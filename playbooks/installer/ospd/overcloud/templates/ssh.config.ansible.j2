@@ -1,0 +1,18 @@
+{% for host in groups['all'] %}
+{% if hostvars[host].get('ansible_connection', '') != 'local' and host != 'virthost' %}
+Host {{ host }}
+    ProxyCommand ssh -i {{ provisioner.hosts.host1.ssh_key_file }} {{ provisioner.hosts.host1.ssh_user }}@{{ provisioner.hosts.host1.ssh_host }} nc %h %p
+    HostName {{ hostvars[host].ansible_default_ipv4.address }}
+{% if host == 'undercloud' %}
+    User root
+    IdentityFile {{ inventory_dir }}/id_rsa
+{% else %}
+    User heat-admin
+    IdentityFile {{ inventory_dir }}/id_rsa_overcloud
+{% endif %}
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+    ForwardAgent yes
+
+{% endif %}
+{% endfor %}

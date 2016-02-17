@@ -1,0 +1,70 @@
+---
+provisioner:
+    nodes:
+        controller: &controller
+            name: controller
+            amount: 3
+            cpu: !lookup provisioner.image.cpu
+            memory: 8192
+            os: &os
+                type: linux
+                variant: !lookup provisioner.image.os.variant
+            disks: &disks
+                disk1: &disk1
+                    path: /var/lib/libvirt/images
+                    dev: /dev/vda
+                    size: 20G
+            network: &network_params
+                interfaces: &interfaces
+                    management: &mgmt_interface
+                        label: eth0
+                    data: &data_interface
+                        label: eth1
+                    external: &external_interface
+                        label: eth2
+            groups:
+                - controller
+                - openstack_nodes
+
+        compute:
+            <<: *controller
+            name: compute1
+            amount: 2
+            cpu: 2
+            memory: 6144
+            disks:
+                disk1:
+                    path: /var/lib/libvirt/images
+                    size: 20G
+            groups:
+                - compute
+                - openstack_nodes
+
+        ceph:
+            <<: *controller
+            name: ceph
+            cpu: 2
+            memory: 4096
+            disks:
+                <<: *disks
+                disk2:
+                    <<: *disk1
+                    dev: /dev/vdb
+            groups:
+                - ceph
+                - openstack_nodes
+
+        undercloud:
+            <<: *controller
+            name: undercloud
+            amount: 1
+            memory: !lookup provisioner.image.memory
+            disks:
+                <<: *disks
+                disk1:
+                    <<: *disk1
+                    size: 20G
+            groups:
+                - undercloud
+                - openstack_nodes
+

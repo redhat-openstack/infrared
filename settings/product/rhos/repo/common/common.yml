@@ -1,0 +1,14 @@
+product:
+    rpm: !lookup private.distro.rhel.rhos_release_rpm
+    repo:
+        release: latest
+        location: bos
+        mirror: download.eng.{{ !lookup product.repo.location }}.redhat.com
+        rhos_release:
+            extra_args:
+                - "-p"
+                - "{{ !lookup product.repo.release }}"
+
+node:
+    prefix:
+        - !lookup product.repo.short_type

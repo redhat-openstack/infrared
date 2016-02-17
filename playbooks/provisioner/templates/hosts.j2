@@ -1,0 +1,5 @@
+{% for host in groups['all'] %}
+{% if hostvars[host].get('ansible_connection', '') != 'local' %}
+{{ hostvars[host]['ansible_ssh_host'] }} {{ host }} {{ host }}{{ provisioner.network.domain }}
+{% endif %}
+{% endfor %}

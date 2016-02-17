@@ -1,0 +1,43 @@
+---
+- name: Add host to host list
+  hosts: localhost
+  gather_facts: no
+  tasks:
+      - name: add hosts to host list
+        add_host:
+            name="{{ item.value.name }}"
+            groups="{{ item.value.groups| join(',') }}"
+            node_label="{{ item.key }}"
+            ansible_ssh_user="{{ item.value.ssh_user }}"
+            ansible_ssh_host="{{ item.value.ssh_host }}"
+            ansible_ssh_private_key_file="{{ item.value.ssh_key_file }}"
+        with_dict: provisioner.hosts
+
+- name: Remove all VMs and networks that were created
+  hosts: virthost
+  gather_facts: no
+  tasks:
+      - name: get the list of VMs
+        shell: "virsh list --all | grep -P '[\\w]+' | sed -n '2,$p' | awk '{print $2}'"
+        register: vm_names
+
+      - set_fact:
+            vm_name_list: "{{ vm_names.stdout_lines }}"
+
+      - name: stop relevant vms
+        virt:
+            name: "{{ item }}"
+            state: destroyed
+        with_items: vm_name_list
+
+      - name: undefine relevant VMs
+        virt:
+            name: "{{ item }}"
+            command: undefine
+        with_items: vm_name_list
+
+      - name: remove the networks we created
+        virt_net:
+            name: "{{ item.value.name }}"
+            state: absent
+        with_dict: provisioner.network.network_list

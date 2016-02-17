@@ -1,0 +1,23 @@
+---
+- name: Ensure yum presence
+  hosts: openstack_nodes
+  gather_facts: no
+  sudo: yes
+  tasks:
+    - shell: python -c 'import yum' || (dnf install -y yum yum-utils && ln -snf /usr/bin/yum-deprecated /usr/bin/yum)
+
+- name: Setup Firewall Rules
+  hosts: openstack_nodes:!tester
+  sudo: yes
+  serial: 1
+  tasks:
+    - name: Iptables - Set default rules
+      command: "iptables {{ item }}"
+      with_items: installer.firewall.rules
+
+    # packstack does not change the rules if they do not conflict
+    # and they are saved, so save them.
+    - name: Iptables - Save default rules
+      shell: /sbin/iptables-save >/etc/sysconfig/iptables
+
+- include: installer/{{ installer.type }}/main.yml

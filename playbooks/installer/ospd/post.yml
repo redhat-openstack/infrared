@@ -1,0 +1,90 @@
+---
+# Any step that should happen after the deployment of the osp-d playbook
+# This could be create ssh forwarding to the nodes, validation of installation, etc
+- name: Post tasks
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  tasks:
+      - name: Copy the keystonerc file for the tester
+        fetch:
+            src: "~/overcloudrc"
+            dest: "{{ inventory_dir }}/keystonerc"
+            flat: yes
+
+- name: Check if RHBZ1304367 is enabled
+  hosts: undercloud
+  gather_facts: no
+  sudo: no
+  tasks:
+    - group_by: key=workaround_rhbz1304367
+      when: workarounds.rhbz1304367 is defined and groups['ceph'] is defined
+
+- name: "Workaround RHBZ1304367: overcloud deployment finished successfully and Ceph's OSDs are down"
+  hosts: workaround_rhbz1304367
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  tasks:
+      - name: Get the ceph nodes IPs
+        shell: "source ~/stackrc; nova list | awk '/ceph/ {print $12}' | grep -oP '[0-9.]+'"
+        register: ip_list
+
+      - name: Workaround for CEPH
+        shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ item }} 'sudo systemctl restart ceph'"
+        with_items: ip_list.stdout_lines
+
+#TODO: remove this when the templating system is in place
+- name: External network creation
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  tasks:
+      - name: create the external network
+        shell: "source ~/overcloudrc; neutron net-create public --router:external --provider:physical_network datacentre --provider:network_type flat"
+
+      - name: create the external subnet
+        shell: "source ~/overcloudrc; neutron subnet-create public 192.168.1.0/24 --name management_subnet --enable-dhcp=False --allocation-pool start=192.168.1.210,end=192.168.1.250 --gateway 192.168.1.1"
+
+#TODO: remove this when tester is in place
+- name: Setup and run tempest
+  hosts: undercloud
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  tasks:
+      - name: create role heat_stack_owner
+        shell: "source ~/overcloudrc; keystone role-create --name heat_stack_owner"
+
+      - name: create the tempest dir
+        shell: "mkdir tempest-dir"
+
+      - name: setup the tempest-dir
+        shell: "/usr/share/openstack-tempest-kilo/tools/configure-tempest-directory"
+        args:
+            chdir: "~/tempest-dir"
+
+      - name: run tempest configuration tool
+        shell: "source ~/overcloudrc; tools/config_tempest.py --deployer-input ~/tempest-deployer-input.conf --debug --create identity.uri $OS_AUTH_URL identity.admin_password $OS_PASSWORD"
+        args:
+            chdir: "~/tempest-dir"
+
+      - name: run tempest
+        shell: "tools/run-tests.sh --parallel --concurrency 8 &> tempest_run.log"
+        args:
+            chdir: "~/tempest-dir"
+        ignore_errors: yes
+
+      - name: print last 30 lines of tempest run for status
+        shell: "tail -n30 tempest_run.log"
+        args:
+            chdir: "~/tempest-dir"
+
+      - name: fetch tempest result
+        fetch:
+            src: "~/tempest-dir/tempest.xml"
+            dest: "{{ lookup('env', 'PWD') }}/nosetests.xml"
+            flat: yes
+
+

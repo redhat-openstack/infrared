@@ -1,0 +1,15 @@
+---
+- name: ensure wget is installed
+  yum:
+      name: wget
+      state: latest
+
+- name: download the pre-built overcloud images
+  shell: >
+        wget --quiet -c -O ~/{{ item.value }}
+        "{{ installer.images.base_url }}/{{ item.value }}"
+  with_dict: "{{ installer.images.overcloud.files }}"
+
+- name: untar the images
+  shell: "tar -xvf ~/{{ item.value }}"
+  with_dict: "{{ installer.images.overcloud.files }}"

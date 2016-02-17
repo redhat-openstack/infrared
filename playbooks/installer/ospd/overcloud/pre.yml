@@ -1,0 +1,177 @@
+---
+# Any step that should happen before initiating the overcloud playbook
+# This could be package installation, image preparation, etc..
+- name: prep and upload images into glance
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  pre_tasks:
+      - fail:
+            msg: "Stopping before building/importing the images per user request"
+        when: break is defined and break == "before_images"
+  roles:
+      - {role: ospd/overcloud/images/build, when: installer.images.task == "build"}
+      - {role: ospd/overcloud/images/import, when: installer.images.task == "import"}
+  tasks:
+      - name: upload the overcloud images to glance
+        shell: "source ~/stackrc; openstack overcloud image upload"
+
+# In case we're dealing with virthost, we need to make sure the undercloud is able to ssh to the hypervisor
+- name: Create the stack user on the virthost and allow SSH to hypervisor
+  hosts: virthost
+  gather_facts: no
+  tasks:
+      - name: create stack user on virthost
+        user:
+            name: "{{ installer.user.name }}"
+            state: present
+            password: "{{ installer.user.password | password_hash('sha512') }}"
+
+      - name: set permissions for the user to access the hypervisor
+        copy:
+            content: |
+                [libvirt Management Access]
+                Identity=unix-user:{{ installer.user.name }}
+                Action=org.libvirt.unix.manage
+                ResultAny=yes
+                ResultInactive=yes
+                ResultActive=yes
+            dest: "/etc/polkit-1/localauthority/50-local.d/50-libvirt-user-{{ installer.user.name }}.pkla"
+
+      - name: make sure sshpass installed
+        yum:
+            name: sshpass
+            state: latest
+        delegate_to: undercloud
+
+      - name: SSH copy ID to the hypervisor
+        become: yes
+        become_user: "{{ installer.user.name }}"
+        shell: "sshpass -p '{{ installer.user.password }}' ssh-copy-id {{ installer.user.name }}@{{ provisioner.network.network_list.management.ip_address }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        delegate_to: undercloud
+
+      - name: prepare instack.json
+        become: yes
+        become_user: "{{ installer.user.name }}"
+        template:
+            src: "templates/virthost_instack.json.j2"
+            dest: "~/instack_template.json"
+        delegate_to: undercloud
+
+      - name: populate the private key
+        become: yes
+        become_user: "{{ installer.user.name }}"
+        shell: "cat ~/instack_template.json | jq --arg key \"$(cat ~/.ssh/id_rsa)\" '. | .nodes[].pm_password=$key | .[\"ssh-key\"]=$key'> instackenv.json"
+        delegate_to: undercloud
+
+- name: Validate our instackenv.json file
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  tasks:
+      - name: validate our instack.json file
+        get_url:
+            url: "https://raw.githubusercontent.com/rthallisey/clapper/master/instackenv-validator.py"
+            dest: "~/instackenv-validator.py"
+
+      - name: validate our instack.json file
+        shell: "python instackenv-validator.py -f ~/instackenv.json"
+
+      - name: register our hosts to instack
+        shell: "source ~/stackrc; openstack baremetal import --json instackenv.json"
+
+      - fail:
+            msg: "Stopping before kernel and ramdisk assignment per user request"
+        when: break is defined and break == "before_kernel_ramdisk_assignment"
+
+      - name: assign the kernel and ramdisk before introspection begins
+        shell: "source ~/stackrc; openstack baremetal configure boot"
+
+# In case of virthost we need to fix the pxe_ssh limitation of correctly assigning the MAC address to the iPXE script
+- name: Fixing the pxe_ssh and iPXE
+  hosts: virthost
+  gather_facts: no
+  tasks:
+      - name: copy bootif script on the undercloud
+        copy:
+            src: "scripts/bootif-fix.sh"
+            dest: "/usr/bin/bootif-fix"
+            mode: 0755
+        delegate_to: undercloud
+
+      - name: copy the service file
+        copy:
+            src: "scripts/bootif-fix.service"
+            dest: "/usr/lib/systemd/system/bootif-fix.service"
+        delegate_to: undercloud
+
+      - name: reload the service daemon
+        shell: "systemctl daemon-reload"
+        delegate_to: undercloud
+
+      - name: enable and run bootif-fix service
+        service:
+            name: "bootif-fix"
+            enabled: yes
+            state: started
+        delegate_to: undercloud
+
+- name: Introspec nodes and Create flavors
+  hosts: undercloud
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  gather_facts: no
+  tasks:
+      - fail:
+            msg: "Stopping before introspection per user request"
+        when: break is defined and break == "before_introspection"
+
+      - name: start node introspection (should take ~20 minutes :) )
+        shell: "source ~/stackrc; openstack baremetal introspection bulk start"
+
+      - name: get subnet ID to update neutron's DNS server
+        shell: "source ~/stackrc; neutron subnet-list | grep {{ installer.undercloud.config.network_cidr }} | awk '{print $2;}'"
+        register: subnet_id
+
+      - name: get the nameserver
+        shell: "cat /etc/resolv.conf | grep -m 1 'nameserver' | awk '{print $2}'"
+        register: nameserver
+
+      - name: update neutron DNS server
+        shell: "source ~/stackrc; neutron subnet-update {{ subnet_id.stdout }} --dns-nameserver {{ nameserver.stdout }}"
+
+      - fail:
+            msg: "Stopping before creating node flavors per user request"
+        when: break is defined and break == "before_flavor_creation"
+
+      - name: create the baremetal flavor for our machines
+        shell: "source ~/stackrc; openstack flavor create --id auto --ram 4096 --disk 16 --vcpus 1 baremetal"
+
+      - name: set additional properties
+        shell: "source ~/stackrc; openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' baremetal"
+
+      - name: create the flavors for our machines
+        shell: "source ~/stackrc; openstack flavor create --id auto --ram {{ item.value.memory | int - 100 }} --disk {{ item.value.disks.disk1.size | regex_replace('(?P<num>[0-9]+).*$', '\\g<num>') | int - 10 }} --vcpus {{ item.value.cpu }} {{ item.key }}"
+        when: "'{{ item.key }}' != 'undercloud'"
+        with_dict: provisioner.nodes
+
+      - name: set additional properties
+        shell: "source ~/stackrc; openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' --property 'capabilities:profile'='{{ item.key }}' {{ item.key }}"
+        when: "'{{ item.key }}' != 'undercloud'"
+        with_dict: provisioner.nodes
+
+      - name: get the node UUID
+        shell: "source ~/stackrc; ironic node-list | grep {{ item }} | awk '{print $2}'"
+        when: "'{{ item.rstrip('1234567890') }}' != 'undercloud'"
+        with_items: groups['openstack_nodes']
+        register: node_list
+
+      - name: tag our nodes with the proper profile
+        shell: "source ~/stackrc; ironic node-update {{ item.stdout }} add properties/capabilities='profile:{{ item.item.rstrip('1234567890') }},boot_option:local'"
+        when: "item.item is defined and item.item.rstrip('1234567890') != 'undercloud'"
+        with_items: node_list.results
+
+      - name: copy template folder for customization
+        shell: "cp -rf /usr/share/openstack-tripleo-heat-templates {{ installer.overcloud.template_base }}"

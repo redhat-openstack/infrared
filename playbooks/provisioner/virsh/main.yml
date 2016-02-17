@@ -1,0 +1,301 @@
+---
+- name: Add host to host list
+  hosts: localhost
+  gather_facts: no
+  tasks:
+      - name: add hosts to host list
+        add_host:
+            name="{{ item.value.name }}"
+            groups="{{ item.value.groups| join(',') }}"
+            node_label="{{ item.key }}"
+            ansible_ssh_user="{{ item.value.ssh_user }}"
+            ansible_ssh_host="{{ item.value.ssh_host }}"
+            ansible_ssh_private_key_file="{{ item.value.ssh_key_file }}"
+        with_dict: provisioner.hosts
+
+- name: Install dependencies
+  hosts: virthost
+  gather_facts: no
+  sudo: yes
+  tasks:
+      - name: install packages
+        yum:
+            name: "{{ item }}"
+            state: present
+        with_items: "{{ provisioner.packages }}"
+
+      - name: start libvirtd
+        service:
+            name: libvirtd
+            state: started
+            enabled: yes
+
+- name: Check if virtualization is supported
+  hosts: virthost
+  gather_facts: no
+  sudo: yes
+  tasks:
+      - name: check if CPU supports INTEL based KVM
+        shell: egrep -c 'vmx' /proc/cpuinfo
+        ignore_errors: True
+        register: kvm_intel
+
+      - name: set fact for Intel based KVM
+        set_fact:
+            kvm_base: "intel"
+        when: kvm_intel == 0
+
+      - name: check if CPU supports AMD based KVM
+        shell: egrep -c 'svm' /proc/cpuinfo
+        ignore_errors: True
+        register: kvm_amd
+
+      - name: set fact for AMD based KVM
+        set_fact:
+            kvm_base: "amd"
+        when: kvm_amd == 0
+
+- name: Enable KVM for intel
+  hosts: virthost
+  gather_facts: no
+  sudo: yes
+  tasks:
+      - name: enable nested KVM support for Intel
+        lineinfile:
+            dest: "/etc/modprobe.d/dist.conf"
+            line: "options kvm_{{ kvm_base }} nested=1"
+            state: present
+            create: yes
+        when: kvm_base is defined
+
+      - name: enable nested KVM support for AMD
+        lineinfile:
+            dest: "/etc/modprobe.d/dist.conf"
+            line: "options {{ kvm_base }} nested=1"
+            state: present
+            create: yes
+        when: kvm_base is defined
+
+      # A change in the modprove requires to reload the module
+      - name: unload KVM module
+        modprobe:
+            name: "kvm_{{ kvm_base }}"
+            state: absent
+        ignore_errors: True
+        when: kvm_base is defined
+
+      - name: load KVM module
+        modprobe:
+            name: "kvm_{{ kvm_base }}"
+            state: present
+        ignore_errors: True
+        when: kvm_base is defined
+
+      - name: install required QEMU-KVM packages
+        yum: name=qemu-kvm state=present
+        when: kvm_base is defined
+
+      # Make sure the net-virtio module is enabled
+      - name: unload vhost-net module
+        modprobe:
+            name: "vhost-net"
+            state: absent
+        ignore_errors: True
+        when: kvm_base is defined
+
+      - name: load KVM module
+        modprobe:
+            name: "vhost-net"
+            state: present
+        ignore_errors: True
+
+- name: Validate virtualization supported on host
+  hosts: virthost
+  gather_facts: no
+  sudo: yes
+  tasks:
+      - command: "virt-host-validate"
+        register: result
+
+      - debug:
+          var: result.stdout_lines
+
+      - fail:
+          msg: "System does not support virtualization"
+        when: "'FAIL' in result.stdout_lines"
+
+- name: Create the topology requested
+  hosts: virthost
+  gather_facts: no
+  sudo: yes
+  tasks:
+      - name: check for existing networks
+        virt_net:
+            command: list_nets
+        register: network_list
+
+      - name: create the networks for the topology
+        virt_net:
+            command: define
+            name: "{{ item.value.name }}"
+            xml: "{{ lookup('template', 'network/network.xml.j2') }}"
+        when: "item.value.name not in network_list.list_nets"
+        with_dict: provisioner.network.network_list
+
+      - name: check if network is active
+        virt_net:
+            state: active
+            name: "{{ item.value.name }}"
+        with_dict: provisioner.network.network_list
+
+      - name: make network persistent
+        virt_net:
+            autostart: "yes"
+            name: "{{ item.value.name }}"
+        with_dict: provisioner.network.network_list
+
+      - name: download base guest image
+        get_url:
+            dest: "/var/lib/libvirt/images/{{ provisioner.image.name }}-original"
+            url: "{{ provisioner.image.base_url }}/{{ provisioner.image.name }}"
+
+      - name: remove cloud-init from the base image
+        shell: "virt-customize -a {{ provisioner.image.name }}-original --run-command 'yum remove cloud-init* -y'"
+        args:
+            chdir: "/var/lib/libvirt/images/"
+
+      - name: reset the password to a default one
+        shell: "virt-customize -a {{ provisioner.image.name }}-original --root-password password:redhat"
+        args:
+            chdir: "/var/lib/libvirt/images/"
+
+        #TODO: configure interfaces based on config rather than hardcode
+      - name: configure three network interfaces for the image
+        shell: "virt-customize -a {{ provisioner.image.name }}-original --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{0,1} && sed -i s/DEVICE=.*/DEVICE=eth1/g /etc/sysconfig/network-scripts/ifcfg-eth1'"
+        args:
+            chdir: "/var/lib/libvirt/images/"
+
+        #TODO: configure interfaces based on config rather than hardcode
+      - name: configure three network interfaces for the image
+        shell: "virt-customize -a {{ provisioner.image.name }}-original --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{1,2} && sed -i s/DEVICE=.*/DEVICE=eth2/g /etc/sysconfig/network-scripts/ifcfg-eth2'"
+        args:
+            chdir: "/var/lib/libvirt/images/"
+
+      - name: create image templates for nodes
+        template:
+            dest: "~/create_images.sh"
+            src: "templates/create_images.sh.j2"
+            mode: 0755
+
+      - name: the create images script
+        shell: "cat ~/create_images.sh"
+
+      - name: execute the create images script
+        shell: "bash ~/create_images.sh"
+
+      - name: create virt install templates for nodes
+        template:
+            dest: "~/create_vms.sh"
+            src: "templates/create_vms.sh.j2"
+            mode: 0755
+        #TODO: move this logic to a module
+      - name: the create vms script
+        shell: "cat ~/create_vms.sh"
+
+      - name: execute the create vms script
+        shell: "bash ~/create_vms.sh"
+
+      - name: get the list of VMs
+        shell: "virsh list --all | grep -P '[\\w]+' | sed -n '2,$p' | awk '{print $2}'"
+        register: vm_names
+
+      - set_fact:
+            vm_name_list: "{{ vm_names.stdout_lines }}"
+
+      - name: get MAC list
+        shell: "virsh domiflist {{ item[0] }} | awk '/{{ item[1] }}/ {print $5};'"
+        with_nested:
+            - vm_name_list
+            - provisioner.network.network_list
+        register: mac_list
+
+      - set_fact:
+            vm_mac_list: "{{ mac_list.results }}"
+
+      - name: wait until one of the VMs gets an IP
+        shell: "virsh net-dhcp-leases {{ provisioner.network.network_list['%s' % item.item[1]].name }} | awk /{{ item.stdout }}/'{print $5}' | cut -d'/' -f1"
+        when: item.stdout != ""
+        register: ip_list
+        until: ip_list.stdout.find("{{ provisioner.network.network_list['%s' % item.item[1]].ip_address | truncate(7, True, '') }}") > -1
+        retries: 40
+        delay: 5
+        with_items: vm_mac_list
+
+      - set_fact:
+            vm_ip_list: "{{ ip_list.results }}"
+
+      - name: add hosts to host list
+        add_host:
+            name="{{ item.item.item[0] }}"
+            groups="{{ provisioner.nodes['%s' % item.item.item[0].rstrip('1234567890')].groups | join(',') }}"
+            ansible_ssh_user="root"
+            ansible_ssh_password="redhat"
+            ansible_ssh_host="{{ item.stdout }}"
+        when: item.item is defined and item.item.item[1] == "management"
+        with_items: vm_ip_list
+
+      - name: make IPs persistent
+        shell: "virsh net-update {{ item[0] }} add ip-dhcp-host \"<host mac='{{ item[1].item.stdout }}' name='{{ item[1].item.item[0] }}' ip='{{ item[1].stdout }}' />\" --live --config"
+        when: item[1].item is defined and item[1].item.item[1] == item[0]
+        with_nested:
+            - provisioner.network.network_list
+            - vm_ip_list
+
+      - name: generating RSA key for root
+        user:
+            name: root
+            generate_ssh_key: yes
+        delegate_to: virthost
+
+      - name: copy created key from virthost for SSH proxy
+        fetch:
+            src: "~/.ssh/id_rsa"
+            dest: "{{ inventory_dir }}/id_rsa"
+            flat: yes
+
+      - name: SSH copy ID to all VMs from virthost
+        shell: "sshpass -p 'redhat' ssh-copy-id root@{{ item.stdout }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        register: shell_result
+        until: shell_result.stderr.find("ERROR") == -1
+        retries: 20
+        delay: 10
+        when: item.item is defined
+        with_items: vm_ip_list
+
+- name: Update ansible with the new hosts
+  hosts: localhost
+  tasks:
+      - name: update file permissions
+        file:
+            path: "{{ inventory_dir }}/id_rsa"
+            mode: 0600
+
+      - name: setup ssh config
+        template:
+            src: "templates/ssh.config.ansible.j2"
+            dest: "{{ inventory_dir }}/ansible.ssh.config"
+            mode: 0755
+
+      # This step is necessary in order to allow the SSH forwarding
+      - name: update the ssh host name of each machine
+        add_host:
+            name="{{ item }}"
+            ansible_ssh_host="{{ item }}"
+        with_items: groups['openstack_nodes']
+
+      - name: update ansible with the new SSH settings
+        ini_file:
+            dest: "{{ inventory_dir }}/ansible.cfg"
+            section: ssh_connection
+            option: ssh_args
+            value: "-o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -F {{ inventory_dir }}/ansible.ssh.config"

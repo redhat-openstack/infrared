@@ -1,0 +1,37 @@
+- name: prepare the network isolation
+  template:
+      src: "isolation.yml.j2"
+      dest: "{{ installer.overcloud.template_base }}/isolation_params.yml"
+
+- name: append our params to the network isolation file
+  shell: "cat {{ installer.overcloud.template_base }}/isolation_params.yml >> {{ installer.overcloud.template_base }}/{{ installer.overcloud.network.template.file }}"
+
+# Until https://review.openstack.org/#/c/214372 is merged, create the three-nics-vlans
+- name: create folder for three per-role nic configuration
+  shell: "mkdir -p {{ installer.overcloud.template_base }}/network/config/three-nics-vlans/"
+
+- name: copy files into folder
+  copy:
+      src: "{{ item }}"
+      dest: "{{ installer.overcloud.template_base }}/network/config/three-nics-vlans/"
+  with_items:
+    - controller.yaml
+    - compute.yaml
+    - cinder-storage.yaml
+    - ceph-storage.yaml
+    - swift-storage.yaml
+
+- name: copy net-three-nics-vlans.yaml files into folder
+  copy:
+      src: "net-three-nics-with-vlans.yaml"
+      dest: "{{ installer.overcloud.template_base }}/environments/"
+
+- name: append the network isolation template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '                       -e {{ installer.overcloud.template_base }}/environments/network-isolation.yaml \\'
+
+- name: append the net-three-nics-vlans template line base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '                       -e {{ installer.overcloud.template_base }}/environments/net-three-nics-with-vlans.yaml \\'

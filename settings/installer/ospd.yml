@@ -1,0 +1,45 @@
+---
+
+installer:
+    type: ospd
+    short_type: ospd
+    user:
+        name: stack
+        password: stack
+
+    undercloud:
+        config:
+            local_ip: 172.16.0.1/24
+            undercloud_public_vip:  172.16.0.10
+            undercloud_admin_vip: 172.16.0.11
+            local_interface: eth0
+            masquerade_network: 172.16.0.0/24
+            dhcp_start: 172.16.0.20
+            dhcp_end: 172.16.0.120
+            network_cidr: 172.16.0.0/24
+            network_gateway: 172.16.0.1
+            discovery_iprange: 172.16.0.150,172.16.0.180
+    overcloud:
+        template_base: "~/my_templates"
+
+    firewall:
+        rules:
+            - ' -A INPUT -m state --state ESTABLISHED,RELATED -m comment --comment "001 QA incoming related session exist the host interface MGMT" -j ACCEPT'
+            - ' -A INPUT -p tcp -m tcp --dport 22 -m comment --comment "002 QA incoming SSH" -j ACCEPT'
+            - ' -A INPUT -p icmp -m comment --comment "003 QA incoming ICMP" -j ACCEPT'
+            - ' -A INPUT -i lo -m comment --comment "004 QA incoming loopback" -j ACCEPT'
+            - ' -A INPUT -p udp --sport 53 -m comment --comment "005 QA incoming DNS" -j ACCEPT'
+            - ' -A INPUT -p udp --sport 123 -m comment --comment "006 QA incoming NTP" -j ACCEPT'
+            - ' -P INPUT DROP'
+
+defaults:
+    build: latest
+    images: import
+    network: no-isolation
+    version: 7
+    ssl: "no"
+
+workarounds:
+    rhbz1304367:
+        desc: "Overcloud deployment finished successfully and Ceph's OSDs are down"
+        enabled: True

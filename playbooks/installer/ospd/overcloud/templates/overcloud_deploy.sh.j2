@@ -1,0 +1,25 @@
+#!/bin/bash
+
+source ~/stackrc;
+openstack overcloud deploy --debug \
+                       --templates {{ installer.overcloud.template_base }} \
+                       --libvirt-type qemu \
+                       --ntp-server clock.redhat.com \
+                       --neutron-network-type {{ installer.overcloud.network.backend }} \
+{% if installer.overcloud.network.backend == "vlan" %}
+                       --neutron-disable-tunneling \
+                       --neutron-network-vlan-ranges datacenter:1:1000 \
+{% else %}
+                       --neutron-tunnel-types {{ installer.overcloud.network.backend }} \
+{% endif %}
+{% if groups['controller'] is defined %}
+                       --control-scale {{ groups['controller']| length }} \
+                       --control-flavor controller \
+{% if groups['controller']| length > 1 %}
+                       -e /usr/share/openstack-tripleo-heat-templates/environments/puppet-pacemaker.yaml \
+{% endif %}
+{% endif %}
+{% if groups['compute'] is defined %}
+                       --compute-scale {{ groups['compute']| length }} \
+                       --compute-flavor compute \
+{% endif %}

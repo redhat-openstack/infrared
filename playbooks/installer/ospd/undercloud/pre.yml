@@ -1,0 +1,71 @@
+---
+- name: Prepare the undercloud for installation
+  hosts: undercloud
+  tasks:
+    - name: set hostname
+      hostname:
+          name: undercloud.redhat.local
+
+    - name: update /etc/hosts with undercloud details
+      lineinfile:
+          dest: "/etc/hosts"
+          line: "{{ ansible_default_ipv4.address }}    undercloud.redhat.local undercloud"
+          state: present
+
+    - name: remove all repos
+      command: "rm -f /etc/yum.repos.d/*"
+
+    - name: install the rhos-release RPM
+      shell: "yum localinstall -y {{ product.rpm }}"
+
+    - debug:
+          msg: "rhos-release {{ installer.version.major }}-director -p {{ installer.build }}"
+
+    - name: create necessary repos with for director using rhos-release
+      command: "rhos-release {{ installer.version.major }}-director -p {{ installer.build }}"
+      register: command_result
+      until: command_result.stderr.find('Connection reset by peer') == -1
+      retries: 40
+      delay: 5
+
+    - debug:
+          msg: "rhos-release {{ product.version.major }} -p {{ product.build }}"
+
+    - name: create necessary repos for core using rhos-release
+      command: "rhos-release {{ product.version.major }} -p {{ product.build }}"
+
+    - name: update system packages
+      shell: "yum update -y"
+
+    - name: reboot the undercloud
+      shell: "sleep 2 && shutdown -r now"
+      async: 1
+      poll: 0
+      ignore_errors: true
+
+- name: Waiting for host to startup
+  hosts: localhost
+  tasks:
+    - name: Waiting for the undercloud to be available
+      wait_for:
+          host: "undercloud"
+          timeout: 120
+
+- name: Continue with the undercloud installation
+  hosts: undercloud
+  tasks:
+    - name: Install the oscplugin/tripleO client
+      yum:
+          name: "{% if installer.version.major == 7 %}python-rdomanager-oscplugin{% else %}python-tripleoclient{% endif %}"
+          state: present
+
+    - name: create user
+      user:
+          name: "{{ installer.user.name }}"
+          state: present
+          password: "{{ installer.user.password | password_hash('sha512') }}"
+
+    - name: add user to sudoers
+      lineinfile:
+          dest: "/etc/sudoers"
+          line: "{{ installer.user.name }} ALL=(root) NOPASSWD:ALL"

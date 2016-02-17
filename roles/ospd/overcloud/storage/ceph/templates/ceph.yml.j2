@@ -1,0 +1,18 @@
+parameters:
+  CinderEnableIscsiBackend: false
+  CinderEnableRbdBackend: true
+  CinderEnableNfsBackend: false
+  NovaEnableRbdBackend: true
+
+parameter_defaults:
+  CinderRbdPoolName: 'volumes'
+  NovaRbdPoolName: 'vms'
+  GlanceRbdPoolName: 'images'
+  ExtraConfig:
+    ceph::profile::params::osds:
+{% for disk_name, disk_values in provisioner.nodes.ceph.disks.iteritems() %}
+{% if disk_name != 'disk1' %}
+     '{{ disk_values.dev }}':
+         journal: ''
+{% endif %}
+{% endfor %}

@@ -1,0 +1,33 @@
+---
+# Any step that should happen after the deployment of the overcloud playbook
+# This could be validation of installation, etc
+- name: Fetch key for SSH to the overcloud
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  tasks:
+      - name: fetch the private key file from the undercloud
+        fetch:
+            src: "~/.ssh/id_rsa"
+            dest: "{{ inventory_dir }}/id_rsa_overcloud"
+            flat: yes
+
+- name: Update the inventory file
+  hosts: localhost
+  gather_facts: no
+  tasks:
+      - name: update file permissions
+        file:
+            path: "{{ inventory_dir }}/id_rsa_overcloud"
+            mode: 0600
+
+      - name: update our ansible ssh configuration file
+        template:
+            src: "templates/ssh.config.ansible.j2"
+            dest: "{{ inventory_dir }}/ansible.ssh.config"
+            mode: 0755
+
+      - fail:
+            msg: "Stopping before any test is being run per user request"
+        when: break is defined and break == "before_tempest"
