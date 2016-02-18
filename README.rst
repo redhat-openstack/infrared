@@ -14,11 +14,11 @@ Setup
 
 Use pip to install from source::
 
-  $ pip install tools/kcli
+  $ pip install kcli
 
 .. note:: For development work it's better to install in editable mode::
 
-  $ pip install -e tools/kcli
+  $ pip install -e kcli
 
 Conf
 ====

@@ -1,6 +1,7 @@
+from os.path import join, dirname, abspath
+
 from pip import req
 from setuptools import setup, find_packages
-from os.path import join, dirname, abspath
 
 import kcli
 
@@ -18,7 +19,7 @@ setup(
     packages=find_packages(),
     long_description=open(join(prj_dir, 'README.rst')).read(),
     entry_points={
-        'console_scripts': ['kcli = kcli.main:main']
+        'console_scripts': ['kcli = kcli.kcli.main:main']
     },
     install_requires=reqs,
     author='Yair Fried',

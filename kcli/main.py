@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 import logging
-import os
 
+import os
 import yaml
 
 # logger creation is first thing to be done
@@ -55,10 +55,10 @@ def main():
 
         LOG.debug("All settings files to be loaded:\n%s" % settings_files)
 
-        kcli.yamls.Lookup.settings = utils.generate_settings(settings_files,
-                                                             args.extra_vars)
+        yamls.Lookup.settings = utils.generate_settings(settings_files,
+                                                        args.extra_vars)
 
-        output = yaml.safe_dump(kcli.yamls.Lookup.settings,
+        output = yaml.safe_dump(yamls.Lookup.settings,
                                 default_flow_style=False)
 
         if args.output_file:
