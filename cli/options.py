@@ -8,9 +8,9 @@ import os
 
 import yaml
 
-from kcli import conf
-from kcli import exceptions
-from kcli import logger
+from cli import conf
+from cli import exceptions
+from cli import logger
 
 LOG = logger.LOG
 

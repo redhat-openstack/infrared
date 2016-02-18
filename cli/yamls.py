@@ -10,8 +10,8 @@ import string
 import configure
 import yaml
 
-from kcli import exceptions
-from kcli import logger
+from cli import exceptions
+from cli import logger
 
 LOG = logger.LOG
 

@@ -9,7 +9,7 @@ SETTINGS_PATH = os.path.join(TESTS_CWD, "settings")
 def os_environ():
     """ Backups env var from os.environ and restores it at teardown. """
 
-    from kcli import conf
+    from cli import conf
 
     backup_flag = False
     if conf.ENV_VAR_NAME in os.environ:

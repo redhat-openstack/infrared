@@ -2,15 +2,15 @@ import ConfigParser
 import os
 import time
 
-from kcli import exceptions
+from cli import exceptions
 
-ENV_VAR_NAME = "KCLI_CONFIG"
-KCLI_CONF_FILE = 'kcli.cfg'
-CWD_PATH = os.path.join(os.getcwd(), KCLI_CONF_FILE)
-USER_PATH = os.path.expanduser('~/.' + KCLI_CONF_FILE)
-SYSTEM_PATH = os.path.join('/etc/khaleesi', KCLI_CONF_FILE)
+ENV_VAR_NAME = "IR_CONFIG"
+IR_CONF_FILE = 'infrared.cfg'
+CWD_PATH = os.path.join(os.getcwd(), IR_CONF_FILE)
+USER_PATH = os.path.expanduser('~/.' + IR_CONF_FILE)
+SYSTEM_PATH = os.path.join('/etc/khaleesi', IR_CONF_FILE)
 YAML_EXT = ".yml"
-TMP_OUTPUT_FILE = 'kcli_settings_' + str(time.time()) + YAML_EXT
+TMP_OUTPUT_FILE = 'ir_settings_' + str(time.time()) + YAML_EXT
 KHALEESI_DIR_ENV_VAR = 'KHALEESI_SETTINGS'
 
 
@@ -24,7 +24,7 @@ def load_config_file():
     if env_path is not None:
         env_path = os.path.expanduser(env_path)
         if os.path.isdir(env_path):
-            env_path = os.path.join(env_path, KCLI_CONF_FILE)
+            env_path = os.path.join(env_path, IR_CONF_FILE)
     for path in (env_path, CWD_PATH, USER_PATH, SYSTEM_PATH):
         if path is not None and os.path.exists(path):
             _config.read(path)

@@ -1,8 +1,8 @@
-========================
-kcli - Khaleesi CLI tool
-========================
+=================
+InfraRed CLI tool
+=================
 
-``kcli`` is intended to reduce Khaleesi users' dependency on external CLI tools.
+Reduce users' dependency on external CLI tools (Ansible and others).
 
 Setup
 =====
@@ -14,38 +14,43 @@ Setup
 
 Use pip to install from source::
 
-  $ pip install kcli
+  $ pip install <path_to_infrared_dir>
+
+So, After cloning repo from GitHub::
+
+ $ cd Infrared
+ $ pip install .
 
 .. note:: For development work it's better to install in editable mode::
 
-  $ pip install -e kcli
+  $ pip install -e .
 
 Conf
 ====
 
-.. note:: Assumes that ``kcli`` is installed, else follow Setup_.
+.. note:: Assumes that ``infrared`` is installed, else follow Setup_.
 
-``kcli`` will look for ``kcli.cfg`` in the following order:
+``infrared`` will look for ``infrared.cfg`` in the following order:
 
-#. In working directory: ``./kcli.cfg``
-#. In user home directory: ``~/.kcli.cfg``
-#. In system settings: ``/etc/khaleesi/kcli.cfg``
+#. In working directory: ``./infrared.cfg``
+#. In user home directory: ``~/.infrared.cfg``
+#. In system settings: ``/etc/khaleesi/infrared.cfg``
 
 .. note:: To specify a different directory or different filename, override the
- lookup order with ``KCLI_CONFIG`` environment variable::
+ lookup order with ``IR_CONFIG`` environment variable::
 
-    $ KCLI_CONFIG=/my/config/file.ini kcli --help
+    $ IR_CONFIG=/my/config/file.ini infrared --help
 
-Running kcli
-============
+Running infrared
+================
 
-.. note:: Assumes that ``kcli`` is installed, else follow Setup_.
+.. note:: Assumes that ``infrared`` is installed, else follow Setup_.
 
 You can get general usage information with the ``--help`` option::
 
-  kcli --help
+  infrared --help
 
-This displays options you can pass to ``kcli``.
+This displays options you can pass to ``infrared``.
 
 .. note:: Some setting files are hard-coded to look for the ``$WORKSPACE``
  environment variable (see `Khaleesi - Cookbook`) that should point to the
@@ -68,7 +73,7 @@ The '-e/--extra-vars' can be used more than once.
 
 Merging order
 -------------
-Except options based on the settings dir structure, kcli accepts input of
+Except options based on the settings dir structure, infrared accepts input of
 predefined settings files (with -n/--input) and user defined specific options
 (-e/--extra-vars).
 The merging priority order listed below:

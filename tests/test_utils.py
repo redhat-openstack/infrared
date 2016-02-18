@@ -10,6 +10,6 @@ import pytest
      ['b_key1', 'b_key2'], {'a_key': 'a_val', 'b_key1': {'b_key2': 'x_val'}}),
 ])
 def test_dict_insert(tested, val, key, expected):
-    from kcli import utils
+    from cli import utils
     utils.dict_insert(tested, val, *key)
     assert tested == expected

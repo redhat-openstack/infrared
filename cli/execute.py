@@ -8,7 +8,7 @@ import ansible.playbook
 import ansible.utils
 from ansible import callbacks
 
-from kcli import conf, exceptions, utils
+from cli import conf, exceptions, utils
 
 VERBOSITY = 0
 HOSTS_FILE = "hosts"
@@ -164,10 +164,10 @@ parser.add_argument('-v', '--verbose', default=VERBOSITY, action="count",
                     help="verbose mode (-vvv for more,"
                          " -vvvv to enable connection debugging)")
 parser.add_argument("--settings",
-                    default=conf.KCLI_SETTINGS_YML,
+                    default=conf.IR_SETTINGS_YML,
                     type=lambda file_path: utils.normalize_file(file_path),
                     help="settings file to use. default: %s"
-                         % conf.KCLI_SETTINGS_YML)
+                         % conf.IR_SETTINGS_YML)
 subparsers = parser.add_subparsers(metavar="COMMAND")
 
 if __name__ == '__main__':

@@ -6,14 +6,14 @@ import os
 import yaml
 
 # logger creation is first thing to be done
-from kcli import logger
+from cli import logger
 
-from kcli import conf
-from kcli import options as kcli_options
-from kcli.execute import PLAYBOOKS
-from kcli import parse
-from kcli import utils
-import kcli.yamls
+from cli import conf
+from cli import options as cli_options
+from cli.execute import PLAYBOOKS
+from cli import parse
+from cli import utils
+import cli.yamls
 
 LOG = logger.LOG
 CONF = conf.config
@@ -26,7 +26,7 @@ def main():
         CONF.get('DEFAULTS', 'SETTINGS_DIR'))
 
     for option in CONF.options('ROOT_OPTS'):
-        options_trees.append(kcli_options.OptionsTree(settings_dir, option))
+        options_trees.append(cli_options.OptionsTree(settings_dir, option))
 
     parser = parse.create_parser(options_trees)
     args = parser.parse_args()
@@ -55,10 +55,10 @@ def main():
 
         LOG.debug("All settings files to be loaded:\n%s" % settings_files)
 
-        yamls.Lookup.settings = utils.generate_settings(settings_files,
+        cli.yamls.Lookup.settings = utils.generate_settings(settings_files,
                                                         args.extra_vars)
 
-        output = yaml.safe_dump(yamls.Lookup.settings,
+        output = yaml.safe_dump(cli.yamls.Lookup.settings,
                                 default_flow_style=False)
 
         if args.output_file:
