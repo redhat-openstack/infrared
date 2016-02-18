@@ -1,0 +1,12 @@
+language: python
+python:
+    - "2.7"
+# command to install dependencies
+install:
+  - pip install pep8 --use-mirrors
+  - pip install https://github.com/dcramer/pyflakes/tarball/master
+  - pip install .
+# command to run tests
+script:
+    - pep8 cli
+    - py.test tests -v
