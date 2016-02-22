@@ -3,6 +3,7 @@ This module provide some general helper methods
 """
 
 import os
+import re
 
 import configure
 import yaml
@@ -50,7 +51,7 @@ def validate_settings_dir(settings_dir=None):
             exist
     """
     settings_dir = settings_dir or os.environ.get(
-        cli.conf.KHALEESI_DIR_ENV_VAR)
+        cli.conf.INFRARED_DIR_ENV_VAR)
 
     if not os.path.exists(settings_dir):
         raise exceptions.IRFileNotFoundException(
@@ -73,6 +74,12 @@ def update_settings(settings, file_path):
 
     try:
         loaded_file = configure.Configuration.from_file(file_path).configure()
+        placeholders_list = cli.yamls.Placeholder.placeholders_list
+        for placeholder in placeholders_list[::-1]:
+            if placeholders_list[-1].file_path is None:
+                placeholder.file_path = file_path
+            else:
+                break
     except yaml.constructor.ConstructorError as e:
         raise exceptions.IRYAMLConstructorError(e, file_path)
 

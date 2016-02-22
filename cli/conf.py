@@ -8,10 +8,10 @@ ENV_VAR_NAME = "IR_CONFIG"
 IR_CONF_FILE = 'infrared.cfg'
 CWD_PATH = os.path.join(os.getcwd(), IR_CONF_FILE)
 USER_PATH = os.path.expanduser('~/.' + IR_CONF_FILE)
-SYSTEM_PATH = os.path.join('/etc/khaleesi', IR_CONF_FILE)
+SYSTEM_PATH = os.path.join('/etc/infrared', IR_CONF_FILE)
 YAML_EXT = ".yml"
 TMP_OUTPUT_FILE = 'ir_settings_' + str(time.time()) + YAML_EXT
-KHALEESI_DIR_ENV_VAR = 'KHALEESI_SETTINGS'
+INFRARED_DIR_ENV_VAR = 'IR_SETTINGS'
 
 
 def load_config_file():

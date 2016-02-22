@@ -1,5 +1,4 @@
 from os.path import join, dirname, abspath
-
 from pip import req
 from setuptools import setup, find_packages
 
