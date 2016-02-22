@@ -4,11 +4,11 @@ provisioner:
         controller: &controller
             name: controller
             amount: 3
-            cpu: !lookup provisioner.image.cpu
+            cpu: "{{ !lookup provisioner.image.cpu }}"
             memory: 8192
             os: &os
                 type: linux
-                variant: !lookup provisioner.image.os.variant
+                variant: "{{ !lookup provisioner.image.os.variant }}"
             disks: &disks
                 disk1: &disk1
                     path: /var/lib/libvirt/images
@@ -58,7 +58,7 @@ provisioner:
             <<: *controller
             name: undercloud
             amount: 1
-            memory: !lookup provisioner.image.memory
+            memory: "{{ !lookup provisioner.image.memory }}"
             disks:
                 <<: *disks
                 disk1:

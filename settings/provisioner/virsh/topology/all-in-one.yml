@@ -4,11 +4,11 @@ provisioner:
         controller: &controller
             name: controller
             amount: 1
-            cpu: !lookup provisioner.image.cpu
+            cpu: "{{ !lookup provisioner.image.cpu }}"
             memory: 16384
             os:
                 type: linux
-                variant: !lookup provisioner.image.os.variant
+                variant: "{{ !lookup provisioner.image.os.variant }}"
             disks:
                 disk1: &disk1
                     path: /var/lib/libvirt/images
@@ -25,13 +25,13 @@ provisioner:
                             nm_controlled: "no"
                             type: ethernet
                             onboot: yes
-                            device: !lookup provisioner.nodes.controller.network.interfaces.data.label
+                            device: "{{ !lookup provisioner.nodes.controller.network.interfaces.data.label }}"
                     external: &external_interface
                         label: eth2
                         config_params:
                             <<: *data_interface_params
                             ipaddr: ""
-                            device: !lookup provisioner.nodes.controller.network.interfaces.external.label
+                            device: "{{ !lookup provisioner.nodes.controller.network.interfaces.external.label }}"
             groups:
                 - controller
                 - compute
