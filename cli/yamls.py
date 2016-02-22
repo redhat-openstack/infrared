@@ -215,11 +215,14 @@ class Lookup(yaml.YAMLObject):
         if settings_dic is None:
             settings_dic = cls.settings
 
-        my_iter = settings_dic.iteritems() if isinstance(settings_dic, dict) \
-            else enumerate(settings_dic)
+        my_iter = settings_dic.iteritems() if \
+            (isinstance(settings_dic, dict) or
+             isinstance(settings_dic, configure.Configuration)) else \
+            enumerate(settings_dic)
 
         for idx_key, value in my_iter:
-            if isinstance(value, dict):
+            if isinstance(value, dict) or \
+                    isinstance(value, configure.Configuration):
                 cls.in_string_lookup(settings_dic[idx_key])
             elif isinstance(value, list):
                 cls.in_string_lookup(value)
