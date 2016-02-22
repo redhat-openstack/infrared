@@ -1,5 +1,3 @@
-import argparse
-import sys
 from os import path
 
 import ansible.color
@@ -8,7 +6,7 @@ import ansible.playbook
 import ansible.utils
 from ansible import callbacks
 
-from cli import conf, exceptions, utils, logger
+from cli import conf, exceptions, logger
 
 LOG = logger.LOG
 
