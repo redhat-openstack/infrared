@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 import logging
-
 import os
+
 import yaml
 
 # logger creation is first thing to be done
@@ -10,7 +10,7 @@ from cli import logger
 
 from cli import conf
 from cli import options as cli_options
-from cli.execute import PLAYBOOKS
+from cli import execute
 from cli import parse
 from cli import utils
 import cli.yamls
@@ -56,8 +56,9 @@ def main():
         LOG.debug("All settings files to be loaded:\n%s" % settings_files)
 
         cli.yamls.Lookup.settings = utils.generate_settings(settings_files,
-                                                        args.extra_vars)
+                                                            args.extra_vars)
 
+        LOG.debug("Dumping settings...")
         output = yaml.safe_dump(cli.yamls.Lookup.settings,
                                 default_flow_style=False)
 
@@ -75,9 +76,10 @@ def main():
     if exec_playbook:
         if args.which == 'execute':
             execute_args = parser.parse_args()
-        elif args.which not in PLAYBOOKS:
+        elif args.which not in execute.PLAYBOOKS:
             LOG.debug("No playbook named \"%s\", nothing to execute.\n"
-                      "Please choose from: %s" % (args.which, PLAYBOOKS))
+                      "Please choose from: %s" % (args.which,
+                                                  execute.PLAYBOOKS))
             return
         else:
             args_list = ["execute"]

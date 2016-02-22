@@ -48,3 +48,8 @@ class IRYAMLConstructorError(IRException):
                         '{column_no}'.format(where=where,
                                              line_no=pm.line + 1,
                                              column_no=pm.column + 1)
+
+
+class IRPlaceholderException(IRException):
+    def __init__(self, trace_message):
+        self.message = 'Mandatory value is missing.\n' + trace_message

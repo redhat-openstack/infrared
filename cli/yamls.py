@@ -276,3 +276,33 @@ class Lookup(yaml.YAMLObject):
             node.replace_lookup()
 
         return dumper.represent_data("%s" % node.key)
+
+
+class Placeholder(yaml.YAMLObject):
+    """ Raises 'IRPlaceholderException' when dumping Placeholder objects.
+
+    Objects created by 'from_yaml' method are automatically added to the
+    'placeholders_list' class variable so it'll be possible to add for each
+    object the path to the file where it stored.
+    """
+    yaml_tag = u'!placeholder'
+    yaml_dumper = yaml.SafeDumper
+
+    # Refs for all Placeholder's objects
+    placeholders_list = []
+
+    def __init__(self, message):
+        self.message = message
+        self.file_path = None
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        # Create & save references to Placeholder objects
+        placeholder = Placeholder(str(node.start_mark))
+        cls.placeholders_list.append(placeholder)
+        return placeholder
+
+    @classmethod
+    def to_yaml(cls, dumper, node):
+        message = re.sub("<string>", node.file_path, node.message)
+        raise exceptions.IRPlaceholderException(message)
