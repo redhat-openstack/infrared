@@ -34,7 +34,7 @@ Conf
 
 #. In working directory: ``./infrared.cfg``
 #. In user home directory: ``~/.infrared.cfg``
-#. In system settings: ``/etc/infrared  /infrared.cfg``
+#. In system settings: ``/etc/infrared/infrared.cfg``
 
 .. note:: To specify a different directory or different filename, override the
  lookup order with ``IR_CONFIG`` environment variable::
