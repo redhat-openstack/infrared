@@ -11,6 +11,9 @@ subparsers:
     virsh:
         help: Provision systems using 'virsh'
         options:
+            dry-run:
+                action: store_true
+                help: Only generate settings, skip the playbook execution stage
             input-files:
                 action: append
                 type: str
@@ -48,9 +51,12 @@ subparsers:
                     all-in-one,
                     multi-node,
                     ospd_1ctrl_1cmpt,
+                    ospd_1cont_1comp_1ceph,
+                    ospd_3cont_1comp,
+                    ospd_3cont_1comp_1ceph,
+                    ospd_3cont_1comp_3ceph,
                     ospd_3cont_2comp,
                     ospd_3cont_2comp_3ceph,
-                    ospd_minimal,
                     ]
             distro:
                 type: str
