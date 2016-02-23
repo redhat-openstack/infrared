@@ -2,7 +2,7 @@
 
 source ~/stackrc;
 openstack overcloud deploy --debug \
-                       --templates {{ installer.overcloud.template_base }} \
+                       --templates \
                        --libvirt-type qemu \
                        --ntp-server clock.redhat.com \
                        --neutron-network-type {{ installer.overcloud.network.backend }} \
@@ -14,12 +14,17 @@ openstack overcloud deploy --debug \
 {% endif %}
 {% if groups['controller'] is defined %}
                        --control-scale {{ groups['controller']| length }} \
-                       --control-flavor controller \
-{% if groups['controller']| length > 1 %}
-                       -e /usr/share/openstack-tripleo-heat-templates/environments/puppet-pacemaker.yaml \
+{% for flavor in tagged_flavors %}
+{% if flavor.cmd is defined and 'controller' in flavor.cmd %}
+                       --control-flavor {{ flavor.cmd.split() | last }} \
 {% endif %}
+{% endfor %}
 {% endif %}
 {% if groups['compute'] is defined %}
                        --compute-scale {{ groups['compute']| length }} \
-                       --compute-flavor compute \
+{% for flavor in tagged_flavors %}
+{% if flavor.cmd is defined and 'compute' in flavor.cmd %}
+                       --compute-flavor {{ flavor.cmd.split() | last }} \
+{% endif %}
+{% endfor %}
 {% endif %}

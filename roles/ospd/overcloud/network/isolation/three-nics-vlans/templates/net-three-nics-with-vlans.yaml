@@ -11,11 +11,11 @@
 # environment files we should think about using it here to automatically
 # include network-isolation.yaml.
 resource_registry:
-  OS::TripleO::BlockStorage::Net::SoftwareConfig: ../network/config/three-nics-vlans/cinder-storage.yaml
-  OS::TripleO::Compute::Net::SoftwareConfig: ../network/config/three-nics-vlans/compute.yaml
-  OS::TripleO::Controller::Net::SoftwareConfig: ../network/config/three-nics-vlans/controller.yaml
-  OS::TripleO::ObjectStorage::Net::SoftwareConfig: ../network/config/three-nics-vlans/swift-storage.yaml
-  OS::TripleO::CephStorage::Net::SoftwareConfig: ../network/config/three-nics-vlans/ceph-storage.yaml
+  OS::TripleO::BlockStorage::Net::SoftwareConfig: network/config/three-nics-vlans/cinder-storage.yaml
+  OS::TripleO::Compute::Net::SoftwareConfig: network/config/three-nics-vlans/compute.yaml
+  OS::TripleO::Controller::Net::SoftwareConfig: network/config/three-nics-vlans/controller.yaml
+  OS::TripleO::ObjectStorage::Net::SoftwareConfig: network/config/three-nics-vlans/swift-storage.yaml
+  OS::TripleO::CephStorage::Net::SoftwareConfig: network/config/three-nics-vlans/ceph-storage.yaml
 
 # We use parameter_defaults instead of parameters here because Tuskar munges
 # the names of top level and role level parameters with the role name and a
@@ -25,4 +25,4 @@ parameter_defaults:
   # This sets 'external_network_bridge' in l3_agent.ini to an empty string
   # so that external networks act like provider bridge networks (they
   # will plug into br-int instead of br-ex)
-  NeutronExternalNetworkBridge: "br-ex"
+  NeutronExternalNetworkBridge: "''"
