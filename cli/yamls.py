@@ -110,12 +110,12 @@ class Lookup(yaml.YAMLObject):
     yaml_dumper = yaml.SafeDumper
 
     settings = None
-    handling_nested_lookups = False
 
     def __init__(self, key, old_style_lookup=False):
         self.key = key
         if old_style_lookup:
             self.convert_old_style_lookup()
+        self.handling_nested_lookups = False
 
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, self.key)
@@ -234,7 +234,7 @@ class Lookup(yaml.YAMLObject):
                     settings_dic[idx_key] = cls(value)
 
     @classmethod
-    def handle_nested_lookup(cls):
+    def handle_nested_lookup(cls, node):
         """ handles lookup to lookup (nested lookup scenario)
 
         load and dump 'settings' again and again until all lookups strings
@@ -244,7 +244,7 @@ class Lookup(yaml.YAMLObject):
         # because there is a call to 'yaml.safe_dump' which call to this
         # method, the 'handling_nested_lookups' flag is being set & unset to
         # prevent infinite loop between the method
-        cls.handling_nested_lookups = True
+        node.handling_nested_lookups = True
 
         first_dump = True
         settings = cls.settings
@@ -264,7 +264,7 @@ class Lookup(yaml.YAMLObject):
             if not cmp(settings, cls.settings):
                 break
 
-        cls.handling_nested_lookups = False
+        node.handling_nested_lookups = False
 
     @classmethod
     def from_yaml(cls, loader, node):
@@ -272,8 +272,8 @@ class Lookup(yaml.YAMLObject):
 
     @classmethod
     def to_yaml(cls, dumper, node):
-        if not cls.handling_nested_lookups:
-            cls.handle_nested_lookup()
+        if not node.handling_nested_lookups:
+            node.handle_nested_lookup(node)
 
         if node.settings:
             node.replace_lookup()
