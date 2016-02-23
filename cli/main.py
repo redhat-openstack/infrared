@@ -58,6 +58,9 @@ def main():
         cli.yamls.Lookup.settings = utils.generate_settings(settings_files,
                                                             args.extra_vars)
 
+        # explicitly call to 'in_string_lookup' to create Lookup object
+        cli.yamls.Lookup.in_string_lookup()
+
         LOG.debug("Dumping settings...")
         output = yaml.safe_dump(cli.yamls.Lookup.settings,
                                 default_flow_style=False)
