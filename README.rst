@@ -1,7 +1,7 @@
 =================
 InfraRed CLI tool
 =================
-
+simple check
 Reduce users' dependency on external CLI tools (Ansible and others).
 
 Setup
