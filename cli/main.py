@@ -3,11 +3,10 @@
 import logging
 import os
 
+import clg
 import yaml
 
-# logger creation is first thing to be done
-from cli import logger
-
+from cli import logger  # logger creation is first thing to be done
 from cli import conf
 from cli import options as cli_options
 from cli import execute
@@ -18,20 +17,17 @@ import cli.yamls
 LOG = logger.LOG
 CONF = conf.config
 
+NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output-file',
+                        'input-files']
+
 
 def main():
-    options_trees = []
     settings_files = []
     settings_dir = utils.validate_settings_dir(
         CONF.get('DEFAULTS', 'SETTINGS_DIR'))
 
-    for option in CONF.options('ROOT_OPTS'):
-        options_trees.append(cli_options.OptionsTree(settings_dir, option))
-
-    parser = parse.create_parser(options_trees)
-    args = parser.parse_args()
-
-    verbose = int(args.verbose)
+    cmd = clg.CommandLine(yaml.load(open(CONF.get('DEFAULTS', 'SPEC_FILE'))))
+    args = cmd.parse()
 
     if args.verbose == 0:
         args.verbose = logging.WARNING
@@ -42,80 +38,37 @@ def main():
 
     LOG.setLevel(args.verbose)
 
-    # settings generation stage
-    if args.which.lower() != 'execute':
-        for input_file in args.input:
-            settings_files.append(utils.normalize_file(input_file))
+    provision_dir = os.path.join(settings_dir, 'provisioner', args['command0'])
 
-        for options_tree in options_trees:
-            options = {key: value for key, value in vars(args).iteritems()
-                       if value and key.startswith(options_tree.name)}
+    for input_file in args['input-files'] or []:
+        settings_files.append(utils.normalize_file(input_file))
 
-            settings_files += (options_tree.get_options_ymls(options))
-
-        LOG.debug("All settings files to be loaded:\n%s" % settings_files)
-
-        cli.yamls.Lookup.settings = utils.generate_settings(settings_files,
-                                                            args.extra_vars)
-
-        # explicitly call to 'in_string_lookup' to create Lookup object
-        cli.yamls.Lookup.in_string_lookup()
-
-        LOG.debug("Dumping settings...")
-        output = yaml.safe_dump(cli.yamls.Lookup.settings,
-                                default_flow_style=False)
-
-        if args.output_file:
-            with open(args.output_file, 'w') as output_file:
-                output_file.write(output)
-        else:
-            print output
-
-    exec_playbook = (args.which == 'execute') or \
-                    (not args.dry_run and args.which in CONF.options(
-                        'AUTO_EXEC_OPTS'))
-
-    # playbook execution stage
-    if exec_playbook:
-        if args.which == 'execute':
-            execute_args = parser.parse_args()
-        elif args.which not in execute.PLAYBOOKS:
-            LOG.debug("No playbook named \"%s\", nothing to execute.\n"
-                      "Please choose from: %s" % (args.which,
-                                                  execute.PLAYBOOKS))
-            return
-        else:
-            args_list = ["execute"]
-            if verbose:
-                args_list.append('-%s' % ('v' * verbose))
-            if 'inventory' in args:
-                inventory = args.inventory
+    for key, val in vars(args).iteritems():
+        if val is not None and key not in NON_SETTINGS_OPTIONS:
+            if key == 'distro':
+                settings_files.append(os.path.join(settings_dir, 'distro',
+                                                   val + '.yml'))
             else:
-                inventory = 'local_hosts' if args.which == 'provision' \
-                    else 'hosts'
-            args_list.append('--inventory=%s' % inventory)
-            args_list.append('--' + args.which)
-            args_list.append('--collect-logs')
-            if args.output_file:
-                LOG.debug('Using the newly created settings file: "%s"'
-                          % args.output_file)
-                args_list.append('--settings=%s' % args.output_file)
-            else:
-                with open(conf.TMP_OUTPUT_FILE, 'w') as output_file:
-                    output_file.write(output)
-                LOG.debug('Temporary settings file "%s" has been created for '
-                          'execution purpose only.' % conf.TMP_OUTPUT_FILE)
-                args_list.append('--settings=%s' % conf.TMP_OUTPUT_FILE)
+                settings_files.append(os.path.join(provision_dir, key,
+                                                   val + '.yml'))
 
-            execute_args = parser.parse_args(args_list)
+    LOG.debug("All settings files to be loaded:\n%s" % settings_files)
 
-        LOG.debug("execute parser args: %s" % args)
-        execute_args.func(execute_args)
+    cli.yamls.Lookup.settings = utils.generate_settings(settings_files,
+                                                        args['extra-vars'])
 
-        if not args.output_file and args.which != 'execute':
-            LOG.debug('Temporary settings file "%s" has been deleted.'
-                      % conf.TMP_OUTPUT_FILE)
-            os.remove(conf.TMP_OUTPUT_FILE)
+    cli.yamls.Lookup.in_string_lookup()
+
+    LOG.debug("Dumping settings...")
+
+    output = yaml.safe_dump(cli.yamls.Lookup.settings,
+                            default_flow_style=False)
+
+    if args['output-file']:
+        with open(args.output_file, 'w') as output_file:
+            output_file.write(output)
+    else:
+        print output
 
 
 if __name__ == '__main__':
