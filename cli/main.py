@@ -98,7 +98,7 @@ def main():
         LOG.debug("execute parser args: %s" % execute_args)
         execute_args.func(execute_args)
 
-        if not args['output-file'] and args.which != 'execute':
+        if not args['output-file']:
             LOG.debug('Temporary settings file "%s" has been deleted.'
                       % conf.TMP_OUTPUT_FILE)
             os.remove(conf.TMP_OUTPUT_FILE)
