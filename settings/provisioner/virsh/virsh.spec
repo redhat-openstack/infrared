@@ -14,33 +14,19 @@ subparsers:
             hypervisor:
                 type: str
                 help: Hypervisor
-                choices: [default]
                 required: True
             network:
                 type: str
                 help: Network
-                choices: [default]
                 default: default
             image:
                 type: str
                 help: An image to provision the systems with
-                choices: [rhel]
                 default: rhel
             topology:
                 type: str
                 help: 'Provision topology (default: __DEFAULT__)'
                 default: all-in-one
-                choices: [
-                    all-in-one,
-                    multi-node,
-                    ospd_1ctrl_1cmpt,
-                    ospd_1cont_1comp_1ceph,
-                    ospd_3cont_1comp,
-                    ospd_3cont_1comp_1ceph,
-                    ospd_3cont_1comp_3ceph,
-                    ospd_3cont_2comp,
-                    ospd_3cont_2comp_3ceph,
-                    ]
             dry-run:
                 action: store_true
                 help: Only generate settings, skip the playbook execution stage
