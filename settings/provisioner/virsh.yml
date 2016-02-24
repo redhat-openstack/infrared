@@ -3,6 +3,12 @@
 provisioner:
     type: virsh
 
+    hosts:
+        host1:
+            name: virthost
+            groups:
+                - virthost
+
     packages:
         - libvirt
         - qemu-kvm
@@ -14,3 +20,14 @@ provisioner:
         - virt-viewer
         - libguestfs-xfs
         - sshpass
+
+distro:
+    name: rhel
+    full_version: "7.2"
+    version:
+        major: '7'
+        minor: '2'
+
+workarounds:
+    rhbz1265306:
+        enabled: true
