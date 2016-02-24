@@ -50,12 +50,8 @@ def main():
 
     for key, val in vars(args).iteritems():
         if val is not None and key not in NON_SETTINGS_OPTIONS:
-            if key == 'distro':
-                settings_files.append(os.path.join(settings_dir, 'distro',
-                                                   val + '.yml'))
-            else:
-                settings_files.append(os.path.join(provision_dir, key,
-                                                   val + '.yml'))
+            settings_files.append(os.path.join(
+                provision_dir, key, val + '.yml'))
 
     LOG.debug("All settings files to be loaded:\n%s" % settings_files)
 

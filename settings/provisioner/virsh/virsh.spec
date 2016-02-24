@@ -61,7 +61,3 @@ subparsers:
                 short: e
                 help: Extra variables to be merged last
                 type: str
-            distro:
-                type: str
-                help: 'Operating system distribution'
-                choices: [rhel-7.2]
