@@ -18,7 +18,7 @@ LOG = logger.LOG
 CONF = conf.config
 
 NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output-file',
-                        'input-files', 'dry-run']
+                        'input-files', 'dry-run', 'cleanup']
 
 
 def main():
@@ -82,7 +82,8 @@ def main():
             args_list.append('-%s' % ('v' * verbose))
         args_list.append('--inventory=local_hosts')
         args_list.append('--provision')
-        args_list.append('--collect-logs')
+        if args['cleanup']:
+            args_list.append('--cleanup')
         if args['output-file']:
             LOG.debug('Using the newly created settings file: "%s"'
                       % args['output-file'])
