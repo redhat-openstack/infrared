@@ -184,7 +184,7 @@ def _parse_output(module, stdout):
         repodir=repodir,
         files=list(filenames),
         releases=installed_releases,
-        stdout=stdout.splitlines()
+        stdout=stdout
     )
 
 
@@ -219,7 +219,7 @@ def main():
     module = AnsibleModule(
         argument_spec = dict(
             state=dict(default="pinned", choices=['absent', 'pinned', 'rolling'], required=False),
-            release=dict(required=True),
+            release=dict(required=False),
             dest=dict(default=None, required=False),
             distro=dict(default=None, required=False),
             repo_type=dict(default="puddle", choices=['puddle', 'poodle'], required=False),
