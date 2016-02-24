@@ -46,7 +46,7 @@ def main():
         settings_files.append(utils.normalize_file(input_file))
 
     settings_files.append(os.path.join(provision_dir,
-                                       '../' + args['command0'] + '.yml'))
+                                       args['command0'] + '.yml'))
 
     for key, val in vars(args).iteritems():
         if val is not None and key not in NON_SETTINGS_OPTIONS:
