@@ -1,19 +1,9 @@
 ---
 
 provisioner:
-    type: virsh
-
-    hosts:
-        host1:
-            name: virthost
-            ssh_host: "{{ MANDATORY_FIELD }}"
-            ssh_user: root
-            ssh_key_file: ~/.ssh/id_rsa
-            groups:
-                - virthost
-
     network:
         network_list:
+            # todo: same as hyp
             data:
                 name: "provisioning"
                 ip_address: "172.16.0.254"
@@ -48,19 +38,3 @@ provisioner:
                 floating_ip:
                     start: "192.168.1.101"
                     end: "192.168.1.150"
-
-    packages:
-        - libvirt
-        - qemu-kvm
-        - virt-manager
-        - virt-install
-        - libguestfs-tools
-        - xorg-x11-apps
-        - xauth
-        - virt-viewer
-        - libguestfs-xfs
-        - sshpass
-
-defaults:
-    image: rhel
-    topology: all-in-one
