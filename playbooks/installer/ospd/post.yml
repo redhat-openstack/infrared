@@ -13,27 +13,25 @@
             dest: "{{ inventory_dir }}/keystonerc"
             flat: yes
 
-- name: Check if RHBZ1304367 is enabled
+- name: Apply workarounds if necessary
   hosts: undercloud
-  gather_facts: no
-  sudo: no
-  tasks:
-    - group_by: key=workaround_rhbz1304367
-      when: workarounds.rhbz1304367 is defined and groups['ceph'] is defined
-
-- name: "Workaround RHBZ1304367: overcloud deployment finished successfully and Ceph's OSDs are down"
-  hosts: workaround_rhbz1304367
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
-  tasks:
-      - name: Get the ceph nodes IPs
-        shell: "source ~/stackrc; nova list | awk '/ceph/ {print $12}' | grep -oP '[0-9.]+'"
-        register: ip_list
-
-      - name: Workaround for CEPH
-        shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ item }} 'sudo systemctl restart ceph'"
-        with_items: ip_list.stdout_lines
+  roles:
+      - {role: workarounds/rhbz1304367, when: workarounds.rhbz1304367 is defined and 'ceph' in groups }
+#  tasks:
+#      # TODO: Move to role
+#      - name: Get the controller nodes IPs
+#        shell: "source ~/stackrc; nova list | awk '/controller/ {print $12}' | grep -oP '[0-9.]+'"
+#        register: ip_list
+#
+#      - name: Workaround for Controllers
+#        shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ item }} 'sudo crudini  --set /etc/swift/container-server.conf app:container-server allow_versions true'"
+#        with_items: ip_list.stdout_lines
+#
+#      - name: restart swift
+#        shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ item }} 'sudo systemctl restart openstack-swift*'"
 
 #TODO: remove this when the templating system is in place
 - name: External network creation
@@ -43,10 +41,10 @@
   become_user: "{{ installer.user.name }}"
   tasks:
       - name: create the external network
-        shell: "source ~/overcloudrc; neutron net-create public --router:external --provider:physical_network datacentre --provider:network_type flat"
+        shell: "source ~/overcloudrc; neutron net-create nova --router:external --provider:physical_network datacentre --provider:network_type flat"
 
       - name: create the external subnet
-        shell: "source ~/overcloudrc; neutron subnet-create public 192.168.1.0/24 --name management_subnet --enable-dhcp=False --allocation-pool start=192.168.1.210,end=192.168.1.250 --gateway 192.168.1.1"
+        shell: "source ~/overcloudrc; neutron subnet-create nova 192.168.1.0/24 --name external_subnet --enable-dhcp=False --allocation-pool start=192.168.1.210,end=192.168.1.250 --gateway 192.168.1.1"
 
 #TODO: remove this when tester is in place
 - name: Setup and run tempest
@@ -61,7 +59,7 @@
         shell: "mkdir tempest-dir"
 
       - name: setup the tempest-dir
-        shell: "/usr/share/openstack-tempest-kilo/tools/configure-tempest-directory"
+        shell: "/usr/share/openstack-tempest-{{ product.version.code_name }}/tools/configure-tempest-directory"
         args:
             chdir: "~/tempest-dir"
 
@@ -86,5 +84,3 @@
             src: "~/tempest-dir/tempest.xml"
             dest: "{{ lookup('env', 'PWD') }}/nosetests.xml"
             flat: yes
-
-
