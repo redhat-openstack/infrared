@@ -50,8 +50,13 @@ def main():
 
     for key, val in vars(args).iteritems():
         if val is not None and key not in NON_SETTINGS_OPTIONS:
-            settings_files.append(os.path.join(
-                provision_dir, key, val + '.yml'))
+            settings_file = os.path.join(provision_dir, key, val + '.yml')
+            LOG.debug('Searching settings file for the "%s" key...' % key)
+            if not os.path.isfile(settings_file):
+                settings_file = utils.normalize_file(val)
+            settings_files.append(settings_file)
+            LOG.debug('"%s" was added to settings files list as an argument '
+                      'for "%s" key' % (settings_file, key))
 
     LOG.debug("All settings files to be loaded:\n%s" % settings_files)
 
