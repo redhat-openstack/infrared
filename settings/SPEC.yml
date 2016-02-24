@@ -11,28 +11,11 @@ subparsers:
     virsh:
         help: Provision systems using 'virsh'
         options:
-            dry-run:
-                action: store_true
-                help: Only generate settings, skip the playbook execution stage
-            input-files:
-                action: append
-                type: str
-                help: Settings file to be merged first
-                short: n
-            output-file:
-                type: str
-                short: o
-                help: 'Name for the generated settings file (default: stdout)'
-            extra-vars:
-                action: append
-                short: e
-                help: Extra variables to be merged last
-                type: str
             hypervisor:
                 type: str
                 help: Hypervisor
                 choices: [default]
-                default: default
+                required: True
             network:
                 type: str
                 help: Network
@@ -58,6 +41,26 @@ subparsers:
                     ospd_3cont_2comp,
                     ospd_3cont_2comp_3ceph,
                     ]
+            dry-run:
+                action: store_true
+                help: Only generate settings, skip the playbook execution stage
+            cleanup:
+                action: store_true
+                help: Clean up environment at the end
+            input-files:
+                action: append
+                type: str
+                help: Settings file to be merged first
+                short: n
+            output-file:
+                type: str
+                short: o
+                help: 'Name for the generated settings file (default: stdout)'
+            extra-vars:
+                action: append
+                short: e
+                help: Extra variables to be merged last
+                type: str
             distro:
                 type: str
                 help: 'Operating system distribution'
