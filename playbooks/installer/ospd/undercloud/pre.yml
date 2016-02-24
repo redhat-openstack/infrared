@@ -18,21 +18,23 @@
     - name: install the rhos-release RPM
       shell: "yum localinstall -y {{ product.rpm }}"
 
-    - debug:
-          msg: "rhos-release {{ installer.version.major }}-director -p {{ installer.build }}"
-
     - name: create necessary repos with for director using rhos-release
-      command: "rhos-release {{ installer.version.major }}-director -p {{ installer.build }}"
+      rhos-release:
+          state: "pinned"
+          repo_type: "puddle"
+          release: "{{ product.version.major }}-director"
+          version: "{{ installer.build }}"
       register: command_result
-      until: command_result.stderr.find('Connection reset by peer') == -1
+      until: command_result.msg.find('Connection reset by peer') == -1
       retries: 40
       delay: 5
 
-    - debug:
-          msg: "rhos-release {{ product.version.major }} -p {{ product.build }}"
-
     - name: create necessary repos for core using rhos-release
-      command: "rhos-release {{ product.version.major }} -p {{ product.build }}"
+      rhos-release:
+          state: "pinned"
+          repo_type: "puddle"
+          release: "{{ product.version.major }}-director"
+          version: "{{ product.build }}"
 
     - name: update system packages
       shell: "yum update -y"
