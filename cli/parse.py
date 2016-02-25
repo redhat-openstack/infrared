@@ -38,8 +38,7 @@ def create_parser(options_trees):
     execute_parser.add_argument("--settings",
                                 type=lambda file_path: utils.normalize_file(
                                     file_path),
-                                help="settings file to use. default: %s"
-                                     % conf.IR_SETTINGS_YML)
+                                help="settings file to use.")
     execute_parser.set_defaults(func=execute.ansible_wrapper)
     execute_parser.set_defaults(which='execute')
 
