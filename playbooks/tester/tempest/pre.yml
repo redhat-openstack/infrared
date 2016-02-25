@@ -1,0 +1,27 @@
+---
+- name: Configure tempest
+  hosts: tester
+  gather_facts: yes
+  roles:
+      - {role: tester/tempest/setup/git, when: tester.setup == "git"}
+      - {role: tester/tempest/setup/rpm, when: tester.setup == "rpm"} #WIP
+  tasks:
+      - name: create a command to use tempest with our venv if needed
+        copy:
+          dest: "{{ tester.dir }}/with_venv"
+          mode: 0755
+          content: |
+            #!/bin/bash
+            cd "$(dirname $0)"
+            [[ -d .venv ]] && source .venv/bin/activate
+            exec "$@"
+
+      - name: copy the keystonerc to the tester
+        copy:
+            src: "{{ inventory_dir }}/keystonerc"
+            dest: "~/keystonerc"
+
+      - name: run tempest configuration tool
+        shell: "source ~/keystonerc; ./with_venv tools/config_tempest.py --deployer-input ~/tempest-deployer-input.conf --debug --create identity.uri $OS_AUTH_URL identity.admin_password $OS_PASSWORD"
+        args:
+            chdir: "~/tempest-dir"

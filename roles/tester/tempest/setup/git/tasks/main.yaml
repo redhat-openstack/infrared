@@ -1,0 +1,35 @@
+- name: Install pip
+  command: "easy_install pip"
+
+- name: Install devel packages for package build dependencies
+  yum:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ tester.packages }}"
+
+- name: Install tempest from source
+  git:
+      repo: "{{ tester.git.repo }}"
+      version: "{{ tester.git.revision | default('HEAD') }}"
+      dest: "{{ tester.dir }}"
+  register: tempest_repo
+
+- name: Print repo version
+  command: "git log -1 --pretty=format:%h"
+  args:
+      chdir: "{{ tester.dir }}"
+  register: tempest_repo_version
+
+- debug: "msg='Build mark: tempest={{ tempest_repo_version.stdout }}'"
+
+- name: install virtualenv
+  command: "python {{ tester.dir }}/tools/install_venv.py {{ tester.dir }}"
+  when: tempest_repo|changed or tempest_local_dir|changed
+
+- name: Install extra pip requirements
+  pip:
+      name: "{{ item }}"
+      state: present
+      virtualenv: "~/{{ tester.dir }}/.venv"
+  with_items: "{{ tester.pip_packages }}"
+  when: tempest_repo|changed or tempest_local_dir|changed

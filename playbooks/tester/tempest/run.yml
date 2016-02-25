@@ -1,0 +1,38 @@
+---
+- name: Run tempest
+  hosts: tester
+  gather_facts: no
+  tasks:
+      - name: remove old test list
+        file:
+            state: absent
+            name: "{{ tester.dir }}/skipfile"
+
+      - name: create Test List - Whitelist
+        lineinfile:
+            create: yes
+            dest: "{{ tester.dir }}/skipfile"
+            line: "+{{ item }}"
+            regexp: "^[-+]{{ item }}$"
+        with_items: tester.tempest.whitelist
+        register: wlist
+        when: tester.tempest.whitelist is defined and tester.tempest.whitelist
+
+      - name: create Test List - Blacklist
+        lineinfile:
+            create: yes
+            dest: "{{ tester.dir }}/skipfile"
+            line: "-{{ item }}"
+            regexp: "^[-+]{{ item }}$"
+        with_items: tester.tempest.blacklist
+        when: tester.tempest.blacklist is defined and tester.tempest.blacklist
+
+      - name: add skipfile invocation
+        set_fact:
+            skipfile: "--skip-file ./skipfile"
+        when: (tester.tempest.whitelist is defined and tester.tempest.whitelist) or (tester.tempest.blacklist is defined and tester.tempest.blacklist)
+
+      - name: run tempest
+        shell: "{{ tester.dir }}/with_venv ./tools/run-tests.sh {{ tester.tempest.testr_args|default('') }} {{ tester.tempest.test_regex }} {{ skipfile|default('') }}"
+        ignore_errors: true
+        when: tester.tempest.test_regex is defined or skipfile is defined

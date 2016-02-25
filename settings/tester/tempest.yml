@@ -1,0 +1,26 @@
+---
+
+tester:
+    type: tempest
+    dir: tempest-dir
+    guest_image:
+        url: "{{ !lookup tester.images.cirros.url }}"
+    threads: 8
+    tempest:
+        testr_args: "--parallel --concurrency={{ !lookup tester.threads }}"
+
+    images:
+        cirros:
+            name: cirros-0.3.4-x86_64-disk
+            url: http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
+
+job:
+    archive:
+        - '{{ tester.dir }}/etc/tempest.conf'
+        - '{{ tester.dir }}/etc/tempest.conf.sample'
+        - '{{ tester.dir }}/*.log'
+        - '{{ tester.dir }}/*.xml'
+
+defaults:
+    setup: git
+    tests: none

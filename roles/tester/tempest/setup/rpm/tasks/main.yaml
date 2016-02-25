@@ -1,0 +1,32 @@
+- name: Install tempest from rpm
+  yum:
+      name: "openstack-tempest"
+      state: present
+  register: tempest_rpm
+
+- name: list tempest version
+  command: "rpm -q --qf %{VERSION} openstack-tempest"
+  register: tempest_rpm_version
+
+- name: list tempest release
+  command: "rpm -q --qf %{RELEASE} openstack-tempest"
+  register: tempest_rpm_release
+
+- debug: "msg='Build mark: tempest={{ tempest_rpm_version.stdout }}-{{ tempest_rpm_release.stdout }}'"
+
+# TODO(psedlak): make subunit2junitxml usage opt. in script, add the flag for run-tests.sh in run.yml after that
+- name: Install subunit filters - needed for subunit2junitxml
+  yum:
+      name: "subunit-filters"
+      state: present
+
+- name: Create the tempest directory
+  file:
+      dest: "{{ tester.dir }}"
+      state: directory
+
+- name: Initialize tempest workspace directory
+  command: "/usr/share/openstack-tempest-{{ tempest_rpm_version.stdout }}/tools/configure-tempest-directory"
+  args:
+      chdir: "~/{{ tester.dir }}"
+      creates: "~/{{ tester.dir }}/LICENSE"
