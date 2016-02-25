@@ -18,7 +18,7 @@ PROVISION = "provision"
 PLAYBOOKS = [PROVISION, "install", "test", "collect-logs", "cleanup"]
 
 assert "playbooks" == path.basename(
-    CONF.get('dirs', 'playbooks_dir')), "Bad path to playbooks"
+    CONF.get('defaults', 'playbooks')), "Bad path to playbooks"
 
 
 # ansible-playbook
@@ -52,7 +52,8 @@ def execute_ansible(playbook, args):
     hosts = args.inventory or (LOCAL_HOSTS if playbook == PROVISION
                                else HOSTS_FILE)
     playbook = playbook.replace("-", "_") + ".yml"
-    path_to_playbook = path.join(CONF.get('dirs', 'playbooks_dir'), playbook)
+    path_to_playbook = path.join(
+        CONF.get('defaults', 'playbooks'), playbook)
 
     # From ansible-playbook:
     stats = callbacks.AggregateStats()
@@ -68,7 +69,7 @@ def execute_ansible(playbook, args):
         verbose=ansible.utils.VERBOSITY
     )
 
-    module_path = CONF.get('dirs', 'modules_dir')
+    module_path = CONF.get('defaults', 'modules')
 
     pb = ansible.playbook.PlayBook(
         # From ansible-playbook:

@@ -25,10 +25,11 @@ def main():
     settings_files = []
 
     settings_dir = utils.validate_settings_dir(
-        CONF.get('dirs', 'settings_dir'))
+        CONF.get('defaults', 'settings'))
 
-    cmd = clg.CommandLine(yaml.load(open(os.path.join(
-        CONF.get('dirs', 'settings_dir'), 'provisioner/virsh/virsh.spec'))))
+    spec_file = 'provisioner/virsh/virsh.spec'
+    cmd = clg.CommandLine(yaml.load(open(os.path.join(CONF.get(
+        'defaults', 'settings'), spec_file))))
     args = cmd.parse()
 
     verbose = int(args.verbose)
