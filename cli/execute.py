@@ -9,6 +9,7 @@ from ansible import callbacks
 from cli import conf, exceptions, logger
 
 LOG = logger.LOG
+CONF = conf.config
 
 VERBOSITY = 0
 HOSTS_FILE = "hosts"
@@ -16,8 +17,8 @@ LOCAL_HOSTS = "local_hosts"
 PROVISION = "provision"
 PLAYBOOKS = [PROVISION, "install", "test", "collect-logs", "cleanup"]
 
-assert "playbooks" == path.basename(conf.PLAYBOOKS_DIR), \
-    "Bad path to playbooks"
+assert "playbooks" == path.basename(
+    CONF.get('dirs', 'playbooks_dir')), "Bad path to playbooks"
 
 
 # ansible-playbook
@@ -51,7 +52,7 @@ def execute_ansible(playbook, args):
     hosts = args.inventory or (LOCAL_HOSTS if playbook == PROVISION
                                else HOSTS_FILE)
     playbook = playbook.replace("-", "_") + ".yml"
-    path_to_playbook = path.join(conf.PLAYBOOKS_DIR, playbook)
+    path_to_playbook = path.join(CONF.get('dirs', 'playbooks_dir'), playbook)
 
     # From ansible-playbook:
     stats = callbacks.AggregateStats()
@@ -67,8 +68,7 @@ def execute_ansible(playbook, args):
         verbose=ansible.utils.VERBOSITY
     )
 
-    module_path = None if not hasattr(conf, 'MODULES_DIR') else \
-        conf.MODULES_DIR
+    module_path = CONF.get('dirs', 'modules_dir')
 
     pb = ansible.playbook.PlayBook(
         # From ansible-playbook:

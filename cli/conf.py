@@ -1,6 +1,7 @@
 import ConfigParser
 import os
 import time
+from os.path import dirname
 
 from cli import exceptions
 
@@ -9,8 +10,7 @@ IR_CONF_FILE = 'infrared.cfg'
 CWD_PATH = os.path.join(os.getcwd(), IR_CONF_FILE)
 USER_PATH = os.path.expanduser('~/.' + IR_CONF_FILE)
 SYSTEM_PATH = os.path.join('/etc/infrared', IR_CONF_FILE)
-YAML_EXT = ".yml"
-TMP_OUTPUT_FILE = 'ir_settings_' + str(time.time()) + YAML_EXT
+TMP_OUTPUT_FILE = 'ir_settings_%s.yml' % str(time.time())
 INFRARED_DIR_ENV_VAR = 'IR_SETTINGS'
 
 
@@ -19,12 +19,18 @@ def load_config_file():
 
     :return ConfigParser: config object
     """
-    _config = ConfigParser.ConfigParser(allow_no_value=True)
+
+    # create a parser with default path to InfraRed's main dir
+    _config = ConfigParser.SafeConfigParser(
+        {'infrared_dir': dirname(dirname(__file__))}
+    )
+
     env_path = os.getenv(ENV_VAR_NAME, None)
     if env_path is not None:
         env_path = os.path.expanduser(env_path)
         if os.path.isdir(env_path):
             env_path = os.path.join(env_path, IR_CONF_FILE)
+
     for path in (env_path, CWD_PATH, USER_PATH, SYSTEM_PATH):
         if path is not None and os.path.exists(path):
             _config.read(path)
@@ -38,6 +44,3 @@ def load_config_file():
 
 
 config = load_config_file()
-
-for dir_path in config.options('DEFAULTS'):
-    globals()[dir_path.upper()] = config.get('DEFAULTS', dir_path)
