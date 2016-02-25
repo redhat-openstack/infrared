@@ -8,17 +8,15 @@ import yaml
 
 from cli import logger  # logger creation is first thing to be done
 from cli import conf
-from cli import options as cli_options
-from cli import execute
-from cli import parse
 from cli import utils
 import cli.yamls
+import cli.execute
 
 LOG = logger.LOG
 CONF = conf.config
 
 NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output-file',
-                        'input-files', 'dry-run', 'cleanup']
+                        'input-files', 'dry-run', 'cleanup', 'inventory']
 
 
 def main():
@@ -81,35 +79,11 @@ def main():
 
     # playbook execution stage
     if not args['dry-run']:
-        args_list = ["execute"]
-        if verbose:
-            args_list.append('-%s' % ('v' * verbose))
-        args_list.append('--inventory=local_hosts')
-        if args['cleanup']:
-            args_list.append('--cleanup')
-        else:
-            args_list.append('--provision')
-        if args['output-file']:
-            LOG.debug('Using the newly created settings file: "%s"'
-                      % args['output-file'])
-            args_list.append('--settings=%s' % args['output-file'])
-        else:
-            with open(conf.TMP_OUTPUT_FILE, 'w') as output_file:
-                output_file.write(output)
-            LOG.debug('Temporary settings file "%s" has been created for '
-                      'execution purpose only.' % conf.TMP_OUTPUT_FILE)
-            args_list.append('--settings=%s' % conf.TMP_OUTPUT_FILE)
+        vars(args)['settings'] = cli.yamls.Lookup.settings
+        if not args['cleanup']:
+            vars(args)['provision'] = True
 
-        parser = cli.parse.create_parser(list())
-        execute_args = parser.parse_args(args_list)
-
-        LOG.debug("execute parser args: %s" % execute_args)
-        execute_args.func(execute_args)
-
-        if not args['output-file']:
-            LOG.debug('Temporary settings file "%s" has been deleted.'
-                      % conf.TMP_OUTPUT_FILE)
-            os.remove(conf.TMP_OUTPUT_FILE)
+        cli.execute.ansible_wrapper(args)
 
 
 if __name__ == '__main__':

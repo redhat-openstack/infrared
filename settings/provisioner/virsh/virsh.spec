@@ -6,6 +6,11 @@ options:
         short: v
         action: count
         default: 0
+    inventory:
+        help: 'Inventory file'
+        short: i
+        type: str
+        default: local_hosts
 
 subparsers:
     virsh:
