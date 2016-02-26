@@ -3,7 +3,6 @@
 import logging
 import os
 
-import clg
 import yaml
 
 from cli import logger  # logger creation is first thing to be done
@@ -23,8 +22,7 @@ NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output-file',
 
 def main():
     spec_manager = conf.SpecManager(CONF)
-    cmd = clg.CommandLine(spec_manager.get_specs('provisioner'))
-    args = cmd.parse()
+    args = spec_manager.parse_args("provisioner")
 
     settings_files = []
     settings_dir = utils.validate_settings_dir(

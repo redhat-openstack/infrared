@@ -1,6 +1,7 @@
 import ConfigParser
 import time
 
+import clg
 import os
 import yaml
 from cli import exceptions
@@ -64,6 +65,14 @@ class SpecManager(object):
             spec = yaml.load(open(spec_file))
             utils.dict_merge(res, spec)
         return res
+
+    def parse_args(self, module_name):
+        """
+        Looks for all the specs for specified module
+        and parses the commandline input arguments accordingly.
+        """
+        cmd = clg.CommandLine(self.get_specs(module_name))
+        return cmd.parse()
 
     def __get_all_specs(self, subfolder=None):
         root_dir = utils.validate_settings_dir(
