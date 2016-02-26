@@ -37,6 +37,21 @@ def dict_insert(dic, val, key, *keys):
     dict_insert(dic.setdefault(key, {}), val, *keys)
 
 
+def dict_merge(first, second):
+    """
+
+    :param first:
+    :param second:
+    :return:
+    """
+    if isinstance(first, dict) and isinstance(second, dict):
+        for k,v in second.iteritems():
+            if k not in first:
+                first[k] = v
+            else:
+                first[k] = dict_merge(first[k],v)
+    return first
+
 # TODO: remove "settings" references in project
 def validate_settings_dir(settings_dir=None):
     """Checks & returns the full path to the settings dir.

@@ -22,15 +22,13 @@ NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output-file',
 
 
 def main():
-    settings_files = []
+    spec_manager = conf.SpecManager(CONF)
+    cmd = clg.CommandLine(spec_manager.get_specs('provisioner'))
+    args = cmd.parse()
 
+    settings_files = []
     settings_dir = utils.validate_settings_dir(
         CONF.get('defaults', 'settings'))
-
-    spec_file = 'provisioner/virsh/virsh.spec'
-    cmd = clg.CommandLine(yaml.load(open(os.path.join(CONF.get(
-        'defaults', 'settings'), spec_file))))
-    args = cmd.parse()
 
     verbose = int(args.verbose)
 
