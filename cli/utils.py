@@ -38,16 +38,17 @@ def dict_insert(dic, val, key, *keys):
 
 
 def dict_merge(first, second):
-    """
-    Merge second dict to a first dict.
+    """ Given two dict objects, this function returns
+    a dict that is the result of merging them into one.
     """
     if isinstance(first, dict) and isinstance(second, dict):
-        for k,v in second.iteritems():
-            if k not in first:
-                first[k] = v
+        for key, value in second.iteritems():
+            if key not in first:
+                first[key] = value
             else:
-                first[k] = dict_merge(first[k],v)
+                first[key] = dict_merge(first[key], value)
     return first
+
 
 # TODO: remove "settings" references in project
 def validate_settings_dir(settings_dir=None):

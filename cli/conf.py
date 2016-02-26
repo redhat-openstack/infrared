@@ -66,13 +66,15 @@ class SpecManager(object):
         return res
 
     def __get_all_specs(self, subfolder=None):
-        root_dir = utils.validate_settings_dir(self.config.get('defaults', 'settings'))
+        root_dir = utils.validate_settings_dir(
+            self.config.get('defaults', 'settings'))
         if subfolder:
             root_dir = os.path.join(root_dir, subfolder)
 
         res = []
         for dirpath, _, filenames in os.walk(root_dir):
-            for filename in [f for f in filenames if f.endswith(self.SPEC_EXTENSION)]:
+            for filename in [f for f in filenames
+                             if f.endswith(self.SPEC_EXTENSION)]:
                 res.append(os.path.join(dirpath, filename))
 
         return res
