@@ -39,10 +39,7 @@ def dict_insert(dic, val, key, *keys):
 
 def dict_merge(first, second):
     """
-
-    :param first:
-    :param second:
-    :return:
+    Merge second dict to a first dict.
     """
     if isinstance(first, dict) and isinstance(second, dict):
         for k,v in second.iteritems():
