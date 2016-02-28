@@ -46,7 +46,8 @@ def test_product_repo(args, output):
       "isolation": {
           "enable": "no"},
       "ssl": "no"}),
-    ("--network-protocol ipv6 --network-isolation yes --network-variant sriov --ssl yes",
+    ("--network-protocol ipv6 --network-isolation yes --network-variant "
+     "sriov --ssl yes",
      {"protocol": "ipv6",
       "backend": "sriov",
       "isolation": {
@@ -105,6 +106,7 @@ def test_set_image(args, output):
     args = install.get_args(args=args.split(" "))
     images = install.set_image(args)
     assert images["installer"]["overcloud"]["images"] == output
+
 
 def test_set_image_build():
     from cli import exceptions

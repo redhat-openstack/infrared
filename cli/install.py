@@ -28,7 +28,7 @@ def get_settings_dir(args=None):
     :returns: path to settings dir. if args, return path to parser settings
         dir. If args.command0 exists, return path to subparser settings dir.
     """
-    settings_dir =  utils.validate_settings_dir(
+    settings_dir = utils.validate_settings_dir(
         CONF.get('defaults', 'settings'))
     if args:
         settings_dir = os.path.join(settings_dir,
@@ -66,7 +66,6 @@ def main():
 
     LOG.setLevel(args.verbose)
 
-
     for input_file in args['input-files'] or []:
         settings_files.append(utils.normalize_file(input_file))
 
@@ -87,8 +86,8 @@ def main():
     storage_template = yaml.load(
         open(set_network_template(
             settings_dict["installer"]["overcloud"]["storage"]["template"],
-                                  os.path.join(get_settings_dir(args),
-                                               "storage", "templates"))))
+            os.path.join(get_settings_dir(args),
+                         "storage", "templates"))))
     settings_dict["installer"]["overcloud"]["storage"]["template"] = \
         storage_template
 
@@ -109,7 +108,6 @@ def main():
             output_file.write(output)
     else:
         print output
-
 
     # playbook execution stage
     if not args['dry-run']:
