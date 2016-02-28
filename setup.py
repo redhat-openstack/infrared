@@ -12,8 +12,8 @@ install_reqs = req.parse_requirements('requirements.txt', session=False)
 reqs = [str(ir.req) for ir in install_reqs]
 
 # InfraRed scripts
-cmds = ('provision', 'install', 'test')
-scripts = ['ir-' + cmd for cmd in cmds]
+# cmds = ('provision', 'install', 'test')
+# scripts = ['ir-' + cmd for cmd in cmds]
 
 prj_dir = dirname(abspath(__file__))
 setup(
@@ -22,7 +22,8 @@ setup(
     packages=find_packages(),
     long_description=open(join(prj_dir, 'README.rst')).read(),
     entry_points={
-        'console_scripts': [script + ' = cli.main:main' for script in scripts]
+        'console_scripts': ["ir-provision = cli.provision:main",
+                            "ir-install = cli.install:main"]
     },
     install_requires=reqs,
     author='Yair Fried',

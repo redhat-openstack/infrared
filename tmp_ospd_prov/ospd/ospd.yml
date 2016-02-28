@@ -32,8 +32,12 @@ installer:
             - ' -A INPUT -p udp --sport 123 -m comment --comment "006 QA incoming NTP" -j ACCEPT'
             - ' -P INPUT DROP'
 
-product:
-    rpm: http://rhos-release.virt.bos.redhat.com/repos/rhos-release/rhos-release-latest.noarch.rpm
+defaults:
+    build: latest
+    images: import
+    network: no-isolation
+    version: 7
+    ssl: "no"
 
 workarounds:
     rhbz1304367:
