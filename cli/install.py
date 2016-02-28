@@ -1,49 +1,59 @@
 #!/usr/bin/env python
 
 import logging
-
 import os
 
-import clg
-import sys
 import yaml
 
 from cli import logger  # logger creation is first thing to be done
 from cli import conf
-from cli import options as cli_options
-from cli import execute
 from cli import exceptions
-from cli import parse
 from cli import utils
 import cli.yamls
+import cli.execute
+
+ENTRY_POINT = "installer"
 
 LOG = logger.LOG
 CONF = conf.config
 
 NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output-file',
-                        'input-files', 'dry-run', 'cleanup']
+                        'input-files', 'dry-run', 'cleanup', 'inventory']
 
 
-# todo(yfried): remove this
-TMP_SETTINGS_DIR = "/home/yfried/workspace/git/InfraRed/tmp_ospd_prov"
+def get_settings_dir(args=None):
+    """Retrieve settings dir.
+
+    :param args: Namespace of argument parser
+    :returns: path to settings dir. if args, return path to parser settings
+        dir. If args.command0 exists, return path to subparser settings dir.
+    """
+    settings_dir =  utils.validate_settings_dir(
+        CONF.get('defaults', 'settings'))
+    if args:
+        settings_dir = os.path.join(settings_dir,
+                                    ENTRY_POINT)
+    if hasattr(args, "command0"):
+        settings_dir = os.path.join(settings_dir,
+                                    args['command0'])
+    return settings_dir
 
 
-def get_args(spec, args=None):
+def get_args(args=None):
     """
     :return args: return loaded arguments from CLI
     """
 
-    cmd = clg.CommandLine(yaml.load(spec))
-    args = cmd.parse(args)
+    spec_manager = conf.SpecManager(CONF)
+    args = spec_manager.parse_args(ENTRY_POINT, args=args)
     return args
 
 
 def main():
-    settings_files = []
-    settings_dir = utils.validate_settings_dir(TMP_SETTINGS_DIR)
+    args = get_args()
 
-    spec_file = open(os.path.join(TMP_SETTINGS_DIR, "ospd", "ospd.spec"))
-    args = get_args(spec=spec_file)
+    settings_files = []
+    settings_dir = get_settings_dir()
 
     verbose = int(args.verbose)
 
@@ -56,34 +66,24 @@ def main():
 
     LOG.setLevel(args.verbose)
 
-    installer_dir = os.path.join(TMP_SETTINGS_DIR, args['command0'])
 
     for input_file in args['input-files'] or []:
         settings_files.append(utils.normalize_file(input_file))
 
-    settings_files.append(os.path.join(installer_dir,
-                                       args['command0'] + '.yml'))
-
-    # for key, val in vars(args).iteritems():
-    #     if val is not None and key not in NON_SETTINGS_OPTIONS:
-    #         settings_file = os.path.join(provision_dir, key, val + '.yml')
-    #         LOG.debug('Searching settings file for the "%s" key...' % key)
-    #         if not os.path.isfile(settings_file):
-    #             settings_file = utils.normalize_file(val)
-    #         settings_files.append(settings_file)
-    #         LOG.debug('"%s" was added to settings files list as an argument '
-    #                   'for "%s" key' % (settings_file, key))
-
-    # LOG.debug("All settings files to be loaded:\n%s" % settings_files)
+    settings_files.append(os.path.join(get_settings_dir(args),
+                                       args["command0"] + '.yml'))
 
     # todo(yfried): ospd specific
     settings_dict = set_product_repo(args)
-    settings_dict.update(set_network_details(args))
-    settings_dict.update(set_image(args))
+    utils.dict_merge(settings_dict, set_network_details(args))
+    utils.dict_merge(settings_dict, set_image(args))
     net_template = yaml.load(
-        open(set_network_template(args["network-template"])))
+        open(set_network_template(args["network-template"],
+                                  os.path.join(get_settings_dir(args),
+                                               "network", "templates"))))
     settings_dict["installer"]["overcloud"]["network"]["template"] = \
         net_template
+
     cli.yamls.Lookup.settings = utils.generate_settings(settings_files,
                                                         args['extra-vars'])
     # todo(yfried): ospd specific
@@ -105,32 +105,11 @@ def main():
 
     # playbook execution stage
     if not args['dry-run']:
-        args_list = ["execute"]
-        if verbose:
-            args_list.append('-%s' % ('v' * verbose))
-        args_list.append('--inventory=local_hosts')
-        args_list.append('--install')
-        if args['output-file']:
-            LOG.debug('Using the newly created settings file: "%s"'
-                      % args['output-file'])
-            args_list.append('--settings=%s' % args['output-file'])
-        else:
-            with open(conf.TMP_OUTPUT_FILE, 'w') as output_file:
-                output_file.write(output)
-            LOG.debug('Temporary settings file "%s" has been created for '
-                      'execution purpose only.' % conf.TMP_OUTPUT_FILE)
-            args_list.append('--settings=%s' % conf.TMP_OUTPUT_FILE)
+        vars(args)['settings'] = cli.yamls.Lookup.settings
+        vars(args)['install'] = True
 
-        parser = cli.parse.create_parser(list())
-        execute_args = parser.parse_args(args_list)
+        cli.execute.ansible_wrapper(args)
 
-        LOG.debug("execute parser args: %s" % execute_args)
-        execute_args.func(execute_args)
-
-        if not args['output-file']:
-            LOG.debug('Temporary settings file "%s" has been deleted.'
-                      % conf.TMP_OUTPUT_FILE)
-            os.remove(conf.TMP_OUTPUT_FILE)
 
 def set_product_repo(args):
     """Get Arguments for repo. """
@@ -172,14 +151,17 @@ def set_network_details(args):
     return {"installer": {"overcloud": {"network": network}}}
 
 
-def set_network_template(filename):
-    """Find network template. search default path first. """
-    default_path = os.path.join(TMP_SETTINGS_DIR, "ospd", "network",
-                                "templates")
-    filename = os.path.join(default_path, filename) if os.path.exists(
-        os.path.join(default_path, filename)) else filename
+def set_network_template(filename, path):
+    """Find network template. search default path first.
+
+    :param filename: template filename
+    :param path: default path to search first
+    :returns: absolute path to template file
+    """
+    filename = os.path.join(path, filename) if os.path.exists(
+        os.path.join(path, filename)) else filename
     if os.path.exists(os.path.abspath(filename)):
-        LOG.debug("Loading Heat network template: %s" %
+        LOG.debug("Loading Heat net work template: %s" %
                   os.path.abspath(filename))
         return os.path.abspath(filename)
     raise exceptions.IRFileNotFoundException(
@@ -191,7 +173,7 @@ def set_image(args):
     if not args["image-server"]:
         raise exceptions.IRNotImplemented(message="No support for "
                                                   "build images")
-    LOG.debug("Import files from server %s: " % args["image-server"])
+    LOG.debug("Import files from server: %s" % args["image-server"])
     files = {"7": dict(discovery="discovery-ramdisk.tar",
                        deployment="deploy-ramdisk-ironic.tar",
                        overcloud="overcloud-full.tar"),

@@ -34,8 +34,7 @@ import pytest
 def test_product_repo(args, output):
     from cli import install
 
-    spec_file = open(os.path.join(install.TMP_SETTINGS_DIR, "ospd", "ospd.spec"))
-    args = install.get_args(spec=spec_file, args=args.split(" "))
+    args = install.get_args(args=args.split(" "))
     product = install.set_product_repo(args)
     assert output == product["installer"]["product"]
 
@@ -59,10 +58,9 @@ def test_product_repo(args, output):
 def test_set_network_details(args, output):
     from cli import install
 
-    spec_file = open(os.path.join(install.TMP_SETTINGS_DIR, "ospd", "ospd.spec"))
     args = "ospd --version 7 " + args
     args = args.strip(" ")
-    args = install.get_args(spec=spec_file, args=args.split(" "))
+    args = install.get_args(args=args.split(" "))
     network = install.set_network_details(args)
     assert output == network["installer"]["overcloud"]["network"]
 
@@ -71,18 +69,21 @@ def test_set_network_template():
     from cli import install
 
     filename = "ipv4.yml"
-    def_path = os.path.join(install.TMP_SETTINGS_DIR, "ospd", "network",
-                            "templates", filename)
-    act_filename = install.set_network_template(filename)
-    assert act_filename == def_path
+    def_path = os.path.join(install.get_settings_dir(),
+                            install.ENTRY_POINT,
+                            "ospd", "network",
+                            "templates")
+    act_filename = install.set_network_template(filename,
+                                                def_path)
+    assert act_filename == os.path.join(def_path, filename)
 
     from cli import exceptions
     with pytest.raises(exceptions.IRFileNotFoundException):
-        install.set_network_template("bad/file/path")
+        install.set_network_template("bad/file/path", def_path)
 
     from tests.test_cwd import utils
     alt_file = os.path.join(utils.TESTS_CWD, "placeholder_overwriter.yml")
-    new_act_filename = install.set_network_template(alt_file)
+    new_act_filename = install.set_network_template(alt_file, def_path)
     assert alt_file == new_act_filename
 
 
@@ -100,9 +101,8 @@ def test_set_network_template():
 def test_set_image(args, output):
     from cli import install
 
-    spec_file = open(os.path.join(install.TMP_SETTINGS_DIR, "ospd", "ospd.spec"))
     args = "ospd " + args
-    args = install.get_args(spec=spec_file, args=args.split(" "))
+    args = install.get_args(args=args.split(" "))
     images = install.set_image(args)
     assert images["installer"]["overcloud"]["images"] == output
 
@@ -110,9 +110,7 @@ def test_set_image_build():
     from cli import exceptions
     from cli import install
 
-    spec_file = open(
-        os.path.join(install.TMP_SETTINGS_DIR, "ospd", "ospd.spec"))
     args = "ospd --version 7"
-    args = install.get_args(spec=spec_file, args=args.split(" "))
+    args = install.get_args(args=args.split(" "))
     with pytest.raises(exceptions.IRNotImplemented):
         install.set_image(args)

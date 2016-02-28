@@ -8,7 +8,6 @@ from cli import utils
 
 ENV_VAR_NAME = "IR_CONFIG"
 IR_CONF_FILE = 'infrared.cfg'
-CWD_PATH = os.path.join(os.getcwd(), IR_CONF_FILE)
 USER_PATH = os.path.expanduser('~/.' + IR_CONF_FILE)
 SYSTEM_PATH = os.path.join('/etc/infrared', IR_CONF_FILE)
 INFRARED_DIR_ENV_VAR = 'IR_SETTINGS'
@@ -21,6 +20,7 @@ def load_config_file():
     """
 
     # create a parser with default path to InfraRed's main dir
+    cwd_path = os.path.join(os.getcwd(), IR_CONF_FILE)
     _config = ConfigParser.ConfigParser()
 
     env_path = os.getenv(ENV_VAR_NAME, None)
@@ -29,12 +29,12 @@ def load_config_file():
         if os.path.isdir(env_path):
             env_path = os.path.join(env_path, IR_CONF_FILE)
 
-    for path in (env_path, CWD_PATH, USER_PATH, SYSTEM_PATH):
+    for path in (env_path, cwd_path, USER_PATH, SYSTEM_PATH):
         if path is not None and os.path.exists(path):
             _config.read(path)
             return _config
 
-    conf_file_paths = "\n".join([CWD_PATH, USER_PATH, SYSTEM_PATH])
+    conf_file_paths = "\n".join([cwd_path, USER_PATH, SYSTEM_PATH])
     raise exceptions.IRFileNotFoundException(
         conf_file_paths,
         "IR configuration not found. "
@@ -62,13 +62,13 @@ class SpecManager(object):
             utils.dict_merge(res, spec)
         return res
 
-    def parse_args(self, module_name):
+    def parse_args(self, module_name, args=None):
         """
         Looks for all the specs for specified module
         and parses the commandline input arguments accordingly.
         """
         cmd = clg.CommandLine(self.get_specs(module_name))
-        return cmd.parse()
+        return cmd.parse(args)
 
     def __get_all_specs(self, subfolder=None):
         root_dir = utils.validate_settings_dir(
