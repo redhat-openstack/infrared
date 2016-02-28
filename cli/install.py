@@ -79,10 +79,11 @@ def main():
     # todo(yfried): ospd specific
     settings_dict = set_product_repo(args)
     settings_dict.update(set_network_details(args))
+    settings_dict.update(set_image(args))
     net_template = yaml.load(
         open(set_network_template(args["network-template"])))
-    settings_dict["installer"]["overcloud"]["network"]["template"] = net_template
-
+    settings_dict["installer"]["overcloud"]["network"]["template"] = \
+        net_template
     cli.yamls.Lookup.settings = utils.generate_settings(settings_files,
                                                         args['extra-vars'])
     # todo(yfried): ospd specific
@@ -178,9 +179,29 @@ def set_network_template(filename):
     filename = os.path.join(default_path, filename) if os.path.exists(
         os.path.join(default_path, filename)) else filename
     if os.path.exists(os.path.abspath(filename)):
+        LOG.debug("Loading Heat network template: %s" %
+                  os.path.abspath(filename))
         return os.path.abspath(filename)
     raise exceptions.IRFileNotFoundException(
         file_path=os.path.abspath(filename))
+
+
+def set_image(args):
+    # todo(yfried): add support for build image mode
+    if not args["image-server"]:
+        raise exceptions.IRNotImplemented(message="No support for "
+                                                  "build images")
+    LOG.debug("Import files from server %s: " % args["image-server"])
+    files = {"7": dict(discovery="discovery-ramdisk.tar",
+                       deployment="deploy-ramdisk-ironic.tar",
+                       overcloud="overcloud-full.tar"),
+             # any version above 7:
+             "8": dict(discovery="ironic-python-agent.tar",
+                       overcloud="overcloud-full.tar")}
+    return {"installer": {"overcloud": {"images": {
+        "server": args["image-server"],
+        "files": files["7"] if args["version"] == "7" else files["8"]
+    }}}}
 
 
 if __name__ == '__main__':

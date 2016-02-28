@@ -53,3 +53,7 @@ class IRYAMLConstructorError(IRException):
 class IRPlaceholderException(IRException):
     def __init__(self, trace_message):
         self.message = 'Mandatory value is missing.\n' + trace_message
+
+
+class IRNotImplemented(IRException):
+    pass

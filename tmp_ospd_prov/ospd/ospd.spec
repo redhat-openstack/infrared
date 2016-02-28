@@ -77,5 +77,10 @@ subparsers:
                     network-variant:
                         choices: [gre, vxlan, sriov, vlan]
                         default: vxlan
+              - title: Image Options
+                options:
+                    image-server:
+                        type: str
+                        help: URL to images servers
 
 
