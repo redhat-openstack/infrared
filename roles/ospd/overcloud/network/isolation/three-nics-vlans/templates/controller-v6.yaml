@@ -90,7 +90,7 @@ resources:
               type: interface
               name: nic1
               use_dhcp: false
-              dns_servers: {get_param: DnsServers}
+              defroute: false
               addresses:
                 -
                   ip_netmask:
@@ -140,13 +140,15 @@ resources:
               # This will default to br-ex, anything else requires specific
               # brige mapping entries for it to be used.
               name: {get_input: bridge_name}
+              dns_servers: {get_param: DnsServers}
               use_dhcp: false
+              defroute: true
               addresses:
                 -
                   ip_netmask: {get_param: ExternalIpSubnet}
                   routes:
                     -
-                      ip_netmask: 0.0.0.0/0
+                      default: true
                       next_hop: {get_param: ExternalInterfaceDefaultRoute}
               members:
                 -
