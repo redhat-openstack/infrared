@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import logging
+
 import os
 
 import clg
@@ -11,6 +12,7 @@ from cli import logger  # logger creation is first thing to be done
 from cli import conf
 from cli import options as cli_options
 from cli import execute
+from cli import exceptions
 from cli import parse
 from cli import utils
 import cli.yamls
@@ -75,11 +77,17 @@ def main():
     # LOG.debug("All settings files to be loaded:\n%s" % settings_files)
 
     # todo(yfried): ospd specific
-    product = set_product_repo(args)
+    settings_dict = set_product_repo(args)
+    settings_dict.update(set_network_details(args))
+    net_template = yaml.load(
+        open(set_network_template(args["network-template"])))
+    settings_dict["installer"]["overcloud"]["network"]["template"] = net_template
+
     cli.yamls.Lookup.settings = utils.generate_settings(settings_files,
                                                         args['extra-vars'])
     # todo(yfried): ospd specific
-    cli.yamls.Lookup.settings = cli.yamls.Lookup.settings.merge(product)
+    cli.yamls.Lookup.settings = cli.yamls.Lookup.settings.merge(settings_dict)
+
     cli.yamls.Lookup.in_string_lookup()
 
     LOG.debug("Dumping settings...")
@@ -142,7 +150,37 @@ def set_product_repo(args):
         if product["version"] != product["core"]["version"]:
             product["core"].setdefault("build", "latest")
         product["core"].setdefault("build", product["build"])
-    return {"product": product}
+    return {"installer": {"product": product}}
+
+
+def set_network_details(args):
+    # todo(yfried): consider moving this to conf file when supporting options.
+    isolation = dict(
+        no=dict(enable="no"),
+        yes=dict(enable="yes",
+                 type="three-nics-vlans",
+                 file="environments/net-three-nic-with-vlans.yaml")
+    )
+    network = dict(
+        protocol=args["network-protocol"],
+        backend=args["network-variant"],
+        isolation=isolation[args["network-isolation"]],
+        ssl=args["ssl"],
+    )
+
+    return {"installer": {"overcloud": {"network": network}}}
+
+
+def set_network_template(filename):
+    """Find network template. search default path first. """
+    default_path = os.path.join(TMP_SETTINGS_DIR, "ospd", "network",
+                                "templates")
+    filename = os.path.join(default_path, filename) if os.path.exists(
+        os.path.join(default_path, filename)) else filename
+    if os.path.exists(os.path.abspath(filename)):
+        return os.path.abspath(filename)
+    raise exceptions.IRFileNotFoundException(
+        file_path=os.path.abspath(filename))
 
 
 if __name__ == '__main__':

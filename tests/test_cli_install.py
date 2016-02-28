@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 
@@ -30,10 +32,55 @@ import pytest
           "build": "2016-01-26.1"}}),
 ])
 def test_product_repo(args, output):
-    import os
     from cli import install
 
     spec_file = open(os.path.join(install.TMP_SETTINGS_DIR, "ospd", "ospd.spec"))
     args = install.get_args(spec=spec_file, args=args.split(" "))
     product = install.set_product_repo(args)
     assert output == product["product"]
+
+
+@pytest.mark.parametrize('args, output', [
+    ("",
+     {"protocol": "ipv4",
+      "backend": "vxlan",
+      "isolation": {
+          "enable": "no"},
+      "ssl": "no"}),
+    ("--network-protocol ipv6 --network-isolation yes --network-variant sriov --ssl yes",
+     {"protocol": "ipv6",
+      "backend": "sriov",
+      "isolation": {
+          "enable": "yes",
+          "type": "three-nics-vlans",
+          'file': "environments/net-three-nic-with-vlans.yaml"},
+      "ssl": "yes"}),
+])
+def test_set_network_details(args, output):
+    from cli import install
+
+    spec_file = open(os.path.join(install.TMP_SETTINGS_DIR, "ospd", "ospd.spec"))
+    args = "ospd --version 7 " + args
+    args = args.strip(" ")
+    args = install.get_args(spec=spec_file, args=args.split(" "))
+    network = install.set_network_details(args)
+    assert output == network["installer"]["overcloud"]["network"]
+
+
+def test_set_network_template():
+    from cli import install
+
+    filename = "ipv4.yml"
+    def_path = os.path.join(install.TMP_SETTINGS_DIR, "ospd", "network",
+                            "templates", filename)
+    act_filename = install.set_network_template(filename)
+    assert act_filename == def_path
+
+    from cli import exceptions
+    with pytest.raises(exceptions.IRFileNotFoundException):
+        install.set_network_template("bad/file/path")
+
+    from tests.test_cwd import utils
+    alt_file = os.path.join(utils.TESTS_CWD, "placeholder_overwriter.yml")
+    new_act_filename = install.set_network_template(alt_file)
+    assert alt_file == new_act_filename

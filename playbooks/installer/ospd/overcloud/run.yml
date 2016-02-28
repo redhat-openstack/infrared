@@ -20,7 +20,7 @@
   roles:
       - {role: "ospd/overcloud/storage/ceph/", when: provisioner.nodes.ceph is defined}
       - {role: "ospd/overcloud/network/isolation/{{ installer.overcloud.network.isolation.type }}/", when: installer.overcloud.network.isolation.enable == "yes"}
-      - {role: "ospd/overcloud/ssl/", when: installer.overcloud.use_ssl == "yes"}
+      - {role: "ospd/overcloud/ssl/", when: installer.overcloud.network.ssl == "yes"}
 
 - name: Install the overcloud
   hosts: undercloud
