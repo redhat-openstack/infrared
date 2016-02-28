@@ -82,5 +82,15 @@ subparsers:
                     image-server:
                         type: str
                         help: URL to images servers
-
+              - title: Storage Options
+                options:
+                    storage-type:
+                        choices: [internal, external]
+                        default: internal
+                        help: |
+                            Use internal/external storage
+                    storage-template:
+                        help: |
+                            Storage configuration template file. Search first in templates dir.
+                            (default: match storage type)
 

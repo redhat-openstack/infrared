@@ -114,3 +114,24 @@ def test_set_image_build():
     args = install.get_args(args=args.split(" "))
     with pytest.raises(exceptions.IRNotImplemented):
         install.set_image(args)
+
+
+@pytest.mark.parametrize('args, output', [
+    ("",
+     {"type": "internal",
+      "template": "internal.yml"}),
+    ("--storage-type external",
+     {"type": "external",
+      "template": "external.yml"}),
+    ("--storage-type external --storage-template fake_tmp",
+     {"type": "external",
+      "template": "fake_tmp"})
+])
+def test_set_storage(args, output):
+    from cli import install
+
+    args = "ospd --version 7 " + args
+    args = args.strip(" ")
+    args = install.get_args(args=args.split(" "))
+    storage = install.set_storage(args)
+    assert storage["installer"]["overcloud"]["storage"] == output

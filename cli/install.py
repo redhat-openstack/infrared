@@ -77,12 +77,20 @@ def main():
     settings_dict = set_product_repo(args)
     utils.dict_merge(settings_dict, set_network_details(args))
     utils.dict_merge(settings_dict, set_image(args))
+    utils.dict_merge(settings_dict, set_storage(args))
     net_template = yaml.load(
         open(set_network_template(args["network-template"],
                                   os.path.join(get_settings_dir(args),
                                                "network", "templates"))))
     settings_dict["installer"]["overcloud"]["network"]["template"] = \
         net_template
+    storage_template = yaml.load(
+        open(set_network_template(
+            settings_dict["installer"]["overcloud"]["storage"]["template"],
+                                  os.path.join(get_settings_dir(args),
+                                               "storage", "templates"))))
+    settings_dict["installer"]["overcloud"]["storage"]["template"] = \
+        storage_template
 
     cli.yamls.Lookup.settings = utils.generate_settings(settings_files,
                                                         args['extra-vars'])
@@ -161,7 +169,7 @@ def set_network_template(filename, path):
     filename = os.path.join(path, filename) if os.path.exists(
         os.path.join(path, filename)) else filename
     if os.path.exists(os.path.abspath(filename)):
-        LOG.debug("Loading Heat net work template: %s" %
+        LOG.debug("Loading Heat template: %s" %
                   os.path.abspath(filename))
         return os.path.abspath(filename)
     raise exceptions.IRFileNotFoundException(
@@ -184,6 +192,17 @@ def set_image(args):
         "server": args["image-server"],
         "files": files["7"] if args["version"] == "7" else files["8"]
     }}}}
+
+
+def set_storage(args):
+    """Set storage type and default template. """
+
+    return {"installer": {
+        "overcloud": {
+            "storage": {"type": args["storage-type"],
+                        "template":
+                            args["storage-template"] or
+                            args["storage-type"] + ".yml"}}}}
 
 
 if __name__ == '__main__':
