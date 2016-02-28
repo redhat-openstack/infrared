@@ -17,6 +17,18 @@
   hosts: virthost
   gather_facts: no
   tasks:
+      - name: install dependencies
+        yum:
+            name: "{{ item }}"
+            state: present
+        with_items: "{{ provisioner.packages }}"
+
+      - name: start libvirtd
+        service:
+            name: libvirtd
+            state: started
+            enabled: yes
+
       - name: get the list of VMs
         shell: "virsh list --all | grep -P '[\\w]+' | sed -n '2,$p' | awk '{print $2}'"
         register: vm_names

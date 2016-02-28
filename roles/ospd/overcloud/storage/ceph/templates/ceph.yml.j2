@@ -1,18 +1,21 @@
 parameters:
-  CinderEnableIscsiBackend: false
-  CinderEnableRbdBackend: true
-  CinderEnableNfsBackend: false
-  NovaEnableRbdBackend: true
+    CinderEnableIscsiBackend: false
+    CinderEnableRbdBackend: true
+    CinderEnableNfsBackend: false
+    NovaEnableRbdBackend: true
+    GlanceBackend: rbd
 
-parameter_defaults:
-  CinderRbdPoolName: 'volumes'
-  NovaRbdPoolName: 'vms'
-  GlanceRbdPoolName: 'images'
-  ExtraConfig:
-    ceph::profile::params::osds:
+{{ installer.overcloud.storage.template.content |to_nice_yaml }}
+{% if installer.overcloud.storage.external == "yes" %}
+resource_registry:
+    OS::TripleO::CephClusterConfig::SoftwareConfig: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/ceph/ceph-external-config.yaml
+{% else %}
+    ExtraConfig:
+      ceph::profile::params::osds:
 {% for disk_name, disk_values in provisioner.nodes.ceph.disks.iteritems() %}
 {% if disk_name != 'disk1' %}
-     '{{ disk_values.dev }}':
-         journal: ''
+       '{{ disk_values.dev }}':
+           journal: ''
 {% endif %}
 {% endfor %}
+{% endif %}
