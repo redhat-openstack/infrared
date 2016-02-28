@@ -3,8 +3,9 @@ import ConfigParser
 import clg
 import os
 import yaml
-from cli import exceptions
-from cli import utils
+
+import cli.exceptions
+import cli.utils
 
 ENV_VAR_NAME = "IR_CONFIG"
 IR_CONF_FILE = 'infrared.cfg'
@@ -35,7 +36,7 @@ def load_config_file():
             return _config
 
     conf_file_paths = "\n".join([CWD_PATH, USER_PATH, SYSTEM_PATH])
-    raise exceptions.IRFileNotFoundException(
+    raise cli.exceptions.IRFileNotFoundException(
         conf_file_paths,
         "IR configuration not found. "
         "Please set it in one of the following paths:\n")
@@ -59,7 +60,7 @@ class SpecManager(object):
         res = {}
         for spec_file in self.__get_all_specs(subfolder=module_name):
             spec = yaml.load(open(spec_file))
-            utils.dict_merge(res, spec)
+            cli.utils.dict_merge(res, spec)
         return res
 
     def parse_args(self, module_name):
@@ -71,7 +72,7 @@ class SpecManager(object):
         return cmd.parse()
 
     def __get_all_specs(self, subfolder=None):
-        root_dir = utils.validate_settings_dir(
+        root_dir = cli.utils.validate_settings_dir(
             self.config.get('defaults', 'settings'))
         if subfolder:
             root_dir = os.path.join(root_dir, subfolder)
