@@ -1,11 +1,4 @@
 ---
-options:
-    verbose:
-        help: 'Verbosity level'
-        short: v
-        action: count
-        default: 0
-
 subparsers:
     ospd:
         help: Install OpenStack using OSP-d installer

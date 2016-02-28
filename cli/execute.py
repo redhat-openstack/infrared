@@ -152,5 +152,5 @@ def ansible_wrapper(args):
         print "Executing Playbook: %s" % playbook
         try:
             execute_ansible(playbook, args)
-        except Exception:
+        except Exception as e:
             raise exceptions.IRPlaybookFailedException(playbook)
