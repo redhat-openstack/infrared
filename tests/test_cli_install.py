@@ -67,6 +67,7 @@ def test_set_network_details(args, output):
 
 
 def test_set_network_template():
+    import cli
     from cli import install
 
     filename = "ipv4.yml"
@@ -76,7 +77,9 @@ def test_set_network_template():
                             "templates")
     act_filename = install.set_network_template(filename,
                                                 def_path)
-    assert act_filename == os.path.join(def_path, filename)
+    cli_path = os.path.join(os.path.dirname(cli.__file__))
+    ir_path = os.path.dirname(cli_path)
+    assert act_filename == os.path.join(ir_path, def_path, filename)
 
     from cli import exceptions
     with pytest.raises(exceptions.IRFileNotFoundException):
