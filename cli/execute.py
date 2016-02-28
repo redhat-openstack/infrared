@@ -75,7 +75,7 @@ def execute_ansible(playbook, args):
         # From ansible-playbook:
         playbook=path_to_playbook,
         inventory=ansible.inventory.Inventory(hosts),
-        extra_vars=ansible.utils.parse_yaml_from_file(args.settings),
+        extra_vars=args.settings,
         callbacks=playbook_cb,
         runner_callbacks=runner_cb,
         stats=stats,
@@ -91,7 +91,8 @@ def execute_ansible(playbook, args):
             ansible_cmd.append("-M " + module_path)
         ansible_cmd.append("-" + "v" * args.verbose)
         ansible_cmd.append("-i " + hosts)
-        ansible_cmd.append("--extra-vars @" + args.settings)
+        extra_vars = vars(args)['output-file'] or "<path to settings file>"
+        ansible_cmd.append("--extra-vars @" + extra_vars)
         ansible_cmd.append(path_to_playbook)
         print "ANSIBLE COMMAND: " + " ".join(ansible_cmd)
 
