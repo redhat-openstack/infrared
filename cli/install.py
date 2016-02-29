@@ -49,22 +49,22 @@ def get_args(args=None):
     return args
 
 
+def set_logger_verbosity(level):
+    """
+    Set the logger verbosity level
+
+    :param level: verbosity level (int)
+    """
+    from logging import WARNING, INFO, DEBUG
+    LOG.setLevel((WARNING, INFO)[level] if level < 2 else DEBUG)
+
+
 def main():
     args = get_args()
 
     settings_files = []
-    settings_dir = get_settings_dir()
 
-    verbose = int(args.verbose)
-
-    if args.verbose == 0:
-        args.verbose = logging.WARNING
-    elif args.verbose == 1:
-        args.verbose = logging.INFO
-    else:
-        args.verbose = logging.DEBUG
-
-    LOG.setLevel(args.verbose)
+    set_logger_verbosity(args.verbose)
 
     for input_file in args['input-files'] or []:
         settings_files.append(utils.normalize_file(input_file))
@@ -91,6 +91,7 @@ def main():
     settings_dict["installer"]["overcloud"]["storage"]["template"] = \
         storage_template
 
+    LOG.debug("All settings files to be loaded:\n%s" % settings_files)
     cli.yamls.Lookup.settings = utils.generate_settings(settings_files,
                                                         args['extra-vars'])
     # todo(yfried): ospd specific
@@ -111,7 +112,8 @@ def main():
 
     # playbook execution stage
     if not args['dry-run']:
-        vars(args)['settings'] = cli.yamls.Lookup.settings
+        vars(args)['settings'] = yaml.load(yaml.safe_dump(
+            cli.yamls.Lookup.settings, default_flow_style=False))
         vars(args)['install'] = True
 
         cli.execute.ansible_wrapper(args)
@@ -120,7 +122,7 @@ def main():
 def set_product_repo(args):
     """Get Arguments for repo. """
 
-    product = {}
+    product = {"rpm": args["rpm"]}
     version = args["version"].split(".", 1)
     # If minor version is provided, set build. else default build to latest
     build = "Y" + str(version[1]) if len(version) == 2 else "latest"

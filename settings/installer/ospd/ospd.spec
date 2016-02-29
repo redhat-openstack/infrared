@@ -26,6 +26,9 @@ subparsers:
                     Version and build of the procuct. use "core-*" to specify
                     core version and build.
                 options:
+                    rpm:
+                        required: true
+                        help: Path to rhos-release rpm (URL or local)
                     version:
                         required: true
                         type: str

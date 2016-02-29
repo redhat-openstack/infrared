@@ -150,7 +150,5 @@ def ansible_wrapper(args):
 
     for playbook in (p for p in PLAYBOOKS if getattr(args, p, False)):
         print "Executing Playbook: %s" % playbook
-        try:
-            execute_ansible(playbook, args)
-        except Exception as e:
-            raise exceptions.IRPlaybookFailedException(playbook)
+        execute_ansible(playbook, args)
+

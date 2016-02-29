@@ -8,7 +8,7 @@
   shell: >
         wget --quiet -c -O ~/{{ item.value }}
         "{{ installer.overcloud.images.server }}/{{ item.value }}"
-  with_dict: "{{ installer.overcloud.images }}"
+  with_dict: "{{ installer.overcloud.images.files }}"
 
 - name: untar the images
   shell: "tar -xvf ~/{{ item.value }}"

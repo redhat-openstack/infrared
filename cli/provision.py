@@ -75,7 +75,8 @@ def main():
 
     # playbook execution stage
     if not args['dry-run']:
-        vars(args)['settings'] = cli.yamls.Lookup.settings
+        vars(args)['settings'] = yaml.load(yaml.safe_dump(
+            cli.yamls.Lookup.settings, default_flow_style=False))
         if not args['cleanup']:
             vars(args)['provision'] = True
 

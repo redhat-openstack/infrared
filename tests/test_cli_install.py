@@ -4,28 +4,39 @@ import pytest
 
 
 @pytest.mark.parametrize('args, output', [
-    ("ospd --version 7.3",
-     {"build": "Y3", "version": "7"}),
-    ("ospd --version 7 --build latest",
-     {"build": "latest", "version": "7"}),
-    ("ospd --version 7 --build Y3",
-     {"build": "Y3", "version": "7"}),
-    ("ospd --version 7 --build 2016-01-26.1",
-     {"build": "2016-01-26.1", "version": "7"}),
-    ("ospd --version 8 --build 2016-01-26.1 --core-version 7",
-     {"build": "2016-01-26.1",
+    ("ospd --rpm path_to_rpm --rpm path_to_rpm --version 7.3",
+     {"rpm": "path_to_rpm",
+      "build": "Y3", "version": "7"}),
+    ("ospd --rpm path_to_rpm --rpm path_to_rpm --version 7 --build latest",
+     {"rpm": "path_to_rpm",
+      "build": "latest", "version": "7"}),
+    ("ospd --rpm path_to_rpm --rpm path_to_rpm --version 7 --build Y3",
+     {"rpm": "path_to_rpm",
+      "build": "Y3", "version": "7"}),
+    ("ospd --rpm path_to_rpm --rpm path_to_rpm --version 7 "
+     "--build 2016-01-26.1",
+     {"rpm": "path_to_rpm",
+      "build": "2016-01-26.1", "version": "7"}),
+    ("ospd --rpm path_to_rpm --rpm path_to_rpm --version 8 "
+     "--build 2016-01-26.1 --core-version 7",
+     {"rpm": "path_to_rpm",
+      "build": "2016-01-26.1",
       "version": "8",
       "core": {
           "version": "7",
           "build": "latest"}}),
-    ("ospd --version 8 --core-version 7",
-     {"build": "latest",
+    ("ospd --rpm path_to_rpm --rpm path_to_rpm --version 8 "
+     "--core-version 7",
+     {"rpm": "path_to_rpm",
+      "build": "latest",
       "version": "8",
       "core": {
           "version": "7",
           "build": "latest"}}),
-    ("ospd --version 8 --core-build 2016-01-26.1",
-     {"build": "latest",
+    ("ospd --rpm path_to_rpm --rpm path_to_rpm --version 8 "
+     "--core-build 2016-01-26.1",
+     {"rpm": "path_to_rpm",
+      "build": "latest",
       "version": "8",
       "core": {
           "version": "8",
@@ -59,7 +70,7 @@ def test_product_repo(args, output):
 def test_set_network_details(args, output):
     from cli import install
 
-    args = "ospd --version 7 " + args
+    args = "ospd --rpm path_to_rpm --version 7 " + args
     args = args.strip(" ")
     args = install.get_args(args=args.split(" "))
     network = install.set_network_details(args)
@@ -92,12 +103,12 @@ def test_set_network_template():
 
 
 @pytest.mark.parametrize('args, output', [
-    ("--version 7 --image-server www.fake_url.to/images",
+    ("--rpm path_to_rpm --version 7 --image-server www.fake_url.to/images",
      {"server": "www.fake_url.to/images",
       "files": {"discovery": "discovery-ramdisk.tar",
                 "deployment": "deploy-ramdisk-ironic.tar",
                 "overcloud": "overcloud-full.tar"}}),
-    ("--version 20 --image-server www.fake_url.to/images",
+    ("--rpm path_to_rpm --version 20 --image-server www.fake_url.to/images",
      {"server": "www.fake_url.to/images",
       "files": {"discovery": "ironic-python-agent.tar",
                 "overcloud": "overcloud-full.tar"}})
@@ -115,7 +126,7 @@ def test_set_image_build():
     from cli import exceptions
     from cli import install
 
-    args = "ospd --version 7"
+    args = "ospd --rpm path_to_rpm --version 7"
     args = install.get_args(args=args.split(" "))
     with pytest.raises(exceptions.IRNotImplemented):
         install.set_image(args)
@@ -135,7 +146,7 @@ def test_set_image_build():
 def test_set_storage(args, output):
     from cli import install
 
-    args = "ospd --version 7 " + args
+    args = "ospd --rpm path_to_rpm --version 7 " + args
     args = args.strip(" ")
     args = install.get_args(args=args.split(" "))
     storage = install.set_storage(args)
