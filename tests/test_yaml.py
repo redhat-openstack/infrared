@@ -28,9 +28,7 @@ def test_placeholder_validator(our_cwd_setup):
 
     # Checks that 'IRPlaceholderException' is raised if value isn't been
     # overwritten
-    settings = configure.Configuration.from_dict({})
-    settings = update_settings(settings,
-                               os.path.join(utils.TESTS_CWD, injector))
+    settings = update_settings({}, os.path.join(utils.TESTS_CWD, injector))
 
     assert isinstance(settings['place']['holder']['validator'], Placeholder)
     with pytest.raises(IRPlaceholderException) as exc:
@@ -56,9 +54,7 @@ def test_placeholder_double_validator(our_cwd_setup):
 
     # Checks that 'IRPlaceholderException' is raised if value isn't been
     # overwritten
-    settings = configure.Configuration.from_dict({})
-    settings = update_settings(settings,
-                               os.path.join(utils.TESTS_CWD, injector))
+    settings = update_settings({}, os.path.join(utils.TESTS_CWD, injector))
 
     assert isinstance(settings['place']['holder']['validator1'], Placeholder)
     assert isinstance(settings['place']['holder']['validator2'], Placeholder)
@@ -86,7 +82,7 @@ def test_lookup(our_cwd_setup, lookup_style):
 
     # dump the settings in order to retrieve the key's value and load them
     # again for value validation
-    settings = yaml.safe_load(
+    settings = yaml.load(
         yaml.safe_dump(cli.yamls.Lookup.settings, default_flow_style=False))
 
     assert settings['foo']['key_to_be_found'] == "key was found"
@@ -137,7 +133,7 @@ def test_nested_lookup(our_cwd_setup, lookup_style):
 
     # dump the settings in order to retrieve the key's value and load them
     # again for value validation
-    settings = yaml.safe_load(
+    settings = yaml.load(
         yaml.safe_dump(cli.yamls.Lookup.settings, default_flow_style=False))
 
     assert settings['foo']['test1'] == "key was found"
@@ -164,7 +160,7 @@ def test_recursive_lookup(our_cwd_setup, lookup_style):
 
     # dump the settings in order to retrieve the key's value and load them
     # again for value validation
-    settings = yaml.safe_load(
+    settings = yaml.load(
         yaml.safe_dump(cli.yamls.Lookup.settings, default_flow_style=False))
 
     assert settings['foo']['test1'] == "key was found"

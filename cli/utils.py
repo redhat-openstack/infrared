@@ -34,17 +34,21 @@ def dict_insert(dic, val, key, *keys):
     dict_insert(dic.setdefault(key, {}), val, *keys)
 
 
-def dict_merge(first, second):
-    """ Given two dict objects, this function returns
-    a dict that is the result of merging them into one.
+def dict_merge(first_dict, second_dict):
+    """ Given two dict objects, this function merges the two dicts into the
+    first dict. If the same key is in the both dicts, the value in the
+    second dict will overwrite the value in the first dict.
     """
-    if isinstance(first, dict) and isinstance(second, dict):
-        for key, value in second.iteritems():
-            if key not in first:
-                first[key] = value
-            else:
-                first[key] = dict_merge(first[key], value)
-    return first
+    if not isinstance(first_dict, dict) or not isinstance(second_dict, dict):
+        raise ValueError("Two arguments must be 'dict' type.")
+
+    for key, value in second_dict.iteritems():
+        if key not in first_dict \
+                or not isinstance(first_dict[key], dict)\
+                or not isinstance(value, dict):
+            first_dict[key] = value
+        else:
+            dict_merge(first_dict[key], value)
 
 
 # TODO: remove "settings" references in project
@@ -60,8 +64,7 @@ def validate_settings_dir(settings_dir=None):
     :raise: IRFileNotFoundException: when the path to the settings dir doesn't
             exist
     """
-    settings_dir = settings_dir or os.environ.get(
-        utils.INFRARED_DIR_ENV_VAR)
+    settings_dir = settings_dir or os.environ.get(INFRARED_DIR_ENV_VAR)
 
     if not os.path.exists(settings_dir):
         raise exceptions.IRFileNotFoundException(
@@ -84,7 +87,7 @@ def update_settings(settings, file_path):
 
     try:
         stream = file(file_path, 'r')
-        loaded_file = yaml.safe_load(stream)
+        loaded_file = yaml.load(stream)
         placeholders_list = cli.yamls.Placeholder.placeholders_list
         for placeholder in placeholders_list[::-1]:
             if placeholder.file_path is None:
@@ -94,7 +97,7 @@ def update_settings(settings, file_path):
     except yaml.constructor.ConstructorError as e:
         raise exceptions.IRYAMLConstructorError(e, file_path)
 
-    settings = dict_merge(settings, loaded_file)
+    dict_merge(settings, loaded_file)
 
     return settings
 
