@@ -86,8 +86,8 @@ def update_settings(settings, file_path):
         raise exceptions.IRFileNotFoundException(file_path)
 
     try:
-        stream = file(file_path, 'r')
-        loaded_file = yaml.load(stream)
+        with file(file_path, 'r') as stream:
+            loaded_file = yaml.load(stream)
         placeholders_list = cli.yamls.Placeholder.placeholders_list
         for placeholder in placeholders_list[::-1]:
             if placeholder.file_path is None:
