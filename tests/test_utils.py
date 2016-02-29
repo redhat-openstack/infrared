@@ -13,3 +13,16 @@ def test_dict_insert(tested, val, key, expected):
     from cli import utils
     utils.dict_insert(tested, val, *key)
     assert tested == expected
+
+
+def test_dict_merge():
+    from cli.utils import dict_merge
+
+    first_dict = {'a': 1, 'b': 2, 'c': {'d': 'foo1', 'e': 'bar'}}
+    second_dict = {'a': 2, 'c': {'d': 'foo2', 'f': 5}, 'g': 'bla', 5: 'yy'}
+    expected_result = {'a': 2, 'b': 2, 'c': {'d': 'foo2', 'e': 'bar',
+                                             'f': 5}, 'g': 'bla', 5: 'yy'}
+
+    dict_merge(first_dict, second_dict)
+
+    assert not cmp(first_dict, expected_result)
