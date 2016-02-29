@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import logging
 import os
 
 import yaml
@@ -18,6 +17,16 @@ NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output-file',
                         'input-files', 'dry-run', 'cleanup', 'inventory']
 
 
+def set_logger_verbosity(level):
+    """
+    Set the logger verbosity level
+
+    :param level: verbosity level (int)
+    """
+    from logging import WARNING, INFO, DEBUG
+    LOG.setLevel((WARNING, INFO)[level] if level < 2 else DEBUG)
+
+
 def main():
     spec_manager = conf.SpecManager(CONF)
     args = spec_manager.parse_args("provisioner")
@@ -26,16 +35,7 @@ def main():
     settings_dir = utils.validate_settings_dir(
         CONF.get('defaults', 'settings'))
 
-    verbose = int(args.verbose)
-
-    if args.verbose == 0:
-        args.verbose = logging.WARNING
-    elif args.verbose == 1:
-        args.verbose = logging.INFO
-    else:
-        args.verbose = logging.DEBUG
-
-    LOG.setLevel(args.verbose)
+    set_logger_verbosity(args.verbose)
 
     provision_dir = os.path.join(settings_dir, 'provisioner', args['command0'])
 
