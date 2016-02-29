@@ -3,9 +3,7 @@ This module provide some general helper methods
 """
 
 import os
-import re
 
-import configure
 import yaml
 
 import cli.yamls
@@ -76,7 +74,7 @@ def validate_settings_dir(settings_dir=None):
 def update_settings(settings, file_path):
     """merge settings in 'file_path' with 'settings'
 
-    :param settings: settings to be merge with (configure.Configuration)
+    :param settings: settings dictionary to be merge with
     :param file_path: path to file with settings to be merged
     :return: merged settings
     """
@@ -85,7 +83,8 @@ def update_settings(settings, file_path):
         raise exceptions.IRFileNotFoundException(file_path)
 
     try:
-        loaded_file = configure.Configuration.from_file(file_path).configure()
+        stream = file(file_path, 'r')
+        loaded_file = yaml.safe_load(stream)
         placeholders_list = cli.yamls.Placeholder.placeholders_list
         for placeholder in placeholders_list[::-1]:
             if placeholder.file_path is None:
@@ -95,13 +94,13 @@ def update_settings(settings, file_path):
     except yaml.constructor.ConstructorError as e:
         raise exceptions.IRYAMLConstructorError(e, file_path)
 
-    settings = settings.merge(loaded_file)
+    settings = dict_merge(settings, loaded_file)
 
     return settings
 
 
 def generate_settings(settings_files, extra_vars):
-    """ Generates one settings object (configure.Configuration) by merging all
+    """ Generates one settings object (dictionary) by merging all
     files in settings file & extra-vars
 
     files in 'settings_files' are the first to be merged and after them the
@@ -109,10 +108,10 @@ def generate_settings(settings_files, extra_vars):
 
     :param settings_files: list of paths to settings files
     :param extra_vars: list of extra-vars
-    :return: Configuration object with merging results of all settings
+    :return: A dictionary with merging results of all settings
     files and extra-vars
     """
-    settings = configure.Configuration.from_dict({})
+    settings = {}
 
     for settings_file in settings_files:
         settings = update_settings(settings, settings_file)
