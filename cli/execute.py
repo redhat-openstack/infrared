@@ -151,4 +151,3 @@ def ansible_wrapper(args):
     for playbook in (p for p in PLAYBOOKS if getattr(args, p, False)):
         print "Executing Playbook: %s" % playbook
         execute_ansible(playbook, args)
-
