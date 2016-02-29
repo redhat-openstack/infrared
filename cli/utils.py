@@ -9,7 +9,6 @@ import configure
 import yaml
 
 import cli.yamls
-import cli.conf
 from cli import exceptions
 from cli import logger
 
@@ -64,7 +63,7 @@ def validate_settings_dir(settings_dir=None):
             exist
     """
     settings_dir = settings_dir or os.environ.get(
-        cli.conf.INFRARED_DIR_ENV_VAR)
+        utils.INFRARED_DIR_ENV_VAR)
 
     if not os.path.exists(settings_dir):
         raise exceptions.IRFileNotFoundException(
@@ -89,7 +88,7 @@ def update_settings(settings, file_path):
         loaded_file = configure.Configuration.from_file(file_path).configure()
         placeholders_list = cli.yamls.Placeholder.placeholders_list
         for placeholder in placeholders_list[::-1]:
-            if placeholders_list[-1].file_path is None:
+            if placeholder.file_path is None:
                 placeholder.file_path = file_path
             else:
                 break
@@ -152,3 +151,10 @@ def normalize_file(file_path):
         raise exceptions.IRFileNotFoundException(file_path)
 
     return file_path
+
+
+ENV_VAR_NAME = "IR_CONFIG"
+IR_CONF_FILE = 'infrared.cfg'
+USER_PATH = os.path.expanduser('~/.' + IR_CONF_FILE)
+SYSTEM_PATH = os.path.join('/etc/infrared', IR_CONF_FILE)
+INFRARED_DIR_ENV_VAR = 'IR_SETTINGS'

@@ -47,6 +47,25 @@ def test_placeholder_validator(our_cwd_setup):
     yaml.safe_dump(settings, default_flow_style=False)
 
 
+def test_placeholder_double_validator(our_cwd_setup):
+    from cli.utils import update_settings
+    from cli.exceptions import IRPlaceholderException
+    from cli.yamls import Placeholder
+
+    injector = 'placeholder_double_injector.yml'
+
+    # Checks that 'IRPlaceholderException' is raised if value isn't been
+    # overwritten
+    settings = configure.Configuration.from_dict({})
+    settings = update_settings(settings,
+                               os.path.join(utils.TESTS_CWD, injector))
+
+    assert isinstance(settings['place']['holder']['validator1'], Placeholder)
+    assert isinstance(settings['place']['holder']['validator2'], Placeholder)
+    with pytest.raises(IRPlaceholderException) as exc:
+        yaml.safe_dump(settings, default_flow_style=False)
+
+
 @pytest.mark.parametrize('our_cwd_setup, lookup_style', [
     (our_cwd_setup, 'old'),
     (our_cwd_setup, 'new'),

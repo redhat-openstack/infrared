@@ -3,14 +3,9 @@ import ConfigParser
 import clg
 import os
 import yaml
+
 from cli import exceptions
 from cli import utils
-
-ENV_VAR_NAME = "IR_CONFIG"
-IR_CONF_FILE = 'infrared.cfg'
-USER_PATH = os.path.expanduser('~/.' + IR_CONF_FILE)
-SYSTEM_PATH = os.path.join('/etc/infrared', IR_CONF_FILE)
-INFRARED_DIR_ENV_VAR = 'IR_SETTINGS'
 
 
 def load_config_file():
@@ -20,21 +15,21 @@ def load_config_file():
     """
 
     # create a parser with default path to InfraRed's main dir
-    cwd_path = os.path.join(os.getcwd(), IR_CONF_FILE)
+    cwd_path = os.path.join(os.getcwd(), utils.IR_CONF_FILE)
     _config = ConfigParser.ConfigParser()
 
-    env_path = os.getenv(ENV_VAR_NAME, None)
+    env_path = os.getenv(utils.ENV_VAR_NAME, None)
     if env_path is not None:
         env_path = os.path.expanduser(env_path)
         if os.path.isdir(env_path):
-            env_path = os.path.join(env_path, IR_CONF_FILE)
+            env_path = os.path.join(env_path, utils.IR_CONF_FILE)
 
-    for path in (env_path, cwd_path, USER_PATH, SYSTEM_PATH):
+    for path in (env_path, cwd_path, utils.USER_PATH, utils.SYSTEM_PATH):
         if path is not None and os.path.exists(path):
             _config.read(path)
             return _config
 
-    conf_file_paths = "\n".join([cwd_path, USER_PATH, SYSTEM_PATH])
+    conf_file_paths = "\n".join([cwd_path, utils.USER_PATH, utils.SYSTEM_PATH])
     raise exceptions.IRFileNotFoundException(
         conf_file_paths,
         "IR configuration not found. "

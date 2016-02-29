@@ -1,6 +1,8 @@
 import os
 import pytest
 
+import utils
+
 TESTS_CWD = os.path.dirname(__file__)
 SETTINGS_PATH = os.path.join(TESTS_CWD, "settings")
 
@@ -12,12 +14,12 @@ def os_environ():
     from cli import conf
 
     backup_flag = False
-    if conf.ENV_VAR_NAME in os.environ:
+    if utils.ENV_VAR_NAME in os.environ:
         backup_flag = True
-        backup_value = os.environ.get(conf.ENV_VAR_NAME)
+        backup_value = os.environ.get(utils.ENV_VAR_NAME)
     yield os.environ
     if backup_flag:
-        os.environ[conf.ENV_VAR_NAME] = backup_value
+        os.environ[utils.ENV_VAR_NAME] = backup_value
 
 
 @pytest.fixture()
