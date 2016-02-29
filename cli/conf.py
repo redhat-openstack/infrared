@@ -57,13 +57,13 @@ class SpecManager(object):
             utils.dict_merge(res, spec)
         return res
 
-    def parse_args(self, module_name):
+    def parse_args(self, module_name, args=None):
         """
         Looks for all the specs for specified module
         and parses the commandline input arguments accordingly.
         """
         cmd = clg.CommandLine(self.get_specs(module_name))
-        return cmd.parse()
+        return cmd.parse(args)
 
     def __get_all_specs(self, subfolder=None):
         root_dir = utils.validate_settings_dir(

@@ -11,8 +11,8 @@
             msg: "Stopping before building/importing the images per user request"
         when: break is defined and break == "before_images"
   roles:
-      - {role: ospd/overcloud/images/build, when: installer.images.task == "build"}
-      - {role: ospd/overcloud/images/import, when: installer.images.task == "import"}
+      - {role: ospd/overcloud/images/build, when: installer.overcloud.images is not defined installer.overcloud.images.server is not defined}
+      - {role: ospd/overcloud/images/import, when: installer.overcloud.images is defined and installer.overcloud.images.server is defined}
   tasks:
       - name: upload the overcloud images to glance
         shell: "source ~/stackrc; openstack overcloud image upload"
