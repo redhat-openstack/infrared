@@ -81,4 +81,5 @@ class SpecManager(object):
 
         return res
 
+
 config = load_config_file()

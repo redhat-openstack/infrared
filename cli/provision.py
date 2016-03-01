@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 
 import os
-from logging import WARNING, INFO, DEBUG
 
-from cli import logger  # logger creation is first thing to be done
-import cli.execute
-import cli.yamls
 import yaml
 
+from cli import logger  # logger creation is first thing to be done
 from cli import conf
-from cli import exceptions
 from cli import utils
 import cli.yamls
 import cli.execute
@@ -169,6 +165,7 @@ class IRApplication(object):
 
             cli.execute.ansible_wrapper(self.args)
 
+        cli.execute.ansible_wrapper(args)
 
 def main():
     app = IRFactory.create('provisioner', CONF)

@@ -12,16 +12,13 @@ from cli import utils
 import cli.yamls
 import cli.execute
 
-ENTRY_POINT = "installer"
-
 LOG = logger.LOG
 CONF = conf.config
 
-NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output-file',
-                        'input-files', 'dry-run', 'cleanup', 'inventory']
+ENTRY_POINT = 'installer'
 
 
-def get_settings_dir(args=None):
+def get_settings_dir(entry_point, args=None):
     """Retrieve settings dir.
 
     :param args: Namespace of argument parser
@@ -31,20 +28,19 @@ def get_settings_dir(args=None):
     settings_dir = utils.validate_settings_dir(
         CONF.get('defaults', 'settings'))
     if args:
-        settings_dir = os.path.join(settings_dir,
-                                    ENTRY_POINT)
+        settings_dir = os.path.join(settings_dir, entry_point)
     if hasattr(args, "command0"):
         settings_dir = os.path.join(settings_dir,
                                     args['command0'])
     return settings_dir
 
 
-def get_args(args=None):
+def get_args(entry_point, args=None):
     """
     :return args: return loaded arguments from CLI
     """
     # todo(obaranov) remove one-line method.
-    args = conf.SpecManager.parse_args(ENTRY_POINT, CONF, args=args)
+    args = conf.SpecManager.parse_args(entry_point, CONF, args=args)
     return args
 
 
@@ -59,7 +55,7 @@ def set_logger_verbosity(level):
 
 
 def main():
-    args = get_args()
+    args = get_args(ENTRY_POINT)
 
     settings_files = []
 
@@ -68,7 +64,7 @@ def main():
     for input_file in args['input-files'] or []:
         settings_files.append(utils.normalize_file(input_file))
 
-    settings_files.append(os.path.join(get_settings_dir(args),
+    settings_files.append(os.path.join(get_settings_dir(ENTRY_POINT, args),
                                        args["command0"] + '.yml'))
 
     # todo(yfried): ospd specific
@@ -78,14 +74,15 @@ def main():
     utils.dict_merge(settings_dict, set_storage(args))
     net_template = yaml.load(
         open(set_network_template(args["network-template"],
-                                  os.path.join(get_settings_dir(args),
-                                               "network", "templates"))))
+                                  os.path.join(
+                                      get_settings_dir(ENTRY_POINT, args),
+                                      "network", "templates"))))
     settings_dict["installer"]["overcloud"]["network"]["template"] = \
         net_template
     storage_template = yaml.load(
         open(set_network_template(
             settings_dict["installer"]["overcloud"]["storage"]["template"],
-            os.path.join(get_settings_dir(args),
+            os.path.join(get_settings_dir(ENTRY_POINT, args),
                          "storage", "templates"))))
     settings_dict["installer"]["overcloud"]["storage"]["template"] = \
         storage_template

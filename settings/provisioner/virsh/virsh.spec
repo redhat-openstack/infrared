@@ -3,22 +3,34 @@ subparsers:
     virsh:
         help: Provision systems using 'virsh'
         options:
-            hypervisor:
+            host:
                 type: str
-                help: Hypervisor
+                help: Address/FQDN of the BM hypervisor
                 required: True
+            ssh-user:
+                type: str
+                help: User to SSH to the host with
+                default: root
+            ssh-key:
+                type: str
+                help: "User's SSH key"
+                default: '~/.ssh/id_rsa'
             network:
                 type: str
                 help: Network
-                default: default
-            image:
+                default: default.yml
+            image-file:
                 type: str
-                help: An image to provision the systems with
-                default: rhel
+                help: An image to provision the host with
+                required: True
+            image-server:
+                type: str
+                help: Base URL of the image file server
+                required: True
             topology:
                 type: str
                 help: 'Provision topology (default: __DEFAULT__)'
-                default: all-in-one
+                default: all-in-one.yml
             dry-run:
                 action: store_true
                 help: Only generate settings, skip the playbook execution stage

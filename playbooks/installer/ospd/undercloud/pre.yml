@@ -37,21 +37,24 @@
       when: prodcut.core is defined
 
     - name: update system packages
-      shell: "yum update -y"
+      yum:
+          state: latest
+          name: "*"
+      register: update
 
     - name: reboot the undercloud
       shell: "sleep 2 && shutdown -r now"
       async: 1
       poll: 0
       ignore_errors: true
+      when: update|changed
 
-- name: Waiting for host to startup
-  hosts: localhost
-  tasks:
     - name: Waiting for the undercloud to be available
+      delegate_to: localhost
       wait_for:
-          host: "undercloud"
+          host: "{{ hostvars[inventory_hostname].ansible_ssh_host }}"
           timeout: 120
+      when: update|changed
 
 - name: Continue with the undercloud installation
   hosts: undercloud
