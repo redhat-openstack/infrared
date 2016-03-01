@@ -12,17 +12,14 @@ from cli.install import get_args, get_settings_dir, set_logger_verbosity
 import cli.yamls
 import cli.execute
 
-ENTRY_POINT = "provisioner"
-
 LOG = logger.LOG
 CONF = conf.config
 
-NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output-file',
-                        'input-files', 'dry-run', 'cleanup', 'inventory']
+ENTRY_POINT = 'provisioner'
 
 
 def main():
-    args = get_args()
+    args = get_args(ENTRY_POINT)
 
     settings_files = []
 
@@ -31,7 +28,7 @@ def main():
     for input_file in args['input-files'] or []:
         settings_files.append(utils.normalize_file(input_file))
 
-    settings_files.append(os.path.join(get_settings_dir(args),
+    settings_files.append(os.path.join(get_settings_dir(ENTRY_POINT, args),
                                        args["command0"] + '.yml'))
 
     # todo(aopincar): virsh specific
@@ -40,7 +37,8 @@ def main():
 
     for arg_dir in ('network', 'topology'):
         with open(set_network(args[arg_dir], os.path.join(
-                get_settings_dir(args), arg_dir))) as settings_file:
+                get_settings_dir(ENTRY_POINT, args), arg_dir))) as \
+                settings_file:
             settings = yaml.load(settings_file)
         utils.dict_merge(settings_dict, settings)
 
