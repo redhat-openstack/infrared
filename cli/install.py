@@ -43,7 +43,7 @@ def get_args(args=None):
     """
     :return args: return loaded arguments from CLI
     """
-
+    # todo(obaranov) remove one-line method.
     args = conf.SpecManager.parse_args(ENTRY_POINT, CONF, args=args)
     return args
 

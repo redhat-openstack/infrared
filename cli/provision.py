@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+from logging import WARNING, INFO, DEBUG
 
 from cli import logger  # logger creation is first thing to be done
 import cli.execute
@@ -8,6 +9,7 @@ import cli.yamls
 import yaml
 
 from cli import conf
+from cli import exceptions
 from cli import utils
 import cli.yamls
 import cli.execute
@@ -30,30 +32,25 @@ class IRFactory(object):
         Create the application object
         by module name and provided configuration.
         """
-        args = conf.SpecManager.parse_args(app_name, config)
-        setting_dir = utils.validate_settings_dir(
-            CONF.get('defaults', 'settings'))
-        cls.configure(args)
-
         if app_name in ["provisioner", ]:
+            args = conf.SpecManager.parse_args(app_name, config)
+            cls.configure_environment(args)
+            setting_dir = utils.validate_settings_dir(
+                CONF.get('defaults', 'settings'))
             app_instance = IRApplication(app_name, setting_dir, args)
 
         else:
-            raise Exception(
+            raise exceptions.IRUnknownApplicationException(
                 "Application is not supported: '{}'".format(app_name))
         return app_instance
 
     @classmethod
-    def configure(cls, args):
-        cls._configure_log(args)
-
-    @classmethod
-    def _configure_log(cls, args):
+    def configure_environment(cls, args):
         """
-        Performs the logging module configuration.
+        Performs the environment configuration.
+        :param args:
         :return:
         """
-        from logging import WARNING, INFO, DEBUG
         LOG.setLevel((WARNING, INFO)[args.verbose]
                      if args.verbose < 2 else DEBUG)
 
@@ -64,8 +61,8 @@ class IRSubCommand(object):
     for the application
     """
 
-    def __init__(self, mame, args, settings_dir):
-        self.name = mame
+    def __init__(self, name, args, settings_dir):
+        self.name = name
         self.args = args
         self.settings_dir = settings_dir
 
@@ -124,7 +121,7 @@ class IRApplication(object):
     """
     def __init__(self, name, settings_dir, args):
         self.name = name
-        self.args = args.args
+        self.args = args
         self.settings_dir = settings_dir
         self.sub_command = IRSubCommand.create(name, settings_dir, args)
 

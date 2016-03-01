@@ -57,3 +57,14 @@ class IRPlaceholderException(IRException):
 
 class IRNotImplemented(IRException):
     pass
+
+
+class IRUnknownApplicationException(IRException):
+    """
+    This exceptions is raised when unknown application is
+     started by user.
+    """
+    def __init__(self, app_name):
+        self.app_name = app_name
+        super(IRUnknownApplicationException, self).__init__(
+            "Application is unknown: '{}'".format(app_name))
