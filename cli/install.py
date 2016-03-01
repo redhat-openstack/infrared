@@ -12,8 +12,6 @@ from cli import utils
 import cli.yamls
 import cli.execute
 
-ENTRY_POINT = "installer"
-
 LOG = logger.LOG
 CONF = conf.config
 
@@ -31,8 +29,7 @@ def get_settings_dir(args=None):
     settings_dir = utils.validate_settings_dir(
         CONF.get('defaults', 'settings'))
     if args:
-        settings_dir = os.path.join(settings_dir,
-                                    ENTRY_POINT)
+        settings_dir = os.path.join(settings_dir, conf.ENTRY_POINT)
     if hasattr(args, "command0"):
         settings_dir = os.path.join(settings_dir,
                                     args['command0'])
@@ -45,7 +42,7 @@ def get_args(args=None):
     """
 
     spec_manager = conf.SpecManager(CONF)
-    args = spec_manager.parse_args(ENTRY_POINT, args=args)
+    args = spec_manager.parse_args(conf.ENTRY_POINT, args=args)
     return args
 
 

@@ -2,10 +2,17 @@ import ConfigParser
 
 import clg
 import os
+import sys
 import yaml
 
 from cli import exceptions
 from cli import utils
+
+ENTRY_POINT = dict(
+    provision='provisioner',
+    install='installer',
+    test='tester'
+)[sys.argv[0].split('-')[-1]]
 
 
 def load_config_file():
@@ -78,5 +85,6 @@ class SpecManager(object):
                 res.append(os.path.join(dirpath, filename))
 
         return res
+
 
 config = load_config_file()

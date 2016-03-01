@@ -12,13 +12,8 @@ from cli.install import get_args, get_settings_dir, set_logger_verbosity
 import cli.yamls
 import cli.execute
 
-ENTRY_POINT = "provisioner"
-
 LOG = logger.LOG
 CONF = conf.config
-
-NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output-file',
-                        'input-files', 'dry-run', 'cleanup', 'inventory']
 
 
 def main():
