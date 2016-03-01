@@ -7,7 +7,6 @@ import cli.execute
 import cli.yamls
 import yaml
 
-from cli import logger  # logger creation is first thing to be done
 from cli import conf
 from cli import utils
 import cli.yamls
@@ -19,15 +18,11 @@ CONF = conf.config
 NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output-file',
                         'input-files', 'dry-run', 'cleanup', 'inventory']
 
+
 class IRFactory(object):
     """
-    Creates and configures tha IR applications.
+    Creates and configures the IR applications.
     """
-    from logging import WARNING, INFO, DEBUG
-    LOG.setLevel((WARNING, INFO)[level] if level < 2 else DEBUG)
-
-    NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output-file',
-                            'input-files', 'dry-run', 'cleanup', 'inventory']
 
     @classmethod
     def create(cls, app_name, config):
@@ -35,58 +30,82 @@ class IRFactory(object):
         Create the application object
         by module name and provided configuration.
         """
+        args = conf.SpecManager.parse_args(app_name, config)
+        setting_dir = utils.validate_settings_dir(
+            CONF.get('defaults', 'settings'))
+        cls.configure(args)
+
         if app_name in ["provisioner", ]:
-            args = conf.SpecManager.parse_args(app_name, config)
-            settings_files = cls.configure(app_name, config, args)
-            app_instance = IRApplication(app_name, args, settings_files)
+            app_instance = IRApplication(app_name, setting_dir, args)
 
         else:
-            raise Exception("Application is not supported: '{}'".format(app_name))
+            raise Exception(
+                "Application is not supported: '{}'".format(app_name))
         return app_instance
 
     @classmethod
-    def configure(cls, app_name, config, args):
+    def configure(cls, args):
         cls._configure_log(args)
-        settings_files = cls._collect_settings_files(app_name, config, args)
-        LOG.debug("All settings files to be loaded:\n%s" % settings_files)
-        return settings_files
 
     @classmethod
     def _configure_log(cls, args):
         """
-        Perfroms the logging module configuration.
+        Performs the logging module configuration.
         :return:
         """
         from logging import WARNING, INFO, DEBUG
         LOG.setLevel((WARNING, INFO)[args.verbose]
                      if args.verbose < 2 else DEBUG)
 
+
+class IRSubCommand(object):
+    """
+    Represents a command (virsh, ospd, etc)
+    for the application
+    """
+
+    def __init__(self, mame, args, settings_dir):
+        self.name = mame
+        self.args = args
+        self.settings_dir = settings_dir
+
     @classmethod
-    def _collect_settings_files(cls, app_name, config, args):
+    def create(cls, app, settings_dir, args):
         """
-        Collects all the settings files for given module and sub-command
+        Constructs the sub-command.
+        :param app:  tha application name
+        :param settings_dir:  the default application settings dir
+        :param args: the application args
+        :return: the IRSubCommand instance.
+        """
+        if args:
+            settings_dir = os.path.join(settings_dir,
+                                        app)
+        if hasattr(args, "command0"):
+            settings_dir = os.path.join(settings_dir,
+                                        args['command0'])
+        return cls(args['command0'], args, settings_dir)
+
+    def get_settings_files(self):
+        """
+        Collects all the settings files for given application and sub-command
         """
         settings_files = []
-        settings_dir = utils.validate_settings_dir(
-            config.get('defaults', 'settings'))
-        module_dir = os.path.join(
-            settings_dir,
-            app_name,
-            args.command0)
 
         # first take all the files from the input-files args
-        for input_file in args['input-files'] or []:
+        for input_file in self.args['input-files'] or []:
             settings_files.append(utils.normalize_file(input_file))
 
         # get the sub-command yml file
         settings_files.append(os.path.join(
-            module_dir,
-            args.command0 + '.yml'))
+            self.settings_dir,
+            self.name + '.yml'))
 
         # load directly from args
-        for key, val in vars(args).iteritems():
-            if val is not None and key not in cls.NON_SETTINGS_OPTIONS:
-                settings_file = os.path.join(module_dir, key, val + '.yml')
+        for key, val in vars(self.args).iteritems():
+            if val is not None and key not in NON_SETTINGS_OPTIONS:
+                settings_file = os.path.join(
+                    self.settings_dir, key, val + '.yml')
                 LOG.debug('Searching settings file for the "%s" key...' % key)
                 if not os.path.isfile(settings_file):
                     settings_file = utils.normalize_file(val)
@@ -95,24 +114,25 @@ class IRFactory(object):
                           'files list as an argument '
                           'for "%s" key' % (settings_file, key))
 
+        LOG.debug("All settings files to be loaded:\n%s" % settings_files)
         return settings_files
 
-    cli.yamls.Lookup.in_string_lookup()
 
 class IRApplication(object):
     """
     Hold the default application workflow logic.
     """
-    def __init__(self, name, args, settings_files):
+    def __init__(self, name, settings_dir, args):
         self.name = name
-        self.args = args
-        self.settings_files = settings_files
+        self.args = args.args
+        self.settings_dir = settings_dir
+        self.sub_command = IRSubCommand.create(name, settings_dir, args)
 
     def run(self):
         """
         :return: Runs the application
         """
-        settings = self.lookup(self.settings_files)
+        settings = self.lookup(self.sub_command.get_settings_files())
         self.dump_settings(settings)
         self.execute(settings)
 
@@ -144,11 +164,13 @@ class IRApplication(object):
         Executes a playbook.
         """
         if not self.args['dry-run']:
-            vars(self.args)['settings'] = settings
+            vars(self.args)['settings'] = yaml.load(yaml.safe_dump(
+                settings,
+                default_flow_style=False))
             if not self.args['cleanup']:
                 vars(self.args)['provision'] = True
 
-        cli.execute.ansible_wrapper(self.args)
+            cli.execute.ansible_wrapper(self.args)
 
 
 def main():

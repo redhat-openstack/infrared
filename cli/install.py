@@ -44,8 +44,7 @@ def get_args(args=None):
     :return args: return loaded arguments from CLI
     """
 
-    spec_manager = conf.SpecManager(CONF)
-    args = spec_manager.parse_args(ENTRY_POINT, args=args)
+    args = conf.SpecManager.parse_args(ENTRY_POINT, CONF, args=args)
     return args
 
 
