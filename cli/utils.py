@@ -62,8 +62,7 @@ def validate_settings_dir(settings_dir=None):
     :raise: IRFileNotFoundException: when the path to the settings dir doesn't
             exist
     """
-    settings_dir = settings_dir or os.environ.get(
-        utils.INFRARED_DIR_ENV_VAR)
+    settings_dir = settings_dir or os.environ.get(INFRARED_DIR_ENV_VAR)
 
     if not os.path.exists(settings_dir):
         raise exceptions.IRFileNotFoundException(
