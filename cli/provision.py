@@ -7,8 +7,12 @@ import yaml
 from cli import logger  # logger creation is first thing to be done
 from cli import conf
 from cli import utils
+from cli.install import set_network_template as set_network
+from cli.install import get_args, get_settings_dir, set_logger_verbosity
 import cli.yamls
 import cli.execute
+
+ENTRY_POINT = "provisioner"
 
 LOG = logger.LOG
 CONF = conf.config
@@ -17,48 +21,34 @@ NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output-file',
                         'input-files', 'dry-run', 'cleanup', 'inventory']
 
 
-def set_logger_verbosity(level):
-    """
-    Set the logger verbosity level
-
-    :param level: verbosity level (int)
-    """
-    from logging import WARNING, INFO, DEBUG
-    LOG.setLevel((WARNING, INFO)[level] if level < 2 else DEBUG)
-
-
 def main():
-    spec_manager = conf.SpecManager(CONF)
-    args = spec_manager.parse_args("provisioner")
+    args = get_args()
 
     settings_files = []
-    settings_dir = utils.validate_settings_dir(
-        CONF.get('defaults', 'settings'))
 
     set_logger_verbosity(args.verbose)
-
-    provision_dir = os.path.join(settings_dir, 'provisioner', args['command0'])
 
     for input_file in args['input-files'] or []:
         settings_files.append(utils.normalize_file(input_file))
 
-    settings_files.append(os.path.join(provision_dir,
-                                       args['command0'] + '.yml'))
+    settings_files.append(os.path.join(get_settings_dir(args),
+                                       args["command0"] + '.yml'))
 
-    for key, val in vars(args).iteritems():
-        if val is not None and key not in NON_SETTINGS_OPTIONS:
-            settings_file = os.path.join(provision_dir, key, val + '.yml')
-            LOG.debug('Searching settings file for the "%s" key...' % key)
-            if not os.path.isfile(settings_file):
-                settings_file = utils.normalize_file(val)
-            settings_files.append(settings_file)
-            LOG.debug('"%s" was added to settings files list as an argument '
-                      'for "%s" key' % (settings_file, key))
+    # todo(aopincar): virsh specific
+    settings_dict = set_image_source(args)
+    utils.dict_merge(settings_dict, set_host(args))
+
+    for arg_dir in ('network', 'topology'):
+        with open(set_network(args[arg_dir], os.path.join(
+                get_settings_dir(args), arg_dir))) as settings_file:
+            settings = yaml.load(settings_file)
+        utils.dict_merge(settings_dict, settings)
 
     LOG.debug("All settings files to be loaded:\n%s" % settings_files)
-
     cli.yamls.Lookup.settings = utils.generate_settings(settings_files,
                                                         args['extra-vars'])
+    # todo(aopincar): virsh specific
+    cli.yamls.Lookup.settings = cli.yamls.Lookup.settings.merge(settings_dict)
 
     cli.yamls.Lookup.in_string_lookup()
 
@@ -81,6 +71,23 @@ def main():
             vars(args)['provision'] = True
 
         cli.execute.ansible_wrapper(args)
+
+
+def set_image_source(args):
+    image = dict(
+        name=args['image-file'],
+        base_url=args['image-server']
+    )
+    return {'provisioner': {'image': image}}
+
+
+def set_host(args):
+    host = dict(
+        ssh_host=args['host'],
+        ssh_user=args['ssh-user'],
+        ssh_key_file=args['ssh-key']
+    )
+    return {'provisioner': {'hosts': {'host1': host}}}
 
 
 if __name__ == '__main__':
