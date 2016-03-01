@@ -118,6 +118,8 @@ def generate_settings(settings_files, extra_vars):
 
     for extra_var in extra_vars or []:
         if extra_var.startswith('@'):
+            if not len(extra_var[1:]):
+                raise exceptions.IRExtraVarsException(extra_var)
             settings_file = normalize_file(extra_var[1:])
             settings = update_settings(settings, settings_file)
 
