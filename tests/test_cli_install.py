@@ -3,6 +3,9 @@ import os
 import pytest
 
 
+ENTRY_POINT = 'installer'
+
+
 @pytest.mark.parametrize('args, output', [
     ("ospd --rpm path_to_rpm --rpm path_to_rpm --version 7.3",
      {"rpm": "path_to_rpm",
@@ -45,7 +48,7 @@ import pytest
 def test_product_repo(args, output):
     from cli import install
 
-    args = install.get_args(args=args.split(" "))
+    args = install.get_args(ENTRY_POINT, args=args.split(" "))
     product = install.set_product_repo(args)
     assert output == product["installer"]["product"]
 
@@ -72,7 +75,7 @@ def test_set_network_details(args, output):
 
     args = "ospd --rpm path_to_rpm --version 7 " + args
     args = args.strip(" ")
-    args = install.get_args(args=args.split(" "))
+    args = install.get_args(ENTRY_POINT, args=args.split(" "))
     network = install.set_network_details(args)
     assert output == network["installer"]["overcloud"]["network"]
 
@@ -82,7 +85,7 @@ def test_set_network_template():
     from cli import install
 
     filename = "ipv4.yml"
-    def_path = os.path.join(install.get_settings_dir(),
+    def_path = os.path.join(install.get_settings_dir(ENTRY_POINT, ),
                             install.ENTRY_POINT,
                             "ospd", "network",
                             "templates")
@@ -117,7 +120,7 @@ def test_set_image(args, output):
     from cli import install
 
     args = "ospd " + args
-    args = install.get_args(args=args.split(" "))
+    args = install.get_args(ENTRY_POINT, args=args.split(" "))
     images = install.set_image(args)
     assert images["installer"]["overcloud"]["images"] == output
 
@@ -127,7 +130,7 @@ def test_set_image_build():
     from cli import install
 
     args = "ospd --rpm path_to_rpm --version 7"
-    args = install.get_args(args=args.split(" "))
+    args = install.get_args(ENTRY_POINT, args=args.split(" "))
     with pytest.raises(exceptions.IRNotImplemented):
         install.set_image(args)
 
@@ -148,6 +151,6 @@ def test_set_storage(args, output):
 
     args = "ospd --rpm path_to_rpm --version 7 " + args
     args = args.strip(" ")
-    args = install.get_args(args=args.split(" "))
+    args = install.get_args(ENTRY_POINT, args=args.split(" "))
     storage = install.set_storage(args)
     assert storage["installer"]["overcloud"]["storage"] == output
