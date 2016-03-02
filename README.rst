@@ -57,9 +57,9 @@ Extra-Vars
 One can set/overwrite settings in the output file using the '-e/--extra-vars'
 option. There are 2 ways of doing so:
 
-1. specific settings: (``key=value`` form)
+1. Specific settings: (``key=value`` form)
     ``--extra-vars provisioner.site.user=a_user``
-2. path to a settings file: (starts with ``@``)
+2. Path to a settings file: (starts with ``@``)
     ``--extra-vars @path/to/a/settings_file.yml``
 
 The ``-e``/``--extra-vars`` can be used more than once.
