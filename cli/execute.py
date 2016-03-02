@@ -91,7 +91,7 @@ def execute_ansible(playbook, args):
             ansible_cmd.append("-M " + module_path)
         ansible_cmd.append("-" + "v" * args.verbose)
         ansible_cmd.append("-i " + hosts)
-        extra_vars = vars(args)['output-file'] or "<path to settings file>"
+        extra_vars = vars(args)['output'] or "<path to settings file>"
         ansible_cmd.append("--extra-vars @" + extra_vars)
         ansible_cmd.append(path_to_playbook)
         print "ANSIBLE COMMAND: " + " ".join(ansible_cmd)
