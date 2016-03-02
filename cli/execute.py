@@ -136,9 +136,11 @@ def execute_ansible(playbook, args):
 
     print ""
     if len(failed_hosts) > 0:
-        raise Exception(2)
+        raise exceptions.IRPlaybookFailedException(
+            playbook, "Failed hosts: %s" % failed_hosts)
     if len(unreachable_hosts) > 0:
-        raise Exception(3)
+        raise exceptions.IRPlaybookFailedException(
+            playbook, "Unreachable hosts: %s" % unreachable_hosts)
 
 
 def ansible_wrapper(args):

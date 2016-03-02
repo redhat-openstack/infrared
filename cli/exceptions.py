@@ -35,9 +35,10 @@ class IRUndefinedEnvironmentVariableExcption(IRException):
 
 
 class IRPlaybookFailedException(IRException):
-    def __init__(self, playbook):
-        super(self.__class__, self).__init__(
-            'Playbook "%s" failed!' % playbook)
+    def __init__(self, playbook, message=""):
+        msg = 'Playbook "%s" failed!' % playbook
+        msg = msg + message if message else msg
+        super(self.__class__, self).__init__(msg)
 
 
 class IRYAMLConstructorError(IRException):
