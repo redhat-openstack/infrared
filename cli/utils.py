@@ -3,9 +3,7 @@ This module provide some general helper methods
 """
 
 import os
-import re
 
-import configure
 import yaml
 
 import cli.yamls
@@ -36,17 +34,21 @@ def dict_insert(dic, val, key, *keys):
     dict_insert(dic.setdefault(key, {}), val, *keys)
 
 
-def dict_merge(first, second):
-    """ Given two dict objects, this function returns
-    a dict that is the result of merging them into one.
+def dict_merge(first_dict, second_dict):
+    """ Given two dict objects, this function merges the two dicts into the
+    first dict. If the same key is in the both dicts, the value in the
+    second dict will overwrite the value in the first dict.
     """
-    if isinstance(first, dict) and isinstance(second, dict):
-        for key, value in second.iteritems():
-            if key not in first:
-                first[key] = value
-            else:
-                first[key] = dict_merge(first[key], value)
-    return first
+    if not isinstance(first_dict, dict) or not isinstance(second_dict, dict):
+        raise ValueError("Two arguments must be 'dict' type.")
+
+    for key, value in second_dict.iteritems():
+        if key not in first_dict \
+                or not isinstance(first_dict[key], dict)\
+                or not isinstance(value, dict):
+            first_dict[key] = value
+        else:
+            dict_merge(first_dict[key], value)
 
 
 # TODO: remove "settings" references in project
@@ -75,7 +77,7 @@ def validate_settings_dir(settings_dir=None):
 def update_settings(settings, file_path):
     """merge settings in 'file_path' with 'settings'
 
-    :param settings: settings to be merge with (configure.Configuration)
+    :param settings: settings dictionary to be merge with
     :param file_path: path to file with settings to be merged
     :return: merged settings
     """
@@ -84,7 +86,8 @@ def update_settings(settings, file_path):
         raise exceptions.IRFileNotFoundException(file_path)
 
     try:
-        loaded_file = configure.Configuration.from_file(file_path).configure()
+        with file(file_path, 'r') as stream:
+            loaded_file = yaml.load(stream)
         placeholders_list = cli.yamls.Placeholder.placeholders_list
         for placeholder in placeholders_list[::-1]:
             if placeholder.file_path is None:
@@ -94,13 +97,13 @@ def update_settings(settings, file_path):
     except yaml.constructor.ConstructorError as e:
         raise exceptions.IRYAMLConstructorError(e, file_path)
 
-    settings = settings.merge(loaded_file)
+    dict_merge(settings, loaded_file)
 
     return settings
 
 
 def generate_settings(settings_files, extra_vars):
-    """ Generates one settings object (configure.Configuration) by merging all
+    """ Generates one settings object (dictionary) by merging all
     files in settings file & extra-vars
 
     files in 'settings_files' are the first to be merged and after them the
@@ -108,10 +111,10 @@ def generate_settings(settings_files, extra_vars):
 
     :param settings_files: list of paths to settings files
     :param extra_vars: list of extra-vars
-    :return: Configuration object with merging results of all settings
+    :return: A dictionary with merging results of all settings
     files and extra-vars
     """
-    settings = configure.Configuration.from_dict({})
+    settings = {}
 
     for settings_file in settings_files:
         settings = update_settings(settings, settings_file)

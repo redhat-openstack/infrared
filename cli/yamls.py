@@ -5,104 +5,13 @@ This module contains the tools for handling YAML files and tags.
 import logging
 import re
 import sys
-import string
 
-import configure
 import yaml
 
 from cli import exceptions
 from cli import logger
 
 LOG = logger.LOG
-
-# Representer for Configuration object
-yaml.SafeDumper.add_representer(
-    configure.Configuration,
-    lambda dumper, value:
-    yaml.representer.BaseRepresenter.represent_mapping
-    (dumper, u'tag:yaml.org,2002:map', value))
-
-
-def random_generator(size=32, chars=string.ascii_lowercase + string.digits):
-    import random
-
-    return ''.join(random.choice(chars) for _ in range(size))
-
-
-@configure.Configuration.add_constructor('join')
-def _join_constructor(loader, node):
-    seq = loader.construct_sequence(node)
-    return ''.join([str(i) for i in seq])
-
-
-@configure.Configuration.add_constructor('random')
-def _random_constructor(loader, node):
-    """
-    usage:
-        !random <length>
-    returns a random string of <length> characters
-    """
-
-    num_chars = loader.construct_scalar(node)
-    return random_generator(int(num_chars))
-
-
-def _limit_chars(_string, length):
-    length = int(length)
-    if length < 0:
-        raise exceptions.IRException('length to crop should be int, not ' +
-                                     str(length))
-
-    return _string[:length]
-
-
-@configure.Configuration.add_constructor('limit_chars')
-def _limit_chars_constructor(loader, node):
-    """
-    Usage:
-        !limit_chars [<string>, <length>]
-    Method returns first param cropped to <length> chars.
-    """
-
-    params = loader.construct_sequence(node)
-    if len(params) != 2:
-        raise exceptions.IRException(
-            'limit_chars requires two params: string length')
-    return _limit_chars(params[0], params[1])
-
-
-@configure.Configuration.add_constructor('env')
-def _env_constructor(loader, node):
-    """
-    usage:
-        !env <var-name>
-        !env [<var-name>, [default]]
-        !env [<var-name>, [default], [length]]
-    returns value for the environment var-name
-    default may be specified by passing a second parameter in a list
-    length is maximum length of output (croped to that length)
-    """
-
-    import os
-    # scalar node or string has no defaults,
-    # raise IRUndefinedEnvironmentVariableExcption if absent
-    if isinstance(node, yaml.nodes.ScalarNode):
-        try:
-            return os.environ[loader.construct_scalar(node)]
-        except KeyError:
-            raise exceptions.IRUndefinedEnvironmentVariableExcption(node.value)
-
-    seq = loader.construct_sequence(node)
-    var = seq[0]
-    if len(seq) >= 2:
-        ret = os.getenv(var, seq[1])  # second item is default val
-
-        # third item is max. length
-        if len(seq) == 3:
-            ret = _limit_chars(ret, seq[2])
-        return ret
-
-    return os.environ[var]
 
 
 class Lookup(yaml.YAMLObject):
@@ -215,14 +124,11 @@ class Lookup(yaml.YAMLObject):
         if settings_dic is None:
             settings_dic = cls.settings
 
-        my_iter = settings_dic.iteritems() if \
-            (isinstance(settings_dic, dict) or
-             isinstance(settings_dic, configure.Configuration)) else \
-            enumerate(settings_dic)
+        my_iter = settings_dic.iteritems() if isinstance(settings_dic, dict)\
+            else enumerate(settings_dic)
 
         for idx_key, value in my_iter:
-            if isinstance(value, dict) or \
-                    isinstance(value, configure.Configuration):
+            if isinstance(value, dict):
                 cls.in_string_lookup(settings_dic[idx_key])
             elif isinstance(value, list):
                 cls.in_string_lookup(value)
