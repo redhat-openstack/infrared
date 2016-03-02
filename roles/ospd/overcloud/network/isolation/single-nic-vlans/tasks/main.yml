@@ -17,9 +17,9 @@
       line: '                       -e {{ installer.overcloud.template_base }}/{{ installer.overcloud.network.isolation.file }} \\'
 
 - name: add port to br-ctlplane for ipv6 over vlan support
-  shell: "sudo ovs-vsctl add-port br-ctlplane vlan{{ installer.overcloud.network.template.parameter_defaults.ExternalNetworkVlanID }} tag={{ installer.overcloud.network.template.parameter_defaults.ExternalNetworkVlanID }} -- set interface vlan{{ installer.overcloud.network.template.parameter_defaults.ExternalNetworkVlanID }} type=internal"
+  shell: "sudo ovs-vsctl add-port br-ctlplane vlan{{ installer.overcloud.network.template.content.parameter_defaults.ExternalNetworkVlanID }} tag={{ installer.overcloud.network.template.content.parameter_defaults.ExternalNetworkVlanID }} -- set interface vlan{{ installer.overcloud.network.template.content.parameter_defaults.ExternalNetworkVlanID }} type=internal"
   when: installer.overcloud.network.backend == 'vlan'
 
 - name: add the ipv6 address
-  shell: "sudo ip l set dev vlan{{ installer.overcloud.network.template.parameter_defaults.ExternalNetworkVlanID }} up; sudo ip addr add {{ installer.overcloud.network.template.parameter_defaults.ExternalInterfaceDefaultRoute }}/64 dev vlan{{ installer.overcloud.network.template.parameter_defaults.ExternalNetworkVlanID }}"
+  shell: "sudo ip l set dev vlan{{ installer.overcloud.network.template.content.parameter_defaults.ExternalNetworkVlanID }} up; sudo ip addr add {{ installer.overcloud.network.template.content.parameter_defaults.ExternalInterfaceDefaultRoute }}/64 dev vlan{{ installer.overcloud.network.template.content.parameter_defaults.ExternalNetworkVlanID }}"
   when: installer.overcloud.network.backend == 'vlan'

@@ -2,7 +2,7 @@
   shell: "openssl genrsa -out {{ installer.overcloud.template_base }}/overcloud-privkey.pem 2048"
 
 - name: create the self signed CA certificate
-  shell: "openssl req -new -x509 -key {{ installer.overcloud.template_base }}/overcloud-privkey.pem -out {{ installer.overcloud.template_base }}/overcloud-cacert.pem -days 365 -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ installer.overcloud.network.template.parameter_defaults.ExternalAllocationPools[0].start }}'"
+  shell: "openssl req -new -x509 -key {{ installer.overcloud.template_base }}/overcloud-privkey.pem -out {{ installer.overcloud.template_base }}/overcloud-cacert.pem -days 365 -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ installer.overcloud.network.template.content.parameter_defaults.ExternalAllocationPools[0].start }}'"
 
 - name: update the tls template
   shell: "sed -i 's/CLOUDNAME/IP_ADDRESS/' {{ installer.overcloud.template_base }}/environments/enable-tls.yaml"

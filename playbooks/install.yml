@@ -3,7 +3,7 @@
   hosts: openstack_nodes
   sudo: yes
   tasks:
-    - debug: "var={{ installer.selinux | default('enforcing') }}"
+    - selinux: policy=targeted state={{ installer.selinux|default('enforcing') }}
 
 - name: Ensure yum presence
   hosts: openstack_nodes

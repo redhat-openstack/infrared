@@ -16,25 +16,23 @@
       command: "rm -f /etc/yum.repos.d/*"
 
     - name: install the rhos-release RPM
-      shell: "yum localinstall -y {{ installer.product.rpm }}"
+      shell: "yum localinstall -y {{ product.rpm }}"
 
     - debug:
-          msg: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }}"
+          msg: "rhos-release {{ installer.version.major }}-director -p {{ installer.build }}"
 
     - name: create necessary repos with for director using rhos-release
-      command: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }}"
+      command: "rhos-release {{ installer.version.major }}-director -p {{ installer.build }}"
       register: command_result
       until: command_result.stderr.find('Connection reset by peer') == -1
       retries: 40
       delay: 5
 
     - debug:
-          msg: "rhos-release {{ installer.productcore.version }} -p {{ installer.product.core.build }}"
-      when: prodcut.core is defined
+          msg: "rhos-release {{ product.version.major }} -p {{ product.build }}"
 
     - name: create necessary repos for core using rhos-release
-      command: "rhos-release {{ installer.productcore.version }} -p {{ installer.product.core.build }}"
-      when: prodcut.core is defined
+      command: "rhos-release {{ product.version.major }} -p {{ product.build }}"
 
     - name: update system packages
       yum:
@@ -61,7 +59,7 @@
   tasks:
     - name: Install the oscplugin/tripleO client
       yum:
-          name: "{% if installer.product.version == '7' %}python-rdomanager-oscplugin{% else %}python-tripleoclient{% endif %}"
+          name: "{% if installer.version.major == 7 %}python-rdomanager-oscplugin{% else %}python-tripleoclient{% endif %}"
           state: present
 
     - name: create user
