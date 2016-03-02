@@ -40,6 +40,7 @@ subparsers:
             input:
                 action: append
                 type: str
+                short: i
                 help: Input settings file to be loaded before the merging of user args
             output:
                 type: str
