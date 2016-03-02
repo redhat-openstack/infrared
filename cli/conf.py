@@ -1,8 +1,9 @@
 import ConfigParser
-
-import clg
 import os
 import yaml
+
+import clg
+import yamlordereddictloader
 
 from cli import exceptions
 from cli import utils
@@ -62,7 +63,8 @@ class SpecManager(object):
         """
         res = {}
         for spec_file in cls._get_all_specs(config, subfolder=module_name):
-            spec = yaml.load(open(spec_file))
+            spec = yaml.load(open(spec_file),
+                             Loader=yamlordereddictloader.Loader)
             utils.dict_merge(res, spec)
         return res
 
