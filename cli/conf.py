@@ -43,38 +43,40 @@ class SpecManager(object):
 
     SPEC_EXTENSION = '.spec'
 
-    def __init__(self, config):
-        self.config = config
+    @classmethod
+    def parse_args(cls, module_name, config, args=None):
+        """
+        Looks for all the specs for specified module
+        and parses the commandline input arguments accordingly.
 
-    def get_specs(self, module_name):
+        :param module_name: the module name: installer|provisioner|tester
+        """
+        cmd = clg.CommandLine(cls._get_specs(module_name, config))
+        return cmd.parse(args)
+
+    @classmethod
+    def _get_specs(cls, module_name, config):
         """
         Gets specs files as a dict from settings/<module_name> folder.
         :param module_name: the module name: installer|provisioner|tester
         """
         res = {}
-        for spec_file in self.__get_all_specs(subfolder=module_name):
+        for spec_file in cls._get_all_specs(config, subfolder=module_name):
             spec = yaml.load(open(spec_file))
             utils.dict_merge(res, spec)
         return res
 
-    def parse_args(self, module_name, args=None):
-        """
-        Looks for all the specs for specified module
-        and parses the commandline input arguments accordingly.
-        """
-        cmd = clg.CommandLine(self.get_specs(module_name))
-        return cmd.parse(args)
-
-    def __get_all_specs(self, subfolder=None):
+    @classmethod
+    def _get_all_specs(cls, config, subfolder=None):
         root_dir = utils.validate_settings_dir(
-            self.config.get('defaults', 'settings'))
+            config.get('defaults', 'settings'))
         if subfolder:
             root_dir = os.path.join(root_dir, subfolder)
 
         res = []
         for dirpath, _, filenames in os.walk(root_dir):
             for filename in [f for f in filenames
-                             if f.endswith(self.SPEC_EXTENSION)]:
+                             if f.endswith(cls.SPEC_EXTENSION)]:
                 res.append(os.path.join(dirpath, filename))
 
         return res
