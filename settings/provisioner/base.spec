@@ -11,6 +11,6 @@ options:
         type: str
         default: local_hosts
     debug:
-        help: 'Set log level to DEBUG'
+        help: 'Run InfraRed in DEBUG mode'
         short: d
         action: store_true
