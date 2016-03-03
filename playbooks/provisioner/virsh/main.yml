@@ -24,6 +24,12 @@
             state: present
         with_items: "{{ provisioner.packages }}"
 
+      - name: stop libvirtd
+        service:
+            name: libvirtd
+            state: stopped
+            enabled: no
+
       - name: start libvirtd
         service:
             name: libvirtd
@@ -163,28 +169,6 @@
         get_url:
             dest: "/var/lib/libvirt/images/{{ provisioner.image.name }}-original"
             url: "{{ provisioner.image.base_url }}/{{ provisioner.image.name }}"
-
-      - name: remove cloud-init from the base image
-        shell: "virt-customize -a {{ provisioner.image.name }}-original --run-command 'yum remove cloud-init* -y'"
-        args:
-            chdir: "/var/lib/libvirt/images/"
-
-      - name: reset the password to a default one
-        shell: "virt-customize -a {{ provisioner.image.name }}-original --root-password password:redhat"
-        args:
-            chdir: "/var/lib/libvirt/images/"
-
-        #TODO: configure interfaces based on config rather than hardcode
-      - name: configure three network interfaces for the image
-        shell: "virt-customize -a {{ provisioner.image.name }}-original --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{0,1} && sed -i s/DEVICE=.*/DEVICE=eth1/g /etc/sysconfig/network-scripts/ifcfg-eth1'"
-        args:
-            chdir: "/var/lib/libvirt/images/"
-
-        #TODO: configure interfaces based on config rather than hardcode
-      - name: configure three network interfaces for the image
-        shell: "virt-customize -a {{ provisioner.image.name }}-original --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{1,2} && sed -i s/DEVICE=.*/DEVICE=eth2/g /etc/sysconfig/network-scripts/ifcfg-eth2'"
-        args:
-            chdir: "/var/lib/libvirt/images/"
 
       - name: create image templates for nodes
         template:
