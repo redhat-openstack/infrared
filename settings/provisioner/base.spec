@@ -10,3 +10,7 @@ options:
         short: i
         type: str
         default: local_hosts
+    debug:
+        help: 'Set log level to DEBUG'
+        short: d
+        action: store_true
