@@ -154,6 +154,11 @@
             name: "{{ item.value.name }}"
         with_dict: provisioner.network.network_list
 
+      - name: remove pre-existing file
+        file:
+            state: absent
+            dest: "/var/lib/libvirt/images/{{ provisioner.image.name }}-original"
+
       - name: download base guest image
         get_url:
             dest: "/var/lib/libvirt/images/{{ provisioner.image.name }}-original"
