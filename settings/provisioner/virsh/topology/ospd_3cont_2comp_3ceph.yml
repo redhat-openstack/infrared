@@ -47,13 +47,13 @@ provisioner:
             cpu: 2
             memory: 4096
             disks:
-                <<: *disks
+                disk1: &disk1
+                    path: /var/lib/libvirt/images
+                    dev: /dev/vda
+                    size: 20G
                 disk2:
                     <<: *disk1
                     dev: /dev/vdb
-            groups:
-                - ceph
-                - openstack_nodes
 
         undercloud:
             <<: *controller

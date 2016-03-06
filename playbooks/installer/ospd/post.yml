@@ -13,6 +13,12 @@
             dest: "{{ inventory_dir }}/keystonerc"
             flat: yes
 
+      - name: Copy the tempest-deployer-input.conf file for the tester
+        fetch:
+            src: "~/tempest-deployer-input.conf"
+            dest: "{{ inventory_dir }}/tempest-deployer-input.conf"
+            flat: yes
+
 - name: Apply workarounds if necessary
   hosts: undercloud
   gather_facts: no
@@ -20,7 +26,11 @@
   become_user: "{{ installer.user.name }}"
   roles:
       - {role: workarounds/rhbz1304367, when: workarounds.rhbz1304367 is defined and 'ceph' in groups }
+      - {role: workarounds/rhbz1314711, when: workarounds.rhbz1314711 is defined }
+      - {role: workarounds/rhbz1314725, when: workarounds.rhbz1314725 is defined }
+      - {role: workarounds/rhbz1314725, when: workarounds.rhbz1314732 is defined }
 #      - TODO: https://bugzilla.redhat.com/show_bug.cgi?id=1233251
+
 
 #TODO: remove this when the templating system is in place
 - name: External network creation
@@ -29,8 +39,12 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   tasks:
+      - name: get the default floating ip pool name as set in the nova.conf file
+        shell: "sudo grep -oP '(?<=default_floating_pool=)(.*$)' /etc/nova/nova.conf"
+        register: pool_name
+
       - name: create the external network
-        shell: "source ~/overcloudrc; neutron net-create nova --router:external --provider:physical_network datacentre --provider:network_type flat"
+        shell: "source ~/overcloudrc; neutron net-create {{ pool_name.stdout_lines|last }} --router:external --provider:physical_network datacentre --provider:network_type flat"
 
       - name: create the external subnet
-        shell: "source ~/overcloudrc; neutron subnet-create nova 192.168.1.0/24 --name external_subnet --enable-dhcp=False --allocation-pool start=192.168.1.210,end=192.168.1.250 --gateway 192.168.1.1"
+        shell: "source ~/overcloudrc; neutron subnet-create {{ pool_name.stdout_lines|last }} 192.168.1.0/24 --name external_subnet --enable-dhcp=False --allocation-pool start=192.168.1.210,end=192.168.1.250 --gateway 192.168.1.1"

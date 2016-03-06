@@ -169,6 +169,10 @@
         get_url:
             dest: "/var/lib/libvirt/images/{{ provisioner.image.name }}-original"
             url: "{{ provisioner.image.base_url }}/{{ provisioner.image.name }}"
+        register: result
+        until: result.msg.find("Request failed") == -1
+        retries: 5
+        delay: 5
 
       - name: create image templates for nodes
         template:
