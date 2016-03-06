@@ -22,6 +22,9 @@
             path: "{{ inventory_dir }}/id_rsa_overcloud"
             mode: 0600
 
+      - name: write hostvars for reference
+        shell: "echo {{ hostvars }} > host_details.txt"
+
       - name: update our ansible ssh configuration file
         template:
             src: "templates/ssh.config.ansible.j2"

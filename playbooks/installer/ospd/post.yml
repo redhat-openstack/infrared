@@ -6,6 +6,8 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  roles:
+      - {role: workarounds/rhbz1291568, when: workarounds.rhbz1291568 is defined and 'ceph' in groups }
   tasks:
       - name: Copy the keystonerc file for the tester
         fetch:
