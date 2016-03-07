@@ -39,7 +39,7 @@
         register: ip_list
 
       - name: get the default floating ip pool name from the controller
-        shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ ip_list.stdout_lines|last }} 'sudo grep -oP '(?<=default_floating_pool=)(.*$)' /etc/nova/nova.conf"
+        shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ ip_list.stdout_lines|last }} 'sudo grep -oP \"(?<=default_floating_pool=)(.*$)\" /etc/nova/nova.conf'"
         register: pool_name
 
       - name: create the external network
