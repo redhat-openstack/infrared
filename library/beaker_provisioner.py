@@ -63,24 +63,13 @@ options:
         required: false
 '''
 
-LOAN_COMMENT = 'Loaned by BeakerManager'
+LOAN_COMMENT = "Loaned by Ansible's Module For Beaker"
 SYS_FQDN_PATH = '/systems/{fqdn}/'
+SUCCESS_CODE = 200
 WAIT_BETWEEN_PROVISION_CHECKS = 10
 
 
-def is_fail(status_code, success_code=200):
-    """
-    Check if a command execution failed or not
-
-    :param status_code: The command status code
-    :param success_code: Success code (default is 200)
-    :return: False if status code is equal to success code, otherwise, False
-    """
-
-    return status_code != success_code
-
-
-class BeakerManager(object):
+class BeakerMachine(object):
     REQ_URL = dict(
         ALL='',
         FREE='free/',
@@ -95,7 +84,7 @@ class BeakerManager(object):
     def __init__(self, url, username, password, fqdn,
                  verify=False, disable_warnings=True):
         """
-        BeakerManager initializer.
+        BeakerMachine initializer.
 
         :param url: Base URL of the Beaker server
         :param username: Authentication username
@@ -121,30 +110,18 @@ class BeakerManager(object):
             requests.packages.urllib3.disable_warnings()
 
         # cookie workaround - consider changing with _get_last_activity()
-        self.get(limit=1)
+        self.list_systems(limit=1)
 
     def view(self):
         headers = {'Content-Type': 'application/json'}
-        old_params, new_params = self.session.params, {'tg_format': 'turtle'}
         url = self.base_url + '/view/' + self.fqdn
-        self.session.params = new_params
-        resp = self.session.get(url, headers=headers)
-        self.session.params = old_params
+        resp = self.session.get(url, headers=headers,
+                                data={'tg_format': 'turtle'})
 
-        return is_fail(resp.status_code)
-
-    def view2(self):
-        headers = {'Content-Type': 'application/json'}
-        url = self.base_url + '/systems/' + self.fqdn + '/'
-        resp = self.session.get(url, headers=headers)
-        print resp.status_code
-        print resp.url
-        print resp.content
-
-        return is_fail(resp.status_code)
+        return resp.status_code != SUCCESS_CODE
 
     # TODO: Adds FQDN existence check in __init__()
-    def get(self, limit=0, filters=None, req='FREE'):
+    def list_systems(self, limit=0, filters=None, req='FREE'):
         """
         Get a list of free systems
 
@@ -228,7 +205,7 @@ class BeakerManager(object):
         resp = self.session.post(url, headers=headers,
                                  data=json.dumps({'comment': LOAN_COMMENT}))
 
-        return is_fail(resp.status_code)
+        return resp.status_code != SUCCESS_CODE
 
     def _return_system(self):
         """
@@ -242,7 +219,7 @@ class BeakerManager(object):
         resp = self.session.patch(url, headers=headers,
                                   data=json.dumps({'finish': 'now'}))
 
-        return is_fail(resp.status_code)
+        return resp.status_code != SUCCESS_CODE
 
     def _reserve_system(self):
         """
@@ -255,7 +232,7 @@ class BeakerManager(object):
         url = self._build_url('RESERVE', self.fqdn)
         resp = self.session.post(url, headers=headers)
 
-        return is_fail(resp.status_code)
+        return resp.status_code != SUCCESS_CODE
 
     def _release_system(self):
         """
@@ -269,7 +246,7 @@ class BeakerManager(object):
         resp = self.session.patch(url, headers=headers,
                                   data=json.dumps({'finish_time': 'now'}))
 
-        return is_fail(resp.status_code)
+        return resp.status_code != SUCCESS_CODE
 
     def provision(self, distro_id, ks_meta=None, koptions=None,
                   koptions_post=None, reboot=False, wait_for_host=True,
@@ -306,7 +283,7 @@ class BeakerManager(object):
 
         resp = self.session.post(url, data=params, headers=headers)
 
-        if is_fail(resp.status_code, 201):
+        if resp.status_code != 201:
             return True
 
         if wait_for_host and self._provision_waiter(
@@ -343,8 +320,9 @@ class BeakerManager(object):
         while (time.time() - start_time) < timeout:
             time.sleep(WAIT_BETWEEN_PROVISION_CHECKS)
             last_activity = self._get_last_system_activity()
-            if (last_activity['id'] != pre_provision_activity_id['id']) \
-                    and last_activity['action'] == 'clear_netboot':
+            if (last_activity['id'] != pre_provision_activity_id['id']) and (
+                    last_activity['action'] == 'clear_netboot' or
+                    last_activity['action'] == 'on'):
                 break
         else:
             return True
@@ -384,7 +362,7 @@ def main():
             action=dict(required=True, choices=['provision', 'release']),
             distro_tree_id=dict(default=71576)))
 
-    beaker_client = BeakerManager(url=module.params['server_url'],
+    beaker_client = BeakerMachine(url=module.params['server_url'],
                                   username=module.params['username'],
                                   password=module.params['password'],
                                   fqdn=module.params['fqdn'])
