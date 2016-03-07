@@ -9,8 +9,47 @@ product:
         code_name: liberty
 
 workarounds:
-    rhbz1300662: {}
-    rhbz1299563: {}
-    rhbz1314711: {}
-    rhbz1314732: {}
-    rhbz1291568: {}
+    rhbz1302047:
+        desc: "ceilometer-nova is not configured"
+        bugzilla: "https://bugzilla.redhat.com/show_bug.cgi?id=1302047"
+        failed_tests:
+            - "tempest.api.telemetry.test_telemetry_notification_api.TelemetryNotificationAPITestJSON.test_check_nova_notificationer"
+    rhbz1217093:
+        desc: "OSP installs nova-cert, but is not managed by either systemd or pacemaker"
+        bugzilla: "https://bugzilla.redhat.com/show_bug.cgi?id=1217093"
+        failed_tests:
+            - "tempest.api.compute.certificates.test_certificates.CertificatesV2TestJSON.test_create_root_certificate"
+            - "tempest.api.compute.certificates.test_certificates.CertificatesV2TestJSON.test_get_root_certificate"
+    rhbz1314732:
+        desc: "Telemetry is not configured in nova.conf"
+        bugzilla: "https://bugzilla.redhat.com/show_bug.cgi?id=1314732"
+        failed_tests:
+            - "tempest.api.telemetry.test_telemetry_notification_api.TelemetryNotificationAPITestJSON.test_check_nova_notification"
+    rhbz1291568:
+        desc: "When using Ceph, the 'storage_protocol' in tempest.conf should be set to 'ceph'"
+        bugzilla: "https://bugzilla.redhat.com/show_bug.cgi?id=1291568"
+        failed_tests:
+            - "tempest.api.volume.admin.test_volume_types.VolumeTypesV2Test.test_volume_crud_with_volume_type_and_extra_specs"
+            - "tempest.api.volume.admin.test_volume_types.VolumeTypesV1Test.test_volume_crud_with_volume_type_and_extra_specs"
+            - "tempest.api.compute.volumes.test_attach_volume.AttachVolumeTestJSON.test_list_get_volume_attachments"
+    rhbz1304367:
+        desc: "Overcloud deployment finished successfully and Ceph's OSDs are down"
+        bugzilla: "https://bugzilla.redhat.com/show_bug.cgi?id=1304367"
+    rhbz1314725:
+        desc: "missing heat_stack_owner role after installation"
+        bugzilla: "https://bugzilla.redhat.com/show_bug.cgi?id=1314725"
+        failed_tests:
+            - "tempest.api.orchestration.stacks.test_templates_negative.TemplateYAMLNegativeTestJSON"
+            - "tempest.api.orchestration.stacks.test_environment.StackEnvironmentTest"
+            - "tempest.api.orchestration.stacks.test_stacks.StacksTestJSON"
+            - "tempest.api.orchestration.stacks.test_templates.TemplateAWSTestJSON"
+            - "tempest.api.orchestration.stacks.test_nova_keypair_resources.NovaKeyPairResourcesAWSTest"
+            - "tempest.api.orchestration.stacks.test_limits.TestServerStackLimits"
+            - "tempest.api.orchestration.stacks.test_nova_keypair_resources.NovaKeyPairResourcesYAMLTest"
+            - "tempest.api.orchestration.stacks.test_swift_resources.SwiftResourcesTestJSON"
+            - "tempest.api.orchestration.stacks.test_templates_negative.TemplateAWSNegativeTestJSON"
+            - "tempest.api.orchestration.stacks.test_resource_types.ResourceTypesTest"
+            - "tempest.api.orchestration.stacks.test_non_empty_stack.StacksTestJSON"
+            - "tempest.api.orchestration.stacks.test_soft_conf.TestSoftwareConfig"
+            - "tempest.api.orchestration.stacks.test_templates.TemplateYAMLTestJSON"
+            - "tempest.api.orchestration.stacks.test_volumes.CinderResourcesTest"

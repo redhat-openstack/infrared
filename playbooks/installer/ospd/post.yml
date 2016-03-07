@@ -7,7 +7,13 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   roles:
+      - {role: workarounds/rhbz1302047, when: workarounds.rhbz1302047 is defined }
+      - {role: workarounds/rhbz1217093, when: workarounds.rhbz1217093 is defined }
+      - {role: workarounds/rhbz1314732, when: workarounds.rhbz1314732 is defined }
       - {role: workarounds/rhbz1291568, when: workarounds.rhbz1291568 is defined and 'ceph' in groups }
+      - {role: workarounds/rhbz1304367, when: workarounds.rhbz1304367 is defined and 'ceph' in groups }
+      - {role: workarounds/rhbz1314725, when: workarounds.rhbz1314725 is defined }
+#      - TODO: https://bugzilla.redhat.com/show_bug.cgi?id=1233251
   tasks:
       - name: Copy the keystonerc file for the tester
         fetch:
@@ -20,19 +26,6 @@
             src: "~/tempest-deployer-input.conf"
             dest: "{{ inventory_dir }}/tempest-deployer-input.conf"
             flat: yes
-
-- name: Apply workarounds if necessary
-  hosts: undercloud
-  gather_facts: no
-  become: yes
-  become_user: "{{ installer.user.name }}"
-  roles:
-      - {role: workarounds/rhbz1304367, when: workarounds.rhbz1304367 is defined and 'ceph' in groups }
-      - {role: workarounds/rhbz1314711, when: workarounds.rhbz1314711 is defined }
-      - {role: workarounds/rhbz1314725, when: workarounds.rhbz1314725 is defined }
-      - {role: workarounds/rhbz1314725, when: workarounds.rhbz1314732 is defined }
-#      - TODO: https://bugzilla.redhat.com/show_bug.cgi?id=1233251
-
 
 #TODO: remove this when the templating system is in place
 - name: External network creation
