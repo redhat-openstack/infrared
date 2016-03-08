@@ -26,7 +26,7 @@
   tasks:
     - template:
         dest: "{{ lookup('env', 'PWD') }}/hosts-{{ lookup('env', 'USER') }}"
-        src: provisioner/templates/inventory.j2
+        src: "{{ inventory_dir }}/templates/inventory.j2"
     - file:
         dest: "{{ lookup('env', 'PWD') }}/hosts"
         state: link
