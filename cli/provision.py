@@ -156,6 +156,16 @@ class VirshCommand(IRSubCommand):
         return []
 
 
+class BeakerCommand(IRSubCommand):
+
+    def get_settings_dict(self):
+        pass
+
+    def _load_yaml_files(self):
+        # do not load additional yaml files.
+        return []
+
+
 class IRApplication(object):
     """
     Hold the default application workflow logic.
@@ -166,7 +176,8 @@ class IRApplication(object):
         self.settings_dir = settings_dir
 
         # todo(obaranov) replace with subcommand factory
-        self.sub_command = VirshCommand.create(name, settings_dir, args)
+        sc = {'virsh': VirshCommand, 'beaker': BeakerCommand}[args['command0']]
+        self.sub_command = sc.create(name, settings_dir, args)
 
     def run(self):
         """
