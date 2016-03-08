@@ -37,7 +37,7 @@ options:
     server_url:
         description:
             - Base URL of Beaker server
-        required: tru
+        required: true
     username:
         description:
             - Login username to authenticate to Beaker
