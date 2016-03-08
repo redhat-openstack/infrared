@@ -27,3 +27,21 @@
             src: "templates/ssh.config.ansible.j2"
             dest: "{{ inventory_dir }}/ansible.ssh.config"
             mode: 0755
+
+      - name: Update Inventory
+        add_host:
+          name: "{{ item }}"
+          ansible_ssh_user: "heat-admin"
+        with_items: groups['openstack_nodes'] | difference(["undercloud"])
+        # todo(yfried): Do we need to flush the inventory somehow?
+
+      - name: Generate new Inventory file
+        template:
+          dest: "{{ lookup('env', 'PWD') }}/hosts-{{ lookup('env', 'USER') }}"
+          src: ../../provisioner/templates/inventory.j2
+
+      - name: Link to new Inventory file
+        file:
+          dest: "{{ lookup('env', 'PWD') }}/hosts"
+          state: link
+          src: "{{ lookup('env', 'PWD') }}/hosts-{{ lookup('env', 'USER') }}"
