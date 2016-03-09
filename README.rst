@@ -51,7 +51,7 @@ You can get general usage information with the ``--help`` option::
 This displays options you can pass to ``ir-provision``, as well as plugins available as "subcommands"::
 
   $ ir-provision --help
-  usage: ir-provision [-h] [-v] [-i INVENTORY] {virsh} ...
+  usage: ir-provision [-h] [-v] {virsh} ...
 
   positional arguments:
     {virsh}
@@ -61,7 +61,7 @@ This displays options you can pass to ``ir-provision``, as well as plugins avail
 External setting trees
 ======================
 InfraRed builds settings tree (YAML dict-like structures) that are later passed to Ansible 
-as varibales. This tree can be built upon pre-existing YAML files (with ``-n``/``--input``) ,
+as varibales. This tree can be built upon pre-existing YAML files (with ``-i``/``--input``) ,
 or be overridden post creation by other pre-existing files and/or sets of ``key=value`` arguments.
 
 The merging priority order is:
