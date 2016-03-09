@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-from logging import WARNING, INFO, DEBUG
+import logging
 from cli.install import set_network_template as set_network
 
 import yaml
@@ -50,8 +50,8 @@ class IRFactory(object):
         :param args:
         :return:
         """
-        LOG.setLevel((WARNING, INFO)[args.verbose]
-                     if args.verbose < 2 else DEBUG)
+        if args.debug:
+            LOG.setLevel(logging.DEBUG)
 
 
 class IRSubCommand(object):
