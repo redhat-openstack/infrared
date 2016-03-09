@@ -12,13 +12,6 @@ Setup
 
   $ dnf install redhat-rpm-config
 
-.. note:: InfraRed is using SSH tunneling for some of it's work. To avoid SSH errors,
- add the following lines to ``~/.ssh/config``::
-
-  StrictHostKeyChecking no
-  UserKnownHostsFile=/dev/null
-
-
 Use pip to install from source::
 
   $ pip install <path_to_infrared_dir>
@@ -84,8 +77,8 @@ Set/overwrite settings in the output file using the '-e/--extra-vars'
 option. There are 2 ways of doing so:
 
 1. Specific settings: (``key=value`` form)
-    ``--extra-vars provisioner.site.user=a_user``
+    ``-e provisioner.site.user=a_user``
 2. Path to a settings file: (starts with ``@``)
-    ``--extra-vars @path/to/a/settings_file.yml``
+    ``-e @path/to/a/settings_file.yml``
 
 The ``-e``/``--extra-vars`` can be used more than once.
