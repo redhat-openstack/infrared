@@ -50,7 +50,7 @@ class IRFactory(object):
         :param args:
         :return:
         """
-        if args.debug:
+        if args['debug']:
             LOG.setLevel(logging.DEBUG)
 
 
@@ -77,7 +77,7 @@ class IRSubCommand(object):
         if args:
             settings_dir = os.path.join(settings_dir,
                                         app)
-        if hasattr(args, "command0"):
+        if "command0" in args:
             settings_dir = os.path.join(settings_dir,
                                         args['command0'])
         return cls(args['command0'], args, settings_dir)
