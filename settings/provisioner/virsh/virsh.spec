@@ -9,11 +9,9 @@ subparsers:
             ssh-user:
                 type: str
                 help: User to SSH to the host with
-                default: root
             ssh-key:
                 type: str
                 help: "User's SSH key"
-                default: '~/.ssh/id_rsa'
             network:
                 type: str
                 help: Network
@@ -27,7 +25,6 @@ subparsers:
             topology:
                 type: str
                 help: 'Provision topology (default: __DEFAULT__)'
-                default: all-in-one.yml
             dry-run:
                 action: store_true
                 help: Only generate settings, skip the playbook execution stage

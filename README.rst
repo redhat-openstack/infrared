@@ -52,6 +52,26 @@ You can get general usage information with the ``--help`` option::
 
 This displays options you can pass to ``infrared``.
 
+
+InfraRed input arguments
+------------------------
+InfraRed accepts the next sources of the input arguments (in priority order):
+
+#. Command line arguments:  ``ir-provision virsh --host=some.host.com --ssh_user=root``
+#. Predefined arguments in ini file. Use the --from-file option to specify ini file:
+
+  ```
+  $ ir-provision virsh --host=some.host.com --from-file=user.ini
+  $ cat user.ini
+  [virsh]
+  ssh_user=root
+  ssh_key=mkey.pm
+  ```
+
+#. Environment variables: ``HOST=earth ir-provision virsh --ssh_user=root``
+
+Command line arguments have the highest priority. All the undefined variables will be replaced by that arguments from file or from environment.
+
 Extra-Vars
 ----------
 One can set/overwrite settings in the output file using the '-e/--extra-vars'
