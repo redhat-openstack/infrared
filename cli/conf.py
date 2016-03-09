@@ -37,6 +37,28 @@ def load_config_file():
         "Please set it in one of the following paths:\n")
 
 
+def IniFileType(value):
+    """
+    The custom type for clg spec
+    :param value: the argument value.
+    :return: dict based on a provided ini file.
+    """
+    _config = ConfigParser.ConfigParser()
+    _config.read(value)
+
+    d = dict(_config._sections)
+    for k in d:
+        d[k] = dict(_config._defaults, **d[k])
+        for key, value in d[k].iteritems():
+            # check if we have lists
+            if value.startswith('[') and value.endswith(']'):
+                value = value[1:-1].split(',')
+            d[k][key] = value
+        d[k].pop('__name__', None)
+
+    return d
+
+
 class SpecManager(object):
     """
     Holds everything related to specs.
@@ -53,7 +75,16 @@ class SpecManager(object):
         :param module_name: the module name: installer|provisioner|tester
         """
         cmd = clg.CommandLine(cls._get_specs(module_name, config))
-        return cmd.parse(args)
+        res_args = cmd.parse(args)
+
+        # override the command specific arguments from file
+        if 'from-file' in res_args:
+            file_args = res_args['from-file']
+            if res_args['command0'] in file_args:
+                utils.dict_merge(res_args, file_args[res_args['command0']])
+
+        # todo(obaranov) try to resolve 'None' arguments from environment.
+        return res_args
 
     @classmethod
     def _get_specs(cls, module_name, config):
@@ -85,3 +116,6 @@ class SpecManager(object):
 
 
 config = load_config_file()
+
+# update clg types
+clg.TYPES.update({'IniFile': IniFileType})

@@ -5,8 +5,7 @@ subparsers:
         options:
             host:
                 type: str
-                help: Address/FQDN of the BM hypervisor
-                required: True
+                help: Address/FQDN of the BM hypervisor. Required argument
             ssh-user:
                 type: str
                 help: User to SSH to the host with
@@ -22,11 +21,9 @@ subparsers:
             image-file:
                 type: str
                 help: An image to provision the host with
-                required: True
             image-server:
                 type: str
                 help: Base URL of the image file server
-                required: True
             topology:
                 type: str
                 help: 'Provision topology (default: __DEFAULT__)'
@@ -51,3 +48,7 @@ subparsers:
                 short: e
                 help: Extra variables to be merged last
                 type: str
+            from-file:
+                type: IniFile
+                help: the ini file with the list of arguments
+
