@@ -218,11 +218,11 @@ class IRApplication(object):
         Executes a playbook.
         """
         if not self.args['dry-run']:
-            vars(self.args)['settings'] = yaml.load(yaml.safe_dump(
+            self.args['settings'] = yaml.load(yaml.safe_dump(
                 settings,
                 default_flow_style=False))
             if not self.args['cleanup']:
-                vars(self.args)['provision'] = True
+                self.args['provision'] = True
 
             cli.execute.ansible_wrapper(self.args)
 

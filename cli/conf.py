@@ -1,10 +1,9 @@
 import ConfigParser
-import os
-import yaml
 
 import clg
+import os
+import yaml
 import yamlordereddictloader
-
 from cli import exceptions
 from cli import utils
 
@@ -52,8 +51,8 @@ def IniFileType(value):
         for key, value in d[k].iteritems():
             # check if we have lists
             if value.startswith('[') and value.endswith(']'):
-                value = value[1:-1].split(',')
-            d[k][key] = value
+                value = utils.string_to_list(value)
+                d[k][key] = value
         d[k].pop('__name__', None)
 
     return d
@@ -75,7 +74,7 @@ class SpecManager(object):
         :param module_name: the module name: installer|provisioner|tester
         """
         cmd = clg.CommandLine(cls._get_specs(module_name, config))
-        res_args = cmd.parse(args)
+        res_args = vars(cmd.parse(args))
 
         # override the command specific arguments from file
         if 'from-file' in res_args:
@@ -83,7 +82,17 @@ class SpecManager(object):
             if file_args is not None and res_args['command0'] in file_args:
                 utils.dict_merge(res_args, file_args[res_args['command0']])
 
-        # todo(obaranov) try to resolve 'None' arguments from environment.
+        # try to resolve 'None' and [] arguments from environment.
+        for arg_name, arg_value in res_args.iteritems():
+            upper_arg_name = arg_name.upper()
+            if upper_arg_name in os.environ:
+                if arg_value is None:
+                    res_args[arg_name] = os.getenv(upper_arg_name)
+                elif isinstance(arg_value, list):
+                    # append value to the list
+                    res_args[arg_name].extend(
+                        utils.string_to_list(os.getenv(upper_arg_name)))
+
         return res_args
 
     @classmethod

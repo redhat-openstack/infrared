@@ -48,8 +48,8 @@ def hostcolor(host, stats, color=True):
 
 
 def execute_ansible(playbook, args):
-    ansible.utils.VERBOSITY = args.verbose
-    hosts = args.inventory or (LOCAL_HOSTS if playbook == PROVISION
+    ansible.utils.VERBOSITY = args['verbose']
+    hosts = args['inventory']or (LOCAL_HOSTS if playbook == PROVISION
                                else HOSTS_FILE)
     playbook = playbook.replace("-", "_") + ".yml"
     path_to_playbook = path.join(
@@ -75,7 +75,7 @@ def execute_ansible(playbook, args):
         # From ansible-playbook:
         playbook=path_to_playbook,
         inventory=ansible.inventory.Inventory(hosts),
-        extra_vars=args.settings,
+        extra_vars=args['settings'],
         callbacks=playbook_cb,
         runner_callbacks=runner_cb,
         stats=stats,
@@ -85,13 +85,13 @@ def execute_ansible(playbook, args):
     failed_hosts = []
     unreachable_hosts = []
 
-    if args.verbose:
+    if args['verbose']:
         ansible_cmd = ["ansible-playbook"]
         if module_path:
             ansible_cmd.append("-M " + module_path)
-        ansible_cmd.append("-" + "v" * args.verbose)
+        ansible_cmd.append("-" + "v" * args['verbose'])
         ansible_cmd.append("-i " + hosts)
-        extra_vars = vars(args)['output'] or "<path to settings file>"
+        extra_vars = args['output'] or "<path to settings file>"
         ansible_cmd.append("--extra-vars @" + extra_vars)
         ansible_cmd.append(path_to_playbook)
         print "ANSIBLE COMMAND: " + " ".join(ansible_cmd)
@@ -146,10 +146,10 @@ def execute_ansible(playbook, args):
 def ansible_wrapper(args):
     """Wraps the 'ansible-playbook' CLI. """
 
-    playbooks = [p for p in PLAYBOOKS if getattr(args, p, False)]
+    playbooks = [p for p in PLAYBOOKS if p in args]
     if not playbooks:
         LOG.error("No playbook to execute (%s)" % PLAYBOOKS)
 
-    for playbook in (p for p in PLAYBOOKS if getattr(args, p, False)):
+    for playbook in playbooks:
         print "Executing Playbook: %s" % playbook
         execute_ansible(playbook, args)

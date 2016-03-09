@@ -184,6 +184,16 @@ def normalize_file(file_path):
     return file_path
 
 
+def string_to_list(value, separator=','):
+    """
+    Converts string to list.
+    """
+    if value.startswith('[') and value.endswith(']'):
+        value = value[1:-1].split(separator)
+    else:
+        value = [value, ]
+    return value
+
 ENV_VAR_NAME = "IR_CONFIG"
 IR_CONF_FILE = 'infrared.cfg'
 USER_PATH = os.path.expanduser('~/.' + IR_CONF_FILE)
