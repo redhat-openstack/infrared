@@ -36,16 +36,46 @@ def dict_insert(dic, val, key, *keys):
     dict_insert(dic.setdefault(key, {}), val, *keys)
 
 
-def dict_merge(first, second):
+class ConflictResolver(object):
+    """
+    Resolves conflicts while merging dicts.
+    """
+
+    @staticmethod
+    def none_resolver(first, second, key):
+        """
+        Replaces value in first dict only if it null
+        """
+
+        # tyr to merge lists first
+        if isinstance(first[key], list):
+            if isinstance(first[key], list):
+                first[key].extend(second[key])
+            else:
+                first[key].append(first[key])
+
+        if key not in first or first[key] is None:
+            first[key] = second[key]
+
+
+def dict_merge(first, second, path=None,
+               conflict_resolver=ConflictResolver.none_resolver):
     """ Given two dict objects, this function returns
     a dict that is the result of merging them into one.
     """
-    if isinstance(first, dict) and isinstance(second, dict):
-        for key, value in second.iteritems():
-            if key not in first:
-                first[key] = value
+    if path is None:
+        path = []
+    for key in second:
+        if key in first:
+            if isinstance(first[key], dict) and isinstance(second[key], dict):
+                dict_merge(first[key], second[key], path + [str(key)])
+            elif first[key] == second[key]:
+                pass
             else:
-                first[key] = dict_merge(first[key], value)
+                # replace first value with the value from second
+                conflict_resolver(first, second, key)
+        else:
+            first[key] = second[key]
     return first
 
 

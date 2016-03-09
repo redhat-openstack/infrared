@@ -144,6 +144,10 @@ class VirshCommand(IRSubCommand):
 
         # load network and image settings
         for arg_dir in ('network', 'topology'):
+            if self.args[arg_dir] is None:
+                raise exceptions.IRConfigurationException(
+                    "A value for for the  '{}' "
+                    "argument should be provided!".format(arg_dir))
             with open(set_network(self.args[arg_dir], os.path.join(
                     self.settings_dir, arg_dir))) as settings_file:
                 settings = yaml.load(settings_file)
