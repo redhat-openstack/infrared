@@ -88,7 +88,7 @@ class IRSubCommand(object):
         """
         settings_files = []
 
-        # first take all the files from the input-files args
+        # first take all input files from args
         for input_file in self.args['input'] or []:
             settings_files.append(utils.normalize_file(input_file))
 
