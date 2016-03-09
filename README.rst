@@ -118,7 +118,7 @@ There are two steps that should be done when adding a new plugin to InfraRed:
     .org/en/latest/>`_.
 
 2. Creating a default spec file (default.ini). 
-    This file should contain the dafault values for the comamnd line arguments. All the default values should go under the name section names as a new plugin. Example::
+    This file should contain the default values for the command line arguments. All the default values should go under the name section names as a new plugin. Example::
       
       [virsh]
       topology=all-in-one.yml
