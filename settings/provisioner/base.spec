@@ -1,7 +1,7 @@
 ---
 options:
     verbose:
-        help: 'Verbosity level'
+        help: 'Control Ansible verbosity level'
         short: v
         action: count
         default: 0
