@@ -76,18 +76,18 @@ InfraRed input arguments
 ------------------------
 InfraRed accepts the next sources of the input arguments (in priority order):
 
-#. Command line arguments:  ``ir-provision virsh --host=some.host.com --ssh_user=root``
-#. Predefined arguments in ini file. Use the --from-file option to specify ini file:
+1. Command line arguments:  ``ir-provision virsh --host=some.host.com --ssh_user=root``
+2. Predefined arguments in ini file. Use the --from-file option to specify ini file::
+  
+    ir-provision virsh --host=some.host.com --from-file=user.ini
+  
+    cat user.ini
+    [virsh]
+    ssh_user=root
+    ssh_key=mkey.pm
 
-  ```
-  $ ir-provision virsh --host=some.host.com --from-file=user.ini
-  $ cat user.ini
-  [virsh]
-  ssh_user=root
-  ssh_key=mkey.pm
-  ```
 
-#. Environment variables: ``HOST=earth ir-provision virsh --ssh_user=root``
+3. Environment variables: ``HOST=earth ir-provision virsh --ssh_user=root``
 
 Command line arguments have the highest priority. All the undefined variables will be replaced by that arguments from file or from environment.
 
@@ -117,7 +117,16 @@ There are two steps that should be done when adding a new plugin to InfraRed:
     For more details on how to use this module, please visit the 'clg' module `homepage <http://clg.readthedocs
     .org/en/latest/>`_.
 
-2. Creating settings files.
+2. Creating a default spec file (default.ini). 
+    This file should contain the dafault values for the comamnd line arguments. All the default values should go under the name section names as a new plugin. Example::
+      
+      [virsh]
+      topology=all-in-one.yml
+      network=default.yml
+      ssh-key=~/.ssh/id_rsa
+      ssh-user=root
+
+3. Creating settings files.
     Settings files are files containing data which defines how the end result of the playbook execution will be
     looked like. Settings file are file in YAML format, end with ".yml" extension. Those files located under the
     plugin's dir which itself located under the 'settings' dir in the InfraRed project's dir.
