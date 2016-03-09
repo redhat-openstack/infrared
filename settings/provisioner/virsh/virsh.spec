@@ -44,7 +44,7 @@ subparsers:
                       help: Only generate settings, skip the playbook execution stage
                   cleanup:
                       action: store_true
-                      help: Clean up environment at the end
+                      help: Clean given system instead of provisioning a new one
                   input:
                       action: append
                       type: str
