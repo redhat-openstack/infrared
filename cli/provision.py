@@ -89,7 +89,7 @@ class IRSubCommand(object):
         settings_files = []
 
         # first take all the files from the input-files args
-        for input_file in self.args['input-files'] or []:
+        for input_file in self.args['input'] or []:
             settings_files.append(utils.normalize_file(input_file))
 
         # get the sub-command yml file
@@ -144,6 +144,10 @@ class VirshCommand(IRSubCommand):
 
         # load network and image settings
         for arg_dir in ('network', 'topology'):
+            if self.args[arg_dir] is None:
+                raise exceptions.IRConfigurationException(
+                    "A value for for the  '{}'"
+                    "argument should be provided!".format(arg_dir))
             with open(set_network(self.args[arg_dir], os.path.join(
                     self.settings_dir, arg_dir))) as settings_file:
                 settings = yaml.load(settings_file)
@@ -201,7 +205,7 @@ class IRApplication(object):
         LOG.debug("Dumping settings...")
         output = yaml.safe_dump(settings,
                                 default_flow_style=False)
-        dump_file = self.args['output-file']
+        dump_file = self.args['output']
         if dump_file:
             LOG.debug("Dump file: {}".format(dump_file))
             with open(dump_file, 'w') as output_file:

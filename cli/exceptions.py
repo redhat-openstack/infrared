@@ -70,3 +70,10 @@ class IRUnknownApplicationException(IRException):
         self.app_name = app_name
         super(IRUnknownApplicationException, self).__init__(
             "Application is unknown: '{}'".format(app_name))
+
+
+class IRConfigurationException(IRException):
+    """
+    General exception for any kind of configuration issues.
+    """
+    pass
