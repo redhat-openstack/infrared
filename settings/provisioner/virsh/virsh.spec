@@ -55,3 +55,4 @@ subparsers:
                   from-file:
                       type: IniFile
                       help: the ini file with the list of arguments
+                      default: settings/provisioner/virsh/default.ini
