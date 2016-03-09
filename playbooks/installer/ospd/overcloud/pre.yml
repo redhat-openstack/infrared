@@ -78,6 +78,8 @@
         delegate_to: undercloud
 
       - name: "DEBUG - print instackenv.json - DEBUG"
+        become: yes
+        become_user: "{{ installer.user.name }}"
         shell: "cat ~/instack_template.json"
         delegate_to: undercloud
 
