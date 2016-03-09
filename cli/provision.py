@@ -16,8 +16,8 @@ import cli.execute
 LOG = logger.LOG
 CONF = conf.config
 
-NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output-file',
-                        'input-files', 'dry-run', 'cleanup', 'inventory']
+NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output',
+                        'input', 'dry-run', 'cleanup', 'inventory']
 
 
 class IRFactory(object):
@@ -88,8 +88,8 @@ class IRSubCommand(object):
         """
         settings_files = []
 
-        # first take all the files from the input-files args
-        for input_file in self.args['input-files'] or []:
+        # first take all input files from args
+        for input_file in self.args['input'] or []:
             settings_files.append(utils.normalize_file(input_file))
 
         # get the sub-command yml file
@@ -201,7 +201,7 @@ class IRApplication(object):
         LOG.debug("Dumping settings...")
         output = yaml.safe_dump(settings,
                                 default_flow_style=False)
-        dump_file = self.args['output-file']
+        dump_file = self.args['output']
         if dump_file:
             LOG.debug("Dump file: {}".format(dump_file))
             with open(dump_file, 'w') as output_file:

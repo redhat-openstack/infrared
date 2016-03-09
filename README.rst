@@ -67,7 +67,7 @@ The ``-e``/``--extra-vars`` can be used more than once.
 Merging order
 -------------
 Except options based on the settings dir structure, ``infrared`` accepts input of
-predefined settings files (with ``-n``/``--input``) and user defined specific options
+predefined settings files (with ``-i``/``--input``) and user defined specific options
 (``-e``/``--extra-vars``).
 The merging priority order listed below:
 
