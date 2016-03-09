@@ -37,15 +37,15 @@ subparsers:
             cleanup:
                 action: store_true
                 help: Clean up environment at the end
-            input-files:
+            input:
                 action: append
                 type: str
-                help: Settings file to be merged first
-                short: n
-            output-file:
+                short: i
+                help: Input settings file to be loaded before the merging of user args
+            output:
                 type: str
                 short: o
-                help: 'Name for the generated settings file (default: stdout)'
+                help: 'File to dump the generated settings into (default: stdout)'
             extra-vars:
                 action: append
                 short: e

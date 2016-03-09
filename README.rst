@@ -60,7 +60,7 @@ This displays options you can pass to ``ir-provision``, as well as plugins avail
 
 External setting trees
 ======================
-InfraRed builds settings tree (YAML dict-like structures) that are later passed to Ansible 
+InfraRed builds settings tree (YAML dict-like structures) that are later passed to Ansible
 as varibales. This tree can be built upon pre-existing YAML files (with ``-i``/``--input``) ,
 or be overridden post creation by other pre-existing files and/or sets of ``key=value`` arguments.
 

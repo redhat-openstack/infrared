@@ -60,7 +60,7 @@ def main():
 
     set_logger_verbosity(args.verbose)
 
-    for input_file in args['input-files'] or []:
+    for input_file in args['input'] or []:
         settings_files.append(utils.normalize_file(input_file))
 
     settings_files.append(os.path.join(get_settings_dir(ENTRY_POINT, args),
@@ -99,8 +99,8 @@ def main():
     output = yaml.safe_dump(cli.yamls.Lookup.settings,
                             default_flow_style=False)
 
-    if args['output-file']:
-        with open(args['output-file'], 'w') as output_file:
+    if args['output']:
+        with open(args['output'], 'w') as output_file:
             output_file.write(output)
     else:
         print output
