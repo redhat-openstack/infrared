@@ -265,6 +265,21 @@
         when: item.item is defined
         with_items: vm_ip_list
 
+      - name: "DEBUG - print mac addresses for hosts - DEBUG"
+        shell: "virsh dumpxml {{ item }} | grep mac"
+        with_items: groups['openstack_nodes']
+        ignore_errors: true
+
+      - debug:
+            msg: "MAC address for eth0: {{ hostvars[item]['ansible_eth0'] }}\nMAC address for eth1: {{ hostvars[item]['ansible_eth1'] }}\nMAC address for eth2: {{ hostvars[item]['ansible_eth2'] }}"
+        with_items: groups['openstack_nodes']
+        ignore_errors: true
+
+      - debug:
+            msg: "MAC address for instackenv.json: {{ hostvars[item]['ansible_%s' % installer.undercloud.config.local_interface].macaddress }}"
+        with_items: groups['openstack_nodes']
+        ignore_errors: true
+
 - name: Update ansible with the new hosts
   hosts: localhost
   tasks:

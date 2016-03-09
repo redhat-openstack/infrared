@@ -54,14 +54,17 @@
       - name: "DEBUG - print mac addresses for hosts - DEBUG"
         shell: "virsh dumpxml {{ item }} | grep mac"
         with_items: groups['openstack_nodes']
+        ignore_errors: true
 
       - debug:
-            msg: "MAC address for eth0: {{ hostvars[item]['ansible_eth0'] }}\nMAC address for eth1: {{ hostvars[item]['ansible_eth1'] }}\nMAC address for eth1: {{ hostvars[item]['ansible_eth2'] }}"
+            msg: "MAC address for eth0: {{ hostvars[item]['ansible_eth0'] }}\nMAC address for eth1: {{ hostvars[item]['ansible_eth1'] }}\nMAC address for eth2: {{ hostvars[item]['ansible_eth2'] }}"
         with_items: groups['openstack_nodes']
+        ignore_errors: true
 
       - debug:
             msg: "MAC address for instackenv.json: {{ hostvars[item]['ansible_%s' % installer.undercloud.config.local_interface].macaddress }}"
         with_items: groups['openstack_nodes']
+        ignore_errors: true
 
       - name: prepare instack.json
         become: yes
@@ -82,6 +85,7 @@
         become_user: "{{ installer.user.name }}"
         shell: "cat ~/instack_template.json"
         delegate_to: undercloud
+        ignore_errors: true
 
 - name: Validate our instackenv.json file
   hosts: undercloud
