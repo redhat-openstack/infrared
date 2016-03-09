@@ -80,7 +80,7 @@ class SpecManager(object):
         # override the command specific arguments from file
         if 'from-file' in res_args:
             file_args = res_args['from-file']
-            if res_args['command0'] in file_args:
+            if file_args is not None and res_args['command0'] in file_args:
                 utils.dict_merge(res_args, file_args[res_args['command0']])
 
         # todo(obaranov) try to resolve 'None' arguments from environment.
