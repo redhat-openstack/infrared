@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-from logging import WARNING, INFO, DEBUG
+import logging
 from cli.install import set_network_template as set_network
 
 import yaml
@@ -16,8 +16,8 @@ import cli.execute
 LOG = logger.LOG
 CONF = conf.config
 
-NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output-file',
-                        'input-files', 'dry-run', 'cleanup', 'inventory']
+NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output',
+                        'input', 'dry-run', 'cleanup', 'inventory']
 
 
 class IRFactory(object):
@@ -50,8 +50,8 @@ class IRFactory(object):
         :param args:
         :return:
         """
-        LOG.setLevel((WARNING, INFO)[args.verbose]
-                     if args['verbose'] < 2 else DEBUG)
+        if args.debug:
+            LOG.setLevel(logging.DEBUG)
 
 
 class IRSubCommand(object):
@@ -77,7 +77,7 @@ class IRSubCommand(object):
         if args:
             settings_dir = os.path.join(settings_dir,
                                         app)
-        if 'command0' in args:
+        if hasattr(args, "command0"):
             settings_dir = os.path.join(settings_dir,
                                         args['command0'])
         return cls(args['command0'], args, settings_dir)
