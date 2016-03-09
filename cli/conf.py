@@ -7,6 +7,8 @@ import yamlordereddictloader
 from cli import exceptions
 from cli import utils
 
+DEFAULT_INI = 'default.ini'
+
 
 def load_config_file():
     """Load config file order(ENV, CWD, USER HOME, SYSTEM).
@@ -76,22 +78,29 @@ class SpecManager(object):
         cmd = clg.CommandLine(cls._get_specs(module_name, config))
         res_args = vars(cmd.parse(args))
 
-        # override the command specific arguments from file
-        if 'from-file' in res_args:
-            file_args = res_args['from-file']
-            if file_args is not None and res_args['command0'] in file_args:
-                utils.dict_merge(res_args, file_args[res_args['command0']])
+        # always load default values for command0
+        default_file = os.path.join(
+            config.get('defaults', 'settings'),
+            module_name,
+            res_args['command0'],
+            DEFAULT_INI
+        )
+        defaults = IniFileType(default_file)[res_args['command0']]
 
-        # try to resolve 'None' and [] arguments from environment.
+        # override defaults with env variables
         for arg_name, arg_value in res_args.iteritems():
             upper_arg_name = arg_name.upper()
             if upper_arg_name in os.environ:
-                if arg_value is None:
-                    res_args[arg_name] = os.getenv(upper_arg_name)
-                elif isinstance(arg_value, list):
-                    # append value to the list
-                    res_args[arg_name].extend(
-                        utils.string_to_list(os.getenv(upper_arg_name)))
+                defaults[arg_name] = os.getenv(upper_arg_name)
+
+        # override defaults with the ini file args
+        if 'from-file' in res_args:
+            file_args = res_args['from-file']
+            if file_args is not None and res_args['command0'] in file_args:
+                defaults = utils.dict_merge(file_args[res_args['command0']], defaults)
+
+        # replace defaults with cli
+        utils.dict_merge(res_args, defaults)
 
         return res_args
 
