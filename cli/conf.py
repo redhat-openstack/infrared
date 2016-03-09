@@ -97,7 +97,9 @@ class SpecManager(object):
         if 'from-file' in res_args:
             file_args = res_args['from-file']
             if file_args is not None and res_args['command0'] in file_args:
-                defaults = utils.dict_merge(file_args[res_args['command0']], defaults)
+                defaults = utils.dict_merge(
+                    file_args[res_args['command0']],
+                    defaults)
 
         # replace defaults with cli
         utils.dict_merge(res_args, defaults)

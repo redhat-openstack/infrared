@@ -49,8 +49,8 @@ def hostcolor(host, stats, color=True):
 
 def execute_ansible(playbook, args):
     ansible.utils.VERBOSITY = args['verbose']
-    hosts = args['inventory']or (LOCAL_HOSTS if playbook == PROVISION
-                               else HOSTS_FILE)
+    hosts = args['inventory'] or (LOCAL_HOSTS if playbook == PROVISION
+                                  else HOSTS_FILE)
     playbook = playbook.replace("-", "_") + ".yml"
     path_to_playbook = path.join(
         CONF.get('defaults', 'playbooks'), playbook)
