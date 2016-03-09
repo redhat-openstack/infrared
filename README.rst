@@ -82,3 +82,26 @@ option. There are 2 ways of doing so:
     ``-e @path/to/a/settings_file.yml``
 
 The ``-e``/``--extra-vars`` can be used more than once.
+
+
+Add new Plugins
+===============
+
+There are two steps that should be done when adding a new plugin to InfraRed:
+
+1. Creating a specification file:
+    InfraRed uses ArgParse wrapper module called 'clg' in order to create a parser that based on `spec` file
+    (YAML format file) containing the plugin options.
+    The spec file should be named as the new plugin name with '.spec' extension and located inside the plugin dir
+    under the InfraRed 'setting' dir.
+    For more details on how to use this module, please visit the 'clg' module `homepage <http://clg.readthedocs
+    .org/en/latest/>`_.
+
+2. Creating settings files.
+    Settings files are files containing data which defines how the end result of the playbook execution will be
+    looked like. Settings file are file in YAML format, end with ".yml" extension. Those files located under the
+    plugin's dir which itself located under the 'settings' dir in the InfraRed project's dir.
+    The end result of the playbook execution is based on the data created by merging of several settings files together
+    with other values, all are received by the user.
+    When adding a new plugin, there is a need to create those settings files containing the needed data for the
+    playbook execution.
