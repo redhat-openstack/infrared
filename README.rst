@@ -28,8 +28,6 @@ So, After cloning repo from GitHub::
 Conf
 ====
 
-.. note:: Assumes that ``infrared`` is installed, else follow Setup_.
-
 ``infrared`` will look for ``infrared.cfg`` in the following order:
 
 #. In working directory: ``./infrared.cfg``
@@ -39,38 +37,48 @@ Conf
 .. note:: To specify a different directory or different filename, override the
  lookup order with ``IR_CONFIG`` environment variable::
 
-    $ IR_CONFIG=/my/config/file.ini infrared --help
+    $ IR_CONFIG=/my/config/file.ini ir-provision --help
 
 Running InfraRed
 ================
 
-.. note:: Assumes that ``infrared`` is installed, else follow Setup_.
+InfraRed has several "entry points". Currently available: [``ir-provision``]
 
 You can get general usage information with the ``--help`` option::
 
-  infrared --help
+  ir-provision --help
 
-This displays options you can pass to ``infrared``.
+This displays options you can pass to ``ir-provision``, as well as plugins available as "subcommands"::
 
-Extra-Vars
-----------
-One can set/overwrite settings in the output file using the '-e/--extra-vars'
-option. There are 2 ways of doing so:
+  $ ir-provision --help
+  usage: ir-provision [-h] [-v] {virsh} ...
 
-1. specific settings: (``key=value`` form)
-    ``--extra-vars provisioner.site.user=a_user``
-2. path to a settings file: (starts with ``@``)
-    ``--extra-vars @path/to/a/settings_file.yml``
+  positional arguments:
+    {virsh}
+      virsh               Provision systems using 'virsh'
 
-The ``-e``/``--extra-vars`` can be used more than once.
 
-Merging order
--------------
-Except options based on the settings dir structure, ``infrared`` accepts input of
-predefined settings files (with ``-i``/``--input``) and user defined specific options
-(``-e``/``--extra-vars``).
-The merging priority order listed below:
+External setting trees
+======================
+InfraRed builds settings tree (YAML dict-like structures) that are later passed to Ansible
+as varibales. This tree can be built upon pre-existing YAML files (with ``-i``/``--input``) ,
+or be overridden post creation by other pre-existing files and/or sets of ``key=value`` arguments.
+
+The merging priority order is:
 
 1. Input files
 2. Settings dir based options
 3. Extra Vars
+
+
+Extra-Vars
+----------
+Set/overwrite settings in the output file using the '-e/--extra-vars'
+option. There are 2 ways of doing so:
+
+1. Specific settings: (``key=value`` form)
+    ``-e provisioner.site.user=a_user``
+2. Path to a settings file: (starts with ``@``)
+    ``-e @path/to/a/settings_file.yml``
+
+The ``-e``/``--extra-vars`` can be used more than once.
