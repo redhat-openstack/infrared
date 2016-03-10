@@ -50,7 +50,7 @@ class IRFactory(object):
         :param args:
         :return:
         """
-        if args.debug:
+        if args['debug']:
             LOG.setLevel(logging.DEBUG)
 
 
@@ -77,7 +77,7 @@ class IRSubCommand(object):
         if args:
             settings_dir = os.path.join(settings_dir,
                                         app)
-        if hasattr(args, "command0"):
+        if "command0" in args:
             settings_dir = os.path.join(settings_dir,
                                         args['command0'])
         return cls(args['command0'], args, settings_dir)
@@ -218,11 +218,11 @@ class IRApplication(object):
         Executes a playbook.
         """
         if not self.args['dry-run']:
-            vars(self.args)['settings'] = yaml.load(yaml.safe_dump(
+            self.args['settings'] = yaml.load(yaml.safe_dump(
                 settings,
                 default_flow_style=False))
             if not self.args['cleanup']:
-                vars(self.args)['provision'] = True
+                self.args['provision'] = True
 
             cli.execute.ansible_wrapper(self.args)
 

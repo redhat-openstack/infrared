@@ -1,12 +1,13 @@
 import ConfigParser
-import os
-import yaml
 
 import clg
+import os
+import yaml
 import yamlordereddictloader
-
 from cli import exceptions
 from cli import utils
+
+DEFAULT_INI = 'default.ini'
 
 
 def load_config_file():
@@ -51,8 +52,7 @@ def IniFileType(value):
         d[k] = dict(_config._defaults, **d[k])
         for key, value in d[k].iteritems():
             # check if we have lists
-            if value.startswith('[') and value.endswith(']'):
-                value = value[1:-1].split(',')
+            value = utils.string_to_list(value, append_to_list=False)
             d[k][key] = value
         d[k].pop('__name__', None)
 
@@ -75,15 +75,34 @@ class SpecManager(object):
         :param module_name: the module name: installer|provisioner|tester
         """
         cmd = clg.CommandLine(cls._get_specs(module_name, config))
-        res_args = cmd.parse(args)
+        res_args = vars(cmd.parse(args))
 
-        # override the command specific arguments from file
+        # always load default values for command0
+        default_file = os.path.join(
+            config.get('defaults', 'settings'),
+            module_name,
+            res_args['command0'],
+            DEFAULT_INI
+        )
+        defaults = IniFileType(default_file)[res_args['command0']]
+
+        # override defaults with env variables
+        for arg_name, arg_value in res_args.iteritems():
+            upper_arg_name = arg_name.upper()
+            if arg_value is None and upper_arg_name in os.environ:
+                defaults[arg_name] = os.getenv(upper_arg_name)
+
+        # override defaults with the ini file args
         if 'from-file' in res_args:
             file_args = res_args['from-file']
             if file_args is not None and res_args['command0'] in file_args:
-                utils.dict_merge(res_args, file_args[res_args['command0']])
+                defaults = utils.dict_merge(
+                    file_args[res_args['command0']],
+                    defaults)
 
-        # todo(obaranov) try to resolve 'None' arguments from environment.
+        # replace defaults with cli
+        utils.dict_merge(res_args, defaults)
+
         return res_args
 
     @classmethod
