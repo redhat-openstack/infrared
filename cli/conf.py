@@ -192,7 +192,6 @@ class SpecLoader(object):
             opt_params['help'] += " | Default value: {}".format(
                 opt_params['default'])
 
-
     @classmethod
     def trim_option(cls, opt_name, opt_params):
         for opt_param_name, param_value in opt_params.iteritems():
