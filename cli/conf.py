@@ -52,9 +52,8 @@ def IniFileType(value):
         d[k] = dict(_config._defaults, **d[k])
         for key, value in d[k].iteritems():
             # check if we have lists
-            if value.startswith('[') and value.endswith(']'):
-                value = utils.string_to_list(value)
-                d[k][key] = value
+            value = utils.string_to_list(value, append_to_list=False)
+            d[k][key] = value
         d[k].pop('__name__', None)
 
     return d
@@ -90,7 +89,7 @@ class SpecManager(object):
         # override defaults with env variables
         for arg_name, arg_value in res_args.iteritems():
             upper_arg_name = arg_name.upper()
-            if upper_arg_name in os.environ:
+            if arg_value is None and upper_arg_name in os.environ:
                 defaults[arg_name] = os.getenv(upper_arg_name)
 
         # override defaults with the ini file args
