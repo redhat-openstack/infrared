@@ -6,6 +6,18 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  roles:
+      - {role: workarounds/rhbz1302047, when: workarounds.rhbz1302047 is defined }
+      - {role: workarounds/rhbz1217093, when: workarounds.rhbz1217093 is defined }
+      - {role: workarounds/rhbz1314732, when: workarounds.rhbz1314732 is defined }
+      - {role: workarounds/rhbz1291568, when: workarounds.rhbz1291568 is defined and 'ceph' in groups }
+      - {role: workarounds/rhbz1304367, when: workarounds.rhbz1304367 is defined and 'ceph' in groups }
+      - {role: workarounds/rhbz1314725, when: workarounds.rhbz1314725 is defined }
+      - {role: workarounds/rhbz1316012, when: workarounds.rhbz1316012 is defined }
+      - {role: workarounds/rhbz1316016, when: workarounds.rhbz1316016 is defined }
+      - {role: workarounds/rhbz1316072, when: workarounds.rhbz1316072 is defined }
+#      - {role: workarounds/rhbz1316018, when: workarounds.rhbz1314725 is defined } TODO: add PATH TO RPM
+#      - TODO: https://bugzilla.redhat.com/show_bug.cgi?id=1233251
   tasks:
       - name: Copy the keystonerc file for the tester
         fetch:
@@ -13,14 +25,11 @@
             dest: "{{ inventory_dir }}/keystonerc"
             flat: yes
 
-- name: Apply workarounds if necessary
-  hosts: undercloud
-  gather_facts: no
-  become: yes
-  become_user: "{{ installer.user.name }}"
-  roles:
-      - {role: workarounds/rhbz1304367, when: workarounds.rhbz1304367 is defined and 'ceph' in groups }
-#      - TODO: https://bugzilla.redhat.com/show_bug.cgi?id=1233251
+      - name: Copy the tempest-deployer-input.conf file for the tester
+        fetch:
+            src: "~/tempest-deployer-input.conf"
+            dest: "{{ inventory_dir }}/tempest-deployer-input.conf"
+            flat: yes
 
 #TODO: remove this when the templating system is in place
 - name: External network creation
@@ -29,8 +38,16 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   tasks:
+      - name: Get the controller nodes IPs
+        shell: "source ~/stackrc; nova list | awk '/controller/ {print $12}' | grep -oP '[0-9.]+'"
+        register: ip_list
+
+      - name: get the default floating ip pool name from the controller
+        shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ ip_list.stdout_lines|last }} 'sudo grep -oP \"(?<=default_floating_pool=)(.*$)\" /etc/nova/nova.conf'"
+        register: pool_name
+
       - name: create the external network
-        shell: "source ~/overcloudrc; neutron net-create nova --router:external --provider:physical_network datacentre --provider:network_type flat"
+        shell: "source ~/overcloudrc; neutron net-create {{ pool_name.stdout_lines|last }} --router:external --provider:physical_network datacentre --provider:network_type flat"
 
       - name: create the external subnet
-        shell: "source ~/overcloudrc; neutron subnet-create nova 192.168.1.0/24 --name external_subnet --enable-dhcp=False --allocation-pool start=192.168.1.210,end=192.168.1.250 --gateway 192.168.1.1"
+        shell: "source ~/overcloudrc; neutron subnet-create {{ pool_name.stdout_lines|last }} 192.168.1.0/24 --name external_subnet --enable-dhcp=False --allocation-pool start=192.168.1.210,end=192.168.1.250 --gateway 192.168.1.1"
