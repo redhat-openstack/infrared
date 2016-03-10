@@ -32,7 +32,7 @@ subparsers:
                       default: default.yml
                   topology:
                       type: str
-                      help: 'Provision topology (default: __DEFAULT__)'
+                      help: Provision topology
                       default: all-in-one.yml
             - title: common
               options:

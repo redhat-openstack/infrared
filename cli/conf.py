@@ -187,6 +187,12 @@ class SpecLoader(object):
                         param_value.replace(lookup_string, str(opt_params.get(
                             lookup_key, lookup_string)))
 
+        # insert default value into help.
+        if 'help' in opt_params and 'default' in opt_params:
+            opt_params['help'] += " | Default value: {}".format(
+                opt_params['default'])
+
+
     @classmethod
     def trim_option(cls, opt_name, opt_params):
         for opt_param_name, param_value in opt_params.iteritems():
