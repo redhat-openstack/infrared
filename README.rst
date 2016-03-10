@@ -89,6 +89,8 @@ InfraRed accepts the next sources of the input arguments (in priority order):
 
 3. Environment variables: ``HOST=earth ir-provision virsh --ssh_user=root``
 
+.. note:: The simple ini file with the default values can be generated with: ``ir-povision virsh --generate-conf-file=virsh.ini``
+
 Command line arguments have the highest priority. All the undefined variables will be replaced by that arguments from file or from environment.
 
 Extra-Vars
@@ -116,15 +118,6 @@ There are two steps that should be done when adding a new plugin to InfraRed:
     under the InfraRed 'setting' dir.
     For more details on how to use this module, please visit the 'clg' module `homepage <http://clg.readthedocs
     .org/en/latest/>`_.
-
-2. Creating a default spec file (default.ini). 
-    This file should contain the default values for the command line arguments. All the default values should go under the name section names as a new plugin. Example::
-      
-      [virsh]
-      topology=all-in-one.yml
-      network=default.yml
-      ssh-key=~/.ssh/id_rsa
-      ssh-user=root
 
 3. Creating settings files.
     Settings files are files containing data which defines how the end result of the playbook execution will be
