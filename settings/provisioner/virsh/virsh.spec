@@ -11,9 +11,11 @@ subparsers:
                   ssh-user:
                       type: str
                       help: User to SSH to the host with
+                      default: root
                   ssh-key:
                       type: str
                       help: "User's SSH key"
+                      default: ~/.ssh/id_rsa
             - title: image
               options:
                   image-file:
@@ -27,9 +29,11 @@ subparsers:
                   network:
                       type: str
                       help: Network
+                      default: default.yml
                   topology:
                       type: str
                       help: 'Provision topology (default: __DEFAULT__)'
+                      default: all-in-one.yml
             - title: common
               options:
                   dry-run:
@@ -55,3 +59,6 @@ subparsers:
                   from-file:
                       type: IniFile
                       help: the ini file with the list of arguments
+                  generate-conf-file:
+                      type: str
+                      help: generate configuration file (ini) containing default values and exits. This file is than can be used wit the from-file argument

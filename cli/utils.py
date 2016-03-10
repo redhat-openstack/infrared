@@ -2,13 +2,10 @@
 This module provide some general helper methods
 """
 
-import os
-import re
-
-import configure
-import yaml
-
 import cli.yamls
+import configure
+import os
+import yaml
 from cli import exceptions
 from cli import logger
 
@@ -49,9 +46,9 @@ class ConflictResolver(object):
 
         # tyr to merge lists first
         if isinstance(first[key], list):
-            if isinstance(first[key], list):
+            if isinstance(second[key], list):
                 first[key].extend(second[key])
-            else:
+            elif second[key] is not None:
                 first[key].append(first[key])
 
         if key not in first or first[key] is None:
