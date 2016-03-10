@@ -18,7 +18,7 @@
         state: link
         src: "{{ lookup('env', 'PWD') }}/local_hosts"
 
-- include: provisioner/{{ provisioner.type }}/main.yml
+- include: provisioner/{{ provisioner.type }}/main.yaml
 
 - name: generate inventory file
   hosts: localhost
@@ -27,6 +27,7 @@
     - template:
         dest: "{{ lookup('env', 'PWD') }}/hosts-{{ lookup('env', 'USER') }}"
         src: "{{ inventory_dir }}/templates/inventory.j2"
+
     - file:
         dest: "{{ lookup('env', 'PWD') }}/hosts"
         state: link
