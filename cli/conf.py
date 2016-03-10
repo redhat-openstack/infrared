@@ -1,5 +1,7 @@
 import ConfigParser
 
+import sys
+
 import clg
 import os
 import yaml
@@ -64,8 +66,6 @@ class SpecManager(object):
     Holds everything related to specs.
     """
 
-    SPEC_EXTENSION = '.spec'
-
     @classmethod
     def parse_args(cls, module_name, config, args=None):
         """
@@ -74,17 +74,35 @@ class SpecManager(object):
 
         :param module_name: the module name: installer|provisioner|tester
         """
-        cmd = clg.CommandLine(cls._get_specs(module_name, config))
+
+        clg_options, global_opts, subcommand_opts = \
+            SpecLoader.load(module_name, config)
+
+        cmd = clg.CommandLine(clg_options)
         res_args = vars(cmd.parse(args))
 
-        # always load default values for command0
-        default_file = os.path.join(
-            config.get('defaults', 'settings'),
-            module_name,
-            res_args['command0'],
-            DEFAULT_INI
-        )
-        defaults = IniFileType(default_file)[res_args['command0']]
+        # get the default values
+        command_args = subcommand_opts[res_args['command0']]
+        defaults = {k: v.get('default', None)
+                    for k, v in command_args.iteritems()}
+
+        # generate config file if required
+        if res_args['generate-conf-file']:
+            try:
+                file_name = res_args['generate-conf-file']
+                out_config = ConfigParser.ConfigParser()
+
+                section = res_args['command0']
+                out_config.add_section(section)
+                for opt, value in defaults.iteritems():
+                    if value is not None:
+                        out_config.set(section, opt, value)
+                with open(file_name, 'w') as configfile:    # save
+                    out_config.write(configfile)
+            except Exception as ex:
+                raise exceptions.IRException(ex.message)
+            finally:
+                sys.exit(0)
 
         # override defaults with env variables
         for arg_name, arg_value in res_args.iteritems():
@@ -105,6 +123,76 @@ class SpecManager(object):
 
         return res_args
 
+
+class SpecLoader(object):
+    """
+    Responsible to load spec files.
+    """
+    SPEC_EXTENSION = '.spec'
+    LOOKUP_DICT = {
+        '__DEFAULT__': "default"
+    }
+
+    TRIM_PARAMS = ['default', 'required']
+
+    @classmethod
+    def load(cls, module_name, config):
+        """
+        Loads the spec file as dict.
+        """
+        clg_options = cls._get_specs(module_name, config)
+        global_options, subcommands_options = cls._get_options(clg_options)
+        return clg_options, global_options, subcommands_options
+
+    @classmethod
+    def _get_options(cls, spec_dict, lookup=False, trim=False):
+        global_options = {}
+        subcommand_options = {}
+        cls.__get_options(global_options, spec_dict, lookup, trim)
+        cls.__get_groups_options(global_options, spec_dict, lookup, trim)
+        # collect sub parser global_options
+        if 'subparsers' in spec_dict:
+            for subparser_name, params in spec_dict['subparsers'].iteritems():
+                subcommand_options[subparser_name], _ = cls._get_options(
+                    params, lookup=True, trim=True)
+
+        return global_options, subcommand_options
+
+    @classmethod
+    def __get_groups_options(cls, options, spec_dict, lookup, trim):
+        if 'groups' in spec_dict:
+            for group in spec_dict['groups']:
+                cls.__get_options(options, group, lookup, trim)
+
+    @classmethod
+    def __get_options(cls, options, spec_dict, lookup, trim):
+        if 'options' in spec_dict:
+            for opt_name, opt_params in spec_dict['options'].iteritems():
+                if lookup:
+                    cls.lookup_option(opt_name, opt_params)
+
+                # get a parameters copy with all the keys.
+                options[opt_name] = dict(opt_params)
+
+                if trim:
+                    cls.trim_option(opt_name, opt_params)
+
+    @classmethod
+    def lookup_option(cls, opt_name, opt_params):
+        # first check __*__ pattern
+        for opt_param_name, param_value in opt_params.iteritems():
+            for lookup_string, lookup_key in cls.LOOKUP_DICT.iteritems():
+                if lookup_string in str(param_value):
+                    opt_params[opt_param_name] = \
+                        param_value.replace(lookup_string, str(opt_params.get(
+                            lookup_key, lookup_string)))
+
+    @classmethod
+    def trim_option(cls, opt_name, opt_params):
+        for opt_param_name, param_value in opt_params.iteritems():
+            if opt_param_name in cls.TRIM_PARAMS:
+                opt_params.pop(opt_param_name, None)
+
     @classmethod
     def _get_specs(cls, module_name, config):
         """
@@ -113,8 +201,9 @@ class SpecManager(object):
         """
         res = {}
         for spec_file in cls._get_all_specs(config, subfolder=module_name):
-            spec = yaml.load(open(spec_file),
-                             Loader=yamlordereddictloader.Loader)
+            spec = yaml.load(
+                open(spec_file),
+                Loader=yamlordereddictloader.Loader)
             utils.dict_merge(res, spec)
         return res
 
