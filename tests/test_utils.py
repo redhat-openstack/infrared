@@ -22,7 +22,7 @@ def test_dict_merge():
         'a', 'b', 'c']}, 'list2': [1, 2, 3]}
     second_dict = {'a': 2, 'c': {'d': 'foo2', 'f': 5, 'list1': [3, 4, 5]},
                    'g': 'bla', 5: 'yy', 'list3': ['a', 2]}
-    expected_result = {'a': 2, 'b': 2, 'c': {'d': 'foo3', 'e': 'bar', 'f': 5,
+    expected_result = {'a': 2, 'b': 2, 'c': {'d': 'foo2', 'e': 'bar', 'f': 5,
                                              'list1': [3, 4, 5]}, 'g': 'bla',
                        5: 'yy', 'list2': [1, 2, 3], 'list3': ['a', 2]}
 
