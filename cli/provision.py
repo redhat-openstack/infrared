@@ -10,6 +10,7 @@ from cli import logger  # logger creation is first thing to be done
 from cli import conf
 from cli import utils
 from cli import exceptions
+from cli import spec
 import cli.yamls
 import cli.execute
 
@@ -34,7 +35,7 @@ class IRFactory(object):
         by module name and provided configuration.
         """
         if app_name in ["provisioner", ]:
-            args = conf.SpecManager.parse_args(app_name, config)
+            args = spec.parse_args(app_name, config)
             cls.configure_environment(args)
             setting_dir = utils.validate_settings_dir(
                 CONF.get('defaults', 'settings'))
