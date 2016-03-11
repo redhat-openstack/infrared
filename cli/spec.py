@@ -13,7 +13,7 @@ LOOKUP_DICT = {
     '__DEFAULT__': "default"
 }
 
-TRIM_PARAMS = ['default', 'required']
+TRIM_PARAMS = ['default', 'required', 'requires_only']
 
 
 def IniFileType(value):
@@ -95,10 +95,24 @@ def parse_args(module_name, config, args=None):
     utils.dict_merge(res_args, defaults,
                      conflict_resolver=utils.ConflictResolver.none_resolver)
 
+    # check if we have all the required arguments defined at the end of merge
+    unset_args = []
+    only_args = []
+    for arg_name, arg_param in command_args.iteritems():
+        if 'required' in arg_param and \
+                arg_param['required'] and \
+                res_args.get(arg_name, None) is None:
+            unset_args.append(arg_name)
+        if 'requires_only' in arg_param:
+            only_args.extend(arg_param['requires_only'])
+    if len(set(unset_args).intersection(set(only_args))) > 0:
+        raise exceptions.IRConfigurationException(
+                "Required input arguments {} are not set!".format(unset_args))
+
     return res_args
 
 # ***************************************************************
-# private method
+# private methods
 # ***************************************************************
 
 
