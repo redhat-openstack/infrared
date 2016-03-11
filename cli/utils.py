@@ -41,7 +41,8 @@ class ConflictResolver(object):
     @staticmethod
     def none_resolver(first, second, key):
         """
-        Replaces value in first dict only if it null
+        Replaces value in first dict only if it is None.
+        Appends second value into the first in type is list.
         """
 
         # tyr to merge lists first
@@ -49,14 +50,21 @@ class ConflictResolver(object):
             if isinstance(second[key], list):
                 first[key].extend(second[key])
             elif second[key] is not None:
-                first[key].append(first[key])
+                first[key].append(second[key])
 
         if key not in first or first[key] is None:
             first[key] = second[key]
 
+    @staticmethod
+    def greedy_resolver(first, second, key):
+        """
+        Replace always first with the value from second
+        """
+        first[key] = second[key]
+
 
 def dict_merge(first, second, path=None,
-               conflict_resolver=ConflictResolver.none_resolver):
+               conflict_resolver=ConflictResolver.greedy_resolver):
     """ Given two dict objects, this function returns
     a dict that is the result of merging them into one.
     """
@@ -65,7 +73,8 @@ def dict_merge(first, second, path=None,
     for key in second:
         if key in first:
             if isinstance(first[key], dict) and isinstance(second[key], dict):
-                dict_merge(first[key], second[key], path + [str(key)])
+                dict_merge(first[key], second[key], path + [str(key)],
+                           conflict_resolver=conflict_resolver)
             elif first[key] == second[key]:
                 pass
             else:
@@ -191,6 +200,7 @@ def string_to_list(value, separator=',', append_to_list=True):
         if append_to_list:
             value = [value, ]
     return value
+
 
 ENV_VAR_NAME = "IR_CONFIG"
 IR_CONF_FILE = 'infrared.cfg'
