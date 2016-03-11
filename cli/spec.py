@@ -43,6 +43,8 @@ def parse_args(module_name, config, args=None):
     and parses the commandline input arguments accordingly.
 
     :param module_name: the module name: installer|provisioner|tester
+    :param config: the infrared configuration file
+    :param args: additional arguments to pass to the clg.
     """
 
     clg_options, global_opts, subcommand_opts = \
@@ -165,6 +167,9 @@ def __lookup_option(opt_name, opt_params):
     """
     Modifies existing option parameters by replaceing ___*___ patterns
       and inserting default values into the help.
+    :param opt_name: the option name to process
+    :param opt_params: the dictionary of the option parameters
+        (help, type, default, etc)
     """
 
     # first check __*__ pattern

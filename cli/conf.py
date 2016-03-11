@@ -6,8 +6,6 @@ from cli import exceptions
 from cli import utils
 from cli.spec import IniFileType
 
-DEFAULT_INI = 'default.ini'
-
 
 def load_config_file():
     """Load config file order(ENV, CWD, USER HOME, SYSTEM).
@@ -35,7 +33,6 @@ def load_config_file():
         conf_file_paths,
         "IR configuration not found. "
         "Please set it in one of the following paths:\n")
-
 
 
 config = load_config_file()
