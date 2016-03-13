@@ -25,20 +25,17 @@ So, After cloning repo from GitHub::
 
   $ pip install -e .
 
-Conf
-====
-
-``infrared`` will look for ``infrared.cfg`` in the following order:
+.. note:: ``infrared`` will look for ``infrared.cfg`` in the following order:
 
 #. In working directory: ``./infrared.cfg``
 #. In user home directory: ``~/.infrared.cfg``
 #. In system settings: ``/etc/infrared/infrared.cfg``
 
-.. note:: If the configuration file ``infrared.cfg`` doesn't exist in non of
+ If the configuration file ``infrared.cfg`` doesn't exist in non of
  the locations above, the InfraRed project's dir will be used as the default
  location for configurations.
 
-.. note:: To specify a different directory or different filename, override the
+ To specify a different directory or different filename, override the
  lookup order with ``IR_CONFIG`` environment variable::
 
     $ IR_CONFIG=/my/config/file.ini ir-provision --help
