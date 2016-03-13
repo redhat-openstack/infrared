@@ -39,6 +39,10 @@ Conf
 
     $ IR_CONFIG=/my/config/file.ini ir-provision --help
 
+For a quick start, you can copy the existing sample cfg::
+
+  cp infrared.cfg.example infrared.cfg
+
 Running InfraRed
 ================
 
