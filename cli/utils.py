@@ -129,23 +129,12 @@ def update_settings(settings, file_path):
     return settings
 
 
-def generate_settings(settings_files, extra_vars):
-    """ Generates one settings object (configure.Configuration) by merging all
-    files in settings file & extra-vars
+def merge_extra_vars(settings, extra_vars):
+    """ Merging 'extra-vars' into 'settings'
 
-    files in 'settings_files' are the first to be merged and after them the
-    'extra_vars'
-
-    :param settings_files: list of paths to settings files
+    :param settings: configure.Configuration objects with settings
     :param extra_vars: list of extra-vars
-    :return: Configuration object with merging results of all settings
-    files and extra-vars
     """
-    settings = configure.Configuration.from_dict({})
-
-    for settings_file in settings_files:
-        settings = update_settings(settings, settings_file)
-
     for extra_var in extra_vars or []:
         if extra_var.startswith('@'):
             if not len(extra_var[1:]):
@@ -158,6 +147,22 @@ def generate_settings(settings_files, extra_vars):
                 raise exceptions.IRExtraVarsException(extra_var)
             key, value = extra_var.split("=")
             dict_insert(settings, value, *key.split("."))
+
+    return settings
+
+
+def generate_settings(settings_files):
+    """ Generates one settings object (configure.Configuration) by merging all
+    files in settings_files
+
+    :param settings_files: list of paths to settings files
+    :return: Configuration object with merging results of all settings
+    files and extra-vars
+    """
+    settings = configure.Configuration.from_dict({})
+
+    for settings_file in settings_files:
+        settings = update_settings(settings, settings_file)
 
     return settings
 

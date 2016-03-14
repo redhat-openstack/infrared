@@ -203,11 +203,13 @@ class IRApplication(object):
         in the setting files by values from
         other settings files.
         """
-        cli.yamls.Lookup.settings = utils.generate_settings(
-            settings_files,
+
+        cli.yamls.Lookup.settings = utils.generate_settings(settings_files)
+        cli.yamls.Lookup.settings.merge(settings_dict)
+        cli.yamls.Lookup.settings = utils.merge_extra_vars(
+            cli.yamls.Lookup.settings,
             self.args['extra-vars'])
 
-        cli.yamls.Lookup.settings.merge(settings_dict)
         cli.yamls.Lookup.in_string_lookup()
 
         return cli.yamls.Lookup.settings

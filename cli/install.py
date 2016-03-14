@@ -87,8 +87,9 @@ def main():
         storage_template
 
     LOG.debug("All settings files to be loaded:\n%s" % settings_files)
-    cli.yamls.Lookup.settings = utils.generate_settings(settings_files,
-                                                        args['extra-vars'])
+    cli.yamls.Lookup.settings = utils.generate_settings(settings_files)
+    utils.merge_extra_vars(cli.yamls.Lookup.settings, args['extra-vars'])
+
     # todo(yfried): ospd specific
     cli.yamls.Lookup.settings = cli.yamls.Lookup.settings.merge(settings_dict)
 

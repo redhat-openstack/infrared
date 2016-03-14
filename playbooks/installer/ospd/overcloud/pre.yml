@@ -53,12 +53,18 @@
 
       - name: "DEBUG - print mac addresses for hosts - DEBUG"
         shell: "virsh dumpxml {{ item }} | grep mac"
-        with_items: groups['openstack_nodes'] | difference(["virthost"])
+        with_items: groups['openstack_nodes'] | difference(["virthost"]) | difference(["undercloud"])
         ignore_errors: true
 
-      - debug:
+      - name: Print the relevant openstack_nodes
+        debug:
+            msg: "{{ item }}"
+        with_items: groups['openstack_nodes'] | difference(["virthost"]) | difference(["undercloud"])
+
+      - name: Print the MAC addresses for instackenv.json
+        debug:
             msg: "MAC address for instackenv.json: {{ hostvars[item]['ansible_%s' % installer.undercloud.config.local_interface].macaddress }}"
-        with_items: groups['openstack_nodes'] | difference(["virthost"])
+        with_items: groups['openstack_nodes'] | difference(["virthost"]) | difference(["undercloud"])
         ignore_errors: true
 
       - name: prepare instack.json
