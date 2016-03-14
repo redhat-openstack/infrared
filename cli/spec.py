@@ -1,10 +1,10 @@
-import clg
 import ConfigParser
 import os
 import sys
 import yaml
-import yamlordereddictloader
 
+import clg
+import yamlordereddictloader
 from cli import exceptions
 from cli import utils
 
@@ -16,7 +16,7 @@ LOOKUP_DICT = {
 TRIM_PARAMS = ['default', 'required', 'requires_only']
 
 
-def IniFileType(value):
+def clg_ini_file(value):
     """
     The custom type for clg spec
     :param value: the argument value.
