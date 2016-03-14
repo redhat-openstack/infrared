@@ -1,10 +1,9 @@
 import ConfigParser
 import os
-import sys
 import yaml
+import yamlordereddictloader
 
 import clg
-import yamlordereddictloader
 from cli import exceptions
 from cli import utils
 
@@ -16,25 +15,26 @@ LOOKUP_DICT = {
 TRIM_PARAMS = ['default', 'required', 'requires_only']
 
 
-def clg_ini_file(value):
+def cfg_file_to_dict(value):
     """
     The custom type for clg spec
     :param value: the argument value.
     :return: dict based on a provided ini file.
     """
-    _config = ConfigParser.ConfigParser()
-    _config.read(value)
+    config = ConfigParser.ConfigParser()
+    with open(value) as fd:
+        config.readfp(fd)
 
-    d = dict(_config._sections)
-    for k in d:
-        d[k] = dict(_config._defaults, **d[k])
-        for key, value in d[k].iteritems():
-            # check if we have lists
+    res_dict = {}
+    for section in config.sections():
+        res_dict[section] = {}
+        for option, value in config.items(section):
             value = utils.string_to_list(value, append_to_list=False)
-            d[k][key] = value
-        d[k].pop('__name__', None)
+            res_dict[section][option] = value
 
-    return d
+        res_dict[section].pop('__name__', None)
+
+    return res_dict
 
 
 def parse_args(module_name, config, args=None):
@@ -47,11 +47,8 @@ def parse_args(module_name, config, args=None):
     :param args: additional arguments to pass to the clg.
     """
 
-    clg_options, global_opts, subcommand_opts = \
-        __load_spec_as_dict(module_name, config)
-
-    cmd = clg.CommandLine(clg_options)
-    res_args = vars(cmd.parse(args))
+    res_args, subcommand_opts = _get_command_line_args(args, config,
+                                                       module_name)
 
     # get the default values
     command_args = subcommand_opts[res_args['command0']]
@@ -59,7 +56,7 @@ def parse_args(module_name, config, args=None):
                 for k, v in command_args.iteritems()}
 
     # generate config file if required
-    if res_args['generate-conf-file']:
+    if res_args.get('generate-conf-file', None):
         try:
             file_name = res_args['generate-conf-file']
             out_config = ConfigParser.ConfigParser()
@@ -69,12 +66,10 @@ def parse_args(module_name, config, args=None):
             for opt, value in defaults.iteritems():
                 if value is not None:
                     out_config.set(section, opt, value)
-            with open(file_name, 'w') as configfile:    # save
+            with open(file_name, 'w') as configfile:  # save
                 out_config.write(configfile)
         except Exception as ex:
             raise exceptions.IRException(ex.message)
-        finally:
-            sys.exit(0)
 
     # override defaults with env variables
     for arg_name, arg_value in res_args.iteritems():
@@ -101,22 +96,35 @@ def parse_args(module_name, config, args=None):
     for arg_name, arg_param in command_args.iteritems():
         if 'required' in arg_param and \
                 arg_param['required'] and \
-                res_args.get(arg_name, None) is None:
+                        res_args.get(arg_name, None) is None:
             unset_args.append(arg_name)
         if 'requires_only' in arg_param:
             only_args.extend(arg_param['requires_only'])
-    if len(set(unset_args).intersection(set(only_args))) > 0:
+    if len(only_args) > 0:
+        intersection = set(unset_args).intersection(set(only_args))
+        if len(intersection) > 0:
+            raise exceptions.IRConfigurationException(
+                "Required only input arguments {} are not set!".format(
+                    intersection))
+    elif len(unset_args) > 0:
         raise exceptions.IRConfigurationException(
-                "Required input arguments {} are not set!".format(unset_args))
-
+            "Required input arguments {} are not set!".format(
+                unset_args))
     return res_args
 
-# ***************************************************************
-# private methods
-# ***************************************************************
+
+def _get_command_line_args(args, config, module_name):
+    """
+    Gets the arguments values from the command line.
+    """
+    clg_options, global_opts, subcommand_opts = \
+        _load_spec_as_dict(module_name, config)
+    cmd = clg.CommandLine(clg_options)
+    res_args = vars(cmd.parse(args))
+    return res_args, subcommand_opts
 
 
-def __load_spec_as_dict(module_name, config):
+def _load_spec_as_dict(module_name, config):
     """
     Loads the spec file as dict.
 
@@ -126,58 +134,74 @@ def __load_spec_as_dict(module_name, config):
         dict of options for subcommands
     """
     clg_options = _get_specs(module_name, config)
-    global_options, subcommands_options = __process_options(clg_options)
+    global_options, subcommands_options = _process_options(clg_options)
     return clg_options, global_options, subcommands_options
 
 
-def __process_options(spec_dict, lookup=False, trim=False):
+def _process_options(spec_dict, lookup=False, trim=False):
     """
     Goes through all the spec options modifies them by removing
      some options parameters (like defaults)
+
+    :param spec_dict: the dictionary with key obtained from spec file
+    :param lookup: specifies whether the options lookup is required.
+    :param trim: specifies whether the certain option
+        parameters should be removed
     """
     global_options = {}
     subcommand_options = {}
-    __get_flat_options(global_options, spec_dict, lookup, trim)
-    __get_groups_options(global_options, spec_dict, lookup, trim)
+    _process_flat_options(global_options, spec_dict, lookup, trim)
+    _process_groups_options(global_options, spec_dict, lookup, trim)
     # collect sub parser global_options
     if 'subparsers' in spec_dict:
         for subparser_name, params in spec_dict['subparsers'].iteritems():
-            subcommand_options[subparser_name], _ = __process_options(
+            subcommand_options[subparser_name], _ = _process_options(
                 params, lookup=True, trim=True)
 
     return global_options, subcommand_options
 
 
-def __get_groups_options(options, spec_dict, lookup, trim):
+def _process_groups_options(options, spec_dict, lookup, trim):
     """
     Gets the dict of options nested within the spec groups
+
+    :param options:  the current list of options
+    :param spec_dict: the dictionary to look for new group options.
+    :param lookup: specifies whether the options lookup is required.
+    :param trim: specifies whether the certain option
+        parameters should be removed
     """
     if 'groups' in spec_dict:
         for group in spec_dict['groups']:
-            __get_flat_options(options, group, lookup, trim)
+            _process_flat_options(options, group, lookup, trim)
 
 
-def __get_flat_options(options, spec_dict, lookup, trim):
+def _process_flat_options(options, spec_dict, lookup, trim):
     """
     Gest the dict of options listed in the spec of group.
 
     This method will also remove some methods and will replace
      __<value>__ pattens in the option properties (e.g. __default__, __FILE__)
 
+    :param options:  the current list of options
+    :param spec_dict: the dictionary to look for new options.
+    :param lookup: specifies whether the options lookup is required.
+    :param trim: specifies whether the certain option
+        parameters should be removed
     """
     if 'options' in spec_dict:
         for opt_name, opt_params in spec_dict['options'].iteritems():
             if lookup:
-                __lookup_option(opt_name, opt_params)
+                _lookup_option(opt_name, opt_params)
 
             # get a parameters copy with all the keys.
             options[opt_name] = dict(opt_params)
 
             if trim:
-                __trim_option(opt_name, opt_params)
+                _trim_option(opt_name, opt_params)
 
 
-def __lookup_option(opt_name, opt_params):
+def _lookup_option(opt_name, opt_params):
     """
     Modifies existing option parameters by replaceing ___*___ patterns
       and inserting default values into the help.
@@ -200,7 +224,7 @@ def __lookup_option(opt_name, opt_params):
             opt_params['default'])
 
 
-def __trim_option(opt_name, opt_params):
+def _trim_option(opt_name, opt_params):
     """
     Removes the defined option parameters.
     :param opt_name: the option name to process
@@ -216,29 +240,21 @@ def _get_specs(module_name, config):
     """
     Gets specs files as a dict from settings/<module_name> folder.
     :param module_name: the module name: installer|provisioner|tester
+    :param: config: the infrared configuration.
     """
     res = {}
-    for spec_file in _get_all_specs(config, subfolder=module_name):
-        spec = yaml.load(
-            open(spec_file),
-            Loader=yamlordereddictloader.Loader)
-        utils.dict_merge(res, spec)
-    return res
-
-
-def _get_all_specs(config, subfolder=None):
-    """
-    Gets all the list of all spec files.
-    """
     root_dir = utils.validate_settings_dir(
         config.get('defaults', 'settings'))
-    if subfolder:
-        root_dir = os.path.join(root_dir, subfolder)
+    if module_name:
+        root_dir = os.path.join(root_dir, module_name)
 
-    res = []
-    for dirpath, _, filenames in os.walk(root_dir):
-        for filename in [f for f in filenames
-                         if f.endswith(SPEC_EXTENSION)]:
-            res.append(os.path.join(dirpath, filename))
+    sepc_files = []
+    for root, _, files in os.walk(root_dir):
+        sepc_files.extend([os.path.join(root, a_file) for a_file in files
+                           if a_file.endswith(SPEC_EXTENSION)])
 
+    for spec_file in sepc_files:
+        with open(spec_file) as fd:
+            spec = yaml.load(fd, Loader=yamlordereddictloader.Loader)
+        utils.dict_merge(res, spec)
     return res
