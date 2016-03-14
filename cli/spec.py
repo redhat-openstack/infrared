@@ -44,7 +44,8 @@ def parse_args(module_name, config, args=None):
 
     :param module_name: the module name: installer|provisioner|tester
     :param config: the infrared configuration file
-    :param args: additional arguments to pass to the clg.
+    :param args: the list of arguments used for directing the method to work
+        on something other than CLI input (for example, in testing).
     """
 
     clg_options, global_opts, subcommand_opts = \
