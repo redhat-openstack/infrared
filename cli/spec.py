@@ -96,7 +96,7 @@ def parse_args(module_name, config, args=None):
     for arg_name, arg_param in command_args.iteritems():
         if 'required' in arg_param and \
                 arg_param['required'] and \
-                        res_args.get(arg_name, None) is None:
+                res_args.get(arg_name, None) is None:
             unset_args.append(arg_name)
         if 'requires_only' in arg_param:
             only_args.extend(arg_param['requires_only'])
