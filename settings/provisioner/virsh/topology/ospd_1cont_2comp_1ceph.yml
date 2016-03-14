@@ -3,11 +3,11 @@ nodes:
     controller: &controller
         name: controller
         amount: 1
-        cpu: "{{ !lookup provisioner.image.cpu }}"
+        cpu: "{{ !lookup provisioner.virsh.image.cpu }}"
         memory: 8192
         os: &os
             type: linux
-            variant: "{{ !lookup provisioner.image.os.variant }}"
+            variant: "{{ !lookup provisioner.virsh.image.os.variant }}"
         disks: &disks
             disk1:
                 path: /var/lib/libvirt/images
@@ -67,7 +67,7 @@ nodes:
     undercloud:
         <<: *controller
         name: undercloud
-        memory: "{{ !lookup provisioner.image.memory }}"
+        memory: "{{ !lookup provisioner.virsh.image.memory }}"
         groups:
             - undercloud
             - tester

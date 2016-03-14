@@ -3,11 +3,11 @@ nodes:
     controller: &controller
         name: controller
         amount: 1
-        cpu: "{{ !lookup provisioner.image.cpu }}"
+        cpu: "{{ !lookup provisioner.virsh.image.cpu }}"
         memory: 16384
         os:
             type: linux
-            variant: "{{ !lookup provisioner.image.os.variant }}"
+            variant: "{{ !lookup provisioner.virsh.image.os.variant }}"
         disks:
             disk1: &disk1
                 path: /var/lib/libvirt/images

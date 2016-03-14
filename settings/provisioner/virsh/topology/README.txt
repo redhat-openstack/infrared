@@ -6,13 +6,13 @@ nodes:
     example:
         name: controller
         amount: 1
-        cpu: "{{ !lookup provisioner.image.cpu }}"
+        cpu: "{{ !lookup provisioner.virsh.image.cpu }}"
         memory: 8192
         os: &os
             type: linux
-            variant: "{{ !lookup provisioner.image.os.variant }}"
+            variant: "{{ !lookup provisioner.virsh.image.os.variant }}"
         disk: &disk
-            size: "{{ !lookup provisioner.image.disk.size }}"
+            size: "{{ !lookup provisioner.virsh.image.disk.size }}"
             dev: /dev/vda
             path: /var/lib/libvirt/images
         network: &network_params
