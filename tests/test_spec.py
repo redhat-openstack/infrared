@@ -76,7 +76,7 @@ def test_required_option_exception(monkeypatch,
           }
       },
       'ssh-user': 'root',
-      'ssh-key': None },
+      'ssh-key': None},
      {'virsh': {
          'host': {'help': 'help', 'required': True},
          'ssh-user': {'help': 'help2', 'required': True},
@@ -122,4 +122,3 @@ def test_required_options_are_set(monkeypatch,
     mock_cmd_line_method(monkeypatch, res_args, options)
     actual_args = spec.parse_args('test', {})
     cmp(actual_args, expected_args)
-
