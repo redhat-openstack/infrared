@@ -1,52 +1,51 @@
 ---
-provisioner:
-    nodes:
-        controller: &controller
-            name: controller
-            amount: 1
-            cpu: "{{ !lookup provisioner.image.cpu }}"
-            memory: 8192
-            os: &os
-                type: linux
-                variant: "{{ !lookup provisioner.image.os.variant }}"
-            disks: &disks
-                disk1: &disk1
-                    path: /var/lib/libvirt/images
-                    dev: /dev/vda
-                    size: 30G
-            network: &network_params
-                interfaces: &interfaces
-                    management: &mgmt_interface
-                        label: eth0
-                    data: &data_interface
-                        label: eth1
-                    external: &external_interface
-                        label: eth2
-            groups:
-                - controller
-                - openstack_nodes
+nodes:
+    controller: &controller
+        name: controller
+        amount: 1
+        cpu: "{{ !lookup provisioner.image.cpu }}"
+        memory: 8192
+        os: &os
+            type: linux
+            variant: "{{ !lookup provisioner.image.os.variant }}"
+        disks: &disks
+            disk1: &disk1
+                path: /var/lib/libvirt/images
+                dev: /dev/vda
+                size: 30G
+        network: &network_params
+            interfaces: &interfaces
+                management: &mgmt_interface
+                    label: eth0
+                data: &data_interface
+                    label: eth1
+                external: &external_interface
+                    label: eth2
+        groups:
+            - controller
+            - openstack_nodes
 
-        compute:
-            <<: *controller
-            name: compute
-            amount: 2
-            cpu: 2
-            memory: 6144
-            disks:
-                disk1:
-                    path: /var/lib/libvirt/images
-                    size: 20G
-            groups:
-                - compute
-                - openstack_nodes
+    compute:
+        <<: *controller
+        name: compute
+        amount: 2
+        cpu: 2
+        memory: 6144
+        disks:
+            disk1:
+                path: /var/lib/libvirt/images
+                size: 20G
+        groups:
+            - compute
+            - openstack_nodes
 
-        undercloud:
-            <<: *controller
-            name: undercloud
-            amount: 1
-            memory: "{{ !lookup provisioner.image.memory }}"
-            groups:
-                - undercloud
-                - tester
-                - openstack_nodes
+    undercloud:
+        <<: *controller
+        name: undercloud
+        amount: 1
+        memory: "{{ !lookup provisioner.image.memory }}"
+        groups:
+            - undercloud
+            - tester
+            - openstack_nodes
 

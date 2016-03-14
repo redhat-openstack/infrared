@@ -183,7 +183,7 @@
         register: flavor_result
         when: "'{{ item.key }}' != 'undercloud'"
         failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item.key }} already exists') != -1"
-        with_dict: provisioner.nodes
+        with_dict: provisioner.virsh.topology.nodes
 
       - set_fact:
             tagged_flavors: "{{ flavor_result.results }}"
