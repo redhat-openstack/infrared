@@ -1,0 +1,39 @@
+---
+provisioner:
+    nodes:
+        controller: &controller
+            name: controller
+            amount: 1
+            cpu: "{{ !lookup provisioner.image.cpu }}"
+            memory: 16384
+            os:
+                type: linux
+                variant: "{{ !lookup provisioner.image.os.variant }}"
+            disks:
+                disk1: &disk1
+                    path: /var/lib/libvirt/images
+                    dev: /dev/vda
+                    size: 20G
+            network: &network_params
+                interfaces: &interfaces
+                    data: &data_interface
+                        label: eth1
+                        config_params: &data_interface_params
+                            bootproto: static
+                            ipaddr: 10.0.0.1
+                            netmask: 255.255.255.0
+                            nm_controlled: "no"
+                            type: ethernet
+                            onboot: yes
+                            device: "{{ !lookup provisioner.nodes.controller.network.interfaces.data.label }}"
+                    external: &external_interface
+                        label: eth2
+                        config_params:
+                            <<: *data_interface_params
+                            ipaddr: ""
+                            device: "{{ !lookup provisioner.nodes.controller.network.interfaces.external.label }}"
+            groups:
+                - controller
+                - compute
+                - network
+                - openstack_nodes
