@@ -2,15 +2,17 @@
 - name: Add host to host list
   hosts: localhost
   gather_facts: no
+  vars:
+      hypervisor: "{{ provisioner.virsh.host }}"
   tasks:
       - name: add hosts to host list
         add_host:
-            name="{{ item.value.name }}"
-            groups="{{ item.value.groups| join(',') }}"
+            name="{{ hypervisor.name }}"
+            groups="{{ hypervisor.groups| join(',') }}"
             node_label="{{ item.key }}"
-            ansible_ssh_user="{{ item.value.ssh_user }}"
-            ansible_ssh_host="{{ item.value.ssh_host }}"
-            ansible_ssh_private_key_file="{{ item.value.ssh_key_file }}"
+            ansible_ssh_user="{{ hypervisor.user }}"
+            ansible_ssh_host="{{ hypervisor.address }}"
+            ansible_ssh_private_key_file="{{ hypervisor.key }}"
         with_dict: provisioner.hosts
 
 - name: Remove all VMs and networks that were created

@@ -4,15 +4,15 @@ subparsers:
         help: Provision systems using virsh
         #argument_default: null
         groups:
-            - title: host
+            - title: Hypervisor
               options:
-                  host:
+                  host-address:
                       type: Value
                       help: Address/FQDN of the BM hypervisor
-                  ssh-user:
+                  host-user:
                       type: Value
                       help: User to SSH to the host with
-                  ssh-key:
+                  host-key:
                       type: Value
                       help: "User's SSH key"
             - title: image
