@@ -1,10 +1,10 @@
-import clg
 import ConfigParser
 import os
 
+import clg
 from cli import exceptions
 from cli import utils
-from cli.spec import IniFileType
+from cli.spec import clg_ini_file
 
 
 def load_config_file():
@@ -38,4 +38,4 @@ def load_config_file():
 config = load_config_file()
 
 # update clg types
-clg.TYPES.update({'IniFile': IniFileType})
+clg.TYPES.update({'IniFile': clg_ini_file})
