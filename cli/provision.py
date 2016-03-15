@@ -37,9 +37,15 @@ class IRFactory(object):
         if app_name in ["provisioner", ]:
             args = spec.parse_args(app_name, config)
             cls.configure_environment(args)
-            setting_dir = utils.validate_settings_dir(
-                CONF.get('defaults', 'settings'))
-            app_instance = IRApplication(app_name, setting_dir, args)
+
+            if args.get('generate-conf-file', None):
+                LOG.debug('Conf file "{}" has been generated. Exiting'.format(
+                    args['generate-conf-file']))
+                app_instance = None
+            else:
+                setting_dir = utils.validate_settings_dir(
+                    CONF.get('defaults', 'settings'))
+                app_instance = IRApplication(app_name, setting_dir, args)
 
         else:
             raise exceptions.IRUnknownApplicationException(
@@ -141,8 +147,9 @@ class VirshCommand(IRSubCommand):
             ssh_key_file=self.args['ssh-key']
         )
 
-        settings_dict = utils.dict_merge(
-            {'provisioner': {'image': image}},
+        settings_dict = {'provisioner': {'image': image}}
+        utils.dict_merge(
+            settings_dict,
             {'provisioner': {'hosts': {'host1': host}}})
 
         # load network and image settings
@@ -230,7 +237,8 @@ class IRApplication(object):
 
 def main():
     app = IRFactory.create('provisioner', CONF)
-    app.run()
+    if app:
+        app.run()
 
 if __name__ == '__main__':
     main()

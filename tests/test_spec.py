@@ -3,11 +3,11 @@ from cli import exceptions
 from cli import spec
 
 
-def mock_cmd_line_method(monkeypatch, res_args, options):
-    monkeypatch.setattr(spec,
-                        "_get_command_line_args",
-                        value=lambda x, y, z: (res_args, options))
-
+# def mock_cmd_line_method(monkeypatch, res_args, options):
+#     monkeypatch.setattr(spec,
+#                         "_get_command_line_args",
+#                         value=lambda x, y, z: (res_args, options))
+#
 
 @pytest.mark.parametrize("res_args, options, req_args, nonreq_args", [
     # data set #1
@@ -50,14 +50,13 @@ def mock_cmd_line_method(monkeypatch, res_args, options):
      }
      }, ['ssh-user'], ['ssh-key', 'host']]
 ])
-def test_required_option_exception(monkeypatch,
-                                   res_args,
+def test_required_option_exception(res_args,
                                    options,
                                    req_args,
                                    nonreq_args):
-    mock_cmd_line_method(monkeypatch, res_args, options)
+
     with pytest.raises(exceptions.IRConfigurationException) as ex_info:
-        spec.parse_args('test', {})
+        spec.override_default_values(res_args, options)
 
     for arg in req_args:
         assert arg in ex_info.value.message
@@ -115,10 +114,8 @@ def test_required_option_exception(monkeypatch,
       },
       'ssh-user': 'id_rsa'}]
 ])
-def test_required_options_are_set(monkeypatch,
-                                  res_args,
+def test_required_options_are_set(res_args,
                                   options,
                                   expected_args):
-    mock_cmd_line_method(monkeypatch, res_args, options)
-    actual_args = spec.parse_args('test', {})
+    actual_args = spec.override_default_values(res_args, options)
     cmp(actual_args, expected_args)

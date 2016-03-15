@@ -82,7 +82,6 @@ def dict_merge(first, second, path=None,
                 conflict_resolver(first, second, key)
         else:
             first[key] = second[key]
-    return first
 
 
 # TODO: remove "settings" references in project
