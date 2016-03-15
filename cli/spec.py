@@ -47,98 +47,128 @@ def parse_args(module_name, config, args=None):
     :param args: additional arguments to pass to the clg.
     """
 
-    res_args, subcommand_opts = _get_command_line_args(args, config,
-                                                       module_name)
+    # get the options for clg module.
+    clg_options = _get_specs(module_name, config)
 
+    # get the command options as is with all the fields from yaml
+    # this also trims some custom fields from options to pas to clg.
+    subparser_options = _get_subparser_options(clg_options)
+    cmd = clg.CommandLine(clg_options)
+    res_args = vars(cmd.parse(args))
+
+    override_default_values(res_args, subparser_options)
+    return res_args
+
+
+def override_default_values(res_args, subparser_options):
+    """
+    Collects argumetns values from the different sources and
+    :param res_args: the list of command line arguments with values
+    :param subcommand_opts: the subcommand spec options
+    """
     # get the default values
-    command_args = subcommand_opts[res_args['command0']]
-    defaults = {k: v.get('default', None)
-                for k, v in command_args.iteritems()}
+    command_args = subparser_options[res_args['command0']]
+    defaults = {option: attributes['default']
+                for option, attributes in command_args.iteritems()
+                if 'default' in attributes}
 
     # generate config file if required
     if res_args.get('generate-conf-file', None):
-        try:
-            file_name = res_args['generate-conf-file']
-            out_config = ConfigParser.ConfigParser()
+        _generate_config_file(defaults, res_args)
+    else:
+        # override defaults with env variables
+        _replace_with_env_arguments(defaults, res_args)
 
-            section = res_args['command0']
-            out_config.add_section(section)
-            for opt, value in defaults.iteritems():
-                if value is not None:
-                    out_config.set(section, opt, value)
-            with open(file_name, 'w') as configfile:  # save
-                out_config.write(configfile)
-        except Exception as ex:
-            raise exceptions.IRException(ex.message)
+        # override defaults with the ini file args
+        _replace_with_ini_arguments(defaults, res_args)
 
-    # override defaults with env variables
+        # replace defaults with cli
+        utils.dict_merge(
+            res_args,
+            defaults,
+            conflict_resolver=utils.ConflictResolver.none_resolver)
+
+        _check_required_arguments(command_args, res_args)
+
+
+def _check_required_arguments(command_args, res_args):
+    """
+    Verify all the required arguments are set.
+    :param command_args: the dict with command spec options
+    :param res_args: the current command line arguments value
+    """
+    unset_args = []
+    only_args = []
+    for arg_name, arg_param in command_args.iteritems():
+        if arg_param.get('required', None) and \
+                        res_args.get(arg_name, None) is None:
+            unset_args.append(arg_name)
+        if 'requires_only' in arg_param:
+            only_args.extend(arg_param['requires_only'])
+    if only_args:
+        intersection = set(unset_args).intersection(set(only_args))
+        if intersection:
+            raise exceptions.IRConfigurationException(
+                "Required only input arguments {} are not set!".format(
+                    intersection))
+    elif unset_args:
+        raise exceptions.IRConfigurationException(
+            "Required input arguments {} are not set!".format(
+                unset_args))
+
+
+def _replace_with_ini_arguments(defaults, res_args):
+    """
+    Replaces the default arguments values with the arguments from ini file.
+    :param defaults: the default arguments values.
+    :param res_args: the current command line arguments value
+    """
+    if 'from-file' in res_args:
+        file_args = res_args['from-file']
+        if file_args is not None and res_args['command0'] in file_args:
+            utils.dict_merge(
+                file_args[res_args['command0']],
+                defaults,
+                conflict_resolver=utils.ConflictResolver.none_resolver)
+            defaults.update(file_args[res_args['command0']])
+
+
+def _replace_with_env_arguments(defaults, res_args):
+    """
+    Replaces default variables with the variables from env.
+    :param defaults: the default arguments values.
+    :param res_args: the current command line arguments value
+    """
+
     for arg_name, arg_value in res_args.iteritems():
         upper_arg_name = arg_name.upper()
         if arg_value is None and upper_arg_name in os.environ:
             defaults[arg_name] = os.getenv(upper_arg_name)
 
-    # override defaults with the ini file args
-    if 'from-file' in res_args:
-        file_args = res_args['from-file']
-        if file_args is not None and res_args['command0'] in file_args:
-            defaults = utils.dict_merge(
-                file_args[res_args['command0']],
-                defaults,
-                conflict_resolver=utils.ConflictResolver.none_resolver)
 
-    # replace defaults with cli
-    utils.dict_merge(res_args, defaults,
-                     conflict_resolver=utils.ConflictResolver.none_resolver)
-
-    # check if we have all the required arguments defined at the end of merge
-    unset_args = []
-    only_args = []
-    for arg_name, arg_param in command_args.iteritems():
-        if 'required' in arg_param and \
-                arg_param['required'] and \
-                res_args.get(arg_name, None) is None:
-            unset_args.append(arg_name)
-        if 'requires_only' in arg_param:
-            only_args.extend(arg_param['requires_only'])
-    if len(only_args) > 0:
-        intersection = set(unset_args).intersection(set(only_args))
-        if len(intersection) > 0:
-            raise exceptions.IRConfigurationException(
-                "Required only input arguments {} are not set!".format(
-                    intersection))
-    elif len(unset_args) > 0:
-        raise exceptions.IRConfigurationException(
-            "Required input arguments {} are not set!".format(
-                unset_args))
-    return res_args
-
-
-def _get_command_line_args(args, config, module_name):
+def _generate_config_file(defaults, res_args):
     """
-    Gets the arguments values from the command line.
+    Generates config file
+
+    :param defaults: the default arguments values.
+    :param res_args: the current command line arguments value
     """
-    clg_options, global_opts, subcommand_opts = \
-        _load_spec_as_dict(module_name, config)
-    cmd = clg.CommandLine(clg_options)
-    res_args = vars(cmd.parse(args))
-    return res_args, subcommand_opts
+    try:
+        file_name = res_args['generate-conf-file']
+        out_config = ConfigParser.ConfigParser()
+
+        section = res_args['command0']
+        out_config.add_section(section)
+        for opt, value in defaults.iteritems():
+            if value is not None:
+                out_config.set(section, opt, value)
+        with open(file_name, 'w') as configfile:  # save
+            out_config.write(configfile)
+    except Exception as ex:
+        raise exceptions.IRException(ex.message)
 
 
-def _load_spec_as_dict(module_name, config):
-    """
-    Loads the spec file as dict.
-
-    Returns tuple:
-        dict of options and groups for clg
-        dict of options without subcommands
-        dict of options for subcommands
-    """
-    clg_options = _get_specs(module_name, config)
-    global_options, subcommands_options = _process_options(clg_options)
-    return clg_options, global_options, subcommands_options
-
-
-def _process_options(spec_dict, lookup=False, trim=False):
+def _get_subparser_options(spec_dict, lookup=False, trim=False):
     """
     Goes through all the spec options modifies them by removing
      some options parameters (like defaults)
@@ -148,69 +178,86 @@ def _process_options(spec_dict, lookup=False, trim=False):
     :param trim: specifies whether the certain option
         parameters should be removed
     """
-    global_options = {}
-    subcommand_options = {}
-    _process_flat_options(global_options, spec_dict, lookup, trim)
-    _process_groups_options(global_options, spec_dict, lookup, trim)
-    # collect sub parser global_options
+
+    # collect sub parser parser_options
+    options = {}
     if 'subparsers' in spec_dict:
         for subparser_name, params in spec_dict['subparsers'].iteritems():
-            subcommand_options[subparser_name], _ = _process_options(
+            parser_options = _get_parser_options(params, lookup=True,
+                                                 trim=True)
+            group_options = _get_parser_group_options(
                 params, lookup=True, trim=True)
 
-    return global_options, subcommand_options
+            utils.dict_merge(parser_options, group_options)
+            options[subparser_name] = parser_options
+
+    return options
 
 
-def _process_groups_options(options, spec_dict, lookup, trim):
+def _get_parser_group_options(spec_dict, lookup, trim):
     """
     Gets the dict of options nested within the spec groups
 
-    :param options:  the current list of options
     :param spec_dict: the dictionary to look for new group options.
     :param lookup: specifies whether the options lookup is required.
     :param trim: specifies whether the certain option
         parameters should be removed
     """
+    options = {}
     if 'groups' in spec_dict:
         for group in spec_dict['groups']:
-            _process_flat_options(options, group, lookup, trim)
+            options.update(_get_parser_options(group, lookup, trim))
+    return options
 
 
-def _process_flat_options(options, spec_dict, lookup, trim):
+def _get_parser_options(spec_dict, lookup, trim):
     """
-    Gest the dict of options listed in the spec of group.
+    Gets the dict of options listed in the spec of group.
 
     This method will also remove some methods and will replace
      __<value>__ pattens in the option properties (e.g. __default__, __FILE__)
 
-    :param options:  the current list of options
     :param spec_dict: the dictionary to look for new options.
     :param lookup: specifies whether the options lookup is required.
     :param trim: specifies whether the certain option
         parameters should be removed
     """
+    options = {}
     if 'options' in spec_dict:
         for opt_name, opt_params in spec_dict['options'].iteritems():
+            _update_help(opt_params)
             if lookup:
-                _lookup_option(opt_name, opt_params)
+                _replace_builtin(opt_params)
 
             # get a parameters copy with all the keys.
             options[opt_name] = dict(opt_params)
 
             if trim:
-                _trim_option(opt_name, opt_params)
+                _trim_option(opt_params)
+    return options
 
 
-def _lookup_option(opt_name, opt_params):
+def _update_help(opt_params):
+    """
+    Update the help by inserting default values if required.
+    :param opt_params: the dictionary of the option parameters
+        (help, type, default, etc)
+    """
+    # insert default value into help.
+    if 'help' in opt_params and 'default' in opt_params \
+            and '__DEFAULT__' not in opt_params['help']:
+        opt_params['help'] += " | Default value: {}".format(
+            opt_params['default'])
+
+
+def _replace_builtin(opt_params):
     """
     Modifies existing option parameters by replaceing ___*___ patterns
-      and inserting default values into the help.
-    :param opt_name: the option name to process
     :param opt_params: the dictionary of the option parameters
         (help, type, default, etc)
     """
 
-    # first check __*__ pattern
+    # check __*__ pattern
     for opt_param_name, param_value in opt_params.iteritems():
         for lookup_string, lookup_key in LOOKUP_DICT.iteritems():
             if lookup_string in str(param_value):
@@ -218,22 +265,15 @@ def _lookup_option(opt_name, opt_params):
                     param_value.replace(lookup_string, str(opt_params.get(
                         lookup_key, lookup_string)))
 
-    # insert default value into help.
-    if 'help' in opt_params and 'default' in opt_params:
-        opt_params['help'] += " | Default value: {}".format(
-            opt_params['default'])
 
-
-def _trim_option(opt_name, opt_params):
+def _trim_option(opt_params):
     """
     Removes the defined option parameters.
-    :param opt_name: the option name to process
     :param opt_params: the dictionary of the option parameters
         (help, type, default, etc)
     """
-    for opt_param_name, param_value in opt_params.iteritems():
-        if opt_param_name in TRIM_PARAMS:
-            opt_params.pop(opt_param_name, None)
+    for trim_param in TRIM_PARAMS:
+        opt_params.pop(trim_param, None)
 
 
 def _get_specs(module_name, config):
