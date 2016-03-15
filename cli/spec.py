@@ -110,7 +110,52 @@ def parse_args(module_name, config, args=None):
         raise exceptions.IRConfigurationException(
             "Required input arguments {} are not set!".format(
                 unset_args))
+    _post_process_command_args(module_name, res_args, subcommand_opts, config)
     return res_args
+
+
+def _post_process_command_args(module_name,
+                               res_args,
+                               subcommand_opts,
+                               config):
+    """
+    Transforms some of arguments after they have been read.
+    """
+
+    # post process topology
+    if 'topology' in res_args and res_args['topology'] is not None:
+        # for yaml file simply load it.
+        # just to support old style.
+        # TODO
+        if res_args['topology'].endswith('.yml'):
+            root_dir = utils.validate_settings_dir(
+                config.get('defaults', 'settings'))
+            if module_name:
+                root_dir = os.path.join(root_dir, module_name)
+            if 'command0' in res_args:
+                root_dir = os.path.join(root_dir, res_args['command0'])
+
+            settings_file = os.path.join(
+                root_dir, 'topology', res_args['topology'])
+            with open(settings_file) as stream:
+                res_args['topology'] = yaml.load(stream)
+        else:
+            # try to split args
+            topology_dict = {}
+            for topology_item in res_args['topology'].split(','):
+                number, node_type = topology_item.split('_')
+                if int(number) > 1 and node_type[-1] == 's':
+                    node_type = node_type[:-1]
+                root_dir = utils.validate_settings_dir(
+                    config.get('defaults', 'settings'))
+                # todo(obaranov) read the topology folder from settings
+                node_file = os.path.join(
+                    root_dir, 'topology', node_type+'.yml')
+                with open(node_file) as stream:
+                    topology_dict[node_type] = yaml.load(stream)
+                    topology_dict[node_type]['amount'] = int(number)
+
+            res_args['topology'] = topology_dict
 
 
 def _get_command_line_args(args, config, module_name):

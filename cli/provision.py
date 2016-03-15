@@ -144,7 +144,7 @@ class VirshCommand(IRSubCommand):
             {'provisioner': {'hosts': {'host1': host}}})
 
         # load network and image settings
-        for arg_dir in ('network', 'topology'):
+        for arg_dir in ('network',):
             if self.args[arg_dir] is None:
                 raise exceptions.IRConfigurationException(
                     "A value for for the  '{}' "
@@ -154,6 +154,10 @@ class VirshCommand(IRSubCommand):
                 settings = yaml.load(settings_file)
             utils.dict_merge(settings_dict, settings)
 
+        # inject topology from args to the required fro virsh place.
+        settings_dict = utils.dict_merge(
+            settings_dict,
+            {'provisioner': {'nodes': self.args['topology']}})
         return settings_dict
 
     def _load_yaml_files(self):

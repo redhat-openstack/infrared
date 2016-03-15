@@ -4,7 +4,7 @@ import os
 import clg
 from cli import exceptions
 from cli import utils
-from cli.spec import cfg_file_to_dict
+from cli import spec
 
 
 def load_config_file():
@@ -38,4 +38,4 @@ def load_config_file():
 config = load_config_file()
 
 # update clg types
-clg.TYPES.update({'IniFile': cfg_file_to_dict})
+clg.TYPES.update({'IniFile': spec.cfg_file_to_dict})
