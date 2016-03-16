@@ -1,3 +1,15 @@
+- name: copy the enable-tls.yaml file locally
+  shell: "cp /usr/share/openstack-tripleo-heat-templates/environments/enable-tls.yaml {{ installer.overcloud.template_base }}/enable-tls.yaml"
+
+- name: adjust the reference of tls-cert-inject.yaml
+  shell: "sed -i 's#\\.\\.#/usr/share/openstack-tripleo-heat-templates#' {{ installer.overcloud.template_base }}/enable-tls.yaml"
+
+- name: copy the inject-trust-anchor.yaml file locally
+  shell: "cp /usr/share/openstack-tripleo-heat-templates/environments/inject-trust-anchor.yaml {{ installer.overcloud.template_base }}/inject-trust-anchor.yaml"
+
+- name: adjust the reference of ca-inject.yaml
+  shell: "sed -i 's#\\.\\.#/usr/share/openstack-tripleo-heat-templates#' {{ installer.overcloud.template_base }}/inject-trust-anchor.yaml"
+
 - name: create the self signed SSL
   shell: "openssl genrsa -out {{ installer.overcloud.template_base }}/overcloud-privkey.pem 2048"
 
@@ -5,7 +17,7 @@
   shell: "openssl req -new -x509 -key {{ installer.overcloud.template_base }}/overcloud-privkey.pem -out {{ installer.overcloud.template_base }}/overcloud-cacert.pem -days 365 -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ installer.overcloud.network.template.content.parameter_defaults.ExternalAllocationPools[0].start }}'"
 
 - name: update the tls template
-  shell: "sed -i 's/CLOUDNAME/IP_ADDRESS/' {{ installer.overcloud.template_base }}/environments/enable-tls.yaml"
+  shell: "sed -i 's/CLOUDNAME/IP_ADDRESS/' {{ installer.overcloud.template_base }}/enable-tls.yaml"
 
 - name: copy the self signed CA certification to our trusted store
   shell: "sudo cp {{ installer.overcloud.template_base }}/overcloud-cacert.pem /etc/pki/ca-trust/source/anchors/"
@@ -27,16 +39,16 @@
       regexp: "{{ item.regex }}"
       replace: "{{ item.replace_with }}"
   with_items:
-      - {dest: "{{ installer.overcloud.template_base }}/environments/enable-tls.yaml", regex: "(SSLCertificate:.*\\s+)The contents of your certificate.*$", replace_with: "\\1{{ cacert.stdout | indent(4) | string }}"}
-      - {dest: "{{ installer.overcloud.template_base }}/environments/enable-tls.yaml", regex: "(SSLKey:.*\\s+)The contents of the private key.*$", replace_with: "\\1{{ private_key.stdout | indent(4) | string }}"}
-      - {dest: "{{ installer.overcloud.template_base }}/environments/inject-trust-anchor.yaml", regex: "(SSLRootCertificate:.*\\s+)The contents of your root CA.*$", replace_with: "\\1{{ cacert.stdout | indent(4) | string }}"}
+      - {dest: "{{ installer.overcloud.template_base }}/enable-tls.yaml", regex: "(SSLCertificate:.*\\s+)The contents of your certificate.*$", replace_with: "\\1{{ cacert.stdout | indent(4) | string }}"}
+      - {dest: "{{ installer.overcloud.template_base }}/enable-tls.yaml", regex: "(SSLKey:.*\\s+)The contents of the private key.*$", replace_with: "\\1{{ private_key.stdout | indent(4) | string }}"}
+      - {dest: "{{ installer.overcloud.template_base }}/inject-trust-anchor.yaml", regex: "(SSLRootCertificate:.*\\s+)The contents of your root CA.*$", replace_with: "\\1{{ cacert.stdout | indent(4) | string }}"}
 
 - name: append the invocation line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: "                       -e {{ installer.overcloud.template_base }}/environments/enable-tls.yaml \\"
+      line: '                       -e {{ installer.overcloud.template_base }}/enable-tls.yaml \\'
 
 - name: append the invocation line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: "                       -e {{ installer.overcloud.template_base }}/environments/inject-trust-anchor.yaml \\"
+      line: '                       -e {{ installer.overcloud.template_base }}/inject-trust-anchor.yaml \\'

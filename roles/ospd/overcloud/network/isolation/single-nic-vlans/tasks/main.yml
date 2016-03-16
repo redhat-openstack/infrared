@@ -22,4 +22,6 @@
 
 - name: add the ipv6 address
   shell: "sudo ip l set dev vlan{{ installer.overcloud.network.template.content.parameter_defaults.ExternalNetworkVlanID }} up; sudo ip addr add {{ installer.overcloud.network.template.content.parameter_defaults.ExternalInterfaceDefaultRoute }}/64 dev vlan{{ installer.overcloud.network.template.content.parameter_defaults.ExternalNetworkVlanID }}"
-  when: installer.overcloud.network.backend == 'vlan'
+  register: set_ipv6
+  failed_when: "set_ipv6.stderr != '' and 'RTNETLINK answers: File exists' not in set_ipv6.stderr"
+  when: installer.overcloud.network.backend == 'vlan' and installer.overcloud.network.protocol == 'ipv6'

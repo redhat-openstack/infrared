@@ -17,6 +17,8 @@ import cli.execute
 LOG = logger.LOG
 CONF = conf.config
 
+PROVISION_PLAYBOOK = "provision.yaml"
+CLEANUP_PLAYBOOK = "cleanup.yaml"
 NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output',
                         'input', 'dry-run', 'cleanup', 'inventory']
 
@@ -179,11 +181,20 @@ class IRApplication(object):
 
     def run(self):
         """
-        :return: Runs the application
+        Runs the application
         """
         settings = self.collect_settings()
         self.dump_settings(settings)
-        self.execute(settings)
+
+        if not self.args['dry-run']:
+            self.args['settings'] = yaml.load(yaml.safe_dump(
+                settings,
+                default_flow_style=False))
+
+            if self.args['cleanup']:
+                cli.execute.ansible_playbook(CLEANUP_PLAYBOOK, self.args)
+            else:
+                cli.execute.ansible_playbook(PROVISION_PLAYBOOK, self.args)
 
     def collect_settings(self):
         settings_files = self.sub_command.get_settings_files()
@@ -197,11 +208,13 @@ class IRApplication(object):
         in the setting files by values from
         other settings files.
         """
-        cli.yamls.Lookup.settings = utils.generate_settings(
-            settings_files,
+
+        cli.yamls.Lookup.settings = utils.generate_settings(settings_files)
+        cli.yamls.Lookup.settings.merge(settings_dict)
+        cli.yamls.Lookup.settings = utils.merge_extra_vars(
+            cli.yamls.Lookup.settings,
             self.args['extra-vars'])
 
-        cli.yamls.Lookup.settings.merge(settings_dict)
         cli.yamls.Lookup.in_string_lookup()
 
         return cli.yamls.Lookup.settings
@@ -217,19 +230,6 @@ class IRApplication(object):
                 output_file.write(output)
         else:
             print output
-
-    def execute(self, settings):
-        """
-        Executes a playbook.
-        """
-        if not self.args['dry-run']:
-            self.args['settings'] = yaml.load(yaml.safe_dump(
-                settings,
-                default_flow_style=False))
-            if not self.args['cleanup']:
-                self.args['provision'] = True
-
-            cli.execute.ansible_wrapper(self.args)
 
 
 def main():
