@@ -1,3 +1,5 @@
+import ConfigParser
+
 import pytest
 from cli import exceptions
 from cli import spec
@@ -122,3 +124,44 @@ def test_required_options_are_set(monkeypatch,
     mock_cmd_line_method(monkeypatch, res_args, options)
     actual_args = spec.parse_args('test', {})
     cmp(actual_args, expected_args)
+
+
+def test_dynamic_topology(tmpdir):
+    """
+    Verifies the topology is dynamically constructed.
+    """
+    root_dir = tmpdir.mkdir("topology")
+    controller_yml = root_dir.join("controller.yml")
+    compute_yml = root_dir.join("compute.yml")
+    ceph_yml = root_dir.join("ceph.yml")
+    controller_yml.write("""---
+memory: 8192
+os: linux
+name: controller
+""")
+    compute_yml.write("""---
+memory: 1024
+os: rhel
+name: compute
+""")
+    ceph_yml.write("""---
+memory: 2048
+os: fedora
+name: ceph
+""")
+    # prepare config
+    config = ConfigParser.ConfigParser()
+    config.add_section('defaults')
+    config.set('defaults', 'topology', root_dir.strpath)
+    res_args = dict(topology="10_controllers,2_compute")
+
+    # process topology
+    spec._post_process_command_args(res_args, config)
+    topology = res_args['topology']
+    assert 'controller' in topology
+    assert 'compute' in topology
+    assert 'ceph' not in topology
+    assert topology['controller']['amount'] == 10
+    assert topology['compute']['amount'] == 2
+    assert topology['controller']['memory'] == 8192
+    assert topology['compute']['memory'] == 1024
