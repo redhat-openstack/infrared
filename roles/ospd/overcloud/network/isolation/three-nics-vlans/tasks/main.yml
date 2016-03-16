@@ -47,5 +47,5 @@
 - name: add the ipv6 address
   shell: "sudo ip addr add {{ installer.overcloud.network.template.content.parameter_defaults.ExternalInterfaceDefaultRoute }}/64 dev eth2"
   register: set_ipv6
-  failed_when: "'RTNETLINK answers: File exists' not in set_ipv6.stderr"
+  failed_when: "set_ipv6.stderr != '' and 'RTNETLINK answers: File exists' not in set_ipv6.stderr"
   when: installer.overcloud.network.backend == 'vlan' and installer.overcloud.network.protocol == 'ipv6'
