@@ -106,6 +106,26 @@ option. There are 2 ways of doing so:
 The ``-e``/``--extra-vars`` can be used more than once.
 
 
+Dynamic Topology
+----------------
+
+InfraRed allows to dynamically define the provisioning topology to be used during deployment.
+
+InfraRed provides several 'mini' yam files to describe different roles: controller, compute, undercloud, etc.
+These 'mini' files are then merged into one topology file according to the provided ``--topology`` argument value.
+
+The ``--topology`` argument can have the following format:
+ #. ``--topology=1_controller,1_compute``
+ #. ``--topology=1_controller``
+ #. ``--topology=3_controllers,1_compute,1_undercloud``
+
+Infrared will read dynamic topology by following the next steps:
+ #. Split the topology value with ','.
+ #. Split each node with '_' and get pair (number, role). For every pair:
+     * look for the topology folder (configured in the infrared.cfg file) for the appropriate mini file (controller.yml, compute.yml, etc).
+     * load the role the defined number of times into the settings.
+
+
 Add new Plugins
 ===============
 
