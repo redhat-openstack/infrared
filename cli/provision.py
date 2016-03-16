@@ -13,6 +13,8 @@ from cli import exceptions
 import cli.yamls
 import cli.execute
 
+COMMAND = 'provisioner'
+
 LOG = logger.LOG
 CONF = conf.config
 
@@ -28,17 +30,17 @@ class IRFactory(object):
     """
 
     @classmethod
-    def create(cls, app_name, config):
+    def create(cls, app_name, config, args=None):
         """
-        Create the application object
-        by module name and provided configuration.
+        Create the application object by module name and config object
+        :param args: list. If given parse it instead of stdin input.
         """
         if app_name in ["provisioner", ]:
-            args = conf.SpecManager.parse_args(app_name, config)
-            cls.configure_environment(args)
+            spec_args = conf.SpecManager.parse_args(app_name, config, args)
+            cls.configure_environment(spec_args)
             setting_dir = utils.validate_settings_dir(
-                CONF.get('defaults', 'settings'))
-            app_instance = IRApplication(app_name, setting_dir, args)
+                config.get('defaults', 'settings'))
+            app_instance = IRApplication(app_name, setting_dir, spec_args)
 
         else:
             raise exceptions.IRUnknownApplicationException(
@@ -99,67 +101,39 @@ class IRSubCommand(object):
             self.settings_dir,
             self.name + '.yml'))
 
-        settings_files.extend(self._load_yaml_files())
-
         LOG.debug("All settings files to be loaded:\n%s" % settings_files)
         return settings_files
 
-    def _load_yaml_files(self):
-        # load directly from args
-        settings_files = []
-        for key, val in vars(self.args).iteritems():
-            if val is not None and key not in NON_SETTINGS_OPTIONS:
-                settings_file = os.path.join(
-                    self.settings_dir, key, val + '.yml')
-                LOG.debug('Searching settings file for the "%s" key...' % key)
-                if not os.path.isfile(settings_file):
-                    settings_file = utils.normalize_file(val)
-                settings_files.append(settings_file)
-                LOG.debug('"%s" was added to settings '
-                          'files list as an argument '
-                          'for "%s" key' % (settings_file, key))
-        return settings_files
+    #todo(yfried): maybe move to spec?
+    def get_arguments_dict(self):
+        self.dict_ = """
+        Collect all conf.ValueArgument args in dict according to arg names
 
-    def get_settings_dict(self):
-        return {}
+        some-key=value will be nested in dict as:
 
+        {COMMAND: {
+            SUBCOMMAND: {
+                "some": {
+                    "key": value}
+                }
+            }
+        }
 
-class VirshCommand(IRSubCommand):
+        For conf.conf.YamlFileArgument value is path to yaml so file content
+        will be loaded as a nested dict
 
-    def get_settings_dict(self):
+        :return: dict
+        """
+        settings_dict = {}
 
-        # todo(obaranov) this is virsh specific
-        # rework that and make this part of lookup or something.
-        image = dict(
-            name=self.args['image-file'],
-            base_url=self.args['image-server']
-        )
-        host = dict(
-            ssh_host=self.args['host'],
-            ssh_user=self.args['ssh-user'],
-            ssh_key_file=self.args['ssh-key']
-        )
+        for name, argument in self.args.iteritems():
+            if isinstance(argument, conf.YamlFileArgument):
+                argument.find_file(self.settings_dir)
+            if isinstance(argument, conf.ValueArgument):
+                utils.dict_insert(settings_dict, argument.value,
+                                  *argument.arg_name.split("-"))
 
-        settings_dict = utils.dict_merge(
-            {'provisioner': {'image': image}},
-            {'provisioner': {'hosts': {'host1': host}}})
-
-        # load network and image settings
-        for arg_dir in ('network', 'topology'):
-            if self.args[arg_dir] is None:
-                raise exceptions.IRConfigurationException(
-                    "A value for for the  '{}' "
-                    "argument should be provided!".format(arg_dir))
-            with open(set_network(self.args[arg_dir], os.path.join(
-                    self.settings_dir, arg_dir))) as settings_file:
-                settings = yaml.load(settings_file)
-            utils.dict_merge(settings_dict, settings)
-
-        return settings_dict
-
-    def _load_yaml_files(self):
-        # do not load additional yaml files.
-        return []
+        return {COMMAND: {self.args["command0"]: settings_dict}}
 
 
 class IRApplication(object):
@@ -172,7 +146,7 @@ class IRApplication(object):
         self.settings_dir = settings_dir
 
         # todo(obaranov) replace with subcommand factory
-        self.sub_command = VirshCommand.create(name, settings_dir, args)
+        self.sub_command = IRSubCommand.create(name, settings_dir, args)
 
     def run(self):
         """
@@ -193,9 +167,14 @@ class IRApplication(object):
 
     def collect_settings(self):
         settings_files = self.sub_command.get_settings_files()
-        settings_dict = self.sub_command.get_settings_dict()
+        arguments_dict = self.sub_command.get_arguments_dict()
 
-        return self.lookup(settings_files, settings_dict)
+        # todo(yfried): fix after refactor
+        # utils.dict_merge(settings_files, arguments_dict)
+        # return self.lookup(settings_files)
+
+        # todo(yfried) remove this line after refactor
+        return self.lookup(settings_files, arguments_dict)
 
     def lookup(self, settings_files, settings_dict):
         """
@@ -205,6 +184,7 @@ class IRApplication(object):
         """
 
         cli.yamls.Lookup.settings = utils.generate_settings(settings_files)
+        # todo(yfried) remove this line after refactor
         cli.yamls.Lookup.settings.merge(settings_dict)
         cli.yamls.Lookup.settings = utils.merge_extra_vars(
             cli.yamls.Lookup.settings,
@@ -228,7 +208,7 @@ class IRApplication(object):
 
 
 def main():
-    app = IRFactory.create('provisioner', CONF)
+    app = IRFactory.create(COMMAND, CONF)
     app.run()
 
 if __name__ == '__main__':

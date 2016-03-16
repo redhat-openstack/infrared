@@ -74,6 +74,18 @@ The merging priority order is:
 
 InfraRed input arguments
 ------------------------
+
+.. note:: The following mechanism applies to special argument types that need
+ to be defined in `.spec` files:
+
+#. **Value**: String values
+#. **YamlFile**: Expects path to YAML files. Will search for files in the settings directory before trying to resolve
+   absolute path. For the argument name is "arg-name" and of subparser "SUBCOMMAND" of command "COMMAND", the default
+   search path would be::
+
+    settings_dir/COMMAND/SUBCOMMAND/arg/name/arg_value
+
+
 InfraRed accepts the next sources of the input arguments (in priority order):
 
 1. Command line arguments:  ``ir-provision virsh --host=some.host.com --ssh_user=root``
@@ -117,7 +129,7 @@ There are two steps that should be done when adding a new plugin to InfraRed:
     For more details on how to use this module, please visit the 'clg' module `homepage <http://clg.readthedocs
     .org/en/latest/>`_.
 
-2. Creating a default spec file (default.ini). 
+2. Creating a default spec file (default.ini).
     This file should contain the default values for the command line arguments. All the default values should go under the name section names as a new plugin. Example::
       
       [virsh]

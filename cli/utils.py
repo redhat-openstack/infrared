@@ -79,6 +79,28 @@ def dict_merge(first, second, path=None,
     return first
 
 
+def search_tree(haystack, needle, _res=None):
+    """Find all values of key `needle` inside a nested dict tree `haystack`.
+
+    :param haystack: nested dict tree to search
+    :param needle: key name to search for
+    :param _res: helper argument holding return value for internal recursion
+    :return: list. All values of key `needle` in tree `haystack`. Order is not
+        guaranteed.
+    """
+    if _res is None:
+        _res = []
+    if needle in haystack:
+        _res.append(haystack[needle])
+    for key, value in haystack.iteritems():
+        if isinstance(value, dict):
+            search_tree(value, needle, _res)
+        if isinstance(value, list):
+            for item in value:
+                search_tree(item, needle, _res)
+    return _res
+
+
 # TODO: remove "settings" references in project
 def validate_settings_dir(settings_dir=None):
     """Checks & returns the full path to the settings dir.
