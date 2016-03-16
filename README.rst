@@ -162,3 +162,9 @@ InfraRed extends the clg module by adding additional options for command line ar
         help: Clean given system instead of provisioning a new one
         requires_only: [host, ssh-user,  ssh-key, topology]
 
+
+Known issues
+============
+
+#. PROBLEM: sshpass package cannot be installed during virsh provisioning.
+   SOLUTION: install rhos-release tool. Install osp-d with rhos-release: ``rhos-release 7-director``
