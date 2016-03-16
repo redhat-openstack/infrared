@@ -38,8 +38,8 @@ subparsers:
                       required: yes
                   topology:
                       type: str
-                      help: Provision topology
-                      default: all-in-one.yml
+                      help: Provision topology.
+                      default: "1_controller,1_compute,1_undercloud"
                       required: yes
             - title: common
               options:
