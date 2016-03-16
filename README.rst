@@ -121,9 +121,7 @@ The ``--topology`` argument can have the following format:
 
 Infrared will read dynamic topology by following the next steps:
  #. Split the topology value with ','.
- #. Split each node with '_' and get pair (number, role). For every pair:
-     * look for the topology folder (configured in the infrared.cfg file) for the appropriate mini file (controller.yml, compute.yml, etc).
-     * load the role the defined number of times into the settings.
+ #. Split each node with '_' and get pair (number, role). For every pair look for the topology folder (configured in the infrared.cfg file) for the appropriate mini file (controller.yml, compute.yml, etc). Load the role the defined number of times into the settings.
 
 
 Add new Plugins
