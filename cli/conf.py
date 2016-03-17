@@ -1,12 +1,12 @@
 import ConfigParser
+
+import exceptions
 import os
 
 import clg
 
-from cli import exceptions
 from cli import utils
 from cli import logger
-from cli.spec import cfg_file_to_dict
 
 LOG = logger.LOG
 DEFAULT_CONF_DIRS = dict(
@@ -45,6 +45,13 @@ def load_config_file():
         _config.add_section('defaults')
         for option, value in DEFAULT_CONF_DIRS.iteritems():
             _config.set('defaults', option, os.path.join(project_dir, value))
+
+    # Validates settings dir exists
+    settings_dir = _config.get('defaults', 'settings')
+    if not os.path.exists(settings_dir):
+        raise exceptions.IRFileNotFoundException(
+            settings_dir,
+            "Settings directory doesn't exist: ")
 
     return _config
 

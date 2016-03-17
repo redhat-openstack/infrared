@@ -52,8 +52,10 @@ def parse_args(module_name, config, args=None):
     :param args: additional arguments to pass to the clg.
     """
 
+    settings_dir = config.get('defaults', 'settings')
+
     # Dict with the merging result of all module's specs
-    module_specs = _get_specs(module_name, config)
+    module_specs = _get_specs(os.path.join(settings_dir, module_name))
 
     # Get the subparsers options as is with all the fields from module specs.
     # This also trims some custom fields from options to pass to clg.
@@ -273,22 +275,21 @@ def _trim_option(option_attributes):
         option_attributes.pop(trim_param, None)
 
 
-def _get_specs(module_name, config):
+def _get_specs(module_settings_base):
     """
-    Gets specs files as a dict from settings/<module_name> folder.
+    Load all  specs files from base settings directory.
 
-    :param module_name: the module name: installer|provisioner|tester
-    :param: config: the infrared configuration.
+    :param module_settings_base: path to the base directory holding the
+        module's settings. Module can be  provisioner\installer\tester
+        and the path would be: settings/<module_name>/
+    :return: dict: All spec files merged into a single dict.
     """
-    root_dir = utils.validate_settings_dir(
-        config.get('defaults', 'settings'))
-    if module_name:
-        root_dir = os.path.join(root_dir, module_name)
-    # TODO (aopincar): validate that root_dir exists after the this point
+    if not os.path.exists(module_settings_base):
+        raise exceptions.IRFileNotFoundException(module_settings_base)
 
     # Collect all module's spec
     sepc_files = []
-    for root, _, files in os.walk(root_dir):
+    for root, _, files in os.walk(module_settings_base):
         sepc_files.extend([os.path.join(root, a_file) for a_file in files
                            if a_file.endswith(SPEC_EXTENSION)])
 
@@ -301,3 +302,4 @@ def _get_specs(module_name, config):
         utils.dict_merge(res, spec)
 
     return res
+

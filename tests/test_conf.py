@@ -10,7 +10,7 @@ def test_get_config_dir(our_cwd_setup):
     conf_file = conf.load_config_file()
     assert os.path.abspath(
         conf_file.get("defaults", "settings")) == os.path.join(os.getcwd(),
-                                                               "fake_settings")
+                                                               "settings")
 
 
 def test_get_config_dir_project_defaults(our_cwd_setup):

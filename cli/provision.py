@@ -43,8 +43,7 @@ class IRFactory(object):
                     args['generate-conf-file']))
                 app_instance = None
             else:
-                setting_dir = utils.validate_settings_dir(
-                    CONF.get('defaults', 'settings'))
+                setting_dir = CONF.get('defaults', 'settings')
                 app_instance = IRApplication(app_name, setting_dir, args)
 
         else:

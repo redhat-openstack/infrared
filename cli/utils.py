@@ -86,28 +86,6 @@ def dict_merge(first, second,
             first[key] = second[key]
 
 
-def validate_settings_dir(settings_dir=None):
-    """Checks & returns the full path to the settings dir.
-
-    Path is set in the following priority:
-    1. Method argument
-    2. System environment variable
-
-    :param settings_dir: path given as argument by a user
-    :return: path to settings dir (str)
-    :raise: IRFileNotFoundException: when the path to the settings dir doesn't
-            exist
-    """
-    settings_dir = settings_dir or os.environ.get(INFRARED_DIR_ENV_VAR)
-
-    if not os.path.exists(settings_dir):
-        raise exceptions.IRFileNotFoundException(
-            settings_dir,
-            "Settings dir doesn't exist: ")
-
-    return settings_dir
-
-
 def update_settings(settings, file_path):
     """merge settings in 'file_path' with 'settings'
 
