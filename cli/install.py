@@ -24,8 +24,7 @@ def get_settings_dir(entry_point, args=None):
     :returns: path to settings dir. if args, return path to parser settings
         dir. If args.command0 exists, return path to subparser settings dir.
     """
-    settings_dir = utils.validate_settings_dir(
-        CONF.get('defaults', 'settings'))
+    settings_dir = CONF.get('defaults', 'settings')
     if args:
         settings_dir = os.path.join(settings_dir, entry_point)
     if hasattr(args, "command0"):
