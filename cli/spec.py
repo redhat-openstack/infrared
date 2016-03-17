@@ -303,3 +303,5 @@ def _get_specs(module_settings_base):
 
     return res
 
+# update clg types
+clg.TYPES.update({'IniFile': cfg_file_to_dict})

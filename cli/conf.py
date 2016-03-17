@@ -3,8 +3,6 @@ import ConfigParser
 import exceptions
 import os
 
-import clg
-
 from cli import utils
 from cli import logger
 
@@ -57,6 +55,3 @@ def load_config_file():
 
 
 config = load_config_file()
-
-# update clg types
-clg.TYPES.update({'IniFile': cfg_file_to_dict})
