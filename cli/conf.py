@@ -1,10 +1,19 @@
 import ConfigParser
+
+import exceptions
 import os
 
-import clg
-from cli import exceptions
 from cli import utils
-from cli import spec
+from cli.spec import cfg_file_to_dict
+from cli import logger
+
+LOG = logger.LOG
+DEFAULT_CONF_DIRS = dict(
+    settings='settings',
+    modules='library',
+    roles='roles',
+    playbooks='playbooks'
+)
 
 
 def load_config_file():
@@ -26,16 +35,25 @@ def load_config_file():
     for path in (env_path, cwd_path, utils.USER_PATH, utils.SYSTEM_PATH):
         if path is not None and os.path.exists(path):
             _config.read(path)
-            return _config
+            break
+    else:
+        LOG.warning("Configuration file not found, using InfraRed project dir")
+        from os.path import dirname
+        project_dir = dirname(dirname(__file__))
 
-    conf_file_paths = "\n".join([cwd_path, utils.USER_PATH, utils.SYSTEM_PATH])
-    raise exceptions.IRFileNotFoundException(
-        conf_file_paths,
-        "IR configuration not found. "
-        "Please set it in one of the following paths:\n")
+        _config.add_section('defaults')
+        for option, value in DEFAULT_CONF_DIRS.iteritems():
+            _config.set('defaults', option, os.path.join(project_dir, value))
+
+    # Validates settings dir exists
+    settings_dir = _config.get('defaults', 'settings')
+    if not os.path.exists(settings_dir):
+        raise exceptions.IRFileNotFoundException(
+            settings_dir,
+            "Settings directory doesn't exist: ")
+
+    return _config
 
 
 config = load_config_file()
-
-# update clg types
-clg.TYPES.update({'IniFile': spec.cfg_file_to_dict})
+clg.TYPES.update({'IniFile': cfg_file_to_dict})

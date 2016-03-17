@@ -43,6 +43,5 @@ def test_dict_merge():
 def test_dict_merge_none_resolver(first, second, expected):
     from cli.utils import dict_merge, ConflictResolver
 
-    dict_merge(first, second,
-               conflict_resolver=ConflictResolver.none_resolver)
+    dict_merge(first, second, conflict_resolver=ConflictResolver.none_resolver)
     assert not cmp(first, expected)

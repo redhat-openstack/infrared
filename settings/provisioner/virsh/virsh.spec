@@ -13,12 +13,10 @@ subparsers:
                       type: str
                       help: User to SSH to the host with
                       default: root
-                      required: yes
                   ssh-key:
                       type: str
                       help: "User's SSH key"
                       default: ~/.ssh/id_rsa
-                      required: yes
             - title: image
               options:
                   image-file:
@@ -35,12 +33,10 @@ subparsers:
                       type: str
                       help: Network
                       default: default.yml
-                      required: yes
                   topology:
                       type: str
                       help: Provision topology.
                       default: "1_controller,1_compute,1_undercloud"
-                      required: yes
             - title: common
               options:
                   dry-run:
@@ -49,7 +45,6 @@ subparsers:
                   cleanup:
                       action: store_true
                       help: Clean given system instead of provisioning a new one
-                      requires_only: [host, ssh-user,  ssh-key, topology]
                   input:
                       action: append
                       type: str
@@ -69,4 +64,4 @@ subparsers:
                       help: the ini file with the list of arguments
                   generate-conf-file:
                       type: str
-                      help: generate configuration file (ini) containing default values and exits. This file is than can be used wit the from-file argument
+                      help: generate configuration file (ini) containing default values and exits. This file is than can be used with the from-file argument

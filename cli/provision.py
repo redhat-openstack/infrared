@@ -34,12 +34,19 @@ class IRFactory(object):
         Create the application object
         by module name and provided configuration.
         """
+        settings_dir = CONF.get('defaults', 'settings')
+
         if app_name in ["provisioner", ]:
-            args = spec.parse_args(app_name, config)
+            app_settings_dir = os.path.join(settings_dir, app_name)
+            args = spec.parse_args(app_settings_dir)
             cls.configure_environment(args)
-            setting_dir = utils.validate_settings_dir(
-                CONF.get('defaults', 'settings'))
-            app_instance = IRApplication(app_name, setting_dir, args)
+
+            if args.get('generate-conf-file', None):
+                LOG.debug('Conf file "{}" has been generated. Exiting'.format(
+                    args['generate-conf-file']))
+                app_instance = None
+            else:
+                app_instance = IRApplication(app_name, settings_dir, args)
 
         else:
             raise exceptions.IRUnknownApplicationException(
@@ -55,6 +62,7 @@ class IRFactory(object):
         """
         if args['debug']:
             LOG.setLevel(logging.DEBUG)
+        # todo(yfried): load exception hook now and not at init.
 
 
 class IRSubCommand(object):
@@ -141,9 +149,9 @@ class VirshCommand(IRSubCommand):
             ssh_key_file=self.args['ssh-key']
         )
 
-        settings_dict = utils.dict_merge(
-            {'provisioner': {'image': image}},
-            {'provisioner': {'hosts': {'host1': host}}})
+        settings_dict = {'provisioner': {'image': image}}
+        utils.dict_merge(settings_dict,
+                         {'provisioner': {'hosts': {'host1': host}}})
 
         # load network and image settings
         for arg_dir in ('network',):
@@ -234,7 +242,8 @@ class IRApplication(object):
 
 def main():
     app = IRFactory.create('provisioner', CONF)
-    app.run()
+    if app:
+        app.run()
 
 if __name__ == '__main__':
     main()
