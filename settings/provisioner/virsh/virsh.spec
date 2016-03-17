@@ -69,4 +69,4 @@ subparsers:
                       help: the ini file with the list of arguments
                   generate-conf-file:
                       type: str
-                      help: generate configuration file (ini) containing default values and exits. This file is than can be used wit the from-file argument
+                      help: generate configuration file (ini) containing default values and exits. This file is than can be used with the from-file argument

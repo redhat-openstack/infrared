@@ -19,6 +19,8 @@ installer:
             network_cidr: 172.16.0.0/24
             network_gateway: 172.16.0.1
             discovery_iprange: 172.16.0.150,172.16.0.180
+            network_type: flat
+            physical_network: datacentre
     overcloud:
         template_base: "~/my_templates"
 
@@ -36,13 +38,9 @@ defaults:
     build: latest
     images: import
     network: "no-isolation"
+    storage: ceph
     version: 7
     ssl: "no"
-
-workarounds:
-    rhbz1304367:
-        desc: "Overcloud deployment finished successfully and Ceph's OSDs are down"
-        enabled: True
 
 job:
   archive:

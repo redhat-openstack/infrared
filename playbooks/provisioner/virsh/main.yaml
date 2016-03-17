@@ -24,6 +24,12 @@
             state: present
         with_items: "{{ provisioner.packages }}"
 
+      - name: stop libvirtd
+        service:
+            name: libvirtd
+            state: stopped
+            enabled: no
+
       - name: start libvirtd
         service:
             name: libvirtd
@@ -129,6 +135,12 @@
   gather_facts: no
   sudo: yes
   tasks:
+      - name: generating RSA key for root
+        user:
+            name: root
+            generate_ssh_key: yes
+            ssh_key_file: ".ssh/virthost"
+
       - name: check for existing networks
         virt_net:
             command: list_nets
@@ -154,32 +166,19 @@
             name: "{{ item.value.name }}"
         with_dict: provisioner.network.network_list
 
+      - name: remove pre-existing file
+        file:
+            state: absent
+            dest: "/var/lib/libvirt/images/{{ provisioner.image.name }}-original"
+
       - name: download base guest image
         get_url:
             dest: "/var/lib/libvirt/images/{{ provisioner.image.name }}-original"
             url: "{{ provisioner.image.base_url }}/{{ provisioner.image.name }}"
-
-      - name: remove cloud-init from the base image
-        shell: "virt-customize -a {{ provisioner.image.name }}-original --run-command 'yum remove cloud-init* -y'"
-        args:
-            chdir: "/var/lib/libvirt/images/"
-
-      - name: reset the password to a default one
-        shell: "virt-customize -a {{ provisioner.image.name }}-original --root-password password:redhat"
-        args:
-            chdir: "/var/lib/libvirt/images/"
-
-        #TODO: configure interfaces based on config rather than hardcode
-      - name: configure three network interfaces for the image
-        shell: "virt-customize -a {{ provisioner.image.name }}-original --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{0,1} && sed -i s/DEVICE=.*/DEVICE=eth1/g /etc/sysconfig/network-scripts/ifcfg-eth1'"
-        args:
-            chdir: "/var/lib/libvirt/images/"
-
-        #TODO: configure interfaces based on config rather than hardcode
-      - name: configure three network interfaces for the image
-        shell: "virt-customize -a {{ provisioner.image.name }}-original --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{1,2} && sed -i s/DEVICE=.*/DEVICE=eth2/g /etc/sysconfig/network-scripts/ifcfg-eth2'"
-        args:
-            chdir: "/var/lib/libvirt/images/"
+        register: result
+        until: result.msg.find("Request failed") == -1
+        retries: 5
+        delay: 5
 
       - name: create image templates for nodes
         template:
@@ -251,24 +250,18 @@
             - provisioner.network.network_list
             - vm_ip_list
 
-      - name: generating RSA key for root
-        user:
-            name: root
-            generate_ssh_key: yes
-        delegate_to: virthost
-
       - name: copy created key from virthost for SSH proxy
         fetch:
-            src: "~/.ssh/id_rsa"
+            src: "~/.ssh/virthost"
             dest: "{{ inventory_dir }}/id_rsa"
             flat: yes
 
       - name: SSH copy ID to all VMs from virthost
-        shell: "sshpass -p 'redhat' ssh-copy-id root@{{ item.stdout }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        shell: "sshpass -p 'redhat' ssh-copy-id -i ~/.ssh/virthost.pub root@{{ item.stdout }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
         register: shell_result
         until: shell_result.stderr.find("ERROR") == -1
         retries: 20
-        delay: 10
+        delay: 1
         when: item.item is defined
         with_items: vm_ip_list
 

@@ -51,6 +51,22 @@
         shell: "sshpass -p '{{ installer.user.password }}' ssh-copy-id {{ installer.user.name }}@{{ provisioner.network.network_list.management.ip_address }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
         delegate_to: undercloud
 
+      - name: "DEBUG - print mac addresses for hosts - DEBUG"
+        shell: "virsh dumpxml {{ item }} | grep mac"
+        with_items: groups['openstack_nodes'] | difference(["virthost"]) | difference(["undercloud"])
+        ignore_errors: true
+
+      - name: Print the relevant openstack_nodes
+        debug:
+            msg: "{{ item }}"
+        with_items: groups['openstack_nodes'] | difference(["virthost"]) | difference(["undercloud"])
+
+      - name: Print the MAC addresses for instackenv.json
+        debug:
+            msg: "MAC address for instackenv.json: {{ hostvars[item]['ansible_%s' % installer.undercloud.config.local_interface].macaddress }}"
+        with_items: groups['openstack_nodes'] | difference(["virthost"]) | difference(["undercloud"])
+        ignore_errors: true
+
       - name: prepare instack.json
         become: yes
         become_user: "{{ installer.user.name }}"
@@ -64,6 +80,13 @@
         become_user: "{{ installer.user.name }}"
         shell: "cat ~/instack_template.json | jq --arg key \"$(cat ~/.ssh/id_rsa)\" '. | .nodes[].pm_password=$key | .[\"ssh-key\"]=$key'> instackenv.json"
         delegate_to: undercloud
+
+      - name: "DEBUG - print instackenv.json - DEBUG"
+        become: yes
+        become_user: "{{ installer.user.name }}"
+        shell: "cat ~/instack_template.json"
+        delegate_to: undercloud
+        ignore_errors: true
 
 - name: Validate our instackenv.json file
   hosts: undercloud
