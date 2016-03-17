@@ -26,9 +26,35 @@ class ValueArgument(object):
     Default argument type for InfraRed Spec
     Resolves "None" Types with priority defaults.
     """
-    def __init__(self, value=None):
+    def __init__(self, value=None, required=None):
         self.value = value
         self.arg_name = None
+        self.required = None
+
+    @classmethod
+    def init_missing_args(cls, spec, args):
+        """Initialize defaults for ValueArgument class.
+
+        argparse loads all unprovided arguments as None objects, instead of
+        the argument type specified in spec file. This method will set
+        argument types according to spec, so later we can iterate of arguments
+        by type.
+
+        :param spec: dict. spec file
+        :param args: dict. argparse arguments.
+        """
+        # todo(yfried): consider simply searching for option_name instead of
+        # "options"
+        for option_tree in utils.search_tree(spec, "options"):
+            for option_name, option_dict in option_tree.iteritems():
+                if issubclass(clg.TYPES.get(option_dict.get("type", object),
+                                            object),
+                              cls) and args[option_name] is None:
+                    args[option_name] = clg.TYPES.get(option_dict["type"])(
+                        required=option_dict.get("required")
+                    )
+                    # todo(yfried): this is a good place to trigger
+                    # args[option_name].resolve_value()
 
     def resolve_value(self, arg_name, defaults=None):
         """
@@ -47,6 +73,7 @@ class ValueArgument(object):
         defaults = defaults or {}
         self.arg_name = arg_name
         # override get default from env variables
+        # TODO (aopincar): IR env vars should be more uniques
         if self.value is None:
             self.value = os.getenv(self.arg_name.upper().replace("-", "_"))
         # override get default from conf file
@@ -141,6 +168,7 @@ def parse_args(app_settings_dir, args=None):
     # Pass trimmed spec to clg with modified help message
     cmd = clg.CommandLine(app_specs)
     clg_args = vars(cmd.parse(args))
+    ValueArgument.init_missing_args(app_specs, clg_args)
 
     # Current sub-parser options
     sub_parser_options = subparsers_options.get(clg_args['command0'], {})
@@ -164,6 +192,7 @@ def override_default_values(clg_args, sub_parser_options):
     :param sub_parser_options: the sub-parser spec options
     """
     # Get the sub-parser's default values
+    # todo(yfried): move to init_missing_args
     defaults = {option: attributes['default']
                 for option, attributes in sub_parser_options.iteritems()
                 if 'default' in attributes}
@@ -176,33 +205,32 @@ def override_default_values(clg_args, sub_parser_options):
             subcommand=clg_args['command0'],
             defaults=defaults)
     else:
-        # Override defaults with env variables
-        _replace_defaults_with_env_arguments(defaults, clg_args)
-
         # Override defaults with the ini file args
-        _replace_with_ini_arguments(defaults, clg_args)
+        file_args = getattr(clg_args.get('from-file'), "value", {}).get(
+            clg_args['command0'], {})
+        utils.dict_merge(file_args, defaults)
 
-        # Replace defaults with cli
-        utils.dict_merge(
-            clg_args, defaults,
-            conflict_resolver=utils.ConflictResolver.none_resolver)
+        # Resolve defaults and load values to clg_args
+        for arg_name, arg_obj in clg_args.iteritems():
+            if isinstance(arg_obj, ValueArgument):
+                arg_obj.resolve_value(arg_name, defaults)
+                # clg_args[arg_name] = arg_obj.value
 
-        _check_required_arguments(sub_parser_options, clg_args)
+        _check_required_arguments(clg_args)
 
 
-def _check_required_arguments(command_args, clg_args):
+def _check_required_arguments(clg_args):
     """
     Verify all the required arguments are set.
 
-    :param command_args: the dict with command spec options
     :param clg_args: Dictionary based on cmd-line args parsed by clg
     """
-    unset_args = []
+    # Only missing args initialize "required" attr in init_missing_args
+    unset_args = [arg.arg_name for arg in clg_args.values() if
+                  getattr(arg, 'required', False)]
     # only_args = []
-    for option, attributes in command_args.iteritems():
-        if attributes.get('required') and clg_args.get(option) is None:
-            unset_args.append(option)
-        # todo(yfried): revisit this in the future
+    # todo(yfried): revisit this in the future
+    # for arg in clg_args.values():
         # if 'requires_only' in attributes:
         #     only_args.extend(attributes['requires_only'])
 
@@ -215,35 +243,6 @@ def _check_required_arguments(command_args, clg_args):
     if unset_args:
         raise exceptions.IRConfigurationException(
             "Required input arguments {} are not set!".format(unset_args))
-
-
-def _replace_with_ini_arguments(defaults, clg_args):
-    """
-    Replaces the default arguments values with the arguments from ini file.
-
-    :param defaults: the default arguments values.
-    :param clg_args: Dictionary based on cmd-line args parsed by clg
-    """
-    file_args = clg_args.get('from-file')
-    if file_args is not None and clg_args['command0'] in file_args:
-        utils.dict_merge(
-            file_args[clg_args['command0']], defaults,
-            conflict_resolver=utils.ConflictResolver.none_resolver)
-        defaults.update(file_args[clg_args['command0']])
-
-
-def _replace_defaults_with_env_arguments(defaults, args_dict):
-    """
-    Replaces default variables with the variables from env.
-
-    :param defaults: the default arguments values.
-    :param args_dict: the current command line arguments value
-    """
-    # TODO (aopincar): IR env vars should be more uniques
-    for arg_name, arg_value in args_dict.iteritems():
-        upper_arg_name = arg_name.upper()
-        if arg_value is None and upper_arg_name in os.environ:
-            defaults[arg_name] = os.getenv(upper_arg_name)
 
 
 def _generate_config_file(file_name, subcommand, defaults):

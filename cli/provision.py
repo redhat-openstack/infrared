@@ -39,7 +39,7 @@ class IRFactory(object):
         :param config: dict. configuration details
         :param args: list. If given parse it instead of stdin input.
         """
-        settings_dir = CONF.get('defaults', 'settings')
+        settings_dir = config.get('defaults', 'settings')
 
         if app_name in ["provisioner", ]:
             app_settings_dir = os.path.join(settings_dir, app_name)
