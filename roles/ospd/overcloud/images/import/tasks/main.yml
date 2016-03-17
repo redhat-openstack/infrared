@@ -8,3 +8,14 @@
 - name: untar the images
   shell: "tar -xvf ~/{{ item.value }}"
   with_dict: "{{ installer.images.overcloud.files }}"
+
+- name: install the libguestfs-tools to customize the image
+  shell: "sudo yum install libguestfs-tools -y"
+
+- name: list the available images
+  shell: "ls ~/*.qcow2"
+  register: image_list
+
+- name: assign a default password for root
+  shell: "virt-customize -a {{ item }} --root-password password:redhat"
+  with_items: image_list.stdout_lines

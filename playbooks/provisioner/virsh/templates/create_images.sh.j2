@@ -1,10 +1,13 @@
 #!/bin/bash
 
-# Removing cloud-init
-virt-customize -a /var/lib/libvirt/images/{{ provisioner.image.name }}-original --run-command 'yum remove cloud-init* -y'
+# Clean our guest image
+virt-sysprep /var/lib/libvirt/images/{{ provisioner.image.name }}-original --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
 
 # reset the password to a default one
 virt-customize -a /var/lib/libvirt/images/{{ provisioner.image.name }}-original --root-password password:redhat
+
+# Removing cloud-init
+virt-customize -a /var/lib/libvirt/images/{{ provisioner.image.name }}-original --run-command 'yum remove cloud-init* -y'
 
 # TODO: configure interfaces based on config rather than hardcode
 # configure three network interfaces for the image
