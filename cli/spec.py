@@ -31,7 +31,11 @@ def cfg_file_to_dict(file_path):
     for section in config.sections():
         res_dict[section] = {}
         for option, value in config.items(section):
-            res_dict[section][option] = eval(str(value))
+            # todo(obaranov) checking if value is list (for extra-vars).
+            # rework that check to be more beautiful later.
+            if value.startswith('[') and value.endswith(']'):
+                value = eval(str(value))
+            res_dict[section][option] = value
 
         res_dict[section].pop('__name__', None)
 

@@ -3,12 +3,6 @@ from cli import exceptions
 from cli import spec
 
 
-# def mock_cmd_line_method(monkeypatch, res_args, options):
-#     monkeypatch.setattr(spec,
-#                         "_get_command_line_args",
-#                         value=lambda x, y, z: (res_args, options))
-#
-
 @pytest.mark.parametrize("res_args, options, req_args, nonreq_args", [
     # data set #1
     [{'host': None,
@@ -19,22 +13,20 @@ from cli import spec
           }
       },
       'ssh-user': None},
-     {'virsh': {
+     {
          'host': {'help': 'help', 'required': True},
          'ssh-user': {'help': 'help2', 'required': True},
          'ssh-key': {'help': 'help3', 'default': 'id_rsa'}
-     }
      }, ['ssh-user'], ['host', 'ssh-key']],
 
     # data set #2
     [{'host': None,
       'command0': 'virsh',
       'ssh-user': None},
-     {'virsh': {
+     {
          'host': {'help': 'help', 'required': True},
          'ssh-user': {'help': 'help2', 'required': True},
          'ssh-key': {'help': 'help3', 'default': 'id_rsa'}
-     }
      }, ['host', 'ssh-user'], ['ssh-key']],
 
     # data set #3 (require_only)
@@ -42,12 +34,11 @@ from cli import spec
       'command0': 'virsh',
       'ssh-user': None,
       'req_only_opt': True},
-     {'virsh': {
+     {
          'host': {'help': 'help', 'required': True},
          'ssh-user': {'help': 'help2', 'required': True},
          'ssh-key': {'help': 'help3', 'default': 'id_rsa'},
          'req_only_opt': {'requires_only': ['ssh-user']}
-     }
      }, ['ssh-user'], ['ssh-key', 'host']]
 ])
 def test_required_option_exception(res_args,
