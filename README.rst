@@ -25,16 +25,17 @@ So, After cloning repo from GitHub::
 
   $ pip install -e .
 
-Conf
-====
-
-``infrared`` will look for ``infrared.cfg`` in the following order:
+.. note:: ``infrared`` will look for ``infrared.cfg`` in the following order:
 
 #. In working directory: ``./infrared.cfg``
 #. In user home directory: ``~/.infrared.cfg``
 #. In system settings: ``/etc/infrared/infrared.cfg``
 
-.. note:: To specify a different directory or different filename, override the
+ If the configuration file ``infrared.cfg`` doesn't exist in any of
+ the locations above, the InfraRed project's dir will be used as the default
+ location for configurations.
+
+ To specify a different directory or different filename, override the
  lookup order with ``IR_CONFIG`` environment variable::
 
     $ IR_CONFIG=/my/config/file.ini ir-provision --help
@@ -101,6 +102,8 @@ InfraRed accepts the next sources of the input arguments (in priority order):
 
 3. Environment variables: ``HOST=earth ir-provision virsh --ssh_user=root``
 
+.. note:: The simple ini file with the default values can be generated with: ``ir-povision virsh --generate-conf-file=virsh.ini``. Generated file will contain all the default arguments values defined in the spec file.
+
 Command line arguments have the highest priority. All the undefined variables will be replaced by that arguments from file or from environment.
 
 Extra-Vars
@@ -121,22 +124,13 @@ Add new Plugins
 
 There are two steps that should be done when adding a new plugin to InfraRed:
 
-1. Creating a specification file:
+#. Creating a specification file:
     InfraRed uses ArgParse wrapper module called 'clg' in order to create a parser that based on `spec` file
     (YAML format file) containing the plugin options.
     The spec file should be named as the new plugin name with '.spec' extension and located inside the plugin dir
     under the InfraRed 'setting' dir.
     For more details on how to use this module, please visit the 'clg' module `homepage <http://clg.readthedocs
     .org/en/latest/>`_.
-
-2. Creating a default spec file (default.ini).
-    This file should contain the default values for the command line arguments. All the default values should go under the name section names as a new plugin. Example::
-      
-      [virsh]
-      topology=all-in-one.yml
-      network=default.yml
-      ssh-key=~/.ssh/id_rsa
-      ssh-user=root
 
 3. Creating settings files.
     Settings files are files containing data which defines how the end result of the playbook execution will be

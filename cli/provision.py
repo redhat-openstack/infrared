@@ -2,7 +2,6 @@
 
 import os
 import logging
-from cli.install import set_network_template as set_network
 
 import yaml
 
@@ -10,10 +9,11 @@ from cli import logger  # logger creation is first thing to be done
 from cli import conf
 from cli import utils
 from cli import exceptions
+from cli import spec
 import cli.yamls
 import cli.execute
 
-COMMAND = 'provisioner'
+APPLICATION = 'provisioner'
 
 LOG = logger.LOG
 CONF = conf.config
@@ -32,15 +32,26 @@ class IRFactory(object):
     @classmethod
     def create(cls, app_name, config, args=None):
         """
-        Create the application object by module name and config object
+        Create the application object
+        by module name and provided configuration.
+
+        :param app_name: str
+        :param config: dict. configuration details
         :param args: list. If given parse it instead of stdin input.
         """
+        settings_dir = CONF.get('defaults', 'settings')
+
         if app_name in ["provisioner", ]:
-            spec_args = conf.SpecManager.parse_args(app_name, config, args)
+            app_settings_dir = os.path.join(settings_dir, app_name)
+            spec_args = spec.parse_args(app_settings_dir, args)
             cls.configure_environment(spec_args)
-            setting_dir = utils.validate_settings_dir(
-                config.get('defaults', 'settings'))
-            app_instance = IRApplication(app_name, setting_dir, spec_args)
+
+            if spec_args.get('generate-conf-file', None):
+                LOG.debug('Conf file "{}" has been generated. Exiting'.format(
+                    spec_args['generate-conf-file']))
+                app_instance = None
+            else:
+                app_instance = IRApplication(app_name, settings_dir, spec_args)
 
         else:
             raise exceptions.IRUnknownApplicationException(
@@ -56,6 +67,7 @@ class IRFactory(object):
         """
         if args['debug']:
             LOG.setLevel(logging.DEBUG)
+        # todo(yfried): load exception hook now and not at init.
 
 
 class IRSubCommand(object):
@@ -106,12 +118,12 @@ class IRSubCommand(object):
 
     #todo(yfried): maybe move to spec?
     def get_arguments_dict(self):
-        self.dict_ = """
-        Collect all conf.ValueArgument args in dict according to arg names
+        """
+        Collect all spec.ValueArgument args in dict according to arg names
 
         some-key=value will be nested in dict as:
 
-        {COMMAND: {
+        {APPLICATION: {
             SUBCOMMAND: {
                 "some": {
                     "key": value}
@@ -119,7 +131,7 @@ class IRSubCommand(object):
             }
         }
 
-        For conf.conf.YamlFileArgument value is path to yaml so file content
+        For spec.YamlFileArgument value is path to yaml so file content
         will be loaded as a nested dict
 
         :return: dict
@@ -127,13 +139,13 @@ class IRSubCommand(object):
         settings_dict = {}
 
         for name, argument in self.args.iteritems():
-            if isinstance(argument, conf.YamlFileArgument):
+            if isinstance(argument, spec.YamlFileArgument):
                 argument.find_file(self.settings_dir)
-            if isinstance(argument, conf.ValueArgument):
+            if isinstance(argument, spec.ValueArgument):
                 utils.dict_insert(settings_dict, argument.value,
                                   *argument.arg_name.split("-"))
 
-        return {COMMAND: {self.args["command0"]: settings_dict}}
+        return {APPLICATION: {self.args["command0"]: settings_dict}}
 
 
 class IRApplication(object):
@@ -208,8 +220,9 @@ class IRApplication(object):
 
 
 def main():
-    app = IRFactory.create(COMMAND, CONF)
-    app.run()
+    app = IRFactory.create(APPLICATION, CONF)
+    if app:
+        app.run()
 
 if __name__ == '__main__':
     main()

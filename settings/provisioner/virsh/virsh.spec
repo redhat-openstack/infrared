@@ -2,35 +2,41 @@
 subparsers:
     virsh:
         help: Provision systems using virsh
-        #argument_default: null
         groups:
             - title: Hypervisor
               options:
                   host-address:
                       type: Value
                       help: Address/FQDN of the BM hypervisor
+                      required: yes
                   host-user:
                       type: Value
                       help: User to SSH to the host with
+                      default: root
                   host-key:
                       type: Value
                       help: "User's SSH key"
+                      default: ~/.ssh/id_rsa
             - title: image
               options:
                   image-file:
                       type: Value
                       help: An image to provision the host with
+                      required: yes
                   image-server:
                       type: Value
                       help: Base URL of the image file server
+                      required: yes
             - title: topology
               options:
                   network:
                       type: YamlFile
                       help: Network
+                      default: default.yml
                   topology:
                       type: YamlFile
-                      help: 'Provision topology (default: __DEFAULT__)'
+                      help: Provision topology
+                      default: all-in-one.yml
             - title: common
               options:
                   dry-run:
@@ -56,3 +62,6 @@ subparsers:
                   from-file:
                       type: IniFile
                       help: the ini file with the list of arguments
+                  generate-conf-file:
+                      type: str
+                      help: generate configuration file (ini) containing default values and exits. This file is than can be used with the from-file argument
