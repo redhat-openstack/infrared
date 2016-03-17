@@ -52,7 +52,8 @@ def parse_args(app_settings_dir, args=None):
     :param app_settings_dir: path to the base directory holding the
         application's settings. App can be provisioner\installer\tester
         and the path would be: settings/<app_name>/
-    :param args: additional arguments to pass to the clg.
+    :param args: the list of arguments used for directing the method to work
+        on something other than CLI input (for example, in testing).
     """
     # Dict with the merging result of all app's specs
     app_specs = _get_specs(app_settings_dir)
