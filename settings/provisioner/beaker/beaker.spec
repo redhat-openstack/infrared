@@ -24,7 +24,27 @@ subparsers:
                 help: Action to perform
                 required: True
                 choices: [provision, release]
-            distro_tree:
+            distro-tree:
                 type: str
                 help: Distro Tree ID
                 default: 71576
+            dry-run:
+                action: store_true
+                help: Only generate settings, skip the playbook execution stage
+            cleanup:
+                action: store_true
+                help: Clean up environment at the end
+            input-files:
+                action: append
+                type: str
+                help: Settings file to be merged first
+                short: n
+            output-file:
+                type: str
+                short: o
+                help: 'Name for the generated settings file (default: stdout)'
+            extra-vars:
+                action: append
+                short: e
+                help: Extra variables to be merged last
+                type: str

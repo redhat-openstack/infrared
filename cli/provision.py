@@ -159,7 +159,16 @@ class VirshCommand(IRSubCommand):
 class BeakerCommand(IRSubCommand):
 
     def get_settings_dict(self):
-        pass
+        host0 = dict(
+            server_url=self.args['base-url'],
+            remote_user=self.args['username'],
+            remote_pass=self.args['password'],
+            fqdn=self.args['fqdn'],
+            action=self.args['action'],
+            distro_tree_id=self.args['distro-tree']
+        )
+
+        return {'provisioner': {'hosts': {'host0': host0}}}
 
     def _load_yaml_files(self):
         # do not load additional yaml files.
