@@ -91,6 +91,7 @@ def override_default_values(clg_args, sub_parser_options):
                 for option, attributes in sub_parser_options.iteritems()
                 if 'default' in attributes}
 
+    # todo(yfried): move this outside
     # Generate config file if required
     if clg_args.get('generate-conf-file'):
         _generate_config_file(

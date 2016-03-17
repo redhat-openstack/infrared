@@ -13,12 +13,10 @@ subparsers:
                       type: str
                       help: User to SSH to the host with
                       default: root
-                      required: yes
                   ssh-key:
                       type: str
                       help: "User's SSH key"
                       default: ~/.ssh/id_rsa
-                      required: yes
             - title: image
               options:
                   image-file:
@@ -35,12 +33,10 @@ subparsers:
                       type: str
                       help: Network
                       default: default.yml
-                      required: yes
                   topology:
                       type: str
                       help: Provision topology
                       default: all-in-one.yml
-                      required: yes
             - title: common
               options:
                   dry-run:
