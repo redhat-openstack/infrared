@@ -96,9 +96,8 @@ def override_default_values(clg_args, sub_parser_options):
         _replace_with_ini_arguments(defaults, clg_args)
 
         # Replace defaults with cli
-        utils.dict_merge(
-            clg_args, defaults,
-            conflict_resolver=utils.ConflictResolver.none_resolver)
+        utils.dict_merge(clg_args, defaults,
+                         conflict_resolver=utils.ConflictResolver.none_resolver)
 
         _check_required_arguments(sub_parser_options, clg_args)
 
@@ -138,10 +137,8 @@ def _replace_with_ini_arguments(defaults, clg_args):
     """
     file_args = clg_args.get('from-file')
     if file_args is not None and clg_args['command0'] in file_args:
-        utils.dict_merge(
-            file_args[clg_args['command0']],
-            defaults,
-            conflict_resolver=utils.ConflictResolver.none_resolver)
+        utils.dict_merge(file_args[clg_args['command0']], defaults,
+                         conflict_resolver=utils.ConflictResolver.none_resolver)
         defaults.update(file_args[clg_args['command0']])
 
 

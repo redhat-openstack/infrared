@@ -2,10 +2,12 @@
 This module provide some general helper methods
 """
 
-import cli.yamls
-import configure
 import os
+
+import configure
 import yaml
+
+import cli.yamls
 from cli import exceptions
 from cli import logger
 
@@ -63,20 +65,20 @@ class ConflictResolver(object):
         first[key] = second[key]
 
 
-def dict_merge(first, second, path=None,
+def dict_merge(first, second,
                conflict_resolver=ConflictResolver.greedy_resolver):
-    """ Given two dict objects, this function returns
-    a dict that is the result of merging them into one.
+    """Merge `second` dict into `first`.
+
+    :param first: Modified dict
+    :param second: Modifier dict
+    :param conflict_resolver: Function that resolves a merge between 2 values
+        when one of them isn't a dict
     """
-    if path is None:
-        path = []
     for key in second:
         if key in first:
             if isinstance(first[key], dict) and isinstance(second[key], dict):
-                dict_merge(first[key], second[key], path + [str(key)],
+                dict_merge(first[key], second[key],
                            conflict_resolver=conflict_resolver)
-            elif first[key] == second[key]:
-                pass
             else:
                 # replace first value with the value from second
                 conflict_resolver(first, second, key)
@@ -84,7 +86,6 @@ def dict_merge(first, second, path=None,
             first[key] = second[key]
 
 
-# TODO: remove "settings" references in project
 def validate_settings_dir(settings_dir=None):
     """Checks & returns the full path to the settings dir.
 

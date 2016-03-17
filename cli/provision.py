@@ -148,9 +148,8 @@ class VirshCommand(IRSubCommand):
         )
 
         settings_dict = {'provisioner': {'image': image}}
-        utils.dict_merge(
-            settings_dict,
-            {'provisioner': {'hosts': {'host1': host}}})
+        utils.dict_merge(settings_dict,
+                         {'provisioner': {'hosts': {'host1': host}}})
 
         # load network and image settings
         for arg_dir in ('network', 'topology'):
