@@ -128,18 +128,3 @@ There are two steps that should be done when adding a new plugin to InfraRed:
     with other values, all are received by the user.
     When adding a new plugin, there is a need to create those settings files containing the needed data for the
     playbook execution.
-
-
-Clg module extensions
----------------------
-
-InfraRed extends the clg module by adding additional options for command line arguments. In the spec file the following new options can be defined:
-
-* required_only - the options additional parameter which override the list of required arguments when the current option is set. For example::
-
-    options
-      cleanup:
-        action: store_true
-        help: Clean given system instead of provisioning a new one
-        requires_only: [host, ssh-user,  ssh-key, topology]
-

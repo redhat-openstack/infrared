@@ -13,7 +13,7 @@ BUILTINS_REPLACEMENT = {
     '__DEFAULT__': "default"
 }
 
-TRIM_PARAMS = ['default', 'required', 'requires_only']
+TRIM_PARAMS = ['default', 'required']
 
 
 def cfg_file_to_dict(file_path):
@@ -42,26 +42,27 @@ def cfg_file_to_dict(file_path):
     return res_dict
 
 
-def parse_args(module_name, config, args=None):
+def parse_args(app_settings_dir, args=None):
     """
-    Looks for all the specs for specified module
+    Looks for all the specs for specified app
     and parses the commandline input arguments accordingly.
 
-    :param module_name: the module name: installer|provisioner|tester
-    :param config: the infrared configuration file
+    Trim clg spec from customized input and modify help data.
+
+    :param app_settings_dir: path to the base directory holding the
+        application's settings. App can be provisioner\installer\tester
+        and the path would be: settings/<app_name>/
     :param args: additional arguments to pass to the clg.
     """
+    # Dict with the merging result of all app's specs
+    app_specs = _get_specs(app_settings_dir)
 
-    settings_dir = config.get('defaults', 'settings')
-
-    # Dict with the merging result of all module's specs
-    module_specs = _get_specs(os.path.join(settings_dir, module_name))
-
-    # Get the subparsers options as is with all the fields from module specs.
+    # Get the subparsers options as is with all the fields from app's specs.
     # This also trims some custom fields from options to pass to clg.
-    subparsers_options = _get_subparsers_options(module_specs)
+    subparsers_options = _get_subparsers_options(app_specs)
 
-    cmd = clg.CommandLine(module_specs)
+    # Pass trimmed spec to clg with modified help message
+    cmd = clg.CommandLine(app_specs)
     clg_args = vars(cmd.parse(args))
 
     # Current sub-parser options
@@ -74,7 +75,13 @@ def parse_args(module_name, config, args=None):
 
 def override_default_values(clg_args, sub_parser_options):
     """
-    Collects arguments values from the different sources and
+    Collects arguments values from the different sources and resolve values.
+
+    Each argument value is resolved in the following priority:
+    1. Explicitly provided from cmd-line
+    2. Environment variable
+    3. Provided configuration file.
+    4. Spec defaults
 
     :param clg_args: Dictionary based on cmd-line args parsed by clg
     :param sub_parser_options: the sub-parser spec options
@@ -88,7 +95,7 @@ def override_default_values(clg_args, sub_parser_options):
     if clg_args.get('generate-conf-file'):
         _generate_config_file(
             file_name=clg_args['generate-conf-file'],
-            section=clg_args['command0'],
+            subcommand=clg_args['command0'],
             defaults=defaults)
     else:
         # Override defaults with env variables
@@ -112,20 +119,21 @@ def _check_required_arguments(command_args, clg_args):
     :param clg_args: Dictionary based on cmd-line args parsed by clg
     """
     unset_args = []
-    only_args = []
+    # only_args = []
     for option, attributes in command_args.iteritems():
         if attributes.get('required') and clg_args.get(option) is None:
             unset_args.append(option)
-        if 'requires_only' in attributes:
-            only_args.extend(attributes['requires_only'])
+        # todo(yfried): revisit this in the future
+        # if 'requires_only' in attributes:
+        #     only_args.extend(attributes['requires_only'])
 
-    if only_args:
-        intersection = set(unset_args).intersection(set(only_args))
-        if intersection:
-            raise exceptions.IRConfigurationException(
-                "Required only input arguments {} are not set!".format(
-                    intersection))
-    elif unset_args:
+    # if only_args:
+    #     intersection = set(unset_args).intersection(set(only_args))
+    #     if intersection:
+    #         raise exceptions.IRConfigurationException(
+    #             "Missing mandatory arguments: {}".format(
+    #                 list(intersection)))
+    if unset_args:
         raise exceptions.IRConfigurationException(
             "Required input arguments {} are not set!".format(unset_args))
 
@@ -158,22 +166,23 @@ def _replace_defaults_with_env_arguments(defaults, args_dict):
             defaults[arg_name] = os.getenv(upper_arg_name)
 
 
-def _generate_config_file(file_name, section, defaults):
+def _generate_config_file(file_name, subcommand, defaults):
     """
     Generates configuration file based on defaults from specs
 
     :param file_name: Name of the new configuration that will be generated.
-    :param section: The section in it the defaults will be stored.
+    :param subcommand: The subparser for which the conf file is generated
     :param defaults: the default options values.
     """
+    # TODO(yfried): Add required arguments to file
     # TODO (aopincar): try block is too wide
     # TODO (aopincar): if file_name exists, update it instead of overwrite it
     try:
         out_config = ConfigParser.ConfigParser()
 
-        out_config.add_section(section)
+        out_config.add_section(subcommand)
         for opt, value in defaults.iteritems():
-            out_config.set(section, opt, value)
+            out_config.set(subcommand, opt, value)
         with open(file_name, 'w') as configfile:  # save
             out_config.write(configfile)
     except Exception as ex:
@@ -182,8 +191,8 @@ def _generate_config_file(file_name, section, defaults):
 
 def _get_subparsers_options(spec_dict):
     """
-    Goes through all the spec options modifies them by removing some options
-    parameters (like defaults)
+    Goes through all the spec options and modifies them by removing some
+    options parameters (like defaults)
 
     :param spec_dict: the dictionary with key obtained from spec files
     """
@@ -244,7 +253,7 @@ def _add_default_to_option_help(option_attributes):
     # Insert default value into help.
     if all(attr in option_attributes for attr in ('help', 'default')) \
             and '__DEFAULT__' not in option_attributes['help']:
-        option_attributes['help'] += " ( default: {})".format(
+        option_attributes['help'] += " (default: {})".format(
             option_attributes['default'])
 
 
@@ -275,26 +284,26 @@ def _trim_option(option_attributes):
         option_attributes.pop(trim_param, None)
 
 
-def _get_specs(module_settings_base):
+def _get_specs(app_settings_dir):
     """
     Load all  specs files from base settings directory.
 
-    :param module_settings_base: path to the base directory holding the
-        module's settings. Module can be  provisioner\installer\tester
-        and the path would be: settings/<module_name>/
+    :param app_settings_dir: path to the base directory holding the
+        application's settings. App can be provisioner\installer\tester
+        and the path would be: settings/<app_name>/
     :return: dict: All spec files merged into a single dict.
     """
-    if not os.path.exists(module_settings_base):
-        raise exceptions.IRFileNotFoundException(module_settings_base)
+    if not os.path.exists(app_settings_dir):
+        raise exceptions.IRFileNotFoundException(app_settings_dir)
 
-    # Collect all module's spec
-    sepc_files = []
-    for root, _, files in os.walk(module_settings_base):
-        sepc_files.extend([os.path.join(root, a_file) for a_file in files
+    # Collect all app's spec
+    spec_files = []
+    for root, _, files in os.walk(app_settings_dir):
+        spec_files.extend([os.path.join(root, a_file) for a_file in files
                            if a_file.endswith(SPEC_EXTENSION)])
 
     res = {}
-    for spec_file in sepc_files:
+    for spec_file in spec_files:
         # TODO (aopincar): print spec_file in debug mode
         with open(spec_file) as fd:
             spec = yaml.load(fd, Loader=yamlordereddictloader.Loader)

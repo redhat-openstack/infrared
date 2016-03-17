@@ -49,7 +49,6 @@ subparsers:
                   cleanup:
                       action: store_true
                       help: Clean given system instead of provisioning a new one
-                      requires_only: [host, ssh-user,  ssh-key, topology]
                   input:
                       action: append
                       type: str

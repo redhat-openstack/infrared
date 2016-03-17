@@ -34,8 +34,11 @@ class IRFactory(object):
         Create the application object
         by module name and provided configuration.
         """
+        settings_dir = CONF.get('defaults', 'settings')
+
         if app_name in ["provisioner", ]:
-            args = spec.parse_args(app_name, config)
+            app_settings_dir = os.path.join(settings_dir, app_name)
+            args = spec.parse_args(app_settings_dir)
             cls.configure_environment(args)
 
             if args.get('generate-conf-file', None):
@@ -43,8 +46,7 @@ class IRFactory(object):
                     args['generate-conf-file']))
                 app_instance = None
             else:
-                setting_dir = CONF.get('defaults', 'settings')
-                app_instance = IRApplication(app_name, setting_dir, args)
+                app_instance = IRApplication(app_name, settings_dir, args)
 
         else:
             raise exceptions.IRUnknownApplicationException(
@@ -60,6 +62,7 @@ class IRFactory(object):
         """
         if args['debug']:
             LOG.setLevel(logging.DEBUG)
+        # todo(yfried): load exception hook now and not at init.
 
 
 class IRSubCommand(object):
