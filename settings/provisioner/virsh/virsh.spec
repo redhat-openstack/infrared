@@ -2,33 +2,34 @@
 subparsers:
     virsh:
         help: Provision systems using virsh
+        #argument_default: null
         groups:
-            - title: host
+            - title: Hypervisor
               options:
-                  host:
-                      type: str
+                  host-address:
+                      type: Value
                       help: Address/FQDN of the BM hypervisor
-                  ssh-user:
-                      type: str
+                  host-user:
+                      type: Value
                       help: User to SSH to the host with
-                  ssh-key:
-                      type: str
+                  host-key:
+                      type: Value
                       help: "User's SSH key"
             - title: image
               options:
                   image-file:
-                      type: str
+                      type: Value
                       help: An image to provision the host with
                   image-server:
-                      type: str
+                      type: Value
                       help: Base URL of the image file server
             - title: topology
               options:
                   network:
-                      type: str
+                      type: YamlFile
                       help: Network
                   topology:
-                      type: str
+                      type: YamlFile
                       help: 'Provision topology (default: __DEFAULT__)'
             - title: common
               options:

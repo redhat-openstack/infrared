@@ -2,20 +2,20 @@
   "ssh-user": "{{ installer.user.name }}",
   "ssh-key": "$(cat ~/.ssh/id_rsa)",
   "power_manager": "nova.virt.baremetal.virtual_power_driver.VirtualPowerManager",
-  "host-ip": "{{ provisioner.network.network_list.management.ip_address }}",
+  "host-ip": "{{ provisioner.virsh.network.management.ip_address }}",
   "arch": "x86_64",
   "nodes": [
 {% for host_name in groups['openstack_nodes'] %}
     {% if host_name != 'undercloud' %}
     {
       "name": "{{ hostvars[host_name].inventory_hostname }}",
-      "pm_addr": "{{ provisioner.network.network_list.management.ip_address }}",
+      "pm_addr": "{{ provisioner.virsh.network.management.ip_address }}",
       "pm_password": "$(cat ~/.ssh/id_rsa)",
       "pm_type": "pxe_ssh",
       "mac": ["{{ hostvars[host_name]['ansible_%s' % installer.undercloud.config.local_interface].macaddress }}"],
-      "cpu": "{{ provisioner.nodes[host_name.rstrip('1234567890')].cpu }}",
-      "memory": "{{ provisioner.nodes[host_name.rstrip('1234567890')].memory }}",
-      "disk": "{{ provisioner.nodes[host_name.rstrip('1234567890')].disks.disk1.size | regex_replace('(?P<size>[0-9]+).*$', '\\g<size>') }}",
+      "cpu": "{{ provisioner.virsh.topology.nodes[host_name.rstrip('1234567890')].cpu }}",
+      "memory": "{{ provisioner.virsh.topology.nodes[host_name.rstrip('1234567890')].memory }}",
+      "disk": "{{ provisioner.virsh.topology.nodes[host_name.rstrip('1234567890')].disks.disk1.size | regex_replace('(?P<size>[0-9]+).*$', '\\g<size>') }}",
       "arch": "x86_64",
       "pm_user": "{{ installer.user.name }}"
     }{% if not loop.last %},{% endif %}
