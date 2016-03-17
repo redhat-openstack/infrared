@@ -70,7 +70,7 @@ def parse_args(app_settings_dir, args=None):
     sub_parser_options = subparsers_options.get(clg_args['command0'], {})
 
     override_default_values(clg_args, sub_parser_options)
-
+    post_process_command_args(clg_args, app_settings_dir)
     return clg_args
 
 
@@ -114,6 +114,38 @@ def override_default_values(clg_args, sub_parser_options):
         _check_required_arguments(sub_parser_options, clg_args)
 
 
+def post_process_command_args(clg_args, app_settings_dir):
+    """
+    Transforms some of arguments after they have been read.
+
+    :param clg_args: Dictionary based on cmd-line args parsed by clg
+    :param app_settings_dir: path to the base directory holding the
+        application's settings. App can be provisioner\installer\tester
+        and the path would be: settings/<app_name>/
+    """
+
+    # post process topology
+    if 'topology' in clg_args and clg_args['topology'] is not None:
+        topology_dict = {}
+        for topology_item in clg_args['topology'].split(','):
+            if '_' in topology_item:
+                number, node_type = topology_item.split('_')
+            else:
+                raise exceptions.IRConfigurationException(
+                    "Topology node should be in format  <number>_<node role>. "
+                    "Current value: '{}' ".format(topology_item))
+            if int(number) > 1 and node_type[-1] == 's':
+                node_type = node_type[:-1]
+            # todo(obaraov) consider mobing topology to config on constant.
+            node_file = os.path.join(
+                app_settings_dir, 'topology', node_type + '.yml')
+            with open(node_file) as stream:
+                topology_dict[node_type] = yaml.load(stream)
+                topology_dict[node_type]['amount'] = int(number)
+
+        clg_args['topology'] = topology_dict
+
+
 def _check_required_arguments(command_args, clg_args):
     """
     Verify all the required arguments are set.
@@ -139,30 +171,6 @@ def _check_required_arguments(command_args, clg_args):
     if unset_args:
         raise exceptions.IRConfigurationException(
             "Required input arguments {} are not set!".format(unset_args))
-    _post_process_command_args(res_args, config)
-
-
-def _post_process_command_args(res_args, config):
-    """
-    Transforms some of arguments after they have been read.
-    """
-
-    # post process topology
-    if 'topology' in res_args and res_args['topology'] is not None:
-        topology_dict = {}
-        for topology_item in res_args['topology'].split(','):
-            number, node_type = topology_item.split('_')
-            if int(number) > 1 and node_type[-1] == 's':
-                node_type = node_type[:-1]
-            root_dir = utils.validate_settings_dir(
-                config.get('defaults', 'topology'))
-            node_file = os.path.join(
-                root_dir, node_type + '.yml')
-            with open(node_file) as stream:
-                topology_dict[node_type] = yaml.load(stream)
-                topology_dict[node_type]['amount'] = int(number)
-
-        res_args['topology'] = topology_dict
 
 
 def _replace_with_ini_arguments(defaults, clg_args):

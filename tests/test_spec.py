@@ -1,4 +1,5 @@
 import ConfigParser
+import os
 
 import pytest
 from cli import exceptions
@@ -139,13 +140,11 @@ os: fedora
 name: ceph
 """)
     # prepare config
-    config = ConfigParser.ConfigParser()
-    config.add_section('defaults')
-    config.set('defaults', 'topology', root_dir.strpath)
+    app_path = os.path.join(root_dir.strpath, "..")
     res_args = dict(topology="10_controllers,2_compute")
 
     # process topology
-    spec._post_process_command_args(res_args, config)
+    spec.post_process_command_args(res_args, app_path)
     topology = res_args['topology']
     assert 'controller' in topology
     assert 'compute' in topology

@@ -165,7 +165,7 @@ class VirshCommand(IRSubCommand):
             utils.dict_merge(settings_dict, settings)
 
         # inject topology from args to the required fro virsh place.
-        settings_dict = utils.dict_merge(
+        utils.dict_merge(
             settings_dict,
             {'provisioner': {'nodes': self.args['topology']}})
         return settings_dict

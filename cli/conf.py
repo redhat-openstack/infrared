@@ -4,7 +4,6 @@ import exceptions
 import os
 
 from cli import utils
-from cli.spec import cfg_file_to_dict
 from cli import logger
 
 LOG = logger.LOG
@@ -56,4 +55,3 @@ def load_config_file():
 
 
 config = load_config_file()
-clg.TYPES.update({'IniFile': cfg_file_to_dict})
