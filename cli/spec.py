@@ -88,10 +88,10 @@ class YamlFileArgument(ValueArgument):
     Will search for files in the settings directory before trying to resolve
         absolute path.
 
-    For the argument name is "arg-name" and of subparser "SUBCOMMAND" of command
-        "COMMAND", the default search path would be:
+    For the argument name is "arg-name" and of subparser "SUBCOMMAND" of
+        application "APP", the default search path would be:
 
-         settings_dir/COMMAND/SUBCOMMAND/arg/name/arg_value
+         settings_dir/APP/SUBCOMMAND/arg/name/arg_value
     """
 
     def find_file(self, search_first):
@@ -231,8 +231,8 @@ def _check_required_arguments(clg_args):
     # only_args = []
     # todo(yfried): revisit this in the future
     # for arg in clg_args.values():
-        # if 'requires_only' in attributes:
-        #     only_args.extend(attributes['requires_only'])
+    #     if 'requires_only' in attributes:
+    #         only_args.extend(attributes['requires_only'])
 
     # if only_args:
     #     intersection = set(unset_args).intersection(set(only_args))

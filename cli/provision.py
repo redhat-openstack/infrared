@@ -116,7 +116,7 @@ class IRSubCommand(object):
         LOG.debug("All settings files to be loaded:\n%s" % settings_files)
         return settings_files
 
-    #todo(yfried): maybe move to spec?
+    # todo(yfried): maybe move to spec?
     def get_arguments_dict(self):
         """
         Collect all spec.ValueArgument args in dict according to arg names

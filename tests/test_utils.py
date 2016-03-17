@@ -57,15 +57,13 @@ def test_dict_merge_none_resolver(first, second, expected):
       }, ["val1", "val2"]),
     ({"needle": "val1",
       "bad": "input",
-      "nested2": {"netsted3":
-                      {"needle": "val3",
-                       "differnt": "values"}},
+      "nested2": {"netsted3": {"needle": "val3",
+                               "differnt": "values"}},
       "nested1": {"needle": "val2", "differnt": "values"}
       }, ["val1", "val2", "val3"]),
     ({"bad": "input",
-      "needle": {"netsted3":
-                      {"needle": "val3",
-                       "differnt": "values"}},
+      "needle": {"netsted3": {"needle": "val3",
+                              "differnt": "values"}},
       "nested1": {"needle": "val2", "differnt": "values"}
       }, ["val2", "val3",
           {"netsted3": {"needle": "val3", "differnt": "values"}}]),
@@ -78,7 +76,7 @@ def test_dict_merge_none_resolver(first, second, expected):
 
 ])
 def test_search_tree(haystack, output):
-    from utils import search_tree
+    from cli.utils import search_tree
 
     result = search_tree(haystack, "needle")
     # can't make set of dict, but we still don't care about order
