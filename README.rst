@@ -125,7 +125,7 @@ InfraRed will read dynamic topology by following the next steps:
  #. Split each node with '_' and get pair (number, role). For every pair look for the topology folder (configured in the infrared.cfg file) for the appropriate mini file (controller.yml, compute.yml, etc). Load the role the defined number of times into the settings.
 
   .. note:: The default search path for topology files is
-``settings/provivisioner/<subcommand, ie virsh>/topology``. Users can add
+``settings/provivisioner/<TYPE, ie virsh>/topology``. Users can add
 their own topology roles there and reference them on runtime
 
 
