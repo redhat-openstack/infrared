@@ -37,8 +37,7 @@ def load_config_file():
             break
     else:
         LOG.warning("Configuration file not found, using InfraRed project dir")
-        from os.path import dirname
-        project_dir = dirname(dirname(__file__))
+        project_dir = os.path.dirname(os.path.dirname(__file__))
 
         _config.add_section('defaults')
         for option, value in DEFAULT_CONF_DIRS.iteritems():
