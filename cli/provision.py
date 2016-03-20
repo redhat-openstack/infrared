@@ -23,6 +23,36 @@ NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output',
                         'input', 'dry-run', 'cleanup', 'inventory']
 
 
+def process_topology_args(clg_args, app_settings_dir):
+    """
+    Merges topology files in a single topology dict.
+
+    :param clg_args: Dictionary based on cmd-line args parsed by clg
+    :param app_settings_dir: path to the base directory holding the
+        application's settings. App can be provisioner\installer\tester
+        and the path would be: settings/<app_name>/
+    """
+
+    # post process topology
+    if clg_args.get("topology") is not None:
+        topology_dict = {}
+        for topology_item in clg_args['topology'].split(','):
+            if '_' in topology_item:
+                number, node_type = topology_item.split('_')
+            else:
+                raise exceptions.IRConfigurationException(
+                    "Topology node should be in format  <number>_<node role>. "
+                    "Current value: '{}' ".format(topology_item))
+            # todo(obaraov): consider moving topology to config on constant.
+            node_file = os.path.join(
+                app_settings_dir, 'topology', node_type + '.yaml')
+            with open(node_file) as stream:
+                topology_dict[node_type] = yaml.load(stream)
+                topology_dict[node_type]['amount'] = int(number)
+
+        clg_args['topology'] = topology_dict
+
+
 class IRFactory(object):
     """
     Creates and configures the IR applications.
@@ -40,6 +70,8 @@ class IRFactory(object):
             app_settings_dir = os.path.join(settings_dir, app_name)
             args = spec.parse_args(app_settings_dir)
             cls.configure_environment(args)
+            # todo(yfried): This should be in a more generic place
+            process_topology_args(args, app_settings_dir)
 
             if args.get('generate-conf-file', None):
                 LOG.debug('Conf file "{}" has been generated. Exiting'.format(
