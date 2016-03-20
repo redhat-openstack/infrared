@@ -136,7 +136,7 @@ def post_process_command_args(clg_args, app_settings_dir):
                     "Current value: '{}' ".format(topology_item))
             # todo(obaraov): consider moving topology to config on constant.
             node_file = os.path.join(
-                app_settings_dir, 'topology', node_type + '.yml')
+                app_settings_dir, 'topology', node_type + '.yaml')
             with open(node_file) as stream:
                 topology_dict[node_type] = yaml.load(stream)
                 topology_dict[node_type]['amount'] = int(number)

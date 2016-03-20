@@ -122,11 +122,14 @@ The ``--topology`` argument can have the following format:
 
 InfraRed will read dynamic topology by following the next steps:
  #. Split the topology value with ','.
- #. Split each node with '_' and get pair (number, role). For every pair look for the topology folder (configured in the infrared.cfg file) for the appropriate mini file (controller.yml, compute.yml, etc). Load the role the defined number of times into the settings.
+ #. Split each node with '_' and get pair (number, role). For every pair
+    look for the topology folder (configured in the infrared.cfg file) for the
+    appropriate mini file (controller.yaml, compute.yaml, etc). Load the role
+    the defined number of times into the settings.
 
-  .. note:: The default search path for topology files is
-``settings/provivisioner/<TYPE, ie virsh>/topology``. Users can add
-their own topology roles there and reference them on runtime
+    .. note:: The default search path for topology files is
+      ``settings/provivisioner/topology``. Users can add their own topology
+      roles there and reference them on runtime
 
 
 Add new Plugins
