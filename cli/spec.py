@@ -134,9 +134,7 @@ def post_process_command_args(clg_args, app_settings_dir):
                 raise exceptions.IRConfigurationException(
                     "Topology node should be in format  <number>_<node role>. "
                     "Current value: '{}' ".format(topology_item))
-            if int(number) > 1 and node_type[-1] == 's':
-                node_type = node_type[:-1]
-            # todo(obaraov) consider mobing topology to config on constant.
+            # todo(obaraov): consider moving topology to config on constant.
             node_file = os.path.join(
                 app_settings_dir, 'topology', node_type + '.yml')
             with open(node_file) as stream:
