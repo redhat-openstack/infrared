@@ -1,23 +1,23 @@
-name: undercloud
+name: "undercloud"
 amount: "{{ !lookup topology.controller.number }}"
-cpu: "{{ !lookup provisioner.image.cpu }}"
-memory: "{{ !lookup provisioner.image.memory }}"
-os: &os
-    type: linux
-    variant: "{{ !lookup provisioner.image.os.variant }}"
-disks: &disks
-    disk1: &disk1
-        path: /var/lib/libvirt/images
-        dev: /dev/vda
-        size: 20G
-network: &network_params
-    interfaces: &interfaces
-        management: &mgmt_interface
-            label: eth0
-        data: &data_interface
-            label: eth1
-        external: &external_interface
-            label: eth2
+cpu: "4"
+memory: "16384"
+os:
+    type: "linux"
+    variant: "rhel7"
+disks:
+    disk1:
+        path: "/var/lib/libvirt/images"
+        dev: "/dev/vda"
+        size: "20G"
+network:
+    interfaces:
+        management:
+            label: "eth0"
+        data:
+            label: "eth1"
+        external:
+            label: "eth2"
 groups:
   - undercloud
   - tester
