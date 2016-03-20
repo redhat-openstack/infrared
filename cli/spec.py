@@ -70,7 +70,7 @@ def parse_args(app_settings_dir, args=None):
     sub_parser_options = subparsers_options.get(clg_args['command0'], {})
 
     override_default_values(clg_args, sub_parser_options)
-    post_process_command_args(clg_args, app_settings_dir)
+    process_topology_args(clg_args, app_settings_dir)
     return clg_args
 
 
@@ -114,9 +114,9 @@ def override_default_values(clg_args, sub_parser_options):
         _check_required_arguments(sub_parser_options, clg_args)
 
 
-def post_process_command_args(clg_args, app_settings_dir):
+def process_topology_args(clg_args, app_settings_dir):
     """
-    Transforms some of arguments after they have been read.
+    Merges topology files in a single topology dict.
 
     :param clg_args: Dictionary based on cmd-line args parsed by clg
     :param app_settings_dir: path to the base directory holding the
@@ -125,7 +125,7 @@ def post_process_command_args(clg_args, app_settings_dir):
     """
 
     # post process topology
-    if 'topology' in clg_args and clg_args['topology'] is not None:
+    if clg_args.get("topology") is not None:
         topology_dict = {}
         for topology_item in clg_args['topology'].split(','):
             if '_' in topology_item:
