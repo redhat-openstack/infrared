@@ -70,7 +70,6 @@ def parse_args(app_settings_dir, args=None):
     sub_parser_options = subparsers_options.get(clg_args['command0'], {})
 
     override_default_values(clg_args, sub_parser_options)
-
     return clg_args
 
 

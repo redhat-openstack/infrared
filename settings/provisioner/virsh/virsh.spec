@@ -35,8 +35,8 @@ subparsers:
                       default: default.yml
                   topology:
                       type: str
-                      help: Provision topology
-                      default: all-in-one.yml
+                      help: Provision topology.
+                      default: "1_controller,1_compute,1_undercloud"
             - title: common
               options:
                   dry-run:

@@ -107,6 +107,31 @@ option. There are 2 ways of doing so:
 The ``-e``/``--extra-vars`` can be used more than once.
 
 
+Dynamic Topology
+----------------
+
+InfraRed allows to dynamically define the provisioning topology to be used during deployment.
+
+InfraRed provides several 'mini' YAML files to describe different roles: controller, compute, undercloud, etc.
+These 'mini' files are then merged into one topology file according to the provided ``--topology`` argument value.
+
+The ``--topology`` argument can have the following format:
+ #. ``--topology=1_controller,1_compute``
+ #. ``--topology=1_controller``
+ #. ``--topology=3_controller,1_compute,1_undercloud``
+
+InfraRed will read dynamic topology by following the next steps:
+ #. Split the topology value with ','.
+ #. Split each node with '_' and get pair (number, role). For every pair
+    look for the topology folder (configured in the infrared.cfg file) for the
+    appropriate mini file (controller.yaml, compute.yaml, etc). Load the role
+    the defined number of times into the settings.
+
+    .. note:: The default search path for topology files is
+      ``settings/provivisioner/topology``. Users can add their own topology
+      roles there and reference them on runtime
+
+
 Add new Plugins
 ===============
 
@@ -128,3 +153,10 @@ There are two steps that should be done when adding a new plugin to InfraRed:
     with other values, all are received by the user.
     When adding a new plugin, there is a need to create those settings files containing the needed data for the
     playbook execution.
+
+
+Known issues
+============
+
+#. PROBLEM: sshpass package cannot be installed during virsh provisioning.
+   SOLUTION: install rhos-release tool. Install osp-d with rhos-release: ``rhos-release 7-director``
