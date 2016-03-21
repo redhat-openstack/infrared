@@ -1,5 +1,5 @@
 #!/bin/bash
-{% for node_name, node_values in provisioner.virsh.topology.nodes.iteritems() %}
+{% for node_name, node_values in provisioner.virsh.topology.iteritems() %}
 {% for num in range(1, node_values.amount + 1, 1) %}
 virt-install --name {{ node_name }}{% if node_values.amount > 1 %}{{ num }}{% endif %} \
 {% for disk_name, disk_values in node_values.disks.iteritems() %}

@@ -237,7 +237,7 @@
       - name: add hosts to host list
         add_host:
             name="{{ item.item.item[0] }}"
-            groups="{{ provisioner.virsh.topology.nodes['%s' % item.item.item[0].rstrip('1234567890')].groups | join(',') }}"
+            groups="{{ provisioner.virsh.topology['%s' % item.item.item[0].rstrip('1234567890')].groups | join(',') }}"
             ansible_ssh_user="root"
             ansible_ssh_password="redhat"
             ansible_ssh_host="{{ item.stdout }}"
