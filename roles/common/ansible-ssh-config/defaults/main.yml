@@ -1,0 +1,18 @@
+---
+invnetory_dir: "."
+ssh_config_destination: "{{ inventory_dir }}/ansible.ssh.config"
+external_network: "" # cidr or ip
+default_host_name_property: "ansible_default_ipv4.address"
+ssh_config_mode: "0755"
+host_keys:
+  default: "{{ inventory_dir }}/id_rsa_overcloud"
+  undercloud: "{{ inventory_dir }}/id_rsa"
+host_users:
+  default:  heat-admin
+  undercloud: root
+network_protocol: "ipv4"
+
+# the host specific variables
+virthost_ssh_key_file: "!placeholder"
+virthost_ssh_user: "!placeholder"
+virthost_ssh_host: "!placeholder"
