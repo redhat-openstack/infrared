@@ -29,7 +29,7 @@ subparsers:
                       required: yes
             - title: topology
               options:
-                  network:
+                  topology-network:
                       type: YamlFile
                       help: Network
                       default: default.yml
