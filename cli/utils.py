@@ -86,7 +86,7 @@ def dict_merge(first, second,
             first[key] = second[key]
 
 
-def search_tree(haystack, needle, _res=None):
+def search_tree(needle, haystack, _res=None):
     """Find all values of key `needle` inside a nested dict tree `haystack`.
 
     :param haystack: nested dict tree to search
@@ -101,10 +101,10 @@ def search_tree(haystack, needle, _res=None):
         _res.append(haystack[needle])
     for key, value in haystack.iteritems():
         if isinstance(value, dict):
-            search_tree(value, needle, _res)
+            search_tree(needle, value, _res)
         if isinstance(value, list):
             for item in value:
-                search_tree(item, needle, _res)
+                search_tree(needle, item, _res)
     return _res
 
 

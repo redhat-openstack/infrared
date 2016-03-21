@@ -78,7 +78,7 @@ def test_dict_merge_none_resolver(first, second, expected):
 def test_search_tree(haystack, output):
     from cli.utils import search_tree
 
-    result = search_tree(haystack, "needle")
+    result = search_tree("needle", haystack)
     # can't make set of dict, but we still don't care about order
     assert len(result) == len(output)
     for item in output:

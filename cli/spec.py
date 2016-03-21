@@ -72,7 +72,7 @@ class ValueArgument(object):
 
         # todo(yfried): consider simply searching for option_name instead of
         # "options"
-        for option_tree in utils.search_tree(spec, "options"):
+        for option_tree in utils.search_tree("options", spec):
             for option_name, option_dict in option_tree.iteritems():
                 if issubclass(clg.TYPES.get(option_dict.get("type", object),
                                             object),
