@@ -1,10 +1,9 @@
 import ConfigParser
 import os
 
+import clg
 import yaml
 import yamlordereddictloader
-
-import clg
 
 from cli import exceptions
 from cli import logger
@@ -36,8 +35,16 @@ class ValueArgument(object):
 
     @classmethod
     def get_app_attr(cls, attribute):
+        """Get class attributes from ancestor tree.
+
+        If attribute isn't initialized, search ancestor tree for it and
+        initialize attribute with the first match found.
+
+        :param attribute: class attribute.
+        :return:
+        """
         if getattr(cls, attribute):
-            getattr(cls, attribute)
+            return getattr(cls, attribute)
         try:
             setattr(cls, attribute,
                     super(ValueArgument, cls).get_app_attr(attribute))
@@ -170,6 +177,35 @@ class IniFileArgument(object):
         self.value = res_dict
 
 
+def get_arguments_dict(application, args):
+    """
+    Collect all ValueArgument args in dict according to arg names
+
+    some-key=value will be nested in dict as:
+
+    {`application`: {
+        SUBCOMMAND: {
+            "some": {
+                "key": value}
+            }
+        }
+    }
+
+    For spec.YamlFileArgument value is path to yaml so file content
+    will be loaded as a nested dict
+
+    :return: dict
+    """
+    settings_dict = {}
+
+    for name, argument in args.iteritems():
+        if isinstance(argument, ValueArgument):
+            utils.dict_insert(settings_dict, argument.value,
+                              *argument.arg_name.split("-"))
+
+    return {application: {args["command0"]: settings_dict}}
+
+
 def parse_args(app_settings_dir, args=None):
     """
     Looks for all the specs for specified app
@@ -230,7 +266,7 @@ def override_default_values(clg_args, sub_parser_options):
             subcommand=clg_args['command0'],
             defaults=defaults)
     else:
-        # Override defaults with the ini file args
+        # Override defaults with the ini file args if provided
         file_args = getattr(clg_args.get('from-file'), "value", {}).get(
             clg_args['command0'], {})
         utils.dict_merge(file_args, defaults)
@@ -239,7 +275,6 @@ def override_default_values(clg_args, sub_parser_options):
         for arg_name, arg_obj in clg_args.iteritems():
             if isinstance(arg_obj, ValueArgument):
                 arg_obj.resolve_value(arg_name, defaults)
-                # clg_args[arg_name] = arg_obj.value
 
         _check_required_arguments(clg_args)
 
@@ -253,8 +288,9 @@ def _check_required_arguments(clg_args):
     # Only missing args initialize "required" attr in init_missing_args
     unset_args = [arg.arg_name for arg in clg_args.values() if
                   getattr(arg, 'required', False)]
-    # only_args = []
+
     # todo(yfried): revisit this in the future
+    # only_args = []
     # for arg in clg_args.values():
     #     if 'requires_only' in attributes:
     #         only_args.extend(attributes['requires_only'])
@@ -415,6 +451,7 @@ def _get_specs(app_settings_dir):
         utils.dict_merge(res, spec)
 
     return res
+
 
 # update clg types
 clg.TYPES.update({'IniFile': IniFileArgument})

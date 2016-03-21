@@ -80,8 +80,6 @@ class IRFactory(object):
             app_settings_dir = os.path.join(settings_dir, app_name)
             spec_args = spec.parse_args(app_settings_dir, args)
             cls.configure_environment(spec_args)
-            # # todo(yfried): This should be in a more generic place
-            # process_topology_args(spec_args, app_settings_dir)
 
             if spec_args.get('generate-conf-file', None):
                 LOG.debug('Conf file "{}" has been generated. Exiting'.format(
@@ -153,37 +151,6 @@ class IRSubCommand(object):
         LOG.debug("All settings files to be loaded:\n%s" % settings_files)
         return settings_files
 
-    # todo(yfried): maybe move to spec?
-    def get_arguments_dict(self):
-        """
-        Collect all spec.ValueArgument args in dict according to arg names
-
-        some-key=value will be nested in dict as:
-
-        {APPLICATION: {
-            SUBCOMMAND: {
-                "some": {
-                    "key": value}
-                }
-            }
-        }
-
-        For spec.YamlFileArgument value is path to yaml so file content
-        will be loaded as a nested dict
-
-        :return: dict
-        """
-        settings_dict = {}
-
-        for name, argument in self.args.iteritems():
-            # if isinstance(argument, spec.YamlFileArgument):
-            #     argument.find_file(self.settings_dir)
-            if isinstance(argument, spec.ValueArgument):
-                utils.dict_insert(settings_dict, argument.value,
-                                  *argument.arg_name.split("-"))
-
-        return {APPLICATION: {self.args["command0"]: settings_dict}}
-
 
 class IRApplication(object):
     """
@@ -216,13 +183,13 @@ class IRApplication(object):
 
     def collect_settings(self):
         settings_files = self.sub_command.get_settings_files()
-        arguments_dict = self.sub_command.get_arguments_dict()
+        arguments_dict = spec.get_arguments_dict(APPLICATION, self.args)
 
         # todo(yfried): fix after refactor
         # utils.dict_merge(settings_files, arguments_dict)
         # return self.lookup(settings_files)
 
-        # todo(yfried) remove this line after refactor
+        # todo(yfried) remove this line after lookup refactor
         return self.lookup(settings_files, arguments_dict)
 
     def lookup(self, settings_files, settings_dict):
