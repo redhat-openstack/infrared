@@ -28,11 +28,13 @@ name: ceph
 """)
     # prepare config
     app_path = os.path.join(root_dir.strpath, "..")
-    res_args = dict(topology="10_controller,2_compute")
 
+    provision.TopologyArgument.settings_dir = app_path
+    topology_arg = provision.TopologyArgument("10_controller,2_compute")
     # process topology
-    provision.process_topology_args(res_args, app_path)
-    topology = res_args['topology']
+    topology_arg.resolve_value("topology", {})
+
+    topology = topology_arg.value
     assert 'controller' in topology
     assert 'compute' in topology
     assert 'ceph' not in topology

@@ -25,9 +25,9 @@ NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output',
 
 
 class TopologyArgument(spec.ValueArgument):
+    """Build topology dict from smaller YAML files by parsing input. """
 
     def resolve_value(self, arg_name, defaults=None):
-        super(TopologyArgument, self).resolve_value(arg_name, defaults)
         """
         Merges topology files in a single topology dict.
 
@@ -36,10 +36,11 @@ class TopologyArgument(spec.ValueArgument):
             application's settings. App can be provisioner\installer\tester
             and the path would be: settings/<app_name>/
         """
+        super(TopologyArgument, self).resolve_value(arg_name, defaults)
 
         # post process topology
         topology_dir = os.path.join(self.get_app_attr("settings_dir"),
-                                   'topology')
+                                    'topology')
         topology_dict = {}
         for topology_item in self.value.split(','):
             if '_' in topology_item:
