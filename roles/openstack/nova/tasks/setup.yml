@@ -1,0 +1,43 @@
+---
+# This file is used to create OpenStack nova resources
+
+#TODO(abregman): Enable 'create_flavors' when ansible 2.1 is out
+#- name: Create flavors
+#  os_nova_flavor:
+#      cloud: "{{ provisioner.cloud | default(omit) }}"
+#      name: "{{ prefix }}{{ item.value.nane | default(flavor_name) }}"
+#      ram: "{{ item.value.ram | default(omit) }}"
+#      disk: "{{ item.value.disk | default(omit) }}"
+#      vcpus: "{{ item.value.vcpus | default(omit) }}"
+#      state: present
+#  register: flavors
+#  with_dict: "{{ provisioner.flavors }}"
+#  when: provisioner.flavors is defined  
+
+- name: Create instances
+  os_server:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      auto_ip: "{{ item.value.auto_ip | default(auto_ip) }}"
+      config_drive: "{{ item.value.config_drive | default(config_drive) }}"
+      flavor: "{{ item.value.flavor | default(flavor_id) }}"
+      image: "{{ provisioner.image }}"
+      name: "{{ prefix }}{{ item.value.name }}"
+      nics: "{{ networks.results | map(attribute='id') | list() |map('add_prefix', 'net-id=') | list() }}"
+      key: "{{ item.value.key | default(omit) }}"
+      key_name: "{{ item.value.key_name | default(omit) }}"
+      state: present
+      wait: "{{ item.value.wait | default(wait) }}"
+  register: nodes
+  with_dict: "{{ provisioner.nodes }}"
+  when: provisioner.nodes is defined
+
+- name: Create floating IPs
+  os_floating_ip:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      network: "{{ external_network_id }}"
+      internal_network: "{{ prefix}}{{ item.value.network.floating_ip_network }}"
+      server: "{{ prefix }}{{ item.value.name }}"
+      state: present
+  register: floating_ips
+  with_dict: "{{ provisioner.nodes }}"
+  when: provisioner.nodes is defined

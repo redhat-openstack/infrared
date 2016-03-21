@@ -1,0 +1,45 @@
+---
+# This file is used to cleanup OpenStack nova resources
+
+- name: Register nova servers details
+  os_server_facts:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      server: "{{ prefix }}*"
+  register: servers_details
+- debug: var=servers_details
+
+- name: Set floating IP address
+  set_fact:
+      floating_ip_address: "{{ item.value[0].interface_ip }}"
+  with_dict: servers_details.ansible_facts
+  ignore_errors: yes
+
+- name: Release floating IPs
+  os_floating_ip:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      server: "{{ prefix }}{{ item.value.name }}"
+      floating_ip_address: "{{ floating_ip_address }}"
+      state: absent
+  with_dict: "{{ provisioner.nodes }}"
+  when: provisioner.nodes is defined
+  ignore_errors: yes
+
+- name: Cleanup instances
+  os_server:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      image: "{{ item.value.image | default(instance_image) }}"
+      name: "{{ prefix }}{{ item.value.name }}"
+      state: absent
+  with_dict: "{{ provisioner.nodes }}"
+  when: provisioner.nodes is defined
+  ignore_errors: yes
+
+###todo(abregman): Enable 'Cleanup flavors' when ansible 2.1 is out
+#- name: Cleanup flavors
+#  os_nova_flavor:
+#      cloud: "{{ provisioner.cloud | default(omit) }}"
+#      name: "{{ prefix }}{{ item.value.nane | default(flavor_name) }}"
+#      state: absent
+#  with_dict: "{{ provisioner.flavors }}"
+#  when: provisioner.flavors is defined
+#  ignore_errors: yes

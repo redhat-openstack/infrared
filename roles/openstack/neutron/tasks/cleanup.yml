@@ -1,0 +1,29 @@
+---
+# This file is used to cleanup OpenStack neutron resources
+
+- name: Cleanup routers
+  os_router:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      name: "{{ prefix }}{{ item.value.name | default(router_name) }}"
+      state: absent
+  with_dict: "{{ provisioner.neutron.routers }}"
+  when: provisioner.neutron.routers is defined
+  ignore_errors: yes
+
+- name: Cleanup subnets
+  os_subnet:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      name: "{{ prefix }}{{ item.value.name }}"
+      state: absent
+  with_dict: "{{ provisioner.neutron.subnets }}"
+  when: provisioner.neutron.subnets is defined
+  ignore_errors: yes
+
+- name: Cleanup networks
+  os_network:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      name: "{{ prefix }}{{ item.value.name }}"
+      state: absent
+  with_dict: "{{ provisioner.neutron.networks }}"
+  when: provisioner.neutron.networks is defined
+  ignore_errors: yes
