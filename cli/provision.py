@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-import clg
 import os
 import logging
 
+import clg
 import yaml
 
 from cli import logger  # logger creation is first thing to be done
@@ -13,11 +13,11 @@ from cli import spec
 import cli.yamls
 import cli.execute
 
-APPLICATION = 'provisioner'
 
 LOG = logger.LOG
 CONF = conf.config
 
+APPLICATION = 'provisioner'
 PROVISION_PLAYBOOK = "provision.yaml"
 CLEANUP_PLAYBOOK = "cleanup.yaml"
 NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output',
