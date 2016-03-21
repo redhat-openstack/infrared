@@ -76,7 +76,7 @@ The merging priority order is:
 InfraRed input arguments
 ------------------------
 InfraRed extends the ``clg`` and ``argpars`` packages with the following types
- that need to be defined in `.spec` files:
+that need to be defined in `.spec` files:
 
 * **Value**: String values
 * **YamlFile**: Expects path to YAML files. Will search for files in the settings directory before trying to resolve
@@ -87,14 +87,15 @@ InfraRed extends the ``clg`` and ``argpars`` packages with the following types
 
 * **Topology**: Provisioners allow to dynamically define the provisioned
   nodes topology. InfraRed provides several
-  'mini' YAML files to describe different roles: controller, compute, undercloud, etc.
+  'mini' YAML files to describe different roles: ``controller``, ``compute``,
+  ``undercloud``, etc...
   These 'mini' files are then merged into one topology file according to the
-  provided ``--topology`` argument value.
+  provided ``--topology-nodes`` argument value.
 
-  The ``--topology`` argument can have the following format:
-   * ``--topology=1_controller,1_compute``
-   * ``--topology=1_controller``
-   * ``--topology=3_controller,1_compute,1_undercloud``
+  The ``--topology-nodes`` argument can have the following format:
+   * ``--topology-nodes=1_controller,1_compute``
+   * ``--topology-nodes=1_controller``
+   * ``--topology-nodes=3_controller,1_compute,1_undercloud``
 
  InfraRed will read dynamic topology by following the next steps:
   #. Split the topology value with ','.
@@ -107,12 +108,12 @@ InfraRed extends the ``clg`` and ``argpars`` packages with the following types
        ``settings/provivisioner/topology``. Users can add their own topology
        roles there and reference them on runtime
 
-These arguments will accepts input from sources in the following priority
+These arguments will accept input from sources in the following priority
 order:
 
 #. Command line arguments:
    ``ir-provision virsh --host-address=some.host.com --host-user=root``
-#. Environment variables: ``HOST_ADRRESS=earth ir-provision virsh --host-user=root``
+#. Environment variables: ``HOST_ADRRESS=earth.example.com ir-provision virsh --host-user=root``
 #. Predefined arguments in ini file specified using ``--from-file`` option::
 
     ir-provision virsh --host-address=some.host.com --from-file=user.ini
@@ -124,7 +125,7 @@ order:
 
 #. Defaults defined in ``.spec`` file for each argument.
 
-  .. note:: The simple ini file with the default values can be generated with:
+  .. note:: The sample `ini` file with the default values can be generated with:
    ``ir-povision virsh --generate-conf-file=virsh.ini``. Generated file will contain
    all the default arguments values defined in the spec file.
 
