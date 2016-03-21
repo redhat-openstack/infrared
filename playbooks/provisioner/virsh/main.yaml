@@ -170,11 +170,11 @@
       - name: remove pre-existing file
         file:
             state: absent
-            dest: "/var/lib/libvirt/images/{{ provisioner.virsh.image.name }}-original"
+            dest: "/var/lib/libvirt/images/{{ provisioner.virsh.image.file }}-original"
 
       - name: download base guest image
         get_url:
-            dest: "/var/lib/libvirt/images/{{ provisioner.virsh.image.name }}-original"
+            dest: "/var/lib/libvirt/images/{{ provisioner.virsh.image.file }}-original"
             url: "{{ provisioner.virsh.image.server }}/{{ provisioner.virsh.image.file }}"
         register: result
         until: result.msg.find("Request failed") == -1
