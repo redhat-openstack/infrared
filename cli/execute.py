@@ -1,10 +1,14 @@
 from os import path
 
-import ansible.color
-import ansible.inventory
-import ansible.playbook
-import ansible.utils
-from ansible import callbacks
+from collections import namedtuple
+import ansible.constants
+from ansible.parsing.dataloader import DataLoader
+from ansible.vars import VariableManager
+from ansible.inventory import Inventory
+from ansible.executor.playbook_executor import PlaybookExecutor
+# from ansible.playbook.play_context import PlayContext
+from ansible.utils.vars import load_extra_vars
+from ansible.utils.display import Display
 
 from cli import conf, exceptions, logger
 
@@ -19,32 +23,6 @@ assert "playbooks" == path.basename(
     CONF.get('defaults', 'playbooks')), "Bad path to playbooks"
 
 
-# ansible-playbook
-# https://github.com/ansible/ansible/blob/devel/bin/ansible-playbook
-
-# From ansible-playbook
-def colorize(lead, num, color):
-    """ Print 'lead' = 'num' in 'color' """
-
-    if num != 0 and color is not None:
-        return "%s%s%-15s" % (ansible.color.stringc(lead, color),
-                              ansible.color.stringc("=", color),
-                              ansible.color.stringc(str(num), color))
-    else:
-        return "%s=%-4s" % (lead, str(num))
-
-
-def hostcolor(host, stats, color=True):
-    if color:
-        if stats['failures'] != 0 or stats['unreachable'] != 0:
-            return "%-37s" % ansible.color.stringc(host, 'red')
-        elif stats['changed'] != 0:
-            return "%-37s" % ansible.color.stringc(host, 'yellow')
-        else:
-            return "%-37s" % ansible.color.stringc(host, 'green')
-    return "%-26s" % host
-
-
 def ansible_playbook(playbook, args, inventory="local_hosts"):
     """
     Wraps the 'ansible-playbook' CLI.
@@ -52,6 +30,10 @@ def ansible_playbook(playbook, args, inventory="local_hosts"):
      :args: all arguments passed for the playbook
      :inventory: the inventory file to use, default: local_hosts
     """
+    verbosity = args["verbose"]
+    display = Display(verbosity=verbosity)
+    import __main__ as main
+    setattr(main, "display", display)
 
     if not playbook:
         LOG.error("No playbook to execute (%s)" % PLAYBOOKS)
@@ -59,96 +41,62 @@ def ansible_playbook(playbook, args, inventory="local_hosts"):
         # TODO: remove all IRexceptions and change to regular Python exceptions
         raise exceptions.IRFileNotFoundException
 
-    print "Executing Playbook: %s" % playbook
+    LOG.info("Executing Playbook: %s" % playbook)
 
-    ansible.utils.VERBOSITY = args['verbose']
-    path_to_playbook = path.join(CONF.get('defaults', 'playbooks'), playbook)
+    variable_manager = VariableManager()
+    loader = DataLoader()
 
-    # From ansible-playbook:
-    stats = callbacks.AggregateStats()
-    playbook_cb = callbacks.PlaybookCallbacks(verbose=ansible.utils.VERBOSITY)
-    if args.get('step'):
-        # execute step by step
-        playbook_cb.step = args.step
+    #### Mocking ansible-playbook cli input ####
+    # These values were extracted from ansible-playbook runtime.
+    # todo(yfried): decide which options are hardcoded and which should be
+    # exposed to user
+    hacked_options = {'subset': None, 'ask_pass': False, 'listtags': None,
+                      'become_user': 'root', 'sudo': False,
+                      'private_key_file': None,
+                      'syntax': None, 'skip_tags': None, 'diff': False,
+                      'sftp_extra_args': '', 'check': False,
+                      'force_handlers': False,
+                      'remote_user': None, 'become_method': 'sudo',
+                      'vault_password_file': None, 'listtasks': None,
+                      'output_file': None, 'ask_su_pass': False,
+                      'new_vault_password_file': None,
+                      'inventory': 'local_hosts',
+                      'forks': 5, 'listhosts': None, 'ssh_extra_args': '',
+                      'tags': 'all', 'become_ask_pass': False,
+                      'start_at_task': None,
+                      'flush_cache': None, 'step': None, 'module_path': None,
+                      'su_user': None, 'ask_sudo_pass': False,
+                      'su': False,
+                      'scp_extra_args': '', 'connection': 'smart',
+                      'ask_vault_pass': False, 'timeout': 30, 'become': False,
+                      'sudo_user': None, 'ssh_common_args': ''}
 
-    if args.get('start_at'):
-        # start execution at a specific task
-        playbook_cb.start_at = args.start_at
-
-    runner_cb = callbacks.PlaybookRunnerCallbacks(
-        stats,
-        verbose=ansible.utils.VERBOSITY
-    )
 
     module_path = CONF.get('defaults', 'modules')
+    path_to_playbook = path.join(CONF.get('defaults', 'playbooks'), playbook)
 
-    pb = ansible.playbook.PlayBook(
-        # From ansible-playbook:
-        playbook=path_to_playbook,
-        inventory=ansible.inventory.Inventory(inventory),
-        extra_vars=args['settings'],
-        callbacks=playbook_cb,
-        runner_callbacks=runner_cb,
-        stats=stats,
-        module_path=module_path
+    hacked_options.update(
+        module_path=module_path,
+        verbosity=verbosity,
+        forks=ansible.constants.DEFAULT_FORKS,
+        remote_user=ansible.constants.DEFAULT_REMOTE_USER,
+        private_key_file=ansible.constants.DEFAULT_PRIVATE_KEY_FILE,
+
     )
+    options = namedtuple('Options', hacked_options.keys())(**hacked_options)
 
-    failed_hosts = []
-    unreachable_hosts = []
+    passwords = dict(vault_pass='secret')
+    inventory = Inventory(loader=loader, variable_manager=variable_manager,
+                          host_list=inventory)
+    variable_manager.set_inventory(inventory)
 
-    if args['verbose']:
-        ansible_cmd = ["ansible-playbook"]
-        if module_path:
-            ansible_cmd.append("-M " + module_path)
-        ansible_cmd.append("-" + "v" * args['verbose'])
-        ansible_cmd.append("-i " + inventory)
-        extra_vars = args['output'] or "<path to settings file>"
-        ansible_cmd.append("--extra-vars @" + extra_vars)
-        ansible_cmd.append(path_to_playbook)
-        print "ANSIBLE COMMAND: " + " ".join(ansible_cmd)
+    loader = DataLoader()
 
-    pb.run()
+    variable_manager = VariableManager()
+    variable_manager.extra_vars = args["settings"]
+    pbex = PlaybookExecutor(playbooks=[path_to_playbook], inventory=inventory,
+                            variable_manager=variable_manager, loader=loader,
+                            options=options, passwords=passwords)
+    results = pbex.run()
+    pass
 
-    hosts = sorted(pb.stats.processed.keys())
-    callbacks.display(callbacks.banner("PLAY RECAP"))
-    playbook_cb.on_stats(pb.stats)
-
-    for host in hosts:
-        status = pb.stats.summarize(host)
-        if status['failures'] > 0:
-            failed_hosts.append(host)
-        if status['unreachable'] > 0:
-            unreachable_hosts.append(host)
-
-    retries = failed_hosts + unreachable_hosts
-
-    if len(retries) > 0:
-        filename = pb.generate_retry_inventory(retries)
-        if filename:
-            callbacks.display(
-                "           to retry, use: --limit @%s\n" % filename)
-
-    for host in hosts:
-        status = pb.stats.summarize(host)
-
-        callbacks.display("%s : %s %s %s %s" % (
-            hostcolor(host, status),
-            colorize('ok', status['ok'], 'green'),
-            colorize('changed', status['changed'], 'yellow'),
-            colorize('unreachable', status['unreachable'], 'red'),
-            colorize('failed', status['failures'], 'red')), screen_only=True)
-
-        callbacks.display("%s : %s %s %s %s" % (
-            hostcolor(host, status, False),
-            colorize('ok', status['ok'], None),
-            colorize('changed', status['changed'], None),
-            colorize('unreachable', status['unreachable'], None),
-            colorize('failed', status['failures'], None)), log_only=True)
-
-    print ""
-    if len(failed_hosts) > 0:
-        raise exceptions.IRPlaybookFailedException(
-            playbook, "Failed hosts: %s" % failed_hosts)
-    if len(unreachable_hosts) > 0:
-        raise exceptions.IRPlaybookFailedException(
-            playbook, "Unreachable hosts: %s" % unreachable_hosts)
