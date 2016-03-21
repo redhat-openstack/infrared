@@ -1,0 +1,32 @@
+name: ceph
+amount: "{{ !lookup topology.controller.number }}"
+cpu: 2
+memory: 4096
+os: &os
+    type: linux
+    variant: "{{ !lookup provisioner.virsh.image.os.variant }}"
+disks:
+    disk1: &disk1
+        path: /var/lib/libvirt/images
+        dev: /dev/vda
+        size: 20G
+    disk2:
+        <<: *disk1
+        dev: /dev/vdb
+    disk3:
+        <<: *disk1
+        dev: /dev/vdc
+    disk4:
+        <<: *disk1
+        dev: /dev/vdd
+network: &network_params
+    interfaces: &interfaces
+        management: &mgmt_interface
+            label: eth0
+        data: &data_interface
+            label: eth1
+        external: &external_interface
+            label: eth2
+groups:
+    - ceph
+    - openstack_nodes

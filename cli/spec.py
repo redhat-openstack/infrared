@@ -26,13 +26,27 @@ class ValueArgument(object):
     Default argument type for InfraRed Spec
     Resolves "None" Types with priority defaults.
     """
+    settings_dir = None
+    subcommand = None
+
     def __init__(self, value=None, required=None):
         self.value = value
         self.arg_name = None
         self.required = None
 
     @classmethod
-    def init_missing_args(cls, spec, args):
+    def get_app_attr(cls, attribute):
+        if getattr(cls, attribute):
+            getattr(cls, attribute)
+        try:
+            setattr(cls, attribute,
+                    super(ValueArgument, cls).get_app_attr(attribute))
+        except AttributeError:
+            pass
+        return getattr(cls, attribute)
+
+    @classmethod
+    def init_missing_args(cls, spec, args, settings_dir=None, subcommand=None):
         """Initialize defaults for ValueArgument class.
 
         argparse loads all unprovided arguments as None objects, instead of
@@ -42,7 +56,13 @@ class ValueArgument(object):
 
         :param spec: dict. spec file
         :param args: dict. argparse arguments.
+        :param app_settings_dir: path to the base directory holding the
+            application's settings. App can be provisioner\installer\tester
+            and the path would be: settings/<app_name>/
         """
+        cls.settings_dir = cls.get_app_attr("settings_dir") or settings_dir
+        cls.subcommand = cls.get_app_attr("subcommand") or subcommand
+
         # todo(yfried): consider simply searching for option_name instead of
         # "options"
         for option_tree in utils.search_tree(spec, "options"):
@@ -94,27 +114,32 @@ class YamlFileArgument(ValueArgument):
          settings_dir/APP/SUBCOMMAND/arg/name/arg_value
     """
 
-    def find_file(self, search_first):
-        """Find yaml file. search default path first.
+    def resolve_value(self, arg_name, defaults=None):
+        super(YamlFileArgument, self).resolve_value(arg_name, defaults)
+        search_first = os.path.join(self.get_app_attr("settings_dir"),
+                                    self.get_app_attr("subcommand"),
+                                    *arg_name.split("-"))
+        self.value = find_file(self.value, search_first)
 
-        :param search_first: default path to search first
-        :returns: absolute path to yaml file
-        """
-        filename = self.value
-        search_first = os.path.join(search_first,
-                                    *self.arg_name.split("-"))
 
-        filename = os.path.join(search_first, filename) if os.path.exists(
-            os.path.join(search_first, filename)) else filename
-        if os.path.exists(os.path.abspath(filename)):
-            LOG.debug("Loading YAML file: %s" %
-                      os.path.abspath(filename))
-            path = os.path.abspath(filename)
-        else:
-            raise exceptions.IRFileNotFoundException(
-                file_path=os.path.abspath(filename))
-        with open(path) as yaml_file:
-            self.value = yaml.load(yaml_file)
+def find_file(filename, search_first):
+    """Find yaml file. search default path first.
+
+    :param filename: path to file
+    :param search_first: default path to search first
+    :returns: absolute path to yaml file
+    """
+    filename = os.path.join(search_first, filename) if os.path.exists(
+        os.path.join(search_first, filename)) else filename
+    if os.path.exists(os.path.abspath(filename)):
+        LOG.debug("Loading YAML file: %s" %
+                  os.path.abspath(filename))
+        path = os.path.abspath(filename)
+    else:
+        raise exceptions.IRFileNotFoundException(
+            file_path=os.path.abspath(filename))
+    with open(path) as yaml_file:
+        return yaml.load(yaml_file)
 
 
 class IniFileArgument(object):
@@ -168,13 +193,13 @@ def parse_args(app_settings_dir, args=None):
     # Pass trimmed spec to clg with modified help message
     cmd = clg.CommandLine(app_specs)
     clg_args = vars(cmd.parse(args))
-    ValueArgument.init_missing_args(app_specs, clg_args)
+    ValueArgument.init_missing_args(app_specs, clg_args, app_settings_dir,
+                                    subcommand=clg_args["command0"])
 
     # Current sub-parser options
     sub_parser_options = subparsers_options.get(clg_args['command0'], {})
 
     override_default_values(clg_args, sub_parser_options)
-
     return clg_args
 
 

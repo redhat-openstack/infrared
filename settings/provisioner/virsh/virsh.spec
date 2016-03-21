@@ -34,9 +34,9 @@ subparsers:
                       help: Network
                       default: default.yml
                   topology:
-                      type: YamlFile
-                      help: Provision topology
-                      default: all-in-one.yml
+                      type: Topology
+                      help: Provision topology.
+                      default: "1_controller,1_compute,1_undercloud"
             - title: common
               options:
                   dry-run:

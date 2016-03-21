@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import clg
 import os
 import logging
 
@@ -24,6 +24,40 @@ NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output',
                         'input', 'dry-run', 'cleanup', 'inventory']
 
 
+class TopologyArgument(spec.ValueArgument):
+
+    def resolve_value(self, arg_name, defaults=None):
+        super(TopologyArgument, self).resolve_value(arg_name, defaults)
+        """
+        Merges topology files in a single topology dict.
+
+        :param clg_args: Dictionary based on cmd-line args parsed by clg
+        :param app_settings_dir: path to the base directory holding the
+            application's settings. App can be provisioner\installer\tester
+            and the path would be: settings/<app_name>/
+        """
+
+        # post process topology
+        topology_dir = os.path.join(self.get_app_attr("settings_dir"),
+                                   'topology')
+        topology_dict = {}
+        for topology_item in self.value.split(','):
+            if '_' in topology_item:
+                number, node_type = topology_item.split('_')
+            else:
+                raise exceptions.IRConfigurationException(
+                    "Topology node should be in format  <number>_<node role>. "
+                    "Current value: '{}' ".format(topology_item))
+            # todo(obaraov): consider moving topology to config on constant.
+            topology_dict[node_type] = spec.find_file(node_type + ".yaml",
+                                                      topology_dir)
+            topology_dict[node_type]['amount'] = int(number)
+
+        self.value = topology_dict
+
+clg.TYPES.update({'Topology': TopologyArgument})
+
+
 class IRFactory(object):
     """
     Creates and configures the IR applications.
@@ -45,6 +79,8 @@ class IRFactory(object):
             app_settings_dir = os.path.join(settings_dir, app_name)
             spec_args = spec.parse_args(app_settings_dir, args)
             cls.configure_environment(spec_args)
+            # # todo(yfried): This should be in a more generic place
+            # process_topology_args(spec_args, app_settings_dir)
 
             if spec_args.get('generate-conf-file', None):
                 LOG.debug('Conf file "{}" has been generated. Exiting'.format(
@@ -139,8 +175,8 @@ class IRSubCommand(object):
         settings_dict = {}
 
         for name, argument in self.args.iteritems():
-            if isinstance(argument, spec.YamlFileArgument):
-                argument.find_file(self.settings_dir)
+            # if isinstance(argument, spec.YamlFileArgument):
+            #     argument.find_file(self.settings_dir)
             if isinstance(argument, spec.ValueArgument):
                 utils.dict_insert(settings_dict, argument.value,
                                   *argument.arg_name.split("-"))

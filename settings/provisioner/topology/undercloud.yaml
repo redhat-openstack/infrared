@@ -1,0 +1,24 @@
+name: undercloud
+amount: "{{ !lookup topology.controller.number }}"
+cpu: "{{ !lookup provisioner.virsh.image.cpu }}"
+memory: "{{ !lookup provisioner.virsh.image.memory }}"
+os: &os
+    type: linux
+    variant: "{{ !lookup provisioner.virsh.image.os.variant }}"
+disks: &disks
+    disk1: &disk1
+        path: /var/lib/libvirt/images
+        dev: /dev/vda
+        size: 20G
+network: &network_params
+    interfaces: &interfaces
+        management: &mgmt_interface
+            label: eth0
+        data: &data_interface
+            label: eth1
+        external: &external_interface
+            label: eth2
+groups:
+  - undercloud
+  - tester
+  - openstack_nodes

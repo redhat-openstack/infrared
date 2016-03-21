@@ -7,13 +7,12 @@
   tasks:
       - name: add hosts to host list
         add_host:
-            name="{{ hypervisor.name }}"
-            groups="{{ hypervisor.groups| join(',') }}"
-            node_label="{{ item.key }}"
-            ansible_ssh_user="{{ hypervisor.user }}"
-            ansible_ssh_host="{{ hypervisor.address }}"
-            ansible_ssh_private_key_file="{{ hypervisor.key }}"
-        with_dict: provisioner.hosts
+            name: "{{ hypervisor.name }}"
+            groups: "{{ hypervisor.groups| join(',') }}"
+            node_label: "host1"
+            ansible_ssh_user: "{{ hypervisor.user }}"
+            ansible_ssh_host: "{{ hypervisor.address }}"
+            ansible_ssh_private_key_file: "{{ hypervisor.key }}"
 
 - name: Install dependencies
   hosts: virthost
