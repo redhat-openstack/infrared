@@ -3,7 +3,7 @@
   hosts: localhost
   gather_facts: no
   vars:
-      hypervisor: "{{ provisioner.virsh.host }}"
+      hypervisor: "{{ provisioner.host }}"
   tasks:
       - name: add hosts to host list
         add_host:
@@ -153,29 +153,29 @@
             name: "{{ item.value.name }}"
             xml: "{{ lookup('template', 'network/network.xml.j2') }}"
         when: "item.value.name not in network_list.list_nets"
-        with_dict: provisioner.virsh.network
+        with_dict: provisioner.network
 
       - name: check if network is active
         virt_net:
             state: active
             name: "{{ item.value.name }}"
-        with_dict: provisioner.virsh.network
+        with_dict: provisioner.network
 
       - name: make network persistent
         virt_net:
             autostart: "yes"
             name: "{{ item.value.name }}"
-        with_dict: provisioner.virsh.network
+        with_dict: provisioner.network
 
       - name: remove pre-existing file
         file:
             state: absent
-            dest: "/var/lib/libvirt/images/{{ provisioner.virsh.image.file }}-original"
+            dest: "/var/lib/libvirt/images/{{ provisioner.image.file }}-original"
 
       - name: download base guest image
         get_url:
-            dest: "/var/lib/libvirt/images/{{ provisioner.virsh.image.file }}-original"
-            url: "{{ provisioner.virsh.image.server }}/{{ provisioner.virsh.image.file }}"
+            dest: "/var/lib/libvirt/images/{{ provisioner.image.file }}-original"
+            url: "{{ provisioner.image.server }}/{{ provisioner.image.file }}"
         register: result
         until: result.msg.find("Request failed") == -1
         retries: 5
@@ -216,17 +216,17 @@
         shell: "virsh domiflist {{ item[0] }} | awk '/{{ item[1] }}/ {print $5};'"
         with_nested:
             - vm_name_list
-            - provisioner.virsh.network
+            - provisioner.network
         register: mac_list
 
       - set_fact:
             vm_mac_list: "{{ mac_list.results }}"
 
       - name: wait until one of the VMs gets an IP
-        shell: "virsh net-dhcp-leases {{ provisioner.virsh.network['%s' % item.item[1]].name }} | awk /{{ item.stdout }}/'{print $5}' | cut -d'/' -f1"
+        shell: "virsh net-dhcp-leases {{ provisioner.network['%s' % item.item[1]].name }} | awk /{{ item.stdout }}/'{print $5}' | cut -d'/' -f1"
         when: item.stdout != ""
         register: ip_list
-        until: ip_list.stdout.find("{{ provisioner.virsh.network['%s' % item.item[1]].ip_address | truncate(7, True, '') }}") > -1
+        until: ip_list.stdout.find("{{ provisioner.network['%s' % item.item[1]].ip_address | truncate(7, True, '') }}") > -1
         retries: 40
         delay: 5
         with_items: vm_mac_list
@@ -237,7 +237,7 @@
       - name: add hosts to host list
         add_host:
             name="{{ item.item.item[0] }}"
-            groups="{{ provisioner.virsh.topology['%s' % item.item.item[0].rstrip('1234567890')].groups | join(',') }}"
+            groups="{{ provisioner.topology['%s' % item.item.item[0].rstrip('1234567890')].groups | join(',') }}"
             ansible_ssh_user="root"
             ansible_ssh_password="redhat"
             ansible_ssh_host="{{ item.stdout }}"
@@ -248,7 +248,7 @@
         shell: "virsh net-update {{ item[0] }} add ip-dhcp-host \"<host mac='{{ item[1].item.stdout }}' name='{{ item[1].item.item[0] }}' ip='{{ item[1].stdout }}' />\" --live --config"
         when: item[1].item is defined and item[1].item.item[1] == item[0]
         with_nested:
-            - provisioner.virsh.network
+            - provisioner.network
             - vm_ip_list
 
       - name: copy created key from virthost for SSH proxy

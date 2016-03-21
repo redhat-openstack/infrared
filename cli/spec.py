@@ -177,33 +177,30 @@ class IniFileArgument(object):
         self.value = res_dict
 
 
-def get_arguments_dict(application, args):
+def get_arguments_dict(spec_args):
     """
     Collect all ValueArgument args in dict according to arg names
 
     some-key=value will be nested in dict as:
 
-    {`application`: {
-        SUBCOMMAND: {
-            "some": {
-                "key": value}
-            }
-        }
+    {"some": {
+        "key": value}
     }
 
-    For spec.YamlFileArgument value is path to yaml so file content
-    will be loaded as a nested dict
+    For `YamlFileArgument` value is path to yaml so file content
+    will be loaded as a nested dict.
 
+    :param spec_args: Dictionary based on cmd-line args parsed from spec file
     :return: dict
     """
     settings_dict = {}
 
-    for name, argument in args.iteritems():
+    for name, argument in spec_args.iteritems():
         if isinstance(argument, ValueArgument):
             utils.dict_insert(settings_dict, argument.value,
                               *argument.arg_name.split("-"))
 
-    return {application: {args["command0"]: settings_dict}}
+    return settings_dict
 
 
 def parse_args(app_settings_dir, args=None):
@@ -218,6 +215,7 @@ def parse_args(app_settings_dir, args=None):
         and the path would be: settings/<app_name>/
     :param args: the list of arguments used for directing the method to work
         on something other than CLI input (for example, in testing).
+    :return: dict. Based on cmd-line args parsed from spec file
     """
     # Dict with the merging result of all app's specs
     app_specs = _get_specs(app_settings_dir)

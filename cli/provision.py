@@ -183,7 +183,7 @@ class IRApplication(object):
 
     def collect_settings(self):
         settings_files = self.sub_command.get_settings_files()
-        arguments_dict = spec.get_arguments_dict(APPLICATION, self.args)
+        arguments_dict = {APPLICATION: spec.get_arguments_dict(self.args)}
 
         # todo(yfried): fix after refactor
         # utils.dict_merge(settings_files, arguments_dict)

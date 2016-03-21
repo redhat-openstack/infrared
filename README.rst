@@ -128,6 +128,21 @@ order:
    ``ir-povision virsh --generate-conf-file=virsh.ini``. Generated file will contain
    all the default arguments values defined in the spec file.
 
+Arguments of the above types will be automatically injected into settings
+YAML tree in a nested dict from.
+
+Example:
+The input for ``ir-COMMAND`` and argument ``--arg-name=arg-value`` maps to:
+
+  .. code-block:: yaml
+
+      COMMAND:
+          arg:
+              name: "arg-value"
+
+"arg-value" can be a simple string or be resolved into a more advanced
+dictionary depending on the argument type in ``.spec`` file
+
 Extra-Vars
 ----------
 Set/overwrite settings in the output file using the '-e/--extra-vars'

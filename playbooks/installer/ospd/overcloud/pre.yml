@@ -48,7 +48,7 @@
       - name: SSH copy ID to the hypervisor
         become: yes
         become_user: "{{ installer.user.name }}"
-        shell: "sshpass -p '{{ installer.user.password }}' ssh-copy-id {{ installer.user.name }}@{{ provisioner.virsh.network.management.ip_address }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        shell: "sshpass -p '{{ installer.user.password }}' ssh-copy-id {{ installer.user.name }}@{{ provisioner.network.management.ip_address }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
         delegate_to: undercloud
 
       - name: "DEBUG - print mac addresses for hosts - DEBUG"
@@ -183,7 +183,7 @@
         register: flavor_result
         when: "'{{ item.key }}' != 'undercloud'"
         failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item.key }} already exists') != -1"
-        with_dict: provisioner.virsh.topology
+        with_dict: provisioner.topology
 
       - set_fact:
             tagged_flavors: "{{ flavor_result.results }}"
