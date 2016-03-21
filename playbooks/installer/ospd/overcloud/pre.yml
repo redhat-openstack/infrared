@@ -39,11 +39,11 @@
                 ResultActive=yes
             dest: "/etc/polkit-1/localauthority/50-local.d/50-libvirt-user-{{ installer.user.name }}.pkla"
 
-#      - name: make sure sshpass installed
-#        yum:
-#            name: sshpass
-#            state: latest
-#        delegate_to: undercloud
+      - name: make sure sshpass installed
+        yum:
+            name: sshpass
+            state: latest
+        delegate_to: undercloud
 
       - name: SSH copy ID to the hypervisor
         become: yes

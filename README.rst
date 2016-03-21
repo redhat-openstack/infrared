@@ -157,7 +157,7 @@ There are two steps that should be done when adding a new plugin to InfraRed:
     For more details on how to use this module, please visit the 'clg' module `homepage <http://clg.readthedocs
     .org/en/latest/>`_.
 
-3. Creating settings files.
+#. Creating settings files.
     Settings files are files containing data which defines how the end result of the playbook execution will be
     looked like. Settings file are file in YAML format, end with ".yml" extension. Those files located under the
     plugin's dir which itself located under the 'settings' dir in the InfraRed project's dir.
