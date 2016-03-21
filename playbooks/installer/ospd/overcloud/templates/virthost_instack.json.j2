@@ -13,9 +13,9 @@
       "pm_password": "$(cat ~/.ssh/id_rsa)",
       "pm_type": "pxe_ssh",
       "mac": ["{{ hostvars[host_name]['ansible_%s' % installer.undercloud.config.local_interface].macaddress }}"],
-      "cpu": "{{ provisioner.topology[host_name.rstrip('1234567890')].cpu }}",
-      "memory": "{{ provisioner.topology[host_name.rstrip('1234567890')].memory }}",
-      "disk": "{{ provisioner.topology[host_name.rstrip('1234567890')].disks.disk1.size | regex_replace('(?P<size>[0-9]+).*$', '\\g<size>') }}",
+      "cpu": "{{ provisioner.topology.nodes[host_name.rstrip('1234567890')].cpu }}",
+      "memory": "{{ provisioner.topology.nodes[host_name.rstrip('1234567890')].memory }}",
+      "disk": "{{ provisioner.topology.nodes[host_name.rstrip('1234567890')].disks.disk1.size | regex_replace('(?P<size>[0-9]+).*$', '\\g<size>') }}",
       "arch": "x86_64",
       "pm_user": "{{ installer.user.name }}"
     }{% if not loop.last %},{% endif %}

@@ -33,7 +33,7 @@ subparsers:
                       type: YamlFile
                       help: Network
                       default: default.yml
-                  topology:
+                  topology-nodes:
                       type: Topology
                       help: Provision topology.
                       default: "1_controller,1_compute,1_undercloud"
