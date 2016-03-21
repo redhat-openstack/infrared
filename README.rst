@@ -75,36 +75,58 @@ The merging priority order is:
 
 InfraRed input arguments
 ------------------------
+InfraRed extends the ``clg`` and ``argpars`` packages with the following types
+ that need to be defined in `.spec` files:
 
-.. note:: The following mechanism applies to special argument types that need
- to be defined in `.spec` files:
-
-#. **Value**: String values
-#. **YamlFile**: Expects path to YAML files. Will search for files in the settings directory before trying to resolve
-   absolute path. For the argument name is "arg-name" and of subparser "SUBCOMMAND" of command "COMMAND", the default
-   search path would be::
+* **Value**: String values
+* **YamlFile**: Expects path to YAML files. Will search for files in the settings directory before trying to resolve
+  absolute path. For the argument name is "arg-name" and of subparser "SUBCOMMAND" of command "COMMAND", the default
+  search path would be::
 
     settings_dir/COMMAND/SUBCOMMAND/arg/name/arg_value
 
+* **Topology**: Provisioners allow to dynamically define the provisioned
+  nodes topology. InfraRed provides several
+  'mini' YAML files to describe different roles: controller, compute, undercloud, etc.
+  These 'mini' files are then merged into one topology file according to the
+  provided ``--topology`` argument value.
 
-InfraRed accepts the next sources of the input arguments (in priority order):
+  The ``--topology`` argument can have the following format:
+   * ``--topology=1_controller,1_compute``
+   * ``--topology=1_controller``
+   * ``--topology=3_controller,1_compute,1_undercloud``
 
-1. Command line arguments:  ``ir-provision virsh --host=some.host.com --ssh_user=root``
-2. Predefined arguments in ini file. Use the --from-file option to specify ini file::
-  
-    ir-provision virsh --host=some.host.com --from-file=user.ini
-  
+ InfraRed will read dynamic topology by following the next steps:
+  #. Split the topology value with ','.
+  #. Split each node with '_' and get pair (number, role). For every pair
+     look for the topology folder (configured in the infrared.cfg file) for
+     the appropriate mini file (controller.yaml, compute.yaml, etc). Load the
+     role the defined number of times into the settings.
+
+ .. note:: The default search path for topology files is
+       ``settings/provivisioner/topology``. Users can add their own topology
+       roles there and reference them on runtime
+
+These arguments will accepts input from sources in the following priority
+order:
+
+#. Command line arguments:
+   ``ir-provision virsh --host-address=some.host.com --host-user=root``
+#. Environment variables: ``HOST_ADRRESS=earth ir-provision virsh --host-user=root``
+#. Predefined arguments in ini file specified using ``--from-file`` option::
+
+    ir-provision virsh --host-address=some.host.com --from-file=user.ini
+
     cat user.ini
     [virsh]
-    ssh_user=root
-    ssh_key=mkey.pm
+    host-user=root
+    host-key=mkey.pm
 
+#. Defaults defined in ``.spec`` file for each argument.
 
-3. Environment variables: ``HOST=earth ir-provision virsh --ssh_user=root``
-
-.. note:: The simple ini file with the default values can be generated with: ``ir-povision virsh --generate-conf-file=virsh.ini``. Generated file will contain all the default arguments values defined in the spec file.
-
-Command line arguments have the highest priority. All the undefined variables will be replaced by that arguments from file or from environment.
+  .. note:: The simple ini file with the default values can be generated with:
+   ``ir-povision virsh --generate-conf-file=virsh.ini``. Generated file will contain
+   all the default arguments values defined in the spec file.
 
 Extra-Vars
 ----------
@@ -117,31 +139,6 @@ option. There are 2 ways of doing so:
     ``-e @path/to/a/settings_file.yml``
 
 The ``-e``/``--extra-vars`` can be used more than once.
-
-
-Dynamic Topology
-----------------
-
-InfraRed allows to dynamically define the provisioning topology to be used during deployment.
-
-InfraRed provides several 'mini' YAML files to describe different roles: controller, compute, undercloud, etc.
-These 'mini' files are then merged into one topology file according to the provided ``--topology`` argument value.
-
-The ``--topology`` argument can have the following format:
- #. ``--topology=1_controller,1_compute``
- #. ``--topology=1_controller``
- #. ``--topology=3_controller,1_compute,1_undercloud``
-
-InfraRed will read dynamic topology by following the next steps:
- #. Split the topology value with ','.
- #. Split each node with '_' and get pair (number, role). For every pair
-    look for the topology folder (configured in the infrared.cfg file) for the
-    appropriate mini file (controller.yaml, compute.yaml, etc). Load the role
-    the defined number of times into the settings.
-
-    .. note:: The default search path for topology files is
-      ``settings/provivisioner/topology``. Users can add their own topology
-      roles there and reference them on runtime
 
 
 Add new Plugins
