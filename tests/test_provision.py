@@ -1,11 +1,11 @@
 import os
 
-from cli import provision
+from cli import spec
 
 
 def test_dynamic_topology(tmpdir):
     """
-    Verifies the topology is dynamically constructed.
+    Verifiesthe topology is dynamically constructed.
     """
     root_dir = tmpdir.mkdir("topology")
     controller_yml = root_dir.join("controller.yaml")
@@ -29,8 +29,8 @@ name: ceph
     # prepare config
     app_path = os.path.join(root_dir.strpath, "..")
 
-    provision.TopologyArgument.settings_dir = app_path
-    topology_arg = provision.TopologyArgument("10_controller,2_compute")
+    spec.TopologyArgument.settings_dir = app_path
+    topology_arg = spec.TopologyArgument("10_controller,2_compute")
     # process topology
     topology_arg.resolve_value("topology", {})
 
