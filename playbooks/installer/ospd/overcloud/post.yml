@@ -17,19 +17,12 @@
   hosts: localhost
   roles:
     - role: common/ansible-ssh-config
-      when: installer.overcloud.network.isolation.enable == "yes"
-      external_network: "{{ installer.overcloud.network.template.content.parameter_defaults.ExternalNetCidr }}"
-      virthost_ssh_key_file: "{{ provisioner.hosts.host1.ssh_key_file }}"
-      virthost_ssh_user: "{{ provisioner.hosts.host1.ssh_user }}"
-      virthost_ssh_host: "{{ provisioner.hosts.host1.ssh_host }}"
-      network_protocol: "{{ installer.overcloud.network.protocol }}"
-
-    - role: common/ansible-ssh-config
-      when: installer.overcloud.network.isolation.enable == "no"
-      virthost_ssh_key_file: "{{ provisioner.hosts.host1.ssh_key_file }}"
-      virthost_ssh_user: "{{ provisioner.hosts.host1.ssh_user }}"
-      virthost_ssh_host: "{{ provisioner.hosts.host1.ssh_host }}"
-      network_protocol: "{{ installer.overcloud.network.protocol }}"
+      asc_external_network: "{{ (installer.overcloud.network.isolation.enable == "yes")
+        | ternary(installer.overcloud.network.template.content.parameter_defaults.ExternalNetCidr, '') }}"
+      asc_virthost_ssh_key_file: "{{ provisioner.hosts.host1.ssh_key_file }}"
+      asc_virthost_ssh_user: "{{ provisioner.hosts.host1.ssh_user }}"
+      asc_virthost_ssh_host: "{{ provisioner.hosts.host1.ssh_host }}"
+      asc_network_protocol: "{{ installer.overcloud.network.protocol }}"
 
 - name: Update the inventory file
   hosts: localhost
