@@ -1,0 +1,28 @@
+---
+- name: Pre-provisioning tasks
+  hosts: localhost
+  sudo: no
+  tasks:
+    - name: Group by provisioner type
+      group_by: key={{ provisioner.type }}
+
+    - name: Add the host to the inventory
+      add_host:
+        name="host0"
+        groups="provisioned"
+        ansible_fqdn="{{ provisioner.hosts.host0.fqdn }}"
+        ansible_ssh_host="{{ provisioner.hosts.host0.fqdn }}"
+        ansible_ssh_user="{{ provisioner.hosts.host0.remote_user }}"
+        ansible_ssh_pass="{{ provisioner.hosts.host0.remote_pass }}"
+
+- name: Use beaker to provision the machine
+  hosts: localhost
+  tasks:
+    - name: Provision machine using the 'beaker_provisioner' module
+      beaker_provisioner:
+          server_url: "{{ provisioner.hosts.host0.server_url }}"
+          fqdn: "{{ provisioner.hosts.host0.fqdn }}"
+          username: "{{ provisioner.hosts.host0.remote_user }}"
+          password: "{{ provisioner.hosts.host0.remote_pass }}"
+          action: "{{ provisioner.hosts.host0.action }}"
+          distro_tree_id: "{{ provisioner.hosts.host0.distro_tree_id }}"
