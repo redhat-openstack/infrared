@@ -1,0 +1,22 @@
+{% for host in groups['all'] %}
+{% if hostvars[host].get('ansible_connection', '') != 'local' and host != 'virthost' %}
+Host {{ host }}
+  {# try to find interface with specified external network  #}
+  {% set vars={ "address": hostvars[host].get(asc_default_host_name_property) } %}
+  {% for interface in hostvars[host].get("ansible_interfaces", []) %}
+    {% if hostvars[host].get("ansible_" + interface) and hostvars[host].get("ansible_" + interface).get(asc_network_protocol, {}).get('network', 'undefined') == asc_external_network.split('/')[0] %}
+      {# look through all the interfaces and save the required one #}
+      {% if vars.update({'address': hostvars[host].get("ansible_" + interface).get(asc_network_protocol).address}) %} {% endif %}
+    {% endif %}
+  {% endfor %}
+
+    ProxyCommand ssh -i {{ asc_virthost_ssh_key_file }} {{ asc_virthost_ssh_user }}@{{ asc_virthost_ssh_host }} nc %h %p
+    HostName {{ vars.address }}
+    User {{ asc_host_users.get(host, asc_host_users.default) }}
+    IdentityFile {{ asc_host_keys.get(host, asc_host_keys.default) }}
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+    ForwardAgent yes
+
+{% endif %}
+{% endfor %}

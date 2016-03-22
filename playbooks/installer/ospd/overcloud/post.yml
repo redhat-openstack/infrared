@@ -13,6 +13,17 @@
             dest: "{{ inventory_dir }}/id_rsa_overcloud"
             flat: yes
 
+- name: Generate ansible.ssh.config file
+  hosts: localhost
+  roles:
+    - role: common/ansible-ssh-config
+      asc_external_network: "{{ (installer.overcloud.network.isolation.enable == 'yes')
+        | ternary(installer.overcloud.network.template.content.parameter_defaults.ExternalNetCidr, '') }}"
+      asc_virthost_ssh_key_file: "{{ provisioner.hosts.host1.ssh_key_file }}"
+      asc_virthost_ssh_user: "{{ provisioner.hosts.host1.ssh_user }}"
+      asc_virthost_ssh_host: "{{ provisioner.hosts.host1.ssh_host }}"
+      asc_network_protocol: "{{ installer.overcloud.network.protocol }}"
+
 - name: Update the inventory file
   hosts: localhost
   gather_facts: no
@@ -21,12 +32,6 @@
         file:
             path: "{{ inventory_dir }}/id_rsa_overcloud"
             mode: 0600
-
-      - name: update our ansible ssh configuration file
-        template:
-            src: "templates/ssh.config.ansible.j2"
-            dest: "{{ inventory_dir }}/ansible.ssh.config"
-            mode: 0755
 
       - name: Update Inventory
         add_host:
