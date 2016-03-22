@@ -125,7 +125,7 @@ class YamlFileArgument(ValueArgument):
         search_first = os.path.join(self.get_app_attr("settings_dir"),
                                     self.get_app_attr("subcommand"),
                                     *arg_name.split("-"))
-        self.value = utils.find_file(self.value, search_first)
+        self.value = utils.load_yaml(self.value, search_first)
 
 
 class TopologyArgument(ValueArgument):
@@ -154,7 +154,7 @@ class TopologyArgument(ValueArgument):
                     "Topology node should be in format  <number>_<node role>. "
                     "Current value: '{}' ".format(topology_item))
             # todo(obaraov): consider moving topology to config on constant.
-            topology_dict[node_type] = utils.find_file(node_type + ".yaml",
+            topology_dict[node_type] = utils.load_yaml(node_type + ".yaml",
                                                        topology_dir)
             topology_dict[node_type]['amount'] = int(number)
 

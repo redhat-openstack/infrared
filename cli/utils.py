@@ -196,7 +196,7 @@ def normalize_file(file_path):
     return file_path
 
 
-def find_file(filename, search_first):
+def load_yaml(filename, search_first):
     """Find YAML file. search default path first.
 
     :param filename: path to file
