@@ -8,6 +8,7 @@ import configure
 import yaml
 
 import cli.yamls
+import exceptions
 from cli import exceptions
 from cli import logger
 
@@ -193,6 +194,26 @@ def normalize_file(file_path):
         raise exceptions.IRFileNotFoundException(file_path)
 
     return file_path
+
+
+def find_file(filename, search_first):
+    """Find YAML file. search default path first.
+
+    :param filename: path to file
+    :param search_first: default path to search first
+    :returns: dict. loaded YAML file.
+    """
+    filename = os.path.join(search_first, filename) if os.path.exists(
+        os.path.join(search_first, filename)) else filename
+    if os.path.exists(os.path.abspath(filename)):
+        LOG.debug("Loading YAML file: %s" %
+                  os.path.abspath(filename))
+        path = os.path.abspath(filename)
+    else:
+        raise exceptions.IRFileNotFoundException(
+            file_path=os.path.abspath(filename))
+    with open(path) as yaml_file:
+        return yaml.load(yaml_file)
 
 
 ENV_VAR_NAME = "IR_CONFIG"

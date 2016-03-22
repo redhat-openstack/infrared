@@ -1,14 +1,13 @@
 import ConfigParser
-import os
 
 import clg
+import os
 import yaml
 import yamlordereddictloader
 
 from cli import exceptions
 from cli import logger
 from cli import utils
-
 
 LOG = logger.LOG
 
@@ -126,27 +125,7 @@ class YamlFileArgument(ValueArgument):
         search_first = os.path.join(self.get_app_attr("settings_dir"),
                                     self.get_app_attr("subcommand"),
                                     *arg_name.split("-"))
-        self.value = find_file(self.value, search_first)
-
-
-def find_file(filename, search_first):
-    """Find yaml file. search default path first.
-
-    :param filename: path to file
-    :param search_first: default path to search first
-    :returns: absolute path to yaml file
-    """
-    filename = os.path.join(search_first, filename) if os.path.exists(
-        os.path.join(search_first, filename)) else filename
-    if os.path.exists(os.path.abspath(filename)):
-        LOG.debug("Loading YAML file: %s" %
-                  os.path.abspath(filename))
-        path = os.path.abspath(filename)
-    else:
-        raise exceptions.IRFileNotFoundException(
-            file_path=os.path.abspath(filename))
-    with open(path) as yaml_file:
-        return yaml.load(yaml_file)
+        self.value = utils.find_file(self.value, search_first)
 
 
 class TopologyArgument(ValueArgument):
@@ -175,8 +154,8 @@ class TopologyArgument(ValueArgument):
                     "Topology node should be in format  <number>_<node role>. "
                     "Current value: '{}' ".format(topology_item))
             # todo(obaraov): consider moving topology to config on constant.
-            topology_dict[node_type] = find_file(node_type + ".yaml",
-                                                      topology_dir)
+            topology_dict[node_type] = utils.find_file(node_type + ".yaml",
+                                                       topology_dir)
             topology_dict[node_type]['amount'] = int(number)
 
         self.value = topology_dict
@@ -208,32 +187,6 @@ class IniFileArgument(object):
             res_dict[section].pop('__name__', None)
 
         self.value = res_dict
-
-
-def get_arguments_dict(spec_args):
-    """
-    Collect all ValueArgument args in dict according to arg names
-
-    some-key=value will be nested in dict as:
-
-    {"some": {
-        "key": value}
-    }
-
-    For `YamlFileArgument` value is path to yaml so file content
-    will be loaded as a nested dict.
-
-    :param spec_args: Dictionary based on cmd-line args parsed from spec file
-    :return: dict
-    """
-    settings_dict = {}
-
-    for name, argument in spec_args.iteritems():
-        if isinstance(argument, ValueArgument):
-            utils.dict_insert(settings_dict, argument.value,
-                              *argument.arg_name.split("-"))
-
-    return settings_dict
 
 
 def parse_args(app_settings_dir, args=None):

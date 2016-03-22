@@ -12,7 +12,6 @@ from cli import spec
 import cli.yamls
 import cli.execute
 
-
 LOG = logger.LOG
 CONF = conf.config
 
@@ -21,6 +20,30 @@ PROVISION_PLAYBOOK = "provision.yaml"
 CLEANUP_PLAYBOOK = "cleanup.yaml"
 NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output',
                         'input', 'dry-run', 'cleanup', 'inventory']
+
+
+def get_arguments_dict(spec_args):
+    """
+    Collect all ValueArgument args in dict according to arg names
+
+    some-key=value will be nested in dict as:
+
+    {"some": {
+        "key": value}
+    }
+
+    For `YamlFileArgument` value is path to yaml so file content
+    will be loaded as a nested dict.
+
+    :param spec_args: Dictionary based on cmd-line args parsed from spec file
+    :return: dict
+    """
+    settings_dict = {}
+    for _name, argument in spec_args.iteritems():
+        if isinstance(argument, spec.ValueArgument):
+            utils.dict_insert(settings_dict, argument.value,
+                              *argument.arg_name.split("-"))
+    return settings_dict
 
 
 class IRFactory(object):
@@ -147,9 +170,9 @@ class IRApplication(object):
 
     def collect_settings(self):
         settings_files = self.sub_command.get_settings_files()
-        arguments_dict = {APPLICATION: spec.get_arguments_dict(self.args)}
+        arguments_dict = {APPLICATION: get_arguments_dict(self.args)}
 
-        # todo(yfried): fix after refactor
+        # todo(yfried): fix after lookup refactor
         # utils.dict_merge(settings_files, arguments_dict)
         # return self.lookup(settings_files)
 
