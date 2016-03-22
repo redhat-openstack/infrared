@@ -8,28 +8,35 @@ subparsers:
                   host:
                       type: str
                       help: Address/FQDN of the BM hypervisor
+                      required: yes
                   ssh-user:
                       type: str
                       help: User to SSH to the host with
+                      default: root
                   ssh-key:
                       type: str
                       help: "User's SSH key"
+                      default: ~/.ssh/id_rsa
             - title: image
               options:
                   image-file:
                       type: str
                       help: An image to provision the host with
+                      required: yes
                   image-server:
                       type: str
                       help: Base URL of the image file server
+                      required: yes
             - title: topology
               options:
                   network:
                       type: str
                       help: Network
+                      default: default.yml
                   topology:
                       type: str
-                      help: 'Provision topology (default: __DEFAULT__)'
+                      help: Provision topology.
+                      default: "1_controller,1_compute,1_undercloud"
             - title: common
               options:
                   dry-run:
@@ -55,3 +62,6 @@ subparsers:
                   from-file:
                       type: IniFile
                       help: the ini file with the list of arguments
+                  generate-conf-file:
+                      type: str
+                      help: generate configuration file (ini) containing default values and exits. This file is than can be used with the from-file argument

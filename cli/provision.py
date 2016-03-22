@@ -10,6 +10,7 @@ from cli import logger  # logger creation is first thing to be done
 from cli import conf
 from cli import utils
 from cli import exceptions
+from cli import spec
 import cli.yamls
 import cli.execute
 
@@ -20,6 +21,36 @@ PROVISION_PLAYBOOK = "provision.yaml"
 CLEANUP_PLAYBOOK = "cleanup.yaml"
 NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output',
                         'input', 'dry-run', 'cleanup', 'inventory']
+
+
+def process_topology_args(clg_args, app_settings_dir):
+    """
+    Merges topology files in a single topology dict.
+
+    :param clg_args: Dictionary based on cmd-line args parsed by clg
+    :param app_settings_dir: path to the base directory holding the
+        application's settings. App can be provisioner\installer\tester
+        and the path would be: settings/<app_name>/
+    """
+
+    # post process topology
+    if clg_args.get("topology") is not None:
+        topology_dict = {}
+        for topology_item in clg_args['topology'].split(','):
+            if '_' in topology_item:
+                number, node_type = topology_item.split('_')
+            else:
+                raise exceptions.IRConfigurationException(
+                    "Topology node should be in format  <number>_<node role>. "
+                    "Current value: '{}' ".format(topology_item))
+            # todo(obaraov): consider moving topology to config on constant.
+            node_file = os.path.join(
+                app_settings_dir, 'topology', node_type + '.yaml')
+            with open(node_file) as stream:
+                topology_dict[node_type] = yaml.load(stream)
+                topology_dict[node_type]['amount'] = int(number)
+
+        clg_args['topology'] = topology_dict
 
 
 class IRFactory(object):
@@ -33,12 +64,21 @@ class IRFactory(object):
         Create the application object
         by module name and provided configuration.
         """
+        settings_dir = CONF.get('defaults', 'settings')
+
         if app_name in ["provisioner", ]:
-            args = conf.SpecManager.parse_args(app_name, config)
+            app_settings_dir = os.path.join(settings_dir, app_name)
+            args = spec.parse_args(app_settings_dir)
             cls.configure_environment(args)
-            setting_dir = utils.validate_settings_dir(
-                CONF.get('defaults', 'settings'))
-            app_instance = IRApplication(app_name, setting_dir, args)
+            # todo(yfried): This should be in a more generic place
+            process_topology_args(args, app_settings_dir)
+
+            if args.get('generate-conf-file', None):
+                LOG.debug('Conf file "{}" has been generated. Exiting'.format(
+                    args['generate-conf-file']))
+                app_instance = None
+            else:
+                app_instance = IRApplication(app_name, settings_dir, args)
 
         else:
             raise exceptions.IRUnknownApplicationException(
@@ -54,6 +94,7 @@ class IRFactory(object):
         """
         if args['debug']:
             LOG.setLevel(logging.DEBUG)
+        # todo(yfried): load exception hook now and not at init.
 
 
 class IRSubCommand(object):
@@ -140,12 +181,12 @@ class VirshCommand(IRSubCommand):
             ssh_key_file=self.args['ssh-key']
         )
 
-        settings_dict = utils.dict_merge(
-            {'provisioner': {'image': image}},
-            {'provisioner': {'hosts': {'host1': host}}})
+        settings_dict = {'provisioner': {'image': image}}
+        utils.dict_merge(settings_dict,
+                         {'provisioner': {'hosts': {'host1': host}}})
 
         # load network and image settings
-        for arg_dir in ('network', 'topology'):
+        for arg_dir in ('network',):
             if self.args[arg_dir] is None:
                 raise exceptions.IRConfigurationException(
                     "A value for for the  '{}' "
@@ -155,6 +196,10 @@ class VirshCommand(IRSubCommand):
                 settings = yaml.load(settings_file)
             utils.dict_merge(settings_dict, settings)
 
+        # inject topology from args to the required fro virsh place.
+        utils.dict_merge(
+            settings_dict,
+            {'provisioner': {'nodes': self.args['topology']}})
         return settings_dict
 
     def _load_yaml_files(self):
@@ -229,7 +274,8 @@ class IRApplication(object):
 
 def main():
     app = IRFactory.create('provisioner', CONF)
-    app.run()
+    if app:
+        app.run()
 
 if __name__ == '__main__':
     main()

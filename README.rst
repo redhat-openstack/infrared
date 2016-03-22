@@ -90,6 +90,8 @@ InfraRed accepts the next sources of the input arguments (in priority order):
 
 3. Environment variables: ``HOST=earth ir-provision virsh --ssh_user=root``
 
+.. note:: The simple ini file with the default values can be generated with: ``ir-povision virsh --generate-conf-file=virsh.ini``. Generated file will contain all the default arguments values defined in the spec file.
+
 Command line arguments have the highest priority. All the undefined variables will be replaced by that arguments from file or from environment.
 
 Extra-Vars
@@ -105,12 +107,37 @@ option. There are 2 ways of doing so:
 The ``-e``/``--extra-vars`` can be used more than once.
 
 
+Dynamic Topology
+----------------
+
+InfraRed allows to dynamically define the provisioning topology to be used during deployment.
+
+InfraRed provides several 'mini' YAML files to describe different roles: controller, compute, undercloud, etc.
+These 'mini' files are then merged into one topology file according to the provided ``--topology`` argument value.
+
+The ``--topology`` argument can have the following format:
+ #. ``--topology=1_controller,1_compute``
+ #. ``--topology=1_controller``
+ #. ``--topology=3_controller,1_compute,1_undercloud``
+
+InfraRed will read dynamic topology by following the next steps:
+ #. Split the topology value with ','.
+ #. Split each node with '_' and get pair (number, role). For every pair
+    look for the topology folder (configured in the infrared.cfg file) for the
+    appropriate mini file (controller.yaml, compute.yaml, etc). Load the role
+    the defined number of times into the settings.
+
+    .. note:: The default search path for topology files is
+      ``settings/provivisioner/topology``. Users can add their own topology
+      roles there and reference them on runtime
+
+
 Add new Plugins
 ===============
 
 There are two steps that should be done when adding a new plugin to InfraRed:
 
-1. Creating a specification file:
+#. Creating a specification file:
     InfraRed uses ArgParse wrapper module called 'clg' in order to create a parser that based on `spec` file
     (YAML format file) containing the plugin options.
     The spec file should be named as the new plugin name with '.spec' extension and located inside the plugin dir
@@ -118,16 +145,7 @@ There are two steps that should be done when adding a new plugin to InfraRed:
     For more details on how to use this module, please visit the 'clg' module `homepage <http://clg.readthedocs
     .org/en/latest/>`_.
 
-2. Creating a default spec file (default.ini). 
-    This file should contain the default values for the command line arguments. All the default values should go under the name section names as a new plugin. Example::
-      
-      [virsh]
-      topology=all-in-one.yml
-      network=default.yml
-      ssh-key=~/.ssh/id_rsa
-      ssh-user=root
-
-3. Creating settings files.
+#. Creating settings files.
     Settings files are files containing data which defines how the end result of the playbook execution will be
     looked like. Settings file are file in YAML format, end with ".yml" extension. Those files located under the
     plugin's dir which itself located under the 'settings' dir in the InfraRed project's dir.
@@ -135,3 +153,10 @@ There are two steps that should be done when adding a new plugin to InfraRed:
     with other values, all are received by the user.
     When adding a new plugin, there is a need to create those settings files containing the needed data for the
     playbook execution.
+
+
+Known issues
+============
+
+#. PROBLEM: sshpass package cannot be installed during virsh provisioning.
+   SOLUTION: install rhos-release tool. Install osp-d with rhos-release: ``rhos-release 7-director``

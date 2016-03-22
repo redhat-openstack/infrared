@@ -3,7 +3,6 @@ This module provide some general helper methods
 """
 
 import os
-import re
 
 import configure
 import yaml
@@ -44,62 +43,47 @@ class ConflictResolver(object):
     @staticmethod
     def none_resolver(first, second, key):
         """
-        Replaces value in first dict only if it null
+        Replaces value in first dict only if it is None.
+        Appends second value into the first in type is list.
         """
 
         # tyr to merge lists first
         if isinstance(first[key], list):
-            if isinstance(first[key], list):
+            if isinstance(second[key], list):
                 first[key].extend(second[key])
-            else:
-                first[key].append(first[key])
+            elif second[key] is not None:
+                first[key].append(second[key])
 
         if key not in first or first[key] is None:
             first[key] = second[key]
 
+    @staticmethod
+    def greedy_resolver(first, second, key):
+        """
+        Replace always first with the value from second
+        """
+        first[key] = second[key]
 
-def dict_merge(first, second, path=None,
-               conflict_resolver=ConflictResolver.none_resolver):
-    """ Given two dict objects, this function returns
-    a dict that is the result of merging them into one.
+
+def dict_merge(first, second,
+               conflict_resolver=ConflictResolver.greedy_resolver):
+    """Merge `second` dict into `first`.
+
+    :param first: Modified dict
+    :param second: Modifier dict
+    :param conflict_resolver: Function that resolves a merge between 2 values
+        when one of them isn't a dict
     """
-    if path is None:
-        path = []
     for key in second:
         if key in first:
             if isinstance(first[key], dict) and isinstance(second[key], dict):
-                dict_merge(first[key], second[key], path + [str(key)])
-            elif first[key] == second[key]:
-                pass
+                dict_merge(first[key], second[key],
+                           conflict_resolver=conflict_resolver)
             else:
                 # replace first value with the value from second
                 conflict_resolver(first, second, key)
         else:
             first[key] = second[key]
-    return first
-
-
-# TODO: remove "settings" references in project
-def validate_settings_dir(settings_dir=None):
-    """Checks & returns the full path to the settings dir.
-
-    Path is set in the following priority:
-    1. Method argument
-    2. System environment variable
-
-    :param settings_dir: path given as argument by a user
-    :return: path to settings dir (str)
-    :raise: IRFileNotFoundException: when the path to the settings dir doesn't
-            exist
-    """
-    settings_dir = settings_dir or os.environ.get(INFRARED_DIR_ENV_VAR)
-
-    if not os.path.exists(settings_dir):
-        raise exceptions.IRFileNotFoundException(
-            settings_dir,
-            "Settings dir doesn't exist: ")
-
-    return settings_dir
 
 
 def update_settings(settings, file_path):
@@ -188,17 +172,6 @@ def normalize_file(file_path):
 
     return file_path
 
-
-def string_to_list(value, separator=',', append_to_list=True):
-    """
-    Converts string to list.
-    """
-    if value.startswith('[') and value.endswith(']'):
-        value = value[1:-1].split(separator)
-    else:
-        if append_to_list:
-            value = [value, ]
-    return value
 
 ENV_VAR_NAME = "IR_CONFIG"
 IR_CONF_FILE = 'infrared.cfg'
