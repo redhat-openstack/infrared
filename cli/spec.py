@@ -149,6 +149,39 @@ def find_file(filename, search_first):
         return yaml.load(yaml_file)
 
 
+class TopologyArgument(ValueArgument):
+    """Build topology dict from smaller YAML files by parsing input. """
+
+    def resolve_value(self, arg_name, defaults=None):
+        """
+        Merges topology files in a single topology dict.
+
+        :param clg_args: Dictionary based on cmd-line args parsed by clg
+        :param app_settings_dir: path to the base directory holding the
+            application's settings. App can be provisioner\installer\tester
+            and the path would be: settings/<app_name>/
+        """
+        super(TopologyArgument, self).resolve_value(arg_name, defaults)
+
+        # post process topology
+        topology_dir = os.path.join(self.get_app_attr("settings_dir"),
+                                    'topology')
+        topology_dict = {}
+        for topology_item in self.value.split(','):
+            if '_' in topology_item:
+                number, node_type = topology_item.split('_')
+            else:
+                raise exceptions.IRConfigurationException(
+                    "Topology node should be in format  <number>_<node role>. "
+                    "Current value: '{}' ".format(topology_item))
+            # todo(obaraov): consider moving topology to config on constant.
+            topology_dict[node_type] = find_file(node_type + ".yaml",
+                                                      topology_dir)
+            topology_dict[node_type]['amount'] = int(number)
+
+        self.value = topology_dict
+
+
 class IniFileArgument(object):
     """Creates a dictionary based on given configuration file."""
 
@@ -454,4 +487,5 @@ def _get_specs(app_settings_dir):
 # update clg types
 clg.TYPES.update({'IniFile': IniFileArgument})
 clg.TYPES.update({'Value': ValueArgument})
+clg.TYPES.update({'Topology': TopologyArgument})
 clg.TYPES.update({'YamlFile': YamlFileArgument})

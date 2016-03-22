@@ -2,7 +2,6 @@
 import os
 import logging
 
-import clg
 import yaml
 
 from cli import logger  # logger creation is first thing to be done
@@ -22,41 +21,6 @@ PROVISION_PLAYBOOK = "provision.yaml"
 CLEANUP_PLAYBOOK = "cleanup.yaml"
 NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output',
                         'input', 'dry-run', 'cleanup', 'inventory']
-
-
-class TopologyArgument(spec.ValueArgument):
-    """Build topology dict from smaller YAML files by parsing input. """
-
-    def resolve_value(self, arg_name, defaults=None):
-        """
-        Merges topology files in a single topology dict.
-
-        :param clg_args: Dictionary based on cmd-line args parsed by clg
-        :param app_settings_dir: path to the base directory holding the
-            application's settings. App can be provisioner\installer\tester
-            and the path would be: settings/<app_name>/
-        """
-        super(TopologyArgument, self).resolve_value(arg_name, defaults)
-
-        # post process topology
-        topology_dir = os.path.join(self.get_app_attr("settings_dir"),
-                                    'topology')
-        topology_dict = {}
-        for topology_item in self.value.split(','):
-            if '_' in topology_item:
-                number, node_type = topology_item.split('_')
-            else:
-                raise exceptions.IRConfigurationException(
-                    "Topology node should be in format  <number>_<node role>. "
-                    "Current value: '{}' ".format(topology_item))
-            # todo(obaraov): consider moving topology to config on constant.
-            topology_dict[node_type] = spec.find_file(node_type + ".yaml",
-                                                      topology_dir)
-            topology_dict[node_type]['amount'] = int(number)
-
-        self.value = topology_dict
-
-clg.TYPES.update({'Topology': TopologyArgument})
 
 
 class IRFactory(object):
