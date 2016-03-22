@@ -266,6 +266,19 @@
         when: item.item is defined
         with_items: vm_ip_list
 
+- name: Generate ansible.ssh.config file
+  hosts: localhost
+  roles:
+    - role: common/ansible-ssh-config
+      asc_virthost_ssh_key_file: "{{ provisioner.host.key }}"
+      asc_virthost_ssh_user: "{{ provisioner.host.user }}"
+      asc_virthost_ssh_host: "{{ provisioner.host.address }}"
+      asc_default_host_name_property: "ansible_ssh_host"
+      asc_host_users:
+        default: root
+      asc_host_keys:
+        default: "{{ inventory_dir }}/id_rsa"
+
 - name: Update ansible with the new hosts
   hosts: localhost
   tasks:
@@ -273,12 +286,6 @@
         file:
             path: "{{ inventory_dir }}/id_rsa"
             mode: 0600
-
-      - name: setup ssh config
-        template:
-            src: "templates/ssh.config.ansible.j2"
-            dest: "{{ inventory_dir }}/ansible.ssh.config"
-            mode: 0755
 
       # This step is necessary in order to allow the SSH forwarding
       - name: update the ssh host name of each machine
