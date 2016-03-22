@@ -8,6 +8,7 @@ import configure
 import yaml
 
 import cli.yamls
+import exceptions
 from cli import exceptions
 from cli import logger
 
@@ -84,6 +85,28 @@ def dict_merge(first, second,
                 conflict_resolver(first, second, key)
         else:
             first[key] = second[key]
+
+
+def search_tree(needle, haystack, _res=None):
+    """Find all values of key `needle` inside a nested dict tree `haystack`.
+
+    :param haystack: nested dict tree to search
+    :param needle: key name to search for
+    :param _res: helper argument holding return value for internal recursion
+    :return: list. All values of key `needle` in tree `haystack`. Order is not
+        guaranteed.
+    """
+    if _res is None:
+        _res = []
+    if needle in haystack:
+        _res.append(haystack[needle])
+    for key, value in haystack.iteritems():
+        if isinstance(value, dict):
+            search_tree(needle, value, _res)
+        if isinstance(value, list):
+            for item in value:
+                search_tree(needle, item, _res)
+    return _res
 
 
 def update_settings(settings, file_path):
@@ -171,6 +194,26 @@ def normalize_file(file_path):
         raise exceptions.IRFileNotFoundException(file_path)
 
     return file_path
+
+
+def load_yaml(filename, search_first):
+    """Find YAML file. search default path first.
+
+    :param filename: path to file
+    :param search_first: default path to search first
+    :returns: dict. loaded YAML file.
+    """
+    filename = os.path.join(search_first, filename) if os.path.exists(
+        os.path.join(search_first, filename)) else filename
+    if os.path.exists(os.path.abspath(filename)):
+        LOG.debug("Loading YAML file: %s" %
+                  os.path.abspath(filename))
+        path = os.path.abspath(filename)
+    else:
+        raise exceptions.IRFileNotFoundException(
+            file_path=os.path.abspath(filename))
+    with open(path) as yaml_file:
+        return yaml.load(yaml_file)
 
 
 ENV_VAR_NAME = "IR_CONFIG"

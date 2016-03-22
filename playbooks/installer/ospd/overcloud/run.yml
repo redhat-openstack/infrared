@@ -18,7 +18,7 @@
             dest: "~/overcloud_deploy.sh"
             mode: 0755
   roles:
-      - {role: "ospd/overcloud/storage/ceph/", when: provisioner.nodes.ceph is defined or installer.overcloud.storage.external == "yes"}
+      - {role: "ospd/overcloud/storage/ceph/", when: provisioner.topology.nodes.ceph is defined or installer.overcloud.storage.external == "yes"}
       - {role: "ospd/overcloud/network/isolation/{{ installer.overcloud.network.isolation.type }}/", when: installer.overcloud.network.isolation.enable == "yes"}
       - {role: "ospd/overcloud/ssl/", when: installer.overcloud.use_ssl == "yes"}
 

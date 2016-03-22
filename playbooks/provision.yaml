@@ -33,22 +33,6 @@
         state: link
         src: "{{ lookup('env', 'PWD') }}/hosts-{{ lookup('env', 'USER') }}"
 
-- name: extend hosts file
-  hosts: openstack_nodes
-  gather_facts: no
-  sudo: yes
-  tasks:
-    - name: Template of nodes
-      template:
-        dest: "/tmp/ansible_hosts"
-        src: provisioner/templates/hosts.j2
-      register: templatehosts
-      when: provisioner.network.domain is defined
-
-    - name: Update hosts file
-      shell: "cat /tmp/ansible_hosts >> /etc/hosts"
-      when: templatehosts|changed
-
 - name: Break point
   hosts: localhost
   tasks:

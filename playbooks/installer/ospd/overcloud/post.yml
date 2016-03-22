@@ -19,9 +19,9 @@
     - role: common/ansible-ssh-config
       asc_external_network: "{{ (installer.overcloud.network.isolation.enable == 'yes')
         | ternary(installer.overcloud.network.template.content.parameter_defaults.ExternalNetCidr, '') }}"
-      asc_virthost_ssh_key_file: "{{ provisioner.hosts.host1.ssh_key_file }}"
-      asc_virthost_ssh_user: "{{ provisioner.hosts.host1.ssh_user }}"
-      asc_virthost_ssh_host: "{{ provisioner.hosts.host1.ssh_host }}"
+      asc_virthost_ssh_key_file: "{{ provisioner.host.key }}"
+      asc_virthost_ssh_user: "{{ provisioner.host.user }}"
+      asc_virthost_ssh_host: "{{ provisioner.host.address }}"
       asc_network_protocol: "{{ installer.overcloud.network.protocol }}"
 
 - name: Update the inventory file

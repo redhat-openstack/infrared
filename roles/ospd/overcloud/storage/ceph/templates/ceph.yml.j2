@@ -12,7 +12,7 @@ resource_registry:
 {% else %}
     ExtraConfig:
       ceph::profile::params::osds:
-{% for disk_name, disk_values in provisioner.nodes.ceph.disks.iteritems() %}
+{% for disk_name, disk_values in provisioner.topology.nodes.ceph.disks.iteritems() %}
 {% if disk_name != 'disk1' %}
        '{{ disk_values.dev }}':
            journal: ''

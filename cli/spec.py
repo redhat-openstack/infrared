@@ -1,12 +1,15 @@
 import ConfigParser
-import os
 
+import clg
+import os
 import yaml
 import yamlordereddictloader
 
-import clg
 from cli import exceptions
+from cli import logger
 from cli import utils
+
+LOG = logger.LOG
 
 SPEC_EXTENSION = '.spec'
 BUILTINS_REPLACEMENT = {
@@ -16,30 +19,174 @@ BUILTINS_REPLACEMENT = {
 TRIM_PARAMS = ['default', 'required']
 
 
-def cfg_file_to_dict(file_path):
+class ValueArgument(object):
     """
-    Creates a dictionary based on given configuration file.
-
-    :param file_path: Path to configuration file.
-    :return: dict based on a provided configuration file.
+    Default argument type for InfraRed Spec
+    Resolves "None" Types with priority defaults.
     """
-    config = ConfigParser.ConfigParser()
-    with open(file_path) as fd:
-        config.readfp(fd)
+    settings_dir = None
+    subcommand = None
 
-    res_dict = {}
-    for section in config.sections():
-        res_dict[section] = {}
-        for option, value in config.items(section):
-            # todo(obaranov) checking if value is list (for extra-vars).
-            # rework that check to be more beautiful later.
-            if value.startswith('[') and value.endswith(']'):
-                value = eval(str(value))
-            res_dict[section][option] = value
+    def __init__(self, value=None, required=None):
+        self.value = value
+        self.arg_name = None
+        self.required = None
 
-        res_dict[section].pop('__name__', None)
+    @classmethod
+    def get_app_attr(cls, attribute):
+        """Get class attributes from ancestor tree.
 
-    return res_dict
+        If attribute isn't initialized, search ancestor tree for it and
+        initialize attribute with the first match found.
+
+        :param attribute: class attribute.
+        :return:
+        """
+        if getattr(cls, attribute):
+            return getattr(cls, attribute)
+        try:
+            setattr(cls, attribute,
+                    super(ValueArgument, cls).get_app_attr(attribute))
+        except AttributeError:
+            pass
+        return getattr(cls, attribute)
+
+    @classmethod
+    def init_missing_args(cls, spec, args, settings_dir=None, subcommand=None):
+        """Initialize defaults for ValueArgument class.
+
+        argparse loads all unprovided arguments as None objects, instead of
+        the argument type specified in spec file. This method will set
+        argument types according to spec, so later we can iterate of arguments
+        by type.
+
+        :param spec: dict. spec file
+        :param args: dict. argparse arguments.
+        :param app_settings_dir: path to the base directory holding the
+            application's settings. App can be provisioner\installer\tester
+            and the path would be: settings/<app_name>/
+        """
+        cls.settings_dir = cls.get_app_attr("settings_dir") or settings_dir
+        cls.subcommand = cls.get_app_attr("subcommand") or subcommand
+
+        # todo(yfried): consider simply searching for option_name instead of
+        # "options"
+        for option_tree in utils.search_tree("options", spec):
+            for option_name, option_dict in option_tree.iteritems():
+                if issubclass(clg.TYPES.get(option_dict.get("type", object),
+                                            object),
+                              cls) and args[option_name] is None:
+                    args[option_name] = clg.TYPES.get(option_dict["type"])(
+                        required=option_dict.get("required")
+                    )
+                    # todo(yfried): this is a good place to trigger
+                    # args[option_name].resolve_value()
+
+    def resolve_value(self, arg_name, defaults=None):
+        """
+        Resolve the argument value with alternative input origins
+
+        Search order:
+            1. Given value from CLI parsing
+            2. Environment variables:
+                [Aa-Zz] -> [A-Z]
+                "-" -> "_"
+            3. defaults dict
+
+        :param arg_name: argument name from clg
+        :param defaults: dict containing default values.
+        """
+        defaults = defaults or {}
+        self.arg_name = arg_name
+        # override get default from env variables
+        # TODO (aopincar): IR env vars should be more uniques
+        if self.value is None:
+            self.value = os.getenv(self.arg_name.upper().replace("-", "_"))
+        # override get default from conf file
+        if self.value is None:
+            self.value = defaults.get(self.arg_name)
+
+
+class YamlFileArgument(ValueArgument):
+    """
+    YAML file input argument.
+    Loads legal YAML from file.
+    Will search for files in the settings directory before trying to resolve
+        absolute path.
+
+    For the argument name is "arg-name" and of subparser "SUBCOMMAND" of
+        application "APP", the default search path would be:
+
+         settings_dir/APP/SUBCOMMAND/arg/name/arg_value
+    """
+
+    def resolve_value(self, arg_name, defaults=None):
+        super(YamlFileArgument, self).resolve_value(arg_name, defaults)
+        search_first = os.path.join(self.get_app_attr("settings_dir"),
+                                    self.get_app_attr("subcommand"),
+                                    *arg_name.split("-"))
+        self.value = utils.load_yaml(self.value, search_first)
+
+
+class TopologyArgument(ValueArgument):
+    """Build topology dict from smaller YAML files by parsing input. """
+
+    def resolve_value(self, arg_name, defaults=None):
+        """
+        Merges topology files in a single topology dict.
+
+        :param clg_args: Dictionary based on cmd-line args parsed by clg
+        :param app_settings_dir: path to the base directory holding the
+            application's settings. App can be provisioner\installer\tester
+            and the path would be: settings/<app_name>/
+        """
+        super(TopologyArgument, self).resolve_value(arg_name, defaults)
+
+        # post process topology
+        topology_dir = os.path.join(self.get_app_attr("settings_dir"),
+                                    'topology')
+        topology_dict = {}
+        for topology_item in self.value.split(','):
+            if '_' in topology_item:
+                number, node_type = topology_item.split('_')
+            else:
+                raise exceptions.IRConfigurationException(
+                    "Topology node should be in format  <number>_<node role>. "
+                    "Current value: '{}' ".format(topology_item))
+            # todo(obaraov): consider moving topology to config on constant.
+            topology_dict[node_type] = utils.load_yaml(node_type + ".yaml",
+                                                       topology_dir)
+            topology_dict[node_type]['amount'] = int(number)
+
+        self.value = topology_dict
+
+
+class IniFileArgument(object):
+    """Creates a dictionary based on given configuration file."""
+
+    def __init__(self, value):
+        """Loads dict based on a provided configuration file.
+
+        :param value: Path to configuration file.
+        """
+
+        _config = ConfigParser.ConfigParser()
+        with open(value) as fd:
+            _config.readfp(fd)
+
+        res_dict = {}
+        for section in _config.sections():
+            res_dict[section] = {}
+            for option, val in _config.items(section):
+                # todo(obaranov) checking if val is list (for extra-vars).
+                # rework that check to be more beautiful later.
+                if val.startswith('[') and val.endswith(']'):
+                    val = eval(str(val))
+                res_dict[section][option] = val
+
+            res_dict[section].pop('__name__', None)
+
+        self.value = res_dict
 
 
 def parse_args(app_settings_dir, args=None):
@@ -54,6 +201,7 @@ def parse_args(app_settings_dir, args=None):
         and the path would be: settings/<app_name>/
     :param args: the list of arguments used for directing the method to work
         on something other than CLI input (for example, in testing).
+    :return: dict. Based on cmd-line args parsed from spec file
     """
     # Dict with the merging result of all app's specs
     app_specs = _get_specs(app_settings_dir)
@@ -65,6 +213,8 @@ def parse_args(app_settings_dir, args=None):
     # Pass trimmed spec to clg with modified help message
     cmd = clg.CommandLine(app_specs)
     clg_args = vars(cmd.parse(args))
+    ValueArgument.init_missing_args(app_specs, clg_args, app_settings_dir,
+                                    subcommand=clg_args["command0"])
 
     # Current sub-parser options
     sub_parser_options = subparsers_options.get(clg_args['command0'], {})
@@ -87,6 +237,7 @@ def override_default_values(clg_args, sub_parser_options):
     :param sub_parser_options: the sub-parser spec options
     """
     # Get the sub-parser's default values
+    # todo(yfried): move to init_missing_args
     defaults = {option: attributes['default']
                 for option, attributes in sub_parser_options.iteritems()
                 if 'default' in attributes}
@@ -99,35 +250,34 @@ def override_default_values(clg_args, sub_parser_options):
             subcommand=clg_args['command0'],
             defaults=defaults)
     else:
-        # Override defaults with env variables
-        _replace_defaults_with_env_arguments(defaults, clg_args)
+        # Override defaults with the ini file args if provided
+        file_args = getattr(clg_args.get('from-file'), "value", {}).get(
+            clg_args['command0'], {})
+        utils.dict_merge(defaults, file_args)
 
-        # Override defaults with the ini file args
-        _replace_with_ini_arguments(defaults, clg_args)
+        # Resolve defaults and load values to clg_args
+        for arg_name, arg_obj in clg_args.iteritems():
+            if isinstance(arg_obj, ValueArgument):
+                arg_obj.resolve_value(arg_name, defaults)
 
-        # Replace defaults with cli
-        utils.dict_merge(
-            clg_args, defaults,
-            conflict_resolver=utils.ConflictResolver.none_resolver)
-
-        _check_required_arguments(sub_parser_options, clg_args)
+        _check_required_arguments(clg_args)
 
 
-def _check_required_arguments(command_args, clg_args):
+def _check_required_arguments(clg_args):
     """
     Verify all the required arguments are set.
 
-    :param command_args: the dict with command spec options
     :param clg_args: Dictionary based on cmd-line args parsed by clg
     """
-    unset_args = []
+    # Only missing args initialize "required" attr in init_missing_args
+    unset_args = [arg.arg_name for arg in clg_args.values() if
+                  getattr(arg, 'required', False)]
+
+    # todo(yfried): revisit this in the future
     # only_args = []
-    for option, attributes in command_args.iteritems():
-        if attributes.get('required') and clg_args.get(option) is None:
-            unset_args.append(option)
-        # todo(yfried): revisit this in the future
-        # if 'requires_only' in attributes:
-        #     only_args.extend(attributes['requires_only'])
+    # for arg in clg_args.values():
+    #     if 'requires_only' in attributes:
+    #         only_args.extend(attributes['requires_only'])
 
     # if only_args:
     #     intersection = set(unset_args).intersection(set(only_args))
@@ -138,35 +288,6 @@ def _check_required_arguments(command_args, clg_args):
     if unset_args:
         raise exceptions.IRConfigurationException(
             "Required input arguments {} are not set!".format(unset_args))
-
-
-def _replace_with_ini_arguments(defaults, clg_args):
-    """
-    Replaces the default arguments values with the arguments from ini file.
-
-    :param defaults: the default arguments values.
-    :param clg_args: Dictionary based on cmd-line args parsed by clg
-    """
-    file_args = clg_args.get('from-file')
-    if file_args is not None and clg_args['command0'] in file_args:
-        utils.dict_merge(
-            file_args[clg_args['command0']], defaults,
-            conflict_resolver=utils.ConflictResolver.none_resolver)
-        defaults.update(file_args[clg_args['command0']])
-
-
-def _replace_defaults_with_env_arguments(defaults, args_dict):
-    """
-    Replaces default variables with the variables from env.
-
-    :param defaults: the default arguments values.
-    :param args_dict: the current command line arguments value
-    """
-    # TODO (aopincar): IR env vars should be more uniques
-    for arg_name, arg_value in args_dict.iteritems():
-        upper_arg_name = arg_name.upper()
-        if arg_value is None and upper_arg_name in os.environ:
-            defaults[arg_name] = os.getenv(upper_arg_name)
 
 
 def _generate_config_file(file_name, subcommand, defaults):
@@ -315,5 +436,9 @@ def _get_specs(app_settings_dir):
 
     return res
 
+
 # update clg types
-clg.TYPES.update({'IniFile': cfg_file_to_dict})
+clg.TYPES.update({'IniFile': IniFileArgument})
+clg.TYPES.update({'Value': ValueArgument})
+clg.TYPES.update({'Topology': TopologyArgument})
+clg.TYPES.update({'YamlFile': YamlFileArgument})
