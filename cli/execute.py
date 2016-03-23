@@ -58,7 +58,6 @@ def ansible_playbook(playbook, args, inventory="local_hosts"):
                       'vault_password_file': None, 'listtasks': None,
                       'output_file': None, 'ask_su_pass': False,
                       'new_vault_password_file': None,
-                      'inventory': 'local_hosts',
                       'forks': 5, 'listhosts': None, 'ssh_extra_args': '',
                       'tags': 'all', 'become_ask_pass': False,
                       'start_at_task': None,
