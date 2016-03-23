@@ -6,8 +6,6 @@ from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
 from ansible.inventory import Inventory
 from ansible.executor.playbook_executor import PlaybookExecutor
-# from ansible.playbook.play_context import PlayContext
-from ansible.utils.vars import load_extra_vars
 from ansible.utils.display import Display
 
 from cli import conf, exceptions, logger
@@ -46,7 +44,7 @@ def ansible_playbook(playbook, args, inventory="local_hosts"):
     variable_manager = VariableManager()
     loader = DataLoader()
 
-    #### Mocking ansible-playbook cli input ####
+    # ------------------ Mocking ansible-playbook cli input ------------------
     # These values were extracted from ansible-playbook runtime.
     # todo(yfried): decide which options are hardcoded and which should be
     # exposed to user
@@ -70,7 +68,6 @@ def ansible_playbook(playbook, args, inventory="local_hosts"):
                       'scp_extra_args': '', 'connection': 'smart',
                       'ask_vault_pass': False, 'timeout': 30, 'become': False,
                       'sudo_user': None, 'ssh_common_args': ''}
-
 
     module_path = CONF.get('defaults', 'modules')
     path_to_playbook = path.join(CONF.get('defaults', 'playbooks'), playbook)
@@ -98,5 +95,5 @@ def ansible_playbook(playbook, args, inventory="local_hosts"):
                             variable_manager=variable_manager, loader=loader,
                             options=options, passwords=passwords)
     results = pbex.run()
-    pass
-
+    if results:
+        raise exceptions.IRPlaybookFailedException(playbook)
