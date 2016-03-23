@@ -21,9 +21,10 @@ setup(
     version=cli.__VERSION__,
     packages=find_packages(),
     long_description=open(join(prj_dir, 'README.rst')).read(),
+    # todo(obaranov) generate entry points automatically by folder structure
     entry_points={
-        'console_scripts': ["ir-provision = cli.provision:main",
-                            "ir-install = cli.install:main"]
+        'console_scripts': ["ir-provision = cli.main:main_provision",
+                            "ir-install = cli.main:main_install"]
     },
     install_requires=reqs,
     author='Yair Fried',

@@ -47,8 +47,8 @@
         register: pool_name
 
       - name: create the external network
-        shell: "source ~/overcloudrc; neutron net-create {{ pool_name.stdout_lines|last }} --router:external --provider:physical_network {{ installer.undercloud.config.physical_network }} --provider:network_type {{ installer.undercloud.config.network_type }}"
+        shell: "source ~/overcloudrc; neutron net-create {{ pool_name.stdout_lines|last }} --router:external --provider:physical_network {{ installer.undercloud.network.physical_network }} --provider:network_type {{ installer.undercloud.network.network_type }}"
 
         # TODO: move the hard coded value to a variable
       - name: create the external subnet
-        shell: "source ~/overcloudrc; neutron subnet-create {{ pool_name.stdout_lines|last }} {{ installer.overcloud.network.template.content.parameter_defaults.ExternalNetCidr }} --name external_subnet --enable-dhcp=False --allocation-pool start=192.168.1.210,end=192.168.1.250 --gateway {{ installer.overcloud.network.template.content.parameter_defaults.ExternalInterfaceDefaultRoute }}"
+        shell: "source ~/overcloudrc; neutron subnet-create {{ pool_name.stdout_lines|last }} {{ installer.overcloud.network.isolation.template.content.parameter_defaults.ExternalNetCidr }} --name external_subnet --enable-dhcp=False --allocation-pool start=192.168.1.210,end=192.168.1.250 --gateway {{ installer.overcloud.network.isolation.template.content.parameter_defaults.ExternalInterfaceDefaultRoute }}"

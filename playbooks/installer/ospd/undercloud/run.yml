@@ -10,13 +10,13 @@
             dest: "/tmp/undercloud.conf"
             flat: yes
 
-      - name: edit configuration file per our needs
+      - name: edit network configuration file per our needs
         ini_file:
             dest: "/tmp/undercloud.conf"
             section: "DEFAULT"
             option: "{{ item.key }}"
             value: "{{ item.value }}"
-        with_dict: "{{ installer.undercloud.config }}"
+        with_dict: "{{ installer.undercloud.network }}"
         sudo: no
         delegate_to: localhost
 

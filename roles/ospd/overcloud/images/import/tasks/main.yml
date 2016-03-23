@@ -2,12 +2,12 @@
 - name: download the pre-built overcloud images
   get_url:
       dest: "~/{{ item.value }}"
-      url: "{{ installer.images.base_url }}/{{ item.value }}"
-  with_dict: "{{ installer.images.overcloud.files }}"
+      url: "{{ installer.overcloud.images.url }}/{{ item.value }}"
+  with_dict: "{{ installer.overcloud.images.files }}"
 
 - name: untar the images
   shell: "tar -xvf ~/{{ item.value }}"
-  with_dict: "{{ installer.images.overcloud.files }}"
+  with_dict: "{{ installer.overcloud.images.files }}"
 
 - name: install the libguestfs-tools to customize the image
   shell: "sudo yum install libguestfs-tools -y"

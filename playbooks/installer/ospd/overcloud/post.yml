@@ -18,7 +18,7 @@
   roles:
     - role: common/ansible-ssh-config
       asc_external_network: "{{ (installer.overcloud.network.isolation.enable == 'yes')
-        | ternary(installer.overcloud.network.template.content.parameter_defaults.ExternalNetCidr, '') }}"
+        | ternary(installer.overcloud.network.isolation.template.content.parameter_defaults.ExternalNetCidr, '') }}"
       asc_virthost_ssh_key_file: "{{ provisioner.host.key }}"
       asc_virthost_ssh_user: "{{ provisioner.host.user }}"
       asc_virthost_ssh_host: "{{ provisioner.host.address }}"
