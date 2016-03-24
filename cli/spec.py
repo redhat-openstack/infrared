@@ -260,31 +260,26 @@ def override_default_values(clg_args, sub_parser_options):
             if isinstance(arg_obj, ValueArgument):
                 arg_obj.resolve_value(arg_name, defaults)
 
-        _check_required_arguments(clg_args)
+        _check_required_arguments(clg_args, sub_parser_options)
 
 
-def _check_required_arguments(clg_args):
+def _check_required_arguments(clg_args, sub_parser_options):
     """
     Verify all the required arguments are set.
 
     :param clg_args: Dictionary based on cmd-line args parsed by clg
+    :param sub_parser_options: Dictionary with all the options attributes for
+        a sub-command.
     """
-    # Only missing args initialize "required" attr in init_missing_args
-    unset_args = [arg.arg_name for arg in clg_args.values() if
-                  getattr(arg, 'required', False)]
-
-    # todo(yfried): revisit this in the future
-    # only_args = []
-    # for arg in clg_args.values():
-    #     if 'requires_only' in attributes:
-    #         only_args.extend(attributes['requires_only'])
-
-    # if only_args:
-    #     intersection = set(unset_args).intersection(set(only_args))
-    #     if intersection:
-    #         raise exceptions.IRConfigurationException(
-    #             "Missing mandatory arguments: {}".format(
-    #                 list(intersection)))
+    unset_args = []
+    for option, attributes in sub_parser_options.iteritems():
+        if attributes.get('required'):
+            # safely get the attribute provided value
+            value = clg_args.get(option, None)
+            if hasattr(value, 'value'):
+                value = value.value
+            if value is None:
+                unset_args.append(option)
     if unset_args:
         raise exceptions.IRConfigurationException(
             "Required input arguments {} are not set!".format(unset_args))
