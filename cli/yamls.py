@@ -146,7 +146,12 @@ class Lookup(yaml.YAMLObject):
                 lookup_value = self.dict_lookup(lookup_key.split("."))
 
                 if isinstance(lookup_value, Lookup):
-                    return
+                    # here we have situation when one lookup is looking
+                    # for another. And this scenario is possible, e.g. when
+                    # the second lookup is looking to the real value.
+                    # in that case we need to just lookup to the final
+                    # non-lookup value.
+                    raise exceptions.IRInfiniteLookupException(lookup_key)
 
                 lookup_value = str(lookup_value)
 

@@ -77,3 +77,12 @@ class IRConfigurationException(IRException):
     General exception for any kind of configuration issues.
     """
     pass
+
+
+class IRInfiniteLookupException(IRException):
+    def __init__(self, value):
+        message = "Lookup value '{}' " \
+                  "is pointing to anther lookup value." \
+                  "\n Make sure lookup is pointing " \
+                  "to the non-lookup value".format(value)
+        super(IRInfiniteLookupException, self).__init__(message)
