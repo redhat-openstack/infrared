@@ -81,8 +81,5 @@ class IRConfigurationException(IRException):
 
 class IRInfiniteLookupException(IRException):
     def __init__(self, value):
-        message = "Lookup value '{}' " \
-                  "is pointing to anther lookup value." \
-                  "\n Make sure lookup is pointing " \
-                  "to the non-lookup value".format(value)
+        message = "Lookup circular reference detected for: {}".format(value)
         super(IRInfiniteLookupException, self).__init__(message)
