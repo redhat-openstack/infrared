@@ -73,9 +73,11 @@ class ValueArgument(object):
         # "options"
         for option_tree in utils.search_tree("options", spec):
             for option_name, option_dict in option_tree.iteritems():
-                if issubclass(clg.TYPES.get(option_dict.get("type", object),
-                                            object),
-                              cls) and args[option_name] is None:
+                if option_name in args and issubclass(
+                        clg.TYPES.get(option_dict.get(
+                            "type", object),
+                            object),
+                        cls) and args[option_name] is None:
                     args[option_name] = clg.TYPES.get(option_dict["type"])(
                         required=option_dict.get("required")
                     )
