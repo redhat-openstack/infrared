@@ -1,0 +1,17 @@
+resource_registry:
+    OS::TripleO::ControllerExtraConfigPre: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/pre_deploy/controller/cinder-netapp.yaml
+
+parameter_defaults:
+    CinderEnableNetappBackend: true
+    CinderEnableIscsiBackend: false
+    CinderNetappServerPort: '80'
+    CinderNetappSizeMultiplier: '1.2'
+    CinderNetappStorageFamily: 'ontap_7mode'
+    CinderNetappStorageProtocol: 'iscsi'
+    CinderNetappTransportType: 'http'
+    CinderNetappBackendName: 'tripleo_netapp'
+    CinderNetappLogin: 'automation'
+    CinderNetappVolumeList: 'vol_rhos_auto_iscsi'
+{% for key, val in installer.overcloud.storage.template.content.parameter_defaults.iteritems() %}
+    {{ key }}: '{{ val }}'
+{% endfor %}
