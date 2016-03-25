@@ -15,5 +15,5 @@ def main_install():
 
 
 if __name__ == '__main__':
-    #main_provision()
+    main_provision()
     main_install()

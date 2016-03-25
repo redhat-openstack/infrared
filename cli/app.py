@@ -64,13 +64,15 @@ class IRFactory(object):
                     spec_args['generate-conf-file']))
                 app_instance = None
             else:
-                app_instance = getattr(cls, '_create_' + app_name)(app_name, settings_dir, spec_args)
+                app_instance = getattr(cls, '_create_' + app_name)(
+                    app_name, settings_dir, spec_args)
         return app_instance
 
     @classmethod
     def _create_provisioner(cls, app_name, settings_dir, spec_args):
         return IRApplication(app_name,
-                             dict(cleanup='cleanup.yaml', main='provision.yaml'),
+                             dict(cleanup='cleanup.yaml',
+                                  main='provision.yaml'),
                              settings_dir, spec_args)
 
     @classmethod
