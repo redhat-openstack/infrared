@@ -41,7 +41,6 @@ def ansible_playbook(playbook, args, inventory="local_hosts"):
 
     LOG.info("Executing Playbook: %s" % playbook)
 
-    variable_manager = VariableManager()
     loader = DataLoader()
 
     # ------------------ Mocking ansible-playbook cli input ------------------
@@ -82,14 +81,12 @@ def ansible_playbook(playbook, args, inventory="local_hosts"):
     options = namedtuple('Options', hacked_options.keys())(**hacked_options)
 
     passwords = dict(vault_pass='secret')
+    variable_manager = VariableManager()
+    variable_manager.extra_vars = args["settings"]
     inventory = Inventory(loader=loader, variable_manager=variable_manager,
                           host_list=inventory)
     variable_manager.set_inventory(inventory)
 
-    loader = DataLoader()
-
-    variable_manager = VariableManager()
-    variable_manager.extra_vars = args["settings"]
     pbex = PlaybookExecutor(playbooks=[path_to_playbook], inventory=inventory,
                             variable_manager=variable_manager, loader=loader,
                             options=options, passwords=passwords)
