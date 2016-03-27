@@ -57,9 +57,9 @@
 
       - name: remove the networks we created
         virt_net:
-            name: "{{ item.value.name }}"
+            name: "{{ item }}"
             state: absent
-        with_dict: provisioner.topology.network
+        with_items: provisioner.topology.network.keys()
 
       - name: remove any existing disks that we created
         shell: "rm -f {{ item.key }}*disk*.qcow*"
