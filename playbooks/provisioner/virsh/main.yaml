@@ -294,6 +294,14 @@
             ansible_ssh_host="{{ item }}"
         with_items: groups['openstack_nodes']
 
+      - name: update the ssh host name of Loadbalancer machine
+        add_host:
+           name="{{ item }}"
+           ansible_ssh_host="{{ item }}"
+        with_items: groups['loadbalancer']
+        ignore_errors: True
+
+
       - name: update ansible with the new SSH settings
         ini_file:
             dest: "{{ inventory_dir }}/ansible.cfg"
