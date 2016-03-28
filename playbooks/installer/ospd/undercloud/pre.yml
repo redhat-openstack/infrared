@@ -72,3 +72,8 @@
       lineinfile:
           dest: "/etc/sudoers"
           line: "{{ installer.user.name }} ALL=(root) NOPASSWD:ALL"
+
+- name: Deploy and configure external loadbalancer instance
+  hosts: loadbalancer
+  roles:
+    - { role: "ospd/overcloud/loadbalancer/provision/", when: provisioner.topology.nodes.loadbalancer is defined }

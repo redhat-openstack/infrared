@@ -22,6 +22,7 @@
       - {role: "installer/ospd/overcloud/storage/netapp/", when: installer.overcloud.storage.backend is defined and installer.overcloud.storage.backend == "netapp"}
       - {role: "installer/ospd/overcloud/network/isolation/{{ installer.overcloud.network.isolation.type }}/", when: installer.overcloud.network.isolation.enable == "yes"}
       - {role: "installer/ospd/overcloud/ssl/", when: installer.overcloud.use_ssl == "yes"}
+      - {role: "installer/ospd/overcloud/loadbalancer/deploy/", when: provisioner.topology.nodes.loadbalancer is defined}
 
 - name: Install the overcloud
   hosts: undercloud
