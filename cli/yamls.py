@@ -141,12 +141,29 @@ class Lookup(yaml.YAMLObject):
                 break
 
             for a_lookup in lookups:
-                lookup_key = re.search('(\w+\.?)+ *?\}\}', a_lookup)
-                lookup_key = lookup_key.group(0).strip()[:-2].strip()
-                lookup_value = self.dict_lookup(lookup_key.split("."))
+                visited_lookups = []
+                lookup_value = a_lookup
+                while True:
+                    lookup_key = re.search('(\w+\.?)+ *?\}\}', a_lookup)
+                    if lookup_key is None:
+                        # if key cannot be found in lookup consider
+                        # it as a value and exit
+                        break
 
-                if isinstance(lookup_value, Lookup):
-                    return
+                    lookup_key = lookup_key.group(0).strip()[:-2].strip()
+                    # check if lookups are in circular reference
+                    if lookup_key in visited_lookups:
+                        raise exceptions.IRInfiniteLookupException(
+                            visited_lookups)
+                    visited_lookups.append(lookup_key)
+                    lookup_value = self.dict_lookup(lookup_key.split("."))
+
+                    if not isinstance(lookup_value, Lookup):
+                        # value was resolved
+                        break
+                    else:
+                        # we have another lookup
+                        a_lookup = lookup_value.key
 
                 lookup_value = str(lookup_value)
 

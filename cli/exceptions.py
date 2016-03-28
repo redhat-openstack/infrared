@@ -77,3 +77,9 @@ class IRConfigurationException(IRException):
     General exception for any kind of configuration issues.
     """
     pass
+
+
+class IRInfiniteLookupException(IRException):
+    def __init__(self, value):
+        message = "Lookup circular reference detected for: {}".format(value)
+        super(IRInfiniteLookupException, self).__init__(message)
