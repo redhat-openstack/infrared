@@ -1,8 +1,11 @@
 ---
 backend: "netapp"
+protocol: "nfs"
 template:
     content:
         parameter_defaults:
             CinderNetappPassword: "{{ !lookup private.storage.netapp.CinderNetappPassword }}"
             CinderNetappServerHostname: "{{ !lookup private.storage.netapp.CinderNetappServerHostname  }}"
             CinderNetappLogin: "{{ !lookup private.storage.netapp.CinderNetappLogin }}"
+            CinderNetappNfsShares: "{{ !lookup private.storage.netapp.CinderNetappNfsShares }}"
+            CinderNetappNfsMountOptions: "{{ !lookup private.storage.netapp.CinderNetappNfsMountOptions }}"
