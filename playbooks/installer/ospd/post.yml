@@ -51,4 +51,4 @@
 
         # TODO: move the hard coded value to a variable
       - name: create the external subnet
-        shell: "source ~/overcloudrc; neutron subnet-create {{ pool_name.stdout_lines|last }} {{ installer.overcloud.network.template.content.parameter_defaults.ExternalNetCidr }} --name external_subnet --enable-dhcp=False --allocation-pool start=192.168.1.210,end=192.168.1.250 --gateway {{ installer.overcloud.network.template.content.parameter_defaults.ExternalInterfaceDefaultRoute }}"
+        shell: "source ~/overcloudrc; neutron subnet-create {{ pool_name.stdout_lines|last }} 192.168.1.0/24 --name external_subnet --enable-dhcp=False --allocation-pool start=192.168.1.210,end=192.168.1.250 --gateway 192.168.1.1"
