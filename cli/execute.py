@@ -1,6 +1,6 @@
 from os import path
-
 from collections import namedtuple
+
 import ansible.constants
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
@@ -16,9 +16,6 @@ CONF = conf.config
 VERBOSITY = 0
 HOSTS_FILE = "hosts"
 PLAYBOOKS = ["provision", "install", "test", "collect-logs", "cleanup"]
-
-assert "playbooks" == path.basename(
-    CONF.get('defaults', 'playbooks')), "Bad path to playbooks"
 
 
 def ansible_playbook(playbook, args, inventory="local_hosts"):
