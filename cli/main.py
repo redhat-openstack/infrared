@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import logging
+import inspect
 import os
 
 import yaml
@@ -52,8 +53,7 @@ class IRFactory(object):
         supported_specs = cls.get_supported_specs(config)
 
         if spec_name not in supported_specs:
-            raise exceptions.IRUnknownSpecException(
-                "Spec is not supported: '{}'".format(spec_name))
+            raise exceptions.IRUnknownSpecException(spec_name)
         else:
             spec_settings_dir = os.path.join(settings_dir, spec_name)
             spec_args = spec.parse_args(settings_dir, spec_settings_dir, args)
@@ -220,20 +220,26 @@ class IRSpec(object):
             print output
 
 
-# todo(obaranov) consider removing separate methods.
-# generate entry points and methods below using IRFactory.get_supported_specs
-def main_provision():
-    spec = IRFactory.create("provisioner", CONF)
-    if spec:
-        spec.run()
+def main(spec_name):
+    """
+    The start function for a spec.
+    """
+    spec_runner = IRFactory.create(spec_name, CONF)
+    if spec_runner:
+        spec_runner.run()
 
 
-def main_install():
-    spec = IRFactory.create("installer", CONF)
-    if spec:
-        spec.run()
+def entry_point():
+    """
+    The main entry point for the ir-* scripts.
+    """
+    filename = inspect.stack()[1][1]
+    spec_name = os.path.basename(filename).replace('ir-', '', 1)
+    LOG.debug("Starting entry point for {}".format(spec_name))
+    main(spec_name)
 
 
 if __name__ == '__main__':
-    main_provision()
-    main_install()
+    # This is mainly for debug purposed
+    main('provisioner')
+    main('installer')

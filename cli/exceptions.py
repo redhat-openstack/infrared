@@ -66,10 +66,12 @@ class IRUnknownSpecException(IRException):
     This exceptions is raised when unknown application is
      started by user.
     """
+
     def __init__(self, app_name):
         self.app_name = app_name
         super(IRUnknownSpecException, self).__init__(
-            "Application is unknown: '{}'".format(app_name))
+            "Spec is unknown: '{}'. Make sure the infrared configuration "
+            "file has a section for that spec.".format(app_name))
 
 
 class IRConfigurationException(IRException):
