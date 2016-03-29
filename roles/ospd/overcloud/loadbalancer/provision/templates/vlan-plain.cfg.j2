@@ -1,0 +1,11 @@
+DEVICE="{{ provisioner.topology.nodes.loadbalancer.network.oc_interface }}"
+BOOTPROTO="static"
+ONBOOT="yes"
+TYPE="Ethernet"
+IPADDR={{ provisioner.topology.nodes.loadbalancer.network.plain.ip | ipaddr('address') }}
+NETMASK={{ provisioner.topology.nodes.loadbalancer.network.plain.ip | ipaddr('netmask') }}
+GATEWAY={{ provisioner.topology.nodes.loadbalancer.network.plain.gateway }}
+PERSISTENT_DHCLIENT="yes"
+DNS1={{ provisioner.topology.nodes.loadbalancer.network.plain.dns1 }}
+NM_CONTROLLED=no
+METRIC=20
