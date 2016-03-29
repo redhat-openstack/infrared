@@ -4,7 +4,6 @@ from pip import req
 from setuptools import setup, find_packages
 
 import cli
-from cli import main, conf
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
 install_reqs = req.parse_requirements('requirements.txt', session=False)
@@ -18,12 +17,10 @@ def generate_entry_scripts():
     """
     Generates the entry points for the ir-* scripts.
     """
-    # 1 try to get spec names from the configuration
-    # if cfg file is already provided
-    specs = main.IRFactory.get_supported_specs(conf.config)
-    if not specs:
-        # 2 try to read from the file structure
-        specs = next(os.walk(conf.config.get('defaults', 'settings')))[1]
+
+    # at this point we don't have any packages installed
+    # so hard-code settings folder for now here
+    specs = next(os.walk('settings'))[1]
 
     return ["ir-{0} = cli.main:entry_point".format(spec_name)
             for spec_name in
