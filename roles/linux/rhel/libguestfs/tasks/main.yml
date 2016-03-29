@@ -1,0 +1,21 @@
+# TODO: remove this once libguestfs is updated to 1.30 on RHEL
+- name: remove existing libguestfs packages
+  become_user: root
+  yum:
+      state: absent
+      name: "libguestfs"
+
+- name: install from RPM
+  become_user: root
+  shell: "wget {{ private.rpms.base_url }}/{{ item }} --no-check-certificate && yum localinstall -y {{ item }}"
+  with_items:
+      - libguestfs-1.32.3-1.el7.x86_64.rpm
+      - libguestfs-tools-c-1.32.3-1.el7.x86_64.rpm
+      - libguestfs-xfs-1.32.3-1.el7.x86_64.rpm
+
+- name: start libvirtd
+  become_user: root
+  service:
+      name: libvirtd
+      state: started
+      enabled: yes

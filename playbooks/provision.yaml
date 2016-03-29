@@ -33,6 +33,17 @@
         state: link
         src: "{{ lookup('env', 'PWD') }}/hosts-{{ lookup('env', 'USER') }}"
 
+- name: Check SSH connection
+  hosts: all:!localhost
+  gather_facts: no
+  tasks:
+      - name: wait for hosts to be reachable
+        wait_for:
+            host: "{{ ansible_ssh_host }}"
+            search_regex: OpenSSH
+            delay: 10
+        delegate_to: localhost
+
 - name: Break point
   hosts: localhost
   tasks:
