@@ -1,10 +1,9 @@
 ---
 - name: create VLAN interface for internal_api network
-  become: yes
-  become_method: sudo
+  become_user: root
   template: src=vlan-internal_api.cfg.j2
-            dest=/etc/sysconfig/network-scripts/ifcfg-{{ provisioner.topology.nodes.loadbalancer.network.undercloud.oc_interface }}.101
+            dest=/etc/sysconfig/network-scripts/ifcfg-{{ provisioner.topology.nodes.loadbalancer.network.undercloud.oc_interface }}.{{ installer.overcloud.network.template.content.parameter_defaults.InternalApiNetworkVlanID }}
   when: provisioner.topology.nodes.loadbalancer.network.internal_api is defined
 
 - name: Start internal_api interface
-  shell: sudo /usr/sbin/ifup {{ provisioner.topology.nodes.loadbalancer.network.undercloud.oc_interface }}.101
+  shell: sudo /usr/sbin/ifup {{ provisioner.topology.nodes.loadbalancer.network.undercloud.oc_interface }}.{{ installer.overcloud.network.template.content.parameter_defaults.InternalApiNetworkVlanID }}
