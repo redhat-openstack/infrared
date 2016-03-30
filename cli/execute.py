@@ -18,15 +18,18 @@ HOSTS_FILE = "hosts"
 PLAYBOOKS = ["provision", "install", "test", "collect-logs", "cleanup"]
 
 
-def ansible_playbook(playbook, args, inventory="local_hosts"):
+def ansible_playbook(playbook, verbose=2, settings=None,
+                     inventory="local_hosts"):
+    """Wraps the 'ansible-playbook' CLI.
+
+     :param playbook: the playbook to invoke
+     :param verbose: Ansible verbosity level
+     :param settings: dict with Ansible variables.
+     :param inventory: the inventory file to use, default: local_hosts
     """
-    Wraps the 'ansible-playbook' CLI.
-     :playbook: the playbook to invoke
-     :args: all arguments passed for the playbook
-     :inventory: the inventory file to use, default: local_hosts
-    """
-    verbosity = args["verbose"]
-    display = Display(verbosity=verbosity)
+    settings = settings or {}
+
+    display = Display(verbosity=verbose)
     import __main__ as main
     setattr(main, "display", display)
 
@@ -69,7 +72,7 @@ def ansible_playbook(playbook, args, inventory="local_hosts"):
 
     hacked_options.update(
         module_path=module_path,
-        verbosity=verbosity,
+        verbosity=verbose,
         forks=ansible.constants.DEFAULT_FORKS,
         remote_user=ansible.constants.DEFAULT_REMOTE_USER,
         private_key_file=ansible.constants.DEFAULT_PRIVATE_KEY_FILE,
@@ -79,7 +82,7 @@ def ansible_playbook(playbook, args, inventory="local_hosts"):
 
     passwords = dict(vault_pass='secret')
     variable_manager = VariableManager()
-    variable_manager.extra_vars = args["settings"]
+    variable_manager.extra_vars = settings
     inventory = Inventory(loader=loader, variable_manager=variable_manager,
                           host_list=inventory)
     variable_manager.set_inventory(inventory)
