@@ -12,9 +12,9 @@ virt-install --name {{ node_name }}{% if node_values.amount > 1 %}{{ num }}{% en
 {# Hard coding network names because undercloud needs "data" network to map
  to the NIC defined in ospd.yml::installer.undercloud.config.local_interface
     todo(yfried): remove hardcoded network names#}
-            --network network: data \
-            --network network: management \
-            --network network: external \
+            --network network:data \
+            --network network:management \
+            --network network:external \
              --virt-type kvm \
              --cpu host-model \
              --ram {{ node_values.memory }} \

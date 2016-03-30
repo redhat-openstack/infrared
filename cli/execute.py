@@ -1,7 +1,9 @@
 from os import path
 from collections import namedtuple
 
+# this import loads ansible.cfg
 import ansible.constants
+
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
 from ansible.inventory import Inventory
@@ -12,10 +14,6 @@ from cli import conf, exceptions, logger
 
 LOG = logger.LOG
 CONF = conf.config
-
-VERBOSITY = 0
-HOSTS_FILE = "hosts"
-PLAYBOOKS = ["provision", "install", "test", "collect-logs", "cleanup"]
 
 
 def ansible_playbook(playbook, verbose=2, settings=None,
@@ -34,8 +32,6 @@ def ansible_playbook(playbook, verbose=2, settings=None,
     setattr(main, "display", display)
 
     if not playbook:
-        LOG.error("No playbook to execute (%s)" % PLAYBOOKS)
-
         # TODO: remove all IRexceptions and change to regular Python exceptions
         raise exceptions.IRFileNotFoundException
 
@@ -57,7 +53,7 @@ def ansible_playbook(playbook, verbose=2, settings=None,
                       'vault_password_file': None, 'listtasks': None,
                       'output_file': None, 'ask_su_pass': False,
                       'new_vault_password_file': None,
-                      'forks': 5, 'listhosts': None, 'ssh_extra_args': '',
+                      'listhosts': None, 'ssh_extra_args': '',
                       'tags': 'all', 'become_ask_pass': False,
                       'start_at_task': None,
                       'flush_cache': None, 'step': None, 'module_path': None,
@@ -76,7 +72,6 @@ def ansible_playbook(playbook, verbose=2, settings=None,
         forks=ansible.constants.DEFAULT_FORKS,
         remote_user=ansible.constants.DEFAULT_REMOTE_USER,
         private_key_file=ansible.constants.DEFAULT_PRIVATE_KEY_FILE,
-
     )
     options = namedtuple('Options', hacked_options.keys())(**hacked_options)
 
