@@ -18,9 +18,9 @@
             dest: "~/overcloud_deploy.sh"
             mode: 0755
   roles:
-      - {role: "ospd/overcloud/storage/{{ installer.overcloud.storage.backend }}/", when: installer.overcloud.storage.backend is defined}
-      - {role: "ospd/overcloud/network/isolation/{{ installer.overcloud.network.isolation.type | default('no-isolation') }}/", when: installer.overcloud.network.isolation.enable == "yes"}
-      - {role: "ospd/overcloud/ssl/", when: installer.overcloud.use_ssl == "yes"}
+      - {role: "installer/ospd/overcloud/storage/{{ installer.overcloud.storage.backend }}/", when: installer.overcloud.storage.backend is defined}
+      - {role: "installer/ospd/overcloud/network/isolation/{{ installer.overcloud.network.isolation.type | default('no-isolation') }}/", when: installer.overcloud.network.isolation.enable == "yes"}
+      - {role: "installer/ospd/overcloud/ssl/", when: installer.overcloud.use_ssl == "yes"}
 
 - name: Install the overcloud
   hosts: undercloud

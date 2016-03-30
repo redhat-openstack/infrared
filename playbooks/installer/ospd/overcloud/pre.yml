@@ -7,13 +7,23 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   pre_tasks:
+      - name: copy our public key to inject the images of the overcloud nodes
+        copy:
+            src: "{{ inventory_dir }}/id_rsa.pub"
+            dest: "/home/{{ installer.user.name }}/id_rsa.pub"
+            mode: 0600
+
       - fail:
             msg: "Stopping before building/importing the images per user request"
         when: break is defined and break == "before_images"
+
   roles:
-      - {role: ospd/overcloud/images/build, when: installer.overcloud.images.task == "build"}
-      - {role: ospd/overcloud/images/import, when: installer.overcloud.images.task == "import"}
+      - {role: installer/ospd/images/build, when: installer.overcloud.images.task == "build"}
+      - {role: installer/ospd/images/import, when: installer.overcloud.images.task == "import"}
   tasks:
+      - name: remove tar files for space
+        shell: "rm -f *.tar"
+
       - name: upload the overcloud images to glance
         shell: "source ~/stackrc; openstack overcloud image upload"
 
@@ -39,33 +49,21 @@
                 ResultActive=yes
             dest: "/etc/polkit-1/localauthority/50-local.d/50-libvirt-user-{{ installer.user.name }}.pkla"
 
-      - name: make sure sshpass installed
-        yum:
-            name: sshpass
-            state: latest
-        delegate_to: undercloud
-
-      - name: SSH copy ID to the hypervisor
+      - name: copy our undercloud public key
         become: yes
         become_user: "{{ installer.user.name }}"
-        shell: "sshpass -p '{{ installer.user.password }}' ssh-copy-id {{ installer.user.name }}@{{ provisioner.topology.network.management.ip_address }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        fetch:
+            src: "/home/{{ installer.user.name }}/.ssh/id_rsa.pub"
+            dest: "{{ inventory_dir }}/id_rsa_undercloud.pub"
+            flat: yes
         delegate_to: undercloud
 
-      - name: "DEBUG - print mac addresses for hosts - DEBUG"
-        shell: "virsh dumpxml {{ item }} | grep mac"
-        with_items: groups['openstack_nodes'] | difference(["virthost"]) | difference(["undercloud"])
-        ignore_errors: true
-
-      - name: Print the relevant openstack_nodes
-        debug:
-            msg: "{{ item }}"
-        with_items: groups['openstack_nodes'] | difference(["virthost"]) | difference(["undercloud"])
-
-      - name: Print the MAC addresses for instackenv.json
-        debug:
-            msg: "MAC address for instackenv.json: {{ hostvars[item]['ansible_%s' % installer.undercloud.network.local_interface].macaddress }}"
-        with_items: groups['openstack_nodes'] | difference(["virthost"]) | difference(["undercloud"])
-        ignore_errors: true
+      - name: Add the undercloud public key to the virthost
+        authorized_key:
+            user: "{{ installer.user.name }}"
+            key: "{{ item }}"
+        with_file:
+          - "{{ inventory_dir }}/id_rsa_undercloud.pub"
 
       - name: prepare instack.json
         become: yes
@@ -80,13 +78,6 @@
         become_user: "{{ installer.user.name }}"
         shell: "cat ~/instack_template.json | jq --arg key \"$(cat ~/.ssh/id_rsa)\" '. | .nodes[].pm_password=$key | .[\"ssh-key\"]=$key'> instackenv.json"
         delegate_to: undercloud
-
-      - name: "DEBUG - print instackenv.json - DEBUG"
-        become: yes
-        become_user: "{{ installer.user.name }}"
-        shell: "cat ~/instack_template.json"
-        delegate_to: undercloud
-        ignore_errors: true
 
 - name: Validate our instackenv.json file
   hosts: undercloud
@@ -104,13 +95,6 @@
 
       - name: register our hosts to instack
         shell: "source ~/stackrc; openstack baremetal import --json instackenv.json"
-
-      - fail:
-            msg: "Stopping before kernel and ramdisk assignment per user request"
-        when: break is defined and break == "before_kernel_ramdisk_assignment"
-
-      - name: assign the kernel and ramdisk before introspection begins
-        shell: "source ~/stackrc; openstack baremetal configure boot"
 
 # In case of virthost we need to fix the pxe_ssh limitation of correctly assigning the MAC address to the iPXE script
 - name: Fixing the pxe_ssh and iPXE
@@ -148,6 +132,13 @@
   gather_facts: no
   tasks:
       - fail:
+            msg: "Stopping before kernel and ramdisk assignment per user request"
+        when: break is defined and break == "before_kernel_ramdisk_assignment"
+
+      - name: assign the kernel and ramdisk before introspection begins
+        shell: "source ~/stackrc; openstack baremetal configure boot"
+
+      - fail:
             msg: "Stopping before introspection per user request"
         when: break is defined and break == "before_introspection"
 
@@ -179,7 +170,7 @@
         shell: "source ~/stackrc; openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' baremetal"
 
       - name: create the flavors for our machines
-        shell: "source ~/stackrc; openstack flavor create --id auto --ram {{ item.value.memory | int - 100 }} --disk {{ item.value.disks.disk1.size | regex_replace('(?P<num>[0-9]+).*$', '\\g<num>') | int - 10 }} --vcpus {{ item.value.cpu }} {{ item.key }}-{{ item.key | to_uuid }}"
+        shell: "source ~/stackrc; openstack flavor create --id auto --ram {{ item.value.memory | int - 100 }} --disk {{ item.value.disks.disk1.size | regex_replace('(?P<num>[0-9]+).*$', '\\g<num>') | int - 10 }} --vcpus {{ item.value.cpu | int - 1 }} {{ item.key }}-{{ item.key | to_uuid }}"
         register: flavor_result
         when: "'{{ item.key }}' != 'undercloud'"
         failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item.key }} already exists') != -1"
