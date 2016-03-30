@@ -1,0 +1,10 @@
+---
+- name: create VLAN interface for internal_api network
+  become: yes
+  become_method: sudo
+  template: src=vlan-internal_api.cfg.j2
+            dest=/etc/sysconfig/network-scripts/ifcfg-{{ provisioner.topology.nodes.loadbalancer.network.undercloud.oc_interface }}.101
+  when: provisioner.topology.nodes.loadbalancer.network.internal_api is defined
+
+- name: Start internal_api interface
+  shell: sudo /usr/sbin/ifup {{ provisioner.topology.nodes.loadbalancer.network.undercloud.oc_interface }}.101
