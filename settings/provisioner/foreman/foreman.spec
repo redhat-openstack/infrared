@@ -5,7 +5,7 @@ subparsers:
         groups:
             - title: foreman
               options:
-                  foreman-username:
+                  foreman-user:
                       type: Value
                       help: User to Forman server
                       required: True
@@ -27,7 +27,7 @@ subparsers:
                       default: cycle
                   foreman-wait:
                       type: Value
-#                      action: store_true
+                      default: true
                       help: Whether we should wait for the host given the 'rebuild' state was set.
             - title: host
               options:
