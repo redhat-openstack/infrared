@@ -3,7 +3,7 @@
 
 #this is required to have the 22 port free on haproxy VIP's
 - name: setup ssh for loadbalancer
-  lineinfile: dest=/etc/ssh/sshd_config line="ListenAddress {{ provisioner.topology.nodes.loadbalancer.network.plain.ip | ipaddr('address') }}"
+  lineinfile: dest=/etc/ssh/sshd_config line="ListenAddress {{ installer.overcloud.loadbalancer.network.plain.ip | ipaddr('address') }}"
 
 - name: restart sshd service
   service: name=sshd state=restarted
@@ -14,33 +14,33 @@
 
 - name: create VLAN interface for plain network
   template: src=vlan-plain.cfg.j2
-            dest=/etc/sysconfig/network-scripts/ifcfg-{{ provisioner.topology.nodes.loadbalancer.network.oc_interface }}
-  when: provisioner.topology.nodes.loadbalancer.network.plain is defined
+            dest=/etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.oc_interface }}
+  when: installer.overcloud.loadbalancer.network.plain is defined
 
 - name: create VLAN interface for external network
   template: src=vlan-external.cfg.j2
-            dest=/etc/sysconfig/network-scripts/ifcfg-{{ provisioner.topology.nodes.loadbalancer.network.ex_interface }}
-  when: provisioner.topology.nodes.loadbalancer.network.external is defined
+            dest=/etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.ex_interface }}
+  when: installer.overcloud.loadbalancer.network.external is defined
 
 - name: create VLAN interface for internal_api network
   template: src=vlan-internal_api.cfg.j2
-            dest=/etc/sysconfig/network-scripts/ifcfg-{{ provisioner.topology.nodes.loadbalancer.network.oc_interface }}.101
-  when: provisioner.topology.nodes.loadbalancer.network.internal_api is defined
+            dest=/etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.oc_interface }}.101
+  when: installer.overcloud.loadbalancer.network.internal_api is defined
 
 - name: create VLAN interface for storage network
   template: src=vlan-storage.cfg.j2
-            dest=/etc/sysconfig/network-scripts/ifcfg-{{ provisioner.topology.nodes.loadbalancer.network.oc_interface }}.301
-  when: provisioner.topology.nodes.loadbalancer.network.storage is defined
+            dest=/etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.oc_interface }}.301
+  when: installer.overcloud.loadbalancer.network.storage is defined
 
 - name: create VLAN interface for storage_mgmnt network
   template: src=vlan-storage_mgmt.cfg.j2
-            dest=/etc/sysconfig/network-scripts/ifcfg-{{ provisioner.topology.nodes.loadbalancer.network.oc_interface }}.401
-  when: provisioner.topology.nodes.loadbalancer.network.storage_mgmnt is defined
+            dest=/etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.oc_interface }}.401
+  when: installer.overcloud.loadbalancer.network.storage_mgmnt is defined
 
 - name: create VLAN interface for tenant network
   template: src=vlan-tenant.cfg.j2
-            dest=/etc/sysconfig/network-scripts/ifcfg-{{ provisioner.topology.nodes.loadbalancer.network.oc_interface }}.201
-  when: provisioner.topology.nodes.loadbalancer.network.tenant is defined
+            dest=/etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.oc_interface }}.201
+  when: installer.overcloud.loadbalancer.network.tenant is defined
 
 - name: Install release tool on loadbancer
   command: "yum localinstall -y {{ product.rpm }}"

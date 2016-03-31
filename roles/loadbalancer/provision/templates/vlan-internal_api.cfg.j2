@@ -1,0 +1,10 @@
+DEVICE={{ installer.overcloud.loadbalancer.network.oc_interface }}.{{ installer.overcloud.network.template.content.parameter_defaults.InternalApiNetworkVlanID }}
+BOOTPROTO=static
+ONBOOT=yes
+IPADDR1={{ installer.overcloud.loadbalancer.network.internal_api.vip | ipaddr('address') }}
+IPADDR2={{ installer.overcloud.loadbalancer.network.redis.vip | ipaddr('address') }}
+PREFIX1={{ installer.overcloud.loadbalancer.network.internal_api.vip | ipaddr('prefix') }}
+PREFIX2={{ installer.overcloud.loadbalancer.network.redis.vip | ipaddr('prefix') }}
+USERCTL=no
+VLAN=yes
+NM_CONTROLLED=no
