@@ -232,7 +232,7 @@ class ForemanManager(object):
         if mgmt_strategy == 'foreman':
             self.bmc(host_id, mgmt_action)
         elif mgmt_strategy == 'ipmi':
-            host = "{0}.{1}".format(building_host.get('interfaces')[0].get('name'),building_host.get('domain_name'))
+            host = "{0}.{1}".format(building_host.get('interfaces')[0].get('name'), building_host.get('domain_name'))
             self.ipmi(host, mgmt_action)
         else:
             raise Exception("{0} is not a supported "
@@ -245,7 +245,7 @@ class ForemanManager(object):
             return_code = subprocess.call(command.split(" "))
 
             if return_code > 0:
-                raise Exception("Could not reach {0}, rc={1}, cmd={2}".format(host_id,return_code,command))
+                raise Exception("Could not reach {0}, rc={1}, cmd={2}".format(host_id, return_code, command))
 
 def main():
     module = AnsibleModule(

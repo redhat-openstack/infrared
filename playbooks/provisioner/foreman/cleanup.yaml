@@ -1,5 +1,17 @@
 ---
-- include: pre.yaml
+- name: Pre tasks
+  hosts: localhost
+  gather_facts: no
+  tasks:
+      - name: Add candidate hosts to host list
+        add_host:
+            name: "{{ provisioner.host.address }}"
+            groups: controller
+            node_label: controller
+            ansible_fqdn: "{{ provisioner.host.address }}"
+            ansible_ssh_user: "{{ provisioner.host.user }}"
+            ansible_ssh_host: "{{ provisioner.host.address }}"
+            ansible_ssh_private_key_file: "{{ provisioner.host.key }}"
 
 - name: Rebuild nodes - Foreman
   hosts: controller
