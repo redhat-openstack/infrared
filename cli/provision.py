@@ -164,9 +164,13 @@ class IRApplication(object):
                 default_flow_style=False))
 
             if self.args['cleanup']:
-                cli.execute.ansible_playbook(CLEANUP_PLAYBOOK, self.args)
+                cli.execute.ansible_playbook(CLEANUP_PLAYBOOK,
+                                             verbose=self.args["verbose"],
+                                             settings=self.args["settings"])
             else:
-                cli.execute.ansible_playbook(PROVISION_PLAYBOOK, self.args)
+                cli.execute.ansible_playbook(PROVISION_PLAYBOOK,
+                                             verbose=self.args["verbose"],
+                                             settings=self.args["settings"])
 
     def collect_settings(self):
         settings_files = self.sub_command.get_settings_files()
