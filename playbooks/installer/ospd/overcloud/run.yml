@@ -18,7 +18,8 @@
             dest: "~/overcloud_deploy.sh"
             mode: 0755
   roles:
-      - {role: "installer/ospd/overcloud/storage/{{ installer.overcloud.storage.backend }}/", when: installer.overcloud.storage.backend is defined}
+      - {role: "installer/ospd/overcloud/storage/ceph/", when: installer.overcloud.storage.backend is defined and installer.overcloud.storage.backend == "ceph"}
+      - {role: "installer/ospd/overcloud/storage/netapp/", when: installer.overcloud.storage.backend is defined and installer.overcloud.storage.backend == "netapp"}
       - {role: "installer/ospd/overcloud/network/isolation/{{ installer.overcloud.network.isolation.type | default('no-isolation') }}/", when: installer.overcloud.network.isolation.enable == "yes"}
       - {role: "installer/ospd/overcloud/ssl/", when: installer.overcloud.use_ssl == "yes"}
 

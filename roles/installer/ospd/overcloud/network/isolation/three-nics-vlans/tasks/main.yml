@@ -32,17 +32,17 @@
 - name: append the network isolation template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '                       -e /usr/share/openstack-tripleo-heat-templates/environments/{{ isolation_file }} \\'
+      line: '                       -e /usr/share/openstack-tripleo-heat-templates/environments/{{ isolation_file }} \'
 
 - name: append the network environment template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '                       -e {{ installer.overcloud.template_base }}/network-environment.yaml \\'
+      line: '                       -e {{ installer.overcloud.template_base }}/network-environment.yaml \'
 
 - name: append the net-three-nics-vlans template line base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '                       -e {{ installer.overcloud.template_base }}/{{ nics_file }} \\'
+      line: '                       -e {{ installer.overcloud.template_base }}/{{ nics_file }} \'
 
 - name: add the ipv6 address
   shell: "sudo ip addr add {{ installer.overcloud.network.isolation.template.content.parameter_defaults.ExternalInterfaceDefaultRoute }}/64 dev eth2"

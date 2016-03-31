@@ -170,13 +170,13 @@ class IRSpec(object):
             if self.args['cleanup']:
                 execute.ansible_playbook(
                     self.playbooks['cleanup'],
-                    self.args,
-                    inventory=self.args['inventory'])
+                    verbose=self.args['verbose'],
+                    settings=self.args['settings'])
             else:
                 execute.ansible_playbook(
                     self.playbooks['main'],
-                    self.args,
-                    inventory=self.args['inventory'])
+                    verbose=self.args['verbose'],
+                    settings=self.args['settings'])
 
     def collect_settings(self):
         settings_files = self.sub_command.get_settings_files()

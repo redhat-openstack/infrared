@@ -1,7 +1,13 @@
 from datetime import datetime
 
+try:
+    from ansible.plugins.callback import CallbackBase
+    ANSIBLE2 = True
+except ImportError:
+    ANSIBLE2 = False
 
-class CallbackModule(object):
+
+class CallbackModule(CallbackBase if ANSIBLE2 else object):
     __color = '\033[01;30m'
     __endcolor = '\033[00m'
 

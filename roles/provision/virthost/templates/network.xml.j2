@@ -1,8 +1,8 @@
 <network>
-  <name>{{ item.value.name }}</name>
+  <name>{{ item.key }}</name>
     {% if item.value.forward is defined %}
         <forward mode="{{ item.value.forward.type }}" />
-        <bridge name="{{ item.value.name }}" stp='on' delay='0'/>
+        <bridge name="{{ item.key }}" stp='on' delay='0'/>
     {% endif %}
   <ip address="{{ item.value.ip_address }}" netmask="{{ item.value.netmask }}">
     {% if item.value.dhcp is defined %}
