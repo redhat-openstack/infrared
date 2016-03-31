@@ -1,0 +1,28 @@
+---
+- include: pre.yaml
+
+- name: Rebuild nodes - Foreman
+  hosts: controller
+  gather_facts: no
+  tasks:
+    - name: Rebuild nodes
+      foreman_provisioner:
+           auth_url: "{{ provisioner.foreman.url }}"
+           username: "{{ provisioner.foreman.username }}"
+           password: "{{ provisioner.foreman.password }}"
+           host_id: "{{ provisioner.host.address }}"
+           wait_for_host: "{{ provisioner.foreman.wait|lower }}"
+           mgmt_strategy: "{{ provisioner.foreman.strategy }}"
+           mgmt_action: "{{ provisioner.foreman.action }}"
+      retries: 4
+      delegate_to: localhost
+      register: created_nodes
+
+    - name: wait for ssh
+      wait_for:
+           host: "{{ provisioner.host.address }}"
+           port: 22
+           search_regex: OpenSSH
+           timeout: 300
+           delay: 5
+           connect_timeout: 30
