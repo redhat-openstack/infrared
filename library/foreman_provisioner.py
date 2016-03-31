@@ -281,10 +281,11 @@ def main():
 
     #TODO(tkammer): implement RESERVE and RELEASE
     host = foreman_client.get_host(module.params['host_id'])
+    interface = foreman_client.get_host('{0}/interfaces'.format(module.params['host_id']))
     if host.has_key('error'):
         module.fail_json(msg=host['error'])
 
-    module.exit_json(changed=status_changed, host=host)
+    module.exit_json(changed=status_changed, host=host, interface=interface)
 
 
 from ansible.module_utils.basic import *

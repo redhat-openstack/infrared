@@ -5,27 +5,27 @@ subparsers:
         groups:
             - title: foreman
               options:
-                  foreman-user:
+                  user:
                       type: Value
                       help: User to Forman server
                       required: True
-                  foreman-password:
+                  password:
                       type: Value
                       help: Password of Forman server
                       required: True
-                  foreman-url:
+                  url:
                       type: Value
                       help: The Foreman api url
                       required: True
-                  foreman-strategy:
+                  strategy:
                       type: Value
                       help: Whether to use Foreman or system ipmi command.
                       default: foreman
-                  foreman-action:
+                  action:
                       type: Value
                       help: Which command to send with the power-management selected by mgmt_strategy. For example - reset, reboot, cycle
                       default: cycle
-                  foreman-wait:
+                  wait:
                       type: Value
                       default: true
                       help: Whether we should wait for the host given the 'rebuild' state was set.
@@ -35,10 +35,6 @@ subparsers:
                       type: Value
                       help: Name or ID of the host as listed in foreman
                       required: yes
-                  host-user:
-                      type: Value
-                      help: User to SSH to the host with
-                      default: root
                   host-key:
                       type: Value
                       help: "User's SSH key"
