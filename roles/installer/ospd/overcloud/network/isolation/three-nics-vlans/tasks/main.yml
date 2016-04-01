@@ -12,17 +12,17 @@
       src: "{{ item }}"
       dest: "{{ installer.overcloud.template_base }}/network/config/three-nics-vlans/"
   with_items:
-    - "{% if installer.overcloud.network.protocol == 'ipv6' %}controller-v6.yaml{% else %}controller.yaml{% endif %}"
+    - "{% if installer.network.protocol == 'ipv6' %}controller-v6.yaml{% else %}controller.yaml{% endif %}"
     - compute.yaml
     - cinder-storage.yaml
     - ceph-storage.yaml
     - swift-storage.yaml
 
 - set_fact:
-      nics_file: "{% if installer.overcloud.network.protocol == 'ipv6' %}net-three-nics-with-vlans-v6.yaml{% else %}net-three-nics-with-vlans.yaml{% endif %}"
+      nics_file: "{% if installer.network.protocol == 'ipv6' %}net-three-nics-with-vlans-v6.yaml{% else %}net-three-nics-with-vlans.yaml{% endif %}"
 
 - set_fact:
-      isolation_file: "{% if installer.overcloud.network.protocol == 'ipv6' %}network-isolation-v6.yaml{% else %}network-isolation.yaml{% endif %}"
+      isolation_file: "{% if installer.network.protocol == 'ipv6' %}network-isolation-v6.yaml{% else %}network-isolation.yaml{% endif %}"
 
 - name: copy net-three-nics-vlans.yaml files into folder
   template:
@@ -45,7 +45,7 @@
       line: '                       -e {{ installer.overcloud.template_base }}/{{ nics_file }} \'
 
 - name: add the ipv6 address
-  shell: "sudo ip addr add {{ installer.overcloud.network.isolation.template.content.parameter_defaults.ExternalInterfaceDefaultRoute }}/64 dev eth2"
+  shell: "sudo ip addr add {{ installer.network.isolation.template.content.parameter_defaults.ExternalInterfaceDefaultRoute }}/64 dev eth2"
   register: set_ipv6
   failed_when: "set_ipv6.stderr != '' and 'RTNETLINK answers: File exists' not in set_ipv6.stderr"
-  when: installer.overcloud.network.backend == 'vlan' and installer.overcloud.network.protocol == 'ipv6'
+  when: installer.network.backend == 'vlan' and installer.network.protocol == 'ipv6'

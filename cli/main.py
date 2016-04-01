@@ -171,12 +171,14 @@ class IRSpec(object):
                 execute.ansible_playbook(
                     self.playbooks['cleanup'],
                     verbose=self.args['verbose'],
-                    settings=self.args['settings'])
+                    settings=self.args['settings'],
+                    inventory=self.args['inventory'])
             else:
                 execute.ansible_playbook(
                     self.playbooks['main'],
                     verbose=self.args['verbose'],
-                    settings=self.args['settings'])
+                    settings=self.args['settings'],
+                    inventory=self.args['inventory'])
 
     def collect_settings(self):
         settings_files = self.sub_command.get_settings_files()
@@ -241,5 +243,5 @@ def entry_point():
 
 if __name__ == '__main__':
     # This is mainly for debug purposed
-    main('provisioner')
+    #main('provisioner')
     main('installer')

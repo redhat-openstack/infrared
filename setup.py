@@ -36,6 +36,6 @@ setup(
         'console_scripts': generate_entry_scripts()
     },
     install_requires=reqs,
-    author='Yair Fried',
-    author_email='yfried@redhat.com'
+    author='rhos-qe',
+    author_email='rhos-qe-dept@redhat.com'
 )

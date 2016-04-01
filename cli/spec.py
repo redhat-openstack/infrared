@@ -114,22 +114,33 @@ class YamlFileArgument(ValueArgument):
     """
     YAML file input argument.
     Loads legal YAML from file.
-    Will search for files in the settings directory before trying to resolve
-        absolute path.
+    Will search for files in the spec settings directories before trying
+        to resolve absolute path.
 
     For the argument name is "arg-name" and of subparser "SUBCOMMAND" of
-        application "APP", the default search path would be:
+        application "APP", the default search paths would be:
 
          settings_dir/APP/SUBCOMMAND/arg/name/arg_value
+         settings_dir/APP/arg/name/arg_value
+         arg_value
+
     """
 
     def resolve_value(self, arg_name, defaults=None):
         super(YamlFileArgument, self).resolve_value(arg_name, defaults)
+
         search_first = os.path.join(self.get_app_attr("settings_dir"),
                                     self.get_app_attr("subcommand"),
                                     *arg_name.split("-"))
+        search_second = os.path.join(self.get_app_attr("settings_dir"),
+                                     *arg_name.split("-"))
+
         if self.value is not None:
-            self.value = utils.load_yaml(self.value, search_first)
+            self.value = utils.load_yaml(self.value,
+                                         search_first,
+                                         search_second)
+        else:
+            pass
 
 
 class TopologyArgument(ValueArgument):

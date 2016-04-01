@@ -26,40 +26,49 @@ subparsers:
 
             - title: Overcloud
               options:
-                overcloud-use_ssl:
+                overcloud-ssl:
                     type: Value
                     help: Specifies whether ths SSL should be used for overcloud
                     default: 'no'
-                overcloud-storage:
+
+            - title: Overcloud storage
+              options:
+                storage:
                     type: YamlFile
                     help: The overcloud storage type
                     default: ceph.yml
-                overcloud-images-task:
+
+            - title: Overcloud images
+              options:
+                images-task:
                     type: Value
                     help: Specifies whether the images should be built or imported
                     required: yes
                     #choices: [import, build]
-                overcloud-images-files:
+                images-files:
                     type: YamlFile
                     help: The list of images for overcloud nodes
                     required: yes
-                overcloud-images-url:
+                images-url:
                     type: Value
                     help: The images download url
                     required: yes
-                overcloud-network-backend:
+
+            - title: Overcloud Network
+              options:
+                network-backend:
                     type: Value
                     help: The overcloud network backend.
                     default: vxlan
-                overcloud-network-protocol:
+                network-protocol:
                     type: Value
                     help: The network protocol for overcloud
                     default: ipv4
-                overcloud-network-isolation:
+                network-isolation:
                     type: YamlFile
                     help: The overcloud network isolation type
                     required: yes
-                overcloud-network-isolation-template:
+                network-isolation-template:
                     type: YamlFile
                     help: The overcloud network isolation template
 

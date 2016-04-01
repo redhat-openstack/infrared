@@ -11,8 +11,8 @@ class IRKeyNotFoundException(IRException):
 
 class IRFileNotFoundException(IRException):
     def __init__(self, file_path, msg=None):
-        pre_msg = msg if msg else 'No such file or directory: '
-        super(self.__class__, self).__init__(pre_msg + file_path)
+        pre_msg = msg if msg else 'No such file(s) or directory(s): '
+        super(self.__class__, self).__init__(pre_msg + str(file_path))
 
 
 class IRExtraVarsException(IRException):
