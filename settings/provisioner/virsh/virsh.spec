@@ -17,15 +17,11 @@ subparsers:
                       type: Value
                       help: "User's SSH key"
                       default: ~/.ssh/id_rsa
-            - title: image
+            - title: distro
               options:
-                  image-file:
-                      type: Value
-                      help: An image to provision the host with
-                      required: yes
-                  image-server:
-                      type: Value
-                      help: Base URL of the image file server
+                  distro:
+                      type: CommonSpecYamlFile
+                      help: The RHEL distribution version
                       required: yes
             - title: topology
               options:

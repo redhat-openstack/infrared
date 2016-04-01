@@ -142,8 +142,8 @@ class Lookup(yaml.YAMLObject):
 
             for a_lookup in lookups:
                 visited_lookups = []
-                lookup_value = a_lookup
                 while True:
+                    lookup_value = a_lookup
                     lookup_key = re.search('(\w+\.?)+ *?\}\}', a_lookup)
                     if lookup_key is None:
                         # if key cannot be found in lookup consider

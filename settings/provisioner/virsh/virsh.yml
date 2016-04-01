@@ -9,6 +9,8 @@ provisioner:
             - virthost
     image:
         memory: "16384"
+        file: "{{ !lookup provisioner.distro.image.file }}"
+        server: "{{ !lookup provisioner.distro.image.server }}"
         cpu: "4"
         os:
             variant: rhel7
@@ -23,13 +25,6 @@ provisioner:
         - xorg-x11-apps
         - xauth
         - virt-viewer
-
-distro:
-    name: rhel
-    full_version: "7.2"
-    version:
-        major: '7'
-        minor: '2'
 
 job:
   archive:

@@ -130,6 +130,25 @@ class YamlFileArgument(ValueArgument):
         self.value = utils.load_yaml(self.value, search_first)
 
 
+class SpecYamlArgument(YamlFileArgument):
+    """
+    YAML file input argument.
+    Loads legal YAML from file located in the root of settings directory
+        of the spec.
+
+    The default search path would be:
+
+         settings_dir/APP/arg/name/arg_value
+    """
+
+    def resolve_value(self, arg_name, defaults=None):
+        super(YamlFileArgument, self).resolve_value(arg_name, defaults)
+        search_first = os.path.join(self.get_app_attr("settings_dir"),
+                                    *arg_name.split("-"))
+        if self.value is not None:
+            self.value = utils.load_yaml(self.value, search_first)
+
+
 class TopologyArgument(ValueArgument):
     """Build topology dict from smaller YAML files by parsing input. """
 
@@ -439,3 +458,4 @@ clg.TYPES.update({'IniFile': IniFileArgument})
 clg.TYPES.update({'Value': ValueArgument})
 clg.TYPES.update({'Topology': TopologyArgument})
 clg.TYPES.update({'YamlFile': YamlFileArgument})
+clg.TYPES.update({'CommonSpecYamlFile': SpecYamlArgument})
