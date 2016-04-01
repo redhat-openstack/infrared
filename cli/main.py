@@ -243,5 +243,5 @@ def entry_point():
 
 if __name__ == '__main__':
     # This is mainly for debug purposed
-    #main('provisioner')
+    main('provisioner')
     main('installer')
