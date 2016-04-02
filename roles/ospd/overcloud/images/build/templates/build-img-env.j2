@@ -1,0 +1,41 @@
+export DIB_LOCAL_IMAGE={{ distro.images[distro.name][distro.full_version].guest_image_name }}
+
+{% if product.name == 'rdo' %}
+export RDO_RELEASE={{ product.full_version }}
+{%endif %}
+
+{% if product.repo_type is defined and product.repo_type in ["poodle", "puddle"] %}
+export DIB_YUM_REPO_CONF="{{installer.dib_dir}}/rhos-release-{{product.repo.core_product_version}}-director.repo {{installer.dib_dir}}/rhos-release-{{product.repo.core_product_version}}.repo {{installer.dib_dir}}/rhos-release-rhel-{{distro.full_version}}.repo"
+export USE_DELOREAN_TRUNK=0
+export NODE_DIST=rhel7
+export RUN_RHOS_RELEASE=1
+export RHOS=1
+export RHOS_RELEASE={{product.repo.core_product_version}}-director
+{%endif %}
+
+{% if product.repo_type_override is defined and product.repo_type_override == 'rhsm' %}
+export REG_METHOD=portal
+export REG_USER="{{ distro.rhel.subscription.username }}"
+export REG_PASSWORD="{{ distro.rhel.subscription.password }}"
+export REG_POOL_ID="{{ distro.rhel.subscription.pool }}"
+export REG_REPOS="rhel-7-server-rpms rhel-7-server-extras-rpms rhel-ha-for-rhel-7-server-rpms rhel-7-server-optional-rpms rhel-7-server-openstack-7.0-rpms"
+export NODE_DIST=rhel7
+{%endif %}
+
+{% if product.name == "rdo" and distro.name == "centos" and product.repo.delorean_pin_version is defined and product.repo.delorean is defined %}
+export USE_DELOREAN_TRUNK=1
+export DELOREAN_TRUNK_REPO="{{ product.repo['delorean'][ansible_distribution][distro.full_version] }}/{{product.repo.delorean_pin_version}}/"
+export DELOREAN_REPO_FILE="{{ product.repo.delorean.repo_file }}"
+export NODE_DIST=centos7
+{%endif %}
+
+{% if product.name == "rdo" and distro.name == "centos" and product.repo.delorean_pin_version is not defined and product.repo.delorean is defined %}
+export USE_DELOREAN_TRUNK=1
+export DELOREAN_TRUNK_REPO="{{ product.repo['delorean'][ansible_distribution][distro.full_version] }}/current/"
+export DELOREAN_REPO_FILE="{{ product.repo.delorean.repo_file }}"
+export NODE_DIST=centos7
+{%endif %}
+
+{% if installer.proxy != 'none' %}
+export http_proxy={{ installer.http_proxy_url }}
+{%endif %}

@@ -1,2 +1,32 @@
 ---
 # TODO: Add images build code here
+- name: build the images on baremetal
+  hosts: undercloud
+  tasks:
+    - name: setup environment vars
+      template: src={{ base_dir }}/khaleesi/playbooks/installer/rdo-manager/templates/build-img-env.j2
+                dest=~/build-img-env mode=0755
+
+    - name: ensure /tmp/svc-map-services is absent
+      file: path=/tmp/svc-map-services state=absent
+      sudo: yes
+      when: installer.overcloud_images
+
+    - name: Contents of build-img-env
+      shell: >
+          cat {{ instack_user_home }}/build-img-env
+      when: installer.overcloud_images
+
+    - name: get the guest-image
+      get_url: >
+        url="{{ distro.images[distro.name][distro.full_version].remote_file_server }}{{ distro.images[distro.name][distro.full_version].guest_image_name }}"
+        dest=/home/stack/overcloud_images/{{ distro.images[distro.name][distro.full_version].guest_image_name }}
+        timeout=360
+
+    - name: build all the images
+      shell: >
+          source {{ instack_user_home }}/build-img-env;
+          pushd {{ instack_user_home }}/overcloud_images;
+          openstack overcloud image build --all > {{ instack_user_home }}/openstack-build-images.log
+      when: installer.overcloud_images
+
