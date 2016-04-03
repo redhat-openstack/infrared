@@ -3,33 +3,40 @@ subparsers:
     virsh:
         help: Provision systems using virsh
         groups:
-            - title: host
+            - title: Hypervisor
               options:
-                  host:
-                      type: str
+                  host-address:
+                      type: Value
                       help: Address/FQDN of the BM hypervisor
-                  ssh-user:
-                      type: str
+                      required: yes
+                  host-user:
+                      type: Value
                       help: User to SSH to the host with
-                  ssh-key:
-                      type: str
+                      default: root
+                  host-key:
+                      type: Value
                       help: "User's SSH key"
+                      default: ~/.ssh/id_rsa
             - title: image
               options:
                   image-file:
-                      type: str
+                      type: Value
                       help: An image to provision the host with
+                      required: yes
                   image-server:
-                      type: str
+                      type: Value
                       help: Base URL of the image file server
+                      required: yes
             - title: topology
               options:
-                  network:
-                      type: str
+                  topology-network:
+                      type: YamlFile
                       help: Network
-                  topology:
-                      type: str
-                      help: 'Provision topology (default: __DEFAULT__)'
+                      default: default.yml
+                  topology-nodes:
+                      type: Topology
+                      help: Provision topology.
+                      default: "1_controller,1_compute,1_undercloud"
             - title: common
               options:
                   dry-run:
@@ -55,3 +62,6 @@ subparsers:
                   from-file:
                       type: IniFile
                       help: the ini file with the list of arguments
+                  generate-conf-file:
+                      type: str
+                      help: generate configuration file (ini) containing default values and exits. This file is than can be used with the from-file argument

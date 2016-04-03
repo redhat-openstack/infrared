@@ -25,16 +25,17 @@ So, After cloning repo from GitHub::
 
   $ pip install -e .
 
-Conf
-====
-
-``infrared`` will look for ``infrared.cfg`` in the following order:
+.. note:: ``infrared`` will look for ``infrared.cfg`` in the following order:
 
 #. In working directory: ``./infrared.cfg``
 #. In user home directory: ``~/.infrared.cfg``
 #. In system settings: ``/etc/infrared/infrared.cfg``
 
-.. note:: To specify a different directory or different filename, override the
+ If the configuration file ``infrared.cfg`` doesn't exist in any of
+ the locations above, the InfraRed project's dir will be used as the default
+ location for configurations.
+
+ To specify a different directory or different filename, override the
  lookup order with ``IR_CONFIG`` environment variable::
 
     $ IR_CONFIG=/my/config/file.ini ir-provision --help
@@ -74,22 +75,74 @@ The merging priority order is:
 
 InfraRed input arguments
 ------------------------
-InfraRed accepts the next sources of the input arguments (in priority order):
+InfraRed extends the ``clg`` and ``argpars`` packages with the following types
+that need to be defined in `.spec` files:
 
-1. Command line arguments:  ``ir-provision virsh --host=some.host.com --ssh_user=root``
-2. Predefined arguments in ini file. Use the --from-file option to specify ini file::
-  
-    ir-provision virsh --host=some.host.com --from-file=user.ini
-  
+* **Value**: String values
+* **YamlFile**: Expects path to YAML files. Will search for files in the settings directory before trying to resolve
+  absolute path. For the argument name is "arg-name" and of subparser "SUBCOMMAND" of command "COMMAND", the default
+  search path would be::
+
+    settings_dir/COMMAND/SUBCOMMAND/arg/name/arg_value
+
+* **Topology**: Provisioners allow to dynamically define the provisioned
+  nodes topology. InfraRed provides several
+  'mini' YAML files to describe different roles: ``controller``, ``compute``,
+  ``undercloud``, etc...
+  These 'mini' files are then merged into one topology file according to the
+  provided ``--topology-nodes`` argument value.
+
+  The ``--topology-nodes`` argument can have the following format:
+   * ``--topology-nodes=1_controller,1_compute``
+   * ``--topology-nodes=1_controller``
+   * ``--topology-nodes=3_controller,1_compute,1_undercloud``
+
+ InfraRed will read dynamic topology by following the next steps:
+  #. Split the topology value with ','.
+  #. Split each node with '_' and get pair (number, role). For every pair
+     look for the topology folder (configured in the infrared.cfg file) for
+     the appropriate mini file (controller.yaml, compute.yaml, etc). Load the
+     role the defined number of times into the settings.
+
+ .. note:: The default search path for topology files is
+       ``settings/provivisioner/topology``. Users can add their own topology
+       roles there and reference them on runtime
+
+These arguments will accept input from sources in the following priority
+order:
+
+#. Command line arguments:
+   ``ir-provision virsh --host-address=some.host.com --host-user=root``
+#. Environment variables: ``HOST_ADRRESS=earth.example.com ir-provision virsh --host-user=root``
+#. Predefined arguments in ini file specified using ``--from-file`` option::
+
+    ir-provision virsh --host-address=some.host.com --from-file=user.ini
+
     cat user.ini
     [virsh]
-    ssh_user=root
-    ssh_key=mkey.pm
+    host-user=root
+    host-key=mkey.pm
 
+#. Defaults defined in ``.spec`` file for each argument.
 
-3. Environment variables: ``HOST=earth ir-provision virsh --ssh_user=root``
+  .. note:: The sample `ini` file with the default values can be generated with:
+   ``ir-povision virsh --generate-conf-file=virsh.ini``. Generated file will contain
+   all the default arguments values defined in the spec file.
 
-Command line arguments have the highest priority. All the undefined variables will be replaced by that arguments from file or from environment.
+Arguments of the above types will be automatically injected into settings
+YAML tree in a nested dict from.
+
+Example:
+The input for ``ir-COMMAND`` and argument ``--arg-name=arg-value`` maps to:
+
+  .. code-block:: yaml
+
+      COMMAND:
+          arg:
+              name: "arg-value"
+
+"arg-value" can be a simple string or be resolved into a more advanced
+dictionary depending on the argument type in ``.spec`` file
 
 Extra-Vars
 ----------
@@ -109,7 +162,7 @@ Add new Plugins
 
 There are two steps that should be done when adding a new plugin to InfraRed:
 
-1. Creating a specification file:
+#. Creating a specification file:
     InfraRed uses ArgParse wrapper module called 'clg' in order to create a parser that based on `spec` file
     (YAML format file) containing the plugin options.
     The spec file should be named as the new plugin name with '.spec' extension and located inside the plugin dir
@@ -117,16 +170,7 @@ There are two steps that should be done when adding a new plugin to InfraRed:
     For more details on how to use this module, please visit the 'clg' module `homepage <http://clg.readthedocs
     .org/en/latest/>`_.
 
-2. Creating a default spec file (default.ini). 
-    This file should contain the default values for the command line arguments. All the default values should go under the name section names as a new plugin. Example::
-      
-      [virsh]
-      topology=all-in-one.yml
-      network=default.yml
-      ssh-key=~/.ssh/id_rsa
-      ssh-user=root
-
-3. Creating settings files.
+#. Creating settings files.
     Settings files are files containing data which defines how the end result of the playbook execution will be
     looked like. Settings file are file in YAML format, end with ".yml" extension. Those files located under the
     plugin's dir which itself located under the 'settings' dir in the InfraRed project's dir.
@@ -134,3 +178,10 @@ There are two steps that should be done when adding a new plugin to InfraRed:
     with other values, all are received by the user.
     When adding a new plugin, there is a need to create those settings files containing the needed data for the
     playbook execution.
+
+
+Known issues
+============
+
+#. PROBLEM: sshpass package cannot be installed during virsh provisioning.
+   SOLUTION: install rhos-release tool. Install osp-d with rhos-release: ``rhos-release 7-director``

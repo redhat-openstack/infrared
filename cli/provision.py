@@ -1,8 +1,6 @@
 #!/usr/bin/env python
-
 import os
 import logging
-from cli.install import set_network_template as set_network
 
 import yaml
 
@@ -10,16 +8,42 @@ from cli import logger  # logger creation is first thing to be done
 from cli import conf
 from cli import utils
 from cli import exceptions
+from cli import spec
 import cli.yamls
 import cli.execute
 
 LOG = logger.LOG
 CONF = conf.config
 
+APPLICATION = 'provisioner'
 PROVISION_PLAYBOOK = "provision.yaml"
 CLEANUP_PLAYBOOK = "cleanup.yaml"
 NON_SETTINGS_OPTIONS = ['command0', 'verbose', 'extra-vars', 'output',
                         'input', 'dry-run', 'cleanup', 'inventory']
+
+
+def get_arguments_dict(spec_args):
+    """
+    Collect all ValueArgument args in dict according to arg names
+
+    some-key=value will be nested in dict as:
+
+    {"some": {
+        "key": value}
+    }
+
+    For `YamlFileArgument` value is path to yaml so file content
+    will be loaded as a nested dict.
+
+    :param spec_args: Dictionary based on cmd-line args parsed from spec file
+    :return: dict
+    """
+    settings_dict = {}
+    for _name, argument in spec_args.iteritems():
+        if isinstance(argument, spec.ValueArgument):
+            utils.dict_insert(settings_dict, argument.value,
+                              *argument.arg_name.split("-"))
+    return settings_dict
 
 
 class IRFactory(object):
@@ -28,17 +52,28 @@ class IRFactory(object):
     """
 
     @classmethod
-    def create(cls, app_name, config):
+    def create(cls, app_name, config, args=None):
         """
         Create the application object
         by module name and provided configuration.
+
+        :param app_name: str
+        :param config: dict. configuration details
+        :param args: list. If given parse it instead of stdin input.
         """
+        settings_dir = config.get('defaults', 'settings')
+
         if app_name in ["provisioner", ]:
-            args = conf.SpecManager.parse_args(app_name, config)
-            cls.configure_environment(args)
-            setting_dir = utils.validate_settings_dir(
-                CONF.get('defaults', 'settings'))
-            app_instance = IRApplication(app_name, setting_dir, args)
+            app_settings_dir = os.path.join(settings_dir, app_name)
+            spec_args = spec.parse_args(app_settings_dir, args)
+            cls.configure_environment(spec_args)
+
+            if spec_args.get('generate-conf-file', None):
+                LOG.debug('Conf file "{}" has been generated. Exiting'.format(
+                    spec_args['generate-conf-file']))
+                app_instance = None
+            else:
+                app_instance = IRApplication(app_name, settings_dir, spec_args)
 
         else:
             raise exceptions.IRUnknownApplicationException(
@@ -54,6 +89,7 @@ class IRFactory(object):
         """
         if args['debug']:
             LOG.setLevel(logging.DEBUG)
+        # todo(yfried): load exception hook now and not at init.
 
 
 class IRSubCommand(object):
@@ -99,67 +135,8 @@ class IRSubCommand(object):
             self.settings_dir,
             self.name + '.yml'))
 
-        settings_files.extend(self._load_yaml_files())
-
         LOG.debug("All settings files to be loaded:\n%s" % settings_files)
         return settings_files
-
-    def _load_yaml_files(self):
-        # load directly from args
-        settings_files = []
-        for key, val in vars(self.args).iteritems():
-            if val is not None and key not in NON_SETTINGS_OPTIONS:
-                settings_file = os.path.join(
-                    self.settings_dir, key, val + '.yml')
-                LOG.debug('Searching settings file for the "%s" key...' % key)
-                if not os.path.isfile(settings_file):
-                    settings_file = utils.normalize_file(val)
-                settings_files.append(settings_file)
-                LOG.debug('"%s" was added to settings '
-                          'files list as an argument '
-                          'for "%s" key' % (settings_file, key))
-        return settings_files
-
-    def get_settings_dict(self):
-        return {}
-
-
-class VirshCommand(IRSubCommand):
-
-    def get_settings_dict(self):
-
-        # todo(obaranov) this is virsh specific
-        # rework that and make this part of lookup or something.
-        image = dict(
-            name=self.args['image-file'],
-            base_url=self.args['image-server']
-        )
-        host = dict(
-            ssh_host=self.args['host'],
-            ssh_user=self.args['ssh-user'],
-            ssh_key_file=self.args['ssh-key']
-        )
-
-        settings_dict = utils.dict_merge(
-            {'provisioner': {'image': image}},
-            {'provisioner': {'hosts': {'host1': host}}})
-
-        # load network and image settings
-        for arg_dir in ('network', 'topology'):
-            if self.args[arg_dir] is None:
-                raise exceptions.IRConfigurationException(
-                    "A value for for the  '{}' "
-                    "argument should be provided!".format(arg_dir))
-            with open(set_network(self.args[arg_dir], os.path.join(
-                    self.settings_dir, arg_dir))) as settings_file:
-                settings = yaml.load(settings_file)
-            utils.dict_merge(settings_dict, settings)
-
-        return settings_dict
-
-    def _load_yaml_files(self):
-        # do not load additional yaml files.
-        return []
 
 
 class IRApplication(object):
@@ -172,7 +149,7 @@ class IRApplication(object):
         self.settings_dir = settings_dir
 
         # todo(obaranov) replace with subcommand factory
-        self.sub_command = VirshCommand.create(name, settings_dir, args)
+        self.sub_command = IRSubCommand.create(name, settings_dir, args)
 
     def run(self):
         """
@@ -187,15 +164,24 @@ class IRApplication(object):
                 default_flow_style=False))
 
             if self.args['cleanup']:
-                cli.execute.ansible_playbook(CLEANUP_PLAYBOOK, self.args)
+                cli.execute.ansible_playbook(CLEANUP_PLAYBOOK,
+                                             verbose=self.args["verbose"],
+                                             settings=self.args["settings"])
             else:
-                cli.execute.ansible_playbook(PROVISION_PLAYBOOK, self.args)
+                cli.execute.ansible_playbook(PROVISION_PLAYBOOK,
+                                             verbose=self.args["verbose"],
+                                             settings=self.args["settings"])
 
     def collect_settings(self):
         settings_files = self.sub_command.get_settings_files()
-        settings_dict = self.sub_command.get_settings_dict()
+        arguments_dict = {APPLICATION: get_arguments_dict(self.args)}
 
-        return self.lookup(settings_files, settings_dict)
+        # todo(yfried): fix after lookup refactor
+        # utils.dict_merge(settings_files, arguments_dict)
+        # return self.lookup(settings_files)
+
+        # todo(yfried) remove this line after lookup refactor
+        return self.lookup(settings_files, arguments_dict)
 
     def lookup(self, settings_files, settings_dict):
         """
@@ -205,6 +191,7 @@ class IRApplication(object):
         """
 
         cli.yamls.Lookup.settings = utils.generate_settings(settings_files)
+        # todo(yfried) remove this line after refactor
         cli.yamls.Lookup.settings.merge(settings_dict)
         cli.yamls.Lookup.settings = utils.merge_extra_vars(
             cli.yamls.Lookup.settings,
@@ -228,8 +215,9 @@ class IRApplication(object):
 
 
 def main():
-    app = IRFactory.create('provisioner', CONF)
-    app.run()
+    app = IRFactory.create(APPLICATION, CONF)
+    if app:
+        app.run()
 
 if __name__ == '__main__':
     main()

@@ -3,6 +3,7 @@ import os.path
 import configure
 import pytest
 import yaml
+from cli import exceptions
 
 from tests.test_cwd import utils
 
@@ -169,3 +170,24 @@ def test_recursive_lookup(our_cwd_setup, lookup_style):
 
     assert settings['foo']['test1'] == "key was found"
     assert settings['foo']['test2'] == "key was found"
+
+
+def test_circular_reference_lookup():
+    import cli.yamls
+
+    tester_file_name = 'lookup_new_style_circular_reference.yml'
+    tester_file = os.path.join(utils.TESTS_CWD, tester_file_name)
+
+    # load settings from yaml and set them into Lookup 'settings' class var
+    cli.yamls.Lookup.settings = configure.Configuration().from_file(
+        tester_file).configure()
+    # cli.yamls.Lookup.handling_nested_lookups = False
+    cli.yamls.Lookup.in_string_lookup()
+
+    # dump the settings in order to retrieve the key's value and load them
+    # again for value validation
+
+    with pytest.raises(exceptions.IRInfiniteLookupException):
+        yaml.safe_load(
+            yaml.safe_dump(cli.yamls.Lookup.settings,
+                           default_flow_style=False))

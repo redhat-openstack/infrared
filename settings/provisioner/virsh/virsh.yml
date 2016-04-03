@@ -3,24 +3,10 @@
 provisioner:
     type: virsh
 
-    hosts:
-        host1:
-            name: virthost
-            groups:
-                - virthost
-
-    packages:
-        - libvirt
-        - qemu-kvm
-        - virt-manager
-        - virt-install
-        - libguestfs-tools
-        - xorg-x11-apps
-        - xauth
-        - virt-viewer
-        - libguestfs-xfs
-        - sshpass
-
+    host:
+        name: virthost
+        groups:
+            - virthost
     image:
         memory: "16384"
         cpu: "4"
@@ -28,6 +14,15 @@ provisioner:
             variant: rhel7
         disk:
             size: "40G"
+
+    packages:
+        - libvirt
+        - qemu-kvm
+        - virt-manager
+        - virt-install
+        - xorg-x11-apps
+        - xauth
+        - virt-viewer
 
 distro:
     name: rhel

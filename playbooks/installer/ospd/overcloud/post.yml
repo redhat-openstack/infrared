@@ -22,12 +22,6 @@
             path: "{{ inventory_dir }}/id_rsa_overcloud"
             mode: 0600
 
-      - name: update our ansible ssh configuration file
-        template:
-            src: "templates/ssh.config.ansible.j2"
-            dest: "{{ inventory_dir }}/ansible.ssh.config"
-            mode: 0755
-
       - name: Update Inventory
         add_host:
           name: "{{ item }}"
