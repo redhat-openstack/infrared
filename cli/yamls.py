@@ -330,7 +330,7 @@ class Placeholder(yaml.YAMLObject):
         raise exceptions.IRPlaceholderException(message)
 
 
-def load(file_path):
+def load(file_path, update_placeholders=True):
     """
     Loads the yaml file and return it dict representation.
     """
@@ -338,4 +338,16 @@ def load(file_path):
     if not os.path.exists(file_path):
         raise exceptions.IRFileNotFoundException(file_path)
 
-    return dict(configure.Configuration.from_file(file_path).configure())
+    try:
+        res = dict(configure.Configuration.from_file(file_path).configure())
+        if update_placeholders:
+            placeholders_list = Placeholder.placeholders_list
+            for placeholder in placeholders_list[::-1]:
+                if placeholder.file_path is None:
+                    placeholder.file_path = file_path
+                else:
+                    break
+        return res
+    except yaml.constructor.ConstructorError as e:
+        raise exceptions.IRYAMLConstructorError(e, file_path)
+
