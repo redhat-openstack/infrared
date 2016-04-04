@@ -20,7 +20,8 @@
   roles:
       - {role: "installer/ospd/overcloud/storage/ceph/", when: installer.storage.backend is defined and installer.storage.backend == "ceph"}
       - {role: "installer/ospd/overcloud/storage/netapp/", when: installer.storage.backend is defined and installer.storage.backend == "netapp"}
-      - {role: "installer/ospd/overcloud/network/isolation/{{ installer.network.isolation.type | default('no-isolation') }}/", when: installer.network.isolation.enable == "yes"}
+      - {role: "installer/ospd/overcloud/network/isolation/single-nic-vlans/", when: installer.network.isolation.enable == "yes" and installer.network.isolation.type == "single-nic-vlans" }
+      - {role: "installer/ospd/overcloud/network/isolation/three-nics-vlans/", when: installer.network.isolation.enable == "yes" and installer.network.isolation.type == "three-nics-vlans" }
       - {role: "installer/ospd/overcloud/ssl/", when: installer.overcloud.ssl == "yes"}
 
 - name: Install the overcloud
