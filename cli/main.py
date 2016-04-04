@@ -4,7 +4,8 @@ import inspect
 import os
 
 import yaml
-from cli import execute, logger, conf, spec, utils, exceptions, yamls
+from cli import logger  # logger should bne imported first
+from cli import execute, conf, spec, utils, exceptions, yamls
 
 LOG = logger.LOG
 CONF = conf.config
