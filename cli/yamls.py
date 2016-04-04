@@ -350,4 +350,3 @@ def load(file_path, update_placeholders=True):
         return res
     except yaml.constructor.ConstructorError as e:
         raise exceptions.IRYAMLConstructorError(e, file_path)
-
