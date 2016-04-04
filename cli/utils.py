@@ -105,7 +105,8 @@ def search_tree(needle, haystack, _res=None):
             search_tree(needle, value, _res)
         if isinstance(value, list):
             for item in value:
-                search_tree(needle, item, _res)
+                if isinstance(item, dict):
+                    search_tree(needle, item, _res)
     return _res
 
 
