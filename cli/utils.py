@@ -8,7 +8,6 @@ import configure
 import yaml
 
 import cli.yamls
-import exceptions
 from cli import exceptions
 from cli import logger
 
@@ -212,8 +211,8 @@ def load_yaml(filename, search_first):
     else:
         raise exceptions.IRFileNotFoundException(
             file_path=os.path.abspath(filename))
-    with open(path) as yaml_file:
-        return yaml.load(yaml_file)
+
+    return cli.yamls.load(path)
 
 
 ENV_VAR_NAME = "IR_CONFIG"
