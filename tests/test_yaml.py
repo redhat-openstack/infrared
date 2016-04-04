@@ -191,3 +191,50 @@ def test_circular_reference_lookup():
         yaml.safe_load(
             yaml.safe_dump(cli.yamls.Lookup.settings,
                            default_flow_style=False))
+
+
+def test_yamls_load(tmpdir):
+    """
+    Verify yamls module can load yaml file properly.
+    """
+    import cli.yamls
+
+    p = tmpdir.mkdir("yamls").join("test_load.yml")
+    p.write("""---
+network:
+    ip: 0.0.0.0
+    mask: 255.255.255.255
+
+intkey: 1
+strkey: Value2
+""")
+
+    res = cli.yamls.load(p.strpath)
+
+    assert isinstance(res, dict)
+    assert 'network' in res
+    assert 'ip' in res['network']
+    assert res['network']['ip'] == '0.0.0.0'
+    assert 'mask' in res['network']
+    assert res['network']['mask'] == '255.255.255.255'
+    assert 'intkey' in res
+    assert res['intkey'] == 1
+    assert 'strkey' in res
+    assert res['strkey'] == "Value2"
+
+
+@pytest.mark.parametrize("random_arg", [0, 1, 5, 10])
+def test_yamls_random(tmpdir, random_arg):
+    """
+    Verifies the random constructor for yaml files.
+    """
+    import cli.yamls
+
+    p = tmpdir.mkdir("yamls").join("test_yamls_random.yml")
+    p.write("""---
+random_string: !random {}
+    """.format(random_arg))
+
+    res = cli.yamls.load(p.strpath)
+    assert 'random_string' in res
+    assert len(res['random_string']) == random_arg

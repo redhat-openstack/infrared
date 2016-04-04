@@ -3,6 +3,8 @@ This module contains the tools for handling YAML files and tags.
 """
 
 import logging
+
+import os
 import re
 import sys
 import string
@@ -326,3 +328,25 @@ class Placeholder(yaml.YAMLObject):
     def to_yaml(cls, dumper, node):
         message = re.sub("<string>", node.file_path, node.message)
         raise exceptions.IRPlaceholderException(message)
+
+
+def load(file_path, update_placeholders=True):
+    """
+    Loads the yaml file and return it dict representation.
+    """
+    LOG.debug("Loading setting file: %s" % file_path)
+    if not os.path.exists(file_path):
+        raise exceptions.IRFileNotFoundException(file_path)
+
+    try:
+        res = dict(configure.Configuration.from_file(file_path).configure())
+        if update_placeholders:
+            placeholders_list = Placeholder.placeholders_list
+            for placeholder in placeholders_list[::-1]:
+                if placeholder.file_path is None:
+                    placeholder.file_path = file_path
+                else:
+                    break
+        return res
+    except yaml.constructor.ConstructorError as e:
+        raise exceptions.IRYAMLConstructorError(e, file_path)
