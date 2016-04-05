@@ -1,4 +1,5 @@
 import ConfigParser
+from functools import total_ordering
 
 import clg
 import os
@@ -19,6 +20,7 @@ BUILTINS_REPLACEMENT = {
 TRIM_PARAMS = ['default', 'required']
 
 
+@total_ordering
 class ValueArgument(object):
     """
     Default argument type for InfraRed Spec
@@ -107,6 +109,27 @@ class ValueArgument(object):
         # override get default from conf file
         if self.value is None:
             self.value = defaults.get(self.arg_name)
+
+    def __eq__(self, other):
+        """
+        Checks if other value is equal to the current value.
+        """
+        if isinstance(other, ValueArgument):
+            return self.value == other.value
+        else:
+            return self.value == other
+
+    def __lt__(self, other):
+        """
+        Checks if current value is less than other value.
+        """
+        if isinstance(other, ValueArgument):
+            return self.value < other.value
+        else:
+            return self.value < other
+
+    def __repr__(self):
+        return self.value
 
 
 class YamlFileArgument(ValueArgument):
