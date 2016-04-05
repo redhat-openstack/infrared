@@ -21,7 +21,7 @@ subparsers:
               options:
                   image:
                       type: YamlFile
-                      help: The RHEL distribution version
+                      help: The image to use for nodes provisioning. Check the 'sample.yml.example' for example.
                       required: yes
             - title: topology
               options:
