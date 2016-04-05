@@ -28,20 +28,20 @@ class ConfigWrapper(object):
         """
         Returns the list of the configured settings folders.
         """
-        return self.config.get(section, DEFAULT_CONF_DIRS['settings']).split(
+        return self.config.get(section, 'settings').split(
             os.pathsep)
 
     def get_modules_dir(self, section=_DEFAULT_SECTION):
         """
         Gets the modules directory.
         """
-        return self.config.get(section, DEFAULT_CONF_DIRS['modules'])
+        return self.config.get(section, 'modules')
 
     def get_playbooks_dir(self, section=_DEFAULT_SECTION):
         """
         Gets the playbooks directory.
         """
-        return self.config.get(section, DEFAULT_CONF_DIRS['playbooks'])
+        return self.config.get(section, 'playbooks')
 
     def build_app_settings_dirs(self, app_name):
         return [os.path.join(path, app_name)
