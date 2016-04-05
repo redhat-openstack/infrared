@@ -26,7 +26,7 @@ class ValueArgument(object):
     Default argument type for InfraRed Spec
     Resolves "None" Types with priority defaults.
     """
-    settings_dir = None
+    settings_dirs = None
     subcommand = None
 
     def __init__(self, value=None, required=None):
@@ -54,7 +54,8 @@ class ValueArgument(object):
         return getattr(cls, attribute)
 
     @classmethod
-    def init_missing_args(cls, spec, args, settings_dir=None, subcommand=None):
+    def init_missing_args(cls, spec, args, settings_dirs=None,
+                          subcommand=None):
         """Initialize defaults for ValueArgument class.
 
         argparse loads all unprovided arguments as None objects, instead of
@@ -64,11 +65,12 @@ class ValueArgument(object):
 
         :param spec: dict. spec file
         :param args: dict. argparse arguments.
-        :param app_settings_dir: path to the base directory holding the
-            application's settings. App can be provisioner\installer\tester
+        :param settings_dirs: the list of path to the base directory
+            holding the application's settings. App can be
+            provisioner\installer\tester
             and the path would be: settings/<app_name>/
         """
-        cls.settings_dir = cls.get_app_attr("settings_dir") or settings_dir
+        cls.settings_dirs = cls.get_app_attr("settings_dirs") or settings_dirs
         cls.subcommand = cls.get_app_attr("subcommand") or subcommand
 
         # todo(yfried): consider simply searching for option_name instead of
@@ -147,10 +149,12 @@ class YamlFileArgument(ValueArgument):
 
     def resolve_value(self, arg_name, defaults=None):
         super(YamlFileArgument, self).resolve_value(arg_name, defaults)
-        search_first = os.path.join(self.get_app_attr("settings_dir"),
-                                    self.get_app_attr("subcommand"),
-                                    *arg_name.split("-"))
-        self.value = utils.load_yaml(self.value, search_first)
+        search_locations = [os.path.join(settings_path,
+                                         self.get_app_attr("subcommand"),
+                                         *arg_name.split("-")) for
+                            settings_path in
+                            self.get_app_attr("settings_dirs")]
+        self.value = utils.load_yaml(self.value, *search_locations)
 
 
 class TopologyArgument(ValueArgument):
@@ -168,8 +172,9 @@ class TopologyArgument(ValueArgument):
         super(TopologyArgument, self).resolve_value(arg_name, defaults)
 
         # post process topology
-        topology_dir = os.path.join(self.get_app_attr("settings_dir"),
-                                    'topology')
+        topology_dirs = [os.path.join(path,
+                                      'topology') for path in
+                         self.get_app_attr("settings_dirs")]
         topology_dict = {}
         for topology_item in self.value.split(','):
             if '_' in topology_item:
@@ -180,7 +185,7 @@ class TopologyArgument(ValueArgument):
                     "Current value: '{}' ".format(topology_item))
             # todo(obaraov): consider moving topology to config on constant.
             topology_dict[node_type] = utils.load_yaml(node_type + ".yaml",
-                                                       topology_dir)
+                                                       *topology_dirs)
             topology_dict[node_type]['amount'] = int(number)
 
         self.value = topology_dict
@@ -214,22 +219,22 @@ class IniFileArgument(object):
         self.value = res_dict
 
 
-def parse_args(app_settings_dir, args=None):
+def parse_args(app_settings_dirs, args=None):
     """
     Looks for all the specs for specified app
     and parses the commandline input arguments accordingly.
 
     Trim clg spec from customized input and modify help data.
 
-    :param app_settings_dir: path to the base directory holding the
-        application's settings. App can be provisioner\installer\tester
+    :param app_settings_dirs: the list of pathes to the base directory holding
+        the application's settings. App can be provisioner\installer\tester
         and the path would be: settings/<app_name>/
     :param args: the list of arguments used for directing the method to work
         on something other than CLI input (for example, in testing).
     :return: dict. Based on cmd-line args parsed from spec file
     """
     # Dict with the merging result of all app's specs
-    app_specs = _get_specs(app_settings_dir)
+    app_specs = _get_specs(app_settings_dirs)
 
     # Get the subparsers options as is with all the fields from app's specs.
     # This also trims some custom fields from options to pass to clg.
@@ -238,7 +243,7 @@ def parse_args(app_settings_dir, args=None):
     # Pass trimmed spec to clg with modified help message
     cmd = clg.CommandLine(app_specs)
     clg_args = vars(cmd.parse(args))
-    ValueArgument.init_missing_args(app_specs, clg_args, app_settings_dir,
+    ValueArgument.init_missing_args(app_specs, clg_args, app_settings_dirs,
                                     subcommand=clg_args["command0"])
 
     # Current sub-parser options
@@ -428,23 +433,22 @@ def _trim_option(option_attributes):
         option_attributes.pop(trim_param, None)
 
 
-def _get_specs(app_settings_dir):
+def _get_specs(app_settings_dirs):
     """
     Load all  specs files from base settings directory.
 
-    :param app_settings_dir: path to the base directory holding the
-        application's settings. App can be provisioner\installer\tester
+    :param app_settings_dir:s the list of paths to the base directory holding
+        the application's settings. App can be provisioner\installer\tester
         and the path would be: settings/<app_name>/
     :return: dict: All spec files merged into a single dict.
     """
-    if not os.path.exists(app_settings_dir):
-        raise exceptions.IRFileNotFoundException(app_settings_dir)
 
     # Collect all app's spec
     spec_files = []
-    for root, _, files in os.walk(app_settings_dir):
-        spec_files.extend([os.path.join(root, a_file) for a_file in files
-                           if a_file.endswith(SPEC_EXTENSION)])
+    for app_settings_dir in app_settings_dirs:
+        for root, _, files in os.walk(app_settings_dir):
+            spec_files.extend([os.path.join(root, a_file) for a_file in files
+                               if a_file.endswith(SPEC_EXTENSION)])
 
     res = {}
     for spec_file in spec_files:

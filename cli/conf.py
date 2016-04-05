@@ -15,6 +15,37 @@ DEFAULT_CONF_DIRS = dict(
 )
 
 
+class ConfigWrapper(object):
+    """
+    The helper class for the InfraRed configuration.
+    """
+    _DEFAULT_SECTION = 'defaults'
+    _SETTINGS_OPTION = 'settings'
+
+    def __init__(self, conf):
+        self.config = conf
+
+    def get_settings_dirs(self, section=_DEFAULT_SECTION):
+        """
+        Returns the list of the configured settings folders.
+        """
+        return self.config.get(section, self._SETTINGS_OPTION).split(
+            os.pathsep)
+
+    def build_app_settings_dirs(self, app_name):
+        return [os.path.join(path, app_name)
+                for path in self.get_settings_dirs()]
+
+    def validate(self):
+        # Validates at least one settings dir exists
+        dirs = self.get_settings_dirs()
+        if not any([os.path.exists(path)
+                   for path in dirs]):
+            raise exceptions.IRFileNotFoundException(
+                dirs,
+                "Settings directories do not exist: ")
+
+
 def load_config_file():
     """Load config file order(ENV, CWD, USER HOME, SYSTEM).
 
@@ -43,14 +74,9 @@ def load_config_file():
         for option, value in DEFAULT_CONF_DIRS.iteritems():
             _config.set('defaults', option, os.path.join(project_dir, value))
 
-    # Validates settings dir exists
-    settings_dir = _config.get('defaults', 'settings')
-    if not os.path.exists(settings_dir):
-        raise exceptions.IRFileNotFoundException(
-            settings_dir,
-            "Settings directory doesn't exist: ")
-
     return _config
 
 
 config = load_config_file()
+config_wrapper = ConfigWrapper(config)
+config_wrapper.validate()

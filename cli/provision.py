@@ -13,7 +13,7 @@ import cli.yamls
 import cli.execute
 
 LOG = logger.LOG
-CONF = conf.config
+CONF = conf.config_wrapper
 
 APPLICATION = 'provisioner'
 PROVISION_PLAYBOOK = "provision.yaml"
@@ -61,11 +61,11 @@ class IRFactory(object):
         :param config: dict. configuration details
         :param args: list. If given parse it instead of stdin input.
         """
-        settings_dir = config.get('defaults', 'settings')
+        settings_dirs = config.get_settings_dirs()
 
         if app_name in ["provisioner", ]:
-            app_settings_dir = os.path.join(settings_dir, app_name)
-            spec_args = spec.parse_args(app_settings_dir, args)
+            app_settings_dirs = config.build_app_settings_dirs(app_name)
+            spec_args = spec.parse_args(app_settings_dirs, args)
             cls.configure_environment(spec_args)
 
             if spec_args.get('generate-conf-file', None):
@@ -73,7 +73,8 @@ class IRFactory(object):
                     spec_args['generate-conf-file']))
                 app_instance = None
             else:
-                app_instance = IRApplication(app_name, settings_dir, spec_args)
+                app_instance = IRApplication(
+                    app_name, settings_dirs, spec_args)
 
         else:
             raise exceptions.IRUnknownApplicationException(
@@ -89,7 +90,7 @@ class IRFactory(object):
         """
         if args['debug']:
             LOG.setLevel(logging.DEBUG)
-        # todo(yfried): load exception hook now and not at init.
+            # todo(yfried): load exception hook now and not at init.
 
 
 class IRSubCommand(object):
@@ -98,27 +99,29 @@ class IRSubCommand(object):
     for the application
     """
 
-    def __init__(self, name, args, settings_dir):
+    def __init__(self, name, args, settings_dirs):
         self.name = name
         self.args = args
-        self.settings_dir = settings_dir
+        self.settings_dirs = settings_dirs
 
     @classmethod
-    def create(cls, app, settings_dir, args):
+    def create(cls, app, settings_dirs, args):
         """
         Constructs the sub-command.
         :param app:  tha application name
-        :param settings_dir:  the default application settings dir
+        :param settings_dirs:  the default application settings dirs
         :param args: the application args
         :return: the IRSubCommand instance.
         """
         if args:
-            settings_dir = os.path.join(settings_dir,
-                                        app)
+            settings_dirs = [os.path.join(settings_dir,
+                                          app) for settings_dir in
+                             settings_dirs]
         if "command0" in args:
-            settings_dir = os.path.join(settings_dir,
-                                        args['command0'])
-        return cls(args['command0'], args, settings_dir)
+            settings_dirs = [os.path.join(settings_dir,
+                                          args['command0']) for settings_dir in
+                             settings_dirs]
+        return cls(args['command0'], args, settings_dirs)
 
     def get_settings_files(self):
         """
@@ -131,9 +134,12 @@ class IRSubCommand(object):
             settings_files.append(utils.normalize_file(input_file))
 
         # get the sub-command yml file
-        settings_files.append(os.path.join(
-            self.settings_dir,
-            self.name + '.yml'))
+        for settings_dir in self.settings_dirs:
+            path = os.path.join(
+                settings_dir,
+                self.name + '.yml')
+            if os.path.exists(path):
+                settings_files.append(path)
 
         LOG.debug("All settings files to be loaded:\n%s" % settings_files)
         return settings_files
@@ -143,13 +149,12 @@ class IRApplication(object):
     """
     Hold the default application workflow logic.
     """
-    def __init__(self, name, settings_dir, args):
+
+    def __init__(self, name, settings_dirs, args):
         self.name = name
         self.args = args
-        self.settings_dir = settings_dir
-
-        # todo(obaranov) replace with subcommand factory
-        self.sub_command = IRSubCommand.create(name, settings_dir, args)
+        self.settings_dirs = settings_dirs
+        self.sub_command = IRSubCommand.create(name, settings_dirs, args)
 
     def run(self):
         """
@@ -218,6 +223,7 @@ def main():
     app = IRFactory.create(APPLICATION, CONF)
     if app:
         app.run()
+
 
 if __name__ == '__main__':
     main()

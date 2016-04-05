@@ -180,24 +180,31 @@ def normalize_file(file_path):
     return file_path
 
 
-def load_yaml(filename, search_first):
+def load_yaml(filename, *search_paths):
     """Find YAML file. search default path first.
-
     :param filename: path to file
     :param search_first: default path to search first
     :returns: dict. loaded YAML file.
     """
-    filename = os.path.join(search_first, filename) if os.path.exists(
-        os.path.join(search_first, filename)) else filename
-    if os.path.exists(os.path.abspath(filename)):
-        LOG.debug("Loading YAML file: %s" %
-                  os.path.abspath(filename))
-        path = os.path.abspath(filename)
+    path = None
+    searched_files = []
+    files_to_search = map(
+        lambda search_path: os.path.join(search_path, filename), search_paths)
+    # append file name to verify absolute path by default
+    files_to_search.append(filename)
+
+    for try_filename in files_to_search:
+        searched_files.append(os.path.abspath(try_filename))
+        if os.path.exists(try_filename):
+            path = os.path.abspath(try_filename)
+            break
+
+    if path is not None:
+        LOG.debug("Loading YAML file: %s" % path)
+        return cli.yamls.load(path)
     else:
         raise exceptions.IRFileNotFoundException(
-            file_path=os.path.abspath(filename))
-
-    return cli.yamls.load(path)
+            file_path=searched_files)
 
 
 ENV_VAR_NAME = "IR_CONFIG"
