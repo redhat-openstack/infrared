@@ -1,3 +1,4 @@
+---
 - name: switch selinux to permissive
   selinux: policy=targeted state=permissive
 
@@ -9,48 +10,47 @@
   service: name=sshd state=restarted
 
 - name: enable vlan kernel module
-  linefile:
-  create: yes
-  state: present
-  line: "exec /sbin/modprobe 8021q >/dev/null 2>&1"
-  mode: "0700"
-  owner: "root"
-  dest: /etc/sysconfig/modules/vlan.modules
+  lineinfile:
+      dest: "/etc/sysconfig/modules/vlan.modules"
+      state: present
+      create: yes
+      line: "exec /sbin/modprobe 8021q >/dev/null 2>&1"
+
 
 - name: create VLAN interface for plain network
   template:
-  src: vlan-plain.cfg.j2
-  dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.oc_interface }}
+      src: vlan-plain.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.oc_interface }}
   when: installer.overcloud.loadbalancer.network.plain is defined
 
 - name: create VLAN interface for external network
   template:
-  src: vlan-external.cfg.j2
-  dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.ex_interface }}
+      src: vlan-external.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.ex_interface }}
   when: installer.overcloud.loadbalancer.network.external is defined
 
 - name: create VLAN interface for internal_api network
   template:
-  src: vlan-internal_api.cfg.j2
-  dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.oc_interface }}.{{ installer.overcloud.network.template.content.parameter_defaults.InternalApiNetworkVlanID }}
+      src: vlan-internal_api.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.oc_interface }}.{{ installer.overcloud.network.template.content.parameter_defaults.InternalApiNetworkVlanID }}
   when: installer.overcloud.loadbalancer.network.internal_api is defined
 
 - name: create VLAN interface for storage network
   template:
-  src: vlan-storage.cfg.j2
-  dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.oc_interface }}.{{ installer.overcloud.network.template.content.parameter_defaults.StorageNetworkVlanID }}
+      src: vlan-storage.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.oc_interface }}.{{ installer.overcloud.network.template.content.parameter_defaults.StorageNetworkVlanID }}
   when: installer.overcloud.loadbalancer.network.storage is defined
 
 - name: create VLAN interface for storage_mgmnt network
   template:
-  src: vlan-storage_mgmt.cfg.j2
-  dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.oc_interface }}.{{ installer.overcloud.network.template.content.parameter_defaults.StorageMgmtNetworkVlanID }}
+      src: vlan-storage_mgmt.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.oc_interface }}.{{ installer.overcloud.network.template.content.parameter_defaults.StorageMgmtNetworkVlanID }}
   when: installer.overcloud.loadbalancer.network.storage_mgmnt is defined
 
 - name: create VLAN interface for tenant network
   template:
-  src: vlan-tenant.cfg.j2
-  dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.oc_interface }}.{{ installer.overcloud.network.template.content.parameter_defaults.TenantNetworkVlanID }}
+      src: vlan-tenant.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.oc_interface }}.{{ installer.overcloud.network.template.content.parameter_defaults.TenantNetworkVlanID }}
   when: installer.overcloud.loadbalancer.network.tenant is defined
 
 - name: Install release tool on loadbancer
@@ -60,24 +60,21 @@
   command: rhos-release {{ installer.version.major}}
 
 - name: update all packages
-  yum:
-  name: *
-  state: latest
+  yum: name=* state=latest
 
 - name: install haproxy service
-  yum:
-  name: haproxy
-  state: present
+  yum: name=haproxy state=present
 
 - name: copy haproxy configuration file
   template:
-  src: haproxy.cfg.j2
-  dest: /etc/haproxy/haproxy.cfg
+      src: haproxy.cfg.j2
+      dest: /etc/haproxy/haproxy.cfg
 
 - name: start haproxy service
   service:
-  name: haproxy
-  state: started enabled=yes
+      name: haproxy
+      state: started
+      enabled: yes
 
 - name: reboot the loadbalancer
   shell: "sleep 2 && shutdown -r now"
