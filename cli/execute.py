@@ -63,8 +63,8 @@ def ansible_playbook(playbook, verbose=2, settings=None,
                       'ask_vault_pass': False, 'timeout': 30, 'become': False,
                       'sudo_user': None, 'ssh_common_args': ''}
 
-    module_path = CONF.get('defaults', 'modules')
-    path_to_playbook = path.join(CONF.get('defaults', 'playbooks'), playbook)
+    module_path = CONF.get_modules_dir()
+    path_to_playbook = path.join(CONF.get_playbooks_dir(), playbook)
 
     hacked_options.update(
         module_path=module_path,

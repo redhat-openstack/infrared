@@ -20,7 +20,6 @@ class ConfigWrapper(object):
     The helper class for the InfraRed configuration.
     """
     _DEFAULT_SECTION = 'defaults'
-    _SETTINGS_OPTION = 'settings'
 
     def __init__(self, conf):
         self.config = conf
@@ -29,14 +28,29 @@ class ConfigWrapper(object):
         """
         Returns the list of the configured settings folders.
         """
-        return self.config.get(section, self._SETTINGS_OPTION).split(
+        return self.config.get(section, DEFAULT_CONF_DIRS['settings']).split(
             os.pathsep)
+
+    def get_modules_dir(self, section=_DEFAULT_SECTION):
+        """
+        Gets the modules directory.
+        """
+        return self.config.get(section, DEFAULT_CONF_DIRS['modules'])
+
+    def get_playbooks_dir(self, section=_DEFAULT_SECTION):
+        """
+        Gets the playbooks directory.
+        """
+        return self.config.get(section, DEFAULT_CONF_DIRS['playbooks'])
 
     def build_app_settings_dirs(self, app_name):
         return [os.path.join(path, app_name)
                 for path in self.get_settings_dirs()]
 
     def validate(self):
+        """
+        Validates the configuration.
+        """
         # Validates at least one settings dir exists
         dirs = self.get_settings_dirs()
         if not any([os.path.exists(path)
@@ -77,6 +91,5 @@ def load_config_file():
     return _config
 
 
-config = load_config_file()
-config_wrapper = ConfigWrapper(config)
-config_wrapper.validate()
+config = ConfigWrapper(load_config_file())
+config.validate()

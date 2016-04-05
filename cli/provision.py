@@ -13,7 +13,7 @@ import cli.yamls
 import cli.execute
 
 LOG = logger.LOG
-CONF = conf.config_wrapper
+CONF = conf.config
 
 APPLICATION = 'provisioner'
 PROVISION_PLAYBOOK = "provision.yaml"
