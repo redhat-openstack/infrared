@@ -57,24 +57,24 @@
 - name: Continue with the undercloud installation
   hosts: undercloud
   tasks:
-    - name: Install the oscplugin/tripleO client
-      yum:
-          name: "{% if installer.version.major == 7 %}python-rdomanager-oscplugin{% else %}python-tripleoclient{% endif %}"
-          state: present
+      - name: Install the oscplugin/tripleO client
+        yum:
+            name: "{% if installer.version.major == 7 %}python-rdomanager-oscplugin{% else %}python-tripleoclient{% endif %}"
+            state: present
 
-    - name: create user
-      user:
-          name: "{{ installer.user.name }}"
-          state: present
-          password: "{{ installer.user.password | password_hash('sha512') }}"
+      - name: create user
+        user:
+            name: "{{ installer.user.name }}"
+            state: present
+            password: "{{ installer.user.password | password_hash('sha512') }}"
 
-    - name: add user to sudoers
-      lineinfile:
-          dest: "/etc/sudoers"
-          line: "{{ installer.user.name }} ALL=(root) NOPASSWD:ALL"
+      - name: add user to sudoers
+        lineinfile:
+            dest: "/etc/sudoers"
+            line: "{{ installer.user.name }} ALL=(root) NOPASSWD:ALL"
 
 - name: Deploy and configure external loadbalancer instance
   hosts: loadbalancer
   roles:
-    - { role: "loadbalancer/provision/", ll}
+    - { role: "loadbalancer/provision/", when: provisioner.topology.nodes.loadbalancer is defined }
 
