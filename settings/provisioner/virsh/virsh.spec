@@ -17,10 +17,10 @@ subparsers:
                       type: Value
                       help: "User's SSH key"
                       default: ~/.ssh/id_rsa
-            - title: distro
+            - title: image
               options:
-                  distro:
-                      type: CommonSpecYamlFile
+                  image:
+                      type: YamlFile
                       help: The RHEL distribution version
                       required: yes
             - title: topology
