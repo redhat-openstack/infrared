@@ -1,0 +1,22 @@
+---
+- name: Use beaker to provision/release the machine
+  hosts: localhost
+  tasks:
+    - name: Releasing machine using the 'beaker_provisioner' module
+      beaker_provisioner:
+          server_url: "{{ provisioner.base.url }}"
+          fqdn: "{{ provisioner.fqdn }}"
+          username: "{{ provisioner.username }}"
+          password: "{{ provisioner.password }}"
+          action: "release"
+          distro_tree_id: "{{ provisioner.distro.tree }}"
+          web_service: "{{ provisioner.web.service }}"
+          ca_cert: "{{ provisioner.ca.cert }}"
+
+    - name: wait for ssh
+      wait_for:
+          host: "{{ provisioner.fqdn }}"
+          port: 22
+          search_regex: OpenSSH
+          timeout: 300
+          connect_timeout: 30
