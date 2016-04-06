@@ -30,8 +30,12 @@ def get_arguments_dict(spec_args):
     settings_dict = {}
     for _name, argument in spec_args.iteritems():
         if isinstance(argument, spec.ValueArgument):
-            utils.dict_insert(settings_dict, argument.value,
-                              *argument.arg_name.split("-"))
+            if argument.auto_nesting:
+                utils.dict_insert(settings_dict, argument.value,
+                                  *argument.arg_name.split("-"))
+            elif isinstance(argument.value, dict):
+                utils.dict_merge(settings_dict, argument.value)
+
     return settings_dict
 
 
@@ -183,7 +187,8 @@ class IRSpec(object):
 
     def collect_settings(self):
         settings_files = self.sub_command.get_settings_files()
-        arguments_dict = {self.name: get_arguments_dict(self.args)}
+        #arguments_dict = {self.name: get_arguments_dict(self.args)} # Debugo
+        arguments_dict = get_arguments_dict(self.args)
 
         # todo(yfried): fix after lookup refactor
         # utils.dict_merge(settings_files, arguments_dict)

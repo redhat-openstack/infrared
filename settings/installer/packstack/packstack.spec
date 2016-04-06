@@ -6,40 +6,40 @@ subparsers:
             - title: Storage
               options:
                   storage:
-                      type: YamlFile
+                      type: YamlFileNoNesting
                       help: Storage
                   storage-backend:
-                      type: YamlFile
+                      type: YamlFileNoNesting
                       help: Storage backend
 
             - title: Config
               options:
                   config:
-                      type: YamlFile
+                      type: YamlFileNoNesting
                       help: Packstack Configuration
                       default: default.yml
 
             - title: Debug
               options:
                   osdebug:
-                      type: YamlFile
+                      type: YamlFileNoNesting
                       help: Install OS with DEBUG
 
             - title: Messaging
               options:
                   messaging:
-                      type: YamlFile
+                      type: YamlFileNoNesting
                       help: Messaging
                       default: rabbitmq.yml
 
             - title: Network
               options:
                   network:
-                      type: YamlFile
+                      type: YamlFileNoNesting
                       help: Network
                       default: neutron.yml
                   network-variant:
-                      type: YamlFile
+                      type: YamlFileNoNesting
                       help: Network variant
                       default: _neutron_ml2-vxlan.yml
 

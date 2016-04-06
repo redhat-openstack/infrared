@@ -24,6 +24,7 @@ class ValueArgument(object):
     """
     settings_dir = None
     subcommand = None
+    auto_nesting = True
 
     def __init__(self, value=None, required=None):
         self.value = value
@@ -200,6 +201,10 @@ class YamlFileArgument(ValueArgument):
                                          *search_paths)
         else:
             pass
+
+
+class YamlFileArgumentNoAutoNesting(YamlFileArgument):
+    auto_nesting = False
 
 
 class TopologyArgument(ValueArgument):
@@ -646,3 +651,4 @@ clg.TYPES.update({'IniFile': IniFileArgument})
 clg.TYPES.update({'Value': ValueArgument})
 clg.TYPES.update({'Topology': TopologyArgument})
 clg.TYPES.update({'YamlFile': YamlFileArgument})
+clg.TYPES.update({'YamlFileNoNesting': YamlFileArgumentNoAutoNesting})
