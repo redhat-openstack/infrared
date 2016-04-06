@@ -4,10 +4,14 @@
 
 #this is required to have the 22 port free on haproxy VIP's
 - name: setup ssh for loadbalancer
-  lineinfile: dest=/etc/ssh/sshd_config line="ListenAddress {{ installer.overcloud.loadbalancer.network.plain.ip | ipaddr('address') }}"
+  lineinfile:
+      dest: "/etc/ssh/sshd_config"
+      line: "ListenAddress {{ installer.overcloud.loadbalancer.network.plain.ip | ipaddr('address') }}"
 
 - name: restart sshd service
-  service: name=sshd state=restarted
+  service:
+      name: sshd
+      state: restarted
 
 - name: enable vlan kernel module
   lineinfile:
