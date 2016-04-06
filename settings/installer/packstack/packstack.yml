@@ -1,0 +1,65 @@
+---
+installer:
+    type: packstack
+    short_type: pksk
+
+    packstack:
+        answer_file: packstack_config.txt
+
+    validate:
+        tenant_network_name: private
+        router_name: ext-to-int
+        admin_username: admin
+        admin_tenant_name: admin
+        admin_password: redhat
+        keystone_endpoint: http://127.0.0.1:5000/v2.0/
+        instance_name: khaleesi
+        key_name: instance-key
+        image:
+            user: cirros
+            id: cirros
+    network:
+        name: public
+
+    firewall:
+        rules:
+            - ' -A INPUT -m state --state ESTABLISHED,RELATED -m comment --comment "001 QA incoming related session exist the host interface MGMT" -j ACCEPT'
+            - ' -A INPUT -p tcp -m tcp --dport 22 -m comment --comment "002 QA incoming SSH" -j ACCEPT'
+            - ' -A INPUT -p icmp -m comment --comment "003 QA incoming ICMP" -j ACCEPT'
+            - ' -A INPUT -i lo -m comment --comment "004 QA incoming loopback" -j ACCEPT'
+            - ' -A INPUT -p udp --sport 53 -m comment --comment "005 QA incoming DNS" -j ACCEPT'
+            - ' -A INPUT -p udp --sport 123 -m comment --comment "006 QA incoming NTP" -j ACCEPT'
+            - ' -P INPUT DROP'
+
+node:
+    prefix:
+        - "{{ !lookup installer.short_type }}"
+
+hostname:
+    prefix:
+        - "{{ !lookup installer.short_type }}"
+
+job:
+    archive:
+        - /root/
+        - /var/lib/mysql
+        - /etc/nova
+        - /etc/ceilometer
+        - /etc/cinder
+        - /etc/glance
+        - /etc/keystone
+        - /etc/neutron
+        - /etc/swift
+        - /etc/heat
+        - /etc/libvirt
+        - /etc/rabbitmq
+        - /etc/ntp
+        - /etc/puppet
+        - /etc/qpid
+        - /etc/qpidd.conf
+        - /var/tmp/packstack
+
+defaults:
+    messaging: rabbitmq
+    network: neutron
+    config: default

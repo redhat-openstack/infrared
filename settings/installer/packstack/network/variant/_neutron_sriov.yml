@@ -1,0 +1,35 @@
+---
+installer:
+    network:
+        plugin: ml2
+        variant: sriov
+        internal:
+            label: 'physnet2'
+            vlan:
+                range:
+                    start: 290
+                    end: 340
+                bridge: "br-{{ !lookup installer.network.internal.label }}"
+    config:
+        ml2_conf:
+            type_drivers: vlan,flat,gre,vxlan
+            mechanism_drivers: openvswitch,sriovnicswitch
+            tenant_network_types: vlan
+
+    packstack:
+        config:
+            # 290-340 is the private vlan range assign to automation in qa.lab.tlv
+            # NOTE(yfried): Do not add external vlan tags to answer file.
+            #               Cloud admin can add special vlan tags via neutron API.
+            # NOTE(tkammer): Due to ksgen limitation, we have to hard code the ranges
+            CONFIG_NEUTRON_L2_PLUGIN: "{{ !lookup installer.network.plugin }}"
+            CONFIG_NEUTRON_L3_EXT_BRIDGE: provider
+            CONFIG_NEUTRON_ML2_TENANT_NETWORK_TYPES: vlan
+            CONFIG_NEUTRON_ML2_TUNNEL_ID_RANGES: '1:1000'
+            CONFIG_NEUTRON_ML2_TYPE_DRIVERS: 'local,flat,vlan'
+            CONFIG_NEUTRON_OVS_TENANT_NETWORK_TYPE: vlan
+            CONFIG_NEUTRON_OVS_TUNNEL_IF: ""
+            CONFIG_NEUTRON_OVS_VLAN_RANGES: "{{ !lookup installer.network.internal.label }}:{{ !lookup installer.network.internal.vlan.range.start }}:{{ !lookup installer.network.internal.vlan.range.end }}, {{ !lookup installer.network.label}}:{{ !lookup installer.network.external.vlan.tag }}:{{ !lookup installer.network.external.vlan.tag  }}"
+            CONFIG_NEUTRON_ML2_VLAN_RANGES: "{{ !lookup installer.packstack.config.CONFIG_NEUTRON_OVS_VLAN_RANGES }}"
+            CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS: "{{ !lookup installer.network.internal.label }}:{{ !lookup installer.network.internal.vlan.bridge }},{{ !lookup installer.network.label }}:{{ !lookup installer.network.external.vlan.bridge }}"
+            CONFIG_NEUTRON_OVS_BRIDGE_IFACES: "{{ !lookup installer.network.internal.vlan.bridge }}:{{ !lookup provisioner.nodes.controller.network.interfaces.data.label }},{{ !lookup installer.network.external.vlan.bridge }}:{{ !lookup provisioner.nodes.controller.network.interfaces.external.label }}"

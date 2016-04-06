@@ -1,0 +1,36 @@
+---
+storage:
+  services:
+    - cinder
+  volume:
+    variant:
+      share: "{{ !lookup provisioner.storage.shares.xtremio }}"
+      shares_file: "/etc/cinder/xtremio.shares"
+    config:
+      cinder:
+        "icehouse":
+          &cinder_cfg
+          DEFAULT:
+            volume_driver: "cinder.volume.drivers.emc.xtremio.XtremIOISCSIDriver"
+            san_ip: "{{ !lookup private.storage.volume.backend.xtremio.san_ip }}"
+            san_login: "{{ !lookup private.storage.volume.backend.xtremio.san_login }}"
+            san_password: "{{ !lookup private.storage.volume.backend.xtremio.san_password }}"
+        "juno":
+          *cinder_cfg
+        "5.0":
+          *cinder_cfg
+        "6.0":
+          *cinder_cfg
+        "7.0":
+          *cinder_cfg
+        "8.0":
+          *cinder_cfg
+
+tester:
+    tempest:
+        config_options:
+          - volume.storage_protocol "iSCSI"
+          - volume.vendor_name "EMC"
+        blacklist:
+          - tempest.*s3.*
+          - tempest.*ec2.*

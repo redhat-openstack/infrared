@@ -1,0 +1,33 @@
+---
+storage:
+  services:
+    - glance
+  image:
+    config:
+      glance:
+        "icehouse":
+          &glance_cfg_old
+          DEFAULT:
+           swift_store_auth_address: "http://localhost:35357/v2.0/"
+           swift_store_user: "admin:admin"
+           swift_store_key: "redhat"
+           swift_store_create_container_on_put: "True"
+           default_store: "swift"
+        "juno":
+          &glance_cfg_new
+          DEFAULT:
+            default_store: "swift"
+          glance_store:
+            swift_store_auth_address: "http://localhost:35357/v2.0/"
+            swift_store_user: "admin:admin"
+            swift_store_key: "redhat"
+            swift_store_create_container_on_put: "True"
+            stores: "glance.store.swift.Store, glance.store.filesystem.Store, glance.store.http.Store"
+        "5.0":
+          *glance_cfg_old
+        "6.0":
+          *glance_cfg_new
+        "7.0":
+          *glance_cfg_new
+        "8.0":
+          *glance_cfg_new

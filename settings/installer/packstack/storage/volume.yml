@@ -1,0 +1,24 @@
+---
+storage:
+  volume:
+    plugin:
+      name: volume
+    variant:
+      short_name: vol
+
+provisioner:
+  storage:
+    shares:
+      nfs: "{{ !lookup private.storage.shares.nfs }}"
+      gluster: "{{ !lookup private.storage.shares.gluster }}"
+      nfs_netapp: "{{ !lookup private.storage.shares.nfs_netapp }}"
+      xtremio: "{{ !lookup private.storage.shares.xtremio }}"
+      ceph: "{{ !lookup private.storage.shares.ceph }}"
+
+nodes:
+  tester:
+    groups:
+      - storage_volume
+  controller:
+    groups:
+      - storage_volume
