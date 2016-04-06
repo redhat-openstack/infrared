@@ -1,0 +1,63 @@
+---
+- name: Removing compute node
+  hosts: undercloud
+  become: yes
+  become_user: stack
+  gather_facts: no
+  tasks:
+      - name: disable services on nodes
+        shell: "source /home/stack/overcloudrc && nova service-disable {{ item }}.localdomain nova-compute"
+        with_items: "{{ node_names }}"
+
+      - name: get stack id
+        shell: "source /home/stack/stackrc && heat stack-list | awk '/overcloud/ {print $2}'"
+        register: stack_id
+
+      - name: get node id
+        shell: "source /home/stack/stackrc && nova list | awk '/{{ item }}/ {print $2}'"
+        with_items: "{{ node_names }}"
+        register: node_ids
+
+      - name: show node ids
+        debug: var=node_ids
+
+      - name: get list of exported files
+        shell: "cat ~/overcloud_deploy.sh | grep '\\-e'"
+        register: export_files
+
+      - name: show export files
+        debug: var=export_files.stdout_lines
+
+      - name: generate scale down script
+        template:
+          dest: "~/overcloud_scaling.sh"
+          src: overcloud_scaling.j2
+
+      - name: add templates to the script
+        lineinfile:
+            dest: "~/overcloud_scaling.sh"
+            line: "      {{ item }}"
+        with_items: "{{ export_files.stdout_lines }}"
+
+      - name: add nodes to the script
+        lineinfile:
+            dest: "~/overcloud_scaling.sh"
+            line: "                               {{ item.stdout_lines | last }} \\"
+        with_items: "{{ node_ids.results }}"
+
+      - name: append the invocation line to the base overcloud deploy script
+        lineinfile:
+            dest: "~/overcloud_scaling.sh"
+            line: "                       --log-file overcloud_scaling_{{ 100 | random }}.log &> overcloud_scaling.log"
+
+      - name: execute the overcloud deploy script (should take ~30 minutes :) )
+        shell: "bash ~/overcloud_scaling.sh""
+        register: overcloud_scaling
+        ignore_errors: yes
+
+      - name: print the last few lines of the output to spot failures
+        shell: "tail -n30 overcloud_scaling.log"
+
+      - fail: msg="Overcloud scailing failed... :("
+        when: overcloud_scaling.rc != 0
+
