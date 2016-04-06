@@ -30,19 +30,18 @@ subparsers:
                   messaging:
                       type: YamlFile
                       help: Messaging
-                      default rabbitmq.yml
-
+                      default: rabbitmq.yml
 
             - title: Network
               options:
                   network:
                       type: YamlFile
                       help: Network
-                      default neutron.yml
+                      default: neutron.yml
                   network-variant:
                       type: YamlFile
                       help: Network variant
-                      default ml2-vxlan.yml
+                      default: _neutron_ml2-vxlan.yml
 
             - title: common
               options:
