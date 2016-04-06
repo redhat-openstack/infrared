@@ -4,6 +4,7 @@ import os
 import pytest
 from cli import exceptions
 from cli import spec
+from cli.spec import ValueArgument
 
 
 @pytest.mark.parametrize("res_args, options, req_args, nonreq_args", [
@@ -86,3 +87,19 @@ def test_required_options_are_set(res_args,
                                   expected_args):
     actual_args = spec.override_default_values(res_args, options)
     cmp(actual_args, expected_args)
+
+
+@pytest.mark.parametrize('test_value', [
+  'test string', 1, 0.1
+])
+def test_value_argument_compare(test_value):
+    val = ValueArgument(test_value)
+
+    # verify several equality checks
+    assert val == test_value
+    assert val in [test_value, ]
+
+    # negative case
+    val = ValueArgument(0)
+    assert val != test_value
+    assert val not in [test_value, ]

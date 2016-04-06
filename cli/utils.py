@@ -5,10 +5,8 @@ This module provide some general helper methods
 import os
 
 import configure
-import yaml
 
 import cli.yamls
-import exceptions
 from cli import exceptions
 from cli import logger
 
@@ -108,7 +106,8 @@ def search_tree(needle, haystack, _res=None):
             search_tree(needle, value, _res)
         if isinstance(value, list):
             for item in value:
-                search_tree(needle, item, _res)
+                if isinstance(item, dict):
+                    search_tree(needle, item, _res)
     return _res
 
 
@@ -119,23 +118,8 @@ def update_settings(settings, file_path):
     :param file_path: path to file with settings to be merged
     :return: merged settings
     """
-    LOG.debug("Loading setting file: %s" % file_path)
-    if not os.path.exists(file_path):
-        raise exceptions.IRFileNotFoundException(file_path)
-
-    try:
-        loaded_file = configure.Configuration.from_file(file_path).configure()
-        placeholders_list = cli.yamls.Placeholder.placeholders_list
-        for placeholder in placeholders_list[::-1]:
-            if placeholder.file_path is None:
-                placeholder.file_path = file_path
-            else:
-                break
-    except yaml.constructor.ConstructorError as e:
-        raise exceptions.IRYAMLConstructorError(e, file_path)
-
-    settings = settings.merge(loaded_file)
-
+    loaded_dict = cli.yamls.load(file_path, True)
+    dict_merge(settings, loaded_dict)
     return settings
 
 
