@@ -205,8 +205,7 @@ def load_yaml(filename, *search_paths):
 
     if path is not None:
         print("Loading YAML file: %s" % path)
-        with open(path) as yaml_file:
-            return yaml.load(yaml_file)
+        return cli.yamls.load(path)
     else:
         raise exceptions.IRFileNotFoundException(
             file_path=searched_files)

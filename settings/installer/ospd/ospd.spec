@@ -5,9 +5,9 @@ subparsers:
         groups:
             - title: Firewall
               options:
-                firewall-rules:
+                firewall:
                     type: YamlFile
-                    help: The list of firewall rules
+                    help: The firewall configuration
                     default: default.yml
 
             - title: Product
