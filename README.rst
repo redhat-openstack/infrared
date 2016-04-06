@@ -71,8 +71,6 @@ The merging priority order is:
 2. Settings dir based options
 3. Extra Vars
 
-
-
 InfraRed input arguments
 ------------------------
 InfraRed extends the ``clg`` and ``argpars`` packages with the following types
