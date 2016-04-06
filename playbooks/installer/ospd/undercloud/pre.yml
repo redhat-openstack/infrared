@@ -76,5 +76,5 @@
 - name: Deploy and configure external loadbalancer instance
   hosts: loadbalancer
   roles:
-    - { role: "loadbalancer/provision/", when: 'loadbalancer' in groups}
+    - { role: "loadbalancer/provision/", when: groups.loadbalancer is defined }
 
