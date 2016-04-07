@@ -15,7 +15,11 @@ subparsers:
                 product:
                     type: YamlFile
                     help: The product to install
-                    default: "rhos-latest.yml"
+                    required: yes
+                product-version:
+                    type: YamlFile
+                    help: The product version
+                    required: yes
 
             - title: Undercloud
               options:
@@ -97,6 +101,12 @@ subparsers:
                     type: Value
                     help: The installation user password
                     default: stack
+
+            - title: Workarounds
+              options:
+                workarounds:
+                    type: YamlFile
+                    help: The list of workarounds to use during install
 
             - title: common
               options:

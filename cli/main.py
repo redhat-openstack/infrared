@@ -201,7 +201,7 @@ class IRSpec(object):
 
         yamls.Lookup.settings = utils.generate_settings(settings_files)
         # todo(yfried) remove this line after refactor
-        yamls.Lookup.settings.merge(settings_dict)
+        yamls.Lookup.settings = yamls.Lookup.settings.merge(settings_dict)
         yamls.Lookup.settings = utils.merge_extra_vars(
             yamls.Lookup.settings,
             self.args['extra-vars'])
