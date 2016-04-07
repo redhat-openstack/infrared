@@ -23,9 +23,9 @@ subparsers:
 
             - title: Undercloud
               options:
-                undercloud-network:
+                undercloud-config:
                     type: YamlFile
-                    help: The undercloud network config
+                    help: The undercloud config details
                     default: default.yml
 
             - title: Overcloud

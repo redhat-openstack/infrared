@@ -12,7 +12,7 @@
       "pm_addr": "{{ provisioner.topology.network.management.ip_address }}",
       "pm_password": "$(cat ~/.ssh/id_rsa)",
       "pm_type": "pxe_ssh",
-      "mac": ["{{ hostvars[host_name]['ansible_%s' % installer.undercloud.network.local_interface].macaddress }}"],
+      "mac": ["{{ hostvars[host_name]['ansible_%s' % installer.undercloud.config.local_interface].macaddress }}"],
       "cpu": "{{ provisioner.topology.nodes[host_name.rstrip('1234567890')].cpu }}",
       "memory": "{{ provisioner.topology.nodes[host_name.rstrip('1234567890')].memory }}",
       "disk": "{{ provisioner.topology.nodes[host_name.rstrip('1234567890')].disks.disk1.size | regex_replace('(?P<size>[0-9]+).*$', '\\g<size>') }}",

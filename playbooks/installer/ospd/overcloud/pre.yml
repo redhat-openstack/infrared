@@ -146,7 +146,7 @@
         shell: "source ~/stackrc; openstack baremetal introspection bulk start"
 
       - name: get subnet ID to update neutron's DNS server
-        shell: "source ~/stackrc; neutron subnet-list | grep {{ installer.undercloud.network.network_cidr }} | awk '{print $2;}'"
+        shell: "source ~/stackrc; neutron subnet-list | grep {{ installer.undercloud.config.network_cidr }} | awk '{print $2;}'"
         register: subnet_id
 
       - name: get the nameserver

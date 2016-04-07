@@ -8,7 +8,7 @@ openstack overcloud deploy --debug \
                        --neutron-network-type {{ installer.network.backend }} \
 {% if installer.network.backend == "vlan" %}
                        --neutron-disable-tunneling \
-                       --neutron-bridge-mappings {{ installer.undercloud.network.physical_network }}:br-ex,tenant:br-isolated \
+                       --neutron-bridge-mappings {{ installer.undercloud.config.physical_network }}:br-ex,tenant:br-isolated \
                        --neutron-network-vlan-ranges tenant:1000:2000 \
 {% else %}
                        --neutron-tunnel-types {{ installer.network.backend }} \
