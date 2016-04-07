@@ -1,0 +1,8 @@
+DEVICE={{ installer.overcloud.loadbalancer.network.oc_interface }}.{{ installer.overcloud.network.template.content.parameter_defaults.StorageNetworkVlanID }}
+BOOTPROTO=static
+ONBOOT=yes
+IPADDR={{ installer.overcloud.loadbalancer.network.storage.vip | ipaddr('address') }}
+NETMASK={{ installer.overcloud.loadbalancer.network.storage.vip | ipaddr('netmask') }}
+USERCTL=no
+VLAN=yes
+NM_CONTROLLED=no
