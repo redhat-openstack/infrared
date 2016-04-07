@@ -19,20 +19,20 @@
       shell: "yum localinstall -y {{ installer.product.rpm }}"
 
     - debug:
-          msg: "rhos-release {{ installer.version.major }}-director -p {{ installer.build }}"
+          msg: "rhos-release {{ installer.version.major }}-director -p {{ installer.build }} {{ installer.version.extra | default('') }}"
 
     - name: create necessary repos with for director using rhos-release
-      command: "rhos-release {{ installer.version.major }}-director -p {{ installer.build }}"
+      command: "rhos-release {{ installer.version.major }}-director -p {{ installer.build }} {{ installer.version.extra | default('') }}"
       register: command_result
       until: command_result.stderr.find('Connection reset by peer') == -1
       retries: 40
       delay: 5
 
     - debug:
-          msg: "rhos-release {{ installer.product.version.major }} -p {{ installer.product.build }}"
+          msg: "rhos-release {{ installer.product.version.major }} -p {{ installer.product.build }} {{ installer.product.version.extra | default('') }}"
 
     - name: create necessary repos for core using rhos-release
-      command: "rhos-release {{ installer.product.version.major }} -p {{ installer.product.build }}"
+      command: "rhos-release {{ installer.product.version.major }} -p {{ installer.product.build }} {{ installer.product.version.extra | default('') }}"
 
     - name: update system packages
       yum:
