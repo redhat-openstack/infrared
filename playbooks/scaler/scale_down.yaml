@@ -5,17 +5,19 @@
   become_user: stack
   gather_facts: no
   tasks:
+      - name: Create backup copy of overcloud deply script
+        shell: "cp -pv  ~/overcloud_deploy.sh ~/overcloud_deploy.sh.bak"
+
       - name: change list of nodes
         shell: "sed -i 's/--compute-scale\ 2/--compute-scale\ 1/g' ~/overcloud_deploy.sh"
-        register: export_files
 
-      - name: execute the overcloud deploy script (should take ~30 minutes :) )
-        shell: "bash ~/overcloud_scaling.sh"
+      - name: execute the overcloud scale DOWN
+        shell: "bash ~/overcloud_deploy.sh"
         register: overcloud_scaling
         ignore_errors: yes
 
       - name: print the last few lines of the output to spot failures
-        shell: "tail -n30 overcloud_scaling.log"
+        shell: "tail -n30 overcloud_deploy.log"
 
       - fail: msg="Overcloud scailing failed... :("
         when: overcloud_scaling.rc != 0
@@ -24,13 +26,13 @@
         shell: "sed -i 's/--compute-scale\ 1/--compute-scale\ 2/g' ~/overcloud_deploy.sh"
         register: export_files
 
-      - name: execute the overcloud deploy script (should take ~30 minutes :) )
-        shell: "bash ~/overcloud_scaling.sh"
+      - name: execute the overcloud scale UP
+        shell: "bash ~/overcloud_deploy.sh"
         register: overcloud_scaling
         ignore_errors: yes
 
       - name: print the last few lines of the output to spot failures
-        shell: "tail -n30 overcloud_scaling.log"
+        shell: "tail -n30 overcloud_deploy.log"
 
       - fail: msg="Overcloud scailing failed... :("
         when: overcloud_scaling.rc != 0
