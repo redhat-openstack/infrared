@@ -3,11 +3,11 @@
   become_user: root
   template:
       src: vlan-internal_api.cfg.j2
-      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.overcloud.loadbalancer.network.undercloud.oc_interface }}.{{ installer.overcloud.network.template.content.parameter_defaults.InternalApiNetworkVlanID }}
-  when: installer.overcloud.loadbalancer.network.internal_api is defined
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.undercloud.oc_interface }}.{{ installer.network.isolation.template.content.parameter_defaults.InternalApiNetworkVlanID }}
+  when: installer.loadbalancer.network.internal_api is defined
 
 - name: Start internal_api interface
-  shell: "sudo /usr/sbin/ifup {{ installer.overcloud.loadbalancer.network.undercloud.oc_interface }}.{{ installer.overcloud.network.template.content.parameter_defaults.InternalApiNetworkVlanID }}"
+  shell: "sudo /usr/sbin/ifup {{ installer.loadbalancer.network.undercloud.oc_interface }}.{{ installer.network.isolation.template.content.parameter_defaults.InternalApiNetworkVlanID }}"
 
 - name: copy the loadbalancer template
   template:

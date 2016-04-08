@@ -30,36 +30,36 @@ parameters:
     CephStorageHostnameResolveNetwork: storage
 
 parameter_defaults:
-  ControlPlaneIP: {{ installer.overcloud.loadbalancer.network.plain.ip | ipaddr('address') }}
-  ExternalNetworkVip: {{ installer.overcloud.loadbalancer.network.external.vip | ipaddr('address') }}
-  InternalApiNetworkVip: {{ installer.overcloud.loadbalancer.network.internal_api.vip | ipaddr('address') }}
-  StorageNetworkVip: {{ installer.overcloud.loadbalancer.network.storage.vip | ipaddr('address') }}
-  StorageMgmtNetworkVip: {{ installer.overcloud.loadbalancer.network.storage_mgmnt.vip | ipaddr('address') }}
+  ControlPlaneIP: {{ installer.loadbalancer.network.plain.ip | ipaddr('address') }}
+  ExternalNetworkVip: {{ installer.loadbalancer.network.external.vip | ipaddr('address') }}
+  InternalApiNetworkVip: {{ installer.loadbalancer.network.internal_api.vip | ipaddr('address') }}
+  StorageNetworkVip: {{ installer.loadbalancer.network.storage.vip | ipaddr('address') }}
+  StorageMgmtNetworkVip: {{ installer.loadbalancer.network.storage_mgmnt.vip | ipaddr('address') }}
   ServiceVips:
-    redis: {{ installer.overcloud.loadbalancer.network.redis.vip | ipaddr('address') }}
+    redis: {{ installer.loadbalancer.network.redis.vip | ipaddr('address') }}
   ControllerIPs:
-    external_cidr: "{{ installer.overcloud.loadbalancer.network.external.vip | ipaddr('prefix') }}"
-    internal_api_cidr: "{{ installer.overcloud.loadbalancer.network.internal_api.vip | ipaddr('prefix') }}"
-    storage_cidr: "{{ installer.overcloud.loadbalancer.network.storage.vip | ipaddr('prefix') }}"
-    storage_mgmt_cidr: "{{ installer.overcloud.loadbalancer.network.storage_mgmnt.vip | ipaddr('prefix') }}"
-    tenant_cidr: "{{ installer.overcloud.loadbalancer.network.tenant.vip | ipaddr('prefix') }}"
+    external_cidr: "{{ installer.loadbalancer.network.external.vip | ipaddr('prefix') }}"
+    internal_api_cidr: "{{ installer.loadbalancer.network.internal_api.vip | ipaddr('prefix') }}"
+    storage_cidr: "{{ installer.loadbalancer.network.storage.vip | ipaddr('prefix') }}"
+    storage_mgmt_cidr: "{{ installer.loadbalancer.network.storage_mgmnt.vip | ipaddr('prefix') }}"
+    tenant_cidr: "{{ installer.loadbalancer.network.tenant.vip | ipaddr('prefix') }}"
     external:
 {% for x in range(provisioner.topology.nodes.controller.amount) %}
-    - {{ installer.overcloud.loadbalancer.network.external.net | ipaddr('net') | ipaddr(installer.overcloud.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+    - {{ installer.loadbalancer.network.external.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
 {% endfor %}
     internal_api:
 {% for x in range(provisioner.topology.nodes.controller.amount) %}
-    - {{ installer.overcloud.loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(installer.overcloud.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+    - {{ installer.loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
 {% endfor %}
     storage:
 {% for x in range(provisioner.topology.nodes.controller.amount) %}
-    - {{ installer.overcloud.loadbalancer.network.storage.net | ipaddr('net') | ipaddr(installer.overcloud.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+    - {{ installer.loadbalancer.network.storage.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
 {% endfor %}
     storage_mgmt:
 {% for x in range(provisioner.topology.nodes.controller.amount) %}
-    - {{ installer.overcloud.loadbalancer.network.storage_mgmnt.net | ipaddr('net') | ipaddr(installer.overcloud.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+    - {{ installer.loadbalancer.network.storage_mgmnt.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
 {% endfor %}
     tenant:
 {% for x in range(provisioner.topology.nodes.controller.amount) %}
-    - {{ installer.overcloud.loadbalancer.network.tenant.net | ipaddr('net') | ipaddr(installer.overcloud.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+    - {{ installer.loadbalancer.network.tenant.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
 {% endfor %}

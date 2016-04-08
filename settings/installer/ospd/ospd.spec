@@ -16,10 +16,10 @@ subparsers:
                     type: YamlFile
                     help: The product to install
                     required: yes
-                product-version:
+                product-repo:
                     type: YamlFile
-                    help: The product version
-                    required: yes
+                    help: The product repo type
+                    default: puddle.yml
 
             - title: Undercloud
               options:
@@ -48,15 +48,7 @@ subparsers:
                     type: Value
                     help: Specifies whether the images should be built or imported
                     required: yes
-                    #choices: [import, build]
-                images-files:
-                    type: YamlFile
-                    help: The list of images for overcloud nodes
-                    required: yes
-                images-url:
-                    type: Value
-                    help: The images download url
-                    required: yes
+                    choices: [import, build]
 
             - title: Overcloud Network
               options:
@@ -101,6 +93,12 @@ subparsers:
                     type: Value
                     help: The installation user password
                     default: stack
+
+            - title: Loadbalancer
+            options:
+                loadbalancer:
+                    type: YamlFile
+                    help: The loadbalancer to use
 
             - title: Workarounds
               options:

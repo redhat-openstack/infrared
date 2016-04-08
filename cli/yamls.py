@@ -350,3 +350,9 @@ def load(file_path, update_placeholders=True):
         return res
     except yaml.constructor.ConstructorError as e:
         raise exceptions.IRYAMLConstructorError(e, file_path)
+    except configure.ConfigurationError as confError:
+        # fix for the empty yml files
+        if confError.message == 'unconfigured':
+            return {}
+        else:
+            raise

@@ -1,16 +1,19 @@
 ---
 # This is a simple file. Do NOT use it as is.
-tmp:
-    anchors:
-    - &rpmurl 'http://rdoproject.org/repos/openstack-liberty/rdo-release-liberty.rpm'
-name: rdo
-short_name: rdo
-config:
-    enable_epel: y
-repo:
-    puddle_pin_version: 'latest'
-    poodle_pin_version: 'latest'
-rpmrepo:
-    CentOS: *rpmurl
-    Fedora: *rpmurl
-    RedHat: *rpmurl
+name: rhos
+short_name: rh
+images:
+    import:
+        files:
+            discovery: "discovery-ramdisk.tar"
+            deployment: "deploy-ramdisk-ironic.tar"
+            overcloud: "overcloud-full.tar"
+        url: http://images-base-url
+
+build: latest
+version:
+    full_version: "7.0"
+    major: 7
+    minor: 0
+    extra: ""
+    code_name: kilo
