@@ -9,7 +9,10 @@
         shell: "cp -pv  ~/overcloud_deploy.sh ~/overcloud_deploy.sh.bak"
 
       - name: change list of nodes
-        shell: "sed -i 's/--compute-scale\ 2/--compute-scale\ 1/g' ~/overcloud_deploy.sh"
+      #  shell: "sed -i 's/--compute-scale\ 2/--compute-scale\ 1/g' ~/overcloud_deploy.sh"
+        lineinfile:
+            dest: "~/overcloud_deploy.sh "
+            regexp
 
       - name: execute the overcloud scale DOWN
         shell: "bash ~/overcloud_deploy.sh"
@@ -17,7 +20,7 @@
         ignore_errors: yes
 
       - name: print the last few lines of the output to spot failures
-        shell: "tail -n30 overcloud_deploy.log"
+        shell: "tail -n30 overcloud_install.log"
 
       - fail: msg="Overcloud scailing failed... :("
         when: overcloud_scaling.rc != 0
@@ -32,7 +35,7 @@
         ignore_errors: yes
 
       - name: print the last few lines of the output to spot failures
-        shell: "tail -n30 overcloud_deploy.log"
+        shell: "tail -n30 overcloud_install.log"
 
       - fail: msg="Overcloud scailing failed... :("
         when: overcloud_scaling.rc != 0
