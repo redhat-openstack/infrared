@@ -95,7 +95,7 @@ subparsers:
                     default: stack
 
             - title: Loadbalancer
-            options:
+              options:
                 loadbalancer:
                     type: YamlFile
                     help: The loadbalancer to use
