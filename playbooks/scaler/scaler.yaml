@@ -4,38 +4,43 @@
   become: yes
   become_user: stack
   gather_facts: no
+  vars:
+      up_limit: 2
+      down_limit: 1
   tasks:
       - name: Create backup copy of overcloud deply script
         shell: "cp -pv  ~/overcloud_deploy.sh ~/overcloud_deploy.sh.bak"
 
       - name: change list of nodes
-      #  shell: "sed -i 's/--compute-scale\ 2/--compute-scale\ 1/g' ~/overcloud_deploy.sh"
         lineinfile:
-            dest: "~/overcloud_deploy.sh "
-            regexp
+            dest: "~/overcloud_deploy.sh"
+            regexp: '^                       --compute-scale {{ up_limit }} \\'
+            line: '                       --compute-scale {{ down_limit }} \'
 
-      - name: execute the overcloud scale DOWN
+      - name: scaling overcloud DOWN
         shell: "bash ~/overcloud_deploy.sh"
-        register: overcloud_scaling
+        register: overcloud_scaling_down
         ignore_errors: yes
 
       - name: print the last few lines of the output to spot failures
         shell: "tail -n30 overcloud_install.log"
 
       - fail: msg="Overcloud scailing failed... :("
-        when: overcloud_scaling.rc != 0
+        when: overcloud_scaling_down.rc != 0
 
       - name: change list of nodes
-        shell: "sed -i 's/--compute-scale\ 1/--compute-scale\ 2/g' ~/overcloud_deploy.sh"
-        register: export_files
+        lineinfile:
+            dest: "~/overcloud_deploy.sh"
+            regexp: '^                       --compute-scale {{ down_limit }} \\'
+            line: '                       --compute-scale {{ up_limit }} \'
 
-      - name: execute the overcloud scale UP
+      - name: scaling overcloud UP
         shell: "bash ~/overcloud_deploy.sh"
-        register: overcloud_scaling
+        register: overcloud_scaling_up
         ignore_errors: yes
 
       - name: print the last few lines of the output to spot failures
         shell: "tail -n30 overcloud_install.log"
 
       - fail: msg="Overcloud scailing failed... :("
-        when: overcloud_scaling.rc != 0
+        when: overcloud_scaling_up.rc != 0
