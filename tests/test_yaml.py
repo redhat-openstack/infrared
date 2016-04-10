@@ -3,7 +3,6 @@ import os.path
 import configure
 import pytest
 import yaml
-from cli import exceptions
 
 from tests.test_cwd import utils
 
@@ -67,106 +66,55 @@ def test_placeholder_double_validator(our_cwd_setup):
         yaml.safe_dump(settings, default_flow_style=False)
 
 
-@pytest.mark.parametrize('our_cwd_setup, lookup_style', [
-    (our_cwd_setup, 'old'),
-    (our_cwd_setup, 'new'),
-])
-def test_lookup(our_cwd_setup, lookup_style):
+def test_lookup_basic(our_cwd_setup):
     import cli.yamls
 
-    tester_file_name = 'lookup_%s_style.yml' % lookup_style
-    tester_file = os.path.join(utils.TESTS_CWD, tester_file_name)
+    tester_file_name = 'lookup_basic.yml'
+    tester_file_path = os.path.join(utils.TESTS_CWD, tester_file_name)
 
-    # load settings from yaml and set them into Lookup 'settings' class var
-    cli.yamls.Lookup.settings = configure.Configuration().from_file(
-        tester_file).configure()
-
-    if lookup_style == 'new':
-        # explicitly call 'in_string_lookup' in order to create Lookup objects
-        cli.yamls.Lookup.in_string_lookup()
-
-    # dump the settings in order to retrieve the key's value and load them
-    # again for value validation
-    settings = yaml.safe_load(
-        yaml.safe_dump(cli.yamls.Lookup.settings, default_flow_style=False))
+    with open(tester_file_path) as fp:
+        settings = yaml.load(fp)
+        cli.yamls.replace_lookup(settings)
 
     assert settings['foo']['key_to_be_found'] == "key was found"
 
 
-@pytest.mark.parametrize('our_cwd_setup, lookup_style', [
-    (our_cwd_setup, 'old'),
-    (our_cwd_setup, 'new'),
-])
-def test_lookup_non_existing_key(our_cwd_setup, lookup_style):
+def test_lookup_non_existing_key(our_cwd_setup):
     import cli.yamls
     from cli.exceptions import IRKeyNotFoundException
 
-    tester_file_name = 'lookup_%s_style_non_existing_key.yml' % lookup_style
-    tester_file = os.path.join(utils.TESTS_CWD, tester_file_name)
+    tester_file_name = 'lookup_non_existing_key.yml'
+    tester_file_path = os.path.join(utils.TESTS_CWD, tester_file_name)
 
-    # load settings from yaml and set them into Lookup 'settings' class var
-    cli.yamls.Lookup.settings = configure.Configuration().from_file(
-        tester_file).configure()
+    with open(tester_file_path) as fp:
+        settings = yaml.load(fp)
 
-    if lookup_style == 'new':
-        # explicitly call 'in_string_lookup' in order to create Lookup objects
-        cli.yamls.Lookup.in_string_lookup()
-
-    # dump the settings with the non-existing key and expecting
-    # IRKeyNotFoundException to be raised
     with pytest.raises(IRKeyNotFoundException):
-        yaml.safe_dump(cli.yamls.Lookup.settings, default_flow_style=False)
+        cli.yamls.replace_lookup(settings)
 
 
-@pytest.mark.parametrize('our_cwd_setup, lookup_style', [
-    (our_cwd_setup, 'old'),
-    (our_cwd_setup, 'new'),
-])
-def test_nested_lookup(our_cwd_setup, lookup_style):
+def test_nested_lookup(our_cwd_setup):
     import cli.yamls
 
-    tester_file_name = 'lookup_%s_style_nested.yml' % lookup_style
-    tester_file = os.path.join(utils.TESTS_CWD, tester_file_name)
+    tester_file_name = 'lookup_nested.yml'
+    tester_file_path = os.path.join(utils.TESTS_CWD, tester_file_name)
 
-    # load settings from yaml and set them into Lookup 'settings' class var
-    cli.yamls.Lookup.settings = configure.Configuration().from_file(
-        tester_file).configure()
-
-    if lookup_style == 'new':
-        # explicitly call 'in_string_lookup' in order to create Lookup objects
-        cli.yamls.Lookup.in_string_lookup()
-
-    # dump the settings in order to retrieve the key's value and load them
-    # again for value validation
-    settings = yaml.safe_load(
-        yaml.safe_dump(cli.yamls.Lookup.settings, default_flow_style=False))
+    with open(tester_file_path) as fp:
+        settings = yaml.load(fp)
+        cli.yamls.replace_lookup(settings)
 
     assert settings['foo']['test1'] == "key was found"
 
 
-@pytest.mark.parametrize('our_cwd_setup, lookup_style', [
-    (our_cwd_setup, 'old'),
-    (our_cwd_setup, 'new'),
-])
-def test_recursive_lookup(our_cwd_setup, lookup_style):
+def test_recursive_lookup(our_cwd_setup):
     import cli.yamls
 
-    tester_file_name = 'lookup_%s_style_recursive.yml' % lookup_style
-    tester_file = os.path.join(utils.TESTS_CWD, tester_file_name)
+    tester_file_name = 'lookup_recursive.yml'
+    tester_file_path = os.path.join(utils.TESTS_CWD, tester_file_name)
 
-    # load settings from yaml and set them into Lookup 'settings' class var
-    cli.yamls.Lookup.settings = configure.Configuration().from_file(
-        tester_file).configure()
-    # cli.yamls.Lookup.handling_nested_lookups = False
-
-    if lookup_style == 'new':
-        # explicitly call 'in_string_lookup' in order to create Lookup objects
-        cli.yamls.Lookup.in_string_lookup()
-
-    # dump the settings in order to retrieve the key's value and load them
-    # again for value validation
-    settings = yaml.safe_load(
-        yaml.safe_dump(cli.yamls.Lookup.settings, default_flow_style=False))
+    with open(tester_file_path) as fp:
+        settings = yaml.load(fp)
+        cli.yamls.replace_lookup(settings)
 
     assert settings['foo']['test1'] == "key was found"
     assert settings['foo']['test2'] == "key was found"
@@ -174,23 +122,16 @@ def test_recursive_lookup(our_cwd_setup, lookup_style):
 
 def test_circular_reference_lookup():
     import cli.yamls
+    from cli.exceptions import IRInfiniteLookupException
 
     tester_file_name = 'lookup_new_style_circular_reference.yml'
-    tester_file = os.path.join(utils.TESTS_CWD, tester_file_name)
+    tester_file_path = os.path.join(utils.TESTS_CWD, tester_file_name)
 
-    # load settings from yaml and set them into Lookup 'settings' class var
-    cli.yamls.Lookup.settings = configure.Configuration().from_file(
-        tester_file).configure()
-    # cli.yamls.Lookup.handling_nested_lookups = False
-    cli.yamls.Lookup.in_string_lookup()
+    with open(tester_file_path) as fp:
+        settings = yaml.load(fp)
 
-    # dump the settings in order to retrieve the key's value and load them
-    # again for value validation
-
-    with pytest.raises(exceptions.IRInfiniteLookupException):
-        yaml.safe_load(
-            yaml.safe_dump(cli.yamls.Lookup.settings,
-                           default_flow_style=False))
+    with pytest.raises(IRInfiniteLookupException):
+        cli.yamls.replace_lookup(settings)
 
 
 def test_yamls_load(tmpdir):
