@@ -37,6 +37,12 @@ subparsers:
                       type: Value
                       help: The dns server the provisioned instances should use.
                       default: 208.67.222.222
+            - title: ssh_user
+              options:
+                  ssh_user:
+                      type: Value
+                      help: The name of the user Ansible would use when connecting the provisioned nodes
+                      default: cloud-user
             - title: topology
               options:
                   neutron:
