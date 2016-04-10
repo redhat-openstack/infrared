@@ -3,6 +3,7 @@ from functools import total_ordering
 
 import clg
 import os
+import glob
 import yaml
 import yamlordereddictloader
 
@@ -136,21 +137,33 @@ class YamlFileArgument(ValueArgument):
     """
     YAML file input argument.
     Loads legal YAML from file.
-    Will search for files in the settings directory before trying to resolve
-        absolute path.
+    Will search for files in the spec settings directories before trying
+        to resolve absolute path.
 
     For the argument name is "arg-name" and of subparser "SUBCOMMAND" of
-        application "APP", the default search path would be:
+        application "APP", the default search paths would be:
 
          settings_dir/APP/SUBCOMMAND/arg/name/arg_value
+         settings_dir/APP/arg/name/arg_value
+         arg_value
+
     """
 
     def resolve_value(self, arg_name, defaults=None):
         super(YamlFileArgument, self).resolve_value(arg_name, defaults)
+
         search_first = os.path.join(self.get_app_attr("settings_dir"),
                                     self.get_app_attr("subcommand"),
                                     *arg_name.split("-"))
-        self.value = utils.load_yaml(self.value, search_first)
+        search_second = os.path.join(self.get_app_attr("settings_dir"),
+                                     *arg_name.split("-"))
+
+        if self.value is not None:
+            self.value = utils.load_yaml(self.value,
+                                         search_first,
+                                         search_second)
+        else:
+            pass
 
 
 class TopologyArgument(ValueArgument):
@@ -214,7 +227,7 @@ class IniFileArgument(object):
         self.value = res_dict
 
 
-def parse_args(app_settings_dir, args=None):
+def parse_args(settings_dir, app_settings_dir, args=None):
     """
     Looks for all the specs for specified app
     and parses the commandline input arguments accordingly.
@@ -229,7 +242,9 @@ def parse_args(app_settings_dir, args=None):
     :return: dict. Based on cmd-line args parsed from spec file
     """
     # Dict with the merging result of all app's specs
+    common_specs = _get_specs(settings_dir, include_subfolders=False)
     app_specs = _get_specs(app_settings_dir)
+    utils.dict_merge(app_specs, common_specs)
 
     # Get the subparsers options as is with all the fields from app's specs.
     # This also trims some custom fields from options to pass to clg.
@@ -428,23 +443,28 @@ def _trim_option(option_attributes):
         option_attributes.pop(trim_param, None)
 
 
-def _get_specs(app_settings_dir):
+def _get_specs(root_folder, include_subfolders=True):
     """
     Load all  specs files from base settings directory.
 
-    :param app_settings_dir: path to the base directory holding the
+    :param root_folder: path to the base directory holding the
         application's settings. App can be provisioner\installer\tester
         and the path would be: settings/<app_name>/
+    :param include_subfolders: specifies whether the subfolders of the root
+        folder should be also searched for a spec files.
     :return: dict: All spec files merged into a single dict.
     """
-    if not os.path.exists(app_settings_dir):
-        raise exceptions.IRFileNotFoundException(app_settings_dir)
+    if not os.path.exists(root_folder):
+        raise exceptions.IRFileNotFoundException(root_folder)
 
     # Collect all app's spec
     spec_files = []
-    for root, _, files in os.walk(app_settings_dir):
-        spec_files.extend([os.path.join(root, a_file) for a_file in files
-                           if a_file.endswith(SPEC_EXTENSION)])
+    if include_subfolders:
+        for root, _, files in os.walk(root_folder):
+            spec_files.extend([os.path.join(root, a_file) for a_file in files
+                               if a_file.endswith(SPEC_EXTENSION)])
+    else:
+        spec_files = glob.glob('./' + root_folder + '/*' + SPEC_EXTENSION)
 
     res = {}
     for spec_file in spec_files:

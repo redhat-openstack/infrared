@@ -8,13 +8,13 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '                       --ceph-storage-scale {{ groups["ceph"]| length }} \'
-  when: installer.overcloud.storage.external == "no"
+  when: installer.storage.external == "no"
 
 - name: append the ceph storage template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '{% for flavor in tagged_flavors %}{% if flavor.cmd is defined and "ceph" in flavor.cmd %}                       --ceph-storage-flavor {{ flavor.cmd.split() | last }} \{% endif %}{% endfor %}'
-  when: installer.overcloud.storage.external == "no"
+  when: installer.storage.external == "no"
 
 - name: append the storage template line to the base overcloud deploy script
   lineinfile:

@@ -5,8 +5,8 @@ parameters:
     NovaEnableRbdBackend: true
     GlanceBackend: rbd
 
-{{ installer.overcloud.storage.template.content |to_nice_yaml }}
-{% if installer.overcloud.storage.external == "yes" %}
+{{ installer.storage.template.content |to_nice_yaml }}
+{% if installer.storage.external == "yes" %}
 resource_registry:
     OS::TripleO::CephClusterConfig::SoftwareConfig: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/ceph/ceph-external-config.yaml
 {% else %}

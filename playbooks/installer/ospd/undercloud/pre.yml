@@ -16,7 +16,7 @@
       command: "rm -f /etc/yum.repos.d/*"
 
     - name: install the rhos-release RPM
-      shell: "yum localinstall -y {{ product.rpm }}"
+      shell: "yum localinstall -y {{ installer.product.repo.rpm }}"
 
     - debug:
           msg: "rhos-release {{ installer.version.major }}-director -p {{ installer.build }} {{ installer.version.extra | default('') }}"
@@ -29,10 +29,10 @@
       delay: 5
 
     - debug:
-          msg: "rhos-release {{ product.version.major }} -p {{ product.build }} {{ product.version.extra | default('') }}"
+          msg: "rhos-release {{ installer.product.version.major }} -p {{ installer.product.build }} {{ installer.product.version.extra | default('') }}"
 
     - name: create necessary repos for core using rhos-release
-      command: "rhos-release {{ product.version.major }} -p {{ product.build }} {{ product.version.extra | default('') }}"
+      command: "rhos-release {{ installer.product.version.major }} -p {{ installer.product.build }} {{ installer.product.version.extra | default('') }}"
 
     - name: update system packages
       yum:

@@ -9,10 +9,10 @@ parameter_defaults:
     CinderNetappStorageFamily: 'ontap_7mode'
     CinderNetappTransportType: 'http'
 
-{%  if installer.overcloud.storage.protocol == 'iscsi' %}
+{%  if installer.storage.protocol == 'iscsi' %}
     CinderNetappBackendName: 'tripleo_netapp_iscsi'
     CinderNetappStorageProtocol: 'iscsi'
-{%  elif installer.overcloud.storage.protocol == 'nfs' %}
+{%  elif installer.storage.protocol == 'nfs' %}
     CinderNetappBackendName: 'tripleo_netapp_nfs'
     CinderNetappStorageProtocol: 'nfs'
     CinderNetappVfiler: ''
@@ -21,6 +21,6 @@ parameter_defaults:
     CinderNetappNfsSharesConfig: '/etc/cinder/shares.conf'
 {% endif %}
 
-{% for key, val in installer.overcloud.storage.template.content.parameter_defaults.iteritems() %}
+{% for key, val in installer.storage.template.content.parameter_defaults.iteritems() %}
     {{ key }}: '{{ val }}'
 {% endfor %}

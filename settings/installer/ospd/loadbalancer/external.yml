@@ -1,42 +1,39 @@
 ---
-installer:
-    overcloud:
-        loadbalancer:
-            network:
-                provision_interface: "eth0"
-                oc_interface: "eth1"
-                ex_interface: "eth2"
-                undercloud:
-                    oc_interface: "eth1"
-                    internal_ip: 172.17.1.248/24
-                plain:
-                    ip: 10.0.0.200/24
-                    gateway: 10.0.0.1
-                    dns1: 10.0.0.1
-                internal_api:
-                    net: 172.17.1.0/24
-                    vip: 172.17.1.250/24
-                external:
-                    net: 192.168.1.0/24
-                    vip: 192.168.1.250/24
-                storage:
-                    net: 172.17.3.0/24
-                    vip: 172.17.3.250/24
-                storage_mgmnt:
-                    net: 172.17.4.0/24
-                    vip: 172.17.4.250/24
-                redis:
-                    vip: 172.17.1.249/24
-                tenant:
-                    net: 172.17.2.0/24
-                    vip: 172.17.2.250/24
-                interfaces:
-                    management:
-                        label: "eth0"
-                    data:
-                        label: "eth1"
-                    external:
-                        label: "eth2"
-            controllers:
-                pool_start: 251
-                name_prefix: "overcloud-controller-"
+network:
+    provision_interface: "eth0"
+    oc_interface: "eth1"
+    ex_interface: "eth2"
+    undercloud:
+        oc_interface: "eth1"
+        internal_ip: 172.17.1.248/24
+    plain:
+        ip: 10.0.0.200/24
+        gateway: 10.0.0.1
+        dns1: 10.0.0.1
+    internal_api:
+        net: 172.17.1.0/24
+        vip: 172.17.1.250/24
+    external:
+        net: 192.168.1.0/24
+        vip: 192.168.1.250/24
+    storage:
+        net: 172.17.3.0/24
+        vip: 172.17.3.250/24
+    storage_mgmnt:
+        net: 172.17.4.0/24
+        vip: 172.17.4.250/24
+    redis:
+        vip: 172.17.1.249/24
+    tenant:
+        net: 172.17.2.0/24
+        vip: 172.17.2.250/24
+    interfaces:
+        management:
+            label: "eth0"
+        data:
+            label: "eth1"
+        external:
+            label: "eth2"
+controllers:
+    pool_start: 251
+    name_prefix: "overcloud-controller-"
