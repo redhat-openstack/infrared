@@ -30,6 +30,7 @@
       internal_network: "{{ prefix}}{{ node_type.value.network.floating_ip_network }}"
       server: "{{ prefix }}{{ node_type.value.name }}-{{ item }}"
       state: present
+      wait: yes
   register: floating_ips
   with_sequence: "count={{ node_type.value.amount }}"
   when: provisioner.nodes is defined
