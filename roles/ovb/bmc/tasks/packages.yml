@@ -1,0 +1,29 @@
+---
+# Install the necessary packages to setup the bmc node
+
+- name: Install repos
+  yum:
+      name="{{ item }}"
+      state=present
+  with_items:
+      - 'https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm'
+      - 'https://rdo.fedorapeople.org/rdo-release.rpm'
+
+# This is a separate task due to the way Ansible handle RPMs installation.
+# Before able to install 'python-pip' the right repos from previous task, should be installed.
+- name: Install RPM packages
+  yum:
+      name="{{ item }}"
+      state=present
+      disable_gpg_check=yes
+  with_items:
+      - 'python-pip'
+      - 'python-crypto'
+      - 'os-net-config'
+      - 'python-novaclient'
+      - 'python-neutronclient'
+      - 'jq'
+
+- name: Install pip packages
+  pip:
+      name=pyghmi

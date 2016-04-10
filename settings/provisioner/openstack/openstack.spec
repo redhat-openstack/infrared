@@ -30,6 +30,12 @@ subparsers:
                       type: Value
                       help: An image id or name, on OpenStack cloud to provision the instance with. To see full list of images avaialable on the cloud, use 'glance image-list'.
                       required: yes
+            - title: ssh_user
+              options:
+                  ssh_user:
+                      type: Value
+                      help: The name of the user Ansible would use when connecting the provisioned nodes
+                      default: cloud-user
             - title: topology
               options:
                   neutron:

@@ -1,0 +1,20 @@
+---
+# This file used once per node in 'fake_baremetal_nodes' group
+
+- os_client_config:
+  clouds:
+      - cloud: "{{ provisioner.cloud | default(omit) }}"
+  register: cloud_details
+- debug: var=cloud_details
+
+# Node type can be: controller, compute, ceph, etc.
+- name: Set fact for node type
+  set_fact:
+      node_type: "{{ item }}"
+
+- name: Deploy openstack-bmc service file
+  template:
+      src="openstack-bmc-service.j2"
+      dest="/usr/lib/systemd/system/openstack-bmc-{{ prefix}}{{ node_type.value.name }}-{{ item }}.serivce"
+  with_sequence: "count={{ node_type.value.amount }}"
+#  when: 'fake_baremetal_nodes' in "{{ node_type.value.groups }}"
