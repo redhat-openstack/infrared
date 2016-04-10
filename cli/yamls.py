@@ -356,3 +356,131 @@ def load(file_path, update_placeholders=True):
             return {}
         else:
             raise
+
+
+def _dict_flattener(ord_dict):
+    """
+    Converts ordinary dictionary into a flattened dictionary (all keys are
+    in the root level, nested keys are separated by dots.
+
+    Example:
+      input:  {'key1': 'val1', 'key2': {'key21': 'val21', 'key22': 'val22'}}
+      output: {'key1': 'val1', 'key2.key21': 'val21', 'key2.key22': 'val22'}
+
+
+    :param ord_dict: Ordinary dictionary
+    :return: Flattened dictionary
+    """
+    flattened_dict = {}
+
+    def dict_builder(_dic, parent_key=''):
+        for key, value in _dic.iteritems():
+            if parent_key:
+                key = parent_key + '.' + key
+
+            if not isinstance(value, dict):
+                flattened_dict[key] = value
+            else:
+                dict_builder(value, key)
+
+    dict_builder(ord_dict)
+
+    return flattened_dict
+
+
+def _dict_inflator(flattened_dict):
+    """
+    Builds an ordinary dictionary from a flatten dictionary.
+    (Reverse action to _dict_flattener function)
+
+    Example:
+      input:  {'key1': 'val1', 'key2.key21': 'val21', 'key2.key22': 'val22'}
+      output: {'key1': 'val1', 'key2': {'key21': 'val21', 'key22': 'val22'}}
+
+    :param flattened_dict: Flattened dictionary
+    (Dictionary with root level keys only, nested keys separated by dots)
+    :return: Ordinary dictionary
+    """
+    inflated_dict = {}
+
+    def dict_builder(_dic, value, key, *keys):
+        if not keys:
+            _dic[key] = value
+        else:
+            _dic.setdefault(key, {})
+            dict_builder(_dic[key], value, keys[0], *keys[1:])
+
+    for flatten_key, flatten_value in flattened_dict.iteritems():
+        dict_builder(inflated_dict, flatten_value, *flatten_key.split('.'))
+
+    return inflated_dict
+
+
+def _lookup_handler(flattened_dict):
+    """
+    Replaces all lookup patterns with the corresponding values
+
+    Lookup pattern: "{{ !lookup key.sub_key }}'
+
+    :param flattened_dict: Flattened dictionary
+    (Dictionary with root level keys only, nested keys separated by dots)
+    :return: Flattened dictionary without lookup patterns converted into
+    corresponding values
+    """
+    lookups_list = []
+
+    def get_most_nested_lookups(string_value):
+        """
+        Helper method that returns list of most nested lookups patterns from a
+        given string (in case of lookup in lookup)
+
+        :param string_value: String to search lookup patterns in it
+        :return: List containing lookup patterns
+        """
+        parser = re.compile('\{\{\s*\!lookup\s*[\w.]*\s*\}\}')
+        return parser.findall(string_value)
+
+    for key, value in flattened_dict.iteritems():
+        if isinstance(value, str) and get_most_nested_lookups(value):
+            lookups_list.append(key)
+
+    while lookups_list:
+        changed = False
+
+        for key in lookups_list:
+            lookup_patterns = get_most_nested_lookups(flattened_dict[key])
+            for lookup_pattern in lookup_patterns:
+                lookup_key = re.search('(\w+\.?)+ *?\}\}', lookup_pattern)
+                lookup_key = lookup_key.group(0).strip()[:-2].strip()
+
+                if lookup_key in lookups_list:
+                    continue
+                elif lookup_key not in flattened_dict:
+                    raise exceptions.IRKeyNotFoundException(lookup_key,
+                                                            flattened_dict)
+
+                flattened_dict[key] = re.sub(lookup_pattern,
+                                             flattened_dict[lookup_key],
+                                             flattened_dict[key], count=1)
+
+                changed = True
+
+            if not get_most_nested_lookups(flattened_dict[key]):
+                lookups_list.remove(key)
+
+        if not changed:
+            raise exceptions.IRInfiniteLookupException(", ".join(
+                lookups_list))
+
+
+def replace_lookup(lookups_dict):
+    """
+    Replaces all lookup pattern in a given dictionary (lookups_dict) with
+    the corresponding values
+
+    :param lookups_dict: Ordinary dictionary (may contains lookup patterns)
+    """
+    flattened_dict = _dict_flattener(lookups_dict)
+    _lookup_handler(flattened_dict)
+    lookups_dict.clear()
+    lookups_dict.update(_dict_inflator(flattened_dict))
