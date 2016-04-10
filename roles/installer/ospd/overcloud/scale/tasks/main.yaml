@@ -1,0 +1,36 @@
+- name: Set scaler variables
+  set_fact:
+    scale_service={{ item.key }}
+    scale_amount={{ item.value }}
+  when: (item.key == "ceph-storage") or
+        (item.key == "compute")
+  with_dict: "{{ hostvars[inventory_hostname] }}"
+
+- name: Creating scale-down script.
+  shell: "cp -pv  ~/overcloud_deploy.sh ~/overcloud_scale.sh"
+
+- name: change node amount
+  lineinfile:
+      dest: "~/overcloud_scale.sh"
+      regexp: '--{{ scale_service }}-scale \d \\'
+      line: '                       --{{ scale_service }}-scale {{ scale_amount }} \'
+
+- name: log filr destination
+  lineinfile:
+      dest: "~overcloud_scale.sh"
+      regexp: '--log-file*'
+      line: '                       --log-file overcloud_scale.log'
+
+- name: the scale overcloud script
+  shell: "cat ~/overcloud_scale.sh"
+
+- name: scaling overcloud
+  shell: "bash ~/overcloud_scale.sh"
+  register: overcloud_scaling
+  ignore_errors: yes
+
+- name: print the last few lines of the output to spot failures
+  shell: "tail -n30 overcloud_scale.log"
+
+- fail: msg="Overcloud scailing failed... :("
+  when: overcloud_scaling.rc != 0
