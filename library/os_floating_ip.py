@@ -182,7 +182,8 @@ def main():
 
             cloud.add_ips_to_server(
                 server=server, ips=floating_ip_address, reuse=reuse,
-                fixed_address=fixed_address, wait=wait, timeout=timeout)
+                ip_pool=network, fixed_address=fixed_address, wait=wait,
+                timeout=timeout)
             fip_address = cloud.get_server_public_ip(server)
             # Update the floating IP status
             f_ip = _get_floating_ip(cloud, fip_address)
