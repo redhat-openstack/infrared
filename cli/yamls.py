@@ -1,12 +1,8 @@
 """
 This module contains the tools for handling YAML files and tags.
 """
-
-import logging
-
 import os
 import re
-import sys
 import string
 
 import configure
