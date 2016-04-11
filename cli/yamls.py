@@ -74,7 +74,7 @@ def load(settings_file, update_placeholders=True):
 
         # Handling case of empty file
         if loaded_yml is None:
-            return {}
+            raise exceptions.IREmptySettingsFile(settings_file)
 
         if update_placeholders:
             for placeholder in Placeholder.placeholders_list[::-1]:

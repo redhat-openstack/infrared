@@ -85,3 +85,9 @@ class IRInfiniteLookupException(IRException):
     def __init__(self, value):
         message = "Lookup circular reference detected for: {}".format(value)
         super(IRInfiniteLookupException, self).__init__(message)
+
+
+class IREmptySettingsFile(IRException):
+    def __init__(self, file_path):
+        super(self.__class__, self).__init__("Empty settings files are not "
+                                             "allowed: {}".format(file_path))
