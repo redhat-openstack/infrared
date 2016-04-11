@@ -21,18 +21,12 @@ subparsers:
                     type: Value
                     help: The product build
                     default: latest
-                product-extra:
-                    type: Value
-                    help: The product extra info
                 product-core-version:
                     type: Value
                     help: The product core version
                 product-core-build:
                     type: Value
                     help: The product core build
-                product-core-extra:
-                    type: Value
-                    help: The product extra info
 
             - title: Undercloud
               options:
@@ -64,7 +58,7 @@ subparsers:
                     choices: [import, build]
                 images-url:
                     type: Value
-                    help: Specifies the import image url
+                    help: Specifies the import image url. Required only when images task is 'import'
 
             - title: Overcloud Network
               options:
