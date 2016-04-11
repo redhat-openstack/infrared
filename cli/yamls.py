@@ -25,28 +25,10 @@ yaml.SafeDumper.add_representer(
     (dumper, u'tag:yaml.org,2002:map', value))
 
 
-def random_generator(size=32, chars=string.ascii_lowercase + string.digits):
-    import random
-
-    return ''.join(random.choice(chars) for _ in range(size))
-
-
 @configure.Configuration.add_constructor('join')
 def _join_constructor(loader, node):
     seq = loader.construct_sequence(node)
     return ''.join([str(i) for i in seq])
-
-
-@configure.Configuration.add_constructor('random')
-def _random_constructor(loader, node):
-    """
-    usage:
-        !random <length>
-    returns a random string of <length> characters
-    """
-
-    num_chars = loader.construct_scalar(node)
-    return random_generator(int(num_chars))
 
 
 def _limit_chars(_string, length):
@@ -105,6 +87,18 @@ def _env_constructor(loader, node):
         return ret
 
     return os.environ[var]
+
+
+class Random(yaml.YAMLObject):
+    yaml_tag = u'!random'
+    yaml_dumper = yaml.SafeDumper
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        import random
+
+        chars = string.ascii_lowercase + string.digits
+        return ''.join(random.choice(chars) for _ in range(int(node.value)))
 
 
 class Placeholder(yaml.YAMLObject):
