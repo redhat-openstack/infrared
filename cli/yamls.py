@@ -5,20 +5,12 @@ import os
 import re
 import string
 
-import configure
 import yaml
 
 from cli import exceptions
 from cli import logger
 
 LOG = logger.LOG
-
-# Representer for Configuration object
-yaml.SafeDumper.add_representer(
-    configure.Configuration,
-    lambda dumper, value:
-    yaml.representer.BaseRepresenter.represent_mapping
-    (dumper, u'tag:yaml.org,2002:map', value))
 
 
 class Random(yaml.YAMLObject):
