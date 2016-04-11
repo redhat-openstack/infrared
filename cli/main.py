@@ -198,17 +198,12 @@ class IRSpec(object):
         in the setting files by values from
         other settings files.
         """
+        all_settings = utils.load_settings_files(settings_files)
+        utils.dict_merge(all_settings, settings_dict)
+        utils.merge_extra_vars(all_settings, self.args['extra-vars'])
+        yamls.replace_lookup(all_settings)
 
-        yamls.Lookup.settings = utils.generate_settings(settings_files)
-        # todo(yfried) remove this line after refactor
-        yamls.Lookup.settings = yamls.Lookup.settings.merge(settings_dict)
-        yamls.Lookup.settings = utils.merge_extra_vars(
-            yamls.Lookup.settings,
-            self.args['extra-vars'])
-
-        yamls.Lookup.in_string_lookup()
-
-        return yamls.Lookup.settings
+        return all_settings
 
     def dump_settings(self, settings):
         LOG.debug("Dumping settings...")

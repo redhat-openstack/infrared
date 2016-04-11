@@ -86,24 +86,17 @@ def main():
         storage_template
 
     LOG.debug("All settings files to be loaded:\n%s" % settings_files)
-    cli.yamls.Lookup.settings = utils.generate_settings(settings_files)
-    utils.merge_extra_vars(cli.yamls.Lookup.settings, args['extra-vars'])
 
-    # todo(yfried): ospd specific
-    cli.yamls.Lookup.settings = cli.yamls.Lookup.settings.merge(settings_dict)
-
-    cli.yamls.Lookup.in_string_lookup()
-
-    LOG.debug("Dumping settings...")
-
-    output = yaml.safe_dump(cli.yamls.Lookup.settings,
-                            default_flow_style=False)
+    all_settings = utils.load_settings_files(settings_files)
+    utils.merge_extra_vars(all_settings, args['extra-vars'])
+    utils.dict_merge(all_settings, settings_dict)
+    cli.yamls.replace_lookup(all_settings)
 
     if args['output']:
         with open(args['output'], 'w') as output_file:
-            output_file.write(output)
+            output_file.write(yaml.dump(all_settings))
     else:
-        print output
+        print yaml.dump(all_settings)
 
     # playbook execution stage
     if not args['dry-run']:
