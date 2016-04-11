@@ -1,6 +1,5 @@
 import os.path
 
-import configure
 import pytest
 import yaml
 
@@ -10,16 +9,17 @@ our_cwd_setup = utils.our_cwd_setup
 
 
 def test_unsupported_yaml_constructor(our_cwd_setup):
-    from cli.utils import update_settings
+    import cli.yamls
     from cli.exceptions import IRYAMLConstructorError
+
     tester_file = 'IRYAMLConstructorError.yml'
-    settings = configure.Configuration.from_dict({})
     with pytest.raises(IRYAMLConstructorError):
-        update_settings(settings, os.path.join(utils.TESTS_CWD, tester_file))
+        cli.yamls.load(os.path.join(utils.TESTS_CWD, tester_file))
 
 
 def test_placeholder_validator(our_cwd_setup):
-    from cli.utils import update_settings
+    import cli.yamls
+    import cli.utils
     from cli.exceptions import IRPlaceholderException
     from cli.yamls import Placeholder
 
@@ -28,10 +28,7 @@ def test_placeholder_validator(our_cwd_setup):
 
     # Checks that 'IRPlaceholderException' is raised if value isn't been
     # overwritten
-    settings = configure.Configuration.from_dict({})
-    settings = update_settings(settings,
-                               os.path.join(utils.TESTS_CWD, injector))
-
+    settings = cli.yamls.load(os.path.join(utils.TESTS_CWD, injector))
     assert isinstance(settings['place']['holder']['validator'], Placeholder)
     with pytest.raises(IRPlaceholderException) as exc:
         yaml.safe_dump(settings, default_flow_style=False)
@@ -39,16 +36,15 @@ def test_placeholder_validator(our_cwd_setup):
 
     # Checks that exceptions haven't been raised after overwriting the
     # placeholder
-    settings = update_settings(settings,
-                               os.path.join(utils.TESTS_CWD, overwriter))
-
+    overwriter_dict = cli.yamls.load(os.path.join(utils.TESTS_CWD, overwriter))
+    cli.utils.dict_merge(settings, overwriter_dict)
     assert settings['place']['holder']['validator'] == \
         "'!placeholder' has been overwritten"
     yaml.safe_dump(settings, default_flow_style=False)
 
 
 def test_placeholder_double_validator(our_cwd_setup):
-    from cli.utils import update_settings
+    import cli.yamls
     from cli.exceptions import IRPlaceholderException
     from cli.yamls import Placeholder
 
@@ -56,9 +52,7 @@ def test_placeholder_double_validator(our_cwd_setup):
 
     # Checks that 'IRPlaceholderException' is raised if value isn't been
     # overwritten
-    settings = configure.Configuration.from_dict({})
-    settings = update_settings(settings,
-                               os.path.join(utils.TESTS_CWD, injector))
+    settings = cli.yamls.load(os.path.join(utils.TESTS_CWD, injector))
 
     assert isinstance(settings['place']['holder']['validator1'], Placeholder)
     assert isinstance(settings['place']['holder']['validator2'], Placeholder)
