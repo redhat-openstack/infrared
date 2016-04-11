@@ -147,6 +147,18 @@ def _dict_inflator(flattened_dict):
     return inflated_dict
 
 
+def _get_most_nested_lookups(string_value):
+    """
+    Helper method that returns list of most nested lookups patterns from a
+    given string (in case of lookup in lookup)
+
+    :param string_value: String to search lookup patterns in it
+    :return: List containing lookup patterns
+    """
+    parser = re.compile('\{\{\s*\!lookup\s*[\w.]*\s*\}\}')
+    return parser.findall(string_value)
+
+
 def _lookup_handler(flattened_dict):
     """
     Replaces all lookup patterns with the corresponding values
@@ -160,48 +172,103 @@ def _lookup_handler(flattened_dict):
     """
     lookups_list = []
 
-    def get_most_nested_lookups(string_value):
-        """
-        Helper method that returns list of most nested lookups patterns from a
-        given string (in case of lookup in lookup)
-
-        :param string_value: String to search lookup patterns in it
-        :return: List containing lookup patterns
-        """
-        parser = re.compile('\{\{\s*\!lookup\s*[\w.]*\s*\}\}')
-        return parser.findall(string_value)
-
     for key, value in flattened_dict.iteritems():
-        if isinstance(value, str) and get_most_nested_lookups(value):
+        if isinstance(value, str) and _get_most_nested_lookups(value):
             lookups_list.append(key)
+        elif isinstance(value, list):
+            for elem in value:
+                if isinstance(elem, str) and _get_most_nested_lookups(elem):
+                    lookups_list.append(key)
+                    break
 
     while lookups_list:
         changed = False
 
         for key in lookups_list:
-            lookup_patterns = get_most_nested_lookups(flattened_dict[key])
-            for lookup_pattern in lookup_patterns:
-                lookup_key = re.search('(\w+\.?)+ *?\}\}', lookup_pattern)
-                lookup_key = lookup_key.group(0).strip()[:-2].strip()
+            lookups_target = flattened_dict[key]\
+                if isinstance(flattened_dict[key], list)\
+                else [flattened_dict[key]]
 
-                if lookup_key in lookups_list:
-                    continue
-                elif lookup_key not in flattened_dict:
-                    raise exceptions.IRKeyNotFoundException(lookup_key,
-                                                            flattened_dict)
+            for index in range(len(lookups_target)):
+                lookup_patterns = _get_most_nested_lookups(
+                    lookups_target[index])
+                for lookup_pattern in lookup_patterns:
+                    lookup_key = re.search('(\w+\.?)+ *?\}\}', lookup_pattern)
+                    lookup_key = lookup_key.group(0).strip()[:-2].strip()
 
-                flattened_dict[key] = re.sub(lookup_pattern,
-                                             flattened_dict[lookup_key],
-                                             flattened_dict[key], count=1)
+                    if lookup_key in lookups_list:
+                        continue
+                    elif lookup_key not in flattened_dict:
+                        raise exceptions.IRKeyNotFoundException(lookup_key,
+                                                                flattened_dict)
 
-                changed = True
+                    if isinstance(flattened_dict[key], str):
+                        flattened_dict[key] = re.sub(
+                            lookup_pattern, flattened_dict[lookup_key],
+                            flattened_dict[key], count=1)
+                    else:
+                        flattened_dict[key][index] = re.sub(
+                            lookup_pattern, flattened_dict[lookup_key],
+                            flattened_dict[key][index], count=1)
 
-            if not get_most_nested_lookups(flattened_dict[key]):
+                    changed = True
+
+            lookups_target = flattened_dict[key] \
+                if isinstance(flattened_dict[key], list)\
+                else [flattened_dict[key]]
+            to_remove = True
+            for elem in lookups_target:
+                if _get_most_nested_lookups(elem):
+                    to_remove = False
+                    break
+            if to_remove:
                 lookups_list.remove(key)
 
         if not changed:
-            raise exceptions.IRInfiniteLookupException(", ".join(
-                lookups_list))
+            raise exceptions.IRInfiniteLookupException(", ".join(lookups_list))
+
+
+def _common_handler(flattened_dict, key, lookups_list):
+    changed = False
+
+    lookups_target = flattened_dict[key] if \
+        isinstance(flattened_dict[key], list) else [flattened_dict[key]]
+
+    for index in range(len(lookups_target)):
+        lookup_patterns = _get_most_nested_lookups(lookups_target[index])
+        for lookup_pattern in lookup_patterns:
+            lookup_key = re.search('(\w+\.?)+ *?\}\}', lookup_pattern)
+            lookup_key = lookup_key.group(0).strip()[:-2].strip()
+
+            if lookup_key in lookups_list:
+                continue
+            elif lookup_key not in flattened_dict:
+                raise exceptions.IRKeyNotFoundException(lookup_key,
+                                                        flattened_dict)
+
+            if isinstance(flattened_dict[key], str):
+                flattened_dict[key] = re.sub(lookup_pattern,
+                                             flattened_dict[lookup_key],
+                                             flattened_dict[key], count=1)
+            else:
+                flattened_dict[key][index] = re.sub(lookup_pattern,
+                                                    flattened_dict[lookup_key],
+                                                    flattened_dict[key][index],
+                                                    count=1)
+
+            changed = True
+
+    to_remove = True
+    lookups_target = flattened_dict[key] if \
+        isinstance(flattened_dict[key], list) else [flattened_dict[key]]
+    for elem in lookups_target:
+        if _get_most_nested_lookups(elem):
+            to_remove = False
+            break
+    if to_remove:
+        lookups_list.remove(key)
+
+    return changed
 
 
 def replace_lookup(lookups_dict):
