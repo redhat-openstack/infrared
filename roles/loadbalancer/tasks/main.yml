@@ -58,10 +58,10 @@
   when: installer.loadbalancer.network.tenant is defined
 
 - name: Install release tool on loadbancer
-  command: "yum localinstall -y {{ installer.product.repo.rpm }}"
+  command: "yum localinstall -y {{ installer.product.rpm }}"
 
 - name: Execute rhos-release for OSP-Director
-  command: rhos-release {{ installer.version.major}}
+  command: rhos-release {{ installer.product.version}}
 
 - name: update all packages
   yum: name=* state=latest

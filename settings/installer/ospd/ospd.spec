@@ -12,14 +12,27 @@ subparsers:
 
             - title: Product
               options:
-                product:
-                    type: YamlFile
-                    help: The product to install
+                product-version:
+                    type: Value
+                    help: The product version
                     required: yes
-                product-repo:
-                    type: YamlFile
-                    help: The product repo type
-                    default: puddle.yml
+                    choices: ["7", "8"]
+                product-build:
+                    type: Value
+                    help: The product build
+                    default: latest
+                product-extra:
+                    type: Value
+                    help: The product extra info
+                product-core-version:
+                    type: Value
+                    help: The product core version
+                product-core-build:
+                    type: Value
+                    help: The product core build
+                product-core-extra:
+                    type: Value
+                    help: The product extra info
 
             - title: Undercloud
               options:
@@ -42,13 +55,16 @@ subparsers:
                     help: The overcloud storage type
                     default: ceph.yml
 
-            - title: Overcloud images
+            - title: Product images
               options:
                 images-task:
                     type: Value
                     help: Specifies whether the images should be built or imported
                     required: yes
                     choices: [import, build]
+                images-url:
+                    type: Value
+                    help: Specifies the import image url
 
             - title: Overcloud Network
               options:
@@ -67,21 +83,6 @@ subparsers:
                 network-isolation-template:
                     type: YamlFile
                     help: The overcloud network isolation template
-
-            - title: Version
-              options:
-                version-major:
-                    type: Value
-                    help: The OSPd major version
-                    default: 7
-                version-minor:
-                    type: Value
-                    help: The OSPd minor version
-                    default: 3
-                build:
-                    type: Value
-                    help: The OSPd build
-                    default: latest
 
             - title: User
               options:

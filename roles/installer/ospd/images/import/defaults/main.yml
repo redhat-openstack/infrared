@@ -1,0 +1,10 @@
+oii_import_images:
+    '7':
+        - "discovery-ramdisk.tar"
+        - "deploy-ramdisk-ironic.tar"
+        - "overcloud-full.tar"
+    '8':
+        - "ironic-python-agent.tar"
+        - "overcloud-full.tar"
+
+oii_images: "{{ oii_import_images[installer.product.version] | default(oii_import_images['8']) }}"
