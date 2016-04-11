@@ -25,30 +25,6 @@ yaml.SafeDumper.add_representer(
     (dumper, u'tag:yaml.org,2002:map', value))
 
 
-def _limit_chars(_string, length):
-    length = int(length)
-    if length < 0:
-        raise exceptions.IRException('length to crop should be int, not ' +
-                                     str(length))
-
-    return _string[:length]
-
-
-@configure.Configuration.add_constructor('limit_chars')
-def _limit_chars_constructor(loader, node):
-    """
-    Usage:
-        !limit_chars [<string>, <length>]
-    Method returns first param cropped to <length> chars.
-    """
-
-    params = loader.construct_sequence(node)
-    if len(params) != 2:
-        raise exceptions.IRException(
-            'limit_chars requires two params: string length')
-    return _limit_chars(params[0], params[1])
-
-
 class Random(yaml.YAMLObject):
     yaml_tag = u'!random'
     yaml_dumper = yaml.SafeDumper
