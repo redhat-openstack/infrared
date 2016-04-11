@@ -25,12 +25,6 @@ yaml.SafeDumper.add_representer(
     (dumper, u'tag:yaml.org,2002:map', value))
 
 
-@configure.Configuration.add_constructor('join')
-def _join_constructor(loader, node):
-    seq = loader.construct_sequence(node)
-    return ''.join([str(i) for i in seq])
-
-
 def _limit_chars(_string, length):
     length = int(length)
     if length < 0:
