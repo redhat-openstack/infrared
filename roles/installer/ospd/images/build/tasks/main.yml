@@ -10,17 +10,12 @@
 - name: Build OC images
   shell: |
       pushd ~/overcloud_images
-      openstack overcloud image build --all > openstack-build-images.log
+      openstack overcloud image build --type {{ item.value }} > openstack-build-images-{{ item.value }}.log
+  with_dict: "{{ installer.images.overcloud.files }}"
   environment:
       DIB_LOCAL_IMAGE: "{{ image_build_path }}/guest_image.qcow2"
       DIB_YUM_REPO_CONF: "/etc/yum.repos.d/rhos-release-{{ product.version.major }}-director.repo /etc/yum.repos.d/rhos-release-{{ product.version.major }}.repo /etc/yum.repos.d/rhos-release-rhel-{{ private.distro.rhel.full_version }}.repo"
       RHOS: 1
       RUN_RHOS_RELEASE: 1
-      RHOS_RELEASE: "{{ product.version.major }}_director"
+      RHOS_RELEASE: "{{ product.version.major }}-director"
       USE_DELOREAN_TRUNK: 0
-# TODO: Add portal credentials and repositories - not working so far - invalid credentials
-#      REG_METHOD: portal
-#      REG_USER: "{{ private.distro.rhel.subscription.username }}"
-#      REG_PASSWORD: "{{ private.distro.rhel.subscription.password }}"
-#      REG_POOL_ID: "{{ private.distro.rhel.subscription.pool }}"
-#      REG_REPOS: "rhel-7-server-rpms rhel-7-server-extras-rpms rhel-ha-for-rhel-7-server-rpms rhel-7-server-optional-rpms rhel-7-server-openstack-7.0-rpms"
