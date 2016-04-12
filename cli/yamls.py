@@ -2,6 +2,7 @@
 This module contains the tools for handling YAML files and tags.
 """
 import os
+import random
 import re
 import string
 
@@ -14,13 +15,14 @@ LOG = logger.LOG
 
 
 class Random(yaml.YAMLObject):
+    """
+    Class for '!random' YAML tag
+    """
     yaml_tag = u'!random'
     yaml_dumper = yaml.SafeDumper
 
     @classmethod
     def from_yaml(cls, loader, node):
-        import random
-
         chars = string.ascii_lowercase + string.digits
         return ''.join(random.choice(chars) for _ in range(int(node.value)))
 
