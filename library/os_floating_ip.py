@@ -182,6 +182,29 @@ def main():
                         fixed_address = address['ip_address']
                         break
 
+            # If f_ip already assigned to server, check that it matches
+            # requirements.
+            fip_address = cloud.get_server_public_ip(server)
+            if fip_address:
+                f_ip = _get_floating_ip(cloud, fip_address)
+                if all([fixed_address, f_ip.fixed_ip_address == fixed_address,
+                        network, f_ip.network != network]):
+                    # Current state definitely conflicts with requirements
+                    module.fail_json(msg="server {server} already has a "
+                                         "floating-ip on requested "
+                                         "interface but it doesn't match "
+                                         "requested network {network: {fip}"
+                                     .format(server=server_name_or_id,
+                                             network=network,
+                                             fip=remove_values(f_ip,
+                                                               module.no_log_values)))
+                if not network or f_ip.network == network:
+                    # Requirements are met
+                    module.exit_json(changed=False, floating_ip=f_ip)
+
+                # Requirments are vague enough to ignore exisitng f_ip and try
+                # to create a new f_ip to the server.
+
             cloud.add_ips_to_server(
                 server=server, ips=floating_ip_address, reuse=reuse,
                 ip_pool=network, fixed_address=fixed_address, wait=wait,
