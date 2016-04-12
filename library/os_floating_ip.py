@@ -49,13 +49,13 @@ options:
      required: false
    floating_ip_address:
      description:
-        - A floating IP address to attach or to detach. Required only if state
-          is absent. When state is present can be used to specify a IP address
+        - A floating IP address to attach or to detach. Required only if I(state)
+          is absent. When I(state) is present can be used to specify a IP address
           to attach.
      required: false
    reuse:
      description:
-        - When state is present, and floating_ip_address is not present,
+        - When I(state) is present, and I(floating_ip_address) is not present,
           this parameter can be used to specify whether we should try to reuse
           a floating IP address already allocated to the project.
      required: false
@@ -82,6 +82,13 @@ options:
      choices: [present, absent]
      required: false
      default: present
+   purge:
+     description:
+        - When I(state) is absent, indicates whether or not to delete the floating
+          IP completely, or only detach it from the server. Default is to detach only.
+     required: false
+     default: false
+     version_added: "2.1"
 requirements: ["shade"]
 '''
 
@@ -134,6 +141,7 @@ def main():
         fixed_address=dict(required=False, default=None),
         wait=dict(required=False, type='bool', default=False),
         timeout=dict(required=False, type='int', default=60),
+        purge=dict(required=False, type='bool', default=False),
         internal_network=dict(required=False, default=None),
     )
 
@@ -151,6 +159,7 @@ def main():
     fixed_address = module.params['fixed_address']
     wait = module.params['wait']
     timeout = module.params['timeout']
+    purge = module.params['purge']
     internal_network = module.params['internal_network']
 
     cloud = shade.openstack_cloud(**module.params)
@@ -205,9 +214,9 @@ def main():
                 # Requirments are vague enough to ignore exisitng f_ip and try
                 # to create a new f_ip to the server.
 
-            cloud.add_ips_to_server(
-                server=server, ips=floating_ip_address, reuse=reuse,
-                ip_pool=network, fixed_address=fixed_address, wait=wait,
+            server = cloud.add_ips_to_server(
+                server=server, ips=floating_ip_address, ip_pool=network,
+                reuse=reuse, fixed_address=fixed_address, wait=wait,
                 timeout=timeout)
             fip_address = cloud.get_server_public_ip(server)
             # Update the floating IP status
@@ -216,14 +225,24 @@ def main():
 
         elif state == 'absent':
             if floating_ip_address is None:
-                module.fail_json(msg="floating_ip_address is required")
+                if not server_name_or_id:
+                    module.fail_json(msg="either server or floating_ip_address are required")
+                server = cloud.get_server(server_name_or_id)
+                floating_ip_address = cloud.get_server_public_ip(server)
 
             f_ip = _get_floating_ip(cloud, floating_ip_address)
+
+            if not f_ip:
+                # Nothing to detach
+                module.exit_json(changed=False)
 
             cloud.detach_ip_from_server(
                 server_id=server['id'], floating_ip_id=f_ip['id'])
             # Update the floating IP status
             f_ip = cloud.get_floating_ip(id=f_ip['id'])
+            if purge:
+                cloud.delete_floating_ip(f_ip['id'])
+                module.exit_json(changed=True)
             module.exit_json(changed=True, floating_ip=f_ip)
 
     except shade.OpenStackCloudException as e:
