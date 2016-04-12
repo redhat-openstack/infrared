@@ -111,7 +111,7 @@ def _dict_flattener(ord_dict):
     def dict_builder(_dic, parent_key=''):
         for key, value in _dic.iteritems():
             if parent_key:
-                key = parent_key + '.' + key
+                key = parent_key + '.' + str(key)
 
             if not isinstance(value, dict):
                 flattened_dict[key] = value
@@ -140,7 +140,10 @@ def _dict_inflator(flattened_dict):
 
     def dict_builder(_dic, value, key, *keys):
         if not keys:
-            _dic[key] = value
+            if key.isdigit():
+                _dic[int(key)] = value
+            else:
+                _dic[key] = value
         else:
             _dic.setdefault(key, {})
             dict_builder(_dic[key], value, keys[0], *keys[1:])
@@ -189,8 +192,8 @@ def _lookup_handler(flattened_dict):
         changed = False
 
         for key in lookups_list:
-            lookups_target = flattened_dict[key]\
-                if isinstance(flattened_dict[key], list)\
+            lookups_target = flattened_dict[key] \
+                if isinstance(flattened_dict[key], list) \
                 else [flattened_dict[key]]
 
             for index in range(len(lookups_target)):
@@ -218,7 +221,7 @@ def _lookup_handler(flattened_dict):
                     changed = True
 
             lookups_target = flattened_dict[key] \
-                if isinstance(flattened_dict[key], list)\
+                if isinstance(flattened_dict[key], list) \
                 else [flattened_dict[key]]
             to_remove = True
             for elem in lookups_target:
