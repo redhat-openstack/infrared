@@ -1,10 +1,10 @@
 ---
 - name: download the pre-built overcloud images
   get_url:
-      dest: "~/{{ item.value }}"
-      url: "{{ installer.product.images.import.url }}/{{ item.value }}"
-  with_dict: "{{ installer.product.images.import.files }}"
+      dest: "~/{{ item }}"
+      url: "{{ installer.images.url }}/{{ item }}"
+  with_items: "{{ tar_images }}"
 
 - name: untar the images
-  shell: "tar -xvf ~/{{ item.value }}"
-  with_dict: "{{ installer.product.images.import.files }}"
+  shell: "tar -xvf ~/{{ item }}"
+  with_items: "{{ tar_images }}"
