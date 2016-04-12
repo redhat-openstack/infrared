@@ -114,6 +114,19 @@ def test_recursive_lookup(our_cwd_setup):
     assert settings['foo']['test2'] == "key was found"
 
 
+def test_in_list_lookup(our_cwd_setup):
+    import cli.yamls
+
+    tester_file_name = 'lookup_in_list.yml'
+    tester_file_path = os.path.join(utils.TESTS_CWD, tester_file_name)
+
+    with open(tester_file_path) as fp:
+        yaml_content = yaml.load(fp)
+        cli.yamls.replace_lookup(yaml_content)
+
+    assert yaml_content['key1']['key12'] == ["pre", "found", "post"]
+
+
 def test_circular_reference_lookup():
     import cli.yamls
     from cli.exceptions import IRInfiniteLookupException
