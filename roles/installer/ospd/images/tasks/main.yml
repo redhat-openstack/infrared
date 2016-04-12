@@ -1,0 +1,18 @@
+- name: copy our public key to inject the images of the overcloud nodes
+  copy:
+      src: "{{ inventory_dir }}/id_rsa.pub"
+      dest: "/home/{{ installer.user.name }}/id_rsa.pub"
+      mode: 0600
+
+- include: "{{ installer.images.task }}.yml"
+
+- name: list current directory
+  shell: "ls -l"
+  register: file_list
+
+- name: print file list
+  debug:
+      var=file_list
+
+- name: upload the overcloud images to glance
+  shell: "source ~/stackrc; openstack overcloud image upload"

@@ -1,0 +1,28 @@
+- name: prepare the machine for undercloud deployment
+  include: setup.yml
+
+- name: create the undercloud configuration
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  include: configure.yml
+
+- name: install the undercloud
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  shell: "openstack undercloud install --debug &> undercloud_install.log"
+  register: undercloud_deployment
+  ignore_errors: yes
+
+- name: print the last 30 lines of the undercloud installation
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  shell: "tail -n30 undercloud_install.log"
+
+- fail:
+      msg: "Undercloud deployment failed... :("
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  failed_when: undercloud_deployment.rc != 0
+
+- name: gathering new facts about the undercloud
+  setup:

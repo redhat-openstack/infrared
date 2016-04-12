@@ -24,9 +24,12 @@ subparsers:
                 product-core-version:
                     type: Value
                     help: The product core version
+                    required: yes
+                    choices: ["7", "8"]
                 product-core-build:
                     type: Value
                     help: The product core build
+                    default: latest
 
             - title: Undercloud
               options:

@@ -101,7 +101,7 @@ that need to be defined in `.spec` files:
   #. Split the topology value with ','.
   #. Split each node with '_' and get pair (number, role). For every pair
      look for the topology folder (configured in the infrared.cfg file) for
-     the appropriate mini file (controller.yaml, compute.yaml, etc). Load the
+     the appropriate mini file (controller.yml, compute.yml, etc). Load the
      role the defined number of times into the settings.
 
  .. note:: The default search path for topology files is

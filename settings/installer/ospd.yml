@@ -1,0 +1,68 @@
+---
+
+installer:
+    type: ospd
+    short_type: ospd
+    user:
+        name: stack
+        password: stack
+
+    undercloud:
+        config:
+            local_interface: "eth0"
+            network_cidr: "192.0.2.0/24"
+
+    overcloud:
+        template_base: "~/my_templates"
+
+    firewall:
+        rules:
+            - ' -A INPUT -m state --state ESTABLISHED,RELATED -m comment --comment "001 QA incoming related session exist the host interface MGMT" -j ACCEPT'
+            - ' -A INPUT -p tcp -m tcp --dport 22 -m comment --comment "002 QA incoming SSH" -j ACCEPT'
+            - ' -A INPUT -p icmp -m comment --comment "003 QA incoming ICMP" -j ACCEPT'
+            - ' -A INPUT -i lo -m comment --comment "004 QA incoming loopback" -j ACCEPT'
+            - ' -A INPUT -p udp --sport 53 -m comment --comment "005 QA incoming DNS" -j ACCEPT'
+            - ' -A INPUT -p udp --sport 123 -m comment --comment "006 QA incoming NTP" -j ACCEPT'
+            - ' -P INPUT DROP'
+
+defaults:
+    build: latest
+    images: import
+    network: "no-isolation"
+    version: 7
+    ssl: "no"
+
+job:
+  archive:
+  - /var/log/
+  - /etc/yum.repos.d
+  - /etc/selinux
+  - /root/
+  - /var/lib/mysql
+  - /etc/nova
+  - /etc/ceilometer
+  - /etc/cinder
+  - /etc/glance
+  - /etc/keystone
+  - /etc/neutron
+  - /etc/swift
+  - /etc/heat
+  - /etc/libvirt
+  - /etc/rabbitmq
+  - /etc/ntp
+  - /etc/puppet
+  - /etc/qpid
+  - /etc/qpidd.conf
+  - /home/stack/.instack/install-undercloud.log
+  - /home/stack/stackrc
+  - /home/stack/overcloudrc
+  - /home/stack/*.log
+  - /home/stack/*.json
+  - /home/stack/*.conf
+  - /home/stack/*.yml
+  - /home/stack/deploy-overcloudrc
+  - /home/stack/network-environment.yaml
+  - /home/stack/tempest/*.xml
+  - /home/stack/tempest/*.log
+  - /home/stack/tempest/etc/*.conf
+  - /usr/share/openstack-tripleo-heat-templates
