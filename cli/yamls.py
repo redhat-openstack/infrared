@@ -89,6 +89,8 @@ def load(settings_file, update_placeholders=True):
         raise exceptions.IRYAMLConstructorError(e, settings_file)
 
 
+# TODO(aopincar): Replace the entire lookup mechanism to a one without
+# flatted dict
 def _dict_flattener(ord_dict):
     """
     Converts ordinary dictionary into a flattened dictionary (all keys are
@@ -149,8 +151,8 @@ def _dict_inflator(flattened_dict):
 
 def _get_most_nested_lookups(string_value):
     """
-    Helper method that returns list of most nested lookups patterns from a
-    given string (in case of lookup in lookup)
+    Returns list of most nested lookups patterns from a given string (in
+    case of lookup in lookup)
 
     :param string_value: String to search lookup patterns in it
     :return: List containing lookup patterns
@@ -226,49 +228,6 @@ def _lookup_handler(flattened_dict):
 
         if not changed:
             raise exceptions.IRInfiniteLookupException(", ".join(lookups_list))
-
-
-def _common_handler(flattened_dict, key, lookups_list):
-    changed = False
-
-    lookups_target = flattened_dict[key] if \
-        isinstance(flattened_dict[key], list) else [flattened_dict[key]]
-
-    for index in range(len(lookups_target)):
-        lookup_patterns = _get_most_nested_lookups(lookups_target[index])
-        for lookup_pattern in lookup_patterns:
-            lookup_key = re.search('(\w+\.?)+ *?\}\}', lookup_pattern)
-            lookup_key = lookup_key.group(0).strip()[:-2].strip()
-
-            if lookup_key in lookups_list:
-                continue
-            elif lookup_key not in flattened_dict:
-                raise exceptions.IRKeyNotFoundException(lookup_key,
-                                                        flattened_dict)
-
-            if isinstance(flattened_dict[key], str):
-                flattened_dict[key] = re.sub(lookup_pattern,
-                                             flattened_dict[lookup_key],
-                                             flattened_dict[key], count=1)
-            else:
-                flattened_dict[key][index] = re.sub(lookup_pattern,
-                                                    flattened_dict[lookup_key],
-                                                    flattened_dict[key][index],
-                                                    count=1)
-
-            changed = True
-
-    to_remove = True
-    lookups_target = flattened_dict[key] if \
-        isinstance(flattened_dict[key], list) else [flattened_dict[key]]
-    for elem in lookups_target:
-        if _get_most_nested_lookups(elem):
-            to_remove = False
-            break
-    if to_remove:
-        lookups_list.remove(key)
-
-    return changed
 
 
 def replace_lookup(lookups_dict):
