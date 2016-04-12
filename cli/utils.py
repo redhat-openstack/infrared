@@ -187,15 +187,13 @@ def load_yaml(filename, *search_paths):
     """Find YAML file. search default path first.
 
     :param filename: path to file
-    :param search_first: default path to search first
+    :param search_paths: the list of paths to search for a file.
     :returns: dict. loaded YAML file.
     """
     path = None
     searched_files = []
     files_to_search = map(
         lambda search_path: os.path.join(search_path, filename), search_paths)
-    # append file name to verify absolute path by default
-    files_to_search.append(filename)
 
     for filename in files_to_search:
         searched_files.append(os.path.abspath(filename))
