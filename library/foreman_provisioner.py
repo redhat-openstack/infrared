@@ -170,7 +170,9 @@ class ForemanManager(object):
         :param flag: a boolean value (true/false) to set the build flag with
         """
         host = self.update_host(host_id, json.dumps({'build': flag}))
-        #TODO(tkammer): add verification that the host was updated
+        self.get_host(host_id)
+        if self.get_host(host_id).get('build') != flag:
+            raise Exception("Failed setting build on host {0}".format(host_id))
 
     def bmc(self, host_id, command):
         """
@@ -192,7 +194,10 @@ class ForemanManager(object):
         commands: 'status', 'on', 'off', 'cycle', 'reset', 'soft' # TBD
         """
         command = "ipmitool -I lanplus -H {0} -U ADMIN -P ADMIN chassis power {1}".format(host_id, command)
-        response = os.system(command)
+        return_code = subprocess.call(command.split(" "))
+
+        if return_code > 0:
+            raise Exception("Call to {0}, returned with {1}".format(command, return_code))
 
     def _validate_bmc(self, host_id):
         """
@@ -203,12 +208,12 @@ class ForemanManager(object):
             self.url, self.default_uri, host_id)
         response = self.session.get(request_url, verify=False)
         body = response.json()
-        found_bmc = False
+        missing_bmc = True
         for interface in body['results']:
             if "BMC" in interface['type']:
-                found_bmc = True
+                missing_bmc = False
                 break
-        return found_bmc
+        return missing_bmc
 
     def provision(self, host_id, mgmt_strategy, mgmt_action,
                   wait_for_host=True):
@@ -225,7 +230,7 @@ class ForemanManager(object):
                  Exception in case of machine could not be reached after
                  rebuild
         """
-        if not self._validate_bmc(host_id):
+        if self._validate_bmc(host_id):
             raise KeyError("BMC not found on {}".format(host_id))
         building_host = self.get_host(host_id)
         self.set_build_on_host(host_id, True)

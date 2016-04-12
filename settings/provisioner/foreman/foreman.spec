@@ -1,7 +1,7 @@
 ---
 subparsers:
     foreman:
-        help: Provision systems using 'foreman'
+        help: Provision systems using 'Foreman'
         groups:
             - title: foreman
               options:
