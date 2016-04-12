@@ -127,6 +127,24 @@ def test_in_list_lookup(our_cwd_setup):
     assert yaml_content['key1']['key12'] == ["pre", "found", "post"]
 
 
+def test_integer_key_conversion_in_lookup(our_cwd_setup):
+    """
+    Makes sure that integer keys remain integer after lookup method
+    """
+    import cli.yamls
+
+    tester_file_name = 'lookup_int_key_conversion.yml'
+    tester_file_path = os.path.join(utils.TESTS_CWD, tester_file_name)
+
+    with open(tester_file_path) as fp:
+        yaml_content = yaml.load(fp)
+        cli.yamls.replace_lookup(yaml_content)
+
+    assert yaml_content['key'][1] == 'val'
+    with pytest.raises(KeyError):
+        yaml_content['key']['1'] == 'val'
+
+
 def test_circular_reference_lookup():
     import cli.yamls
     from cli.exceptions import IRInfiniteLookupException
