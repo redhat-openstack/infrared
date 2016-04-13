@@ -1,0 +1,9 @@
+---
+- name: Scaling ceph-storage nodes down and up again
+  hosts: undercloud
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  gather_facts: no
+  roles:
+      - {role: "installer/ospd/overcloud/scale/", service: 'ceph-storage', amount: 1}
+      - {role: "installer/ospd/overcloud/scale/", service: 'ceph-storage', amount: 3}
