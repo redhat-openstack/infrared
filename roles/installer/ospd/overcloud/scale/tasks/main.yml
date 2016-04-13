@@ -1,4 +1,28 @@
----
-- name: scaling compute nodes
-  include: scale_compute.yml scale_amount={{ scale_amount }}
-  when: scale_service == 'compute'
+- name: Creating scale script.
+  shell: "cp -pv ~/overcloud_deploy.sh ~/overcloud_scale.sh"
+
+- name: change amount of scaled nodes
+  replace:
+      dest: "~/overcloud_scale.sh"
+      regexp: '^(\s*)--{{ scale_service }}-scale\s\d\s\\'
+      replace: '\1--{{ scale_service }}-scale {{ scale_amount }} \\'
+
+- name: change log file destination
+  replace:
+      dest: "~/overcloud_scale.sh"
+      regexp: '^(\s*)--log-file.*'
+      replace: '\1--log-file overcloud_scale.log'
+
+- name: the compute scale overcloud script
+  shell: "cat ~/overcloud_scale.sh"
+
+- name: scaling overcloud
+  shell: "bash ~/overcloud_scale.sh"
+  register: overcloud_scaling
+  ignore_errors: yes
+
+- name: print the last few lines of the output to spot failures
+  shell: "tail -n30 overcloud_scale.log"
+
+- fail: msg="Overcloud scailing failed... :("
+  when: overcloud_scaling.rc != 0
