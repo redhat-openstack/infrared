@@ -6,6 +6,9 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  vars:
+      image_build_path: "/home/stack/overcloud_images"
+      image_path: "{{ image_build_path if installer.images.task == 'build' else '~' }}"
   pre_tasks:
       - name: copy our public key to inject the images of the overcloud nodes
         copy:
@@ -16,7 +19,6 @@
       - fail:
             msg: "Stopping before building/importing the images per user request"
         when: break is defined and break == "before_images"
-
   roles:
       - {role: installer/ospd/images/build, when: installer.images.task == "build"}
       - {role: installer/ospd/images/import, when: installer.images.task == "import"}
@@ -25,7 +27,7 @@
         shell: "rm -f *.tar"
 
       - name: upload the overcloud images to glance
-        shell: "source ~/stackrc; openstack overcloud image upload"
+        shell: "source ~/stackrc; cd {{ image_path }}; openstack overcloud image upload"
 
 # In case we're dealing with virthost, we need to make sure the undercloud is able to ssh to the hypervisor
 - name: Create the stack user on the virthost and allow SSH to hypervisor
