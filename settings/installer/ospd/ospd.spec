@@ -47,7 +47,7 @@ subparsers:
                 storage:
                     type: YamlFile
                     help: The overcloud storage type
-                    default: ceph.yml
+                    default: no-storage.yml
 
             - title: Product images
               options:
