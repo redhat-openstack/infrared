@@ -59,6 +59,19 @@ class ConfigWrapper(object):
                 dirs,
                 "Settings directories do not exist: ")
 
+    def sections(self):
+        """
+        Gets the list of sections
+        """
+        return self.config.sections()
+
+    def get_spec_config(self, spec_name):
+        """
+        Gets the spec configuration from the config file.
+        """
+
+        return self.config.items(spec_name)
+
 
 def load_config_file():
     """Load config file order(ENV, CWD, USER HOME, SYSTEM).

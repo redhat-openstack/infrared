@@ -160,14 +160,12 @@ class YamlFileArgument(ValueArgument):
                             self.get_app_attr("settings_dirs")]
         root_locations = [os.path.join(settings_path,
                                        *arg_name.split("-")) for
-                            settings_path in
-                            self.get_app_attr("settings_dirs")]
+                          settings_path in
+                          self.get_app_attr("settings_dirs")]
         search_locations.extend(root_locations)
-        self.value = utils.load_yaml(self.value, *search_locations)
+
         if self.value is not None:
-            self.value = utils.load_yaml(self.value,
-                                         search_first,
-                                         search_second)
+            self.value = utils.load_yaml(self.value, *search_locations)
         else:
             pass
 
@@ -234,13 +232,14 @@ class IniFileArgument(object):
         self.value = res_dict
 
 
-def parse_args(settings_dirs, app_settings_dir, args=None):
+def parse_args(settings_dirs, app_settings_dirs, args=None):
     """
     Looks for all the specs for specified app
     and parses the commandline input arguments accordingly.
 
     Trim clg spec from customized input and modify help data.
 
+    :param settings_dirs: the root settings folders
     :param app_settings_dirs: the list of pathes to the base directory holding
         the application's settings. App can be provisioner\installer\tester
         and the path would be: settings/<app_name>/
@@ -249,9 +248,8 @@ def parse_args(settings_dirs, app_settings_dir, args=None):
     :return: dict. Based on cmd-line args parsed from spec file
     """
     # Dict with the merging result of all app's specs
-    common_specs = _get_specs(settings_dir, include_subfolders=False)
+    common_specs = _get_specs(settings_dirs, include_subfolders=False)
     app_specs = _get_specs(app_settings_dirs)
-    utils.dict_merge(app_specs, common_specs)
     utils.dict_merge(app_specs, common_specs)
 
     # Get the subparsers options as is with all the fields from app's specs.
@@ -455,7 +453,7 @@ def _get_specs(app_settings_dirs, include_subfolders=True):
     """
     Load all  specs files from base settings directory.
 
-    :param app_settings_dir:s the list of paths to the base directory holding
+    :param app_settings_dirs: the list of paths to the base directory holding
         the application's settings. App can be provisioner\installer\tester
         and the path would be: settings/<app_name>/
     :param include_subfolders: specifies whether the subfolders of the root
@@ -468,11 +466,14 @@ def _get_specs(app_settings_dirs, include_subfolders=True):
     if include_subfolders:
         for app_settings_dir in app_settings_dirs:
             for root, _, files in os.walk(app_settings_dir):
-                spec_files.extend([os.path.join(root, a_file) for a_file in files
-                                   if a_file.endswith(SPEC_EXTENSION)])
+                spec_files.extend(
+                    [os.path.join(root, a_file) for a_file in files
+                     if a_file.endswith(SPEC_EXTENSION)])
     else:
+        spec_files = []
         for app_settings_dir in app_settings_dirs:
-           spec_files = glob.glob('./' + app_settings_dir + '/*' + SPEC_EXTENSION)
+            spec_files.extend(glob.glob(
+                './' + app_settings_dir + '/*' + SPEC_EXTENSION))
 
     res = {}
     for spec_file in spec_files:

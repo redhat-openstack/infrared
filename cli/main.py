@@ -56,8 +56,8 @@ class IRFactory(object):
         if spec_name not in supported_specs:
             raise exceptions.IRUnknownSpecException(spec_name)
         else:
-            app_settings_dirs = config.build_app_settings_dirs(app_name)
-            spec_args = spec.parse_args(app_settings_dirs, args)
+            app_settings_dirs = config.build_app_settings_dirs(spec_name)
+            spec_args = spec.parse_args(settings_dirs, app_settings_dirs, args)
             cls.configure_environment(spec_args)
 
             if spec_args.get('generate-conf-file', None):
@@ -65,12 +65,12 @@ class IRFactory(object):
                     spec_args['generate-conf-file']))
                 spec_instance = None
             else:
-                spec_config = dict(config.items(spec_name))
+                spec_config = dict(config.get_spec_config(spec_name))
                 spec_instance = IRSpec(
                     spec_name,
                     dict(cleanup=spec_config['cleanup_playbook'],
                          main=spec_config['main_playbook']),
-                    settings_dir, spec_args)
+                    settings_dirs, spec_args)
 
         return spec_instance
 
