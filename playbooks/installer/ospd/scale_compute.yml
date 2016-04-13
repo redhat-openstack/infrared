@@ -1,9 +1,9 @@
 ---
-- name: Run scale tests
+- name: Scaling compute nodes down and up again
   hosts: undercloud
   become: yes
   become_user: "{{ installer.user.name }}"
   gather_facts: no
   roles:
-      - {role: "installer/ospd/overcloud/scale/", scale_service: 'compute', scale_amount: 1}
-      - {role: "installer/ospd/overcloud/scale/", scale_service: 'compute', scale_amount: 2}
+      - {role: "installer/ospd/overcloud/scale/", service: 'compute', amount: 1}
+      - {role: "installer/ospd/overcloud/scale/", service: 'compute', amount: 2}
