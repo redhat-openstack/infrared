@@ -91,69 +91,6 @@ def load(settings_file, update_placeholders=True):
         raise exceptions.IRYAMLConstructorError(e, settings_file)
 
 
-# TODO(aopincar): Replace the entire lookup mechanism to a one without
-# flatted dict
-def _dict_flattener(ord_dict):
-    """
-    Converts ordinary dictionary into a flattened dictionary (all keys are
-    in the root level, nested keys are separated by dots.
-
-    Example:
-      input:  {'key1': 'val1', 'key2': {'key21': 'val21', 'key22': 'val22'}}
-      output: {'key1': 'val1', 'key2.key21': 'val21', 'key2.key22': 'val22'}
-
-
-    :param ord_dict: Ordinary dictionary
-    :return: Flattened dictionary
-    """
-    flattened_dict = {}
-
-    def dict_builder(_dic, parent_key=''):
-        for key, value in _dic.iteritems():
-            if parent_key:
-                key = parent_key + '.' + str(key)
-
-            if not isinstance(value, dict):
-                flattened_dict[key] = value
-            else:
-                dict_builder(value, key)
-
-    dict_builder(ord_dict)
-
-    return flattened_dict
-
-
-def _dict_inflator(flattened_dict):
-    """
-    Builds an ordinary dictionary from a flatten dictionary.
-    (Reverse action to _dict_flattener function)
-
-    Example:
-      input:  {'key1': 'val1', 'key2.key21': 'val21', 'key2.key22': 'val22'}
-      output: {'key1': 'val1', 'key2': {'key21': 'val21', 'key22': 'val22'}}
-
-    :param flattened_dict: Flattened dictionary
-    (Dictionary with root level keys only, nested keys separated by dots)
-    :return: Ordinary dictionary
-    """
-    inflated_dict = {}
-
-    def dict_builder(_dic, value, key, *keys):
-        if not keys:
-            if key.isdigit():
-                _dic[int(key)] = value
-            else:
-                _dic[key] = value
-        else:
-            _dic.setdefault(key, {})
-            dict_builder(_dic[key], value, keys[0], *keys[1:])
-
-    for flatten_key, flatten_value in flattened_dict.iteritems():
-        dict_builder(inflated_dict, flatten_value, *flatten_key.split('.'))
-
-    return inflated_dict
-
-
 def _get_most_nested_lookups(string_value):
     """
     Returns list of most nested lookups patterns from a given string (in
@@ -166,83 +103,80 @@ def _get_most_nested_lookups(string_value):
     return parser.findall(string_value)
 
 
-def _lookup_handler(flattened_dict):
-    """
-    Replaces all lookup patterns with the corresponding values
-
-    Lookup pattern: "{{ !lookup key.sub_key }}'
-
-    :param flattened_dict: Flattened dictionary
-    (Dictionary with root level keys only, nested keys separated by dots)
-    :return: Flattened dictionary without lookup patterns converted into
-    corresponding values
-    """
-    lookups_list = []
-
-    for key, value in flattened_dict.iteritems():
-        if isinstance(value, str) and _get_most_nested_lookups(value):
-            lookups_list.append(key)
-        elif isinstance(value, list):
-            for elem in value:
-                if isinstance(elem, str) and _get_most_nested_lookups(elem):
-                    lookups_list.append(key)
-                    break
-
-    while lookups_list:
-        changed = False
-
-        for key in lookups_list:
-            lookups_target = flattened_dict[key] \
-                if isinstance(flattened_dict[key], list) \
-                else [flattened_dict[key]]
-
-            for index in range(len(lookups_target)):
-                lookup_patterns = _get_most_nested_lookups(
-                    lookups_target[index])
-                for lookup_pattern in lookup_patterns:
-                    lookup_key = re.search('(\w+\.?)+ *?\}\}', lookup_pattern)
-                    lookup_key = lookup_key.group(0).strip()[:-2].strip()
-
-                    if lookup_key in lookups_list:
-                        continue
-                    elif lookup_key not in flattened_dict:
-                        raise exceptions.IRKeyNotFoundException(lookup_key,
-                                                                flattened_dict)
-
-                    if isinstance(flattened_dict[key], str):
-                        flattened_dict[key] = re.sub(
-                            lookup_pattern, flattened_dict[lookup_key],
-                            flattened_dict[key], count=1)
-                    else:
-                        flattened_dict[key][index] = re.sub(
-                            lookup_pattern, flattened_dict[lookup_key],
-                            flattened_dict[key][index], count=1)
-
-                    changed = True
-
-            lookups_target = flattened_dict[key] \
-                if isinstance(flattened_dict[key], list) \
-                else [flattened_dict[key]]
-            to_remove = True
-            for elem in lookups_target:
-                if _get_most_nested_lookups(elem):
-                    to_remove = False
-                    break
-            if to_remove:
-                lookups_list.remove(key)
-
-        if not changed:
-            raise exceptions.IRInfiniteLookupException(", ".join(lookups_list))
-
-
 def replace_lookup(lookups_dict):
     """
     Replaces all lookup pattern in a given dictionary (lookups_dict) with
     the corresponding values
 
-    :param lookups_dict: Ordinary dictionary (may contains lookup patterns)
+    :param lookups_dict: Dictionary with data to replace
     """
-    flattened_dict = _dict_flattener(lookups_dict)
-    _lookup_handler(flattened_dict)
-    lookups_dict.clear()
-    lookups_dict.update(_dict_inflator(flattened_dict))
+    def yaml_walk(yaml_content, key_path=None):
+        an_iter = enumerate(yaml_content) if isinstance(yaml_content, list) \
+            else yaml_content.iteritems()
+
+        for idx_key, value in an_iter:
+            if hasattr(value, '__iter__'):
+                if key_path is None:
+                    next_key = str(idx_key)
+                else:
+                    next_key = key_path + '.' + str(idx_key)
+                yaml_walk(value, next_key)
+            elif isinstance(value, str):
+                yaml_content[idx_key] = _lookup_handler(
+                    value, lookups_dict, key_path)
+
+    yaml_walk(lookups_dict)
+
+
+def _lookup_handler(lookup_string, data_dict, key_path, visited=None):
+    """
+    Lookups handling mechanism
+
+    :param lookup_string: string containing the lookup pattern to be handled
+    :param data_dict: The complete data dictionary
+    :param key_path: Path to the value's key we currently handling
+    :param visited: List of already visited keys (infinite loop indicator)
+    :return:
+    """
+    if visited is None:
+        visited = []
+    visited.append(key_path)
+
+    while True:
+        lookups = _get_most_nested_lookups(lookup_string)
+        if not lookups:
+            break
+
+        for lookup in lookups:
+            lookup_key = re.search('(\w+\.?)+ *?\}\}', lookup)
+            lookup_key = lookup_key.group(0).strip()[:-2].strip()
+
+            if lookup_key in visited:
+                raise exceptions.IRInfiniteLookupException(", ".join(visited))
+
+            new_value = _lookup_handler(dict_get(data_dict, lookup_key),
+                                        data_dict, lookup_key, visited)
+
+            lookup_string = re.sub(lookup, new_value, lookup_string, count=1)
+
+    return lookup_string
+
+
+def dict_get(dic, key):
+    """
+    Gets the value of a nested key in a dictionary
+
+    :param dic: Dictionary containing the needed data
+    :param key: String representing full key path (Example: 'key.sub1.sub2')
+    :return: Value of a given key in the dictionary
+    """
+    def _dict_get(_dic, current_key, *keys):
+        try:
+            if not keys:
+                return _dic[current_key]
+
+            return _dict_get(_dic[current_key], *keys)
+        except KeyError:
+            raise exceptions.IRKeyNotFoundException(key, dic)
+
+    return _dict_get(dic, *key.split('.'))
