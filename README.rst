@@ -178,10 +178,3 @@ There are two steps that should be done when adding a new plugin to InfraRed:
     with other values, all are received by the user.
     When adding a new plugin, there is a need to create those settings files containing the needed data for the
     playbook execution.
-
-
-Known issues
-============
-
-#. PROBLEM: sshpass package cannot be installed during virsh provisioning.
-   SOLUTION: install rhos-release tool. Install osp-d with rhos-release: ``rhos-release 7-director``

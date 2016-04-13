@@ -19,13 +19,9 @@ subparsers:
                       default: ~/.ssh/id_rsa
             - title: image
               options:
-                  image-file:
-                      type: Value
-                      help: An image to provision the host with
-                      required: yes
-                  image-server:
-                      type: Value
-                      help: Base URL of the image file server
+                  image:
+                      type: YamlFile
+                      help: The image to use for nodes provisioning. Check the 'sample.yml.example' for example.
                       required: yes
             - title: topology
               options:

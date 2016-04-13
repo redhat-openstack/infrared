@@ -1,0 +1,33 @@
+---
+# This file includes tasks for instances and floating IPs cleanup.
+
+# Node type can be: controller, compute, ceph, etc.
+- name: Set fact for node type
+  set_fact:
+      node_type: "{{ item }}"
+
+- name: Release floating IPs
+  os_floating_ip:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      server: "{{ prefix }}{{ node_type.value.name }}-{{ item }}"
+      state: absent
+      purge: yes
+  with_sequence: "count={{ node_type.value.amount }}"
+  when: provisioner.nodes is defined
+  register: floating_ips
+  ignore_errors: yes
+
+# These tasks done for each type of node according to 'amount' variable
+- name: Cleanup instances
+  os_server:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      name: "{{ prefix }}{{ node_type.value.name }}-{{ item }}"
+      state: absent
+  with_sequence: "count={{ node_type.value.amount }}"
+  when: provisioner.nodes is defined
+  register: instances
+  ignore_errors: yes
+
+- name: Fail run if one of nova cleanups tasks failed/skipped
+  fail: msg="The run failed because one of nova cleanup tasks failed/skipped"
+  when: instances|skipped or floating_ips|skipped

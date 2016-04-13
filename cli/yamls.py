@@ -144,8 +144,8 @@ class Lookup(yaml.YAMLObject):
 
             for a_lookup in lookups:
                 visited_lookups = []
-                lookup_value = a_lookup
                 while True:
+                    lookup_value = a_lookup
                     lookup_key = re.search('(\w+\.?)+ *?\}\}', a_lookup)
                     if lookup_key is None:
                         # if key cannot be found in lookup consider
@@ -350,3 +350,9 @@ def load(file_path, update_placeholders=True):
         return res
     except yaml.constructor.ConstructorError as e:
         raise exceptions.IRYAMLConstructorError(e, file_path)
+    except configure.ConfigurationError as confError:
+        # fix for the empty yml files
+        if confError.message == 'unconfigured':
+            return {}
+        else:
+            raise

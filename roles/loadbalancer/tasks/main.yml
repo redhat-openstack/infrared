@@ -1,0 +1,93 @@
+---
+- name: switch selinux to permissive
+  selinux: policy=targeted state=permissive
+
+#this is required to have the 22 port free on haproxy VIP's
+- name: setup ssh for loadbalancer
+  lineinfile:
+      dest: "/etc/ssh/sshd_config"
+      line: "ListenAddress {{ installer.loadbalancer.network.plain.ip | ipaddr('address') }}"
+
+- name: restart sshd service
+  service:
+      name: sshd
+      state: restarted
+
+- name: enable vlan kernel module
+  lineinfile:
+      dest: "/etc/sysconfig/modules/vlan.modules"
+      state: present
+      create: yes
+      line: "exec /sbin/modprobe 8021q >/dev/null 2>&1"
+
+
+- name: create VLAN interface for plain network
+  template:
+      src: vlan-plain.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}
+  when: installer.loadbalancer.network.plain is defined
+
+- name: create VLAN interface for external network
+  template:
+      src: vlan-external.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.ex_interface }}
+  when: installer.loadbalancer.network.external is defined
+
+- name: create VLAN interface for internal_api network
+  template:
+      src: vlan-internal_api.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}.{{ installer.network.isolation.template.content.parameter_defaults.InternalApiNetworkVlanID }}
+  when: installer.loadbalancer.network.internal_api is defined
+
+- name: create VLAN interface for storage network
+  template:
+      src: vlan-storage.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}.{{ installer.network.isolation.template.content.parameter_defaults.StorageNetworkVlanID }}
+  when: installer.loadbalancer.network.storage is defined
+
+- name: create VLAN interface for storage_mgmnt network
+  template:
+      src: vlan-storage_mgmt.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}.{{ installer.network.isolation.template.content.parameter_defaults.StorageMgmtNetworkVlanID }}
+  when: installer.loadbalancer.network.storage_mgmnt is defined
+
+- name: create VLAN interface for tenant network
+  template:
+      src: vlan-tenant.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}.{{ installer.network.isolation.template.content.parameter_defaults.TenantNetworkVlanID }}
+  when: installer.loadbalancer.network.tenant is defined
+
+- name: Install release tool on loadbancer
+  command: "yum localinstall -y {{ installer.product.rpm }}"
+
+- name: Execute rhos-release for OSP-Director
+  command: rhos-release {{ installer.product.version }}
+
+- name: update all packages
+  yum: name=* state=latest
+
+- name: install haproxy service
+  yum: name=haproxy state=present
+
+- name: copy haproxy configuration file
+  template:
+      src: haproxy.cfg.j2
+      dest: /etc/haproxy/haproxy.cfg
+
+- name: start haproxy service
+  service:
+      name: haproxy
+      state: started
+      enabled: yes
+
+- name: reboot the loadbalancer
+  shell: "sleep 2 && shutdown -r now"
+  async: 1
+  poll: 0
+  ignore_errors: true
+
+- name: Waiting for the loadbalancer to be available
+  delegate_to: localhost
+  wait_for:
+      host: "{{ hostvars[inventory_hostname].ansible_ssh_host }}"
+      timeout: 120

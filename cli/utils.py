@@ -28,7 +28,10 @@ def dict_insert(dic, val, key, *keys):
     :param keys: sub keys in the keys chain
     """
     if not keys:
-        dic[key] = val
+        if key in dic and isinstance(val, dict):
+            dict_merge(dic[key], val)
+        else:
+            dic[key] = val
         return
 
     dict_insert(dic.setdefault(key, {}), val, *keys)
@@ -193,10 +196,10 @@ def load_yaml(filename, *search_paths):
     # append file name to verify absolute path by default
     files_to_search.append(filename)
 
-    for try_filename in files_to_search:
-        searched_files.append(os.path.abspath(try_filename))
-        if os.path.exists(try_filename):
-            path = os.path.abspath(try_filename)
+    for filename in files_to_search:
+        searched_files.append(os.path.abspath(filename))
+        if os.path.exists(filename):
+            path = os.path.abspath(filename)
             break
 
     if path is not None:

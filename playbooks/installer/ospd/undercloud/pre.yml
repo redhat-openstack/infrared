@@ -16,23 +16,24 @@
       command: "rm -f /etc/yum.repos.d/*"
 
     - name: install the rhos-release RPM
-      shell: "yum localinstall -y {{ product.rpm }}"
+      shell: "yum localinstall -y {{ installer.product.rpm }}"
 
     - debug:
-          msg: "rhos-release {{ installer.version.major }}-director -p {{ installer.build }}"
+          msg: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }} {{ installer.product.extra | default('') }}"
 
     - name: create necessary repos with for director using rhos-release
-      command: "rhos-release {{ installer.version.major }}-director -p {{ installer.build }}"
+      command: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }} {{ installer.product.extra | default('') }}"
       register: command_result
       until: command_result.stderr.find('Connection reset by peer') == -1
       retries: 40
       delay: 5
 
     - debug:
-          msg: "rhos-release {{ product.version.major }} -p {{ product.build }}"
+          msg: "rhos-release {{ installer.product.version }} -p {{ installer.product.build }} {{ installer.product.extra | default('') }}"
 
-    - name: create necessary repos for core using rhos-release
-      command: "rhos-release {{ product.version.major }} -p {{ product.build }}"
+    - name: create necessary repos for CORE using rhos-release
+      command: "rhos-release {{ installer.product.core.version }} -p {{ installer.product.core.build }} {{ installer.product.core.extra | default('') }}"
+      when: installer.product.core.version is defined and installer.product.core.version and installer.product.core.build is defined and installer.product.core.build
 
     - name: update system packages
       yum:
@@ -59,7 +60,7 @@
   tasks:
     - name: Install the oscplugin/tripleO client
       yum:
-          name: "{% if installer.version.major == 7 %}python-rdomanager-oscplugin{% else %}python-tripleoclient{% endif %}"
+          name: "{% if installer.product.version == '7' %}python-rdomanager-oscplugin{% else %}python-tripleoclient{% endif %}"
           state: present
 
     - name: create user
@@ -72,3 +73,9 @@
       lineinfile:
           dest: "/etc/sudoers"
           line: "{{ installer.user.name }} ALL=(root) NOPASSWD:ALL"
+
+- name: Deploy and configure external loadbalancer instance
+  hosts: loadbalancer
+  roles:
+    - { role: "loadbalancer/", when: groups.loadbalancer is defined }
+
