@@ -145,6 +145,23 @@ def test_integer_key_conversion_in_lookup(our_cwd_setup):
         yaml_content['key']['1'] == 'val'
 
 
+def test_same_key_multiple_visits_lookup(our_cwd_setup):
+    """
+    Checks that key's path is removed from the 'visited' list when each
+    lookup is found
+    """
+    import cli.yamls
+
+    tester_file_name = 'lookup_same_key_multiple_visits.yml'
+    tester_file_path = os.path.join(utils.TESTS_CWD, tester_file_name)
+
+    with open(tester_file_path) as fp:
+        yaml_content = yaml.load(fp)
+        cli.yamls.replace_lookup(yaml_content)
+
+    assert yaml_content['key']['sub2'] == 'val-val'
+
+
 def test_circular_reference_lookup():
     import cli.yamls
     from cli.exceptions import IRInfiniteLookupException
