@@ -194,9 +194,9 @@ class ForemanManager(object):
         commands: 'status', 'on', 'off', 'cycle', 'reset', 'soft' # TBD
         """
         command = "ipmitool -I lanplus -H {0} -U ADMIN -P ADMIN chassis power {1}".format(host_id, command)
-        return_code = subprocess.call(command.split(" "))
+        return_code = subprocess.call(command, shell=True)
 
-        if return_code > 0:
+        if return_code:
             raise Exception("Call to {0}, returned with {1}".format(command, return_code))
 
     def _validate_bmc(self, host_id):
@@ -247,9 +247,9 @@ class ForemanManager(object):
                 time.sleep(WAIT_TO_FINISH_BUILDING)
 
             command = "ping -q -c 30 -w 300 {0}".format(building_host.get('name'))
-            return_code = subprocess.call(command.split(" "))
+            return_code = subprocess.call(command, shell=True)
 
-            if return_code > 0:
+            if return_code:
                 raise Exception("Could not reach {0}, rc={1}, cmd={2}".format(host_id, return_code, command))
 
 def main():
