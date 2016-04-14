@@ -152,33 +152,30 @@ class YamlFileArgument(ValueArgument):
         Get the possible locations (folders) where the
         yaml files can be stored.
 
-        :param settings_dir: path to the base directory holding the
+        :param settings_dirs: path to the base directory holding the
             application's settings. App can be provisioner\installer\tester
             and the path would be: settings/<app_name>/
         :param subcommand: the subcommand name (e.g. virsh, ospd, etc)
         :param arg_name: the argument name
         :return The list of folders to search for the yaml files.
         """
-        search_locations = [os.path.join(settings_path,
-                                         self.get_app_attr("subcommand"),
-                                         *arg_name.split("-")) for
-                            settings_path in
-                            settings_dirs]
-        root_locations = [os.path.join(settings_path,
-                                       *arg_name.split("-")) for
-                          settings_path in
-                          settings_dirs"]
+        search_locations = [os.path.join(
+            settings_path, subcommand, *arg_name.split("-"))
+                            for settings_path in settings_dirs]
+        root_locations = [os.path.join(
+            settings_path, *arg_name.split("-"))
+                          for settings_path in settings_dirs]
         search_locations.extend(root_locations)
         search_locations.append(".")
         return search_locations
 
     @classmethod
-    def get_allowed_files(cls, settings_dir, subcommand, arg_name,
+    def get_allowed_files(cls, settings_dirs, subcommand, arg_name,
                           search_root=False):
         """
         Gets the list of the the files in the default locations.
 
-        :param settings_dir: path to the base directory holding the
+        :param settings_dirs: path to the base directory holding the
             application's settings. App can be provisioner\installer\tester
             and the path would be: settings/<app_name>/
         :param subcommand: the subcommand name (e.g. virsh, ospd, etc)
@@ -189,7 +186,7 @@ class YamlFileArgument(ValueArgument):
         """
 
         res = []
-        locations = cls.get_file_locations(settings_dir,
+        locations = cls.get_file_locations(settings_dirs,
                                            subcommand,
                                            arg_name)
         if search_root is False:
@@ -208,8 +205,7 @@ class YamlFileArgument(ValueArgument):
             arg_name)
 
         if self.value is not None:
-            self.value = utils.load_yaml(self.value, *search_locations)
-                                         *search_paths)
+            self.value = utils.load_yaml(self.value, *search_paths)
         else:
             pass
 
@@ -315,9 +311,9 @@ class ArgumentsPreProcessor(object):
 
     TRIM_PARAMS = ['default', 'required']
 
-    def __init__(self, settings_dir, app_settings_dir):
-        self.app_settings_dir = app_settings_dir
-        self.settings_dir = settings_dir
+    def __init__(self, settings_dirs, app_settings_dirs):
+        self.app_settings_dirs = app_settings_dirs
+        self.settings_dirs = settings_dirs
 
     def process(self, spec_dict):
         """
@@ -377,7 +373,7 @@ class ArgumentsPreProcessor(object):
         if option_attributes.get(
                 'type', None) == 'YamlFile' and subcommand is not None:
             allowed_files = YamlFileArgument.get_allowed_files(
-                self.app_settings_dir, subcommand, option_name)
+                self.app_settings_dirs, subcommand, option_name)
 
             option_attributes['help'] += "\nAvailable files: {{ {0} }}".format(
                 ", ".join(map(os.path.basename, allowed_files))
@@ -445,7 +441,7 @@ def parse_args(settings_dirs, app_settings_dirs, args=None):
     # Get the subparsers options as is with all the fields from app's specs.
     # This also trims some custom fields from options to pass to clg.
     subparsers_options = ArgumentsPreProcessor(
-        settings_dir, app_settings_dir).process(app_specs)
+        settings_dirs, app_settings_dirs).process(app_specs)
 
     # Pass trimmed spec to clg with modified help message
     cmd = clg.CommandLine(app_specs)
