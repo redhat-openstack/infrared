@@ -1,6 +1,7 @@
 ---
 subparsers:
     virsh:
+        formatter_class: RawTextHelpFormatter
         help: Provision systems using virsh
         groups:
             - title: Hypervisor
