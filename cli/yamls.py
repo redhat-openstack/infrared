@@ -12,6 +12,8 @@ from cli import exceptions
 from cli import logger
 
 LOG = logger.LOG
+LOOKUP_REGEX = '\{\{\s*\!lookup\s*[\w.]*\s*\}\}'
+LOOKUP_KEY_REGEX = '(\w+\.?)+ *?\}\}'
 
 
 class Random(yaml.YAMLObject):
@@ -91,18 +93,7 @@ def load(settings_file, update_placeholders=True):
         raise exceptions.IRYAMLConstructorError(e, settings_file)
 
 
-def _get_most_nested_lookups(string_value):
-    """
-    Returns list of most nested lookups patterns from a given string (in
-    case of lookup in lookup)
-
-    :param string_value: String to search lookup patterns in it
-    :return: List containing lookup patterns
-    """
-    parser = re.compile('\{\{\s*\!lookup\s*[\w.]*\s*\}\}')
-    return parser.findall(string_value)
-
-
+# TODO(aopincar): Remove use in inner function
 def replace_lookup(lookups_dict):
     """
     Replaces all lookup pattern in a given dictionary (lookups_dict) with
@@ -128,6 +119,7 @@ def replace_lookup(lookups_dict):
     yaml_walk(lookups_dict)
 
 
+# TODO(aopincar): Refactor this method (to be recursive only - no while & for)
 def _lookup_handler(lookup_string, data_dict, key_path, visited=None):
     """
     Lookups handling mechanism
@@ -143,12 +135,13 @@ def _lookup_handler(lookup_string, data_dict, key_path, visited=None):
     visited.append(key_path)
 
     while True:
-        lookups = _get_most_nested_lookups(lookup_string)
+        # Get deepest lookups
+        lookups = re.compile(LOOKUP_REGEX).findall(lookup_string)
         if not lookups:
             break
 
         for lookup in lookups:
-            lookup_key = re.search('(\w+\.?)+ *?\}\}', lookup)
+            lookup_key = re.search(LOOKUP_KEY_REGEX, lookup)
             lookup_key = lookup_key.group(0).strip()[:-2].strip()
 
             if lookup_key in visited:
@@ -162,6 +155,7 @@ def _lookup_handler(lookup_string, data_dict, key_path, visited=None):
     return lookup_string
 
 
+# TODO(aopincar): Remove use in inner function
 def dict_get(dic, key):
     """
     Gets the value of a nested key in a dictionary
