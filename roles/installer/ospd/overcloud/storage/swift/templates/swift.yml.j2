@@ -1,0 +1,26 @@
+resource_registry:
+    OS::TripleO::ControllerExtraConfigPre: /usr/share/openstack-tripleo-heat-templates/puppet/swift-storage.yaml
+
+parameter_defaults:
+    CinderEnableIscsiBackend: false
+    CinderEnableNetappBackend: true
+    CinderNetappServerPort: '80'
+    CinderNetappSizeMultiplier: '1.2'
+    CinderNetappStorageFamily: 'ontap_7mode'
+    CinderNetappTransportType: 'http'
+
+{%  if installer.storage.protocol == 'iscsi' %}
+    CinderNetappBackendName: 'tripleo_netapp_iscsi'
+    CinderNetappStorageProtocol: 'iscsi'
+{%  elif installer.storage.protocol == 'nfs' %}
+    CinderNetappBackendName: 'tripleo_netapp_nfs'
+    CinderNetappStorageProtocol: 'nfs'
+    CinderNetappVfiler: ''
+    CinderNetappVserver: ''
+    CinderNetappPartnerBackendName: ''
+    CinderNetappNfsSharesConfig: '/etc/cinder/shares.conf'
+{% endif %}
+
+{% for key, val in installer.storage.template.content.parameter_defaults.iteritems() %}
+    {{ key }}: '{{ val }}'
+{% endfor %}
