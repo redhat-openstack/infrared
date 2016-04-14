@@ -1,6 +1,7 @@
 ---
 subparsers:
     ospd:
+        formatter_class: RawTextHelpFormatter
         help: Installs openstack using OSP Director
         groups:
             - title: Firewall

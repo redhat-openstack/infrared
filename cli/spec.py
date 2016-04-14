@@ -271,6 +271,34 @@ class ArgumentsPreProcessor(object):
     """
     The helper class which is responsible to to transform input cli arguments
     prior passing them to the clg module for parsing.
+
+    This class will do the following:
+     * remove required and default arguments, because cli arguments can be
+        overridden by environment and file variables
+     * add default values to the help message
+     * add the available yaml files for the yaml options to the help
+     * replace __*__ patterns in option attributes (
+        see https://clg.readthedocs.org/en/latest/configuration.html#options)
+
+    Example:
+        Original arguments dict:
+
+        options:
+            opt1:
+                type: YamlValue
+                help: Simple test value
+                required: yes
+
+        Resulting arguments dict:
+
+        options:
+            opt1:
+                type: YamlValue
+                help: |
+                    Simple test value.
+                    Default value: 'myvalue'
+                    Available files: { file1.yml, file2.yml }
+
     """
     BUILTINS_REPLACEMENT = {
         '__DEFAULT__': "default"
@@ -342,7 +370,7 @@ class ArgumentsPreProcessor(object):
             allowed_files = YamlFileArgument.get_allowed_files(
                 self.app_settings_dir, subcommand, option_name)
 
-            option_attributes['help'] += ". Available files: {{{0}}}".format(
+            option_attributes['help'] += "\nAvailable files: {{ {0} }}".format(
                 ", ".join(map(os.path.basename, allowed_files))
             )
 
@@ -356,7 +384,7 @@ class ArgumentsPreProcessor(object):
         # Insert default value into help.
         if all(attr in option_attributes for attr in ('help', 'default')) \
                 and '__DEFAULT__' not in option_attributes['help']:
-            option_attributes['help'] += " (default: {})".format(
+            option_attributes['help'] += "\nDefault value: {}".format(
                 option_attributes['default'])
 
     def _replace_builtin(self, option_attributes):
