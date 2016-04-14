@@ -192,7 +192,7 @@ class TopologyArgument(ValueArgument):
                     "Topology node should be in format  <number>_<node role>. "
                     "Current value: '{}' ".format(topology_item))
             # todo(obaraov): consider moving topology to config on constant.
-            topology_dict[node_type] = utils.load_yaml(node_type + ".yaml",
+            topology_dict[node_type] = utils.load_yaml(node_type + ".yml",
                                                        topology_dir)
             topology_dict[node_type]['amount'] = int(number)
 

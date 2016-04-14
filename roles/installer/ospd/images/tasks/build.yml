@@ -1,0 +1,22 @@
+---
+- name: Check if there is a guest image is present
+  stat:
+      path: "/home/{{ installer.user.name }}/guest_image.qcow2"
+  register: stat_result
+
+- name: Download guest image for build if needed
+  get_url:
+      dest: "/home/{{ installer.user.name }}/guest_image.qcow2"
+      url: "{{ installer.images.guest_image }}"
+  when: stat_result.stat.exists == False
+
+# TODO: Move environment to a file / template so a user can make customize it
+- name: Build OC images
+  shell: "openstack overcloud image build --all > openstack-build-images.log"
+  environment:
+      DIB_LOCAL_IMAGE: "/home/{{ installer.user.name }}/guest_image.qcow2"
+      DIB_YUM_REPO_CONF: "/etc/yum.repos.d/rhos-release-{{ installer.product.version }}-director.repo /etc/yum.repos.d/rhos-release-{{ installer.product.core.version }}.repo /etc/yum.repos.d/rhos-release-{{ ansible_product_version.split() | first | lower }}-{{ ansible_distribution_version }}.repo"
+      RHOS: 1
+      RUN_RHOS_RELEASE: 1
+      RHOS_RELEASE: "{{ installer.product.version }}_director"
+      USE_DELOREAN_TRUNK: 0

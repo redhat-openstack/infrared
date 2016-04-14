@@ -1,0 +1,82 @@
+- name: install packages
+  yum:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ provisioner.packages }}"
+
+- name: stop libvirtd
+  service:
+      name: "libvirtd"
+      state: "stopped"
+
+- name: start libvirtd
+  service:
+      name: "libvirtd"
+      state: "started"
+      enabled: "yes"
+
+- name: check if host supports virtualization
+  include: validate.yml
+
+- name: setup the virthost
+  include: setup.yml
+
+- name: setup the networks
+  include: network.yml
+
+- name: check if private key exist on system
+  stat:
+      path: "/root/.ssh/id_rsa"
+  register: result
+
+- name: if private key doesn't exist, create it
+  shell: "ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''"
+  when: result.stat.exists != true
+
+- name: copy server private key from virthost for SSH proxy
+  fetch:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      flat: yes
+  with_items:
+      - {src: "~/.ssh/id_rsa", dest: "{{ inventory_dir }}/id_rsa"}
+      - {src: "~/.ssh/id_rsa.pub", dest: "{{ inventory_dir }}/id_rsa.pub"}
+
+- name: update file permissions
+  file:
+      path: "{{ item }}"
+      mode: 0600
+  with_items:
+      - "{{ inventory_dir }}/id_rsa"
+      - "{{ inventory_dir }}/id_rsa.pub"
+  delegate_to: localhost
+
+- name: Set up authorized_keys for the deploy user
+  authorized_key:
+      user: root
+      key: "{{ item }}"
+  with_file:
+    - "{{ inventory_dir }}/id_rsa.pub"
+
+- name: create the base images for each VM
+  include: images.yml
+
+- name: create the VMs
+  include: vms.yml
+
+- name: add hosts to host list
+  add_host:
+      name="{{ item.item.item[0] }}"
+      groups="{{ provisioner.topology.nodes['%s' % item.item.item[0].rstrip('1234567890')].groups | join(',') }}"
+      ansible_ssh_user="root"
+      ansible_ssh_password="redhat"
+      ansible_ssh_host="{{ item.stdout }}"
+      ansible_ssh_private_key_file="{{ inventory_dir }}/id_rsa"
+  when: item.item is defined and item.item.item[1] == "external"
+  with_items: "{{ vm_ip_list }}"
+
+- name: update ansible.ssh.config template
+  template:
+      src: ansible.ssh.config.j2
+      dest: "{{ inventory_dir }}/ansible.ssh.config"
+  delegate_to: localhost

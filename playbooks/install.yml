@@ -1,20 +1,24 @@
 ---
 - name: Set selinux state
   hosts: openstack_nodes
-  sudo: yes
+  become: yes
+  become_method: sudo
   tasks:
     - selinux: policy=targeted state={{ installer.selinux|default('enforcing') }}
 
 - name: Ensure yum presence
   hosts: openstack_nodes
   gather_facts: no
-  sudo: yes
+  become: yes
+  become_method: sudo
   tasks:
     - shell: python -c 'import yum' || (dnf install -y yum yum-utils && ln -snf /usr/bin/yum-deprecated /usr/bin/yum)
 
 - name: Setup Firewall Rules
   hosts: openstack_nodes:!tester
-  sudo: yes
+  gather_facts: no
+  become: yes
+  become_method: sudo
   serial: 1
   tasks:
     #TODO: change to iptables ansible module
@@ -28,3 +32,18 @@
       shell: /sbin/iptables-save >/etc/sysconfig/iptables
 
 - include: installer/{{ installer.type }}/main.yml
+
+- name: Update the inventory file
+  hosts: localhost
+  gather_facts: no
+  tasks:
+      - name: Generate new Inventory file
+        template:
+          dest: "{{ lookup('env', 'PWD') }}/hosts-{{ lookup('env', 'USER') }}"
+          src: "{{ inventory_dir }}/templates/inventory.j2"
+
+      - name: Link to new Inventory file
+        file:
+          dest: "{{ lookup('env', 'PWD') }}/hosts"
+          state: link
+          src: "{{ lookup('env', 'PWD') }}/hosts-{{ lookup('env', 'USER') }}"
