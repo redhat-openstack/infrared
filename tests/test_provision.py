@@ -8,9 +8,9 @@ def test_dynamic_topology(tmpdir):
     Verifiesthe topology is dynamically constructed.
     """
     root_dir = tmpdir.mkdir("topology")
-    controller_yml = root_dir.join("controller.yaml")
-    compute_yml = root_dir.join("compute.yaml")
-    ceph_yml = root_dir.join("ceph.yaml")
+    controller_yml = root_dir.join("controller.yml")
+    compute_yml = root_dir.join("compute.yml")
+    ceph_yml = root_dir.join("ceph.yml")
     controller_yml.write("""---
 memory: 8192
 os: linux

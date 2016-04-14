@@ -6,16 +6,37 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  pre_tasks:
+      - name: fetch the private key file from the undercloud
+        fetch:
+            src: "~/.ssh/id_rsa"
+            dest: "{{ inventory_dir }}/id_rsa_overcloud"
+            flat: yes
+
+      - block:
+          - name: update file permissions
+            become: no
+            file:
+                path: "{{ inventory_dir }}/id_rsa_overcloud"
+                mode: 0600
+
+          - name: Update Inventory
+            become: no
+            add_host:
+                name: "{{ item }}"
+                ansible_user: "heat-admin"
+            with_items: "{{ groups['openstack_nodes'] | difference(['undercloud']) }}"
+        delegate_to: localhost
   roles:
-      - {role: workarounds/rhbz1302047, when: installler.workarounds.rhbz1302047 is defined }
-      - {role: workarounds/rhbz1217093, when: installler.workarounds.rhbz1217093 is defined }
-      - {role: workarounds/rhbz1314732, when: installler.workarounds.rhbz1314732 is defined }
-      - {role: workarounds/rhbz1291568, when: installler.workarounds.rhbz1291568 is defined and 'ceph' in groups }
-      - {role: workarounds/rhbz1304367, when: installler.workarounds.rhbz1304367 is defined and 'ceph' in groups }
-      - {role: workarounds/rhbz1314725, when: installler.workarounds.rhbz1314725 is defined }
-      - {role: workarounds/rhbz1316012, when: installler.workarounds.rhbz1316012 is defined }
-      - {role: workarounds/rhbz1316016, when: installler.workarounds.rhbz1316016 is defined }
-      - {role: workarounds/rhbz1316072, when: installler.workarounds.rhbz1316072 is defined }
+      - {role: workarounds/rhbz1302047, when: installer.workarounds.rhbz1302047 is defined }
+      - {role: workarounds/rhbz1217093, when: installer.workarounds.rhbz1217093 is defined }
+      - {role: workarounds/rhbz1314732, when: installer.workarounds.rhbz1314732 is defined }
+      - {role: workarounds/rhbz1291568, when: installer.workarounds.rhbz1291568 is defined and 'ceph' in groups }
+      - {role: workarounds/rhbz1304367, when: installer.workarounds.rhbz1304367 is defined and 'ceph' in groups }
+      - {role: workarounds/rhbz1314725, when: installer.workarounds.rhbz1314725 is defined }
+      - {role: workarounds/rhbz1316012, when: installer.workarounds.rhbz1316012 is defined }
+      - {role: workarounds/rhbz1316016, when: installer.workarounds.rhbz1316016 is defined }
+      - {role: workarounds/rhbz1316072, when: installer.workarounds.rhbz1316072 is defined }
 #      - {role: workarounds/rhbz1316018, when: workarounds.rhbz1314725 is defined } TODO: add PATH TO RPM
 #      - TODO: https://bugzilla.redhat.com/show_bug.cgi?id=1233251
   tasks:
@@ -47,8 +68,8 @@
         register: pool_name
 
       - name: create the external network
-        shell: "source ~/overcloudrc; neutron net-create {{ pool_name.stdout_lines|last }} --router:external --provider:physical_network {{ installer.undercloud.config.physical_network }} --provider:network_type {{ installer.undercloud.config.network_type }}"
+        shell: "source ~/overcloudrc; neutron net-create {{ pool_name.stdout_lines|last }} --router:external --provider:physical_network datacentre --provider:network_type flat"
 
         # TODO: move the hard coded value to a variable
       - name: create the external subnet
-        shell: "source ~/overcloudrc; neutron subnet-create {{ pool_name.stdout_lines|last }} 192.168.1.0/24 --name external_subnet --enable-dhcp=False --allocation-pool start=192.168.1.210,end=192.168.1.250 --gateway 192.168.1.1"
+        shell: "source ~/overcloudrc; neutron subnet-create {{ pool_name.stdout_lines|last }} 10.0.0.1/24 --name external_subnet --enable-dhcp=False --allocation-pool start=10.0.0.210,end=10.0.0.250 --gateway 10.0.0.1"

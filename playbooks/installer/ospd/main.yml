@@ -1,4 +1,81 @@
 ---
 - include: pre.yml
-- include: run.yml
+
+- name: Installing the undercloud
+  tags: undercloud
+  hosts: undercloud
+  roles:
+      - {role: installer/ospd/undercloud, when: "installer.undercloud is defined"}
+
+- name: Modify overcloud in case of virthost deployment
+  include: virthost.yml
+  tags: virthost
+  when: "'virthost' in groups"
+
+- name: Preparing the images
+  tags: images
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  roles:
+      - {role: installer/ospd/images}
+
+- name: Start introspection
+  tags: introspection
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  roles:
+      - {role: installer/ospd/overcloud/introspection,
+        undercloud_provision_cidr: "{{ ansible_br_ctlplane.ipv4.network }}/{{ ansible_br_ctlplane.ipv4.netmask }}",
+        when: "installer.overcloud is defined"}
+
+- name: Tag hosts with flavors
+  tags: tagging
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  roles:
+      - {role: installer/ospd/overcloud/tagging, when: "installer.overcloud is defined"}
+
+- name: Installing the overcloud
+  tags: overcloud
+  hosts: undercloud
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  pre_tasks:
+      - name: create the template folder for customization
+        shell: "mkdir -p {{ installer.overcloud.template_base }}"
+
+      - name: create the base overcloud deploy script
+        template:
+            src: "templates/overcloud_deploy.sh.j2"
+            dest: "~/overcloud_deploy.sh"
+            mode: 0755
+  roles:
+      - {role: installer/ospd/overcloud/storage, when: "installer.storage is defined"}
+      - {role: installer/ospd/overcloud/network, when: "installer.network is defined and installer.network.isolation.enable == 'yes'"}
+  tasks:
+      - name: append the invocation line to the base overcloud deploy script
+        lineinfile:
+            dest: "~/overcloud_deploy.sh"
+            line: "--log-file overcloud_deployment_{{ 100 | random }}.log &> overcloud_install.log"
+
+      - name: the create overcloud script
+        shell: "cat ~/overcloud_deploy.sh"
+
+      - name: execute the overcloud deploy script
+        shell: "bash ~/overcloud_deploy.sh"
+        register: overcloud_deploy
+        ignore_errors: yes
+
+      - name: print the last few lines of the output to spot failures
+        shell: "tail -n30 overcloud_install.log"
+
+      - fail: msg="Overcloud deployment failed... :("
+        when: overcloud_deploy.rc != 0
+
 - include: post.yml

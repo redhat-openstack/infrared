@@ -1,0 +1,73 @@
+- name: set hostname
+  hostname:
+      name: undercloud.redhat.local
+
+- name: update /etc/hosts with undercloud details
+  lineinfile:
+      dest: "/etc/hosts"
+      line: "{{ ansible_default_ipv4.address }}    undercloud.redhat.local undercloud"
+      state: present
+
+- name: remove all repos
+  command: "rm -f /etc/yum.repos.d/*"
+
+- name: install the rhos-release RPM
+  shell: "yum localinstall -y {{ installer.product.rpm }}"
+
+- debug:
+      msg: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }}"
+
+- name: create necessary repos with for director using rhos-release
+  command: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }}"
+  register: command_result
+  until: command_result.stderr.find('Connection reset by peer') == -1
+  retries: 40
+  delay: 5
+
+- debug:
+      msg: "rhos-release {{ installer.product.core.version }}-director -p {{ installer.product.core.build }}"
+
+- name: create necessary repos for core using rhos-release
+  command: "rhos-release {{ installer.product.core.version }}-director -p {{ installer.product.core.build }}"
+  register: command_result
+  until: command_result.stderr.find('Connection reset by peer') == -1
+  retries: 40
+  delay: 5
+
+- name: update system packages
+  yum:
+      state: latest
+      name: "*"
+  register: update
+
+- name: reboot the undercloud
+  shell: "sleep 2 && shutdown -r now"
+  async: 1
+  poll: 0
+  ignore_errors: true
+  when: update|changed
+
+- name: waiting for the undercloud to be available
+  wait_for:
+      port: 22
+      host: "{{ ansible_ssh_host }}"
+      search_regex: OpenSSH
+      delay: 10
+  delegate_to: "{% if 'virthost' in groups %}virthost{% else %}localhost{% endif %}"
+  when: update|changed
+
+- name: install the oscplugin/tripleO client
+  yum:
+      name: "{% if installer.product.version == '7' %}python-rdomanager-oscplugin{% else %}python-tripleoclient{% endif %}"
+      state: present
+
+- name: create user
+  user:
+      name: "{{ installer.user.name }}"
+      state: present
+      password: "{{ installer.user.password | password_hash('sha512') }}"
+
+- name: add user to sudoers
+  lineinfile:
+      dest: "/etc/sudoers"
+      line: "{{ installer.user.name }} ALL=(root) NOPASSWD:ALL"

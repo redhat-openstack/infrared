@@ -1,0 +1,13 @@
+---
+- include: provisioner/{{ provisioner.type }}/cleanup.yml
+
+- name: restore inventory file with just localhost
+  hosts: localhost
+  tasks:
+    - file:
+        dest: "{{ lookup('env', 'PWD') }}/hosts"
+        state: link
+        src: "{{ lookup('env', 'PWD') }}/local_hosts"
+    - file:
+        dest: "{{ lookup('env', 'PWD') }}/hosts-{{ lookup('env', 'USER') }}"
+        state: absent

@@ -1,6 +1,7 @@
 ---
 subparsers:
     openstack:
+        formatter_class: RawTextHelpFormatter
         help: Provision systems using Ansible OpenStack modules
         groups:
             - title: cloud

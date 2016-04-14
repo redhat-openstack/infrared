@@ -1,6 +1,7 @@
 ---
 subparsers:
     ospd:
+        formatter_class: RawTextHelpFormatter
         help: Installs openstack using OSP Director
         groups:
             - title: Firewall
@@ -24,9 +25,12 @@ subparsers:
                 product-core-version:
                     type: Value
                     help: The product core version
+                    required: yes
+                    choices: ["7", "8"]
                 product-core-build:
                     type: Value
                     help: The product core build
+                    default: latest
 
             - title: Undercloud
               options:
@@ -47,7 +51,7 @@ subparsers:
                 storage:
                     type: YamlFile
                     help: The overcloud storage type
-                    default: ceph.yml
+                    default: no-storage.yml
 
             - title: Product images
               options:

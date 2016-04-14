@@ -1,0 +1,79 @@
+---
+- name: Add host to host list
+  hosts: localhost
+  gather_facts: no
+  vars:
+      hypervisor: "{{ provisioner.host }}"
+  tasks:
+      - name: remove ansible with the new SSH settings
+        lineinfile:
+            state: absent
+            dest: "{{ inventory_dir }}/ansible.cfg"
+            line: "ssh_args = -o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -F {{ inventory_dir }}/ansible.ssh.config"
+
+      - name: add hosts to host list
+        add_host:
+            name: "{{ hypervisor.name }}"
+            groups: "{{ hypervisor.groups| join(',') }}"
+            node_label: "host1"
+            ansible_ssh_user: "{{ hypervisor.user }}"
+            ansible_ssh_host: "{{ hypervisor.address }}"
+            ansible_ssh_private_key_file: "{{ hypervisor.key }}"
+
+- name: Remove all VMs and networks that were created
+  hosts: virthost
+  gather_facts: no
+  tasks:
+      - name: install dependencies
+        yum:
+            name: "{{ item }}"
+            state: present
+        with_items: "{{ provisioner.packages }}"
+
+      - name: start libvirtd
+        service:
+            name: libvirtd
+            state: started
+            enabled: yes
+
+      - name: get the list of VMs
+        shell: "virsh list --all | grep -P '[\\w]+' | sed -n '2,$p' | awk '{print $2}'"
+        register: vm_names
+
+      - set_fact:
+            vm_name_list: "{{ vm_names.stdout_lines }}"
+
+      - name: stop relevant vms
+        virt:
+            name: "{{ item }}"
+            state: destroyed
+        with_items: "{{ vm_name_list }}"
+
+      - name: undefine relevant VMs
+        virt:
+            name: "{{ item }}"
+            command: undefine
+        with_items: "{{ vm_name_list }}"
+
+      - name: remove the networks we created
+        virt_net:
+            name: "{{ item }}"
+            state: absent
+        with_items: "{{ provisioner.topology.network.keys() }}"
+
+      - name: remove any existing disks that we created
+        shell: "rm -f {{ item.key }}*disk*.qcow*"
+        args:
+            chdir: "/var/lib/libvirt/images"
+        with_dict: "{{ provisioner.topology.nodes }}"
+
+- name: Remove hypervisor from the known_hosts
+  hosts: localhost
+  gather_facts: no
+  vars:
+      hypervisor: "{{ provisioner.host }}"
+  tasks:
+    - name: Cleanup known_hosts file
+      known_hosts:
+          name: "{{ hypervisor.address }}"
+          state: absent

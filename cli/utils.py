@@ -4,8 +4,6 @@ This module provide some general helper methods
 
 import os
 
-import configure
-
 import cli.yamls
 from cli import exceptions
 from cli import logger
@@ -111,54 +109,42 @@ def search_tree(needle, haystack, _res=None):
     return _res
 
 
-def update_settings(settings, file_path):
-    """merge settings in 'file_path' with 'settings'
-
-    :param settings: settings to be merge with (configure.Configuration)
-    :param file_path: path to file with settings to be merged
-    :return: merged settings
+def load_settings_files(settings_files):
     """
-    loaded_dict = cli.yamls.load(file_path, True)
-    dict_merge(settings, loaded_dict)
-    return settings
+    Loads and merges settings (YAML) files into a new dictionary object.
+
+    :param settings_files: List of strings representing paths to YAML files.
+    :return: The newly created Dictionary object containing the merging
+    results of all the settings files.
+    """
+    settings_dict = {}
+
+    for settings_file in settings_files:
+        loaded_dict = cli.yamls.load(settings_file, True)
+        dict_merge(settings_dict, loaded_dict)
+
+    return settings_dict
 
 
 def merge_extra_vars(settings, extra_vars):
-    """ Merging 'extra-vars' into 'settings'
+    """
+    Merging 'extra-vars' into 'settings'
 
-    :param settings: configure.Configuration objects with settings
-    :param extra_vars: list of extra-vars
+    :param settings: Dictionary to merge extra-vars into
+    :param extra_vars: List of extra-vars
     """
     for extra_var in extra_vars or []:
         if extra_var.startswith('@'):
             if not len(extra_var[1:]):
                 raise exceptions.IRExtraVarsException(extra_var)
             settings_file = normalize_file(extra_var[1:])
-            settings = update_settings(settings, settings_file)
+            dict_merge(settings, cli.yamls.load(settings_file))
 
         else:
             if '=' not in extra_var:
                 raise exceptions.IRExtraVarsException(extra_var)
             key, value = extra_var.split("=")
             dict_insert(settings, value, *key.split("."))
-
-    return settings
-
-
-def generate_settings(settings_files):
-    """ Generates one settings object (configure.Configuration) by merging all
-    files in settings_files
-
-    :param settings_files: list of paths to settings files
-    :return: Configuration object with merging results of all settings
-    files and extra-vars
-    """
-    settings = configure.Configuration.from_dict({})
-
-    for settings_file in settings_files:
-        settings = update_settings(settings, settings_file)
-
-    return settings
 
 
 # todo: convert into a file object to be consumed by argparse
@@ -186,15 +172,13 @@ def normalize_file(file_path):
 def load_yaml(filename, *search_paths):
     """Find YAML file. search default path first.
     :param filename: path to file
-    :param search_first: default path to search first
+    :param search_paths: the list of paths to search for a file.
     :returns: dict. loaded YAML file.
     """
     path = None
     searched_files = []
     files_to_search = map(
         lambda search_path: os.path.join(search_path, filename), search_paths)
-    # append file name to verify absolute path by default
-    files_to_search.append(filename)
 
     for filename in files_to_search:
         searched_files.append(os.path.abspath(filename))
