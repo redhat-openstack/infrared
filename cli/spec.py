@@ -288,7 +288,8 @@ def override_default_values(clg_args, sub_parser_options):
         _generate_config_file(
             file_name=clg_args['generate-conf-file'],
             subcommand=clg_args['command0'],
-            defaults=defaults)
+            defaults=defaults,
+            all_options=sub_parser_options)
     else:
         # Override defaults with the ini file args if provided
         file_args = getattr(clg_args.get('from-file'), "value", {}).get(
@@ -325,27 +326,40 @@ def _check_required_arguments(clg_args, sub_parser_options):
             "Required input arguments {} are not set!".format(unset_args))
 
 
-def _generate_config_file(file_name, subcommand, defaults):
+def _generate_config_file(file_name, subcommand, defaults, all_options):
     """
     Generates configuration file based on defaults from specs
 
     :param file_name: Name of the new configuration that will be generated.
     :param subcommand: The subparser for which the conf file is generated
     :param defaults: the default options values.
+    :param all_options: The dict with all the possible spec options
     """
-    # TODO(yfried): Add required arguments to file
-    # TODO (aopincar): try block is too wide
-    # TODO (aopincar): if file_name exists, update it instead of overwrite it
-    try:
-        out_config = ConfigParser.ConfigParser()
+    out_config = ConfigParser.ConfigParser()
 
+    # reuse existing file
+    if os.path.exists(file_name):
+        out_config.read(file_name)
+
+    # put defaults values
+    if not out_config.has_section(subcommand):
         out_config.add_section(subcommand)
-        for opt, value in defaults.iteritems():
+    for opt, value in defaults.iteritems():
+        if not out_config.has_option(subcommand, opt):
             out_config.set(subcommand, opt, value)
-        with open(file_name, 'w') as configfile:  # save
-            out_config.write(configfile)
-    except Exception as ex:
-        raise exceptions.IRException(ex.message)
+
+    # add required options
+    for opt, attributes in all_options.iteritems():
+        if attributes.get('required') and not out_config.has_option(
+                subcommand, opt):
+            LOG.warning(
+                "Required argument '{}' from config file "
+                "should be overridden by CLI".format(opt))
+            out_config.set(subcommand, opt,
+                           "!required. use CLI to set value")
+
+    with open(file_name, 'w') as configfile:  # save
+        out_config.write(configfile)
 
 
 def _get_subparsers_options(spec_dict):
