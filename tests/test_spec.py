@@ -6,6 +6,7 @@ from cli import exceptions
 from cli import spec
 from cli.spec import ValueArgument, YamlFileArgument
 
+default_settings_dir = "."
 
 @pytest.mark.parametrize("res_args, options, req_args, nonreq_args", [
     [{'host': spec.ValueArgument(),
@@ -23,7 +24,7 @@ def test_required_option_exception(res_args,
                                    nonreq_args):
 
     with pytest.raises(exceptions.IRConfigurationException) as ex_info:
-        spec.override_default_values(res_args, options)
+        spec.override_default_values(default_settings_dir, res_args, options)
 
     for arg in req_args:
         assert arg in ex_info.value.message
@@ -85,7 +86,8 @@ def test_required_option_exception(res_args,
 def test_required_options_are_set(res_args,
                                   options,
                                   expected_args):
-    actual_args = spec.override_default_values(res_args, options)
+    actual_args = spec.override_default_values(
+        default_settings_dir, res_args, options)
     cmp(actual_args, expected_args)
 
 
