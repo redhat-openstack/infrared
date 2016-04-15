@@ -8,6 +8,7 @@ from cli.spec import ValueArgument, YamlFileArgument
 
 default_settings_dir = "."
 
+
 @pytest.mark.parametrize("res_args, options, req_args, nonreq_args", [
     [{'host': spec.ValueArgument(),
       'command0': 'virsh',
