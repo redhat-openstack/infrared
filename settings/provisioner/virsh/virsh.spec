@@ -33,7 +33,7 @@ subparsers:
                   topology-nodes:
                       type: Topology
                       help: Provision topology.
-                      default: "1_controller,1_compute,1_undercloud"
+                      default: "1_undercloud,1_controller,1_compute"
             - title: common
               options:
                   dry-run:
