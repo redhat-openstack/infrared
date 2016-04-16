@@ -5,8 +5,7 @@
   "host-ip": "{{ provisioner.topology.network.management.ip_address }}",
   "arch": "x86_64",
   "nodes": [
-{% for host_name in groups['openstack_nodes'] %}
-    {% if host_name != 'undercloud' %}
+{% for host_name in groups['overcloud_nodes'] %}
     {
       "name": "{{ hostvars[host_name].inventory_hostname }}",
       "pm_addr": "{{ provisioner.topology.network.management.ip_address }}",
@@ -19,7 +18,6 @@
       "arch": "x86_64",
       "pm_user": "{{ installer.user.name }}"
     }{% if not loop.last %},{% endif %}
-    {% endif %}
 {% endfor %}
     ]
 }
