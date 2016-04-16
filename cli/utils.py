@@ -188,7 +188,7 @@ def load_yaml(filename, *search_paths):
             break
 
     if path is not None:
-        print("Loading YAML file: %s" % path)
+        LOG.debug("Loading YAML file: %s" % path)
         return cli.yamls.load(path)
     else:
         raise exceptions.IRFileNotFoundException(

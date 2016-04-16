@@ -98,10 +98,6 @@ class ValueArgument(object):
         """
         defaults = defaults or {}
         self.arg_name = arg_name
-        # override get default from env variables
-        # TODO (aopincar): IR env vars should be more uniques
-        if self.value is None:
-            self.value = os.getenv(self.arg_name.upper().replace("-", "_"))
         # override get default from conf file
         if self.value is None:
             self.value = defaults.get(self.arg_name)
@@ -365,13 +361,15 @@ class ArgumentsPreProcessor(object):
         type, default, etc)
         :param subcommand: the subcommand name
         """
-        if option_attributes.get(
-                'type', None) == 'YamlFile' and subcommand is not None:
-            allowed_files = YamlFileArgument.get_allowed_files(
-                self.app_settings_dir, subcommand, option_name)
+        allowed_values = _get_option_allowed_values(
+            self.app_settings_dir,
+            subcommand,
+            option_name,
+            option_attributes)
 
-            option_attributes['help'] += "\nAvailable files: {{ {0} }}".format(
-                ", ".join(map(os.path.basename, allowed_files))
+        if allowed_values:
+            option_attributes['help'] += "\nAllowed values: {{ {0} }}".format(
+                ", ".join(map(os.path.basename, allowed_values))
             )
 
     def _add_default_to_option_help(self, option_attributes):
@@ -446,11 +444,11 @@ def parse_args(settings_dir, app_settings_dir, args=None):
     # Current sub-parser options
     sub_parser_options = subparsers_options.get(clg_args['command0'], {})
 
-    override_default_values(clg_args, sub_parser_options)
+    override_default_values(app_settings_dir, clg_args, sub_parser_options)
     return clg_args
 
 
-def override_default_values(clg_args, sub_parser_options):
+def override_default_values(app_settings_dir, clg_args, sub_parser_options):
     """
     Collects arguments values from the different sources and resolve values.
 
@@ -460,6 +458,7 @@ def override_default_values(clg_args, sub_parser_options):
     3. Provided configuration file.
     4. Spec defaults
 
+    :param app_settings_dir: the application settings dir.
     :param clg_args: Dictionary based on cmd-line args parsed by clg
     :param sub_parser_options: the sub-parser spec options
     """
@@ -474,6 +473,7 @@ def override_default_values(clg_args, sub_parser_options):
     if clg_args.get('generate-conf-file'):
         _generate_config_file(
             file_name=clg_args['generate-conf-file'],
+            app_settings_dir=app_settings_dir,
             subcommand=clg_args['command0'],
             defaults=defaults,
             all_options=sub_parser_options)
@@ -483,10 +483,36 @@ def override_default_values(clg_args, sub_parser_options):
             clg_args['command0'], {})
         utils.dict_merge(defaults, file_args)
 
+        # Override defaults with env values
+        # TODO (aopincar): IR env vars should be more uniques
+        env_vars = {}
+        for arg_name, arg_obj in clg_args.iteritems():
+            arg_value = os.getenv(arg_name.upper().replace("-", "_"))
+            if arg_value:
+                env_vars[arg_name] = arg_value
+        utils.dict_merge(defaults, env_vars)
+
         # Resolve defaults and load values to clg_args
+        non_cli_args = []
         for arg_name, arg_obj in clg_args.iteritems():
             if isinstance(arg_obj, ValueArgument):
+                # check what values were not provided in cli
+                if arg_obj.value is None:
+                    non_cli_args.append(arg_name)
                 arg_obj.resolve_value(arg_name, defaults)
+
+        # Now when we have all the values check what default values we have
+        # and show warning to inform user that we took something from
+        # defaults
+        default_args = set(non_cli_args).difference(
+            file_args.keys()).difference(env_vars.keys())
+
+        for arg_name in default_args:
+            if arg_name in defaults:
+                LOG.warning(
+                    "Argument '{}' was not supplied. "
+                    "Using: '{}' as default.".format(
+                        arg_name, defaults[arg_name]))
 
         _check_required_arguments(clg_args, sub_parser_options)
 
@@ -513,7 +539,8 @@ def _check_required_arguments(clg_args, sub_parser_options):
             "Required input arguments {} are not set!".format(unset_args))
 
 
-def _generate_config_file(file_name, subcommand, defaults, all_options):
+def _generate_config_file(
+        file_name, app_settings_dir, subcommand, defaults, all_options):
     """
     Generates configuration file based on defaults from specs
 
@@ -539,14 +566,45 @@ def _generate_config_file(file_name, subcommand, defaults, all_options):
     for opt, attributes in all_options.iteritems():
         if attributes.get('required') and not out_config.has_option(
                 subcommand, opt):
+
+            # get available value:
+            allowed_values = _get_option_allowed_values(app_settings_dir,
+                                                        subcommand, opt,
+                                                        attributes)
+
+            if allowed_values:
+                message = "one of {} options".format(allowed_values)
+            else:
+                message = "any value"
             LOG.warning(
-                "Required argument '{}' from config file "
-                "should be overridden by CLI".format(opt))
-            out_config.set(subcommand, opt,
-                           "!required. use CLI to set value")
+                "Required argument '{0}' not supplied. "
+                "Please edit config file with {1}, OR override "
+                "through CLI: --{0}=<option>. "
+                "".format(opt, message))
+
+            out_config.set(
+                subcommand,
+                opt,
+                "Edit with {0}, "
+                "OR override with CLI: --{1}=<option>".format(
+                    message, opt))
 
     with open(file_name, 'w') as configfile:  # save
         out_config.write(configfile)
+
+
+def _get_option_allowed_values(app_settings_dir, subcommand, option,
+                               attributes):
+    """
+    Gets the list of allowed values for an option.
+    """
+    if attributes.get('type', None) == 'YamlFile':
+        allowed_values = map(os.path.basename,
+                             YamlFileArgument.get_allowed_files(
+                                 app_settings_dir, subcommand, option))
+    else:
+        allowed_values = attributes.get('choices', [])
+    return allowed_values
 
 
 def _get_specs(root_folder, include_subfolders=True):
