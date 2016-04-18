@@ -53,6 +53,13 @@ subparsers:
                     help: The overcloud storage type
                     default: no-storage.yml
 
+            - title: Swift object-storage
+              options:
+                swift:
+                    type: YamlFile
+                    help: The overcloud swift object-store setting
+                    default: no-storage.yml
+
             - title: Product images
               options:
                 images-task:
