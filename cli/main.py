@@ -5,7 +5,7 @@ import os
 
 import yaml
 from cli import logger  # logger should bne imported first
-from cli import execute, conf, spec, utils, exceptions, yamls
+from cli import execute, conf, spec, utils, exceptions, yamls, ci
 
 LOG = logger.LOG
 CONF = conf.config
@@ -64,6 +64,13 @@ class IRFactory(object):
                 LOG.debug('Conf file "{}" has been generated. Exiting'.format(
                     spec_args['generate-conf-file']))
                 spec_instance = None
+            # todo (obaranov) create more generic factory which can create
+            # irspecs and cispecs. Consider creating similar
+            # constructors for specs'
+            elif spec_args.get('command0', None) == 'jenkins':
+                spec_instance = JenkinsSpec(
+                    spec_args, dict(config.items('ci')))
+
             else:
                 spec_config = dict(config.items(spec_name))
                 spec_instance = IRSpec(
@@ -140,6 +147,37 @@ class IRSubCommand(object):
 
         LOG.debug("All settings files to be loaded:\n%s" % settings_files)
         return settings_files
+
+
+class JenkinsSpec(object):
+    """
+    The jenkins specification command.
+    """
+
+    def __init__(self, spec_args, ci_config):
+        self.config = ci_config
+        self.cmd = spec_args.get('command0')
+        self.auth_info = spec_args.get('config').value[self.cmd]
+        self.job_name = self.auth_info['job_name']
+        self.runner = ci.JenkinsRunner(
+            self.auth_info,
+            ignore_ssh_warnings=self.config.get('ignore_ssh_warnings ', True))
+
+        self.job_parameters = {}
+        for key, value in spec_args.get('from-file').value.items():
+            utils.dict_merge(self.job_parameters, value)
+
+    def run(self):
+        params = {}
+        for key, value in self.job_parameters.items():
+            new_key = key.upper().replace('-', '_')
+            params[new_key] = value
+
+        # we pass job parameters as ENV variables
+        # todo(obaranov) ensure that variables from installer/provisioner/etc
+        # do not intersect each other, or gibe more unique names to the
+        # env spec variables. e.g HOST_ADDRESS -> VIRSH_HOST_ADDRESS
+        self.runner.build(self.job_name, params)
 
 
 class IRSpec(object):
@@ -238,6 +276,7 @@ def entry_point():
 
 
 if __name__ == '__main__':
-    # This is mainly for debug purposed
-    main('provisioner')
-    main('installer')
+    # This is mainly for debug purpose
+    # main('provisioner')
+    # main('installer')
+    main('ci')
