@@ -1,9 +1,3 @@
-- name: prepare swift storage template
-  template:
-      src: "swift.yml.j2"
-      dest: "{{ installer.overcloud.template_base }}/custom-swift.yaml"
-      mode: 0755
-
 - name: append the swift storage template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
@@ -14,7 +8,3 @@
       dest: "~/overcloud_deploy.sh"
       line: '{% for flavor in tagged_flavors %}{% if flavor.cmd is defined and "swift" in flavor.cmd %}                       --swift-storage-flavor {{ flavor.cmd.split() | last }} \{% endif %}{% endfor %}'
 
-- name: append the storage swift custom template line to the base overcloud deploy script
-  lineinfile:
-      dest: "~/overcloud_deploy.sh"
-      line: '                       -e {{ installer.overcloud.template_base }}/custom-swift.yaml \'
