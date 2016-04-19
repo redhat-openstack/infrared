@@ -1,0 +1,50 @@
+---
+- name: Update yum on all nodes before packstack installation
+  hosts: openstack_nodes
+  gather_facts: no
+  sudo: yes
+  tasks:
+      - name: Update all packages
+        yum: name=* state=latest
+
+- name: Setup packstack on controller
+  hosts: controller
+  gather_facts: no
+  sudo: yes
+  tasks:
+      - name: Install packstack package
+        yum: name=openstack-packstack state=present
+
+      - name: Generate answer file
+        shell: "packstack --gen-answer-file=/root/{{ installer.packstack.answer_file }}"
+
+      - name: Edit packstack answer-file from the config
+        lineinfile:
+            dest="/root/{{ installer.packstack.answer_file }}"
+            regexp='{{ item.key }}=.*'
+            line='{{ item.key }}={{ item.value }}'
+        with_dict: installer.packstack.config
+
+      - name: Update password values in answer file with default password
+        replace:
+            dest="/root/{{ installer.packstack.answer_file }}"
+            regexp="(.*_PASSWORD|.*_PW)=.*"
+            replace="\1=redhat"
+
+      - name: Update network hosts
+        replace:
+            dest="/root/{{ installer.packstack.answer_file }}"
+            regexp=^CONFIG_NETWORK_HOSTS=.*$
+            replace=CONFIG_NETWORK_HOSTS="{% for host in groups.network %}{{ hostvars[host]['ansible_default_ipv4']['address'] }}{% if not loop.last %},{% endif %}{% endfor %}"
+
+      - name: Update compute hosts
+        replace:
+            dest="/root/{{ installer.packstack.answer_file }}"
+            regexp=^CONFIG_COMPUTE_HOSTS=.*$
+            replace=CONFIG_COMPUTE_HOSTS="{% for host in groups.compute %}{{ hostvars[host]['ansible_default_ipv4']['address'] }}{% if not loop.last %},{% endif %}{% endfor %}"
+
+      - name: Running packstack
+        shell: "packstack --answer-file=/root/{{ installer.packstack.answer_file }} && touch /root/packstack-already-done"
+        args:
+          creates: /root/packstack-already-done
+        register: result

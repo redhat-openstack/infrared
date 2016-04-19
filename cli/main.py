@@ -206,6 +206,9 @@ class IRSpec(object):
         all_settings = utils.load_settings_files(settings_files)
         utils.dict_merge(all_settings, settings_dict)
         utils.merge_extra_vars(all_settings, self.args['extra-vars'])
+        print all_settings  # Debugo
+        with open('/tmp/111.txt', 'w') as f:
+            yaml.dump(all_settings, f)
         yamls.replace_lookup(all_settings)
 
         return all_settings

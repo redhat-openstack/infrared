@@ -38,6 +38,9 @@ installer:
             - ' -A INPUT -p udp --sport 123 -m comment --comment "006 QA incoming NTP" -j ACCEPT'
             - ' -P INPUT DROP'
 
+product:
+    rpm: "{{ !lookup private.distro.rhel.rhos_release_rpm }}"
+
 node:
     prefix:
         - "{{ !lookup installer.short_type }}"
