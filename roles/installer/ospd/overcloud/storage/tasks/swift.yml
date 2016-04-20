@@ -1,9 +1,9 @@
 - name: append the swift storage template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '                       --swift-storage-scale {{ groups["swift"]| length }} \'
+      line: '--swift-storage-scale {{ groups["swift"]| length }} \'
 
 - name: append the swift storage template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '{% for flavor in tagged_flavors %}{% if flavor.cmd is defined and "swift" in flavor.cmd %}                       --swift-storage-flavor {{ flavor.cmd.split() | last }} \{% endif %}{% endfor %}'
+      line: '{% for flavor in tagged_flavors %}{% if flavor.cmd is defined and "swift" in flavor.cmd %}--swift-storage-flavor {{ flavor.cmd.split() | last }} \{% endif %}{% endfor %}'
