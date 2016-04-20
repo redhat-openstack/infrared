@@ -12,10 +12,10 @@
         failed_when: "shell_result.rc > 2"
 
       - name: Install release tool on machines
-        command: "yum localinstall -y {{ product.rpm }}"
+        command: "yum localinstall -y {{ installer.product.rpm }}"
 
       - name: Execute rhos-release for packstack poodle/puddle
-        command: "rhos-release {{ product.version }} -p {{ product.build }}"
+        command: "rhos-release {{ installer.product.version }} -p {{ installer.product.build }}"
 
       - name: repolist
         command: yum -d 7 repolist

@@ -3,6 +3,13 @@ subparsers:
     packstack:
         help: OpenStack installation using Packstack
         groups:
+            - title: Firewall
+              options:
+                firewall:
+                    type: YamlFile
+                    help: The firewall configuration
+                    default: default.yml
+
             - title: Storage
               options:
                   storage:

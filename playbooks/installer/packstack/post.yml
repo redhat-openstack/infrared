@@ -135,7 +135,7 @@
         section: ml2
         option: extension_drivers
         value: port_security
-      when: installer.network.type == 'neutron' and product.version.major >= 7
+      when: installer.network.type == 'neutron' and installer.product.version in ['7', '8']
       register: portsec
 
     - name: restart neutron server
