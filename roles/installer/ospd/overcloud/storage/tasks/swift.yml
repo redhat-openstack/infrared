@@ -7,4 +7,3 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '{% for flavor in tagged_flavors %}{% if flavor.cmd is defined and "swift" in flavor.cmd %}                       --swift-storage-flavor {{ flavor.cmd.split() | last }} \{% endif %}{% endfor %}'
-
