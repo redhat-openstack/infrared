@@ -1,9 +1,6 @@
 ---
-installer:
-    network:
-        variant: gre
+name: gre
 
-    packstack:
-        config:
-            CONFIG_NEUTRON_OVS_TENANT_NETWORK_TYPE: "{{ !lookup installer.network.variant }}"
-            CONFIG_NEUTRON_OVS_TUNNEL_RANGES: "1:1000"
+config:
+    CONFIG_NEUTRON_OVS_TENANT_NETWORK_TYPE: "{{ !lookup installer.network.variant }}"
+    CONFIG_NEUTRON_OVS_TUNNEL_RANGES: "1:1000"

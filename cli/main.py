@@ -30,11 +30,8 @@ def get_arguments_dict(spec_args):
     settings_dict = {}
     for _name, argument in spec_args.iteritems():
         if isinstance(argument, spec.ValueArgument):
-            if argument.auto_nesting:
-                utils.dict_insert(settings_dict, argument.value,
-                                  *argument.arg_name.split("-"))
-            elif isinstance(argument.value, dict):
-                utils.dict_merge(settings_dict, argument.value)
+            utils.dict_insert(settings_dict, argument.value,
+                              *argument.arg_name.split("-"))
 
     return settings_dict
 

@@ -11,6 +11,17 @@
   hosts: controller
   gather_facts: no
   sudo: yes
+  vars:
+      messaging_config: "{{ installer.messaging.config | default({}) }}"
+      network_config: "{{ installer.network.config | default({}) }}"
+      network_variant_config: "{{ installer.network.variant.config | default({}) }}"
+      debug_config: "{{ installer.osdebug.config | default({}) }}"
+
+      packstack_config: "{{ installer.config
+          | combine(messaging_config)
+          | combine(network_config)
+          | combine(network_variant_config)
+          | combine(debug_config) }}"
   tasks:
       - name: Install packstack package
         yum: name=openstack-packstack state=present
@@ -23,7 +34,7 @@
             dest="/root/{{ installer.packstack.answer_file }}"
             regexp='{{ item.key }}=.*'
             line='{{ item.key }}={{ item.value }}'
-        with_dict: installer.packstack.config
+        with_dict: packstack_config
 
       - name: Update password values in answer file with default password
         replace:
