@@ -12,6 +12,22 @@ Setup
 
   $ dnf install redhat-rpm-config
 
+Virtualenv
+----------
+
+InfraRed shares many dependencies with other OpenStack products and projects. Therefore there's a high probability of
+conflicts with python dependencies, which would result either with InfraRed failure, or worse, with breaking dependencies
+for other OpenStack products.
+When working from source, it is recommended to use python `virutalenv <http://docs.python-guide.org/en/latest/dev/virtualenvs/>`_
+to avoid corrupting the system packages::
+
+  $ virtualenv --system-site-packages .venv
+  $ source .venv/bin/activate
+
+.. note:: Create virtualenv with site packages enabled because Ansible file modules require python-libselinux binding.
+ However, according to `this blog post <https://dmsimard.com/2016/01/08/selinux-python-virtualenv-chroot-and-ansible-dont-play-nice/>`_
+ libselinux-python can be hacked into regular virtualenvs as well.
+
 Use pip to install from source::
 
   $ pip install <path_to_infrared_dir>
