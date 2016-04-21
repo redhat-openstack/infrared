@@ -35,9 +35,10 @@ subparsers:
             - title: Messaging
               options:
                   messaging:
-                      type: YamlFile
-                      help: Messaging
-                      default: rabbitmq.yml
+                      type: Value
+                      help: Messaging type
+                      default: rabbitmq
+                      choices: ["rabbitmq", "qpidd"]
 
             - title: Network
               options:

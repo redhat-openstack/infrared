@@ -3,6 +3,9 @@ installer:
     type: packstack
     short_type: pksk
 
+    config:
+        CONFIG_AMQP_BACKEND: "{{ !lookup installer.messaging }}"
+
     packstack:
         answer_file: packstack_config.txt
 
