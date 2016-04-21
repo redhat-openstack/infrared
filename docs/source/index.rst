@@ -12,6 +12,7 @@ Contents:
 .. toctree::
    :maxdepth: 3
 
+   quickstart
    setup
 
 
