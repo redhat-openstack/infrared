@@ -11,7 +11,7 @@ def test_get_config_dir_project_defaults(our_cwd_setup):
 
     conf_file = conf.load_config_file()
 
-    assert 'defaults' in conf_file.sections(),\
+    assert 'defaults' in conf_file.sections(), \
         "'defaults' section not in project's default conf file"
 
     file_default_options = conf_file.options('defaults')
@@ -23,8 +23,7 @@ def test_get_config_dir_project_defaults(our_cwd_setup):
     assert file_default_options == module_default_options, \
         "Options in conf module and conf file aren't the same"
 
-    from os.path import dirname, join
     for option in conf_file.options('defaults'):
-        assert conf_file.get('defaults', option) == join(dirname(dirname(
-            __file__)), conf.DEFAULT_SECTIONS['defaults'][option]),\
-            "Incorrect Option's (%s) value" % option
+        assert conf_file.get('defaults', option) == \
+               conf.DEFAULT_SECTIONS['defaults'][option], \
+               "Incorrect Option's (%s) value" % option
