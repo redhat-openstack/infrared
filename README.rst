@@ -1,7 +1,5 @@
-=================
-InfraRed CLI tool
-=================
+========
+InfraRed
+========
 
-Reduce users' dependency on external CLI tools (Ansible and others).
-
-Please read our `Documentation <http://infrared.readthedocs.org>`_
+Please read our `Documentation <http://infrared.readthedocs.org>`_ to get started
