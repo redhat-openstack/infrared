@@ -22,7 +22,7 @@ for other OpenStack products.
 When working from source, it is recommended to use python `virutalenv <http://docs.python-guide.org/en/latest/dev/virtualenvs/>`_
 to avoid corrupting the system packages::
 
-  $ virtualenv --system-site-packages .venv
+  $ virtualenv .venv
   $ source .venv/bin/activate
 
 `Get python binding for SELinux <https://dmsimard.com/2016/01/08/selinux-python-virtualenv-chroot-and-ansible-dont-play-nice/>`_::
@@ -49,13 +49,13 @@ Install from source after cloning repo from GitHub::
 Configure
 ---------
 
-``infrared`` will look for ``infrared.cfg`` in the following order:
+InfraRed will look for ``infrared.cfg`` in the following order:
 
 #. In working directory: ``./infrared.cfg``
 #. In user home directory: ``~/.infrared.cfg``
 #. In system settings: ``/etc/infrared/infrared.cfg``
 
-Create a quick cfg file from example file:
+Create a quick cfg file from example file::
 
   $ cp infrared.cfg.example infrared.cfg
 
