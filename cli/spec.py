@@ -162,7 +162,7 @@ class YamlFileArgument(ValueArgument):
 
     @classmethod
     def get_allowed_files(cls, settings_dir, subcommand, arg_name,
-                          search_root=False):
+                          search_root=False, file_extensions=('yml', 'yaml')):
         """
         Gets the list of the the files in the default locations.
 
@@ -174,6 +174,7 @@ class YamlFileArgument(ValueArgument):
         :param search_root: specify whether the execution root folder
             should be searched for yamk files. By default equals
             to False to avoid unnecessary files.
+        :param file_extensions: the list of file extension to look for.
         """
 
         res = []
@@ -183,7 +184,8 @@ class YamlFileArgument(ValueArgument):
         if search_root is False:
             locations = locations[:-1]
         for folder in locations:
-            res.extend(glob.glob(folder + "/*.*"))
+            for ext in file_extensions:
+                res.extend(glob.glob(folder + "/*." + ext))
 
         return res
 
@@ -549,48 +551,85 @@ def _generate_config_file(
     :param defaults: the default options values.
     :param all_options: The dict with all the possible spec options
     """
-    out_config = ConfigParser.ConfigParser()
+    out_config = ConfigParser.ConfigParser(allow_no_value=True)
+    out_config_old = ConfigParser.ConfigParser(allow_no_value=True)
 
     # reuse existing file
     if os.path.exists(file_name):
-        out_config.read(file_name)
+        out_config_old.read(file_name)
 
+    # todo(obaranov) we lose help from other sections
+    for old_section in out_config_old.sections():
+        if old_section != subcommand:
+            out_config.add_section(old_section)
+            for option in out_config_old.options(old_section):
+                out_config.set(old_section, option,
+                               out_config_old.get(old_section, option))
     # put defaults values
     if not out_config.has_section(subcommand):
         out_config.add_section(subcommand)
+
     for opt, value in defaults.iteritems():
-        if not out_config.has_option(subcommand, opt):
-            out_config.set(subcommand, opt, value)
+        if out_config_old.has_option(subcommand, opt):
+            value = out_config_old.get(subcommand, opt)
+        short_help = _get_short_help(all_options.get(opt, {}))
+        if short_help:
+            out_config.set(subcommand, "# " + short_help)
+        out_config.set(subcommand, opt, value)
 
     # add required options
     for opt, attributes in all_options.iteritems():
-        if attributes.get('required') and not out_config.has_option(
-                subcommand, opt):
+        if attributes.get('required') \
+                and not out_config.has_option(subcommand, opt):
+            if not out_config_old.has_option(subcommand, opt):
+                # get available value:
+                allowed_values = _get_option_allowed_values(app_settings_dir,
+                                                            subcommand, opt,
+                                                            attributes)
 
-            # get available value:
-            allowed_values = _get_option_allowed_values(app_settings_dir,
-                                                        subcommand, opt,
-                                                        attributes)
+                if allowed_values:
+                    message = "one of {} options".format(allowed_values)
+                else:
+                    message = "any value"
+                LOG.warning(
+                    "Required argument '{0}' not supplied. "
+                    "Please edit config file with {1}, OR override "
+                    "through CLI: --{0}=<option>. "
+                    "".format(opt, message))
 
-            if allowed_values:
-                message = "one of {} options".format(allowed_values)
+                # add comment
+                short_help = _get_short_help(attributes)
+                if short_help:
+                    out_config.set(subcommand, "# " + short_help)
+                out_config.set(
+                    subcommand,
+                    opt,
+                    "Edit with {0}, "
+                    "OR override with CLI: --{1}=<option>".format(
+                        message, opt))
             else:
-                message = "any value"
-            LOG.warning(
-                "Required argument '{0}' not supplied. "
-                "Please edit config file with {1}, OR override "
-                "through CLI: --{0}=<option>. "
-                "".format(opt, message))
-
-            out_config.set(
-                subcommand,
-                opt,
-                "Edit with {0}, "
-                "OR override with CLI: --{1}=<option>".format(
-                    message, opt))
+                # add existing value.
+                short_help = _get_short_help(attributes)
+                if short_help:
+                    out_config.set(subcommand, "# " + short_help)
+                out_config.set(
+                    subcommand,
+                    opt,
+                    out_config_old.get(subcommand, opt))
 
     with open(file_name, 'w') as configfile:  # save
         out_config.write(configfile)
+
+
+def _get_short_help(option_attributes):
+    """
+    Gets the short help message for an option.
+    """
+    res = None
+    if option_attributes.get('help', None):
+        res = option_attributes.get('help').split('\n')[0]
+
+    return res
 
 
 def _get_option_allowed_values(app_settings_dir, subcommand, option,
