@@ -1,4 +1,11 @@
 ---
+- name: Setup openstack repos
+  hosts: openstack_nodes
+  gather_facts: yes
+  sudo: yes
+  roles:
+      - installer/packstack/repo
+
 - name: Ensure hostname is configured properly
   hosts: openstack_nodes
   gather_facts: yes

@@ -62,15 +62,6 @@ subparsers:
                       type: Value
                       help: The product build
                       default: latest
-#                  product-core-version:
-#                      type: Value
-#                      help: The product core version
-#                      required: yes
-#                      choices: ["7", "8"]
-#                  product-core-build:
-#                      type: Value
-#                      help: The product core build
-#                      default: latest
 
             - title: common
               options:
