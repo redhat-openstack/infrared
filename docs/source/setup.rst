@@ -4,9 +4,17 @@ Setup
 Prerequisites
 -------------
 
+General requirements::
+
+  $ dnf install git gcc
+
 Ansible `requires python binding for SELinux <http://docs.ansible.com/ansible/intro_installation.html#managed-node-requirements>`_::
 
   $ dnf install libselinux-python
+
+If we want to use Virtualenv_::
+
+ $ dnf install python-virtualenv
 
 .. note:: On Fedora 23 `BZ#1103566 <https://bugzilla.redhat.com/show_bug.cgi?id=1103566>`_
  calls for::

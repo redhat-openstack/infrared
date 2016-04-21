@@ -8,7 +8,7 @@ Quickstart
 
 #. Get `prerequisites <setup.html#prerequisites>`_::
 
-    $ yum install libselinux-python redhat-rpm-config
+    $ yum install libselinux-python redhat-rpm-config git gcc
 
 #. Clone InfraRed from GitHub::
 
