@@ -31,17 +31,15 @@ to avoid corrupting the system packages::
   $ virtualenv --system-site-packages .venv
   $ source .venv/bin/activate
 
- `Get python binding for SELinux <https://dmsimard.com/2016/01/08/selinux-python-virtualenv-chroot-and-ansible-dont-play-nice/>`_::
+`Get python binding for SELinux <https://dmsimard.com/2016/01/08/selinux-python-virtualenv-chroot-and-ansible-dont-play-nice/>`_::
 
   $ cp -rv /usr/lib64/python2.7/site-packages/selinux/ $VIRTUAL_ENV/lib/python2.7/site-packages
 
-
-..note:: libselinux is in `Prerequisites`_ but doesn't have a pip package. Create virtualenv with site packages enabled to avoid this hack::
+.. note:: libselinux is in `Prerequisites`_ but doesn't have a pip package. Create virtualenv with site packages enabled to avoid this hack::
 
   $ virtualenv --system-site-packages .venv
 
-
-So, After cloning repo from GitHub::
+After cloning repo from GitHub::
 
  $ cd Infrared
  $ pip install .
