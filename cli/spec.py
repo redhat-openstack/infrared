@@ -572,9 +572,7 @@ def _generate_config_file(
     for opt, value in defaults.iteritems():
         if out_config_old.has_option(subcommand, opt):
             value = out_config_old.get(subcommand, opt)
-        short_help = _get_short_help(all_options.get(opt, {}))
-        if short_help:
-            out_config.set(subcommand, "# " + short_help)
+        _add_help_comment(out_config, subcommand, all_options.get(opt, {}))
         out_config.set(subcommand, opt, value)
 
     # add required options
@@ -598,9 +596,7 @@ def _generate_config_file(
                     "".format(opt, message))
 
                 # add comment
-                short_help = _get_short_help(attributes)
-                if short_help:
-                    out_config.set(subcommand, "# " + short_help)
+                _add_help_comment(out_config, subcommand, attributes)
                 out_config.set(
                     subcommand,
                     opt,
@@ -609,9 +605,7 @@ def _generate_config_file(
                         message, opt))
             else:
                 # add existing value.
-                short_help = _get_short_help(attributes)
-                if short_help:
-                    out_config.set(subcommand, "# " + short_help)
+                _add_help_comment(out_config, subcommand, attributes)
                 out_config.set(
                     subcommand,
                     opt,
@@ -621,15 +615,14 @@ def _generate_config_file(
         out_config.write(configfile)
 
 
-def _get_short_help(option_attributes):
+def _add_help_comment(config_parser, section, option_attributes):
     """
     Gets the short help message for an option.
     """
-    res = None
-    if option_attributes.get('help', None):
-        res = option_attributes.get('help').split('\n')[0]
 
-    return res
+    if option_attributes.get('help', None):
+        for sub_help in option_attributes.get('help').split('\n'):
+            config_parser.set(section, "# " + sub_help)
 
 
 def _get_option_allowed_values(app_settings_dir, subcommand, option,
