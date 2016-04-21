@@ -13,6 +13,8 @@
         ansible_fqdn="{{ provisioner.fqdn }}"
         ansible_ssh_host="{{ provisioner.fqdn }}"
         ansible_ssh_user="{{ provisioner.ssh_user }}"
+        ansible_ssh_pass="{{ provisioner.ssh_password }}"
+        # TODO: remove the use in 'ansible_ssh_password'
         ansible_ssh_password="{{ provisioner.ssh_password }}"
 
 - name: Use beaker to provision/release the machine
@@ -36,3 +38,19 @@
           search_regex: OpenSSH
           timeout: 300
           connect_timeout: 30
+
+- name: Preparing SSH access
+  hosts: provisioned
+  gather_facts: no
+  tasks:
+    - name: Creates and saves public key from private key
+      action: "command ssh-keygen -y -f {{ provisioner.ssh_key }}"
+      register: cmd_reg
+      when: provisioner.ssh_key is defined
+      delegate_to: localhost
+
+    - name: Copy SSH key  to authorized_key
+      authorized_key:
+        key: "{{ cmd_reg.stdout }}"
+        user: root
+      when: provisioner.ssh_key is defined

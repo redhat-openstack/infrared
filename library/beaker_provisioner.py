@@ -144,7 +144,7 @@ class BeakerMachine(object):
         url = urljoin(self.base_url, SYS_FQDN_PATH.format(fqdn=self.fqdn))
         resp = self.session.get(url, headers=headers)
 
-        assert resp.status_code == requests.codes.OK,\
+        assert resp.status_code == requests.codes.OK, \
             "Failed to get system's details"
 
         return json.loads(resp.text)
@@ -175,7 +175,7 @@ class BeakerMachine(object):
 
         self.session.params = params
         resp = self.session.get(url)
-        assert resp.status_code == requests.codes.OK,\
+        assert resp.status_code == requests.codes.OK, \
             str(resp.status_code) + " - " + resp.reason
 
         # restore session params
@@ -343,8 +343,9 @@ class BeakerMachine(object):
         while (time.time() - start_time) < timeout:
             time.sleep(WAIT_BETWEEN_PROVISION_CHECKS)
             last_activity = self._get_last_system_activity()
-            if last_activity['id'] != pre_provision_activity_id['id'] \
-                    and last_activity['action'] == 'clear_netboot':
+            if all((last_activity['id'] != pre_provision_activity_id['id'],
+                    last_activity['action'] == 'clear_netboot',
+                    last_activity['service'] == 'XMLRPC')):
                 break
         else:
             raise RuntimeError(
