@@ -14,6 +14,8 @@ Contents:
 
    quickstart
    setup
+   execute
+   contributors
 
 
 
