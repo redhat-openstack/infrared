@@ -7,6 +7,13 @@ Reduce users' dependency on external CLI tools (Ansible and others).
 Setup
 =====
 
+Prerequisites
+-------------
+
+Ansible `requires python binding for SELinux <http://docs.ansible.com/ansible/intro_installation.html#managed-node-requirements>`_::
+
+  $ dnf install libselinux-python
+
 .. note:: On Fedora 23 `BZ#1103566 <https://bugzilla.redhat.com/show_bug.cgi?id=1103566>`_
  calls for::
 
@@ -24,13 +31,15 @@ to avoid corrupting the system packages::
   $ virtualenv --system-site-packages .venv
   $ source .venv/bin/activate
 
-.. note:: Create virtualenv with site packages enabled because Ansible file modules require python-libselinux binding.
- However, according to `this blog post <https://dmsimard.com/2016/01/08/selinux-python-virtualenv-chroot-and-ansible-dont-play-nice/>`_
- libselinux-python can be hacked into regular virtualenvs as well.
+ `Get python binding for SELinux <https://dmsimard.com/2016/01/08/selinux-python-virtualenv-chroot-and-ansible-dont-play-nice/>`_::
 
-Use pip to install from source::
+  $ cp -rv /usr/lib64/python2.7/site-packages/selinux/ $VIRTUAL_ENV/lib/python2.7/site-packages
 
-  $ pip install <path_to_infrared_dir>
+
+..note:: libselinux is in `Prerequisites`_ but doesn't have a pip package. Create virtualenv with site packages enabled to avoid this hack::
+
+  $ virtualenv --system-site-packages .venv
+
 
 So, After cloning repo from GitHub::
 
