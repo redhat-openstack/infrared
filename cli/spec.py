@@ -479,9 +479,10 @@ def override_default_values(app_settings_dir, clg_args, sub_parser_options):
             all_options=sub_parser_options)
     else:
         # Override defaults with the ini file args if provided
-        file_args = getattr(clg_args.get('from-file'), "value", {}).get(
-            clg_args['command0'], {})
-        utils.dict_merge(defaults, file_args)
+        from_file_arg = getattr(clg_args.get('from-file'), "value", {})
+        if from_file_arg is not None:
+            file_args = from_file_arg.get(clg_args['command0'], {})
+            utils.dict_merge(defaults, file_args)
 
         # Override defaults with env values
         # TODO (aopincar): IR env vars should be more uniques
