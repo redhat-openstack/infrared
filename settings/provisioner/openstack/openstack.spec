@@ -31,6 +31,12 @@ subparsers:
                       type: Value
                       help: An image id or name, on OpenStack cloud to provision the instance with. To see full list of images avaialable on the cloud, use 'glance image-list'.
                       required: yes
+            - title: dns
+              options:
+                  dns:
+                      type: Value
+                      help: The dns server the provisioned instances should use.
+                      default: 208.67.222.222
             - title: topology
               options:
                   neutron:
