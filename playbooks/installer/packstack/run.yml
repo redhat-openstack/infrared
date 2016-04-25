@@ -6,11 +6,9 @@
   vars:
       network_config: "{{ installer.network.config | default({}) }}"
       network_variant_config: "{{ installer.network.variant.config | default({}) }}"
-      debug_config: "{{ installer.osdebug.config | default({}) }}"
 
       packstack_config: "{{ installer.config
           | combine(network_config)
-          | combine(network_variant_config)
-          | combine(debug_config) }}"
+          | combine(network_variant_config) }}"
   roles:
       - installer/packstack/install

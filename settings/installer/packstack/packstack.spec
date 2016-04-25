@@ -29,16 +29,19 @@ subparsers:
             - title: Debug
               options:
                   osdebug:
-                      type: YamlFile
+                      type: Value
                       help: Install OS with DEBUG
+                      default: n
+                      choices: ["y", "n"]
+
 
             - title: Messaging
               options:
-                  messaging:
+                  messaging-variant:
                       type: Value
                       help: Messaging type
                       default: rabbitmq
-                      choices: ["rabbitmq", "qpidd"]
+                      choices: ["rabbitmq", "none",  qpidd"]
 
             - title: Network
               options:

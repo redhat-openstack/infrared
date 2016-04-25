@@ -4,7 +4,8 @@ installer:
     short_type: pksk
 
     config:
-        CONFIG_AMQP_BACKEND: "{{ !lookup installer.messaging }}"
+        CONFIG_AMQP_BACKEND: "{{ !lookup installer.messaging.variant }}"
+        CONFIG_DEBUG_MODE: "{{ !lookup installer.osdebug }}"
 
     packstack:
         answer_file: packstack_config.txt
