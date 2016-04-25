@@ -1,12 +1,16 @@
 ---
 # Any step that should happen after the deployment of the osp-d playbook
 # This could be create ssh forwarding to the nodes, validation of installation, etc
+- include: "backup-undercloud.yml"
+  tags: backup
+  when: "backup is defined"
+
 - name: Post tasks
   hosts: undercloud
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
-  pre_tasks:
+  tasks:
       - name: fetch the private key file from the undercloud
         fetch:
             src: "~/.ssh/id_rsa"
@@ -25,21 +29,9 @@
             add_host:
                 name: "{{ item }}"
                 ansible_user: "heat-admin"
-            with_items: "{{ groups['openstack_nodes'] | difference(['undercloud']) }}"
+            with_items: "{{ groups['overcloud_nodes'] }}"
         delegate_to: localhost
-  roles:
-      - {role: workarounds/rhbz1302047, when: installer.workarounds.rhbz1302047 is defined }
-      - {role: workarounds/rhbz1217093, when: installer.workarounds.rhbz1217093 is defined }
-      - {role: workarounds/rhbz1314732, when: installer.workarounds.rhbz1314732 is defined }
-      - {role: workarounds/rhbz1291568, when: installer.workarounds.rhbz1291568 is defined and 'ceph' in groups }
-      - {role: workarounds/rhbz1304367, when: installer.workarounds.rhbz1304367 is defined and 'ceph' in groups }
-      - {role: workarounds/rhbz1314725, when: installer.workarounds.rhbz1314725 is defined }
-      - {role: workarounds/rhbz1316012, when: installer.workarounds.rhbz1316012 is defined }
-      - {role: workarounds/rhbz1316016, when: installer.workarounds.rhbz1316016 is defined }
-      - {role: workarounds/rhbz1316072, when: installer.workarounds.rhbz1316072 is defined }
-#      - {role: workarounds/rhbz1316018, when: workarounds.rhbz1314725 is defined } TODO: add PATH TO RPM
-#      - TODO: https://bugzilla.redhat.com/show_bug.cgi?id=1233251
-  tasks:
+
       - name: Copy the keystonerc file for the tester
         fetch:
             src: "~/overcloudrc"

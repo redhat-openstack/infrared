@@ -34,7 +34,7 @@
       provisioner.topology.network[item.item[1]].dhcp is defined and
       item.stdout is defined and item.stdout != ""
   register: ip_list
-  until: ip_list.stdout.find("{{ provisioner.topology.network['%s' % item.item[1]].ip_address | truncate(7, True, '') }}") > -1
+  until: "'{{ ip_list.stdout }}' != ''"
   retries: 40
   delay: 5
   with_items: "{{ vm_mac_list }}"

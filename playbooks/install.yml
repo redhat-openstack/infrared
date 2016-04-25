@@ -1,5 +1,6 @@
 ---
 - name: Set selinux state
+  tags: backup
   hosts: openstack_nodes
   become: yes
   become_method: sudo
@@ -7,6 +8,7 @@
     - selinux: policy=targeted state={{ installer.selinux|default('enforcing') }}
 
 - name: Ensure yum presence
+  tags: backup
   hosts: openstack_nodes
   gather_facts: no
   become: yes
@@ -15,23 +17,24 @@
     - shell: python -c 'import yum' || (dnf install -y yum yum-utils && ln -snf /usr/bin/yum-deprecated /usr/bin/yum)
 
 - name: Setup Firewall Rules
+  tags: backup
   hosts: openstack_nodes:!tester
   gather_facts: no
   become: yes
   become_method: sudo
   serial: 1
   tasks:
-    #TODO: change to iptables ansible module
-    - name: Iptables - Set default rules
-      command: "iptables {{ item }}"
-      with_items: installer.firewall.rules
+      #TODO: change to iptables ansible module
+      - name: Iptables - Set default rules
+        command: "iptables {{ item }}"
+        with_items: installer.firewall.rules
 
-    # packstack does not change the rules if they do not conflict
-    # and they are saved, so save them.
-    - name: Iptables - Save default rules
-      shell: /sbin/iptables-save >/etc/sysconfig/iptables
+      # packstack does not change the rules if they do not conflict
+      # and they are saved, so save them.
+      - name: Iptables - Save default rules
+        shell: /sbin/iptables-save >/etc/sysconfig/iptables
 
-- include: installer/{{ installer.type }}/main.yml
+- include: "installer/{{ installer.type }}/main.yml"
 
 - name: Update the inventory file
   hosts: localhost

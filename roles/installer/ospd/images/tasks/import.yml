@@ -6,5 +6,8 @@
   with_items: "{{ tar_images }}"
 
 - name: untar the images
-  shell: "tar -xvf ~/{{ item }}"
+  unarchive:
+      src: "~/{{ item }}"
+      dest: "~/"
+      copy: "no"
   with_items: "{{ tar_images }}"
