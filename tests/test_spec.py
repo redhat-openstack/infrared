@@ -1,6 +1,3 @@
-import ConfigParser
-import os
-
 import pytest
 from cli import exceptions
 from cli import spec
