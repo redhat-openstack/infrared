@@ -16,7 +16,7 @@ DEFAULT_SECTIONS = {
         playbooks='playbooks'
     ),
 
-    'provisioner':  dict(
+    'provisioner': dict(
         main_playbook='provision.yml',
         cleanup_playbook='cleanup.yml'
     ),
@@ -45,7 +45,8 @@ def load_config_file(file_path=None):
         if os.path.isdir(env_path):
             env_path = os.path.join(env_path, utils.IR_CONF_FILE)
 
-    for path in (file_path, env_path, cwd_path, utils.USER_PATH, utils.SYSTEM_PATH):
+    for path in (
+            file_path, env_path, cwd_path, utils.USER_PATH, utils.SYSTEM_PATH):
         if path is not None and os.path.exists(path):
             _config.read(path)
             break
