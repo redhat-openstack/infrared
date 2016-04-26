@@ -3,8 +3,8 @@
   hosts: tester
   gather_facts: yes
   roles:
-      - {role: tester/tempest/setup/git, when: tester.setup == "git"}
-      - {role: tester/tempest/setup/rpm, when: tester.setup == "rpm"} #WIP
+      - {role: tester/tempest/setup/git, when: tester.setup.type == "git"}
+      - {role: tester/tempest/setup/rpm, when: tester.setup.type == "rpm"} #WIP
   tasks:
       - name: create a command to use tempest with our venv if needed
         copy:

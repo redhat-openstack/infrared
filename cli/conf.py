@@ -24,6 +24,11 @@ DEFAULT_SECTIONS = {
     'installer': dict(
         main_playbook='install.yml',
         cleanup_playbook='cleanup.yml'
+    ),
+
+    'tester': dict(
+        main_playbook='test.yml',
+        cleanup_playbook='cleanup.yml'
     )
 }
 
