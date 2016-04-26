@@ -233,6 +233,10 @@ class TopologyArgument(ValueArgument):
                 raise exceptions.IRConfigurationException(
                     "Topology node should be in format <node role>:<number>. "
                     "Current value: '{}' ".format(topology_item))
+
+            # Remove white spaces
+            node_type = node_type.strip()
+
             # todo(obaraov): consider moving topology to config on constant.
             topology_dict[node_type] = utils.load_yaml(node_type + ".yml",
                                                        topology_dir)
