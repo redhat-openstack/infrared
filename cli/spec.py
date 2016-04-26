@@ -221,11 +221,17 @@ class TopologyArgument(ValueArgument):
                                     'topology')
         topology_dict = {}
         for topology_item in self.value.split(','):
-            if '_' in topology_item:
-                number, node_type = topology_item.split('_')
-            else:
+
+            node_type, number = None, None
+
+            if ':' in topology_item:
+                node_type, number = topology_item.split(':')
+                if not ("%s" % number).isdigit():
+                    number = None
+
+            if not number:
                 raise exceptions.IRConfigurationException(
-                    "Topology node should be in format  <number>_<node role>. "
+                    "Topology node should be in format <node role>:<number>. "
                     "Current value: '{}' ".format(topology_item))
             # todo(obaraov): consider moving topology to config on constant.
             topology_dict[node_type] = utils.load_yaml(node_type + ".yml",

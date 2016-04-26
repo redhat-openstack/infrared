@@ -116,13 +116,13 @@ that need to be defined in `.spec` files:
   provided ``--topology-nodes`` argument value.
 
   The ``--topology-nodes`` argument can have the following format:
-   * ``--topology-nodes=1_controller,1_compute``
-   * ``--topology-nodes=1_controller``
-   * ``--topology-nodes=3_controller,1_compute,1_undercloud``
+   * ``--topology-nodes=controller:1,compute:1``
+   * ``--topology-nodes=controller:1``
+   * ``--topology-nodes=controller:3,compute:3,undercloud:1``
 
  InfraRed will read dynamic topology by following the next steps:
   #. Split the topology value with ','.
-  #. Split each node with '_' and get pair (number, role). For every pair
+  #. Split each node with ':' and get pair (role, number). For every pair
      look for the topology folder (configured in the infrared.cfg file) for
      the appropriate mini file (controller.yml, compute.yml, etc). Load the
      role the defined number of times into the settings.
