@@ -1,9 +1,20 @@
 ---
-- name: Scaling swift-storage nodes down and up again
+- name: Scaling swift-storage nodes down
   hosts: undercloud
   become: yes
   become_user: "{{ installer.user.name }}"
   gather_facts: no
   roles:
       - {role: "installer/ospd/overcloud/scale/", service: 'swift-storage', amount: 1}
+
+- name: Scaling swift-storage nodes up
+  hosts: undercloud
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  gather_facts: no
+  pre_tasks:
+      - name: Wait for min_part_hours timeout
+        pause: minutes=60
+
+  roles:
       - {role: "installer/ospd/overcloud/scale/", service: 'swift-storage', amount: 3}
