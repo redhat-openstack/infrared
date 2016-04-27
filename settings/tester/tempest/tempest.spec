@@ -19,10 +19,6 @@ subparsers:
                       help: The set of test to execute
                       required: yes
                       default: none.yml
-                  guest-image:
-                      type: YamlFile
-                      help: The guest image
-                      default: cirros-0.3.4.yml
                   threads:
                       type: Value
                       help: The number of concurrent threads to run tests
