@@ -13,8 +13,8 @@
   become_user: "{{ installer.user.name }}"
   gather_facts: no
   pre_tasks:
-      - name: Wait for min_part_hours timeout
+      - name: Wait for min_part_hours (the swift timeout between partition reassignment) timeout
         pause: minutes=60
 
   roles:
-      - {role: "installer/ospd/overcloud/scale/", service: 'swift-storage', amount: 3}
+      - {role: "installer/ospd/overcloud/scale/", service: 'swift-storage', amount: "{{ provisioner.topology.nodes.swift.amount }}" }
