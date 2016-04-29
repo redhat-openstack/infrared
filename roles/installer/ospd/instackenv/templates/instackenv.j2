@@ -1,0 +1,20 @@
+{
+  "nodes": [
+for {% for host in groups['overcloud_nodes'] %}
+    {
+      "pm_password": "password", 
+      "memory": {{ hostvars[host]['ansible_memtotal_mb'] }},
+      "pm_addr": {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}, 
+      "mac": [
+        "{{ hostvars[host]['ansible_eth0']['macaddress'] }}"
+      ], 
+      "capabilities": "boot_option:local", 
+      "pm_type": "pxe_ipmitool", 
+      "disk": {{ hostvars[host]['disk_size'] }}, 
+      "arch": {{ hostvars[host]['ansible_architecture'] }}, 
+      "cpu": {{ hostvars[host]['ansible_processor_cores'] }},
+      "pm_user": "admin"
+    }, 
+{% endfor %}
+  ]
+}

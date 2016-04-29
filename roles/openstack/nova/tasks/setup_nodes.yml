@@ -48,4 +48,5 @@
       groups: "{{ provisioner.nodes[node_type.value.name].groups | join(',') }}"
       ansible_ssh_private_key_file: "{{ provisioner.key.file }}"
       ansible_ssh_user: '{{ provisioner.nodes[node_type.value.name].ssh_user | default(default_ssh_user) }}'
+      disk_size: "{{ provisioner.nodes[node_type.value.name].disks.disk1.size }}"
   with_items: "{{ servers.ansible_facts.openstack_servers }}"

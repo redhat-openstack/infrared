@@ -21,7 +21,15 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   roles:
+      - {role: linux/rhel/libguestfs, when: ansible_distribution == 'RedHat'}
       - {role: installer/ospd/images}
+
+- name: Prepare instackenv.json
+  hosts: undercloud
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  roles:
+      - { role: installer/ospd/instackenv }
 
 - name: Start introspection
   tags: introspection
