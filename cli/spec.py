@@ -1,6 +1,7 @@
 import ConfigParser
 import re
 from functools import total_ordering
+import sys
 
 import clg
 import os
@@ -443,10 +444,12 @@ def parse_args(settings_dir, app_settings_dir, args=None):
     app_specs = _get_specs(app_settings_dir)
     utils.dict_merge(app_specs, common_specs)
 
-    # Get the subparsers options as is with all the fields from app's specs.
-    # This also trims some custom fields from options to pass to clg.
-    subparsers_options = ArgumentsPreProcessor(
-        settings_dir, app_settings_dir).process(app_specs)
+    # TODO(aopincar): This if should be removed  when CLG refactor is merged
+    if not any([_help in sys.argv for _help in ('--help', '-h')]):
+        # Get the subparsers options as is with all the fields from app's specs
+        # This also trims some custom fields from options to pass to clg.
+        subparsers_options = ArgumentsPreProcessor(
+            settings_dir, app_settings_dir).process(app_specs)
 
     # Pass trimmed spec to clg with modified help message
     cmd = clg.CommandLine(app_specs)
