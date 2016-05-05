@@ -1,0 +1,13 @@
+---
+backend: "ceph"
+external: "yes"
+template:
+    content:
+        parameter_defaults:
+            CinderRbdPoolName: "automation-cinder"
+            NovaRbdPoolName: "automation-nova"
+            GlanceRbdPoolName: "automation-glance"
+            CephClientUserName: "automation"
+            CephClientKey: "{{ !lookup private.storage.ceph.CephClientKey }}"
+            CephClusterFSID: "{{ !lookup private.storage.ceph.CephClusterFSID }}"
+            CephExternalMonHost: "{{ !lookup private.storage.ceph.CephExternalMonHost }}"

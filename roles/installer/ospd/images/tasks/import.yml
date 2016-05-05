@@ -1,0 +1,13 @@
+---
+- name: download the pre-built overcloud images
+  get_url:
+      dest: "~/{{ item }}"
+      url: "{{ installer.images.url }}/{{ item }}"
+  with_items: "{{ tar_images }}"
+
+- name: untar the images
+  unarchive:
+      src: "~/{{ item }}"
+      dest: "~/"
+      copy: "no"
+  with_items: "{{ tar_images }}"

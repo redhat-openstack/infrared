@@ -1,0 +1,35 @@
+- name: create the baremetal flavor for our machines
+  tags: debug
+  shell: "source ~/stackrc; openstack flavor create --id auto --ram 4096 --disk 16 --vcpus 1 baremetal"
+  register: result
+  ignore_errors: yes
+  failed_when: "result.rc != 0 and result.stderr.find('Flavor with name baremetal already exists') != -1"
+
+- name: set additional properties
+  shell: "source ~/stackrc; openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' baremetal"
+
+- name: create the flavors for our machines
+  shell: "source ~/stackrc; openstack flavor create --id auto --ram {{ hostvars[item].ansible_memtotal_mb }} --disk {{ hostvars[item].ansible_devices.vda.size | regex_replace('^([0-9]+).*$', '\\1') | int - 5 }} --vcpus {{ hostvars[item].ansible_processor_vcpus | int - 1 }} {{ item.rstrip('1234567890') }}-{{ item.rstrip('1234567890') | to_uuid }}"
+  register: flavor_result
+  failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item }}-{{ item | to_uuid }} already exists') != -1"
+  with_items: "{{ groups['overcloud_nodes'] }}"
+
+- set_fact:
+      tagged_flavors: "{{ flavor_result.results }}"
+
+- name: set additional properties
+  shell: "source ~/stackrc; openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' --property 'capabilities:profile'='{{ item.cmd.split() | last }}' {{ item.cmd.split() | last }}"
+  when: item.cmd is defined
+  with_items: "{{ tagged_flavors }}"
+
+- name: get the node UUID
+  shell: "source ~/stackrc; ironic node-list | grep {{ item }} | awk '{print $2}'"
+  with_items: "{{ groups['overcloud_nodes'] }}"
+  register: node_list
+
+- name: tag our nodes with the proper profile
+  shell: "source ~/stackrc; ironic node-update {{ item[0].stdout }} add properties/capabilities='profile:{{ item[1].cmd.split() | last }},boot_option:local'"
+  when: "item[0].item is defined and item[1].cmd is defined and item[0].item.rstrip('1234567890') in item[1].cmd"
+  with_nested:
+      - "{{ node_list.results }}"
+      - "{{ tagged_flavors }}"

@@ -1,0 +1,30 @@
+- name: check if host supports virtualization
+  command: "virt-host-validate"
+  register: result
+
+- debug:
+    var: result.stdout_lines
+
+- fail:
+      msg: "System does not support virtualization"
+  when: "'FAIL' in result.stdout_lines"
+
+- name: check if CPU supports INTEL based KVM
+  shell: "egrep -c 'vmx' /proc/cpuinfo"
+  ignore_errors: True
+  register: kvm_intel
+
+- name: set fact for Intel based KVM
+  set_fact:
+      kvm_base: "intel"
+  when: kvm_intel == 0
+
+- name: check if CPU supports AMD based KVM
+  shell: "egrep -c 'svm' /proc/cpuinfo"
+  ignore_errors: True
+  register: kvm_amd
+
+- name: set fact for AMD based KVM
+  set_fact:
+      kvm_base: "amd"
+  when: kvm_amd == 0

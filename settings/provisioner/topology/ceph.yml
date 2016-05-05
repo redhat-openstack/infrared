@@ -1,0 +1,30 @@
+name: "ceph"
+amount: "1"
+cpu: "2"
+memory: "4096"
+os:
+    type: "linux"
+    variant: "rhel7"
+disks:
+    disk1: &disk1
+        path: "/var/lib/libvirt/images"
+        dev: "/dev/vda"
+        size: "20G"
+    disk2:
+        <<: *disk1
+        dev: /dev/vdb
+        size: "40G"
+network:
+    interfaces:
+        management:
+            label: "eth0"
+        data:
+            label: "eth1"
+        external:
+            label: "eth2"
+    floating_ip_network: management
+
+groups:
+    - ceph
+    - openstack_nodes
+    - overcloud_nodes

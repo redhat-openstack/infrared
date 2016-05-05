@@ -1,6 +1,7 @@
 ---
 subparsers:
     virsh:
+        formatter_class: RawTextHelpFormatter
         help: Provision systems using virsh
         groups:
             - title: Hypervisor
@@ -19,13 +20,9 @@ subparsers:
                       default: ~/.ssh/id_rsa
             - title: image
               options:
-                  image-file:
-                      type: Value
-                      help: An image to provision the host with
-                      required: yes
-                  image-server:
-                      type: Value
-                      help: Base URL of the image file server
+                  image:
+                      type: YamlFile
+                      help: The image to use for nodes provisioning. Check the 'sample.yml.example' for example.
                       required: yes
             - title: topology
               options:
@@ -36,7 +33,7 @@ subparsers:
                   topology-nodes:
                       type: Topology
                       help: Provision topology.
-                      default: "1_controller,1_compute,1_undercloud"
+                      default: "1_undercloud,1_controller,1_compute"
             - title: common
               options:
                   dry-run:

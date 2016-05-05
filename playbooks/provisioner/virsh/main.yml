@@ -1,0 +1,41 @@
+---
+- name: Add host to host list
+  hosts: localhost
+  gather_facts: no
+  tasks:
+      - name: add hosts to host list
+        add_host:
+            name: "{{ provisioner.host.name }}"
+            groups: "{{ provisioner.host.groups| join(',') }}"
+            node_label: "virthost"
+            ansible_ssh_user: "{{ provisioner.host.user }}"
+            ansible_ssh_host: "{{ provisioner.host.address }}"
+            ansible_ssh_private_key_file: "{{ provisioner.host.key }}"
+
+- name: Setup the virthost
+  hosts: virthost
+  gather_facts: yes
+  roles:
+      - {role: linux/rhel/libguestfs, when: ansible_distribution == 'RedHat'}
+      - {role: provisioner/virsh}
+
+- name: Check SSH connection to newly created VMs
+  hosts: all:!localhost
+  gather_facts: no
+  tasks:
+      - name: wait for hosts to be reachable
+        wait_for:
+            port: 22
+            host: "{{ ansible_ssh_host }}"
+            delay: 10
+        delegate_to: virthost
+
+- name: Update ansible with the new hosts
+  hosts: localhost
+  tasks:
+      - name: update ansible with the new SSH settings
+        ini_file:
+            dest: "{{ inventory_dir }}/ansible.cfg"
+            section: ssh_connection
+            option: ssh_args
+            value: "-o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -F {{ inventory_dir }}/ansible.ssh.config"
