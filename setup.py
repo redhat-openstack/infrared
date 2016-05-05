@@ -1,3 +1,4 @@
+import os
 from os.path import join, dirname, abspath
 from pip import req
 from setuptools import setup, find_packages
@@ -11,9 +12,19 @@ install_reqs = req.parse_requirements('requirements.txt', session=False)
 # e.g. ['django==1.5.1', 'mezzanine==1.4.6']
 reqs = [str(ir.req) for ir in install_reqs]
 
-# InfraRed scripts
-# cmds = ('provision', 'install', 'test')
-# scripts = ['ir-' + cmd for cmd in cmds]
+
+def generate_entry_scripts():
+    """
+    Generates the entry points for the ir-* scripts.
+    """
+
+    # at this point we don't have any packages installed
+    # so hard-code settings folder for now here
+    specs = next(os.walk('settings'))[1]
+
+    return ["ir-{0} = cli.main:entry_point".format(spec_name)
+            for spec_name in
+            specs]
 
 prj_dir = dirname(abspath(__file__))
 setup(
@@ -22,10 +33,9 @@ setup(
     packages=find_packages(),
     long_description=open(join(prj_dir, 'README.rst')).read(),
     entry_points={
-        'console_scripts': ["ir-provision = cli.provision:main",
-                            "ir-install = cli.install:main"]
+        'console_scripts': generate_entry_scripts()
     },
     install_requires=reqs,
-    author='Yair Fried',
-    author_email='yfried@redhat.com'
+    author='rhos-qe',
+    author_email='rhos-qe-dept@redhat.com'
 )

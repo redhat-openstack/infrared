@@ -1,0 +1,120 @@
+# In case of virthost we need to fix the pxe_ssh limitation of correctly assigning the MAC address to the iPXE script
+- name: Update our libvirt machine to latest puddle packages
+  hosts: virthost
+  tags: backup
+  gather_facts: yes
+  tasks:
+      - name: update /etc/hosts with VMs details
+        lineinfile:
+            dest: "/etc/hosts"
+            line: "{{ hostvars[item].ansible_default_ipv4.address }}    {{ item }}.redhat.local {{ item }}"
+            state: present
+        with_items: "{{ groups['all'] | difference(['localhost']) | difference(['virthost']) }}"
+
+      - name: remove all repos
+        command: "rm -f /etc/yum.repos.d/*"
+
+      - name: install the rhos-release RPM
+        shell: "yum localinstall -y {{ installer.product.rpm }}"
+
+      - name: remove rhos-release repos if needed
+        shell: "rhos-release -x"
+
+      - debug:
+            msg: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }}"
+
+      - name: create necessary repos with for director using rhos-release
+        command: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }}"
+        register: command_result
+        until: command_result.stderr.find('Connection reset by peer') == -1
+        retries: 40
+        delay: 5
+
+      - debug:
+            msg: "rhos-release {{ installer.product.core.version }}-director -p {{ installer.product.core.build }}"
+
+      - name: create necessary repos for core using rhos-release
+        command: "rhos-release {{ installer.product.core.version }}-director -p {{ installer.product.core.build }}"
+        register: command_result
+        until: command_result.stderr.find('Connection reset by peer') == -1
+        retries: 40
+        delay: 5
+
+      - name: update system packages
+        yum:
+            state: latest
+            name: "*"
+        register: update
+
+      - name: reboot our virthost
+        shell: "sleep 2 && shutdown -r now"
+        async: 1
+        poll: 0
+        ignore_errors: true
+        when: update|changed
+
+      - name: waiting for the virthost to be available
+        wait_for:
+            port: 22
+            host: "{{ ansible_ssh_host }}"
+            search_regex: OpenSSH
+            delay: 10
+        delegate_to: "localhost"
+        when: update|changed
+
+- include: quickstart-undercloud.yml
+  when: "'undercloud' not in groups"
+
+- name: Prepare the instackenv.json
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  tasks:
+      - name: copy our undercloud public key
+        fetch:
+            src: "/home/{{ installer.user.name }}/.ssh/id_rsa.pub"
+            dest: "{{ inventory_dir }}/id_rsa_undercloud.pub"
+            flat: yes
+
+      - name: prepare instack.json
+        template:
+            src: "templates/virthost_instack.json.j2"
+            dest: "~/instack_template.json"
+
+      - name: populate the private key
+        shell: "cat ~/instack_template.json | jq --arg key \"$(cat ~/.ssh/id_rsa)\" '. | .nodes[].pm_password=$key | .[\"ssh-key\"]=$key'> instackenv.json"
+
+# In case we're dealing with virthost, we need to make sure the undercloud is able to ssh to the hypervisor
+- name: Create the stack user on the virthost and allow SSH to hypervisor
+  hosts: virthost
+  gather_facts: no
+  tasks:
+      - name: create stack user on virthost
+        user:
+            name: "{{ installer.user.name }}"
+            state: present
+            password: "{{ installer.user.password | password_hash('sha512') }}"
+
+      - name: set permissions for the user to access the hypervisor
+        copy:
+            content: |
+                [libvirt Management Access]
+                Identity=unix-user:{{ installer.user.name }}
+                Action=org.libvirt.unix.manage
+                ResultAny=yes
+                ResultInactive=yes
+                ResultActive=yes
+            dest: "/etc/polkit-1/localauthority/50-local.d/50-libvirt-user-{{ installer.user.name }}.pkla"
+
+      - name: print the public key
+        shell: "cat {{ inventory_dir }}/id_rsa_undercloud.pub"
+        register: undercloud_public_key
+        delegate_to: localhost
+
+      - name: insert the public key to the known hosts in virthost
+        lineinfile:
+            dest: "/home/{{ installer.user.name }}/.ssh/authorized_keys"
+            line: "{{ undercloud_public_key.stdout }}"
+        become: yes
+        become_user: "{{ installer.user.name }}"

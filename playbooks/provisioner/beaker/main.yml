@@ -1,0 +1,54 @@
+---
+- name: Pre-provisioning tasks
+  hosts: localhost
+  sudo: no
+  tasks:
+    - name: Group by provisioner type
+      group_by: key={{ provisioner.type }}
+
+    - name: Add the host to the inventory
+      add_host:
+        name="host0"
+        groups="provisioned"
+        ansible_fqdn="{{ provisioner.fqdn }}"
+        ansible_ssh_host="{{ provisioner.fqdn }}"
+        ansible_ssh_user="{{ provisioner.ssh_user }}"
+        ansible_ssh_pass="{{ provisioner.ssh_password }}"
+
+- name: Use beaker to provision/release the machine
+  hosts: localhost
+  tasks:
+    - name: Provisioning machine using the 'beaker_provisioner' module
+      beaker_provisioner:
+          server_url: "{{ provisioner.base.url }}"
+          fqdn: "{{ provisioner.fqdn }}"
+          username: "{{ provisioner.username }}"
+          password: "{{ provisioner.password }}"
+          action: "provision"
+          distro_tree_id: "{{ provisioner.distro.tree }}"
+          web_service: "{{ provisioner.web.service }}"
+          ca_cert: "{{ provisioner.ca.cert }}"
+
+    - name: wait for ssh
+      wait_for:
+          host: "{{ provisioner.fqdn }}"
+          port: 22
+          search_regex: OpenSSH
+          timeout: 300
+          connect_timeout: 30
+
+- name: Preparing SSH access
+  hosts: provisioned
+  gather_facts: no
+  tasks:
+    - name: Creates and saves public key from private key
+      action: "command ssh-keygen -y -f {{ provisioner.ssh_key }}"
+      register: cmd_reg
+      when: provisioner.ssh_key is defined
+      delegate_to: localhost
+
+    - name: Copy SSH key  to authorized_key
+      authorized_key:
+        key: "{{ cmd_reg.stdout }}"
+        user: root
+      when: provisioner.ssh_key is defined

@@ -1,0 +1,51 @@
+---
+# This file includes tasks for instances and floating IPs creation.
+
+# Node type can be: controller, compute, ceph, etc.
+- name: Set fact for node type
+  set_fact:
+      node_type: "{{ item }}"
+
+# These tasks done for each type of node according to 'amount' variable.
+- name: Create instances
+  os_server:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      auto_ip: "{{ node_type.value.auto_ip | default(auto_ip) }}"
+      config_drive: "{{ node_type.value.config_drive | default(config_drive) }}"
+      flavor: "{{ node_type.value.flavor | default(flavor_id) }}"
+      image: "{{ provisioner.image }}"
+      name: "{{ prefix }}{{ node_type.value.name }}-{{ item }}"
+      nics: "{{ networks.results | map(attribute='id') | list() |map('add_prefix', 'net-id=') | list() }}"
+      key_name: "{{ provisioner.key.name if provisioner.key.name else (prefix + provisioner.key.file | basename) }}"
+      state: present
+      wait: "{{ node_type.value.wait | default(wait) }}"
+  register: nodes
+  with_sequence: "count={{ node_type.value.amount }}"
+  when: provisioner.nodes is defined
+
+- name: Create floating IPs
+  os_floating_ip:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      network: "{{ external_network_id }}"
+      internal_network: "{{ prefix}}{{ node_type.value.network.floating_ip_network }}"
+      server: "{{ prefix }}{{ node_type.value.name }}-{{ item }}"
+      state: present
+      wait: yes
+  register: floating_ips
+  with_sequence: "count={{ node_type.value.amount }}"
+  when: provisioner.nodes is defined
+
+- name: Gather created servers facts
+  os_server_facts:
+      server: "{{ prefix }}{{ node_type.value.name }}*"
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+  register: servers
+
+- name: Add created servers to inventory
+  add_host:
+      name: "{{ item.name }}"
+      ansible_ssh_host: "{{ item.public_v4 }}"
+      groups: "{{ provisioner.nodes[node_type.value.name].groups | join(',') }}"
+      ansible_ssh_private_key_file: "{{ provisioner.key.file }}"
+      ansible_ssh_user: 'cloud-user'
+  with_items: "{{ servers.ansible_facts.openstack_servers }}"

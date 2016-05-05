@@ -7,16 +7,39 @@ Reduce users' dependency on external CLI tools (Ansible and others).
 Setup
 =====
 
+Prerequisites
+-------------
+
+Ansible `requires python binding for SELinux <http://docs.ansible.com/ansible/intro_installation.html#managed-node-requirements>`_::
+
+  $ dnf install libselinux-python
+
 .. note:: On Fedora 23 `BZ#1103566 <https://bugzilla.redhat.com/show_bug.cgi?id=1103566>`_
  calls for::
 
   $ dnf install redhat-rpm-config
 
-Use pip to install from source::
+Virtualenv
+----------
 
-  $ pip install <path_to_infrared_dir>
+InfraRed shares many dependencies with other OpenStack products and projects. Therefore there's a high probability of
+conflicts with python dependencies, which would result either with InfraRed failure, or worse, with breaking dependencies
+for other OpenStack products.
+When working from source, it is recommended to use python `virutalenv <http://docs.python-guide.org/en/latest/dev/virtualenvs/>`_
+to avoid corrupting the system packages::
 
-So, After cloning repo from GitHub::
+  $ virtualenv --system-site-packages .venv
+  $ source .venv/bin/activate
+
+`Get python binding for SELinux <https://dmsimard.com/2016/01/08/selinux-python-virtualenv-chroot-and-ansible-dont-play-nice/>`_::
+
+  $ cp -rv /usr/lib64/python2.7/site-packages/selinux/ $VIRTUAL_ENV/lib/python2.7/site-packages
+
+.. note:: libselinux is in `Prerequisites`_ but doesn't have a pip package. Create virtualenv with site packages enabled to avoid this hack::
+
+  $ virtualenv --system-site-packages .venv
+
+After cloning repo from GitHub::
 
  $ cd Infrared
  $ pip install .
@@ -101,7 +124,7 @@ that need to be defined in `.spec` files:
   #. Split the topology value with ','.
   #. Split each node with '_' and get pair (number, role). For every pair
      look for the topology folder (configured in the infrared.cfg file) for
-     the appropriate mini file (controller.yaml, compute.yaml, etc). Load the
+     the appropriate mini file (controller.yml, compute.yml, etc). Load the
      role the defined number of times into the settings.
 
  .. note:: The default search path for topology files is
@@ -178,10 +201,3 @@ There are two steps that should be done when adding a new plugin to InfraRed:
     with other values, all are received by the user.
     When adding a new plugin, there is a need to create those settings files containing the needed data for the
     playbook execution.
-
-
-Known issues
-============
-
-#. PROBLEM: sshpass package cannot be installed during virsh provisioning.
-   SOLUTION: install rhos-release tool. Install osp-d with rhos-release: ``rhos-release 7-director``

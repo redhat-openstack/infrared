@@ -11,8 +11,8 @@ class IRKeyNotFoundException(IRException):
 
 class IRFileNotFoundException(IRException):
     def __init__(self, file_path, msg=None):
-        pre_msg = msg if msg else 'No such file or directory: '
-        super(self.__class__, self).__init__(pre_msg + file_path)
+        pre_msg = msg if msg else 'No such file(s) or directory(s): '
+        super(self.__class__, self).__init__(pre_msg + str(file_path))
 
 
 class IRExtraVarsException(IRException):
@@ -61,15 +61,17 @@ class IRNotImplemented(IRException):
     pass
 
 
-class IRUnknownApplicationException(IRException):
+class IRUnknownSpecException(IRException):
     """
     This exceptions is raised when unknown application is
      started by user.
     """
+
     def __init__(self, app_name):
         self.app_name = app_name
-        super(IRUnknownApplicationException, self).__init__(
-            "Application is unknown: '{}'".format(app_name))
+        super(IRUnknownSpecException, self).__init__(
+            "Spec is unknown: '{}'. Make sure the infrared configuration "
+            "file has a section for that spec.".format(app_name))
 
 
 class IRConfigurationException(IRException):
@@ -83,3 +85,9 @@ class IRInfiniteLookupException(IRException):
     def __init__(self, value):
         message = "Lookup circular reference detected for: {}".format(value)
         super(IRInfiniteLookupException, self).__init__(message)
+
+
+class IREmptySettingsFile(IRException):
+    def __init__(self, file_path):
+        super(self.__class__, self).__init__("Empty settings files are not "
+                                             "allowed: {}".format(file_path))
