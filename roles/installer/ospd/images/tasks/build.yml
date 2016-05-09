@@ -11,6 +11,11 @@
       url: "{{ private.images.base_url }}/rhel-guest-image-latest.qcow2"
   when: stat_result.stat.exists == False
 
+- name: Download ironic-python-agent.initramfs
+  get_url:
+      dest: "/home/{{ installer.user.name }}/ironic-python-agent.initramfs"
+      url: "{{ private.images.base_url }}/ironic-python-agent.initramfs"
+
 # TODO: Move environment to a file / template so a user can make customize it
 - name: Build OC images
   tags: backup
