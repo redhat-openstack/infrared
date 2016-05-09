@@ -113,10 +113,8 @@
         delegate_to: localhost
 
       - name: insert the public key to the known hosts in virthost
-        lineinfile:
-            dest: "/home/{{ installer.user.name }}/.ssh/authorized_keys"
-            line: "{{ undercloud_public_key.stdout }}"
+        authorized_key:
+            user: "{{ installer.user.name }}"
+            key: "{{ undercloud_public_key.stdout }}"
             create: yes
             mode: o-rwx,g-rwx,u+rw
-        become: yes
-        become_user: "{{ installer.user.name }}"
