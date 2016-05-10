@@ -2,7 +2,8 @@
 - name: Setup packstack on controller
   hosts: controller
   gather_facts: no
-  sudo: yes
+  become: yes
+  become_method: sudo
   vars:
       network_config: "{{ installer.network.config | default({}) }}"
       network_variant_config: "{{ installer.network.variant.config | default({}) }}"

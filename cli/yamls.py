@@ -136,6 +136,7 @@ def _lookup_handler(lookup_string, data_dict, key_path, visited=None):
 
     while True:
         # Get deepest lookups
+        lookup_string = str(lookup_string)
         lookups = re.compile(LOOKUP_REGEX).findall(lookup_string)
         if not lookups:
             visited.remove(key_path)

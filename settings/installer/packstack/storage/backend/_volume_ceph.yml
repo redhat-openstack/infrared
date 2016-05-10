@@ -9,7 +9,6 @@ storage:
     - cinder
     - nova
     - glance
-#  ceph_conf_repo: "{{ !lookup private.storage.repo.ceph_conf_repo }}"
   ceph_conf_repo: !placeholder
   ceph_conf_files:
     - ceph.client.admin.keyring
@@ -20,7 +19,6 @@ storage:
     - client.automation-cinder.key
   volume:
     variant:
-#      share: "{{ !lookup provisioner.storage.shares.ceph }}"
       share: !placeholder
       shares_file: "/etc/cinder/ceph.shares"
     config:
@@ -114,7 +112,3 @@ tester:
         blacklist:
           - tempest.*s3.*
           - tempest.*ec2.*
-
-
-
-

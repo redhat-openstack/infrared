@@ -25,7 +25,6 @@ def dict_insert(dic, val, key, *keys):
     :param key: first key in a chain of key that will store the value
     :param keys: sub keys in the keys chain
     """
-    # case of processing sub-key and parent-key has not been given
     if dic is None:
         return
 

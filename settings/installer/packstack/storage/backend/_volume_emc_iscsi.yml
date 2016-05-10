@@ -8,7 +8,6 @@ storage:
         "icehouse":
           &cinder_cfg_old
           DEFAULT:
-#            iscsi_ip_address: "{{ !lookup private.storage.volume.backend.emc_iscsi.iscsi_ip_address }}"
             iscsi_ip_address: !placeholder
             iscsi_target_prefix: "iqn.1992-04.com.emc"
             volume_driver: "cinder.volume.drivers.emc.emc_smis_iscsi.EMCSMISISCSIDriver"
@@ -18,7 +17,6 @@ storage:
           DEFAULT:
             enabled_backends: "rhos-6-emc_iscsi"
           rhos-6-emc_iscsi:
-#            iscsi_ip_address: "{{ !lookup private.storage.volume.backend.emc_iscsi.iscsi_ip_address }}"
             iscsi_ip_address: !placeholder
             iscsi_target_prefix: "iqn.1992-04.com.emc"
             volume_driver: "cinder.volume.drivers.emc.emc_smis_iscsi.EMCSMISISCSIDriver"
@@ -32,11 +30,9 @@ storage:
         "8.0":
           *cinder_cfg_new
         emc:
-#          ecomserverip: "{{ !lookup private.storage.volume.backend.emc_iscsi.ecomserverip }}"
           ecomserverip: !placeholder
           ecomserverport: 5985
           ecomusername: admin
-#          ecompassword: "{{ !lookup private.storage.volume.backend.emc_iscsi.ecompassword }}"
           ecompassword: !placeholder
 
 tester:

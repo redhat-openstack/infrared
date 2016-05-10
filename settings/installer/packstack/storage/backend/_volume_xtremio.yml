@@ -4,7 +4,6 @@ storage:
     - cinder
   volume:
     variant:
-#      share: "{{ !lookup provisioner.storage.shares.xtremio }}"
       share: !placeholder
       shares_file: "/etc/cinder/xtremio.shares"
     config:
@@ -13,9 +12,6 @@ storage:
           &cinder_cfg
           DEFAULT:
             volume_driver: "cinder.volume.drivers.emc.xtremio.XtremIOISCSIDriver"
-#            san_ip: "{{ !lookup private.storage.volume.backend.xtremio.san_ip }}"
-#            san_login: "{{ !lookup private.storage.volume.backend.xtremio.san_login }}"
-#            san_password: "{{ !lookup private.storage.volume.backend.xtremio.san_password }}"
             san_ip: !placeholder
             san_login: !placeholder
             san_password: !placeholder
