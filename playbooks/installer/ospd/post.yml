@@ -10,6 +10,10 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  vars:
+      privkey: "{{ inventory_dir }}/id_rsa_overcloud"
+      user: heat-admin
+      password: redhat
   tasks:
       - name: fetch the private key file from the undercloud
         fetch:
@@ -28,8 +32,26 @@
             become: no
             add_host:
                 name: "{{ item }}"
-                ansible_user: "heat-admin"
+                ansible_user: "{{ user }}"
             with_items: "{{ groups['overcloud_nodes'] }}"
+
+          - name: add hosts to host list
+            become: no
+            add_host:
+                name="{{ item }}"
+                groups="{{ {{ hostvars['item'].group_names | reject('equalto', 'ungrouped') | join(',') }} }}"
+                ansible_user="{{ user }}"
+                ansible_ssh_password="{{ password }}"
+                ansible_host="{{ hostvars[item].ansible_host }}"
+                ansible_ssh_private_key_file="{{ privkey }}"
+            with_items: "{{ groups['overcloud_nodes'] }}"
+
+          - name: update ansible.ssh.config template
+            become: no
+            template:
+                src: "{{ inventory_dir }}/roles/provisioner/virsh/templates/ansible.ssh.config.j2"
+                dest: "{{ inventory_dir }}/ansible.ssh.config"
+
         delegate_to: localhost
 
       - name: Copy the keystonerc file for the tester

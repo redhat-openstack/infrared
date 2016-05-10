@@ -8,13 +8,16 @@
             name: "{{ provisioner.host.name }}"
             groups: "{{ provisioner.host.groups| join(',') }}"
             node_label: "virthost"
-            ansible_ssh_user: "{{ provisioner.host.user }}"
-            ansible_ssh_host: "{{ provisioner.host.address }}"
+            ansible_user: "{{ provisioner.host.user }}"
+            ansible_host: "{{ provisioner.host.address }}"
             ansible_ssh_private_key_file: "{{ provisioner.host.key }}"
 
 - name: Setup the virthost
   hosts: virthost
   gather_facts: yes
+  vars:
+      list_vms: "{{ vm_ip_list }}"
+      privkey: "{{ inventory_dir }}/id_rsa"
   roles:
       - {role: linux/rhel/libguestfs, when: ansible_distribution == 'RedHat'}
       - {role: provisioner/virsh}
@@ -26,7 +29,7 @@
       - name: wait for hosts to be reachable
         wait_for:
             port: 22
-            host: "{{ ansible_ssh_host }}"
+            host: "{{ ansible_host }}"
             delay: 10
         delegate_to: virthost
 
