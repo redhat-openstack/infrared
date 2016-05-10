@@ -39,7 +39,7 @@
             become: no
             add_host:
                 name="{{ item }}"
-                groups="{{ {{ hostvars['item'].group_names | reject('equalto', 'ungrouped') | join(',') }} }}"
+                groups="{{ hostvars[item].provisioner.topology.nodes[item].groups | join(',') }}"
                 ansible_user="{{ user }}"
                 ansible_ssh_password="{{ password }}"
                 ansible_host="{{ hostvars[item].ansible_host }}"
