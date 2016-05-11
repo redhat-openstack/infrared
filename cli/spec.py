@@ -232,8 +232,6 @@ class TopologyArgument(ValueArgument):
             # Remove white spaces
             node_type = node_type.strip()
 
-            number, node_type = topology_item.split('_')
-
             # todo(obaraov): consider moving topology to config on constant.
             topology_dict[node_type] = \
                 utils.load_yaml(node_type + ".yml", topology_dir)
