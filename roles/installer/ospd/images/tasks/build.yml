@@ -11,6 +11,23 @@
       url: "{{ private.images.base_url }}/rhel-guest-image-latest.qcow2"
   when: stat_result.stat.exists == False
 
+- name: Download deploy-ramdisk-ironic.tar
+  get_url:
+      dest: "/home/{{ installer.user.name }}/deploy-ramdisk-ironic.tar"
+      url: "{{ installer.images.url }}/deploy-ramdisk-ironic.tar"
+
+- name: Unrar deploy-ramdisk-ironic.tar
+  unarchive:
+      src: "/home/{{ installer.user.name }}/deploy-ramdisk-ironic.tar"
+      dest: "/home/{{ installer.user.name }}/"
+      copy: "no"
+
+- name: Renaming deploy-ramdisk-ironic.initramfs to ironic-python-agent.initramfs
+  command: mv /home/{{ installer.user.name }}/deploy-ramdisk-ironic.initramfs /home/{{ installer.user.name }}/ironic-python-agent.initramfs
+
+- name: Renaming deploy-ramdisk-ironic.initramfs to ironic-python-agent.kernel
+  command: mv /home/{{ installer.user.name }}/deploy-ramdisk-ironic.kernel /home/{{ installer.user.name }}/ironic-python-agent.kernel
+
 # TODO: Move environment to a file / template so a user can make customize it
 - name: Build OC images
   tags: backup
