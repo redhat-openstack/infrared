@@ -1,4 +1,5 @@
 import ConfigParser
+import re
 from functools import total_ordering
 
 import clg
@@ -221,25 +222,21 @@ class TopologyArgument(ValueArgument):
                                     'topology')
         topology_dict = {}
         for topology_item in self.value.split(','):
+            pattern = re.compile("^[A-Za-z]+:[0-9]+$")
+            if pattern.match(topology_item) is None:
+                raise exceptions.IRWrongTopologyFormat(self.value)
 
             node_type, number = None, None
-
-            if ':' in topology_item:
-                node_type, number = topology_item.split(':')
-                if not ("%s" % number).isdigit():
-                    number = None
-
-            if not number:
-                raise exceptions.IRConfigurationException(
-                    "Topology node should be in format <node role>:<number>. "
-                    "Current value: '{}' ".format(topology_item))
+            node_type, number = topology_item.split(':')
 
             # Remove white spaces
             node_type = node_type.strip()
 
+            number, node_type = topology_item.split('_')
+
             # todo(obaraov): consider moving topology to config on constant.
-            topology_dict[node_type] = utils.load_yaml(node_type + ".yml",
-                                                       topology_dir)
+            topology_dict[node_type] = \
+                utils.load_yaml(node_type + ".yml", topology_dir)
             topology_dict[node_type]['amount'] = int(number)
 
         self.value = topology_dict
