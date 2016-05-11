@@ -30,7 +30,7 @@ Quickstart
   .. code-block:: ini
 
     [virsh]
-    topology-nodes = 1_undercloud,1_controller,1_compute
+    topology-nodes = undercloud:1,controller:1,compute:1
     topology-network = default.yml
     host-key = ~/.ssh/id_rsa
     host-user = root
