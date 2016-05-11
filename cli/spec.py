@@ -222,12 +222,17 @@ class TopologyArgument(ValueArgument):
                                     'topology')
         topology_dict = {}
         for topology_item in self.value.split(','):
-            pattern = re.compile("^[A-Za-z]+:[0-9]+$")
-            if pattern.match(topology_item) is None:
-                raise exceptions.IRWrongTopologyFormat(self.value)
 
             node_type, number = None, None
-            node_type, number = topology_item.split(':')
+
+            pattern = re.compile("^[A-Za-z]+:[0-9]+$")
+            if pattern.match(topology_item) is None:
+                pattern = re.compile("^[0-9]+_[A-Za-z]+$")
+                if pattern.match(topology_item) is None:
+                    raise exceptions.IRWrongTopologyFormat(self.value)
+                number, node_type = topology_item.split('_')
+            else:
+                node_type, number = topology_item.split(':')
 
             # Remove white spaces
             node_type = node_type.strip()
