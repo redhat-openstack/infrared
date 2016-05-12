@@ -34,6 +34,10 @@
       file: dest=/var/log/extra state=directory
       ignore_errors: true
 
+    - name: Prepare directory with openstack logs
+      file: dest=/var/log/extra/openstack state=directory
+      ignore_errors: true
+
     - name: collect logs from all failed systemd services
       shell: |
         systemctl -t service --failed --no-legend | awk '{print $1}' \
@@ -112,6 +116,36 @@
     - name: Publish the count as fact
       set_fact:
         segfault_problems_found: "{{ result.stdout_lines }}"
+      ignore_errors: yes
+
+    - name: Collect logs from nova
+      sudo: yes
+      shell: cp -Rf /var/log/nova/* /var/log/extra/openstack
+      ignore_errors: yes
+
+    - name: Collect logs from glance
+      sudo: yes
+      shell: cp -Rf /var/log/glance/* /var/log/extra/openstack
+      ignore_errors: yes
+
+    - name: Collect logs from cinder
+      sudo: yes
+      shell: cp -Rf /var/log/cinder/* /var/log/extra/openstack
+      ignore_errors: yes
+
+    - name: Collect logs from keystone
+      sudo: yes
+      shell: cp -Rf /var/log/keystone/* /var/log/extra/openstack
+      ignore_errors: yes
+
+    - name: Collect logs from neutron
+      sudo: yes
+      shell: cp -Rf /var/log/neutron/* /var/log/extra/openstack
+      ignore_errors: yes
+
+    - name: Collect logs from horizon
+      sudo: yes
+      shell: cp -Rf /var/log/httpd/horizon_error.log /var/log/extra/openstack
       ignore_errors: yes
 
     - name: Publish the count as fact
