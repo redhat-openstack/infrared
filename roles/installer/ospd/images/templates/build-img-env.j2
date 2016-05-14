@@ -1,0 +1,20 @@
+export DIB_LOCAL_IMAGE={{ base_image }}
+export DIB_YUM_REPO_CONF="{{ dib_dir }}/rhos-release-{{ ospd_version }}.repo"
+export DIB_YUM_REPO_CONF="$DIB_YUM_REPO_CONF {{ dib_dir }}/rhos-release-{{ ospd_version }}-director.repo"
+export DIB_YUM_REPO_CONF="$DIB_YUM_REPO_CONF {{ dib_dir }}/rhos-release-rhel-{{ rhel_version_full }}.repo"
+export USE_DELOREAN_TRUNK=0
+export NODE_DIST={{ distro_type }}
+export RUN_RHOS_RELEASE=1
+export RHOS=1
+export RHOS_RELEASE={{ ospd_version }}-director
+
+{#  Todo: Optionally enable subscriptions for RHEL
+{% if add_subscription is defined and distro is 'rhel' %}
+export REG_METHOD=portal
+export REG_USER="{{ distro.rhel.subscription.username }}"
+export REG_PASSWORD="{{ distro.rhel.subscription.password }}"
+export REG_POOL_ID="{{ distro.rhel.subscription.pool }}"
+export REG_REPOS="rhel-7-server-rpms rhel-7-server-extras-rpms rhel-ha-for-rhel-7-server-rpms rhel-7-server-optional-rpms rhel-7-server-openstack-7.0-rpms"
+export NODE_DIST={{ distro_type }}
+{%endif %}
+#}
