@@ -1,0 +1,60 @@
+# This playbook is not included in "ir-XYZ" flows as is not
+# related to any of them and is used only stand-alone.
+# 
+# This playbook is designed to run on single node in virtual
+# machine environment. Currently node called "controller"
+# is used as main node doing this task as IR doesn't support
+# creating stand-alone single node topology and we still
+# need to have this playbook integrated with current IR workflow.
+---
+- name: Store local public key as variable for current user
+  hosts: controller
+  gather_facts: no
+  tasks:
+    - name: Create and save public key from private key
+      shell: "ssh-keygen -y -f {{ hostvars[inventory_hostname].ansible_ssh_private_key_file }}"
+      register: cmd_priv_key
+      delegate_to: localhost
+
+- name: Enable root access as cloud images might not have one first
+  hosts: controller
+  gather_facts: no
+  become: yes
+  become_user: root
+  tasks:
+    - name: Add local public key to root's authorized_keys
+      authorized_key:
+        key: "{{ cmd_priv_key.stdout }}"
+        user: root
+
+    - name: Copy local private key to remote root
+      copy:
+          src: "{{ hostvars[inventory_hostname].ansible_ssh_private_key_file }}"
+          dest: "/root/.ssh/id_rsa"
+
+    - name: Copy local public key to remote root
+      copy:
+          content: "{{ cmd_priv_key.stdout }}"
+          dest: "/root/.ssh/id_rsa.pub"
+
+    - name: Fix permissions for both keys
+      shell: |
+            chmod 750 /root/.ssh/id_rsa
+            chmod 700 /root/.ssh/id_rsa
+
+- name: Build images as root and upload them to remote storage
+  hosts: controller
+  gather_facts: yes
+  become: yes
+  become_user: root
+  roles:
+    - role: installer/ospd/images
+      task: 'build'
+      ospd_version: "{{ ospd_version }}"
+      base_image_url: "{{ private.distro.rhel.guest_image_url }}"
+      upload_to: 'remote'
+      storage_user: "{{ private.storage.oc_image_repo.user }}"
+      storage_server: "{{ private.storage.oc_image_repo.server }}"
+      storage_path: "{{ private.storage.oc_image_repo.path }}"
+      storage_ssh_key: "{{ ansible_ssh_private_key_file }}"
+      rhos_release_rpm_link: "{{ private.distro.rhel.rhos_release_rpm }}"

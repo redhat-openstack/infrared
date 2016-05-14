@@ -19,9 +19,17 @@
   hosts: undercloud
   gather_facts: no
   become: yes
-  become_user: "{{ installer.user.name }}"
+  become_method: sudo
   roles:
-      - {role: installer/ospd/images}
+      - role: installer/ospd/images
+        task: "{{ installer.images.task }}"
+        work_path: "{%- if installer.images.task == 'import' %}{{ '/home/{{ installer.user.name }}' }}{% endif %}"
+        ospd_version: "{{ installer.product.core.version }}"
+        base_image_url: "{{ private.distro.rhel.guest_image_url }}"
+        rhos_release_rpm_link: "{{ private.distro.rhel.rhos_release_rpm }}"
+        upload_to: 'glance'
+        storage_server: "{{ private.storage.oc_image_repo.server }}"
+        storage_path: "{{ private.storage.oc_image_repo.path }}"
 
 - name: Start introspection
   tags: introspection
