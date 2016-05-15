@@ -1,6 +1,7 @@
 import ConfigParser
 import re
 from functools import total_ordering
+import sys
 
 import clg
 import os
@@ -356,15 +357,24 @@ class ArgumentsPreProcessor(object):
         :param sub_parser: the subcommand name.
         """
         options_dict = {}
+        # TODO(aopincar): The 'help' check should be removed  when CLG refactor
+        #  is  merged
+        help_given = False
+        if any([_help in sys.argv for _help in ('--help', '-h')]):
+            help_given = True
+
         for option, attributes in spec_dict.get('options', {}).iteritems():
             self._add_default_to_option_help(attributes)
             self._add_yaml_info(option, attributes, subcommand)
-            self._replace_builtin(attributes)
+
+            if not help_given:
+                self._replace_builtin(attributes)
 
             # Get a parameters copy with all the keys.
             options_dict[option] = dict(attributes)
 
-            self._trim_option(attributes)
+            if not help_given:
+                self._trim_option(attributes)
 
         return options_dict
 
@@ -446,7 +456,8 @@ def parse_args(settings_dir, app_settings_dir, args=None):
     utils.dict_merge(app_specs, common_specs)
 
     # Get the subparsers options as is with all the fields from app's specs.
-    # This also trims some custom fields from options to pass to clg.
+    # This also trims some custom fields from options to pass to clg if the
+    # help option wasn't given
     subparsers_options = ArgumentsPreProcessor(
         settings_dir, app_settings_dir).process(app_specs)
 
