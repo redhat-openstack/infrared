@@ -91,3 +91,14 @@ class IREmptySettingsFile(IRException):
     def __init__(self, file_path):
         super(self.__class__, self).__init__("Empty settings files are not "
                                              "allowed: {}".format(file_path))
+
+
+class IRWrongTopologyFormat(IRException):
+    def __init__(self, used_format):
+        message = \
+            "Wrong topology nodes format has been given - '{}'\n" \
+            "Topology format should be comma separated value in " \
+            "<count_type> form.\n" \
+            "Example:\n" \
+            "  'controller:1,compute:2,undercloud:3'".format(used_format)
+        super(self.__class__, self).__init__(message)

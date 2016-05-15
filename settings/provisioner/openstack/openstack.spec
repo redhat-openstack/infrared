@@ -46,7 +46,7 @@ subparsers:
                   nodes:
                       type: Topology
                       help: Provision topology.
-                      default: "1_controller"
+                      default: "controller:1"
             - title: common
               options:
                   dry-run:
