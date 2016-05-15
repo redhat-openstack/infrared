@@ -100,5 +100,5 @@ class IRWrongTopologyFormat(IRException):
             "Topology format should be comma separated value in " \
             "<count_type> form.\n" \
             "Example:\n" \
-            "  '1_controller,2_compute,1_undercloud'".format(used_format)
+            "  'controller:1,compute:2,undercloud:3'".format(used_format)
         super(self.__class__, self).__init__(message)
