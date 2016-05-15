@@ -2,6 +2,8 @@
 - name: Run tempest
   hosts: tester
   gather_facts: no
+  vars:
+      testr_args: "{{ tester.threads is defined | ternary('--parallel --concurrency=%s' | format(tester.threads), '')}}"
   tasks:
       - name: remove old test list
         file:
@@ -14,9 +16,9 @@
             dest: "{{ tester.dir }}/skipfile"
             line: "+{{ item }}"
             regexp: "^[-+]{{ item }}$"
-        with_items: tester.tempest.whitelist
+        with_items: tester.tests.whitelist
         register: wlist
-        when: tester.tempest.whitelist is defined and tester.tempest.whitelist
+        when: tester.tests.whitelist is defined and tester.tests.whitelist
 
       - name: create Test List - Blacklist
         lineinfile:
@@ -24,15 +26,15 @@
             dest: "{{ tester.dir }}/skipfile"
             line: "-{{ item }}"
             regexp: "^[-+]{{ item }}$"
-        with_items: tester.tempest.blacklist
-        when: tester.tempest.blacklist is defined and tester.tempest.blacklist
+        with_items: tester.tests.blacklist
+        when: tester.tests.blacklist is defined and tester.tests.blacklist
 
       - name: add skipfile invocation
         set_fact:
             skipfile: "--skip-file ./skipfile"
-        when: (tester.tempest.whitelist is defined and tester.tempest.whitelist) or (tester.tempest.blacklist is defined and tester.tempest.blacklist)
+        when: (tester.tests.whitelist is defined and tester.tests.whitelist) or (tester.tests.blacklist is defined and tester.tests.blacklist)
 
       - name: run tempest
-        shell: "{{ tester.dir }}/with_venv ./tools/run-tests.sh {{ tester.tempest.testr_args|default('') }} {{ tester.tempest.test_regex }} {{ skipfile|default('') }}"
+        shell: "{{ tester.dir }}/with_venv ./tools/run-tests.sh {{ testr_args }} {{ tester.tests.test_regex }} {{ skipfile|default('') }}"
         ignore_errors: true
-        when: tester.tempest.test_regex is defined or skipfile is defined
+        when: tester.tests.test_regex is defined or skipfile is defined
