@@ -12,9 +12,9 @@ openstack overcloud deploy --debug \
 {% else %}
 --neutron-tunnel-types {{ installer.network.backend }} \
 {% endif %}
---control-scale {% if installer.controller.nodes %}{{ installer.controller.nodes }}{% elif groups['controller'] is defined %}{{ groups['controller'] | length }}{% else %}1{% endif %} \
+--control-scale {% if installer.controller.nodes is defined and installer.controller.nodes %}{{ installer.controller.nodes }}{% elif groups['controller'] is defined %}{{ groups['controller'] | length }}{% else %}1{% endif %} \
 --control-flavor {% if groups['controller'] is defined %}controller-{{ 'controller' | to_uuid }} \{% else %}baremetal \
 {% endif %}
---compute-scale {% if installer.compute.nodes %}{{ installer.compute.nodes }}{% elif groups['compute'] is defined %}{{ groups['compute'] | length }}{% else %}1{% endif %} \
+--compute-scale {% if installer.compute.nodes is defined and installer.compute.nodes %}{{ installer.compute.nodes }}{% elif groups['compute'] is defined %}{{ groups['compute'] | length }}{% else %}1{% endif %} \
 --compute-flavor {% if groups['compute'] is defined %}compute-{{ 'compute' | to_uuid }} \{% else %}baremetal \
 {% endif %}
