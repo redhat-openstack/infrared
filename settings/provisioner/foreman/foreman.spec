@@ -1,68 +1,40 @@
 ---
-subparsers:
-    foreman:
-        help: Provision systems using Foreman
-        groups:
-            - title: Foreman server
-              options:
-                  url:
-                      type: Value
+command:
+    subcommands:
+        - name: foreman
+          help: Provision systems using Foreman
+          include_groups: ['Ansible options', 'Inventory options', 'Common options', 'Configuration file options']
+          groups:
+              - name: Foreman server
+                options:
+                    - name: url
                       help: 'The Foreman api url'
                       required: True
-                  user:
-                      type: Value
+                    - name: user
                       help: 'User to Forman server'
                       required: True
-                  password:
-                      type: Value
+                    - name: password
                       help: 'Password of Forman server'
                       required: True
-                  strategy:
-                      type: Value
+                    - name: strategy
                       help: 'Whether to use Foreman or system ipmi command.'
                       default: foreman
-                  action:
-                      type: Value
+                    - name: action
                       help: 'Which command to send with the power-management selected by mgmt_strategy. For example - reset, reboot, cycle'
                       default: cycle
-                  wait:
-                      type: Value
+                    - name: wait
                       default: true
                       help: 'Whether we should wait for the host given the "rebuild" state was set.'
 
-            - title: Host details
-              options:
-                  host-address:
-                      type: Value
+              - name: Host details
+                options:
+                    - name: host-address
                       help: 'Name or ID of the host as listed in foreman'
                       required: yes
-                  host-user:
-                      type: Value
+                    - name: host-user
                       help: 'User to SSH to the host with'
                       default: root
-                  host-password:
-                      type: Value
+                    - name: host-password
                       help: "User's SSH password"
-                  host-key:
-                      type: Value
+                    - name: host-key
                       help: "User's SSH key"
-
-            - title: common
-              options:
-                  dry-run:
-                      action: store_true
-                      help: 'Only generate settings, skip the playbook execution stage'
-                  input:
-                      action: append
-                      type: str
-                      help: 'Settings file to be merged first'
-                      short: n
-                  output:
-                      type: str
-                      short: o
-                      help: 'Name for the generated settings file (default: stdout)'
-                  extra-vars:
-                      action: append
-                      short: e
-                      help: 'Extra variables to be merged last'
-                      type: str
