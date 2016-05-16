@@ -64,6 +64,16 @@ class ConflictResolver(object):
         """
         first[key] = second[key]
 
+    @staticmethod
+    def append_list_resolver(first, second, key):
+        if isinstance(first[key], list):
+            if isinstance(second[key], list):
+                first[key].extend(second[key])
+            else:
+                first[key].extend(second[key])
+        else:
+            return ConflictResolver.greedy_resolver(first, second, key)
+
 
 def dict_merge(first, second,
                conflict_resolver=ConflictResolver.greedy_resolver):

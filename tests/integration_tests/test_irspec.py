@@ -17,7 +17,7 @@ def test_generate_conf_file(conf_file, mock_spec):
     Verify generation of the configuration file.
     """
     mock_spec.run(
-        spec_args=['--req', 'test', '--generate-conf-file=' + conf_file])
+        spec_args=['--req=test', '--generate-conf-file=' + conf_file])
 
     with open(conf_file) as fd:
         config = ConfigParser.ConfigParser()
@@ -33,9 +33,9 @@ def test_generate_conf_file(conf_file, mock_spec):
         # req
         assert config.has_option(mock_spec.IR_SUB_COMMAND, 'req')
         assert config.get(
-            mock_spec.IR_SUB_COMMAND, 'req') == 'Edit with any value, ' \
-                                                'OR override with CLI:' \
-                                                ' --req=<option>'
+            mock_spec.IR_SUB_COMMAND,
+            'req') == 'Required argument. Edit with one of the allowed ' \
+                      'values OR override with CLI: --req=<option>'
         # optional should not be present
         assert not config.has_option(mock_spec.IR_SUB_COMMAND, 'opt ')
 
