@@ -13,8 +13,13 @@
   become_user: "{{ installer.user.name }}"
   gather_facts: no
   pre_tasks:
+      - name: Get min_part_hours parameter from the current setup
+        shell: "hiera tripleo::ringbuilder::min_part_hours"
+        become: no
+        register: min_part_hours
+
       - name: Wait for min_part_hours (the swift timeout between partition reassignment) timeout
-        pause: minutes=60
+        pause: minutes={{ min_part_hours.stdout|int * 60 }}
 
   roles:
       - {role: "installer/ospd/overcloud/scale/", service: 'swift-storage', amount: "{{ provisioner.topology.nodes.swift.amount }}" }
