@@ -2,6 +2,7 @@
 subparsers:
     beaker:
         help: Provision systems using Beaker
+        include_groups: ['Ansible options', 'Inventory options', 'Common options', 'Configuration file options']
         groups:
             - title: Beaker server
               options:
@@ -11,7 +12,7 @@ subparsers:
                       required: True
                   user:
                       type: Value
-                      help: 'Login username to authenticate to Beaker (default: __DEFAULT__)'
+                      help: 'Login username to authenticate to Beaker'
                       default: admin
                   password:
                       type: Value
@@ -51,31 +52,8 @@ subparsers:
                       help: 'The image to use for nodes provisioning. Check the "sample.yml.example" for example.'
                       default: "rhel-7.2.yml"
 
-            - title: common
+            - title: Cleanup
               options:
-                  dry-run:
-                      action: store_true
-                      help: 'Only generate settings, skip the playbook execution stage'
                   cleanup:
                       action: store_true
                       help: 'Release the system'
-                  input:
-                      action: append
-                      type: str
-                      short: i
-                      help: 'Input settings file to be loaded before the merging of user args'
-                  output:
-                      type: str
-                      short: o
-                      help: 'File to dump the generated settings into (default: stdout)'
-                  extra-vars:
-                      action: append
-                      short: e
-                      help: 'Extra variables to be merged last'
-                      type: str
-                  from-file:
-                      type: IniFile
-                      help: 'the ini file with the list of arguments'
-                  generate-conf-file:
-                      type: str
-                      help: 'Generate configuration file (ini) containing default values and exits. This file is than can be used with the from-file argument'

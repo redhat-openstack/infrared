@@ -15,7 +15,7 @@
           line: '--ceph-storage-flavor {% if groups["ceph"] is defined %}ceph-{{ "ceph" | to_uuid }}{% else %}baremetal{% endif %} \'
   when: installer.storage.external != "yes"
   vars:
-      storage_nodes: "{{ (installer.storage.nodes == None) |ternary([1, groups['ceph'] |default([])|length] | max, installer.storage.nodes) }}"
+      storage_nodes: "{{ (installer.storage.nodes is not defined) |ternary([1, groups['ceph'] |default([])|length] | max, installer.storage.nodes) }}"
 
 - name: prepare ceph storage template
   template:
