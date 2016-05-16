@@ -16,7 +16,7 @@ DEFAULT_SECTIONS = {
         playbooks='playbooks'
     ),
 
-    'provisioner':  dict(
+    'provisioner': dict(
         main_playbook='provision.yml',
         cleanup_playbook='cleanup.yml'
     ),
@@ -24,13 +24,19 @@ DEFAULT_SECTIONS = {
     'installer': dict(
         main_playbook='install.yml',
         cleanup_playbook='cleanup.yml'
+    ),
+
+    'tester': dict(
+        main_playbook='test.yml',
+        cleanup_playbook='cleanup.yml'
     )
 }
 
 
-def load_config_file():
-    """Load config file order(ENV, CWD, USER HOME, SYSTEM).
+def load_config_file(file_path=None):
+    """Load config file order(file_path, ENV, CWD, USER HOME, SYSTEM).
 
+    :param file_path: the optional path to the configuration file to read.
     :return ConfigParser: config object
     """
 
@@ -44,7 +50,8 @@ def load_config_file():
         if os.path.isdir(env_path):
             env_path = os.path.join(env_path, utils.IR_CONF_FILE)
 
-    for path in (env_path, cwd_path, utils.USER_PATH, utils.SYSTEM_PATH):
+    for path in (
+            file_path, env_path, cwd_path, utils.USER_PATH, utils.SYSTEM_PATH):
         if path is not None and os.path.exists(path):
             _config.read(path)
             break
@@ -63,6 +70,3 @@ def load_config_file():
             "Settings directory doesn't exist: ")
 
     return _config
-
-
-config = load_config_file()

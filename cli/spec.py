@@ -1,5 +1,7 @@
 import ConfigParser
+import re
 from functools import total_ordering
+import sys
 
 import clg
 import os
@@ -162,7 +164,7 @@ class YamlFileArgument(ValueArgument):
 
     @classmethod
     def get_allowed_files(cls, settings_dir, subcommand, arg_name,
-                          search_root=False):
+                          search_root=False, file_extensions=('yml', 'yaml')):
         """
         Gets the list of the the files in the default locations.
 
@@ -174,6 +176,7 @@ class YamlFileArgument(ValueArgument):
         :param search_root: specify whether the execution root folder
             should be searched for yamk files. By default equals
             to False to avoid unnecessary files.
+        :param file_extensions: the list of file extension to look for.
         """
 
         res = []
@@ -183,7 +186,8 @@ class YamlFileArgument(ValueArgument):
         if search_root is False:
             locations = locations[:-1]
         for folder in locations:
-            res.extend(glob.glob(folder + "/*.*"))
+            for ext in file_extensions:
+                res.extend(glob.glob(folder + "/*." + ext))
 
         return res
 
@@ -221,15 +225,27 @@ class TopologyArgument(ValueArgument):
                                     'topology')
         topology_dict = {}
         for topology_item in self.value.split(','):
-            if '_' in topology_item:
+
+            node_type, number = None, None
+
+            pattern = re.compile("^[A-Za-z]+:[0-9]+$")
+            if pattern.match(topology_item) is None:
+                pattern = re.compile("^[0-9]+_[A-Za-z]+$")
+                if pattern.match(topology_item) is None:
+                    raise exceptions.IRWrongTopologyFormat(self.value)
                 number, node_type = topology_item.split('_')
+                LOG.warning("This topology format is deprecated and will be "
+                            "removed in future versions. Please see `--help` "
+                            "for proper format")
             else:
-                raise exceptions.IRConfigurationException(
-                    "Topology node should be in format  <number>_<node role>. "
-                    "Current value: '{}' ".format(topology_item))
+                node_type, number = topology_item.split(':')
+
+            # Remove white spaces
+            node_type = node_type.strip()
+
             # todo(obaraov): consider moving topology to config on constant.
-            topology_dict[node_type] = utils.load_yaml(node_type + ".yml",
-                                                       topology_dir)
+            topology_dict[node_type] = \
+                utils.load_yaml(node_type + ".yml", topology_dir)
             topology_dict[node_type]['amount'] = int(number)
 
         self.value = topology_dict
@@ -341,15 +357,24 @@ class ArgumentsPreProcessor(object):
         :param sub_parser: the subcommand name.
         """
         options_dict = {}
+        # TODO(aopincar): The 'help' check should be removed  when CLG refactor
+        #  is  merged
+        help_given = False
+        if any([_help in sys.argv for _help in ('--help', '-h')]):
+            help_given = True
+
         for option, attributes in spec_dict.get('options', {}).iteritems():
             self._add_default_to_option_help(attributes)
             self._add_yaml_info(option, attributes, subcommand)
-            self._replace_builtin(attributes)
+
+            if not help_given:
+                self._replace_builtin(attributes)
 
             # Get a parameters copy with all the keys.
             options_dict[option] = dict(attributes)
 
-            self._trim_option(attributes)
+            if not help_given:
+                self._trim_option(attributes)
 
         return options_dict
 
@@ -431,7 +456,8 @@ def parse_args(settings_dir, app_settings_dir, args=None):
     utils.dict_merge(app_specs, common_specs)
 
     # Get the subparsers options as is with all the fields from app's specs.
-    # This also trims some custom fields from options to pass to clg.
+    # This also trims some custom fields from options to pass to clg if the
+    # help option wasn't given
     subparsers_options = ArgumentsPreProcessor(
         settings_dir, app_settings_dir).process(app_specs)
 
@@ -549,48 +575,78 @@ def _generate_config_file(
     :param defaults: the default options values.
     :param all_options: The dict with all the possible spec options
     """
-    out_config = ConfigParser.ConfigParser()
+    out_config = ConfigParser.ConfigParser(allow_no_value=True)
+    out_config_old = ConfigParser.ConfigParser(allow_no_value=True)
 
     # reuse existing file
     if os.path.exists(file_name):
-        out_config.read(file_name)
+        out_config_old.read(file_name)
 
+    # todo(obaranov) we lose help from other sections
+    for old_section in out_config_old.sections():
+        if old_section != subcommand:
+            out_config.add_section(old_section)
+            for option in out_config_old.options(old_section):
+                out_config.set(old_section, option,
+                               out_config_old.get(old_section, option))
     # put defaults values
     if not out_config.has_section(subcommand):
         out_config.add_section(subcommand)
+
     for opt, value in defaults.iteritems():
-        if not out_config.has_option(subcommand, opt):
-            out_config.set(subcommand, opt, value)
+        if out_config_old.has_option(subcommand, opt):
+            value = out_config_old.get(subcommand, opt)
+        _add_help_comment(out_config, subcommand, all_options.get(opt, {}))
+        out_config.set(subcommand, opt, value)
 
     # add required options
     for opt, attributes in all_options.iteritems():
-        if attributes.get('required') and not out_config.has_option(
-                subcommand, opt):
+        if attributes.get('required') \
+                and not out_config.has_option(subcommand, opt):
+            if not out_config_old.has_option(subcommand, opt):
+                # get available value:
+                allowed_values = _get_option_allowed_values(app_settings_dir,
+                                                            subcommand, opt,
+                                                            attributes)
 
-            # get available value:
-            allowed_values = _get_option_allowed_values(app_settings_dir,
-                                                        subcommand, opt,
-                                                        attributes)
+                if allowed_values:
+                    message = "one of {} options".format(allowed_values)
+                else:
+                    message = "any value"
+                LOG.warning(
+                    "Required argument '{0}' not supplied. "
+                    "Please edit config file with {1}, OR override "
+                    "through CLI: --{0}=<option>. "
+                    "".format(opt, message))
 
-            if allowed_values:
-                message = "one of {} options".format(allowed_values)
+                # add comment
+                _add_help_comment(out_config, subcommand, attributes)
+                out_config.set(
+                    subcommand,
+                    opt,
+                    "Edit with {0}, "
+                    "OR override with CLI: --{1}=<option>".format(
+                        message, opt))
             else:
-                message = "any value"
-            LOG.warning(
-                "Required argument '{0}' not supplied. "
-                "Please edit config file with {1}, OR override "
-                "through CLI: --{0}=<option>. "
-                "".format(opt, message))
-
-            out_config.set(
-                subcommand,
-                opt,
-                "Edit with {0}, "
-                "OR override with CLI: --{1}=<option>".format(
-                    message, opt))
+                # add existing value.
+                _add_help_comment(out_config, subcommand, attributes)
+                out_config.set(
+                    subcommand,
+                    opt,
+                    out_config_old.get(subcommand, opt))
 
     with open(file_name, 'w') as configfile:  # save
         out_config.write(configfile)
+
+
+def _add_help_comment(config_parser, section, option_attributes):
+    """
+    Gets the short help message for an option.
+    """
+
+    if option_attributes.get('help', None):
+        for sub_help in option_attributes.get('help').split('\n'):
+            config_parser.set(section, "# " + sub_help)
 
 
 def _get_option_allowed_values(app_settings_dir, subcommand, option,

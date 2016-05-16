@@ -8,7 +8,6 @@ from cli import logger  # logger should bne imported first
 from cli import execute, conf, spec, utils, exceptions, yamls
 
 LOG = logger.LOG
-CONF = conf.config
 
 
 def get_arguments_dict(spec_args):
@@ -66,12 +65,7 @@ class IRFactory(object):
                     spec_args['generate-conf-file']))
                 spec_instance = None
             else:
-                spec_config = dict(config.items(spec_name))
-                spec_instance = IRSpec(
-                    spec_name,
-                    dict(cleanup=spec_config['cleanup_playbook'],
-                         main=spec_config['main_playbook']),
-                    settings_dir, spec_args)
+                spec_instance = IRSpec(config, spec_name, spec_args)
 
         return spec_instance
 
@@ -91,7 +85,7 @@ class IRFactory(object):
         :param args:
         :return:
         """
-        if args['debug']:
+        if args.get('debug', None):
             LOG.setLevel(logging.DEBUG)
             # todo(yfried): load exception hook now and not at init.
 
@@ -131,7 +125,7 @@ class IRSubCommand(object):
         settings_files = []
 
         # first take all input files from args
-        for input_file in self.args['input'] or []:
+        for input_file in self.args.get('input', []) or []:
             settings_files.append(utils.normalize_file(input_file))
 
         # get the sub-command yml file
@@ -148,14 +142,13 @@ class IRSpec(object):
     Hold the default spec workflow logic.
     """
 
-    def __init__(self, name, playbooks, settings_dir, args):
+    def __init__(self, config, name, args):
+        self.config = config
         self.name = name
         self.args = args
-        self.playbooks = playbooks
-        self.settings_dir = settings_dir
-
-        # todo(obaranov) replace with subcommand factory
-        self.sub_command = IRSubCommand.create(name, settings_dir, args)
+        self.spec_config = dict(config.items(name))
+        self.settings_dir = config.get('defaults', 'settings')
+        self.sub_command = IRSubCommand.create(name, self.settings_dir, args)
 
     def run(self):
         """
@@ -164,23 +157,25 @@ class IRSpec(object):
         settings = self.collect_settings()
         self.dump_settings(settings)
 
-        if not self.args['dry-run']:
+        if not self.args.get('dry-run'):
             self.args['settings'] = yaml.load(yaml.safe_dump(
                 settings,
                 default_flow_style=False))
 
-            if self.args['cleanup']:
+            if self.args.get('cleanup', None):
                 execute.ansible_playbook(
-                    self.playbooks['cleanup'],
+                    self.config,
+                    self.spec_config['cleanup_playbook'],
                     verbose=self.args['verbose'],
                     settings=self.args['settings'],
                     inventory=self.args['inventory'])
             else:
                 execute.ansible_playbook(
-                    self.playbooks['main'],
-                    verbose=self.args['verbose'],
+                    self.config,
+                    self.spec_config['main_playbook'],
+                    verbose=self.args.get('verbose', None),
                     settings=self.args['settings'],
-                    inventory=self.args['inventory'])
+                    inventory=self.args.get('inventory', None))
 
     def collect_settings(self):
         settings_files = self.sub_command.get_settings_files()
@@ -201,7 +196,7 @@ class IRSpec(object):
         """
         all_settings = utils.load_settings_files(settings_files)
         utils.dict_merge(all_settings, settings_dict)
-        utils.merge_extra_vars(all_settings, self.args['extra-vars'])
+        utils.merge_extra_vars(all_settings, self.args.get('extra-vars', None))
         yamls.replace_lookup(all_settings)
 
         return all_settings
@@ -210,7 +205,7 @@ class IRSpec(object):
         LOG.debug("Dumping settings...")
         output = yaml.safe_dump(settings,
                                 default_flow_style=False)
-        dump_file = self.args['output']
+        dump_file = self.args.get('output', None)
         if dump_file:
             LOG.debug("Dump file: {}".format(dump_file))
             with open(dump_file, 'w') as output_file:
@@ -223,7 +218,8 @@ def main(spec_name):
     """
     The start function for a spec.
     """
-    spec_runner = IRFactory.create(spec_name, CONF)
+    ir_config = conf.load_config_file()
+    spec_runner = IRFactory.create(spec_name, ir_config)
     if spec_runner:
         spec_runner.run()
 

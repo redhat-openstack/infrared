@@ -1,39 +1,28 @@
----
 subparsers:
-    virsh:
+    tempest:
         formatter_class: RawTextHelpFormatter
-        help: Provision systems using virsh
+        help: Tempest tests runner
         groups:
-            - title: Hypervisor
+            - title: Tempest
               options:
-                  host-address:
-                      type: Value
-                      help: Address/FQDN of the BM hypervisor
-                      required: yes
-                  host-user:
-                      type: Value
-                      help: User to SSH to the host with
-                      default: root
-                  host-key:
-                      type: Value
-                      help: "User's SSH key"
-                      default: ~/.ssh/id_rsa
-            - title: image
-              options:
-                  image:
+                  setup:
                       type: YamlFile
-                      help: The image to use for nodes provisioning. Check the 'sample.yml.example' for example.
+                      help: The setup type for tests
                       required: yes
-            - title: topology
-              options:
-                  topology-network:
+                      default: git.yml
+                  setup-revision:
+                      type: Value
+                      help: The setup (git) revision if applicable
+                      default: HEAD
+                  tests:
                       type: YamlFile
-                      help: Network
-                      default: default.yml
-                  topology-nodes:
-                      type: Topology
-                      help: Provision topology.
-                      default: "undercloud:1,controller:1,compute:1"
+                      help: The set of test to execute
+                      required: yes
+                      default: none.yml
+                  threads:
+                      type: Value
+                      help: The number of concurrent threads to run tests
+                      default: 8
             - title: common
               options:
                   dry-run:

@@ -158,6 +158,7 @@ def normalize_file(file_path):
     :return: normalized path of a file
     :raise: IRFileNotFoundException if the file doesn't exist
     """
+    file_path = os.path.expanduser(file_path)
     if not os.path.isabs(file_path):
         abspath = os.path.abspath(file_path)
         LOG.debug(
