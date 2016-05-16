@@ -16,7 +16,7 @@ LOG = logger.LOG
 
 
 def ansible_playbook(config, playbook, verbose=2, settings=None,
-                     inventory="local_hosts"):
+                     inventory="local_hosts", additional_args=None):
     """Wraps the 'ansible-playbook' CLI.
 
      :param config: the infrared configuration
@@ -24,8 +24,14 @@ def ansible_playbook(config, playbook, verbose=2, settings=None,
      :param verbose: Ansible verbosity level
      :param settings: dict with Ansible variables.
      :param inventory: the inventory file to use, default: local_hosts
+     :param additional_args: the additional ansible arguments
     """
+    if additional_args is None:
+        additional_args = {}
     settings = settings or {}
+    if verbose is not None:
+        verbose = int(verbose)
+    LOG.debug("Additional ansible args: {}".format(additional_args))
 
     display = Display(verbosity=verbose)
     import __main__ as main
@@ -72,6 +78,9 @@ def ansible_playbook(config, playbook, verbose=2, settings=None,
         remote_user=ansible.constants.DEFAULT_REMOTE_USER,
         private_key_file=ansible.constants.DEFAULT_PRIVATE_KEY_FILE,
     )
+
+    hacked_options.update(additional_args)
+    LOG.debug("All ansible options: {}".format(hacked_options))
     options = namedtuple('Options', hacked_options.keys())(**hacked_options)
 
     passwords = dict(vault_pass='secret')
@@ -85,5 +94,9 @@ def ansible_playbook(config, playbook, verbose=2, settings=None,
                             variable_manager=variable_manager, loader=loader,
                             options=options, passwords=passwords)
     results = pbex.run()
-    if results:
-        raise exceptions.IRPlaybookFailedException(playbook)
+    if isinstance(results, int):
+        if results:
+            raise exceptions.IRPlaybookFailedException(playbook)
+    else:
+        # print result output, for example in case when listtags is True.
+        LOG.warning("Playbook result: {}".format(results))
