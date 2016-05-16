@@ -1,14 +1,11 @@
 ---
-- name: download the pre-built overcloud images
+- name: Download the pre-built overcloud images
   get_url:
-      dest: "~/{{ item }}"
-      url: "{{ installer.images.url }}/{{ item }}"
-      timeout: 1000
-  with_items: "{{ tar_images }}"
+      dest: "{{ work_dir }}/{{ tar_file }}"
+      url: "{{ tar_download_url }}"
 
-- name: untar the images
+- name: Untar the images
   unarchive:
-      src: "~/{{ item }}"
-      dest: "~/"
+      src: "{{ work_dir }}/{{ tar_file }}"
+      dest: "{{ work_dir }}"
       copy: "no"
-  with_items: "{{ tar_images }}"

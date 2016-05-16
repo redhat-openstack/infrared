@@ -1,12 +1,20 @@
 - include: "{{ task }}.yml"
 
-- name: list current directory
-  shell: "ls -l"
-  register: file_list
+- name: List images built
+  shell: "ls -l {{ image_build_dir }}"
+  when: task == 'build'
 
-- name: print file list
-  debug:
-      var=file_list
+- name: List images imported
+  shell: "ls -l {{ work_dir }}"
+  when: task == 'import'
 
-#- name: upload the overcloud images to glance
-#  shell: "source ~/stackrc; openstack overcloud image upload --update-existing"
+- name: Upload to the storage server using pubkey auth if requested
+  shell:
+      "time rsync -ave 'ssh -o StrictHostKeyChecking=no' {{ build_image_dir }}/{{ tar_file }} {{ storage_user }}@{{ storage_server }}:{{ storage_path }}/{{ ospd_version }}/"
+  when: upload_to == 'remote'
+
+- name: Upload the overcloud images to glance
+  shell: |
+      pushd {{ build_dir }}
+      source ~/stackrc; openstack overcloud image upload --update-existing
+  when: upload_to == 'glance'

@@ -56,7 +56,7 @@
   yum: name=wget state=present
 
 - name: Create directory for images built
-  file: path={{ build_image_dir }} state=directory
+  file: path={{ image_build_dir }} state=directory
 
 - name: Check if there is a guest image is present
   stat:
@@ -85,7 +85,7 @@
   shell: |
       source {{ build_env_file }}
       touch {{ build_log }}
-      pushd {{ build_image_dir }}
+      pushd {{ image_build_dir }}
       openstack overcloud image build --all &> {{ build_log }}
 - name: Build all possible images
   register: build_status
@@ -103,23 +103,19 @@
 - name: Expose errors durring DIB build if build failed
   ignore_errors: yes
   shell: cat {{ build_log }} | grep -v liberror | grep -v libgpg-error | grep -C 2 -i error
-  when:  build_status.rc != 0 or build_errors.rc != 0
+  when: build_status.rc != 0 or build_errors.rc != 0
 
 - name: Expose nested errors durring DIB build if build failed
   ignore_errors: yes
-  shell: 'for file in `find {{ build_image_dir }} -type f -name "*.log"`; do echo -e "\n\nFILE: $file"; tail -n 30 $file; done'
-  when:  build_status.rc != 0 or build_errors.rc != 0
+  shell: 'for file in `find {{ image_build_dir }} -type f -name "*.log"`; do echo -e "\n\nFILE: $file"; tail -n 30 $file; done'
+  when: build_status.rc != 0 or build_errors.rc != 0
 
 - fail: msg="Failed to build images for OSPd {{ ospd_version }} - see debug logs above"
-  when:  build_status.rc != 0 or build_errors.rc != 0
+  when: build_status.rc != 0 or build_errors.rc != 0
 
 - name: Compress and tar built images without junk files
   shell: |
-      pushd {{ build_image_dir }}
+      pushd {{ image_build_dir }}
       tar -czf {{ tar_file }} *.{vmlinuz,kernel,initramfs,qcow2}
 
 - debug: msg="{{ tar_file }} was successfully produced"
-
-- name: Upload to the storage server using pubkey auth
-  shell:
-      "time rsync -ave 'ssh -o StrictHostKeyChecking=no' {{ tar_file }} {{ storage_user }}@{{ storage_server }}:{{ storage_path }}/{{ ospd_version }}/"
