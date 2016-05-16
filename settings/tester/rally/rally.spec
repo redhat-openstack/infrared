@@ -1,6 +1,6 @@
 subparsers:
     rally:
-        formatter_class: RawTextHelpFormatter
+        include_groups: ['Ansible options', 'Inventory hosts options', 'Common options', 'Configuration file options']
         help: Rally tests runner
         groups:
             - title: Rally
@@ -26,31 +26,3 @@ subparsers:
                       help: The set of test to execute
                       required: yes
                       default: none.yml
-            - title: common
-              options:
-                  dry-run:
-                      action: store_true
-                      help: Only generate settings, skip the playbook execution stage
-                  cleanup:
-                      action: store_true
-                      help: Clean given system instead of provisioning a new one
-                  input:
-                      action: append
-                      type: str
-                      short: i
-                      help: Input settings file to be loaded before the merging of user args
-                  output:
-                      type: str
-                      short: o
-                      help: 'File to dump the generated settings into (default: stdout)'
-                  extra-vars:
-                      action: append
-                      short: e
-                      help: Extra variables to be merged last
-                      type: str
-                  from-file:
-                      type: IniFile
-                      help: the ini file with the list of arguments
-                  generate-conf-file:
-                      type: str
-                      help: generate configuration file (ini) containing default values and exits. This file is than can be used with the from-file argument

@@ -1,7 +1,7 @@
 subparsers:
     provisioner:
-        formatter_class: RawTextHelpFormatter
         help: Cleanups provisioned system
+        include_groups: ["Ansible options", "Inventory options"]
         groups:
             - title: Settings
               options:
