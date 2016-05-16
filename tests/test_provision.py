@@ -1,11 +1,9 @@
-import os
-
 from cli import spec
 
 
 def test_dynamic_topology(tmpdir):
     """
-    Verifiesthe topology is dynamically constructed.
+    Verifies the topology is dynamically constructed.
     """
     root_dir = tmpdir.mkdir("topology")
     controller_yml = root_dir.join("controller.yml")
@@ -27,14 +25,11 @@ os: fedora
 name: ceph
 """)
     # prepare config
-    app_path = os.path.join(root_dir.strpath, "..")
 
-    spec.TopologyArgument.settings_dirs = [app_path]
-    topology_arg = spec.TopologyArgument("controller:10,compute:2")
+    topology_arg = spec.Topology('topology', [root_dir.strpath], "..", '')
     # process topology
-    topology_arg.resolve_value("topology", {})
+    topology = topology_arg.resolve("controller:10,compute:2")
 
-    topology = topology_arg.value
     assert 'controller' in topology
     assert 'compute' in topology
     assert 'ceph' not in topology
