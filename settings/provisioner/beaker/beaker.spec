@@ -1,81 +1,52 @@
 ---
-subparsers:
-    beaker:
-        help: Provision systems using Beaker
-        groups:
-            - title: Beaker server
-              options:
-                  url:
-                      type: Value
+command:
+    subcommands:
+        - name: beaker
+          help: Provision systems using Beaker
+          include_groups: ['Ansible options', 'Inventory options', 'Common options', 'Configuration file options']
+          groups:
+              - name: Beaker server
+                options:
+                    - name: url
                       help: 'The Beaker url'
                       required: True
-                  user:
-                      type: Value
+                    - name: user
                       help: 'Login username to authenticate to Beaker (default: __DEFAULT__)'
                       default: admin
-                  password:
-                      type: Value
+                    - name: password
                       help: 'Password of login user'
                       required: True
-                  web-service:
-                      type: Value
+                    - name: web-service
                       help: 'For cases where the beaker user is not part of the kerberos system, we require to set the Web service to RPC for authentication rather than rest.'
                       default: 'rest'
                       choices: ['rest', 'rpc']
-                  ca-cert:
-                      type: Value
+                    - name: ca-cert
                       help: 'For cases where the beaker user is not part of the kerberos system, a CA Certificate is required for authentication with the Beaker server.'
                       required: False
 
-            - title: Host details
-              options:
-                  host-address:
-                      type: Value
+              - name: Host details
+                options:
+                    - name: host-address
                       help: 'Address/FQDN of the BM'
                       required: yes
-                  host-user:
-                      type: Value
+                    - name: host-user
                       help: 'User to SSH to the host with'
                       default: root
-                  host-password:
-                      type: Value
+                    - name: host-password
                       help: "User's SSH password"
-                  host-key:
-                      type: Value
+                    - name: host-key
                       help: "User's SSH key"
 
-            - title: image
-              options:
-                  image:
-                      type: YamlFile
+              - name: Image
+                options:
+                    - name: image
+                      complex_type: YamlFile
                       help: 'The image to use for nodes provisioning. Check the "sample.yml.example" for example.'
                       default: "rhel-7.2.yml"
 
-            - title: common
-              options:
-                  dry-run:
-                      action: store_true
-                      help: 'Only generate settings, skip the playbook execution stage'
-                  cleanup:
+              - name: Common
+                options:
+                    - name: cleanup
                       action: store_true
                       help: 'Release the system'
-                  input:
-                      action: append
-                      type: str
-                      short: i
-                      help: 'Input settings file to be loaded before the merging of user args'
-                  output:
-                      type: str
-                      short: o
-                      help: 'File to dump the generated settings into (default: stdout)'
-                  extra-vars:
-                      action: append
-                      short: e
-                      help: 'Extra variables to be merged last'
-                      type: str
-                  from-file:
-                      type: IniFile
-                      help: 'the ini file with the list of arguments'
-                  generate-conf-file:
-                      type: str
-                      help: 'Generate configuration file (ini) containing default values and exits. This file is than can be used with the from-file argument'
+                      nested: no
