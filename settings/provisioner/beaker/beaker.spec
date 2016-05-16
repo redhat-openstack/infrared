@@ -1,66 +1,40 @@
 ---
-subparsers:
-    beaker:
-        help: Provision systems using Beaker
-        groups:
-            - title: Beaker server
-              options:
-                  base-url:
-                      type: Value
+command:
+    subcommands:
+        - name: beaker
+          help: Provision systems using Beaker
+          include_groups: ['Ansible options', 'Inventory options', 'Common options', 'Configuration file options']
+          groups:
+              - name: Beaker server
+                options:
+                    - name: base-url
                       help: Base URL of Beaker server
                       required: True
-                  username:
-                      type: Value
+                    - name: username
                       help: 'Login username to authenticate to Beaker (default: __DEFAULT__)'
                       default: admin
-                  password:
-                      type: Value
+                    - name: password
                       help: Password of login user
                       required: True
-                  web-service:
-                      type: Value
+                    - name: web-service
                       help: Web service
                       default: 'rest'
                       choices: ['rest', 'rpc']
-                  ca-cert:
-                      type: Value
+                    - name: ca-cert
                       help: CA Certificate
                       required: False
-            - title: Beaker system
-              options:
-                  fqdn:
-                      type: Value
+              - name: Beaker system
+                options:
+                    - name: fqdn
                       help: Fully qualified domain name of a system
                       required: True
-                  distro-tree:
-                      type: Value
+                    - name: distro-tree
                       help: Distro Tree ID
                       default: 71576
-            - title: common
-              options:
-                  dry-run:
+
+              - name: Cleanup
+                options:
+                    - name: cleanup
                       action: store_true
-                      help: Only generate settings, skip the playbook execution stage
-                  cleanup:
-                      action: store_true
-                      help: Release the system
-                  input:
-                      action: append
-                      type: str
-                      short: i
-                      help: Input settings file to be loaded before the merging of user args
-                  output:
-                      type: str
-                      short: o
-                      help: 'File to dump the generated settings into (default: stdout)'
-                  extra-vars:
-                      action: append
-                      short: e
-                      help: Extra variables to be merged last
-                      type: str
-                  from-file:
-                      type: IniFile
-                      help: the ini file with the list of arguments
-                  generate-conf-file:
-                      type: str
-                      help: generate configuration file (ini) containing default values and exits. This file is than can be used with the from-file argument
+                      help: Clean given system instead of running playbooks on a new one.
+                      nested: no
