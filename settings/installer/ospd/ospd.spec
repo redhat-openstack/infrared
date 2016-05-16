@@ -1,66 +1,60 @@
 ---
-subparsers:
-    ospd:
-        formatter_class: RawTextHelpFormatter
-        help: Installs openstack using OSP Director
-        groups:
-            - title: Firewall
+command:
+    subcommands:
+        - name: ospd
+          help: Installs openstack using OSP Director
+          include_groups: ['Logging arguments', 'Inventory arguments', 'Common arguments', 'Configuration file arguments']
+          groups:
+            - name: Firewall
               options:
-                firewall:
-                    type: YamlFile
+                  - name: firewall
+                    complex_type: YamlFile
                     help: The firewall configuration
                     default: default.yml
 
-            - title: Product
+            - name: Product
               options:
-                product-version:
-                    type: Value
+                  - name: product-version
                     help: The product version
                     required: yes
                     choices: ["7", "8", "9", "10"]
-                product-build:
-                    type: Value
+                  - name: product-build
                     help: The product build
                     default: latest
-                product-core-version:
-                    type: Value
+                  - name: product-core-version
                     help: The product core version
                     required: yes
                     choices: ["7", "8", "9", "10"]
-                product-core-build:
-                    type: Value
+                  - name: product-core-build
                     help: The product core build
                     default: latest
 
-            - title: Undercloud
+            - name: Undercloud
               options:
-                undercloud-config:
-                    type: YamlFile
+                  - name: undercloud-config
+                    complex_type: YamlFile
                     help: The undercloud config details
                     default: default.yml
 
-            - title: Overcloud
+            - name: Overcloud
               options:
-                overcloud-ssl:
-                    type: Value
+                  - name: overcloud-ssl
                     help: Specifies whether ths SSL should be used for overcloud
                     default: 'no'
-                overcloud-hostname:
-                    type: Value
+                  - name: overcloud-hostname
                     help: Specifies whether we should use custom hostnames for controllers
                     default: 'no'
 
-            - title: Overcloud storage
+            - name: Overcloud storage
               options:
-                storage:
-                    type: YamlFile
+                  - name: storage
+                    complex_type: YamlFile
                     help: The overcloud storage type
                     default: no-storage.yml
 
-            - title: Product images
+            - name: Product images
               options:
-                images-task:
-                    type: Value
+                  - name: images-task
                     help: |
                         Specifies the source for the OverCloud images:
                         * RPM - packaged with product (versions 8 and above)
@@ -68,76 +62,55 @@ subparsers:
                         * BUILD - build images locally (takes longer)
                     choices: [import, build, rpm]
                     default: rpm
-                images-url:
-                    type: Value
+                  - name: images-url
                     help: Specifies the import image url. Required only when images task is 'import'
+                    required_when: "images-task == import"
 
-            - title: Overcloud Network
+            - name: Overcloud Network
               options:
-                network-backend:
-                    type: Value
+                  - name: network-backend
                     help: The overcloud network backend.
                     default: vxlan
-                network-protocol:
-                    type: Value
+                  - name: network-protocol
                     help: The network protocol for overcloud
                     default: ipv4
-                network-isolation:
-                    type: YamlFile
+                  - name: network-isolation
+                    complex_type: YamlFile
                     help: The overcloud network isolation type
                     required: yes
-                network-isolation-template:
-                    type: YamlFile
+                  - name: network-isolation-template
+                    complex_type: YamlFile
                     help: The overcloud network isolation template
 
-            - title: User
+            - name: User
               options:
-                user-name:
-                    type: Value
+                  - name: user-name
                     help: The installation user name
                     default: stack
-                user-password:
-                    type: Value
+                  - name: user-password
                     help: The installation user password
                     default: stack
 
-            - title: Loadbalancer
+            - name: Loadbalancer
               options:
-                loadbalancer:
-                    type: YamlFile
+                  - name: loadbalancer
+                    complex_type: YamlFile
                     help: The loadbalancer to use
 
-            - title: Workarounds
+            - name: Workarounds
               options:
-                workarounds:
-                    type: YamlFile
+                  - name: workarounds
+                    complex_type: YamlFile
                     help: The list of workarounds to use during install
 
-            - title: common
+            - name: Cleanup
               options:
-                  dry-run:
-                      action: store_true
-                      help: Only generate settings, skip the playbook execution stage
-                  cleanup:
-                      action: store_true
-                      help: Clean given system instead of provisioning a new one
-                  input:
-                      action: append
-                      type: str
-                      short: i
-                      help: Input settings file to be loaded before the merging of user args
-                  output:
-                      type: str
-                      short: o
-                      help: 'File to dump the generated settings into (default: stdout)'
-                  extra-vars:
-                      action: append
-                      short: e
-                      help: Extra variables to be merged last
-                      type: str
-                  from-file:
-                      type: IniFile
-                      help: the ini file with the list of arguments
-                  generate-conf-file:
-                      type: str
-                      help: generate configuration file (ini) containing default values and exits. This file is than can be used with the from-file argument
+                  - name: cleanup
+                    action: store_true
+                    help: Clean given system instead of running playbooks on a new one.
+                    nested: no
+                    silent:
+                        - "network-isolation"
+                        - "product-core-version"
+                        - "product-version"
+                        - "images-url"
