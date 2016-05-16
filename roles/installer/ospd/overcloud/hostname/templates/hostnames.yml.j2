@@ -17,7 +17,7 @@ parameter_defaults:
     {{ details.heat_name }}HostnameFormat: '{{ node_type }}-%index%'
 {% endfor %}
 
-{% if installer.overcloud.hostname.HostnameMap | default(False) %}
+{% if installer.get("overcloud", {}).get("hostname", {}).get("HostnameMap", false) %}
         HostnameMap:
 {% for old_name, new_name in installer.overcloud.hostname.HostnameMap.iteritems() %}
             {{ old_name }}: {{ new_name }}
