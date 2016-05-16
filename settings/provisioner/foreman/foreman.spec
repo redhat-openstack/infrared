@@ -2,6 +2,7 @@
 subparsers:
     foreman:
         help: Provision systems using Foreman
+        include_groups: ['Ansible options', 'Inventory options', 'Common options', 'Configuration file options']
         groups:
             - title: Foreman server
               options:
@@ -46,23 +47,3 @@ subparsers:
                   host-key:
                       type: Value
                       help: "User's SSH key"
-
-            - title: common
-              options:
-                  dry-run:
-                      action: store_true
-                      help: 'Only generate settings, skip the playbook execution stage'
-                  input:
-                      action: append
-                      type: str
-                      help: 'Settings file to be merged first'
-                      short: n
-                  output:
-                      type: str
-                      short: o
-                      help: 'Name for the generated settings file (default: stdout)'
-                  extra-vars:
-                      action: append
-                      short: e
-                      help: 'Extra variables to be merged last'
-                      type: str
