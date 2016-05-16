@@ -1,6 +1,3 @@
----
-options:
-    inventory:
-        help: 'Inventory file (default: __DEFAULT__)'
-        type: str
-        default: local_hosts
+command:
+    description: Spec to provision systems using different tools
+    include_groups: ['Debug Options']
