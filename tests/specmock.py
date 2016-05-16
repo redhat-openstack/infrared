@@ -20,22 +20,24 @@ class IRMock(object):
         self.config = conf.ConfigWrapper.load_config_file(
             self.ir_conf_file.strpath)
         self._monkeypatch = monkeypatch
+        self.spec_app = None
 
-    def run(self, app_args=None, spec_args=None):
+    def run(self, spec_args=None):
         """
         The function to run spec.
         """
-        if app_args is None:
-            app_args = ['-d', '-vvvv']
+
         if spec_args is None:
             spec_args = []
-        argv = ['appmock', ] + app_args + ['cmdmock', ] + spec_args
+        argv = ['appmock', 'cmdmock'] + spec_args
 
         # replace argument by what we want
         self._monkeypatch.setattr(sys, 'argv', argv)
         spec_app = main.IRFactory.create('appmock', self.config)
         if spec_app:
             spec_app.run()
+
+        self.spec_app = spec_app
 
 
 @pytest.fixture
@@ -75,53 +77,90 @@ def mock_settings(mock_roots):
     image_file = app_spec_dir.mkdir('image').join('default.yml')
 
     base_spec_file.write("""---
-options:
-    verbose:
-        help: 'Control Ansible verbosity level'
-        short: v
-        action: count
-        default: 0
-    inventory:
-        help: 'Inventory file'
-        type: str
-        default: local_hosts
-    debug:
-        help: 'Run InfraRed in DEBUG mode'
-        short: d
-        action: store_true
+groups:
+    - name: common
+      options:
+          - name: verbose
+            help: 'Control Ansible verbosity level'
+            short: v
+            action: count
+            default: 0
+          - name: inventory
+            help: 'Inventory file'
+            type: str
+            default: local_hosts
+          - name: debug
+            help: 'Run InfraRed in DEBUG mode'
+            short: d
+            action: store_true
+            nested: no
 """)
 
     spec_file.write("""---
-subparsers:
-    cmdmock:
-        formatter_class: RawTextHelpFormatter
-        options:
-            image:
-                type: YamlFile
-                help: test_file
-                default: default.yml
-            opt:
-                type: Value
-                help: optional value
-            req:
-                type: Value
-                help: required value
-                required: yes
-            choice:
-                type: Value
-                help: list of predefined value
-                choices: ["1", "2", "3"]
-                default: 2
-            from-file:
-                type: IniFile
-                help: the ini file with the list of arguments
-            generate-conf-file:
-                type: str
-                help: generate configuration file
-            output:
-                type: str
-                short: o
-                help: 'File to dump the generated settings into'
+command:
+    subcommands:
+        - name: cmdmock
+          include_groups: ['common']
+          groups:
+              - name: test args
+                options:
+                     - name: image
+                       complex_type: YamlFile
+                       help: test_file
+                       default: default.yml
+                     - name: opt
+                       help: optional value
+                     - name: req
+                       help: required value
+                       required: yes
+                     - name: choice
+                       help: list of predefined value
+                       choices: ["1", "2", "3"]
+                       default: 2
+                     - name: from-file
+                       action: read-config
+                       help: reads arguments from file.
+                     - name: generate-conf-file
+                       action: generate-config
+                       help: generate configuration file with default values
+                     - name: output
+                       short: o
+                       help: 'File to dump the generated settings into'
+                       nested: no
+
+              - name: require when test args
+                options:
+                     - name: images-task
+                       choices: [import, build, rpm]
+                       default: rpm
+                     - name: images-url
+                       required_when: "images-task == import"
+
+              - name: silent test args
+                options:
+                     - name: do-silent
+                       action: store_true
+                       nested: no
+                       silent:
+                           - req
+
+              - name: priority test args
+                options:
+                     - name: priority_p1
+                     - name: priority_p2
+                     - name: priority_p3
+
+              - name: nested test args
+                options:
+                     - name: nested_arg1
+                       default: defvalue1
+                     - name: nested_arg2
+                       nested: yes
+                     - name: control_arg1
+                       nested: no
+
+
+
 """)
     image_file.write("""---
 image_file: file.qcow
