@@ -102,3 +102,11 @@ class IRWrongTopologyFormat(IRException):
             "Example:\n" \
             "  'controller:1,compute:2,undercloud:3'".format(used_format)
         super(self.__class__, self).__init__(message)
+
+
+class IRUnrecognizedOptionsException(IRException):
+    def __init__(self, wrong_options):
+        message = \
+            "The following options are not recognized:  '{}'".format(
+                wrong_options)
+        super(self.__class__, self).__init__(message)
