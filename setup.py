@@ -58,9 +58,6 @@ except ImportError as e:
             "selinux")
         if not os.path.exists(SELINUX_PATH):
             raise new_error
-        print("missing selinux binding. Trying to pull modules from "
-                 "system ({source}) to virtualenv {dest}".format(
-            source=SELINUX_PATH, dest=sys.prefix))
 
         # filter precompiled files
         files = [f for f in os.listdir(SELINUX_PATH)
@@ -68,8 +65,6 @@ except ImportError as e:
         dest = os.path.join(VENV_SITE, "selinux")
         os.makedirs(dest)
         for f in files:
-            print("Copying {source} to {dest}".format(
-                source=f, dest=dest))
             shutil.copy(os.path.join(SELINUX_PATH, f),
                          dest)
     else:

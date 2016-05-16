@@ -33,12 +33,11 @@ to avoid corrupting the system packages::
   $ virtualenv .venv
   $ source .venv/bin/activate
 
-`Get python binding for SELinux <https://dmsimard.com/2016/01/08/selinux-python-virtualenv-chroot-and-ansible-dont-play-nice/>`_::
 
-  $ cp -rv /usr/lib64/python2.7/site-packages/selinux/ $VIRTUAL_ENV/lib/python2.7/site-packages
-
-
-.. note:: libselinux-python is in `Prerequisites`_ but doesn't have a pip package. Create virtualenv with site packages enabled to avoid this hack::
+.. note:: libselinux-python is in `Prerequisites`_ but doesn't have a pip package.
+ When detecting a virtualenv without selinux binding, InfraRed will try to
+ `get python binding from system <http://dmsimard.com/2016/01/08/selinux-python-virtualenv-chroot-and-ansible-dont-play-nice/>`_.
+ To avoid this, create an "open" virtualenv with site packages enabled::
 
   $ virtualenv --system-site-packages .venv
 
