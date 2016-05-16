@@ -43,7 +43,7 @@
       group: "{{ installer.user.name }}"
       mode: 0644
       force: yes
-  when: installer.undercloud.config
+  when: installer.undercloud.config | default(false)
 
 - name: install the undercloud
   become: yes
