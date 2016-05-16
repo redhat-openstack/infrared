@@ -122,4 +122,4 @@
 
 - name: Upload to the storage server using pubkey auth
   shell:
-      "time rsync -av {{ tar_file }} {{ storage_user }}@{{ storage_server }}:{{ storage_path }}/{{ ospd_version }}/"
+      "time rsync -ave 'ssh -o StrictHostKeyChecking=no' {{ tar_file }} {{ storage_user }}@{{ storage_server }}:{{ storage_path }}/{{ ospd_version }}/"
