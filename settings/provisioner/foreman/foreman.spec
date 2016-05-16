@@ -1,64 +1,42 @@
 ---
-subparsers:
-    foreman:
-        help: Provision systems using Foreman
-        groups:
-            - title: foreman
-              options:
-                  user:
-                      type: Value
+command:
+    subcommands:
+        - name: foreman
+          help: Provision systems using Foreman
+          include_groups: ['Logging arguments', 'Inventory arguments', 'Common arguments', 'Configuration file arguments']
+          groups:
+              - name: foreman
+                options:
+                    - name: user
                       help: User to Forman server
                       required: True
-                  password:
-                      type: Value
+                    - name: password
                       help: Password of Forman server
                       required: True
-                  url:
-                      type: Value
+                    - name: url
                       help: The Foreman api url
                       required: True
-                  strategy:
-                      type: Value
+                    - name: strategy
                       help: Whether to use Foreman or system ipmi command.
                       default: foreman
-                  action:
-                      type: Value
+                    - name: action
                       help: Which command to send with the power-management selected by mgmt_strategy. For example - reset, reboot, cycle
                       default: cycle
-                  wait:
-                      type: Value
+                    - name: wait
                       default: true
                       help: Whether we should wait for the host given the 'rebuild' state was set.
-            - title: host
-              options:
-                  host-address:
-                      type: Value
+              - name: host
+                options:
+                    - name: host-address
                       help: Name or ID of the host as listed in foreman
                       required: yes
-                  host-key:
-                      type: Value
+                    - name: host-key
                       help: "User's SSH key"
                       default: ~/.ssh/id_rsa
-            - title: common
-              options:
-                  dry-run:
+
+              - name: Cleanup
+                options:
+                    - name: cleanup
                       action: store_true
-                      help: Only generate settings, skip the playbook execution stage
-                  cleanup:
-                      action: store_true
-                      help: Provision the host using Forman
-                      required: True
-                  input:
-                      action: append
-                      type: str
-                      help: Settings file to be merged first
-                      short: n
-                  output:
-                      type: str
-                      short: o
-                      help: 'Name for the generated settings file (default: stdout)'
-                  extra-vars:
-                      action: append
-                      short: e
-                      help: Extra variables to be merged last
-                      type: str
+                      help: Clean given system instead of running playbooks on a new one.
+                      nested: no
