@@ -1,6 +1,6 @@
----
+# todo(obaranov) This is deprecated option. Use --inventory flag from the subcommand spec
 options:
     inventory:
-        help: 'Inventory file (default: __DEFAULT__)'
+        help: Inventory file'
         type: str
         default: hosts
