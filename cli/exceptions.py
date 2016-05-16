@@ -125,3 +125,23 @@ class IRWrongYamlListFormat(IRException):
             "Example:\n" \
             "  'item1,item2,item3'".format(used_format)
         super(self.__class__, self).__init__(message)
+
+
+class IRUnrecognizedOptionsException(IRException):
+    def __init__(self, wrong_options):
+        self.wrong_options = wrong_options
+        message = \
+            "The following options are not recognized:  '{}'".format(
+                wrong_options)
+        super(self.__class__, self).__init__(message)
+
+
+class IRRequiredArgsMissingException(IRException):
+    def __init__(self, missing_args):
+        self.missing_args = missing_args
+
+        message = 'Required options are not set:'
+        for cmd_name, args in missing_args.items():
+                message += ("\n * [{}]: {}".format(cmd_name, ", ".join(
+                    ["'" + arg + "'" for arg in args])))
+        super(IRRequiredArgsMissingException, self).__init__(message)
