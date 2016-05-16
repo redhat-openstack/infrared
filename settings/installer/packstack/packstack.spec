@@ -52,7 +52,7 @@ subparsers:
                   network-variant:
                       type: YamlFile
                       help: Network variant
-                      default: _neutron_ml2-vxlan.yml
+                      default: neutron_ml2-vxlan.yml
 
             - title: Product
               options:

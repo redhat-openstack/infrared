@@ -17,7 +17,10 @@ storage:
     - ceph.client.automation-glance.keyring
     - ceph.conf
     - client.automation-cinder.key
-  image:
+  volume:
+    variant:
+      share: !placeholder
+      shares_file: "/etc/cinder/ceph.shares"
     config:
       cinder:
         "icehouse":
@@ -32,8 +35,8 @@ storage:
             glance_api_version: "2"
             backup_driver: "cinder.backup.drivers.ceph"
             backup_ceph_conf: "/etc/ceph/ceph.conf"
-            backup_ceph_user: "automation-backups"
-            backup_ceph_pool: "automation-backups"
+            backup_ceph_user: "automation-cinder-backups"
+            backup_ceph_pool: "automation-cinder-backups"
             backup_ceph_chunk_size: "134217728"
             backup_ceph_stripe_unit: "0"
             backup_ceph_stripe_count: "0"
@@ -79,8 +82,6 @@ storage:
             rbd_store_chunk_size: "8"
         "juno":
           &glance_cfg_new
-          DEFAULT:
-            default_store: "rbd"
           glance_store:
             rbd_store_user: "automation-images"
             rbd_store_pool: "automation-images"
@@ -88,6 +89,8 @@ storage:
             rbd_store_ceph_conf: "/etc/ceph/ceph.conf"
             rbd_store_chunk_size: "8"
             stores: "glance.store.rbd.Store, glance.store.filesystem.Store, glance.store.http.Store"
+          DEFAULT:
+            default_store: "rbd"
         "kilo":
           *glance_cfg_new
         "5.0":
@@ -98,11 +101,3 @@ storage:
           *glance_cfg_new
         "8.0":
           *glance_cfg_new
-
-tester:
-    tempest:
-        whitelist:
-          - tempest\.scenario\.test_snapshot_pattern
-        blacklist:
-          - tempest.*s3.*
-          - tempest.*ec2.*
