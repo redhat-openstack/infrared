@@ -47,6 +47,12 @@
       when: provisioner.ssh_key is defined
       delegate_to: localhost
 
+    - name: Remove provisioned hosts from known_hosts
+      known_hosts:
+        name: "{{ inventory_hostname }}"
+        state: absent
+      delegate_to: localhost
+
     - name: Copy SSH key to authorized_key
       authorized_key:
         key: "{{ cmd_reg.stdout }}"
