@@ -661,9 +661,9 @@ def _get_option_allowed_values(app_settings_dirs, subcommand, option,
     Gets the list of allowed values for an option.
     """
     if attributes.get('type', None) == 'YamlFile':
-        allowed_values = map(os.path.basename,
-                             YamlFileArgument.get_allowed_files(
-                             app_settings_dirs, subcommand, option))
+        allowed_values = map(
+            os.path.basename, YamlFileArgument.get_allowed_files(
+                app_settings_dirs, subcommand, option))
     else:
         allowed_values = attributes.get('choices', [])
     return allowed_values
