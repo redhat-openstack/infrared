@@ -1,0 +1,33 @@
+---
+nodes:
+  controller:
+    packages:
+      default: targetcli
+      '6.0': scsi-target-utils
+
+storage:
+  services:
+    - cinder
+  volume:
+    config:
+      cinder:
+        "icehouse":
+          &cinder_cfg_old
+          DEFAULT:
+            lvm_type: "thin"
+        "juno":
+          &cinder_cfg_new
+          DEFAULT:
+            enabled_backends: "rhos-6-thinlvm"
+          rhos-6-thinlvm:
+            volume_driver: "cinder.volume.drivers.lvm.LVMISCSIDriver"
+            lvm_type: "thin"
+            iscsi_helper: "lioadm"
+        "5.0":
+          *cinder_cfg_old
+        "6.0":
+          *cinder_cfg_new
+        "7.0":
+          *cinder_cfg_new
+        "8.0":
+          *cinder_cfg_new

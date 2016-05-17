@@ -1,0 +1,24 @@
+---
+ha: false
+type: neutron
+label: 'myphysnet'
+auto_assign_floating_ip: false
+name: public
+external:
+    vlan:
+        tag: ''
+        bridge: "br-{{ !lookup installer.network.label }}"
+    provider_network_type: flat
+
+config:
+    CONFIG_NEUTRON_OVS_VLAN_RANGES: "{{ !lookup installer.network.label }}"
+    CONFIG_NEUTRON_ML2_VLAN_RANGES: "{{ !lookup installer.network.label }}"
+    CONFIG_NEUTRON_INSTALL: y
+    CONFIG_NEUTRON_FWAAS: y
+    CONFIG_LBAAS_INSTALL: y
+    CONFIG_NEUTRON_L3_EXT_BRIDGE: provider
+    CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS: "{{ !lookup installer.network.label }}:{{ !lookup installer.network.external.vlan.bridge }}"
+    CONFIG_NEUTRON_OVS_BRIDGE_IFACES: "{{ !lookup installer.network.external.vlan.bridge }}:{{ !lookup installer.network.interfaces.external.label }}"
+    CONFIG_NEUTRON_L2_AGENT: openvswitch
+    CONFIG_NEUTRON_OVS_TUNNEL_IF: "{{ !lookup installer.network.interfaces.data.label }}"
+    CONFIG_NEUTRON_USE_NAMESPACES: y

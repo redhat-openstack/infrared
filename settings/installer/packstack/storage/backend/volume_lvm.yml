@@ -1,0 +1,35 @@
+---
+storage:
+  services:
+    - cinder
+  volume:
+    variant:
+      shares_file: "/etc/cinder/lvm.shares"
+    config:
+      cinder:
+        "icehouse":
+          &cinder_cfg_old
+          DEFAULT:
+             volume_driver: "cinder.volume.drivers.lvm.LVMISCSIDriver"
+             lvm_type: "default"
+        "juno":
+          &cinder_cfg_new
+          DEFAULT:
+            enabled_backends: "rhos-lvm"
+          rhos-lvm:
+            lvm_type: "default"
+            volume_driver: "cinder.volume.drivers.lvm.LVMISCSIDriver"
+        "5.0":
+          *cinder_cfg_old
+        "6.0":
+          *cinder_cfg_new
+        "7.0":
+          &cinder_cfg
+          DEFAULT:
+            enabled_backends: "rhos-lvm"
+          rhos-lvm:
+            lvm_type: "default"
+            iscsi_helper: "lioadm"
+            volume_driver: "cinder.volume.drivers.lvm.LVMISCSIDriver"
+        "8.0":
+          *cinder_cfg

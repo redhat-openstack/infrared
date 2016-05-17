@@ -1,0 +1,42 @@
+---
+storage:
+  services:
+    - cinder
+  volume:
+    config:
+      cinder:
+        "icehouse":
+          &cinder_cfg_old
+          DEFAULT:
+            san_ip: !placeholder
+            san_login: !placeholder
+            san_password: !placeholder
+            volume_driver: "cinder.volume.drivers.emc.emc_cli_iscsi.EMCCLIISCSIDriver"
+            iscsi_ip_address: !placeholder
+            storage_vnx_pool_name: "rhevm"
+            naviseccli_path: "/opt/Navisphere/bin/naviseccli"
+            max_luns_per_storage_group: "256"
+            default_timeout: "10"
+        "juno":
+          &cinder_cfg_new
+          DEFAULT:
+            enabled_backends: "rhos-6-emc_vnx_direct_iscsi"
+          rhos-6-emc_vnx_direct_iscsi:
+            san_ip: !placeholder
+            san_login: !placeholder
+            san_password: !placeholder
+            volume_driver: "cinder.volume.drivers.emc.emc_cli_iscsi.EMCCLIISCSIDriver"
+            iscsi_ip_address: !placeholder
+            storage_vnx_pool_name: "rhevm"
+            naviseccli_path: "/opt/Navisphere/bin/naviseccli"
+            max_luns_per_storage_group: "256"
+            default_timeout: "10"
+        "5.0":
+          *cinder_cfg_old
+        "6.0":
+          *cinder_cfg_new
+        "7.0":
+          *cinder_cfg_new
+        "8.0":
+          *cinder_cfg_new
+

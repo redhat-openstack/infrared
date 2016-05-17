@@ -15,6 +15,7 @@ Contents:
    quickstart
    setup
    execute
+   installer
    contributors
 
 
