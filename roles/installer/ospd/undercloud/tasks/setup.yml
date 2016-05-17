@@ -8,8 +8,15 @@
       line: "{{ ansible_ssh_host }}    undercloud.redhat.local undercloud"
       state: present
 
-- name: remove all repos
-  command: "rm -f /etc/yum.repos.d/*"
+- name: remove all repos from /etc/yum.repos.d
+  file:
+      path: "/etc/yum.repos.d/"
+      state: absent
+
+- name: make sure /etc/yum.repos.d is present
+  file:
+      path: "/etc/yum.repos.d/"
+      state: directory
 
 - name: install the rhos-release RPM
   shell: "yum localinstall -y {{ installer.product.rpm }}"
@@ -45,7 +52,7 @@
   async: 1
   poll: 0
   ignore_errors: true
-  when: update|changed
+  when: update.changed
 
 - name: waiting for the undercloud to be available
   wait_for:
@@ -54,11 +61,11 @@
       search_regex: OpenSSH
       delay: 10
   delegate_to: "{% if 'virthost' in groups %}virthost{% else %}localhost{% endif %}"
-  when: update|changed
+  when: update.changed
 
 - name: install the oscplugin/tripleO client
   yum:
-      name: "{% if installer.product.version == '7' %}python-rdomanager-oscplugin{% else %}python-tripleoclient{% endif %}"
+      name: "{{ (installer.product.version == '7') | ternary('python-rdomanager-oscplugin', 'python-tripleoclient') }}"
       state: present
 
 - name: create user
