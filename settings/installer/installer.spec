@@ -1,6 +1,3 @@
----
-options:
-    inventory:
-        help: 'Inventory file (default: __DEFAULT__)'
-        type: str
-        default: hosts
+command:
+    description: Spec to install OpenStacks using different installers
+    include_groups: ['Logging arguments']

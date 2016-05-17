@@ -1,77 +1,44 @@
 ---
-subparsers:
-    openstack:
-        formatter_class: RawTextHelpFormatter
-        help: Provision systems using Ansible OpenStack modules
-        groups:
-            - title: cloud
+command:
+    subcommands:
+        - name: openstack
+          help: Provision systems using Ansible OpenStack modules
+          include_groups: ['Inventory arguments', 'Common arguments', 'Configuration file arguments']
+          groups:
+            - name: cloud
               options:
-                  cloud:
-                      type: Value
+                    - name: cloud
                       help: "The cloud which the OpenStack modules will operate against. Cloud setup instructions: http://docs.openstack.org/developer/os-client-config/#config-files"
                       required: yes
-            - title: prefix
+            - name: prefix
               options:
-                  prefix:
-                      type: Value
+                    - name: prefix
                       help: An prefix which would be contacted to each provisioned resource. An random prefix would be generated in case this value is not specified.
-            - title: keypair details
+            - name: keypair details
               options:
-                  key-file:
-                      type: Value
+                    - name: key-file
                       help: The key file that would be uploaded to nova and injected into VMs upon creation.
                       default: ~/.ssh/id_rsa
-                  key-name:
-                      type: Value
+                    - name: key-name
                       help: The name of the key that would be uploaded to nova and injected into VMs upon creation. If this option is missing, a public key would be generated from the key file and uploaded as a key_pair to the cloud
                       default: ''
-            - title: image
+            - name: image
               options:
-                  image:
-                      type: Value
+                    - name: image
                       help: An image id or name, on OpenStack cloud to provision the instance with. To see full list of images avaialable on the cloud, use 'glance image-list'.
                       required: yes
-            - title: dns
+            - name: dns
               options:
-                  dns:
-                      type: Value
+                    - name: dns
                       help: The dns server the provisioned instances should use.
                       default: 208.67.222.222
-            - title: topology
+            - name: topology
               options:
-                  neutron:
-                      type: YamlFile
+                    - name: neutron
+                      complex_type: YamlFile
                       help: Network resources
                       default: default.yml
-                  nodes:
-                      type: Topology
+                    - name: nodes
+                      complex_type: Topology
                       help: Provision topology.
                       default: "controller:1"
-            - title: common
-              options:
-                  dry-run:
-                      action: store_true
-                      help: Only generate settings, skip the playbook execution stage
-                  cleanup:
-                      action: store_true
-                      help: Clean given system instead of provisioning a new one
-                  input:
-                      action: append
-                      type: str
-                      short: i
-                      help: Input settings file to be loaded before the merging of user args
-                  output:
-                      type: str
-                      short: o
-                      help: 'File to dump the generated settings into (default: stdout)'
-                  extra-vars:
-                      action: append
-                      short: e
-                      help: Extra variables to be merged last
-                      type: str
-                  from-file:
-                      type: IniFile
-                      help: the ini file with the list of arguments
-                  generate-conf-file:
-                      type: str
-                      help: generate configuration file (ini) containing default values and exits. This file is than can be used with the from-file argument
