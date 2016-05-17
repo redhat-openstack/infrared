@@ -24,7 +24,7 @@ that need to be defined in `.spec` files:
 
 * **Value**: String values
   absolute path. For the argument name is "arg-name" and of subparser "SUBCOMMAND" of command "COMMAND", the default
-* **YamlFile**: Expects path to YAML files. Will search for files in one of the configured settings directory before trying to resolve
+* **YamlFile**: Expects path to YAML files. Will search for files in one of the configured settings directories before trying to resolve absolute path. For the argument name is "arg-name" and of subparser "SUBCOMMAND" of command "COMMAND", the default
   search path would be::
 
     {settings_dir1,...,settings_dirN}/COMMAND/SUBCOMMAND/arg/name/arg_value
