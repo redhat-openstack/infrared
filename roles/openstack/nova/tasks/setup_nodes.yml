@@ -13,7 +13,7 @@
       auto_ip: "{{ node_type.value.auto_ip | default(auto_ip) }}"
       config_drive: "{{ node_type.value.config_drive | default(config_drive) }}"
       flavor: "{{ node_type.value.flavor | default(flavor_id) }}"
-      image: "{{ provisioner.image }}"
+      image: "{{ node_type.value.image | default(provisioner.image) }}"
       name: "{{ prefix }}{{ node_type.value.name }}-{{ item }}"
       nics: "{{ networks.results | map(attribute='id') | list() |map('add_prefix', 'net-id=') | list() }}"
       key_name: "{{ provisioner.key.name if provisioner.key.name else (prefix + provisioner.key.file | basename) }}"
@@ -47,5 +47,6 @@
       ansible_ssh_host: "{{ item.public_v4 }}"
       groups: "{{ provisioner.nodes[node_type.value.name].groups | join(',') }}"
       ansible_ssh_private_key_file: "{{ provisioner.key.file }}"
-      ansible_ssh_user: 'cloud-user'
+      ansible_ssh_user: '{{ provisioner.nodes[node_type.value.name].ssh_user | default(default_ssh_user) }}'
+      disk_size: "{{ provisioner.nodes[node_type.value.name].disks.disk1.size }}"
   with_items: "{{ servers.ansible_facts.openstack_servers }}"

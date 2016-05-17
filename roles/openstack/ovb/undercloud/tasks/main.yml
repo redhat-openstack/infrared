@@ -1,0 +1,7 @@
+- name: Set MTU values
+  shell: >
+    ip link set {{ item }} mtu 1450;
+    echo "MTU=1450" >> /etc/sysconfig/network-scripts/ifcfg-{{ item }}
+  with_items:
+    - 'eth0'
+    - 'eth2'

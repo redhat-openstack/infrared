@@ -1,0 +1,30 @@
+---
+# This file is used once per node in 'overcloud_nodes' group
+
+- name: Gather cloud details
+  os_auth:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+  delegate_to: localhost
+  become: no
+  register: cloud_details
+- debug: var=cloud_details
+
+# Node type can be: controller, compute, ceph, etc.
+- name: Set fact for node type
+  set_fact:
+      node_type: "{{ item }}"
+
+- name: Deploy openstack-bmc service file
+  template:
+      src="openstack-bmc-service.j2"
+      dest="/usr/lib/systemd/system/openstack-bmc-{{ prefix }}{{ node_type.value.name }}-{{ item }}.service"
+  with_sequence: "count={{ node_type.value.amount }}"
+  when: "'overcloud_nodes' in node_type.value.groups"
+
+- name: Start the service for the node
+  service:
+      name="openstack-bmc-{{ prefix}}{{ node_type.value.name }}-{{ item }}.service"
+      state=started
+      enabled=yes
+  with_sequence: "count={{ node_type.value.amount }}"
+  when: "'overcloud_nodes' in node_type.value.groups"

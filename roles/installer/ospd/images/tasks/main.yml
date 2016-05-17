@@ -1,10 +1,22 @@
-- name: copy our public key to inject the images of the overcloud nodes
-  copy:
-      src: "{{ inventory_dir }}/id_rsa.pub"
-      dest: "/home/{{ installer.user.name }}/id_rsa.pub"
-      mode: 0600
+- block:
+    - name: copy our public key to inject the images of the overcloud nodes
+      copy:
+          src: "{{ inventory_dir }}/id_rsa.pub"
+          dest: "/home/{{ installer.user.name }}/id_rsa.pub"
+          mode: 0600
+  rescue:
+    - name: copy our public key to inject the images of the overcloud nodes
+      copy:
+          src: "~/.ssh/id_rsa.pub"
+          dest: "/home/{{ installer.user.name }}/id_rsa.pub"
+          mode: 0600
 
 - include: "{{ installer.images.task }}.yml"
+
+- name: inject our key into the images
+  shell: "virt-customize -a {{ item }} --ssh-inject root:file:/home/{{ installer.user.name }}/id_rsa.pub --selinux-relabel"
+  with_items:
+      - "overcloud-full.qcow2"
 
 - name: list current directory
   shell: "ls -l"

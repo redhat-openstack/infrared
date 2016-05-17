@@ -1,0 +1,8 @@
+# Setup BMC node
+- include: packages.yml
+- include: deploy_files.yml
+- include: os-net-config.yml
+
+# Deploy service file for each node in 'overcloud_nodes' group
+- include: openstack-bmc.yml
+  with_dict: "{{ provisioner.nodes }}"

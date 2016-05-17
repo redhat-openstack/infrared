@@ -1,0 +1,11 @@
+network_config:
+  -
+    type: interface
+    name: eth0
+    use_dhcp: false
+    mtu: 1450
+    routes:
+      - default: true
+        next_hop: {{ management_default_gateway }}
+    addresses:
+    - ip_netmask: {{ ansible_eth0.ipv4.address }}/{{ management_cidr_prefix }}
