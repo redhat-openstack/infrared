@@ -17,7 +17,8 @@ class IRMock(object):
     def __init__(self, mock_roots, monkeypatch):
 
         self.ir_conf_file = mock_roots['irconfig']
-        self.config = conf.load_config_file(self.ir_conf_file.strpath)
+        self.config = conf.ConfigWrapper.load_config_file(
+            self.ir_conf_file.strpath)
         self._monkeypatch = monkeypatch
 
     def run(self, app_args=None, spec_args=None):

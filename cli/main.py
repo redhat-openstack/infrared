@@ -149,9 +149,8 @@ class IRSpec(object):
         self.config = config
         self.name = name
         self.args = args
-        self.spec_config = dict(config.items(name))
-        # todo(obaranov) change that. 
-        self.settings_dirs = config.get('defaults', 'settings')
+        self.spec_config = config.get_spec_config(name)
+        self.settings_dirs = config.get_settings_dirs()
         self.sub_command = IRSubCommand.create(name, self.settings_dirs, args)
 
     def run(self):
@@ -222,8 +221,8 @@ def main(spec_name):
     """
     The start function for a spec.
     """
-    ir_config = conf.load_config_file()
-    spec_runner = IRFactory.create(spec_name, ir_config)
+    spec_runner = IRFactory.create(
+        spec_name, conf.ConfigWrapper.load_config_file())
     if spec_runner:
         spec_runner.run()
 

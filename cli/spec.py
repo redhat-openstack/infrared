@@ -476,11 +476,11 @@ def parse_args(settings_dirs, app_settings_dirs, args=None):
     # Current sub-parser options
     sub_parser_options = subparsers_options.get(clg_args['command0'], {})
 
-    override_default_values(app_settings_dir, clg_args, sub_parser_options)
+    override_default_values(app_settings_dirs, clg_args, sub_parser_options)
     return clg_args
 
 
-def override_default_values(app_settings_dir, clg_args, sub_parser_options):
+def override_default_values(app_settings_dirs, clg_args, sub_parser_options):
     """
     Collects arguments values from the different sources and resolve values.
 
@@ -490,7 +490,7 @@ def override_default_values(app_settings_dir, clg_args, sub_parser_options):
     3. Provided configuration file.
     4. Spec defaults
 
-    :param app_settings_dir: the application settings dir.
+    :param app_settings_dirs: the application settings dir.
     :param clg_args: Dictionary based on cmd-line args parsed by clg
     :param sub_parser_options: the sub-parser spec options
     """
@@ -505,7 +505,7 @@ def override_default_values(app_settings_dir, clg_args, sub_parser_options):
     if clg_args.get('generate-conf-file'):
         _generate_config_file(
             file_name=clg_args['generate-conf-file'],
-            app_settings_dir=app_settings_dir,
+            app_settings_dirs=app_settings_dirs,
             subcommand=clg_args['command0'],
             defaults=defaults,
             all_options=sub_parser_options)
@@ -572,7 +572,7 @@ def _check_required_arguments(clg_args, sub_parser_options):
 
 
 def _generate_config_file(
-        file_name, app_settings_dir, subcommand, defaults, all_options):
+        file_name, app_settings_dirs, subcommand, defaults, all_options):
     """
     Generates configuration file based on defaults from specs
 
@@ -611,7 +611,7 @@ def _generate_config_file(
                 and not out_config.has_option(subcommand, opt):
             if not out_config_old.has_option(subcommand, opt):
                 # get available value:
-                allowed_values = _get_option_allowed_values(app_settings_dir,
+                allowed_values = _get_option_allowed_values(app_settings_dirs,
                                                             subcommand, opt,
                                                             attributes)
 
@@ -655,7 +655,7 @@ def _add_help_comment(config_parser, section, option_attributes):
             config_parser.set(section, "# " + sub_help)
 
 
-def _get_option_allowed_values(app_settings_dir, subcommand, option,
+def _get_option_allowed_values(app_settings_dirs, subcommand, option,
                                attributes):
     """
     Gets the list of allowed values for an option.
@@ -663,7 +663,7 @@ def _get_option_allowed_values(app_settings_dir, subcommand, option,
     if attributes.get('type', None) == 'YamlFile':
         allowed_values = map(os.path.basename,
                              YamlFileArgument.get_allowed_files(
-                                 app_settings_dir, subcommand, option))
+                             app_settings_dirs, subcommand, option))
     else:
         allowed_values = attributes.get('choices', [])
     return allowed_values

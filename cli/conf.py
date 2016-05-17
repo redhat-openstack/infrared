@@ -58,17 +58,21 @@ class ConfigWrapper(object):
                 env_path = os.path.join(env_path, utils.IR_CONF_FILE)
 
         for path in (
-            file_path, env_path, cwd_path, utils.USER_PATH, utils.SYSTEM_PATH):
+                file_path,
+                env_path,
+                cwd_path,
+                utils.USER_PATH,
+                utils.SYSTEM_PATH):
             if path is not None and os.path.exists(path):
                 _config.read(path)
                 break
         else:
-            LOG.warning("Configuration file not found, using InfraRed project dir")
+            LOG.warning(
+                "Configuration file not found, using InfraRed project dir")
             for section_name, section_data in DEFAULT_SECTIONS.items():
                 _config.add_section(section_name)
                 for option, value in section_data.items():
                     _config.set(section_name, option, value)
-
 
         return ConfigWrapper(_config)
 
@@ -115,10 +119,9 @@ class ConfigWrapper(object):
         Gets the list of sections
         """
         return self.config.sections()
+
     def get_spec_config(self, spec_name):
         """
         Gets the spec configuration from the config file.
         """
-        return self.config.items(spec_name)
-
-config = ConfigWrapper.load_config_file()
+        return dict(self.config.items(spec_name))
