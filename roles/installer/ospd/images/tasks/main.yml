@@ -1,8 +1,15 @@
-- name: copy our public key to inject the images of the overcloud nodes
-  copy:
-      src: "{{ inventory_dir }}/id_rsa.pub"
-      dest: "/home/{{ installer.user.name }}/id_rsa.pub"
-      mode: 0600
+- block:
+    - name: copy our public key to inject the images of the overcloud nodes
+      copy:
+          src: "{{ inventory_dir }}/id_rsa.pub"
+          dest: "/home/{{ installer.user.name }}/id_rsa.pub"
+          mode: 0600
+  rescue:
+    - name: copy our public key to inject the images of the overcloud nodes
+      copy:
+          src: "~/.ssh/id_rsa.pub"
+          dest: "/home/{{ installer.user.name }}/id_rsa.pub"
+          mode: 0600
 
 - include: "{{ installer.images.task }}.yml"
 
