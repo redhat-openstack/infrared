@@ -1,27 +1,23 @@
 ---
 - name: Set selinux state
-  tags: backup
-  hosts: openstack_nodes
+  hosts: all:!localhost
   become: yes
-  become_method: sudo
   tasks:
-    - selinux: policy=targeted state={{ installer.selinux|default('enforcing') }}
+    - selinux:
+          policy: "targeted"
+          state: "{{ installer.selinux|default('enforcing') }}"
 
 - name: Ensure yum presence
-  tags: backup
-  hosts: openstack_nodes
+  hosts: all:!localhost
   gather_facts: no
   become: yes
-  become_method: sudo
   tasks:
     - shell: python -c 'import yum' || (dnf install -y yum yum-utils && ln -snf /usr/bin/yum-deprecated /usr/bin/yum)
 
 - name: Setup Firewall Rules
-  tags: backup
   hosts: openstack_nodes:!tester
   gather_facts: no
   become: yes
-  become_method: sudo
   serial: 1
   tasks:
       #TODO: change to iptables ansible module
@@ -38,8 +34,15 @@
 
 - name: Update the inventory file
   hosts: localhost
+  tags: inventory_update
   gather_facts: no
   tasks:
+      - name: update ansible.ssh.config template for SSH tunneling if virthost
+        template:
+            src: "{{ inventory_dir }}/templates/ansible.ssh.config.j2"
+            dest: "{{ inventory_dir }}/ansible.ssh.config"
+        when: "'virthost' in groups"
+
       - name: Generate new Inventory file
         template:
           dest: "{{ lookup('env', 'PWD') }}/hosts-installer"

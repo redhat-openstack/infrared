@@ -3,7 +3,7 @@
 source ~/stackrc;
 openstack overcloud deploy --debug \
 --templates \
---libvirt-type qemu \
+--libvirt-type {% if groups['virthost'] is defined %}qemu{% else %}kvm{% endif %} \
 --ntp-server clock.redhat.com \
 --neutron-network-type {{ installer.network.backend }} \
 {% if installer.network.backend == "vlan" %}
@@ -13,11 +13,9 @@ openstack overcloud deploy --debug \
 {% else %}
 --neutron-tunnel-types {{ installer.network.backend }} \
 {% endif %}
-{% if groups['controller'] is defined %}
---control-scale {{ groups['controller'] | length }} \
---control-flavor controller-{{ 'controller' | to_uuid }} \
+--control-scale {% if installer.controller is defined and installer.controller.nodes is defined %}{{ installer.controller.nodes }}{% else %}{{ groups['controller'] | length }}{% endif %} \
+--control-flavor {% if groups['controller'] is defined %}controller-{{ 'controller' | to_uuid }} \{% else %}baremetal \
 {% endif %}
-{% if groups['compute'] is defined %}
---compute-scale {{ groups['compute'] | length }} \
---compute-flavor compute-{{ 'compute' | to_uuid }} \
+--compute-scale {% if installer.compute is defined and installer.compute.nodes is defined %}{{ installer.compute.nodes }}{% else %}{{ groups['compute'] | length }}{% endif %} \
+--compute-flavor {% if groups['compute'] is defined %}compute-{{ 'compute' | to_uuid }} \{% else %}baremetal \
 {% endif %}

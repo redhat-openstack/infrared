@@ -1,21 +1,32 @@
+{% if installer.storage.external == "yes" %}
+resource_registry:
+    OS::TripleO::CephClusterConfig::SoftwareConfig: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/ceph/ceph-external-config.yaml
+
+parameter_defaults:
+    CinderRbdPoolName: "automation-cinder"
+    NovaRbdPoolName: "automation-nova"
+    GlanceRbdPoolName: "automation-glance"
+    CephClientUserName: "automation"
+    CephClientKey: "{{ private.storage.ceph.CephClientKey }}"
+    CephClusterFSID: "{{ private.storage.ceph.CephClusterFSID }}"
+    CephExternalMonHost: "{{ private.storage.ceph.CephExternalMonHost }}"
+
+{% else %}
+parameter_defaults:
+    CinderRbdPoolName: "volumes"
+    NovaRbdPoolName: "vms"
+    GlanceRbdPoolName: "images"
+    ExtraConfig:
+      ceph::profile::params::osds:
+{% for disk in ansible_devices.keys()[1:] %}
+       '/dev/{{ disk }}':
+           journal: ''
+{% endfor %}
+{% endif %}
+
 parameters:
     CinderEnableIscsiBackend: false
     CinderEnableRbdBackend: true
     CinderEnableNfsBackend: false
     NovaEnableRbdBackend: true
     GlanceBackend: rbd
-
-{{ installer.storage.template.content |to_nice_yaml }}
-{% if installer.storage.external == "yes" %}
-resource_registry:
-    OS::TripleO::CephClusterConfig::SoftwareConfig: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/ceph/ceph-external-config.yaml
-{% else %}
-    ExtraConfig:
-      ceph::profile::params::osds:
-{% for disk_name, disk_values in provisioner.topology.nodes.ceph.disks.iteritems() %}
-{% if disk_name != 'disk1' %}
-       '{{ disk_values.dev }}':
-           journal: ''
-{% endif %}
-{% endfor %}
-{% endif %}

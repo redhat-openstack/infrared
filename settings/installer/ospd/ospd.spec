@@ -6,58 +6,125 @@ subparsers:
         groups:
             - title: Firewall
               options:
-                firewall:
-                    type: YamlFile
-                    help: The firewall configuration
-                    default: default.yml
+                  firewall:
+                      type: YamlFile
+                      help: The firewall configuration
+                      default: default.yml
+
+            - title: Introspection
+              options:
+                  instackenv-file:
+                      type: Value
+                      help: |
+                            The path to the instackenv.json configuration file used for introspection.
+                            If not set, it will look under the `deployment-files` path for the instackenv.json file.
+
+            - title: Undercloud configuration
+              options:
+                  undercloud-config:
+                      type: Value
+                      help: |
+                          Path to our custom undercloud.conf file that we wish to use for our deployment.
+                          If not set, it will look under the `templates` path for a file named `undercloud.conf`.
+                          If no `undercloud.conf` file found, it will use the default `/usr/share/instack-undercloud/undercloud.conf.sample`
+                          that is provided by the installation.
+
+            - title: Deployment Files
+              options:
+                  deployment-files:
+                      type: Value
+                      help: |
+                            The absolute path to the folder containing the templates of the overcloud deployment.
+                            Please see `settings/installer/ospd/deployment/example` as reference.
+                      required: yes
 
             - title: Product
               options:
-                product-version:
-                    type: Value
-                    help: The product version
-                    required: yes
-                    choices: ["7", "8", "9", "10"]
-                product-build:
-                    type: Value
-                    help: The product build
-                    default: latest
-                product-core-version:
-                    type: Value
-                    help: The product core version
-                    required: yes
-                    choices: ["7", "8", "9", "10"]
-                product-core-build:
-                    type: Value
-                    help: The product core build
-                    default: latest
+                  product-version:
+                      type: Value
+                      help: The product version
+                      choices: ["7", "8", "9", "10"]
+                      default: 8
 
-            - title: Undercloud
+                  product-build:
+                      type: Value
+                      help: The product build
+                      default: latest
+
+                  product-core-version:
+                      type: Value
+                      help: The product core version
+                      choices: ["7", "8", "9", "10"]
+                      default: 8
+
+                  product-core-build:
+                      type: Value
+                      help: The product core build
+                      default: latest
+
+            - title: Amount of nodes to use for deployment
               options:
-                undercloud-config:
-                    type: YamlFile
-                    help: The undercloud config details
-                    default: default.yml
+                  controller-nodes:
+                      type: Value
+                      help: The amount of controller nodes to deploy
+
+                  compute-nodes:
+                      type: Value
+                      help: The amount of compute nodes to deploy
+
+                  storage-nodes:
+                      type: Value
+                      help: |
+                            The amount of storage nodes to deploy. If --storage-backend is set, this
+                            value will default to '1', otherwise no storage nodes will be used.
 
             - title: Overcloud
               options:
-                overcloud-ssl:
-                    type: Value
-                    help: Specifies whether ths SSL should be used for overcloud
-                    default: 'no'
-                overcloud-hostname:
-                    type: Value
-                    help: Specifies whether we should use custom hostnames for controllers
-                    default: 'no'
+                  overcloud-ssl:
+                      type: Value
+                      help: Specifies whether ths SSL should be used for overcloud
+                      default: 'no'
+
+                  overcloud-hostname:
+                      type: Value
+                      help: Specifies whether we should use custom hostnames for controllers
+                      default: 'no'
+
+                  overcloud-script:
+                      type: Value
+                      help: |
+                            The absolute path to a custom overcloud deployment script.
+                            If not set, it will auto generate a deployment according to the
+                            provided templates / options.
+
+            - title: Overcloud Network Isolation
+              options:
+                  network-backend:
+                      type: Value
+                      help: The overcloud network backend.
+                      choices: ['gre', 'vxlan', 'vlan']
+                      default: vxlan
+
+                  network-protocol:
+                      type: Value
+                      help: The overcloud network backend.
+                      choices: ['ipv4', 'ipv6']
+                      default: 'ipv4'
 
             - title: Overcloud storage
               options:
-                storage:
-                    type: YamlFile
-                    help: The overcloud storage type
-                    default: no-storage.yml
+                  storage-backend:
+                      type: Value
+                      help: The storage that we would like to use. Default to local LVM on the controllers.
+                      choices: ['ceph', 'swift', 'netapp-iscsi', 'netapp-nfs']
 
-            - title: Product images
+                  storage-external:
+                      type: Value
+                      help: Whether to use an external storage rather than setting it up with the director
+                      choices: ['no', 'yes']
+                      default: 'no'
+
+            - title: Overcloud images
               options:
                 images-task:
                     type: Value
@@ -68,50 +135,34 @@ subparsers:
                         * BUILD - build images locally (takes longer)
                     choices: [import, build, rpm]
                     default: rpm
+
                 images-url:
                     type: Value
                     help: Specifies the import image url. Required only when images task is 'import'
 
-            - title: Overcloud Network
-              options:
-                network-backend:
-                    type: Value
-                    help: The overcloud network backend.
-                    default: vxlan
-                network-protocol:
-                    type: Value
-                    help: The network protocol for overcloud
-                    default: ipv4
-                network-isolation:
-                    type: YamlFile
-                    help: The overcloud network isolation type
-                    required: yes
-                network-isolation-template:
-                    type: YamlFile
-                    help: The overcloud network isolation template
-
             - title: User
               options:
-                user-name:
-                    type: Value
-                    help: The installation user name
-                    default: stack
-                user-password:
-                    type: Value
-                    help: The installation user password
-                    default: stack
+                  user-name:
+                      type: Value
+                      help: The installation user name
+                      default: stack
+
+                  user-password:
+                      type: Value
+                      help: The installation user password
+                      default: stack
 
             - title: Loadbalancer
               options:
-                loadbalancer:
-                    type: YamlFile
-                    help: The loadbalancer to use
+                  loadbalancer:
+                      type: YamlFile
+                      help: The loadbalancer to use
 
             - title: Workarounds
               options:
-                workarounds:
-                    type: YamlFile
-                    help: The list of workarounds to use during install
+                  workarounds:
+                      type: YamlFile
+                      help: The list of workarounds to use during install
 
             - title: common
               options:

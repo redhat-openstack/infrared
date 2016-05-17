@@ -1,0 +1,26 @@
+{% for host in groups['all'] %}
+{% if host not in ['localhost'] %}
+Host {{ host }}
+    HostName {{ hostvars[host].ansible_ssh_host }}
+    User {{ hostvars[host].ansible_ssh_user }}
+    IdentityFile {{ hostvars[host].ansible_ssh_private_key_file }}
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+    ForwardAgent yes
+{% if host != 'virthost' %}
+    ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ hostvars['virthost'].ansible_ssh_private_key_file }} {{ hostvars['virthost'].ansible_ssh_user }}@{{ hostvars['virthost'].ansible_ssh_host }}
+{% endif %}
+{% endif %}
+
+{% endfor %}
+{% if 'virthost' in groups %}
+{# FIXME(mpavlase): 'data' network is here as workaround. It should work well with just external network, but there is some bug in deplyment, that os_server_facts module will receive IP address from 'data' network, that is 'connected' #}
+{# FIXME: puting facter_ipaddress_external and facter_ipaddress_virb1 explicit for now until implementing a better way to discover external network #}
+Host {{ '%s' % '.'.join(hostvars['virthost'].facter_ipaddress_external.split('.')[:-2]) }}.* {{ '%s' % '.'.join(hostvars['virthost'].facter_ipaddress_virbr1.split('.')[:-2]) }}.*
+    ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ hostvars['virthost'].ansible_ssh_private_key_file }} {{ hostvars['virthost'].ansible_ssh_user }}@{{ hostvars['virthost'].ansible_ssh_host }}
+    ControlMaster   yes
+    ControlPath     {{ inventory_dir }}/%r@%h:%p
+    ControlPersist  15m
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+{% endif %}
