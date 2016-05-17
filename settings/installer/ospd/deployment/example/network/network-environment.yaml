@@ -1,0 +1,29 @@
+# This file is meant to hold all network related parameters that should be supplied to the overcloud deploy command
+# Since each deployment has variables that are environment specific, this file is mandatory.
+# For reference to a use case, please see the virt folder
+
+resource_registry:
+  OS::TripleO::BlockStorage::Net::SoftwareConfig: two-nics-vlans/cinder-storage.yaml
+  OS::TripleO::Compute::Net::SoftwareConfig: two-nics-vlans/compute.yaml
+  OS::TripleO::Controller::Net::SoftwareConfig: two-nics-vlans/controller.yaml
+  OS::TripleO::ObjectStorage::Net::SoftwareConfig: two-nics-vlans/swift-storage.yaml
+  OS::TripleO::CephStorage::Net::SoftwareConfig: two-nics-vlans/ceph-storage.yaml
+
+parameter_defaults:
+    # Customize the IP subnets to match the local environment
+    ControlPlaneSubnetCidr: "EXAMPLE"
+    ControlPlaneDefaultRoute: "EXAMPLE"
+    EC2MetadataIp: "EXAMPLE"
+    ExternalInterfaceDefaultRoute: "EXAMPLE"
+    ExternalNetCidr: "EXAMPLE"
+    ExternalAllocationPools: "EXAMPLE"
+    DnsServers: "EXAMPLE"
+    InternalApiNetCidr: "EXAMPLE"
+    InternalApiAllocationPools: "EXAMPLE"
+    StorageNetCidr: "EXAMPLE"
+    StorageMgmtNetCidr: "EXAMPLE"
+    StorageAllocationPools: "EXAMPLE"
+    StorageMgmtAllocationPools: "EXAMPLE"
+    TenantNetCidr: "EXAMPLE"
+    TenantAllocationPools: "EXAMPLE"
+    NeutronExternalNetworkBridge: "EXAMPLE"
