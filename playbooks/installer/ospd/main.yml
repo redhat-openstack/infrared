@@ -3,10 +3,33 @@
   tags: backup
 
 - name: Installing the undercloud
-  tags: backup
+  tags:
+      - undercloud
   hosts: undercloud
   roles:
       - {role: installer/ospd/undercloud, when: "'undercloud' in groups"}
+  tasks:
+      - name: check if instackenv.json is under the deployment folder
+        stat:
+            path: "/home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}/instackenv.json"
+        register: instack_file_path
+
+      - name: copy our configuration if provided by the user
+        copy:
+            src: "{{ installer.instackenv.file }}"
+            dest: "/home/{{ installer.user.name }}/{{ installer.instackenv.file | basename }}"
+            force: yes
+        when: installer.instackenv.file
+
+      - set_fact:
+            instack_file: "
+                {%- if instack_file_path.stat.exists -%}
+                /home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}/instackenv.json
+                {%- elif installer.instackenv.file is defined -%}
+                /home/{{ installer.user.name }}/{{ installer.instackenv.file | basename }}
+                {%- else -%}
+                /home/{{ installer.user.name }}/instackenv.json
+                {%- endif -%}"
 
 - name: Modify undercloud in case of virthost deployment
   tags: virthost
@@ -30,9 +53,20 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   roles:
-      - {role: installer/ospd/overcloud/introspection,
-        undercloud_provision_cidr: "{{ ansible_br_ctlplane.ipv4.network }}/{{ ansible_br_ctlplane.ipv4.netmask }}",
-        when: "installer.overcloud is defined"}
+      - {role: installer/ospd/overcloud/introspection, when: "installer.overcloud is defined"}
+  vars:
+      - undercloud_provision_cidr: "{{ ansible_br_ctlplane.ipv4.network }}/{{ ansible_br_ctlplane.ipv4.netmask }}"
+  tasks:
+      - name: get subnet ID to update neutron's DNS server
+        shell: "source ~/stackrc; neutron subnet-list | grep '{{ undercloud_provision_cidr | ipsubnet }}' | awk '{print $2;}'"
+        register: subnet_id
+
+      - name: get the nameserver
+        shell: "cat /etc/resolv.conf | grep -m 1 'nameserver' | awk '{print $2}'"
+        register: nameserver
+
+      - name: update neutron DNS server
+        shell: "source ~/stackrc; neutron subnet-update {{ subnet_id.stdout }} --dns-nameserver {{ nameserver.stdout }}"
 
 - name: Tag hosts with flavors
   tags: tagging
@@ -41,39 +75,79 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   roles:
-      - {role: installer/ospd/overcloud/tagging, when: "installer.overcloud is defined"}
+      - {role: installer/ospd/overcloud/tagging, when: "'overcloud_nodes' in groups"}
 
 - name: Installing the overcloud
   tags: overcloud
   hosts: undercloud
   become: yes
   become_user: "{{ installer.user.name }}"
+  vars:
+      - template_base: "/home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}"
   pre_tasks:
-      - name: create the template folder for customization
-        shell: "mkdir -p {{ installer.overcloud.template_base }}"
+      - name: check for list of user defined templates
+        find:
+            paths: "{{ template_base }}"
+            patterns: "*.yaml"
+        register: template_list
+
+      - name: check if custom overcloud_deploy.sh exists
+        stat:
+            path: "{{ template_base }}/overcloud_deploy.sh"
+        register: deploy_script
+
+      - name: copy our overcloud deployment script if provided by the user
+        copy:
+            src: "{{ installer.overcloud.script }}"
+            dest: "/home/{{ installer.user.name }}/{{ installer.overcloud.script | basename }}"
+            owner: "{{ installer.user.name }}"
+            group: "{{ installer.user.name }}"
+            mode: 0644
+            force: yes
+        when: installer.overcloud.script
+
+      - set_fact:
+            overcloud_deploy_script: "
+                {%- if deploy_script.stat.exists -%}
+                {{ template_base }}/overcloud_deploy.sh
+                {%- elif installer.overcloud.script -%}
+                /home/{{ installer.user.name }}/{{ installer.overcloud.script | basename }}
+                {%- else -%}{%- endif -%}"
 
       - name: create the base overcloud deploy script
         template:
             src: "templates/overcloud_deploy.sh.j2"
             dest: "~/overcloud_deploy.sh"
             mode: 0755
+        when: overcloud_deploy_script == ''
   roles:
-      - {role: installer/ospd/overcloud/storage, when: "installer.storage is defined and installer.storage.backend != 'none'"}
-      - {role: installer/ospd/overcloud/network, when: "installer.network is defined and installer.network.isolation.enable == 'yes'"}
-      - {role: installer/ospd/overcloud/ssl, when: "installer.overcloud.ssl == 'yes'"}
-      - {role: installer/ospd/overcloud/hostname, when: "installer.overcloud.hostname == 'yes'"}
+      - {role: installer/ospd/overcloud/storage, when: "overcloud_deploy_script == '' and installer.storage.backend"}
+      - {role: installer/ospd/overcloud/network, when: "overcloud_deploy_script == ''"}
+      - {role: installer/ospd/overcloud/ssl, when: "overcloud_deploy_script == '' and installer.overcloud.ssl == 'yes'"}
+      - {role: installer/ospd/overcloud/hostname, when: "overcloud_deploy_script == '' and installer.overcloud.hostname == 'yes'"}
 
   tasks:
-      - name: append the invocation line to the base overcloud deploy script
-        lineinfile:
-            dest: "~/overcloud_deploy.sh"
-            line: "--log-file overcloud_deployment_{{ 100 | random }}.log &> overcloud_install.log"
+      - block:
+          - name: append all custom templates provided by the user
+            lineinfile:
+                dest: "~/overcloud_deploy.sh"
+                line: '-e {{ item.path }} \'
+            with_items: "{{ template_list.files }}"
+
+          - name: append the invocation line to the base overcloud deploy script
+            lineinfile:
+                dest: "~/overcloud_deploy.sh"
+                line: "--log-file overcloud_deployment_{{ 100 | random }}.log &> overcloud_install.log"
+
+          - set_fact:
+                overcloud_deploy_script: '~/overcloud_deploy.sh'
+        when: overcloud_deploy_script  == ''
 
       - name: the create overcloud script
-        shell: "cat ~/overcloud_deploy.sh"
+        shell: "cat {{ overcloud_deploy_script }}"
 
       - name: execute the overcloud deploy script
-        shell: "bash ~/overcloud_deploy.sh"
+        shell: "bash {{ overcloud_deploy_script }}"
         register: overcloud_deploy
         ignore_errors: yes
 
@@ -83,5 +157,79 @@
       - fail: msg="Overcloud deployment failed... :("
         when: overcloud_deploy.rc != 0
 
-- include: post.yml
+- name: Update Inventory from OSPD
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  vars:
+      user: heat-admin
+      password: redhat
+      # The var "private_key" is used outside this scope and cannot be overridden
+      overcloud_pkey: "{{ inventory_dir }}/id_rsa_overcloud"
+      undercloud_rc: stackrc
+  tasks:
+      - name: fetch the private key file from the undercloud
+        fetch:
+            src: "~/.ssh/id_rsa"
+            dest: "{{ overcloud_pkey }}"
+            flat: yes
 
+      - name: update file permissions
+        delegate_to: localhost
+        become: no
+        file:
+            path: "{{ overcloud_pkey }}"
+            mode: 0600
+
+      # todo(yfried): find a better method to load stackrc file
+      - shell: "cat {{ undercloud_rc }} | grep AUTH | cut -d '=' -f 2"
+        register: oc_auth
+
+      - shell: "cat {{ undercloud_rc }} | grep USERNAME | cut -d '=' -f 2"
+        register: oc_username
+
+      - shell: "cat {{ undercloud_rc }} | grep TENANT | cut -d '=' -f 2"
+        register: oc_tenant
+
+      - shell: "source {{ undercloud_rc }} && env | grep OS_PASSWORD | cut -d '=' -f 2"
+        args:
+            executable: /bin/bash
+        register: oc_password
+
+      - block:
+          - pip:
+                name: "{{ item.key }}"
+                version: "{{ item.value }}"
+                virtualenv: "{{ path_venv }}"
+            with_dict:
+                setuptools: "17.0"
+                pytz: "2016.4"
+                shade: "1.7.0"
+                pip: "8.1"
+
+          - name: update IP of overcloud nodes
+            vars:
+                # Here can't be used {{ path_venv }}, because it's not a Jinja template
+                ansible_python_interpreter: "/tmp/venv_server_facts/bin/python"
+            os_server_facts:
+                auth:
+                    auth_url: "{{ oc_auth.stdout }}"
+                    username: "{{ oc_username.stdout }}"
+                    password: "{{ oc_password.stdout }}"
+                    project_name: "{{ oc_tenant.stdout }}"
+
+          - name: add hosts to host list
+            add_host:
+                # convert nova output (overcloud-NODE-COUNT) to ansible node names (NODE-COUNT)
+                name: "{{ item.name.split('-',1)[1]|replace('cephstorage', 'ceph') }}"
+                groups: "{{ hostvars[item.name.split('-',1)[1]|replace('cephstorage', 'ceph')].group_names
+                | default([overcloud_nodes, openstack_nodes, item.name.split('-',1)[1]|replace('cephstorage', 'ceph')])
+                | reject('equalto', 'ungrouped') | join(',') }}"
+                ansible_ssh_user: "{{ user }}"
+                ansible_ssh_pass: "{{ password }}"
+                ansible_ssh_host: "{{ item.accessIPv4 }}"
+                ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
+            with_items: "{{ openstack_servers }}"
+        vars:
+            path_venv: /tmp/venv_server_facts
