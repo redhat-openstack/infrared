@@ -10,11 +10,11 @@
 
 - name: Upload to the storage server using pubkey auth if requested
   shell:
-      "time rsync -ave 'ssh -o StrictHostKeyChecking=no' {{ build_image_dir }}/{{ tar_file }} {{ storage_user }}@{{ storage_server }}:{{ storage_path }}/{{ ospd_version }}/"
+      "time rsync -ave 'ssh -o StrictHostKeyChecking=no' {{ image_build_dir }}/{{ tar_file }} {{ storage_user }}@{{ storage_server }}:{{ storage_path }}/{{ ospd_version }}/"
   when: upload_to == 'remote'
 
 - name: Upload the overcloud images to glance
   shell: |
-      pushd {{ build_dir }}
+      pushd {{ work_dir }}
       source ~/stackrc; openstack overcloud image upload --update-existing
   when: upload_to == 'glance'

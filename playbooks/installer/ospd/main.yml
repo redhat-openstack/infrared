@@ -22,11 +22,13 @@
   become_user: "{{ installer.user.name }}"
   roles:
       - role: installer/ospd/images
-        image_dir: '~'
-        ospd_version: "{{ product.core.version }}"
+        task: "{{ installer.images.task }}"
+        ospd_version: "{{ installer.product.core.version }}"
         base_image_url: "{{ private.distro.rhel.guest_image_url }}"
         rhos_release_rpm_link: "{{ private.distro.rhel.rhos_release_rpm }}"
         upload_to: 'glance'
+        storage_server: "{{ private.storage.oc_image_repo.server }}"
+        storage_path: "{{ private.storage.oc_image_repo.path }}"
 
 - name: Start introspection
   tags: introspection

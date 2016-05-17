@@ -1,11 +1,14 @@
 ---
+- name: Create directory for images built
+  file: path={{ build_path }} state=directory
+
 - name: Download the pre-built overcloud images
   get_url:
-      dest: "{{ work_dir }}/{{ tar_file }}"
-      url: "{{ tar_download_url }}"
+      dest: "{{ build_path }}/{{ tar_file }}"
+      url: "http://{{ tar_download_url }}"
 
 - name: Untar the images
   unarchive:
-      src: "{{ work_dir }}/{{ tar_file }}"
-      dest: "{{ work_dir }}"
+      src: "{{ build_path }}/{{ tar_file }}"
+      dest: "{{ build_path }}"
       copy: "no"
