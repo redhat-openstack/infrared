@@ -63,7 +63,7 @@ class ValueArgument(object):
 
         :param spec: dict. spec file
         :param args: dict. argparse arguments.
-        :param settings_dirs: the list of path to the base directory
+        :param settings_dirs: the list of paths to the base directory
             holding the application's settings. App can be
             provisioner\installer\tester
             and the path would be: settings/<app_name>/
@@ -150,7 +150,7 @@ class YamlFileArgument(ValueArgument):
         Get the possible locations (folders) where the
         yaml files can be stored.
 
-        :param settings_dirs: path to the base directory holding the
+        :param settings_dirs: a list of paths to the base directory holding the
             application's settings. App can be provisioner\installer\tester
             and the path would be: settings/<app_name>/
         :param subcommand: the subcommand name (e.g. virsh, ospd, etc)
@@ -164,7 +164,7 @@ class YamlFileArgument(ValueArgument):
             settings_path, *arg_name.split("-"))
                           for settings_path in settings_dirs]
         search_locations.extend(root_locations)
-        search_locations.append(".")
+        search_locations.append(os.getcwd())
         return search_locations
 
     @classmethod
@@ -173,7 +173,7 @@ class YamlFileArgument(ValueArgument):
         """
         Gets the list of the the files in the default locations.
 
-        :param settings_dirs: path to the base directory holding the
+        :param settings_dirs: a list of paths to the base directory holding the
             application's settings. App can be provisioner\installer\tester
             and the path would be: settings/<app_name>/
         :param subcommand: the subcommand name (e.g. virsh, ospd, etc)
@@ -448,7 +448,7 @@ def parse_args(settings_dirs, app_settings_dirs, args=None):
 
     Trim clg spec from customized input and modify help data.
 
-    :param settings_dirs: the root settings folders
+    :param settings_dirs: a list of paths to the settings folders
     :param app_settings_dirs: the list of pathes to the base directory holding
         the application's settings. App can be provisioner\installer\tester
         and the path would be: settings/<app_name>/
