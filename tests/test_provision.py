@@ -30,7 +30,7 @@ name: ceph
     app_path = os.path.join(root_dir.strpath, "..")
 
     spec.TopologyArgument.settings_dirs = [app_path]
-    topology_arg = spec.TopologyArgument("10_controller,2_compute")
+    topology_arg = spec.TopologyArgument("controller:10,compute:2")
     # process topology
     topology_arg.resolve_value("topology", {})
 

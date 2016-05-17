@@ -4,7 +4,7 @@
 - name: assign the kernel and ramdisk before introspection begins
   shell: "source ~/stackrc; openstack baremetal configure boot"
 
-- name: start node introspection (should take ~20 minutes :) )
+- name: start node introspection
   shell: "source ~/stackrc; openstack baremetal introspection bulk start"
   register: introspection_result
   failed_when: introspection_result.rc != 0

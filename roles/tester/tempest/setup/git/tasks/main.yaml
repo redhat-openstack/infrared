@@ -5,12 +5,12 @@
   yum:
       name: "{{ item }}"
       state: present
-  with_items: "{{ tester.packages }}"
+  with_items: "{{ tester.setup.packages }}"
 
 - name: Install tempest from source
   git:
-      repo: "{{ tester.git.repo }}"
-      version: "{{ tester.git.revision | default('HEAD') }}"
+      repo: "{{ tester.setup.repo }}"
+      version: "{{ tester.setup.revision | default('HEAD') }}"
       dest: "{{ tester.dir }}"
   register: tempest_repo
 
@@ -31,5 +31,5 @@
       name: "{{ item }}"
       state: present
       virtualenv: "~/{{ tester.dir }}/.venv"
-  with_items: "{{ tester.pip_packages }}"
+  with_items: "{{ tester.setup.pip_packages }}"
   when: tempest_repo|changed or tempest_local_dir|changed

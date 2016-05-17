@@ -4,3 +4,15 @@
   roles:
       - { role: openstack/neutron, action: setup }
       - { role: openstack/nova, action: setup }
+
+- name: OpenStack Provisioner SSH wait
+  hosts: openstack_nodes
+  gather_facts: no
+  tasks:
+  - name: Wainting for OpenStack nodes to be SSH-ables
+    wait_for:
+        host: "{{ ansible_ssh_host }}"
+        port: 22
+        search_regex: OpenSSH
+        delay: 10
+    delegate_to: localhost

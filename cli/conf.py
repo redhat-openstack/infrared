@@ -7,12 +7,30 @@ from cli import utils
 from cli import logger
 
 LOG = logger.LOG
-DEFAULT_CONF_DIRS = dict(
-    settings='settings',
-    modules='library',
-    roles='roles',
-    playbooks='playbooks'
-)
+
+DEFAULT_SECTIONS = {
+    'defaults': dict(
+        settings='settings',
+        modules='library',
+        roles='roles',
+        playbooks='playbooks'
+    ),
+
+    'provisioner': dict(
+        main_playbook='provision.yml',
+        cleanup_playbook='cleanup.yml'
+    ),
+
+    'installer': dict(
+        main_playbook='install.yml',
+        cleanup_playbook='cleanup.yml'
+    ),
+
+    'tester': dict(
+        main_playbook='test.yml',
+        cleanup_playbook='cleanup.yml'
+    )
+}
 
 
 class ConfigWrapper(object):
@@ -22,9 +40,10 @@ class ConfigWrapper(object):
     _DEFAULT_SECTION = 'defaults'
 
     @classmethod
-    def load_config_file(cls):
+    def load_config_file(cls, file_path=None):
         """Load config file order(ENV, CWD, USER HOME, SYSTEM).
 
+        :param file_path: the optional path to the configuration file to read.
         :return ConfigParser: config object
         """
 
@@ -38,19 +57,18 @@ class ConfigWrapper(object):
             if os.path.isdir(env_path):
                 env_path = os.path.join(env_path, utils.IR_CONF_FILE)
 
-        for path in (env_path, cwd_path, utils.USER_PATH, utils.SYSTEM_PATH):
+        for path in (
+            file_path, env_path, cwd_path, utils.USER_PATH, utils.SYSTEM_PATH):
             if path is not None and os.path.exists(path):
                 _config.read(path)
                 break
         else:
-            LOG.warning(
-                "Configuration file not found, using InfraRed project dir")
-            project_dir = os.path.dirname(os.path.dirname(__file__))
+            LOG.warning("Configuration file not found, using InfraRed project dir")
+            for section_name, section_data in DEFAULT_SECTIONS.items():
+                _config.add_section(section_name)
+                for option, value in section_data.items():
+                    _config.set(section_name, option, value)
 
-            _config.add_section('defaults')
-            for option, value in DEFAULT_CONF_DIRS.iteritems():
-                _config.set('defaults', option,
-                            os.path.join(project_dir, value))
 
         return ConfigWrapper(_config)
 
@@ -97,12 +115,10 @@ class ConfigWrapper(object):
         Gets the list of sections
         """
         return self.config.sections()
-
     def get_spec_config(self, spec_name):
         """
         Gets the spec configuration from the config file.
         """
-
         return self.config.items(spec_name)
 
 config = ConfigWrapper.load_config_file()

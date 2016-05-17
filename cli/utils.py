@@ -25,6 +25,9 @@ def dict_insert(dic, val, key, *keys):
     :param key: first key in a chain of key that will store the value
     :param keys: sub keys in the keys chain
     """
+    if dic is None:
+        return
+
     if not keys:
         if key in dic and isinstance(val, dict):
             dict_merge(dic[key], val)
@@ -155,6 +158,7 @@ def normalize_file(file_path):
     :return: normalized path of a file
     :raise: IRFileNotFoundException if the file doesn't exist
     """
+    file_path = os.path.expanduser(file_path)
     if not os.path.isabs(file_path):
         abspath = os.path.abspath(file_path)
         LOG.debug(

@@ -1,66 +1,89 @@
 # In case of virthost we need to fix the pxe_ssh limitation of correctly assigning the MAC address to the iPXE script
-- name: Copy the guest image to the undercloud
+- name: Update our libvirt machine to latest puddle packages
   hosts: virthost
-  gather_facts: no
+  tags: backup
+  gather_facts: yes
   tasks:
-      - name: get the guest image name
-        shell: "ls /var/lib/libvirt/images/rhel-guest-image*-original"
-        register: image_name
+      - name: update /etc/hosts with VMs details
+        lineinfile:
+            dest: "/etc/hosts"
+            line: "{{ hostvars[item].ansible_default_ipv4.address }}    {{ item }}.redhat.local {{ item }}"
+            state: present
+        with_items: "{{ groups['all'] | difference(['localhost']) | difference(['virthost']) }}"
 
-      - name: copy the guest image to the undercloud
-        shell: "scp -o StrictHostKeyChecking=no {{ image_name.stdout_lines | last }} {{ hostvars['undercloud'].ansible_default_ipv4.address }}:/home/{{ installer.user.name }}/guest_image.qcow2"
+      - name: remove all repos
+        command: "rm -f /etc/yum.repos.d/*"
 
-      - name: chmod to stack user
-        delegate_to: undercloud
-        shell: "chown {{ installer.user.name }}:{{ installer.user.name }} /home/{{ installer.user.name }}/guest_image.qcow2"
+      - name: install the rhos-release RPM
+        shell: "yum localinstall -y {{ installer.product.rpm }}"
 
-- name: Fixing the pxe_ssh and iPXE
+      - name: remove rhos-release repos if needed
+        shell: "rhos-release -x"
+
+      - debug:
+            msg: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }}"
+
+      - name: create necessary repos with for director using rhos-release
+        command: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }}"
+        register: command_result
+        until: command_result.stderr.find('Connection reset by peer') == -1
+        retries: 40
+        delay: 5
+
+      - debug:
+            msg: "rhos-release {{ installer.product.core.version }}-director -p {{ installer.product.core.build }}"
+
+      - name: create necessary repos for core using rhos-release
+        command: "rhos-release {{ installer.product.core.version }}-director -p {{ installer.product.core.build }}"
+        register: command_result
+        until: command_result.stderr.find('Connection reset by peer') == -1
+        retries: 40
+        delay: 5
+
+      - name: update system packages
+        yum:
+            state: latest
+            name: "*"
+        register: update
+
+      - name: reboot our virthost
+        shell: "sleep 2 && shutdown -r now"
+        async: 1
+        poll: 0
+        ignore_errors: true
+        when: update|changed
+
+      - name: waiting for the virthost to be available
+        wait_for:
+            port: 22
+            host: "{{ ansible_ssh_host }}"
+            search_regex: OpenSSH
+            delay: 10
+        delegate_to: "localhost"
+        when: update|changed
+
+- include: quickstart-undercloud.yml
+  when: "'undercloud' not in groups"
+
+- name: Prepare the instackenv.json
   hosts: undercloud
   gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
   tasks:
       - name: copy our undercloud public key
         fetch:
             src: "/home/{{ installer.user.name }}/.ssh/id_rsa.pub"
             dest: "{{ inventory_dir }}/id_rsa_undercloud.pub"
             flat: yes
-        become: yes
-        become_user: "{{ installer.user.name }}"
-
-      - name: debug hostvars
-        debug:
-            var: "{{ hostvars[inventory_hostname] }}"
 
       - name: prepare instack.json
         template:
             src: "templates/virthost_instack.json.j2"
             dest: "~/instack_template.json"
-        become: yes
-        become_user: "{{ installer.user.name }}"
 
       - name: populate the private key
         shell: "cat ~/instack_template.json | jq --arg key \"$(cat ~/.ssh/id_rsa)\" '. | .nodes[].pm_password=$key | .[\"ssh-key\"]=$key'> instackenv.json"
-        become: yes
-        become_user: "{{ installer.user.name }}"
-
-      - name: copy bootif script on the undercloud
-        copy:
-            src: "scripts/bootif-fix.sh"
-            dest: "/usr/bin/bootif-fix"
-            mode: 0755
-
-      - name: copy the service file
-        copy:
-            src: "scripts/bootif-fix.service"
-            dest: "/usr/lib/systemd/system/bootif-fix.service"
-
-      - name: reload the service daemon
-        shell: "systemctl daemon-reload"
-
-      - name: enable and run bootif-fix service
-        service:
-            name: "bootif-fix"
-            enabled: yes
-            state: started
 
 # In case we're dealing with virthost, we need to make sure the undercloud is able to ssh to the hypervisor
 - name: Create the stack user on the virthost and allow SSH to hypervisor
@@ -90,8 +113,6 @@
         delegate_to: localhost
 
       - name: insert the public key to the known hosts in virthost
-        lineinfile:
-            dest: "/home/{{ installer.user.name }}/.ssh/authorized_keys"
-            line: "{{ undercloud_public_key.stdout }}"
-        become: yes
-        become_user: "{{ installer.user.name }}"
+        authorized_key:
+            user: "{{ installer.user.name }}"
+            key: "{{ undercloud_public_key.stdout }}"

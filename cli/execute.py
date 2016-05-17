@@ -10,16 +10,16 @@ from ansible.inventory import Inventory
 from ansible.executor.playbook_executor import PlaybookExecutor
 from ansible.utils.display import Display
 
-from cli import conf, exceptions, logger
+from cli import exceptions, logger
 
 LOG = logger.LOG
-CONF = conf.config
 
 
-def ansible_playbook(playbook, verbose=2, settings=None,
+def ansible_playbook(config, playbook, verbose=2, settings=None,
                      inventory="local_hosts"):
     """Wraps the 'ansible-playbook' CLI.
 
+     :param config: the infrared configuration
      :param playbook: the playbook to invoke
      :param verbose: Ansible verbosity level
      :param settings: dict with Ansible variables.
@@ -62,7 +62,7 @@ def ansible_playbook(playbook, verbose=2, settings=None,
                       'scp_extra_args': '', 'connection': 'smart',
                       'ask_vault_pass': False, 'timeout': 30, 'become': False,
                       'sudo_user': None, 'ssh_common_args': ''}
-
+    module_path = config.get('defaults', 'modules')
     module_path = CONF.get_modules_dir()
     path_to_playbook = path.join(CONF.get_playbooks_dir(), playbook)
 

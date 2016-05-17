@@ -1,0 +1,39 @@
+---
+storage:
+  services:
+    - cinder
+  volume:
+    config:
+      cinder:
+        "icehouse":
+          &cinder_cfg_old
+          DEFAULT:
+            volume_driver: "cinder.volume.drivers.netapp.common.NetAppDriver"
+            netapp_storage_family: "ontap_7mode"
+            netapp_storage_protocol: "iscsi"
+            netapp_server_hostname: !placeholder
+            nfs_oversub_ratio: "5"
+            netapp_server_port: "80"
+            netapp_login: "cinder_auto"
+            netapp_password: "FreeUkraine1"
+        "juno":
+          &cinder_cfg_new
+          DEFAULT:
+            enabled_backends: "rhos-6-netapp_iscsi_7mode"
+          rhos-6-netapp_iscsi_7mode:
+            volume_driver: "cinder.volume.drivers.netapp.common.NetAppDriver"
+            netapp_storage_family: "ontap_7mode"
+            netapp_storage_protocol: "iscsi"
+            netapp_server_hostname: !placeholder
+            nfs_oversub_ratio: "5"
+            netapp_server_port: "80"
+            netapp_login: "cinder_auto"
+            netapp_password: "FreeUkraine1"
+        "5.0":
+          *cinder_cfg_old
+        "6.0":
+          *cinder_cfg_new
+        "7.0":
+          *cinder_cfg_new
+        "8.0":
+          *cinder_cfg_new

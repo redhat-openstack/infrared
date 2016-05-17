@@ -1,19 +1,21 @@
 ---
 - include: pre.yml
+  tags: backup
 
 - name: Installing the undercloud
-  tags: undercloud
+  tags: backup
   hosts: undercloud
   roles:
-      - {role: installer/ospd/undercloud, when: "installer.undercloud is defined"}
+      - {role: installer/ospd/undercloud, when: "'undercloud' in groups"}
 
-- name: Modify overcloud in case of virthost deployment
-  include: virthost.yml
+- name: Modify undercloud in case of virthost deployment
   tags: virthost
+  include: virthost.yml
   when: "'virthost' in groups"
 
 - name: Preparing the images
-  tags: images
+  tags:
+      - images
   hosts: undercloud
   gather_facts: no
   become: yes
@@ -56,8 +58,9 @@
             dest: "~/overcloud_deploy.sh"
             mode: 0755
   roles:
-      - {role: installer/ospd/overcloud/storage, when: "installer.storage is defined"}
+      - {role: installer/ospd/overcloud/storage, when: "installer.storage is defined and installer.storage.backend != 'none'"}
       - {role: installer/ospd/overcloud/network, when: "installer.network is defined and installer.network.isolation.enable == 'yes'"}
+
   tasks:
       - name: append the invocation line to the base overcloud deploy script
         lineinfile:
@@ -79,3 +82,4 @@
         when: overcloud_deploy.rc != 0
 
 - include: post.yml
+
