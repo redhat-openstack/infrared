@@ -116,13 +116,11 @@ class IRSubCommand(object):
         :return: the IRSubCommand instance.
         """
         if args:
-            settings_dirs = [os.path.join(settings_dir,
-                                          spec_name) for settings_dir in
-                             settings_dirs]
+            settings_dirs = [os.path.join(settings_dir, spec_name)
+                             for settings_dir in settings_dirs]
         if "command0" in args:
-            settings_dirs = [os.path.join(settings_dir,
-                                          args['command0']) for settings_dir in
-                             settings_dirs]
+            settings_dirs = [os.path.join(settings_dir, args['command0'])
+                             for settings_dir in settings_dirs]
         return cls(args['command0'], args, settings_dirs)
 
     def get_settings_files(self):
