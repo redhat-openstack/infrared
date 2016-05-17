@@ -1,27 +1,23 @@
 - name: prepare ceph storage template
   template:
       src: "ceph.yml.j2"
-      dest: "{{ installer.overcloud.template_base }}/custom-ceph.yaml"
+      dest: "{{ template_base }}/ceph.yaml"
       mode: 0755
 
+# If you reached this stage, it means a user explicitely entered the storage flag therefore he wants at least 1 node
 - name: append the ceph storage template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '--ceph-storage-scale {{ groups["ceph"] | length }} \'
+      line: '--ceph-storage-scale {{ (installer.storage.nodes == None) | ternary("1", installer.storage.nodes) }} \'
   when: installer.storage.external == "no"
 
 - name: append the ceph storage template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '--ceph-storage-flavor ceph-{{ "ceph" | to_uuid }} \'
+      line: '--ceph-storage-flavor {% if groups["ceph"] is defined %}ceph-{{ "ceph" | to_uuid }}{% else %}baremetal{% endif %} \'
   when: installer.storage.external == "no"
-
-- name: append the storage template line to the base overcloud deploy script
-  lineinfile:
-      dest: "~/overcloud_deploy.sh"
-      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/storage-environment.yaml \'
 
 - name: append the storage ceph custom template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e {{ installer.overcloud.template_base }}/custom-ceph.yaml \'
+      line: '-e {{ template_base }}/ceph.yaml \'

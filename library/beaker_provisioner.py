@@ -34,7 +34,7 @@ short_description: Provision servers via Beaker
 description:
    - Provision servers via Beaker
 options:
-    server_url:
+    url:
         description:
             - Base URL of Beaker server
         required: true
@@ -47,7 +47,7 @@ options:
         description:
             - Password of login user
             required: true
-    fqdn:
+    host:
         description:
             - Fully qualified domain name of a system
         required: true
@@ -411,20 +411,20 @@ class BeakerMachine(object):
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            server_url=dict(required=True),
+            url=dict(required=True),
             username=dict(default='admin'),
             password=dict(required=True),
-            fqdn=dict(required=True),
+            host=dict(required=True),
             action=dict(required=True, choices=['provision', 'release']),
             distro_tree_id=dict(default=71576),
             web_service=dict(default='rest', choices=['rest', 'rpc']),
             ca_cert=dict(required=False),
         ))
 
-    beaker_client = BeakerMachine(url=module.params['server_url'],
+    beaker_client = BeakerMachine(url=module.params['url'],
                                   username=module.params['username'],
                                   password=module.params['password'],
-                                  fqdn=module.params['fqdn'],
+                                  fqdn=module.params['host'],
                                   web_service=module.params['web_service'],
                                   ca_cert=module.params['ca_cert'])
 
