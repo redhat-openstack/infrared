@@ -66,10 +66,13 @@
   when: "'undercloud' not in groups"
 
 - name: Prepare the instackenv.json
+  tags: instack
   hosts: undercloud
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  vars:
+      - instack_file: "/home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}/instackenv.json"
   tasks:
       - name: copy our undercloud public key
         fetch:
@@ -77,13 +80,19 @@
             dest: "{{ inventory_dir }}/id_rsa_undercloud.pub"
             flat: yes
 
+      - name: fetch our jinja template for editing
+        fetch:
+            src: "{{ instack_file }}"
+            dest: "/tmp/instackenv.json.template"
+            flat: yes
+
       - name: prepare instack.json
         template:
-            src: "templates/virthost_instack.json.j2"
-            dest: "~/instack_template.json"
+            src: "/tmp/instackenv.json.template"
+            dest: "{{ instack_file }}.template"
 
       - name: populate the private key
-        shell: "cat ~/instack_template.json | jq --arg key \"$(cat ~/.ssh/id_rsa)\" '. | .nodes[].pm_password=$key | .[\"ssh-key\"]=$key'> instackenv.json"
+        shell: "cat {{ instack_file }}.template | jq --arg key \"$(cat ~/.ssh/id_rsa)\" '. | .nodes[].pm_password=$key | .[\"ssh-key\"]=$key'> {{ instack_file }}"
 
 # In case we're dealing with virthost, we need to make sure the undercloud is able to ssh to the hypervisor
 - name: Create the stack user on the virthost and allow SSH to hypervisor
