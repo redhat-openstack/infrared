@@ -4,6 +4,10 @@
       dest: "~/{{ item }}"
       url: "{{ installer.images.url }}/{{ item }}"
   with_items: "{{ tar_images }}"
+  register: command_result
+  until: command_result.stderr.find('Request failed') == -1
+  retries: 40
+  delay: 5
 
 - name: untar the images
   unarchive:
