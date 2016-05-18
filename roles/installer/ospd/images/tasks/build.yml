@@ -1,5 +1,6 @@
 - name: Remove conflicting packages if all OSPd image versions built as bulk process
   yum: name={{ item }} state=absent
+  ignore_errors: yes
   with_items:
      - "python-rdomanager-oscplugin"
      - "python-tripleoclient"

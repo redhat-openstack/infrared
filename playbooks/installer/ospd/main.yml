@@ -19,10 +19,11 @@
   hosts: undercloud
   gather_facts: no
   become: yes
-  become_user: "{{ installer.user.name }}"
+  become_user: root
   roles:
       - role: installer/ospd/images
         task: "{{ installer.images.task }}"
+        work_path: "{%- if installer.images.task == 'import' %}{{ '/home/{{ installer.user.name }}' }}{% endif %}"
         ospd_version: "{{ installer.product.core.version }}"
         base_image_url: "{{ private.distro.rhel.guest_image_url }}"
         rhos_release_rpm_link: "{{ private.distro.rhel.rhos_release_rpm }}"
