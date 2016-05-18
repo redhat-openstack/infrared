@@ -5,7 +5,7 @@
   when: task == 'build'
 
 - name: List images imported
-  shell: "ls -l {{ work_dir }}"
+  shell: "ls -l {{ build_path }}"
   when: task == 'import'
 
 - name: Upload to the storage server using pubkey auth if requested
@@ -15,6 +15,6 @@
 
 - name: Upload the overcloud images to glance
   shell: |
-      pushd {{ work_dir }}
+      pushd {{ build_path }}
       source ~/stackrc; openstack overcloud image upload --update-existing
   when: upload_to == 'glance'
