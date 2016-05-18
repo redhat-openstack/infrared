@@ -1,0 +1,34 @@
+# todo(obaranov) using force here to overwirte if file is present.
+# todo(obaranov) loop over the topology.nodes
+- name: download disk images
+  get_url:
+      url: "{{ item.value.import_url }}"
+      dest: "{{disk_path_template.format(diskname=item.key)}}"
+      timeout: 30
+      force: yes
+  register: result
+  until: result.msg.find("Request failed") == -1
+  retries: 5
+  delay: 5
+  when: item.value.import_url is defined and item.value.import_url
+  with_dict: "{{ node_data.disks }}"
+
+- name: create vm
+  shell: |
+      virt-install --name {{node_name}}_test{{item|int - 1}} \
+        {% for disk_name, disk_values in node_data.disks.iteritems() %}
+         --disk path={{disk_path_template.format(diskname=disk_name)}},device=disk,bus=virtio,format=qcow2 \
+        {% endfor %}
+         --network network:data \
+         --network network:management \
+         --network network:external \
+         --virt-type kvm \
+         --cpu host-model \
+         --ram {{ node_data.memory }} \
+         --vcpus {{ node_data.cpu }} \
+         --os-variant {{ node_data.os.variant }} \
+         --import \
+         --noautoconsole \
+         --autostart \
+         --vnc
+  with_sequence: count={{node_data.amount | int }}
