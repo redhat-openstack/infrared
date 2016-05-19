@@ -22,6 +22,11 @@ subnets:
         allocation_pool_start: 172.31.0.10
         allocation_pool_end: 172.31.0.100
         cidr: 172.31.0.0/23
+        nested:
+            subnet_cidr: 172.31.0.0/23
+            subnet_gateway: 172.31.0.1
+            allocation_pool_start: 172.31.1.10
+            allocation_pool_end: 172.31.1.100
     management:
         name: "{{ !lookup provisioner.neutron.networks.management.name }}"
         network_name: "{{ !lookup provisioner.neutron.networks.management.name }}"
