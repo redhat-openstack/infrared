@@ -1,14 +1,18 @@
-- name: create virt install templates for nodes
+- name: install required packages
+  yum: name=wget state=present
+  become: yes
+  become_method: sudo
+
+- name: create the import images script
   template:
       dest: "~/create_vms.sh"
       src: "create_vms.sh.j2"
       mode: 0755
 
-  #TODO: move this logic to a module
-- name: the create vms script
+- name: the import images script
   shell: "cat ~/create_vms.sh"
 
-- name: execute the create vms script
+- name: run import images script
   shell: "bash ~/create_vms.sh"
 
 - name: get the list of VMs
@@ -51,3 +55,19 @@
   with_nested:
       - "{{ provisioner.topology.network }}"
       - "{{ vm_ip_list }}"
+
+- name: add hosts to host list
+  add_host:
+      name="{{ item.item.item[0] }}"
+      groups="{{ provisioner.topology.nodes['%s' % item.item.item[0].rstrip('1234567890')].groups | join(',') }}"
+      ansible_ssh_user="root"
+      ansible_ssh_host="{{ item.stdout }}"
+      ansible_ssh_private_key_file="{{ inventory_dir }}/id_rsa"
+  when: item.item is defined and item.item.item[1] == "external"
+  with_items: "{{ vm_ip_list }}"
+
+- name: update ansible.ssh.config template
+  template:
+      src: ansible.ssh.config.j2
+      dest: "{{ inventory_dir }}/ansible.ssh.config"
+  delegate_to: localhost
