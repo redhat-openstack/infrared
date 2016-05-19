@@ -136,7 +136,10 @@ def load_settings_files(settings_files):
 
     for settings_file in settings_files:
         loaded_dict = cli.yamls.load(settings_file, True)
-        dict_merge(settings_dict, loaded_dict)
+        dict_merge(
+            settings_dict,
+            loaded_dict,
+            conflict_resolver=ConflictResolver.unique_append_list_resolver)
 
     return settings_dict
 
