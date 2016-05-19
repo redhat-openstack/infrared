@@ -3,6 +3,7 @@
   get_url:
       dest: "~/{{ item }}"
       url: "{{ installer.images.url }}/{{ item }}"
+      timeout: 60
   with_items: "{{ tar_images }}"
   register: command_result
   until: command_result.stderr.find('Request failed') == -1
