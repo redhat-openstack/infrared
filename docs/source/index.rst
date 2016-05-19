@@ -16,6 +16,7 @@ Contents:
    setup
    execute
    installer
+   scale
    contributors
 
 

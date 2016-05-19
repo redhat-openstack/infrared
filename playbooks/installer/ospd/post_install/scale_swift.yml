@@ -1,0 +1,9 @@
+---
+- name: Scaling swift-storage nodes down and up
+  hosts: undercloud
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  gather_facts: no
+  roles:
+      - {role: "installer/ospd/overcloud/scale/", service: 'swift-storage', amount: 1}
+      - {role: "installer/ospd/overcloud/scale/", service: 'swift-storage', amount: "{{ provisioner.topology.nodes.swift.amount }}" }
