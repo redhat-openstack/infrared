@@ -57,9 +57,13 @@ subparsers:
               options:
                 images-task:
                     type: Value
-                    help: Specifies whether the images should be built or imported
-                    required: yes
-                    choices: [import, build]
+                    help: |
+                        Specifies the source for the OverCloud images:
+                        * RPM - packaged with product (versions 8 and above)
+                        * IMPORT - fetch from external source (versions 7 and 8). Requires to specify '--image-url'.
+                        * BUILD - build images locally (takes longer)
+                    choices: [import, build, rpm]
+                    default: rpm
                 images-url:
                     type: Value
                     help: Specifies the import image url. Required only when images task is 'import'
