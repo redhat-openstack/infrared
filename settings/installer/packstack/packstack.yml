@@ -1,0 +1,64 @@
+---
+installer:
+    type: packstack
+    short_type: pksk
+
+    config:
+        CONFIG_AMQP_BACKEND: "{{ !lookup installer.messaging.variant }}"
+        CONFIG_DEBUG_MODE: "{{ !lookup installer.osdebug }}"
+
+    packstack:
+        answer_file: packstack_config.txt
+
+    validate:
+        tenant_network_name: private
+        router_name: ext-to-int
+        admin_username: admin
+        admin_tenant_name: admin
+        admin_password: redhat
+        keystone_endpoint: http://127.0.0.1:5000/v2.0/
+        instance_name: khaleesi
+        key_name: instance-key
+        image:
+            user: cirros
+            id: cirros
+    network:
+        name: public
+        interfaces:
+            management:
+                label: "eth0"
+            data:
+                label: "eth1"
+            external:
+                label: "eth2"
+
+    product:
+        rpm: "{{ !lookup private.distro.rhel.rhos_release_rpm }}"
+
+    node:
+        prefix:
+            - "{{ !lookup installer.short_type }}"
+
+    hostname:
+        prefix:
+            - "{{ !lookup installer.short_type }}"
+
+job:
+    archive:
+        - /root/
+        - /var/lib/mysql
+        - /etc/nova
+        - /etc/ceilometer
+        - /etc/cinder
+        - /etc/glance
+        - /etc/keystone
+        - /etc/neutron
+        - /etc/swift
+        - /etc/heat
+        - /etc/libvirt
+        - /etc/rabbitmq
+        - /etc/ntp
+        - /etc/puppet
+        - /etc/qpid
+        - /etc/qpidd.conf
+        - /var/tmp/packstack

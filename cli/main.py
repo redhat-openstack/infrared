@@ -31,6 +31,7 @@ def get_arguments_dict(spec_args):
         if isinstance(argument, spec.ValueArgument):
             utils.dict_insert(settings_dict, argument.value,
                               *argument.arg_name.split("-"))
+
     return settings_dict
 
 

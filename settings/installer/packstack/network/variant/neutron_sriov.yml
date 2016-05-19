@@ -1,0 +1,27 @@
+---
+plugin: ml2
+name: sriov
+internal:
+    label: 'physnet2'
+    vlan:
+        range:
+            start: 290
+            end: 340
+        bridge: "br-{{ !lookup installer.network.variant.internal.label }}"
+ml2_conf:
+    type_drivers: vlan,flat,gre,vxlan
+    mechanism_drivers: openvswitch,sriovnicswitch
+    tenant_network_types: vlan
+
+config:
+    CONFIG_NEUTRON_L2_PLUGIN: "{{ !lookup installer.network.variant.plugin }}"
+    CONFIG_NEUTRON_L3_EXT_BRIDGE: provider
+    CONFIG_NEUTRON_ML2_TENANT_NETWORK_TYPES: vlan
+    CONFIG_NEUTRON_ML2_TUNNEL_ID_RANGES: '1:1000'
+    CONFIG_NEUTRON_ML2_TYPE_DRIVERS: 'local,flat,vlan'
+    CONFIG_NEUTRON_OVS_TENANT_NETWORK_TYPE: vlan
+    CONFIG_NEUTRON_OVS_TUNNEL_IF: ""
+    CONFIG_NEUTRON_OVS_VLAN_RANGES: "{{ !lookup installer.network.variant.internal.label }}:{{ !lookup installer.network.variant.internal.vlan.range.start }}:{{ !lookup installer.network.variant.internal.vlan.range.end }}, {{ !lookup installer.network.label}}:{{ !lookup installer.network.external.vlan.tag }}:{{ !lookup installer.network.external.vlan.tag  }}"
+    CONFIG_NEUTRON_ML2_VLAN_RANGES: "{{ !lookup installer.network.config.CONFIG_NEUTRON_OVS_VLAN_RANGES }}"
+    CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS: "{{ !lookup installer.network.variant.internal.label }}:{{ !lookup installer.network.variant.internal.vlan.bridge }},{{ !lookup installer.network.label }}:{{ !lookup installer.network.external.vlan.bridge }}"
+    CONFIG_NEUTRON_OVS_BRIDGE_IFACES: "{{ !lookup installer.network.variant.internal.vlan.bridge }}:{{ !lookup installer.network.interfaces.data.label }},{{ !lookup installer.network.external.vlan.bridge }}:{{ !lookup installer.network.interfaces.external.label }}"

@@ -25,6 +25,9 @@ def dict_insert(dic, val, key, *keys):
     :param key: first key in a chain of key that will store the value
     :param keys: sub keys in the keys chain
     """
+    if dic is None:
+        return
+
     if not keys:
         if key in dic and isinstance(val, dict):
             dict_merge(dic[key], val)
@@ -63,6 +66,18 @@ class ConflictResolver(object):
         Replace always first with the value from second
         """
         first[key] = second[key]
+
+    @staticmethod
+    def unique_append_list_resolver(first, second, key):
+        """
+        Merges first and second lists
+        """
+        if isinstance(first[key], list) and isinstance(second[key], list):
+            for item in second[key]:
+                if item not in first[key]:
+                    first[key].append(item)
+        else:
+            return ConflictResolver.greedy_resolver(first, second, key)
 
 
 def dict_merge(first, second,
@@ -138,7 +153,10 @@ def merge_extra_vars(settings, extra_vars):
             if not len(extra_var[1:]):
                 raise exceptions.IRExtraVarsException(extra_var)
             settings_file = normalize_file(extra_var[1:])
-            dict_merge(settings, cli.yamls.load(settings_file))
+            dict_merge(
+                settings,
+                cli.yamls.load(settings_file),
+                conflict_resolver=ConflictResolver.unique_append_list_resolver)
 
         else:
             if '=' not in extra_var:
