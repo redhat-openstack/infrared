@@ -1,0 +1,78 @@
+---
+- name: set fact for node
+  set_fact:
+      node_data: "{{ item.value }}"
+      node_name: "{{ item.key }}"
+
+- name: import vm disk image(s) for {{ node_name }}
+  get_url:
+      url: "{{ item.value.import_url }}"
+      dest: /var/lib/libvirt/images/{{node_name}}_original_{{item.key}}.qcow2
+      timeout: 30
+  register: result
+  until: result.msg.find("Request failed") == -1
+  retries: 5
+  delay: 5
+  when: item.value.import_url is defined and item.value.import_url
+  with_dict: "{{ node_data.disks }}"
+
+# TODO consider cleaning image to avoid MAC address duplication
+- name: populate imported image(s) for the given amount of nodes
+  shell: |
+      {% for num in range(1, node_data.amount + 1, 1) %}
+      cp /var/lib/libvirt/images/{{node_name}}_original_{{item.key}}.qcow2 /var/lib/libvirt/images/{{node_name}}{% if node_data.amount > 1 %}{{ num }}{% endif %}_imported_{{item.key}}.qcow2
+      {% endfor %}
+  when: item.value.import_url is defined and item.value.import_url
+  with_dict: "{{ node_data.disks }}"
+
+# TODO: configure interfaces based on config rather than hardcode
+- name: build vm base image
+  shell: |
+      wget -q -N {{ provisioner.image.server }}/{{ guest_image }} -O /var/lib/libvirt/images/base_image.qcow2
+      virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --root-password password:redhat --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel
+      virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --run-command 'yum remove cloud-init* -y'
+      virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{0,1} && sed -i s/DEVICE=.*/DEVICE=eth1/g /etc/sysconfig/network-scripts/ifcfg-eth1'
+      virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{1,2} && sed -i s/DEVICE=.*/DEVICE=eth2/g /etc/sysconfig/network-scripts/ifcfg-eth2'
+  register: baseimage_build_result
+  when: baseimage_build_result is not defined and (item.value.import_url is not defined or not item.value.import_url)
+  with_dict: "{{ node_data.disks }}"
+
+- name: create disk(s) from vm base image for {{ node_name }}
+  shell: |
+      {% for num in range(1, node_data.amount + 1, 1) %}
+      qemu-img create -f qcow2 {{ item.value.path }}/{{ node_name }}{% if node_data.amount > 1 %}{{ num }}{% endif %}.{{ item.key }}.qcow2 {{ item.value.size }}
+      virt-resize --expand /dev/sda1 /var/lib/libvirt/images/base_image.qcow2 {{ item.value.path }}/{{ node_name }}{% if node_data.amount > 1 %}{{ num }}{% endif %}.{{item.key}}.qcow2
+      {% endfor %}
+  when: item.value.import_url is not defined or not item.value.import_url
+  with_dict: "{{ node_data.disks }}"
+
+# this is required to skip base image build for the rest of the nodes
+- name: Set base image build fact
+  set_fact:
+      baseimage_build_result: "{{ baseimage_build_result }}"
+
+- name: create vm's
+  shell: |
+      virt-install --name {{node_name}}{% if node_data.amount > 1 %}{{ item }}{% endif %} \
+        {% for disk_name, disk_values in node_data.disks.iteritems() %}
+        {% if disk_values.import_url is defined and disk_values.import_url %}
+         --disk path=/var/lib/libvirt/images/{{node_name}}{% if node_data.amount > 1 %}{{ item }}{% endif %}_imported_{{disk_name}}.qcow2,device=disk,bus=virtio,format=qcow2 \
+        {% else %}
+          --disk path={{ disk_values.path }}/{{ node_name }}{% if node_data.amount > 1 %}{{ item }}{% endif %}.{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2 \
+        {% endif %}
+        {% endfor %}
+         --network network:data \
+         --network network:management \
+         --network network:external \
+         --virt-type kvm \
+         --cpu host-model \
+         --ram {{ node_data.memory }} \
+         --vcpus {{ node_data.cpu }} \
+         --os-variant {{ node_data.os.variant }} \
+         --import \
+         --noautoconsole \
+         --autostart \
+         --vnc
+  with_sequence: count={{node_data.amount | int }}
+
+

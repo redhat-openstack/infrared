@@ -3,17 +3,13 @@
   become: yes
   become_method: sudo
 
-- name: create the import images script
-  template:
-      dest: "~/create_vms.sh"
-      src: "create_vms.sh.j2"
-      mode: 0755
+- name: remove pre-existing base image
+  file:
+      state: absent
+      dest: "/var/lib/libvirt/images/base_image.qcow2"
 
-- name: the import images script
-  shell: "cat ~/create_vms.sh"
-
-- name: run import images script
-  shell: "bash ~/create_vms.sh"
+- include: "create_vms.yml"
+  with_dict: "{{ provisioner.topology.nodes }}"
 
 - name: get the list of VMs
   shell: "virsh list --all | grep -P '[\\w]+' | sed -n '2,$p' | awk '{print $2}'"
