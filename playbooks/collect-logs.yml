@@ -158,13 +158,13 @@
       fetch: src=/tmp/{{ inventory_hostname }}.tar.gz flat=yes dest={{ base_dir }}/{{ inventory_hostname }}.tar.gz validate_checksum=no
       ignore_errors: true
       when: job.gzip_logs is not defined
-      sudo: no
+      become: no
 
     - name: fetch log archive (tar)
       fetch: src=/tmp/{{ inventory_hostname }}.tar flat=yes dest={{ base_dir }}/{{ inventory_hostname }}.tar validate_checksum=no
       ignore_errors: true
       when: job.gzip_logs is defined and job.gzip_logs
-      sudo: no
+      become: no
 
     - name: delete temporary log directory after collection
       file: path=/tmp/{{ inventory_hostname }} state=absent
