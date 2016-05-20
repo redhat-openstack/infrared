@@ -3,7 +3,7 @@
 {% for num in range(1, node_values.amount + 1, 1) %}
 virt-install --name {{ node_name }}{% if node_values.amount > 1 %}{{ num }}{% endif %} \
 {% for disk_name, disk_values in node_values.disks.iteritems() %}
-             --disk path={{ disk_values.path }}/{{ node_name }}{% if node_values.amount > 1 %}{{ num }}{% endif %}.{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2 \
+             --disk path={{ disk_values.path }}/{{ node_name }}{% if node_values.amount > 1 %}{{ num }}{% endif %}.{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
 {% endfor %}
 {#{%  for net in provisioner.topology.network.keys() %}#}
 {#    todo(yfried): make network order work#}
