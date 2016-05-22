@@ -29,7 +29,7 @@ def dict_insert(dic, val, key, *keys):
         return
 
     if not keys:
-        if key in dic and isinstance(val, dict):
+        if isinstance(dic.get(key, None), dict) and isinstance(val, dict):
             dict_merge(dic[key], val)
         else:
             dic[key] = val
