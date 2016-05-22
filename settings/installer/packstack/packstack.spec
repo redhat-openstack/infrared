@@ -41,7 +41,7 @@ subparsers:
                       type: Value
                       help: Messaging type
                       default: rabbitmq
-                      choices: ["rabbitmq", "none",  "qpidd"]
+                      choices: ["rabbitmq", "qpid"]
 
             - title: Network
               options:
