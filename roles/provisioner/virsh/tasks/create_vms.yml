@@ -2,9 +2,11 @@
 - name: set fact for node
   set_fact:
       node_data: "{{ item.value }}"
-      node_name: "{{ item.key }}"
+      node_name: "{% if item.value.prefix is defined and item.value.prefix %}{{ item.value.prefix }}-{% endif %}{{ item.key }}"
 
-- name: import vm disk image(s) for {{ node_name }}
+# TODO Consider checking if we already downloaded image for another VM's
+# to avoid dowlonading of the same file again.
+- name: import vm disk image(s) for node '{{ node_name }}'
   get_url:
       url: "{{ item.value.import_url }}"
       dest: /var/lib/libvirt/images/{{node_name}}_original_{{item.key}}.qcow2
@@ -20,8 +22,8 @@
 - name: populate imported image(s) for the given amount of nodes
   shell: |
       {% for num in range(1, node_data.amount + 1, 1) %}
-      cp /var/lib/libvirt/images/{{node_name}}_original_{{item.key}}.qcow2 /var/lib/libvirt/images/{{node_name}}{% if node_data.amount > 1 %}{{ num }}{% endif %}_imported_{{item.key}}.qcow2
-      virt-sysprep -a /var/lib/libvirt/images/{{node_name}}{% if node_data.amount > 1 %}{{ num }}{% endif %}_imported_{{item.key}}.qcow2 --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
+      cp /var/lib/libvirt/images/{{node_name}}_original_{{item.key}}.qcow2 /var/lib/libvirt/images/{{node_name}}-{{ num - 1 }}-{{item.key}}.qcow2
+      virt-sysprep -a /var/lib/libvirt/images/{{node_name}}-{{ num - 1 }}-{{item.key}}.qcow2 --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
       {% endfor %}
   when: item.value.import_url is defined and item.value.import_url
   with_dict: "{{ node_data.disks }}"
@@ -39,11 +41,11 @@
   when: baseimage_build_result is not defined and (item.value.import_url is not defined or not item.value.import_url)
   with_dict: "{{ node_data.disks }}"
 
-- name: create disk(s) from vm base image for {{ node_name }}
+- name: create disk(s) from vm base image for node '{{ node_name }}'
   shell: |
       {% for num in range(1, node_data.amount + 1, 1) %}
-      qemu-img create -f qcow2 {{ item.value.path }}/{{ node_name }}{% if node_data.amount > 1 %}{{ num }}{% endif %}.{{ item.key }}.qcow2 {{ item.value.size }}
-      virt-resize --expand /dev/sda1 /var/lib/libvirt/images/base_image.qcow2 {{ item.value.path }}/{{ node_name }}{% if node_data.amount > 1 %}{{ num }}{% endif %}.{{item.key}}.qcow2
+      qemu-img create -f qcow2 -o preallocation={{ item.value.preallocation }} {{ item.value.path }}/{{ node_name }}-{{ num - 1 }}-{{ item.key }}.qcow2 {{ item.value.size }}
+      virt-resize --expand /dev/sda1 /var/lib/libvirt/images/base_image.qcow2 {{ item.value.path }}/{{ node_name }}-{{ num - 1 }}-{{ item.key }}.qcow2
       {% endfor %}
   when: item.value.import_url is not defined or not item.value.import_url
   with_dict: "{{ node_data.disks }}"
@@ -55,12 +57,12 @@
 
 - name: create vm's
   shell: |
-      virt-install --name {{node_name}}{% if node_data.amount > 1 %}{{ item }}{% endif %} \
+      virt-install --name {{node_name}}-{{ item|int - 1 }} \
         {% for disk_name, disk_values in node_data.disks.iteritems() %}
         {% if disk_values.import_url is defined and disk_values.import_url %}
-         --disk path=/var/lib/libvirt/images/{{node_name}}{% if node_data.amount > 1 %}{{ item }}{% endif %}_imported_{{disk_name}}.qcow2,device=disk,bus=virtio,format=qcow2 \
+         --disk path=/var/lib/libvirt/images/{{node_name}}-{{ item|int - 1 }}-{{disk_name}}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
         {% else %}
-          --disk path={{ disk_values.path }}/{{ node_name }}{% if node_data.amount > 1 %}{{ item }}{% endif %}.{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2 \
+          --disk path={{ disk_values.path }}/{{ node_name }}-{{ item|int - 1 }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
         {% endif %}
         {% endfor %}
          --network network:data \
@@ -77,4 +79,58 @@
          --vnc
   with_sequence: count={{node_data.amount | int }}
 
+- name: get the list of VM's for '{{ node_name }}' nodes
+  shell: "virsh list --all | grep -P '[\\w-]+' | grep {{ node_name }} | sed -n '1,$p' | awk '{print $2}'"
+  register: vm_names
+- set_fact:
+      vm_name_list: "{{ vm_names.stdout_lines }}"
 
+- name: get MAC list
+  shell: "virsh domiflist {{ item[0] }} | awk '/{{ item[1] }}/ {print $5};'"
+  with_nested:
+      - "{{ vm_name_list }}"
+      - "{{ provisioner.topology.network }}"
+  register: mac_list
+
+- set_fact:
+      vm_mac_list: "{{ mac_list.results }}"
+
+- name: wait until one of the VMs gets an IP
+  shell: "virsh net-dhcp-leases {{ item.item[1] }} | awk /{{ item.stdout }}/'{print $5}' | cut -d'/' -f1"
+  when: >
+      provisioner.topology.network[item.item[1]].dhcp is defined and
+      item.stdout is defined and item.stdout != ""
+  register: ip_list
+  until: "'{{ ip_list.stdout }}' != ''"
+  retries: 40
+  delay: 5
+  with_items: "{{ vm_mac_list }}"
+
+- set_fact:
+      vm_ip_list: "{{ ip_list.results }}"
+
+- name: make IPs persistent
+  shell: "virsh net-update {{ item[0] }} add ip-dhcp-host \"<host mac='{{ item[1].item.stdout }}' name='{{ item[1].item.item[0] }}' ip='{{ item[1].stdout }}' />\" --live --config"
+  when: >
+      provisioner.topology.network[item[1].item.item[1]].dhcp is defined and
+      item[1].item is defined and
+      item[1].item.item[1] == item[0]
+  with_nested:
+      - "{{ provisioner.topology.network }}"
+      - "{{ vm_ip_list }}"
+
+- name: add hosts to host list
+  add_host:
+      name="{{ item.item.item[0] }}"
+      groups="{{ provisioner.topology.nodes['%s' % item.item.item[0].rstrip('1234567890-')].groups | join(',') }}"
+      ansible_ssh_user="root"
+      ansible_ssh_host="{{ item.stdout }}"
+      ansible_ssh_private_key_file="{{ inventory_dir }}/id_rsa"
+  when: item.item is defined and item.item.item[1] == "external"
+  with_items: "{{ vm_ip_list }}"
+
+- name: update ansible.ssh.config template
+  template:
+      src: ansible.ssh.config.j2
+      dest: "{{ inventory_dir }}/ansible.ssh.config"
+  delegate_to: localhost
