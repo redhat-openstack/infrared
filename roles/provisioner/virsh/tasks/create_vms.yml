@@ -18,12 +18,12 @@
   when: item.value.import_url is defined and item.value.import_url
   with_dict: "{{ node_data.disks }}"
 
-# TODO consider cleaning image to avoid MAC address duplication
 - name: populate imported image(s) for the given amount of nodes
   shell: |
       {% for num in range(1, node_data.amount + 1, 1) %}
       cp /var/lib/libvirt/images/{{node_name}}_original_{{item.key}}.qcow2 /var/lib/libvirt/images/{{node_name}}-{{ num - 1 }}-{{item.key}}.qcow2
       virt-sysprep -a /var/lib/libvirt/images/{{node_name}}-{{ num - 1 }}-{{item.key}}.qcow2 --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
+      virt-customize -a /var/lib/libvirt/images/{{node_name}}-{{ num - 1 }}-{{item.key}}.qcow2 --root-password password:redhat --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel
       {% endfor %}
   when: item.value.import_url is defined and item.value.import_url
   with_dict: "{{ node_data.disks }}"
