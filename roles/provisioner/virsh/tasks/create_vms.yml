@@ -128,8 +128,8 @@
   add_host:
       name="{{ item.item.item[0] }}"
       groups="{{ provisioner.topology.nodes['%s' % item.item.item[0].rstrip('1234567890-')].groups | join(',') }}"
-      ansible_ssh_user="root"
-      ansible_ssh_host="{{ item.stdout }}"
+      ansible_user="root"
+      ansible_host="{{ item.stdout }}"
       ansible_ssh_private_key_file="{{ inventory_dir }}/id_rsa"
   when: item.item is defined and item.item.item[1] == "external"
   with_items: "{{ vm_ip_list }}"
