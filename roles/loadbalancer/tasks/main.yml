@@ -6,7 +6,7 @@
 - name: setup ssh for loadbalancer
   lineinfile:
       dest: "/etc/ssh/sshd_config"
-      line: "ListenAddress {{ installer.loadbalancer.network.plain.ip | ipaddr('address') }}"
+      line: "ListenAddress {{ installer.loadbalancer.network.external.vip | ipaddr('address') }}"
 
 - name: restart sshd service
   service:
