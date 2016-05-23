@@ -1,0 +1,11 @@
+- name: Create remote /etc/cluster folder
+  file:
+    path: /etc/cluster
+    state: directory
+    mode: 0755
+
+- name: Copy fence key
+  copy:
+    src: "{{ fence_key_file }}"
+    dest: /etc/cluster/
+    mode: 0644

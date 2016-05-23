@@ -1,0 +1,23 @@
+- name: Push vm table, and stonith script on overcloud controller
+  copy:
+    src: "{{ lookup('env', 'PWD') }}/vm-host-table"
+    dest: /root/vm-host-table
+- copy:
+    src: "{{ lookup('env', 'PWD') }}/vm-computes-table"
+    dest: /home/heat-admin/vm-computes-table
+
+- name: Make sure stonith property is set to false
+  command: pcs property set stonith-enabled=false
+
+- name: Start create-stonith script which configures fencing
+  shell: |
+      cat /root/vm-host-table | while read LINE
+      do
+        hostname=$(echo "$LINE" | cut -f1 -d\;)
+        vmname=$(echo "$LINE" | cut -f2 -d\;)
+        pcs stonith delete my-stonith-xvm-$hostname || /bin/true
+        pcs stonith create my-stonith-xvm-$hostname fence_xvm port=$vmname pcmk_host_list=$hostname op monitor interval=30s
+      done
+
+- name: Make sure sotnith property is set to true
+  command: pcs property set stonith-enabled=true
