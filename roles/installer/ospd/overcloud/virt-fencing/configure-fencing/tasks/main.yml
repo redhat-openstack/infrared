@@ -1,0 +1,13 @@
+- name: Push vm table, and stonith script on overcloud controller
+  copy: src={{ lookup('env', 'PWD') }}/vm-host-table dest=/root/vm-host-table
+- copy: src=files/create-stonith.sh dest=/root/create-stonith.sh mode=0755
+- copy: src={{ lookup('env', 'PWD') }}/vm-computes-table dest=/home/heat-admin/vm-computes-table
+
+- name: Make sure stonith property is set to false
+  command: pcs property set stonith-enabled=false
+
+- name: Start create-stonith script which configures fencing
+  command: /root/create-stonith.sh /root/vm-host-table
+
+- name: Make sure sotnith property is set to true
+  command: pcs property set stonith-enabled=true

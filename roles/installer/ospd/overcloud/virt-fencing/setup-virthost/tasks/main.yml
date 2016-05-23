@@ -1,0 +1,30 @@
+- name: Install virt fencing packages
+  yum: name=fence-virt,fence-virtd,fence-virtd-multicast,fence-virtd-libvirt state=present
+
+- name: Deploy fence virtd configuration
+  template: src=templates/fence_virtd.j2 dest=/etc/fence_virt.conf mode=0644
+
+- name: Make sure /tmp/vm-host-table is absent
+  file: path=/tmp/vm-host-table state=absent
+
+- name: Ease iptables rules
+  command: iptables -I INPUT 1 -p igmp -j ACCEPT
+
+- name: Set vm name fact for controllers
+  shell: >
+        echo "{{ hostvars[item]['ansible_hostname'] }};"`ps auxfww | grep -i "{{ hostvars[item]['ansible_eth0']['macaddress'] }}" | sed -nr "s/.*name\ (.*)\ /\1/p" | cut -f1 -d " ";`";{{ hostvars[item]['ansible_eth0']['macaddress'] }}" >> /tmp/vm-host-table
+  with_items: "{{ groups['controller'] }}"
+
+- name: Fetch VM controllers host table
+  fetch: src=/tmp/vm-host-table dest={{ lookup('env', 'PWD') }}/vm-host-table flat=yes
+
+- name: Set vm name fact for computes
+  shell: >
+        echo "{{ hostvars[item]['ansible_hostname'] }};"`ps auxfww | grep -i "{{ hostvars[item]['ansible_eth0']['macaddress'] }}" | sed -nr "s/.*name\ (.*)\ /\1/p" | cut -f1 -d " ";`";{{ hostvars[item]['ansible_eth0']['macaddress'] }}" >> /tmp/vm-computes-table
+  with_items: "{{ groups['compute'] }}"
+
+- name: Fetch VM computes host table
+  fetch: src=/tmp/vm-computes-table dest={{ lookup('env', 'PWD') }}/vm-computes-table flat=yes
+
+- service: name=fence_virtd enabled=yes state=started
+- service: name=fence_virtd state=restarted
