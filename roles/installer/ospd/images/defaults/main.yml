@@ -6,5 +6,6 @@ tar_files:
     '8':
         - "ironic-python-agent.tar"
         - "overcloud-full.tar"
+    # Any higher version defaults to 8
 
-tar_images: "{{ installer.images.files | default(tar_files[installer.product.version]) }}"
+tar_images: "{{ installer.images.files | default(tar_files[installer.product.version|string]) | default(tar_files['8'])}}"

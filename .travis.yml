@@ -3,7 +3,9 @@ python:
     - "2.7"
 # command to install dependencies
 install:
+  - pip install -U 'pytest>=2.8'
   - pip install pep8 --use-mirrors
+  - pip install "ansible-lint==2.4.2"
   - pip install https://github.com/dcramer/pyflakes/tarball/master
   - pip install .
   - cp infrared.cfg.example infrared.cfg
@@ -12,3 +14,5 @@ script:
     - pep8 cli
     - pep8 tests
     - py.test tests -v
+    - find roles playbooks -type f -name "*.y*ml" -exec ansible-lint -x ANSIBLE0006,ANSIBLE0007 {} \;
+

@@ -1,0 +1,32 @@
+---
+storage:
+  services:
+    - cinder
+  volume:
+    variant:
+      share: !placeholder
+      shares_file: "/etc/cinder/nfs.shares"
+
+    config:
+      cinder:
+        "icehouse":
+          &cinder_cfg_old
+          DEFAULT:
+            volume_driver: "cinder.volume.drivers.nfs.NfsDriver"
+            nfs_shares_config: "/etc/cinder/nfs.shares"
+        "juno":
+          &cinder_cfg_new
+          DEFAULT:
+            enabled_backends: "rhos-6-nfs"
+          rhos-6-nfs:
+            volume_driver: "cinder.volume.drivers.nfs.NfsDriver"
+            nfs_shares_config: "/etc/cinder/nfs.shares"
+        "5.0":
+          *cinder_cfg_old
+        "6.0":
+          *cinder_cfg_new
+        "7.0":
+          *cinder_cfg_new
+        "8.0":
+          *cinder_cfg_new
+

@@ -1,6 +1,7 @@
 import os
 from os.path import join, dirname, abspath
 from pip import req
+import platform
 from setuptools import setup, find_packages
 
 import cli
@@ -39,3 +40,36 @@ setup(
     author='rhos-qe',
     author_email='rhos-qe-dept@redhat.com'
 )
+
+if all(platform.linux_distribution(supported_dists="redhat")):
+    # For RedHat based systems, get selinux binding
+    try:
+        import selinux
+    except ImportError as e:
+        new_error = type(e)(e.message + ". check that 'python-libselinux is "
+                                        "installed'")
+        import sys
+        import shutil
+        from distutils import sysconfig
+
+        if hasattr(sys, 'real_prefix'):
+            # check for venv
+            VENV_SITE = sysconfig.get_python_lib()
+            SELINUX_PATH = os.path.join(
+                sysconfig.get_python_lib(plat_specific=True,
+                                         prefix=sys.real_prefix),
+                "selinux")
+            if not os.path.exists(SELINUX_PATH):
+                raise new_error
+
+            # filter precompiled files
+            files = [f for f in os.listdir(SELINUX_PATH)
+                     if not os.path.splitext(f)[1] in (".pyc", ".pyo")]
+            dest = os.path.join(VENV_SITE, "selinux")
+            os.makedirs(dest)
+            for f in files:
+                shutil.copy(os.path.join(SELINUX_PATH, f),
+                            dest)
+        else:
+            raise new_error
+        import selinux

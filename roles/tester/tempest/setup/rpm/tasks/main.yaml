@@ -1,14 +1,17 @@
 - name: Install tempest from rpm
+  become: yes
   yum:
       name: "openstack-tempest"
       state: present
   register: tempest_rpm
 
 - name: list tempest version
+  become: yes
   command: "rpm -q --qf %{VERSION} openstack-tempest"
   register: tempest_rpm_version
 
 - name: list tempest release
+  become: yes
   command: "rpm -q --qf %{RELEASE} openstack-tempest"
   register: tempest_rpm_release
 
@@ -16,6 +19,7 @@
 
 # TODO(psedlak): make subunit2junitxml usage opt. in script, add the flag for run-tests.sh in run.yml after that
 - name: Install subunit filters - needed for subunit2junitxml
+  become: yes
   yum:
       name: "subunit-filters"
       state: present

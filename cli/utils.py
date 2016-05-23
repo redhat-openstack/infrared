@@ -25,8 +25,11 @@ def dict_insert(dic, val, key, *keys):
     :param key: first key in a chain of key that will store the value
     :param keys: sub keys in the keys chain
     """
+    if dic is None:
+        return
+
     if not keys:
-        if key in dic and isinstance(val, dict):
+        if isinstance(dic.get(key, None), dict) and isinstance(val, dict):
             dict_merge(dic[key], val)
         else:
             dic[key] = val
@@ -63,6 +66,18 @@ class ConflictResolver(object):
         Replace always first with the value from second
         """
         first[key] = second[key]
+
+    @staticmethod
+    def unique_append_list_resolver(first, second, key):
+        """
+        Merges first and second lists
+        """
+        if isinstance(first[key], list) and isinstance(second[key], list):
+            for item in second[key]:
+                if item not in first[key]:
+                    first[key].append(item)
+        else:
+            return ConflictResolver.greedy_resolver(first, second, key)
 
 
 def dict_merge(first, second,
@@ -121,7 +136,10 @@ def load_settings_files(settings_files):
 
     for settings_file in settings_files:
         loaded_dict = cli.yamls.load(settings_file, True)
-        dict_merge(settings_dict, loaded_dict)
+        dict_merge(
+            settings_dict,
+            loaded_dict,
+            conflict_resolver=ConflictResolver.unique_append_list_resolver)
 
     return settings_dict
 
@@ -138,7 +156,10 @@ def merge_extra_vars(settings, extra_vars):
             if not len(extra_var[1:]):
                 raise exceptions.IRExtraVarsException(extra_var)
             settings_file = normalize_file(extra_var[1:])
-            dict_merge(settings, cli.yamls.load(settings_file))
+            dict_merge(
+                settings,
+                cli.yamls.load(settings_file),
+                conflict_resolver=ConflictResolver.unique_append_list_resolver)
 
         else:
             if '=' not in extra_var:
@@ -155,6 +176,7 @@ def normalize_file(file_path):
     :return: normalized path of a file
     :raise: IRFileNotFoundException if the file doesn't exist
     """
+    file_path = os.path.expanduser(file_path)
     if not os.path.isabs(file_path):
         abspath = os.path.abspath(file_path)
         LOG.debug(
@@ -171,7 +193,6 @@ def normalize_file(file_path):
 
 def load_yaml(filename, *search_paths):
     """Find YAML file. search default path first.
-
     :param filename: path to file
     :param search_paths: the list of paths to search for a file.
     :returns: dict. loaded YAML file.

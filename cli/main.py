@@ -8,7 +8,6 @@ from cli import logger  # logger should bne imported first
 from cli import execute, conf, spec, utils, exceptions, yamls
 
 LOG = logger.LOG
-CONF = conf.config
 
 
 def get_arguments_dict(spec_args):
@@ -32,6 +31,7 @@ def get_arguments_dict(spec_args):
         if isinstance(argument, spec.ValueArgument):
             utils.dict_insert(settings_dict, argument.value,
                               *argument.arg_name.split("-"))
+
     return settings_dict
 
 
@@ -50,14 +50,14 @@ class IRFactory(object):
         :param config: dict. configuration details
         :param args: list. If given parse it instead of stdin input.
         """
-        settings_dir = config.get('defaults', 'settings')
+        settings_dirs = config.get_settings_dirs()
         supported_specs = cls.get_supported_specs(config)
 
         if spec_name not in supported_specs:
             raise exceptions.IRUnknownSpecException(spec_name)
         else:
-            spec_settings_dir = os.path.join(settings_dir, spec_name)
-            spec_args = spec.parse_args(settings_dir, spec_settings_dir, args)
+            app_settings_dirs = config.build_app_settings_dirs(spec_name)
+            spec_args = spec.parse_args(settings_dirs, app_settings_dirs, args)
             cls.configure_environment(spec_args)
 
             if spec_args.get('generate-conf-file', None):
@@ -65,12 +65,7 @@ class IRFactory(object):
                     spec_args['generate-conf-file']))
                 spec_instance = None
             else:
-                spec_config = dict(config.items(spec_name))
-                spec_instance = IRSpec(
-                    spec_name,
-                    dict(cleanup=spec_config['cleanup_playbook'],
-                         main=spec_config['main_playbook']),
-                    settings_dir, spec_args)
+                spec_instance = IRSpec(config, spec_name, spec_args)
 
         return spec_instance
 
@@ -90,7 +85,7 @@ class IRFactory(object):
         :param args:
         :return:
         """
-        if args['debug']:
+        if args.get('debug', None):
             LOG.setLevel(logging.DEBUG)
             # todo(yfried): load exception hook now and not at init.
 
@@ -101,27 +96,27 @@ class IRSubCommand(object):
     for the spec.
     """
 
-    def __init__(self, name, args, settings_dir):
+    def __init__(self, name, args, settings_dirs):
         self.name = name
         self.args = args
-        self.settings_dir = settings_dir
+        self.settings_dirs = settings_dirs
 
     @classmethod
-    def create(cls, spec_name, settings_dir, args):
+    def create(cls, spec_name, settings_dirs, args):
         """
         Constructs the sub-command.
         :param spec_name:  tha spec name
-        :param settings_dir:  the default spec settings dir
+        :param settings_dirs:  the default spec settings dirs
         :param args: the spec args
         :return: the IRSubCommand instance.
         """
         if args:
-            settings_dir = os.path.join(settings_dir,
-                                        spec_name)
+            settings_dirs = [os.path.join(settings_dir, spec_name)
+                             for settings_dir in settings_dirs]
         if "command0" in args:
-            settings_dir = os.path.join(settings_dir,
-                                        args['command0'])
-        return cls(args['command0'], args, settings_dir)
+            settings_dirs = [os.path.join(settings_dir, args['command0'])
+                             for settings_dir in settings_dirs]
+        return cls(args['command0'], args, settings_dirs)
 
     def get_settings_files(self):
         """
@@ -130,13 +125,16 @@ class IRSubCommand(object):
         settings_files = []
 
         # first take all input files from args
-        for input_file in self.args['input'] or []:
+        for input_file in self.args.get('input', []) or []:
             settings_files.append(utils.normalize_file(input_file))
 
         # get the sub-command yml file
-        settings_files.append(os.path.join(
-            self.settings_dir,
-            self.name + '.yml'))
+        for settings_dir in self.settings_dirs:
+            path = os.path.join(
+                settings_dir,
+                self.name + '.yml')
+            if os.path.exists(path):
+                settings_files.append(path)
 
         LOG.debug("All settings files to be loaded:\n%s" % settings_files)
         return settings_files
@@ -147,14 +145,13 @@ class IRSpec(object):
     Hold the default spec workflow logic.
     """
 
-    def __init__(self, name, playbooks, settings_dir, args):
+    def __init__(self, config, name, args):
+        self.config = config
         self.name = name
         self.args = args
-        self.playbooks = playbooks
-        self.settings_dir = settings_dir
-
-        # todo(obaranov) replace with subcommand factory
-        self.sub_command = IRSubCommand.create(name, settings_dir, args)
+        self.spec_config = config.get_spec_config(name)
+        self.settings_dirs = config.get_settings_dirs()
+        self.sub_command = IRSubCommand.create(name, self.settings_dirs, args)
 
     def run(self):
         """
@@ -163,23 +160,25 @@ class IRSpec(object):
         settings = self.collect_settings()
         self.dump_settings(settings)
 
-        if not self.args['dry-run']:
+        if not self.args.get('dry-run'):
             self.args['settings'] = yaml.load(yaml.safe_dump(
                 settings,
                 default_flow_style=False))
 
-            if self.args['cleanup']:
+            if self.args.get('cleanup', None):
                 execute.ansible_playbook(
-                    self.playbooks['cleanup'],
+                    self.config,
+                    self.spec_config['cleanup_playbook'],
                     verbose=self.args['verbose'],
                     settings=self.args['settings'],
                     inventory=self.args['inventory'])
             else:
                 execute.ansible_playbook(
-                    self.playbooks['main'],
-                    verbose=self.args['verbose'],
+                    self.config,
+                    self.spec_config['main_playbook'],
+                    verbose=self.args.get('verbose', None),
                     settings=self.args['settings'],
-                    inventory=self.args['inventory'])
+                    inventory=self.args.get('inventory', None))
 
     def collect_settings(self):
         settings_files = self.sub_command.get_settings_files()
@@ -200,7 +199,7 @@ class IRSpec(object):
         """
         all_settings = utils.load_settings_files(settings_files)
         utils.dict_merge(all_settings, settings_dict)
-        utils.merge_extra_vars(all_settings, self.args['extra-vars'])
+        utils.merge_extra_vars(all_settings, self.args.get('extra-vars', None))
         yamls.replace_lookup(all_settings)
 
         return all_settings
@@ -209,7 +208,7 @@ class IRSpec(object):
         LOG.debug("Dumping settings...")
         output = yaml.safe_dump(settings,
                                 default_flow_style=False)
-        dump_file = self.args['output']
+        dump_file = self.args.get('output', None)
         if dump_file:
             LOG.debug("Dump file: {}".format(dump_file))
             with open(dump_file, 'w') as output_file:
@@ -222,7 +221,8 @@ def main(spec_name):
     """
     The start function for a spec.
     """
-    spec_runner = IRFactory.create(spec_name, CONF)
+    spec_runner = IRFactory.create(
+        spec_name, conf.ConfigWrapper.load_config_file())
     if spec_runner:
         spec_runner.run()
 
