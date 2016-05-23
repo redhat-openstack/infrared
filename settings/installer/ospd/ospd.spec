@@ -85,6 +85,11 @@ subparsers:
                       help: Specifies whether ths SSL should be used for overcloud
                       default: 'no'
 
+                  overcloud-fencing:
+                      type: Value
+                      help: Specifies whether fencing should be configured for overcloud nodes
+                      default: 'no'
+
                   overcloud-hostname:
                       type: Value
                       help: Specifies whether we should use custom hostnames for controllers
