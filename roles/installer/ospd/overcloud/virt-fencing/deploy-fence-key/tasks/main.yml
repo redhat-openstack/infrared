@@ -1,0 +1,5 @@
+- name: Create remote /etc/cluster folder
+  file: path=/etc/cluster state=directory mode=0755
+
+- name: Copy fence key
+  copy: src={{ lookup('env', 'PWD') }}/fence_xvm.key dest=/etc/cluster/ mode=644

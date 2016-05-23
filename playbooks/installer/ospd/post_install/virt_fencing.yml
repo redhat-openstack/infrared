@@ -1,0 +1,24 @@
+---
+- name: Preparatory work for fencing setup
+  hosts: localhost
+  roles:
+      - { role: installer/ospd/overcloud/virt-fencing/create-fence-key }
+
+- name: Create remote /etc/cluster folder and copy key
+  hosts: virthost:controller:compute
+  sudo: yes
+  roles:
+      - { role: installer/ospd/overcloud/virt-fencing/deploy-fence-key }
+
+- name: Configure virt fencing prerequisites on virthost
+  hosts: virthost
+  sudo: yes
+  gather_facts: yes
+  roles:
+      - { role: installer/ospd/overcloud/virt-fencing/setup-virthost }
+
+- name: Configure fencing on overcloud controllers
+  hosts: controller-0
+  sudo: yes
+  roles:
+      - { role: installer/ospd/overcloud/virt-fencing/configure-fencing }

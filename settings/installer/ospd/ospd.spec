@@ -50,6 +50,13 @@ subparsers:
                     help: Specifies whether we should use custom hostnames for controllers
                     default: 'no'
 
+            - title: Overcloud fencing
+              options:
+                overcloud-fencing:
+                    type: Value
+                    help: Specifies whether fencing should be configured for overcloud nodes
+                    default: 'no'
+
             - title: Overcloud storage
               options:
                 storage:
