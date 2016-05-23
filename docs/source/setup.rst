@@ -71,3 +71,12 @@ lookup order with ``IR_CONFIG`` environment variable::
 
   $ IR_CONFIG=/my/config/file.ini ir-provision --help
 
+
+Settings folders
+^^^^^^^^^^^^^^^^
+
+Infrared allows user to define several folders to store settings and spec files. This can be used, for example, to store public and private settings separately. To define additional settings folders edit the ``settings`` option in the Infrared configuration file::
+
+    [defaults]
+    settings  = settings:private_settings
+    ...

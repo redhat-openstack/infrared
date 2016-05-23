@@ -50,14 +50,14 @@ class IRFactory(object):
         :param config: dict. configuration details
         :param args: list. If given parse it instead of stdin input.
         """
-        settings_dir = config.get('defaults', 'settings')
+        settings_dirs = config.get_settings_dirs()
         supported_specs = cls.get_supported_specs(config)
 
         if spec_name not in supported_specs:
             raise exceptions.IRUnknownSpecException(spec_name)
         else:
-            spec_settings_dir = os.path.join(settings_dir, spec_name)
-            spec_args = spec.parse_args(settings_dir, spec_settings_dir, args)
+            app_settings_dirs = config.build_app_settings_dirs(spec_name)
+            spec_args = spec.parse_args(settings_dirs, app_settings_dirs, args)
             cls.configure_environment(spec_args)
 
             if spec_args.get('generate-conf-file', None):
@@ -96,27 +96,27 @@ class IRSubCommand(object):
     for the spec.
     """
 
-    def __init__(self, name, args, settings_dir):
+    def __init__(self, name, args, settings_dirs):
         self.name = name
         self.args = args
-        self.settings_dir = settings_dir
+        self.settings_dirs = settings_dirs
 
     @classmethod
-    def create(cls, spec_name, settings_dir, args):
+    def create(cls, spec_name, settings_dirs, args):
         """
         Constructs the sub-command.
         :param spec_name:  tha spec name
-        :param settings_dir:  the default spec settings dir
+        :param settings_dirs:  the default spec settings dirs
         :param args: the spec args
         :return: the IRSubCommand instance.
         """
         if args:
-            settings_dir = os.path.join(settings_dir,
-                                        spec_name)
+            settings_dirs = [os.path.join(settings_dir, spec_name)
+                             for settings_dir in settings_dirs]
         if "command0" in args:
-            settings_dir = os.path.join(settings_dir,
-                                        args['command0'])
-        return cls(args['command0'], args, settings_dir)
+            settings_dirs = [os.path.join(settings_dir, args['command0'])
+                             for settings_dir in settings_dirs]
+        return cls(args['command0'], args, settings_dirs)
 
     def get_settings_files(self):
         """
@@ -129,9 +129,12 @@ class IRSubCommand(object):
             settings_files.append(utils.normalize_file(input_file))
 
         # get the sub-command yml file
-        settings_files.append(os.path.join(
-            self.settings_dir,
-            self.name + '.yml'))
+        for settings_dir in self.settings_dirs:
+            path = os.path.join(
+                settings_dir,
+                self.name + '.yml')
+            if os.path.exists(path):
+                settings_files.append(path)
 
         LOG.debug("All settings files to be loaded:\n%s" % settings_files)
         return settings_files
@@ -146,9 +149,9 @@ class IRSpec(object):
         self.config = config
         self.name = name
         self.args = args
-        self.spec_config = dict(config.items(name))
-        self.settings_dir = config.get('defaults', 'settings')
-        self.sub_command = IRSubCommand.create(name, self.settings_dir, args)
+        self.spec_config = config.get_spec_config(name)
+        self.settings_dirs = config.get_settings_dirs()
+        self.sub_command = IRSubCommand.create(name, self.settings_dirs, args)
 
     def run(self):
         """
@@ -218,8 +221,8 @@ def main(spec_name):
     """
     The start function for a spec.
     """
-    ir_config = conf.load_config_file()
-    spec_runner = IRFactory.create(spec_name, ir_config)
+    spec_runner = IRFactory.create(
+        spec_name, conf.ConfigWrapper.load_config_file())
     if spec_runner:
         spec_runner.run()
 

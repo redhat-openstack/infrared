@@ -193,7 +193,6 @@ def normalize_file(file_path):
 
 def load_yaml(filename, *search_paths):
     """Find YAML file. search default path first.
-
     :param filename: path to file
     :param search_paths: the list of paths to search for a file.
     :returns: dict. loaded YAML file.
