@@ -34,11 +34,11 @@
 #TODO(abregman): Enable 'security groups' task when ansible 2.1 is out
 #- name: Cleanup security groups
 #  os_security_group:
-#      cloud: "{{ provisioner.cloud | default(omit) }}" 
-#      name: "{{ prefix }}{{ item.value.name | default(security_group_name) }}" 
+#      cloud: "{{ provisioner.cloud | default(omit) }}"
+#      name: "{{ prefix }}{{ item.value.name | default(security_group_name) }}"
 #      state: absent
 #  register: security_groups
-#  with_dict: "{{ provisioner.neutron.security_groups }}" 
+#  with_dict: "{{ provisioner.neutron.security_groups }}"
 #  when: provisioner.neutron.security_groups is defined
 
 - name: Fail run if one of neutron cleanups tasks failed/skipped

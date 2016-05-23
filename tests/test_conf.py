@@ -9,7 +9,7 @@ def test_get_config_dir_project_defaults(our_cwd_setup):
 
     utils.IR_CONF_FILE = 'non_existing_conf.ini'
 
-    conf_file = conf.load_config_file()
+    conf_file = conf.ConfigWrapper.load_config_file().config
 
     assert 'defaults' in conf_file.sections(), \
         "'defaults' section not in project's default conf file"

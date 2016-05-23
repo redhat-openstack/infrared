@@ -23,11 +23,11 @@ InfraRed extends the ``clg`` and ``argpars`` packages with the following types
 that need to be defined in `.spec` files:
 
 * **Value**: String values
-* **YamlFile**: Expects path to YAML files. Will search for files in the settings directory before trying to resolve
   absolute path. For the argument name is "arg-name" and of subparser "SUBCOMMAND" of command "COMMAND", the default
+* **YamlFile**: Expects path to YAML files. Will search for files in one of the configured settings directories before trying to resolve absolute path. If the argument name is "arg-name" and of subparser "SUBCOMMAND" of command "COMMAND", the default
   search path would be::
 
-    settings_dir/COMMAND/SUBCOMMAND/arg/name/arg_value
+    {settings_dir1,...,settings_dirN}/COMMAND/SUBCOMMAND/arg/name/arg_value
 
 * **Topology**: Provisioners allow to dynamically define the provisioned
   nodes topology. InfraRed provides several
@@ -49,7 +49,7 @@ that need to be defined in `.spec` files:
      role the defined number of times into the settings.
 
  .. note:: The default search path for topology files is
-       ``settings/provivisioner/topology``. Users can add their own topology
+       ``{settings_dir(s)}/provivisioner/topology``. Users can add their own topology
        roles there and reference them on runtime
 
 These arguments will accept input from sources in the following priority

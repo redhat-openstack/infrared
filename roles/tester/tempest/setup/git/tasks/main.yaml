@@ -1,7 +1,9 @@
 - name: Install pip
+  become: yes
   command: "easy_install pip"
 
 - name: Install devel packages for package build dependencies
+  become: yes
   yum:
       name: "{{ item }}"
       state: present

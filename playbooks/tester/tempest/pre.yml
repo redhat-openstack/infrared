@@ -21,12 +21,16 @@
             src: "{{ inventory_dir }}/keystonerc"
             dest: "~/keystonerc"
 
-      - name: copy the tempest-deployer-input.conf to the tester
+      - name: copy the tempest-deployer-input.conf to the tester in case it exists
         copy:
             src: "{{ inventory_dir }}/tempest-deployer-input.conf"
             dest: "~/tempest-deployer-input.conf"
+        register: result
+        ignore_errors: yes
 
       - name: run tempest configuration tool
-        shell: "source ~/keystonerc; ./with_venv tools/config_tempest.py --deployer-input ~/tempest-deployer-input.conf --debug --create identity.uri $OS_AUTH_URL identity.admin_password $OS_PASSWORD"
+        vars:
+            deployer_input: "{{ '(result | success)' | ternary('--deployer-input ~/tempest-deployer-input.conf', '') }}"
+        shell: "source ~/keystonerc; ./with_venv tools/config_tempest.py {{ deployer_input }} --debug --create identity.uri $OS_AUTH_URL identity.admin_password $OS_PASSWORD"
         args:
             chdir: "~/tempest-dir"

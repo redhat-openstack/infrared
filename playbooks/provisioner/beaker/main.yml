@@ -1,7 +1,8 @@
 ---
 - name: Pre-provisioning tasks
   hosts: localhost
-  sudo: no
+  become: no
+  become_method: sudo
   tasks:
     - name: Group by provisioner type
       group_by: key={{ provisioner.type }}

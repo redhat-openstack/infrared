@@ -41,7 +41,7 @@ subparsers:
                       type: Value
                       help: Messaging type
                       default: rabbitmq
-                      choices: ["rabbitmq", "none",  qpidd"]
+                      choices: ["rabbitmq", "qpid"]
 
             - title: Network
               options:
@@ -60,7 +60,7 @@ subparsers:
                       type: Value
                       help: The product version
                       required: yes
-                      choices: ["7", "8"]
+                      choices: ["7", "8", "9"]
                   product-build:
                       type: Value
                       help: The product build

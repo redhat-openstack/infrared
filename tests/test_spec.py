@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from cli import exceptions
 from cli import spec
@@ -126,15 +128,15 @@ def test_yamls_file_locations(tmpdir):
     """)
 
     locations = YamlFileArgument.get_file_locations(
-        app_dir.strpath, subcommand, "arg1-arg2")
+        [app_dir.strpath], subcommand, "arg1-arg2")
 
     assert len(locations) == 3
     assert locations[0] == file2.dirname
     assert locations[1] == file1.dirname
-    assert locations[2] == "."
+    assert locations[2] == os.getcwd()
 
     files = YamlFileArgument.get_allowed_files(
-        app_dir.strpath, subcommand, "arg1-arg2")
+        [app_dir.strpath], subcommand, "arg1-arg2")
 
     assert len(files) == 2
     assert files[0] == file2.strpath
