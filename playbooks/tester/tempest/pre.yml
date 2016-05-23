@@ -30,7 +30,7 @@
 
       - name: run tempest configuration tool
         vars:
-            deployer_input: "{{ (result | success) | ternary('--deployer-input ~/tempest-deployer-input.conf','') }}"
+            deployer_input: "{{ '(result | success)' | ternary('--deployer-input ~/tempest-deployer-input.conf', '') }}"
         shell: "source ~/keystonerc; ./with_venv tools/config_tempest.py {{ deployer_input }} --debug --create identity.uri $OS_AUTH_URL identity.admin_password $OS_PASSWORD"
         args:
             chdir: "~/tempest-dir"

@@ -13,7 +13,8 @@
 - name: Gather Logs
   hosts: all:!localhost:!host0
   gather_facts: no
-  sudo: yes
+  become: yes
+  become_method: sudo
   vars:
       base_dir: "{{ base_dir }}"
   tasks:
@@ -93,7 +94,8 @@
       ignore_errors: true
 
     - name: Search for AVC denied
-      sudo: yes
+      become: yes
+      become_method: sudo
       shell: "! grep -i denied /var/log/audit/audit*"
       register: result
       ignore_errors: yes
@@ -104,7 +106,8 @@
       ignore_errors: yes
 
     - name: Search for segfault in logs
-      sudo: yes
+      become: yes
+      become_method: sudo
       shell: "! grep -v ansible-command /var/log/messages | grep segfault"
       register: result
       ignore_errors: yes
@@ -115,7 +118,8 @@
       ignore_errors: yes
 
     - name: Publish the count as fact
-      sudo: yes
+      become: yes
+      become_method: sudo
       shell: "! grep -v ansible-command /var/log/messages | grep oom-killer"
       register: result
       ignore_errors: yes
@@ -172,13 +176,15 @@
 
     - name: extract the logs
       local_action: unarchive src={{ base_dir }}/{{ inventory_hostname }}.tar dest={{ base_dir }}/
-      sudo: no
+      become: no
+      become_method: sudo
       ignore_errors: true
       when: job.gzip_logs is defined and job.gzip_logs
 
     - name: delete the tar file after extraction
       local_action: file path={{ base_dir }}/{{ inventory_hostname }}.tar state=absent
-      sudo: no
+      become: no
+      become_method: sudo
       ignore_errors: true
       when: job.gzip_logs is defined and job.gzip_logs
 
