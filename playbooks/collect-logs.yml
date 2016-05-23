@@ -133,9 +133,14 @@
       file: path=/tmp/{{ inventory_hostname }} state=absent
       ignore_errors: true
 
+    - name: create temporary log directory
+      file:
+          path: "/tmp/{{ inventory_hostname }}"
+          state: directory
+          mode: 0755
+
     - name: collect logs
       shell: |
-        mkdir -p /tmp/{{ inventory_hostname }};
         for F in $(ls -d1 /var/log/rpm.list /var/log/extra {{ job.archive|join(' ') }}); do
           cp -rL --parents $F /tmp/{{ inventory_hostname }}
         done;

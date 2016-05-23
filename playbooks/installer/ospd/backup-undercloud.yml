@@ -24,4 +24,8 @@
         shell: "scp -o StrictHostKeyChecking=no -i ~/backup_server_auth_key undercloud-quickstart.tar {{ private.mirror.user.name }}@{{ private.mirror.base_url | regex_replace('http(s)?://(?P<domain>.*?)(?P<uri>/.*$)', '\\g<domain>:~\\g<uri>') }}/undercloud-quickstart.tar"
 
       - name: cleanup our files
-        shell: "rm -f undercloud.xml undercloud.disk1.qcow2 undercloud-quickstart.tar"
+        file: path={{ item }} state=absent
+        with_items:
+            - undercloud.xml
+            - undercloud.disk1.qcow2
+            - undercloud-quickstart.tar

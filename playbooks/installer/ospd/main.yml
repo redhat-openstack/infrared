@@ -50,7 +50,10 @@
   become_user: "{{ installer.user.name }}"
   pre_tasks:
       - name: create the template folder for customization
-        shell: "mkdir -p {{ installer.overcloud.template_base }}"
+        file:
+            path: "{{ installer.overcloud.template_base }}"
+            state: directory
+            mode: 0755
 
       - name: create the base overcloud deploy script
         template:
