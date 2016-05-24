@@ -81,9 +81,8 @@
       enabled: yes
 
 - name: reboot the loadbalancer
-  shell: "sleep 2 && shutdown -r now"
-  async: 1
-  poll: 0
+  command: virsh reboot loadbalancer
+  delegate_to: virthost
   ignore_errors: true
 
 - name: Waiting for the loadbalancer to be available
