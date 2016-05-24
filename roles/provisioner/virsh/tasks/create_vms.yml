@@ -41,6 +41,9 @@
   when: baseimage_build_result is not defined and (item.value.import_url is not defined or not item.value.import_url)
   with_dict: "{{ node_data.disks }}"
 
+# TODO: for nodes that have multiple disks we should run virt-resize only for one of the disks, say first disk (the one with the root file system).
+# The additional disks just need to be created with the qemu-img command and attached to the VMs as they're going to be partitioned and get data written on top in a later step by the installer.
+# This way we could also save some deployment time as the resize operation is quite time consuming.
 - name: create disk(s) from vm base image for node '{{ node_name }}'
   shell: |
       {% for num in range(1, node_data.amount + 1, 1) %}
