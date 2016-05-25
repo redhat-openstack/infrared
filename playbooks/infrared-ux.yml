@@ -64,12 +64,14 @@
           cp ansible.cfg.example ansible.cfg
 
     - name: Setup IR workaround 1
+      ignore_errors: yes
       shell: |
           {{ VENV }}
           sed -i 's/, session=False//g' setup.py # WORKAROUND
           pip install -e .
 
     - name: Setup IR workaround 2
+      ignore_errors: yes
       shell: |
           {{ VENV }}
           pip install --upgrade setuptools # WORKAROUND
