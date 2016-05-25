@@ -33,3 +33,8 @@
   with_nested:
       - "{{ node_list.results }}"
       - "{{ tagged_flavors }}"
+
+- name: update capabilities for controllers
+  shell: "source ~/stackrc; ironic node-update {{ item.1 }} replace properties/capabilities='node:controller-{{ item.0 }},boot_option:local'"
+  when: "installer.ovbercloud.hostname.controller is defined and installer.overcloud.hostname.controller == 'yes'"
+  with_indexed_items: "{{ groups['controller'] }}"

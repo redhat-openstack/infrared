@@ -1,0 +1,10 @@
+- name: prepare hostname template
+  template:
+      src: "hostnames.yml.j2"
+      dest: "{{ installer.overcloud.template_base }}/hostnames.yml"
+      mode: 0755
+
+- name: append the hostnames template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ installer.overcloud.template_base }}/hostnames.yml \'
