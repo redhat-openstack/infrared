@@ -62,10 +62,11 @@
         with_items: "{{ provisioner.topology.network.keys() }}"
 
       - name: remove any existing disks that we created
-        shell: "rm -f {{ item.key }}*disk*.qcow*"
-        args:
-            chdir: "/var/lib/libvirt/images"
-        with_dict: "{{ provisioner.topology.nodes }}"
+        file:
+            path: "{{ item }}"
+            state: absent
+        with_fileglob:
+            - /var/lib/libvirt/images/*disk*.qcow*
 
 - name: Remove hypervisor from the known_hosts
   hosts: localhost

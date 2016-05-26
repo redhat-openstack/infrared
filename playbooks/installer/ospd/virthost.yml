@@ -12,7 +12,11 @@
         with_items: "{{ groups['all'] | difference(['localhost']) | difference(['virthost']) }}"
 
       - name: remove all repos
-        command: "rm -f /etc/yum.repos.d/*"
+        file:
+            path: "{{ item }}"
+            state: absent
+        with_fileglob:
+            - /etc/yum.repos.d/*
 
       - name: install the rhos-release RPM
         shell: "yum localinstall -y {{ installer.product.rpm }}"
