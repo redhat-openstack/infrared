@@ -1,4 +1,5 @@
 name: "loadbalancer"
+prefix: null
 cpu: "2"
 memory: "4096"
 os:
@@ -6,9 +7,12 @@ os:
     variant: "rhel7"
 disks:
     disk1:
+        import_url: null
         path: "/var/lib/libvirt/images"
         dev: "/dev/vda"
         size: "20G"
+        cache: "default"
+        preallocation: "metadata"
 groups:
     - loadbalancer
 
