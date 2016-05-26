@@ -53,6 +53,13 @@ subparsers:
                     help: The overcloud storage type
                     default: no-storage.yml
 
+            - title: Overcloud ldap server
+              options:
+                authentication:
+                    type: YamlFile
+                    help: When true configure the keystone to work with ldap server
+                    default: default.yml
+
             - title: Product images
               options:
                 images-task:

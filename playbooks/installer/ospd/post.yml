@@ -44,39 +44,39 @@
             dest: "{{ inventory_dir }}/tempest-deployer-input.conf"
             flat: yes
 
-- name: ldap configuration
-  hosts: controller
-  gather_facts: no
-  become: yes
-  become_method: sudo
-  tasks:
-      - name: configure keystone to work with ldap
-        ini_file:
-            dest: "/etc/keystone/keystone.conf"
-            section: ec2
-            option: my_option
-            value: my_value
-          #  with_dict: "{{ installer.undercloud.config }}"
-        delegate_to: undercloud
-
-##TODO: remove this when the templating system is in place
-#- name: External network creation
-#  hosts: undercloud
+#- name: ldap configuration
+#  hosts: controller
 #  gather_facts: no
 #  become: yes
-#  become_user: "{{ installer.user.name }}"
+#  become_method: sudo
 #  tasks:
-#      - name: Get the controller nodes IPs
-#        shell: "source ~/stackrc; nova list | awk '/controller/ {print $12}' | grep -oP '[0-9.]+'"
-#        register: ip_list
-#
-#      - name: get the default floating ip pool name from the controller
-#        shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ ip_list.stdout_lines|last }} 'sudo grep -oP \"(?<=default_floating_pool=)(.*$)\" /etc/nova/nova.conf'"
-#        register: pool_name
-#
-#      - name: create the external network
-#        shell: "source ~/overcloudrc; neutron net-create {{ pool_name.stdout_lines|last }} --router:external --provider:physical_network datacentre --provider:network_type flat"
-#
-#        # TODO: move the hard coded value to a variable
-#      - name: create the external subnet
-#        shell: "source ~/overcloudrc; neutron subnet-create {{ pool_name.stdout_lines|last }} 10.0.0.1/24 --name external_subnet --enable-dhcp=False --allocation-pool start=10.0.0.210,end=10.0.0.250 --gateway 10.0.0.1"
+#      - name: configure keystone to work with ldap
+#        ini_file:
+#            dest: "/etc/keystone/keystone.conf"
+#            section: ec2
+#            option: my_option
+#            value: my_value
+#          #  with_dict: "{{ installer.undercloud.config }}"
+#        delegate_to: undercloud
+
+#TODO: remove this when the templating system is in place
+- name: External network creation
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  tasks:
+      - name: Get the controller nodes IPs
+        shell: "source ~/stackrc; nova list | awk '/controller/ {print $12}' | grep -oP '[0-9.]+'"
+        register: ip_list
+
+      - name: get the default floating ip pool name from the controller
+        shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ ip_list.stdout_lines|last }} 'sudo grep -oP \"(?<=default_floating_pool=)(.*$)\" /etc/nova/nova.conf'"
+        register: pool_name
+
+      - name: create the external network
+        shell: "source ~/overcloudrc; neutron net-create {{ pool_name.stdout_lines|last }} --router:external --provider:physical_network datacentre --provider:network_type flat"
+
+        # TODO: move the hard coded value to a variable
+      - name: create the external subnet
+        shell: "source ~/overcloudrc; neutron subnet-create {{ pool_name.stdout_lines|last }} 10.0.0.1/24 --name external_subnet --enable-dhcp=False --allocation-pool start=10.0.0.210,end=10.0.0.250 --gateway 10.0.0.1"
