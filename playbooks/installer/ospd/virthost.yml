@@ -35,10 +35,10 @@
         delay: 5
 
       - debug:
-            msg: "rhos-release {{ installer.product.core.version }}-director -p {{ installer.product.core.build }}"
+            msg: "rhos-release {{ installer.product.core.version }} -p {{ installer.product.core.build }}"
 
       - name: create necessary repos for core using rhos-release
-        command: "rhos-release {{ installer.product.core.version }}-director -p {{ installer.product.core.build }}"
+        command: "rhos-release {{ installer.product.core.version }} -p {{ installer.product.core.build }}"
         register: command_result
         until: command_result.stderr.find('Connection reset by peer') == -1
         retries: 40

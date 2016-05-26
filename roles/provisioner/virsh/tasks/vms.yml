@@ -1,53 +1,12 @@
-- name: create virt install templates for nodes
-  template:
-      dest: "~/create_vms.sh"
-      src: "create_vms.sh.j2"
-      mode: 0755
+- name: install required packages
+  yum: name=wget state=present
+  become: yes
+  become_method: sudo
 
-  #TODO: move this logic to a module
-- name: the create vms script
-  shell: "cat ~/create_vms.sh"
+- name: remove pre-existing base image
+  file:
+      state: absent
+      dest: "/var/lib/libvirt/images/base_image.qcow2"
 
-- name: execute the create vms script
-  shell: "bash ~/create_vms.sh"
-
-- name: get the list of VMs
-  shell: "virsh list --all | grep -P '[\\w]+' | sed -n '2,$p' | awk '{print $2}'"
-  register: vm_names
-
-- set_fact:
-      vm_name_list: "{{ vm_names.stdout_lines }}"
-
-- name: get MAC list
-  shell: "virsh domiflist {{ item[0] }} | awk '/{{ item[1] }}/ {print $5};'"
-  with_nested:
-      - "{{ vm_name_list }}"
-      - "{{ provisioner.topology.network }}"
-  register: mac_list
-
-- set_fact:
-      vm_mac_list: "{{ mac_list.results }}"
-
-- name: wait until one of the VMs gets an IP
-  shell: "virsh net-dhcp-leases {{ item.item[1] }} | awk /{{ item.stdout }}/'{print $5}' | cut -d'/' -f1"
-  when: >
-      provisioner.topology.network[item.item[1]].dhcp is defined and
-      item.stdout is defined and item.stdout != ""
-  register: ip_list
-  until: "'{{ ip_list.stdout }}' != ''"
-  retries: 40
-  delay: 5
-  with_items: "{{ vm_mac_list }}"
-
-- set_fact:
-      vm_ip_list: "{{ ip_list.results }}"
-
-- name: make IPs persistent
-  shell: "virsh net-update {{ item[0] }} add ip-dhcp-host \"<host mac='{{ item[1].item.stdout }}' name='{{ item[1].item.item[0] }}' ip='{{ item[1].stdout }}' />\" --live --config"
-  when: >
-      provisioner.topology.network[item[1].item.item[1]].dhcp is defined and
-      item[1].item is defined and
-      item[1].item.item[1] == item[0]
-  with_nested:
-      - "{{ provisioner.topology.network }}"
-      - "{{ vm_ip_list }}"
+- include: "create_vms.yml"
+  with_dict: "{{ provisioner.topology.nodes }}"
