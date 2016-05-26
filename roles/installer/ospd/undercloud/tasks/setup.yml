@@ -41,10 +41,7 @@
   register: update
 
 - name: reboot the undercloud
-  shell: "sleep 2 && shutdown -r now"
-  async: 1
-  poll: 0
-  ignore_errors: true
+  include: handlers/reboot/{{ provisioner.type }}.yml hostname='undercloud'
   when: update|changed
 
 - name: waiting for the undercloud to be available
