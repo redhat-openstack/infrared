@@ -34,7 +34,11 @@
       - "{{ node_list.results }}"
       - "{{ tagged_flavors }}"
 
+- name: get controller flavor
+  shell: "source ~/stackrc; openstack flavor list -c Name -f value | grep 'controller-'"
+  register: controller_flavor
+
 - name: update capabilities for controllers
-  shell: "source ~/stackrc; ironic node-update {{ item.1 }} replace properties/capabilities='profile:baremetal,node:controller-{{ item.0 }},boot_option:local'"
+  shell: "source ~/stackrc; ironic node-update {{ item.1 }} replace properties/capabilities='profile:{{ controller_flavor.stdout }},node:controller-{{ item.0 }},boot_option:local'"
   when: "installer.overcloud.hostname.controller is defined and installer.overcloud.hostname.controller == 'yes'"
   with_indexed_items: "{{ groups['controller'] }}"
