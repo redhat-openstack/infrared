@@ -17,7 +17,7 @@
 - set_fact:
       tagged_flavors: "{{ flavor_result.results }}"
 
-- name: set additional properties
+- name: set additional propertiesx
   shell: "source ~/stackrc; openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' --property 'capabilities:profile'='{{ item.cmd.split() | last }}' {{ item.cmd.split() | last }}"
   when: item.cmd is defined
   with_items: "{{ tagged_flavors }}"
@@ -35,6 +35,6 @@
       - "{{ tagged_flavors }}"
 
 - name: update capabilities for controllers
-  shell: "source ~/stackrc; ironic node-update {{ item.1 }} replace properties/capabilities='node:controller-{{ item.0|int +1 }},boot_option:local'"
+  shell: "source ~/stackrc; ironic node-update {{ item.1 }} replace properties/capabilities='profile:baremetal,node:controller-{{ item.0 }},boot_option:local'"
   when: "installer.overcloud.hostname.controller is defined and installer.overcloud.hostname.controller == 'yes'"
   with_indexed_items: "{{ groups['controller'] }}"
