@@ -10,6 +10,11 @@ subparsers:
                       type: Value
                       help: "The cloud which the OpenStack modules will operate against. Cloud setup instructions: http://docs.openstack.org/developer/os-client-config/#config-files"
                       required: yes
+            - title: ssh_user
+              options:
+                  ssh_user:
+                      type: Value
+                      help: The name of the user Ansible would use when connecting the provisioned nodes
             - title: prefix
               options:
                   prefix:

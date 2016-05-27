@@ -73,7 +73,14 @@ class ValueArgument(object):
 
         # todo(yfried): consider simply searching for option_name instead of
         # "options"
-        for option_tree in utils.search_tree("options", spec):
+
+        # limit spec file with only subcommand spec and global spec
+        # to avoid name collision when, for example, tow specs have the
+        # arguments with the same name.
+        subcommand_spec = dict(options=spec['options'],
+                               subparsers={subcommand:
+                                               spec['subparsers'][subcommand]})
+        for option_tree in utils.search_tree("options", subcommand_spec):
             for option_name, option_dict in option_tree.iteritems():
                 if option_name in args and issubclass(
                         clg.TYPES.get(option_dict.get(

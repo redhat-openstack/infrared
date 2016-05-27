@@ -9,30 +9,53 @@ networks:
     management: 
         name: 'management'
 
+# This is only requird for ovb
+# Consider moving to the separate non-default file
+security_groups:
+    - name: undercloud
+      rules:
+          - protocol: icmp
+          - protocol: udp
+          - protocol: tcp
+            port_range_min: 22
+            port_range_max: 22
+
+    - name: all
+      rules:
+          - protocol: icmp
+          - protocol: tcp
+          - protocol: udp
+
+    - name: bmc
+      rules:
+          - protocol: icmp
+          - protocol: tcp
+            port_range_min: 22
+            port_range_max: 22
+          - protocol: udp
+            port_range_min: 623
+            port_range_max: 623
+
 subnets:
     data:
         name: "{{ !lookup provisioner.neutron.networks.data.name }}"
         network_name: "{{ !lookup provisioner.neutron.networks.data.name }}"
-        allocation_pool_start: 172.16.1.10
-        allocation_pool_end: 172.16.1.100
-        cidr: 172.16.1.0/24
+        allocation_pool_start: 192.0.2.10
+        allocation_pool_end: 192.0.2.100
+        cidr: 192.0.2.0/24
+        enable_dhcp: no
     external:
         name: "{{ !lookup provisioner.neutron.networks.external.name }}"
         network_name: "{{ !lookup provisioner.neutron.networks.external.name }}"
-        allocation_pool_start: 172.31.0.10
-        allocation_pool_end: 172.31.0.100
-        cidr: 172.31.0.0/23
-        nested:
-            subnet_cidr: 172.31.0.0/23
-            subnet_gateway: 172.31.0.1
-            allocation_pool_start: 172.31.1.10
-            allocation_pool_end: 172.31.1.100
+        allocation_pool_start: 172.16.0.10
+        allocation_pool_end: 172.16.0.100
+        cidr: 172.16.0.0/24
     management:
         name: "{{ !lookup provisioner.neutron.networks.management.name }}"
         network_name: "{{ !lookup provisioner.neutron.networks.management.name }}"
-        allocation_pool_start: 192.168.1.10
-        allocation_pool_end: 192.168.1.100
-        cidr: 192.168.1.0/24
+        allocation_pool_start: 10.0.0.10
+        allocation_pool_end: 10.0.0.100
+        cidr: 10.0.0.0/24
 
 routers:
     router:
@@ -40,3 +63,4 @@ routers:
         attach_subnets:
             - "{{ !lookup provisioner.neutron.networks.external.name }}"
             - "{{ !lookup provisioner.neutron.networks.management.name }}"
+

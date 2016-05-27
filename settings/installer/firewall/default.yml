@@ -9,4 +9,7 @@ rules:
   - ' -A INPUT -p udp --sport 53 -m comment --comment "005 QA incoming DNS" -j ACCEPT'
   - ' -A INPUT -p udp --sport 123 -m comment --comment "006 QA incoming NTP" -j
     ACCEPT'
+  - ' -A INPUT -p udp -m udp --dport 623 -j ACCEPT'
+  - ' -A OUTPUT -p udp -m udp --sport 623 -j ACCEPT'
+  - ' -I INPUT -i eth0 -p udp --dport 67:68 --sport 67:68 -j ACCEPT'
   - ' -P INPUT DROP'

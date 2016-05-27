@@ -23,6 +23,11 @@
   roles:
       - {role: installer/ospd/images}
 
+- name: Create instack in case of ovb deployment
+  tags: ovb
+  include: ovb.yml
+  when: "'bmc' in groups"
+
 - name: Start introspection
   tags: introspection
   hosts: undercloud
@@ -32,7 +37,7 @@
   roles:
       - {role: installer/ospd/overcloud/introspection,
         undercloud_provision_cidr: "{{ ansible_br_ctlplane.ipv4.network }}/{{ ansible_br_ctlplane.ipv4.netmask }}",
-        when: "installer.overcloud is defined"}
+        when: "installer.overcloud is defined and 'bmc' not in groups"}
 
 - name: Tag hosts with flavors
   tags: tagging

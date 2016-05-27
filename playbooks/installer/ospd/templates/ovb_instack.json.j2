@@ -1,0 +1,27 @@
+{
+  "nodes": [
+{% set counter = [0] %}
+{% for node, node_data in provisioner.nodes.iteritems() %}
+{% if 'overcloud_nodes' in node_data.groups %}
+{% set outer_loop = loop %}
+
+{% for num in range(node_data['amount']) %}
+{% set host_name = "%s%s-%s" | format(provisioner.prefix, node, num+1) %}
+    {
+      "name": "{{host_name}}",
+      "pm_addr": "{{ provisioner.neutron.subnets.management.allocation_pool_end | regex_replace('(^.*\.).*$', '\\1') }}{{provisioner.neutron.subnets.management.allocation_pool_end.split('.')[3] | int - counter[0] }}",
+      "pm_password": "password",
+      "pm_type": "pxe_ipmitool",
+      "mac": ["{{ hostvars[host_name]['ansible_%s' % installer.undercloud.config.local_interface].macaddress }}"],
+      "cpu": {{ hostvars[host_name].ansible_processor_vcpus }},
+      "memory": {{ hostvars[host_name].ansible_memtotal_mb }},
+      "disk": {{ hostvars[host_name].ansible_devices.vda.size | regex_replace('^([0-9]+).*$', '\\1') }},
+      "arch": "x86_64",
+      "pm_user": "admin"
+    }{% if not loop.last or not outer_loop.last %},{% endif %}
+{% if counter.append(counter.pop() + 1) %}{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+    ]
+}

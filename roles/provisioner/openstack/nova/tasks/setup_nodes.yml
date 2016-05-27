@@ -13,12 +13,14 @@
       auto_ip: "{{ node_type.value.auto_ip | default(auto_ip) }}"
       config_drive: "{{ node_type.value.config_drive | default(config_drive) }}"
       flavor: "{{ node_type.value.flavor | default(flavor_id) }}"
-      image: "{{ provisioner.image }}"
+      image: "{{ node_type.value.image | default(provisioner.image) }}"
       name: "{{ prefix }}{{ node_type.value.name }}-{{ item }}"
-      nics: "{{ networks.results | map(attribute='id') | list() |map('add_prefix', 'net-id=') | list() }}"
+      # nics: "{{ networks.results | selectattr('name', 'equalto', 'fixed') | map(attribute='id') | list() |map('add_prefix', 'net-id=') | list() }}"
+      nics: "{{ node_type.value.network.ovb_interfaces | map('add_prefix', 'net-name='+prefix) | list }}"
       key_name: "{{ provisioner.key.name if provisioner.key.name else (prefix + provisioner.key.file | basename) }}"
       state: present
       wait: "{{ node_type.value.wait | default(wait) }}"
+      security_groups: "{{ node_type.value.security_groups | default([]) }}"
   register: nodes
   with_sequence: "count={{ node_type.value.amount }}"
   when: provisioner.nodes is defined
@@ -33,7 +35,7 @@
       wait: yes
   register: floating_ips
   with_sequence: "count={{ node_type.value.amount }}"
-  when: provisioner.nodes is defined
+  when: provisioner.nodes is defined and node_type.value.network.floating_ip_network is defined
 
 - name: Gather created servers facts
   os_server_facts:
@@ -47,5 +49,6 @@
       ansible_ssh_host: "{{ item.public_v4 }}"
       groups: "{{ provisioner.nodes[node_type.value.name].groups | join(',') }}"
       ansible_ssh_private_key_file: "{{ provisioner.key.file }}"
-      ansible_ssh_user: 'cloud-user'
+      ansible_ssh_user: '{{ provisioner.nodes[node_type.value.name].ssh_user | default(default_ssh_user) }}'
+      disk_size: "{{ provisioner.nodes[node_type.value.name].disks.disk1.size }}"
   with_items: "{{ servers.ansible_facts.openstack_servers }}"

@@ -1,0 +1,25 @@
+[Unit]
+Description=openstack-bmc {{ prefix}}{{ node_type.value.name }}-{{ item }} Service
+Requires=config-bmc-ips.service
+After=config-bmc-ips.service
+[Service]
+
+{% set counter = [0] %}
+{% for node, node_data in provisioner.nodes.iteritems() %}
+{% if 'overcloud_nodes' in node_data.groups %}
+{% set outer_loop = loop %}
+{% for num in range(node_data['amount']) %}
+{% if "%s-%s" | format(node, num + 1) == "%s-%s" | format(node_type.value.name, item) %}
+ExecStart={{ bmc_openstackbmc_path }} --os-user {{ cloud_auth_info.username }} --os-password {{ cloud_auth_info.password }} --os-tenant {{ cloud_auth_info.project_name }} --os-auth-url {{ cloud_auth_info.auth_url }} --instance {{ prefix }}{{ node_type.value.name }}-{{ item }} --address {{ bmc_management_network_data.allocation_pool_end | regex_replace('(^.*\.).*$', '\\1') }}{{bmc_management_network_data.allocation_pool_end.split('.')[3] | int - counter[0] }}
+{% endif %}
+{% if counter.append(counter.pop() + 1) %}{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+
+User=root
+StandardOutput=kmsg+console
+StandardError=inherit
+[Install]
+WantedBy=multi-user.target

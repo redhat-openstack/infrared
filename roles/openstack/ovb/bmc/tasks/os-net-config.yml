@@ -1,0 +1,27 @@
+- name: Register management subnet details
+  os_subnets_facts:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      filters:
+          name: "{{ prefix }}{{bmc_management_network_name}}"
+  delegate_to: localhost
+  become: no
+  register: data_subnet_details
+
+- name: Set fact for management subnet - default gateway
+  set_fact:
+      bmc_default_gateway: "{{ item.value[0].gateway_ip }}"
+  with_dict: "{{ data_subnet_details.ansible_facts }}"
+
+- name: Ensure /etc/os-net-config directory exists
+  file:
+      path="/etc/os-net-config"
+      state="directory"
+
+- name: Deploy os-net-config configuration
+  template:
+      src="os-net-config.j2"
+      dest="/etc/os-net-config/config.yaml"
+
+- name: Allow udp:623 on firewall
+  command: iptables {{ item }}
+  with_items: bmc_firewall_rules

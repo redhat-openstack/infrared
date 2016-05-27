@@ -1,0 +1,23 @@
+network_config:
+    -
+        type: interface
+        name: {{ bmc_management_interface }}
+        use_dhcp: false
+        mtu: 1450
+        routes:
+            - default: true
+              next_hop: {{ bmc_default_gateway }}
+        addresses:
+{# allocate fake addresses for the IPMI services at the end of the allocation pool #}
+{% set counter = [0] %}
+{% for node, node_data in provisioner.nodes.iteritems() %}
+{% if 'overcloud_nodes' in node_data.groups %}
+{% set outer_loop = loop %}
+{% for num in range(node_data['amount']) %}
+            # {{ node }}-{{ num | int }}
+            - ip_netmask: {{ bmc_management_network_data.allocation_pool_end | regex_replace('(^.*\.).*$', '\\1') }}{{bmc_management_network_data.allocation_pool_end.split('.')[3] | int - counter[0] }}/{{provisioner.neutron.subnets.management.cidr | ipaddr('prefix')}}
+{% if counter.append(counter.pop() + 1) %}{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+

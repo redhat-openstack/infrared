@@ -54,6 +54,7 @@
       search_regex: OpenSSH
       delay: 10
   delegate_to: "{% if 'virthost' in groups %}virthost{% else %}localhost{% endif %}"
+  become: no
   when: update|changed
 
 - name: install the oscplugin/tripleO client

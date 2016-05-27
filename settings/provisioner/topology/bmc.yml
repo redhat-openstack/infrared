@@ -1,39 +1,39 @@
-name: "compute"
-prefix: null
+# This is a Baremetal Controller used for OVB deployments
+
+name: "bmc"
 amount: "1"
 cpu: "4"
-memory: "6144"
+memory: "4096"
 os:
     type: "linux"
     variant: "rhel7"
 disks:
     disk1:
-        import_url: null
         path: "/var/lib/libvirt/images"
         dev: "/dev/vda"
-        size: "40G"
-        cache: "default"
-        preallocation: "metadata"
+        size: "30G"
 network:
     interfaces:
-        data:
-            label: "eth0"
         management:
+            label: "eth0"
+        data:
             label: "eth1"
         external:
             label: "eth2"
     floating_ip_network: external
 
     ovb_interfaces:
-      - data
-      - management
       - external
+      - management
 
 security_groups:
+  - bmc
   - all
 
+image: "CentOS-7.1.1503-x86_64-GenericCloud.qcow2"
+
+ssh_user: "centos"
 
 groups:
-    - compute
+    - bmc
     - openstack_nodes
-    - overcloud_nodes

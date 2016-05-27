@@ -1,0 +1,21 @@
+---
+# Setup BMC node
+- include: packages.yml
+- include: deploy_files.yml
+- include: os-net-config.yml
+
+
+- name: Get cloud auth info
+  os_client_config:
+      clouds:
+          - "{{ provisioner.cloud | default(omit) }}"
+  delegate_to: localhost
+  become: no
+  register: cloud_details
+
+- set_fact:
+      cloud_auth_info: "{{ cloud_details.ansible_facts.openstack.clouds[0].auth }}"
+
+# Deploy service file for each node in 'overcloud_nodes' group
+- include: openstack-bmc.yml
+  with_dict: "{{ provisioner.nodes }}"

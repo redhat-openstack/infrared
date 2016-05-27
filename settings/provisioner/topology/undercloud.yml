@@ -16,13 +16,22 @@ disks:
         preallocation: "metadata"
 network:
     interfaces:
-        management:
-            label: "eth0"
         data:
+            label: "eth0"
+        management:
             label: "eth1"
         external:
             label: "eth2"
-    floating_ip_network: management
+    floating_ip_network: external
+
+    ovb_interfaces:
+        - data
+        - management
+        - external
+
+security_groups:
+  - undercloud
+  - all
 
 groups:
   - undercloud

@@ -1,0 +1,17 @@
+# Install the necessary packages to setup the bmc node
+- name: Install repos
+  yum:
+      name: "{{ bmc_repos }}"
+      state: present
+
+# This is a separate task due to the way Ansible handle RPMs installation.
+# Before able to install 'python-pip' the right repos from previous task, should be installed.
+- name: Install RPM packages
+  yum:
+      name: "{{ bmc_rpms }}"
+      state: present
+      disable_gpg_check: yes
+
+- name: Install pip packages
+  pip:
+      name: "{{ bmc_pip }}"
