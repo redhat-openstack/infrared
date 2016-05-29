@@ -44,21 +44,6 @@
             dest: "{{ inventory_dir }}/tempest-deployer-input.conf"
             flat: yes
 
-#- name: ldap configuration
-#  hosts: controller
-#  gather_facts: no
-#  become: yes
-#  become_method: sudo
-#  tasks:
-#      - name: configure keystone to work with ldap
-#        ini_file:
-#            dest: "/etc/keystone/keystone.conf"
-#            section: ec2
-#            option: my_option
-#            value: my_value
-#          #  with_dict: "{{ installer.undercloud.config }}"
-#        delegate_to: undercloud
-
 #TODO: remove this when the templating system is in place
 - name: External network creation
   hosts: undercloud
@@ -80,3 +65,37 @@
         # TODO: move the hard coded value to a variable
       - name: create the external subnet
         shell: "source ~/overcloudrc; neutron subnet-create {{ pool_name.stdout_lines|last }} 10.0.0.1/24 --name external_subnet --enable-dhcp=False --allocation-pool start=10.0.0.210,end=10.0.0.250 --gateway 10.0.0.1"
+
+# todo: check the syntax for nested loops over a dict.
+- name: ldap configuration
+  hosts: controller
+  gather_facts: no
+  become: yes
+  become_method: sudo
+  tasks:
+      - name: configure keystone to work with ldap - identity
+        ini_file:
+            dest: "/etc/keystone/keystone.conf"
+            section: identity
+            option: "{{ item.key }}"
+            value: "{{ item.value }}"
+        with_dict: "{{ installer.authentication.settings.identity }}"
+        when: "installer.authentication.type == 'ldap'"
+
+      - name: configure keystone to work with ldap - assignment
+        ini_file:
+            dest: "/etc/keystone/keystone.conf"
+            section: assignment
+            option: "{{ item.key }}"
+            value: "{{ item.value }}"
+        with_dict: "{{ installer.authentication.settings.assignment }}"
+        when: "installer.authentication.type == 'ldap'"
+
+      - name: configure keystone to work with ldap - ldap
+        ini_file:
+            dest: "/etc/keystone/keystone.conf"
+            section: ldap
+            option: "{{ item.key }}"
+            value: "{{ item.value }}"
+        with_dict: "{{ installer.authentication.settings.ldap }}"
+        when: "installer.authentication.type == 'ldap'"
