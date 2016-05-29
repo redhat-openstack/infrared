@@ -17,7 +17,7 @@
 - set_fact:
       tagged_flavors: "{{ flavor_result.results }}"
 
-- name: set additional propertiesx
+- name: set additional properties
   shell: "source ~/stackrc; openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' --property 'capabilities:profile'='{{ item.cmd.split() | last }}' {{ item.cmd.split() | last }}"
   when: item.cmd is defined
   with_items: "{{ tagged_flavors }}"
