@@ -6,7 +6,7 @@
 - name: setup ssh for loadbalancer
   lineinfile:
       dest: "/etc/ssh/sshd_config"
-      line: "ListenAddress {{ installer.loadbalancer.network.plain.ip | ipaddr('address') }}"
+      line: "ListenAddress {{ installer.loadbalancer.network.external.vip | ipaddr('address') }}"
 
 - name: restart sshd service
   service:
@@ -81,9 +81,8 @@
       enabled: yes
 
 - name: reboot the loadbalancer
-  shell: "sleep 2 && shutdown -r now"
-  async: 1
-  poll: 0
+  command: virsh reboot "{{ hostvars[inventory_hostname].inventory_hostname }}"
+  delegate_to: virthost
   ignore_errors: true
 
 - name: Waiting for the loadbalancer to be available
