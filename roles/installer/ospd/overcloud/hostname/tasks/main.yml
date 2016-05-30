@@ -4,14 +4,13 @@
 
 - name: update capabilities for controllers
   shell: "source ~/stackrc; ironic node-update {{ item.1 }} replace properties/capabilities='profile:{{ controller_flavor.stdout }},node:controller-{{ item.0 }},boot_option:local'"
-  when: "installer.overcloud.hostname.controller is defined and installer.overcloud.hostname.controller == 'yes'"
+  when: "installer.overcloud.hostname == 'yes'"
   with_indexed_items: "{{ groups['controller'] }}"
 
 - name: prepare hostname template
   template:
       src: "hostnames.yml.j2"
       dest: "{{ installer.overcloud.template_base }}/hostnames.yml"
-      mode: 0755
 
 - name: append the hostnames template line to the base overcloud deploy script
   lineinfile:
