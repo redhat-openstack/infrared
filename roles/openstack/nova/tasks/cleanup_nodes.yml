@@ -12,7 +12,7 @@
       server: "{{ prefix }}{{ node_type.value.name }}-{{ item }}"
       state: absent
       purge: yes
-  with_sequence: "count={{ node_type.value.amount }}"
+  with_sequence: start=0 count={{ node_type.value.amount | int }}
   when: provisioner.nodes is defined
   register: floating_ips
   ignore_errors: yes
@@ -23,7 +23,7 @@
       cloud: "{{ provisioner.cloud | default(omit) }}"
       name: "{{ prefix }}{{ node_type.value.name }}-{{ item }}"
       state: absent
-  with_sequence: "count={{ node_type.value.amount }}"
+  with_sequence: start=0 count={{ node_type.value.amount | int }}
   when: provisioner.nodes is defined
   register: instances
   ignore_errors: yes

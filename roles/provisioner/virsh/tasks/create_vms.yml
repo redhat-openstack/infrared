@@ -62,12 +62,12 @@
 
 - name: create vm's
   shell: |
-      virt-install --name {{node_name}}-{{ item|int - 1 }} \
+      virt-install --name {{node_name}}-{{ item }} \
         {% for disk_name, disk_values in node_data.disks.iteritems() %}
         {% if disk_values.import_url is defined and disk_values.import_url %}
-         --disk path=/var/lib/libvirt/images/{{node_name}}-{{ item|int - 1 }}-{{disk_name}}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
+         --disk path=/var/lib/libvirt/images/{{node_name}}-{{ item }}-{{disk_name}}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
         {% else %}
-          --disk path={{ disk_values.path }}/{{ node_name }}-{{ item|int - 1 }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
+          --disk path={{ disk_values.path }}/{{ node_name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
         {% endif %}
         {% endfor %}
          --network network:data \
@@ -82,7 +82,7 @@
          --noautoconsole \
          --autostart \
          --vnc
-  with_sequence: count={{node_data.amount | int }}
+  with_sequence: start=0 count={{node_data.amount | int }}
 
 - name: get the list of VM's for '{{ node_name }}' nodes
   shell: "virsh list --all | grep -P '[\\w-]+' | grep {{ node_name }} | sed -n '1,$p' | awk '{print $2}'"

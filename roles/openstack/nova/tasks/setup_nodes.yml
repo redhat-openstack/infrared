@@ -20,7 +20,7 @@
       state: present
       wait: "{{ node_type.value.wait | default(wait) }}"
   register: nodes
-  with_sequence: "count={{ node_type.value.amount }}"
+  with_sequence: start=0 count={{ node_type.value.amount | int }}
   when: provisioner.nodes is defined
 
 - name: Create floating IPs
@@ -32,7 +32,7 @@
       state: present
       wait: yes
   register: floating_ips
-  with_sequence: "count={{ node_type.value.amount }}"
+  with_sequence: start=0 count={{ node_type.value.amount | int }}
   when: provisioner.nodes is defined
 
 - name: Gather created servers facts
