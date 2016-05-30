@@ -66,36 +66,30 @@
       - name: create the external subnet
         shell: "source ~/overcloudrc; neutron subnet-create {{ pool_name.stdout_lines|last }} 10.0.0.1/24 --name external_subnet --enable-dhcp=False --allocation-pool start=10.0.0.210,end=10.0.0.250 --gateway 10.0.0.1"
 
-# todo: check the syntax for nested loops over a dict.
 - name: ldap configuration
   hosts: controller
   gather_facts: no
   become: yes
   become_method: sudo
+  vars:
+      settings_str: ""
   tasks:
-      - name: configure keystone to work with ldap - identity
-        ini_file:
-            dest: "/etc/keystone/keystone.conf"
-            section: identity
-            option: "{{ item.key }}"
-            value: "{{ item.value }}"
-        with_dict: "{{ installer.authentication.settings.identity }}"
-        when: "installer.authentication.type == 'ldap'"
+      - name: gather section-optio-value string
+        set_fact:
+            settings_str: "{{ settings_str }}{% for option, value in item.value.iteritems() %}{{item.key}}-+-{{ option }}-+-{{ value }}----{% endfor %}"
+        with_dict: "{{ installer.authentication.settings }}"
+      - debug: msg="{{ settings_str }}"
 
-      - name: configure keystone to work with ldap - assignment
-        ini_file:
-            dest: "/etc/keystone/keystone.conf"
-            section: assignment
-            option: "{{ item.key }}"
-            value: "{{ item.value }}"
-        with_dict: "{{ installer.authentication.settings.assignment }}"
-        when: "installer.authentication.type == 'ldap'"
+      - name: convert section-optio-value string to list
+        set_fact:
+            settings_list: "{{ settings_str.split('----')[:-1] }}"
+      - debug: msg="{{settings_list}}"
 
-      - name: configure keystone to work with ldap - ldap
+      - name: configure keystone to work with ldap
         ini_file:
             dest: "/etc/keystone/keystone.conf"
-            section: ldap
-            option: "{{ item.key }}"
-            value: "{{ item.value }}"
-        with_dict: "{{ installer.authentication.settings.ldap }}"
+            section: "{{ item.split('-+-')[0] }}"
+            option: "{{ item.split('-+-')[1] }}"
+            value: "{{ item.split('-+-')[2] }}"
+        with_items: "{{ settings_list }}"
         when: "installer.authentication.type == 'ldap'"
