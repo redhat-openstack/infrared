@@ -81,7 +81,7 @@
       enabled: yes
 
 - name: reboot the loadbalancer
-  command: virsh reboot loadbalancer
+  command: virsh reboot "{{ hostvars[inventory_hostname].inventory_hostname }}"
   delegate_to: virthost
   ignore_errors: true
 
