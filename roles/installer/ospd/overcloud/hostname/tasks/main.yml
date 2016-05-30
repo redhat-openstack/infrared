@@ -7,11 +7,11 @@
   when: "installer.overcloud.hostname.controller is defined and installer.overcloud.hostname.controller == 'yes'"
   with_indexed_items: "{{ groups['controller'] }}"
 
-- name: prepare hostname heat template
-  copy:
-    content: "{{ installer.overcloud.hostname.template.content |to_nice_yaml }}"
-    dest: "{{ installer.overcloud.template_base }}/hostnames.yml"
-    mode: 0755
+- name: prepare hostname template
+  template:
+      src: "hostnames.yml.j2"
+      dest: "{{ installer.overcloud.template_base }}/hostnames.yml"
+      mode: 0755
 
 - name: append the hostnames template line to the base overcloud deploy script
   lineinfile:
