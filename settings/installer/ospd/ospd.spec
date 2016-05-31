@@ -45,6 +45,10 @@ subparsers:
                     type: Value
                     help: Specifies whether ths SSL should be used for overcloud
                     default: 'no'
+                overcloud-hostname:
+                    type: Value
+                    help: Specifies whether we should use custom hostnames for controllers
+                    default: 'no'
 
             - title: Overcloud storage
               options:
