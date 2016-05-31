@@ -10,6 +10,11 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  vars:
+      privkey: "{{ inventory_dir }}/id_rsa_overcloud"
+      user: heat-admin
+      password: redhat
+      undercloud_rc: stackrc
   tasks:
       - name: fetch the private key file from the undercloud
         fetch:
@@ -19,30 +24,86 @@
 
       - block:
           - name: update file permissions
-            become: no
             file:
                 path: "{{ inventory_dir }}/id_rsa_overcloud"
                 mode: 0600
 
           - name: Update Inventory
-            become: no
             add_host:
                 name: "{{ item }}"
-                ansible_user: "heat-admin"
+                ansible_user: "{{ user }}"
             with_items: "{{ groups['overcloud_nodes'] }}"
         delegate_to: localhost
+        become: no
 
-      - name: Copy the keystonerc file for the tester
-        fetch:
-            src: "~/overcloudrc"
-            dest: "{{ inventory_dir }}/keystonerc"
-            flat: yes
+      - shell: "cat {{ undercloud_rc }} | grep AUTH | cut -d '=' -f 2"
+        register: oc_auth
 
-      - name: Copy the tempest-deployer-input.conf file for the tester
-        fetch:
-            src: "~/tempest-deployer-input.conf"
-            dest: "{{ inventory_dir }}/tempest-deployer-input.conf"
-            flat: yes
+      - shell: "cat {{ undercloud_rc }} | grep USERNAME | cut -d '=' -f 2"
+        register: oc_username
+
+      - shell: "cat {{ undercloud_rc }} | grep TENANT | cut -d '=' -f 2"
+        register: oc_tenant
+
+      - shell: "source {{ undercloud_rc }} && env | grep OS_PASSWORD | cut -d '=' -f 2"
+        args:
+            executable: /bin/bash
+        register: oc_password
+
+      - block:
+          - pip:
+                name: "{{ item.key }}"
+                version: "{{ item.value }}"
+                virtualenv: "{{ path_venv }}"
+            with_dict:
+                setuptools: "17.0"
+                pytz: "2016.4"
+                shade: "1.7.0"
+                pip: "8.1"
+
+          - name: update IP of overcloud nodes
+            vars:
+                ansible_python_interpreter: "/tmp/venv_server_facts/bin/python"
+            os_server_facts:
+                auth:
+                    auth_url: "{{ oc_auth.stdout }}"
+                    username: "{{ oc_username.stdout }}"
+                    password: "{{ oc_password.stdout }}"
+                    project_name: "{{ oc_tenant.stdout }}"
+
+          - name: add hosts to host list
+            add_host:
+                name="{{ "{0}-{1}".format(item.name.split("-")[1], item.name.split("-")[2] | int ) }}"
+                groups="{{ hostvars["{0}-{1}".format(item.name.split("-")[1], item.name.split("-")[2] | int )].group_names | reject('equalto', 'ungrouped') | join(',') }}"
+                ansible_user="{{ user }}"
+                ansible_ssh_pass="{{ password }}"
+                ansible_host="{{ item.accessIPv4 }}"
+                ansible_ssh_private_key_file="{{ privkey }}"
+            with_items: "{{ openstack_servers }}"
+        vars:
+            path_venv: /tmp/venv_server_facts
+
+
+      - block:
+          - name: update ansible.ssh.config template
+            become: no
+            template:
+                src: "{{ inventory_dir }}/roles/provisioner/virsh/templates/ansible.ssh.config.j2"
+                dest: "{{ inventory_dir }}/ansible.ssh.config"
+
+          - name: Copy the keystonerc file for the tester
+            fetch:
+                src: "~/overcloudrc"
+                dest: "{{ inventory_dir }}/keystonerc"
+                flat: yes
+
+          - name: Copy the tempest-deployer-input.conf file for the tester
+            fetch:
+                src: "~/tempest-deployer-input.conf"
+                dest: "{{ inventory_dir }}/tempest-deployer-input.conf"
+                flat: yes
+        delegate_to: localhost
+        become: no
 
 #TODO: remove this when the templating system is in place
 - name: External network creation

@@ -5,7 +5,7 @@
 - name: update /etc/hosts with undercloud details
   lineinfile:
       dest: "/etc/hosts"
-      line: "{{ ansible_default_ipv4.address }}    undercloud.redhat.local undercloud"
+      line: "{{ ansible_host }}    undercloud.redhat.local undercloud"
       state: present
 
 - name: remove all repos
@@ -50,7 +50,7 @@
 - name: waiting for the undercloud to be available
   wait_for:
       port: 22
-      host: "{{ ansible_ssh_host }}"
+      host: "{{ ansible_host }}"
       search_regex: OpenSSH
       delay: 10
   delegate_to: "{% if 'virthost' in groups %}virthost{% else %}localhost{% endif %}"
