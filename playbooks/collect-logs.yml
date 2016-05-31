@@ -141,10 +141,10 @@
         find /tmp/{{ inventory_hostname }} -type f -print0 | xargs -0 chmod 644;
       ignore_errors: true
 
-    - name: compress logs in tar.xz
+    - name: compress logs in tar.gz
       shell: |
         chdir=/tmp
-        tar cJf {{ inventory_hostname }}.tar.xz {{ inventory_hostname }};
+        tar czf {{ inventory_hostname }}.tar.gz {{ inventory_hostname }};
       ignore_errors: true
       when: job.gzip_logs is not defined
 
@@ -156,8 +156,8 @@
       ignore_errors: true
       when: job.gzip_logs is defined and job.gzip_logs
 
-    - name: fetch log archive (tar.xz)
-      fetch: src=/tmp/{{ inventory_hostname }}.tar.xz flat=yes dest={{ base_dir }}/{{ inventory_hostname }}.tar.xz validate_checksum=no
+    - name: fetch log archive (tar.gz)
+      fetch: src=/tmp/{{ inventory_hostname }}.tar.gz flat=yes dest={{ base_dir }}/{{ inventory_hostname }}.tar.gz validate_checksum=no
       ignore_errors: true
       when: job.gzip_logs is not defined
       become: no
