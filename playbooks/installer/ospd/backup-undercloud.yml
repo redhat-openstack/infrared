@@ -18,7 +18,7 @@
         copy:
             src: "{{ provisioner.host.key }}"
             dest: "~/backup_server_auth_key"
-            mode: "400"
+            mode: "0400"
 
       - name: copy our image to the backup server
         shell: "scp -o StrictHostKeyChecking=no -i ~/backup_server_auth_key undercloud-quickstart.tar {{ private.mirror.user.name }}@{{ private.mirror.base_url | regex_replace('http(s)?://(?P<domain>.*?)(?P<uri>/.*$)', '\\g<domain>:~\\g<uri>') }}/undercloud-quickstart.tar"
