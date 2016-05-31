@@ -1,7 +1,23 @@
 .. note:: This guide need to be edited and splited to sections
 
-Contributors Guid
-=================
+Contributors Guide
+==================
+
+Sending patches
+---------------
+Changes to project are accepted via `review.gerrithub.io`_.
+For that you need to be member of our group rhosqeauto-core on gerrithub,
+ask any of the current members about it.
+
+You can use git-review (dnf/yum/pip install).
+To initalize in the directory of InfraRed execute ``git review -s``.
+Every patch needs to have *Change-Id* in commit message
+(git review -s installs post-commit hook to automatically add one).
+
+For some more info about git review usage you can go for ex. to `OpenStack Infra Manual`_.
+
+.. _`review.gerrithub.io`: https://review.gerrithub.io/#/q/project:rhosqeauto/InfraRed
+.. _`OpenStack Infra Manual`: http://docs.openstack.org/infra/manual/developers.html
 
 Sending patches
 ---------------

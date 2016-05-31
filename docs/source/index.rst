@@ -17,7 +17,7 @@ Contents:
    execute
    installer
    scale
-   contributors
+   contributions
 
 
 
