@@ -288,3 +288,99 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+
+def _find_spec_files(base_path, suffix):
+    search_in = [base_path]
+    spec_files = []
+    while search_in:
+        cdir = search_in.pop()
+        for item in os.listdir(cdir):
+            item_path = os.path.join(cdir, item)
+            if os.path.isdir(item_path):
+                search_in.append(item_path)
+            elif os.path.isfile(item_path) and item.endswith(suffix):
+                spec_files.append(item_path)
+    return spec_files
+
+
+def _dedup_name_parts(filename):
+    # split by folders
+    # and dedup same elements
+    # eg: installer/ospd/ospd.spec => [installer, ospd]
+    newname = []
+    for part in filename.split('/'):
+        if not newname or part != newname[-1]:
+            newname.append(part)
+    return newname
+
+
+def _files_to_sections(file_names, prefix, suffix):
+    # Convert flat list of files into simplified section structure
+    sections = {'content': None, 'nested': {}}
+
+    for name in file_names:
+        name_short = name[len(prefix):]  # drop common path prefix
+        # drop file suffix from the name and split to parts
+        name_parts = _dedup_name_parts(name_short[:-(len(suffix))])
+
+        if name_parts[0] == 'base':
+            sections['content'] = name
+        else:
+            sub = sections['nested'].setdefault(name_parts[0],
+                                                {'content': None,
+                                                 'nested': {}})
+            if len(name_parts) == 1:
+                sub['content'] = name
+            else:
+                # no deeper nesting, assign is ok here
+                sub['nested']['-'.join(name_parts[1:])] = {
+                    'content': name,
+                    'nested': {}}
+
+    return sections
+
+
+def _gen_one_rst(filename, title, section):
+    with open(filename+'.rst', 'w') as rst:
+        rst.write("%s\n%s\n" % (title, len(title)*'='))
+
+        rst.write("\n")
+
+        if section['nested']:
+            rst.write(".. toctree::\n"
+                      "   :maxdepth: 3\n"
+                      "\n")
+            for subsection in section['nested']:
+                rst.write("   %s-%s\n" % (filename, subsection))
+            rst.write("\n")
+
+        if section['content']:
+            rst.write(".. literalinclude:: %s\n" % section['content'])
+            rst.write("    :language: yaml\n")
+            rst.write("\n")
+
+    for subsection in section['nested']:
+        _gen_one_rst(filename + '-' + subsection,
+                     subsection,
+                     section['nested'][subsection])
+
+
+def _clean_rst_files(where, prefix):
+    for filename in os.listdir(where):
+        if filename.startswith(prefix):
+            os.unlink(os.path.join(where, filename))
+
+
+def _gen_specs_rst():
+    settings_path = '../../settings/'
+    suffix = '.spec'
+
+    _clean_rst_files('./', prefix='specs')
+    spec_files = _find_spec_files(settings_path, suffix)
+
+    sections = _files_to_sections(spec_files, settings_path, suffix)
+
+    _gen_one_rst('specs', 'Settings Specifications', sections)
+
+_gen_specs_rst()
