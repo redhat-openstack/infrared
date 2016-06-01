@@ -17,6 +17,7 @@ Contents:
    execute
    installer
    scale
+   specs
    contributions
 
 
