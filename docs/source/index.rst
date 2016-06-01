@@ -18,6 +18,7 @@ Contents:
    installer
    scale
    contributors
+   specs
 
 
 
