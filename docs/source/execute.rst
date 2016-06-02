@@ -1,6 +1,6 @@
 .. note:: This section is incomplete
 
-Running InfraRed
+Using InfraRed
 ================
 
 InfraRed has several "entry points". Currently available: [``ir-provisioner``, ``ir-installer``]
@@ -8,6 +8,15 @@ InfraRed has several "entry points". Currently available: [``ir-provisioner``, `
 You can get general usage information with the ``--help`` option::
 
   ir-provisioner --help
+
+Create a quick cfg file from example file::
+
+  $ cp infrared.cfg.example infrared.cfg
+
+.. note:: To specify a different directory or different filename, override the
+  lookup order with IR_CONFIG environment variable::
+
+  $ IR_CONFIG=/my/config/file.ini ir-provision --help
 
 This displays options you can pass to ``ir-provision``, as well as plugins available as "subcommands"::
 

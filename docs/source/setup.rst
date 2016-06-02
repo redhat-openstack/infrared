@@ -1,60 +1,76 @@
 Setup
 =====
 
+Supported distros
+-----------------
+Currently supported distros are:
+
+* Fedora 22, 23
+* RHEL 7.2
+
 Prerequisites
 -------------
+.. note:: **Sudo or root access is needed to install prerequisities!**
 
 General requirements::
 
-  $ dnf install git gcc
+  sudo dnf/yum install git gcc libffi-devel openssl-devel
 
-Ansible `requires python binding for SELinux <http://docs.ansible.com/ansible/intro_installation.html#managed-node-requirements>`_::
+Virtualenv_ is required::
 
-  $ dnf install libselinux-python
+  sudo dnf/yum install python-virtualenv
 
-If we want to use Virtualenv_::
+Ansible requires `python binding for SELinux <http://docs.ansible.com/ansible/intro_installation.html#managed-node-requirements>`_::
 
- $ dnf install python-virtualenv
+  sudo dnf/yum install libselinux-python
 
-.. note:: On Fedora 23 `BZ#1103566 <https://bugzilla.redhat.com/show_bug.cgi?id=1103566>`_
- calls for::
+otherwise it won't be able to run modules with copy/file/template functions!
 
-  $ dnf install redhat-rpm-config
+.. note:: libselinux-python is in `Prerequisites`_ but doesn't have a pip package. It must be installed on system level.
+.. note:: Ansible requires also **libselinux-python** installed on all nodes using copy/file/template functions!
 
 Virtualenv
 ----------
 
-InfraRed shares many dependencies with other OpenStack products and projects. Therefore there's a high probability of
-conflicts with python dependencies, which would result either with InfraRed failure, or worse, with breaking dependencies
-for other OpenStack products.
-When working from source, it is recommended to use python `virutalenv <http://docs.python-guide.org/en/latest/dev/virtualenvs/>`_
-to avoid corrupting the system packages::
+InfraRed shares many dependencies with other OpenStack products and projects. Therefore there's a high probability of conflicts with python dependencies, which would result either with InfraRed failure, or worse, with breaking dependencies for other OpenStack products.
+When working from source, it is recommended to use python `virtualenv <http://docs.python-guide.org/en/latest/dev/virtualenvs/>`_ to avoid corrupting the system packages::
 
-  $ virtualenv .venv
-  $ source .venv/bin/activate
+  virtualenv .venv
+  source .venv/bin/activate
+
+.. warning:: **It is mandatory that latest pip is used!**
+
+   .. code-block:: ini
+
+      pip install --upgrade pip
+
+.. note:: On Fedora 23 with EPEL enabled, `BZ#1103566 <https://bugzilla.redhat.com/show_bug.cgi?id=1103566>`_ also requires:
+
+   .. code-block:: ini
+
+      dnf install redhat-rpm-config
+
+Installation
+------------
+Clone stable branch from Github repository::
+
+  git clone https://github.com/rhosqeauto/InfraRed.git -b stable
 
 
-.. note:: libselinux-python is in `Prerequisites`_ but doesn't have a pip package.
- When detecting a virtualenv without selinux binding, InfraRed will try to
- `get python binding from system <http://dmsimard.com/2016/01/08/selinux-python-virtualenv-chroot-and-ansible-dont-play-nice/>`_.
- To avoid this, create an "open" virtualenv with site packages enabled::
+Install InfraRed from source::
 
-  $ virtualenv --system-site-packages .venv
+  cd InfraRed
+  pip install .
 
-Install
--------
+.. note::
+   For development work it's better to install in editable mode
 
-Install from source after cloning repo from GitHub::
+   .. code-block:: ini
 
- $ cd Infrared
- $ pip install .
+      pip install -e .
 
-.. note:: For development work it's better to install in editable mode::
-
-  $ pip install -e .
-
-Configure
----------
+Configuration
+-------------
 
 InfraRed will look for ``infrared.cfg`` in the following order:
 
@@ -62,21 +78,45 @@ InfraRed will look for ``infrared.cfg`` in the following order:
 #. In user home directory: ``~/.infrared.cfg``
 #. In system settings: ``/etc/infrared/infrared.cfg``
 
-Create a quick cfg file from example file::
+Set up `ansible config <http://docs.ansible.com/ansible/intro_configuration.html>`_ if it was not configured already::
 
-  $ cp infrared.cfg.example infrared.cfg
+  cp ansible.cfg.example ansible.cfg
 
-To specify a different directory or different filename, override the
-lookup order with ``IR_CONFIG`` environment variable::
+Additional settings
+^^^^^^^^^^^^^^^^^^^
+In InfraRed configuration file, you can adjust where ansible looks for directories and entry/cleanup playbooks:
 
-  $ IR_CONFIG=/my/config/file.ini ir-provision --help
+.. code-block:: plain
+   :caption: infrared.cfg.example
 
+    InfraRed configuration file
+    # ===========================
 
-Settings folders
-^^^^^^^^^^^^^^^^
+    [defaults]
+    settings  = settings
+    modules   = library
+    roles     = roles
+    playbooks = playbooks
+
+    [provisioner]
+    main_playbook = provision.yml
+    cleanup_playbook = cleanup.yml
+
+    [installer]
+    main_playbook = install.yml
+    cleanup_playbook = cleanup.yml
+
+    [tester]
+    main_playbook = test.yml
+    cleanup_playbook = cleanup.yml
+
+Private settings
+-------------------
 
 Infrared allows user to define several folders to store settings and spec files. This can be used, for example, to store public and private settings separately. To define additional settings folders edit the ``settings`` option in the Infrared configuration file::
 
     [defaults]
     settings  = settings:private_settings
     ...
+
+.. note:: InfraRed tool must be tied to infrastructure at certain level, therefore requires part of configuration not shared publicly. It is assumed this part will be located in private settings.
