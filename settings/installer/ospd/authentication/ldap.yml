@@ -1,0 +1,34 @@
+---
+type: ldap
+settings:
+    identity:
+        driver: "keystone.identity.backends.ldap.Identity"
+    assignment:
+        driver: "keystone.assignment.backends.sql.Assignment"
+    ldap:
+        url: "ldap://192.168.122.86" # todo: take it from the host file
+        user: "cn=Administrator,cn=users,DC=win2012-2dom,DC=com"
+        password: "R3dhat456"
+        suffix: "DC=win2012-2dom,DC=com"
+        use_dumb_member: "False"
+        allow_subtree_delete: "False"
+        user_tree_dn: "CN=Users,DC=win2012-2dom,DC=com"
+        user_objectclass: "person"
+        user_id_attribute: "cn"
+        user_name_attribute: "sAMAccountName"
+        user_mail_attribute: "userPrincipalName"
+        user_enabled_attribute: "userAccountControl"
+        user_enabled_mask: "2"
+        user_enabled_default: "512"
+        user_allow_create: "False"
+        user_allow_update: "False"
+        user_allow_delete: "False"
+        group_allow_create: "False"
+        group_allow_update: "False"
+        group_allow_delete: "False"
+        NovaRbdPoolName: "automation-nova"
+        GlanceRbdPoolName: "automation-glance"
+        CephClientUserName: "automation"
+        CephClientKey: "{{ !lookup private.storage.ceph.CephClientKey }}"
+        CephClusterFSID: "{{ !lookup private.storage.ceph.CephClusterFSID }}"
+        CephExternalMonHost: "{{ !lookup private.storage.ceph.CephExternalMonHost }}"

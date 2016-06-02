@@ -124,3 +124,31 @@
         # TODO: move the hard coded value to a variable
       - name: create the external subnet
         shell: "source ~/overcloudrc; neutron subnet-create {{ pool_name.stdout_lines|last }} 10.0.0.1/24 --name external_subnet --enable-dhcp=False --allocation-pool start=10.0.0.210,end=10.0.0.250 --gateway 10.0.0.1"
+
+- name: ldap configuration
+  hosts: controller
+  gather_facts: no
+  become: yes
+  become_method: sudo
+  vars:
+      settings_str: ""
+  tasks:
+      - name: gather section-optio-value string
+        set_fact:
+            settings_str: "{{ settings_str }}{% for option, value in item.value.iteritems() %}{{item.key}}-+-{{ option }}-+-{{ value }}----{% endfor %}"
+        with_dict: "{{ installer.authentication.settings }}"
+      - debug: msg="{{ settings_str }}"
+
+      - name: convert section-optio-value string to list
+        set_fact:
+            settings_list: "{{ settings_str.split('----')[:-1] }}"
+      - debug: msg="{{settings_list}}"
+
+      - name: configure keystone to work with ldap
+        ini_file:
+            dest: "/etc/keystone/keystone.conf"
+            section: "{{ item.split('-+-')[0] }}"
+            option: "{{ item.split('-+-')[1] }}"
+            value: "{{ item.split('-+-')[2] }}"
+        with_items: "{{ settings_list }}"
+        when: "installer.authentication.type == 'ldap'"
