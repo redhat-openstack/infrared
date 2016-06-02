@@ -1,3 +1,5 @@
+.. highlight:: plain
+
 .. note:: This guide need to be edited and splited to sections
 
 Contributors Guide
@@ -30,8 +32,6 @@ The merging priority order is:
 1. Input files
 2. Settings dir based options
 3. Extra Vars
-
-
 
 InfraRed input arguments
 ------------------------
