@@ -67,12 +67,13 @@
 
           - name: add hosts to host list
             add_host:
-                name="{{ "{0}-{1}".format(item.name.split("-")[1], item.name.split("-")[2] | int ) }}"
-                groups="{{ hostvars["{0}-{1}".format(item.name.split("-")[1], item.name.split("-")[2] | int )].group_names | reject('equalto', 'ungrouped') | join(',') }}"
-                ansible_user="{{ user }}"
-                ansible_ssh_pass="{{ password }}"
-                ansible_host="{{ item.accessIPv4 }}"
-                ansible_ssh_private_key_file="{{ privkey }}"
+                # convert nova output (overcloud-NODE-COUNT) to ansible node names (NODE-COUNT)
+                name: "{{ item.name.split('-',1)[1] }}"
+                groups: "{{ hostvars[item.name.split('-',1)[1]].group_names | reject('equalto', 'ungrouped') | join(',') }}"
+                ansible_user: "{{ user }}"
+                ansible_ssh_pass: "{{ password }}"
+                ansible_host: "{{ item.accessIPv4 }}"
+                ansible_ssh_private_key_file: "{{ privkey }}"
             with_items: "{{ openstack_servers }}"
         vars:
             path_venv: /tmp/venv_server_facts
