@@ -1,5 +1,10 @@
-Scale tester
-============
+.. highlight:: plain
+
+Advanced features
+=================
+
+Scalability
+^^^^^^^^^^^
 
 Infrared allows to perform scale tests on different services.
 

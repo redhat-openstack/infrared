@@ -12,14 +12,12 @@ Contents:
 .. toctree::
    :maxdepth: 3
 
+   introduction
    quickstart
    setup
    execute
-   installer
-   scale
+   advanced
    contributions
-
-
 
 Indices and tables
 ==================
