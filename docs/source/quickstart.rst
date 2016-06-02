@@ -1,47 +1,69 @@
+.. highlight:: plain
+
 Quickstart
 ==========
 
 .. note:: This guide assumes:
 
-  * Working on Fedora 23
-  * `Virtualenv <setup.html#Virtualenv>`_ is not used.
+  * Latest version of `Python 2 <https://www.python.org/downloads/>`_ installed
+  * `Virtualenv <setup.html#Virtualenv>`_ is used
+  * `Prerequisites <setup.html#prerequisites>`_ are set-up
+  * We strongly urge to read all `Setup <setup.html#Setup>`_ instructions first
 
-#. Get `prerequisites <setup.html#prerequisites>`_::
+Clone InfraRed stable from GitHub::
 
-    $ yum install libselinux-python redhat-rpm-config git gcc
+    git clone https://github.com/rhosqeauto/InfraRed.git -b stable
 
-#. Clone InfraRed from GitHub::
+.. note:: This is documentation for stable version. Check in top left corner of this page if you stable branch tag matches version of documentation. If not true, let us know!
 
-    $ git clone https://github.com/rhosqeauto/InfraRed.git
+`Install <setup.html#Install>`_ from source using pip::
 
-#. `Install <setup.html#Install>`_ from source using pip::
+    cd InfraRed
+    pip install --upgrade pip
+    pip install .
+    cp ansible.cfg.example ansible.cfg
+    cp infrared.cfg.example infrared.cfg
 
-    $ cd InfraRed
-    $ pip install .
-    $ cp ansible.cfg.example ansible.cfg
-    $ cp infrared.cfg.example infrared.cfg
+Generate arguments file for virsh provisioner::
 
-#. Generate arguments file for virsh provisioner::
+    ir-provisioner virsh --generate-conf-file virsh_prov.ini
 
-    $ ir-provisioner virsh --generate-conf-file virsh_prov.ini
+Review the config file and edit as required:
 
-#. Review the output and edit as needed:
+.. code-block:: plain
+   :emphasize-lines: 6,7
+   :caption: virsh_prov.ini
 
-  .. code-block:: ini
+   [virsh]
+   topology-nodes = undercloud:1,controller:1,compute:1
+   topology-network = default.yml
+   host-key = ~/.ssh/id_rsa
+   host-user = root
+   image = Edit with one of ['sample.yml.example'] options, OR override with CLI: --image=<option>
+   host-address = Edit with any value, OR override with CLI: --host-address=<option>
 
-    [virsh]
-    topology-nodes = undercloud:1,controller:1,compute:1
-    topology-network = default.yml
-    host-key = ~/.ssh/id_rsa
-    host-user = root
-    image = Edit with one of ['sample.yml.example'] options, OR override with CLI: --image=<option>
-    host-address = Edit with any value, OR override with CLI: --host-address=<option>
+.. note:: ``image`` and ``host-address`` don't have default values. All arguments can be edited in file or overridden directly from CLI.
 
-  .. note:: ``image`` and ``host-address`` don't have default values. All arguments can be edited in file or overridden directly from CLI.
 
-#. Execute provisioning. Override file argument if required::
+In previous example, ``image`` doesn't have a valid optional value. You can generate your own file based on the provided example file we provide, or you can get it from private repository if available:
 
-    $ ir-provisioner virsh --image=rhel-7.2.yml --host=my.example.host.redhat.com
+.. code-block:: plain
+   :caption: settings/provisioner/virsh/image/sample.yml.example
 
- .. note:: In this example, ``image`` doesn't have a valid optional value. You can generate your own file
-   based on the provided example file, or you can get it from private repository if available.
+   ---
+   file: "Fedora-Cloud-Base-23-20151030.x86_64.qcow2"
+   server: "http://mirror.pnl.gov/fedora/linux/releases/23/Cloud/x86_64/Images/"
+
+Prepare sample file with required information about image used for provisioning::
+
+   mv settings/provisioner/virsh/image/sample.yml.example \
+   settings/provisioner/virsh/image/fedora23.yml
+
+Execute provisioning. Override arguments if needed::
+
+    ir-provisioner virsh --image=fedora23.yml --host-address=my.host.com
+
+For ``installer`` and ``tester`` stages continue to #TODO.
+
+
+
