@@ -1,31 +1,34 @@
 Quickstart
 ==========
-
 .. note:: This guide assumes:
 
-  * Working on Fedora 23
-  * `Virtualenv <setup.html#Virtualenv>`_ is not used.
+  * `Virtualenv <setup.html#Virtualenv>`_ is used
+  * `Prerequisites <setup.html#prerequisites>`_ are set-up
+  * We strongly urge to read `Setup <setup.html#Setup>`_ instructions for known issues and workarounds before you proceed
 
-#. Get `prerequisites <setup.html#prerequisites>`_::
+* Clone InfraRed from GitHub::
 
-    $ yum install libselinux-python redhat-rpm-config git gcc
+    git clone https://github.com/rhosqeauto/InfraRed.git
 
-#. Clone InfraRed from GitHub::
+.. note::
 
-    $ git clone https://github.com/rhosqeauto/InfraRed.git
+  * For production, `Stable branch <https://github.com/rhosqeauto/InfraRed/tree/stable>`_ is probably good point to start with:
 
-#. `Install <setup.html#Install>`_ from source using pip::
+    git clone https://github.com/rhosqeauto/InfraRed.git -b stable
 
-    $ cd InfraRed
-    $ pip install .
-    $ cp ansible.cfg.example ansible.cfg
-    $ cp infrared.cfg.example infrared.cfg
+* `Install <setup.html#Install>`_ from source using pip::
 
-#. Generate arguments file for virsh provisioner::
+    cd InfraRed
+    pip install --upgrade pip
+    pip install .
+    cp ansible.cfg.example ansible.cfg
+    cp infrared.cfg.example infrared.cfg
 
-    $ ir-provisioner virsh --generate-conf-file virsh_prov.ini
+* Generate arguments file for virsh provisioner::
 
-#. Review the output and edit as needed:
+    ir-provisioner virsh --generate-conf-file virsh_prov.ini
+
+* Review the config file and edit as required:
 
   .. code-block:: ini
 
@@ -39,9 +42,24 @@ Quickstart
 
   .. note:: ``image`` and ``host-address`` don't have default values. All arguments can be edited in file or overridden directly from CLI.
 
-#. Execute provisioning. Override file argument if required::
 
-    $ ir-provisioner virsh --image=rhel-7.2.yml --host=my.example.host.redhat.com
+* In previous example, ``image`` doesn't have a valid optional value. You can generate your own file based on the provided example file we provide, or you can get it from private repository if available:
 
- .. note:: In this example, ``image`` doesn't have a valid optional value. You can generate your own file
-   based on the provided example file, or you can get it from private repository if available.
+  .. code-block:: ini
+
+   cat settings/provisioner/virsh/image/sample.yml.example
+   ---
+   file: "Fedora-Cloud-Base-23-20151030.x86_64.qcow2"
+   server: "http://mirror.pnl.gov/fedora/linux/releases/23/Cloud/x86_64/Images/"
+
+* Prepare sample file with your image:
+
+  .. code-block:: ini
+
+   mv settings/provisioner/virsh/image/sample.yml.example \
+   settings/provisioner/virsh/image/fedora23.yml
+
+* Execute provisioning using prepared image. Override arguments if needed::
+
+    ir-provisioner virsh --image=fedora23.yml --host-address=my.host.com
+
