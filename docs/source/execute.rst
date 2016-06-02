@@ -1,31 +1,196 @@
-.. note:: This section is incomplete
+.. highlight:: plain
 
-Running InfraRed
+Using InfraRed
 ================
 
-InfraRed has several "entry points". Currently available: [``ir-provisioner``, ``ir-installer``]
+General use
+-----------
+InfraRed framework is divided into three logically separated stages (tools):
+
+* ``ir-provisioner``
+
+* ``ir-installer``
+
+* ``ir-tester``
+
+First, create InfraRed config file::
+
+  cp infrared.cfg.example infrared.cfg
+
+.. note:: There is an environment variable called IR_CONFIG that controls the location of the config file (defaults to: ./infrared.cfg). Use if you wish to override local one.
+
+  .. code-block:: plain
+
+    IR_CONFIG=/my/config/file.ini ir-provision --help
 
 You can get general usage information with the ``--help`` option::
 
   ir-provisioner --help
 
-This displays options you can pass to ``ir-provision``, as well as plugins available as "subcommands"::
+Output will display supported options you can pass to ``ir-provision``, as well as available positional arguments for current stage (e.g. for provisioner these are foreman, virsh, openstack, ...):
 
-  $ ir-provision --help
-    usage: ir-provisioner [-h] [-v] [--inventory INVENTORY] [-d]
-                          {foreman,virsh,openstack,beaker} ...
+.. code-block:: plain
+
+    usage: ir-provisioner [-h] [--inventory INVENTORY] [-v] [-d]
+                          {openstack,beaker,foreman,virsh} ...
 
     positional arguments:
-      {foreman,virsh,openstack,beaker}
-        foreman             Provision systems using 'Foreman'
-        virsh               Provision systems using virsh
+      {openstack,beaker,foreman,virsh}
         openstack           Provision systems using Ansible OpenStack modules
         beaker              Provision systems using Beaker
+        foreman             Provision systems using Foreman
+        virsh               Provision systems using virsh
 
     optional arguments:
       -h, --help            show this help message and exit
-      -v, --verbose         Control Ansible verbosity level
       --inventory INVENTORY
-                            Inventory file
+                            Inventory file (default: local_hosts)
+      -v, --verbose         Control Ansible verbosity level
       -d, --debug           Run InfraRed in DEBUG mode
 
+Also, you can invoke help for specific positional arguments (supported provisioners, in this case)::
+
+  ir-provisioner beaker --help
+
+.. note:: Positional arguments are generated dynamically from spec files - order and amount might change in time.
+
+%TODO - STATIC/DYNAMIC params
+
+Provisioners
+------------
+For list of supported provisioners invoke::
+
+    $ ir-provisioner -h
+
+For detailed description::
+
+    $ ir-provisioner <provisioners_name> -h
+
+Beaker
+^^^^^^
+Entry point::
+
+  playbooks/provisioner/beaker/main.yml
+
+Beaker provisioner is designed to work with instances of `Beaker project <https://beaker-project.org>`_ at least version 22.3. It is based custom ansible module built on top of
+
+.. code-block:: plain
+
+  library/beaker_provisioner.py
+
+script. Because of not very flexible support of Kerberos in Beaker (with this type of authentication user can not have custom SSH key set-up, Kerberos handling not very suitable in dynamic cloud environment), authentication is done using XML-RPC API with credentials for dedicated user. Playbooks expect following "static" private settings defined:
+
+.. code-block:: plain
+
+  private:
+      provisioner:
+              beaker:
+              base_url: "https://beaker_instance_url/"
+              username: "beaker_username"
+              password: "beaker_password"
+              cer_file: "link_to_certificate"
+              ssh_user: "predefined_user"
+              ssh_pass: "predefined_password"
+
+See apropriate value of ``ssh_pass`` for your ``beaker_username`` in ``Account`` -> ``Preferences`` -> ``Root Password`` if you didn't setup one. ``cer_file`` must be downloaded and linked also for proper XML-RPC calls.
+
+Also, for each run you will need to set proper dynamic node-specific values:
+
+.. code-block:: plain
+
+    ...
+    Beaker system:
+      --fqdn FQDN                Fully qualified domain name of a system
+      --distro-tree DISTRO-TREE  Distro Tree ID Default value: 71576
+    ...
+
+Foreman
+^^^^^^^
+Entry point::
+
+  playbooks/provisioner/foreman/main.yml
+
+Foreman provisioner is designed to work with instances of `Foreman project <https://theforeman.org>`_ at least version 1.6.3. It is based custom ansible module built on top of
+
+.. code-block:: plain
+
+  library/foreman_provisioner.py
+
+.. code-block:: plain
+
+  private:
+      provisioner:
+              foreman:
+                auth_url: 'https://foreman_instance_url/'
+                username: '...'
+                password: '...'
+
+Foreman provisioner expects that provisioned node has configured relevat puppet recipies to provide basic SSH access after provisioning is done.
+
+Openstack
+^^^^^^^^^
+
+Virsh
+^^^^^
+Virsh provisioner requires prepared host to be accessible through SSH key. Please see `Quickstart <quickstart.html>`_ guide where usage is demonstrated.
+
+Installers
+----------
+For list of supported installers invoke::
+
+    $ ir-installer -h
+
+Packstack
+^^^^^^^^^
+Infrared allows to use Packstack installer to install OpenStack::
+
+    $ ir-installer -d -vvvv --inventory hosts packstack --product-version=8 -o install.yml -e @provision.yml
+
+Here required arguments are:
+    * ``--product-version`` - the product version to install.
+
+Optional arguments:
+    * ``-o provision.yml`` - the settings file generated by provisiner (using ``ir-provisioner [...] -o provision.yml [...]``). It might contain relevant data required for Packstack settings.
+
+
+Settings structure
+""""""""""""""""""
+
+The path for the main settings file for packstack installer::
+
+    settings/installer/packstack/packstack.yml
+
+This file provides defaults settings and default configuration options for the packstack answer files.
+
+Additional answer options can be added using the the following approaches:
+
+    * Using a non default config argument value::
+
+        $ ir-installer --inventory hosts packstack --config=basic_neutron.yml
+
+    * Using the extra-vars flags::
+
+        $ ir-installer --inventory hosts packstack --product-version=8 --extra-vars=installer.config.CONFIG_DEBUG_MODE=no
+
+    * Network based answer file options can be selected whether by choosing network backend or by modyfing config with --extra-vars::
+
+        $ ir-installer --inventory hosts packstack --product-version=8 --network=neutron.yml --netwrok-variant=neutron_gre.yml
+
+        $ ir-installer --inventory hosts packstack --product-version=8 --network=neutron.yml --netwrok-variant=neutron_gre.yml --extra-vars=installer.network.config.CONFIG_NEUTRON_USE_NAMESPACES=n
+
+Both installer.network.config.* and installer.config.* options will be merged into one config and used as the answer file for Packstack installer.installer
+
+OpenStack Director
+^^^^^
+
+Testers
+-------
+For list of supported testers invoke::
+
+    $ ir-tester -h
+
+Tempest
+^^^^^^^
+
+Rally
+^^^^^
