@@ -1,0 +1,17 @@
+---
+- name: Generate Deployer output for Tester
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  tasks:
+      - name: fetch deployer output for tester
+        fetch:
+            src: "~/{{ item.src }}"
+            dest: "{{ inventory_dir }}/{{ item.dst }}"
+            flat: yes
+        with_items:
+            - src:  "overcloudrc"
+              dest: "keystonerc"
+            - src:  "tempest-deployer-input.conf"
+              dest: "tempest-deployer-input.conf"
