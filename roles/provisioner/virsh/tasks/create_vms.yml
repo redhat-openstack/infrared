@@ -1,73 +1,77 @@
 ---
-- name: set fact for node
+- name: set fact for node '{{ item.key }}'
   set_fact:
+      node_key: "{{ item.key }}"
       node_data: "{{ item.value }}"
-      node_name: "{% if item.value.prefix is defined and item.value.prefix %}{{ item.value.prefix }}-{% endif %}{{ item.key }}"
+      node_name: "{% if item.value.prefix is defined and item.value.prefix %}{{ item.value.prefix }}-{% endif %}{{ item.value.name }}"
 
 # TODO Consider checking if we already downloaded image for another VM's
 # to avoid dowlonading of the same file again.
-- name: import vm disk image(s) for node '{{ node_name }}'
-  get_url:
-      url: "{{ item.value.import_url }}"
-      dest: /var/lib/libvirt/images/{{node_name}}_original_{{item.key}}.qcow2
-      timeout: 30
-  register: result
-  until: result.msg.find("Request failed") == -1
-  retries: 5
-  delay: 5
+- block:
+    - name: import vm disk image(s) for node '{{ node_name }}'
+      get_url:
+          url: "{{ item.value.import_url }}"
+          dest: /var/lib/libvirt/images/{{node_name}}_original_{{item.key}}.qcow2
+          timeout: 30
+      register: result
+      until: result.msg.find("Request failed") == -1
+      retries: 5
+      delay: 5
+      with_dict: "{{ node_data.disks }}"
+
+    - name: populate imported image(s) for the given amount of nodes
+      shell: |
+          {% for num in range(1, node_data.amount + 1, 1) %}
+          cp /var/lib/libvirt/images/{{node_name}}_original_{{item.key}}.qcow2 /var/lib/libvirt/images/{{node_name}}-{{ num - 1 }}-{{item.key}}.qcow2
+          virt-sysprep -a /var/lib/libvirt/images/{{node_name}}-{{ num - 1 }}-{{item.key}}.qcow2 --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
+          virt-customize -a /var/lib/libvirt/images/{{node_name}}-{{ num - 1 }}-{{item.key}}.qcow2 --root-password password:redhat --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel
+          {% endfor %}
+      with_dict: "{{ node_data.disks }}"
+
   when: item.value.import_url is defined and item.value.import_url
-  with_dict: "{{ node_data.disks }}"
 
-- name: populate imported image(s) for the given amount of nodes
-  shell: |
-      {% for num in range(1, node_data.amount + 1, 1) %}
-      cp /var/lib/libvirt/images/{{node_name}}_original_{{item.key}}.qcow2 /var/lib/libvirt/images/{{node_name}}-{{ num - 1 }}-{{item.key}}.qcow2
-      virt-sysprep -a /var/lib/libvirt/images/{{node_name}}-{{ num - 1 }}-{{item.key}}.qcow2 --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
-      virt-customize -a /var/lib/libvirt/images/{{node_name}}-{{ num - 1 }}-{{item.key}}.qcow2 --root-password password:redhat --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel
-      {% endfor %}
-  when: item.value.import_url is defined and item.value.import_url
-  with_dict: "{{ node_data.disks }}"
+- block:
+    # TODO: configure interfaces based on config rather than hardcode
+    - name: build '{{ node_name }}' vm base image
+      shell: |
+          wget -q -N {{ provisioner.image.server }}/{{ guest_image }} -O /var/lib/libvirt/images/base_image.qcow2
+          virt-sysprep -a /var/lib/libvirt/images/base_image.qcow2 --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
+          virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --root-password password:redhat --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel
+          virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --run-command 'yum remove cloud-init* -y'
+          virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{0,1} && sed -i s/DEVICE=.*/DEVICE=eth1/g /etc/sysconfig/network-scripts/ifcfg-eth1'
+          virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{1,2} && sed -i s/DEVICE=.*/DEVICE=eth2/g /etc/sysconfig/network-scripts/ifcfg-eth2'
+      register: baseimage_build_result
+      when: baseimage_build_result is not defined
+      with_dict: "{{ node_data.disks }}"
 
-# TODO: configure interfaces based on config rather than hardcode
-- name: build vm base image
-  shell: |
-      wget -q -N {{ provisioner.image.server }}/{{ guest_image }} -O /var/lib/libvirt/images/base_image.qcow2
-      virt-sysprep -a /var/lib/libvirt/images/base_image.qcow2 --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
-      virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --root-password password:redhat --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel
-      virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --run-command 'yum remove cloud-init* -y'
-      virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{0,1} && sed -i s/DEVICE=.*/DEVICE=eth1/g /etc/sysconfig/network-scripts/ifcfg-eth1'
-      virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{1,2} && sed -i s/DEVICE=.*/DEVICE=eth2/g /etc/sysconfig/network-scripts/ifcfg-eth2'
-  register: baseimage_build_result
-  when: baseimage_build_result is not defined and (item.value.import_url is not defined or not item.value.import_url)
-  with_dict: "{{ node_data.disks }}"
+    # for nodes that have multiple disks we should run virt-resize only for one of the disks, say first disk (the one with the root file system).
+    # The additional disks just need to be created with the qemu-img command and attached to the VMs as they're going to be partitioned and get data written on top in a later step by the installer.
+    # This way we could also save some deployment time as the resize operation is quite time consuming.
+    - name: create disk(s) from vm base image for node '{{ node_key }}'
+      shell: |
+          {% for num in range(0, node_data.amount, 1) %}
+          qemu-img create -f qcow2 -o preallocation={{ item.value.preallocation }} {{ item.value.path }}/{{ node_name }}-{{ num }}-{{ item.key }}.qcow2 {{ item.value.size }}
+          {% if item.key == 'disk1' %}
+          virt-resize --expand /dev/sda1 /var/lib/libvirt/images/base_image.qcow2 {{ item.value.path }}/{{ node_name }}-{{ num }}-{{ item.key }}.qcow2
+          {% endif %}
+          {% endfor %}
+      with_dict: "{{ node_data.disks }}"
 
-# for nodes that have multiple disks we should run virt-resize only for one of the disks, say first disk (the one with the root file system).
-# The additional disks just need to be created with the qemu-img command and attached to the VMs as they're going to be partitioned and get data written on top in a later step by the installer.
-# This way we could also save some deployment time as the resize operation is quite time consuming.
-- name: create disk(s) from vm base image for node '{{ node_name }}'
-  shell: |
-      {% for num in range(1, node_data.amount + 1, 1) %}
-      qemu-img create -f qcow2 -o preallocation={{ item.value.preallocation }} {{ item.value.path }}/{{ node_name }}-{{ num - 1 }}-{{ item.key }}.qcow2 {{ item.value.size }}
-      {% if item.key == 'disk1' %}
-      virt-resize --expand /dev/sda1 /var/lib/libvirt/images/base_image.qcow2 {{ item.value.path }}/{{ node_name }}-{{ num - 1 }}-{{ item.key }}.qcow2
-      {% endif %}
-      {% endfor %}
   when: item.value.import_url is not defined or not item.value.import_url
-  with_dict: "{{ node_data.disks }}"
 
 # this is required to skip base image build for the rest of the nodes
 - name: Set base image build fact
   set_fact:
       baseimage_build_result: "{{ baseimage_build_result }}"
 
-- name: create vm's
+- name: create '{{ node_name }}' vms
   shell: |
-      virt-install --name {{node_name}}-{{ item|int - 1 }} \
+      virt-install --name {{node_name}}-{{ item }} \
         {% for disk_name, disk_values in node_data.disks.iteritems() %}
         {% if disk_values.import_url is defined and disk_values.import_url %}
-         --disk path=/var/lib/libvirt/images/{{node_name}}-{{ item|int - 1 }}-{{disk_name}}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
+         --disk path=/var/lib/libvirt/images/{{node_name}}-{{ item }}-{{disk_name}}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
         {% else %}
-          --disk path={{ disk_values.path }}/{{ node_name }}-{{ item|int - 1 }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
+          --disk path={{ disk_values.path }}/{{ node_name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
         {% endif %}
         {% endfor %}
          --network network:data \
@@ -82,9 +86,9 @@
          --noautoconsole \
          --autostart \
          --vnc
-  with_sequence: count={{node_data.amount | int }}
+  with_sequence: "start=0 end={{node_data.amount | int - 1}}"
 
-- name: get the list of VM's for '{{ node_name }}' nodes
+- name: get the list of VM's for '{{ node_key }}' nodes
   shell: "virsh list --all | grep -P '[\\w-]+' | grep {{ node_name }} | sed -n '1,$p' | awk '{print $2}'"
   register: vm_names
 - set_fact:
@@ -126,11 +130,11 @@
 
 - name: add hosts to host list
   add_host:
-      name="{{ item.item.item[0] }}"
-      groups="{{ provisioner.topology.nodes['%s' % item.item.item[0].rstrip('1234567890-')].groups | join(',') }}"
-      ansible_ssh_user="root"
-      ansible_ssh_host="{{ item.stdout }}"
-      ansible_ssh_private_key_file="{{ inventory_dir }}/id_rsa"
+      name: "{{ item.item.item[0] }}"
+      groups: "{{ provisioner.topology.nodes['%s' % item.item.item[0].rstrip('1234567890-')].groups | join(',') }}"
+      ansible_ssh_user: "root"
+      ansible_ssh_host: "{{ item.stdout }}"
+      ansible_ssh_private_key_file: "{{ inventory_dir }}/id_rsa"
   when: item.item is defined and item.item.item[1] == "external"
   with_items: "{{ vm_ip_list }}"
 
