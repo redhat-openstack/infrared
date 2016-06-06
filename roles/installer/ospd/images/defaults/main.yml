@@ -1,11 +1,17 @@
-tar_files:
-    '7':
-        - "discovery-ramdisk.tar"
-        - "deploy-ramdisk-ironic.tar"
-        - "overcloud-full.tar"
-    '8':
-        - "ironic-python-agent.tar"
-        - "overcloud-full.tar"
-    # Any higher version defaults to 8
+# Default role parameters
+task: import
+ospd_version: 8
+work_dir: "~/overcloud_images"
+dib_dir: '/etc/yum.repos.d'
+distro_type: 'rhel7'
+rhel_version_full: '7.2'
+ospd_pin: 'latest'
 
-tar_images: "{{ installer.images.files | default(tar_files[installer.product.version|string]) | default(tar_files['8'])}}"
+# Mandatory role parameters
+base_image_url: 'UNDEFINED'
+rhos_release_rpm_link: 'UNDEFINED'
+upload_to: 'UNDEFINED'
+storage_server: 'UNDEFINED'
+storage_path: 'UNDEFINED'
+storage_ssh_key: 'UNDEFINED'
+storage_user: 'UNDEFINED'

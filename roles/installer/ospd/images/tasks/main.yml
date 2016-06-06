@@ -1,18 +1,20 @@
-- name: copy our public key to inject the images of the overcloud nodes
-  copy:
-      src: "{{ inventory_dir }}/id_rsa.pub"
-      dest: "/home/{{ installer.user.name }}/id_rsa.pub"
-      mode: 0600
+- include: "{{ task }}.yml"
 
-- include: "{{ installer.images.task }}.yml"
+- name: List images built
+  shell: "ls -l {{ image_build_dir }}"
+  when: task == 'build'
 
-- name: list current directory
-  shell: "ls -l"
-  register: file_list
+- name: List images imported
+  shell: "ls -l {{ build_path }}"
+  when: task == 'import'
 
-- name: print file list
-  debug:
-      var=file_list
+- name: Upload to the storage server using pubkey auth if requested
+  shell:
+      "time rsync -ave 'ssh -o StrictHostKeyChecking=no' {{ image_build_dir }}/{{ tar_file }} {{ storage_user }}@{{ storage_server }}:{{ storage_path }}/{{ ospd_version }}/"
+  when: upload_to == 'remote'
 
-- name: upload the overcloud images to glance
-  shell: "source ~/stackrc; openstack overcloud image upload --update-existing"
+- name: Upload the overcloud images to glance
+  shell: |
+      pushd {{ build_path }}
+      source ~/stackrc; openstack overcloud image upload --update-existing
+  when: upload_to == 'glance'

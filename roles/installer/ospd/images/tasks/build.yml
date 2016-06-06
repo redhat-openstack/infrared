@@ -1,30 +1,122 @@
----
+- name: Remove conflicting packages if all OSPd image versions built as bulk process
+  yum: name={{ item }} state=absent
+  ignore_errors: yes
+  with_items:
+     - "python-rdomanager-oscplugin"
+     - "python-tripleoclient"
+     - "*openstack*"
+     - "*tripleo*"
+
+- name: Install the rhos-release RPM
+  shell: "yum localinstall -y {{ rhos_release_rpm_link }}"
+
+- name: Remove rhos-release repos if needed
+  shell: "rhos-release -x"
+
+- name: Remove all remaining repos
+  command: "rm -f /etc/yum.repos.d/*"
+
+- name: Clean yum cache
+  command: "yum clean all"
+  ignore_errors: yes
+
+- debug:
+      msg: "rhos-release {{ ospd_version }}-director -p {{ ospd_pin }}"
+
+- name: Create necessary repos with for director using rhos-release
+  command: "rhos-release {{ ospd_version }}-director -p {{ ospd_pin }}"
+  register: command_result
+  until: command_result.stderr.find('Connection reset by peer') == -1
+  retries: 40
+  delay: 5
+
+- name: Update system packages
+  yum:
+      state: latest
+      name: "*"
+  register: update
+
+- name: When working with OSPd7, install python-rdomanager-oscplugin
+  yum: name=python-rdomanager-oscplugin state=present
+  when: ospd_version|int == 7
+
+- name: Workaround bug LP#1468028 part.1
+  command: easy_install pip
+  register: easy_install
+  when: ospd_version|int == 7
+
+- name: Workaround bug LP#1468028 part.2
+  pip: name=oslo.i18n version=1.7.0
+  when: ospd_version|int == 7 and easy_install.rc == 0
+
+- name: When working with OSPd>=8, install python-tripleoclient
+  yum: name=python-tripleoclient state=present
+  when: ospd_version|int >= 8
+
+- name: Install wget as is prerequisity for rhos-release
+  yum: name=wget state=present
+
+- name: Create directory for images built
+  file: path={{ image_build_dir }} state=directory
+
 - name: Check if there is a guest image is present
-  tags: backup
   stat:
-      path: "/home/{{ installer.user.name }}/base_image.qcow2"
+      path: "{{ base_image }}"
   register: stat_result
 
 - name: Download guest image for build if needed
   get_url:
-      dest: "/home/{{ installer.user.name }}/base_image.qcow2"
-      url: "{{ private.images.base_url }}/rhel-guest-image-latest.qcow2"
-  when: stat_result.stat.exists == False
+      dest: "{{ base_image }}"
+      url: "{{ base_image_url }}"
+  when: not stat_result.stat.exists
 
-# TODO: Move environment to a file / template so a user can make customize it
-- name: Build OC images
-  tags: backup
-  shell: "source ~/stackrc; openstack overcloud image build --all > openstack-build-images.log"
-  environment:
-      DIB_LOCAL_IMAGE: "/home/{{ installer.user.name }}/base_image.qcow2"
-      DIB_YUM_REPO_CONF: "/etc/yum.repos.d/rhos-release-{{ installer.product.version }}-director.repo /etc/yum.repos.d/rhos-release-{{ installer.product.core.version }}.repo /etc/yum.repos.d/rhos-release-{{ ansible_product_version.split() | first | lower }}-{{ ansible_distribution_version }}.repo"
-      NODE_DIST: "rhel7"
-      RHOS: 1
-      RUN_RHOS_RELEASE: 1
-      RHOS_RELEASE: "{{ installer.product.version }}-director"
-      USE_DELOREAN_TRUNK: 0
+- name: Setup export-file with environment vars
+  template: 
+      src: ./templates/build-img-env.j2
+      dest: '{{ build_env_file }}'
+      mode: 0755
 
-- name: tar our images
-  tags: backup
-  shell: "tar -cf {{ item }} {{ item | splitext | first }}.*"
-  with_items: "{{ tar_images }}"
+- name: Print all env pre-exports prepared in script
+  shell: |
+      cat {{ build_env_file }} 
+
+- name: Build all possible images
+  register: build_status
+  ignore_errors: True
+  shell: |
+      source {{ build_env_file }}
+      touch {{ build_log }}
+      pushd {{ image_build_dir }}
+      openstack overcloud image build --all &> {{ build_log }}
+- name: Build all possible images
+  register: build_status
+  ignore_errors: True
+  shell: |
+      source {{ build_env_file }}
+
+- name: Detect other possible build errors ("overcloud image build" is not reliable script)
+  register: build_errors
+  shell: |
+      ! tail -n 10 {{ build_log }} | grep -E -i "(error|404|fail|problem|unexpected)"
+
+- debug: msg={{ build_errors.rc }}
+
+- name: Expose errors durring DIB build if build failed
+  ignore_errors: yes
+  shell: cat {{ build_log }} | grep -v liberror | grep -v libgpg-error | grep -C 2 -i error
+  when: build_status.rc != 0 or build_errors.rc != 0
+
+- name: Expose nested errors durring DIB build if build failed
+  ignore_errors: yes
+  shell: 'for file in `find {{ image_build_dir }} -type f -name "*.log"`; do echo -e "\n\nFILE: $file"; tail -n 30 $file; done'
+  when: build_status.rc != 0 or build_errors.rc != 0
+
+- fail: msg="Failed to build images for OSPd {{ ospd_version }} - see debug logs above"
+  when: build_status.rc != 0 or build_errors.rc != 0
+
+- name: Compress and tar built images without junk files
+  shell: |
+      pushd {{ image_build_dir }}
+      tar -czf {{ tar_file }} *.{vmlinuz,kernel,initramfs,qcow2,initrd}
+
+- debug: msg="{{ tar_file }} was successfully produced"
