@@ -48,7 +48,7 @@
   become_method: sudo
   tasks:
     - name: copy ssh-key to nodes
-      authorized_key: user=root key="{{ lookup(file, '/tmp/ssh_keys/id_rsa.pub') }}"
+      authorized_key: user=root key="{{ lookup('file', '/tmp/ssh_keys/id_rsa.pub') }}"
 
 - name: "Workaround RHBZ#1265306 updated sqlalchemy breaks rhos-5 db_sync"
   hosts: openstack_nodes
