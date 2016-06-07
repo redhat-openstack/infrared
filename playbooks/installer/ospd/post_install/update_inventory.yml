@@ -5,22 +5,23 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   vars:
-      private_key: "{{ inventory_dir }}/id_rsa_overcloud"
       user: heat-admin
       password: redhat
+      # The var "private_key" is used outside this scope and cannot be overridden
+      overcloud_pkey: "{{ inventory_dir }}/id_rsa_overcloud"
       undercloud_rc: stackrc
   tasks:
       - name: fetch the private key file from the undercloud
         fetch:
             src: "~/.ssh/id_rsa"
-            dest: "{{ private_key }}"
+            dest: "{{ overcloud_pkey }}"
             flat: yes
 
       - name: update file permissions
         delegate_to: localhost
         become: no
         file:
-            path: "{{ private_key }}"
+            path: "{{ overcloud_pkey }}"
             mode: 0600
 
       # todo(yfried): find a better method to load stackrc file
@@ -70,7 +71,7 @@
                 ansible_ssh_user: "{{ user }}"
                 ansible_ssh_pass: "{{ password }}"
                 ansible_ssh_host: "{{ item.accessIPv4 }}"
-                ansible_ssh_private_key_file: "{{ private_key }}"
+                ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
             with_items: "{{ openstack_servers }}"
         vars:
             path_venv: /tmp/venv_server_facts
