@@ -81,10 +81,7 @@
       enabled: yes
 
 - name: reboot the loadbalancer
-  shell: "sleep 2 && shutdown -r now"
-  async: 1
-  poll: 0
-  ignore_errors: true
+  include: handlers/reboot/{{ provisioner.type }}.yml hostname='loadbalancer'
 
 - name: Waiting for the loadbalancer to be available
   delegate_to: localhost
