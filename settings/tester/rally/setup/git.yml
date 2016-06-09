@@ -1,0 +1,37 @@
+type: git
+repo: https://git.openstack.org/openstack/rally
+revision: HEAD
+
+packages:
+    - git
+    - wget
+    - which
+    - gcc
+    - libffi-devel
+    - libxml2-devel
+    - libxslt-devel
+    - openssl-devel
+    - python-virtualenv
+    - postgresql-devel
+    - python-devel
+    - gmp-devel
+
+pip_packages:
+    - setuptools
+    - pytz
+    - shade
+    - six
+
+plugins_git:
+  repo: https://github.com/redhat-openstack/rally-plugins.git
+  revision: HEAD
+use_virtual_env: true
+
+tempest:
+  base: '.rally/tempest'
+  git:
+    repo: https://github.com/redhat-openstack/tempest.git
+    revision: HEAD
+    local: true
+  regex: network_basic_ops
+  conf: 'rally-dir/tempest.conf'

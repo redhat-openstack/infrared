@@ -1,0 +1,21 @@
+---
+tester:
+    # TODO: Might be a good idea to have this specified in a file
+    #       shared between the testers
+    guest_image:
+        name: 'cirros-0.3.4-x86_64-disk'
+        url: 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'
+    type: rally
+    rally:
+        dir: 'rally-dir'
+        path: 'rally'
+        deployment: cloud_under_test
+        taskfile: rally-jobs/mytest.json
+        outputdir: /tmp/rally_output
+
+job:
+    archive:
+        - '{{ tester.rally.outputdir }}/*.log'
+        - '{{ tester.rally.outputdir }}/*.xml'
+        - '{{ tester.rally.outputdir }}/*.html'
+        - '{{ tester.rally.outputdir }}/*.txt'
