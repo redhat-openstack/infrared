@@ -1,0 +1,42 @@
+---
+- name: Copy to Task Files Rally
+  hosts: tester
+  tasks:
+  - name: Copy Task file from settings
+    copy:
+      dest: "{{ tester.rally.dir }}/{{ tester.rally.taskfile }}"
+      content: "{{ tester.tests.rally.task | to_nice_json }}"
+      force: yes
+
+- name: Run Rally Task
+  hosts: tester
+  tasks:
+  - name: Check Rally deployment
+    command: "{{ tester.rally.path }}/bin/rally deployment check"
+  - name: Start Rally task
+    command: "{{ tester.rally.path }}/bin/rally -v task start --task {{ tester.rally.dir }}/{{ tester.rally.taskfile }}"
+
+
+# TODO(yfried): Add this to enable Tempset Via Rally
+#- name: Setup Tempest
+#  hosts: tester
+#  tasks:
+#  - name: Install Tempest with Rally
+#    command: "{{ tester.rally.path }}/bin/rally-manage -v tempest install --deployment {{ tester.rally.deployment }} --source {{ tester.rally.tempest.git.repo }}"
+#
+#  - name: Set Tempest Branch to Juno to get tempest config
+#    command: "git checkout {{ tester.rally.tempest.git.revision }}"
+#    args:
+#      chdir: "{{ tester.rally.tempest.base }}/for-deployment-{{ tester.rally_deployment_uuid.stdout }}"
+#      creates: "{{ tester.rally.tempest.base }}/for-deployment-{{ tester.rally_deployment_uuid.stdout }}/tools/config_tempest.py"
+#
+#  - name: Create tempest config file
+#    shell: "{{ tester.rally.path }}/bin/rally {{ item }}/tools/config_tempest.py --out {{ tester.rally.tempest.conf }} --debug  --create identity.uri http://{{ hostvars[nodes.controller.name].ansible_default_ipv4.address }}:5000/v2.0/ compute.allow_tenant_isolation true object-storage.operator_role SwiftOperator identity.admin_password {{ hostvars[nodes.controller.name].admin_password|default('redhat') }} identity.password {{ hostvars[nodes.controller.name].demo_password|default('secrete') }} network.public_network_id {{ hostvars[nodes.controller.name].network.id }}"
+#    args:
+#      chdir: "{{ item }}"
+#      creates: "{{ tester.rally.tempest.conf }}"
+#    with_items:
+#      - "{{ tester.rally.tempest.base }}/for-deployment-{{ tester.rally_deployment_uuid.stdout }}"
+#
+#  - name: Start Tempest Via Rally
+#    command: "{{ tester.rally.path }}/bin/rally -v verify start --deployment {{ tester.rally.deployment }} --regex {{ tester.rally.tempest.regex }} --tempest-config {{ tester.rally.tempest.conf }}"
