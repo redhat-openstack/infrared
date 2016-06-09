@@ -1,0 +1,116 @@
+---
+- name: Install Rally dependencies on the machine
+  hosts: tester
+  gather_facts: no
+  tasks:
+    - name: Install support packages for pip-based deps building
+      yum:
+          name: "{{ item }}"
+          state: present
+      with_items: "{{ tester.setup.packages }}"
+    - command: easy_install pip
+    - pip:
+          name: pip
+          state: latest
+
+    - pip:
+          name: setuptools
+          version: "17.0"
+
+    - name: Install required pip packages
+      pip:
+          name: "{{ item }}"
+          state: latest
+      with_items: "{{ tester.setup.pip_packages }}"
+
+    - name: Reinstall six
+    # workaround for an issue where python for some reason uses
+    # incorrect version
+      shell: "pip download six; pip install -U six*"
+
+
+- name: Install Rally on the machine
+  hosts: tester
+  gather_facts: no
+  tasks:
+    - name: Clone Rally from git repo
+      git:
+          repo: "{{ tester.setup.repo }}"
+          version: "{{ tester.setup.revision }}"
+          dest: "{{ tester.rally.dir }}"
+
+#      # This URL should be in the config file (khaleesi settings)
+#    - name: Download cirros image
+#      get_url: url=http://download.cirros-cloud.net/0.3.1/cirros-0.3.1-x86_64-disk.img dest={{ tester.rally.dir }}/etc/{{ tester.rally.cirros_image_file }} mode=0440
+
+    - name: Clone Rally-Plugins git repo
+      git:
+        repo: "{{ tester.setup.plugins_git.repo }}"
+        version: "{{ tester.setup.plugins_git.revision }}"
+        dest: "~/.rally/plugins"
+
+    - name: Run Rally installation script
+      shell: "{{ tester.rally.dir }}/install_rally.sh -v -y -d {{ tester.rally.path }} | tee {{ tester.rally.dir }}/rally_install.log"
+      args:
+        creates: "{{ tester.rally.path }}/bin/rally"
+
+
+- name: Copy overcloud keystonerc to the tester
+  hosts: tester
+  gather_facts: no
+  tasks:
+    - copy:
+        src: "{{ inventory_dir }}/keystonerc"
+        dest: "~/keystonerc"
+
+- name: Prepare Openstack
+  hosts: tester
+  tasks:
+    - name: Create nano flavor
+      shell: "source ~/keystonerc && nova flavor-create m1.nano 42 64 0 1"
+      # ignore errors if flavor already created
+      ignore_errors: true
+
+    - name: Create Glance Image
+      shell: >
+             source ~/keystonerc &&
+             glance --os-image-api-version 1 image-create
+             --copy-from '{{ tester.guest_image.url }}'
+             --name '{{ tester.guest_image.name }}'
+             --disk-format iso --container-format bare
+             --is-public True
+      ignore_errors: true
+
+# TODO (tjamrisk): Figure out why this os ansible module didn't work, but
+#                  needed a working version
+#    - name: Create Glance Image
+#      os_image:
+#        auth:
+#          auth_url: " {{ oc_auth.stdout }} "
+#          username: " {{ oc_username.stdout }}"
+#          password: " {{ oc_password.stdout }} "
+#          project_name: " {{ oc_tenant.stdout }} "
+#        name: "{{ tester.guest_image.name }}"
+#        disk_format: ami
+#        state: present
+#        filename: "{{ tester.guest_image.url }}"
+#        region_name: regionOne
+
+- name: Setup Rally
+  hosts: tester
+  tasks:
+#  Need to somehow skip this if deployment exists
+  - name: Create Rally deployment
+    shell: "source ~/keystonerc && {{ tester.rally.path }}/bin/rally deployment create --fromenv --name {{ tester.rally.deployment }} | awk '/{{ tester.rally.deployment }}/ {print $2}'"
+    register: rally_deployment_uuid
+    ignore_errors: true
+
+  - debug: var=rally_deployment_uuid
+
+  - name: Use Rally deployment
+    shell: "{{ tester.rally.path }}/bin/rally use deployment {{ tester.rally.deployment }} | awk '/Using deployment/ {print $3}'"
+    register: rally_deployment_uuid
+    when: "'Deployment' in rally_deployment_uuid.stdout"
+
+  - debug: var=rally_deployment_uuid
+
