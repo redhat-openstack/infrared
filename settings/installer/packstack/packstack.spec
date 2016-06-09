@@ -31,7 +31,7 @@ subparsers:
                   osdebug:
                       type: Value
                       help: Install OS with DEBUG
-                      default: n
+                      default: y
                       choices: ["y", "n"]
 
 
