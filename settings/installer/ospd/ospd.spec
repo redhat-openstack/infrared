@@ -85,6 +85,11 @@ subparsers:
                       help: Specifies whether ths SSL should be used for overcloud
                       default: 'no'
 
+                  overcloud-instanceha:
+                      type: Value
+                      help: Specifies whether instaceha should be configured for overcloud
+                      default: 'no'
+
                   overcloud-hostname:
                       type: Value
                       help: Specifies whether we should use custom hostnames for controllers
