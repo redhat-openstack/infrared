@@ -166,6 +166,8 @@
 
       - name: create the external network
         shell: "source /root/keystonerc_admin; neutron net-create {{ pool_name.stdout_lines|last }} --router:external --provider:physical_network {{ installer.network.label }} --provider:network_type {{ installer.network.external.provider_network_type }}"
+        when: installer.network.type == 'neutron'
 
       - name: create the external subnet
         shell: "source /root/keystonerc_admin; neutron subnet-create {{ pool_name.stdout_lines|last }} {{ provisioner.neutron.subnets.external.nested.subnet_cidr }} --name external_subnet --enable-dhcp=False --allocation-pool start={{ provisioner.neutron.subnets.external.nested.allocation_pool_start }},end={{ provisioner.neutron.subnets.external.nested.allocation_pool_end }} --gateway {{ provisioner.neutron.subnets.external.nested.subnet_gateway }}"
+        when: installer.network.type == 'neutron'
