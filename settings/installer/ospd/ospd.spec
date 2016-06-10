@@ -90,6 +90,11 @@ subparsers:
                       help: Specifies whether fencing should be configured for overcloud nodes
                       default: 'no'
 
+                  overcloud-instance-ha:
+                      type: Value
+                      help: Specifies whether instaceha should be configured for overcloud
+                      default: 'no'
+
                   overcloud-hostname:
                       type: Value
                       help: Specifies whether we should use custom hostnames for controllers
