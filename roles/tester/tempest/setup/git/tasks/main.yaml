@@ -26,7 +26,7 @@
 
 - name: install virtualenv
   command: "python {{ tester.dir }}/tools/install_venv.py {{ tester.dir }}"
-  when: tempest_repo|changed or tempest_local_dir|changed
+  when: tempest_repo|changed
 
 - name: Install extra pip requirements
   pip:
@@ -34,4 +34,4 @@
       state: present
       virtualenv: "~/{{ tester.dir }}/.venv"
   with_items: "{{ tester.setup.pip_packages }}"
-  when: tempest_repo|changed or tempest_local_dir|changed
+  when: tempest_repo|changed
