@@ -11,7 +11,7 @@
       - name: get the default floating ip pool name from the controller
         shell: "grep -oP \"(?<=default_floating_pool=)(.*$)\" /etc/nova/nova.conf"
         register: pool_name
-        delegate_to: first_controller
+        delegate_to: "{{ first_controller }}"
         become_user: root
         become: yes
 
