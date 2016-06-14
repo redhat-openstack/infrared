@@ -4,13 +4,6 @@ subparsers:
         formatter_class: RawTextHelpFormatter
         help: Installs openstack using OSP Director
         groups:
-            - title: Firewall
-              options:
-                firewall:
-                    type: YamlFile
-                    help: The firewall configuration
-                    default: default.yml
-
             - title: Product
               options:
                 product-version:
