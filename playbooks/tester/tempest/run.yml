@@ -16,7 +16,7 @@
             dest: "{{ tester.dir }}/skipfile"
             line: "+{{ item }}"
             regexp: "^[-+]{{ item }}$"
-        with_items: tester.tests.whitelist
+        with_items: "{{ tester.tests.whitelist }}"
         register: wlist
         when: tester.tests.whitelist is defined and tester.tests.whitelist
 
@@ -26,7 +26,7 @@
             dest: "{{ tester.dir }}/skipfile"
             line: "-{{ item }}"
             regexp: "^[-+]{{ item }}$"
-        with_items: tester.tests.blacklist
+        with_items: "{{ tester.tests.blacklist }}"
         when: tester.tests.blacklist is defined and tester.tests.blacklist
 
       - name: add skipfile invocation
