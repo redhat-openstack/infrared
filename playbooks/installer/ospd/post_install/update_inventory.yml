@@ -85,7 +85,13 @@
             src: "{{ inventory_dir }}/roles/provisioner/virsh/templates/ansible.ssh.config.j2"
             dest: "{{ inventory_dir }}/ansible.ssh.config"
 
-      - name: Generate new Inventory file
+      - name: Generate new Inventory file (ospd)
         template:
-          dest: "{{ lookup('env', 'PWD') }}/hosts-{{ lookup('env', 'USER') }}"
+          dest: "{{ lookup('env', 'PWD') }}/hosts-post-ospd"
           src: "{{ inventory_dir }}/templates/inventory.j2"
+
+      - name: Link to new Inventory file (ospd)
+        file:
+          dest: "{{ lookup('env', 'PWD') }}/hosts"
+          state: link
+          src: "{{ lookup('env', 'PWD') }}/hosts-post-ospd"
