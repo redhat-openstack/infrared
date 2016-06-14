@@ -8,12 +8,12 @@
 
 - name: update the oslo_messaging_rabbit /etc/glance/glance-api.conf
   shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ item }} 'sudo crudini --set /etc/glance/glance-api.conf oslo_messaging_rabbit rabbit_hosts {{ controller_vip.stdout }}'"
-  with_items: ip_list.stdout_lines
+  with_items: "{{ ip_list.stdout_lines }}"
 
 - name: configure the /etc/glance/glance-api.conf
   shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ item }} 'sudo crudini --set /etc/glance/glance-api.conf DEFAULT notification_driver messagingv2'"
-  with_items: ip_list.stdout_lines
+  with_items: "{{ ip_list.stdout_lines }}"
 
 - name: restart openstack-swift-container service
   shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ item }} 'sudo systemctl restart openstack-ceilometer-alarm-notifier.service openstack-ceilometer-api.service openstack-ceilometer-collector.service openstack-ceilometer-notification.service openstack-ceilometer-polling.service openstack-ceilometer-alarm-evaluator.service'"
-  with_items: ip_list.stdout_lines
+  with_items: "{{ ip_list.stdout_lines }}"
