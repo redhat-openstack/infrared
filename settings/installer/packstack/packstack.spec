@@ -4,13 +4,6 @@ subparsers:
         help: OpenStack installation using Packstack
         include_groups: ['Ansible options', 'Inventory hosts options', 'Common options', 'Configuration file options']
         groups:
-            - title: Firewall
-              options:
-                firewall:
-                    type: YamlFile
-                    help: The firewall configuration
-                    default: default.yml
-
             - title: Storage
               options:
                   storage:
