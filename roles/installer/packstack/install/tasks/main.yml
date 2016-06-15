@@ -10,7 +10,7 @@
       dest="/root/{{ installer.packstack.answer_file }}"
       regexp='{{ item.key }}=.*'
       line='{{ item.key }}={{ item.value }}'
-  with_dict: packstack_config
+  with_dict: "{{ packstack_config }}"
 
 - name: Update password values in answer file with default password
   replace:
