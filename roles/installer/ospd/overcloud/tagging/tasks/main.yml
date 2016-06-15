@@ -9,7 +9,14 @@
   shell: "source ~/stackrc; openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' baremetal"
 
 - name: create the flavors for our machines
-  shell: "source ~/stackrc; openstack flavor create --id auto --ram {{ hostvars[item].ansible_memtotal_mb }} --disk {{ hostvars[item].ansible_devices.vda.size | regex_replace('^([0-9]+).*$', '\\1') | int - 5 }} --vcpus {{ hostvars[item].ansible_processor_vcpus | int - 1 }} {{ item.rstrip('1234567890-') }}-{{ item.rstrip('1234567890-') | to_uuid }}"
+  shell: >
+      source ~/stackrc;
+      openstack flavor create
+      --id auto
+      --ram {{ hostvars[item].ansible_memtotal_mb }}
+      --disk {{ [(hostvars[item].ansible_devices.vda.size | regex_replace('^([0-9]+).*$', '\\1') | int) - 5, flv_min_disks] | max }}
+      --vcpus {{ [(hostvars[item].ansible_processor_vcpus | int) - 1, flv_min_cpu] | max }}
+       {{ item.rstrip('1234567890-') }}-{{ item.rstrip('1234567890-') | to_uuid }}
   register: flavor_result
   failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item }}-{{ item | to_uuid }} already exists') != -1"
   with_items: "{{ groups['overcloud_nodes'] | default([]) }}"
