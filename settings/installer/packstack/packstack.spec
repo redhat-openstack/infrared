@@ -60,7 +60,7 @@ subparsers:
                       type: Value
                       help: The product version
                       required: yes
-                      choices: ["7", "8", "9"]
+                      choices: ["7", "8", "9", "10"]
                   product-build:
                       type: Value
                       help: The product build
