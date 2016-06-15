@@ -4,8 +4,8 @@
 
 - name: configure the container-server.conf to allow versions
   shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ item }} 'sudo crudini --set /etc/swift/container-server.conf DEFAULT allow_versions true'"
-  with_items: ip_list.stdout_lines
+  with_items: "{{ ip_list.stdout_lines }}"
 
 - name: restart openstack-swift-container service
   shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ item }} 'sudo systemctl restart openstack-swift-container*'"
-  with_items: ip_list.stdout_lines
+  with_items: "{{ ip_list.stdout_lines }}"

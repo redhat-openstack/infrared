@@ -8,12 +8,12 @@
 
 - name: update heat_metadata_server_url /etc/heat/heat.conf
   shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ item }} 'sudo crudini --set /etc/heat/heat.conf DEFAULT heat_metadata_server_url http://{{ controller_vip.stdout }}:8000'"
-  with_items: ip_list.stdout_lines
+  with_items: "{{ ip_list.stdout_lines }}"
 
 - name: update heat_waitcondition_server_url /etc/heat/heat.conf
   shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ item }} 'sudo crudini --set /etc/heat/heat.conf DEFAULT heat_waitcondition_server_url http://{{ controller_vip.stdout }}:8000/v1/waitcondition'"
-  with_items: ip_list.stdout_lines
+  with_items: "{{ ip_list.stdout_lines }}"
 
 - name: restart the heat services
   shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ item }} 'sudo systemctl restart openstack-heat-api openstack-heat-api-cloudwatch openstack-heat-api openstack-heat-engine'"
-  with_items: ip_list.stdout_lines
+  with_items: "{{ ip_list.stdout_lines }}"

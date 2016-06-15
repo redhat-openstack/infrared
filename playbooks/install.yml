@@ -27,7 +27,7 @@
       #TODO: change to iptables ansible module
       - name: Iptables - Set default rules
         command: "iptables {{ item }}"
-        with_items: installer.firewall.rules
+        with_items: "{{ installer.firewall.rules }}"
 
       # packstack does not change the rules if they do not conflict
       # and they are saved, so save them.
