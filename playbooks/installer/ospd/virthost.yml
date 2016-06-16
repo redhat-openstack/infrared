@@ -22,10 +22,10 @@
 
       - block:
           - debug:
-                msg: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }}"
+                msg: "rhos-release {{ installer.product.version }}-director -P -p {{ installer.product.build }}"
 
           - name: create necessary repos with for director using rhos-release
-            command: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }}"
+            command: "rhos-release {{ installer.product.version }}-director -P -p {{ installer.product.build }}"
             register: command_result
             until: command_result.stderr.find('Connection reset by peer') == -1
             retries: 40
@@ -33,10 +33,10 @@
        when: installer.product.version < 10
 
       - debug:
-            msg: "rhos-release {{ installer.product.core.version }} -p {{ installer.product.core.build }}"
+            msg: "rhos-release {{ installer.product.core.version }} -P -p {{ installer.product.core.build }}"
 
       - name: create necessary repos for core using rhos-release
-        command: "rhos-release {{ installer.product.core.version }} -p {{ installer.product.core.build }}"
+        command: "rhos-release {{ installer.product.core.version }} -P -p {{ installer.product.core.build }}"
         register: command_result
         until: command_result.stderr.find('Connection reset by peer') == -1
         retries: 40
