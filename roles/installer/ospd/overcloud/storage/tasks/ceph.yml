@@ -8,7 +8,7 @@
 - name: append the ceph storage template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '--ceph-storage-scale {{ (installer.storage.nodes == None) | ternary("1", installer.storage.nodes) }} \'
+      line: '--ceph-storage-scale {{ installer.storage.nodes | default("1") }} \'
   when: installer.storage.external == "no"
 
 - name: append the ceph storage template line to the base overcloud deploy script
