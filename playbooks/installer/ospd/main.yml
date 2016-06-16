@@ -19,7 +19,7 @@
             src: "{{ installer.instackenv.file }}"
             dest: "/home/{{ installer.user.name }}/{{ installer.instackenv.file | basename }}"
             force: yes
-        when: installer.instackenv.file
+        when: if installer.instackenv.file is defined and installer.instackenv.file
 
       - set_fact:
             instack_file: "
