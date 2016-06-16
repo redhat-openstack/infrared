@@ -19,13 +19,13 @@
             src: "{{ installer.instackenv.file }}"
             dest: "/home/{{ installer.user.name }}/{{ installer.instackenv.file | basename }}"
             force: yes
-        when: installer.instackenv.file
+        when: installer.instackenv.file | default(none)
 
       - set_fact:
             instack_file: "
                 {%- if instack_file_path.stat.exists -%}
                 /home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}/instackenv.json
-                {%- elif installer.instackenv.file is defined -%}
+                {%- elif installer.instackenv.file | default(none) -%}
                 /home/{{ installer.user.name }}/{{ installer.instackenv.file | basename }}
                 {%- else -%}
                 /home/{{ installer.user.name }}/instackenv.json
@@ -104,13 +104,13 @@
             group: "{{ installer.user.name }}"
             mode: 0644
             force: yes
-        when: installer.overcloud.script
+        when: installer.overcloud.script | default(none)
 
       - set_fact:
             overcloud_deploy_script: "
                 {%- if deploy_script.stat.exists -%}
                 {{ template_base }}/overcloud_deploy.sh
-                {%- elif installer.overcloud.script -%}
+                {%- elif installer.overcloud.script | default(none) -%}
                 /home/{{ installer.user.name }}/{{ installer.overcloud.script | basename }}
                 {%- else -%}{%- endif -%}"
 
@@ -121,7 +121,7 @@
             mode: 0755
         when: overcloud_deploy_script == ''
   roles:
-      - {role: installer/ospd/overcloud/storage, when: "overcloud_deploy_script == '' and installer.storage.backend"}
+      - {role: installer/ospd/overcloud/storage, when: "overcloud_deploy_script == '' and installer.storage.backend | default(none)"}
       - {role: installer/ospd/overcloud/network, when: "overcloud_deploy_script == ''"}
       - {role: installer/ospd/overcloud/ssl, when: "overcloud_deploy_script == '' and installer.overcloud.ssl == 'yes'"}
       - {role: installer/ospd/overcloud/hostname, when: "overcloud_deploy_script == '' and installer.overcloud.hostname == 'yes'"}
@@ -161,3 +161,4 @@
 # So Ansible will be able to access the newly provisioned machines.
 - include: ospd_inventory_update.yml
   tags: overcloud
+
