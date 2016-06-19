@@ -421,6 +421,9 @@ def main():
             ca_cert=dict(required=False),
         ))
 
+    if module.params['ca_cert'] and not os.path.exists(os.path.expanduser(module.params['ca_cert'])):
+        module.fail_json(msg="CA cert file doesn't exist", ca_cert=module.params['ca_cert'])
+
     beaker_client = BeakerMachine(url=module.params['url'],
                                   username=module.params['username'],
                                   password=module.params['password'],
