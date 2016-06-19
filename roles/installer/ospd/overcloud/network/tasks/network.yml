@@ -23,7 +23,7 @@
       failed_when: "vlan_result.stderr != '' and 'RTNETLINK answers: File exists' not in vlan_result.stderr"
 
     - name: get the IP address on the external network default route
-      shell: "cat {{ installer.overcloud.template_base }}/network-environment.yaml | grep ExternalNetCidr | awk -F':' '{print $2}' | sed 's/[^0-9.]//'"
+      shell: "cat {{ template_base }}/network/network-environment.yaml | grep ExternalNetCidr | awk -F':' '{print $2}' | sed 's/[^0-9.]//'"
       register: result
 
     - name: add the ip address to the device when vlan is used
