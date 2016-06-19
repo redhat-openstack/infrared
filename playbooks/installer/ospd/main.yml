@@ -78,7 +78,6 @@
       - {role: installer/ospd/overcloud/tagging, when: "'overcloud_nodes' in groups"}
 
 - name: Installing the overcloud
-  tags: overcloud
   hosts: undercloud
   become: yes
   become_user: "{{ installer.user.name }}"
@@ -160,3 +159,4 @@
 # Since OSP-d reprovision our machines (overcloud) and becomes the DHCP server, an update of our inventory is required
 # So Ansible will be able to access the newly provisioned machines.
 - include: ospd_inventory_update.yml
+  tags: overcloud
