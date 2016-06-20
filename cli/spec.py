@@ -3,7 +3,6 @@ import re
 from functools import total_ordering
 import sys
 
-import clg
 import os
 import glob
 import yaml
@@ -12,6 +11,7 @@ import yamlordereddictloader
 from cli import exceptions
 from cli import logger
 from cli import utils
+from cli import clg
 
 LOG = logger.LOG
 
