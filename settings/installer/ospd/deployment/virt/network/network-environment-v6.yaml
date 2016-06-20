@@ -19,15 +19,16 @@ resource_registry:
   OS::TripleO::CephStorage::Net::SoftwareConfig: three-nics-vlans/ceph-storage.yaml
 
 parameter_defaults:
+    ExternalNetCidr: '2620:52:0:13b8::/64'
+    ExternalAllocationPools: [{'start': '2620:52:0:13b8:5054:ff:fe3e:1', 'end': '2620:52:0:13b8:5054:ff:fe3e:9'}]
+    ExternalInterfaceDefaultRoute: 2620:52:0:13b8::fe
+    ExternalNetworkVlanID: 10
     InternalApiNetCidr: 'fd00:fd00:fd00:2000::/64'
     InternalApiAllocationPools: [{'start': 'fd00:fd00:fd00:2000::10', 'end': 'fd00:fd00:fd00:2000:ffff:ffff:ffff:fffe'}]
     StorageNetCidr: 'fd00:fd00:fd00:3000::/64'
     StorageAllocationPools: [{'start': 'fd00:fd00:fd00:3000::10', 'end': 'fd00:fd00:fd00:3000:ffff:ffff:ffff:fffe'}]
     StorageMgmtNetCidr: 'fd00:fd00:fd00:4000::/64'
     StorageMgmtAllocationPools: [{'start': 'fd00:fd00:fd00:4000::10', 'end': 'fd00:fd00:fd00:4000:ffff:ffff:ffff:fffe'}]
-    ExternalNetCidr: '2620:52:0:13b8::/64'
-    ExternalAllocationPools: [{'start': '2620:52:0:13b8:5054:ff:fe3e:1', 'end': '2620:52:0:13b8:5054:ff:fe3e:9'}]
-    ExternalInterfaceDefaultRoute: 2620:52:0:13b8::fe
     DnsServers: ['10.0.0.1', '8.8.8.8']
     EC2MetadataIp: 192.0.2.1
     ControlPlaneDefaultRoute: 192.0.2.1
