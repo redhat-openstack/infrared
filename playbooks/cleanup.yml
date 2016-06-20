@@ -1,5 +1,5 @@
 ---
-- include: provisioner/{{ provisioner.type }}/cleanup.yml
+- include: "cleanup/{{ (cleanup | default({ 'type': 'provisioner' })).type }}/{{ provisioner.type }}.yml"
 
 - name: restore inventory file with just localhost
   hosts: localhost
