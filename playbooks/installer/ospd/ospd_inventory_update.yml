@@ -64,9 +64,10 @@
           - name: add hosts to host list
             add_host:
                 # convert nova output (overcloud-NODE-COUNT) to ansible node names (NODE-COUNT)
-                name: "{{ item.name.split('-',1)[1]|replace('cephstorage', 'ceph') }}"
-                groups: "{{ hostvars[item.name.split('-',1)[1]|replace('cephstorage', 'ceph')].group_names
-                | default([overcloud_nodes, openstack_nodes, item.name.split('-',1)[1]|replace('cephstorage', 'ceph')])
+                # todo(yfried) solve this ("replace...") systematically either in virsh or in topology files
+                name: "{{ item.name.split('-',1)[1]|replace('cephstorage', 'ceph')|replace('novacompute', 'nova') }}"
+                groups: "{{ hostvars[item.name.split('-',1)[1]|replace('cephstorage', 'ceph')|replace('novacompute', 'nova')].group_names
+                | default([overcloud_nodes, openstack_nodes, item.name.split('-',1)[1]|replace('cephstorage', 'ceph')|replace('novacompute', 'nova')])
                 | reject('equalto', 'ungrouped') | join(',') }}"
                 ansible_ssh_user: "{{ user }}"
                 ansible_ssh_pass: ""
