@@ -31,7 +31,7 @@
       until: command_result.stderr.find('Connection reset by peer') == -1
       retries: 40
       delay: 5
-  when: installer.product.version < 10
+  when: installer.product.version|int < 10
 
 - debug:
       msg: "rhos-release {{ installer.product.core.version }} -P -p {{ installer.product.core.build }}"
