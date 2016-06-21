@@ -17,7 +17,7 @@
 - name: set fact for Intel based KVM
   set_fact:
       kvm_base: "intel"
-  when: kvm_intel == 0
+  when: kvm_intel.rc == 0
 
 - name: check if CPU supports AMD based KVM
   shell: "egrep -c 'svm' /proc/cpuinfo"
@@ -27,4 +27,5 @@
 - name: set fact for AMD based KVM
   set_fact:
       kvm_base: "amd"
-  when: kvm_amd == 0
+  when: kvm_amd.rc == 0
+
