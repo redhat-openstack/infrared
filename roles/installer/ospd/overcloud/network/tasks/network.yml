@@ -15,22 +15,25 @@
       dest: "~/overcloud_deploy.sh"
       line: '-e /usr/share/openstack-tripleo-heat-templates/environments/{{ isolation_file }} \'
 
-- block:
-    - name: get the IP address on the external network default route
-      shell: "cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalNetworkVlanID | awk -F' ' '{print $2}'"
-      register: vlan_result
+- name: get the IP address on the external network default route
+  shell: "cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalNetworkVlanID | awk -F' ' '{print $2}'"
+  register: vlan_result
 
-    - name: add the ip address to the device when vlan is used
-      shell: "sudo ovs-vsctl add-port br-ctlplane vlan{{ vlan_result.stdout | replace(\"'\",'') }} tag={{ vlan_result.stdout | replace(\"'\",'') }} -- set interface vlan{{ vlan_result.stdout | replace(\"'\",'') }} type=internal;"
-      register: result
-      failed_when: "result.stderr != '' and 'RTNETLINK answers: File exists' not in result.stderr"
+- name: add the ip address to the device when vlan is used
+  shell: "sudo ovs-vsctl add-port br-ctlplane vlan{{ vlan_result.stdout | replace(\"'\", '') }} tag={{ vlan_result.stdout | replace(\"'\",'') }} -- set interface vlan{{ vlan_result.stdout | replace(\"'\",'') }} type=internal;"
+  register: result
+  failed_when: "result.stderr != '' and 'RTNETLINK answers: File exists' not in result.stderr"
 
-    - name: get the IP address on the external network default route
-      shell: "cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalNetCidr | awk -F' ' '{print $2}'"
-      register: result
+- name: get the IP address on the external network default route
+  shell: "cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalNetCidr | awk -F' ' '{print $2}'"
+  register: result
 
-    - name: add the ip address to the device when vlan is used
-      shell: "sudo ip addr add {{ result.stdout | replace(\"'\",'') }} dev vlan{{ vlan_result.stdout | replace(\"'\",'') }}"
-      register: vlan_result
-      failed_when: "vlan_result.stderr != '' and 'RTNETLINK answers: File exists' not in vlan_result.stderr"
-  when: installer.network.backend == 'vlan'
+- name: get the interface that our external network is connected through
+  shell: "ip r | awk '/{{ item }}/ {print $3}'"
+  register: interface
+  with_items: "{{ result.stdout | replace(\"'\",'') | replace('/', '\\/') }}"
+
+- name: add the ip address to the device when vlan is used
+  shell: "sudo ip addr add {{ result.stdout | replace(\"'\",'') }} dev {{ (interface.results|first).stdout }}"
+  register: vlan_result
+  failed_when: "vlan_result.stderr != '' and 'RTNETLINK answers: File exists' not in vlan_result.stderr"
