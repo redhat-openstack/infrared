@@ -32,6 +32,11 @@
 
 - include: "installer/{{ installer.type }}/main.yml"
 
+- name: Gather Virthost Facts for Inventory Update
+  hosts: virthost
+  tags: inventory_update
+  gather_facts: yes
+
 - name: Update the inventory file
   hosts: localhost
   tags: inventory_update
