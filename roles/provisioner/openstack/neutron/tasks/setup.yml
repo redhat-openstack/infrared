@@ -9,6 +9,7 @@
       state: present
       shared: "{{ item.value.shared | default(omit) }}"
       timeout: "{{ item.value.timeout | default(timeout_network) }}"
+      port_security_enabled: "{{ item.value.port_security_enabled | default(False) }}"
   register: networks
   with_dict: "{{ provisioner.neutron.networks }}"
   when: provisioner.neutron.networks is defined
