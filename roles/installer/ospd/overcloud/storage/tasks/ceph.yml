@@ -1,8 +1,21 @@
+- name: Get Ceph node facts
+  # set ceph's disks as undercloud's facts
+  setup:
+      filter: ansible_devices
+  delegate_to: "{{item}}"
+  become: no
+  with_items: "{{groups['ceph']}}"
+
 - name: prepare ceph storage template
   template:
       src: "ceph.yml.j2"
       dest: "{{ template_base }}/ceph.yaml"
       mode: 0755
+
+- name: undercloud facts
+  # set undercloud's facts back
+  setup:
+      filter: ansible_devices
 
 # If you reached this stage, it means a user explicitely entered the storage flag therefore he wants at least 1 node
 - name: append the ceph storage template line to the base overcloud deploy script
