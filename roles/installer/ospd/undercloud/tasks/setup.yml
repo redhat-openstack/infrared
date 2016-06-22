@@ -49,6 +49,13 @@
       name: "*"
   register: update
 
+- name: Install python-virtualenv, gcc for the pip tasks
+  yum: name={{ item }} state=present
+  with_items:
+     - python-virtualenv
+     - gcc
+     - python-devel
+
 - name: reboot the undercloud
   shell: "sleep 2 && shutdown -r now"
   async: 1
