@@ -1,0 +1,115 @@
+---
+- name: Prepare the odl controller for installation
+  hosts: odl_controller
+  become: yes
+  become_user: root
+  vars:
+      - ansible_python_interpreter: "/usr/bin/python"
+  tasks:
+    - name: remove all repos
+      command: "rm -f /etc/yum.repos.d/*"
+
+    - name: install the rhos-release RPM
+      yum: name="{{ installer.product.rpm }}" state=present
+
+    - debug:
+          msg: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }}"
+
+    - name: create necessary repos with for director using rhos-release
+      command: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }}"
+      register: command_result
+      until: command_result.stderr.find('Connection reset by peer') == -1
+      retries: 40
+      delay: 5
+
+    - debug:
+          msg: "rhos-release {{ installer.product.version }} -p {{ installer.product.build }}"
+
+    - name: create necessary repos for core using rhos-release
+      command: "rhos-release {{ installer.product.version }} -p {{ installer.product.build }}"
+
+
+    - name: update system packages
+      yum:
+          state: latest
+          name: "*"
+      register: update
+
+    - name: reboot the odl controller
+      shell: "sleep 2 && shutdown -r now"
+      async: 1
+      poll: 0
+      ignore_errors: true
+      when: update|changed
+
+    - name: Waiting for the odl controller to be available
+      delegate_to: localhost
+      become: no
+      wait_for:
+          host: "{{ hostvars[inventory_hostname].ansible_ssh_host }}"
+          timeout: 120
+      when: update|changed
+
+
+- name: Install OpenDaylight distribution
+  hosts: odl_controller
+  become: yes
+  become_user: root
+  vars:
+      - ansible_python_interpreter: "/usr/bin/python"
+  tasks:
+    - name: Install OpenDaylight distribution using RPM
+      yum: name=opendaylight state=present
+
+    - name: Make sure the opendaylight service is stopped
+      service: name=opendaylight state=stopped
+
+    - name: Clean opendaylight data
+      shell:  cd /opt/opendaylight && rm -rf data/* journal/* snapshots/*
+
+- name: Set Iptables rule on openstack nodes
+  hosts:
+    - controller
+    - compute
+  become_user: root
+  become: yes
+  tasks:
+    - name: Enable traffic from ODL Controller to nodes
+      iptables: chain=INPUT jump=ACCEPT protocol=tcp source="{{ hostvars[item].ansible_ssh_host }}"
+      with_items: "{{ groups.odl_controller }}"
+
+    - name: Make openvswitch_t a permissive domain
+      command: semanage permissive -a openvswitch_t
+
+- name: Set Iptables rules on opendaylight controller
+  hosts:
+    - odl_controller
+  become_user: root
+  become: yes
+  tasks:
+    - name: Enable traffic from OpenStack nodes to ODL controller
+      iptables: chain=INPUT jump=ACCEPT protocol=tcp source="{{ hostvars[item].ansible_ssh_host }}"
+
+      with_items:
+        - "{{ groups.compute }}"
+        - "{{ groups.controller }}"
+
+
+- name: Start OpenDaylight distribution
+  hosts:
+    - odl_controller
+  become_user: root
+  become: yes
+  tasks:
+    - name: Setting l3_gateway_mac
+      set_fact:
+          l3_gateway_mac: "{{ hostvars[inventory_hostname]['ansible_eth0']['macaddress'] }}"
+
+    - name: Add L3 configuration
+      lineinfile: dest=/opt/opendaylight/etc/custom.properties regexp="{{ item.regexp }}" line="{{ item.line }}" state=present create=yes
+      with_items:
+          - { line: 'ovsdb.l3.fwd.enabled=yes',regexp: ovsdb.l3.fwd.enabled }
+      notify: restart opendaylight controller server
+
+    - name: Start opendaylight controller server
+      service: name=opendaylight state=started
