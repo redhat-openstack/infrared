@@ -1,0 +1,39 @@
+---
+- name: Stop controller networking services
+  hosts:
+    - controller
+  become_user: root
+  become: yes
+  tasks:
+    - name: Stop neutron-server
+      service: name=neutron-server
+               state=stopped
+
+- name: Stop networking services
+  hosts:
+    - controller
+    - compute
+  become_user: root
+  become: yes
+  tasks:
+    - name: Stop neutron-openvswitch-agent
+      service: name=neutron-openvswitch-agent
+               state=stopped
+               enabled=no
+
+    - name: Stop openvswitch
+      service: name=openvswitch
+               state=stopped
+
+- name: Remove openvswitch logs and configuration
+  hosts:
+    - controller
+    - compute
+  become_user: root
+  become: yes
+  tasks:
+    - name: Remove openvswitch logs
+      command: "rm -rf /var/log/openvswitch/*"
+
+    - name: Remove openvswitch configuration
+      command: "rm -rf /etc/openvswitch/conf.db"
