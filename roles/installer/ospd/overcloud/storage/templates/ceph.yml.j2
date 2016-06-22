@@ -1,8 +1,10 @@
-{% if installer.storage.external == "yes" %}
-resource_registry:
-    OS::TripleO::CephClusterConfig::SoftwareConfig: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/ceph/ceph-external-config.yaml
-
 parameter_defaults:
+    CinderEnableIscsiBackend: false
+    CinderEnableRbdBackend: true
+    CinderEnableNfsBackend: false
+    NovaEnableRbdBackend: true
+    GlanceBackend: rbd
+{% if installer.storage.external == "yes" %}
     CinderRbdPoolName: "automation-cinder"
     NovaRbdPoolName: "automation-nova"
     GlanceRbdPoolName: "automation-glance"
@@ -11,8 +13,11 @@ parameter_defaults:
     CephClusterFSID: "{{ private.storage.ceph.CephClusterFSID }}"
     CephExternalMonHost: "{{ private.storage.ceph.CephExternalMonHost }}"
 
+resource_registry:
+    OS::TripleO::CephClusterConfig::SoftwareConfig: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/ceph/ceph-external-config.yaml
+
 {% else %}
-parameter_defaults:
+    GlanceBackend: rbd
     CinderRbdPoolName: "volumes"
     NovaRbdPoolName: "vms"
     GlanceRbdPoolName: "images"
@@ -23,10 +28,3 @@ parameter_defaults:
            journal: ''
 {% endfor %}
 {% endif %}
-
-parameters:
-    CinderEnableIscsiBackend: false
-    CinderEnableRbdBackend: true
-    CinderEnableNfsBackend: false
-    NovaEnableRbdBackend: true
-    GlanceBackend: rbd
