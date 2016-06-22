@@ -39,6 +39,13 @@
             executable: /bin/bash
         register: oc_password
 
+      - name: Install python-virtualenv, gcc, python-devel for the pip tasks
+        yum: name={{ item }} state=present
+        with_items:
+           - python-virtualenv
+           - gcc
+           - python-devel
+
       - block:
           - pip:
                 name: "{{ item.key }}"
