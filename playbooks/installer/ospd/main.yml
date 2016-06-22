@@ -8,28 +8,6 @@
   hosts: undercloud
   roles:
       - {role: installer/ospd/undercloud, when: "'undercloud' in groups"}
-  tasks:
-      - name: check if instackenv.json is under the deployment folder
-        stat:
-            path: "/home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}/instackenv.json"
-        register: instack_file_path
-
-      - name: copy our configuration if provided by the user
-        copy:
-            src: "{{ installer.instackenv.file }}"
-            dest: "/home/{{ installer.user.name }}/{{ installer.instackenv.file | basename }}"
-            force: yes
-        when: installer.instackenv.file
-
-      - set_fact:
-            instack_file: "
-                {%- if instack_file_path.stat.exists -%}
-                /home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}/instackenv.json
-                {%- elif installer.instackenv.file is defined -%}
-                /home/{{ installer.user.name }}/{{ installer.instackenv.file | basename }}
-                {%- else -%}
-                /home/{{ installer.user.name }}/instackenv.json
-                {%- endif -%}"
 
 - name: Modify undercloud in case of virthost deployment
   tags: virthost
@@ -52,6 +30,28 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  pre_tasks:
+      - name: check if instackenv.json is under the deployment folder
+        stat:
+            path: "/home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}/instackenv.json"
+        register: instack_file_path
+
+      - name: copy our configuration if provided by the user
+        copy:
+            src: "{{ installer.instackenv.file }}"
+            dest: "/home/{{ installer.user.name }}/{{ installer.instackenv.file | basename }}"
+            force: yes
+        when: installer.instackenv.file
+
+      - set_fact:
+            instack_file: "
+                {%- if instack_file_path.stat.exists -%}
+                /home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}/instackenv.json
+                {%- elif installer.instackenv.file is defined -%}
+                /home/{{ installer.user.name }}/{{ installer.instackenv.file | basename }}
+                {%- else -%}
+                /home/{{ installer.user.name }}/instackenv.json
+                {%- endif -%}"
   roles:
       - {role: installer/ospd/overcloud/introspection, when: "installer.overcloud is defined"}
   vars:
