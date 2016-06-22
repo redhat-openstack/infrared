@@ -1,3 +1,19 @@
+- block:
+    - name: register first ceph node
+      set_fact:
+          first_ceph: "{{ groups.ceph | first }}"
+
+    - name: Get Ceph node facts
+      # set ceph's disks as undercloud's facts
+      setup:
+          filter: ansible_devices
+      delegate_to: "{{ first_ceph }}"
+      delegate_facts: True
+      become: no
+
+  when: installer.storage.external != "yes"
+
+
 - name: prepare ceph storage template
   template:
       src: "ceph.yml.j2"
