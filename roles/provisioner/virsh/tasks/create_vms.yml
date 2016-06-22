@@ -101,7 +101,8 @@
       vm_mac_list: "{{ mac_list.results }}"
 
 - name: wait until one of the VMs gets an IP
-  shell: "virsh net-dhcp-leases {{ item.item[1] }} | awk /{{ item.stdout }}/'{print $5}' | cut -d'/' -f1"
+  shell: |
+      virsh net-dhcp-leases {{ item.item[1] }} | awk '($4 == "ipv4")  && ($3 == "{{ item.stdout }}") {print $5}' | cut -d'/' -f1
   when: >
       provisioner.topology.network[item.item[1]].dhcp is defined and
       item.stdout is defined and item.stdout != ""
