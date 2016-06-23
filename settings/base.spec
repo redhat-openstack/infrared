@@ -61,6 +61,13 @@ groups:
             help: Extra variables to be merged last
             type: str
             nested: no
+          - name: ansible-args
+            help: |
+                Extra variables for ansible-playbook tool
+                Should be specified as a list of ansible-playbook options, separated with commas.
+                For example, --ansible-args="tags=overcloud,forks=500"
+            complex_type: AdditionalArgs
+            nested: no
 
     - name: Configuration file options
       options:
