@@ -147,7 +147,9 @@
         shell: "cat {{ overcloud_deploy_script }}"
 
       - name: execute the overcloud deploy script
-        shell: "bash {{ overcloud_deploy_script }}"
+        shell: |
+            source ~/stackrc
+            bash {{ overcloud_deploy_script }}
         register: overcloud_deploy
         ignore_errors: yes
 
