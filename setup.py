@@ -30,7 +30,7 @@ def generate_entry_scripts():
 prj_dir = dirname(abspath(__file__))
 setup(
     name='infrared',
-    version=cli.__VERSION__,
+    version='1.1.0.1',
     packages=find_packages(),
     long_description=open(join(prj_dir, 'README.rst')).read(),
     entry_points={
