@@ -885,6 +885,28 @@ class ComplexType(object):
         return search_locations
 
 
+class AdditionalOptionsType(ComplexType):
+    """
+    This is a custom type to handle passing additional arguments to some part
+    of infrared.
+
+    Format should be --additional-args=option1=value1,option2=value2
+    """
+    def resolve(self, value):
+        arguments = value.split(',')
+        res = []
+        for argument in arguments:
+            argument = argument.strip()
+            if '=' in argument:
+                name, value = argument.split('=', 1)
+                res.append("--" + name)
+                res.append(value)
+            else:
+                res.append("--" + argument)
+
+        return res
+
+
 class YamlFile(ComplexType):
     """
     The complex type for yaml arguments.
@@ -959,5 +981,6 @@ ACTIONS = {
 # register complex Types. See ComplexType by type to implement new types
 COMPLEX_TYPES = {
     'YamlFile': YamlFile,
-    'Topology': Topology
+    'Topology': Topology,
+    'AdditionalArgs': AdditionalOptionsType
 }

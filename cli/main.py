@@ -150,14 +150,18 @@ class IRSpec(object):
                     self.spec_config['cleanup_playbook'],
                     verbose=self.control_args['verbose'],
                     settings=playbook_settings,
-                    inventory=self.control_args['inventory'])
+                    inventory=self.control_args['inventory'],
+                    additional_args=self.control_args.get(
+                        'ansible-args', None))
             else:
                 execute.ansible_playbook(
                     self.config,
                     self.spec_config['main_playbook'],
                     verbose=self.control_args.get('verbose', None),
                     settings=playbook_settings,
-                    inventory=self.control_args.get('inventory', None))
+                    inventory=self.control_args.get('inventory', None),
+                    additional_args=self.control_args.get(
+                        'ansible-args', None))
 
     def collect_settings(self):
         settings_files = self.get_settings_files()
