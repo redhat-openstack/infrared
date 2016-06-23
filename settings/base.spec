@@ -25,6 +25,12 @@ shared_groups:
               short: v
               action: count
               default: 0
+          ansible-args:
+            help: |
+                Extra variables for ansible-playbook tool
+                Should be specified as a list of ansible-playbook options, separated with ';'.
+                For example, --ansible-args="tags=tagging,overcloud;forks=500"
+            type: AdditionalArgs
 
     - title: Inventory options
       options:
