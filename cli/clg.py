@@ -966,6 +966,32 @@ class Value(ComplexType):
         return value
 
 
+class AdditionalOptionsType(ComplexType):
+    """
+    This is a custom type to handle passing additional arguments to some part
+    of infrared.
+
+    Format should be --additional-args=option1=value1,option2=value2
+    """
+
+    # ansible args should not be put into the settings file
+    is_nested = False
+
+    def resolve(self, value):
+        arguments = value.split(',')
+        res = []
+        for argument in arguments:
+            argument = argument.strip()
+            if '=' in argument:
+                name, value = argument.split('=', 1)
+                res.append("--" + name)
+                res.append(value)
+            else:
+                res.append("--" + argument)
+
+        return res
+
+
 class YamlFile(ComplexType):
     """
     The complex type for yaml arguments.
@@ -1114,5 +1140,6 @@ COMPLEX_TYPES = {
     'Value': Value,
     'YamlFile': YamlFile,
     'ListOfYamls': ListOfYamls,
-    'Topology': Topology
+    'Topology': Topology,
+    'AdditionalArgs': AdditionalOptionsType
 }
