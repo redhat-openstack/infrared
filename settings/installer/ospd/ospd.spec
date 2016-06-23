@@ -197,3 +197,12 @@ subparsers:
                   generate-conf-file:
                       type: str
                       help: generate configuration file (ini) containing default values and exits. This file is than can be used with the from-file argument
+                  ansible-args:
+                      help: Extra variables for ansible-playbook tool
+                      type: AdditionalArgs
+                  ansible-args:
+                      help: |
+                        Extra variables for ansible-playbook tool
+                        Should be specified as a list of ansible-playbook options, separated with commas.
+                        For example, --ansible-args="tags=overcloud,forks=500"
+                      type: AdditionalArgs
