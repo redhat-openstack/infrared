@@ -151,21 +151,18 @@ class IRSpec(object):
             playbook_settings = yaml.load(yaml.safe_dump(
                 settings,
                 default_flow_style=False))
+            playbook_name = self.spec_config['cleanup_playbook'] \
+                if self.control_args.get('cleanup', None) \
+                else self.spec_config['main_playbook']
 
-            if self.control_args.get('cleanup', None):
-                execute.ansible_playbook(
-                    self.config,
-                    self.spec_config['cleanup_playbook'],
-                    verbose=self.control_args['verbose'],
-                    settings=playbook_settings,
-                    inventory=self.control_args['inventory'])
-            else:
-                execute.ansible_playbook(
-                    self.config,
-                    self.spec_config['main_playbook'],
-                    verbose=self.control_args.get('verbose', None),
-                    settings=playbook_settings,
-                    inventory=self.control_args.get('inventory', None))
+            execute.ansible_playbook(
+                self.config,
+                playbook_name,
+                verbose=self.control_args['verbose'],
+                settings=playbook_settings,
+                inventory=self.control_args['inventory'],
+                additional_args=self.control_args.get(
+                    'ansible-args', None))
 
     def collect_settings(self):
         settings_files = self.get_settings_files()
