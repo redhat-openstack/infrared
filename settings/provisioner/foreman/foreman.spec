@@ -66,3 +66,9 @@ subparsers:
                       short: e
                       help: 'Extra variables to be merged last'
                       type: str
+                  ansible-args:
+                      help: |
+                        Extra variables for ansible-playbook tool
+                        Should be specified as a list of ansible-playbook options, separated with commas.
+                        For example, --ansible-args="tags=overcloud,forks=500"
+                      type: AdditionalArgs

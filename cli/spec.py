@@ -1,3 +1,4 @@
+import inspect
 import ConfigParser
 import re
 from functools import total_ordering
@@ -82,11 +83,12 @@ class ValueArgument(object):
                                            spec['subparsers'][subcommand]})
         for option_tree in utils.search_tree("options", subcommand_spec):
             for option_name, option_dict in option_tree.iteritems():
-                if option_name in args and issubclass(
-                        clg.TYPES.get(option_dict.get(
-                            "type", object),
-                            object),
-                        cls) and args[option_name] is None:
+                value_class = clg.TYPES.get(
+                    option_dict.get("type", object), object)
+                if option_name in args and \
+                        inspect.isclass(value_class) \
+                        and issubclass(value_class, cls) \
+                        and args[option_name] is None:
                     args[option_name] = clg.TYPES.get(option_dict["type"])(
                         required=option_dict.get("required")
                     )
@@ -289,6 +291,28 @@ class IniFileArgument(object):
             res_dict[section].pop('__name__', None)
 
         self.value = res_dict
+
+
+class AdditionalOptionsType(object):
+    """
+    This is a custom type to handle passing additional arguments to some part
+    of infrared.
+
+    Format should be --additional-args=option1=value1,option2=value2
+    """
+    def __call__(self, value):
+        arguments = value.split(',')
+        res = []
+        for argument in arguments:
+            argument = argument.strip()
+            if '=' in argument:
+                name, value = argument.split('=', 1)
+                res.append("--" + name)
+                res.append(value)
+            else:
+                res.append("--" + argument)
+
+        return res
 
 
 class ArgumentsPreProcessor(object):
@@ -718,3 +742,4 @@ clg.TYPES.update({'IniFile': IniFileArgument})
 clg.TYPES.update({'Value': ValueArgument})
 clg.TYPES.update({'Topology': TopologyArgument})
 clg.TYPES.update({'YamlFile': YamlFileArgument})
+clg.TYPES.update({'AdditionalArgs': AdditionalOptionsType()})
