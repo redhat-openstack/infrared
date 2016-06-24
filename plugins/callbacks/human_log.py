@@ -39,7 +39,8 @@ class CallbackModule(CallbackBase if ANSIBLE2 else object):
             for field in FIELDS:
                 if field in data.keys() and data[field]:
                     output = self._format_output(data[field])
-                    print("\n{0}: {1}".format(field, output.replace("\\n","\n")))
+                    output_replace = output.replace("\\n", "\n")
+                    print("\n{0}: {1}".format(field, output_replace))
 
     def _format_output(self, output):
         # Strip unicode
@@ -93,7 +94,6 @@ class CallbackModule(CallbackBase if ANSIBLE2 else object):
 
     def runner_on_ok(self, host, res):
         self.human_log(res)
-
 
     def runner_on_error(self, host, msg):
         pass
