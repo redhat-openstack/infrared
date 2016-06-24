@@ -12,12 +12,10 @@ default_settings_dir = "."
     [{'host': spec.ValueArgument(),
       'command0': 'virsh',
       'ssh-user': spec.ValueArgument()},
-     {
-         'host': {'help': 'help', 'required': True},
-         'ssh-user': {'help': 'help2', 'required': True},
-         'ssh-key': {'help': 'help3', 'default': 'id_rsa'}
-     }, ['host', 'ssh-user'], ['ssh-key']],
-])
+     {'host': {'help': 'help', 'required': True},
+      'ssh-user': {'help': 'help2', 'required': True},
+      'ssh-key': {'help': 'help3', 'default': 'id_rsa'}},
+     ['host', 'ssh-user'], ['ssh-key']], ])
 def test_required_option_exception(res_args,
                                    options,
                                    req_args,
@@ -91,9 +89,7 @@ def test_required_options_are_set(res_args,
     cmp(actual_args, expected_args)
 
 
-@pytest.mark.parametrize('test_value', [
-  'test string', 1, 0.1
-])
+@pytest.mark.parametrize('test_value', ['test string', 1, 0.1])
 def test_value_argument_compare(test_value):
     val = ValueArgument(test_value)
 

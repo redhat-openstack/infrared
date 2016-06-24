@@ -166,10 +166,10 @@ class YamlFileArgument(ValueArgument):
         """
         search_locations = [os.path.join(
             settings_path, subcommand, *arg_name.split("-"))
-                            for settings_path in settings_dirs]
+            for settings_path in settings_dirs]
         root_locations = [os.path.join(
             settings_path, *arg_name.split("-"))
-                          for settings_path in settings_dirs]
+            for settings_path in settings_dirs]
         search_locations.extend(root_locations)
         search_locations.append(os.getcwd())
         return search_locations

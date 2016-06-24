@@ -24,6 +24,6 @@ def test_get_config_dir_project_defaults(our_cwd_setup):
         "Options in conf module and conf file aren't the same"
 
     for option in conf_file.options('defaults'):
-        assert conf_file.get('defaults', option) == \
-               conf.DEFAULT_SECTIONS['defaults'][option], \
-               "Incorrect Option's (%s) value" % option
+        assert (conf_file.get('defaults', option) ==
+                conf.DEFAULT_SECTIONS['defaults'][option]), \
+            "Incorrect Option's (%s) value" % option
