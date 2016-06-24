@@ -72,4 +72,4 @@ if all(platform.linux_distribution(supported_dists="redhat")):
                             dest)
         else:
             raise new_error
-        import selinux
+        import selinux  # noqa

@@ -11,8 +11,6 @@ SETTINGS_PATH = os.path.join(TESTS_CWD, "settings")
 def os_environ():
     """ Backups env var from os.environ and restores it at teardown. """
 
-    from cli import conf
-
     backup_flag = False
     if utils.ENV_VAR_NAME in os.environ:
         backup_flag = True

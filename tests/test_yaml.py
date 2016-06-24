@@ -58,6 +58,7 @@ def test_placeholder_double_validator(our_cwd_setup):
     assert isinstance(settings['place']['holder']['validator2'], Placeholder)
     with pytest.raises(IRPlaceholderException) as exc:
         yaml.safe_dump(settings, default_flow_style=False)
+    assert "Mandatory value is missing." in str(exc.value.message)
 
 
 def test_lookup_basic(our_cwd_setup):

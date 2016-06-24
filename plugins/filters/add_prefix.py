@@ -1,6 +1,3 @@
-from ansible import utils
-
-
 def add_prefix(value, prefix=''):
     """Add string prefix to item.
 
