@@ -29,6 +29,7 @@
       dest="/root/{{ installer.packstack.answer_file }}"
       regexp=^CONFIG_COMPUTE_HOSTS=.*$
       replace=CONFIG_COMPUTE_HOSTS={% for host in groups.compute %}{{ hostvars[host]['ansible_default_ipv4']['address'] }}{% if not loop.last %},{% endif %}{% endfor %}
+  when: groups.compute is defined
 
 - name: Running packstack
   shell: "packstack --answer-file=/root/{{ installer.packstack.answer_file }} && touch /root/packstack-already-done"
