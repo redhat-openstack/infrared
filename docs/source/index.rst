@@ -19,6 +19,7 @@ Contents:
    advanced
    contributions
    contacts
+   release
 
 Indices and tables
 ==================
