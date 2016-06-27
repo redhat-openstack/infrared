@@ -43,6 +43,10 @@
   retries: 40
   delay: 5
 
+- name: Downloading ceph repositories
+  get_url: url="{{ installer.product.ceph.repo_url }}" dest=/etc/yum.repos.d/ceph.repo
+  when: installer.product.ceph.repo_url
+
 - name: update system packages
   yum:
       state: latest
