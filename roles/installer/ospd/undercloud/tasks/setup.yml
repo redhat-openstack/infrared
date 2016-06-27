@@ -43,6 +43,26 @@
   retries: 40
   delay: 5
 
+- name: Downloading extra repositories
+  get_url:
+    url="{{ item }}"
+    dest=/etc/yum.repos.d/
+  with_items: "{{ ospd.extra_repos.from_url | default([]) }}"
+  when: ospd.extra_repos.from_url
+
+- name: Creating extra repositories
+  yum_repository:
+    name: "{{ item.name }}"
+    state: "{{ item.name | default(omit) }}"
+    file: "{{ item.file| default(omit) }}"
+    description: "{{ item.description | default(omit) }}"
+    baseurl: "{{ item.baseurl | default(omit) }}"
+    mirrorlist: "{{ item.mirrorlist | default(omit) }}"
+    enabled: "{{ item.enabled | default(omit) }}"
+    gpgcheck: "{{ item.gpgcheck | default(omit) }}"
+  with_items: "{{ ospd.extra_repos.explicit | default([]) }}"
+  when: ospd.extra_repos.from_config
+
 - name: update system packages
   yum:
       state: latest
