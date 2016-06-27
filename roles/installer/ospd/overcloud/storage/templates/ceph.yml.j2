@@ -23,8 +23,8 @@ resource_registry:
     GlanceRbdPoolName: "images"
     ExtraConfig:
       ceph::profile::params::osds:
-{% for disk in hostvars[(groups.ceph|first)].ansible_devices.keys()[1:] %}
-       '/dev/{{ disk }}':
+{% for disk in provisioner.topology.nodes.ceph.disks.values()[1:] %}
+       '{{ disk.dev }}':
            journal: ''
 {% endfor %}
 {% endif %}
