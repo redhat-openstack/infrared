@@ -43,6 +43,13 @@
   retries: 40
   delay: 5
 
+- name: Downloading extra repositories
+  get_url:
+    url="{{ item }}"
+    dest=/etc/yum.repos.d/
+  with_items: "{{ ospd.extra_repos.from_url | default([]) }}"
+  when: installer.product.ceph.repo_url
+
 - name: update system packages
   yum:
       state: latest
