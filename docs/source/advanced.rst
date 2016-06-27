@@ -24,6 +24,59 @@ Execute only the desired tags. For example, this will only install the underclou
     ansible-playbook -i hosts --extra-vars @OUTPUT_FILE playbooks/install.yml --tags=undercloud
 
 
+Custom repositories
+^^^^^^^^^^^^^^^^^^^
+
+Infrared allows to add custom repositories when you're running OSPD.
+This can be done passing through extra-vars with the follow key:
+    * ospd.extra_repos.from_url which will download a repo file and add it on /etc/yum.repos.d
+..    * ospd.extra_repos.from_config which will setup a repo using the ansible yum_repository module
+
+.. .. note:: Since both options holds a list, you must create a yaml file in both cases to pass in the extra-vars option.
+
+#. Using ospd.extra_repos.from_url
+
+    Create a yaml file:
+
+    .. code-block:: plain
+       :caption: repos.yml
+
+        ---
+        ospd:
+           extra_repos:
+               from_url:
+                   - http://yoururl.com/repofile1.repo
+                   - http://yoururl.com/repofile2.repo
+        ...
+
+    Run ir-installer::
+
+        ir-installer -e @repos.yml ospd
+
+..
+  TODO: acruz uncomment this when ansible 2.1 be shipped with yum_repository module
+  #. Using ospd.extra_repos.from_config
+
+      Using this option enables you to set specific options for each repository:
+
+      .. code-block:: plain
+         :caption: repos.yml
+
+          ---
+          ospd:
+             extra_repos:
+                 from_config:
+                     - { name: my_repo1, file: my_repo1.file, description: my repo1, base_url: http://myurl.com/my_repo1, enabled: 0, gpg_check: 0 }
+                     - { name: my_repo2, file: my_repo2.file, description: my repo2, base_url: http://myurl.com/my_repo2, enabled: 0, gpg_check: 0 }
+          ...
+
+      .. note:: As you can see, ospd.extra_repos.explicity support some of the options found in yum_repository module (name, file, description, base_url, enabled and gpg_check). For more information about this module, visit `Ansible yum_repository documentation <https://docs.ansible.com/ansible/yum_repository_module.html>`_.
+
+      Run ir-installer::
+
+          ir-installer -e @repos.yml ospd
+
+
 Scalability
 ^^^^^^^^^^^
 
@@ -63,4 +116,3 @@ Currently supported services for tests:
             ansible-playbook -vvvv -i hosts -e @install.yml playbooks/installer/ospd/post_install/swift_compute.yml
 
     .. note:: Swift has a parameter called ``min_part_hours`` which configures amount of time that should be passed between two rebalance processes. In real production environment this parameter is used to reduce network load. During the deployment of swift cluster for further scale testing we set it to 0 to decrease amount of time for scale.
-
