@@ -8,6 +8,7 @@
         lineinfile:
             dest: "/etc/hosts"
             line: "{{ hostvars[item].ansible_ssh_host }}    {{ item }}.redhat.local {{ item }}"
+            regexp: ".*{{ item }}$"
             state: present
         with_items: "{{ groups['all'] | difference(['localhost']) | difference(['virthost']) }}"
 
