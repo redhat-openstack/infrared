@@ -28,7 +28,8 @@
       - name: Add hosts to host list
         add_host:
             name: "{{ provisioner.host.address }}"
-            groups: "baremetal,undercloud"
+            # TODO: Move tester and even undercloud tagging to later phases in future
+            groups: "baremetal,undercloud,tester"
             ansible_ssh_host: "{{ provisioner.host.address }}"
             ansible_ssh_user: "{{ provisioner.host.user }}"
             ansible_ssh_pass: "{{ provisioner.host.password | default(omit) }}"
