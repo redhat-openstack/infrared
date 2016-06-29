@@ -30,6 +30,21 @@
       - name: Iptables - Save default rules
         shell: /sbin/iptables-save >/etc/sysconfig/iptables
 
+- name: Dump all facts before the installation begins
+  hosts: openstack_nodes:!tester
+  gather_facts: no
+  tags: dump_facts
+  tasks:
+      - name: Dumping all facts
+        setup:
+        register: initial_facts
+
+      - name: Writing facts into files
+        copy:
+          content: "{{ initial_facts.ansible_facts}}"
+          dest: {{ inventory_hostname}}
+        delegate_to: localhost
+
 - include: "installer/{{ installer.type }}/main.yml"
 
 - name: Update the inventory file

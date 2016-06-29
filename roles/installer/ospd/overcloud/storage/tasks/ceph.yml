@@ -1,3 +1,7 @@
+- name: import ceph facts
+  set_fact:
+      ceph_facts: "{{ lookup('file', hostvars[(groups.ceph|first)].inventory_hostname) }}"
+
 - name: prepare ceph storage template
   template:
       src: "ceph.yml.j2"
