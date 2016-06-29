@@ -6,11 +6,19 @@
   become: yes
   become_method: sudo
   tasks:
-    - name: Setup fixed key for encrypted volumes
-      shell: openstack-config --set /etc/nova/nova.conf keymgr fixed_key `hexdump -n 32 -v -e '/1 "%02x"' /dev/urandom`
+    - name:
+      shell: hexdump -n 32 -v -e '/1 "%02x"' /dev/urandom
+      register: randkey
 
-    - name: restart nova compute service to apply changes in nova.conf
-      shell: openstack-service restart nova-compute
+    - name: Setup fixed key for encrypted volumes
+      ini_file:
+               dest: /etc/nova/nova.conf
+               section: keymgr
+               option: fixed_key
+               value: "{{ randkey.stdout }}"
+
+    - name: Restart openstack-nova-compute
+      service: name=openstack-nova-compute state=restarted
 
 - name: Check if BZ1300662 is enabled
   hosts: controller
