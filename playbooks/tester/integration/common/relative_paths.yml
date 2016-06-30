@@ -1,0 +1,12 @@
+---
+- name: Turn ansible files into relative paths
+  hosts: localhost
+  tasks:
+      - replace:
+          dest: "{{ item }}"
+          regexp: "{{ lookup('env', 'WORKSPACE') }}"
+          replace: ""
+        with_items:
+          - ansible.ssh.config
+          - hosts-horizon
+          - ansible.cfg
