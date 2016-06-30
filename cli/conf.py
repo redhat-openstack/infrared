@@ -29,6 +29,10 @@ DEFAULT_SECTIONS = {
     'tester': dict(
         main_playbook='test.yml',
         cleanup_playbook='cleanup.yml'
+    ),
+
+    'cleanup': dict(
+        main_playbook='cleanup.yml',
     )
 }
 
