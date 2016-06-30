@@ -1,0 +1,72 @@
+---
+- set_fact:
+    overcloud_rc: overcloudrc
+
+# todo(yfried): find a better method to load stackrc file
+- shell: "cat {{ overcloud_rc }} | grep AUTH | cut -d '=' -f 2"
+  register: oc_auth
+
+- shell: "cat {{ overcloud_rc }} | grep USERNAME | cut -d '=' -f 2"
+  register: oc_username
+
+- shell: "cat {{ overcloud_rc }} | grep TENANT | cut -d '=' -f 2"
+  register: oc_tenant
+
+- shell: "source {{ overcloud_rc }} && env | grep OS_PASSWORD | cut -d '=' -f 2"
+  args:
+      executable: /bin/bash
+  register: oc_password
+
+- name: Install python-virtualenv, gcc, python-devel for the pip tasks
+  become: yes
+  become_user: root
+  yum:
+      name: "{{ item }}"
+      state: present
+  with_items:
+     - python-virtualenv
+     - gcc
+     - python-devel
+
+- block:
+    - pip:
+          name: "{{ item.key }}"
+          version: "{{ item.value }}"
+          virtualenv: "{{ path_venv }}"
+      with_dict:
+          setuptools: "17.0"
+          pytz: "2016.4"
+          shade: "1.7.0"
+          pip: "8.1"
+    - debug: msg="{{ oc_auth.stdout }} {{ oc_username.stdout }} {{ oc_password.stdout }} {{ oc_tenant.stdout }}"
+    - name: Create demo project
+      vars:
+          ansible_python_interpreter: "/tmp/venv_shade/bin/python"
+      os_project:
+          auth:
+              auth_url: "{{ oc_auth.stdout }}"
+              username: "{{ oc_username.stdout }}"
+              password: "{{ oc_password.stdout }}"
+              project_name: "{{ oc_tenant.stdout }}"
+          cacert: /etc/pki/tls/certs/ca-bundle.crt
+          name: "{{ item.tenant_name }}"
+          state: present
+      with_items: "{{ tester.accounts }}"
+
+
+    - name: update IP of overcloud nodes
+      vars:
+          ansible_python_interpreter: "/tmp/venv_shade/bin/python"
+      os_user:
+          auth:
+              auth_url: "{{ oc_auth.stdout }}"
+              username: "{{ oc_username.stdout }}"
+              password: "{{ oc_password.stdout }}"
+              project_name: "{{ oc_tenant.stdout }}"
+          cacert: /etc/pki/tls/certs/ca-bundle.crt
+          name: "{{ item.username }}"
+          password: "{{ item.password }}"
+          state: present
+      with_items: "{{ tester.accounts }}"
+  vars:
+      path_venv: /tmp/venv_shade
