@@ -1,0 +1,43 @@
+---
+- name: Upload test image into glance
+  hosts: tester
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  vars:
+    controller_name: "{{ provisioner.nodes.controller.name }}"
+    controller_ip: "{{ hostvars[controller_name].ansible_default_ipv4.address }}"
+    image_dest: "./{{ tester.image_name }}"
+    undercloud_rc: overcloudrc
+  tasks:
+    - shell: "cat {{ undercloud_rc }} | grep AUTH | cut -d '=' -f 2"
+      register: oc_auth
+
+    - shell: "cat {{ undercloud_rc }} | grep USERNAME | cut -d '=' -f 2"
+      register: oc_username
+
+    - shell: "cat {{ undercloud_rc }} | grep TENANT | cut -d '=' -f 2"
+      register: oc_tenant
+
+    - shell: "source {{ undercloud_rc }} && env | grep OS_PASSWORD | cut -d '=' -f 2"
+      args:
+          executable: /bin/bash
+      register: oc_password
+    - get_url:
+          url: "{{ tester.image_url }}"
+          dest: "{{ image_dest }}"
+
+    - vars:
+          ansible_python_interpreter: "/tmp/venv_shade/bin/python"
+      os_image:
+          auth:
+              auth_url: "{{ oc_auth.stdout }}"
+              username: "{{ oc_username.stdout }}"
+              password: "{{ oc_password.stdout }}"
+              project_name: "{{ oc_tenant.stdout }}"
+          cacert: /etc/pki/tls/certs/ca-bundle.crt
+          name: "{{ tester.image_name }}"
+          filename: "{{ image_dest }}"
+          state: present
+          is_public: false
+          timeout: 3600
