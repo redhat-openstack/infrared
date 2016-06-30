@@ -1,0 +1,60 @@
+---
+#- name: Install python-virtualenv, gcc, python-devel for the pip tasks
+#  become: yes
+#  become_user: root
+#  yum:
+#      name: "{{ item }}"
+#      state: present
+#  with_items:
+#     - python-virtualenv
+#     - gcc
+#     - python-devel
+
+- block:
+    - name: Create projects for accounts
+      vars:
+          ansible_python_interpreter: "/tmp/venv_shade/bin/python"
+      os_project:
+          auth:
+              auth_url: "{{ oc_auth }}"
+              username: "{{ oc_username }}"
+              password: "{{ oc_password }}"
+              project_name: "{{ oc_tenant }}"
+          cacert: /etc/pki/tls/certs/ca-bundle.crt
+          name: "{{ item.tenant_name }}"
+          state: present
+      with_items: "{{ tester.accounts }}"
+
+    - name: Create users for accounts
+      vars:
+          ansible_python_interpreter: "/tmp/venv_shade/bin/python"
+      os_user:
+          auth:
+              auth_url: "{{ oc_auth }}"
+              username: "{{ oc_username }}"
+              password: "{{ oc_password }}"
+              project_name: "{{ oc_tenant }}"
+          cacert: /etc/pki/tls/certs/ca-bundle.crt
+          name: "{{ item.username }}"
+          password: "{{ item.password }}"
+          state: present
+      with_items: "{{ tester.accounts }}"
+
+    # available only in Ansible 2.1
+    - name: Associate users with projects of accounts
+      vars:
+          ansible_python_interpreter: "/tmp/venv_shade/bin/python"
+      os_user_role:
+          auth:
+              auth_url: "{{ oc_auth }}"
+              username: "{{ oc_username }}"
+              password: "{{ oc_password }}"
+              project_name: "{{ oc_tenant }}"
+          cacert: /etc/pki/tls/certs/ca-bundle.crt
+          user: "{{ item.username }}"
+          project: "{{ item.tenant_name }}"
+          role: _member_
+          state: present
+      with_items: "{{ tester.accounts }}"
+  vars:
+      path_venv: /tmp/venv_shade
