@@ -1,0 +1,67 @@
+---
+- name: Download and configure selenium grid
+  hosts: tester
+  gather_facts: no
+  become: no
+  vars:
+      grid_filename: selenium_grid.jar
+      grid_path: "/opt/selenium-grid"
+      grid_node_config: grid_node.json
+      grid_hub_config: grid_hub.json
+      webdriver_chrome_zip: /tmp/chrome-webdriver.zip
+  roles:
+    - role: linux/java/oracle
+      java_oracle_download_url: "{{ tester.component.horizon.java.oracle_download_url }}"
+      java_download_folder: "{{ tester.component.horizon.java.download_folder }}"
+      java_name: "{{ tester.component.horizon.java.download_folder }}/{{ tester.component.horizon.java.name }}"
+      java_archive: "{{ tester.component.horizon.java.download_folder }}/{{ tester.component.horizon.java.archive }}"
+      when: tester.component.horizon.java.use_oracle == true
+    - role: linux/xvfb
+      xvfb_screen_num: "{{ tester.component.horizon.xvfb.display_num }}"
+      xvfb_resolution: "{{ tester.component.horizon.xvfb.resolution }}"
+      xvfb_service_name: "{{ tester.component.horizon.xvfb.service_name }}"
+    - role: linux/windowmanager
+      screen_num: "{{ tester.component.horizon.xvfb.display_num }}"
+  tasks:
+    - file:
+        path: "{{ grid_path }}"
+        state: directory
+    - copy:
+        src: google-chrome.repo
+        dest: /etc/yum.repos.d/
+    - yum: name=google-chrome-stable state=installed
+    - get_url:
+        url: "{{ tester.component.horizon.chrome_webdriver_download }}"
+        dest: "{{ webdriver_chrome_zip }}"
+    - unarchive:
+        src: "{{ webdriver_chrome_zip }}"
+        dest: "{{ grid_path }}/"
+        copy: no
+    - get_url:
+        url: "{{ tester.component.horizon.selenium_grid_download }}"
+        dest: "{{ grid_path }}/{{ grid_filename }}"
+    - copy:
+        src: "{{ item }}"
+        dest: "{{ grid_path }}"
+      with_items:
+        - "{{ grid_node_config }}"
+        - "{{ grid_hub_config }}"
+    - template:
+        src: "{{ item }}.service.j2"
+        dest: "/etc/systemd/system/{{ item }}.service"
+        owner: root
+        group: root
+        mode: 0644
+      with_items:
+          - selenium-grid-hub
+          - selenium-grid-node
+    - command: systemctl daemon-reload
+    - service:
+        name: "{{ item }}"
+        state: restarted
+        enabled: yes
+      with_items:
+          - "selenium-grid-hub"
+          - "selenium-grid-node"
+    - name: Wait for selenium grid to became ready
+      script: wait_for_grid.sh
