@@ -1,0 +1,17 @@
+---
+- name: Copy to Task Files Rally
+  hosts: tester
+  tasks:
+  - name: Copy Task file from settings
+    copy:
+      dest: "{{ tester.rally.dir }}/{{ tester.rally.taskfile }}"
+      content: "{{ tester.tests.rally.task | to_nice_json }}"
+      force: yes
+
+- name: Run Rally Task
+  hosts: tester
+  tasks:
+  - name: Check Rally deployment
+    command: "{{ tester.rally.path }}/bin/rally deployment check"
+  - name: Start Rally task
+    command: "{{ tester.rally.path }}/bin/rally -v task start --task {{ tester.rally.dir }}/{{ tester.rally.taskfile }}"
