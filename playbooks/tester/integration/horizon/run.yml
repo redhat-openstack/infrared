@@ -1,0 +1,28 @@
+---
+- name: Run horizon integration tests
+  hosts: tester
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  vars:
+      xunit_file: horizon.xml
+  tasks:
+      - set_fact:
+          grid_hub: 'http://127.0.0.1:4444/wd/hub'
+        when: tester.selenium.grid is not defined or tester.selenium.grid == 'local'
+      - set_fact:
+          grid_hub: 'http://{{ private.tester.saucelab.user }}:{{ private.tester.saucelab.key }}@ondemand.saucelabs.com:80/wd/hub'
+        when: tester.selenium.grid == 'sauce'
+      - name: run integration tests
+        environment:
+          INTEGRATION_TESTS: 1
+          GRID_HUB: "{{ grid_hub }}"
+          BROWSER_NAME: "{{ lookup('env', 'BROWSER_NAME') }}"
+          BROWSER_VERSION: "{{ lookup('env', 'BROWSER_VERSION') }}"
+          BROWSER_PLATFORM: "{{ lookup('env', 'BROWSER_PLATFORM') }}"
+        shell: |
+             [ -d ~/{{ tester.venv_dir }} ] && source ~/{{ tester.venv_dir }}/bin/activate
+             ~/{{ tester.venv_dir }}/bin/nosetests -v -s -a "{{ tester.tests_tag }}" --processes={{ tester.threads }} --process-timeout=3000 --with-xunitmp --xunitmp-file={{ xunit_file }} openstack_dashboard/test/integration_tests/tests/test_login.py chdir=~/{{ tester.dir }}
+        ignore_errors: true
+        #async: 21600
+        #poll: 30
