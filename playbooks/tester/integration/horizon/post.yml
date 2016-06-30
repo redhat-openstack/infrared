@@ -1,0 +1,8 @@
+---
+- name: Fetch results
+  hosts: tester
+  gather_facts: no
+  tasks:
+    -  fetch: src={{ tester.dir }}/horizon.xml
+              dest={{ lookup('env', 'PWD') }}/nosetests.xml
+              flat=yes
