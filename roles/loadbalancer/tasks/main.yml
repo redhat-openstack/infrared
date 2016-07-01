@@ -1,4 +1,6 @@
 ---
+- include_vars: "{{ installer.deployment.files }}/network/network-environment.yaml"
+
 - name: switch selinux to permissive
   selinux: policy=targeted state=permissive
 
@@ -6,7 +8,7 @@
 - name: setup ssh for loadbalancer
   lineinfile:
       dest: "/etc/ssh/sshd_config"
-      line: "ListenAddress {{ installer.loadbalancer.network.plain.ip | ipaddr('address') }}"
+      line: "ListenAddress {{ installer.loadbalancer.network.external.vip | ipaddr('address') }}"
 
 - name: restart sshd service
   service:
@@ -36,25 +38,25 @@
 - name: create VLAN interface for internal_api network
   template:
       src: vlan-internal_api.cfg.j2
-      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}.{{ installer.network.isolation.template.content.parameter_defaults.InternalApiNetworkVlanID }}
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}.{{ parameter_defaults.InternalApiNetworkVlanID }}
   when: installer.loadbalancer.network.internal_api is defined
 
 - name: create VLAN interface for storage network
   template:
       src: vlan-storage.cfg.j2
-      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}.{{ installer.network.isolation.template.content.parameter_defaults.StorageNetworkVlanID }}
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}.{{ parameter_defaults.StorageNetworkVlanID }}
   when: installer.loadbalancer.network.storage is defined
 
 - name: create VLAN interface for storage_mgmnt network
   template:
       src: vlan-storage_mgmt.cfg.j2
-      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}.{{ installer.network.isolation.template.content.parameter_defaults.StorageMgmtNetworkVlanID }}
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}.{{ parameter_defaults.StorageMgmtNetworkVlanID }}
   when: installer.loadbalancer.network.storage_mgmnt is defined
 
 - name: create VLAN interface for tenant network
   template:
       src: vlan-tenant.cfg.j2
-      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}.{{ installer.network.isolation.template.content.parameter_defaults.TenantNetworkVlanID }}
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}.{{ parameter_defaults.TenantNetworkVlanID }}
   when: installer.loadbalancer.network.tenant is defined
 
 - name: Install release tool on loadbancer
@@ -81,9 +83,8 @@
       enabled: yes
 
 - name: reboot the loadbalancer
-  shell: "sleep 2 && shutdown -r now"
-  async: 1
-  poll: 0
+  command: virsh reboot "{{ hostvars[inventory_hostname].inventory_hostname }}"
+  delegate_to: virthost
   ignore_errors: true
 
 - name: Waiting for the loadbalancer to be available

@@ -28,8 +28,16 @@ parameters:
     BlockStorageHostnameResolveNetwork: internal_api
     ObjectStorageHostnameResolveNetwork: internal_api
     CephStorageHostnameResolveNetwork: storage
+{% if installer.product.version|int > 8 %}
+    AodhApiNetwork: internal_api
+    GnocchiApiNetwork: internal_api
+    SaharaApiNetwork: internal_api
+{% endif %}
 
 parameter_defaults:
+{% if installer.product.version|int > 7 %}
+  RedisPassword: 'examplepassword'
+{% endif %}
   ControlPlaneIP: {{ installer.loadbalancer.network.plain.ip | ipaddr('address') }}
   ExternalNetworkVip: {{ installer.loadbalancer.network.external.vip | ipaddr('address') }}
   InternalApiNetworkVip: {{ installer.loadbalancer.network.internal_api.vip | ipaddr('address') }}

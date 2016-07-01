@@ -2,6 +2,12 @@
 - include: pre.yml
   tags: backup
 
+- name: Deploy and configure external loadbalancer instance
+  hosts: loadbalancer
+  tags: loadbalancer
+  roles:
+    - { role: loadbalancer, when: groups.loadbalancer is defined }
+
 - name: Installing the undercloud
   tags:
       - undercloud
@@ -126,6 +132,7 @@
       - {role: installer/ospd/overcloud/network, when: "{{ (overcloud_deploy_script == '') }}" }
       - {role: installer/ospd/overcloud/ssl, when: "overcloud_deploy_script == '' and installer.overcloud.ssl == 'yes'"}
       - {role: installer/ospd/overcloud/hostname, when: "overcloud_deploy_script == '' and installer.overcloud.hostname == 'yes'"}
+      - {role: installer/ospd/loadbalancer, when: groups.loadbalancer is defined}
 
   tasks:
       - block:

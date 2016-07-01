@@ -8,6 +8,7 @@ global
 
 defaults
   log  global
+  maxconn  4096
   mode  tcp
   retries  3
   timeout  http-request 10s
@@ -157,6 +158,13 @@ listen redis
   bind {{ installer.loadbalancer.network.redis.vip | ipaddr('address') }}:6379
   balance first
   option tcp-check
+{% if installer.product.version|int > 7 %}
+  tcp-check send AUTH\ examplepassword\r\n
+  tcp-check send PING\r\n
+  tcp-check expect string +PONG
+  tcp-check send QUIT\r\n
+  tcp-check expect string +OK
+{% endif %}
   tcp-check send info\ replication\r\n
   tcp-check expect string role:master
   timeout client 0
@@ -171,3 +179,26 @@ listen swift_proxy_server
   {% for x in range(provisioner.topology.nodes.controller.amount) %}
 server {{ installer.loadbalancer.controllers.name_prefix }}{{x}} {{ installer.loadbalancer.network.storage.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8080 check fall 5 inter 2000 rise 2
   {% endfor %}
+
+{% if installer.product.version|int > 8 %}
+listen aodh
+  bind {{ installer.loadbalancer.network.external.vip | ipaddr('address') }}:8042 transparent
+  bind {{ installer.loadbalancer.network.internal_api.vip | ipaddr('address') }}:8042 transparent
+  {% for x in range(provisioner.topology.nodes.controller.amount) %}
+server {{ installer.loadbalancer.controllers.name_prefix }}{{x}} {{ installer.loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8042 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen gnocchi
+  bind {{ installer.loadbalancer.network.external.vip | ipaddr('address') }}:8041 transparent
+  bind {{ installer.loadbalancer.network.internal_api.vip | ipaddr('address') }}:8041 transparent
+  {% for x in range(provisioner.topology.nodes.controller.amount) %}
+server {{ installer.loadbalancer.controllers.name_prefix }}{{x}} {{ installer.loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8041 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen sahara
+  bind {{ installer.loadbalancer.network.external.vip | ipaddr('address') }}:8386 transparent
+  bind {{ installer.loadbalancer.network.internal_api.vip | ipaddr('address') }}:8386 transparent
+  {% for x in range(provisioner.topology.nodes.controller.amount) %}
+server {{ installer.loadbalancer.controllers.name_prefix }}{{x}} {{ installer.loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8386 check fall 5 inter 2000 rise 2
+  {% endfor %}
+{% endif %}
