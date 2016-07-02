@@ -90,6 +90,12 @@
 
       - name: Disable keystone resource
         shell: "pcs resource disable openstack-keystone --wait=900"
+        when: "{{ installer.product.version | int }} < 9"
+
+      # Keystone resource was replaced by openstack-core resource in RHOS9
+      - name: Disable openstack-core resource
+        shell: "pcs resource disable openstack-core --wait=900"
+        when: "{{ installer.product.version | int }} > 8"
 
       - name: Set controller pacemaker property on controllers
         shell: "pcs property set --node {{ hostvars[item]['ansible_hostname'] }} osprole=controller"
@@ -170,10 +176,17 @@
         shell: "pcs stonith level add 1 {{ hostvars[item]['ansible_hostname'] }} my-stonith-xvm-{{ hostvars[item]['ansible_hostname'] }},fence-nova"
         with_items: "{{ groups['compute'] }}"
 
-      - name: Enable openstack-keystone and compute resources
+      - name: Enable keystone resource
+        shell: "pcs resource enable openstack-keystone"
+        when: "{{ installer.product.version | int }} < 9"
+
+      - name: Enable openstack-core resource
+        shell: "pcs resource enable openstack-core"
+        when: "{{ installer.product.version | int }} > 8"
+
+      - name: Enable compute resources
         shell: "pcs resource enable {{ item }}"
         with_items:
-            - openstack-keystone
             - neutron-openvswitch-agent-compute
             - libvirtd-compute
             - ceilometer-compute
