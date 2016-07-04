@@ -31,6 +31,13 @@
             until: command_result.stderr.find('Connection reset by peer') == -1
             retries: 40
             delay: 5
+
+          - name: Dump rhos-release to file
+            copy:
+              content: "{{ command_result.stdout }}"
+              dest: ./rhos-releas-director.log
+            delegate_to: localhost
+
         when: "{{ installer.product.version | int }} < 10"
 
       - debug:
@@ -42,6 +49,12 @@
         until: command_result.stderr.find('Connection reset by peer') == -1
         retries: 40
         delay: 5
+
+      - name: Dump rhos-release to file
+        copy:
+          content: "{{ command_result.stdout }}"
+          dest: ./rhos-releas.log
+        delegate_to: localhost
 
       - name: update system packages
         yum:
