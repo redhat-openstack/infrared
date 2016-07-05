@@ -22,10 +22,17 @@ def generate_entry_scripts():
     # at this point we don't have any packages installed
     # so hard-code settings folder for now here
     specs = next(os.walk('settings'))[1]
+    scripts = next(os.walk('cli/scripts'))[2]
 
-    return ["ir-{0} = cli.main:entry_point".format(spec_name)
-            for spec_name in
-            specs]
+    specs_e_points = ["ir-{0} = cli.main:entry_point".format(
+        spec_name) for spec_name in specs]
+    scripts_e_points = \
+        ["ir-{script} = cli.scripts.{script}:main".format(
+            script=script.split('.')[0]) for script in scripts
+         if script.endswith('.py') and not script.startswith('__')]
+
+    return specs_e_points + scripts_e_points
+
 
 prj_dir = dirname(abspath(__file__))
 setup(

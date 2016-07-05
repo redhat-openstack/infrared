@@ -378,3 +378,45 @@ For list of supported testers invoke::
 .. TODO: Add doc about testers
 .. Tempest
 .. Rally
+
+Scripts
+-------
+Archive
+^^^^^^^
+This script will create a portable package which can be used to access an environment deployed by InfraRed from any
+machine. The archive script archives the relevant SSH & inventory files using tar. One can later use those files
+from anywhere in order to SSH and run playbook against the inventory hosts.
+
+To get the full details on how to use the archive script invoke::
+
+    $ ir-archive --help
+
+Basic usage of archive script::
+
+    $ ir-archive
+
+.. note:: Unless supplying paths to all relevant files, please run this script from the InfraRed project dir
+
+This creates a new tar file (IR-Archive-[date/suffix].tar) containing the files mentioned above while de-referencing local absolute paths of the SSH keys so they can be accessed from anywhere.
+
+Usage examples:
+
+* Untar the archive file::
+
+    tar -xvf IR-Archive-2016-07-11_10-31-28.tar
+
+.. note:: Make sure to extract the files into the InfraRed project dir
+
+
+* Use the SSH config file to access your provisioned nodes::
+
+    ssh -F ansible.ssh.config.2016-07-11_10-31-28 controller-0
+
+* Execute ansible Ad-Hoc command / Run playbook against the nodes in the archived inventory file::
+
+    ansible -i hosts-2016-07-11_10-31-28 all -m setup
+
+* Use the archived files with InfraRed::
+
+    mv ansible.ssh.config.2016-07-11_10-31-28 ansible.ssh.config
+    ir-installer --inventory hosts-2016-07-11_10-31-28 ospd ...
