@@ -329,3 +329,14 @@ For list of supported testers invoke::
 .. TODO: Add doc about testers
 .. Tempest
 .. Rally
+
+Scripts
+-------
+As of the time this document was written, the archive script is the only independent script which comes with InfraRed
+The archive script archives the relevant SSH & inventory files using tar. One can later make a use of those files in
+order to SSH and run playbook against the inventory hosts.
+
+To get the full details on how to use the archive script invoke::
+
+    $ ir-archive --help
+
