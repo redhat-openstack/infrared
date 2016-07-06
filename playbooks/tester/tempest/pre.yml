@@ -28,6 +28,24 @@
         register: result
         ignore_errors: yes
 
+      - name: Install tempest
+        shell: "~/{{ tester.dir }}/tools/with_venv.sh  {{ item }}"
+        args:
+            chdir: "~/{{ tester.dir }}"
+        with_items:
+          - "pip install -r requirements.txt"
+          - "pip install -r test-requirements.txt"
+          - "python setup.py develop"
+
+      - name: Install neutron
+        shell: "~/{{ tester.dir }}/tools/with_venv.sh {{ item }}"
+        args:
+            chdir: "~/upstream_neutron"
+        with_items:
+          - "pip install -r requirements.txt"
+          - "pip install -r test-requirements.txt"
+          - "python setup.py develop"
+
       - name: run tempest configuration tool
         vars:
             deployer_input: "{{ '(result | success)' | ternary('--deployer-input ~/tempest-deployer-input.conf', '') }}"

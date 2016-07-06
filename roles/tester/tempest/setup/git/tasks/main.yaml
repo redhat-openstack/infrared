@@ -25,7 +25,7 @@
 - debug: "msg='Build mark: tempest={{ tempest_repo_version.stdout }}'"
 
 - name: install virtualenv
-  command: "python {{ tester.dir }}/tools/install_venv.py {{ tester.dir }}"
+  command: "python {{ tester.dir }}/tools/install_venv.py --no-site-packages"
   when: tempest_repo|changed
 
 - name: Install extra pip requirements
@@ -35,3 +35,9 @@
       virtualenv: "~/{{ tester.dir }}/.venv"
   with_items: "{{ tester.setup.pip_packages }}"
   when: tempest_repo|changed
+
+- name: Clone upstream neutron
+  git:
+      repo: "https://github.com/openstack/neutron.git"
+      version: "00f95afaaeafbefd8ef59ac0498363f224ccba16"
+      dest: "~/upstream_neutron"
