@@ -32,7 +32,7 @@
 - debug: "msg='Build mark: tempest={{ tempest_repo_version.stdout }}'"
 
 - name: install virtualenv
-  command: "python {{ tester.dir }}/tools/install_venv.py {{ tester.dir }}"
+  command: "python {{ tester.dir }}/tools/install_venv.py --no-site-packages"
   when: tempest_repo|changed or tempest_local_dir|changed
 
 - name: Install extra pip requirements
@@ -42,3 +42,20 @@
       virtualenv: "~/{{ tester.dir }}/.venv"
   with_items: "{{ tester.setup.pip_packages }}"
   when: tempest_repo|changed or tempest_local_dir|changed
+
+- name: Clone upstream neutron
+  git:
+      repo: "{{ tester.setup.upstream_neutron.repo }}"
+      version: "{{ tester.setup.upstream_neutron.revision }}"
+      dest: "~/upstream_neutron"
+  when: tester.tests.name is defined and (tester.tests.name == all or tester.tests.name == neutron)
+
+- name: Install neutron
+  shell: "~/{{ tester.dir }}/tools/with_venv.sh {{ item }}"
+  args:
+      chdir: "~/upstream_neutron"
+  with_items:
+    - "pip install -r requirements.txt"
+    - "pip install -r test-requirements.txt"
+    - "python setup.py develop"
+  when: tester.tests.name is defined and (tester.tests.name == all or tester.tests.name == neutron)
