@@ -1,7 +1,15 @@
 parameter_defaults:
-    ControllerSchedulerHints:
-        'capabilities:node': 'controller-%index%'
+{% for node_type, details in node_types.iteritems() %}
+{% if groups[node_type]|default([])|length %}
+    {{ details.heat_name }}SchedulerHints:
+        'capabilities:node': '{{ details.ospd_name }}-%index%'
+{% endif %}
+{% endfor %}
+
     HostnameMap:
-        overcloud-controller-0: overcloud-controller-prod-123-0
-        overcloud-controller-1: overcloud-controller-prod-456-0
-        overcloud-controller-2: overcloud-controller-prod-789-0
+{% for node_type, details in node_types.iteritems() %}
+{% for node in groups[node_type]|default([]) %}
+        overcloud-{{ details.tripleo_hostname }}-{{ loop.index0 }}: {{ node }}
+{% endfor %}
+{% endfor %}
+
