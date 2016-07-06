@@ -1,7 +1,25 @@
+{#
+    For more details see:
+    http://docs.openstack.org/developer/tripleo-docs/advanced_deployment/node_placement.html
+#}
+
 parameter_defaults:
-    ControllerSchedulerHints:
-        'capabilities:node': 'controller-%index%'
-    HostnameMap:
-        overcloud-controller-0: overcloud-controller-prod-123-0
-        overcloud-controller-1: overcloud-controller-prod-456-0
-        overcloud-controller-2: overcloud-controller-prod-789-0
+{% if installer.scheduler_hints|default(False) %}
+{% for node_type, details in node_types.iteritems() %}
+{% if groups[node_type]|default([])|length %}
+    {{ details.heat_name }}SchedulerHints:
+        'capabilities:node': '{{ node_type }}-%index%'
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% for node_type, details in node_types.iteritems() %}
+    {{ details.heat_name }}HostnameFormat: '{{ node_type }}-%index%'
+{% endfor %}
+
+{% if installer.overcloud.hostname.HostnameMap | default(False) %}
+        HostnameMap:
+{% for old_name, new_name in installer.overcloud.hostname.HostnameMap.iteritems() %}
+            {{ old_name }}: {{ new_name }}
+{% endfor %}
+{% endif %}

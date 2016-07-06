@@ -1,18 +1,34 @@
-- name: get controller flavor
-  shell: "source ~/stackrc; openstack flavor list -c Name -f value | grep 'controller-'"
-  register: controller_flavor
+- name: Get hostnames template
+  stat:
+      path: "{{ hostnames_template_file }}"
+  register: file_result
 
-- name: update capabilities for controllers
-  shell: "source ~/stackrc; ironic node-update {{ item.1 }} replace properties/capabilities='profile:{{ controller_flavor.stdout }},node:controller-{{ item.0 }},boot_option:local'"
-  when: "installer.overcloud.hostname == 'yes'"
-  with_indexed_items: "{{ groups['controller'] }}"
+- block:
+    - block:
+        - name: get node details
+          shell: |
+              source ~/stackrc
+              ironic --json node-show {{ item }}
+          with_items: "{{ groups['overcloud_nodes'] }}"
+          register: ironic_nodes
 
-- name: prepare hostname template
-  template:
-      src: "hostnames.yml.j2"
-      dest: "{{ installer.overcloud.template_base }}/hostnames.yml"
+        - name: update node capabilities with node name for scheduler hints
+          shell: >
+              source ~/stackrc;
+              ironic node-update {{ (item | from_json)['name'] }} replace
+              properties/capabilities='node:{{ (item | from_json)['name'] }},{{ (item | from_json)['properties']['capabilities'] }}'
+          with_items: "{{ ironic_nodes.results | default([]) | map(attribute='stdout') | list }}"
+      when: installer.scheduler_hints|default(False)
 
+    - name: prepare hostname template
+      template:
+          src: "{{ installer.customized_hostnames |default('hostnames.yml.j2') }}"
+          dest: "{{ hostnames_template_file }}"
+  when: not file_result.stat.exists
+  
+  
 - name: append the hostnames template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e {{ installer.overcloud.template_base }}/hostnames.yml \'
+      line: '-e {{ hostnames_template_file }} \'
+  when: overcloud_deploy_script == ''
