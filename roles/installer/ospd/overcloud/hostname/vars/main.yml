@@ -1,0 +1,28 @@
+hostnames_template_file: "{{ template_base }}/hostnames.yml"
+stack_name: overcloud
+
+# The names here are taken from:
+# http://docs.openstack.org/developer/tripleo-docs/advanced_deployment/node_placement.html
+node_types:
+    ceph:
+      heat_name: CephStorage
+      ospd_hostname: cephstorage
+    swift:
+      heat_name: ObjectStorage
+      ospd_hostname: objectstorage
+    compute:
+      # As of Mitaka (9) upstream tripleo uses "novacompute"
+      # According to BZ#1352057 this causes problems during upgrade.
+      # RH-OSP reverted to use "compute" in all releases.
+      # https://code.engineering.redhat.com/gerrit/#/c/78111
+      # todo(yfried): Update this comment with proper RH-OSP doc once one is written
+      # heat_name: NovaCompute
+      # ospd_hostname: novacompute
+      heat_name: Compute
+      ospd_hostname: compute
+    controller:
+      heat_name: Controller
+      ospd_hostname: controller
+
+
+

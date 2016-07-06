@@ -341,6 +341,34 @@ different assumptions are made for each deployment type:
 
 .. TODO: Add OVB in future
 
+
+Hostnames
+"""""""""
+
+To simplify node management, InfraRed uses shorter names than the default names OSPD gives
+the OverCloud nodes. For example, instead of ``overcloud-cephstorage-0`` the node will be called ``ceph-0``.
+The full conversion details are `here <https://github.com/rhosqeauto/InfraRed/blob/master/roles/installer/ospd/overcloud/hostname/vars/main.yml>`_.
+
+A user can provide customized `HostnameMap <http://docs.openstack.org/developer/tripleo-docs/advanced_deployment/node_placement.html?highlight=hostnameformat#custom-hostnames>`_
+using ``--overcloud-hostname`` argument::
+
+    ir-installer [...] ospd [...] --overcloud-hostname=special_hostnames.yml [...]
+
+.. code-block:: yaml
+   :caption: special_hostnames.yml
+
+    HostnameMap:
+        ceph-0: my_main_ceph_node
+        ceph-1: another_storage_node
+        controller-2: SPECIAL_MACHINE
+        compute-0: BIG_HYPERVISOR
+
+Note that the default naming template is the one described above
+and not the one in the tripleo documentation (``overcloud-novacompute-0``).
+
+.. note:: The naming convention and customization can be completely overridden if the ``--deployment-files``
+    input contains a file called ``hostnames.yml`` following the tripleo `guidlines <http://docs.openstack.org/developer/tripleo-docs/advanced_deployment/node_placement.html>`_
+
 Testers
 -------
 For list of supported testers invoke::

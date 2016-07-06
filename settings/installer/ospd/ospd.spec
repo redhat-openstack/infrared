@@ -91,9 +91,11 @@ subparsers:
                       default: 'no'
 
                   overcloud-hostname:
-                      type: Value
-                      help: Specifies whether we should use custom hostnames for controllers
-                      default: 'no'
+                      type: YamlFile
+                      help: |
+                            Provide a template for customized hostnames.
+                            See documentation for further details.
+                            NOTE: requires product-version > 7
 
                   overcloud-script:
                       type: Value
