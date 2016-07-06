@@ -157,14 +157,14 @@
       - name: print the last few lines of the output to spot failures
         shell: "tail -n30 overcloud_install.log"
 
+      - fail: msg="Overcloud deployment failed... :("
+        when: overcloud_deploy.rc != 0
+
       - name: verify overcloudrc was created
         wait_for:
             path: "/home/stack/overcloudrc"
             state: present
             timeout: 60
-
-      - fail: msg="Overcloud deployment failed... :("
-        when: overcloud_deploy.rc != 0
 
 # Since OSP-d reprovision our machines (overcloud) and becomes the DHCP server, an update of our inventory is required
 # So Ansible will be able to access the newly provisioned machines.
