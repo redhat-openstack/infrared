@@ -9,10 +9,15 @@
       state: present
   with_items: "{{ tester.setup.packages }}"
 
-- name: Install tempest from source
+- name: Clone downstream tempest
+  git:
+      repo: "{{ tester.setup.downstream_tempest.repo }}"
+      dest: "{{ tester.setup.downstream_tempest.dest_dir }}"
+  when: tester.local_dir is not defined
+
+- name: Clone upstream tempest
   git:
       repo: "{{ tester.setup.repo }}"
-      version: "{{ tester.setup.revision | default('HEAD') }}"
       dest: "{{ tester.dir }}"
   register: tempest_repo
   when: tester.local_dir is not defined
@@ -31,8 +36,10 @@
 
 - debug: "msg='Build mark: tempest={{ tempest_repo_version.stdout }}'"
 
+# Using downstream script to create a virtual environment in the tempest US dir and also install the US requirements
+# This should be replaced with Ansible's built-in virtualenv module
 - name: install virtualenv
-  command: "python {{ tester.dir }}/tools/install_venv.py {{ tester.dir }}"
+  shell: "export TOOLS_PATH=$PWD/{{ tester.dir }}; python $PWD/{{ tester.downstream_dir }}/tools/install_venv.py --no-site-packages"
   when: tempest_repo|changed or tempest_local_dir|changed
 
 - name: Install extra pip requirements
@@ -42,3 +49,23 @@
       virtualenv: "~/{{ tester.dir }}/.venv"
   with_items: "{{ tester.setup.pip_packages }}"
   when: tempest_repo|changed or tempest_local_dir|changed
+
+- name: Save plugins dict to a variable
+  set_fact:
+    tempest_plugins: "{{ item.value.plugins | default({}) }}"
+  with_dict: "{{ tester.tests }}"
+
+- debug: "msg=Tempest Plugins:\n{{ tempest_plugins }}"
+
+- name: Clone tempest plugins
+  git:
+      repo: "{{ item.value.repo }}"
+      dest: "{{ item.value.dest_dir }}"
+      version: "{{ item.value.version | default('HEAD') }}"
+  with_dict: "{{ tempest_plugins | default({}) }}"
+
+- name: Install tempest plugins
+  shell: "~/{{ tester.dir }}/tools/with_venv.sh pip install -r requirements.txt; ~/{{ tester.dir }}/tools/with_venv.sh pip install -r test-requirements.txt; ~/{{ tester.dir }}/tools/with_venv.sh python setup.py develop"
+  args:
+      chdir: "{{ item.value.dest_dir }}"
+  with_dict: "{{ tempest_plugins | default({}) }}"

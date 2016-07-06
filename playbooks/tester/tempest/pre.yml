@@ -30,8 +30,11 @@
             deployer_input: "{{ '(result | success)' | ternary('--deployer-input ~/tempest-deployer-input.conf', '') }}"
             orchestration: "{{ (installer.type == 'ospd') | ternary('orchestration.stack_owner_role heat_stack_owner', '') }}"
         shell: |
-          source .venv/bin/activate
+          source ~/{{ tester.dir }}/.venv/bin/activate
           source ~/keystonerc
           tools/config_tempest.py {{ deployer_input }} --debug --create identity.uri $OS_AUTH_URL identity.admin_password $OS_PASSWORD {{ orchestration }}
         args:
-            chdir: "{{ tester.dir }}"
+            chdir: "~/{{ tester.setup.downstream_tempest.dest_dir }}"
+
+      - name: "copy the tempest.conf from DS to US tempest dir"
+        shell: "cp ~/{{ tester.downstream_dir }}/etc/tempest.conf ~/{{ tester.dir }}/etc"
