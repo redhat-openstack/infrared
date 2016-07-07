@@ -1,25 +1,25 @@
-- name: import ceph facts
-  set_fact:
-      ceph_facts: "{{ lookup('file', '{{ inventory_dir }}/{{ hostvars[(groups.ceph|first)].inventory_hostname }}') }}"
+- block:
+    - name: import ceph facts
+      set_fact:
+          ceph_facts: "{{ lookup('file', '{{ inventory_dir }}/{{ hostvars[(groups.ceph|first)].inventory_hostname }}') }}"
+
+    # If you reached this stage, it means a user explicitely entered the storage flag therefore he wants at least 1 node
+    - name: append the ceph storage template line to the base overcloud deploy script
+      lineinfile:
+          dest: "~/overcloud_deploy.sh"
+          line: '--ceph-storage-scale {{ (installer.storage.nodes == None) | ternary("1", installer.storage.nodes) }} \'
+
+    - name: append the ceph storage template line to the base overcloud deploy script
+      lineinfile:
+          dest: "~/overcloud_deploy.sh"
+          line: '--ceph-storage-flavor {% if groups["ceph"] is defined %}ceph-{{ "ceph" | to_uuid }}{% else %}baremetal{% endif %} \'
+  when: installer.storage.external != "yes"
 
 - name: prepare ceph storage template
   template:
       src: "ceph.yml.j2"
       dest: "{{ template_base }}/ceph.yaml"
       mode: 0755
-
-# If you reached this stage, it means a user explicitely entered the storage flag therefore he wants at least 1 node
-- name: append the ceph storage template line to the base overcloud deploy script
-  lineinfile:
-      dest: "~/overcloud_deploy.sh"
-      line: '--ceph-storage-scale {{ (installer.storage.nodes == None) | ternary("1", installer.storage.nodes) }} \'
-  when: installer.storage.external == "no"
-
-- name: append the ceph storage template line to the base overcloud deploy script
-  lineinfile:
-      dest: "~/overcloud_deploy.sh"
-      line: '--ceph-storage-flavor {% if groups["ceph"] is defined %}ceph-{{ "ceph" | to_uuid }}{% else %}baremetal{% endif %} \'
-  when: installer.storage.external == "no"
 
 - name: append the storage ceph custom template line to the base overcloud deploy script
   lineinfile:
