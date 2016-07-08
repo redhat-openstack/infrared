@@ -28,9 +28,14 @@
         register: result
         ignore_errors: yes
 
+      - name: Create heat_stack_owner
+        shell: "source ~/keystonerc; keystone role-create --name heat_stack_owner"
+        when: installer.type == "ospd"
+
       - name: run tempest configuration tool
         vars:
             deployer_input: "{{ '(result | success)' | ternary('--deployer-input ~/tempest-deployer-input.conf', '') }}"
-        shell: "source ~/keystonerc; ./with_venv tools/config_tempest.py {{ deployer_input }} --debug --create identity.uri $OS_AUTH_URL identity.admin_password $OS_PASSWORD"
+            orchestration: "{{ (installer.type == 'ospd') | ternary('orchestration.stack_owner_role heat_stack_owner', '') }}"
+        shell: "source ~/keystonerc; ./with_venv tools/config_tempest.py {{ deployer_input }} --debug --create identity.uri $OS_AUTH_URL identity.admin_password $OS_PASSWORD {{ orchestration }}"
         args:
             chdir: "~/tempest-dir"
