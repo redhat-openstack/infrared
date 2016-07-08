@@ -26,7 +26,7 @@
       failed_when: "result.stderr != '' and 'RTNETLINK answers: File exists' not in result.stderr"
 
     - name: get the IP address on the external network default route
-      shell: "cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalNetCidr | awk -F' ' '{print $2}'"
+      shell: "cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalInterfaceDefaultRoute | awk -F' ' '{print $2}'"
       register: result
 
     - name: add the ip address to the device when vlan is used
