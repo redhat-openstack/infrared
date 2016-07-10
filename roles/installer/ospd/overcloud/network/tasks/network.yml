@@ -31,6 +31,9 @@
 
     - name: add the ip address to the device when vlan is used
       shell: "sudo ip addr add {{ result.stdout | replace(\"'\",'') }} dev vlan{{ vlan_result.stdout | replace(\"'\",'') }}"
-      register: vlan_result
-      failed_when: "vlan_result.stderr != '' and 'RTNETLINK answers: File exists' not in vlan_result.stderr"
+      register: iface_ip_result
+      failed_when: "iface_ip_result.stderr != '' and 'RTNETLINK answers: File exists' not in iface_ip_result.stderr"
+
+    - name: switch on the newly added vlan interface
+      shell: "sudo ip link set vlan{{ vlan_result.stdout | replace(\"'\",'') }} up"
   when: installer.network.backend == 'vlan'
