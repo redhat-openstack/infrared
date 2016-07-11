@@ -28,9 +28,15 @@
         register: result
         ignore_errors: yes
 
+      - name: Install python-openstackclient
+        yum: name=python-openstackclient state=present
+
+      # (TODO) This shouldn't be here according afazekas, but it's required to
+      # run tempest
       - name: Create heat_stack_owner
-        shell: "source ~/keystonerc; keystone role-create --name heat_stack_owner"
+        shell: "source ~/keystonerc; openstack role create heat_stack_owner"
         when: installer.type == "ospd"
+        ignore_errors: yes
 
       - name: run tempest configuration tool
         vars:
