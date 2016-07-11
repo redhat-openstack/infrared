@@ -1,6 +1,7 @@
 ---
 - name: Set selinux state
   hosts: all:!localhost
+  tags: init
   gather_facts: no
   become: yes
   tasks:
@@ -11,6 +12,7 @@
 - name: Ensure yum presence
   hosts: all:!localhost
   gather_facts: no
+  tags: init
   become: yes
   tasks:
     - shell: python -c 'import yum' || (dnf install -y yum yum-utils && ln -snf /usr/bin/yum-deprecated /usr/bin/yum)
@@ -18,6 +20,7 @@
 - name: Setup Firewall Rules
   hosts: openstack_nodes:!tester
   gather_facts: no
+  tags: init
   become: yes
   serial: 1
   tasks:

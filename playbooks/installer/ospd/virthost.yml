@@ -1,3 +1,12 @@
+# Dumping all facts for later use
+- name: Dumping facts from all nodes for later use
+  hosts: all:!localhost
+  gather_facts: no
+  tags: virthost
+  tasks:
+      - name: Dumping facts
+        setup:
+
 # In case of virthost we need to fix the pxe_ssh limitation of correctly assigning the MAC address to the iPXE script
 - name: Update our libvirt machine to latest puddle packages
   hosts: virthost
