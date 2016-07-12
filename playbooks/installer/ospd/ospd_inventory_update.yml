@@ -79,10 +79,10 @@
                 name: "{{ item.name.split('-',1)[1]|replace('cephstorage', 'ceph')|replace('novacompute', 'compute') }}"
                 # only add groups for new nodes. don't touch existing nodes' groups
                 groups: "{{
-                 ( item.name.split('-',1)[1]|replace('cephstorage', 'ceph')|replace('novacompute', 'compute') in groups.all )
+                 ( item.name.split('-')[1]|replace('cephstorage', 'ceph')|replace('novacompute', 'compute') in groups.all )
                  | ternary(
                     omit,
-                    ['overcloud_nodes', 'openstack_nodes', item.name.split('-',1)[1]|replace('cephstorage', 'ceph')|replace('novacompute', 'compute')] | join(',')
+                    ['overcloud_nodes', 'openstack_nodes', item.name.split('-')[1]|replace('cephstorage', 'ceph')|replace('novacompute', 'compute')] | join(',')
                    ) }}"
                 ansible_ssh_user: "{{ user }}"
                 ansible_ssh_pass: ""
@@ -91,3 +91,13 @@
             with_items: "{{ openstack_servers }}"
         vars:
             path_venv: /tmp/venv_server_facts
+
+- name: Update ansible.cfg forwarding to OC nodes
+  hosts: localhost
+  tasks:
+      - name: update ansible with the new SSH settings
+        ini_file:
+            dest: "{{ inventory_dir }}/ansible.cfg"
+            section: ssh_connection
+            option: ssh_args
+            value: "-o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -F {{ inventory_dir }}/ansible.ssh.config"
