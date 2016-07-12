@@ -61,6 +61,8 @@
   hosts: localhost
   tags: inventory_update
   gather_facts: no
+  vars:
+      overcloud_pkey: "{{ inventory_dir }}/id_rsa_overcloud"
   tasks:
       - name: update ansible.ssh.config template for SSH tunneling if virthost
         template:
