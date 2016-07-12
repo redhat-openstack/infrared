@@ -49,6 +49,12 @@
             dest: "{{ inventory_dir }}/{{ inventory_hostname }}"
         delegate_to: localhost
 
+- name: Deploy and configure external loadbalancer instance
+  hosts: loadbalancer
+  tags: loadbalancer
+  roles:
+    - { role: loadbalancer, when: groups.loadbalancer is defined }
+
 - include: "installer/{{ installer.type }}/main.yml"
 
 - name: Update the inventory file

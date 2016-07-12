@@ -126,6 +126,7 @@
       - {role: installer/ospd/overcloud/network, when: "{{ (overcloud_deploy_script == '') }}" }
       - {role: installer/ospd/overcloud/ssl, when: "overcloud_deploy_script == '' and installer.overcloud.ssl == 'yes'"}
       - {role: installer/ospd/overcloud/hostname, when: "overcloud_deploy_script == '' and installer.overcloud.hostname == 'yes'"}
+      - {role: installer/ospd/loadbalancer, when: "overcloud_deploy_script == '' and groups.loadbalancer is defined"}
 
   tasks:
       - block:
