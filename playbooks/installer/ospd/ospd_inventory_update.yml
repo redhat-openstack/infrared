@@ -1,7 +1,7 @@
 - name: Update Inventory from OSPD
   hosts: undercloud
   tags: inventory_update
-  gather_facts: no
+  gather_facts: yes
   become: yes
   become_user: "{{ installer.user.name }}"
   vars:
@@ -101,3 +101,19 @@
             section: ssh_connection
             option: ssh_args
             value: "-o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -F {{ inventory_dir }}/ansible.ssh.config"
+
+      - name: update ansible.ssh.config template for SSH tunneling if virthost
+        template:
+            src: "{{ inventory_dir }}/templates/ansible.ssh.config.j2"
+            dest: "{{ inventory_dir }}/ansible.ssh.config"
+
+      - name: Generate new Inventory file
+        template:
+          dest: "{{ lookup('env', 'PWD') }}/hosts-installer"
+          src: "{{ inventory_dir }}/templates/inventory.j2"
+
+      - name: Link to new Inventory file
+        file:
+          dest: "{{ lookup('env', 'PWD') }}/hosts"
+          state: link
+          src: "{{ lookup('env', 'PWD') }}/hosts-installer"
