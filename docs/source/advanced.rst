@@ -76,6 +76,17 @@ This can be done passing through ``--extra-vars`` with the following key:
           ir-installer -e @repos.yml ospd
 
 
+Custom/local tempest tester
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You might have a specific version of tempest to test locally in a particular directory, and you want to use it.
+Infrared allows you to use this instead of the default git repository. To do so, all you need to do is pass the key tester.local_dir as extra-vars to ir-tester:
+
+Run ir-tester::
+
+    ir-tester tempest --extra-vars tester.local_dir-/patch/for/your/tempest
+
+
 Scalability
 ^^^^^^^^^^^
 

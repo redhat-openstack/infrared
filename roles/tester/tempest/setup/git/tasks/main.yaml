@@ -15,6 +15,13 @@
       version: "{{ tester.setup.revision | default('HEAD') }}"
       dest: "{{ tester.dir }}"
   register: tempest_repo
+  when: tester.local_dir is not defined
+
+- name: Install tempest from change
+  synchronize: dest={{ tester.dir }} src={{ tester.git.local_dir }}/
+                 archive=no recursive=yes perms=yes links=yes
+  register: tempest_local_dir
+  when: tester.local_dir is defined
 
 - name: Print repo version
   command: "git log -1 --pretty=format:%h"
@@ -26,7 +33,7 @@
 
 - name: install virtualenv
   command: "python {{ tester.dir }}/tools/install_venv.py {{ tester.dir }}"
-  when: tempest_repo|changed
+  when: tempest_repo|changed or tempest_local_dir|changed
 
 - name: Install extra pip requirements
   pip:
@@ -34,4 +41,4 @@
       state: present
       virtualenv: "~/{{ tester.dir }}/.venv"
   with_items: "{{ tester.setup.pip_packages }}"
-  when: tempest_repo|changed
+  when: tempest_repo|changed or tempest_local_dir|changed
