@@ -1,7 +1,7 @@
 .. highlight:: plain
 
 Using InfraRed
-================
+==============
 
 General workflow
 ----------------
@@ -239,6 +239,7 @@ Packstack
 ^^^^^^^^^
 .. TODO: Revisit packstack as this was mostly copied from previous docs - I am really not sure here!
 .. TODO: yfried: Add how packstack supports AIO topology
+
 Entry point::
 
   playbooks/installer/packstack/main.yml
@@ -278,38 +279,12 @@ This file provides defaults settings and default configuration options for vario
 Both `installer.network.config.*` and `installer.config.*` options will be merged into one config and used as the answer file for Packstack.
 
 OpenStack director
-^^^^^
+^^^^^^^^^^^^^^^^^^
 Entry point::
 
   playbooks/installer/ospd/main.yml
 
-There is one OSPd deployment type currently supported:
-
-* Virthost (VH) setup - not really using baremetal nodes, they are emulated using virtual ones
-* Baremetal (BM) setup - production use-case
-
-nic1 - data
-  * Referred to as "ctlplane" by `OSPd documentation <https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux_OpenStack_Platform/7/html/Director_Installation_and_Usage/>`_
-  * Does not have dhcp and nat enabled (OSPd will later take dhcp/nat ownership for this network)
-  * Used by OSPD to handle dhcp and pxe boot for overcloud nodes
-  * Later used as primary interface for ssh by InraRed (Ansible)
-  * Data between compute nodes and Ceph storage (if exists)
-nic2 - management
-  * Internal API for the overcloud services (services run REST queries against these interfaces (for example Neutron/Nova communication and neutron-server/neutron-agent communication))
-  * Tenant network with tunnels (vxlan/gre/vlan) for internal data between OverCloud nodes. Examples:
-
-    * VM (on compute-0) to VM (on compute-1)
-    * VM (on compute-1) to Neutron Router (on Controller-3)
-nic3 - external
-  * public API for the overcloud services (OC users run REST queries against these interfaces)
-  * The testers (i.e. Tempest) use this network to execute commands against the OverCloud API
-  * Routes external traffic for nested VMs outside of the overcloud (connects to neutron external network and br-ex bridge...)
-  * The testers (i.e. Tempest) use this network to ssh to the VMs (cirros) nested in the OverCloud
-
-.. TODO: Add doc about BM setup, virthost is not enough!!!
-.. TODO: Add OVB in future
-
-OSPd is designed to be used in BM setup in production, however it is possible to use VH setup for automated testing, CI, e.g. when there is lack of BM hosts. BM setup deals with full scale deployment - contains deployment itself and infrastructure management. Virthost setup expects infrastructure prepared earlier during ir-provision stage. OSPd deployment in general consists of following steps:
+OSPd deployment in general consists of following steps:
 
 * Undercloud deployment
 * Virthost tweaks
@@ -318,7 +293,53 @@ OSPd is designed to be used in BM setup in production, however it is possible to
 * Flavor setup
 * Overcloud deployment
 
-You can find full documentation at `Red Hat OpenStack director <https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux_OpenStack_Platform/7/html/Director_Installation_and_Usage/>`_.
+You can find full documentation at `Red Hat OpenStack director <https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux_OpenStack_Platform/>`_.
+
+There are 2 OSPd deployment types currently supported.
+The API is the same but different input is required and
+different assumptions are made for each deployment type:
+
+* Baremetal (BM)
+
+  Normal deployment of openstack where all nodes are physical hosts.
+
+  Users need to provide an absolute path to a directory with various
+  files and templates describing their OSPd deployment::
+
+    ir-provisioner ospd [...] --deployment-files=/absolute/path/to/templates/directory [...]
+
+  The details of such directory can be found under `settings tree <https://github.com/rhosqeauto/InfraRed/tree/master/settings/installer/ospd/deployment/example>`_
+
+.. TODO: replace link with actual details
+
+* Virthost (VH)
+
+  Using `virsh`_ provisioner, deploy openstack on virtual machines hosted on a single hypervisor
+
+  This is a common use-case for POC, development and testing, where hardware is limited.
+  OSPD requires special customization to be nested on OpenStack clouds, so using local virsh VMs is a common solution.
+
+  Expects the following network deployment (created by the ``virsh`` provisioner):
+
+  nic1 - data
+    * Referred to as "ctlplane" by `OSPd documentation <https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux_OpenStack_Platform/7/html/Director_Installation_and_Usage/>`_
+    * Does not have dhcp and nat enabled (OSPd will later take dhcp/nat ownership for this network)
+    * Used by OSPD to handle dhcp and pxe boot for overcloud nodes
+    * Later used as primary interface for ssh by InraRed (Ansible)
+    * Data between compute nodes and Ceph storage (if exists)
+  nic2 - management
+    * Internal API for the overcloud services (services run REST queries against these interfaces (for example Neutron/Nova communication and neutron-server/neutron-agent communication))
+    * Tenant network with tunnels (vxlan/gre/vlan) for internal data between OverCloud nodes. Examples:
+
+      * VM (on compute-0) to VM (on compute-1)
+      * VM (on compute-1) to Neutron Router (on Controller-3)
+  nic3 - external
+    * public API for the overcloud services (OC users run REST queries against these interfaces)
+    * The testers (i.e. Tempest) use this network to execute commands against the OverCloud API
+    * Routes external traffic for nested VMs outside of the overcloud (connects to neutron external network and br-ex bridge...)
+    * The testers (i.e. Tempest) use this network to ssh to the VMs (cirros) nested in the OverCloud
+
+.. TODO: Add OVB in future
 
 Testers
 -------
