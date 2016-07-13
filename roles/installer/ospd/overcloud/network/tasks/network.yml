@@ -43,5 +43,7 @@
 
         - name: add new static route for external network
           shell: "sudo ip route add {{ route_result.stdout | replace(\"'\",'') }} dev vlan{{ vlan_result.stdout | replace(\"'\",'') }}"
-      when: installer.network.protocol != 'ipv4'
+      # following condition means we want to execute this block if we are using ipv6 with virthost or any network.protocol with baremetals
+      # for virthost with ipv4 it is not necessary, as such routing is already present and configured - we only need to add vlan interface above
+      when: "installer.network.protocol == 'ipv6' or 'virthost' not in groups"
   when: installer.network.backend == 'vlan'
