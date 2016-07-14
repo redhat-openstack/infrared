@@ -120,8 +120,11 @@ subparsers:
               options:
                   storage-backend:
                       type: Value
-                      help: The storage that we would like to use. Default to local LVM on the controllers.
                       choices: ['ceph', 'swift', 'netapp-iscsi', 'netapp-nfs']
+                      help: |
+                        The storage that we would like to use.
+                        If not supplied, OSPD will default to local LVM on the controllers.
+                        NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
 
                   storage-external:
                       type: Value

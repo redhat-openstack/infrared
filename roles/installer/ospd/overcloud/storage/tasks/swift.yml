@@ -7,13 +7,15 @@
     - name: append the swift storage template line to the base overcloud deploy script
       lineinfile:
           dest: "~/overcloud_deploy.sh"
-          line: '--swift-storage-scale {{ (installer.storage.nodes == None) | ternary("1", installer.storage.nodes) }} \'
+          line: '--swift-storage-scale {{ storage_nodes }} \'
 
     - name: append the swift storage template line to the base overcloud deploy script
       lineinfile:
           dest: "~/overcloud_deploy.sh"
           line: '--swift-storage-flavor {% if groups["swift"] is defined %}swift-{{ "swift" | to_uuid }}{% else %}baremetal{% endif %} \'
   when: installer.storage.external != "yes"
+  vars:
+      storage_nodes: "{{ (installer.storage.nodes == None) |ternary([1, groups['ceph'] |default([])|length] | max, installer.storage.nodes) }}"
 
 - name: prepare swift storage template
   template:
