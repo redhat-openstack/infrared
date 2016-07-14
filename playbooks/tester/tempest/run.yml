@@ -2,39 +2,51 @@
 - name: Run tempest
   hosts: tester
   gather_facts: no
-  vars:
-      testr_args: "{{ tester.threads is defined | ternary('--parallel --concurrency=%s' | format(tester.threads), '')}}"
   tasks:
       - name: remove old test list
         file:
             state: absent
-            name: "{{ tester.dir }}/skipfile"
+            name: "{{ tester.dir }}/{{ item }}"
+        with_items:
+            - white_list
+            - black_list
 
       - name: create Test List - Whitelist
         lineinfile:
             create: yes
-            dest: "{{ tester.dir }}/skipfile"
-            line: "+{{ item }}"
-            regexp: "^[-+]{{ item }}$"
+            dest: "{{ tester.dir }}/white_list"
+            line: "{{ item }}"
+            regexp: "^{{ item }}$"
         with_items: "{{ tester.tests.whitelist }}"
         register: wlist
+        when: tester.tests.whitelist is defined and tester.tests.whitelist
+
+      - name: add whitelist invocation
+        set_fact:
+            whitelistfile: "--whitelist_file {{ tester.dir }}/white_list"
         when: tester.tests.whitelist is defined and tester.tests.whitelist
 
       - name: create Test List - Blacklist
         lineinfile:
             create: yes
-            dest: "{{ tester.dir }}/skipfile"
-            line: "-{{ item }}"
-            regexp: "^[-+]{{ item }}$"
+            dest: "{{ tester.dir }}/black_list"
+            line: "{{ item }}"
+            regexp: "^{{ item }}$"
         with_items: "{{ tester.tests.blacklist }}"
         when: tester.tests.blacklist is defined and tester.tests.blacklist
 
-      - name: add skipfile invocation
+      - name: add blacklist invocation
         set_fact:
-            skipfile: "--skip-file ./skipfile"
-        when: (tester.tests.whitelist is defined and tester.tests.whitelist) or (tester.tests.blacklist is defined and tester.tests.blacklist)
+            blacklistfile: "--blacklist_file {{ tester.dir }}/blacklist_list"
+        when: tester.tests.blacklist is defined and tester.tests.blacklist
 
       - name: run tempest
-        shell: "{{ tester.dir }}/with_venv ./tools/run-tests.sh {{ testr_args }} {{ tester.tests.test_regex }} {{ skipfile|default('') }}"
+        shell: >
+            {{ tester.dir }}/with_venv ostestr --subunit --no-pretty
+            {{ tester.tests.test_regex | default('') }}
+            {{ whitelistfile | default('') }}
+            {{ blacklistfile | default('') }}
+            | tee >\( subunit2junitxml --output-to=tempest-{{ tester.tests.name }}.xml \)
+            | subunit-trace --no-failure-debug -f
         ignore_errors: true
-        when: tester.tests.test_regex is defined or skipfile is defined
+        when: tester.tests.test_regex is defined or whitelistfile is defined or blacklistfile is defined
