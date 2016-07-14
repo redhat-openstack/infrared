@@ -2,7 +2,6 @@
 - name: Run tempest
   hosts: tester
   gather_facts: no
-  tags: debug
   tasks:
       - name: remove old test list
         file:
@@ -41,7 +40,7 @@
         when: tester.tests.blacklist is defined and tester.tests.blacklist
 
       - name: run tempest
-        shell: "./{{ tester.dir }}/with_venv ostestr --subunit --no-pretty --regex {{ tester.tests.test_regex | default('') }} {{ whitelistfile | default('') }} {{ blacklistfile | default('') }} | tee >( subunit2junitxml --output-to=tempest.xml ) | subunit-trace --no-failure-debug -f"
+        shell: "./{{ tester.dir }}/with_venv ostestr --subunit --no-pretty --regex {{ tester.tests.test_regex | default('') }} {{ whitelistfile | default('') }} {{ blacklistfile | default('') }} | tee >( subunit2junitxml --output-to={{ tester.dir }}/tempest.xml ) | subunit-trace --no-failure-debug -f"
         args:
             executable: /bin/bash
         ignore_errors: true
