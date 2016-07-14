@@ -11,8 +11,9 @@ Host {{ host }}
 {% if host != 'virthost' %}
     ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ hostvars['virthost'].ansible_ssh_private_key_file }} {{ hostvars['virthost'].ansible_ssh_user }}@{{ hostvars['virthost'].ansible_ssh_host }}
 {% endif %}
-{% else %}
+{% if 'undercloud' in groups %}
     ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} {{ hostvars[groups['undercloud'][0]].ansible_ssh_user }}@{{ hostvars[groups['undercloud'][0]].ansible_ssh_host }}
+{% endif %}
 {% endif %}
 {% endif %}
 {% endfor %}
@@ -27,13 +28,14 @@ Host {{ '%s' % '.'.join(hostvars['virthost'].facter_ipaddress_external.split('.'
     ControlPersist  15m
     StrictHostKeyChecking no
     UserKnownHostsFile=/dev/null
-{% else %}
+{% if 'undercloud' in groups %}
 {# If virthost is not our deployment, assume we are using baremetals - implies we are not forwarding thru virthost node anymore, we are forwarding thru certain baremetal serving as undercloud #}
 Host {{ '%s' % '.'.join(hostvars[groups['undercloud'][0]].facter_ipaddress_br_ctlplane.split('.')[:-2]) }}.*
     User heat-admin
-    IdentityFile {{ overcloud_pkey }}
+    IdentityFile {{ inventory_dir }}/id_rsa_overcloud
     StrictHostKeyChecking no
     UserKnownHostsFile=/dev/null
     ForwardAgent yes
     ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} {{ hostvars[groups['undercloud'][0]].ansible_ssh_user }}@{{ hostvars[groups['undercloud'][0]].ansible_ssh_host }}
+{% endif %}
 {% endif %}
