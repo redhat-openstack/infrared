@@ -6,16 +6,6 @@
       - {role: tester/tempest/setup/git, when: tester.setup.type == "git"}
       - {role: tester/tempest/setup/rpm, when: tester.setup.type == "rpm"} #WIP
   tasks:
-      - name: create a command to use tempest with our venv if needed
-        copy:
-          dest: "{{ tester.dir }}/with_venv"
-          mode: 0755
-          content: |
-            #!/bin/bash
-            cd "$(dirname $0)"
-            [[ -d .venv ]] && source .venv/bin/activate
-            exec "$@"
-
       - name: copy the keystonerc to the tester
         copy:
             src: "{{ inventory_dir }}/keystonerc"
@@ -39,6 +29,9 @@
         vars:
             deployer_input: "{{ '(result | success)' | ternary('--deployer-input ~/tempest-deployer-input.conf', '') }}"
             orchestration: "{{ (installer.type == 'ospd') | ternary('orchestration.stack_owner_role heat_stack_owner', '') }}"
-        shell: "source ~/keystonerc; ./with_venv tools/config_tempest.py {{ deployer_input }} --debug --create identity.uri $OS_AUTH_URL identity.admin_password $OS_PASSWORD {{ orchestration }}"
+        shell: |
+          source .venv/bin/activate
+          source ~/keystonerc
+          tools/config_tempest.py {{ deployer_input }} --debug --create identity.uri $OS_AUTH_URL identity.admin_password $OS_PASSWORD {{ orchestration }}
         args:
-            chdir: "~/tempest-dir"
+            chdir: "{{ tester.dir }}"
