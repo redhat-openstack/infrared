@@ -46,8 +46,13 @@
         when: tester.tests.test_regex
 
       - name: run tempest
-        shell: "./{{ tester.dir }}/with_venv ostestr --subunit --no-pretty {{ regex | default('') }} {{ whitelistfile | default('') }} {{ blacklistfile | default('') }} | tee >( subunit2junitxml --output-to={{ tester.dir }}/tempest.xml ) | subunit-trace --no-failure-debug -f"
+        shell: >
+            source .venv/bin/activate;
+            ostestr --subunit --no-pretty {{ regex | default('') }} {{ whitelistfile | default('') }} {{ blacklistfile | default('') }}
+            | tee >(subunit2junitxml --output-to=tempest.xml ) | subunit-trace --no-failure-debug -f
         args:
             executable: /bin/bash
+            chdir: "{{ tester.dir }}"
+            creates: "{{ tester.dir }}/tempest.xml"
         ignore_errors: true
         when: tester.tests.test_regex is defined or whitelistfile is defined or blacklistfile is defined
