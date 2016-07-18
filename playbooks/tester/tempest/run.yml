@@ -4,55 +4,5 @@
   gather_facts: no
   tags: debug
   tasks:
-      - name: remove old test list
-        file:
-            state: absent
-            name: "{{ tester.dir }}/{{ item }}"
-        with_items:
-            - white_list
-            - black_list
-
-      - block:
-          - name: create Test List - Whitelist
-            lineinfile:
-                create: yes
-                dest: "{{ tester.dir }}/white_list"
-                line: "{{ item }}"
-                regexp: "^{{ item }}$"
-            with_items: "{{ tester.tests.whitelist }}"
-
-          - name: add whitelist invocation
-            set_fact:
-                whitelistfile: "--whitelist_file white_list"
-        when: tester.tests.whitelist is defined and tester.tests.whitelist
-
-      - block:
-          - name: create Test List - Blacklist
-            lineinfile:
-                create: yes
-                dest: "{{ tester.dir }}/black_list"
-                line: "{{ item }}"
-                regexp: "^{{ item }}$"
-            with_items: "{{ tester.tests.blacklist }}"
-
-          - name: add blacklist invocation
-            set_fact:
-                blacklistfile: "--blacklist_file blacklist_list"
-        when: tester.tests.blacklist is defined and tester.tests.blacklist
-
-      - name: add regex invoke
-        set_fact:
-            regex: "--regex {{ tester.tests.test_regex }}"
-        when: tester.tests.test_regex
-
-      - name: run tempest
-        shell: >
-            source .venv/bin/activate;
-            ostestr --subunit --no-pretty {{ regex | default('') }} {{ whitelistfile | default('') }} {{ blacklistfile | default('') }}
-            | tee >(subunit2junitxml --output-to=tempest.xml ) | subunit-trace --no-failure-debug -f
-        args:
-            executable: /bin/bash
-            chdir: "{{ tester.dir }}"
-            creates: "{{ tester.dir }}/tempest.xml"
-        ignore_errors: true
-        when: tester.tests.test_regex is defined or whitelistfile is defined or blacklistfile is defined
+      - include: "run_suite.yml"
+        with_dict: "{{ tester.tests }}"

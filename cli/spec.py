@@ -135,22 +135,10 @@ class ValueArgument(object):
         return self.value
 
 
-class YamlFileArgument(ValueArgument):
+class BaseFileArgument(ValueArgument):
     """
-    YAML file input argument.
-    Loads legal YAML from file.
-    Will search for files in the spec settings directories before trying
-        to resolve absolute path.
-
-    For the argument name is "arg-name" and of subparser "SUBCOMMAND" of
-        application "APP", the default search paths would be:
-
-         settings_dir/APP/SUBCOMMAND/arg/name/arg_value
-         settings_dir/APP/arg/name/arg_value
-         arg_value
-
+    Base abstract class to load files as a dicts.
     """
-
     @classmethod
     def get_file_locations(cls, settings_dirs, subcommand, arg_name):
         """
@@ -166,10 +154,10 @@ class YamlFileArgument(ValueArgument):
         """
         search_locations = [os.path.join(
             settings_path, subcommand, *arg_name.split("-"))
-            for settings_path in settings_dirs]
+                            for settings_path in settings_dirs]
         root_locations = [os.path.join(
             settings_path, *arg_name.split("-"))
-            for settings_path in settings_dirs]
+                          for settings_path in settings_dirs]
         search_locations.extend(root_locations)
         search_locations.append(os.getcwd())
         return search_locations
@@ -186,17 +174,38 @@ class YamlFileArgument(ValueArgument):
         :param subcommand: the subcommand name (e.g. virsh, ospd, etc)
         :param arg_name: the argument name
         :param search_root: specify whether the execution root folder
-            should be searched for yamk files. By default equals
+            should be searched for yaml files. By default equals
             to False to avoid unnecessary files.
         :param file_extensions: the list of file extension to look for.
         """
 
+        raise NotImplemented("Implement that method in the sub-classes")
+
+
+class YamlFileArgument(BaseFileArgument):
+    """
+    YAML file input argument.
+    Loads legal YAML from file.
+    Will search for files in the spec settings directories before trying
+        to resolve absolute path.
+
+    For the argument name is "arg-name" and of subparser "SUBCOMMAND" of
+        application "APP", the default search paths would be:
+
+         settings_dir/APP/SUBCOMMAND/arg/name/arg_value
+         settings_dir/APP/arg/name/arg_value
+         arg_value
+
+    """
+
+    @classmethod
+    def get_allowed_files(cls, settings_dirs, subcommand, arg_name,
+                          search_root=False, file_extensions=('yml', 'yaml')):
         res = []
         locations = cls.get_file_locations(settings_dirs,
                                            subcommand,
                                            arg_name)
-        if search_root is False:
-            locations = locations[:-1]
+        locations = locations if search_root else locations[:-1]
         for folder in locations:
             for ext in file_extensions:
                 res.extend(glob.glob(folder + "/*." + ext))
@@ -215,6 +224,76 @@ class YamlFileArgument(ValueArgument):
             self.value = utils.load_yaml(self.value, *search_paths)
         else:
             pass
+
+
+class ListOfYamlArgument(BaseFileArgument):
+    """
+    Builds dicts from smaller YAML files.
+
+    Type value should be the comma separated string of files to load with or
+     without yml extension. This list can have only one element.
+     Values examples:
+        item1,item2,item3
+        item1.yml
+
+    For the value "item1,item2,item3" it will load
+    all the item1.yml, item2.yml ... files from the setting.
+    The type value will be the dict in the format:
+      item1:
+         <content of item1.yml>
+      item2:
+         <content of item2.yml>
+      ...
+    """
+
+    def resolve_value(self, arg_name, defaults=None):
+        super(ListOfYamlArgument, self).resolve_value(arg_name, defaults)
+        search_paths = self.get_file_locations(
+            self.get_app_attr("settings_dirs"),
+            self.get_app_attr("subcommand"),
+            arg_name)
+
+        if self.value is not None:
+            result = {}
+            # validate value. Check that we have comma separated values
+            pattern = re.compile("^[-\w\s\.]+(?:,[-\w\s]*)*$")
+            if pattern.match(self.value) is None:
+                raise exceptions.IRWrongYamlListFormat(self.value)
+
+            for item in self.value.split(','):
+                item_name, item_file = ListOfYamlArgument._construct_name(item)
+                item_dict = utils.load_yaml(item_file, *search_paths)
+                result[item_name] = item_dict
+
+            self.value = result
+
+    @staticmethod
+    def _construct_name(item, extension=".yml"):
+        """
+        Gets the name of the file to load.
+        """
+        if item.endswith(extension):
+            result_file = item
+            result_name = item[:-len(extension)]
+        else:
+            result_file = item + extension
+            result_name = item
+        return result_name, result_file
+
+    @classmethod
+    def get_allowed_files(cls, settings_dirs, subcommand, arg_name,
+                          search_root=False, file_extensions=('yml', 'yaml')):
+        res = []
+        locations = cls.get_file_locations(settings_dirs,
+                                           subcommand,
+                                           arg_name)
+        locations = locations if search_root else locations[:-1]
+        for folder in locations:
+            for ext in file_extensions:
+                res.extend(os.path.splitext(os.path.basename(file_name))[0]
+                           for file_name in glob.glob(folder + "/*." + ext))
+
+        return res
 
 
 class TopologyArgument(ValueArgument):
@@ -667,9 +746,9 @@ def _get_option_allowed_values(app_settings_dirs, subcommand, option,
     """
     Gets the list of allowed values for an option.
     """
-    if attributes.get('type', None) == 'YamlFile':
+    if attributes.get('type', None) in ['YamlFile', 'ListOfYamls']:
         allowed_values = map(
-            os.path.basename, YamlFileArgument.get_allowed_files(
+            os.path.basename, clg.TYPES[attributes['type']].get_allowed_files(
                 app_settings_dirs, subcommand, option))
     else:
         allowed_values = attributes.get('choices', [])
@@ -718,3 +797,4 @@ clg.TYPES.update({'IniFile': IniFileArgument})
 clg.TYPES.update({'Value': ValueArgument})
 clg.TYPES.update({'Topology': TopologyArgument})
 clg.TYPES.update({'YamlFile': YamlFileArgument})
+clg.TYPES.update({'ListOfYamls': ListOfYamlArgument})
