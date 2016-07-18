@@ -1,0 +1,34 @@
+name: "cfme"
+prefix: null
+amount: "1"
+cpu: "2"
+memory: "8192"
+os:
+    type: "linux"
+    variant: "rhel7"
+disks:
+    disk1: &disk1
+        import_url: !placeholder "CFME image URL"
+        path: "/var/lib/libvirt/images"
+        dev: "/dev/vda"
+        size: "40G"
+        cache: "default"
+        preallocation: "metadata"
+    disk2:
+        <<: *disk1
+        import_url: null
+        dev: "/dev/vdb"
+        size: "5G"
+network:
+    interfaces:
+        management:
+            label: "eth0"
+        data:
+            label: "eth1"
+        external:
+            label: "eth2"
+    floating_ip_network: management
+
+groups:
+    - cloudforms
+    - cfme

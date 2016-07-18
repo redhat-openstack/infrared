@@ -11,6 +11,14 @@
   when: item.value.import_url is defined and item.value.import_url
   with_dict: "{{ node.value.disks }}"
 
+- name: CFME - workaround for uses of eth0 for webserver and interfaces down
+  shell: |
+      virt-customize -a /var/lib/libvirt/images/{{node_name}}_original_{{item.key}}.qcow2 --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{0,1} && sed -i s/DEVICE=.*/DEVICE=eth1/g /etc/sysconfig/network-scripts/ifcfg-eth1'
+      virt-customize -a /var/lib/libvirt/images/{{node_name}}_original_{{item.key}}.qcow2 --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{1,2} && sed -i s/DEVICE=.*/DEVICE=eth2/g /etc/sysconfig/network-scripts/ifcfg-eth2'
+      virt-customize -a /var/lib/libvirt/images/{{node_name}}_original_{{item.key}}.qcow2 --run-command 'sed -i "s/eth0/eth2/g" /var/www/miq/vmdb/gems/pending/appliance_console.rb'
+  when: item.value.import_url is def`ined and item.value.import_url and 'cfme' in node_data.groups
+  with_dict: "{{ node_data.disks }}"
+
 - name: create disk(s) from vm base image
   shell: |
       {% for num in range(1, node.value.amount + 1, 1) %}

@@ -1,0 +1,28 @@
+---
+- name: Setup CloufForms Management Engine
+  hosts: cfme
+  gather_facts: no
+  become: yes
+  become_method: sudo
+  tasks:
+      - name: "Configuring the appliance console"
+        command: "appliance_console_cli --verbose --internal --dbdisk {{ installer.dbdisk }} --dbname {{ installer.dbname }} --region {{ installer.dbregion }} --username {{ installer.dbuser }} --password {{ installer.dbpass }}"
+
+      - name: "Starting EVM"
+        shell: "exec rake evm:start"
+        args:
+          chdir: "/var/www/miq/vmdb/bin/"
+
+      - name: "Waiting for EVM service to be ready"
+        wait_for:
+            port: 443
+            host: "{{ ansible_ssh_host }}"
+            delay: 10
+        delegate_to: "virthost"
+
+      - name: "Recompile & restart EVM server"
+        shell: |
+          vmdb
+          rake assets:clobber
+          rake assets:precompile
+          service evmserverd restart
