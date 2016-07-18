@@ -1,0 +1,76 @@
+---
+- name: set facts for node
+  set_fact:
+      tests_data: "{{ item.value }}"
+      test_suite_name: "{{ item.key }}"
+
+- name: set facts for test suite
+  set_fact:
+      test_result_file: "tempest-{{ test_suite_name }}.xml"
+      blacklistfile: ''
+      whitelistfile: ''
+
+- name: set fact for test result file
+  set_fact:
+      test_result_file_path:  "{{ tester.dir }}/{{ test_result_file }}"
+
+- name: remove old test list for "{{ test_suite_name }}
+  file:
+      state: absent
+      name: "{{ tester.dir }}/{{ item }}"
+  with_items:
+      - white_list
+      - black_list
+      - "{{ test_result_file }}"
+
+- block:
+    - name: create Test List - Whitelist for "{{ test_suite_name }}"
+      lineinfile:
+          create: yes
+          dest: "{{ tester.dir }}/white_list"
+          line: "{{ item }}"
+          regexp: "^{{ item }}$"
+      with_items: "{{ tests_data.whitelist | default({}) }}"
+
+    - name: add whitelist invocation
+      set_fact:
+          whitelistfile: "--whitelist_file white_list"
+
+  when: tests_data.whitelist is defined and tests_data.whitelist
+
+- block:
+    - name: create Test List - Blacklist for "{{ test_suite_name }}"
+      lineinfile:
+          create: yes
+          dest: "{{ tester.dir }}/black_list"
+          line: "{{ item }}"
+          regexp: "^{{ item }}$"
+      with_items: "{{ tests_data.blacklist | default({}) }}"
+
+    - name: add blacklist invocation
+      set_fact:
+          blacklistfile: "--blacklist_file blacklist_list"
+  when: tests_data.blacklist is defined and tests_data.blacklist
+
+- name: add regex invoke for "{{ test_suite_name }}"
+  set_fact:
+      regex: "--regex {{ tests_data.test_regex }}"
+  when: tests_data.test_regex is defined and tests_data.test_regex
+
+- name: run tempest "{{ test_suite_name }}" suite
+  shell: >
+      source .venv/bin/activate;
+      ostestr --subunit --no-pretty {{ regex | default('') }} {{ whitelistfile }} {{ blacklistfile }}
+      | tee >(subunit2junitxml --output-to={{ test_result_file }} ) | subunit-trace --no-failure-debug -f
+  args:
+      executable: /bin/bash
+      chdir: "{{ tester.dir }}"
+      creates: "{{ test_result_file_path }}"
+  ignore_errors: true
+  when: tests_data.test_regex is defined or whitelistfile is defined or blacklistfile is defined
+
+- name: Fetch resulting file
+  fetch:
+      src: "{{ test_result_file_path }}"
+      dest: "{{ lookup('env', 'PWD') }}/nosetests-{{test_suite_name}}.xml"
+      flat: yes
