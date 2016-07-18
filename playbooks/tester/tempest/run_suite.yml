@@ -1,0 +1,71 @@
+---
+- name: set facts for node
+  set_fact:
+      test_data: "{{ item.value }}"
+      test_suite_name: "{{ item.key }}"
+
+- name: set facts for test suite
+  set_fact:
+      test_output_file: "tempest-results-{{ test_suite_name }}.xml"
+      blacklistfile: ''
+      whitelistfile: ''
+
+- name: remove old test list for "{{ test_suite_name }}
+  file:
+      state: absent
+      name: "{{ tester.dir }}/{{ item }}"
+  with_items:
+      - white_list
+      - black_list
+      - "{{ test_output_file }}"
+
+- block:
+    - name: create Test List - Whitelist for "{{ test_suite_name }}"
+      lineinfile:
+          create: yes
+          dest: "{{ tester.dir }}/white_list"
+          line: "{{ item }}"
+          regexp: "^{{ item }}$"
+      with_items: "{{ test_data.whitelist | default([]) }}"
+
+    - name: add whitelist invocation
+      set_fact:
+          whitelistfile: "--whitelist_file white_list"
+
+  when: test_data.whitelist is defined and test_data.whitelist
+
+- block:
+    - name: create Test List - Blacklist for "{{ test_suite_name }}"
+      lineinfile:
+          create: yes
+          dest: "{{ tester.dir }}/black_list"
+          line: "{{ item }}"
+          regexp: "^{{ item }}$"
+      with_items: "{{ test_data.blacklist | default([]) }}"
+
+    - name: add blacklist invocation
+      set_fact:
+          blacklistfile: "--blacklist_file blacklist_list"
+  when: test_data.blacklist is defined and test_data.blacklist
+
+- name: add regex invoke for "{{ test_suite_name }}"
+  set_fact:
+      regex: "--regex {{ test_data.test_regex }}"
+  when: test_data.test_regex is defined and test_data.test_regex
+
+- name: run tempest "{{ test_suite_name }}" suite
+  shell: >
+      source .venv/bin/activate;
+      ostestr -s --no-pretty {{ regex | default('') }} {{ whitelistfile }} {{ blacklistfile }}
+      | subunit2junitxml --output-to={{ test_output_file }}
+  args:
+      executable: /bin/bash
+      chdir: "{{ tester.dir }}"
+  ignore_errors: true
+  when: test_data.test_regex is defined or whitelistfile is defined or blacklistfile is defined
+
+- name: Fetch resulting file
+  fetch:
+      src: "{{ tester.dir }}/{{ test_output_file }}"
+      dest: "{{ lookup('env', 'PWD') }}/{{ test_output_file }}"
+      flat: yes
