@@ -157,8 +157,16 @@ class IRSpec(object):
         """
         Runs the spec
         """
-        settings = self.collect_settings()
-        self.dump_settings(settings)
+        try:
+            settings = self.collect_settings()
+            self.dump_settings(settings)
+        # handle errors here and provide more output for user if required
+        except exceptions.IRKeyNotFoundException as key_exception:
+            if key_exception and key_exception.key.startswith("private."):
+                raise exceptions.IRPrivateSettingsMissingException(
+                    key_exception.key)
+            else:
+                raise
 
         if not self.args.get('dry-run'):
             self.args['settings'] = yaml.load(yaml.safe_dump(
@@ -239,5 +247,5 @@ def entry_point():
 
 if __name__ == '__main__':
     # This is mainly for debug purposed
-    main('provisioner')
+    # main('provisioner')
     main('installer')

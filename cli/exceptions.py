@@ -5,8 +5,21 @@ class IRException(Exception):
 
 class IRKeyNotFoundException(IRException):
     def __init__(self, key, dic):
+        self.key = key
+        self.dic = dic
         super(self.__class__, self).__init__(
             'Key "%s" not found in %s' % (key, dic))
+
+
+class IRPrivateSettingsMissingException(IRException):
+    def __init__(self, key):
+        self.key = key
+        super(self.__class__, self).__init__(
+            "Settings key '{}' was not found. Check that you have "
+            "private settings referenced: "
+            "add -e @<private settings file> to the invocation OR add "
+            "the path the private settings folder to "
+            "your infrared.cfg file.".format(key))
 
 
 class IRFileNotFoundException(IRException):
