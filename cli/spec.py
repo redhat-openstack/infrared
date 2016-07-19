@@ -166,10 +166,10 @@ class YamlFileArgument(ValueArgument):
         """
         search_locations = [os.path.join(
             settings_path, subcommand, *arg_name.split("-"))
-            for settings_path in settings_dirs]
+                            for settings_path in settings_dirs]
         root_locations = [os.path.join(
             settings_path, *arg_name.split("-"))
-            for settings_path in settings_dirs]
+                          for settings_path in settings_dirs]
         search_locations.extend(root_locations)
         search_locations.append(os.getcwd())
         return search_locations
@@ -246,9 +246,10 @@ class TopologyArgument(ValueArgument):
                 if pattern.match(topology_item) is None:
                     raise exceptions.IRWrongTopologyFormat(self.value)
                 number, node_type = topology_item.split('_')
-                LOG.warning("This topology format is deprecated and will be "
-                            "removed in future versions. Please see `--help` "
-                            "for proper format")
+                LOG.warning("The '{}' topology format is deprecated and "
+                            "will be removed in future versions. "
+                            "Please see `--help` for proper format.".format(
+                                topology_item))
             else:
                 node_type, number = topology_item.split(':')
 
