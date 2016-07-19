@@ -75,9 +75,9 @@ def archive(suffix, inventory, ssh_conf, dest_dir, debug):
     ARCHIVE_FILE_NAME = ARCHIVE_FILE_NAME.format(suffix=suffix)
 
     files_content = {}
-    for file_arg in (inventory, ssh_conf):
-        LOG.debug("Getting content of {}...".format(file_arg))
-        files_content[file_arg] = get_file_content(file_arg)
+    for file_arg in ('inventory', 'ssh_conf'):
+        LOG.debug("Getting content of {}...".format(locals()[file_arg]))
+        files_content[file_arg] = get_file_content(locals()[file_arg])
 
     ssh_keys_map = {}
     ssh_keys = set(key_line.split()[-1] for key_line in
@@ -90,8 +90,12 @@ def archive(suffix, inventory, ssh_conf, dest_dir, debug):
         new_ssh_key = os.path.basename(ssh_keys_map[ssh_key])
         LOG.debug("Replacing key {} with {}".format(ssh_key, new_ssh_key))
         for file_content_key in files_content.keys():
-            files_content[file_content_key] = re.sub(
-                ssh_key, new_ssh_key, files_content[file_content_key])
+            files_content[file_content_key] = \
+                re.sub(
+                    ssh_key + ' ',
+                    new_ssh_key + ' ',
+                    files_content[file_content_key]
+                )
 
     with tarfile.open(
             os.path.join(dest_dir, ARCHIVE_FILE_NAME), 'w') as tar:
