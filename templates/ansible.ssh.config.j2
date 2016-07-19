@@ -11,9 +11,8 @@ Host {{ host }}
 {% if host != 'virthost' %}
     ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ hostvars['virthost'].ansible_ssh_private_key_file }} {{ hostvars['virthost'].ansible_ssh_user }}@{{ hostvars['virthost'].ansible_ssh_host }}
 {% endif %}
-{% if 'undercloud' in groups %}
+{% elif 'undercloud' in groups %}
     ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} {{ hostvars[groups['undercloud'][0]].ansible_ssh_user }}@{{ hostvars[groups['undercloud'][0]].ansible_ssh_host }}
-{% endif %}
 {% endif %}
 {% endif %}
 {% endfor %}
