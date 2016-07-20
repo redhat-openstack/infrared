@@ -14,7 +14,7 @@ from cli.logger import LOG
 ARCHIVE_FILE_NAME = 'IR-Archive-{suffix}.tar'
 ARCHIVE_FILES_MAP = dict(
     inventory='hosts-{suffix}',
-    ssh_conf='ansible.ssh.config.{suffix}'
+    ssh_conf='ssh.config.{suffix}'
 )
 TIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
 
@@ -92,8 +92,8 @@ def archive(suffix, inventory, ssh_conf, dest_dir, debug):
         for file_content_key in files_content.keys():
             files_content[file_content_key] = \
                 re.sub(
-                    ssh_key + ' ',
-                    new_ssh_key + ' ',
+                    ssh_key + '\\b',
+                    new_ssh_key,
                     files_content[file_content_key]
                 )
 
