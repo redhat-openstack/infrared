@@ -115,3 +115,13 @@ class IRWrongTopologyFormat(IRException):
             "Example:\n" \
             "  'controller:1,compute:2,undercloud:3'".format(used_format)
         super(self.__class__, self).__init__(message)
+
+
+class IRWrongYamlListFormat(IRException):
+    def __init__(self, used_format):
+        message = \
+            "Wrong yaml list format has been given - '{}'\n" \
+            "Value should be comma separated string. " \
+            "Example:\n" \
+            "  'item1,item2,item3'".format(used_format)
+        super(self.__class__, self).__init__(message)
