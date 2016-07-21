@@ -335,9 +335,10 @@ class TopologyArgument(ValueArgument):
                 if pattern.match(topology_item) is None:
                     raise exceptions.IRWrongTopologyFormat(self.value)
                 number, node_type = topology_item.split('_')
-                LOG.warning("This topology format is deprecated and will be "
-                            "removed in future versions. Please see `--help` "
-                            "for proper format")
+                LOG.warning("The '{}' topology format is deprecated and "
+                            "will be removed in future versions. "
+                            "Please see `--help` for proper format.".format(
+                                topology_item))
             else:
                 node_type, number = topology_item.split(':')
 
