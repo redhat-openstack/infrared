@@ -17,6 +17,20 @@
 
       - role: installer/ospd/undercloud
 
+# In BM deployment case we need to masquerade overcloud's external network
+# traffic thru UC node which is also BM node. Such traffic is in this
+# case closed in VLAN and we don't have access to the that network on UC.
+# First we need to enable masqurading for external network with undercloud.conf's
+# "masquerade_network" setting for each infra. Then following role will add
+# interface connected to external network using same cidr as ExternalNetCidr.
+# These two cidr's must match!
+# On virthost we don't need such tweak as external traffic is handled by libvirt.
+- name: Enable external network routing ability through new vlan interface on undercloud
+  tags: undercloud
+  roles:
+      - {role: installer/ospd/undercloud/extvlan}
+  when: "'virthost' not in groups"
+
 - name: Preparing the images
   tags:
       - images
