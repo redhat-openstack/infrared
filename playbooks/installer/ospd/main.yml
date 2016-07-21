@@ -166,6 +166,10 @@
             dest: "~/overcloud_deploy.sh"
             mode: 0755
         when: overcloud_deploy_script == ''
+
+      - name: Enable external network access through newly created vlan interface on undercloud
+        include: undercloud-ext-vlan.yml
+        when: "'virthost' not in groups"
   roles:
       - {role: installer/ospd/overcloud/storage, when: "overcloud_deploy_script == '' and installer.storage.backend is defined and installer.storage.backend"}
       - {role: installer/ospd/overcloud/network, when: "{{ (overcloud_deploy_script == '') }}" }
