@@ -29,6 +29,17 @@ subparsers:
                           If no `undercloud.conf` file found, it will use the default `/usr/share/instack-undercloud/undercloud.conf.sample`
                           that is provided by the installation.
 
+                  undercloud-extrouting:
+                      type: Value
+                      help: |
+                            Enables external network routing&masquerading on undercloud.
+                            This is useful when one wants to have external connectivity
+                            for OC nodes, but doesn't have external gateway present in infrastructure.
+                            This will manually set UC node as GW. Tweaks in undercloud.conf
+                            might be needed to enable masquerade.
+                      choices: ['no', 'yes']
+                      default: 'no'
+
             - title: Deployment Files
               options:
                   deployment-files:
