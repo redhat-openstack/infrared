@@ -17,6 +17,11 @@
 
       - role: installer/ospd/undercloud
 
+- name: Enable external network routing ability through new vlan interface on undercloud
+  tags: undercloud
+  include: undercloud-ext-vlan.yml
+  when: "'virthost' not in groups"
+
 - name: Preparing the images
   tags:
       - images

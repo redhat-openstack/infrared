@@ -27,6 +27,18 @@ subparsers:
                           If no `undercloud.conf` file found, it will use the default `/usr/share/instack-undercloud/undercloud.conf.sample`
                           that is provided by the installation.
 
+                  undercloud-extrouting:
+                      type: Value
+                      help: |
+                            Trunks overcloud's external network to undercloud.
+                            This is useful when one wants to have external connectivity
+                            for OC nodes, but doesn't have external gateway present in infrastructure.
+                            This will manually set UC node as such gateway/router. Tweaks in undercloud.conf
+                            might be needed to enable masquerade between external network and public one.
+                            Only vlan is currently supported.
+                      choices: ['no', 'vlan']
+                      default: 'no'
+
             - title: Deployment Files
               options:
                   deployment-files:
