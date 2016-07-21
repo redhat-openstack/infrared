@@ -1,0 +1,36 @@
+# In BM deployment case we need to masquerade overcloud's external network
+# traffic thru UC node which is also BM node. Such traffic is in this
+# case closed in VLAN and we don't have access to the that network on UC.
+# First we need to enable masqurading for external network with undercloud.conf's
+# "masquerade_network" setting for each infra. Then following role will add
+# interface connected to external network using same cidr as ExternalNetCidr.
+# These two cidr's must match!
+# On virthost we don't need such tweak as external traffic is handled by libvirt.
+- name: get the vlan number where external network should be served
+  shell: "cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalNetworkVlanID | awk -F' ' '{print $2}'"
+  register: vlan_result
+
+- name: create new vlan interface in ovs system
+  shell: "sudo ovs-vsctl add-port br-ctlplane vlan{{ vlan_result.stdout | replace(\"'\",'') }} tag={{ vlan_result.stdout | replace(\"'\",'') }} -- set interface vlan{{ vlan_result.stdout | replace(\"'\",'') }} type=internal;"
+  register: result
+  failed_when: "result.stderr != '' and 'port named vlan{{ vlan_result.stdout | replace(\"'\",'') }} already exists' not in result.stderr"
+
+- name: get the IP address for the external network interface
+  shell: "cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalInterfaceDefaultRoute | awk -F' ' '{print $2}'"
+  register: stat_ip_result
+
+- name: configure external gateway's IP for this interface
+  shell: "sudo ip addr add {{ stat_ip_result.stdout | replace(\"'\",'') }} dev vlan{{ vlan_result.stdout | replace(\"'\",'') }}"
+  register: iface_ip_result
+  failed_when: "result.rc != 0 and result.stderr.find('RTNETLINK answers: File exists') != -1"
+
+- name: switch on the newly added vlan interface
+  shell: "sudo ip link set vlan{{ vlan_result.stdout | replace(\"'\",'') }} up"
+
+- name: get cidr of the external network
+  shell: "cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalNetCidr | awk -F' ' '{print $2}'"
+  register: route_result
+
+- name: add new static route for external network
+  shell: "sudo ip route add {{ route_result.stdout | replace(\"'\",'') }} dev vlan{{ vlan_result.stdout | replace(\"'\",'') }}"
+  failed_when: "result.rc != 0 and result.stderr.find('RTNETLINK answers: File exists') != -1"
