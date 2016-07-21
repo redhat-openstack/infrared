@@ -27,7 +27,7 @@ Host {{ '%s' % '.'.join(hostvars['virthost'].facter_ipaddress_external.split('.'
     ControlPersist  15m
     StrictHostKeyChecking no
     UserKnownHostsFile=/dev/null
-{% if 'undercloud' in groups %}
+{% elif 'undercloud' in groups %}
 {# If virthost is not our deployment, assume we are using baremetals - implies we are not forwarding thru virthost node anymore, we are forwarding thru certain baremetal serving as undercloud #}
 Host {{ '%s' % '.'.join(hostvars[groups['undercloud'][0]].facter_ipaddress_br_ctlplane.split('.')[:-2]) }}.*
     User heat-admin
@@ -36,5 +36,4 @@ Host {{ '%s' % '.'.join(hostvars[groups['undercloud'][0]].facter_ipaddress_br_ct
     UserKnownHostsFile=/dev/null
     ForwardAgent yes
     ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} {{ hostvars[groups['undercloud'][0]].ansible_ssh_user }}@{{ hostvars[groups['undercloud'][0]].ansible_ssh_host }}
-{% endif %}
 {% endif %}
