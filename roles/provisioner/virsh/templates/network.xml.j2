@@ -4,6 +4,7 @@
         <forward mode="{{ item.value.forward.type }}" />
     {% endif %}
         <bridge name="{{ item.key }}" stp='on' delay='0'/>
+    {% if item.value.ip_address is defined %}
   <ip address="{{ item.value.ip_address }}" netmask="{{ item.value.netmask }}">
     {% if item.value.dhcp is defined %}
         <dhcp>
@@ -11,6 +12,7 @@
         </dhcp>
     {% endif %}
   </ip>
+    {% endif %}
 
   {% if item.value.ipv6 is defined %}
   <ip family="ipv6" address="{{ item.value.ipv6.ip_address }}" prefix="{{ item.value.ipv6.prefix }}" >
