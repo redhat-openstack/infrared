@@ -1,5 +1,9 @@
 ---
-- name: Tempest post-install
+- name: Fetch results
   hosts: tester
   gather_facts: no
-  # place global post install tasks here
+  tasks:
+      - fetch:
+            src: "{{ tester.dir }}/tempest.xml"
+            dest: "{{ lookup('env', 'PWD') }}/nosetests.xml"
+            flat: yes

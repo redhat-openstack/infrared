@@ -15,12 +15,10 @@ subparsers:
                       help: The setup (git) revision if applicable
                       default: HEAD
                   tests:
-                      type: ListOfYamls
-                      help: |
-                        The set of tests to execute. Should be specified as list
-                        constructed from the allowed values.
-                        For example: smoke,network,volumes
+                      type: YamlFile
+                      help: The set of test to execute
                       required: yes
+                      default: none.yml
                   threads:
                       type: Value
                       help: The number of concurrent threads to run tests
