@@ -70,13 +70,22 @@ if all(platform.linux_distribution(supported_dists="redhat")):
                 raise new_error
 
             # filter precompiled files
-            files = [f for f in os.listdir(SELINUX_PATH)
+            files = [os.path.join(SELINUX_PATH, f)
+                     for f in os.listdir(SELINUX_PATH)
                      if not os.path.splitext(f)[1] in (".pyc", ".pyo")]
+
+            # add extra file for (libselinux-python-2.5-9.fc24.x86_64)
+            _selinux_file = os.path.join(
+                sysconfig.get_python_lib(plat_specific=True,
+                                         prefix=sys.real_prefix),
+                "_selinux.so")
+            if os.path.exists(_selinux_file):
+                files.append(_selinux_file)
+
             dest = os.path.join(VENV_SITE, "selinux")
             os.makedirs(dest)
             for f in files:
-                shutil.copy(os.path.join(SELINUX_PATH, f),
-                            dest)
+                shutil.copy(f, dest)
         else:
             raise new_error
         import selinux  # noqa
