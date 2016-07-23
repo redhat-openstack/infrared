@@ -62,7 +62,7 @@
     url="{{ item }}"
     dest=/etc/yum.repos.d/
   with_items: "{{ ospd.extra_repos.from_url | default([]) }}"
-  when: ospd.extra_repos.from_url
+  when: ospd.extra_repos.from_url is defined
 
 - name: update system packages
   yum:
