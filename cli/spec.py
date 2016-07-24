@@ -1,17 +1,17 @@
 import ConfigParser
-import re
-from functools import total_ordering
+import glob
 import sys
+from functools import total_ordering
 
 import os
-import glob
+import re
 import yaml
 import yamlordereddictloader
 
+from cli import clg
 from cli import exceptions
 from cli import logger
 from cli import utils
-from cli import clg
 
 LOG = logger.LOG
 
@@ -152,11 +152,10 @@ class BaseFileArgument(ValueArgument):
         :param arg_name: the argument name
         :return The list of folders to search for the yaml files.
         """
-        search_locations = [os.path.join(
-            settings_path, subcommand, *arg_name.split("-"))
+        search_locations = [os.path.join(settings_path, subcommand,
+                                         *arg_name.split("-"))
                             for settings_path in settings_dirs]
-        root_locations = [os.path.join(
-            settings_path, *arg_name.split("-"))
+        root_locations = [os.path.join(settings_path, *arg_name.split("-"))
                           for settings_path in settings_dirs]
         search_locations.extend(root_locations)
         search_locations.append(os.getcwd())

@@ -3,14 +3,15 @@
 """This module is a wrapper to ``argparse`` module. It allow to generate a
 command-line from a predefined directory (ie: a YAML, JSON, ... file)."""
 
+import argparse
+import copy
+import imp
+import pydoc
+import sys
+from collections import OrderedDict
+
 import os
 import re
-import sys
-import imp
-import copy
-import pydoc
-import argparse
-from collections import OrderedDict
 
 #
 # Constants.
@@ -110,7 +111,8 @@ def _deepcopy(config):
 
 def _gen_parser(parser_conf, subparser=False):
     """Retrieve arguments pass to **argparse.ArgumentParser** from
-    **parser_conf**. A subparser can take an extra 'help' keyword."""
+    **parser_conf**. A subparser can take an extra 'help' keyword.
+    """
     formatter_class = parser_conf.get('formatter_class', 'HelpFormatter')
     conf = {'prog': parser_conf.get('prog', None),
             'usage': None,
@@ -140,7 +142,8 @@ def _get_args(parser_conf):
 
 def _set_builtin(value):
     """Replace configuration values which begin and end by ``__`` by the
-    respective builtin function."""
+    respective builtin function.
+    """
     try:
         return TYPES[re.search('^__([A-Z]*)__$', value).group(1).lower()]
     except (AttributeError, TypeError):
@@ -152,7 +155,8 @@ def _set_builtin(value):
 def _print_help(parser):
     """Manage 'print_help' parameter of a (sub)command. It monkey patch the
     `_parse_known_args` method of the **parser** instance for simulating the
-    use of the --help option if no arguments is supplied for the command."""
+    use of the --help option if no arguments is supplied for the command.
+    """
     default_method = parser._parse_known_args
 
     def _parse_known_args(arg_strings, namespace):
@@ -177,13 +181,15 @@ def _format_usage(prog, usage):
 
 def _format_optname(value):
     """Format the name of an option in the configuration file to a more
-    readable option in the command-line."""
+    readable option in the command-line.
+    """
     return value.replace('_', '-').replace(' ', '-')
 
 
 def _format_optdisplay(value, conf):
     """Format the display of an option in error message (short and long option
-    with dash(es) separated by a slash."""
+    with dash(es) separated by a slash.
+    """
     return ('-%s/--%s' % (conf['short'], _format_optname(value))
             if 'short' in conf
             else '--%s' % _format_optname(value))
@@ -204,7 +210,8 @@ def _check_empty(path, conf):
 
 def _check_type(path, conf, conf_type=dict):
     """Check the **conf** is of **conf_type** type
-    and raise an error if not."""
+    and raise an error if not.
+    """
     if not isinstance(conf, conf_type):
         type_str = str(conf_type).split()[1][1:-2]
         raise CLGError(path, _INVALID_SECTION.format(type=type_str))
@@ -212,7 +219,8 @@ def _check_type(path, conf, conf_type=dict):
 
 def _check_keywords(path, conf, section, one=None, need=None):
     """Check items of **conf** from **KEYWORDS[section]**. **one** indicate
-    whether a check must be done on the number of elements or not."""
+    whether a check must be done on the number of elements or not.
+    """
     valid_keywords = [keyword
                       for keywords in KEYWORDS[section].values()
                       for keyword in keywords]
@@ -394,7 +402,8 @@ class HelpPager(argparse.Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
         """Page help using `pydoc.pager` method (which use $PAGER environment
-        variable)."""
+        variable).
+        """
         os.environ['PAGER'] = 'less -c'
         pydoc.pager(parser.format_help())
         parser.exit()
@@ -424,13 +433,15 @@ class Namespace(argparse.Namespace):
 
 class CommandLine(object):
     """CommandLine object that parse a preformatted dictionnary and generate
-    ``argparse`` parser."""
+    ``argparse`` parser.
+    """
 
     def __init__(self, config, keyword='command', deepcopy=True):
         """Initialize the command from **config** which is a dictionnary
         (preferably an OrderedDict). **keyword** is the name use for knowing
         the path of subcommands (ie: 'command0', 'command1', ...
-        in the namespace of arguments)."""
+        in the namespace of arguments).
+        """
         self.config = _deepcopy(config) if deepcopy else config
         self.keyword = keyword
         self._parsers = OrderedDict()
@@ -461,21 +472,25 @@ class CommandLine(object):
 
     def _get_config(self, path, ignore=True):
         """Retrieve an element configuration (based on **path**) in the
-        configuration."""
+        configuration.
+        """
         config = self.config
         for idx, elt in enumerate(path):
             if elt.startswith('#'):
                 config = config[int(elt[1:])]
             elif not ignore and path[
-                        idx - 1] == 'subparsers' and 'parsers' in config:
+                    idx - 1] == 'subparsers' and 'parsers' in config:
                 config = config['parsers'][elt]
             else:
                 config = config[elt]
         return config
 
     def _add_parser(self, path, parser=None):
-        """Add a subparser to a parser. If **parser** is ``None``, the subparser
-        is in fact the main parser."""
+        """Add a subparser to a parser.
+
+        If **parser** is ``None``, the subparser
+        is in fact the main parser.
+        """
         # Get configuration.
         parser_conf = self._get_config(path)
 
@@ -550,7 +565,8 @@ class CommandLine(object):
     def _add_subparsers(self, parser, path, subparsers_conf):
         """Add subparsers. Subparsers can have a global configuration or
         directly parsers configuration. This is the keyword **parsers** that
-        indicate it."""
+        indicate it.
+        """
         # Get arguments to pass to add_subparsers method.
         required = True
         subparsers_params = {'dest': '%s%d' % (self.keyword, len(path) / 2)}
