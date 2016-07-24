@@ -181,6 +181,23 @@ Please see `Quickstart <quickstart.html>`_ guide where usage is demonstrated.
 
 .. TODO - Network layout - chapter describing network in detail
 
+Cleanup
+"""""""
+`virsh` cleanup will discover virsh nodes and networks on the host and delete them as well as their matching disks.
+To avoid cleanup of specific nodes/networks use extra vars ``ignore_virsh_nodes`` and ``ignore_virsh_nets``::
+
+  ir-provisioner [...] virsh [...]  --cleanup \
+      --host-address=example1.redhat.com \
+      --host-key=~/.ssh/id_rsa \
+      --extra-vars ignore_virsh_nodes=MY-NODE-0 \
+      --extra-vars ignore_virsh_nets=MY-PERSISTENT-NETWORK
+
+By default, cleanup will only ignore ``default`` network (automatically created by `libvirt`). Overriding the ``ignore_virsh_nets`` variable will delete this network unless explicitly specified
+
+.. warning:: Arguments like ``images`` and ``topology`` are required by cleanup even though they are never used. This will be fixed in future versions.
+
+.. warning:: Cleanup won't install libvirt packages and requirements. If `libvirtd` service is unavailable, cleanup be skipped
+
 Network layout
 """"""""""""""
 Baremetal machine used as host for such setup is called `virthost`. The whole deployment is designed to work within boundaries of this machine and (except public/natted traffic) shouldn't reach beyond. Following layout is part of default setup defined in `default.yml <https://github.com/rhosqeauto/InfraRed/blob/master/settings/provisioner/virsh/topology/network/default.yml>`_. User can also provide his own network layout (example `network-sample.yml <https://github.com/rhosqeauto/InfraRed/blob/master/settings/provisioner/virsh/topology/network/network.sample.yml>`_).
