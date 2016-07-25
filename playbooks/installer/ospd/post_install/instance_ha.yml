@@ -184,6 +184,14 @@
         shell: "pcs resource enable openstack-core"
         when: "{{ installer.product.version | int }} > 8"
 
+      - name: Wait for httpd service to be started
+        shell: "systemctl show httpd --property=ActiveState"
+        register: httpd_status_result
+        until: httpd_status_result.stdout.find('inactive') == -1 and httpd_status_result.stdout.find('activating') == -1
+        retries: 30
+        delay: 10
+        when: "{{ installer.product.version | int }} > 8"
+
       - name: Enable compute resources
         shell: "pcs resource enable {{ item }}"
         with_items:
@@ -193,5 +201,16 @@
             - nova-compute-checkevacuate
             - nova-compute
 
+- name: Wait for libvirt resource to be available on compute nodes
+  hosts: compute
+  tasks:
+      - wait_for:
+            port: 16509
+            delay: 20
+
+- name: Cleanup all pacemaker resource
+  hosts: controller[0]
+  become: yes
+  tasks:
       - name: Cleanup all pacemaker resources
         shell: "pcs resource cleanup"
