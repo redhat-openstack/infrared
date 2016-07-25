@@ -17,11 +17,14 @@ verify_tox() {
     if ! tail -n2 .tox_$1_out | grep -q "$1: commands succeeded"; then
         FAILED="${FAILED} $1"
     fi
+    source .tox/$1/bin/activate
+    pip freeze &>> .tox_$1_out
+    deactivate
 }
 
 for tEnv in ${RUN_ENVS}; do run_tox ${tEnv}; done
 wait
-for tEnv in ${RUN_ENVS}; do verify_tox ${tEnv} || exit 1; done
+for tEnv in ${RUN_ENVS}; do verify_tox ${tEnv}; done
 if [[ ! -z "$FAILED" ]]; then
     echo "==== Failed: $FAILED ====" >&2
     exit 1
