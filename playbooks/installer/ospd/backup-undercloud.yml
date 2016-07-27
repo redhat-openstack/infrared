@@ -1,18 +1,33 @@
 - name: Make a copy of our undercloud for virthost installation
   hosts: virthost
   gather_facts: no
+  vars:
+      undercloud: "{{ hostvars[(groups.undercloud|first)].inventory_hostname }}"
   tasks:
       - name: shutdown the undercloud VM
-        shell: "virsh shutdown undercloud"
+        virt:
+            name: "{{ undercloud }}"
+            state: shutdown
 
       - name: create a copy from the VM xml
-        shell: "virsh dumpxml undercloud > undercloud.xml"
+        virt:
+            name: "{{ undercloud }}"
+            command: get_xml
+        register: undercloud_xml
+
+      - name: save undercloud xml to file
+        copy:
+            content: "{{ undercloud_xml.get_xml }}"
+            dest: "./{{ undercloud }}.xml"
 
       - name: copy the undercloud disk
-        shell: "cp /var/lib/libvirt/images/undercloud.disk1.qcow2 ."
+        shell: "cp -pv /var/lib/libvirt/images/{{ undercloud }}-disk1.qcow2 {{ undercloud }}-disk1.qcow2.tmp"
+
+      - name: shrink undercloud image
+        shell: "qemu-img convert -O qcow2 {{ undercloud }}-disk1.qcow2.tmp {{ undercloud }}-disk1.qcow2"
 
       - name: tar our undercloud files
-        shell: "tar -cvf undercloud-quickstart.tar undercloud.xml undercloud.disk1.qcow2"
+        shell: "tar -cvf undercloud-quickstart.tar {{ undercloud }}.xml {{ undercloud }}-disk1.qcow2"
 
       - name: copy our auth key to the virthost
         copy:
@@ -21,7 +36,15 @@
             mode: "0400"
 
       - name: copy our image to the backup server
-        shell: "scp -o StrictHostKeyChecking=no -i ~/backup_server_auth_key undercloud-quickstart.tar {{ private.mirror.user.name }}@{{ private.mirror.base_url | regex_replace('http(s)?://(?P<domain>.*?)(?P<uri>/.*$)', '\\g<domain>:~\\g<uri>') }}/undercloud-quickstart.tar"
+        shell: "scp -o StrictHostKeyChecking=no -i ~/backup_server_auth_key undercloud-quickstart.tar {{ private.storage.oc_image_repo.user }}@{{ private.storage.oc_image_repo.server }}:{{ private.storage.oc_image_repo.path }}/{{ installer.product.core.version }}/undercloud-quickstart.tar"
 
       - name: cleanup our files
-        shell: "rm -f undercloud.xml undercloud.disk1.qcow2 undercloud-quickstart.tar"
+        file:
+            state: absent
+            path: "{{ item }}"
+        with_items:
+            - "{{ undercloud }}.xml"
+            - "{{ undercloud }}-disk1.qcow2"
+            - "{{ undercloud }}-disk1.qcow2.tmp"
+            - "undercloud-quickstart.tar"
+

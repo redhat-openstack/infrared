@@ -9,6 +9,10 @@
   roles:
       - {role: installer/ospd/undercloud, when: "'undercloud' in groups"}
 
+- include: "backup-undercloud.yml"
+  tags: backup
+  when: "backup is defined"
+
 - name: Modify undercloud in case of virthost deployment
   tags: virthost
   include: virthost.yml
