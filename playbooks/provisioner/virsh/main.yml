@@ -2,15 +2,17 @@
 - name: Add host to host list
   hosts: localhost
   gather_facts: no
+  vars:
+      hypervisor: "{{ provisioner.host }}"
   tasks:
       - name: add hosts to host list
         add_host:
-            name: "{{ provisioner.host.name }}"
-            groups: "{{ provisioner.host.groups| join(',') }}"
+            name: "{{ hypervisor.name }}"
+            groups: "{{ hypervisor.groups| join(',') }}"
             node_label: "virthost"
-            ansible_ssh_user: "{{ provisioner.host.user }}"
-            ansible_ssh_host: "{{ provisioner.host.address }}"
-            ansible_ssh_private_key_file: "{{ provisioner.host.key }}"
+            ansible_ssh_user: "{{ hypervisor.user }}"
+            ansible_ssh_host: "{{ hypervisor.address }}"
+            ansible_ssh_private_key_file: "{{ hypervisor.key }}"
 
 - name: Setup the virthost
   hosts: virthost

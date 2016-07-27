@@ -15,7 +15,7 @@
         add_host:
             name: "{{ hypervisor.name }}"
             groups: "{{ hypervisor.groups| join(',') }}"
-            node_label: "host1"
+            node_label: "virthost"
             ansible_ssh_user: "{{ hypervisor.user }}"
             ansible_ssh_host: "{{ hypervisor.address }}"
             ansible_ssh_private_key_file: "{{ hypervisor.key }}"
@@ -23,49 +23,24 @@
 - name: Remove all VMs and networks that were created
   hosts: virthost
   gather_facts: no
+  vars:
+      ignore_virsh_nodes: []
+      # ignore virsh's default network
+      ignore_virsh_nets:
+          - default
   tasks:
-      - name: install dependencies
-        yum:
-            name: "{{ item }}"
-            state: present
-        with_items: "{{ provisioner.packages }}"
-
       - name: start libvirtd
         service:
             name: libvirtd
             state: started
             enabled: yes
+        ignore_errors: true
+        register: libvirtd_available
 
-      - name: get the list of VMs
-        shell: "virsh list --all | grep -P '[\\w]+' | sed -n '2,$p' | awk '{print $2}'"
-        register: vm_names
+      # Don't cleanup if the libvirtd process is unavailable
+      - include: "{{ inventory_dir }}/playbooks/provisioner/virsh/cleanup.yml"
+        when: libvirtd_available | success
 
-      - set_fact:
-            vm_name_list: "{{ vm_names.stdout_lines }}"
-
-      - name: stop relevant vms
-        virt:
-            name: "{{ item }}"
-            state: destroyed
-        with_items: "{{ vm_name_list }}"
-
-      - name: undefine relevant VMs
-        virt:
-            name: "{{ item }}"
-            command: undefine
-        with_items: "{{ vm_name_list }}"
-
-      - name: remove the networks we created
-        virt_net:
-            name: "{{ item }}"
-            state: absent
-        with_items: "{{ provisioner.topology.network.keys() }}"
-
-      - name: remove any existing disks that we created
-        shell: "rm -f {{ item.key }}*disk*.qcow*"
-        args:
-            chdir: "/var/lib/libvirt/images"
-        with_dict: "{{ provisioner.topology.nodes }}"
 
 - name: Remove hypervisor from the known_hosts
   hosts: localhost
