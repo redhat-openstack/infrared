@@ -47,3 +47,9 @@ subparsers:
                   host-key:
                       type: Value
                       help: "User's SSH key"
+                  host-ipmi-username:
+                      type: Value
+                      help: "Host IPMI username"
+                  host-ipmi-password:
+                      type: Value
+                      help: "Host IPMI password"

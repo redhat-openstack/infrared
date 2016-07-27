@@ -61,6 +61,16 @@ options:
          mgmt_strategy. For example: reset, reboot, cycle
      default: 'cycle'
      required: false
+   ipmi_username:
+     description:
+         - Host IPMI username
+     default: 'ADMIN'
+     required: false
+   ipmi_password:
+     description:
+         - Host IPMI password
+     default: 'ADMIN'
+     required: false
    wait_for_host:
      description:
          - Whether we should wait for the host given the 'rebuild' state was set.
@@ -186,14 +196,18 @@ class ForemanManager(object):
         response = self.session.put(request_url, data=command, verify=False)
         #TODO(tkammer): add verification that the BMC command was issued
 
-    def ipmi(self, host_id, command):
+    def ipmi(self, host_id, command, username, password):
         """
         execute a command through the ipmitool
         :param host_id: the ipmi id of the host
         :param command: the command to send through the ipmitool
+        :param username: host IPMI username
+        :param password: host IPMI password
         commands: 'status', 'on', 'off', 'cycle', 'reset', 'soft' # TBD
         """
-        command = "ipmitool -I lanplus -H {0} -U ADMIN -P ADMIN chassis power {1}".format(host_id, command)
+        command = "ipmitool -I lanplus -H {host_id} -U {username} -P " \
+                  "{password} chassis power {cmd}".format(
+            host_id=host_id, username=username, password=password, cmd=command)
         return_code = subprocess.call(command, shell=True)
 
         if return_code:
@@ -216,7 +230,7 @@ class ForemanManager(object):
         return missing_bmc
 
     def provision(self, host_id, mgmt_strategy, mgmt_action,
-                  wait_for_host=True):
+                  ipmi_username, ipmi_password, wait_for_host=True):
         """
         This method rebuilds a machine, doing so by running get_host and bmc.
         :param host_id: the name or ID of the host we wish to rebuild
@@ -226,6 +240,8 @@ class ForemanManager(object):
         (e.g: cycle, reset, etc)
         :param wait_for_host: whether the function will wait until host has
         finished rebuilding before exiting.
+        :param ipmi_username: remote server username (IPMI)
+        :param ipmi_password: remote server password (IPMI)
         :raises: KeyError if BMC hasn't been found on the given host
                  Exception in case of machine could not be reached after
                  rebuild
@@ -238,7 +254,7 @@ class ForemanManager(object):
             self.bmc(host_id, mgmt_action)
         elif mgmt_strategy == 'ipmi':
             host = "{0}.{1}".format(building_host.get('interfaces')[0].get('name'), building_host.get('domain_name'))
-            self.ipmi(host, mgmt_action)
+            self.ipmi(host, mgmt_action, ipmi_username, ipmi_password)
         else:
             raise Exception("{0} is not a supported "
                             "management strategy".format(mgmt_strategy))
@@ -264,7 +280,9 @@ def main():
                                choices=MGMT_SUPPORTED_STRATEGIES),
             mgmt_action=dict(default='cycle', choices=['on', 'off', 'cycle',
                                                        'reset', 'soft']),
-            wait_for_host=dict(default=True, choices=BOOLEANS)))
+            wait_for_host=dict(default=True, choices=BOOLEANS),
+            ipmi_username=dict(default='ADMIN'),
+            ipmi_password=dict(default='ADMIN')))
 
     foreman_client = ForemanManager(url=module.params['auth_url'],
                                     username=module.params['username'],
@@ -277,6 +295,8 @@ def main():
             foreman_client.provision(module.params['host_id'],
                                      module.params['mgmt_strategy'],
                                      module.params['mgmt_action'],
+                                     module.params['ipmi_username'],
+                                     module.params['ipmi_password'],
                                      module.boolean(
                                          module.params['wait_for_host']))
         except KeyError as e:
