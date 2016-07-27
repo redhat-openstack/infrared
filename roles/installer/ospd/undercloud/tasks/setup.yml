@@ -1,11 +1,11 @@
 - name: set hostname
   hostname:
-      name: undercloud.redhat.local
+      name: "{{ inventory_hostname }}.redhat.local"
 
 - name: update /etc/hosts with undercloud details
   lineinfile:
       dest: "/etc/hosts"
-      line: "{{ ansible_ssh_host }}    undercloud.redhat.local undercloud"
+      line: "{{ ansible_ssh_host }}    {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
       state: present
 
 - name: remove all repos from /etc/yum.repos.d
