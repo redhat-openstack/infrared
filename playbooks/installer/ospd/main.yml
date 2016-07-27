@@ -1,28 +1,29 @@
 ---
 - include: pre.yml
-  tags: backup
 
 - name: Installing the undercloud
   tags:
       - undercloud
+      - backup
   hosts: undercloud
   roles:
       - {role: installer/ospd/undercloud, when: "'undercloud' in groups"}
 
-- name: Modify undercloud in case of virthost deployment
-  tags: virthost
-  include: virthost.yml
-  when: "'virthost' in groups"
-
 - name: Preparing the images
   tags:
       - images
+      - backup
   hosts: undercloud
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
   roles:
       - {role: installer/ospd/images}
+
+- name: Modify undercloud in case of virthost deployment
+  tags: virthost
+  include: virthost.yml
+  when: "'virthost' in groups"
 
 - name: Start introspection
   tags: introspection

@@ -4,45 +4,43 @@
 - name: Prepare our undercloud
   hosts: virthost
   gather_facts: no
+  vars:
+      undercloud: 'undercloud-0'
+      undercloud_tar_file: "undercloud-quickstart-{{ director_puddle_version }}.tar"
   tasks:
       - name: download the undercloud tar file
         get_url:
-            url: "{{ private.mirror.base_url }}/undercloud-quickstart.tar"
-            dest: "~/undercloud-quickstart.tar"
-            force: yes
+            url: "http://{{ private.storage.oc_image_repo.server }}/{{ private.storage.oc_image_repo.path }}/{{ installer.product.core.version }}/{{ undercloud_tar_file }}"
+            dest: "~/{{ undercloud_tar_file }}"
 
       - name: untar the undercloud quickstart
         unarchive:
-            src: "~/undercloud-quickstart.tar"
+            src: "~/{{ undercloud_tar_file }}"
             dest: "~/"
             copy: no
+            list_files: yes
+        register: tar
 
       - name: copy the image into libvirt images folder
-        shell: "cp -f undercloud.disk1.qcow2 /var/lib/libvirt/images/undercloud.disk1.qcow2"
+        shell: "cp -vf {{ undercloud }}-disk1.qcow2 /var/lib/libvirt/images/{{ undercloud }}-disk1.qcow2"
 
       - name: inject our key into the undercloud image
-        shell: "virt-customize -a /var/lib/libvirt/images/undercloud.disk1.qcow2 --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel"
+        shell: "virt-customize -a /var/lib/libvirt/images/{{ undercloud }}-disk1.qcow2 --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel"
 
       - name: define our new undercloud VM
-        shell: "virsh define undercloud.xml"
+        shell: "virsh define {{ undercloud }}.xml"
 
       - name: start our undercloud VM
-        shell: "virsh start undercloud"
+        virt:
+            name: "{{ undercloud }}"
+            state: running
 
       - name: wait for the undercloud IP to become available
-        shell: "virsh net-dhcp-leases external | awk /undercloud/'{print $5}'"
+        shell: "virsh net-dhcp-leases external | awk /{{ undercloud }}/'{print $5}'"
         register: undercloud_ip
         until: undercloud_ip.stdout != ''
         retries: 10
         delay: 10
-
-      - debug:
-            var: undercloud_ip
-
-        # TODO: for some reason it skips this task if using the "wait_for" module, revisit this in ansible 2.1
-      - name: waiting for the undercloud to be SSH available
-        pause:
-            seconds: 60
 
       - name: waiting for the undercloud to be SSH available
         wait_for:
@@ -53,12 +51,24 @@
 
       - name: add undercloud to host list
         add_host:
-            name: "undercloud"
+            name: "{{ undercloud }}"
             groups: "undercloud,tester,openstack_nodes"
             ansible_ssh_user: "root"
             ansible_ssh_private_key_file: "{{ hostvars[groups['overcloud_nodes'][0]].ansible_ssh_private_key_file }}"
             ansible_ssh_host: "{{ undercloud_ip.stdout | ipaddr('address') }}"
 
-- name: gatehr facts from the undercloud
+      #TODO(yfried): cleanup should be in a block/allways format
+      - name: remove unarchived files from machine
+        file:
+            state: absent
+            path: "{{ item }}"
+        with_items: "{{ tar.files }}"
+
+      - name: remove quickstart tar file
+        file:
+            state: absent
+            path: "{{ undercloud_tar_file }}"
+
+- name: gather facts from the undercloud
   hosts: undercloud
   gather_facts: yes

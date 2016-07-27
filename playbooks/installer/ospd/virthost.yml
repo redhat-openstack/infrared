@@ -1,13 +1,3 @@
-# Dumping all facts for later use
-- name: Dumping facts from all nodes for later use
-  hosts: all:!localhost
-  gather_facts: no
-  tags: virthost
-  tasks:
-      - name: Dumping facts
-        setup:
-
-# In case of virthost we need to fix the pxe_ssh limitation of correctly assigning the MAC address to the iPXE script
 - name: Update our libvirt machine to latest puddle packages
   hosts: virthost
   tags: backup
@@ -34,7 +24,7 @@
           - debug:
                 msg: "rhos-release {{ installer.product.version }}-director -P -p {{ installer.product.build }}"
 
-          - name: create necessary repos with for director using rhos-release
+          - name: create necessary repos for director using rhos-release
             command: "rhos-release {{ installer.product.version }}-director -P -p {{ installer.product.build }}"
             register: command_result
             until: command_result.stderr.find('Connection reset by peer') == -1
@@ -44,6 +34,13 @@
 
       - debug:
             msg: "rhos-release {{ installer.product.core.version }} -P -p {{ installer.product.core.build }}"
+
+      - set_fact:
+            director_puddle_version: "{{ command_result | regex_replace('^.*director[ ]+-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
+
+      # TODO(yfried): merge set_fact tasks
+      - set_fact:
+            core_puddle_version: "{{ command_result | regex_replace('^.*-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
 
       - name: create necessary repos for core using rhos-release
         command: "rhos-release {{ installer.product.core.version }} -P -p {{ installer.product.core.build }}"
@@ -74,8 +71,17 @@
         delegate_to: "localhost"
         when: update|changed
 
-- include: quickstart-undercloud.yml
+- include: "quickstart-undercloud.yml"
   when: "'undercloud' not in groups"
+
+# Dumping all facts for later use
+- name: Dumping facts from all nodes for later use
+  hosts: all:!localhost
+  gather_facts: no
+  tags: virthost
+  tasks:
+      - name: Dumping facts
+        setup:
 
 - name: Prepare the instackenv.json
   tags: instack
@@ -137,3 +143,33 @@
         authorized_key:
             user: "{{ installer.user.name }}"
             key: "{{ undercloud_public_key.stdout }}"
+
+- name: get the puddle version for the backup process
+  tags: backup
+  hosts: virthost
+  gather_facts: no
+  tasks:
+      - block:
+          - debug:
+                msg: "rhos-release {{ installer.product.version }}-director -P -p {{ installer.product.build }}"
+
+          - name: create necessary repos with for director using rhos-release
+            command: "rhos-release {{ installer.product.version }}-director -P -p {{ installer.product.build }}"
+            register: command_result
+            until: command_result.stderr.find('Connection reset by peer') == -1
+            retries: 40
+            delay: 5
+
+          - debug:
+                msg: "rhos-release {{ installer.product.core.version }} -P -p {{ installer.product.core.build }}"
+
+          - set_fact:
+                director_puddle_version: "{{ command_result | regex_replace('^.*director[ ]+-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
+
+          - set_fact:
+                core_puddle_version: "{{ command_result | regex_replace('^.*-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
+        when: "{{ installer.product.version | int }} < 10 and not director_puddle_version and not core_puddle_version"
+
+- include: "backup-undercloud.yml"
+  tags: backup
+  when: "backup is defined"
