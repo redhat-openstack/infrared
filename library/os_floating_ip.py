@@ -193,11 +193,15 @@ def main():
 
             # If f_ip already assigned to server, check that it matches
             # requirements.
-            fip_address = cloud.get_server_public_ip(server)
-            if fip_address:
-                f_ip = _get_floating_ip(cloud, fip_address)
+            f_ip = cloud.get_server_public_ip(server)
+            f_ip = _get_floating_ip(cloud, f_ip) if f_ip else f_ip
+            if f_ip:
+                if network:
+                    network_id = cloud.get_network(name_or_id=network)["id"]
+                else:
+                    network_id = None
                 if all([fixed_address, f_ip.fixed_ip_address == fixed_address,
-                        network, f_ip.network != network]):
+                        network, f_ip.network != network_id]):
                     # Current state definitely conflicts with requirements
                     module.fail_json(msg="server {server} already has a "
                                          "floating-ip on requested "
@@ -207,7 +211,7 @@ def main():
                                              network=network,
                                              fip=remove_values(f_ip,
                                                                module.no_log_values)))
-                if not network or f_ip.network == network:
+                if not network or f_ip.network == network_id:
                     # Requirements are met
                     module.exit_json(changed=False, floating_ip=f_ip)
 
@@ -235,15 +239,17 @@ def main():
             if not f_ip:
                 # Nothing to detach
                 module.exit_json(changed=False)
-
-            cloud.detach_ip_from_server(
-                server_id=server['id'], floating_ip_id=f_ip['id'])
-            # Update the floating IP status
-            f_ip = cloud.get_floating_ip(id=f_ip['id'])
+            changed = False
+            if f_ip["fixed_ip_address"]:
+                cloud.detach_ip_from_server(
+                    server_id=server['id'], floating_ip_id=f_ip['id'])
+                # Update the floating IP status
+                f_ip = cloud.get_floating_ip(id=f_ip['id'])
+                changed = True
             if purge:
                 cloud.delete_floating_ip(f_ip['id'])
                 module.exit_json(changed=True)
-            module.exit_json(changed=True, floating_ip=f_ip)
+            module.exit_json(changed=changed, floating_ip=f_ip)
 
     except shade.OpenStackCloudException as e:
         module.fail_json(msg=str(e), extra_data=e.extra_data)
