@@ -111,12 +111,12 @@ Foreman
 ^^^^^^^
 Entry point::
 
-  playbooks/provisioner/foreman/cleanup.yml
+  playbooks/provisioner/foreman/main.yml
 
 .. warning::
-   Currently, Foreman provisioning supports only cleanup of hosts::
+   Currently, Foreman provisioning supports only the ability to rebuild hosts (without the option change the operating system)::
 
-     ir-provisioner [...] foreman [...] --cleanup
+     ir-provisioner [...] foreman [...]
 
 Foreman provisioner is designed to work with instances of `Foreman project <https://theforeman.org>`_ at least version 1.6.3. It is based custom ansible module built on top of
 
@@ -125,6 +125,10 @@ Foreman provisioner is designed to work with instances of `Foreman project <http
   library/foreman_provisioner.py
 
 Foreman provisioner expects that provisioned node has configured relevant puppet recipies to provide basic SSH access after provisioning is done.
+
+To get more details on how to provision hosts using Foreman::
+
+    $ ir-provisioner foreman --help
 
 Openstack
 ^^^^^^^^^
