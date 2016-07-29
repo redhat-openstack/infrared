@@ -3,7 +3,12 @@
   selinux: policy=targeted state=permissive
 
 #this is required to have the 22 port free on haproxy VIP's
-- name: setup ssh for loadbalancer
+- name: setup ssh to listen on existing external IP
+  lineinfile:
+      dest: "/etc/ssh/sshd_config"
+      line: "ListenAddress {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+
+- name: setup ssh for loadbalancer to listen on external VIP
   lineinfile:
       dest: "/etc/ssh/sshd_config"
       line: "ListenAddress {{ installer.loadbalancer.network.external.vip | ipaddr('address') }}"
@@ -30,7 +35,7 @@
 - name: create VLAN interface for external network
   template:
       src: vlan-external.cfg.j2
-      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.ex_interface }}
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.ex_interface }}:0
   when: installer.loadbalancer.network.external is defined
 
 - name: create VLAN interface for internal_api network
