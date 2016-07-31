@@ -18,7 +18,7 @@ subparsers:
                   host-key:
                       type: Value
                       help: "User's SSH key"
-                      default: '~/.ssh/id_rsa'
+                      required: yes
 
             - title: image
               options:
@@ -36,7 +36,7 @@ subparsers:
                   topology-nodes:
                       type: Topology
                       help: Provision topology.
-                      default: "undercloud:1,controller:1,compute:1"
+                      required: yes
 
             - title: cleanup
               options:
