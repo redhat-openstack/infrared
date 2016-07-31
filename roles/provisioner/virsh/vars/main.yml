@@ -1,1 +1,4 @@
-guest_image: "{{ provisioner.image.file | default('rhel-guest-image-latest.qcow2') }}"
+# TODO(yfried): remove ternary when image YAML (server+file) is deprecated.
+# ternary values are evaluated before the condition
+url: "{{ (provisioner.image.server is defined) | ternary(provisioner.image.server|default('') + '/' + provisioner.image.file|default(''), provisioner.image.url) }}"
+base_image_path: /var/lib/libvirt/images/base_image.qcow2
