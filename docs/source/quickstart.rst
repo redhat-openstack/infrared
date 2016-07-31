@@ -24,7 +24,51 @@ Clone InfraRed stable from GitHub::
     pip install .
     cp ansible.cfg.example ansible.cfg
 
-Generate arguments file for virsh provisioner::
+.. warning:: Some of the data is sensitive and can't be uploaded upstream. Users with access to redhat internal network can run the following command to download a file contains some credentials & other sensitive data, other user will have to provide this data explicitly everywhere there is a reference to private variables.
+
+  .. code-block:: text
+
+    wget --no-check-certificate https://url.corp.redhat.com/infrared-private -O infrared-private.yml
+
+Basic Usage Example
+"""""""""""""""""""
+Provisioning
+------------
+
+In this example we'll use `virsh <execute.html#virsh>`_ provisioner in order to demonstrate how easy and fast it is to provision machines using InfraRed.
+For basic execution, the user should only provide data for the mandatory parameters, this can be done by two ways:
+
+1) `CLI`_
+2) `INI File`_
+
+CLI
+~~~
+In order to know which are the mandatory parameters (for `virsh`) the user should provide, please run::
+
+    ir-provisioner virsh --help
+
+Notice that the only three mandatory paramters in `virsh` provisioner are the 'host-address', 'host-key' & 'topology-nodes'.
+We can now execute the provisioning process by providing those parameters through the CLI::
+
+    ir-provisioner virsh --host-address=my.host.address --host-key=~/.ssh/id_rsa --topology-nodes="controller:1,compute:1" -e @infrared-private.yml
+
+..  note:: The value of the topology-nodes option is a comma-separated string in a "type:amount" format. Please check the settings/topology dir for a complete list of the available types. (In the example above, two nodes will be provisioned: 1 controller & 1 compute)
+
+That is it, the machines are now provisioned and accessible.
+
+.. note:: You can also use the auto-generated ssh config file to easily access the machines
+
+  .. code-block:: text
+
+    ssh -F ansible.ssh.config controller-0
+
+INI File
+~~~~~~~~
+Unlike with CLI, here a new configuration file (INI based) will be created.
+This file contains all the default & mandatory parameters in a section of its own (named 'virsh' in our case), so the user can easily replace all mandatory parameters.
+When the file is ready, it should be provided as an input for the '--from-file' option.
+
+Generate INI file for `virsh` provisioner::
 
     ir-provisioner virsh --generate-conf-file virsh_prov.ini
 
@@ -35,33 +79,37 @@ Review the config file and edit as required:
    :caption: virsh_prov.ini
 
    [virsh]
-   topology-nodes = undercloud:1,controller:1,compute:1
+   host-key = Required argument. Edit with any value, OR override with CLI: --host-key=<option>
+   host-address = Required argument. Edit with any value, OR override with CLI: --host-address=<option>
+   topology-nodes = Required argument. Edit with one of the allowed values OR override with CLI: --topology-nodes=<option>
    topology-network = default.yml
-   host-key = ~/.ssh/id_rsa
    host-user = root
-   image = Edit with one of ['sample.yml.example'] options, OR override with CLI: --image=<option>
-   host-address = Edit with any value, OR override with CLI: --host-address=<option>
-
-.. note:: ``image`` and ``host-address`` don't have default values. All arguments can be edited in file or overridden directly from CLI.
 
 
-In previous example, ``image`` doesn't have a valid optional value. You can generate your own file based on the provided example file we provide, or you can get it from private repository if available:
+.. note:: ``host-key``, ``host-address`` and ``topology-nodes`` don't have default values. All arguments can be edited in file or overridden directly from CLI.
 
-.. code-block:: plain
-   :caption: settings/provisioner/virsh/image/sample.yml.example
+Edit mandatory parameters values in the INI file::
 
-   ---
-   file: "Fedora-Cloud-Base-23-20151030.x86_64.qcow2"
-   server: "http://mirror.pnl.gov/fedora/linux/releases/23/Cloud/x86_64/Images/"
+   [virsh]
+   host-key = ~/.ssh/id_rsa
+   host-address = my.host.address
+   topology-nodes = controller:1,compute:1
+   topology-network = default.yml
+   host-user = root
 
-Prepare sample file with required information about image used for provisioning::
+Execute provisioning using the newly created INI file::
 
-   mv settings/provisioner/virsh/image/sample.yml.example \
-   settings/provisioner/virsh/image/fedora23.yml
+    ir-provisioner virsh --from-file=virsh_prov.ini -e @infrared-private.yml
 
-Execute provisioning. Override arguments if needed::
+.. note:: You can always overwrite parameters from INI file with parameters from CLI
 
-    ir-provisioner virsh --image=fedora23.yml --host-address=my.host.com
+  .. code-block:: text
+
+    ir-provisioner virsh --from-file=virsh_prov.ini --topology-nodes="undercloud:1,controller:1,compute:1, ceph:1" -e @infrared-private.yml
+
+Done. Quick & Easy!
+
+.. warning:: Users without access to redhat internal network will have to provide a url to a guest image using the "--image-url" option
 
 For `installer` and `tester` stages continue to `Using InfraRed <execute.html>`_
 
