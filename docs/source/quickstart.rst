@@ -24,6 +24,35 @@ Clone InfraRed stable from GitHub::
     pip install .
     cp ansible.cfg.example ansible.cfg
 
+Basic Usage Example
+===================
+Provisioning
+------------
+
+In this example we'll use `virsh` provisioner in order to demonstrate how easy and fast it is to provision machines using InfraRed.
+For basic execution, the user should only provide data for the mandatory parameters, this can be done by two ways:
+
+1) CLI
+2) Arguments file
+
+1. CLI
+~~~~~~
+In order to know which are the mandatory parameters the user should provide, please run::
+
+    ir-provisioner --help
+
+Notice that the only two mandatory paramters in `virsh` provisioner are the '--host-address' & '--host-key'.
+We can now execute the provisioning process by providing those parameters through the CLI::
+
+    ir-provisioner --host-address=my.host.address --host-key=~/.ssh/id_rsa
+
+BOOM! That how easy it is ;-)
+
+2. Arguments file
+~~~~~~~~~~~~~~~~~
+An arguments file is an INI based configuration file which has the needed values for tools execution.
+It been easily created and it shows all options needed for basic execution in more readable way. The user will then need to review the file and to take care of the missing values in the relevant section (`virsh` in our case) in this file.
+
 Generate arguments file for virsh provisioner::
 
     ir-provisioner virsh --generate-conf-file virsh_prov.ini
@@ -37,31 +66,23 @@ Review the config file and edit as required:
    [virsh]
    topology-nodes = undercloud:1,controller:1,compute:1
    topology-network = default.yml
-   host-key = ~/.ssh/id_rsa
    host-user = root
-   image = Edit with one of ['sample.yml.example'] options, OR override with CLI: --image=<option>
-   host-address = Edit with any value, OR override with CLI: --host-address=<option>
+   host-key = Required argument. Edit with any value, OR override with CLI: --host-key=<option>
+   host-address = Required argument. Edit with any value, OR override with CLI: --host-address=<option>
 
-.. note:: ``image`` and ``host-address`` don't have default values. All arguments can be edited in file or overridden directly from CLI.
+In this example, we can easily notice that we need to replace the values if 'host-key' & 'host-address'::
 
+    sed -e 's/host-key = .*/host-key = ~\/.ssh\/id_rsa/g' -i virsh_prov.ini
+    sed -e 's/host-address = .*/host-address = my.host.address/g' -i virsh_prov.ini
 
-In previous example, ``image`` doesn't have a valid optional value. You can generate your own file based on the provided example file we provide, or you can get it from private repository if available:
+.. note:: ``host-key`` and ``host-address`` don't have default values. All arguments can be edited in file or overridden directly from CLI.
+.. warning:: Users without access to redhat internal network will have to provide a url to a guest image using the "--image-url" option
 
-.. code-block:: plain
-   :caption: settings/provisioner/virsh/image/sample.yml.example
+Execute provisioning using the newly created and modified arguments file::
 
-   ---
-   file: "Fedora-Cloud-Base-23-20151030.x86_64.qcow2"
-   server: "http://mirror.pnl.gov/fedora/linux/releases/23/Cloud/x86_64/Images/"
+    ir-provisioner virsh --from-file=virsh_prov.ini
 
-Prepare sample file with required information about image used for provisioning::
-
-   mv settings/provisioner/virsh/image/sample.yml.example \
-   settings/provisioner/virsh/image/fedora23.yml
-
-Execute provisioning. Override arguments if needed::
-
-    ir-provisioner virsh --image=fedora23.yml --host-address=my.host.com
+Done. Quick & Easy!
 
 For `installer` and `tester` stages continue to `Using InfraRed <execute.html>`_
 

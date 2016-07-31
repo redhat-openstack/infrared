@@ -18,7 +18,7 @@ subparsers:
                   host-key:
                       type: Value
                       help: "User's SSH key"
-                      default: '~/.ssh/id_rsa'
+                      required: yes
 
             - title: image
               options:
