@@ -29,17 +29,30 @@
   with_dict: "{{ node_data.disks }}"
 
 # TODO: configure interfaces based on config rather than hardcode
-- name: build vm base image
-  shell: |
-      wget -q -N {{ provisioner.image.server }}/{{ guest_image }} -O /var/lib/libvirt/images/base_image.qcow2
-      virt-sysprep -a /var/lib/libvirt/images/base_image.qcow2 --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
-      virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --root-password password:redhat --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel
-      virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --run-command 'yum remove cloud-init* -y'
-      virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{0,1} && sed -i s/DEVICE=.*/DEVICE=eth1/g /etc/sysconfig/network-scripts/ifcfg-eth1'
-      virt-customize -a /var/lib/libvirt/images/base_image.qcow2 --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{1,2} && sed -i s/DEVICE=.*/DEVICE=eth2/g /etc/sysconfig/network-scripts/ifcfg-eth2'
-  register: baseimage_build_result
+- block:
+    - name: Download base image
+      get_url:
+          url: "{{ url }}"
+          dest: "{{ base_image_path }}"
+          validate_certs: "{{ url.startswith('https://url.corp.redhat.com/') | ternary(false, omit)}}"
+
+    - name: build vm base image
+      shell: |
+          virt-sysprep -a {{ base_image_path }} --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
+          virt-customize -a {{ base_image_path }} --root-password password:redhat --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel
+          virt-customize -a {{ base_image_path }} --run-command 'yum remove cloud-init* -y'
+          virt-customize -a {{ base_image_path }} --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{0,1} && sed -i s/DEVICE=.*/DEVICE=eth1/g /etc/sysconfig/network-scripts/ifcfg-eth1'
+          virt-customize -a {{ base_image_path }} --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{1,2} && sed -i s/DEVICE=.*/DEVICE=eth2/g /etc/sysconfig/network-scripts/ifcfg-eth2'
+      register: baseimage_build_result
+      with_dict: "{{ node_data.disks }}"
   when: baseimage_build_result is not defined and (item.value.import_url is not defined or not item.value.import_url)
-  with_dict: "{{ node_data.disks }}"
+  vars:
+    # TODO(yfried): default when image YAML is deprecated
+    url: "{{ provisioner.image.url | default(provisioner.image.server + '/' + provisioner.image.file) }}"
+    base_image_path: "/var/lib/libvirt/images/base_image.qcow2"
+
+
+
 
 # for nodes that have multiple disks we should run virt-resize only for one of the disks, say first disk (the one with the root file system).
 # The additional disks just need to be created with the qemu-img command and attached to the VMs as they're going to be partitioned and get data written on top in a later step by the installer.
