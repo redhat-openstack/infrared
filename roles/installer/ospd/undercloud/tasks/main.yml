@@ -45,10 +45,21 @@
       force: yes
   when: installer.undercloud.config is defined and installer.undercloud.config
 
+- name: create the base undercloud deploy script
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  template:
+      src: "undercloud_deploy.sh.j2"
+      dest: "/home/{{ installer.user.name }}/undercloud_deploy.sh"
+      mode: 0755
+
+- name: the create undercloud script
+  shell: "cat /home/{{ installer.user.name }}/undercloud_deploy.sh"
+
 - name: install the undercloud
   become: yes
   become_user: "{{ installer.user.name }}"
-  shell: "openstack undercloud install --debug &> undercloud_install.log"
+  shell: "bash ~/undercloud_deploy.sh"
   register: undercloud_deployment
   ignore_errors: yes
 
