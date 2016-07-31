@@ -24,8 +24,16 @@ subparsers:
               options:
                   image:
                       type: YamlFile
-                      help: 'The image to use for nodes provisioning. Check the "sample.yml.example" for example.'
-                      required: yes
+                      help: |
+                        (DEPRECATED)
+                        The image to use for nodes provisioning.
+                        Check the "sample.yml.example" for example.
+
+                  image-url:
+                      type: Value
+                      help: |
+                        URL to the image used for node provisioning.
+                        Default is internal path for RHEL guest image
 
             - title: topology
               options:
