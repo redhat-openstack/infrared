@@ -116,7 +116,15 @@ Done. Quick & Easy!
 
 .. warning:: Users without access to redhat internal network will have to provide a url to a guest image using the "--image-url" option
 
-For `installer` and `tester` stages continue to `Using InfraRed <execute.html>`_
+Installing
+----------
 
+Now lets demonstrate how easy the installation process is by deploy an OpenStack environment using redhat OSPD (OpenStack Director) and the nodes we have provisioned in the previous stage. (The deployment in this case will be 'virthost' type)
 
+.. note:: In this example we'll use the 'quickstart' mode, which creates the undercloud VM form an existing guest image (QCOW file) - In 'quickstart' mode we skip the undercloud installation stage which takes a significant part of the installation time. 'quickstart' mode is automatically enabled if an 'undercloud' node hasn't been created in the provisioning stage (actually, if there is no 'undercloud' host in the Ansible's inventory file during the installation process)
 
+Just like in the provisioning stage, here also the user should take care of the mandatory parameters (by CLI or INI file) in order to be able to start the installation process. Lets provide the mandatory parameter ('undercloud-config') and choose to work with RHOS version 9, this time using the CLI only::
+
+  ir-installer ospd --deployment-files=$PWD/settings/installer/ospd/deployment/virt --product-version=9 --product-core-version=9 -e @infrared-private.yml
+
+For detailed information on the usage of the various installers, provisioners & tester continue to `Using InfraRed <execute.html>`_
