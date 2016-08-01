@@ -24,6 +24,15 @@ Execute only the desired tags. For example, this will only install the underclou
     ansible-playbook -i hosts --extra-vars @OUTPUT_FILE playbooks/install.yml --tags=undercloud
 
 
+OverCloud Image Update
+^^^^^^^^^^^^^^^^^^^^^^
+
+OSPD creates the OverCloud nodes from an image. By default, InfraRed updates that image's packages
+to match RH-OSP core bits ``build``. To avoid that and keep the OverCloud image as created,
+set ``--images-update`` to ``no``::
+
+  ir-installer [...] ospd [...] --images-update=no
+
 Custom repositories
 ^^^^^^^^^^^^^^^^^^^
 

@@ -21,5 +21,9 @@
   debug:
       var=file_list
 
+- name: update overcloud image to core build
+  include: update_overcloud_images.yml
+  when: "{{ installer.images.update == 'yes' }}"
+
 - name: upload the overcloud images to glance
   shell: "source ~/stackrc; openstack overcloud image upload --update-existing"
