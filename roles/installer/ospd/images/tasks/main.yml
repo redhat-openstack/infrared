@@ -21,5 +21,8 @@
   debug:
       var=file_list
 
+- name: Update core bits to latest
+  shell: "virt-customize -a overcloud-full.qcow2 --run-command 'yum update -y'"
+
 - name: upload the overcloud images to glance
   shell: "source ~/stackrc; openstack overcloud image upload --update-existing"
