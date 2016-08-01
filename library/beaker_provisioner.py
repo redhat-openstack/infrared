@@ -307,7 +307,8 @@ class BeakerMachine(object):
 
         resp = self.session.post(url, data=params, headers=headers)
 
-        assert resp.status_code == requests.codes.CREATED, \
+        assert resp.status_code in [requests.codes.CREATED,
+                                    requests.codes.OK], \
             ', '.join((str(resp.status_code), resp.reason, resp.text))
 
         self.changed = True
