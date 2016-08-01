@@ -151,6 +151,12 @@ subparsers:
                     help: Specifies the import image url. Required only when images task is 'import'
                     required_when: "images-task == import"
 
+                images-update:
+                    type: Value
+                    help: Update OverCloud image to match core build
+                    choices: ['no', 'yes']
+                    default: 'yes'
+
             - title: User
               options:
                   user-name:
