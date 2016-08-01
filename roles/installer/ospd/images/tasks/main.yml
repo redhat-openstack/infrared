@@ -1,3 +1,6 @@
+- fail:
+    msg: done
+
 - block:
     - name: copy our public key to inject the images of the overcloud nodes
       copy:
@@ -20,6 +23,10 @@
 - name: print file list
   debug:
       var=file_list
+
+- name: update overcloud image to core build
+  include: update_overcloud_images.yml
+  when: "{{ update_overcloud_core_bits | default(true) }}"
 
 - name: upload the overcloud images to glance
   shell: "source ~/stackrc; openstack overcloud image upload --update-existing"
