@@ -55,9 +55,9 @@ Notice that the only three mandatory paramters in `virsh` provisioner are:
 
 We can now execute the provisioning process by providing those parameters through the CLI::
 
-    ir-provisioner virsh --host-address=my.host.address --host-key=~/.ssh/id_rsa --topology-nodes="controller:1,compute:1" -e @infrared-private.yml
+    ir-provisioner virsh --host-address=my.host.address --host-key=~/.ssh/id_rsa --topology-nodes="undercloud:1,controller:1,compute:1" -e @infrared-private.yml
 
-..  note:: The value of the topology-nodes option is a comma-separated string in a "type:amount" format. Please check the settings/topology dir for a complete list of the available types. (In the example above, two nodes will be provisioned: 1 controller & 1 compute)
+..  note:: The value of the topology-nodes option is a comma-separated string in a "type:amount" format. Please check the settings/topology dir for a complete list of the available types. (In the example above, three nodes will be provisioned: 1 undercloud, 1 controller & 1 compute)
 
 That is it, the machines are now provisioned and accessible.
 
@@ -98,7 +98,7 @@ Edit mandatory parameters values in the INI file::
    [virsh]
    host-key = ~/.ssh/id_rsa
    host-address = my.host.address
-   topology-nodes = controller:1,compute:1
+   topology-nodes = undercloud:1,controller:1,compute:1
    topology-network = default.yml
    host-user = root
 
@@ -110,7 +110,7 @@ Execute provisioning using the newly created INI file::
 
   .. code-block:: text
 
-    ir-provisioner virsh --from-file=virsh_prov.ini --topology-nodes="undercloud:1,controller:1,compute:1, ceph:1" -e @infrared-private.yml
+    ir-provisioner virsh --from-file=virsh_prov.ini --topology-nodes="undercloud:1,controller:1,compute:1,ceph:1" -e @infrared-private.yml
 
 Done. Quick & Easy!
 
