@@ -116,7 +116,28 @@ Done. Quick & Easy!
 
 .. warning:: Users without access to redhat internal network will have to provide a url to a guest image using the "--image-url" option
 
-For `installer` and `tester` stages continue to `Using InfraRed <execute.html>`_
+Installing
+----------
+
+Now let's demonstrate the installation process by deploy an OpenStack environment using redhat OSPD (OpenStack Director) on the nodes we have provisioned in the previous stage (The deployment in this case will be 'virthost' type).
+
+Just like in the provisioning stage, here also the user should take care of the mandatory parameters (by CLI or INI file) in order to be able to start the installation process. Lets provide the mandatory parameter ('undercloud-config') and choose to work with RHOS version 9, this time using the CLI only::
+
+  ir-installer ospd --deployment-files=$PWD/settings/installer/ospd/deployment/virt --product-version=9 --product-core-version=9 -e @infrared-private.yml
+
+Done.
+
+.. note::
+
+  .. code-block:: text
+
+    ir-provisioner virsh --host-address=my.host.address --host-key=~/.ssh/id_rsa --topology-nodes="controller:1,compute:1" -e @infrared-private.yml
+
+  Notice that an undercloud hasn't been provided to the 'topology-nodes' parameter, that will cause the installer process to assumes you would like to use the latest release according to the product version and to download a pre-made undercloud image rather than install the undercloud.
+
+  .. code-block:: text
+
+    ir-installer ospd --deployment-files=$PWD/settings/installer/ospd/deployment/virt --product-version=9 --product-core-version=9 -e @infrared-private.yml
 
 
-
+For detailed information on the usage of the various installers, provisioners & tester continue to `Using InfraRed <execute.html>`_
