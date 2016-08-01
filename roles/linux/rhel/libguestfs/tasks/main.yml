@@ -1,33 +1,37 @@
 # TODO: remove this once libguestfs is updated to 1.30 on RHEL
-- name: get necessary libguestfs 1.32 RPM
-  become_user: root
-  get_url:
-      url: "{{ private.rpms.base_url }}/{{ item }}"
-      dest: "/root/"
-      force: yes
-      validate_certs: no
-  with_items:
-      - libguestfs-1.32.3-1.el7.x86_64.rpm
-      - libguestfs-tools-c-1.32.3-1.el7.x86_64.rpm
-      - libguestfs-xfs-1.32.3-1.el7.x86_64.rpm
+- name: Get libguestfs version
+  yum:
+      list: installed
+  register: installed_packages
 
-- name: install libguestfs 1.32 from RPM
-  become_user: root
-  shell: "yum localinstall -y {{ item }}"
-  with_items:
-      - libguestfs-1.32.3-1.el7.x86_64.rpm
-      - libguestfs-tools-c-1.32.3-1.el7.x86_64.rpm
-      - libguestfs-xfs-1.32.3-1.el7.x86_64.rpm
+- name: Filter required packages
+  set_fact:
+      libguestfs_installed_pkgs: "{{ installed_packages.results | selectattr('name', 'search',  'libguestfs') | list }}"
 
-- name: remove libguestfs 1.32 RPM from machine
+- debug:
+      msg: |
+        found libguestfs packages:
+        {{ libguestfs_installed_pkgs | to_nice_json }}
+      verbosity: 2
+
+- name: check all required packages are installed
+  set_fact:
+      update_libguestfs: "{{ update_libguestfs|default(false) or item not in (libguestfs_installed_pkgs | map(attribute='name') | list) }}"
+  with_items: "{{ libguestfs_packages }}"
+
+- name: check all required versions
+  set_fact:
+      update_libguestfs: "{{ update_libguestfs|default(false) or item|version_compare(libguestfs_min_version, '<') }}"
+  with_items: "{{ libguestfs_installed_pkgs | map(attribute='version') | list }}"
+
+- name: install libguestfs {{ libguestfs_fixed_version }} from RPM
+  become: yes
   become_user: root
-  file:
-      state: absent
-      name: "{{ item }}"
-  with_items:
-      - libguestfs-1.32.3-1.el7.x86_64.rpm
-      - libguestfs-tools-c-1.32.3-1.el7.x86_64.rpm
-      - libguestfs-xfs-1.32.3-1.el7.x86_64.rpm
+  yum:
+      name: "{{ libguestfs_rpm_source }}/{{ [item, libguestfs_fixed_version, libguestfs_suffix]|join('-') }}"
+      state: present
+  with_items: "{{ libguestfs_packages }}"
+  when: update_libguestfs
 
 - name: start libvirtd
   become_user: root
