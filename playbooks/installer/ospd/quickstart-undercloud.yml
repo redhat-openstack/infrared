@@ -36,7 +36,8 @@
             state: running
 
       - name: wait for the undercloud IP to become available
-        shell: "virsh net-dhcp-leases external | awk /{{ undercloud }}/'{print $5}'"
+        shell: |
+            virsh net-dhcp-leases external | awk awk '($4 == "ipv4") && ($3 =="{{ undercloud }}") {print $5}'
         register: undercloud_ip
         until: undercloud_ip.stdout != ''
         retries: 10
