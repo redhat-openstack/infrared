@@ -3,3 +3,11 @@
 # This could be validation of the hosts, package installation that is assumed as per the guide, etc..
 - name: Pre tasks
   hosts: localhost
+
+- name: Remove requiretty
+  gather_facts: no
+  hosts: undercloud
+  tasks:
+      - name: sudoers no tty
+        become: yes
+        lineinfile: dest=/etc/sudoers state=absent regexp='Defaults\s+requiretty'
