@@ -102,7 +102,7 @@
 
 - name: wait until one of the VMs gets an IP
   shell: |
-      virsh net-dhcp-leases {{ item.item[1] }} | awk '($4 == "ipv4")  && ($3 == "{{ item.stdout }}") {print $5}' | cut -d'/' -f1
+      virsh net-dhcp-leases {{ item.item[1] }} | awk '($4 == "ipv4")  && ($3 == "{{ item.stdout }}") {print $5}'
   when: >
       provisioner.topology.network[item.item[1]].dhcp is defined and
       item.stdout is defined and item.stdout != ""
@@ -113,10 +113,11 @@
   with_items: "{{ vm_mac_list }}"
 
 - set_fact:
+      # todo(yfried): filter results - grap 'stdout' and convert to ip using ipaddr
       vm_ip_list: "{{ ip_list.results }}"
 
 - name: make IPs persistent
-  shell: "virsh net-update {{ item[0] }} add ip-dhcp-host \"<host mac='{{ item[1].item.stdout }}' name='{{ item[1].item.item[0] }}' ip='{{ item[1].stdout }}' />\" --live --config"
+  shell: "virsh net-update {{ item[0] }} add ip-dhcp-host \"<host mac='{{ item[1].item.stdout }}' name='{{ item[1].item.item[0] }}' ip='{{ item[1].stdout | ipaddr('address') }}' />\" --live --config"
   when: >
       provisioner.topology.network[item[1].item.item[1]].dhcp is defined and
       item[1].item is defined and
@@ -130,7 +131,7 @@
       name="{{ item.item.item[0] }}"
       groups="{{ provisioner.topology.nodes['%s' % item.item.item[0].rstrip('1234567890-')].groups | join(',') }}"
       ansible_ssh_user="root"
-      ansible_ssh_host="{{ item.stdout }}"
+      ansible_ssh_host="{{ item.stdout | ipaddr('address') }}"
       ansible_ssh_private_key_file="{{ inventory_dir }}/id_rsa"
   when: item.item is defined and item.item.item[1] == "external"
   with_items: "{{ vm_ip_list }}"
