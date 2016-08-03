@@ -63,10 +63,10 @@
   register: undercloud_deployment
   ignore_errors: yes
 
-- name: print the last 30 lines of the undercloud installation
+- name: print the last 60 lines of the undercloud installation
   become: yes
   become_user: "{{ installer.user.name }}"
-  shell: "tail -n30 undercloud_install.log"
+  shell: "tail -n60 undercloud_install.log"
 
 - fail:
       msg: "Undercloud deployment failed... :("
