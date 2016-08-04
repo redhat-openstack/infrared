@@ -3,17 +3,20 @@
       name: "{{ item }}"
       state: present
   with_items: "{{ provisioner.packages }}"
+  register: yum_result
 
 - name: stop libvirtd
   service:
       name: "libvirtd"
       state: "stopped"
+  when: yum_result.changed
 
 - name: start libvirtd
   service:
       name: "libvirtd"
       state: "started"
       enabled: "yes"
+  when: yum_result.changed
 
 - name: check if host supports virtualization
   include: validate.yml
