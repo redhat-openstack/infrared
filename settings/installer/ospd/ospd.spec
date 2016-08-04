@@ -153,9 +153,11 @@ subparsers:
 
                 images-update:
                     type: Value
-                    help: Update OverCloud image to match core build
-                    choices: ['no', 'yes']
-                    default: 'yes'
+                    help: |
+                        Update OverCloud image before deploying, to match core build.
+                        Note: This can take a while and is not 100% stable due to old libguestfs on RHEL-7.2
+                    choices: ['no', 'yes', 'verbose']
+                    default: 'no'
 
             - title: User
               options:

@@ -27,11 +27,15 @@ Execute only the desired tags. For example, this will only install the underclou
 OverCloud Image Update
 ^^^^^^^^^^^^^^^^^^^^^^
 
-OSPD creates the OverCloud nodes from an image. By default, InfraRed updates that image's packages
-to match RH-OSP core bits ``build``. To avoid that and keep the OverCloud image as created,
-set ``--images-update`` to ``no``::
+OSPD creates the OverCloud nodes from images. These images should be recreated on any new core build.
+However, this is not always the case. To updates that image's packages
+(after download and before deploying the Overcloud),  to match RH-OSP core bits ``build``,
+set ``--images-update`` to ``yes``::
 
-  ir-installer [...] ospd [...] --images-update=no
+  ir-installer [...] ospd [...] --images-update=yes
+
+.. note:: This might take a while and sometimes hangs. Probably due to old libguestfs packages in RHEL 7.2.
+ For a more detailed console output of that task, set ``--images-update`` to ``verbose``.
 
 Custom repositories
 ^^^^^^^^^^^^^^^^^^^
