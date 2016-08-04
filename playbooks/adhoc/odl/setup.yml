@@ -56,11 +56,14 @@
   vars:
       - ansible_python_interpreter: "/usr/bin/python"
   tasks:
+    - name: Install OpenDaylight package
+      yum: name={{ odl.rpm | default('opendaylight') }} state=present
+
+    - name: Show the OpenDaylight package details
+      command: yum info opendaylight
+
     - name: Install OpenDaylight and IPTables
-      yum: name={{ item }} state=present
-      with_items:
-        - opendaylight
-        - iptables-services
+      yum: name=iptables-services state=present
 
     - name: Make sure the opendaylight service is stopped
       service: name=opendaylight state=stopped
