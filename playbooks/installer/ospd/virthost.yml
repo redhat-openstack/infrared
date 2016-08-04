@@ -30,17 +30,13 @@
             until: command_result.stderr.find('Connection reset by peer') == -1
             retries: 40
             delay: 5
+
+          - set_fact:
+                director_puddle_version: "{{ command_result | regex_replace('^.*director[ ]+-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
         when: "{{ installer.product.version | int }} < 10"
 
       - debug:
             msg: "rhos-release {{ installer.product.core.version }} -P -p {{ installer.product.core.build }}"
-
-      - set_fact:
-            director_puddle_version: "{{ command_result | regex_replace('^.*director[ ]+-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
-
-      # TODO(yfried): merge set_fact tasks
-      - set_fact:
-            core_puddle_version: "{{ command_result | regex_replace('^.*-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
 
       - name: create necessary repos for core using rhos-release
         command: "rhos-release {{ installer.product.core.version }} -P -p {{ installer.product.core.build }}"
@@ -48,6 +44,9 @@
         until: command_result.stderr.find('Connection reset by peer') == -1
         retries: 40
         delay: 5
+
+      - set_fact:
+            core_puddle_version: "{{ command_result | regex_replace('^.*-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
 
       - name: update system packages
         yum:
@@ -143,32 +142,6 @@
         authorized_key:
             user: "{{ installer.user.name }}"
             key: "{{ undercloud_public_key.stdout }}"
-
-- name: get the puddle version for the backup process
-  tags: backup
-  hosts: virthost
-  gather_facts: no
-  tasks:
-      - block:
-          - debug:
-                msg: "rhos-release {{ installer.product.version }}-director -P -p {{ installer.product.build }}"
-
-          - name: create necessary repos with for director using rhos-release
-            command: "rhos-release {{ installer.product.version }}-director -P -p {{ installer.product.build }}"
-            register: command_result
-            until: command_result.stderr.find('Connection reset by peer') == -1
-            retries: 40
-            delay: 5
-
-          - debug:
-                msg: "rhos-release {{ installer.product.core.version }} -P -p {{ installer.product.core.build }}"
-
-          - set_fact:
-                director_puddle_version: "{{ command_result | regex_replace('^.*director[ ]+-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
-
-          - set_fact:
-                core_puddle_version: "{{ command_result | regex_replace('^.*-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
-        when: "{{ installer.product.version | int }} < 10 and not director_puddle_version and not core_puddle_version"
 
 - include: "backup-undercloud.yml"
   tags: backup
