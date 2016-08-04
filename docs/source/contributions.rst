@@ -127,8 +127,7 @@ There are two steps that should be done when adding a new plugin to InfraRed:
     (YAML format file) containing the plugin options.
     The spec file should be named as the new plugin name with '.spec' extension and located inside the plugin dir
     under the InfraRed 'setting' dir.
-    For more details on how to use this module, please visit the 'clg' module `homepage <http://clg.readthedocs
-    .org/en/latest/>`_.
+    For more details on how to use this module, please see the `Specifications <spec.html>`_ documentation.
 
 #. Creating settings files.
     Settings files are files containing data which defines how the end result of the playbook execution will be
