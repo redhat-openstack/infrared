@@ -5,6 +5,10 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   tasks:
+      - name: "Workaround RHBZ#1357579 - non-default region=regionOne"
+        shell: "crudini --set ~/tempest-deployer-input.conf identity region regionOne"
+        when: workarounds | bug('rhbz1357579')
+
       - name: fetch deployer output for tester
         fetch:
             src: "~/{{ item.src }}"
