@@ -87,6 +87,11 @@
   vars:
       - template_base: "/home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}"
   pre_tasks:
+      - name: Enable debug logging in all service
+        copy:
+            src: /usr/share/openstack-tripleo-heat-templates/environments/config-debug.yaml
+            dest: "{{ template_base }}/config-debug.yaml"
+
       - name: check for list of user defined templates
         find:
             paths: "{{ template_base }}"
