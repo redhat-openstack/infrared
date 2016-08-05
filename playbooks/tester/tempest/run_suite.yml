@@ -53,19 +53,25 @@
       regex: "--regex {{ test_data.test_regex }}"
   when: test_data.test_regex is defined and test_data.test_regex
 
-- name: run tempest "{{ test_suite_name }}" suite
-  shell: >
-      source .venv/bin/activate;
-      ostestr -s --no-pretty {{ regex | default('') }} {{ whitelistfile }} {{ blacklistfile }}
-      | subunit2junitxml --output-to={{ test_output_file }} | subunit2pyunit
-  args:
-      executable: /bin/bash
-      chdir: "{{ tester.dir }}"
-  ignore_errors: true
-  when: test_data.test_regex is defined or whitelistfile is defined or blacklistfile is defined
+- block:
+      - name: run tempest "{{ test_suite_name }}" suite
+        shell: >
+            source .venv/bin/activate;
+            ostestr -s --no-pretty {{ regex | default('') }} {{ whitelistfile }} {{ blacklistfile }}
+            | subunit2junitxml --output-to={{ test_output_file }} | subunit2pyunit
+        args:
+            executable: /bin/bash
+            chdir: "{{ tester.dir }}"
+        ignore_errors: true
 
-- name: Fetch resulting file
-  fetch:
-      src: "{{ tester.dir }}/{{ test_output_file }}"
-      dest: "{{ lookup('env', 'PWD') }}/{{ test_output_file }}"
-      flat: yes
+      - name: inject the test suite name to the XML name atribute
+        shell: "sed '/^<testsuite/s/name=\"\"/name=\"{{ test_suite_name }}\"/' -i {{ test_output_file }}"
+        args:
+            chdir: "{{ tester.dir }}"
+
+      - name: Fetch resulting file
+        fetch:
+            src: "{{ tester.dir }}/{{ test_output_file }}"
+            dest: "{{ lookup('env', 'PWD') }}/{{ test_output_file }}"
+            flat: yes
+  when: test_data.test_regex is defined or whitelistfile is defined or blacklistfile is defined
