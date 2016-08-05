@@ -2,6 +2,7 @@
 
 openstack overcloud deploy --debug \
 --templates \
+--environment-file /usr/share/openstack-tripleo-heat-templates/environments/config-debug.yaml \
 --libvirt-type {% if groups['virthost'] is defined %}qemu{% else %}kvm{% endif %} \
 --ntp-server clock.redhat.com \
 --neutron-network-type {{ installer.network.backend }} \
