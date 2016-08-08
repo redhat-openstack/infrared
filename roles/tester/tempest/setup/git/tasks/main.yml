@@ -1,5 +1,7 @@
 - name: Install pip
   become: yes
+  become_user: root
+  # todo(yfried): make idempotent
   command: "easy_install pip"
 
 - name: Install devel packages for package build dependencies
@@ -13,7 +15,7 @@
   git:
       repo: "{{ tester.setup.repo }}"
       version: "{{ tester.setup.revision | default('HEAD') }}"
-      dest: "{{ tester.dir }}"
+      dest: "~/{{ tester.dir }}"
   register: tempest_repo
   when: tester.local_dir is not defined
 
