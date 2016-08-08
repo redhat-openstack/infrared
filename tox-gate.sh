@@ -12,8 +12,9 @@ run_tox() {
 }
 
 verify_tox() {
+    echo -e "\033[01;33m====== output of $1: ======\033[0m"
     cat .tox_$1_out
-    echo "======"
+    echo -e "\033[01;33m====== ^^ end of $1 ^^ ======\033[0m"
     if ! tail -n2 .tox_$1_out | grep -q "$1: commands succeeded"; then
         FAILED="${FAILED} $1"
     fi
