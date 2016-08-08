@@ -34,3 +34,17 @@
   args:
       chdir: "~/{{ tester.dir }}"
       creates: "~/{{ tester.dir }}/LICENSE"
+
+- name: run tempest configuration tool
+  vars:
+      deployer_input: "{{ '(result | success)' | ternary('--deployer-input ~/tempest-deployer-input.conf', '') }}"
+      orchestration: "{{ (installer.type == 'ospd') | ternary('orchestration.stack_owner_role heat_stack_owner', '') }}"
+      region: "{{ (installer.type == 'ospd') | ternary('identity.region regionOne', '') }}"
+  shell: |
+      source .venv/bin/activate
+      source ~/keystonerc
+      tools/config_tempest.py {{ deployer_input }} --debug \
+      --create identity.uri $OS_AUTH_URL \
+      identity.admin_password $OS_PASSWORD {{ orchestration }} {{ region }}
+  args:
+      chdir: "~/{{ tester.dir }}"
