@@ -1,8 +1,8 @@
 ---
 - name: set fact for node
   set_fact:
-      node_data: "{{ item.value }}"
-      node_name: "{% if item.value.prefix is defined and item.value.prefix %}{{ item.value.prefix }}-{% endif %}{{ item.key }}"
+      node_data: "{{ node_item.value }}"
+      node_name: "{% if node_item.value.prefix is defined and node_item.value.prefix %}{{ node_item.value.prefix }}-{% endif %}{{ node_item.key }}"
 
 # TODO Consider checking if we already downloaded image for another VM's
 # to avoid dowlonading of the same file again.
