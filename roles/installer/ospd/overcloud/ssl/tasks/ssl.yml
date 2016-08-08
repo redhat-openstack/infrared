@@ -14,11 +14,14 @@
   shell: "openssl genrsa -out {{ template_base }}/overcloud-privkey.pem 2048"
 
 - name: extract our external allocation pools start value
-  shell: "cat {{ template_base }}/network/network-environment.yaml | grep ExternalAllocationPools | awk -F':' '{print $3}' | awk -F',' '{print $1}'"
+  shell: "cat {{ template_base }}/network/{{ network_environment_file }}"
   register: result
 
 - set_fact:
-      shell_command: "openssl req -new -x509 -key {{ template_base }}/overcloud-privkey.pem -out {{ template_base }}/overcloud-cacert.pem -days 365 -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ result.stdout.strip() | replace(\"'\",'') }}'"
+      external_allocation_pool_start: "{{ (result.stdout | from_yaml).parameter_defaults.ExternalAllocationPools[0].start }}"
+
+- set_fact:
+      shell_command: "openssl req -new -x509 -key {{ template_base }}/overcloud-privkey.pem -out {{ template_base }}/overcloud-cacert.pem -days 365 -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ external_allocation_pool_start }}'"
 
 # Ansible had trouble templating the above command straight to the shell module hence the above "set_fact"
 - name: create the self signed CA certificate

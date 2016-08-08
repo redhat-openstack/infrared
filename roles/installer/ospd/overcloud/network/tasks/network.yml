@@ -2,9 +2,6 @@
 - set_fact:
       isolation_file: "network-isolation{{ (installer.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
 
-- set_fact:
-      network_environment_file: "network-environment{{ (installer.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
-
 - name: append the network environment template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
@@ -16,33 +13,28 @@
       line: '-e /usr/share/openstack-tripleo-heat-templates/environments/{{ isolation_file }} \'
 
 - block:
-    - name: get the vlan number where external network should be served
-      shell: "cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalNetworkVlanID | awk -F' ' '{print $2}'"
-      register: vlan_result
+    - name: extract the network details into a dict
+      shell: "cat {{ template_base }}/network/{{ network_environment_file }}"
+      register: result
+
+    - set_fact:
+          network_environment: "{{ (result.stdout | from_yaml) }}"
 
     - name: create new vlan interface in ovs system
-      shell: "sudo ovs-vsctl add-port br-ctlplane vlan{{ vlan_result.stdout | replace(\"'\",'') }} tag={{ vlan_result.stdout | replace(\"'\",'') }} -- set interface vlan{{ vlan_result.stdout | replace(\"'\",'') }} type=internal;"
+      shell: "sudo ovs-vsctl add-port br-ctlplane vlan{{ network_environment.parameter_defaults.ExternalNetworkVlanID }} tag={{ network_environment.parameter_defaults.ExternalNetworkVlanID }} -- set interface vlan{{ network_environment.parameter_defaults.ExternalNetworkVlanID }} type=internal;"
       register: result
       failed_when: "result.stderr != '' and 'RTNETLINK answers: File exists' not in result.stderr"
 
     - block:
-        - name: get the IP address for the external network interface
-          shell: "cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalInterfaceDefaultRoute | awk -F' ' '{print $2}'"
-          register: stat_ip_result
-
         - name: configure external gateway's IP for this interface
-          shell: "sudo ip addr add {{ stat_ip_result.stdout | replace(\"'\",'') }} dev vlan{{ vlan_result.stdout | replace(\"'\",'') }}"
+          shell: "sudo ip addr add {{ network_environment.parameter_defaults.ExternalInterfaceDefaultRoute }} dev vlan{{ network_environment.parameter_defaults.ExternalNetworkVlanID }}"
           register: iface_ip_result
 
         - name: switch on the newly added vlan interface
-          shell: "sudo ip link set vlan{{ vlan_result.stdout | replace(\"'\",'') }} up"
-
-        - name: get cidr of the external network
-          shell: "cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalNetCidr | awk -F' ' '{print $2}'"
-          register: route_result
+          shell: "sudo ip link set vlan{{ network_environment.parameter_defaults.ExternalNetworkVlanID }} up"
 
         - name: add new static route for external network
-          shell: "sudo ip route add {{ route_result.stdout | replace(\"'\",'') }} dev vlan{{ vlan_result.stdout | replace(\"'\",'') }}"
+          shell: "sudo ip route add {{ network_environment.parameter_defaults.ExternalNetCidr }} dev vlan{{ network_environment.parameter_defaults.ExternalNetworkVlanID }}"
       # following condition means we want to execute this block if we are using ipv6 with virthost or any network.protocol with baremetals
       # for virthost with ipv4 it is not necessary, as such routing is already present and configured - we only need to add vlan interface above
       # todo(yfried): remove the duplicate conidition (== vlan) once nested blocks issue is sorted
