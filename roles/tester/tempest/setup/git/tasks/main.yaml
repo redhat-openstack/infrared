@@ -31,14 +31,29 @@
 
 - debug: "msg='Build mark: tempest={{ tempest_repo_version.stdout }}'"
 
-- name: install virtualenv
-  command: "python {{ tester.dir }}/tools/install_venv.py {{ tester.dir }}"
-  when: tempest_repo|changed or tempest_local_dir|changed
-
-- name: Install extra pip requirements
+- name: create venv with latest pip, setuptools and pbr
   pip:
+      virtualenv: "~/{{ tester.dir }}/.venv"
+      name: "{{ item }}"
+      state: latest
+  with_items:
+      - pip
+      - setuptools
+      - pbr
+
+- name: get repo requirements
+  pip:
+      virtualenv: "~/{{ tester.dir }}/.venv"
+      chdir: "~/{{ tester.dir }}"
+      requirements: "{{ item }}"
+  with_items:
+      - requirements.txt
+      - test-requirements.txt
+
+- name: install extra requirements
+  pip:
+      chdir: "~/{{ tester.dir }}"
+      virtualenv: "~/{{ tester.dir }}/.venv"
       name: "{{ item }}"
       state: present
-      virtualenv: "~/{{ tester.dir }}/.venv"
   with_items: "{{ tester.setup.pip_packages }}"
-  when: tempest_repo|changed or tempest_local_dir|changed
