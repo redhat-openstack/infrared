@@ -392,13 +392,26 @@ and not the one in the tripleo documentation (``overcloud-novacompute-0``).
 
 Testers
 -------
+.. note:: Inventory file (``hosts``) should have ``tester`` group with 1 node in it.
+    In ``ospd`` this is usually the undercloud. In ``packstack`` this is usually a dedicated node.
+
 For list of supported testers invoke::
 
     $ ir-tester --help
 
 .. TODO: Add doc about testers
-.. Tempest
 .. Rally
+
+Tempest
+^^^^^^^
+
+.. note:: `InfraRed` uses a python script to configure `Tempest`. Currently that script is only available in
+ `Red Hat's Tempest fork <https://github.com/redhat-openstack/tempest>`_, so `InfraRed` will clone that repo
+ as well in order to use that script.
+
+Use ``--tests`` to provide a list of test sets to execute. Each test set is defined in
+`settings tree <https://github.com/rhosqeauto/InfraRed/tree/master/settings/tester/tempest/tests>`_
+And will be executed separately.
 
 Scripts
 -------
