@@ -18,6 +18,7 @@ Contents:
    execute
    advanced
    contributions
+   spec
    contacts
    release
 
