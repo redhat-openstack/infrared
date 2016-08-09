@@ -16,7 +16,7 @@ verify_tox() {
     cat .tox_$1_out
     if ! tail -n2 .tox_$1_out | grep -q "$1: commands succeeded"; then
         FAILED="${FAILED} $1"
-        echo -e "\033[01;31m====== ^^ enf of failed $1 ^^ ======\033[0m"
+        echo -e "\033[01;31m====== ^^ end of failed $1 ^^ ======\033[0m"
     else
         echo -e "\033[01;33m====== ^^ end of $1 ^^ ======\033[0m"
     fi
