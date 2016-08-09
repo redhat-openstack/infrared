@@ -1,0 +1,97 @@
+- name: Install pip
+  become: yes
+  # todo(yfried): make idempotent
+  command: "easy_install pip"
+
+- name: Install devel packages for package build dependencies
+  become: yes
+  yum:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ tester.setup.packages }}"
+
+
+- name: Clone upstream tempest
+  git:
+      repo: "{{ tester.setup.repo }}"
+      version: "{{ tester.setup.revision | default(omit) }}"
+      dest: "~/{{ tester.dir }}"
+  register: tempest_repo
+  when: tester.local_dir is not defined
+
+# todo(yfried): remove this once we have a solution for upstream config
+- block:
+      # Only clone redhat/tempest if no config script exists
+      - name: check if config_tempest exists
+        stat:
+            path: "~/{{ tester.dir }}/tools/config_tempest.py"
+        register: config_tempest
+
+      - name: Clone downstream tempest
+        git:
+            repo: "{{ tester.setup.downstream_tempest.repo }}"
+            dest: "~/{{ tester.setup.downstream_tempest.dir }}"
+            # version is required by ansible-lint
+            version: "{{ tester.setup.downstream_tempest.version | default(omit)}}"
+        when: tester.local_dir is not defined and not config_tempest.stat.exists
+
+- name: register path to config script
+  set_fact:
+      tempest_config_path: "~/{{ (config_tempest.stat.exists) | ternary(tester.dir, tester.setup.downstream_tempest.dir) }}/tools"
+  register: config_tempest
+
+- name: install tempest from change
+  synchronize: dest={{ tester.dir }} src={{ tester.local_dir }}/
+                 archive=no recursive=yes perms=yes links=yes
+  register: tempest_local_dir
+  when: tester.local_dir is defined
+
+- name: Print repo version
+  command: "git log -1 --pretty=format:%h"
+  args:
+      chdir: "{{ tester.dir }}"
+  register: tempest_repo_version
+
+- debug: "msg='Build mark: tempest={{ tempest_repo_version.stdout }}'"
+
+- name: create venv with latest pip, setuptools and pbr
+  pip:
+      virtualenv: "~/{{ tester.dir }}/.venv"
+      name: "{{ item }}"
+      state: latest
+  with_items:
+      - pip
+      - setuptools
+      - pbr
+
+- name: get repo requirements
+  pip:
+      virtualenv: "~/{{ tester.dir }}/.venv"
+      chdir: "~/{{ tester.dir }}"
+      requirements: "{{ item }}"
+  with_items:
+      - requirements.txt
+      - test-requirements.txt
+
+- name: install extra requirements
+  pip:
+      chdir: "~/{{ tester.dir }}"
+      virtualenv: "~/{{ tester.dir }}/.venv"
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ tester.setup.pip_packages }}"
+
+
+# Plugin Packages has "Tempest" in their requirements.
+# Must install it to have its namespace, otherwise plugins will install it from pip
+- name: install tempest package
+  pip:
+      chdir: "~/{{ tester.dir }}"
+      virtualenv: "~/{{ tester.dir }}/.venv"
+      name: "."
+      state: present
+      editable: true
+
+- name: install test plugins
+  include: install_plugins.yml
+  with_dict: "{{ tester.tests }}"
