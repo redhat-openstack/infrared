@@ -413,24 +413,6 @@ Use ``--tests`` to provide a list of test sets to execute. Each test set is defi
 `settings tree <https://github.com/rhosqeauto/InfraRed/tree/master/settings/tester/tempest/tests>`_
 And will be executed separately.
 
-To import Tempest Plugins from external repos, ``tests`` files should contain ``plugins`` dict.
-`InfraRed` will clone those plugins from source and install them. Tempest will be able to discover
-and execute tests from those repos as well.
-
-.. code-block:: yaml
-   :emphasize-lines: 6-8
-   :caption: settings/tester/tempest/tests/neutron.yml
-
-   ---
-   name: neutron
-   test_regex: "^neutron.tests.tempest"
-   whitelist: []
-   blacklist: []
-   plugins:
-     neutron:
-       repo: "https://github.com/openstack/neutron.git"
-
-
 Scripts
 -------
 Archive
