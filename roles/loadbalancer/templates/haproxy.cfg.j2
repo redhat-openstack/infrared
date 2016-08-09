@@ -155,20 +155,16 @@ server {{ installer.loadbalancer.controllers.name_prefix }}{{x}} {{ installer.lo
   {% endfor %}
 
 listen redis
-  bind {{ installer.loadbalancer.network.redis.vip | ipaddr('address') }}:6379
+  bind {{ installer.loadbalancer.network.redis.vip | ipaddr('address') }}:6379 transparent
   balance first
   option tcp-check
-{% if installer.product.version|int > 7 %}
   tcp-check send AUTH\ examplepassword\r\n
   tcp-check send PING\r\n
   tcp-check expect string +PONG
-  tcp-check send QUIT\r\n
-  tcp-check expect string +OK
-{% endif %}
   tcp-check send info\ replication\r\n
   tcp-check expect string role:master
-  timeout client 0
-  timeout server 0
+  tcp-check send QUIT\r\n
+  tcp-check expect string +OK
   {% for x in range(provisioner.topology.nodes.controller.amount) %}
 server {{ installer.loadbalancer.controllers.name_prefix }}{{x}} {{ installer.loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:6379 check fall 5 inter 2000 rise 2
   {% endfor %}
