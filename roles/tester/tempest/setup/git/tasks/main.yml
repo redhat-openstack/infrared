@@ -10,37 +10,15 @@
       state: present
   with_items: "{{ tester.setup.packages }}"
 
-
-- name: Clone upstream tempest
+- name: Install tempest from source
   git:
       repo: "{{ tester.setup.repo }}"
-      version: "{{ tester.setup.revision | default(omit) }}"
+      version: "{{ tester.setup.revision | default('HEAD') }}"
       dest: "~/{{ tester.dir }}"
   register: tempest_repo
   when: tester.local_dir is not defined
 
-# todo(yfried): remove this once we have a solution for upstream config
-- block:
-      # Only clone redhat/tempest if no config script exists
-      - name: check if config_tempest exists
-        stat:
-            path: "~/{{ tester.dir }}/tools/config_tempest.py"
-        register: config_tempest
-
-      - name: Clone downstream tempest
-        git:
-            repo: "{{ tester.setup.downstream_tempest.repo }}"
-            dest: "~/{{ tester.setup.downstream_tempest.dir }}"
-            # version is required by ansible-lint
-            version: "{{ tester.setup.downstream_tempest.version | default(omit)}}"
-        when: tester.local_dir is not defined and not config_tempest.stat.exists
-
-- name: register path to config script
-  set_fact:
-      tempest_config_path: "~/{{ (config_tempest.stat.exists) | ternary(tester.dir, tester.setup.downstream_tempest.dir) }}/tools"
-  register: config_tempest
-
-- name: install tempest from change
+- name: Install tempest from change
   synchronize: dest={{ tester.dir }} src={{ tester.local_dir }}/
                  archive=no recursive=yes perms=yes links=yes
   register: tempest_local_dir
