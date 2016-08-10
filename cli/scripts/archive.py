@@ -100,7 +100,14 @@ def archive(suffix, inventory, ssh_conf, dest_dir, debug):
     with tarfile.open(
             os.path.join(dest_dir, ARCHIVE_FILE_NAME), 'w') as tar:
         for ssh_key in ssh_keys_map:
-            tar.add(os.path.expanduser(ssh_key), ssh_keys_map[ssh_key])
+            expanded_ssh_key = os.path.expanduser(ssh_key)
+            if not os.path.exists(expanded_ssh_key):
+                from cli.exceptions import IRFileNotFoundException
+                raise IRFileNotFoundException(
+                    file_path=os.path.expanduser(expanded_ssh_key),
+                    msg="Can't crate the archive, file not found: ")
+
+            tar.add(expanded_ssh_key, ssh_keys_map[ssh_key])
 
         for file_to_archive in ARCHIVE_FILES_MAP.keys():
             with tempfile.NamedTemporaryFile(mode='w+r') as tmp_file:
