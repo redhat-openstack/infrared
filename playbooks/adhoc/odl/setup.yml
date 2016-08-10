@@ -57,7 +57,7 @@
       - ansible_python_interpreter: "/usr/bin/python"
   tasks:
     - name: Install OpenDaylight package
-      yum: name={{ odl.rpm | default('opendaylight') }} state=present
+      yum: name={{ odl.rpm if odl is defined and odl.rpm is defined else 'opendaylight' }} state=present
 
     - name: Show the OpenDaylight package details
       command: yum info opendaylight
