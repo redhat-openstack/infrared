@@ -10,15 +10,16 @@
       state: present
   with_items: "{{ tester.setup.packages }}"
 
-- name: Install tempest from source
+
+- name: Clone tempest
   git:
       repo: "{{ tester.setup.repo }}"
-      version: "{{ tester.setup.revision | default('HEAD') }}"
+      version: "{{ tester.setup.revision | default(omit) }}"
       dest: "~/{{ tester.dir }}"
   register: tempest_repo
   when: tester.local_dir is not defined
 
-- name: Install tempest from change
+- name: fetch tempest from change
   synchronize: dest={{ tester.dir }} src={{ tester.local_dir }}/
                  archive=no recursive=yes perms=yes links=yes
   register: tempest_local_dir
@@ -58,3 +59,57 @@
       name: "{{ item }}"
       state: present
   with_items: "{{ tester.setup.pip_packages }}"
+
+# todo(yfried): remove this once we have a solution for upstream config
+- block:
+      # Only clone redhat/tempest if no config script exists
+      - name: check if config_tempest exists
+        stat:
+            path: "~/{{ tester.dir }}/tools/config_tempest.py"
+        register: config_tempest
+
+      - name: fetch RedHat tempest
+        git:
+            repo: "{{ tester.setup.downstream_tempest.repo }}"
+            dest: "~/{{ tester.setup.downstream_tempest.dir }}"
+            # version is required by ansible-lint
+            version: "{{ tester.setup.downstream_tempest.version | default(omit)}}"
+        when: tester.local_dir is not defined and not config_tempest.stat.exists
+
+- name: Install Tempest from {{ target }}
+  vars:
+    target: "{{ config_tempest.stat.exists | ternary('.', '~/' + tester.setup.downstream_tempest.dir ) }}"
+  pip:
+      chdir: "~/{{ tester.dir }}"
+      virtualenv: "~/{{ tester.dir }}/.venv"
+      name: "{{ target }}"
+      state: forcereinstall
+      editable: true
+
+- name: run tempest configuration tool
+  vars:
+      tempest_config_repo: "~/{{ (config_tempest.stat.exists) | ternary(tester.dir, tester.setup.downstream_tempest.dir) }}"
+      deployer_input: "{{ '(deployer_input_result | success)' | ternary('--deployer-input ~/tempest-deployer-input.conf', '') }}"
+      orchestration: "{{ (installer.type == 'ospd') | ternary('orchestration.stack_owner_role heat_stack_owner', '') }}"
+      region: "{{ (installer.type == 'ospd') | ternary('identity.region regionOne', '') }}"
+  shell: |
+      source ~/{{ tester.dir }}/.venv/bin/activate
+      source ~/keystonerc
+      {{ tempest_config_repo }}/tools/config_tempest.py {{ deployer_input }} --debug \
+            --create \
+            identity.uri $OS_AUTH_URL \
+            identity.admin_password $OS_PASSWORD {{ orchestration }} {{ region }} \
+            scenario.img_dir ~/{{ tester.dir }}/etc \
+            --out ~/{{ tester.dir }}/etc/tempest.conf
+  args:
+      chdir: "{{ tempest_config_repo }}"
+
+- name: restore tempest package
+  pip:
+      chdir: "~/{{ tester.dir }}"
+      virtualenv: "~/{{ tester.dir }}/.venv"
+      name: "."
+      state: forcereinstall
+      editable: true
+  when: not config_tempest.stat.exists
+

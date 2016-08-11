@@ -2,10 +2,7 @@
 - name: Configure tempest
   hosts: tester
   gather_facts: yes
-  roles:
-      - {role: tester/tempest/setup/git, when: tester.setup.type == "git"}
-      - {role: tester/tempest/setup/rpm, when: tester.setup.type == "rpm"} #WIP
-  tasks:
+  pre_tasks:
       - name: copy the keystonerc to the tester
         copy:
             src: "{{ inventory_dir }}/keystonerc"
@@ -15,24 +12,16 @@
         copy:
             src: "{{ inventory_dir }}/tempest-deployer-input.conf"
             dest: "~/tempest-deployer-input.conf"
-        register: result
+        register: deployer_input_result
         ignore_errors: yes
 
       # (TODO) This shouldn't be here according afazekas, but it's required to
       # run tempest
       - name: Create heat_stack_owner
+        # todo(yfried): convert to built-in
         shell: "source ~/keystonerc; openstack role create heat_stack_owner"
         when: installer.type == "ospd"
         ignore_errors: yes
-
-      - name: run tempest configuration tool
-        vars:
-            deployer_input: "{{ '(result | success)' | ternary('--deployer-input ~/tempest-deployer-input.conf', '') }}"
-            orchestration: "{{ (installer.type == 'ospd') | ternary('orchestration.stack_owner_role heat_stack_owner', '') }}"
-            region: "{{ (installer.type == 'ospd') | ternary('identity.region regionOne', '') }}"
-        shell: |
-          source .venv/bin/activate
-          source ~/keystonerc
-          tools/config_tempest.py {{ deployer_input }} --debug --create identity.uri $OS_AUTH_URL identity.admin_password $OS_PASSWORD {{ orchestration }} {{ region }}
-        args:
-            chdir: "{{ tester.dir }}"
+  roles:
+      - {role: tester/tempest/setup/git, when: tester.setup.type == "git"}
+      - {role: tester/tempest/setup/rpm, when: tester.setup.type == "rpm"} #WIP
