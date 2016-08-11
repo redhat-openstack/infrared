@@ -113,3 +113,6 @@
       editable: true
   when: not config_tempest.stat.exists
 
+- name: install test plugins
+  include: install_plugins.yml
+  with_dict: "{{ tester.tests }}"
