@@ -1,4 +1,4 @@
-- name: Update our libvirt machine to latest puddle packages
+- name: Update our libvirt machine to latest puddle packages (for Ironic)
   hosts: virthost
   tags: backup
   gather_facts: yes
@@ -91,6 +91,14 @@
   vars:
       - instack_file: "/home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}/instackenv.json"
   tasks:
+      - name: waiting for the undercloud to be available after virthost reboot
+        wait_for:
+            port: 22
+            host: "{{ ansible_ssh_host }}"
+            search_regex: OpenSSH
+            delay: 10
+        delegate_to: "localhost"
+
       - name: copy our undercloud public key
         fetch:
             src: "/home/{{ installer.user.name }}/.ssh/id_rsa.pub"
