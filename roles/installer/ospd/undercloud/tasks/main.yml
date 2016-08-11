@@ -72,7 +72,7 @@
       msg: "Undercloud deployment failed... :("
   become: yes
   become_user: "{{ installer.user.name }}"
-  failed_when: undercloud_deployment.rc != 0
+  when: undercloud_deployment.rc != 0
 
 - name: gathering new facts about the undercloud
   setup:
