@@ -1,4 +1,4 @@
-- name: Update our libvirt machine to latest puddle packages
+- name: Update our libvirt machine to latest puddle packages (for Ironic)
   hosts: virthost
   tags: backup
   gather_facts: yes
@@ -48,27 +48,11 @@
       - set_fact:
             core_puddle_version: "{{ command_result | regex_replace('^.*-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
 
-      - name: update system packages
+      - name: get Ironic requirement
         yum:
             state: latest
-            name: "*"
+            name: ipxe-roms-qemu
         register: update
-
-      - name: reboot our virthost
-        shell: "sleep 2 && shutdown -r now"
-        async: 1
-        poll: 0
-        ignore_errors: true
-        when: update|changed
-
-      - name: waiting for the virthost to be available
-        wait_for:
-            port: 22
-            host: "{{ ansible_ssh_host }}"
-            search_regex: OpenSSH
-            delay: 10
-        delegate_to: "localhost"
-        when: update|changed
 
 - include: "quickstart-undercloud.yml"
   when: "'undercloud' not in groups"
