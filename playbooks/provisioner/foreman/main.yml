@@ -12,8 +12,9 @@
            wait_for_host: "{{ provisioner.wait | lower }}"
            mgmt_strategy: "{{ provisioner.strategy }}"
            mgmt_action: "{{ provisioner.action }}"
-           ipmi_username: "{{ provisioner.host.ipmi.username | default(omit) }}"
-           ipmi_password: "{{ provisioner.host.ipmi.password | default(omit) }}"
+           rebuild: "yes"
+           ipmi_username: "{{ (provisioner.host.ipmi|default({})).username | default(omit) }}"
+           ipmi_password: "{{ (provisioner.host.ipmi|default({})).password | default(omit) }}"
       register: created_nodes
 
     - name: wait for ssh
