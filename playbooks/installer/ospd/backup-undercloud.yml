@@ -5,10 +5,20 @@
       undercloud: "{{ hostvars[(groups.undercloud|first)].inventory_hostname }}"
       undercloud_tar_file: "undercloud-quickstart-{{ director_puddle_version | default(core_puddle_version) }}.tar"
   tasks:
+      - name: install package with virt-sparsify
+        yum: name=libguestfs-tools-c state=present
+
       - name: shutdown the undercloud VM
         virt:
             name: "{{ undercloud }}"
             state: shutdown
+
+      - name: wait for vm to be fully shut off
+        shell: "virsh dominfo {{ undercloud }} | grep '^State: '"
+        register: virsh_vm_status
+        until: 'shut off' in virsh_vm_status.stdout
+        retries: 180  # * 5 = 1.5 minute
+        delay: 5
 
       - name: create a copy from the VM xml
         virt:
@@ -21,18 +31,15 @@
             content: "{{ undercloud_xml.get_xml }}"
             dest: "./{{ undercloud }}.xml"
 
-      - name: copy the undercloud disk
-        shell: "cp -pv /var/lib/libvirt/images/{{ undercloud }}-disk1.qcow2 {{ undercloud }}-disk1.qcow2.tmp"
-
-      - name: shrink undercloud image
-        shell: "qemu-img convert -O qcow2 {{ undercloud }}-disk1.qcow2.tmp {{ undercloud }}-disk1.qcow2"
+      - name: copy and shrink undercloud image
+        shell: "virt-sparsify --compress /var/lib/libvirt/images/{{ undercloud }}-disk1.qcow2 {{ undercloud }}-disk1.qcow2"
 
       - name: tar our undercloud files
         shell: "tar -cvf {{ undercloud_tar_file }} {{ undercloud }}.xml {{ undercloud }}-disk1.qcow2"
 
       - name: copy our auth key to the virthost
         copy:
-            src: "{{ inventory_dir }}/{{ ansible_ssh_private_key_file }}"
+            src: "{{ ansible_ssh_private_key_file | realpath }}"
             dest: "~/backup_server_auth_key"
             mode: "0400"
 
