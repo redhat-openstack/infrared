@@ -184,6 +184,14 @@ subparsers:
                       type: YamlFile
                       help: The list of workarounds to use during install
 
+            # TODO: how to make it general installer opt, there is deprecated desc there
+            - title: Mirror host
+              options:
+                  qe_mirror:
+                      type: Value
+                      help: Enable usage of specified (QE) mirror (for rpm, pip etc) [brq,qeos,tlv - or hostname]
+                      default: ''
+
             - title: Cleanup
               options:
                   cleanup:
