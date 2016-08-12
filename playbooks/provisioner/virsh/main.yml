@@ -17,7 +17,25 @@
 - name: Setup the virthost
   hosts: virthost
   gather_facts: yes
+  pre_tasks:
+      - name: "Check if InfraRed broke yum repos on virthost"
+        yum: name=libvirt state=latest
+        ignore_errors: yes
+        register: workaround_check_broken_repo
+
+      - service: name=libvirtd state=restarted
+        when: workaround_check_broken_repo|changed
+
   roles:
+      - dbg: msg="Workaround repositories broken by infrared on virthost"
+        when: workaround_check_broken_repo|failed
+      - role: installer/rhos-release
+            rr_rpm_url: "{{ private.distro.rhel.rhos_release_rpm }}"
+            core_version: 10
+            core_build: latest
+            qe_mirror: "tlv"
+        when: workaround_check_broken_repo|failed
+
       - {role: linux/rhel/libguestfs, when: ansible_distribution == 'RedHat'}
       - {role: provisioner/virsh}
 
