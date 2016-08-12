@@ -67,6 +67,14 @@ subparsers:
                       help: The product build
                       default: latest
 
+            - title: Mirror host
+              options:
+                  qe_mirror:
+                      type: Value
+                      help: Enable usage of specified (QE) mirror (for rpm, pip etc) [brq,qeos,tlv - or hostname]
+                      default: ''
+
+
             - title: Cleanup
               options:
                   cleanup:
