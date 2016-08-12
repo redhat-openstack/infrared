@@ -1,0 +1,51 @@
+---
+- name: remove all repos
+  command: "rm -f /etc/yum.repos.d/*"
+
+- name: install the rhos-release RPM
+  shell: "yum localinstall -y {{ installer.product.rpm }}"
+
+- name: remove rhos-release repos if needed
+  shell: "rhos-release -x"
+
+- block:
+    - debug:
+        msg: "rhos-release {{ installer.product.version }}-director -P -p {{ installer.product.build }}"
+
+    - name: create necessary repos for director using rhos-release
+      command: "rhos-release {{ installer.product.version }}-director -P -p {{ installer.product.build }}"
+      register: command_result
+      until: command_result.stderr.find('Connection reset by peer') == -1
+      retries: 40
+      delay: 5
+
+    - set_fact:
+        director_puddle_version: "{{ command_result | regex_replace('^.*director[ ]+-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
+
+    - debug:
+        msg: "Buildmark: Director_version: {{ director_puddle_version }}"
+
+  when: "director_version is defined and director_version | int < 10 and director_build is defined"
+
+- debug:
+    msg: "rhos-release {{ installer.product.core.version }} -P -p {{ installer.product.core.build }}"
+
+- name: create necessary repos for core using rhos-release
+  command: "rhos-release {{ installer.product.core.version }} -P -p {{ installer.product.core.build }}"
+  register: command_result
+  until: command_result.stderr.find('Connection reset by peer') == -1
+  retries: 40
+  delay: 5
+
+- set_fact:
+    core_puddle_version: "{{ command_result | regex_replace('^.*-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
+
+- debug:
+    msg: "Buildmark: Core_version: {{ core_puddle_version }}"
+
+- block:
+    - copy: src=use-mirror.sh dest=~/use-mirror.sh mode=0755
+    - command: "~/use-mirror.sh {{ qe_mirror }}"
+      register: mirror_used_cmd
+      changed_when: "'Skipping mirror' not in mirror_used_cmd.stdout"
+  when: "qe_mirror is defined and qe_mirror"
