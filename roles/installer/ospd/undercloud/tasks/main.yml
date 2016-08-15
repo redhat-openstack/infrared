@@ -21,14 +21,14 @@
 
 - name: check if undercloud.conf is under the deployment folder
   stat:
-      path: "/home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}/undercloud.conf"
+      path: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}/undercloud.conf"
   register: undercloud_conf
 
 - name: copy the undercloud.conf if provided with deployment folder
   copy:
       force: yes
       remote_src: True
-      src: "/home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}/undercloud.conf"
+      src: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}/undercloud.conf"
       dest: "/home/{{ installer.user.name }}/undercloud.conf"
       owner: "{{ installer.user.name }}"
       group: "{{ installer.user.name }}"

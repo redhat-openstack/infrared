@@ -34,7 +34,7 @@
   pre_tasks:
       - name: check if instackenv.json is under the deployment folder
         stat:
-            path: "/home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}/instackenv.json"
+            path: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}/instackenv.json"
         register: instack_file_path
 
       - name: copy our configuration if provided by the user
@@ -47,7 +47,7 @@
       - set_fact:
             instack_file: "
                 {%- if instack_file_path.stat.exists -%}
-                /home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}/instackenv.json
+                /home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}/instackenv.json
                 {%- elif installer.instackenv.file is defined and installer.instackenv.file -%}
                 /home/{{ installer.user.name }}/{{ installer.instackenv.file | basename }}
                 {%- else -%}
@@ -85,7 +85,7 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   vars:
-      - template_base: "/home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}"
+      - template_base: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}"
       - network_environment_file: "network-environment{{ (installer.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
   pre_tasks:
       - name: check for list of user defined templates

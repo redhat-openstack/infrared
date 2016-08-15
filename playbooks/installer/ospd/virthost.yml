@@ -80,7 +80,7 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   vars:
-      - instack_file: "/home/{{ installer.user.name }}/{{ installer.deployment.files | regex_replace('/$','') | basename }}/instackenv.json"
+      - instack_file: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}/instackenv.json"
   tasks:
       - name: copy our undercloud public key
         fetch:
