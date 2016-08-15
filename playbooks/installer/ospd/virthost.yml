@@ -80,7 +80,7 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   vars:
-      - instack_file: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}/instackenv.json"
+      - instack_file: "/home/{{ installer.user.name }}/instackenv.json"
   tasks:
       - name: copy our undercloud public key
         fetch:
@@ -103,6 +103,8 @@
             dest: "{{ instack_file }}"
             # Don't push a new file if folder contains a user-injected instackenv file
             force: no
+        when: not (installer.instackenv is defined and installer.instackenv.file is defined and installer.instackenv.file)
+
 
 # In case we're dealing with virthost, we need to make sure the undercloud is able to ssh to the hypervisor
 - name: Create the stack user on the virthost and allow SSH to hypervisor
