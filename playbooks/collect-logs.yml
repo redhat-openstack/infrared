@@ -96,6 +96,15 @@
       shell: "[[ -f /usr/lib64/sa/sa2 ]] && /usr/lib64/sa/sa2 -A"
       ignore_errors: true
 
+    - name: Create directory for mysql db dumps
+      file:
+          state: directory
+          dest: /var/log/extra/mysqldump
+
+    - name: backup the mysql databases
+      shell: "echo show databases\;| mysql | awk 'BEGIN {a=0}; { if (a>0) print $1; a=a+1}' | while read a; do echo Dump $a..; mysqldump --lock-all-tables \"$a\" |xz > \"/var/log/extra/mysqldump/$a.sql.xz\"; done"
+      ignore_errors: true
+
     - name: Search for AVC denied
       become: yes
       become_method: sudo
