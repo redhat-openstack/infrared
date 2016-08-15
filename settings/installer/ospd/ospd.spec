@@ -17,7 +17,6 @@ subparsers:
                       type: Value
                       help: |
                             The path to the instackenv.json configuration file used for introspection.
-                            If not set, it will look under the `deployment-files` path for the instackenv.json file.
 
             - title: Undercloud configuration
               options:

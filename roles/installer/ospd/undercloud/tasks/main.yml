@@ -1,19 +1,6 @@
 - name: prepare the machine for undercloud deployment
   include: setup.yml
 
-- name: copy our deployment folder
-  copy:
-      src: "{{ installer.deployment.files }}"
-      dest: "/home/{{ installer.user.name }}/"
-      directory_mode: u=rwX,g=rX,o=rX
-      owner: "{{ installer.user.name }}"
-      group: "{{ installer.user.name }}"
-
-- name: check if undercloud.conf is under the deployment folder
-  stat:
-      path: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}/undercloud.conf"
-  register: undercloud_conf
-
 - name: copy our configuration if provided by the user
   vars:
       local_src: "{%- if installer.undercloud is defined and installer.undercloud.config is defined and installer.undercloud.config -%}
