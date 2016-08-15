@@ -26,6 +26,14 @@
       command: undefine
   with_items: "{{ virt_status.list_vms }}"
 
+- name: Clean /etc/hostshosts file
+  become: yes
+  lineinfile:
+      dest: "/etc/hosts"
+      regexp: ".*{{ item }}.*"
+      state: absent
+  with_items: "{{ virt_status.list_vms }}"
+
 - name: remove the networks we created
   virt_net:
       name: "{{ item }}"
