@@ -160,6 +160,16 @@
       - name: print the last few lines of the output to spot failures
         shell: "tail -n60 overcloud_install.log"
 
+      - name: copy summary script
+        copy:
+            src: files/deploy_info.sh
+            dest: /home/{{ installer.user.name }}/deploy_info.sh
+            mode: 0755
+
+      - name: Execute the deployment summary script
+        become_user: root
+        shell: "mkdir -p /var/log/extra/; source /home/{{ installer.user.name }}/stackrc; /home/{{ installer.user.name }}/deploy_info.sh 2>&1 | tee -a /var/log/extra/deploy_resources.log"
+
       - fail: msg="Overcloud deployment failed... :("
         when: overcloud_deploy.rc != 0
 
