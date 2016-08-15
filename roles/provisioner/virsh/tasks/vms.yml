@@ -1,14 +1,18 @@
-- name: install required packages
-  yum: name=wget state=present
-  become: yes
-  become_method: sudo
+# Setting facts here rather than vars/ since it's the only place it's being used
+- set_fact:
+      base_image: "{{ (provisioner.image.server is defined) | ternary(provisioner.image.file|default(''), provisioner.image.url|basename) }}"
+      base_image_path: /var/lib/libvirt/images
+      url: "{{ (provisioner.image.server is defined) | ternary(provisioner.image.server|default('') + '/' + provisioner.image.file|default(''), provisioner.image.url) }}"
 
-- name: remove pre-existing base image
-  file:
-      state: absent
-      dest: "/var/lib/libvirt/images/base_image.qcow2"
-
-- include: "create_vms.yml"
+# This creates our base disk qcow2 if not specified
+- name: create base image
+  include: "download_images.yml"
   with_dict: "{{ provisioner.topology.nodes }}"
   loop_control:
-      loop_var: node_item
+      loop_var: node
+
+- name: create our vms
+  include: "create_vms.yml"
+  with_dict: "{{ provisioner.topology.nodes }}"
+  loop_control:
+      loop_var: node
