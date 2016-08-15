@@ -32,11 +32,22 @@
       dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}
   when: installer.loadbalancer.network.plain is defined
 
-- name: create VLAN interface for external network
+- name: create IPV4 VLAN interface for external network as alias
   template:
       src: vlan-external.cfg.j2
       dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.ex_interface }}:0
-  when: installer.loadbalancer.network.external is defined
+  when: installer.loadbalancer.network.external is defined and installer.network.protocol == 'ipv4'
+
+- name: create IPV6 VLAN interface for external network
+  lineinfile:
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.ex_interface }}
+      line: "{{ item }}"
+  with_items:
+      - "IPV6_AUTOCONF=no"
+      - "IPV6ADDR={{ installer.loadbalancer.network.external.vip | ipaddr('address') }}"
+      - "IPV6PREFIX={{ installer.loadbalancer.network.external.vip | ipaddr('prefix') }}"
+  when: installer.loadbalancer.network.external is defined and installer.network.protocol == 'ipv6'
+
 
 - name: create VLAN interface for internal_api network
   template:
@@ -102,3 +113,9 @@
   wait_for:
       host: "{{ hostvars[inventory_hostname].ansible_ssh_host }}"
       timeout: 120
+
+- name: Make sure haproxy service is started
+  service:
+      name: haproxy
+      state: started
+      enabled: yes
