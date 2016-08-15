@@ -39,28 +39,33 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  vars:
+      custom_instack: "{{ (installer.instackenv|default({})).file | default('') }}"
   pre_tasks:
-      - name: check if instackenv.json is under the deployment folder
+      - name: copy instackenv if provided by the user
+        copy:
+            src: "{{ custom_instack }}"
+            dest: "/home/{{ installer.user.name }}/{{ custom_instack | basename }}"
+            # User provided file overwrites everything
+            force: yes
+        when: "{{ custom_instack }}"
+        register: inject_instackenv
+
+      - name: verify that instackenv json file exists
+        vars:
+            target: "{{ (inject_instackenv|succeeded) | ternary((custom_instack|basename), 'instackenv.json') }}"
         stat:
-            path: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}/instackenv.json"
+            path: "/home/{{ installer.user.name }}/{{ target }}"
         register: instack_file_path
 
-      - name: copy our configuration if provided by the user
-        copy:
-            src: "{{ installer.instackenv.file }}"
-            dest: "/home/{{ installer.user.name }}/{{ installer.instackenv.file | basename }}"
-            force: yes
-        when: installer.instackenv.file is defined and installer.instackenv.file
-
       - set_fact:
-            instack_file: "
-                {%- if instack_file_path.stat.exists -%}
-                /home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}/instackenv.json
-                {%- elif installer.instackenv.file is defined and installer.instackenv.file -%}
-                /home/{{ installer.user.name }}/{{ installer.instackenv.file | basename }}
-                {%- else -%}
-                /home/{{ installer.user.name }}/instackenv.json
-                {%- endif -%}"
+            instack_file: "{{ instack_file_path.stat.path }}"
+        when: instack_file_path.stat.exists
+
+      - fail:
+            msg: "instackenv file is missing"
+        when: not instack_file_path.stat.exists
+
   roles:
       - {role: installer/ospd/overcloud/introspection, when: "installer.overcloud is defined"}
   vars:
@@ -86,8 +91,10 @@
   roles:
       - {role: installer/ospd/overcloud/tagging, when: "'overcloud_nodes' in groups"}
 
-- name: Installing the overcloud
-  tags: overcloud
+- name: Prepare the overcloud configuration
+  tags:
+      - overcloud
+      - overcloud_init
   hosts: undercloud
   gather_facts: yes
   become: yes
@@ -96,6 +103,14 @@
       - template_base: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}"
       - network_environment_file: "network-environment{{ (installer.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
   pre_tasks:
+      - name: copy our deployment folder
+        copy:
+            src: "{{ installer.deployment.files }}"
+            dest: "{{ template_base }}"
+            directory_mode: u=rwX,g=rX,o=rX
+            owner: "{{ installer.user.name }}"
+            group: "{{ installer.user.name }}"
+
       - name: check for list of user defined templates
         find:
             paths: "{{ template_base }}"
@@ -103,11 +118,13 @@
         register: template_list
 
       - name: check if custom overcloud_deploy.sh exists
+        tags: overcloud_deploy
         stat:
             path: "{{ template_base }}/overcloud_deploy.sh"
         register: deploy_script
 
       - name: copy our overcloud deployment script if provided by the user
+        tags: overcloud_deploy
         copy:
             src: "{{ installer.overcloud.script }}"
             dest: "/home/{{ installer.user.name }}/{{ installer.overcloud.script | basename }}"
@@ -124,6 +141,7 @@
                 {%- elif installer.overcloud.script is defined and installer.overcloud.script -%}
                 /home/{{ installer.user.name }}/{{ installer.overcloud.script | basename }}
                 {%- else -%}{%- endif -%}"
+        tags: overcloud_deploy
 
       - name: create the base overcloud deploy script
         template:
@@ -155,6 +173,15 @@
                 overcloud_deploy_script: '~/overcloud_deploy.sh'
         when: overcloud_deploy_script  == ''
 
+- name: Deploy the OverCloud
+  tags:
+      - overcloud
+      - overcloud_deploy
+  hosts: undercloud
+  gather_facts: yes
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  tasks:
       - name: the create overcloud script
         shell: "cat {{ overcloud_deploy_script }}"
 
@@ -190,4 +217,7 @@
 # Since OSP-d reprovision our machines (overcloud) and becomes the DHCP server, an update of our inventory is required
 # So Ansible will be able to access the newly provisioned machines.
 - include: ospd_inventory_update.yml
-  tags: overcloud, inventory_update
+  tags:
+      - overcloud
+      - inventory_update
+      - overcloud_deploy
