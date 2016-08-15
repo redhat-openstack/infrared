@@ -9,41 +9,30 @@
       owner: "{{ installer.user.name }}"
       group: "{{ installer.user.name }}"
 
-- name: create default undercloud.conf file
-  copy:
-      force: no
-      remote_src: True
-      src: "/usr/share/instack-undercloud/undercloud.conf.sample"
-      dest: "/home/{{ installer.user.name }}/undercloud.conf"
-      owner: "{{ installer.user.name }}"
-      group: "{{ installer.user.name }}"
-      mode: 0755
-
 - name: check if undercloud.conf is under the deployment folder
   stat:
       path: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}/undercloud.conf"
   register: undercloud_conf
 
-- name: copy the undercloud.conf if provided with deployment folder
-  copy:
-      force: yes
-      remote_src: True
-      src: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}/undercloud.conf"
-      dest: "/home/{{ installer.user.name }}/undercloud.conf"
-      owner: "{{ installer.user.name }}"
-      group: "{{ installer.user.name }}"
-      mode: 0644
-  when: undercloud_conf.stat.exists
-
 - name: copy our configuration if provided by the user
+  vars:
+      undercloud_conf: >
+          {% if installer.undercloud.config is defined and installer.undercloud.config %}
+          {{ installer.undercloud.config }}
+          {% elif 'virthost' in groups.all %}
+          roles/installer/ospd/undercloud/templates/undercloud.conf
+          {% else %}
+          False
+          {% endif %}
+      deafult_conf: /usr/share/instack-undercloud/undercloud.conf.sample
   copy:
-      src: "{{ installer.undercloud.config }}"
+      remote_src: "{{ undercloud_conf | ternary(False, True)}}"
+      src: "{{ undercloud_conf | ternary(undercloud_conf, deafult_conf)}}"
       dest: "/home/{{ installer.user.name }}/undercloud.conf"
       owner: "{{ installer.user.name }}"
       group: "{{ installer.user.name }}"
-      mode: 0644
+      mode: 0755
       force: yes
-  when: installer.undercloud.config is defined and installer.undercloud.config
 
 - name: create the base undercloud deploy script
   become: yes
