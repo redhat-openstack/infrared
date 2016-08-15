@@ -24,6 +24,13 @@
       - name: copy the image into libvirt images folder
         shell: "cp -vf {{ undercloud }}-disk1.qcow2 /var/lib/libvirt/images/{{ undercloud }}-disk1.qcow2"
 
+      - name: remove downloaded and extracted files right away as they will stock up the host in time
+        file: path={ item } state=absent
+        with_items:
+            - "~/{{ undercloud_tar_file }}"
+            - {{ undercloud }}-disk1.qcow2
+            - {{ undercloud }}.xml
+
       - name: inject our key into the undercloud image
         shell: "virt-customize -a /var/lib/libvirt/images/{{ undercloud }}-disk1.qcow2 --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel"
 
