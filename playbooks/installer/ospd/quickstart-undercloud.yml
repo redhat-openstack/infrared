@@ -24,6 +24,18 @@
       - name: copy the image into libvirt images folder
         shell: "cp -vf {{ undercloud }}-disk1.qcow2 /var/lib/libvirt/images/{{ undercloud }}-disk1.qcow2"
 
+      #TODO(yfried): cleanup should be in a block/allways format
+      - name: remove unarchived files from machine
+        file:
+            state: absent
+            path: "{{ item }}"
+        with_items: "{{ tar.files }}"
+
+      - name: remove quickstart tar file
+        file:
+            state: absent
+            path: "{{ undercloud_tar_file }}"
+
       - name: inject our key into the undercloud image
         shell: "virt-customize -a /var/lib/libvirt/images/{{ undercloud }}-disk1.qcow2 --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel"
 
@@ -57,18 +69,6 @@
             ansible_ssh_user: "root"
             ansible_ssh_private_key_file: "{{ hostvars[groups['overcloud_nodes'][0]].ansible_ssh_private_key_file }}"
             ansible_ssh_host: "{{ undercloud_ip.stdout | ipaddr('address') }}"
-
-      #TODO(yfried): cleanup should be in a block/allways format
-      - name: remove unarchived files from machine
-        file:
-            state: absent
-            path: "{{ item }}"
-        with_items: "{{ tar.files }}"
-
-      - name: remove quickstart tar file
-        file:
-            state: absent
-            path: "{{ undercloud_tar_file }}"
 
 - name: gather facts from the undercloud
   hosts: undercloud
