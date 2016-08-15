@@ -88,19 +88,20 @@
             dest: "{{ inventory_dir }}/id_rsa_undercloud.pub"
             flat: yes
 
-      - name: fetch our jinja template for editing
-        fetch:
-            src: "{{ instack_file }}"
-            dest: "/tmp/instackenv.json.template"
-            flat: yes
+      - name: grab undercloud private key
+        shell: "cat /home/{{ installer.user.name }}/.ssh/id_rsa"
+        register: uc_pkey_result
 
-      - name: prepare instack.json
+      - name: store undercloud private key
+        set_fact:
+            undercloud_private_key: "{{ uc_pkey_result.stdout }}"
+
+      - name: prepare instack.json if one doesn't exist
         template:
-            src: "/tmp/instackenv.json.template"
+            src: "{{ inventory_dir }}/templates/inventory.j2"
             dest: "{{ instack_file }}.template"
-
-      - name: populate the private key
-        shell: "cat {{ instack_file }}.template | jq --arg key \"$(cat ~/.ssh/id_rsa)\" '. | .nodes[].pm_password=$key | .[\"ssh-key\"]=$key'> {{ instack_file }}"
+            # Don't push a new file if folder contains a user-injected instackenv file
+            force: no
 
 # In case we're dealing with virthost, we need to make sure the undercloud is able to ssh to the hypervisor
 - name: Create the stack user on the virthost and allow SSH to hypervisor
