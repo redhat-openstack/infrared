@@ -7,7 +7,15 @@
       - backup
   hosts: undercloud
   roles:
-      - {role: installer/ospd/undercloud, when: "'undercloud' in groups"}
+      - role: installer/rhos-release
+        rr_rpm_url: "{{ installer.product.rpm }}"
+        director_version: "{{ installer.product.version }}"
+        director_build: "{{ installer.product.build }}"
+        core_version: "{{ installer.product.core.version }}"
+        core_build: "{{ installer.product.core.build }}"
+        mirror: "{{ installer.mirror | default(omit) }}"
+
+      - role: installer/ospd/undercloud
 
 - name: Preparing the images
   tags:
@@ -159,6 +167,16 @@
 
       - name: print the last few lines of the output to spot failures
         shell: "tail -n60 overcloud_install.log"
+
+      - name: copy summary script
+        copy:
+            src: files/deploy_info.sh
+            dest: /home/{{ installer.user.name }}/deploy_info.sh
+            mode: 0755
+
+      - name: Execute the deployment summary script
+        become_user: root
+        shell: "mkdir -p /var/log/extra/; source /home/{{ installer.user.name }}/stackrc; /home/{{ installer.user.name }}/deploy_info.sh 2>&1 | tee -a /var/log/extra/deploy_resources.log"
 
       - fail: msg="Overcloud deployment failed... :("
         when: overcloud_deploy.rc != 0
