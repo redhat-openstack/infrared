@@ -68,7 +68,7 @@ options:
         choices: 'rest', 'rpc'
     ca_cert:
         description:
-            - CA certificate
+            - CA certificate (python 2.7.9+ only)
         required: false
 '''
 
@@ -380,8 +380,14 @@ class BeakerMachine(object):
         import tempfile
         import xmlrpclib
 
-        ssl_context = ssl.create_default_context(cafile=self.ca_cert)
-        transport = xmlrpclib.SafeTransport(context=ssl_context)
+        try:
+            ssl_context = ssl.create_default_context(cafile=self.ca_cert)
+            transport = xmlrpclib.SafeTransport(context=ssl_context)
+        except TypeError:
+            # py < 2.7.9
+            transport = xmlrpclib.SafeTransport()
+
+
         hub = xmlrpclib.ServerProxy(
             urljoin(self.base_url, 'client'),
             allow_none=True,
