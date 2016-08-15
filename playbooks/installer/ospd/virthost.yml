@@ -35,7 +35,7 @@
                 director_puddle_version: "{{ command_result | regex_replace('^.*director[ ]+-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
 
           - debug:
-                msg: "Buildmark: Director_version: {{ director_puddle_version }}"
+                msg: "Build mark: director_puddle={{ director_puddle_version }}"
 
         when: "{{ installer.product.version | int }} < 10"
 
@@ -53,7 +53,7 @@
             core_puddle_version: "{{ command_result | regex_replace('^.*-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
 
       - debug:
-            msg: "Buildmark: Core_version: {{ core_puddle_version }}"
+            msg: "Build mark: core_puddle={{ core_puddle_version }}"
 
       - name: get Ironic requirement
         yum:
