@@ -330,6 +330,7 @@ different assumptions are made for each deployment type:
     * ``--undercloud-config`` - ``undercloud.conf`` file. If not provided,
       the `sample configuration file <http://docs.openstack.org/developer/tripleo-docs/installation/installing.html#installing-the-undercloud>`_
       will be used.
+    * ``--instackenv-file`` - ``instackenv.json`` `file <http://docs.openstack.org/developer/tripleo-docs/environments/baremetal.html?highlight=instackenv#instackenv-json>`_.
 
   Both paths must be absolute paths::
 
@@ -370,6 +371,7 @@ different assumptions are made for each deployment type:
 
     ir-installer ospd --deployment-files=$PWD/settings/installer/ospd/deployment/virt [...]
 
+  InfraRed will generate ``undercloud.conf`` and ``instackenv.json`` configuration files if not provided explicitly.
   See `Quickstart <quickstart.html#ospd-quickstart>`_ guide for more details.
 .. TODO: Add OVB in future
 
