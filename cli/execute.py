@@ -36,7 +36,7 @@ def ansible_playbook(config, playbook, verbose=2, settings=None,
 
     cli_args = ['execute',
                 playbook_path,
-                "-v" if not verbose else '-' + 'v'*verbose,
+                "-v" if not verbose else '-' + 'v' * verbose,
                 '--inventory', inventory or 'local_hosts',
                 '--module-path', config.get_modules_dir()]
 
