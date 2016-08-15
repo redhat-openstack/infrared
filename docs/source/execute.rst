@@ -324,10 +324,16 @@ different assumptions are made for each deployment type:
 
   Normal deployment of openstack where all nodes are physical hosts.
 
-  Users need to provide an absolute path to a directory with various
-  files and templates describing their OSPd deployment::
+  Users need to provide:
+    * ``--deployment-files`` - directory with various files and templates, describing
+      the OverCloud (such as ``instackenv.json``).
+    * ``--undercloud-config`` - ``undercloud.conf`` file. If not provided,
+      the `sample configuration file <http://docs.openstack.org/developer/tripleo-docs/installation/installing.html#installing-the-undercloud>`_
+      will be used.
 
-    ir-provisioner ospd [...] --deployment-files=/absolute/path/to/templates/directory [...]
+  Both paths must be absolute paths::
+
+        ir-provisioner ospd [...] --deployment-files=/absolute/path/to/templates/directory [...] --undercloud-config=/home/myuser/undercloud.conf
 
   The details of such directory can be found under `settings tree <https://github.com/rhosqeauto/InfraRed/tree/master/settings/installer/ospd/deployment/example>`_
 
@@ -360,6 +366,11 @@ different assumptions are made for each deployment type:
     * Routes external traffic for nested VMs outside of the overcloud (connects to neutron external network and br-ex bridge...)
     * The testers (i.e. Tempest) use this network to ssh to the VMs (cirros) nested in the OverCloud
 
+  To build a `Virthost` deployment, use the preset deployment-files provided in ``settings``::
+
+    ir-installer ospd --deployment-files=$PWD/settings/installer/ospd/deployment/virt [...]
+
+  See `Quickstart <quickstart.html#ospd-quickstart>`_ guide for more details.
 .. TODO: Add OVB in future
 
 
