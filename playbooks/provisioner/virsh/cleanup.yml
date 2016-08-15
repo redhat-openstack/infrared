@@ -31,10 +31,3 @@
       name: "{{ item }}"
       state: absent
   with_items: "{{ virt_status.list_nets }}"
-
-
-- name: remove any existing disks that we created
-  shell: "rm -f {{ item }}*disk*.qcow*"
-  args:
-      chdir: "/var/lib/libvirt/images"
-  with_items: "{{ virt_status.list_vms }}"

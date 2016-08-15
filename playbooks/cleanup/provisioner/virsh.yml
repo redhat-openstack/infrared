@@ -41,6 +41,18 @@
       - include: "{{ inventory_dir }}/playbooks/provisioner/virsh/cleanup.yml"
         when: libvirtd_available | success
 
+      - name: remove any existing disks that we created
+        shell: "rm -f {{ item }}*disk*.qcow*"
+        args:
+            chdir: "/var/lib/libvirt/images"
+        with_items: "{{ virt_status.list_vms }}"
+
+      # TODO(fhubik): Change path if quickstart image path will be changed in future
+      - name: remove any quickstart images that we might have downloaded in previous runs
+        shell: "rm -f undercloud-quickstart-*.tar"
+        args:
+            chdir: "~"
+        ignore_errors: true
 
 - name: Remove hypervisor from the known_hosts
   hosts: localhost
