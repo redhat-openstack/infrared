@@ -27,13 +27,16 @@
     - name: collect list of installed rpms
       shell: rpm -qa > /var/log/rpm.list
 
+
     - name: collect list of running kernel modules
       shell: lsmod > /var/log/module_list
       ignore_errors: true
 
     - name: prepare directory with extra logs
       file: dest=/var/log/extra state=directory
-      ignore_errors: true
+
+    - name: list pkg+repo
+      shell: yum -C list installed > /var/log/extra/packages
 
     - name: collect logs from all failed systemd services
       shell: |
