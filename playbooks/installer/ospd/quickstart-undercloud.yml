@@ -35,6 +35,18 @@
             name: "{{ undercloud }}"
             state: running
 
+      #TODO(yfried): cleanup should be in a block/allways format
+      - name: remove unarchived files from machine
+        file:
+            state: absent
+            path: "{{ item }}"
+        with_items: "{{ tar.files }}"
+
+      - name: remove quickstart tar file
+        file:
+            state: absent
+            path: "{{ undercloud_tar_file }}"
+
       - name: wait for the undercloud IP to become available
         shell: |
             virsh net-dhcp-leases external | awk '($4 == "ipv4") && ($6 =="{{ undercloud }}") {print $5}'
@@ -57,18 +69,6 @@
             ansible_ssh_user: "root"
             ansible_ssh_private_key_file: "{{ hostvars[groups['overcloud_nodes'][0]].ansible_ssh_private_key_file }}"
             ansible_ssh_host: "{{ undercloud_ip.stdout | ipaddr('address') }}"
-
-      #TODO(yfried): cleanup should be in a block/allways format
-      - name: remove unarchived files from machine
-        file:
-            state: absent
-            path: "{{ item }}"
-        with_items: "{{ tar.files }}"
-
-      - name: remove quickstart tar file
-        file:
-            state: absent
-            path: "{{ undercloud_tar_file }}"
 
 - name: gather facts from the undercloud
   hosts: undercloud
