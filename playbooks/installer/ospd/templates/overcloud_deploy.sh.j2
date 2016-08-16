@@ -2,7 +2,7 @@
 
 openstack overcloud deploy --debug \
 --templates \
---libvirt-type {% if groups['virthost'] is defined %}qemu{% else %}kvm{% endif %} \
+--libvirt-type kvm \
 --ntp-server clock.redhat.com \
 --neutron-network-type {{ installer.network.backend }} \
 {% if installer.network.backend == "vlan" %}
