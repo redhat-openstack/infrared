@@ -10,7 +10,7 @@
   tasks:
       - name: download the undercloud tar file
         get_url:
-            url: "http://{{ private.storage.oc_image_repo.server }}/{{ private.storage.oc_image_repo.path }}/{{ installer.product.core.version }}/{{ undercloud_tar_file }}"
+            url: "http://{{ private.storage.oc_image_repo.server }}/{{ private.storage.oc_image_repo.path }}/{{ installer.product.version }}/{{ undercloud_tar_file }}"
             dest: "~/{{ undercloud_tar_file }}"
 
       - name: untar the undercloud quickstart
@@ -52,8 +52,8 @@
             virsh net-dhcp-leases external | awk '($4 == "ipv4") && ($6 =="{{ undercloud }}") {print $5}'
         register: undercloud_ip
         until: undercloud_ip.stdout != ''
-        retries: 10
-        delay: 10
+        retries: 15
+        delay: 15
 
       - name: waiting for the undercloud to be SSH available
         wait_for:
@@ -69,6 +69,23 @@
             ansible_ssh_user: "root"
             ansible_ssh_private_key_file: "{{ hostvars[groups['overcloud_nodes'][0]].ansible_ssh_private_key_file }}"
             ansible_ssh_host: "{{ undercloud_ip.stdout | ipaddr('address') }}"
+        notify:
+            - update hosts
+            - Link to new Inventory file
+
+  handlers:
+      - name: update hosts
+        template:
+          dest: "{{ lookup('env', 'PWD') }}/hosts-installer"
+          src: "{{ inventory_dir }}/templates/inventory.j2"
+        delegate_to: localhost
+
+      - name: Link to new Inventory file
+        file:
+          dest: "{{ lookup('env', 'PWD') }}/hosts"
+          state: link
+          src: "{{ lookup('env', 'PWD') }}/hosts-installer"
+
 
 - name: gather facts from the undercloud
   hosts: undercloud
