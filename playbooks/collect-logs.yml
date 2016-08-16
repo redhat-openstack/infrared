@@ -23,6 +23,9 @@
       with_items:
         - gzip
         - tar
+        - psmisc  # pstree
+        - lsof
+        - pciutils  # lspci
 
     - name: collect list of installed rpms
       shell: rpm -qa > /var/log/rpm.list
@@ -35,10 +38,14 @@
       file: dest=/var/log/extra state=directory
       ignore_errors: true
 
+    - name: collect status of all systemd units
+      shell: systemctl --all > /var/log/extra/service 2>&1
+      ignore_errors: true
+
     - name: collect logs from all failed systemd services
       shell: |
         systemctl -t service --failed --no-legend | awk '{print $1}' \
-            | xargs -r -n1 journalctl -u > /var/log/extra/services 2>&1
+            | xargs -r -n1 journalctl -u > /var/log/extra/service-failed 2>&1
       ignore_errors: true
 
     - name: collect network status info
