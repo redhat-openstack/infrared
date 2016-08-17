@@ -24,5 +24,4 @@ subparsers:
                   tests:
                       type: YamlFile
                       help: The set of test to execute
-                      required: yes
-                      default: none.yml
+                      required: no

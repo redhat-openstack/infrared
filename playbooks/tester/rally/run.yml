@@ -7,6 +7,7 @@
       dest: "{{ tester.rally.dir }}/{{ tester.rally.taskfile }}"
       content: "{{ tester.tests.rally.task | to_nice_json }}"
       force: yes
+    when: relly.task is defined
 
 - name: Run Rally Task
   hosts: tester
@@ -14,4 +15,4 @@
   - name: Check Rally deployment
     command: "{{ tester.rally.path }}/bin/rally deployment check"
   - name: Start Rally task
-    command: "{{ tester.rally.path }}/bin/rally -v task start --task {{ tester.rally.dir }}/{{ tester.rally.taskfile }}"
+    command: "{{ tester.rally.path }}/bin/rally -v task start --task {{ tester.rally.taskdir | default(tester.rally.dir)  }}/{{ tester.rally.taskfile }}"

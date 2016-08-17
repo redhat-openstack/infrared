@@ -29,12 +29,14 @@
           repo: "{{ tester.git.repo }}"
           version: "{{ tester.git.revision }}"
           dest: "{{ tester.rally.dir }}"
+          force: yes
 
     - name: Clone Rally-Plugins git repo
       git:
         repo: "{{ tester.git.plugins.repo }}"
         version: "{{ tester.git.plugins.revision }}"
         dest: "~/.rally/plugins"
+        force: yes
 
     - name: Run Rally installation script
       shell: "{{ tester.rally.dir }}/install_rally.sh -v -y -d {{ tester.rally.path }} | tee {{ tester.rally.dir }}/rally_install.log"
@@ -117,7 +119,7 @@
   - debug: var=rally_deployment_uuid
 
   - name: Use Rally deployment
-    shell: "{{ tester.rally.path }}/bin/rally use deployment {{ tester.rally.deployment }} | awk '/Using deployment/ {print $3}'"
+    shell: "{{ tester.rally.path }}/bin/rally deployment use {{ tester.rally.deployment }} | awk '/Using deployment/ {print $3}'"
     register: rally_deployment_uuid
     when: "'Deployment' in rally_deployment_uuid.stdout"
 
