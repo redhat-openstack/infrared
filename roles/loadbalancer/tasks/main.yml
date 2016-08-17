@@ -73,6 +73,7 @@
       dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}.{{ installer.loadbalancer.network.tenant.vlanid }}
   when: installer.loadbalancer.network.tenant is defined
 
+# TODO(psedlak): use installer/rhos-release role / mirror urls (do we want it here?)
 - name: Install release tool on loadbancer
   command: "yum localinstall -y {{ installer.product.rpm }}"
 
