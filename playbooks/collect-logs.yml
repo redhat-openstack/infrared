@@ -36,7 +36,9 @@
 
     - name: prepare directory with extra logs
       file: dest=/var/log/extra state=directory
-      ignore_errors: true
+
+    - name: list pkg+repo
+      shell: yum -C list installed > /var/log/extra/packages
 
     - name: collect status of all systemd units
       shell: systemctl --all > /var/log/extra/service 2>&1
