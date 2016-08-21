@@ -25,7 +25,7 @@
       when: hostvars[inventory_hostname].ansible_default_ipv4.address is defined
 
     - name: restart systemd-hostnamed
-      service: name=systemd-hostnamed state=restarted
+      service: name=systemd-hostnamed state=restarted sleep=5
       when: ansible_distribution_version|int > 6
 
 - name: Create ssh key if one does not exist
