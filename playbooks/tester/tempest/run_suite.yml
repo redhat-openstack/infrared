@@ -1,14 +1,15 @@
 ---
 - name: set facts for node
   set_fact:
-      test_data: "{{ item.value }}"
-      test_suite_name: "{{ item.key }}"
+      test_data: "{{ outer_item.value }}"
+      test_suite_name: "{{ outer_item.key }}"
 
 - name: set facts for test suite
   set_fact:
       test_output_file: "tempest-results-{{ test_suite_name }}.xml"
       blacklistfile: ''
       whitelistfile: ''
+      regex: ''
 
 - name: remove old test list for "{{ test_suite_name }}
   file:
