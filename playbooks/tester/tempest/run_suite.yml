@@ -1,16 +1,12 @@
 ---
-- name: set facts for node
-  set_fact:
-      test_data: "{{ item.value }}"
-      test_suite_name: "{{ item.key }}"
-
 - name: set facts for test suite
   set_fact:
-      test_output_file: "tempest-results-{{ test_suite_name }}.xml"
+      test_output_file: "tempest-results-{{ outer_item.key }}.xml"
       blacklistfile: ''
       whitelistfile: ''
+      regex: ''
 
-- name: remove old test list for "{{ test_suite_name }}
+- name: remove old test list for "{{ outer_item.key }}"
   file:
       state: absent
       name: "{{ tester.dir }}/{{ item }}"
@@ -20,41 +16,41 @@
       - "{{ test_output_file }}"
 
 - block:
-    - name: create Test List - Whitelist for "{{ test_suite_name }}"
+    - name: create Test List - Whitelist for "{{ outer_item.key }}"
       lineinfile:
           create: yes
           dest: "{{ tester.dir }}/white_list"
           line: "{{ item }}"
           regexp: "^{{ item }}$"
-      with_items: "{{ test_data.whitelist | default([]) }}"
+      with_items: "{{ outer_item.value.whitelist | default([]) }}"
 
     - name: add whitelist invocation
       set_fact:
           whitelistfile: "--whitelist_file white_list"
 
-  when: test_data.whitelist is defined and test_data.whitelist
+  when: outer_item.value.whitelist is defined and outer_item.value.whitelist
 
 - block:
-    - name: create Test List - Blacklist for "{{ test_suite_name }}"
+    - name: create Test List - Blacklist for "{{ outer_item.key }}"
       lineinfile:
           create: yes
           dest: "{{ tester.dir }}/black_list"
           line: "{{ item }}"
           regexp: "^{{ item }}$"
-      with_items: "{{ test_data.blacklist | default([]) }}"
+      with_items: "{{ outer_item.value.blacklist | default([]) }}"
 
     - name: add blacklist invocation
       set_fact:
           blacklistfile: "--blacklist_file black_list"
-  when: test_data.blacklist is defined and test_data.blacklist
+  when: outer_item.value.blacklist is defined and outer_item.value.blacklist
 
-- name: add regex invoke for "{{ test_suite_name }}"
+- name: add regex invoke for "{{ outer_item.key }}"
   set_fact:
-      regex: "--regex {{ test_data.test_regex }}"
-  when: test_data.test_regex is defined and test_data.test_regex
+      regex: "--regex {{ outer_item.value.test_regex }}"
+  when: outer_item.value.test_regex is defined and outer_item.value.test_regex
 
 - block:
-      - name: run tempest "{{ test_suite_name }}" suite
+      - name: run tempest "{{ outer_item.key }}" suite
         shell: >
             source .venv/bin/activate;
             ostestr -s --no-pretty {{ regex | default('') }} {{ whitelistfile }} {{ blacklistfile }}
@@ -65,7 +61,7 @@
         ignore_errors: true
 
       - name: inject the test suite name to the XML name atribute
-        shell: "sed '/^<testsuite/s/name=\"\"/name=\"{{ test_suite_name }}\"/' -i {{ test_output_file }}"
+        shell: "sed '/^<testsuite/s/name=\"\"/name=\"{{ outer_item.key }}\"/' -i {{ test_output_file }}"
         args:
             chdir: "{{ tester.dir }}"
 
@@ -74,4 +70,4 @@
             src: "{{ tester.dir }}/{{ test_output_file }}"
             dest: "{{ lookup('env', 'PWD') }}/{{ test_output_file }}"
             flat: yes
-  when: test_data.test_regex is defined or whitelistfile is defined or blacklistfile is defined
+  when: outer_item.value.test_regex is defined or whitelistfile is defined or blacklistfile is defined
