@@ -5,51 +5,105 @@
   hosts: virthost
   gather_facts: no
   vars:
-      undercloud: 'undercloud-0'
-      undercloud_tar_file: "undercloud-quickstart-{{ director_puddle_version | default(core_puddle_version) }}.tar"
+      undercloud_image_file: "undercloud-quickstart-{{ director_puddle_version | default(core_puddle_version) }}"
+      # todo(yfried): add external refs so users can override these values and customize the Undercloud
+      undercloud_node:
+          name: 'undercloud-0'
+          disk_cache: "default"
+          memory: '16384'
+          cpu: '4'
+          os:
+              type: linux
+              variant: rhel7
+      undercloud_disk_path: "/var/lib/libvirt/images/{{ undercloud_node.name }}-disk1.qcow2"
+#      xml: "{{ undercloud_node.name }}.xml"
+
   tasks:
-      - name: download the undercloud tar file
-        get_url:
-            url: "http://{{ private.storage.oc_image_repo.server }}/{{ private.storage.oc_image_repo.path }}/{{ installer.product.version }}/{{ undercloud_tar_file }}"
-            dest: "~/{{ undercloud_tar_file }}"
+      - block:
+            - name: download the undercloud image file
+              get_url:
+                  url: "http://{{ private.storage.oc_image_repo.server }}/{{ private.storage.oc_image_repo.path }}/{{ installer.product.version }}/{{ undercloud_image_file }}.qcow2"
+                  dest: "~/{{ undercloud_image_file }}.qcow2"
 
-      - name: untar the undercloud quickstart
-        unarchive:
-            src: "~/{{ undercloud_tar_file }}"
-            dest: "~/"
-            copy: no
-            list_files: yes
-        register: tar
 
+        # Old images are tar'ed
+        rescue:
+            - name: download the undercloud tar file
+              get_url:
+                  url: "http://{{ private.storage.oc_image_repo.server }}/{{ private.storage.oc_image_repo.path }}/{{ installer.product.version }}/{{ undercloud_image_file }}.tar"
+                  dest: "~/{{ undercloud_image_file }}.tar"
+
+            - name: untar the undercloud quickstart
+              unarchive:
+                  src: "~/{{ undercloud_image_file }}.tar"
+                  dest: "~/"
+                  copy: no
+                  list_files: yes
+              register: tar
+
+            - name: remove the old XML
+              file:
+                  state: absent
+                  path: "{{ undercloud_node.name }}.xml"
+#
       - name: copy the image into libvirt images folder
-        shell: "cp -vf {{ undercloud }}-disk1.qcow2 /var/lib/libvirt/images/{{ undercloud }}-disk1.qcow2"
-
+        vars:
+            image_filename: "~/{{ (tar is defined) | ternary(undercloud_node.name + '-disk1', undercloud_image_file) }}.qcow2"
+        copy:
+            remote_src: yes
+            force: yes
+            src: "{{ image_filename }}"
+            dest: "{{ undercloud_disk_path }}"
+#
       - name: inject our key into the undercloud image
-        shell: "virt-customize -a /var/lib/libvirt/images/{{ undercloud }}-disk1.qcow2 --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel"
+        shell: "virt-customize -a {{ undercloud_disk_path }} --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel"
 
-      - name: define our new undercloud VM
-        shell: "virsh define {{ undercloud }}.xml"
+      - name: create Undercloud VM from snapshot
+        shell: |
+            virt-install --name {{ undercloud_node.name }} \
+               --disk path={{ undercloud_disk_path }},device=disk,bus=virtio,format=qcow2,cache={{ undercloud_node.disk_cache }} \
+               --network network:data \
+               --network network:management \
+               --network network:external \
+               --virt-type kvm \
+               --cpu host-model \
+               --ram {{ undercloud_node.memory }} \
+               --vcpus {{ undercloud_node.cpu }} \
+               --os-variant {{ undercloud_node.os.variant }} \
+               --import \
+               --noautoconsole \
+               --autostart \
+               --vnc \
+               --dry-run --print-xml
+        register: virt_xml
 
-      - name: start our undercloud VM
+      - name: define the undercloud VM
         virt:
-            name: "{{ undercloud }}"
+            name: "{{ undercloud_node.name }}"
+            command: define
+            xml: "{{ virt_xml.stdout }}"
+
+      - name: start the undercloud VM
+        virt:
+            name: "{{ undercloud_node.name }}"
             state: running
 
       #TODO(yfried): cleanup should be in a block/allways format
       - name: remove unarchived files from machine
+        vars:
+            image_filename: "~/{{ (tar is defined) | ternary(undercloud_node.name + '-disk1', undercloud_image_file) }}.qcow2"
         file:
             state: absent
-            path: "{{ item }}"
-        with_items: "{{ tar.files }}"
+            path: "{{ image_filename }}"
 
       - name: remove quickstart tar file
         file:
             state: absent
-            path: "{{ undercloud_tar_file }}"
+            path: "{{ undercloud_image_file }}.{{ (tar is defined) | ternary('tar', 'qcow2') }}"
 
       - name: wait for the undercloud IP to become available
         shell: |
-            virsh net-dhcp-leases external | awk '($4 == "ipv4") && ($6 =="{{ undercloud }}") {print $5}'
+            virsh net-dhcp-leases external | awk '($4 == "ipv4") && ($6 =="{{ undercloud_node.name }}") {print $5}'
         register: undercloud_ip
         until: undercloud_ip.stdout != ''
         retries: 15
@@ -64,7 +118,7 @@
 
       - name: add undercloud to host list
         add_host:
-            name: "{{ undercloud }}"
+            name: "{{ undercloud_node.name }}"
             groups: "undercloud,tester,openstack_nodes"
             ansible_ssh_user: "root"
             ansible_ssh_private_key_file: "{{ hostvars[groups['overcloud_nodes'][0]].ansible_ssh_private_key_file }}"
