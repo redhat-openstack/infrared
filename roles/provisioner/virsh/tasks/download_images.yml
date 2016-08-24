@@ -15,13 +15,12 @@
   shell: |
       set -x
       virt-sysprep -a {{ base_image_path }}/{{ base_image }} --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
-      virt-customize -a {{ base_image_path }}/{{ base_image }} --run-command 'sed 's/disable_root: 1/disable_root: 0/' -i /etc/cloud/cloud.cfg'
-      virt-customize -a {{ base_image_path }}/{{ base_image }} --run-command 'yum remove -y cloud-init*'
-      virt-customize -a {{ base_image_path }}/{{ base_image }} --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{0,1} && sed -i s/DEVICE=.*/DEVICE=eth1/g /etc/sysconfig/network-scripts/ifcfg-eth1'
-      virt-customize -a {{ base_image_path }}/{{ base_image }} --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{1,2} && sed -i s/DEVICE=.*/DEVICE=eth2/g /etc/sysconfig/network-scripts/ifcfg-eth2'
-      virt-customize -a {{ base_image_path }}/{{ base_image }} --root-password password:redhat --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel
+      virt-customize -a {{ base_image_path }}/{{ base_image }} --run-command 'yum remove -y cloud-init*' \
+          --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{0,1} && sed -i s/DEVICE=.*/DEVICE=eth1/g /etc/sysconfig/network-scripts/ifcfg-eth1' \
+          --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{1,2} && sed -i s/DEVICE=.*/DEVICE=eth2/g /etc/sysconfig/network-scripts/ifcfg-eth2'
+      virt-customize -a {{ base_image_path }}/{{ base_image }} --root-password password:redhat --mkdir /root/.ssh --chmod 0770:/root/.ssh --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys --selinux-relabel
       touch {{ base_image_path }}/{{ base_image }}.customized
   args:
-    creates: "{{ base_image_path }}/{{ base_image }}.customized"
+      creates: "{{ base_image_path }}/{{ base_image }}.customized"
   when: (item.value.import_url is not defined or not item.value.import_url)
   with_dict: "{{ node.value.disks }}"
