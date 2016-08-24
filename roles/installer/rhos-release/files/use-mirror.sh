@@ -2,19 +2,6 @@
 set -ex
 
 mirror="$1"
-if [[ "$mirror" =~ ^(brq|qeos|tlv)$ ]]; then
-    mirror="rhos-qe-mirror-${mirror}.usersys.redhat.com"
-fi
-
-
-# check that mirror is ready and responds in time
-
-mirror_status="$(curl --max-time 3 "http://${mirror}/status")"
-echo "Mirror ${mirror} status: '$mirror_status'"
-if [[ "$mirror_status" != "ready" ]]; then
-    echo "Skipping mirror usage as it is not ready."
-    exit 0
-fi
 
 mirror_ip=$(ping -c1 ${mirror}|head -n1|sed -r 's/^[^\(]+\(([^\)]+)\).*/\1/')
 if [[ -z "$mirror_ip" ]]; then
