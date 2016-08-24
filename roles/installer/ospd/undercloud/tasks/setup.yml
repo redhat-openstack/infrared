@@ -8,26 +8,25 @@
       line: "{{ ansible_ssh_host }}    {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
       state: present
 
-# TODO: acriz re-enable it when ansible 2.1 be shipped
-# - name: Creating extra repositories
-#   yum_repository:
-#     name: "{{ item.name }}"
-#     state: "{{ item.name | default(omit) }}"
-#     file: "{{ item.file| default(omit) }}"
-#     description: "{{ item.description | default(omit) }}"
-#     baseurl: "{{ item.baseurl | default(omit) }}"
-#     mirrorlist: "{{ item.mirrorlist | default(omit) }}"
-#     enabled: "{{ item.enabled | default(omit) }}"
-#     gpgcheck: "{{ item.gpgcheck | default(omit) }}"
-#   with_items: "{{ ospd.extra_repos.explicit | default([]) }}"
-#   when: ospd.extra_repos.from_config
+- name: Creating extra repositories
+  yum_repository:
+      name: "{{ item.name }}"
+      state: "{{ item.name | default(omit) }}"
+      file: "{{ item.file| default(omit) }}"
+      description: "{{ item.description | default(omit) }}"
+      baseurl: "{{ item.baseurl | default(omit) }}"
+      mirrorlist: "{{ item.mirrorlist | default(omit) }}"
+      enabled: "{{ item.enabled | default(omit) }}"
+      gpgcheck: "{{ item.gpgcheck | default(omit) }}"
+  with_items: "{{ (installer.extra_repos|default({})).explicit | default([]) }}"
+  when: (installer.extra_repos|default({})).from_config is defined
 
 - name: Downloading extra repositories
   get_url:
-    url="{{ item }}"
-    dest=/etc/yum.repos.d/
-  with_items: "{{ ospd.extra_repos.from_url | default([]) }}"
-  when: ospd.extra_repos.from_url is defined
+      url: "{{ item }}"
+      dest: /etc/yum.repos.d/
+  with_items: "{{ (installer.extra_repos|default({})).from_url | default([]) }}"
+  when: (installer.extra_repos|default({})).from_url is defined
 
 - name: update system packages
   yum:

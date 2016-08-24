@@ -55,7 +55,7 @@ This can be done passing through ``--extra-vars`` with the following key:
        :caption: repos.yml
 
         ---
-        ospd:
+        installer:
            extra_repos:
                from_url:
                    - http://yoururl.com/repofile1.repo
@@ -65,8 +65,7 @@ This can be done passing through ``--extra-vars`` with the following key:
 
         ir-installer --extra-vars=@repos.yml ospd
 
-..
-  TODO(acruz): uncomment this when ansible 2.1 be shipped with yum_repository module
+
   #. Using ospd.extra_repos.from_config
 
       Using this option enables you to set specific options for each repository:
@@ -75,7 +74,7 @@ This can be done passing through ``--extra-vars`` with the following key:
          :caption: repos.yml
 
           ---
-          ospd:
+          installer:
              extra_repos:
                  from_config:
                      - { name: my_repo1, file: my_repo1.file, description: my repo1, base_url: http://myurl.com/my_repo1, enabled: 0, gpg_check: 0 }
