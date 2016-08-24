@@ -1,4 +1,15 @@
 ---
+- set_fact:
+    rr_download_fqdn: ''
+- block:
+    - copy: src=select-mirror.sh dest=~/select-mirror.sh mode=0755
+    - script: "~/select-mirror.sh {{ mirror }}"
+      register: selected_mirror
+    - set_fact:
+        mirror_fqdn: "{{ selected_mirror.stdout | trim }}"
+        rr_download_fqdn: "{{ selected_mirror.stdout | trim | ternary('-H ' + selected_mirror.stdout|trim, '') }}"
+  when: "mirror is defined and mirror"
+
 - name: remove all repos
   command: "rm -f /etc/yum.repos.d/*"
 
@@ -10,10 +21,10 @@
 
 - block:
     - debug:
-        msg: "rhos-release {{ director_version }}-director -P -p {{ director_build }}"
+        msg: "rhos-release {{ director_version }}-director -P -p {{ director_build }} {{ rr_download_fqdn }}"
 
     - name: create necessary repos for director using rhos-release
-      command: "rhos-release {{ director_version }}-director -P -p {{ director_build }}"
+      command: "rhos-release {{ director_version }}-director -P -p {{ director_build }} {{ rr_download_fqdn }}"
       register: command_result
       until: command_result.stderr.find('Connection reset by peer') == -1
       retries: 40
@@ -28,10 +39,10 @@
   when: "director_version is defined and director_version | int < 10 and director_build is defined"
 
 - debug:
-    msg: "rhos-release {{ core_version }} -P -p {{ core_build }}"
+    msg: "rhos-release {{ core_version }} -P -p {{ core_build }} {{ rr_download_fqdn }}"
 
 - name: create necessary repos for core using rhos-release
-  command: "rhos-release {{ core_version }} -P -p {{ core_build }}"
+  command: "rhos-release {{ core_version }} -P -p {{ core_build }} {{ rr_download_fqdn }}"
   register: command_result
   until: command_result.stderr.find('Connection reset by peer') == -1
   retries: 40
@@ -45,7 +56,7 @@
 
 - block:
     - copy: src=use-mirror.sh dest=~/use-mirror.sh mode=0755
-    - command: "~/use-mirror.sh {{ mirror }}"
+    - command: "~/use-mirror.sh {{ mirror_fqdn }}"
       register: mirror_used_cmd
       changed_when: "'Skipping mirror' not in mirror_used_cmd.stdout"
-  when: "mirror is defined and mirror"
+  when: "mirror_fqdn is defined and mirror_fqdn"
