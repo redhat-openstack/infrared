@@ -1,49 +1,30 @@
 - name: prepare the machine for undercloud deployment
   include: setup.yml
 
-- name: copy our deployment folder
-  copy:
-      src: "{{ installer.deployment.files }}"
-      dest: "/home/{{ installer.user.name }}/"
-      directory_mode: u=rwX,g=rX,o=rX
-      owner: "{{ installer.user.name }}"
-      group: "{{ installer.user.name }}"
+- name: check if undercloud.conf is under the deployment folder
+  stat:
+      path: "{{ installer.deployment.files.rstrip('/') }}/undercloud.conf"
+  register: undercloud_conf
 
-- name: create default undercloud.conf file
+- name: copy our configuration if provided by the user
+  vars:
+      local_src: "{%- if installer.undercloud is defined and installer.undercloud.config is defined and installer.undercloud.config -%}
+          {%- elif undercloud_conf.stat.exists -%}
+          {{ undercloud_conf.stat.path }}
+          {%- elif 'virthost' in groups.all -%}
+          templates/undercloud.conf
+          {%- else -%}
+          False
+          {%- endif -%}"
+      deafult_conf: /usr/share/instack-undercloud/undercloud.conf.sample
   copy:
-      force: no
-      remote_src: True
-      src: "/usr/share/instack-undercloud/undercloud.conf.sample"
+      remote_src: "{{ not local_src }}"
+      src: "{{ local_src | ternary(local_src, deafult_conf)}}"
       dest: "/home/{{ installer.user.name }}/undercloud.conf"
       owner: "{{ installer.user.name }}"
       group: "{{ installer.user.name }}"
       mode: 0755
-
-- name: check if undercloud.conf is under the deployment folder
-  stat:
-      path: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}/undercloud.conf"
-  register: undercloud_conf
-
-- name: copy the undercloud.conf if provided with deployment folder
-  copy:
       force: yes
-      remote_src: True
-      src: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}/undercloud.conf"
-      dest: "/home/{{ installer.user.name }}/undercloud.conf"
-      owner: "{{ installer.user.name }}"
-      group: "{{ installer.user.name }}"
-      mode: 0644
-  when: undercloud_conf.stat.exists
-
-- name: copy our configuration if provided by the user
-  copy:
-      src: "{{ installer.undercloud.config }}"
-      dest: "/home/{{ installer.user.name }}/undercloud.conf"
-      owner: "{{ installer.user.name }}"
-      group: "{{ installer.user.name }}"
-      mode: 0644
-      force: yes
-  when: installer.undercloud.config is defined and installer.undercloud.config
 
 - name: create the base undercloud deploy script
   become: yes
