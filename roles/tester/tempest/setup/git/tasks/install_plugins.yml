@@ -1,8 +1,7 @@
 ---
-# external loop iterator
-- set_fact:
-      plugins: "{{ item.value.plugins | default({}) }}"
-      test_suite_name: "{{ item.key }}"
+- name: set plugins list iterator
+  set_fact:
+      plugins: "{{ test_suite.value.plugins | default({}) }}"
       plugins_dir: "{{ ('~/' + tester.dir) | dirname }}/plugins"
 
 - name: create plugins directory

@@ -60,59 +60,71 @@
       state: present
   with_items: "{{ tester.setup.pip_packages }}"
 
-# todo(yfried): remove this once we have a solution for upstream config
-- block:
-      # Only clone redhat/tempest if no config script exists
-      - name: check if config_tempest exists
-        stat:
-            path: "~/{{ tester.dir }}/tools/config_tempest.py"
-        register: config_tempest
-
-      - name: fetch RedHat tempest
-        git:
-            repo: "{{ tester.setup.downstream_tempest.repo }}"
-            dest: "~/{{ tester.setup.downstream_tempest.dir }}"
-            # version is required by ansible-lint
-            version: "{{ tester.setup.downstream_tempest.version | default(omit)}}"
-        when: tester.local_dir is not defined and not config_tempest.stat.exists
-
-- name: Install Tempest from {{ target }}
-  vars:
-    target: "{{ config_tempest.stat.exists | ternary('.', '~/' + tester.setup.downstream_tempest.dir ) }}"
-  pip:
-      chdir: "~/{{ tester.dir }}"
-      virtualenv: "~/{{ tester.dir }}/.venv"
-      name: "{{ target }}"
-      state: forcereinstall
-      editable: true
-
-- name: run tempest configuration tool
-  vars:
-      tempest_config_repo: "~/{{ (config_tempest.stat.exists) | ternary(tester.dir, tester.setup.downstream_tempest.dir) }}"
-      deployer_input: "{{ '(deployer_input_result | success)' | ternary('--deployer-input ~/tempest-deployer-input.conf', '') }}"
+# todo(yfried): remove this once config is decoupled from downstream tempest
+- vars:
       orchestration: "{{ (installer.type == 'ospd') | ternary('orchestration.stack_owner_role heat_stack_owner', '') }}"
       region: "{{ (installer.type == 'ospd') | ternary('identity.region regionOne', '') }}"
-  shell: |
-      source ~/{{ tester.dir }}/.venv/bin/activate
-      source ~/keystonerc
-      {{ tempest_config_repo }}/tools/config_tempest.py {{ deployer_input }} --debug \
-            --create \
-            identity.uri $OS_AUTH_URL \
-            identity.admin_password $OS_PASSWORD {{ orchestration }} {{ region }} \
-            scenario.img_dir ~/{{ tester.dir }}/etc \
-            --out ~/{{ tester.dir }}/etc/tempest.conf
-  args:
-      chdir: "{{ tempest_config_repo }}"
+      deployer_input: "{{ '(deployer_input_result | success)' | ternary('--deployer-input ~/tempest-deployer-input.conf', '') }}"
+      redhat_tempest:
+          repo: https://github.com/redhat-openstack/tempest.git
+          dir: ~/downstream-tempest
+          venv: ~/.redhat_tempest_venv
+  block:
+      - name: clone redhat/Tempest
+        git:
+            repo: "{{ redhat_tempest.repo }}"
+            dest: "{{ redhat_tempest.dir }}"
+            # version is required by ansible-lint
+            version: "{{ redhat_tempest.version | default(omit)}}"
+        when: tester.local_dir is not defined
 
-- name: restore tempest package
+      - name: create venv for redhat/Tempest
+        pip:
+            virtualenv: "{{ redhat_tempest.venv }}"
+            name: "{{ item }}"
+            state: latest
+        with_items:
+            - pip
+            - setuptools
+            - pbr
+
+      - name: get repo requirements for redhat/Tempest
+        pip:
+            virtualenv: "{{ redhat_tempest.venv }}"
+            chdir: "{{ redhat_tempest.dir }}"
+            requirements: "{{ item }}"
+        with_items:
+            - requirements.txt
+            - test-requirements.txt
+
+      - name: Install redhat/Tempest for configuration only
+        pip:
+            virtualenv: "{{ redhat_tempest.venv }}"
+            name: "{{ redhat_tempest.dir }}"
+            editable: true
+
+      - name: run tempest configuration tool from redhat/Tempest
+        shell: |
+            source {{ redhat_tempest.venv }}/bin/activate
+            source ~/keystonerc
+            {{ redhat_tempest.dir }}/tools/config_tempest.py {{ deployer_input }} --debug \
+                  --create \
+                  identity.uri $OS_AUTH_URL \
+                  identity.admin_password $OS_PASSWORD {{ orchestration }} {{ region }} \
+                  scenario.img_dir ~/{{ tester.dir }}/etc \
+                  --out ~/{{ tester.dir }}/etc/tempest.conf
+        args:
+            chdir: "{{ redhat_tempest.dir }}"
+
+- name: Install Tempest package
   pip:
       chdir: "~/{{ tester.dir }}"
       virtualenv: "~/{{ tester.dir }}/.venv"
       name: "."
-      state: forcereinstall
       editable: true
-  when: not config_tempest.stat.exists
 
 - name: install test plugins
   include: install_plugins.yml
   with_dict: "{{ tester.tests }}"
+  loop_control:
+      loop_var: test_suite
