@@ -2,10 +2,13 @@
 - set_fact:
     rr_download_fqdn: ''
 - block:
-    - copy: src=select-mirror.sh dest=~/select-mirror.sh mode=0755
-    - command: "~/select-mirror.sh {{ mirror }}"
+    - name: copy select-mirror.sh into home
+      copy: src=select-mirror.sh dest=~/select-mirror.sh mode=0755
+    - name: run select-mirror with provided mirror value
+      command: "~/select-mirror.sh {{ mirror }}"
       register: selected_mirror
-    - set_fact:
+    - name: process results of mirror selection
+      set_fact:
         mirror_fqdn: "{{ selected_mirror.stdout | trim }}"
         rr_download_fqdn: "{{ selected_mirror.stdout | trim | ternary('-H ' + selected_mirror.stdout|trim, '') }}"
   when: "mirror is defined and mirror"
@@ -30,7 +33,8 @@
       retries: 40
       delay: 5
 
-    - set_fact:
+    - name: parse specific number of director puddle used from rhos-release output
+      set_fact:
         director_puddle_version: "{{ command_result | regex_replace('^.*director[ ]+-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
 
     - debug:
@@ -48,15 +52,18 @@
   retries: 40
   delay: 5
 
-- set_fact:
+- name: parse specific number of puddle used from rhos-release output
+  set_fact:
     core_puddle_version: "{{ command_result | regex_replace('^.*-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
 
 - debug:
     msg: "Build mark: core_puddle={{ core_puddle_version }}"
 
 - block:
-    - copy: src=use-mirror.sh dest=~/use-mirror.sh mode=0755
-    - command: "~/use-mirror.sh {{ mirror_fqdn }}"
+    - name: copy use-mirror.sh to home
+      copy: src=use-mirror.sh dest=~/use-mirror.sh mode=0755
+    - name: reconfigure system to use mirror
+      command: "~/use-mirror.sh {{ mirror_fqdn }}"
       register: mirror_used_cmd
       changed_when: "'Skipping mirror' not in mirror_used_cmd.stdout"
   when: "mirror_fqdn is defined and mirror_fqdn"
