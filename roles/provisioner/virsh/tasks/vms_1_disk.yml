@@ -1,0 +1,23 @@
+---
+- name: import vm disk image(s) for node if specified
+  get_url:
+      url: "{{ item.value.import_url }}"
+      dest: "{{ base_image_path }}/{{ node.value.name }}-{{ item.key }}.qcow2"
+      timeout: 30
+  register: result
+  until: result.msg.find("Request failed") == -1
+  retries: 5
+  delay: 5
+  when: item.value.import_url is defined and item.value.import_url
+  with_dict: "{{ node.value.disks }}"
+
+- name: create disk(s) from vm base image
+  shell: |
+      {% for num in range(1, node.value.amount + 1, 1) %}
+      cp {{ base_image_path }}/{{ node.value.name }}-{{ item.key }}.qcow2 {{ base_image_path }}/{{ node.value.name }}-{{ num - 1 }}-{{ item.key }}.qcow2
+      qemu-img create -f qcow2 -o preallocation={{ item.value.preallocation }} {{ base_image_path }}/{{ node.value.name }}-{{ num - 1 }}-{{ item.key }}.qcow2 {{ item.value.size }}
+      {% if item.key == 'disk1' %}
+      virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ base_image }} {{ item.value.path }}/{{ node.value.name }}-{{ num - 1 }}-{{ item.key }}.qcow2
+      {% endif %}
+      {% endfor %}
+  with_dict: "{{ node.value.disks }}"
