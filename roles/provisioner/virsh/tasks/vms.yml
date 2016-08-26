@@ -71,8 +71,27 @@
 
 
 # now continue with creating vm's
-- name: create our vms
-  include: "create_vms.yml"
+#
+- name: "prepare disks for each VM"
+  include: "vms_1_disk.yml"
   with_dict: "{{ provisioner.topology.nodes }}"
   loop_control:
       loop_var: node
+
+- name: "define libvirt VMs"
+  include: "vms_2_install.yml"
+  with_dict: "{{ provisioner.topology.nodes }}"
+  loop_control:
+      loop_var: node
+
+- name: "wait for VMs to come up, fix their ip and add to inventory"
+  include: "vms_3_netip.yml"
+  with_dict: "{{ provisioner.topology.nodes }}"
+  loop_control:
+      loop_var: node
+
+- name: "update ansible.ssh.config template"
+  template:
+      src: ansible.ssh.config.j2
+      dest: "{{ inventory_dir }}/ansible.ssh.config"
+  delegate_to: localhost
