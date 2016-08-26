@@ -14,16 +14,16 @@
 #      stands for download-base-image
 - name: "get all disks dictionaries"
   set_fact:
-    dbi_disk_dict: "{{ provisioner.topology.nodes.values() | map(attribute='disks') | list }}"  # | map(attribute='disks') | list }}"  # last sum is list flattening
+    dbi_disks_dict: "{{ provisioner.topology.nodes.values() | map(attribute='disks') | list }}"  # | map(attribute='disks') | list }}"  # last sum is list flattening
 - name: "define acummulator var"
   set_fact:
-    dbi_disk_list: []
-- name: "accumulate all disk dictionaries contents"
+    dbi_disks_list: []
+- name: "accumulate all disks dictionaries contents"
   set_fact:
-    dbi_disk_list: "{{ dbi_disk_list + item.values() }}"
+    dbi_disks_list: "{{ dbi_disks_list + item.values() }}"
   with_items: "{{ dbi_disks_dict }}"
 - name: "find all disks with import_url"
-  set_fact: dbi_disks_imported="{{ dbi_disk_list | selectattr('import_url', 'defined') | selectattr('import_url') | list }}"
+  set_fact: dbi_disks_imported="{{ dbi_disks_list | selectattr('import_url', 'defined') | selectattr('import_url') | list }}"
 - name: "check if we have any not imported disk"
   set_fact: dbi_any_not_imported="{{ dbi_disks_list|length > dbi_disks_imported|length }}"
 
@@ -65,8 +65,27 @@
 
 
 # now continue with creating vm's
-- name: create our vms
-  include: "create_vms.yml"
+#
+- name: "prepare disks for each VM"
+  include: "vms_1_disk.yml"
   with_dict: "{{ provisioner.topology.nodes }}"
   loop_control:
       loop_var: node
+
+- name: "define libvirt VMs"
+  include: "vms_2_install.yml"
+  with_dict: "{{ provisioner.topology.nodes }}"
+  loop_control:
+      loop_var: node
+
+- name: "wait for VMs to come up, fix their ip and add to inventory"
+  include: "vms_3_netip.yml"
+  with_dict: "{{ provisioner.topology.nodes }}"
+  loop_control:
+      loop_var: node
+
+- name: "update ansible.ssh.config template"
+  template:
+      src: ansible.ssh.config.j2
+      dest: "{{ inventory_dir }}/ansible.ssh.config"
+  delegate_to: localhost
