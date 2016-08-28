@@ -145,3 +145,15 @@ class IRRequiredArgsMissingException(IRException):
                 message += ("\n * [{}]: {}".format(cmd_name, ", ".join(
                     ["'" + arg + "'" for arg in args])))
         super(IRRequiredArgsMissingException, self).__init__(message)
+
+
+class IRWorspaceExists(IRException):
+    def __init__(self, workspace):
+        message = "Workspace {} already exists".format(workspace)
+        super(IRWorspaceExists, self).__init__(message)
+
+
+class IRWorspaceMissing(IRException):
+    def __init__(self, workspace):
+        message = "Workspace {} doesn't exist".format(workspace)
+        super(IRWorspaceMissing, self).__init__(message)
