@@ -133,15 +133,15 @@
   handlers:
       - name: update hosts
         template:
-          dest: "{{ lookup('env', 'PWD') }}/hosts-installer"
+          dest: "{{ inventory_dir }}/hosts-installer"
           src: "{{ inventory_dir }}/templates/inventory.j2"
         delegate_to: localhost
 
       - name: Link to new Inventory file
         file:
-          dest: "{{ lookup('env', 'PWD') }}/hosts"
+          dest: "{{ inventory_dir }}/hosts"
           state: link
-          src: "{{ lookup('env', 'PWD') }}/hosts-installer"
+          src: "{{ inventory_dir }}/hosts-installer"
         delegate_to: localhost
 
 

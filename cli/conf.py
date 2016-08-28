@@ -13,7 +13,8 @@ DEFAULT_SECTIONS = {
         settings='settings',
         modules='library',
         roles='roles',
-        playbooks='playbooks'
+        playbooks='playbooks',
+        workspaces='.workspaces'
     ),
 
     'provisioner': dict(
@@ -96,6 +97,12 @@ class ConfigWrapper(object):
         Gets the modules directory.
         """
         return self.config.get(section, 'modules')
+
+    def get_workspaces_dir(self, section=_DEFAULT_SECTION):
+        """
+        Gets the modules directory.
+        """
+        return self.config.get(section, 'workspaces')
 
     def get_playbooks_dir(self, section=_DEFAULT_SECTION):
         """
