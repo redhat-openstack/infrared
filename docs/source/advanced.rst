@@ -37,6 +37,50 @@ set ``--images-update`` to ``yes``::
 .. note:: This might take a while and sometimes hangs. Probably due to old libguestfs packages in RHEL 7.2.
  For a more detailed console output of that task, set ``--images-update`` to ``verbose``.
 
+Profiles
+^^^^^^^^
+
+.. warning:: This feature is "tech preview" and is disabled by default. It will be mandatory in the future, and its CLI will be modified.
+
+Using `profiles`, user manage several environments created by `InfraRed` and alternate between them.
+All runtime files (Inventory, hosts, ssh configuration, ansible.cfg, etc...) will be loaded from a profile directory and all output files
+(Inventory, ssh keys, environment settings, facts caches, etc...) will be generated into that directory.
+
+.. note:: When `profiles` are disabled, `InfraRed` will continue to use current working directory as both source and destination for runtime files.
+
+Enable:
+    In `infrared.cfg <setup.html#Configuration>`_, define a path for profiles directory. A recommended place for this is
+    ``~/.infrared/profiles``. Making this a hidden path is another advantage.
+Create:
+    Create new profile. If name isn't provided, InfraRed will generate one based on timestamp::
+
+        ir-profile create example
+        Profile 'example' created
+    An initial inventory file can be provided using ``--inventory`` argument::
+
+        ir-profile create --inventory hosts-prov
+        Profile 'profile_2016-09-18_11-46-22' created
+
+Active:
+    Show the active profile::
+
+        ir-profile active
+        profile_2016-09-18_11-46-22
+
+    Set the active profile::
+
+        ir-profile active example
+        Profile 'example' is active
+
+List:
+    List all profiles. Active profile will be marked::
+
+        ir-profile list
+                example
+            *	profile_2016-09-18_11-50-44
+                profile_2016-09-18_11-46-22
+                yair
+
 Custom repositories
 ^^^^^^^^^^^^^^^^^^^
 

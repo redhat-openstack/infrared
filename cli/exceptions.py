@@ -145,3 +145,30 @@ class IRRequiredArgsMissingException(IRException):
                 message += ("\n * [{}]: {}".format(cmd_name, ", ".join(
                     ["'" + arg + "'" for arg in args])))
         super(IRRequiredArgsMissingException, self).__init__(message)
+
+
+class IRProfileExists(IRException):
+    def __init__(self, profile):
+        message = "Profile {} already exists".format(profile)
+        super(IRProfileExists, self).__init__(message)
+
+
+class IRProfileMissing(IRException):
+    def __init__(self, profile):
+        message = "Profile {} doesn't exist".format(profile)
+        super(IRProfileMissing, self).__init__(message)
+
+
+class IRProfileUndefined(IRConfigurationException):
+    def __init__(self):
+        message = "'profiles' path undefined in 'infrared.cfg'. If you wish " \
+                  "to use 'profiles' feature, please define it. Use " \
+                  "'infrared.cfg.example as template."
+        super(IRProfileUndefined, self).__init__(message)
+
+
+class IRProfileMissingFile(IRException):
+    def __init__(self, profile, filename):
+        message = "File {} not found in Profile {}".format(filename,
+                                                           profile)
+        super(IRProfileMissingFile, self).__init__(message)
