@@ -24,7 +24,7 @@ Clone InfraRed stable from GitHub::
     pip install .
     cp ansible.cfg.example ansible.cfg
 
-.. warning:: Some of the data is sensitive and can't be uploaded upstream. Users with access to redhat internal network can run the following command to download a file contains some credentials & other sensitive data, other user will have to provide this data explicitly everywhere there is a reference to private variables.
+.. warning:: While most topologies will work 'out of the box', some topologies (like external ceph, netapp, etc) requires internal credentials which we cannot upload upstream. Users with access to redhat internal network can run the following command to download a file contains some credentials & other sensitive data, other user will have to provide this data explicitly everywhere there is a reference to private variables.
 
   .. code-block:: text
 
