@@ -16,36 +16,34 @@
               type: linux
               variant: rhel7
       undercloud_disk_path: "/var/lib/libvirt/images/{{ undercloud_node.name }}-disk1.qcow2"
-#      xml: "{{ undercloud_node.name }}.xml"
 
   tasks:
       - block:
-            - name: download the undercloud image file
-              get_url:
-                  url: "http://{{ private.storage.oc_image_repo.server }}/{{ private.storage.oc_image_repo.path }}/{{ installer.product.version }}/{{ undercloud_image_file }}.qcow2"
-                  dest: "~/{{ undercloud_image_file }}.qcow2"
-
+          - name: download the undercloud image file
+            get_url:
+                url: "http://{{ private.storage.oc_image_repo.server }}/{{ private.storage.oc_image_repo.path }}/{{ installer.product.version }}/{{ undercloud_image_file }}.qcow2"
+                dest: "~/{{ undercloud_image_file }}.qcow2"
 
         # Old images are tar'ed
         rescue:
-            - name: download the undercloud tar file
-              get_url:
-                  url: "http://{{ private.storage.oc_image_repo.server }}/{{ private.storage.oc_image_repo.path }}/{{ installer.product.version }}/{{ undercloud_image_file }}.tar"
-                  dest: "~/{{ undercloud_image_file }}.tar"
+          - name: download the undercloud tar file
+            get_url:
+                url: "http://{{ private.storage.oc_image_repo.server }}/{{ private.storage.oc_image_repo.path }}/{{ installer.product.version }}/{{ undercloud_image_file }}.tar"
+                dest: "~/{{ undercloud_image_file }}.tar"
 
-            - name: untar the undercloud quickstart
-              unarchive:
-                  src: "~/{{ undercloud_image_file }}.tar"
-                  dest: "~/"
-                  copy: no
-                  list_files: yes
-              register: tar
+          - name: untar the undercloud quickstart
+            unarchive:
+                src: "~/{{ undercloud_image_file }}.tar"
+                dest: "~/"
+                copy: no
+                list_files: yes
+            register: tar
 
-            - name: remove the old XML
-              file:
-                  state: absent
-                  path: "{{ undercloud_node.name }}.xml"
-#
+          - name: remove the old XML
+            file:
+                state: absent
+                path: "{{ undercloud_node.name }}.xml"
+
       - name: copy the image into libvirt images folder
         vars:
             image_filename: "~/{{ (tar is defined) | ternary(undercloud_node.name + '-disk1', undercloud_image_file) }}.qcow2"
@@ -54,9 +52,9 @@
             force: yes
             src: "{{ image_filename }}"
             dest: "{{ undercloud_disk_path }}"
-#
+
       - name: inject our key into the undercloud image
-        shell: "virt-customize -a {{ undercloud_disk_path }} --ssh-inject root:file:/root/.ssh/id_rsa.pub --selinux-relabel"
+        shell: "virt-customize -a {{ undercloud_disk_path }} --root-password password:redhat --mkdir /root/.ssh --chmod 0700:/root/.ssh --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys --selinux-relabel"
 
       - name: create Undercloud VM from snapshot
         shell: |
