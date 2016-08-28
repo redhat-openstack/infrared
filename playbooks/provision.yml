@@ -14,9 +14,9 @@
   gather_facts: no
   tasks:
     - file:
-        dest: "{{ lookup('env', 'PWD') }}/hosts"
+        dest: "{{ inventory_dir }}/hosts"
         state: link
-        src: "{{ lookup('env', 'PWD') }}/local_hosts"
+        src: "{{ inventory_dir }}/local_hosts"
 
 - include: "provisioner/{{ provisioner.type }}/main.yml"
 
@@ -25,11 +25,11 @@
   gather_facts: no
   tasks:
     - template:
-        dest: "{{ lookup('env', 'PWD') }}/hosts-prov"
+        dest: "{{ inventory_dir }}/hosts-prov"
         src: "{{ inventory_dir }}/templates/inventory.j2"
 
     - file:
-        dest: "{{ lookup('env', 'PWD') }}/hosts"
+        dest: "{{ inventory_dir }}/hosts"
         state: link
-        src: "{{ lookup('env', 'PWD') }}/hosts-prov"
+        src: "{{ inventory_dir }}/hosts-prov"
 
