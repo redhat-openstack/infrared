@@ -5,7 +5,9 @@ import yaml
 from ansible.utils.display import Display
 from ansible.cli.playbook import PlaybookCLI
 
-from cli import exceptions, logger
+from cli import exceptions
+from cli import logger
+from cli import workspace
 
 LOG = logger.LOG
 
@@ -28,6 +30,8 @@ def ansible_playbook(config, playbook, verbose=2, settings=None,
     additional_args = additional_args or []
     playbook_path = os.path.join(config.get_playbooks_dir(), playbook)
     LOG.debug("Additional ansible args: {}".format(additional_args))
+
+    invetory_workspace = workspace.WorkspaceManager.get()
 
     # hack for verbosity
     display = Display(verbosity=verbose)
