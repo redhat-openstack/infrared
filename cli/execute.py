@@ -1,17 +1,18 @@
-import os
 import tempfile
+
+import os
 import yaml
-
-from ansible.utils.display import Display
 from ansible.cli.playbook import PlaybookCLI
-
-from cli import exceptions, logger
+from ansible.utils.display import Display
+from cli import exceptions
+from cli import logger
+from cli import profile_manager
 
 LOG = logger.LOG
 
 
 def ansible_playbook(config, playbook, verbose=2, settings=None,
-                     inventory="local_hosts", additional_args=None):
+                     inventory=None, additional_args=None):
     """Wraps the 'ansible-playbook' CLI.
 
      :param config: the infrared configuration
@@ -29,6 +30,17 @@ def ansible_playbook(config, playbook, verbose=2, settings=None,
     playbook_path = os.path.join(config.get_playbooks_dir(), playbook)
     LOG.debug("Additional ansible args: {}".format(additional_args))
 
+    # setup profile
+    myprofile = profile_manager.ProfileManager.get_active()
+    myprofile = myprofile or profile_manager.ProfileManager.create(
+        inventory=inventory)
+    # Set ansible cfg if exists in cwd or provided via ENV vars. else skip
+    local_ansible_cfg = "ansible.cfg"
+    myprofile.ansible_cfg = os.environ.get(
+        "ANSIBLE_CONFIG",
+        local_ansible_cfg if os.path.exists(local_ansible_cfg) else None
+    )
+
     # hack for verbosity
     display = Display(verbosity=verbose)
     import __main__ as main
@@ -37,12 +49,20 @@ def ansible_playbook(config, playbook, verbose=2, settings=None,
     cli_args = ['execute',
                 playbook_path,
                 "-v" if not verbose else '-' + 'v' * verbose,
-                '--inventory', inventory or 'local_hosts',
+                '--inventory', myprofile.inventory,
                 '--module-path', config.get_modules_dir()]
 
     cli_args.extend(additional_args)
 
     results = _run_playbook(cli_args, settings)
+
+    # todo(yfried): depracte this
+    try:
+        os.unlink("hosts")
+    except OSError as e:
+        if e.errno != 2:
+            raise
+    os.symlink(myprofile.inventory, "hosts")
 
     if results:
         raise exceptions.IRPlaybookFailedException(playbook)

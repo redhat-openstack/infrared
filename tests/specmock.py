@@ -1,6 +1,6 @@
 import sys
 import pytest
-from cli import main, conf
+from cli import main, conf, profile_manager
 
 
 class IRMock(object):
@@ -11,6 +11,7 @@ class IRMock(object):
     IR_CONFIG = 'infrared.cfg'
     IR_SETTINGS = 'settings'
     IR_PLAYBOOKS = 'playbooks'
+    IR_PROFILES = 'profiles'
     IR_APP_NAME = 'appmock'
     IR_SUB_COMMAND = 'cmdmock'
 
@@ -45,6 +46,7 @@ def mock_roots(tmpdir):
     root = tmpdir.mkdir(IRMock.IR_ROOT)
     settings = root.mkdir(IRMock.IR_SETTINGS)
     playbooks = root.mkdir(IRMock.IR_PLAYBOOKS)
+    profiles = root.mkdir(IRMock.IR_PROFILES)
     cfg_file = root.join(IRMock.IR_CONFIG)
     cfg_file.write("""
 [defaults]
@@ -52,13 +54,15 @@ settings  = {0}
 modules   = library
 roles     = roles
 playbooks = {1}
+profiles = {2}
 
 [appmock]
 cleanup_playbook=cleanup.yml
 main_playbook=appmock.yml
 
 """.format(settings.strpath,
-           playbooks.strpath))
+           playbooks.strpath,
+           profiles.strpath))
     return dict(settings=settings,
                 playbooks=playbooks,
                 irconfig=cfg_file)
@@ -199,4 +203,9 @@ def mock_spec(mock_roots, mock_settings, mock_playbooks, monkeypatch):
 
     Returns a function which will run mock.
     """
-    return IRMock(mock_roots, monkeypatch)
+    irmock = IRMock(mock_roots, monkeypatch)
+
+    profile_manager.ProfileManager._profiledir = None
+    profile_manager.ProfileManager._config = irmock.config
+
+    return irmock
