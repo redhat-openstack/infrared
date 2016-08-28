@@ -1,23 +1,43 @@
 ---
 - set_fact:
     rr_download_fqdn: ''
+
 - block:
     - name: copy select-mirror.sh into home
-      copy: src=select-mirror.sh dest=~/select-mirror.sh mode=0755
+      copy:
+          src: "select-mirror.sh"
+          dest: "~/select-mirror.sh"
+          mode: "0755"
+
     - name: run select-mirror with provided mirror value
       command: "~/select-mirror.sh {{ mirror }}"
       register: selected_mirror
+
     - name: process results of mirror selection
       set_fact:
-        mirror_fqdn: "{{ selected_mirror.stdout | trim }}"
-        rr_download_fqdn: "{{ selected_mirror.stdout | trim | ternary('-H ' + selected_mirror.stdout|trim, '') }}"
+          mirror_fqdn: "{{ selected_mirror.stdout | trim }}"
+          rr_download_fqdn: "{{ selected_mirror.stdout | trim | ternary('-H ' + selected_mirror.stdout|trim, '') }}"
   when: "mirror is defined and mirror"
 
-- name: remove all repos
-  command: "rm -f /etc/yum.repos.d/*"
+- name: gather repo file names to remove
+  find:
+      path: "/etc/yum.repos.d"
+  register: files_to_remove
+
+- name: remove all repo files
+  file:
+      state: absent
+      path: "{{ item.path }}"
+  with_items: "{{ files_to_remove.files }}"
+
+- name: get the rhos-release RPM
+  get_url:
+      url: "{{ installer.product.rpm }}"
+      dest: "/tmp/rhos-release-latest.rpm"
+      validate_certs: "no"
 
 - name: install the rhos-release RPM
-  shell: "yum localinstall -y {{ rr_rpm_url }}"
+  shell: "yum localinstall -y /tmp/rhos-release-latest.rpm"
 
 - name: remove rhos-release repos if needed
   shell: "rhos-release -x"
@@ -61,7 +81,11 @@
 
 - block:
     - name: copy use-mirror.sh to home
-      copy: src=use-mirror.sh dest=~/use-mirror.sh mode=0755
+      copy:
+          src: "use-mirror.sh"
+          dest: "~/use-mirror.sh"
+          mode: 0755
+
     - name: reconfigure system to use mirror
       command: "~/use-mirror.sh {{ mirror_fqdn }}"
       register: mirror_used_cmd
