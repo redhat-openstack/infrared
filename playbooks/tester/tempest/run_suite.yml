@@ -68,6 +68,6 @@
       - name: Fetch resulting file
         fetch:
             src: "{{ tester.dir }}/{{ test_output_file }}"
-            dest: "{{ lookup('env', 'PWD') }}/{{ test_output_file }}"
+            dest: "{{ inventory_dir }}/{{ test_output_file }}"
             flat: yes
   when: test_suite.value.test_regex is defined or whitelistfile is defined or blacklistfile is defined
