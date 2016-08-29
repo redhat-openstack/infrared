@@ -397,7 +397,7 @@ class Spec(object):
 
                 # check required options.
                 if (option.get('required', False) and
-                        name not in parser_args or
+                        (name not in parser_args or not parser_args[name]) or
                         option['name'] in condition_req_args) and \
                         name not in silent_args:
                     result[parser_name].append(name)
