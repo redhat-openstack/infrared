@@ -30,13 +30,3 @@
             host: "{{ ansible_ssh_host }}"
             search_regex: OpenSSH
         delegate_to: virthost
-
-- name: Update ansible with the new hosts
-  hosts: localhost
-  tasks:
-      - name: update ansible with the new SSH settings
-        ini_file:
-            dest: "{{ inventory_dir }}/ansible.cfg"
-            section: ssh_connection
-            option: ssh_args
-            value: "-o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -F {{ inventory_dir }}/ansible.ssh.config"

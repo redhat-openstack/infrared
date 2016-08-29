@@ -4,14 +4,14 @@
           virt-install --name {{ node.value.name }}-{{ item | int - 1 }} \
             {% for disk_name, disk_values in node.value.disks.iteritems() %}
             {% if disk_values.import_url is defined and disk_values.import_url %}
-             --disk path={{ base_image_path }}/{{ node.value.name }}-{{ item|int - 1 }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
+             --disk path={{ base_image_path }}/{{ node.value.name }}-{{ item |int - 1 }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
             {% else %}
-             --disk path={{ disk_values.path }}/{{ node.value.name }}-{{ item|int - 1 }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
-            {% endif %}
+             --disk path={{ disk_values.path }}/{{ node.value.name }}-{{ item |int - 1 }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
+            {% endif -%}
             {% endfor %}
-             --network network:data \
-             --network network:management \
-             --network network:external \
+            {% for interface_name in node.value.interfaces | sort %}
+             --network network:{{ node.value.interfaces[interface_name].network }} \
+            {% endfor -%}
              --virt-type kvm \
              --cpu host-model \
              --ram {{ node.value.memory }} \
@@ -33,9 +33,9 @@
          --disk path={{ disk_values.path }}/{{ node.value.name }}-{{ item|int - 1 }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
         {% endif %}
         {% endfor %}
-         --network network:data \
-         --network network:management \
-         --network network:external \
+        {% for interface_name in node.value.interfaces | sort %}
+         --network network:{{ node.value.interfaces[interface_name].network }} \
+        {% endfor -%}
          --virt-type kvm \
          --cpu host-model \
          --ram {{ node.value.memory }} \

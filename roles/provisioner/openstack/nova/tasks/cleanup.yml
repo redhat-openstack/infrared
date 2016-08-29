@@ -3,6 +3,8 @@
 
 - include: "cleanup_nodes.yml"
   with_dict: "{{ provisioner.nodes }}"
+  loop_control:
+      loop_var: node
 
 - name: Remove keypair
   os_keypair:
