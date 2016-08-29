@@ -6,7 +6,7 @@ networks:
         name: 'data'
     external:
         name: 'external'
-    management: 
+    management:
         name: 'management'
 
 subnets:
@@ -38,5 +38,5 @@ routers:
     router:
         name: 'router'
         attach_subnets:
-            - "{{ !lookup provisioner.neutron.networks.external.name }}"
             - "{{ !lookup provisioner.neutron.networks.management.name }}"
+            - "{{ !lookup provisioner.neutron.networks.external.name }}"
