@@ -16,8 +16,14 @@
       {% for num in range(1, node.value.amount + 1, 1) %}
       cp {{ base_image_path }}/{{ node.value.name }}-{{ item.key }}.qcow2 {{ base_image_path }}/{{ node.value.name }}-{{ num - 1 }}-{{ item.key }}.qcow2
       qemu-img create -f qcow2 -o preallocation={{ item.value.preallocation }} {{ base_image_path }}/{{ node.value.name }}-{{ num - 1 }}-{{ item.key }}.qcow2 {{ item.value.size }}
-      {% if item.key == 'disk1' %}
+      {% if item.key == 'disk1' -%}
       virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ base_image }} {{ item.value.path }}/{{ node.value.name }}-{{ num - 1 }}-{{ item.key }}.qcow2
+      virt-customize -a {{ item.value.path }}/{{ node.value.name }}-{{ num - 1 }}-{{ item.key }}.qcow2 \
+      {%- for index in range(node.value.interfaces | length - 1) %}
+          --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{0,{{ index + 1 }}} && sed -i s/DEVICE=.*/DEVICE=eth{{ index + 1 }}/g /etc/sysconfig/network-scripts/ifcfg-eth{{ index +1 }}' {% if not loop.last %}\
+          {% endif %}
+      {% endfor %}
       {% endif %}
       {% endfor %}
   with_dict: "{{ node.value.disks }}"
+
