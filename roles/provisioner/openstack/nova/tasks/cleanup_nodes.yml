@@ -1,18 +1,13 @@
 ---
 # This file includes tasks for instances and floating IPs cleanup.
 
-# Node type can be: controller, compute, ceph, etc.
-- name: Set fact for node type
-  set_fact:
-      node_type: "{{ item }}"
-
 - name: Release floating IPs
   os_floating_ip:
       cloud: "{{ provisioner.cloud | default(omit) }}"
-      server: "{{ prefix }}{{ node_type.value.name }}-{{ item }}"
+      server: "{{ prefix }}{{ node.value.name }}-{{ item }}"
       state: absent
       purge: yes
-  with_sequence: "count={{ node_type.value.amount }}"
+  with_sequence: "count={{ node.value.amount }}"
   when: provisioner.nodes is defined
   register: floating_ips
   ignore_errors: yes
@@ -21,9 +16,9 @@
 - name: Cleanup instances
   os_server:
       cloud: "{{ provisioner.cloud | default(omit) }}"
-      name: "{{ prefix }}{{ node_type.value.name }}-{{ item }}"
+      name: "{{ prefix }}{{ node.value.name }}-{{ item }}"
       state: absent
-  with_sequence: "count={{ node_type.value.amount }}"
+  with_sequence: "count={{ node.value.amount }}"
   when: provisioner.nodes is defined
   register: instances
   ignore_errors: yes

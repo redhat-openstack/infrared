@@ -63,15 +63,11 @@
               --mkdir /root/.ssh \
               --chmod 0700:/root/.ssh \
               --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys \
-              --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{0,1} && sed -i s/DEVICE=.*/DEVICE=eth1/g /etc/sysconfig/network-scripts/ifcfg-eth1' \
-              --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{1,2} && sed -i s/DEVICE=.*/DEVICE=eth2/g /etc/sysconfig/network-scripts/ifcfg-eth2' \
               --selinux-relabel
 
   when: dbi_any_not_imported is defined and dbi_any_not_imported
 
-
 # now continue with creating vm's
-#
 - name: "prepare disks for each VM"
   include: "vms_1_disk.yml"
   with_dict: "{{ provisioner.topology.nodes }}"
