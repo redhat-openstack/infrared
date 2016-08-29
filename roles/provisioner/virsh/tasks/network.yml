@@ -6,19 +6,19 @@
 - name: create the networks for the topology
   virt_net:
       command: "define"
-      name: "{{ item.key }}"
+      name: "{{ item.value.name }}"
       xml: "{{ lookup('template', '../templates/network.xml.j2') }}"
-  when: "item.key not in network_list.list_nets"
+  when: "item.value.name not in network_list.list_nets"
   with_dict: "{{ provisioner.topology.network }}"
 
 - name: check if network is active
   virt_net:
       state: active
-      name: "{{ item }}"
-  with_items: "{{ provisioner.topology.network.keys() }}"
+      name: "{{ item.value.name }}"
+  with_dict: "{{ provisioner.topology.network }}"
 
 - name: make network persistent
   virt_net:
-      name: "{{ item }}"
+      name: "{{ item.value.name }}"
       autostart: "yes"
-  with_items: "{{ provisioner.topology.network.keys() }}"
+  with_dict: "{{ provisioner.topology.network }}"

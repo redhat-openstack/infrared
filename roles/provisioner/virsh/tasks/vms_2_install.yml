@@ -7,11 +7,11 @@
              --disk path={{ base_image_path }}/{{ node.value.name }}-{{ item|int - 1 }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
             {% else %}
              --disk path={{ disk_values.path }}/{{ node.value.name }}-{{ item|int - 1 }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
-            {% endif %}
+            {% endif -%}
             {% endfor %}
-             --network network:data \
-             --network network:management \
-             --network network:external \
+            {% for interface_name in node.value.interfaces | sort %}
+             --network network:{{ node.value.interfaces[interface_name].network }} \
+            {% endfor -%}
              --virt-type kvm \
              --cpu host-model \
              --ram {{ node.value.memory }} \
@@ -33,9 +33,9 @@
          --disk path={{ disk_values.path }}/{{ node.value.name }}-{{ item|int - 1 }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
         {% endif %}
         {% endfor %}
-         --network network:data \
-         --network network:management \
-         --network network:external \
+        {% for interface_name in node.value.interfaces | sort %}
+         --network network:{{ node.value.interfaces[interface_name].network }} \
+        {% endfor -%}
          --virt-type kvm \
          --cpu host-model \
          --ram {{ node.value.memory }} \
