@@ -193,8 +193,11 @@
         shell: |
             source ~/stackrc
             bash {{ overcloud_deploy_script }}
-        register: overcloud_deploy
+        register: overcloud_deploy_registered
         ignore_errors: yes
+
+      - debug: msg="The deployment already failed!"
+        when: overcloud_deploy_registered.rc != 0
 
       - name: print the last few lines of the output to spot failures
         shell: "tail -n60 overcloud_install.log"
@@ -209,19 +212,30 @@
         become_user: root
         shell: "mkdir -p /var/log/extra/; source /home/{{ installer.user.name }}/stackrc; /home/{{ installer.user.name }}/deploy_info.sh 2>&1 | tee -a /var/log/extra/deploy_resources.log"
 
+
+# Since OSP-d reprovision our machines (overcloud) and becomes the DHCP server, an update of our inventory is required
+# So Ansible will be able to access the newly provisioned machines.
+# The inventory also gets updated when the deployment fails in order to be able to run log-collection
+- include: ospd_inventory_update.yml
+  tags:
+      - overcloud
+      - inventory_update
+      - overcloud_deploy
+
+- name: Deploy OverCloud post verify
+  tags:
+      - overcloud
+      - overcloud_deploy
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  tasks:
       - fail: msg="Overcloud deployment failed... :("
-        when: overcloud_deploy.rc != 0
+        when: overcloud_deploy_registered.rc != 0
 
       - name: verify overcloudrc was created
         wait_for:
             path: "/home/stack/overcloudrc"
             state: present
             timeout: 60
-
-# Since OSP-d reprovision our machines (overcloud) and becomes the DHCP server, an update of our inventory is required
-# So Ansible will be able to access the newly provisioned machines.
-- include: ospd_inventory_update.yml
-  tags:
-      - overcloud
-      - inventory_update
-      - overcloud_deploy
