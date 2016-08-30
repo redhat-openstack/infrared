@@ -72,6 +72,9 @@
       OS_AUTH_URL: "{{ oc_auth.stdout }}"
       OS_TENANT_NAME: "{{ oc_tenant.stdout | default('admin') }}"
   tasks:
+      - name: Refresh facts (required for facter)
+        setup:
+
       - name: Create NovaEvacuate resource
         shell: "pcs resource create nova-evacuate ocf:openstack:NovaEvacuate auth_url=$OS_AUTH_URL username=$OS_USERNAME password=$OS_PASSWORD tenant_name=$OS_TENANT_NAME no_shared_storage=0"
 

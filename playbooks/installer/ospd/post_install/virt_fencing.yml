@@ -64,7 +64,12 @@
   hosts: controller[0]
   become: yes
   become_method: sudo
+  gather_facts: yes
   tasks:
+
+      - name: Refresh facts (required for facter)
+        setup:
+
       - name: Make sure stonith property is set to false
         command: pcs property set stonith-enabled=false
 
@@ -76,5 +81,5 @@
           pcs stonith create my-stonith-xvm-$hostname fence_xvm port=$vm_uuid pcmk_host_list=$hostname use_uuid=1 op monitor interval=30s
         with_items: "{{ groups['controller'] }}"
 
-      - name: Make sure sotnith property is set to true
+      - name: Make sure stonith property is set to true
         command: pcs property set stonith-enabled=true
