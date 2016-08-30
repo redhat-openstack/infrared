@@ -53,6 +53,11 @@
             src: "{{ image_filename }}"
             dest: "{{ undercloud_disk_path }}"
 
+      - name: install libguestfs-tool / virt-customize
+        yum:
+            name: libguestfs-tools
+            state: present
+
       - name: inject our key into the undercloud image
         shell: "virt-customize -a {{ undercloud_disk_path }} --root-password password:redhat --mkdir /root/.ssh --chmod 0700:/root/.ssh --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys --selinux-relabel"
 
