@@ -73,9 +73,6 @@
       dest: /etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.oc_interface }}.{{ installer.loadbalancer.network.tenant.vlanid }}
   when: installer.loadbalancer.network.tenant is defined
 
-- name: Execute rhos-release for OSP-Director
-  command: rhos-release -P {{ installer.product.version }}
-
 - name: update all packages
   yum: name=* state=latest
 
