@@ -17,7 +17,9 @@
   shell: "cat ~/overcloud_scale.sh"
 
 - name: scaling overcloud
-  shell: "bash ~/overcloud_scale.sh"
+  shell: |
+      source ~/stackrc
+      bash ~/overcloud_scale.sh
   register: overcloud_scaling
   ignore_errors: yes
 
