@@ -32,7 +32,7 @@
   when: groups.compute is defined
 
 - name: Running packstack
-  shell: "packstack --answer-file=/root/{{ installer.packstack.answer_file }} && touch /root/packstack-already-done"
+  shell: "packstack --debug --answer-file=/root/{{ installer.packstack.answer_file }} && touch /root/packstack-already-done"
   args:
     creates: /root/packstack-already-done
   register: result
