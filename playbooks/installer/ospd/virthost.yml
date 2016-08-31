@@ -25,7 +25,7 @@
             name: ipxe-roms-qemu
         register: update
 
-- include: "quickstart-undercloud.yml"
+- include: "undercloud-restore.yml"
   when: "'undercloud' not in groups"
 
 # Dumping all facts for later use
@@ -102,6 +102,6 @@
             user: "{{ installer.user.name }}"
             key: "{{ undercloud_public_key.stdout }}"
 
-- include: "backup-undercloud.yml"
+- include: "undercloud-backup.yml"
   tags: backup
   when: "backup is defined"
