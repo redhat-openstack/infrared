@@ -14,7 +14,11 @@ parameter_defaults:
     CephExternalMonHost: "{{ private.storage.ceph.CephExternalMonHost }}"
 
 resource_registry:
+{% if installer.product.version|int >= 10 %}
+    OS::TripleO::Services::CephExternal: /usr/share/openstack-tripleo-heat-templates/puppet/services/ceph-external.yaml
+{% else %}
     OS::TripleO::CephClusterConfig::SoftwareConfig: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/ceph/ceph-external-config.yaml
+{% endif %}
 
 {% else %}
     GlanceBackend: rbd
