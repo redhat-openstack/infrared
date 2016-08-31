@@ -91,3 +91,12 @@
       register: mirror_used_cmd
       changed_when: "'Skipping mirror' not in mirror_used_cmd.stdout"
   when: "mirror_fqdn is defined and mirror_fqdn"
+
+- name: refresh yum cache
+  yum:
+      name: kernel
+      state: present
+      update_cache: yes
+
+- name: repolist
+  command: yum -d 7 repolist

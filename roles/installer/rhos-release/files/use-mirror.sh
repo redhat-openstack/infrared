@@ -14,17 +14,14 @@ fi
 
 cd /etc/yum.repos.d
 
-original_download_srv=$(sed -nr 's/.*(download\.lab.*redhat\.com).*/\1/p' *.repo | head -n1)
-original_download_srv_alts=$(sed 's/\.lab\./.eng./' <<< "$original_download_srv")
-original_download_srv_alts="$original_download_srv_alts $(sed 's/download/download-node-02/' <<< "$original_download_srv_alts")"
-
-sed -i "s/download\.lab.*\.redhat\.com/${mirror}/" *.repo
+sed -i "s/download.*\.lab.*\.redhat\.com/${mirror}/" *.repo
+sed -i "s/download\.eng.*\.redhat\.com/${mirror}/" *.repo
 sed -i "s/rhos-release.*\.redhat\.com/${mirror}\/rhos-release/" *.repo
 sed -r -i "s/ayanami.*\.redhat.com/${mirror}\/ayanami/" *.repo
 sed -i "s/pulp-read.*\.redhat\.com/${mirror}\/pulp-read/" *.repo
 
 sed '/.* download\.lab.*redhat\.com.*/d' -i /etc/hosts
-echo "$mirror_ip  $mirror $original_download_srv $original_download_srv_alts" >> /etc/hosts
+echo "$mirror_ip  $mirror download.lab.bos.redhat.com download.eng.bos.redhat.com download-node-02.eng.bos.redhat.com" >> /etc/hosts
 echo "In case you want to disable mirror usage, also remove its entry from /etc/hosts" >> mirror-readme
 
 # FIXME(psedlak):
