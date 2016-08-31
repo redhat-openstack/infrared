@@ -11,9 +11,6 @@
         core_build: "{{ installer.product.build }}"
         mirror: "{{ installer.mirror | default(omit) }}"
   tasks:
-      - name: repolist
-        command: yum -d 7 repolist
-
       - name: Update all packages
         yum: name=* state=latest
 
