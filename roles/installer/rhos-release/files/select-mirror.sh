@@ -9,7 +9,7 @@ fi
 
 # check that mirror is ready and responds in time
 
-mirror_status="$(curl --max-time 3 "http://${mirror}/status")"
+mirror_status="$(curl --max-time 3 "http://${mirror}/status" || echo "unreachable")"
 echo "Mirror ${mirror} status: '$mirror_status'" >&2
 if [[ "$mirror_status" != "ready" ]]; then
     echo "Skipping mirror usage as it is not ready." >&2
