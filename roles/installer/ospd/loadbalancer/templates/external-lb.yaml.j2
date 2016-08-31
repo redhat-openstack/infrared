@@ -1,3 +1,4 @@
+{% if installer.product.version|int < 9 %}
 parameters:
   ServiceNetMap:
     NeutronTenantNetwork: tenant
@@ -28,13 +29,43 @@ parameters:
     BlockStorageHostnameResolveNetwork: internal_api
     ObjectStorageHostnameResolveNetwork: internal_api
     CephStorageHostnameResolveNetwork: storage
+{% endif %}
+
+parameter_defaults:
 {% if installer.product.version|int > 8 %}
+  ServiceNetMap:
+    NeutronTenantNetwork: tenant
+    CeilometerApiNetwork: internal_api
+    MongoDbNetwork: internal_api
+    CinderApiNetwork: internal_api
+    CinderIscsiNetwork: storage
+    GlanceApiNetwork: storage
+    GlanceRegistryNetwork: internal_api
+    KeystoneAdminApiNetwork: internal_api
+    KeystonePublicApiNetwork: internal_api
+    NeutronApiNetwork: internal_api
+    HeatApiNetwork: internal_api
+    NovaApiNetwork: internal_api
+    NovaMetadataNetwork: internal_api
+    NovaVncProxyNetwork: internal_api
+    SwiftMgmtNetwork: storage_mgmt
+    SwiftProxyNetwork: storage
+    HorizonNetwork: internal_api
+    MemcachedNetwork: internal_api
+    RabbitMqNetwork: internal_api
+    RedisNetwork: internal_api
+    MysqlNetwork: internal_api
+    CephClusterNetwork: storage_mgmt
+    CephPublicNetwork: storage
+    ControllerHostnameResolveNetwork: internal_api
+    ComputeHostnameResolveNetwork: internal_api
+    BlockStorageHostnameResolveNetwork: internal_api
+    ObjectStorageHostnameResolveNetwork: internal_api
+    CephStorageHostnameResolveNetwork: storage
     AodhApiNetwork: internal_api
     GnocchiApiNetwork: internal_api
     SaharaApiNetwork: internal_api
 {% endif %}
-
-parameter_defaults:
 {% if installer.product.version|int > 7 %}
   RedisPassword: 'examplepassword'
 {% endif %}
