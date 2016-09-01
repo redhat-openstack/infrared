@@ -62,6 +62,14 @@
   roles:
       - {role: installer/ospd/overcloud/credentials, overcloudrc: "{{ inventory_dir }}/keystonerc" }
 
+- name: Run setup as root, to get all facter data
+  hosts: controller
+  gather_facts: yes
+  become: yes
+  become_method: sudo
+  tasks:
+      - setup:
+
 - name: Setup pacemaker for instance HA
   hosts: controller[0]
   gather_facts: yes
