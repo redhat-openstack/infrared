@@ -1,8 +1,4 @@
 options:
-    # todo(obaranov) This is deprecated option. Use --inventory flag from the subcommand spec
-    inventory:
-        help: Inventory file
-        type: str
     mirror:
         type: Value
         help: |
