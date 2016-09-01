@@ -73,7 +73,7 @@ class Spec(object):
         result = {}
         for spec_file in spec_files:
             with open(spec_file) as stream:
-                spec = yaml.load(stream)
+                spec = yaml.load(stream) or {}
                 utils.dict_merge(
                     result,
                     spec,
@@ -534,11 +534,11 @@ class SpecDictHelper(object):
         # make structure of the dict flat
         # 1. handle include_groups directive in main parser
         parser_dict = self.spec_dict
-        self._include_groups(parser_dict)
+        self._include_groups(parser_dict.get('name', ''), parser_dict)
         # 2. Include groups for all subparsers
         for subparser_name, subparser_dict in parser_dict.get(
                 'subparsers', {}).items():
-            self._include_groups(subparser_dict)
+            self._include_groups(subparser_name, subparser_dict)
 
     def iterate_parsers(self):
         """
@@ -618,7 +618,7 @@ class SpecDictHelper(object):
 
         return res
 
-    def _include_groups(self, parser_dict):
+    def _include_groups(self, parser_name, parser_dict):
         """
         Resolves the include dict directive in the spec files.
         """
@@ -633,7 +633,7 @@ class SpecDictHelper(object):
                     "Unable to include group '{}' in '{}' parser. "
                     "Group was not found!".format(
                         group,
-                        parser_dict['name']))
+                        parser_name))
 
             parser_groups_list = parser_dict.get('groups', [])
             parser_groups_list.append(deepcopy(grp_dict))
