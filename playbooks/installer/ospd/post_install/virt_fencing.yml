@@ -60,6 +60,14 @@
           enabled: yes
           state: restarted
 
+- name: Run setup as root, to get all facter data
+  hosts: controller
+  gather_facts: yes
+  become: yes
+  become_method: sudo
+  tasks:
+      - setup:
+
 - name: Configure fencing on overcloud controllers
   hosts: controller[0]
   become: yes
