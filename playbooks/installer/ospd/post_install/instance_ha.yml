@@ -2,17 +2,15 @@
   hosts: compute
   become: yes
   tasks:
-      - name: Stop openstack services
-        shell: "openstack-service stop"
-
-      - name: Disable automatic start of openstack services
-        shell: "openstack-service disable"
-
-      - name: Stop libvirt deamon
-        service:
-            name: libvirtd
+      - service:
+            name: "{{ item }}"
             state: stopped
             enabled: no
+        with_items:
+            - neutron-openvswitch-agent
+            - openstack-ceilometer-compute
+            - openstack-nova-compute
+            - libvirtd
 
 - name: Generate authkey for remote pacemaker
   hosts: localhost
