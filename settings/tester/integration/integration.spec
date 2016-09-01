@@ -1,6 +1,6 @@
 subparsers:
     integration:
-        include_groups: ['Ansible options', 'Inventory options', 'Common options', 'Configuration file options']
+        include_groups: ['Ansible options', 'Inventory hosts options', 'Common options', 'Configuration file options']
         help: Integration tests runner
         groups:
             - title: Component selection

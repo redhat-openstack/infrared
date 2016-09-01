@@ -10,14 +10,6 @@ shared_groups:
               action: store_true
               nested: no
 
-          # todo(obaranov) adding verbose here to pass gates
-          # this should be removed prior merging the patch
-          verbose:
-              help: Control Ansible verbosity level
-              short: v
-              action: count
-              default: 0
-
     - title: Ansible options
       options:
           verbose:
