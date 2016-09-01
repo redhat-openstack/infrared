@@ -30,6 +30,16 @@
 - name: make IPs persistent
   shell: "virsh net-update {{ node.value.external_network }} add ip-dhcp-host \"<host mac='{{ item.item[1] }}' name='{{ item.item[0].cmd.split()[2] }}' ip='{{ item.stdout | ipaddr('address') }}' />\" --live --config"
   with_items: "{{ vm_ip_list }}"
+  register: "vm_ips"
+  async: 7200
+  poll: 0
+
+- name: Wait for our disks to be created
+  async_status: "jid={{ item.ansible_job_id }}"
+  register: ip_tasks
+  until: ip_tasks.finished
+  retries: 300
+  with_items: "{{ vm_ips.results }}"
 
 - name: add hosts to host list
   add_host:

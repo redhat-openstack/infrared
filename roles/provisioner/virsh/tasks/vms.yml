@@ -68,12 +68,17 @@
   when: dbi_any_not_imported is defined and dbi_any_not_imported
 
 # now continue with creating vm's
-- name: "prepare disks for each VM"
-  include: "vms_1_disk.yml"
+# Import disk images if necessary
+- name: "import disks for each VM if specified"
+  include: "vms_0_import_disk.yml"
   with_dict: "{{ provisioner.topology.nodes }}"
   loop_control:
       loop_var: node
 
+- name: "create disks for each VM if not import"
+  include: "vms_1_create_disk.yml"
+
+# Build our VMs
 - name: "define libvirt VMs"
   include: "vms_2_install.yml"
   with_dict: "{{ provisioner.topology.nodes }}"
