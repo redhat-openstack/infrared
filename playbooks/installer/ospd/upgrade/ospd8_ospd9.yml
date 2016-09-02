@@ -15,7 +15,7 @@
         shell: "cat ~/overcloud_deploy.sh"
         register: deployment_data
 
-      - name: enble ospd9 repos
+      - name: enable ospd9 repos
         shell: "rhos-release 9-director -P"
         become: yes
         become_user: root
@@ -76,13 +76,14 @@
             content: "{{ deployment_data.stdout }}"
 
       - name: add upgrade line to the file
-        blockinfile:
+        lineinfile:
             dest: "{{ pacemaker_upgrade_script }}"
             insertbefore: "^--log-file.*"
             state: present
-            content: |
-                -e /usr/share/openstack-tripleo-heat-templates/environments/upgrade-pacemaker.yaml \
-                -e rhos-release-9.yaml \
+            line: "{{ item }}"
+        with_items:
+            - '-e /usr/share/openstack-tripleo-heat-templates/environments/upgrade-pacemaker.yaml \'
+            - '-e rhos-release-9.yaml \'
 
       - name: the pacemaker upgrade script
         shell: "cat {{ pacemaker_upgrade_script }}"
@@ -101,13 +102,14 @@
             content: "{{ deployment_data.stdout }}"
 
       - name: add upgrade line to the file
-        blockinfile:
+        lineinfile:
             dest: "{{ pacemaker_major_upgrade_script }}"
             insertbefore: "^--log-file.*"
             state: present
-            content: |
-                -e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker-init.yaml \
-                -e rhos-release-9.yaml \
+            line: "{{ item }}"
+        with_items:
+            - '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker-init.yaml \'
+            - '-e rhos-release-9.yaml \'
 
       - name: the pacemaker major upgrade script
         shell: "cat {{ pacemaker_major_upgrade_script }}"
