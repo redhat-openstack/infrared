@@ -35,8 +35,8 @@ class SpecManager(object):
         elif subcommand in self.subcommands_handlers:
             self._call_handler(subcommand, args)
 
-    def _call_handler(self, name, args):
-        self.subcommands_handlers[name](args)
+    def _call_handler(self, name, cli_args):
+        self.subcommands_handlers[name](name, cli_args)
 
     def register_plugin_spec(self, plugin, cmd_handler, add_base_groups=True):
         """

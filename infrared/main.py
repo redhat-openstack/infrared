@@ -1,8 +1,15 @@
 import sys
+import logging
+import yaml
 
-from infrared.core.plugins.manager import PluginsManager
+from infrared.core import execute
+from infrared.core.plugins import PluginsManager
+from infrared.core.settings import SettingsManager
 from infrared.core.cli.spec import SpecManager
+from infrared.core.utils import logger
 PLUGIN_SETTINGS = 'plugins/settings.yml'
+
+LOG = logger.LOG
 
 
 def main():
@@ -32,17 +39,48 @@ def main():
     specs_manager.run()
 
 
-def handle_plugin_manager_commands(args):
+def handle_plugin_manager_commands(subcommand, args):
     print "Hanlde plugin manager"
 
 
-def handle_plugin_commands(args):
+def handle_plugin_commands(subcommand, args):
     """
     Handler function for the plugins.
     """
-    print "Hanlde plugin"
-    # print args[0] # nested
-    print args[1] # control args
+    plugin = PluginsManager.get_plugin(subcommand)
+
+    nested_args = args[0]
+    control_args = args[1]
+    unknown_args = args[2]
+    subcommand_name = control_args['command0']
+
+    if control_args.get('debug', None):
+        LOG.setLevel(logging.DEBUG)
+
+    settings = SettingsManager.generate_settings(
+        plugin.name,
+        nested_args,
+        plugin.subcommand_settings_files(subcommand_name),
+        input_files=control_args.get('input', []),
+        extra_vars=control_args.get('extra-vars', None),
+        dump_file=control_args.get('output', None))
+
+    if not control_args.get('dry-run'):
+        playbook_settings = yaml.load(yaml.safe_dump(
+            settings,
+            default_flow_style=False))
+
+        if control_args.get('cleanup', None):
+            playbook = plugin.cleanup_playbook
+        else:
+            playbook = plugin.main_playbook
+
+        execute.ansible_playbook(
+            playbook,
+            module_path=plugin.modules_dir,
+            verbose=control_args.get('verbose', None),
+            settings=playbook_settings,
+            inventory=control_args.get('inventory', None))
 
 if __name__ == '__main__':
     sys.exit(int(main() or 0))

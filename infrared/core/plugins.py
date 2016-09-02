@@ -20,6 +20,51 @@ class Plugin(object):
         return [os.path.join(self.root_dir, sf)
                 for sf in self.config['settings'].split(os.pathsep)]
 
+    @property
+    def cleanup_playbook(self):
+        return os.path.join(
+            self.root_dir,
+            self.config['playbooks'],
+            self.config['entry_points']['cleanup'])
+
+    @property
+    def main_playbook(self):
+        return os.path.join(
+            self.root_dir,
+            self.config['playbooks'],
+            self.config['entry_points']['main'])
+
+    @property
+    def modules_dir(self):
+        return os.path.join(self.root_dir, self.config['modules'])
+
+    @classmethod
+    def from_settings(cls, name, plugin_settings):
+        """
+        Creates pluigins from the settings dict.
+        """
+        return Plugin(
+            name,
+            plugin_settings['root_dir'],
+            plugin_settings['config'])
+
+    def subcommand_settings_files(self, subcommand_name, extension='.yml'):
+        result = []
+        for sf in self.settings_folders():
+            settings_file = os.path.join(
+                sf, subcommand_name, subcommand_name + extension)
+
+        if os.path.exists(settings_file):
+            result.append(settings_file)
+
+        return result
+
+    def __repr__(self):
+        return repr(dict(
+            name=self.name,
+            root_dir=self.root_dir,
+            config=self.config))
+
 
 class PluginsManager(object):
     PLUGIN_SETTINGS = 'plugins/settings.yml'
@@ -59,9 +104,12 @@ class PluginsManager(object):
     def iter_plugins(cls):
         settings = cls.get_settings()
         for name, plugin_settings in settings.items():
-            yield Plugin(
-                name, plugin_settings['root_dir'], plugin_settings['config'])
+            yield Plugin.from_settings(name, plugin_settings)
 
+    @classmethod
+    def get_plugin(cls, name):
+        settings = cls.get_settings()
+        return Plugin.from_settings(name, settings[name])
     #
     # @classmethod
     # def update(cls, name):
