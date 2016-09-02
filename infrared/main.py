@@ -78,7 +78,7 @@ def handle_plugin_commands(subcommand, args):
             playbook = plugin.main_playbook
 
         proc = multiprocessing.Process(
-            target=worker,
+            target=ansible_worker,
             args=(plugin.root_dir, playbook, ),
             kwargs=dict(
                 module_path=plugin.modules_dir,
@@ -90,8 +90,8 @@ def handle_plugin_commands(subcommand, args):
         proc.join()
 
 
-def worker(root_dir, playbook, module_path, verbose, settings, inventory):
-    # hack to change cwd for plugin root folder
+def ansible_worker(root_dir, playbook, module_path, verbose, settings, inventory):
+    # hack to change cwd to the plugin root folder
     os.environ['PWD'] = os.path.abspath(root_dir)
     os.chdir(root_dir)
     # import here cause it will init ansible in correct plugin folder.
