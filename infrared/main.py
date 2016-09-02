@@ -4,7 +4,6 @@ import logging
 import multiprocessing
 import yaml
 
-from infrared.core import execute
 from infrared.core.plugins import PluginsManager
 from infrared.core.settings import SettingsManager
 from infrared.core.cli.spec import SpecManager
@@ -92,7 +91,11 @@ def handle_plugin_commands(subcommand, args):
 
 
 def worker(root_dir, playbook, module_path, verbose, settings, inventory):
+    # hack to change cwd for plugin root folder
+    os.environ['PWD'] = os.path.abspath(root_dir)
     os.chdir(root_dir)
+    # import here cause it will init ansible in correct plugin folder.
+    from infrared.core import execute
     execute.ansible_playbook(playbook,
                              module_path=module_path,
                              verbose=verbose,

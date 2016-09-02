@@ -21,6 +21,7 @@ class SettingsManager(object):
                 input_files=input_files, extra_vars=extra_vars)
 
             cls._dump_settings(settings, dump_file=dump_file)
+            return settings
         # handle errors here and provide more output for user if required
         except exceptions.IRKeyNotFoundException as key_exception:
             if key_exception and key_exception.key.startswith("private."):
@@ -82,7 +83,7 @@ class SettingsManager(object):
         return all_settings
 
     @classmethod
-    def _dump_settings(self, settings, dump_file=None):
+    def _dump_settings(cls, settings, dump_file=None):
         LOG.debug("Dumping settings...")
         output = yaml.safe_dump(settings,
                                 default_flow_style=False)
