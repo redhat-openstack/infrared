@@ -1,0 +1,15 @@
+openstack overcloud deploy --debug \
+--templates /usr/share/openstack-tripleo-heat-templates \
+-e /usr/share/openstack-tripleo-heat-templates/overcloud-resource-registry-puppet.yaml \
+-e /usr/share/openstack-tripleo-heat-templates/environments/puppet-pacemaker.yaml \
+-e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \
+-e /usr/share/openstack-tripleo-heat-templates/environments/net-single-nic-with-vlans.yaml \
+{% if storage_yaml.rc == 0 %}
+{{ storage_yaml.stdout }}
+{% endif %}
+{% if ssl_yaml.rc == 0 %}
+{{ ssl_yaml.stdout }}
+{% endif %}
+-e /home/stack/virt/network/network-environment.yaml \
+-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker.yaml \
+--log-file {{ pacemaker_upgrade}}.log
