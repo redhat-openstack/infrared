@@ -1,0 +1,110 @@
+---
+- name: Upgrade the undercloud
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  vars:
+      major_upgrade_script: "~/major_upgrade.sh"
+      pacemaker_upgrade_script: "~/pacemaker_upgrade.sh"
+      pacemaker_major_upgrade_script: "~/pacemaker_major_upgrade.sh"
+      pacemaker_converge_script: "~/pacemaker_converge.sh"
+  tasks:
+      - name: get content of the deployment file
+        shell: "cat ~/overcloud_deploy.sh"
+        register: deployment_data
+
+      - name: enable ospd8 repos
+        shell: "rhos-release 8-director -P"
+        become: yes
+        become_user: root
+
+      - name: update all packages
+        yum:
+          name: *
+          state: latest
+          update_cache: yes
+
+      - name: upgrade undercloud
+        shell: "openstack undercloud upgrade"
+
+########################################################################################################################
+      - name: create the init upgrade script
+        copy:
+            dest: "{{ major_upgrade_script }}"
+            content: "{{ deployment_data.stdout }}"
+
+      - name: add upgrade line to the file
+        blockinfile:
+            dest: "{{ major_upgrade_script }}"
+            insertbefore: "^--log-file.*"
+            state: present
+            content: |
+                -e /usr/share/openstack-tripleo-heat-templates/overcloud-resource-registry-puppet.yaml \
+                -e /usr/share/openstack-tripleo-heat-templates/environments/puppet-pacemaker.yaml \
+                -e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker-init.yaml \
+                -e rhos-release-8.yaml \
+
+      - name: the init upgrade script
+        shell: "cat {{ major_upgrade_script }}"
+
+      - name: Running major upgrade
+        shell: |
+            source ~/stackrc
+            bash {{ major_upgrade_script }}
+        register: overcloud_init_upgrade
+        ignore_errors: yes
+
+########################################################################################################################
+      - name: create the major upgrade script
+        copy:
+            dest: "{{ pacemaker_upgrade_script }}"
+            content: "{{ deployment_data.stdout }}"
+
+      - name: add upgrade line to the file
+        blockinfile:
+            dest: "{{ pacemaker_upgrade_script }}"
+            insertbefore: "^--log-file.*"
+            state: present
+            content: |
+                -e /usr/share/openstack-tripleo-heat-templates/overcloud-resource-registry-puppet.yaml \
+                -e /usr/share/openstack-tripleo-heat-templates/environments/puppet-pacemaker.yaml \
+                -e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker.yaml \
+
+      - name: the major upgrade script
+        shell: "cat {{ pacemaker_upgrade_script }}"
+
+      - name: Running major upgrade
+        shell: |
+            source ~/stackrc
+            bash {{ pacemaker_upgrade_script }}
+        register: overcloud_pacemaker_upgrade
+        ignore_errors: yes
+
+########################################################################################################################
+      - name: create the major upgrade script
+        copy:
+            dest: "{{ pacemaker_converge_script }}"
+            content: "{{ deployment_data.stdout }}"
+
+      - name: add upgrade line to the file
+        blockinfile:
+            dest: "{{ pacemaker_converge_script }}"
+            insertbefore: "^--log-file.*"
+            state: present
+            content: |
+                -e /usr/share/openstack-tripleo-heat-templates/overcloud-resource-registry-puppet.yaml \
+                -e /usr/share/openstack-tripleo-heat-templates/environments/puppet-pacemaker.yaml \
+                -e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker-converge.yaml \
+
+      - name: the major upgrade script
+        shell: "cat {{ pacemaker_converge_script }}"
+
+      - name: Running major upgrade
+        shell: |
+            source ~/stackrc
+            bash {{ pacemaker_converge_script }}
+        register: overcloud_pacemaker_converge
+        ignore_errors: yes
+
+########################################################################################################################
