@@ -1,5 +1,7 @@
+import os
 import sys
 import logging
+import multiprocessing
 import yaml
 
 from infrared.core import execute
@@ -7,6 +9,7 @@ from infrared.core.plugins import PluginsManager
 from infrared.core.settings import SettingsManager
 from infrared.core.cli.spec import SpecManager
 from infrared.core.utils import logger
+
 PLUGIN_SETTINGS = 'plugins/settings.yml'
 
 LOG = logger.LOG
@@ -75,12 +78,26 @@ def handle_plugin_commands(subcommand, args):
         else:
             playbook = plugin.main_playbook
 
-        execute.ansible_playbook(
-            playbook,
-            module_path=plugin.modules_dir,
-            verbose=control_args.get('verbose', None),
-            settings=playbook_settings,
-            inventory=control_args.get('inventory', None))
+        proc = multiprocessing.Process(
+            target=worker,
+            args=(plugin.root_dir, playbook, ),
+            kwargs=dict(
+                module_path=plugin.modules_dir,
+                verbose=control_args.get('verbose', None),
+                settings=playbook_settings,
+                inventory=control_args.get('inventory', None)
+            ))
+        proc.start()
+        proc.join()
+
+
+def worker(root_dir, playbook, module_path, verbose, settings, inventory):
+    os.chdir(root_dir)
+    execute.ansible_playbook(playbook,
+                             module_path=module_path,
+                             verbose=verbose,
+                             settings=settings,
+                             inventory=inventory)
 
 if __name__ == '__main__':
     sys.exit(int(main() or 0))

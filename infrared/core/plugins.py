@@ -23,20 +23,18 @@ class Plugin(object):
     @property
     def cleanup_playbook(self):
         return os.path.join(
-            self.root_dir,
             self.config['playbooks'],
             self.config['entry_points']['cleanup'])
 
     @property
     def main_playbook(self):
         return os.path.join(
-            self.root_dir,
             self.config['playbooks'],
             self.config['entry_points']['main'])
 
     @property
     def modules_dir(self):
-        return os.path.join(self.root_dir, self.config['modules'])
+        return self.config['modules']
 
     @classmethod
     def from_settings(cls, name, plugin_settings):
