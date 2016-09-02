@@ -1,0 +1,162 @@
+---
+- name: Enable repos for ospd 8
+  hosts: undercloud
+  roles:
+      - role: installer/rhos-release
+        director_version: "8"
+        director_build: "latest"
+        core_version: "8"
+        core_build: "latest"
+        mirror: "{{ installer.mirror | default(omit) }}"
+
+- name: Upgrade the undercloud
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  vars:
+      pacemaker_template: "pacemaker_template.sh.j2"
+      pacemaker_init: "~/pacemaker_init.sh"
+      pacemaker_upgrade: "~/pacemaker_upgrade.sh"
+      pacemaker_converge: "~/pacemaker_converge.sh"
+      rhos_release_yaml: "~/rhos-release-8.yaml"
+  tasks:
+      - name: "Get storage template line"
+        shell: "cat ~/overcloud_deploy.sh | grep storage-environment"
+        register: storage_yaml
+        when: installer.storage.backend is defined
+
+      - name: "Get TLS template line"
+        shell: "cat ~/overcloud_deploy.sh | grep enable-tls"
+        register: ssl_yaml
+        when: installer.overcloud.ssl == 'yes'
+
+      - name: "Prepare rhos-release yaml"
+        template:
+            src: "templates/rhos-release-8.yaml.j2"
+            dest: "{{ rhos_release_yaml }}"
+            mode: 0644
+
+      - name: "Update all packages"
+        yum:
+          name: '*'
+          state: latest
+          update_cache: yes
+        become: yes
+        become_user: root
+
+      - name: "Upgrade undercloud"
+        shell: "openstack undercloud upgrade"
+
+      - name: "Add hosts keys to known hosts for further upgrade"
+        shell: |
+            ssh -o StrictHostKeyChecking=no heat-admin@"{{ hostvars[item]['ansible_ssh_host'] }}" "hostname"
+        with_items: groups["overcloud_nodes"]
+########################################################################################################################
+      - name: "Create the init upgrade script"
+        template:
+            src: "templates/{{ pacemaker_template }}"
+            dest: "{{ pacemaker_init }}"
+            mode: 0755
+        with_items: "major-upgrade-pacemaker-init"
+
+      - name: "The init upgrade script"
+        shell: "cat {{ pacemaker_init }}"
+
+      - name: "Running pacemaker upgrade init"
+        shell: |
+            source ~/stackrc
+            bash {{ pacemaker_init }}
+        register: overcloud_init_upgrade
+        ignore_errors: yes
+
+      - debug: msg="The major upgrade failed!"
+        when: overcloud_init_upgrade.rc != 0
+
+      - name: "Print the last few lines of the output to spot failures"
+        shell: "tail -n60 major-upgrade-pacemaker-init.log"
+########################################################################################################################
+      - name: "Get objectstorage node IDs"
+        shell: |
+            source ~/stackrc
+            nova list|awk '/objectstorage/ {print $2}'
+        register: objectstorage_ids
+
+      - name: "Upgrade objectstorages"
+        shell: |
+            source ~/stackrc
+            upgrade-non-controller.sh --upgrade "{{ item }}"
+        with_items: "{{ objectstorage_ids.stdout_lines }}"
+        when: objectstorage_ids.stdout != ""
+########################################################################################################################
+      - name: "Create the upgrade script"
+        template:
+            src: "templates/{{ pacemaker_template }}"
+            dest: "{{ pacemaker_upgrade }}"
+            mode: 0755
+        with_items: "major-upgrade-pacemaker"
+
+      - name: "The major upgrade script"
+        shell: "cat {{ pacemaker_upgrade }}"
+
+      - name: "Running pacemaker upgrade"
+        shell: |
+            source ~/stackrc
+            bash {{ pacemaker_upgrade }}
+        register: overcloud_pacemaker_upgrade
+        ignore_errors: yes
+
+      - debug: msg="Pacemaker upgrade failed!"
+        when: overcloud_pacemaker_upgrade.rc != 0
+
+      - name: print the last few lines of the output to spot failures
+        shell: "tail -n60 major-upgrade-pacemaker.log"
+########################################################################################################################
+      - name: "Get computes IDs"
+        shell: |
+            source ~/stackrc
+            nova list|awk '/compute/ {print $2}'
+        register: compute_ids
+
+      - name: "Upgrade computes"
+        shell: |
+            source ~/stackrc
+            upgrade-non-controller.sh --upgrade "{{ item }}"
+        with_items: "{{ compute_ids.stdout_lines }}"
+########################################################################################################################
+      - name: "Get ceph node IDs"
+        shell: |
+            source ~/stackrc
+            nova list|awk '/ceph/ {print $2}'
+        register: ceph_ids
+
+      - name: "Upgrade cephs"
+        shell: |
+            source ~/stackrc
+            upgrade-non-controller.sh --upgrade "{{ item }}"
+        with_items: "{{ ceph_ids.stdout_lines }}"
+        when: ceph_ids.stdout != ""
+########################################################################################################################
+      - name: "Create the converge script"
+        template:
+            src: "templates/{{ pacemaker_template }}"
+            dest: "{{ pacemaker_converge }}"
+            mode: 0755
+        with_items: "major-upgrade-pacemaker-converge"
+
+      - name: "The major upgrade script"
+        shell: "cat {{ pacemaker_converge }}"
+
+      - name: "Running pacemaker converge"
+        shell: |
+            source ~/stackrc
+            bash {{ pacemaker_converge }}
+        register: overcloud_pacemaker_converge
+        ignore_errors: yes
+
+      - debug: msg="The deployment already failed!"
+        when: overcloud_pacemaker_converge.rc != 0
+
+      - name: print the last few lines of the output to spot failures
+        shell: "tail -n60 major-upgrade-pacemaker-converge.log"
+########################################################################################################################
