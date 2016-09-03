@@ -4,11 +4,13 @@
 - name: check if undercloud.conf is under the deployment folder
   stat:
       path: "{{ installer.deployment.files.rstrip('/') }}/undercloud.conf"
+  delegate_to: localhost
   register: undercloud_conf
 
 - name: copy our configuration if provided by the user
   vars:
       local_src: "{%- if installer.undercloud is defined and installer.undercloud.config is defined and installer.undercloud.config -%}
+          {{ installer.undercloud.config }}
           {%- elif undercloud_conf.stat.exists -%}
           {{ undercloud_conf.stat.path }}
           {%- elif 'virthost' in groups.all -%}
