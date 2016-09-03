@@ -9,6 +9,7 @@
 - name: copy our configuration if provided by the user
   vars:
       local_src: "{%- if installer.undercloud is defined and installer.undercloud.config is defined and installer.undercloud.config -%}
+          {{ installer.undercloud.config }}
           {%- elif undercloud_conf.stat.exists -%}
           {{ undercloud_conf.stat.path }}
           {%- elif 'virthost' in groups.all -%}
