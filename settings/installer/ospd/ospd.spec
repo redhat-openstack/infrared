@@ -42,7 +42,7 @@ subparsers:
                       type: Value
                       help: The product version (product == director)
                       choices: ["7", "8", "9", "10"]
-                      default: 8
+                      default: 9
 
                   product-build:
                       type: Value
@@ -53,7 +53,7 @@ subparsers:
                       type: Value
                       help: The product core version (product-core == overcloud)
                       choices: ["7", "8", "9", "10"]
-                      default: 8
+                      default: 9
 
                   product-core-build:
                       type: Value
