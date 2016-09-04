@@ -40,24 +40,24 @@ subparsers:
               options:
                   product-version:
                       type: Value
-                      help: The product version
+                      help: The product version (product == director)
                       choices: ["7", "8", "9", "10"]
                       default: 8
 
                   product-build:
                       type: Value
-                      help: The product build
+                      help: "String represents a timestamp of the OSP-Director puddle (for the given product version). Relevant only for OSP 9 and below. Examples: 'latest', '2016-08-11.1'"
                       default: latest
 
                   product-core-version:
                       type: Value
-                      help: The product core version
+                      help: The product core version (product-core == overcloud)
                       choices: ["7", "8", "9", "10"]
                       default: 8
 
                   product-core-build:
                       type: Value
-                      help: The product core build
+                      help: "String represents a timestamp of the OSP puddle (for the given product core version). Examples: 'latest', '2016-08-11.1'"
                       default: latest
 
             - title: Amount of nodes to use for deployment
