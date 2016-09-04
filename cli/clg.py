@@ -392,14 +392,19 @@ class Spec(object):
             condition_req_args = self._get_conditionally_required_args(
                 parser_name, expected_options, args)
 
+            required_str = 'Required argument.'
             for option in expected_options:
                 name = option['name']
+                option_required = option.get('required', False)
+                name_arg = parser_args.get(name)
 
                 # check required options.
-                if (option.get('required', False) and
-                        name not in parser_args or
-                        option['name'] in condition_req_args) and \
-                        name not in silent_args:
+                if (
+                    (option_required and not name_arg) or
+                    (isinstance(name_arg, str) and
+                        name_arg.startswith(required_str)) or
+                    (name in condition_req_args)
+                ) and (name not in silent_args):
                     result[parser_name].append(name)
 
             return result
