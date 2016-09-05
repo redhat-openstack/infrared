@@ -12,8 +12,8 @@
            wait_for_host: "{{ provisioner.wait | lower }}"
            mgmt_strategy: "{{ provisioner.strategy }}"
            mgmt_action: "{{ provisioner.action }}"
-           ipmi_username: "{{ provisioner.host.ipmi.username | default(omit) }}"
-           ipmi_password: "{{ provisioner.host.ipmi.password | default(omit) }}"
+           ipmi_username: "{{ (provisioner.host.ipmi|default({})).username | default(omit) }}"
+           ipmi_password: "{{ (provisioner.host.ipmi|default({})).password | default(omit) }}"
       register: created_nodes
 
     - name: wait for ssh
@@ -22,6 +22,7 @@
            host: "{{ provisioner.host.address }}"
            search_regex: OpenSSH
       delay: 10
+      when: provisioner.wait
 
 - name: Generate host list
   hosts: localhost
