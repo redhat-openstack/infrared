@@ -110,7 +110,7 @@
   pre_tasks:
       - name: copy our deployment folder
         copy:
-            src: "{{ installer.deployment.files }}"
+            src: "{{ installer.deployment.files.rstrip('/') }}"
             dest: "{{ template_base | dirname }}/"
             directory_mode: u=rwX,g=rX,o=rX
             owner: "{{ installer.user.name }}"
