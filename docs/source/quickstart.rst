@@ -93,6 +93,10 @@ Review the config file and edit as required:
 
 .. note:: ``host-key``, ``host-address`` and ``topology-nodes`` don't have default values. All arguments can be edited in file or overridden directly from CLI.
 
+.. note:: Do not use double quotes of apostrophes for the string values
+    in the configuration ini file. Infrared will NOT remove those quotation marks
+    that surround the values.
+
 Edit mandatory parameters values in the INI file::
 
    [virsh]

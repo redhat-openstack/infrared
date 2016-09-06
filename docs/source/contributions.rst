@@ -83,6 +83,11 @@ order:
     host-user-root
     host-key-mkey.pm
 
+ .. note:: Do not use double quotes of apostrophes for the string values
+   in the configuration ini file. Infrared will NOT remove those quotation marks
+   that surround the values.
+
+
 #. Defaults defined in ``.spec`` file for each argument.
 
   .. note:: The sample `ini` file with the default values can be generated with:
