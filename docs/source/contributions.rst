@@ -72,28 +72,33 @@ These arguments will accept input from sources in the following priority
 order:
 
 #. Command line arguments:
-   ``ir-provision virsh --host-address-some.host.com --host-user-root``
-#. Environment variables: ``HOST_ADRRESS-earth.example.com ir-provision virsh --host-user-root``
+   ``ir-provision virsh --host-address=some.host.com --host-user=root``
+#. Environment variables: ``HOST_ADRRESS=earth.example.com ir-provision virsh --host-user=root``
 #. Predefined arguments in ini file specified using ``--from-file`` option::
 
-    ir-provision virsh --host-address-some.host.com --from-file-user.ini
+    ir-provision virsh --host-address=some.host.com --from-file=user.ini
 
     cat user.ini
     [virsh]
-    host-user-root
-    host-key-mkey.pm
+    host-user=root
+    host-key=mkey.pm
+
+ .. note:: Do not use double quotes or apostrophes for the string values
+   in the configuration ini file. Infrared will NOT remove those quotation marks
+   that surround the values.
+
 
 #. Defaults defined in ``.spec`` file for each argument.
 
   .. note:: The sample `ini` file with the default values can be generated with:
-   ``ir-povision virsh --generate-conf-file-virsh.ini``. Generated file will contain
+   ``ir-povision virsh --generate-conf-file=virsh.ini``. Generated file will contain
    all the default arguments values defined in the spec file.
 
 Arguments of the above types will be automatically injected into settings
 YAML tree in a nested dict from.
 
 Example:
-The input for ``ir-COMMAND`` and argument ``--arg-name-arg-value`` maps to:
+The input for ``ir-COMMAND`` and argument ``--arg-name=arg-value`` maps to:
 
   .. code-block:: yaml
 
