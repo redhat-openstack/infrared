@@ -9,9 +9,15 @@ parameter_defaults:
     NovaRbdPoolName: "automation-vms"
     GlanceRbdPoolName: "automation-images"
     CephClientUserName: "automation"
+  {% if installer.storage.backend == "ceph2" %}
+    CephClientKey: "{{ private.storage.ceph2.CephClientKey }}"
+    CephClusterFSID: "{{ private.storage.ceph2.CephClusterFSID }}"
+    CephExternalMonHost: "{{ private.storage.ceph2.CephExternalMonHost }}"
+  {% else %}
     CephClientKey: "{{ private.storage.ceph.CephClientKey }}"
     CephClusterFSID: "{{ private.storage.ceph.CephClusterFSID }}"
     CephExternalMonHost: "{{ private.storage.ceph.CephExternalMonHost }}"
+  {% endif %}
 
 resource_registry:
 {% if installer.product.version|int >= 10 %}
