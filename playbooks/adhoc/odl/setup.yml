@@ -1,45 +1,21 @@
 ---
-- name: Prepare the odl controller for installation
+- name: Use rhos-release to install the repositories
   hosts: odl_controller
   become: yes
   become_user: root
-  vars:
-      - ansible_python_interpreter: "/usr/bin/python"
-  tasks:
-    - name: remove all repos
-      command: "rm -f /etc/yum.repos.d/*"
+  roles:
+    - role: installer/rhos-release
+      rr_rpm_url: "{{ installer.product.rpm }}"
+      director_version: "{{ installer.product.version }}"
+      director_build: "{{ installer.product.build }}"
+      mirror: "{{ installer.mirror | default(omit) }}"
 
-    - name: install the rhos-release RPM
-      shell: "yum localinstall -y {{ installer.product.rpm }}"
-
-    - debug:
-          msg: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }}"
-
-    - name: create necessary repos with for director using rhos-release
-      command: "rhos-release {{ installer.product.version }}-director -p {{ installer.product.build }}"
-      register: command_result
-      until: command_result.stderr.find('Connection reset by peer') == -1
-      retries: 40
-      delay: 5
-
-    - debug:
-          msg: "rhos-release {{ installer.product.version }} -p {{ installer.product.build }}"
-
-    - name: create necessary repos for core using rhos-release
-      command: "rhos-release {{ installer.product.version }} -p {{ installer.product.build }}"
-
-    - name: update system packages
-      yum:
-          state: latest
-          name: "*"
-      register: update
-
+  post_tasks:
     - name: reboot the odl controller
       shell: "sleep 2 && shutdown -r now"
       async: 1
       poll: 0
       ignore_errors: true
-      when: update|changed
 
     - name: Waiting for the odl controller to be available
       delegate_to: localhost
@@ -47,7 +23,6 @@
       wait_for:
           host: "{{ hostvars[inventory_hostname].ansible_ssh_host }}"
           timeout: 120
-      when: update|changed
 
 - name: Install OpenDaylight distribution and iptables-service package
   hosts: odl_controller
