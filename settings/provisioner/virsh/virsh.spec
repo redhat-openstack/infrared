@@ -25,7 +25,6 @@ subparsers:
                   image:
                       type: YamlFile
                       help: |
-                        (DEPRECATED)
                         The image to use for nodes provisioning.
                         Check the "sample.yml.example" for example.
 
@@ -44,7 +43,7 @@ subparsers:
                       default: default.yml
                   topology-nodes:
                       type: Topology
-                      help: Provision topology.
+                      help: 'Provision topology. In the form of: <node>:<amount>[,<node>:<amount>] Example: undercloud:1,controller:3'
                       required: yes
 
             - title: cleanup

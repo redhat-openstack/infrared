@@ -1,10 +1,12 @@
----
-# Top level key represents the network name to be created
-data:
-    # Values represent the virsh XML equivalent params to create a network.
+--- # TODO: consolidate networks after provisioning
+net1:
+    external_connectivity: no
+    name: "isolated"
     ip_address: "192.0.2.254"
     netmask: "255.255.255.0"
-management:
+net2:
+    external_connectivity: yes
+    name: "tenant"
     ip_address: "172.16.0.1"
     netmask: "255.255.255.0"
     forward:
@@ -18,7 +20,16 @@ management:
     floating_ip:
         start: "172.16.0.101"
         end: "172.16.0.150"
-external:
+net3:
+    external_connectivity: yes
+    name: "external"
+    ipv6:
+        ip_address: "2620:52:0:13b8::fe"
+        prefix: "64"
+        dhcp:
+            range:
+                start: "2620:52:0:13b8::fe:1"
+                end: "2620:52:0:13b8::fe:ff"
     ip_address: "10.0.0.1"
     netmask: "255.255.255.0"
     forward:
