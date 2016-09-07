@@ -1,0 +1,53 @@
+- name: Get flavor list
+  os_flavor_facts:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      ram: ">={{ node.value.memory }}"
+      vcpus: ">={{ node.value.cpu }}"
+      limit: 1
+  register: flavor
+
+- name: Set the nic order
+  shell: "echo net-name={{ provisioner.prefix }}{{ node.value.interfaces[item].network }}"
+  with_items: "{{ node.value.interfaces | sort }}"
+  register: nics
+
+- name: Create instances
+  os_server:
+      state: present
+      name: "{{ provisioner.prefix }}{{ node.value.name }}-{{ item }}"
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      auto_ip: "no"
+      flavor: "{{ flavor.ansible_facts.openstack_flavors | map(attribute='name') | first }}"
+      image: "{{ provisioner.image.name }}"
+      nics: "{{ nics.results | map(attribute='stdout') | list }}"
+      key_name: "{{ provisioner.key.name }}"
+      wait: "yes"
+  with_sequence: start=0 end="{{ node.value.amount | int - 1 }}"
+  register: instances
+
+- name: Create floating IPs
+  os_floating_ip:
+      state: present
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      network: "{{ external_network.id }}"
+      internal_network: "{{ provisioner.prefix }}{{ node.value.external_network }}"
+      server: "{{ provisioner.prefix }}{{ node.value.name }}-{{ item }}"
+      wait: yes
+  register: floating_ips
+  with_sequence: start=0 end="{{ node.value.amount | int - 1 }}"
+  when: instances|changed
+
+- name: Gather created servers facts
+  os_server_facts:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      server: "{{ provisioner.prefix }}{{ node.value.name }}*"
+  register: servers
+
+- name: Add created servers to inventory
+  add_host:
+      name: "{{ item.name }}"
+      groups: "{{ node.value.groups | join(',') }}"
+      ansible_ssh_user: "{{ provisioner.image.ssh_user }}"
+      ansible_ssh_host: "{{ item.interface_ip }}"
+      ansible_ssh_private_key_file: "{{ provisioner.key.file }}"
+  with_items: "{{ servers.ansible_facts.openstack_servers }}"
