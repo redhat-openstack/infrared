@@ -20,6 +20,26 @@
     - name: Restart openstack-nova-compute
       service: name=openstack-nova-compute state=restarted
 
+- name: VNC console bug fix
+  hosts: compute
+  gather_facts: yes
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: Gathering facts
+      setup:
+
+    - name: VNC console bug fix
+      lineinfile:
+        dest: /etc/nova/nova.conf
+        regexp: "^vncserver_proxyclient_address=*"
+        line: "vncserver_proxyclient_address={{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+
+    - name: Restart nova service
+      service:
+        name: openstack-nova-compute
+        state: restarted
+
 - name: Check if BZ1300662 is enabled
   hosts: controller
   gather_facts: no
