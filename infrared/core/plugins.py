@@ -106,7 +106,12 @@ class PluginsInspector(object):
             LOG.debug("Trying to load plugin from: '%s'", dirpath)
             config_path = os.path.join(dirpath, cls.CONFIG_FILE_NAME)
             if os.path.isfile(config_path):
-                yield InfraredPlugin.from_config_file(dirpath, cls.CONFIG_FILE_NAME)
+                try:
+                    yield InfraredPlugin.from_config_file(
+                        dirpath, cls.CONFIG_FILE_NAME)
+                except Exception as ex:
+                    LOG.warn(
+                        "Error loading plugin '%s': %s", dirpath, ex.message)
 
 
 def _get_option(config, section, option, default):
