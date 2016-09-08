@@ -1,106 +1,88 @@
 import os
 import sys
-import logging
-import multiprocessing
-import yaml
 
-from infrared.core.plugins import PluginsManager
-from infrared.core.settings import SettingsManager
-from infrared.core.cli.spec import SpecManager
+import git
 from infrared.core.utils import logger
-
+from infrared.core.plugins import PluginsInspector
+from infrared import api
 PLUGIN_SETTINGS = 'plugins/settings.yml'
 
 LOG = logger.LOG
 
 
-def main():
-    specs_manager = SpecManager()
+class PluginManagerSpec(api.SpecObject):
 
-    # create plugins manager command (just as placeholder for now)
-    parser_plugin = specs_manager.add_subparser(
-        'plugin', cmd_handler= handle_plugin_manager_commands,
-        help='Plugins manager',)
-    plugins_subparsers = parser_plugin.add_subparsers(dest="plugin")
+    def extend_cli(self, root_subparsers):
+        parser_plugin = root_subparsers.add_parser(self.name, **self.kwargs)
+        plugins_subparsers = parser_plugin.add_subparsers(dest="command0")
 
-    # add
-    add_plugin_parser = plugins_subparsers.add_parser(
-        'add', help='Adds new plugin')
-    add_plugin_parser.add_argument('uri', help="Plugin git repo uri.")
-    add_plugin_parser.add_argument('name', help="Plugin name.")
-    add_plugin_parser.add_argument('--branch', help="Plugin branch to use.")
+        # list command
+        plugins_subparsers.add_parser(
+            'list', help='List all the available plugins')
 
-    # ***********************************************
-    # collect all the plugins
-    for plugin in PluginsManager.iter_plugins():
-        # collect plugin specs
-        specs_manager.register_plugin_spec(
-            plugin,
-            cmd_handler=handle_plugin_commands)
+        # init plugin
+        init_parser = plugins_subparsers.add_parser(
+            'init', help='Initializes a core plugin')
+        init_parser.add_argument("name", help="Plugin name")
+        plugins_subparsers.add_parser(
+            'init-all', help='Initializes all the core plugin')
 
-    specs_manager.run()
+    def spec_handler(self, parser, args):
+        """
+        Handles all the plugin manager commands
+        :param parser: the infrared parser object.
+        :param args: the list of arguments received from cli.
+        """
+        command0 = args.get('command0', '')
 
+        if command0 == 'list':
+            self._list_plugins()
+        elif command0 == 'init':
+            self._init_plugin(args['name'])
+        elif command0 == 'init-all':
+            self._init_all_plugins()
 
-def handle_plugin_manager_commands(subcommand, args):
-    print "Hanlde plugin manager"
+    def _list_plugins(self):
+        print("Available plugins:")
+        for plugin in PluginsInspector.iter_plugins():
+            print('\t {name}: {path}'.format(
+                name=plugin.name, path=plugin.root_dir))
 
+    def _init_all_plugins(self):
+        root_repo = git.Repo(os.getcwd())
 
-def handle_plugin_commands(subcommand, args):
-    """
-    Handler function for the plugins.
-    """
-    plugin = PluginsManager.get_plugin(subcommand)
+        for submodule in root_repo.submodules:
+            print("Initializing plugin submodule: '{}'...".format(submodule.name))
+            submodule.update(init=True)
 
-    nested_args = args[0]
-    control_args = args[1]
-    unknown_args = args[2]
-    subcommand_name = control_args['command0']
+    def _init_plugin(self, name):
+        plugin = PluginsInspector.get_plugin(name)
+        if plugin is None:
+            LOG.warn("Unable to find plugin: %s", name)
+            sys.exit(1)
+        root_repo = git.Repo(os.getcwd())
 
-    if control_args.get('debug', None):
-        LOG.setLevel(logging.DEBUG)
-
-    settings = SettingsManager.generate_settings(
-        plugin.name,
-        nested_args,
-        plugin.subcommand_settings_files(subcommand_name),
-        input_files=control_args.get('input', []),
-        extra_vars=control_args.get('extra-vars', None),
-        dump_file=control_args.get('output', None))
-
-    if not control_args.get('dry-run'):
-        playbook_settings = yaml.load(yaml.safe_dump(
-            settings,
-            default_flow_style=False))
-
-        if control_args.get('cleanup', None):
-            playbook = plugin.cleanup_playbook
+        for submodule in root_repo.submodules:
+            if os.path.abspath(submodule.path) == os.path.abspath(
+                    plugin.root_dir):
+                print("Updating plugin submodule: '{}'...".format(
+                    submodule.name))
+                submodule.update(init=True)
+                break
         else:
-            playbook = plugin.main_playbook
-
-        proc = multiprocessing.Process(
-            target=ansible_worker,
-            args=(plugin.root_dir, playbook, ),
-            kwargs=dict(
-                module_path=plugin.modules_dir,
-                verbose=control_args.get('verbose', None),
-                settings=playbook_settings,
-                inventory=control_args.get('inventory', None)
-            ))
-        proc.start()
-        proc.join()
+            LOG.warn("No submodule found for plugin: %s", name)
 
 
-def ansible_worker(root_dir, playbook, module_path, verbose, settings, inventory):
-    # hack to change cwd to the plugin root folder
-    os.environ['PWD'] = os.path.abspath(root_dir)
-    os.chdir(root_dir)
-    # import here cause it will init ansible in correct plugin folder.
-    from infrared.core import execute
-    execute.ansible_playbook(playbook,
-                             module_path=module_path,
-                             verbose=verbose,
-                             settings=settings,
-                             inventory=inventory)
+def main():
+    specs_manager = api.SpecManager()
+    specs_manager.register_spec(PluginManagerSpec(
+        'plugin', help="Plugin management command"))
+
+    # add all the plugins
+    for plugin in PluginsInspector.iter_plugins():
+        specs_manager.register_spec(api.DefaultInfraredPluginSpec(plugin))
+
+    specs_manager.run_specs()
 
 if __name__ == '__main__':
     sys.exit(int(main() or 0))

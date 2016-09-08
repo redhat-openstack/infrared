@@ -44,7 +44,7 @@ class SpecParser(object):
     def from_folder(cls, settings_folders,
                     app_name,
                     app_subfolder="",
-                    user_dict=None, file_ext='spec'):
+                    user_dict=None, file_ext='spec', subparser=None):
         """
         Reads spec file from the settings folder and generate Spec object.
         :param settings_folders: the main settings folder
@@ -73,11 +73,11 @@ class SpecParser(object):
                             spec_files.append(full_path)
 
         return cls.from_files(settings_folders, app_name, app_subfolder,
-                              user_dict, *spec_files)
+                              user_dict, subparser, *spec_files)
 
     @classmethod
     def from_files(cls, settings_folders, app_name, app_subfolder,
-                   user_dict, *spec_files):
+                   user_dict, subparser, *spec_files):
         """
         Reads specs files and constructs the parser instance
         """
@@ -92,16 +92,22 @@ class SpecParser(object):
                     spec,
                     utils.ConflictResolver.unique_append_list_resolver)
 
-        return SpecParser(result, settings_folders, app_name, app_subfolder)
+        return SpecParser(
+            result, settings_folders, app_name, app_subfolder, subparser)
 
-    def __init__(self, spec_dict, settings_folders, app_name, app_subfolder):
+    def __init__(self, spec_dict, settings_folders,
+                 app_name, app_subfolder, subparser):
         self.app_name = app_name
         self.app_subfolder = app_subfolder
         self.settings_folders = settings_folders
+        self.subparser = subparser
 
         # inject name to the spec_dict to handle it as regular subparser
         spec_dict['name'] = app_name
         self.spec_helper = SpecDictHelper(spec_dict)
+
+        # create parser
+        self.parser = CliParser.create_parser(self, subparsers=subparser)
 
     def add_shared_groups(self, list_of_groups):
         """
@@ -301,10 +307,7 @@ class SpecParser(object):
             self.app_subfolder,
             subcommand)
 
-    def create_parser(self, subparsers=None):
-        return CliParser.create_parser(self, subparsers=subparsers)
-
-    def parse_args(self, parser=None, subparsers=None):
+    def parse_args(self, arg_parser):
         """
         Parses all the arguments (cli, file, env) and returns two dicts:
             * command arguments dict (arguments to control the IR logic)
@@ -313,11 +316,6 @@ class SpecParser(object):
 
         spec_defaults = self.get_spec_defaults()
         env_defaults = self.get_env_defaults()
-        if parser:
-            arg_parser = parser
-        else:
-            arg_parser = CliParser.create_parser(self, subparsers=subparsers)
-
         cli_args, unknown_args = CliParser.parse_args(
             self, arg_parser=arg_parser)
 
@@ -678,6 +676,9 @@ class CliParser(object):
     """
     Allows to handle the CLI arguments.
     """
+
+    def __init__(self, parser):
+        pass
 
     @classmethod
     def create_parser(cls, spec, subparsers=None):
