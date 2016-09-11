@@ -7,7 +7,7 @@
 {%- if hostvars[host]['ansible_ssh_private_key_file'] is defined %} ansible_ssh_private_key_file={{ hostvars[host]['ansible_ssh_private_key_file'] }}
 {%- else %} ansible_ssh_pass={{ hostvars[host]['ansible_ssh_pass'] }}
 {% endif %}
-{%- if 'virthost' in groups %} ansible_ssh_common_args='-o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ hostvars['virthost'].ansible_ssh_private_key_file }} {{ provisioner.host.user }}@{{ provisioner.host.address }}"'
+{%- if 'virthost' in groups %} ansible_ssh_common_args='-o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ hostvars['virthost'].ansible_ssh_private_key_file }} {{ hostvars['virthost']['ansible_ssh_user'] }}@{{ hostvars['virthost']['ansible_ssh_host'] }}"'
 {% endif %}
 {% endif %}
 {% endfor %}
