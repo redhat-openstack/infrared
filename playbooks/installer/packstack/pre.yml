@@ -13,6 +13,10 @@
   tasks:
       - name: Update all packages
         yum: name=* state=latest
+      - name: install facter
+        yum: name=facter state=present
+      - name: make sure we have up to date facts
+        setup:
 
 - name: Ensure hostname is configured properly
   hosts: openstack_nodes
