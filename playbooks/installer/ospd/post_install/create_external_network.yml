@@ -1,12 +1,18 @@
 ---
-#TODO: remove this when the templating system is in place
-- name: External network creation
+# This playbook is used to enable external network access to virthost or baremetal deployments and it is
+# intended to be used as post-deployment step. It does not create private networks and router as it is
+# users responsibility. This playbook gathers data from template_base used in ospd installer!
+# Playbook is idempotent (until neutron stderr messaging change), see "failed_when" conditions.
+
+- name: Enable external network access
   hosts: undercloud
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
   vars:
       first_controller: "{{ groups.controller | first }}"
+      template_base: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}"
+      network_environment_file: "network-environment{{ (installer.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
   tasks:
       - name: get the default floating ip pool name from the controller
         shell: "grep -oP \"(?<=default_floating_pool=)(.*$)\" /etc/nova/nova.conf"
@@ -15,9 +21,77 @@
         become_user: root
         become: yes
 
+      # In virthost case, UC node is not used for routing, virthost's libvirt is
       - name: create the external network
-        shell: "source ~/overcloudrc; neutron net-create {{ pool_name.stdout_lines|last }} --router:external --provider:physical_network datacentre --provider:network_type flat"
+        shell: >
+            source ~/overcloudrc; neutron net-create {{ pool_name.stdout_lines|last }} --router:external \
+            --provider:physical_network datacentre --provider:network_type flat --shared
+        when: "'virthost' in groups"
+        register: result
+        failed_when: "result.stderr != '' and 'Unable to create the flat network. Physical network datacentre is in use' not in result.stderr"
 
-        # TODO: move the hard coded value to a variable
-      - name: create the external subnet
-        shell: "source ~/overcloudrc; neutron subnet-create {{ pool_name.stdout_lines|last }} 10.0.0.1/24 --name external_subnet --enable-dhcp=False --allocation-pool start=10.0.0.210,end=10.0.0.250 --gateway 10.0.0.1"
+      - block:
+         - name: get the vlan number where external network should be served
+           shell: >
+               cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalNetworkVlanID | \
+               awk -F' ' '{print $2}' | sed 's/[^0-9]//g'
+           register: vlan_number
+
+         - name: create the external network
+           shell: >
+               source ~/overcloudrc; neutron net-create {{ pool_name.stdout_lines|last }} --router:external --provider:physical_network \
+               datacentre --provider:network_type vlan --provider:segmentation_id {{ vlan_number.stdout }} --shared
+           register: result
+           failed_when: "result.stderr != '' and 'The VLAN {{ vlan_number.stdout }} on physical network datacentre is in use' not in result.stderr"
+        when: "'virthost' not in groups"
+
+      - name: get cidr of the external network
+        shell: >
+            cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalNetCidr | \
+            awk -F' ' '{print $2}' | sed 's/[^a-zA-Z0-9.:/]//g'
+        register: cidr
+
+      - name: figure out IP range for external OC network from last address of range allocated for undercloud layer
+        shell: >
+            cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalAllocationPools | \
+            awk -F' ' '{print $5}' | sed 's/[^a-zA-Z0-9.:]//g'
+        register: pool_end
+
+      # There is no way to increment IP address with ansible/jinja (ipaddr/netaddr library) so we need to do this manually
+      - name: Increment end of the pool used for undercloud to get first free IP (ipv4)
+        shell: >
+            python -c 'import struct, socket;
+            print socket.inet_ntoa(struct.pack("!I",
+            struct.unpack("!I", socket.inet_aton("{{ pool_end.stdout }}"))[0] + 1 ))'
+        register: free_iprange_start
+        when: installer.network.protocol == 'ipv4'
+
+      - name: Increment end of the pool used for undercloud to get first free IP (ipv6)
+        shell: >
+            python -c 'import struct, socket;
+            a, b = struct.unpack("!QQ", socket.inet_pton(socket.AF_INET6, "{{ pool_end.stdout }}")); int_ipv6 = ((a << 64) | b);
+            int_ipv6 += 1;
+            a = int_ipv6 >> 64;
+            b = int_ipv6 & ((1 << 64) - 1);
+            print socket.inet_ntop(socket.AF_INET6, struct.pack("!QQ", a, b))'
+        register: free_iprange_start_ipv6
+        when: installer.network.protocol == 'ipv6'
+
+      - name: create the external subnet for OC from first available IP to the end of the available range gathered from cidr
+        shell: >
+            source ~/overcloudrc;
+            neutron subnet-create {{ pool_name.stdout_lines|last }} {{ cidr.stdout }} --name external-subnet
+            --enable-dhcp=False --allocation-pool
+            start={% if installer.network.protocol == 'ipv6' %}{{ free_iprange_start_ipv6.stdout }}{% else %}{{ free_iprange_start.stdout }}{% endif %},end={{ cidr.stdout | ipaddr('-2') | ipaddr('address') }}
+            {% if installer.network.protocol == 'ipv6' %}--ip_version 6{% endif %}
+        register: result
+        failed_when: "result.stderr != '' and 'Invalid input for operation: Requested subnet with cidr: {{ cidr.stdout }} for network' not in result.stderr"
+
+      - name: figure out gateway's IP from external route setting
+        shell: >
+            cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalInterfaceDefaultRoute | \
+            awk -F' ' '{print $2}' | sed 's/[^a-zA-Z0-9.:]//g'
+        register: gw
+
+      - name: set gateway for external network
+        shell: "source ~/overcloudrc; neutron subnet-update external-subnet --gateway {{ gw.stdout }}"
