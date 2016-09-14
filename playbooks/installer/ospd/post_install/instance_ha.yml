@@ -93,6 +93,7 @@
             - openstack-glance-api-clone
             - neutron-metadata-agent-clone
             - openstack-nova-conductor-clone
+        when: "{{ installer.product.version | int }} < 10"
 
       - name: Disable keystone resource
         shell: "pcs resource disable openstack-keystone --wait=900"
@@ -101,7 +102,7 @@
       # Keystone resource was replaced by openstack-core resource in RHOS9
       - name: Disable openstack-core resource
         shell: "pcs resource disable openstack-core --wait=900"
-        when: "{{ installer.product.version | int }} > 8"
+        when: "{{ installer.product.version | int }} == 9"
 
       - name: Set controller pacemaker property on controllers
         shell: "pcs property set --node {{ hostvars[item]['ansible_hostname'] }} osprole=controller"
@@ -131,20 +132,17 @@
         shell: |
             pcs resource create neutron-openvswitch-agent-compute systemd:neutron-openvswitch-agent --clone interleave=true --disabled --force
             pcs constraint location neutron-openvswitch-agent-compute-clone rule resource-discovery=exclusive score=0 osprole eq compute
-            pcs constraint order start neutron-server-clone then neutron-openvswitch-agent-compute-clone require-all=false
             pcs resource create libvirtd-compute systemd:libvirtd --clone interleave=true --disabled --force
             pcs constraint location libvirtd-compute-clone rule resource-discovery=exclusive score=0 osprole eq compute
             pcs constraint order start neutron-openvswitch-agent-compute-clone then libvirtd-compute-clone
             pcs constraint colocation add libvirtd-compute-clone with neutron-openvswitch-agent-compute-clone
             pcs resource create ceilometer-compute systemd:openstack-ceilometer-compute --clone interleave=true --disabled --force
             pcs constraint location ceilometer-compute-clone rule resource-discovery=exclusive score=0 osprole eq compute
-            pcs constraint order start openstack-ceilometer-notification-clone then ceilometer-compute-clone require-all=false
             pcs constraint order start libvirtd-compute-clone then ceilometer-compute-clone
             pcs constraint colocation add ceilometer-compute-clone with libvirtd-compute-clone
 
             pcs resource create nova-compute-checkevacuate ocf:openstack:nova-compute-wait auth_url=$OS_AUTH_URL username=$OS_USERNAME password=$OS_PASSWORD tenant_name=$OS_TENANT_NAME no_shared_storage=0 op start timeout=300 --clone interleave=true --disabled --force
             pcs constraint location nova-compute-checkevacuate-clone rule resource-discovery=exclusive score=0 osprole eq compute
-            pcs constraint order start openstack-nova-conductor-clone then nova-compute-checkevacuate-clone require-all=false
 
             pcs resource create nova-compute systemd:openstack-nova-compute --clone interleave=true --disabled --force
             pcs constraint location nova-compute-clone rule resource-discovery=exclusive score=0 osprole eq compute
@@ -153,6 +151,13 @@
             pcs constraint order start nova-compute-clone then nova-evacuate require-all=false
             pcs constraint order start libvirtd-compute-clone then nova-compute-clone
             pcs constraint colocation add nova-compute-clone with libvirtd-compute-clone
+
+      - name: Create pacemaker constraint for neutron-server, nova-conductor and ceilometer-notification
+        shell: |
+            pcs constraint order start neutron-server-clone then neutron-openvswitch-agent-compute-clone require-all=false
+            pcs constraint order start openstack-ceilometer-notification-clone then ceilometer-compute-clone require-all=false
+            pcs constraint order start openstack-nova-conductor-clone then nova-compute-checkevacuate-clone require-all=false
+        when: "{{ installer.product.version | int }} < 10"
 
       # TODO (mkrcmari) Create a play for baremetal computes fencing setup
       - name: Set up virt-fencing for compute nodes
@@ -188,7 +193,7 @@
 
       - name: Enable openstack-core resource
         shell: "pcs resource enable openstack-core"
-        when: "{{ installer.product.version | int }} > 8"
+        when: "{{ installer.product.version | int }} == 9"
 
       - name: Wait for httpd service to be started
         shell: "systemctl show httpd --property=ActiveState"
