@@ -2,13 +2,13 @@
   "ssh-user": "{{ installer.user.name }}",
   "ssh-key": "{{ undercloud_private_key }}",
   "power_manager": "nova.virt.baremetal.virtual_power_driver.VirtualPowerManager",
-  "host-ip": "{{ hostvars['virthost'].facter_ipaddress_management }}",
+  "host-ip": "{{ hostvars['virthost'].ansible_management.ipv4.address }}",
   "arch": "x86_64",
   "nodes": [
 {% for host_name in groups['overcloud_nodes'] %}
     {
       "name": "{{ hostvars[host_name].inventory_hostname }}",
-      "pm_addr": "{{ hostvars['virthost'].facter_ipaddress_management }}",
+      "pm_addr": "{{ hostvars['virthost'].ansible_management.ipv4.address }}",
       "pm_password": "{{ undercloud_private_key }}",
       "pm_type": "pxe_ssh",
       "mac": ["{{ hostvars[host_name]['ansible_eth0']['macaddress'] }}"],
