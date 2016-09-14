@@ -145,3 +145,12 @@ class IRRequiredArgsMissingException(IRException):
                 message += ("\n * [{}]: {}".format(cmd_name, ", ".join(
                     ["'" + arg + "'" for arg in args])))
         super(IRRequiredArgsMissingException, self).__init__(message)
+
+
+class SpecParserException(Exception):
+    """
+    The spec parser specific exception.
+    """
+    def __init__(self, message, errors):
+        super(SpecParserException, self).__init__(message)
+        self.errors = errors

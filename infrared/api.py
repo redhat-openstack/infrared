@@ -1,13 +1,14 @@
 # provides AP Ito run plugins
-import os
 import argparse
 import logging
 import multiprocessing
+import os
 import yaml
 
-from infrared.core.cli import base, clg
-from infrared.core.utils import logger
+from infrared import SHARED_GROUPS
+from infrared.core.inspector.inspector import SpecParser
 from infrared.core.settings import SettingsManager
+from infrared.core.utils import logger
 
 
 class SpecObject(object):
@@ -54,8 +55,8 @@ class DefaultInfraredPluginSpec(SpecObject):
         user_dict = {}
         if self.add_base_groups:
             user_dict = dict(
-                shared_groups=base.SHARED_GROUPS)
-        self.specification = clg.SpecParser.from_folder(
+                shared_groups=SHARED_GROUPS)
+        self.specification = SpecParser.from_folder(
             self.plugin.settings_folders(),
             self.plugin.name,
             user_dict=user_dict,
@@ -106,7 +107,8 @@ class DefaultInfraredPluginSpec(SpecObject):
             proc.start()
             proc.join()
 
-    def _ansible_worker(self, root_dir, playbook,
+    @staticmethod
+    def _ansible_worker(root_dir, playbook,
                         module_path, verbose, settings, inventory):
         # hack to change cwd to the plugin root folder
         os.environ['PWD'] = os.path.abspath(root_dir)
