@@ -8,7 +8,8 @@ of the base.
 #### Installation
 
 
-```bash git submodule update
+```
+git submodule update
 pip install -r requirements.txt
 pip install -e .
 ```
