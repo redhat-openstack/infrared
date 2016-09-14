@@ -60,7 +60,7 @@
           enabled: yes
           state: restarted
 
-- name: Run setup as root, to get all facter data
+- name: Run setup as root, to get all Ansible facts
   hosts: controller
   gather_facts: yes
   become: yes
@@ -79,7 +79,7 @@
       - name: Start create-stonith script which configures fencing
         shell: |
           hostname={{ hostvars[item]['ansible_hostname'] }}
-          vm_uuid={{ hostvars[item]['facter_uuid'] }}
+          vm_uuid={{ hostvars[item]['ansible_product_uuid'] }}
           pcs stonith delete my-stonith-xvm-$hostname || /bin/true
           pcs stonith create my-stonith-xvm-$hostname fence_xvm port=$vm_uuid pcmk_host_list=$hostname use_uuid=1 op monitor interval=30s
         with_items: "{{ groups['controller'] }}"
