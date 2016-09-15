@@ -3,25 +3,56 @@
 Advanced features
 =================
 
-Breakpoints
-^^^^^^^^^^^
+Tags
+^^^^
 
 Advanced usage sometimes requires partial execution of the ospd playbook. This can be achieved with
 `Ansible tags <http://docs.ansible.com/ansible/playbooks_tags.html>`_
 
-Use `InfraRed` with ``--dry-run`` flag. Instead of executing ansible, this will only generate the required ansible input::
-
-    ir-installer [...] ospd [...] --dry-run -o OUTPUT_FILE
-
-Ansible will take the `yaml` file ``OUTPUT_FILE`` as ``--extra-vars`` input file.
-
 List the available tags of the `ospd` playbooks::
 
-    ansible-playbook -i hosts --extra-vars @OUTPUT_FILE playbooks/install.yml  --list-tags
+    ir-installer [...] ospd [...] --ansible-args list-tags
 
-Execute only the desired tags. For example, this will only install the undercloud and stop::
+Execute only the desired tags. For example, this will only install the UnderCloud and download OverCloud images::
 
-    ansible-playbook -i hosts --extra-vars @OUTPUT_FILE playbooks/install.yml --tags=undercloud
+    ir-installer [...] ospd [...] --ansible-args "tags=undercloud,images"
+
+
+Breakpoints
+-----------
+Commonly used tags:
+
+undercloud
+    Install the UnderCloud.
+images
+    Download OverCloud images and upload them to UnderCloud's Glance service.
+introspection
+    Create ``instackenv.json`` file and perform introspection on OverCloud nodes with Ironic.
+tagging
+    Tag Ironic nodes with OverCloud properties.
+overcloud_init
+    Generate heat-templates from user provided ``deployement-files`` and from input data.
+    Create the ``overcloud_deploy.sh`` accordingly.
+overcloud_deploy
+    Execute ``overcloud_deploy.sh`` script
+overcloud
+    Do ``overcloud_init`` and ``overcloud_deploy``.
+inventory_update
+    Update Ansible inventory and SSH tunneling with new OverCloud nodes details (user, password, keys, etc...)
+
+Common use case of tags is to stop after a certain stage is completed.
+To do this, Ansible requires **a list of all the tags up to, and including the last desired stage**.
+Therefore, in order to stop after UnderCloud is ready::
+
+  ir-installer [...] ospd [...] --ansible-args --ansible-args tags="init,dump_facts,undercloud"
+
+Or, in as a bash script, to stop after ``$BREAKPOINT``:
+
+.. code-block:: bash
+
+  FULL_TAG_LIST=init,dump_facts,undercloud,virthost,images,introspection,tagging,overcloud,inventory_update
+  LEADING=`echo $FULL_TAG_LIST | awk -F$BREAKPOINT '{print $1}'`
+  ir-installer [...] ospd [...] --ansible-args --ansible-args tags="${LEADING}${BREAKPOINT}"
 
 
 OverCloud Image Update
