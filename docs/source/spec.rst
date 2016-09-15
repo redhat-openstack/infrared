@@ -3,6 +3,25 @@
 Specifications
 ==============
 
+InfraRed "drives" Ansible through a Plugin's playbooks (and roles) in the following manner::
+
+  ir-XXXer YYYer [...]
+
+Where ``XXX`` is the `command` (``provision``, ``install``, or ``test``), and ``YYY`` is the plugin `subcommand` (``virsh``, ``ospd``, ``openstack``, ``tempest``, etc...)
+
+* Each `command` executes a matching playbook (at ``playbooks/XXX.yml``) with a generated set of `extra vars <http://docs.ansible.com/ansible/playbooks_variables.html#passing-variables-on-the-command-line>`_
+  as `plugin input`_.
+* That "top" playbook calls (via "include") to the `subcommand`'s playbook at ``playbooks/XXXer/YYY.yml``
+
+Plugin Input
+------------
+
+InfraRed exposes several types of arguments via it's CLI to accept user-input before execution.
+It generates a python-dict input and merges it with a dict of defaults defined in YAML format.
+
+If the `subcommand` is called ``YYY``, InfraRed will search for its input definitions in `settings trees <setup.html#private-settings>`_
+in a directory called ``YYY``.
+
 Infrared uses special files (in YAML format) to describe plugin CLI interface.
 These files are called *specifications* (spec's) and have ``.spec`` extension.
 
@@ -73,10 +92,14 @@ Infrared settings structure
         |       +-> [ospd]
         |       |      |
         |       |      +-> ospd.spec
+        |       |      |
+        |       |      +-> ospd.yml
         |       |
         |       +-> [packstack]
         |       |      |
         |       |      +-> packstack.spec
+        |       |      |
+        |       |      +-> packstack.yml
         |       |
         |       +-> installer.spec
         |
@@ -85,6 +108,8 @@ Infrared settings structure
         |       +-> [....]
         |       |
         |       +-> provisioner.spec
+        |       |
+        |       +-> provisioner.yml
         |
         +-> base.spec
 
@@ -98,6 +123,10 @@ The command specification files ``installer/installer.spec`` and ``provisioner/p
 The subcommand specification files ``installer/ospd/ospd.spec`` and ``installer/ospd/packstack.spec`` contain:
     * subcommand name and description
     * specific options and groups for a given subcommand
+
+The subcommand default files ``installer/ospd/ospd.yml`` and ``installer/ospd/packstack.yml`` contain:
+    * A set of `extra vars <http://docs.ansible.com/ansible/playbooks_variables.html#passing-variables-on-the-command-line>`_ in YAML format
+      which the subcommand will use as the skeleton for its input
 
 
 Options and Groups
@@ -186,10 +215,10 @@ If type is not specified, Infrared will treat such option as 'str' control optio
 Settings types
 ''''''''''''''
 
-    * Value
-    * YamlFile
-    * ListOfYamls
-    * Topology
+    * `Value`_
+    * `YamlFile`_
+    * `ListOfYamls`_
+    * `Topology`_
 
 Value
 """""
