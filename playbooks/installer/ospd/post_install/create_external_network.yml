@@ -25,7 +25,7 @@
       - name: create the external network
         shell: >
             source ~/overcloudrc; neutron net-create {{ pool_name.stdout_lines|last }} --router:external \
-            --provider:physical_network datacentre --provider:network_type flat --shared
+            --provider:physical_network datacentre --provider:network_type flat
         when: "'virthost' in groups"
         register: result
         failed_when: "result.stderr != '' and 'Unable to create the flat network. Physical network datacentre is in use' not in result.stderr"
@@ -40,7 +40,7 @@
          - name: create the external network
            shell: >
                source ~/overcloudrc; neutron net-create {{ pool_name.stdout_lines|last }} --router:external --provider:physical_network \
-               datacentre --provider:network_type vlan --provider:segmentation_id {{ vlan_number.stdout }} --shared
+               datacentre --provider:network_type vlan --provider:segmentation_id {{ vlan_number.stdout }}
            register: result
            failed_when: "result.stderr != '' and 'The VLAN {{ vlan_number.stdout }} on physical network datacentre is in use' not in result.stderr"
         when: "'virthost' not in groups"
