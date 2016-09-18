@@ -172,7 +172,8 @@ class Spec(object):
         :param spec_defaults: the default values.
         """
 
-        def put_option(config, parser_name, option_name, value):
+        def put_option(
+                config, parser_name, option_name, value, commented=False):
             for opt_help in option.get('help', '').split('\n'):
                 help_opt = '# ' + opt_help
 
@@ -188,7 +189,7 @@ class Spec(object):
 
             config.set(
                 parser_name,
-                option_name,
+                option_name if not commented else '# ' + option_name,
                 str(value) + '\n')
 
         file_generated = False
@@ -227,6 +228,13 @@ class Spec(object):
                             "Edit with one of the allowed values OR "
                             "override with "
                             "CLI: --{}=<option>".format(opt_name))
+                    else:
+                        put_option(
+                            out_config,
+                            parser_name,
+                            opt_name,
+                            None,
+                            True)
                 with open(arg_value, 'w') as configfile:  # save
                     out_config.write(configfile)
                 file_generated = True
