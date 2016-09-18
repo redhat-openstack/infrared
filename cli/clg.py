@@ -189,7 +189,7 @@ class Spec(object):
             config.set(
                 parser_name,
                 option_name,
-                value)
+                str(value) + '\n')
 
         file_generated = False
 
