@@ -116,6 +116,16 @@ subparsers:
                       choices: ['ipv4', 'ipv6']
                       default: 'ipv4'
 
+                  network-public:
+                      type: Value
+                      help: |
+                        Deploy "public" external network on the Overcloud as post-install.
+                        Note such access needs to be enabled through Undercloud
+                        (routing&masquerading in undercloud.conf) or provided by
+                        external infrastructure available (external GW).
+                      choices: ['yes', 'no']
+                      default: 'yes'
+
             - title: Overcloud storage
               options:
                   storage-backend:
