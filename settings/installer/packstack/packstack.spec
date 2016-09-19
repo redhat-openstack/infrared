@@ -54,6 +54,11 @@ subparsers:
                       type: YamlFile
                       help: Network variant
                       default: neutron_ml2-vxlan.yml
+                  network-public:
+                      type: Value
+                      help: Deploy "public" external network on the Cloud as post-install.
+                      choices: ['yes', 'no']
+                      default: 'yes'
 
             - title: Product
               options:
