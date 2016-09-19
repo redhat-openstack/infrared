@@ -256,3 +256,7 @@
             path: "/home/stack/overcloudrc"
             state: present
             timeout: 60
+
+- include: post_install/create_external_network.yml
+  tags: public_network
+  when: installer.public.network == 'yes'
