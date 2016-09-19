@@ -9,8 +9,21 @@ of the base.
 
 
 ```
-git submodule update
+git clone https://github.com/rhos-infra/infrared-core.git
+cd infrared-core
+git checkout spec_poc
+virtualenv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .
+
+# init all the plugins
+infrared plugin init-all
+
+# list and check that we have provisioner
+infrared plugin list
+
+# try to run provisioner
+infrared provisioner virsh [....]
 ```
 
