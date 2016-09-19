@@ -14,10 +14,31 @@
             ansible_ssh_host: "{{ hypervisor.address }}"
             ansible_ssh_private_key_file: "{{ hypervisor.key }}"
 
+
 - name: Setup the virthost
   hosts: virthost
   gather_facts: yes
+  pre_tasks:
+      - name: update /etc/hosts with VMs details
+        lineinfile:
+            dest: "/etc/hosts"
+            line: "{{ hostvars[item].ansible_ssh_host }}    {{ item }}.redhat.local {{ item }}"
+            regexp: ".*{{ item }}$"
+            state: present
+        with_items: "{{ groups['all'] | difference(['localhost']) | difference(['virthost']) }}"
   roles:
+      # FIXME HERE
+      # - hardcode versions (as variable)
+      # - missing rr_rpm_url, move it to provisioner (virsh only?) as we do need something (ipxe-roms-qemu) from puddle!
+      # - teach rhos-release role how to not pin (keep latest = always working, always current)
+      # ######
+      - role: rhos-release
+        rr_rpm_url: "{{ installer.product.rpm }}"
+        director_version: "{{ installer.product.version }}"
+        director_build: "{{ installer.product.build }}"
+        core_version: "{{ installer.product.core.version }}"
+        core_build: "{{ installer.product.core.build }}"
+        mirror: "{{ installer.mirror | default(omit) }}"
       - {role: provisioner/virsh}
 
 - name: Check SSH connection to newly created VMs

@@ -5,6 +5,13 @@
   with_items: "{{ provisioner.packages }}"
   register: yum_result
 
+- name: get ipxe-roms-qemu as Ironic requirement
+  yum:
+      state: latest
+      name: ipxe-roms-qemu
+  register: update
+  # FIXME(psedlak): to be conditional depending when new ipxe-roms-qemu moves from OSP to general repos
+
 - name: stop libvirtd
   service:
       name: "libvirtd"
