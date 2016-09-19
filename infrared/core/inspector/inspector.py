@@ -67,7 +67,7 @@ class SpecParser(object):
         result = user_dict
         for spec_file in spec_files:
             with open(spec_file) as stream:
-                spec = yaml.load(stream)
+                spec = yaml.load(stream) or {}
                 utils.dict_merge(
                     result,
                     spec,

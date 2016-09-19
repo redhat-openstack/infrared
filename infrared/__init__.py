@@ -8,15 +8,6 @@ SHARED_GROUPS = [
                 'action': 'store_true',
                 'help': 'Run InfraRed in DEBUG mode',
                 'short': 'd'
-            },
-
-            # todo(obaranov) should be removed once jobs will be updated with
-            # a new usage of --verbose argument
-            'verbose': {
-                'action': 'count',
-                'default': 0,
-                'help': 'Control Ansible verbosity level',
-                'short': 'v'
             }
         }
     },

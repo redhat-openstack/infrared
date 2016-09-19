@@ -57,13 +57,13 @@ class InfraredPlugin(object):
         folders_config = dict(
             settings=_get_option(config, 'folders', 'settings', 'settings'),
             modules=_get_option(config, 'folders', 'modules', 'library'),
-            roles=_get_option(config, 'folders', 'modules', 'roles'),
+            roles=_get_option(config, 'folders', 'roles', 'roles'),
             playbooks=_get_option(config, 'folders', 'playbooks', 'playbooks')
         )
 
         playbooks_config = dict(
             main=_get_option(config, 'playbooks', 'main', name+".yml"),
-            cleanup=_get_option(config, 'playbooks', 'main', "cleanup.yml")
+            cleanup=_get_option(config, 'playbooks', 'cleanup', "cleanup.yml")
         )
 
         plugin_config = dict(
