@@ -17,7 +17,25 @@
 - name: Setup the virthost
   hosts: virthost
   gather_facts: yes
+  pre_tasks:
+      - name: update /etc/hosts with VMs details
+        lineinfile:
+            dest: "/etc/hosts"
+            line: "{{ hostvars[item].ansible_ssh_host }}    {{ item }}.redhat.local {{ item }}"
+            regexp: ".*{{ item }}$"
+            state: present
+        with_items: "{{ groups['all'] | difference(['localhost']) | difference(['virthost']) }}"
   roles:
+      - role: rhos-release
+            rr_rpm_url: "{{ provisioner.repositories.rhosrelease.url }}"
+            director_version: "{{ provisioner.repositories.release }}"
+            director_build: "latest"
+            core_version: "{{ provisioner.repositiories.release }}"
+            core_build: "latest"
+            mirror: "{{ provisioner.repositiories.mirror | default(omit) }}"
+            resolve_latest: False
+        when: provisioner.repositories.rhosrelease.url is defined and provisioner.repositiories.rhosrelease.url
+
       - {role: provisioner/virsh}
 
 - name: Check SSH connection to newly created VMs

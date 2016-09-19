@@ -47,6 +47,22 @@ subparsers:
                       help: Provision topology.
                       required: yes
 
+            - title: Repositories
+              options:
+                  rhosrelease-url:
+                      type: Value
+                      help: |
+                        URL pointing to rhos-release tool rpm.
+                        If provided (default) it will be used to setup yum repos on Hypervisor,
+                        set it to empty string to skip repo manipulation there.
+                      default: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+                  mirror:
+                      type: Value
+                      help: |
+                        Enable usage of specified mirror (for rpm, pip etc) [brq,qeos,tlv - or hostname].
+                        (Specified mirror needs to proxy multiple rpm source hosts and pypi packages.)
+                      default: ''
+
             - title: cleanup
               options:
                   cleanup:
