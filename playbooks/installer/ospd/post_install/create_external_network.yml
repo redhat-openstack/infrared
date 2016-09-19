@@ -71,10 +71,10 @@
             provider_segmentation_id: "{{ ('vlan' == physnet_type) | ternary(vlan_id, omit) }}"
         register: net_create
 
-#      OSPD "External*" data can't be used to discover subnet details because:
-#           1) IPv6 public network is not supported as public network
-#           2) CIDR arithmetic is complicted. Only implement it when #1 is supported
-#     TODO(yfried): expose subnet details as vars
+      #      OSPD "External*" data can't be used to discover subnet details because:
+      #           1) IPv6 public network is not supported as public network
+      #           2) CIDR arithmetic is complicted. Only implement it when #1 is supported
+      #     TODO(yfried): expose subnet details as vars
       - name: create the external subnet
         vars:
             # Here can't be used {{ path_venv }}, because it's not a Jinja template
