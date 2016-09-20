@@ -11,7 +11,6 @@ of the base.
 ```
 git clone https://github.com/rhos-infra/infrared-core.git
 cd infrared-core
-git checkout spec_poc
 virtualenv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
