@@ -124,7 +124,7 @@
       register: result
       ignore_errors: yes
 
-    - name: Publish the count as fact
+    - name: Publish selinux issues as fact
       set_fact:
         selinux_problems_found: "{{ result.stdout_lines }}"
       ignore_errors: yes
@@ -136,19 +136,19 @@
       register: result
       ignore_errors: yes
 
-    - name: Publish the count as fact
+    - name: Publish segfault issues as fact
       set_fact:
         segfault_problems_found: "{{ result.stdout_lines }}"
       ignore_errors: yes
 
-    - name: Publish the count as fact
+    - name: Search for OOM issues in logs
       become: yes
       become_method: sudo
       shell: "! grep -v ansible-command /var/log/messages | grep oom-killer"
       register: result
       ignore_errors: yes
 
-    - name: Set fact
+    - name: Publish oom issues as fact
       set_fact:
         oom_killer_problems_found: "{{ result.stdout_lines }}"
       ignore_errors: yes
@@ -209,6 +209,33 @@
       become_method: sudo
       ignore_errors: true
       when: job.gzip_logs is defined and job.gzip_logs
+
+- name: Aggregate and print info for build marks
+  hosts: localhost
+  gather_facts: no
+  become: no
+  tasks:
+      - name: "initialize temp variables"
+        set_fact:
+            selinux_problems: 0
+            segfault_problems: 0
+            oom_killer_problems: 0
+
+      - name: "add together all issue counts from all hosts except localhost and tester"
+        set_fact:
+            selinux_problems: "{{ selinux_problems | int + ( hostvars[item]['selinux_problems_found'] | default([]) | length ) }}"
+            segfault_problems: "{{ segfault_problems | int + ( hostvars[item]['segfault_problems_found'] | default([]) | length ) }}"
+            oom_killer_problems: "{{ oom_killer_problems | int + ( hostvars[item]['oom_killer_problems_found'] | default([]) | length ) }}"
+        with_items: "{{ groups['all'] | difference( groups['local'] + groups['tester'] ) }}"
+
+      - name: "print out build marks"
+        debug:
+            msg: "Build mark: {{ item }}_found={{ hostvars[inventory_hostname][item] }}"
+        with_items:
+            - selinux_problems
+            - segfault_problems
+            - oom_killer_problems
+
 
 - name: Upload the artifacts
   hosts: localhost
