@@ -59,6 +59,16 @@ subparsers:
                       help: Deploy "public" external network on the Cloud as post-install.
                       choices: ['yes', 'no']
                       default: 'yes'
+                  public-subnet:
+                      type: YamlFile
+                      help: |
+                          Subnet detail for "public" external network on the OverCloud as post-install.
+                          CIDR
+                          Allocation Pool
+                          Gateway
+
+                          If empty, will try to discover using "neutron.subnets.external" details
+                  # TODO(yfried): decouple this from openstack provisioner.
 
             - title: Product
               options:
