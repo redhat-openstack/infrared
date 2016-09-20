@@ -19,6 +19,7 @@ subparsers:
                       help: |
                         The image to use for nodes provisioning.
                         Check the "sample.yml.example" for example.
+                      default: fedora-24.yml
 
             - title: topology
               options:

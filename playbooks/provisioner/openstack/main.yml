@@ -4,6 +4,11 @@
   roles:
       - { role: provisioner/openstack, action: "setup" }
 
+- name: Provision OpenStack resources
+  hosts: bmc
+  roles:
+      - { role: openstack/bmc, when: "'bmc' in groups" }
+
 - name: OpenStack Provisioner SSH wait
   hosts: openstack_nodes
   gather_facts: no

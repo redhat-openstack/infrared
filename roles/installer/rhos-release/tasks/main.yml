@@ -41,7 +41,9 @@
       validate_certs: "no"
 
 - name: install the rhos-release RPM
-  shell: "yum localinstall -y /tmp/rhos-release-latest.rpm"
+  package:
+      name: "/tmp/rhos-release-latest.rpm"
+      state: present
 
 - name: remove rhos-release repos if needed
   rhos_release:

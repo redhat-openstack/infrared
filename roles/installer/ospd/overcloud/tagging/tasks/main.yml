@@ -12,7 +12,10 @@
   set_fact: node_facts="{{lookup('file', '{{ inventory_dir }}/{{ item }}')}}"
   with_items: "{{ groups['overcloud_nodes'] }}"
   register: overcloud_facts
-  when: "'virthost' in groups"
+  when: "'virthost' in groups or 'bmc' in groups"
+
+- debug: var=overcloud_facts
+- fail:
 
 - name: create the flavors for our machines
   vars:

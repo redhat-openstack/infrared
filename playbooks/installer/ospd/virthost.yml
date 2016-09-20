@@ -45,39 +45,6 @@
       - name: Dumping facts
         setup:
 
-- name: Prepare the instackenv.json
-  tags: instack
-  hosts: undercloud
-  gather_facts: no
-  become: yes
-  become_user: "{{ installer.user.name }}"
-  vars:
-      - instack_file: "/home/{{ installer.user.name }}/instackenv.json"
-  tasks:
-      - name: copy our undercloud public key
-        fetch:
-            src: "/home/{{ installer.user.name }}/.ssh/id_rsa.pub"
-            dest: "{{ inventory_dir }}/id_rsa_undercloud.pub"
-            flat: yes
-
-      - name: grab undercloud private key
-        shell: "cat /home/{{ installer.user.name }}/.ssh/id_rsa"
-        register: uc_pkey_result
-
-      - name: store undercloud private key
-        set_fact:
-            # json file shouldn't hold newlines
-            undercloud_private_key: "{{ uc_pkey_result.stdout_lines | join('\\n')}}"
-
-      - name: prepare instack.json if one doesn't exist
-        template:
-            src: templates/instackenv.json.j2
-            dest: "{{ instack_file }}"
-            # Don't push a new file if folder contains a user-injected instackenv file
-            force: no
-        when: not (installer.instackenv is defined and installer.instackenv.file is defined and installer.instackenv.file)
-
-
 # In case we're dealing with virthost, we need to make sure the undercloud is able to ssh to the hypervisor
 - name: Create the stack user on the virthost and allow SSH to hypervisor
   hosts: virthost

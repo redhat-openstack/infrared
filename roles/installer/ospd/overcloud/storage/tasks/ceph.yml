@@ -12,7 +12,7 @@
     - name: append the ceph storage template line to the base overcloud deploy script
       lineinfile:
           dest: "~/overcloud_deploy.sh"
-          line: '--ceph-storage-flavor {% if groups["ceph"] is defined %}ceph-{{ "ceph" | to_uuid }}{% else %}baremetal{% endif %} \'
+          line: '--ceph-storage-flavor {% if groups["ceph"] is defined %}{{ groups["ceph"][0].rstrip("1234567890-") }}-{{ groups["ceph"][0].rstrip("1234567890-") | to_uuid }}{% else %}baremetal{% endif %} \'
   when: installer.storage.external != "yes"
   vars:
       storage_nodes: "{{ (installer.storage.nodes is not defined) |ternary([1, groups['ceph'] |default([])|length] | max, installer.storage.nodes) }}"

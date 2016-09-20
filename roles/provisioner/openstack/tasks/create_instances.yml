@@ -12,15 +12,18 @@
   register: nics
 
 - name: Create instances
+  vars:
+      - node_image: "{%- if node.value.image is defined -%}{{ node.value.image.name }}{%- else -%}{{ provisioner.image.name }}{%- endif -%}"
   os_server:
       state: present
       name: "{{ provisioner.prefix }}{{ node.value.name }}-{{ item }}"
       cloud: "{{ provisioner.cloud | default(omit) }}"
       auto_ip: "no"
       flavor: "{{ flavor.ansible_facts.openstack_flavors | map(attribute='name') | first }}"
-      image: "{{ provisioner.image.name }}"
+      image: "{{ node_image }}"
       nics: "{{ nics.results | map(attribute='stdout') | list }}"
       key_name: "{{ provisioner.key.name }}"
+      security_groups: "ad8368ec-3af2-4e34-8e58-8ed2622cc81a"
       wait: "yes"
   with_sequence: start=0 end="{{ node.value.amount | int - 1 }}"
   register: instances

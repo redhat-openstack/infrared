@@ -20,6 +20,7 @@
       allocation_pool_end: "{{ item.value.subnet.allocation_pool_end }}"
       dns_nameservers: "{{ item.value.subnet.dns | default(omit) }}"
       enable_dhcp: "{{ item.value.subnet.enable_dhcp | default(enable_dhcp) }}"
+      gateway_ip: "{{ item.value.subnet.gateway_ip | default(omit) }}"
   with_dict: "{{ provisioner.topology.network }}"
   register: subnets
   when: networks|changed

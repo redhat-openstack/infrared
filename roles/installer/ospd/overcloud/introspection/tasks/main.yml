@@ -1,3 +1,6 @@
+- include: "prepare_nodes_for_introspection.yml"
+  tags: instack
+
 - name: register our hosts to instack
   tags: ironic
   shell: "source ~/stackrc; openstack baremetal import --json {{ instack_file }}"
@@ -8,5 +11,3 @@
 
 - name: start node introspection
   shell: "source ~/stackrc; openstack baremetal introspection bulk start"
-  register: introspection_result
-  failed_when: introspection_result.rc != 0
