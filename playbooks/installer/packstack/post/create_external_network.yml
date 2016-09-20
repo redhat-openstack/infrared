@@ -61,7 +61,7 @@
             "
         register: creds
 
-      # Use localhost where shade is mandatory
+      # TODO(yfried): Use localhost where shade is mandatory
       - name: create the external network
         vars:
             # Here can't be used {{ path_venv }}, because it's not a Jinja template
@@ -80,13 +80,23 @@
         vars:
             # Here can't be used {{ path_venv }}, because it's not a Jinja template
             ansible_python_interpreter: "/tmp/venv_shade/bin/python"
+            # It's cleaner to define top defaults first
+            subnet: "{{ installer.public.subnet|default({}) }}"
+            pool: "{{ subnet.allocation_pool|default({}) }}"
+            # Check that provisioner data is discoverable if not, all its values are set to False and will trigger "omit"
+            # Module will fail if data is not discoverable or provided by user.
+            pr_data: "{{ ((((provisioner|default({})).neutron|default({})).subnets|default({})).external|default({})).nested|default({}) }}
+            p_cidr: "{{ p_data.subnet_cidr|default(False) }}"
+            p_gateway: "{{ p_data.subnet_gateway|default(False) }}"
+            p_pool_start: "{{ p_data.allocation_pool_start|default(False) }}"
+            p_pool_end: "{{ p_data.allocation_pool_end|default(False) }}"
         os_subnet:
             auth: "{{ creds.stdout | from_yaml }}"
-            cidr: "{{ provisioner.neutron.subnets.external.nested.subnet_cidr }}"
             name: external_subnet
             network_name: "{{ net_create.network.name }}"
             enable_dhcp: no
-            gateway_ip: "{{ provisioner.neutron.subnets.external.nested.subnet_gateway }}"
-            allocation_pool_start: "{{ provisioner.neutron.subnets.external.nested.allocation_pool_start }}"
-            allocation_pool_end: "{{ provisioner.neutron.subnets.external.nested.allocation_pool_end }}"
+            cidr: "{{ subnet.cidr|default(p_cidr or omit) }}"
+            gateway_ip: "{{ subnet.gateway|default(p_gateway or omit) }}"
+            allocation_pool_start: "{{ pool.start|default(p_pool_start or omit) }}"
+            allocation_pool_end: "{{ pool.end|default(p_pool_end or omit) }}"
         register: subnet_create
