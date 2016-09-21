@@ -15,7 +15,8 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            "infrared = infrared.main:main"
+            "infrared = infrared.main:main",
+            'ir = infrared.main:main'
         ]
     },
     install_requires=reqs,
