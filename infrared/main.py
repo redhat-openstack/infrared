@@ -55,17 +55,15 @@ class PluginManagerSpec(api.SpecObject):
         for submodule in root_repo.submodules:
             print("Initializing plugin submodule: '{}'...".format(submodule.name))
             submodule.update(init=True)
+        self.__install_requirements()
 
-        # install all the requirements
+    def __install_requirements(self):
         for plugin in PluginsInspector.iter_plugins():
             requirement_file = os.path.join(plugin.root_dir, "plugin_requirements.txt")
             if os.path.isfile(requirement_file):
                 print("Installing requirements from: {}".format(requirement_file))
                 pip_args = ['install', '-r', requirement_file]
                 pip.main(args=pip_args)
-
-    def __install_requirements(self, plugin):
-        pass
 
     def _init_plugin(self, name):
         plugin = PluginsInspector.get_plugin(name)
