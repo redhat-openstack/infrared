@@ -44,43 +44,48 @@ class PluginManagerSpec(api.SpecObject):
             self._init_all_plugins()
 
     def _list_plugins(self):
+        """
+        Actually this will list all the modules and check if we have repo cloned.
+        :return:
+        """
+        root_repo = git.Repo(os.getcwd())
         print("Available plugins:")
-        for plugin in PluginsInspector.iter_plugins():
-            print('\t {name}: {path}'.format(
-                name=plugin.name, path=plugin.root_dir))
+        for submodule in root_repo.submodules:
+            try:
+                # trying to get repo
+                submodule.module()
+                print('\t [initialized] {name}'.format(name=submodule.name))
+            except git.exc.InvalidGitRepositoryError:
+                print('\t [not initialized] {name}'.format(name=submodule.name))
 
     def _init_all_plugins(self):
         root_repo = git.Repo(os.getcwd())
-
         for submodule in root_repo.submodules:
             print("Initializing plugin submodule: '{}'...".format(submodule.name))
-            submodule.update(init=True)
-        self.__install_requirements()
+            submodule.update(init=True, force=True)
+            self._install_requirements(submodule)
 
-    def __install_requirements(self):
+    def _install_requirements(self, submodule):
+        # iter_plugins will go through all the plugins subfolders and check what we have there.
         for plugin in PluginsInspector.iter_plugins():
-            requirement_file = os.path.join(plugin.root_dir, "plugin_requirements.txt")
-            if os.path.isfile(requirement_file):
-                print("Installing requirements from: {}".format(requirement_file))
-                pip_args = ['install', '-r', requirement_file]
-                pip.main(args=pip_args)
+            if os.path.abspath(plugin.root_dir) == os.path.abspath(submodule.path):
+                requirement_file = os.path.join(plugin.root_dir, "plugin_requirements.txt")
+                if os.path.isfile(requirement_file):
+                    print("Installing requirements from: {}".format(requirement_file))
+                    pip_args = ['install', '-r', requirement_file]
+                    pip.main(args=pip_args)
+                break
 
     def _init_plugin(self, name):
-        plugin = PluginsInspector.get_plugin(name)
-        if plugin is None:
-            LOG.warn("Unable to find plugin: %s", name)
-            sys.exit(1)
         root_repo = git.Repo(os.getcwd())
-
         for submodule in root_repo.submodules:
-            if os.path.abspath(submodule.path) == os.path.abspath(
-                    plugin.root_dir):
-                print("Updating plugin submodule: '{}'...".format(
-                    submodule.name))
+            if submodule.name == name:
+                print("Initializing plugin submodule: '{}'...".format(submodule.name))
                 submodule.update(init=True)
+                self._install_requirements(submodule)
                 break
         else:
-            LOG.warn("No submodule found for plugin: %s", name)
+            print("Plugin '{}' was not found in submodules.".format(name))
 
 
 def main():
