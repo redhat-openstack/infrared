@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 
 import git
 import pip
@@ -28,6 +29,11 @@ class PluginManagerSpec(api.SpecObject):
         plugins_subparsers.add_parser(
             'init-all', help='Initializes all the core plugin')
 
+        # deinit plugin
+        deinit_parser = plugins_subparsers.add_parser(
+            'deinit', help='De-initializes a core plugin')
+        deinit_parser.add_argument("name", help="Plugin name")
+
     def spec_handler(self, parser, args):
         """
         Handles all the plugin manager commands
@@ -42,6 +48,8 @@ class PluginManagerSpec(api.SpecObject):
             self._init_plugin(args['name'])
         elif command0 == 'init-all':
             self._init_all_plugins()
+        elif command0 == 'deinit':
+            self._deinit_plugin(args['name'])
 
     def _list_plugins(self):
         """
@@ -51,12 +59,9 @@ class PluginManagerSpec(api.SpecObject):
         root_repo = git.Repo(os.getcwd())
         print("Available plugins:")
         for submodule in root_repo.submodules:
-            try:
-                # trying to get repo
-                submodule.module()
-                print('\t [initialized] {name}'.format(name=submodule.name))
-            except git.exc.InvalidGitRepositoryError:
-                print('\t [not initialized] {name}'.format(name=submodule.name))
+            #  trying to get repo
+            status = 'initialized' if submodule.module_exists() else 'not initialized'
+            print('\t [{status}] {name}'.format(name=submodule.name, status=status))
 
     def _init_all_plugins(self):
         root_repo = git.Repo(os.getcwd())
@@ -74,6 +79,18 @@ class PluginManagerSpec(api.SpecObject):
                     print("Installing requirements from: {}".format(requirement_file))
                     pip_args = ['install', '-r', requirement_file]
                     pip.main(args=pip_args)
+                break
+
+    def _deinit_plugin(self, name):
+        root_repo = git.Repo(os.getcwd())
+        for submodule in root_repo.submodules:
+            if submodule.name == name:
+                git.Git(os.getcwd()).execute(['git', 'submodule', 'deinit', '-f', submodule.path])
+                # need also remove .git/modules/<module_path> folder..
+                git_mod_path = os.path.join(os.getcwd(), '.git', 'modules', submodule.name)
+                if os.path.exists(git_mod_path):
+                    shutil.rmtree(git_mod_path)
+                print("Submodule '{}' has been de-initialized".format(submodule.name))
                 break
 
     def _init_plugin(self, name):

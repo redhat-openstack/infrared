@@ -46,7 +46,7 @@ class CliParser(object):
         else:
             arg_parser = subparsers.add_parser(
                 spec.app_name,
-                description=parser_dict.get('description', ''),
+                help=parser_dict.get('description', ''),
                 formatter_class=parser_dict.get(
                     'formatter_class', argparse.RawTextHelpFormatter))
 

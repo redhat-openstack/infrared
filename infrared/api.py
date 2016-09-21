@@ -55,6 +55,7 @@ class DefaultInfraredPluginSpec(SpecObject):
         user_dict = {}
         if self.add_base_groups:
             user_dict = dict(
+                description=self.plugin.description,
                 shared_groups=SHARED_GROUPS)
         self.specification = SpecParser.from_folder(
             self.plugin.settings_folders(),

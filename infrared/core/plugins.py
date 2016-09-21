@@ -14,6 +14,10 @@ class InfraredPlugin(object):
         self.name = name
 
     @property
+    def description(self):
+        return self.config['defaults']['description']
+
+    @property
     def folders_config(self):
         return self.config['folders']
 
@@ -54,6 +58,10 @@ class InfraredPlugin(object):
             config.readfp(fd)
 
         name = config.get('defaults', 'name')
+
+        defaults = dict(
+            description=_get_option(config, 'defaults', 'description', ''),
+        )
         folders_config = dict(
             settings=_get_option(config, 'folders', 'settings', 'settings'),
             modules=_get_option(config, 'folders', 'modules', 'library'),
@@ -67,6 +75,7 @@ class InfraredPlugin(object):
         )
 
         plugin_config = dict(
+            defaults=defaults,
             folders=folders_config,
             playbooks=playbooks_config
         )
