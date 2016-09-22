@@ -98,7 +98,7 @@ class PluginManagerSpec(api.SpecObject):
         for submodule in root_repo.submodules:
             if submodule.name == name:
                 print("Initializing plugin submodule: '{}'...".format(submodule.name))
-                submodule.update(init=True)
+                submodule.update(init=True, force=True)
                 self._install_requirements(submodule)
                 break
         else:
