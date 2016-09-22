@@ -2,10 +2,12 @@
 - name: Copy to Task Files Rally
   hosts: tester
   tasks:
+  - debug: msg="{{ tester.tests }}"
+
   - name: Copy Task file from settings
     copy:
       dest: "{{ tester.rally.dir }}/{{ tester.rally.taskfile }}"
-      content: "{{ tester.tests.rally.task | to_nice_json }}"
+      src: "{{ tester.tests.rally.task  }}"
       force: yes
 
 - name: Run Rally Task
