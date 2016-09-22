@@ -116,6 +116,12 @@ subparsers:
                       choices: ['ipv4', 'ipv6']
                       default: 'ipv4'
 
+                  public-network:
+                      type: Value
+                      help: Deploy "public" external network on the OverCloud as post-install.
+                      choices: ['yes', 'no']
+                      default: 'yes'
+
             - title: Overcloud storage
               options:
                   storage-backend:
