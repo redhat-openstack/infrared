@@ -79,18 +79,11 @@
         vars:
             path_venv: "/tmp/venv_shade"
 
-- name: Update ansible.cfg forwarding to OC nodes
+- name: Update ansible.ssh.config forwarding to OC nodes
   hosts: localhost
   vars:
       overcloud_pkey: "{{ inventory_dir }}/id_rsa_overcloud"
   tasks:
-      - name: update ansible with the new SSH settings
-        ini_file:
-            dest: "{{ inventory_dir }}/ansible.cfg"
-            section: ssh_connection
-            option: ssh_args
-            value: "-o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -F {{ inventory_dir }}/ansible.ssh.config"
-
       - name: update ansible.ssh.config template for SSH tunneling if virthost
         template:
             src: "{{ inventory_dir }}/templates/ansible.ssh.config.j2"
