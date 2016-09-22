@@ -5,12 +5,6 @@
   vars:
       hypervisor: "{{ provisioner.host }}"
   tasks:
-      - name: remove SSH settings from ansible.cfg
-        lineinfile:
-            state: absent
-            dest: "{{ inventory_dir }}/ansible.cfg"
-            line: "ssh_args = -o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -F {{ inventory_dir }}/ansible.ssh.config"
-
       - name: add hosts to host list
         add_host:
             name: "{{ hypervisor.name }}"
