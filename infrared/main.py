@@ -29,9 +29,9 @@ class PluginManagerSpec(api.SpecObject):
         plugins_subparsers.add_parser(
             'init-all', help='Initializes all the core plugin')
 
-        # deinit plugin
+        # remove plugin
         deinit_parser = plugins_subparsers.add_parser(
-            'deinit', help='De-initializes a core plugin')
+            'remove', help='Removes (de-initializes) a core plugin')
         deinit_parser.add_argument("name", help="Plugin name")
 
     def spec_handler(self, parser, args):
@@ -48,7 +48,7 @@ class PluginManagerSpec(api.SpecObject):
             self._init_plugin(args['name'])
         elif command0 == 'init-all':
             self._init_all_plugins()
-        elif command0 == 'deinit':
+        elif command0 == 'remove':
             self._deinit_plugin(args['name'])
 
     def _list_plugins(self):
