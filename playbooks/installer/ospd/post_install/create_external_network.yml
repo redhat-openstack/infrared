@@ -26,14 +26,6 @@
         become_user: root
         become: yes
 
-# FIXME(yfried): this is commented because virthost solution is misconfiguring vlan. Need to reevaluate the vlan indicators
-#      - name: Check if vlan is enabled for public network - get vlan trunks
-#        shell: "grep -E \"^network_vlan_ranges\\s*=\" /etc/neutron/plugin.ini"
-#        register: vlan_trunks
-#        delegate_to: "{{ first_controller }}"
-#        become_user: root
-#        become: yes
-
       - name: read deployment network configuration
         command: "cat {{ template_base }}/network/{{ network_environment_file }}"
         register: network_template_out
@@ -56,10 +48,7 @@
 
       - name: create the external network
         vars:
-            # FIXME(yfried): this is commented because virthost solution is misconfiguring vlan. Need to reevaluate the vlan indicators
-            # # If 'datacentre' physnet is in vlan trunk, this means ext-net must be of vlan type
-            # physnet_type: "{{ (physnet_name in vlan_trunks.stdout) | ternary('vlan', 'flat') }}"
-            physnet_type: "{{ ('virthost' in groups) | ternary('flat', 'vlan') }}"
+            physnet_type: "{{ network_template.parameter_defaults.ExternalNetworkVlanID is defined | ternary('vlan', 'flat') }}"
             vlan_id: "{{ network_template.parameter_defaults.ExternalNetworkVlanID|default('') }}"
             # Here can't be used {{ path_venv }}, because it's not a Jinja template
             ansible_python_interpreter: "/tmp/venv_shade/bin/python"
