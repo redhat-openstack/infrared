@@ -1,3 +1,6 @@
+- include: "undercloud-restore.yml"
+  when: "'undercloud' not in groups"
+
 - name: Add rhos-release repos and update ipxe-roms (for Ironic)
   hosts: virthost
   tags: backup
@@ -9,6 +12,7 @@
         director_build: "{{ installer.product.build }}"
         core_version: "{{ installer.product.core.version }}"
         core_build: "{{ installer.product.core.build }}"
+        rr_distro_version: "{{ hostvars[groups.undercloud[0]].ansible_distribution_version }}"
         mirror: "{{ installer.mirror | default(omit) }}"
   tasks:
       - name: update /etc/hosts with VMs details
@@ -24,9 +28,6 @@
             state: latest
             name: ipxe-roms-qemu
         register: update
-
-- include: "undercloud-restore.yml"
-  when: "'undercloud' not in groups"
 
 # Dumping all facts for later use
 - name: Dumping facts from all nodes for later use
