@@ -5,7 +5,7 @@
   - name: Copy Task file from settings
     copy:
       dest: "{{ tester.rally.dir }}/{{ tester.rally.taskfile }}"
-      src: "{{ tester.tests.rally.task  }}"
+      content: "{{ tester.tests.rally.task | to_nice_json }}"
       force: yes
 
 - name: Run Rally Task
