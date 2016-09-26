@@ -13,6 +13,7 @@
         director_build: "{{ installer.product.build }}"
         core_version: "{{ installer.product.core.version }}"
         core_build: "{{ installer.product.core.build }}"
+        rr_distro_version: "{{ hostvars[groups.undercloud[0]].ansible_distribution_version }}"
         mirror: "{{ installer.mirror | default(omit) }}"
 
       - role: installer/ospd/undercloud
