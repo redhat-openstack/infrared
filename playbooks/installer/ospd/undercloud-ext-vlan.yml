@@ -6,8 +6,15 @@
 # interface connected to external network using same cidr as ExternalNetCidr.
 # These two cidr's must match!
 # On virthost we don't need such tweak as external traffic is handled by libvirt.
+- name: check for the network-environment file
+  find:
+      paths: "{{ template_base }}"
+      patterns: "{{ network_environment_file }}"
+      recurse: yes
+  register: network_environment_file_path
+
 - name: get the vlan number where external network should be served
-  shell: "cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalNetworkVlanID | awk -F' ' '{print $2}'"
+  shell: "cat {{ network_environment_file_path.files[0].path }} | grep ExternalNetworkVlanID | awk -F' ' '{print $2}'"
   register: vlan_result
 
 - name: create new vlan interface in ovs system
@@ -16,7 +23,7 @@
   failed_when: "result.stderr != '' and 'port named vlan{{ vlan_result.stdout | replace(\"'\",'') }} already exists' not in result.stderr"
 
 - name: get the IP address for the external network interface
-  shell: "cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalInterfaceDefaultRoute | awk -F' ' '{print $2}'"
+  shell: "cat {{ network_environment_file_path.files[0].path }} | grep ExternalInterfaceDefaultRoute | awk -F' ' '{print $2}'"
   register: stat_ip_result
 
 - name: configure external gateway's IP for this interface
@@ -28,7 +35,7 @@
   shell: "sudo ip link set vlan{{ vlan_result.stdout | replace(\"'\",'') }} up"
 
 - name: get cidr of the external network
-  shell: "cat {{ template_base }}/network/{{ network_environment_file }} | grep ExternalNetCidr | awk -F' ' '{print $2}'"
+  shell: "cat {{ network_environment_file_path.files[0].path }} | grep ExternalNetCidr | awk -F' ' '{print $2}'"
   register: route_result
 
 - name: add new static route for external network
