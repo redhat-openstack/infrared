@@ -1,13 +1,7 @@
 - name: check if host supports virtualization
   command: "virt-host-validate"
   register: result
-
-- debug:
-    var: result.stdout_lines
-
-- fail:
-      msg: "System does not support virtualization"
-  when: "'FAIL' in result.stdout_lines"
+  failed_when: "'FAIL' in result.stdout_lines"
 
 - name: check if CPU supports INTEL based KVM
   shell: "egrep -c 'vmx' /proc/cpuinfo"
