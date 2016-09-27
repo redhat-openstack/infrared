@@ -23,6 +23,6 @@ subparsers:
                       default: HEAD
                   tests:
                       type: YamlFile
-                      help: The set of test to execute
-                      required: yes
-                      default: none.yml
+                      help: The set of tests to execute (optional, but provide tester.rally.taskdir and tester.rally.taskfile, which when concatenated point to the task you want to run)
+                      required: no
+
