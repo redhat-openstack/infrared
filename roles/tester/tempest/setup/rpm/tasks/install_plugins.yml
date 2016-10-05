@@ -1,0 +1,11 @@
+---
+- name: set plugins list iterator
+  set_fact:
+      plugins: "{{ test_suite.value.plugins | default({}) }}"
+
+- name: Install plugin packages
+  become: yes
+  yum:
+      name: "{{ item.value.package }}"
+      state: present
+  with_items: "{{ plugins }}"
