@@ -5,6 +5,13 @@
 - name: Generate answer file
   shell: "packstack --gen-answer-file=/root/{{ installer.packstack.answer_file }}"
 
+- name: Default to kvm
+  ini_file:
+      dest: "/root/{{ installer.packstack.answer_file }}"
+      section: general
+      option: CONFIG_NOVA_LIBVIRT_VIRT_TYPE
+      value: kvm
+
 - name: Edit packstack answer-file from the config
   lineinfile:
       dest="/root/{{ installer.packstack.answer_file }}"
