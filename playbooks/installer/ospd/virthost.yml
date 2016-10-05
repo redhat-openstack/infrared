@@ -23,11 +23,16 @@
             state: present
         with_items: "{{ groups['all'] | difference(['localhost']) | difference(['virthost']) }}"
 
-      - name: get Ironic requirement
-        yum:
-            state: latest
-            name: ipxe-roms-qemu
-        register: update
+      # (fhubik) Bug in ansible, packages with long names aren't parsed correctly and upgraded
+      # Remove when fixed (https://github.com/ansible/ansible-modules-core/issues/4318)
+      #- name: get Ironic requirement
+      #  yum:
+      #      state: latest
+      #      name: ipxe-roms-qemu
+      #  register: update
+
+      - name: get Ironic requirement (workaround ansible-modules-core yum bug 4318)
+        shell: yum install ipxe-roms-qemu -y
 
 # Dumping all facts for later use
 - name: Dumping facts from all nodes for later use
