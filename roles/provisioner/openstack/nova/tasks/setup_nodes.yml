@@ -7,7 +7,7 @@
       auto_ip: "{{ node.value.auto_ip | default(auto_ip) }}"
       config_drive: "{{ node.value.config_drive | default(config_drive) }}"
       flavor: "{{ node.value.flavor | default(flavor_id) }}"
-      image: "{{ provisioner.image }}"
+      image: "{{ node.value.image | default(provisioner.image) }}"
       name: "{{ prefix }}{{ node.value.name }}-{{ item }}"
       nics: "{{ networks.results | map(attribute='id') | list() |map('add_prefix', 'net-id=') | list() }}"
       key_name: "{{ provisioner.key.name if provisioner.key.name else (prefix + provisioner.key.file | basename) }}"
