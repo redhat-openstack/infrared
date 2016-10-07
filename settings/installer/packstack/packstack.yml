@@ -6,6 +6,8 @@ installer:
     config:
         CONFIG_AMQP_BACKEND: "{{ !lookup installer.messaging.variant }}"
         CONFIG_DEBUG_MODE: "{{ !lookup installer.osdebug }}"
+        CONFIG_SAHARA_INSTALL: "{{ !lookup installer.component.sahara }}"
+        CONFIG_TROVE_INSTALL: "{{ !lookup installer.component.trove }}"
 
     packstack:
         answer_file: packstack_config.txt
