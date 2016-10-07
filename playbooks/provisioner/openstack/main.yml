@@ -17,3 +17,23 @@
         delay: 10
         timeout: 500
     delegate_to: localhost
+
+- name: Setup data interface for the openstack_nodes
+  hosts: openstack_nodes
+  gather_facts: no
+  become: yes
+  become_user: root
+  tasks:
+      - name: Setup data interface
+        template:
+            src: templates/ifcfg-interface.j2
+            dest: /etc/sysconfig/network-scripts/ifcfg-eth1
+            owner: root
+            group: root
+            mode: 0644
+        register: update_ifcfgs
+
+      - name: Start interfaces
+        shell: |
+          ifdown eth1
+          ifup eth1
