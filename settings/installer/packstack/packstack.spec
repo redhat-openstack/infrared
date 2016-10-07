@@ -82,6 +82,19 @@ subparsers:
                       help: The product build
                       default: latest
 
+            - title: Extra components
+              options:
+                  component-sahara:
+                      type: Value
+                      help: Sahara enabled
+                      default: 'n'
+                      choices: ['y', 'n']
+                  component-trove:
+                      type: Value
+                      help: Trove enabled
+                      default: 'n'
+                      choices: ['y', 'n']
+
             - title: Cleanup
               options:
                   cleanup:
