@@ -11,12 +11,13 @@
       state: "stopped"
   when: yum_result.changed
 
-- name: start libvirtd
+# NOTE(psedlak): due to some flakiness in >few days running libvirt/dbus
+# lets always restart libvirt at beginning of provisioning
+- name: "always restart libvirtd"
   service:
       name: "libvirtd"
-      state: "started"
+      state: "restarted"
       enabled: "yes"
-  when: yum_result.changed
 
 - name: check if host supports virtualization
   include: validate.yml
