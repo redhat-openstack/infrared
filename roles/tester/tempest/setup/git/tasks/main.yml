@@ -65,17 +65,17 @@
       orchestration: "{{ (installer.type == 'ospd') | ternary('orchestration.stack_owner_role heat_stack_owner', '') }}"
       region: "{{ (installer.type == 'ospd') | ternary('identity.region regionOne', '') }}"
       deployer_input: "{{ '(deployer_input_result | success)' | ternary('--deployer-input ~/tempest-deployer-input.conf', '') }}"
+
       redhat_tempest:
-          repo: https://github.com/redhat-openstack/tempest.git
           dir: ~/downstream-tempest
           venv: ~/.redhat_tempest_venv
   block:
       - name: clone redhat/Tempest
         git:
-            repo: "{{ redhat_tempest.repo }}"
+            repo: "{{ tester.setup.downstream_tempest.repo }}"
             dest: "{{ redhat_tempest.dir }}"
             # version is required by ansible-lint
-            version: "{{ redhat_tempest.version | default(omit)}}"
+            version: "{{ tester.setup.downstream_tempest.revision | default(omit) }}"
         when: tester.local_dir is not defined
 
       - name: create venv for redhat/Tempest
