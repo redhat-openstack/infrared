@@ -88,6 +88,11 @@
             command: define
             xml: "{{ virt_xml.stdout }}"
 
+      - name: get correct MAC of external interface for undercloud (in case we have multiple dhcp leases in libvirt's db)
+        shell: |
+            virsh dumpxml undercloud-0 | grep external -B 1 | grep mac | cut -d\' -f2
+        register: mac_ext
+
       - name: start the undercloud VM
         virt:
             name: "{{ undercloud_node.name }}"
@@ -108,7 +113,7 @@
 
       - name: wait for the undercloud IP to become available
         shell: |
-            virsh net-dhcp-leases external | awk '($4 == "ipv4") && ($6 =="{{ undercloud_node.name }}") {print $5}'
+            virsh net-dhcp-leases external | grep {{ mac_ext.stdout }} | awk '($4 == "ipv4") && ($6 =="{{ undercloud_node.name }}") {print $5}'
         register: undercloud_ip
         until: undercloud_ip.stdout != ''
         retries: 15
@@ -124,13 +129,19 @@
       - name: add undercloud to host list
         add_host:
             name: "{{ undercloud_node.name }}"
+            hostname: "undercloud-0"
+            node_label: "undercloud-0"
             groups: "undercloud,tester,openstack_nodes"
             ansible_ssh_user: "root"
             ansible_ssh_private_key_file: "{{ hostvars[groups['overcloud_nodes'][0]].ansible_ssh_private_key_file }}"
             ansible_ssh_host: "{{ undercloud_ip.stdout | ipaddr('address') }}"
+            ansible_ssh_common_args: "-o 'ProxyCommand=ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                                      -W %h:%p -i {{ hostvars[groups['overcloud_nodes'][0]].ansible_ssh_private_key_file }} \
+                                      {{ hostvars['virthost'].ansible_ssh_user }}@{{ hostvars['virthost'].ansible_ssh_host}}'"
         notify:
             - update hosts
             - Link to new Inventory file
+            - update /etc/hosts with undercloud's details
 
   handlers:
       - name: update hosts
@@ -145,6 +156,12 @@
           state: link
           src: "{{ lookup('env', 'PWD') }}/hosts-installer"
         delegate_to: localhost
+
+      - name: update /etc/hosts with undercloud's details
+        lineinfile:
+            dest: "/etc/hosts"
+            line: "{{ hostvars[groups['undercloud'][0]].ansible_ssh_host }}    {{ groups['undercloud'][0] }}.redhat.local {{ groups['undercloud'][0] }}"
+            state: present
 
 - name: gather facts from the undercloud
   hosts: undercloud
