@@ -6,22 +6,75 @@
       name: libguestfs-tools
       state: present
 
+# assume (select|use)-mirror.sh are in ~/"
+- block:
+    - name: run select-mirror with provided mirror value
+      vars:
+          mirror: "{{ installer.mirror | default(omit) }}"
+      command: "~/select-mirror.sh {{ mirror }}"
+      register: selected_mirror
+      # todo(yfried): we shouldn't need sudo for this
+      become: yes
+      become_user: root
+
+    - name: process results of mirror selection
+      set_fact:
+          mirror_fqdn: "{{ selected_mirror.stdout | trim }}"
+          rr_download_fqdn: "{{ selected_mirror.stdout | trim | ternary('-H ' + selected_mirror.stdout|trim, '') }}"
+  when: "mirror is defined and mirror"
+
 - name: tmp repos.d for overcloud
   file:
       name: "{{ tmp_oc_repos_dir }}"
       state: directory
 
-# TODO(psedlak): use installer/rhos-release / mirror urls (do we want it here?)
-- name: "create overcloud build's repos locally"
-  command: "rhos-release {{ installer.product.core.version }} -P -p {{ installer.product.core.build }} -t {{ tmp_oc_repos_dir }}"
-  register: command_result
-  until: command_result.stderr.find('Connection reset by peer') == -1
-  retries: 40
-  delay: 5
+# assume rhos-release is installed already
+- name: remove rhos-release repos if needed
+  command: "rhos-release -x -t {{ tmp_oc_repos_dir }}"
+
+- block:
+    - name: build rhos-release command
+      vars:
+          # todo(yfried): target distro should match OC and not UC
+          distro: "{{ ansible_distribution_version }}"
+      set_fact:
+          rr_command_overcloud: "
+              rhos-release
+              {{ installer.product.core.version }}
+              -P -p {{ installer.product.core.build }}
+              {{ rr_download_fqdn|default('') }}
+              -t {{ tmp_oc_repos_dir }}
+              -r {{ distro }}"
+
+    - debug:
+          var: rr_command_overcloud
+
+    - name: create overcloud build's repos locally
+      command: "{{ rr_command_overcloud }}"
+      register: command_result
+      until: command_result.stderr.find('Connection reset by peer') == -1
+      retries: 40
+      delay: 5
+
+    - name: reconfigure overcloud build's repos to use mirror
+      command: "~/use-mirror.sh {{ mirror_fqdn }}"
+      args:
+          chdir: "{{ tmp_oc_repos_dir }}"
+      register: mirror_used_cmd
+      changed_when: "'Skipping mirror' not in mirror_used_cmd.stdout"
+      when: "mirror_fqdn is defined and mirror_fqdn"
+      # todo(yfried): we shouldn't need sudo for this
+      become: yes
+      become_user: root
 
 - name: push core repos to overcloud image
   shell: "virt-copy-in -a {{ overcloud_image_file }} {{ tmp_oc_repos_dir }} /etc/"
 
 - name: update overcloud core bits to build's latest
-  shell: "virt-customize {% if installer.images['update'] == 'verbose' %}-v{% endif %} -a {{ overcloud_image_file }} --update --selinux-relabel"
+  shell: "
+      virt-customize
+      {% if installer.images['update'] == 'verbose' %}-v{% endif %}
+      -a {{ overcloud_image_file }}
+      --update
+      --selinux-relabel"
 
