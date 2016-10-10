@@ -24,13 +24,24 @@
       name: "subunit-filters"
       state: present
 
+- name: Install test dependency
+  become: yes
+  yum:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ tester.setup.dependencies }}"
+
 - name: Create the tempest directory
   file:
       dest: "{{ tester.dir }}"
       state: directory
 
+- name: Get the script which configures the tempest directory
+  shell: ls -d /usr/share/openstack-tempest-*/tools/configure-tempest-directory
+  register: configure_tempest_dir
+
 - name: Initialize tempest workspace directory
-  command: "/usr/share/openstack-tempest-{{ tempest_rpm_version.stdout }}/tools/configure-tempest-directory"
+  command: "{{ configure_tempest_dir.stdout_lines[0] }}"
   args:
       chdir: "~/{{ tester.dir }}"
       creates: "~/{{ tester.dir }}/LICENSE"
@@ -41,7 +52,6 @@
       orchestration: "{{ (installer.type == 'ospd') | ternary('orchestration.stack_owner_role heat_stack_owner', '') }}"
       region: "{{ (installer.type == 'ospd') | ternary('identity.region regionOne', '') }}"
   shell: |
-      source .venv/bin/activate
       source ~/keystonerc
       tools/config_tempest.py {{ deployer_input }} --debug \
       --create identity.uri $OS_AUTH_URL \
