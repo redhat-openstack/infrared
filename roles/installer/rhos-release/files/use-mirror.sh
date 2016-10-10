@@ -1,4 +1,7 @@
 #!/bin/bash
+
+# script is invoked from within repos dir (ie /etc/yum.repos.d/)
+
 set -ex
 
 mirror="$1"
@@ -11,8 +14,6 @@ fi
 
 
 # patch yum.repos
-
-cd /etc/yum.repos.d
 
 sed -i "s/download.*\.lab.*\.redhat\.com/${mirror}/" *.repo
 sed -i "s/download\.eng.*\.redhat\.com/${mirror}/" *.repo
