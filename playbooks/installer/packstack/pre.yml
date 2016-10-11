@@ -86,3 +86,5 @@
         changed_when: "shell_result.rc == 0"
         failed_when: "shell_result.rc > 2"
         when: patch is defined
+      - name: Create swap file
+        shell: if [ -e /swap ]; then echo "you already have a swap file"; else dd if=/dev/zero bs=128M count=32 of=/swap && mkswap /swap && swapon /swap && echo "DONE";  fi
