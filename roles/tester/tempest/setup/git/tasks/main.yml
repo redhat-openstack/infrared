@@ -1,7 +1,6 @@
 - name: Install pip
   become: yes
-  # todo(yfried): make idempotent
-  command: "easy_install pip"
+  easy_install: name=pip state=latest
 
 - name: Install devel packages for package build dependencies
   become: yes
@@ -11,12 +10,18 @@
   with_items: "{{ tester.setup.packages }}"
 
 
-- name: Clone tempest
-  git:
-      repo: "{{ tester.setup.repo }}"
-      version: "{{ tester.setup.revision | default(omit) }}"
-      dest: "~/{{ tester.dir }}"
-  register: tempest_repo
+- block:
+      - name: Remove tempest folder to have clean repo
+        file:
+            path: "~/{{ tester.dir }}"
+            state: absent
+
+      - name: Clone tempest
+        git:
+            repo: "{{ tester.setup.repo }}"
+            version: "{{ tester.setup.revision | default(omit) }}"
+            dest: "~/{{ tester.dir }}"
+        register: tempest_repo
   when: tester.local_dir is not defined
 
 - name: fetch tempest from change
@@ -60,61 +65,8 @@
       state: present
   with_items: "{{ tester.setup.pip_packages }}"
 
-# todo(yfried): remove this once config is decoupled from downstream tempest
-- vars:
-      orchestration: "{{ (installer.type == 'ospd') | ternary('orchestration.stack_owner_role heat_stack_owner', '') }}"
-      region: "{{ (installer.type == 'ospd') | ternary('identity.region regionOne', '') }}"
-      deployer_input: "{{ '(deployer_input_result | success)' | ternary('--deployer-input ~/tempest-deployer-input.conf', '') }}"
-      redhat_tempest:
-          repo: https://github.com/redhat-openstack/tempest.git
-          dir: ~/downstream-tempest
-          venv: ~/.redhat_tempest_venv
-  block:
-      - name: clone redhat/Tempest
-        git:
-            repo: "{{ redhat_tempest.repo }}"
-            dest: "{{ redhat_tempest.dir }}"
-            # version is required by ansible-lint
-            version: "{{ redhat_tempest.version | default(omit)}}"
-        when: tester.local_dir is not defined
-
-      - name: create venv for redhat/Tempest
-        pip:
-            virtualenv: "{{ redhat_tempest.venv }}"
-            name: "{{ item }}"
-            state: latest
-        with_items:
-            - pip
-            - setuptools
-            - pbr
-
-      - name: get repo requirements for redhat/Tempest
-        pip:
-            virtualenv: "{{ redhat_tempest.venv }}"
-            chdir: "{{ redhat_tempest.dir }}"
-            requirements: "{{ item }}"
-        with_items:
-            - requirements.txt
-            - test-requirements.txt
-
-      - name: Install redhat/Tempest for configuration only
-        pip:
-            virtualenv: "{{ redhat_tempest.venv }}"
-            name: "{{ redhat_tempest.dir }}"
-            editable: true
-
-      - name: run tempest configuration tool from redhat/Tempest
-        shell: |
-            source {{ redhat_tempest.venv }}/bin/activate
-            source ~/keystonerc
-            {{ redhat_tempest.dir }}/tools/config_tempest.py {{ deployer_input }} --debug \
-                  --create \
-                  identity.uri $OS_AUTH_URL \
-                  identity.admin_password $OS_PASSWORD {{ orchestration }} {{ region }} \
-                  scenario.img_dir ~/{{ tester.dir }}/etc \
-                  --out ~/{{ tester.dir }}/etc/tempest.conf
-        args:
-            chdir: "{{ redhat_tempest.dir }}"
+- name: start configuration
+  include: configure.yml
 
 - name: Install Tempest package
   pip:
@@ -128,3 +80,10 @@
   with_dict: "{{ tester.tests }}"
   loop_control:
       loop_var: test_suite
+  when: openstack_version|int < 7
+
+- name: warning message
+  debug:
+      msg: WARNING! Plugins are not available for RHOS version < 7
+  when: openstack_version|int < 7
+

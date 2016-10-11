@@ -2,26 +2,77 @@
 - name: Configure tempest
   hosts: tester
   gather_facts: yes
+  vars:
+      default_rc_file: "{{ inventory_dir }}/keystonerc"
+      rc_file: "{{ tester.openstackrc | default(default_rc_file) }}"
   pre_tasks:
-      - name: copy the keystonerc to the tester
+      # todo(obaranov) remove installer reference in IR2 and use only tester.* settings
+      # get the installer type
+      - name: try to read installer type from installer settings
+        set_fact:
+            openstack_installer_type: "{{ installer.type }}"
+        when: installer is defined and installer.type is defined
+
+      - name:  try to read installer type from tester cli
+        set_fact:
+            openstack_installer_type: "{{ tester.openstack.installer }}"
+        when: installer is not defined or installer.type is not defined
+
+      # read product version
+      - name: try to read openstack version type from installer settings
+        set_fact:
+            openstack_version: "{{ installer.product.version }}"
+        when: installer is defined and installer.product is defined and installer.product.version is defined
+
+      - name:  try to read installer type from tester cli
+        set_fact:
+             openstack_version: "{{ tester.openstack.version }}"
+        when: installer is not defined or installer.product is not defined or installer.product.version is not defined
+
+      - name: copy the openstackrc to the tester
         copy:
-            src: "{{ inventory_dir }}/keystonerc"
+            src: "{{ rc_file }}"
             dest: "~/keystonerc"
 
-      - name: copy the tempest-deployer-input.conf to the tester in case it exists
+      - name: copy the tempest-deployer-input to the tester
         copy:
-            src: "{{ inventory_dir }}/tempest-deployer-input.conf"
+            src: "{{ tester.deployer.input.file }}"
             dest: "~/tempest-deployer-input.conf"
         register: deployer_input_result
-        ignore_errors: yes
+        when: tester.deployer is defined and tester.deployer.input.method == 'copy'
 
-      # (TODO) This shouldn't be here according afazekas, but it's required to
-      # run tempest
-      - name: Create heat_stack_owner
-        # todo(yfried): convert to built-in
-        shell: "source ~/keystonerc; openstack role create heat_stack_owner"
-        when: installer.type == "ospd"
-        ignore_errors: yes
+      - name: set fact for copied deployer config
+        set_fact:
+            deployer_input: "~/tempest-deployer-input.conf"
+        when: tester.deployer is defined and tester.deployer.input.method == 'copy'
+
+      - name: set fact for local deployer config
+        set_fact:
+            deployer_input: "~/{{ tester.dir }}/{{ tester.deployer.input.file }}"
+        when: tester.deployer is defined and tester.deployer.input.method == 'local'
+
+      # print variables to be used
+      - name: print deployer input file to be used
+        debug:
+          var: deployer_input
+
+      - name: print installer type to be used
+        debug:
+          var: openstack_installer_type
+
+      - name: print openstgack version to be used
+        debug:
+          var: openstack_version
+
+      # run installer sepcific tasks
+      - name: check for additional configuration tasks for installer '{{ openstack_installer_type }}'
+        local_action: stat path="{{ playbook_dir }}/pre/{{ openstack_installer_type }}.yml"
+        register: pre_installer_file
+
+      - name: run configuration tasks for installer '{{ openstack_installer_type }}'
+        include: "pre/{{ openstack_installer_type }}.yml"
+        when: pre_installer_file.stat.exists
+
   roles:
       - {role: tester/tempest/setup/git, when: tester.setup.type == "git"}
       - {role: tester/tempest/setup/rpm, when: tester.setup.type == "rpm"} #WIP

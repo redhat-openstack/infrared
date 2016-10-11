@@ -11,6 +11,41 @@ subparsers:
                       help: The setup type for tests
                       required: yes
                       default: git.yml
+                  deployer-input-method:
+                      type: Value
+                      help: |
+                          Possible values:
+                             - copy: The deployer-input specified by the 'deployer-input-file' argument will be copied from the local station.
+                             - local: The deployer-input file to use from the tester folder on tester
+                      choices: [copy, local]
+                  deployer-input-file:
+                      type: Value
+                      help: |
+                          Required when the 'deployer-input-method' option is set.
+                          Specifies the deployer-input file location. When  deployer-input-method == 'copy' the absolute path to the file should be specified.
+                          When  deployer-input-method == 'local' the tempest-dir relative path should be specified (e.g. etc/deployer-config-icehouse.conf).
+                  openstackrc:
+                      type: Value
+                      help: |
+                          The full path to the openstackrc file.
+                          By default the inventory_dir/keystonerc file will be used.
+                  openstack-version:
+                       type: Value
+                       help: |
+                           The Openstack under test version.
+                           This value can be overridden by the extra vars: '-e installer.product.version=<value>'
+                       choices: ['5', '6', '7', '8', '9', '10']
+                  openstack-installer:
+                       type: Value
+                       help: |
+                           The Openstack installation type
+                           This value can be overridden by the extra vars: '-e installer.type=<value>'
+                       choices: ['packstack', 'ospd']
+                  config-options:
+                       type: DictValue
+                       help: |
+                           Tempest configuration additional options.
+                           Format: --config-options="section.option=value1;section.option=value"
                   setup-revision:
                       type: Value
                       help: The setup (git) revision if applicable
