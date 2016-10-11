@@ -978,15 +978,39 @@ class Value(ComplexType):
         return value
 
 
+class DictValue(ComplexType):
+    """
+    Represents a dict value.
+    Format should be --options="option1=value1;option2=value2"
+    """
+    ARG_SEPARATOR = ';'
+
+    def resolve(self, value):
+        arguments = value.split(DictValue.ARG_SEPARATOR)
+        res = {}
+        for argument in arguments:
+            argument = argument.strip()
+            if '=' in argument:
+                name, value = argument.split('=', 1)
+                res[name] = value
+            else:
+                raise exceptions.IRException(
+                    "Wrong argument format for {}. \n\t Use format: "
+                    "'--options=\"option1=value1;option2=value2\"'".format(
+                        value))
+
+        return res
+
+
 class AdditionalOptionsType(ComplexType):
     """
     This is a custom type to handle passing additional arguments to some part
     of infrared.
 
-    Format should be --additional-args=option1=value1;option2=value2
+    Format should be --additional-args="option1=value1;option2=value2"
     """
-
     ARG_SEPARATOR = ';'
+    
     # ansible args should not be put into the settings file
     is_nested = False
 
@@ -1151,6 +1175,7 @@ ACTIONS = {
 # register complex Types. See ComplexType to implement new types
 COMPLEX_TYPES = {
     'Value': Value,
+    'DictValue': DictValue,
     'YamlFile': YamlFile,
     'ListOfYamls': ListOfYamls,
     'Topology': Topology,
