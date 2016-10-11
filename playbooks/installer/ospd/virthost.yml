@@ -109,6 +109,15 @@
             user: "{{ installer.user.name }}"
             key: "{{ undercloud_public_key.stdout }}"
 
+- name: Power off overcloud nodes VMs so they can be properly registered
+  hosts: virthost
+  gather_facts: no
+  tasks:
+      - name: power off overcloud nodes
+        shell: "virsh destroy {{ item }}"
+        with_items: "{{ groups['overcloud_nodes'] }}"
+        when: "{{ installer.product.version | int == 10 }}"
+
 - include: "undercloud-backup.yml"
   tags: backup
   when: "backup is defined"
