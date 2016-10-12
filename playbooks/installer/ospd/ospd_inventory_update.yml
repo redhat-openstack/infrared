@@ -76,6 +76,24 @@
                 ansible_ssh_pass: ""
                 ansible_ssh_host: "{{ item.accessIPv4 }}"
                 ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
+
+            with_items: "{{ openstack_servers }}"
+        vars:
+            path_venv: "/tmp/venv_shade"
+
+      # Connection for baremetals must be forwarded through UC as OC nodes
+      # lie on ctplane not accessible from anywhere else.
+      # Done as "redundant" block because Ansible can not reference
+      # one variable multiple times in block context.
+      - block: 
+          - name: Enable SSH forwarding using UC node for baremetal OC nodes
+            add_host:
+                name: "{{ item.name }}"
+                ansible_ssh_common_args: "-o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                                          -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
+                                          {{ hostvars[groups['undercloud'][0]].ansible_ssh_user }}@{{ hostvars[groups['undercloud'][0]].ansible_ssh_host }}\""
+            when: "'virthost' not in groups"
+
             with_items: "{{ openstack_servers }}"
         vars:
             path_venv: "/tmp/venv_shade"
