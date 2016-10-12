@@ -75,6 +75,9 @@
                 ansible_ssh_pass: ""
                 ansible_ssh_host: "{{ item.accessIPv4 }}"
                 ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
+                ansible_ssh_common_args: "-o 'ProxyCommand=ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                                          -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
+                                          {{ hostvars[groups['undercloud'][0]].ansible_ssh_user }}@{{ hostvars[groups['undercloud'][0]].ansible_ssh_host }}'"
             with_items: "{{ openstack_servers }}"
         vars:
             path_venv: "/tmp/venv_shade"
