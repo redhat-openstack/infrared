@@ -17,23 +17,6 @@
   tasks:
     - shell: python -c 'import yum' || (dnf install -y yum yum-utils && ln -snf /usr/bin/yum-deprecated /usr/bin/yum)
 
-- name: Setup Firewall Rules
-  hosts: openstack_nodes:!tester
-  gather_facts: no
-  tags: init
-  become: yes
-  serial: 1
-  tasks:
-      #TODO: change to iptables ansible module
-      - name: Iptables - Set default rules
-        command: "iptables {{ item }}"
-        with_items: "{{ installer.firewall.rules }}"
-
-      # packstack does not change the rules if they do not conflict
-      # and they are saved, so save them.
-      - name: Iptables - Save default rules
-        shell: /sbin/iptables-save >/etc/sysconfig/iptables
-
 - name: Dump all facts before the installation begins
   hosts: openstack_nodes
   gather_facts: no
