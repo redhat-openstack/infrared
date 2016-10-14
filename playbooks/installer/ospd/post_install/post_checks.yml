@@ -1,0 +1,10 @@
+- name: Check the release file
+  hosts: controller:compute
+  tasks:
+    - block:
+        - shell: 'cat /etc/rhosp-release'
+          register: rhosp_release
+        - fail:
+             msg: "The release string does not have the major version: {{installer.product.version }} not in {{ rhosp_release.stdout }}"
+          when: "installer.product.version not in rhosp_release.stdout"
+      when: "installer.product.version|int >= 10"
