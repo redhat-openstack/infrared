@@ -16,6 +16,16 @@
                section: keymgr
                option: fixed_key
                value: "{{ randkey.stdout }}"
+      when: "installer.product.version|int < 9"
+
+    - name: Setup fixed key for encrypted volumes
+      ini_file:
+               dest: /etc/nova/nova.conf
+               section: key_manager
+               option: fixed_key
+               value: "{{ randkey.stdout }}"
+      when: "installer.product.version|int >= 9"
+
 
     - name: Restart openstack-nova-compute
       service: name=openstack-nova-compute state=restarted
