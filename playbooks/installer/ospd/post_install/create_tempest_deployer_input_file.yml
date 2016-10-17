@@ -9,6 +9,13 @@
         shell: "crudini --set ~/tempest-deployer-input.conf identity region regionOne"
         when: installer.workarounds is defined and installer.workarounds.rhbz1357579 is defined
 
+      - name: "Enable console logging: https://review.openstack.org/#/c/387445/"
+        ini_file:
+            dest: "~/tempest-deployer-input.conf"
+            section: compute-feature-enabled
+            option: console_output
+            value: true
+
       - name: fetch deployer output for tester
         fetch:
             src: "~/{{ item.src }}"
