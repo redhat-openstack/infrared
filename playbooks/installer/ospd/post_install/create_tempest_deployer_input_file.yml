@@ -19,3 +19,9 @@
               dest: "keystonerc"
             - src:  "tempest-deployer-input.conf"
               dest: "tempest-deployer-input.conf"
+
+      - name: "Enable console logging: https://review.openstack.org/#/c/387445/"
+        ini_file: {{ inventory_dir }}//tempest-deployer-input.conf
+            section: compute-feature-enabled
+            option: console_output
+            value: true
