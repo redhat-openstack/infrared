@@ -1,5 +1,15 @@
 - name: register our hosts to instack
   shell: "source ~/stackrc; openstack baremetal import --json {{ instack_file }}"
+  when: "{{ installer.product.version | int < 10 }}"
+
+# In order to avoid BZ#1383627 we need to delete and retry the nodes import for several times to succeed
+- name: register our hosts to instack
+  shell: "source ~/stackrc; for node in $(ironic node-list | grep -v 'Power State' | awk {'print $2'}); do ironic node-delete $node; done; openstack baremetal import --json {{ instack_file }}"
+  ignore_errors: yes
+  register: import_result
+  until: import_result.rc == 0
+  retries: 5
+  when: "{{ installer.product.version | int == 10 }}"
 
 - name: assign the kernel and ramdisk before introspection begins
   shell: "source ~/stackrc; openstack baremetal configure boot"
