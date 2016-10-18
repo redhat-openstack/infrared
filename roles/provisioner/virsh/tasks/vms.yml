@@ -62,6 +62,7 @@
           virt-customize -a {{ base_image_path }}/{{ base_image }} \
               --run-command 'yum remove -y cloud-init*' \
               --root-password password:redhat \
+              --append-line '/etc/ssh/sshd_config:UseDNS no' \
               --mkdir /root/.ssh \
               --chmod 0700:/root/.ssh \
               --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys \
