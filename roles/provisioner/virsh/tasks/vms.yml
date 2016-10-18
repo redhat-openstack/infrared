@@ -55,7 +55,8 @@
 
     - name: adjust base image for this run
       shell: |
-          set -x
+          set -ex
+          export LIBGUESTFS_BACKEND=direct
           virt-sysprep -a {{ base_image_path }}/{{ base_image }} \
               --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
 
@@ -67,6 +68,7 @@
               --chmod 0700:/root/.ssh \
               --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys \
               --selinux-relabel
+          chown qemu:qemu {{ base_image_path }}/{{ base_image }}
 
   when: dbi_any_not_imported is defined and dbi_any_not_imported
 
