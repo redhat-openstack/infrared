@@ -11,6 +11,7 @@
         core_build: "{{ installer.product.core.build }}"
         rr_distro_version: "{% if installer.product.version|int < 10 %}7.2{% else %}7.3{% endif %}"
         mirror: "{{ installer.mirror | default(omit) }}"
+        when: "{{ ansible_distribution_version }} == '7.2'"
   tasks:
       - name: update /etc/hosts with VMs details
         lineinfile:
