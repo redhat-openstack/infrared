@@ -1,0 +1,6 @@
+- name: install extra system requirements for "{{ plugin_item.key }}"
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ plugin_item.value.packages }}"
+  when: plugin_item.value.packages is defined
