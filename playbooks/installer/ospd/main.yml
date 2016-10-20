@@ -34,17 +34,15 @@
   include: virthost.yml
   when: "'virthost' in groups"
 
-- name: Start introspection
-  tags: introspection
+- name: Prepare introspection
+  tags: introspection,ironic
   hosts: undercloud
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
   vars:
-      undercloud_provision_cidr: "{{ ansible_br_ctlplane.ipv4.network }}/{{ ansible_br_ctlplane.ipv4.netmask }}"
       custom_instack: "{{ (installer.instackenv|default({})).file | default('') }}"
-  pre_tasks:
-
+  tasks:
       - name: "Set selinux state on undercloud after install"
         selinux:
             policy: "targeted"
@@ -94,6 +92,14 @@
             msg: "instackenv file is missing"
         when: not instack_file_path.stat.exists
 
+- name: Start introspection
+  tags: introspection
+  hosts: undercloud
+  gather_facts: no
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  vars:
+      undercloud_provision_cidr: "{{ ansible_br_ctlplane.ipv4.network }}/{{ ansible_br_ctlplane.ipv4.netmask }}"
   roles:
       - {role: installer/ospd/overcloud/introspection, when: "installer.overcloud is defined"}
   tasks:
