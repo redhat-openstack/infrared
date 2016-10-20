@@ -17,6 +17,11 @@
       version: "{{ item.value.version | default(omit) }}"
   with_dict: "{{ plugins }}"
 
+- include: install_extras.yml
+  with_dict: "{{ plugins }}"
+  loop_control:
+      loop_var: plugin_item
+
 - block:
   # some repos have "test-requirements" files and some don't.
     - name: check if test-requirements exists

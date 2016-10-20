@@ -5,3 +5,8 @@
       name: "{{ item.value.package }}"
       state: present
   with_dict: "{{ test_suite.value.plugins | default({}) }}"
+
+- include: install_extras.yml
+  with_dict: "{{ plugins }}"
+  loop_control:
+      loop_var: plugin_item
