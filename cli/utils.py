@@ -114,7 +114,7 @@ def search_tree(needle, haystack, _res=None):
         _res = []
     if needle in haystack:
         _res.append(haystack[needle])
-    for key, value in haystack.iteritems():
+    for key, value in haystack.items():
         if isinstance(value, dict):
             search_tree(needle, value, _res)
         if isinstance(value, list):
