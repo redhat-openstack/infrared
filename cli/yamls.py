@@ -103,10 +103,10 @@ def replace_lookup(lookups_dict):
     """
     def yaml_walk(yaml_content, key_path=None):
         an_iter = enumerate(yaml_content) if isinstance(yaml_content, list) \
-            else yaml_content.iteritems()
+            else yaml_content.items()
 
         for idx_key, value in an_iter:
-            if hasattr(value, '__iter__'):
+            if hasattr(value, '__iter__') and not isinstance(value, str):
                 if key_path is None:
                     next_key = str(idx_key)
                 else:
