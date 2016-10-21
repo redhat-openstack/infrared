@@ -1,6 +1,8 @@
-import ConfigParser
-
-import exceptions
+try: # py2
+    import ConfigParser
+    import exceptions
+except ImportError:  # py3
+    import configparser as ConfigParser
 import os
 
 from cli import utils
