@@ -28,3 +28,6 @@
 
 - name: upload the overcloud images to glance
   shell: "source ~/stackrc; openstack overcloud image upload --update-existing"
+
+- include: cleanup.yml
+  when: image_files is defined and installer.images.cleanup == 'yes'

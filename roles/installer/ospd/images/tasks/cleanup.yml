@@ -1,0 +1,7 @@
+- name: remove downloaded images
+  file:
+      path: "/home/{{ installer.user.name }}/{{ item[1] }}"
+      state: absent
+  with_subelements:
+    - "{{ image_files.results }}"
+    - "files"
