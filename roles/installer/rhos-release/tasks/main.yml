@@ -18,7 +18,7 @@
     - name: process results of mirror selection
       set_fact:
           mirror_fqdn: "{{ selected_mirror.stdout | trim }}"
-          rr_download_fqdn: "{{ selected_mirror.stdout | trim | ternary('-H ' + selected_mirror.stdout|trim, '') }}"
+          rr_download_fqdn: "{{ selected_mirror.stdout | trim | ternary(selected_mirror.stdout|trim, '') }}"
   when: "mirror is defined and mirror"
 
 - name: gather repo file names to remove
@@ -42,24 +42,20 @@
   shell: "yum localinstall -y /tmp/rhos-release-latest.rpm"
 
 - name: remove rhos-release repos if needed
-  shell: "rhos-release -x -t {{ rr_target_directory }}"
+  rhos_release:
+      state: uninstall
+      target_directory: "{{ rr_target_directory }}"
 
 - block:
-    - name: build rhos-release command
-      set_fact:
-          rr_command_director: "
-              rhos-release
-              {{ director_version }}-director
-              -P -p {{ director_build }}
-              {{ rr_download_fqdn }}
-              -t {{ rr_target_directory }}
-              -r {{ rr_distro_version }}"
-
-    - debug:
-          var: rr_command_director
-
     - name: create necessary repos for director using rhos-release
-      command: "{{ rr_command_director }}"
+      rhos_release:
+          state: install
+          release: "{{ director_version }}-director"
+          puddle: "{{ director_build }}"
+          pin_puddle: yes
+          target_directory: "{{ rr_target_directory }}"
+          distro_version: "{{ rr_distro_version }}"
+          override_hostname: "{{ rr_download_fqdn }}"
       register: command_result
       until: command_result.stderr.find('Connection reset by peer') == -1
       retries: 40
@@ -67,27 +63,21 @@
 
     - name: parse specific number of director puddle used from rhos-release output
       set_fact:
-          director_puddle_version: "{{ command_result | regex_replace('^.*director[ ]+-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
+          director_puddle_version: "{{ command_result.releases.product.version }}"
 
     - debug:
           msg: "Build mark: director_puddle={{ director_puddle_version }}"
   when: "director_version is defined and director_version | int < 10 and director_build is defined"
 
-- name: build rhos-release command
-  set_fact:
-      rr_command: "
-          rhos-release
-          {{ core_version }}
-          -P -p {{ core_build }}
-          {{ rr_download_fqdn }}
-          -t {{ rr_target_directory }}
-          -r {{ rr_distro_version }}"
-
-- debug:
-      var: rr_command
-
 - name: create necessary repos for core using rhos-release
-  command: "{{ rr_command }}"
+  rhos_release:
+      state: install
+      release: "{{ core_version }}"
+      puddle: "{{ core_build }}"
+      pin_puddle: yes
+      target_directory: "{{ rr_target_directory }}"
+      distro_version: "{{ rr_distro_version }}"
+      override_hostname: "{{ rr_download_fqdn }}"
   register: command_result
   until: command_result.stderr.find('Connection reset by peer') == -1
   retries: 40
@@ -95,7 +85,7 @@
 
 - name: parse specific number of puddle used from rhos-release output
   set_fact:
-      core_puddle_version: "{{ command_result | regex_replace('^.*-p (?P<puddle>\\d{4}-\\d{2}-\\d{2}\\.\\d).*$', '\\g<puddle>') }}"
+      core_puddle_version: "{{ command_result.releases.core.version }}"
 
 - debug:
       msg: "Build mark: core_puddle={{ core_puddle_version }}"
