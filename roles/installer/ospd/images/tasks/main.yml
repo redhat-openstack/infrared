@@ -28,3 +28,12 @@
 
 - name: upload the overcloud images to glance
   shell: "source ~/stackrc; openstack overcloud image upload --update-existing"
+
+- name: remove downloaded images
+  file:
+      path: "/home/{{ installer.user.name }}/{{ item[1] }}"
+      state: absent
+  with_subelements:
+    - "{{ image_files.results }}"
+    - "files"
+  when: image_files is defined and installer.images.cleanup == 'yes'
