@@ -38,6 +38,12 @@
   hosts: compute
   become: yes
   tasks:
+      - name: Open pacemaker_remote port
+        shell: "iptables -I INPUT -p tcp --dport 3121 -j ACCEPT"
+
+      - name: Make created iptables rules persistant
+        shell: "/sbin/service iptables save"
+
       - name: Start pacemaker remote service at compute nodes
         service:
             name: pacemaker_remote
