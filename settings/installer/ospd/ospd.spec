@@ -76,6 +76,14 @@ subparsers:
                       help: Specifies whether ths SSL should be used for overcloud
                       default: 'no'
 
+                  overcloud-lowres:
+                      type: Value
+                      help: |
+                            Configure the deployed nodes for use less resources,
+                            it typically means lower number of API workers.
+                      default: 'auto'
+                      choices: ['yes', 'no', 'auto']
+
                   overcloud-fencing:
                       type: Value
                       help: Specifies whether fencing should be configured for overcloud nodes
