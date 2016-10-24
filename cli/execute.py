@@ -58,7 +58,7 @@ def _run_playbook(cli_args, settings):
     """
     with tempfile.NamedTemporaryFile(
             prefix="ir-settings-", delete=True) as tmp:
-        tmp.write(yaml.safe_dump(settings, default_flow_style=False))
+        tmp.write(yaml.safe_dump(settings, default_flow_style=False).encode('utf-8'))
         # make sure ansible can read that file.
         tmp.flush()
         cli_args.extend(['--extra-vars', "@" + tmp.name])

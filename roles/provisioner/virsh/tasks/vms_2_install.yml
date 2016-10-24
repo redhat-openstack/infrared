@@ -4,7 +4,7 @@
   shell: |
 
           virt-install --name {{ node.value.name }}-{{ item }} \
-            {% for disk_name, disk_values in node.value.disks.iteritems() %}
+            {% for disk_name, disk_values in node.value.disks.items() %}
             {% if disk_values.import_url is defined and disk_values.import_url %}
              --disk path={{ base_image_path }}/{{ node.value.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
             {% else %}

@@ -1,6 +1,8 @@
-import ConfigParser
-
-import exceptions
+try:
+    import ConfigParser
+    import exceptions
+except ImportError:
+    import configparser as ConfigParser
 import os
 
 from cli import utils
