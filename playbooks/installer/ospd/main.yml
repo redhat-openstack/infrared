@@ -182,6 +182,9 @@
         tags: overcloud_deploy
 
       - name: create the base overcloud deploy script
+        vars:
+            constrol_scale:  "{% if installer.controller is defined and installer.controller.nodes is defined and installer.controller.nodes %}{{ installer.controller.nodes }}{% elif groups['controller'] is defined %}{{ groups['controller'] | length }}{% else %}1{% endif %}"
+            compute_scale: "{% if installer.compute is defined and installer.compute.nodes is defined and installer.compute.nodes %}{{ installer.compute.nodes }}{% elif groups['compute'] is defined %}{{ groups['compute'] | length }}{% else %}1{% endif %}"
         template:
             src: "templates/overcloud_deploy.sh.j2"
             dest: "~/overcloud_deploy.sh"
