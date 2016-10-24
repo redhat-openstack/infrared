@@ -76,6 +76,12 @@ subparsers:
                       help: Specifies whether ths SSL should be used for overcloud
                       default: 'no'
 
+                  overcloud-lowres:
+                      type: Value
+                      help: Use extra settings and tweaks for small hardware
+                      default: 'auto'
+                      choices: ['yes', 'no', 'auto']
+
                   overcloud-fencing:
                       type: Value
                       help: Specifies whether fencing should be configured for overcloud nodes
