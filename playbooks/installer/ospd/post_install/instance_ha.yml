@@ -66,7 +66,7 @@
   roles:
       - {role: installer/ospd/overcloud/credentials, overcloudrc: "{{ inventory_dir }}/keystonerc" }
 
-- name: Run setup as root, to get all facter data
+- name: Run setup as root, to get all Ansible facts
   hosts: controller
   gather_facts: yes
   become: yes
@@ -169,7 +169,7 @@
       - name: Set up virt-fencing for compute nodes
         shell: |
             COMPUTENAME={{ hostvars[item]['ansible_hostname'] }}
-            VM_UUID={{ hostvars[item]['facter_uuid'] }}
+            VM_UUID={{ hostvars[item]['ansible_product_uuid'] }}
             pcs stonith delete my-stonith-xvm-$COMPUTENAME || /bin/true
             pcs stonith create my-stonith-xvm-$COMPUTENAME fence_xvm port=$VM_UUID pcmk_host_list=$COMPUTENAME use_uuid=1 op monitor interval=30s
         with_items: "{{ groups['compute'] }}"
