@@ -23,6 +23,14 @@
             option: attach_encrypted_volume
             value: false
 
+      - name: "Configure storage protocol when ceph: https://bugs.launchpad.net/tripleo/+bug/1634499"
+        ini_file:
+            dest: "~/tempest-deployer-input.conf"
+            section: volume
+            option: storage_protocol
+            value: ceph
+        when:  "installer.storage.backend|startswith('ceph')"
+
       - name: fetch deployer output for tester
         fetch:
             src: "~/{{ item.src }}"
