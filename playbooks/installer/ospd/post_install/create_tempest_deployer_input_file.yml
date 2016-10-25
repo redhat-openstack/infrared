@@ -16,11 +16,12 @@
             option: console_output
             value: true
 
-      - name: "Disable volume encrytion tests rhbz#1383377"
+      - name: "Disable encrypted volume tests rhbz#1383377"
         ini_file:
             dest: "~/tempest-deployer-input.conf"
-            section: attach_encrypted_volume
-            option: false
+            section: compute-feature-enabled
+            option: attach_encrypted_volume
+            value: false
 
       - name: fetch deployer output for tester
         fetch:
