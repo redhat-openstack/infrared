@@ -978,6 +978,35 @@ class Value(ComplexType):
         return value
 
 
+class DictValue(ComplexType):
+    """
+    Represents a dict value.
+    Format should be --options="option1=value1;option2=value2"
+
+    Resulting settigns value will look like:
+    options:
+        option1: value1
+        option2: value2
+    """
+    ARG_SEPARATOR = ';'
+
+    def resolve(self, value):
+        arguments = value.split(DictValue.ARG_SEPARATOR)
+        res = {}
+        for argument in arguments:
+            argument = argument.strip()
+            if '=' in argument:
+                name, value = argument.split('=', 1)
+                res[name] = value
+            else:
+                raise exceptions.IRException(
+                    "Wrong argument format for {}. \n\t Use format: "
+                    "'--options=\"option1=value1;option2=value2\"'".format(
+                        value))
+
+        return res
+
+
 class AdditionalOptionsType(ComplexType):
     """
     This is a custom type to handle passing additional arguments to some part
