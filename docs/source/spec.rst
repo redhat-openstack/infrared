@@ -219,6 +219,7 @@ Settings types
     * `YamlFile`_
     * `ListOfYamls`_
     * `Topology`_
+    * `DictValue`_
 
 Value
 """""
@@ -251,7 +252,7 @@ will produce the folloiwng settings in YAML format:
        host:
            address: myhost.domain.com
 
-These settings file is then will passed the Ansible as extra-vars.
+This settings tree is passed to Ansible as extra-vars.
 
 
 YamlFile
@@ -340,7 +341,7 @@ For example, for ``undercloud:1,controller:2,compute:3`` value with option name 
                 compute:
                    # content of the compute.yml will go there
                    amount: 3
-                
+
 ListOfYamls
 """""""""""
 
@@ -363,15 +364,53 @@ For example, for ``network,compute,volume`` value with option name ``tests``, co
        tests:
            network:
                # content of the network.yml will go there
-               
+
            compute:
                # content of the compute.yml will go there
-               
+
            volume:
                # content of the volume.yml will go there
-               
 
-               
+DictValue
+"""""""""
+
+Specifies the value which should be interpreted as a dictionary value in the settings.
+
+DictValue should be specified in the format: ``option1=value1;option2=value;option3=value3``
+
+Consider the following example on how to add the DictValue option into a spec.
+
+.. code-block:: yaml
+
+   ---
+   subparsers:
+       virsh:
+           options:
+               my-dict-option:
+                   type: DictValue
+                   help: 'Sample dict'
+
+
+Calling the cli tool::
+
+    ir-provisioner virsh --my-dict-option=option1=value1;key2=value2
+
+
+will produce the following dict tree in YAML format:
+
+.. code-block:: yaml
+
+   ---
+   provisioner
+       my:
+           dict:
+               options:
+                   option1: value1
+                   key2: value2
+
+This settings tree is passed to Ansible as extra-vars.
+
+
 Types extension
 '''''''''''''''
 
