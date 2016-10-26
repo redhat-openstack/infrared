@@ -121,6 +121,9 @@ class DefaultInfraredPluginSpec(SpecObject):
                 ))
             proc.start()
             proc.join()
+            if proc.exitcode:
+                # soemthing wrong happened in child process.
+                exit(proc.exitcode)
 
     @staticmethod
     def _ansible_worker(root_dir, playbook,
