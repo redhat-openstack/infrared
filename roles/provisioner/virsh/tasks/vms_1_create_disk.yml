@@ -1,4 +1,17 @@
 ---
+#todo(yfried): move this to verification section (before execution)
+- name: verify swap is within disk1 size
+  vars:
+      disk1_min: 8G #GB
+  fail:
+      msg:
+          error: "Not enough disk space for swap"
+          node: "{{ item.key }}"
+          swap: "{{ item.value.swap }}"
+          disk_size: "{{ item.value.disks.disk1.size }}"
+  with_dict: "{{ provisioner.topology.nodes }}"
+  when: "{{ (item.value.disks.disk1.size|filesize('M')|int - item.value.swap|default(0)|int) < (disk1_min|filesize('M')|int) }}"
+
 # For disks usually it will be only 1 disk so the async will run on nodes rather than disks creation
 - name: create disk(s) from vm base image
   shell: |
@@ -21,6 +34,13 @@
           --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{0,{{ index + 1 }}} && sed -i s/DEVICE=.*/DEVICE=eth{{ index + 1 }}/g /etc/sysconfig/network-scripts/ifcfg-eth{{ index +1 }}' {% if not loop.last %}\
           {% endif %}
       {% endfor %};
+      {% if item.value.swap|default('0')|int > 0 -%}
+      virt-customize -a {{ disk_values.path }}/{{ node_image }} \
+          --run-command 'dd if=/dev/zero of=/swapfile bs=1M count={{ item.value.swap }}' \
+          --run-command 'chmod 600 /swapfile' \
+          --run-command 'mkswap /swapfile' \
+          --run-command 'echo /swapfile none swap defaults 0 0 >> /etc/fstab'
+      {% endif %}{# endif swap #}
       {% endif %}{# endif disk1 #}
 
       chown qemu:qemu {{ disk_values.path }}/{{ node_image }}
