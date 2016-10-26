@@ -19,10 +19,10 @@ back_and_forth = [
 
 
 @pytest.mark.parametrize("num, unit, expected", back_and_forth)
-def test_to_bytest(num, unit, expected):
+def test_to_bytes(num, unit, expected):
     assert filesize.to_bytes(num, unit) == expected
 
 
 @pytest.mark.parametrize("expected, unit, num", back_and_forth)
-def test_to_bytest(num, unit, expected):
+def test_from_bytes(num, unit, expected):
     assert filesize.from_bytes(num, unit) == expected
