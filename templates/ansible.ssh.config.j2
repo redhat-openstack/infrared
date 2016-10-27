@@ -19,8 +19,8 @@ Host {{ host }}
 
 {% if 'virthost' in groups %}
 {# FIXME(mpavlase): 'data' network is here as workaround. It should work well with just external network, but there is some bug in deplyment, that os_server_facts module will receive IP address from 'data' network, that is 'connected' #}
-{# FIXME: puting facter_ipaddress_external and facter_ipaddress_data explicit for now until implementing a better way to discover external network #}
-Host {{ '%s' % '.'.join(hostvars['virthost'].facter_ipaddress_external.split('.')[:-2]) }}.* {{ '%s' % '.'.join(hostvars['virthost'].facter_ipaddress_data.split('.')[:-2]) }}.*
+{# FIXME: puting ansible_external.ipv4.address and ansible_data.ipv4.address explicit for now until implementing a better way to discover external network #}
+Host {{ '%s' % '.'.join(hostvars['virthost'].ansible_external.ipv4.address.split('.')[:-2]) }}.* {{ '%s' % '.'.join(hostvars['virthost'].ansible_data.ipv4.address.split('.')[:-2]) }}.*
     ProxyCommand ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ hostvars['virthost'].ansible_ssh_private_key_file }} {{ hostvars['virthost'].ansible_ssh_user }}@{{ hostvars['virthost'].ansible_ssh_host }}
     ControlMaster   yes
     ControlPath     {{ inventory_dir }}/%r@%h:%p
@@ -29,7 +29,7 @@ Host {{ '%s' % '.'.join(hostvars['virthost'].facter_ipaddress_external.split('.'
     UserKnownHostsFile=/dev/null
 {% elif 'undercloud' in groups %}
 {# If virthost is not our deployment, assume we are using baremetals - implies we are not forwarding thru virthost node anymore, we are forwarding thru certain baremetal serving as undercloud #}
-Host {{ '%s' % '.'.join(hostvars[groups['undercloud'][0]].facter_ipaddress_br_ctlplane.split('.')[:-2]) }}.*
+Host {{ '%s' % '.'.join(hostvars[groups['undercloud'][0]].ansible_br_ctlplane.ipv4.address.split('.')[:-2]) }}.*
     User heat-admin
     IdentityFile {{ inventory_dir }}/id_rsa_overcloud
     StrictHostKeyChecking no

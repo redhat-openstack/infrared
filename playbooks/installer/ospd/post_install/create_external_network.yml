@@ -34,8 +34,19 @@
 #        become_user: root
 #        become: yes
 
+      - name: check the deployment network configuration file
+        find:
+            paths: "{{ template_base }}"
+            patterns: "{{ network_environment_file }}"
+            recurse: yes
+        register: network_environment_file_path
+
+      - fail:
+            msg: "Unable to find the deployment network configuration file"
+        when: 'network_environment_file_path.matched == 0'
+
       - name: read deployment network configuration
-        command: "cat {{ template_base }}/network/{{ network_environment_file }}"
+        command: "cat {{ network_environment_file_path.files[0].path }}"
         register: network_template_out
 
       - name: load deployment network configuration as YAML

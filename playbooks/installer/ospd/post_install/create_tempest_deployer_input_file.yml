@@ -9,6 +9,28 @@
         shell: "crudini --set ~/tempest-deployer-input.conf identity region regionOne"
         when: installer.workarounds is defined and installer.workarounds.rhbz1357579 is defined
 
+      - name: "Enable console logging: https://review.openstack.org/#/c/387445/"
+        ini_file:
+            dest: "~/tempest-deployer-input.conf"
+            section: compute-feature-enabled
+            option: console_output
+            value: true
+
+      - name: "Disable encrypted volume tests rhbz#1383377"
+        ini_file:
+            dest: "~/tempest-deployer-input.conf"
+            section: compute-feature-enabled
+            option: attach_encrypted_volume
+            value: false
+
+      - name: "Configure storage protocol when ceph: https://bugs.launchpad.net/tripleo/+bug/1634499"
+        ini_file:
+            dest: "~/tempest-deployer-input.conf"
+            section: volume
+            option: storage_protocol
+            value: ceph
+        when:  "installer.storage.backend.startswith('ceph')"
+
       - name: fetch deployer output for tester
         fetch:
             src: "~/{{ item.src }}"

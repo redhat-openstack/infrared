@@ -4,13 +4,6 @@ subparsers:
         help: Installs openstack using OSP Director
         include_groups: ['Ansible options', 'Inventory hosts options', 'Common options', 'Configuration file options']
         groups:
-            - title: Firewall
-              options:
-                  firewall:
-                      type: YamlFile
-                      help: The firewall configuration
-                      default: default.yml
-
             - title: Introspection
               options:
                   instackenv-file:
@@ -172,6 +165,13 @@ subparsers:
                         Note: This can take a while and is not 100%% stable due to old libguestfs on RHEL-7.2
                     choices: ['no', 'yes', 'verbose']
                     default: 'no'
+
+                images-cleanup:
+                    type: Value
+                    help: |
+                        Removes all the downloaded images when images-task is in 'rpm' or 'import'
+                    choices: ['no', 'yes']
+                    default: 'yes'
 
             - title: User
               options:
