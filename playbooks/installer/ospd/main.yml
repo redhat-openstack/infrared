@@ -288,6 +288,10 @@
             policy: "targeted"
             state: "{{ installer.selinux | default('enforcing') }}"
 
+- include: post_install/lbaas_v2.yml
+  tags: lbaas
+  when: installer.network.lbaas|default('yes') == 'yes'
+
 - include: post_install/create_external_network.yml
   tags: public_network
   when: installer.public.network == 'yes'
