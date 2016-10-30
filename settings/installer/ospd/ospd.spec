@@ -113,7 +113,7 @@ subparsers:
                       type: Value
                       help: Activate Neutron LBaaS(v2) extension on the OverCloud.
                       choices: ['yes', 'no']
-                      default: 'yes'
+                      default: 'no'
 
                   public-network:
                       type: Value
