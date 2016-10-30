@@ -166,6 +166,13 @@ subparsers:
                     choices: ['no', 'yes', 'verbose']
                     default: 'no'
 
+                images-cleanup:
+                    type: Value
+                    help: |
+                        Removes all the downloaded images when images-task is in 'rpm' or 'import'
+                    choices: ['no', 'yes']
+                    default: 'yes'
+
             - title: User
               options:
                   user-name:
