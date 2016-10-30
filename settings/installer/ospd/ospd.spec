@@ -109,6 +109,12 @@ subparsers:
                       choices: ['ipv4', 'ipv6']
                       default: 'ipv4'
 
+                  network-lbaas:
+                      type: Value
+                      help: Activate Neutron LBaaS(v2) extension on the OverCloud.
+                      choices: ['yes', 'no']
+                      default: 'yes'
+
                   public-network:
                       type: Value
                       help: Deploy "public" external network on the OverCloud as post-install.
