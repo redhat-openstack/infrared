@@ -4,11 +4,14 @@
 - name: Actibate Neutron LBaaS (v2)
   hosts: controller
   become: true
+  vars:
+      # command switch deprecated on Mitaka
+      project_switch: "--{{ (installer.product.version|int < 9) | ternary('service ', '--subproject neutron-') }}lbaas"
   tasks:
     - name: Update neutron mariaDB with lbaas tables
       command: >
           neutron-db-manage
-          --service lbaas
+          {{ project_switch }}
           --config-file /etc/neutron/neutron.conf
           --config-file /etc/neutron/plugins/ml2/ml2_conf.ini
           upgrade head
