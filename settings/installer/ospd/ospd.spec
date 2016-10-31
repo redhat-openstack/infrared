@@ -111,7 +111,9 @@ subparsers:
 
                   network-lbaas:
                       type: Value
-                      help: Activate Neutron LBaaS(v2) extension on the OverCloud.
+                      help: |
+                          Activate Neutron LBaaS(v2) extension on the OverCloud.
+                          Ignored on OSPD-10
                       choices: ['yes', 'no']
                       default: 'no'
 
