@@ -3,7 +3,7 @@
   gather_facts: no
   vars:
       undercloud: "{{ hostvars[(groups.undercloud|first)].inventory_hostname }}"
-      undercloud_image_file: "undercloud-quickstart-{{ director_puddle_version | default(core_puddle_version) }}.qcow2"
+      undercloud_image_file: "undercloud-quickstart-{{ hostvars[(groups.undercloud|first)].director_puddle_version | default(hostvars[(groups.undercloud|first)].core_puddle_version) }}.qcow2"
   tasks:
       - name: install package with virt-sparsify
         yum: name=libguestfs-tools-c state=present
