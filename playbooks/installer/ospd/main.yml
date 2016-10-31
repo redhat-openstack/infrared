@@ -290,7 +290,12 @@
 
 - include: post_install/lbaas_v2.yml
   tags: lbaas
-  when: installer.network.lbaas|default('no') == 'yes'
+  when: installer.network.lbaas|default('no') == 'yes' and installer.product.version|int < 10
+
+- debug:
+      msg: "Neutron LBaaS configuration unimplemented for OSPD-10"
+  tags: lbaas
+  when: installer.network.lbaas|default('no') == 'yes' and installer.product.version|int == 10
 
 - include: post_install/create_external_network.yml
   tags: public_network
