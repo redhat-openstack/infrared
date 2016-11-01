@@ -72,6 +72,11 @@ class DefaultInfraredPluginSpec(SpecObject):
                              self.name))
         # perform additional arguments validation for a plugin.
         pargs = self.specification.parse_args(parser)
+
+        # '--generate-conf-file' - Finish execution after creation of conf file
+        if pargs is None:
+            return
+
         nested_args = pargs[0]
         control_args = pargs[1]
         unknown_args = pargs[2]
