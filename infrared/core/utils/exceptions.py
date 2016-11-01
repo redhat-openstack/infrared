@@ -47,14 +47,6 @@ class IRUndefinedEnvironmentVariableExcption(IRException):
             'Environment variable "%s" is not defined' % env_var)
 
 
-class IRPlaybookFailedException(IRException):
-    def __init__(self, playbook, message=''):
-        msg = 'Playbook "%s" failed!' % playbook
-        if message:
-            msg += ' ' + message
-        super(self.__class__, self).__init__(msg)
-
-
 class IRYAMLConstructorError(IRException):
     def __init__(self, mark_obj, where):
         self.message = mark_obj.problem

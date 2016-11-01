@@ -1,11 +1,10 @@
-import os
 import tempfile
 import yaml
 
 from ansible.utils.display import Display
 from ansible.cli.playbook import PlaybookCLI
 
-from infrared.core.utils import exceptions, logger
+from infrared.core.utils import logger
 
 LOG = logger.LOG
 
@@ -45,7 +44,7 @@ def ansible_playbook(playbook_path, verbose=2, settings=None,
     results = _run_playbook(cli_args, settings)
 
     if results:
-        raise exceptions.IRPlaybookFailedException(playbook_path)
+        LOG.error('Playbook "%s" failed!' % playbook_path)
     return results
 
 
