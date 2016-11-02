@@ -1,13 +1,16 @@
-# provides AP Ito run plugins
+# provides API to run plugins
 import argparse
 import logging
 import multiprocessing
 import os
+import sys
 import yaml
 
 from infrared import SHARED_GROUPS
 from infrared.core.inspector.inspector import SpecParser
 from infrared.core.settings import SettingsManager
+from infrared.core.services import CoreServices
+from infrared.core.utils import exceptions
 from infrared.core.utils import logger
 
 LOG = logger.LOG
@@ -46,7 +49,12 @@ class SpecObject(object):
 
 
 class DefaultInfraredPluginSpec(SpecObject):
+    """Infrared plugin specification."""
+
     add_base_groups = True
+
+    ANSIBLE_FOLDERS = ["library", "callbacks", "plugins", "templates"]
+    ANSIBLE_FILES = ["ansible.cfg"]
 
     def __init__(self, plugin):
         self.plugin = plugin
@@ -103,32 +111,69 @@ class DefaultInfraredPluginSpec(SpecObject):
             else:
                 playbook = self.plugin.main_playbook
 
-            inventory = control_args.get('inventory', 'local_hosts')
+            inventory = control_args.get('inventory', 'hosts')
 
-            # try to find file within the plugin folder
-            # TODO(obaranov) probably this is not a good idea.
-            # but it simplifies
-            if not os.path.isfile(inventory):
-                plugin_rel_invnetory = os.path.join(self.plugin.root_dir, inventory)
-                if os.path.isfile(plugin_rel_invnetory):
-                    inventory = plugin_rel_invnetory
-                    LOG.warn("Using inventory file from the plugin folder: %s", inventory)
-            inventory = self.__expand_path(inventory)
+            # copy all the required data to the plugin folder
+            active_profile = CoreServices.profile_manager().get_active_profile()
 
+            if not active_profile:
+                raise exceptions.IRNoActiveProfileFound()
+
+            invnetory_name = self.capture_plugin_to_profile(
+                active_profile, inventory)
+
+            LOG.debug("Inventory file used: %s", invnetory_name)
             proc = multiprocessing.Process(
                 target=self._ansible_worker,
-                args=(self.plugin.root_dir, playbook,),
+                args=(active_profile.path, playbook,),
                 kwargs=dict(
                     module_path=self.plugin.modules_dir,
                     verbose=control_args.get('verbose', None),
                     settings=playbook_settings,
-                    inventory=inventory
+                    inventory=invnetory_name
                 ))
             proc.start()
             proc.join()
             if proc.exitcode:
                 # soemthing wrong happened in child process.
                 exit(proc.exitcode)
+
+    def capture_plugin_to_profile(self, profile, inventory):
+        """
+        Copies a plugin data to the profile folder.
+
+        Returns the profile path and new inventory path.
+        """
+        LOG.debug("Initializing the '%s' profile...", profile.name)
+
+        # clear data from previous run
+        profile.clear_links()
+
+        # get the plugin configured folders
+        folders = []
+        for _, fodlers in self.plugin.folders_config.items():
+            folders.extend(fodlers.split(os.pathsep))
+        folders.extend(self.ANSIBLE_FOLDERS)
+
+        for lib in folders:
+            lib_abs_path = os.path.join(os.path.abspath(
+                self.plugin.root_dir), lib)
+            if os.path.exists(lib_abs_path):
+                profile.link_file(lib_abs_path)
+
+        # ansible cfg can be changes by executor/playbooks.
+        # so keep it copy
+        for plugin_file in self.ANSIBLE_FILES:
+            file_abs_path = os.path.join(
+                os.path.abspath(self.plugin.root_dir), plugin_file)
+            profile.copy_file(file_abs_path)
+
+        # resolve invnetory file
+        # first look in the current dir, then in plugin dir, then in profile dir
+        new_inventory = profile.copy_file(
+            inventory, additional_lookup_dirs=(self.plugin.root_dir, profile.path))
+
+        return new_inventory
 
     @staticmethod
     def _ansible_worker(root_dir, playbook,
@@ -138,20 +183,12 @@ class DefaultInfraredPluginSpec(SpecObject):
         os.chdir(root_dir)
         # import here cause it will init ansible in correct plugin folder.
         from infrared.core import execute
-        execute.ansible_playbook(playbook,
-                                 module_path=module_path,
-                                 verbose=verbose,
-                                 settings=settings,
-                                 inventory=inventory)
-
-    def __expand_path(self, path):
-        """
-        Returns the absolute path or None
-        """
-        res = None
-        if path:
-            res = os.path.abspath(path)
-        return res
+        result = execute.ansible_playbook(playbook,
+                                          module_path=module_path,
+                                          verbose=verbose,
+                                          settings=settings,
+                                          inventory=inventory)
+        sys.exit(result)
 
 
 class SpecManager(object):

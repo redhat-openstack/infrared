@@ -101,23 +101,25 @@ class InfraredPlugin(object):
 
 
 class PluginsInspector(object):
-    PLUGINS_FOLDER = './plugins'
     CONFIG_FILE_NAME = 'infrared.cfg'
 
-    @classmethod
-    def get_plugin(cls, name):
-        return next(
-            (plg for plg in cls.iter_plugins() if plg.name == name), None)
+    def __init__(self, plugins_dir):
+        # todo(obaranov) consider that multiple plugin folders can be used
+        # here later.
+        self.plugins_dir = plugins_dir
 
-    @classmethod
-    def iter_plugins(cls):
-        for dirpath, _, _ in os.walk(cls.PLUGINS_FOLDER):
+    def get_plugin(self, name):
+        return next(
+            (plg for plg in self.iter_plugins() if plg.name == name), None)
+
+    def iter_plugins(self):
+        for dirpath, _, _ in os.walk(self.plugins_dir):
             LOG.debug("Trying to load plugin from: '%s'", dirpath)
-            config_path = os.path.join(dirpath, cls.CONFIG_FILE_NAME)
+            config_path = os.path.join(dirpath, self.CONFIG_FILE_NAME)
             if os.path.isfile(config_path):
                 try:
                     yield InfraredPlugin.from_config_file(
-                        dirpath, cls.CONFIG_FILE_NAME)
+                        dirpath, self.CONFIG_FILE_NAME)
                 except Exception as ex:
                     LOG.warn(
                         "Error loading plugin '%s': %s", dirpath, ex.message)
