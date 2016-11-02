@@ -209,7 +209,7 @@
           - name: append the invocation line to the base overcloud deploy script
             lineinfile:
                 dest: "~/overcloud_deploy.sh"
-                line: "--log-file overcloud_deployment_{{ 100 | random }}.log &> overcloud_install.log"
+                line: "--log-file overcloud_deployment_{{ 100 | random }}.log"
 
           - set_fact:
                 overcloud_deploy_script: '~/overcloud_deploy.sh'
@@ -230,7 +230,7 @@
       - name: execute the overcloud deploy script
         shell: |
             source ~/stackrc
-            bash {{ overcloud_deploy_script }}
+            bash {{ overcloud_deploy_script }} &> overcloud_install.log
         register: overcloud_deploy_registered
         ignore_errors: yes
 
