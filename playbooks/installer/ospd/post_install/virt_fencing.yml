@@ -68,6 +68,14 @@
   tasks:
       - setup:
 
+- name: Ease iptables rules on controllers for fence_xvm
+  hosts: controller
+  become: yes
+  become_method: sudo
+  tasks:
+      - shell: "iptables -I INPUT -p tcp --dport 1229 -j ACCEPT"
+      - shell: "/sbin/service iptables save"
+
 - name: Configure fencing on overcloud controllers
   hosts: controller[0]
   become: yes
