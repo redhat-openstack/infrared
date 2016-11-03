@@ -169,3 +169,53 @@ Currently supported services for tests:
             ansible-playbook -vvvv -i hosts -e @install.yml playbooks/installer/ospd/post_install/swift_compute.yml
 
     .. note:: Swift has a parameter called ``min_part_hours`` which configures amount of time that should be passed between two rebalance processes. In real production environment this parameter is used to reduce network load. During the deployment of swift cluster for further scale testing we set it to 0 to decrease amount of time for scale.
+
+UnderCloud testing
+^^^^^^^^^^^^^^^^^^
+
+By default all tempest tests are run against OverCloud, while you might want test UnderCloud services (e.g. ironic).
+Refer example of running Ironic Inspector tests against UnderCloud::
+
+    ## CLEANUP ##
+    ir-provisioner -d virsh -v -o provision.yml \
+        --topology-nodes=ironic:1,controller:1,tester:1 \
+        --host-address=$HOST \
+        --host-key=$HOME/.ssh/rhos-jenkins/id_rsa \
+        --image=$IMAGE \
+        -e @private.yml \
+        --cleanup
+
+    ## PROVISION ##
+    ir-provisioner -d virsh -v -o provision.yml \
+        --topology-nodes=ironic:1,controller:1,tester:1 \
+        --host-address=$HOST \
+        --host-key=$HOME/.ssh/rhos-jenkins/id_rsa \
+        --image=$IMAGE \
+        -e @private.yml \
+        -e provisioner.topology.nodes.controller.cpu=1 \
+        -e provisioner.topology.nodes.controller.disks.disk1.size=41G \
+        -e provisioner.topology.nodes.controller.memory=4096 \
+        -e provisioner.topology.nodes.controller.name=test-vm
+
+    ## INSTALL ##
+    ir-installer --debug ospd -v --inventory hosts \
+        -e @provision.yml \
+        -e @private.yml \
+        -o install.yml \
+        --deployment-files=$PWD/settings/installer/ospd/deployment/virt \
+        --product-version=10 \
+        --product-core-version=10 \
+        --ansible-args="tags=undercloud,images,virthost,ironic"
+
+    ## Add test-vm into ironic list, configure network and flavor ##
+    ansible-playbook -vvvv -i hosts -e @install.yml \
+        playbooks/installer/ospd/post_install/add_nodes_to_ironic_list.yml \
+        -e net_name=ctlplane \
+        -e driver_type=pxe_ssh \
+        -e rc_file_name=stackrc
+
+    ## RUN IRONIC INSPECTOR TESTS ##
+    ir-tester --debug tempest -v \
+        -e @install.yml \
+        --tests=ironic_inspector \
+        -o test.yml
