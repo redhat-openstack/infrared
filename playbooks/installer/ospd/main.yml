@@ -46,6 +46,7 @@
   pre_tasks:
 
       - name: "Set selinux state on undercloud after install"
+        tags: ironic
         selinux:
             policy: "targeted"
             state: "{{ installer.selinux | default('enforcing') }}"
@@ -55,6 +56,7 @@
 
       # User provided file overwrites everything
       - name: check if instackenv is under the deployment folder
+        tags: ironic
         stat:
             path: "{{ installer.deployment.files.rstrip('/') }}/instackenv.json"
         delegate_to: localhost
@@ -66,8 +68,10 @@
       - set_fact:
             old_custom_instack_path: "{{ old_custom_instack.stat.path }}"
         when: old_custom_instack|changed and old_custom_instack.stat.exists != false
+        tags: ironic
 
       - name: copy instackenv if provided by the user
+        tags: ironic
         copy:
             src: "{{ (custom_instack != '') | ternary(custom_instack, old_custom_instack_path) }}"
             dest: "/home/{{ installer.user.name }}/{{ custom_instack | basename }}"
@@ -77,8 +81,10 @@
       - set_fact:
             inject_instackenv_name: "{{ inject_instackenv.dest|basename }}"
         when: inject_instackenv|changed
+        tags: ironic
 
       - name: verify that instackenv json file exists
+        tags: ironic
         vars:
             target: "{{ (inject_instackenv|changed) | ternary((inject_instackenv_name), 'instackenv.json') }}"
 
@@ -89,10 +95,12 @@
       - set_fact:
             instack_file: "{{ instack_file_path.stat.path }}"
         when: instack_file_path.stat.exists
+        tags: ironic
 
       - fail:
             msg: "instackenv file is missing"
         when: not instack_file_path.stat.exists
+        tags: ironic
 
   roles:
       - {role: installer/ospd/overcloud/introspection, when: "installer.overcloud is defined"}
