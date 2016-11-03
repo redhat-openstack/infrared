@@ -200,7 +200,7 @@ class IRSpec(object):
             with open(dump_file, 'w') as output_file:
                 output_file.write(output)
         else:
-            print output
+            print(output)
 
 
 def main(spec_name):

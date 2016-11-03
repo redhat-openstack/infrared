@@ -164,7 +164,7 @@ class BeakerMachine(object):
         params = dict(tg_format='atom', list_tgp_limit=limit)
 
         cnt = 0
-        for f_name, f_val in filters.iteritems():
+        for f_name, f_val in filters.items():
             params['systemsearch-{0}.table'.format(cnt)] = f_name
             params['systemsearch-{0}.operation'.format(cnt)] = 'is'
             params['systemsearch-{0}.value'.format(cnt)] = f_val
