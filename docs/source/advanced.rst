@@ -169,3 +169,72 @@ Currently supported services for tests:
             ansible-playbook -vvvv -i hosts -e @install.yml playbooks/installer/ospd/post_install/swift_compute.yml
 
     .. note:: Swift has a parameter called ``min_part_hours`` which configures amount of time that should be passed between two rebalance processes. In real production environment this parameter is used to reduce network load. During the deployment of swift cluster for further scale testing we set it to 0 to decrease amount of time for scale.
+
+UnderCloud testing
+^^^^^^^^^^^^^^^^^^
+
+Usually, all tempest tests are run from the UnderCloud, against OverCloud, while you might want test UnderCloud services (e.g. ironic).
+The following cookbook uses InfraRed to run Tempest tests against the UnderCloud.
+
+1. **We want an explicit "tester" node to avoid running tests on the same node as the UnderCloud.**
+    Use "ironic" node instead of "undercloud". It's the same but doesn't have the role of "tester".
+    Rename "controller" node into "test-vm" to avoid misunderstanding and update it's parameters to match with "baremetal" flavor.
+
+       ::
+
+        ir-provisioner -d virsh -v -o provision.yml \
+            --topology-nodes=ironic:1,controller:1,tester:1 \
+            --host-address=$HOST \
+            --host-key=$HOME/.ssh/rhos-jenkins/id_rsa \
+            --image=$IMAGE \
+            -e @private.yml \
+            -e provisioner.topology.nodes.controller.cpu=1 \
+            -e provisioner.topology.nodes.controller.disks.disk1.size=41G \
+            -e provisioner.topology.nodes.controller.memory=4096 \
+            -e provisioner.topology.nodes.controller.name=test-vm
+
+2. **As we don't want the full OSPD installation, we will use explicit** `Tags`_ **to do only certain parts:**
+
+  * Undercloud - will install UnderCloud
+  * Images - installs or builds OverCloud images
+  * Ironic - performs all required actions before introspection (including assignment of the kernel and ramdisk)
+  * Virthost - enables "virthost" specific tasks in case of "virsh" provisioning
+
+       ::
+
+        ir-installer --debug ospd -v --inventory hosts \
+            -e @provision.yml \
+            -e @private.yml \
+            -o install.yml \
+            --deployment-files=$PWD/settings/installer/ospd/deployment/virt \
+            --product-version=10 \
+            --product-core-version=10 \
+            --ansible-args="tags=undercloud,images,virthost,ironic"
+
+3. **We want prepare environment for ironic tests:**
+
+  * update baremetal flavor with cpu_arch
+  * create initial tempest.conf file using predefined template
+  * enable ironic inspector
+  * enable fake and pxe_ssh drivers in ironic
+  * make desired neutron network shared
+  * install rhos-release repos into "tester" node
+  * configure data network on "tester" node
+
+       ::
+
+        ansible-playbook -vvvv -i hosts -e @install.yml \
+            playbooks/installer/ospd/post_install/add_nodes_to_ironic_list.yml \
+            -e net_name=ctlplane \
+            -e driver_type=pxe_ssh \
+            -e rc_file_name=stackrc
+
+4. **Finally run the** `Ironic tempest plugin tests <https://github.com/openstack/ironic-inspector/tree/master/ironic_inspector/test/inspector_tempest_plugin>`_
+
+       ::
+
+        ir-tester --debug tempest -v \
+            -e @install.yml \
+            --tests=ironic_inspector \
+            -o test.yml
+
