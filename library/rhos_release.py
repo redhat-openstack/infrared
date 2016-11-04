@@ -120,7 +120,7 @@ POODLE_TYPES = {
     'smoke': ['-C']
 }
 
-def _parse_output(module, stdout):
+def _parse_output(module, cmd, stdout):
     """Parse rhos-release stdout.
     lines starting with "Installed":
         list of repo files created.
@@ -146,7 +146,7 @@ def _parse_output(module, stdout):
         pattern = re.compile(r'(?P<start>Installed: )(?P<filename>\S+)')
         match = pattern.search(line)
         if not match:
-            module.fail_json("Failed to parse line %s" % line)
+            _fail(module, "Failed to parse line %s" % line, cmd, out=stdout)
         filename = os.path.abspath(match.group("filename"))
         return dict(
             file=os.path.basename(filename),
@@ -156,7 +156,8 @@ def _parse_output(module, stdout):
     filenames = map(installed, file_lines)
     dirs = set(f["repodir"] for f in filenames)
     if len(dirs) > 1:
-        module.fail_json("Found repo files in multiple directories %s" % dirs)
+        _fail(module,"Found repo files in multiple directories %s" % dirs,
+              cmd, out=stdout)
     repodir = dirs.pop() if len(dirs) > 0 else ''
 
     filenames = set(f["file"] for f in filenames)
@@ -173,7 +174,7 @@ def _parse_output(module, stdout):
                              )
         match = pattern.search(line)
         if not match:
-            module.fail_json("Failed to parse line %s" % line)
+            _fail(module, "Failed to parse release line %s" % line, cmd, out=stdout)
         return dict(
             release=match.group("release"),
             version=match.group("version"),
@@ -210,16 +211,22 @@ def wrap_results(res_dict, cmd, rc, out, err):
 def _run_command(module, cmd):
     return_code, out, err = module.run_command(cmd)
     if return_code == "127":
-        module.fail_json(
-            **wrap_results(dict(msg="Requires rhos-release installed"),
-                           cmd, return_code, out, err))
+        _fail(module, "Requires rhos-release installed",
+              cmd, return_code, out, err)
     elif return_code:
-        module.fail_json(**wrap_results(dict(msg="Error"),
-                                        cmd, return_code, out, err))
+        _fail(module, 'Error', cmd, return_code, out, err)
 
-    summary = _parse_output(module, out)
+    summary = _parse_output(module, cmd, out)
     module.exit_json(changed=True, **wrap_results(
         summary, cmd, return_code, out, err))
+
+def _fail(module, msg, cmd, return_code=-1, out='', err=''):
+    """
+    Fails module execution.
+    """
+    module.fail_json(
+        **wrap_results(dict(msg=msg), cmd, return_code, out, err))
+
 
 def main():
     """ Main """
@@ -282,8 +289,8 @@ def main():
             releases.append((core_release, core_puddle))
 
         if not releases:
-            module.fail_json(
-                msg="'director_version' or 'core_version' option should be specified.")
+            _fail("'director_version' or 'core_version' " +
+                  "option should be specified.", cmd)
 
         for release, build in releases:
             if state == 'update':
