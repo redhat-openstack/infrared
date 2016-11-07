@@ -1,6 +1,7 @@
 - name: Stop and disable openstack services and libvirtd
   hosts: compute
   become: yes
+  any_errors_fatal: true
   tasks:
       - service:
             name: "{{ item }}"
@@ -21,6 +22,7 @@
   hosts: controller:compute
   become: yes
   gather_facts: yes
+  any_errors_fatal: true
   tasks:
       - name: Make sure pacemaker config dir exists
         file:
@@ -37,6 +39,7 @@
 - name: Enable and start remote_pacemaker on computes
   hosts: compute
   become: yes
+  any_errors_fatal: true
   tasks:
       - name: Open pacemaker_remote port
         shell: "iptables -I INPUT -p tcp --dport 3121 -j ACCEPT"
@@ -55,6 +58,7 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   tasks:
       - fetch:
             src: "~/overcloudrc"
@@ -63,6 +67,7 @@
 
 - name: Set overcloud credentials
   hosts: controller[0]
+  any_errors_fatal: true
   roles:
       - {role: installer/ospd/overcloud/credentials, overcloudrc: "{{ inventory_dir }}/keystonerc" }
 
@@ -71,6 +76,7 @@
   gather_facts: yes
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   tasks:
       - setup:
 
@@ -83,6 +89,7 @@
       OS_PASSWORD: "{{ oc_password.stdout }}"
       OS_AUTH_URL: "{{ oc_auth.stdout }}"
       OS_TENANT_NAME: "{{ oc_tenant.stdout | default('admin') }}"
+  any_errors_fatal: true
   tasks:
       - name: Create NovaEvacuate resource
         shell: "pcs resource create nova-evacuate ocf:openstack:NovaEvacuate auth_url=$OS_AUTH_URL username=$OS_USERNAME password=$OS_PASSWORD tenant_name=$OS_TENANT_NAME no_shared_storage=0"
@@ -221,6 +228,7 @@
 
 - name: Wait for libvirt and nova-compute resources to be available on compute nodes
   hosts: compute
+  any_errors_fatal: true
   tasks:
       - wait_for:
             port: 16509
@@ -235,6 +243,7 @@
 - name: Cleanup all pacemaker resource
   hosts: controller[0]
   become: yes
+  any_errors_fatal: true
   tasks:
       - name: Cleanup all pacemaker resources
         shell: "pcs --force resource cleanup"

@@ -14,6 +14,7 @@
   gather_facts: yes
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   tasks:
     - name: update flavor propreties with cpu arch
       shell: "source ~/stackrc; openstack flavor set --property \"cpu_arch\"=\"x86_64\" baremetal"
@@ -22,6 +23,7 @@
   tags: ironic
   hosts: undercloud
   gather_facts: yes
+  any_errors_fatal: true
   tasks:
     - name: prepare rc file for fetching
       shell: "source /home/stack/{{ rc_file_name }}; sed -i 's/$(sudo hiera admin_password)/'$OS_PASSWORD'/g' /home/stack/stackrc"
@@ -49,6 +51,7 @@
   tags: ironic
   hosts: undercloud
   gather_facts: yes
+  any_errors_fatal: true
   tasks:
     - name: enable ironic inspector
       ini_file:
@@ -79,6 +82,7 @@
       - backup
       - ironic
   hosts: tester
+  any_errors_fatal: true
   roles:
       - role: installer/rhos-release
         rr_rpm_url: "{{ installer.product.rpm }}"
@@ -101,6 +105,7 @@
   tags: ironic
   hosts: tester
   gather_facts: yes
+  any_errors_fatal: true
   tasks:
     - name: create data network interface file
       template:
@@ -117,6 +122,7 @@
   gather_facts: yes
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   tasks:
     - name: introspect nodes if required
       shell: "source ~/stackrc; openstack baremetal introspection bulk start"
