@@ -170,11 +170,15 @@ def _parse_output(module, cmd, stdout):
                              r'(?P<release>\d+)\s*'
                              r'(?P<director>-director)?\s*'
                              r'(?P<poodle>-d)?\s*'
-                             r'-p (?P<version>\S+)'
+                             r'(-p (?P<version>\S*))?'
                              )
         match = pattern.search(line)
         if not match:
             _fail(module, "Failed to parse release line %s" % line, cmd, out=stdout)
+        elif match.group("version") is None:
+            _fail(module, "Cannot determine puddle version. " +
+                  "Check whether the specified puddle version exists!",
+                  cmd, out=stdout)
         return dict(
             release=match.group("release"),
             version=match.group("version"),
