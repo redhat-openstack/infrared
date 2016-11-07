@@ -1,6 +1,7 @@
 ---
 - name: Enable repos for ospd 8
   hosts: undercloud
+  any_errors_fatal: true
   roles:
       - role: installer/rhos-release
         director_version: "8"
@@ -14,6 +15,7 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   vars:
       pacemaker_template: "pacemaker_template.sh.j2"
       pacemaker_init: "~/pacemaker_init.sh"
