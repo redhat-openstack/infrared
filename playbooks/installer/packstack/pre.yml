@@ -4,6 +4,7 @@
   gather_facts: yes
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   roles:
       - role: installer/rhos-release
         rr_rpm_url: "{{ installer.product.rpm }}"
@@ -19,6 +20,7 @@
   gather_facts: yes
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   tasks:
     - name: Configure hostname
       hostname: name="{{ hostvars[inventory_hostname].inventory_hostname }}"
@@ -43,6 +45,7 @@
   gather_facts: no
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   tasks:
       - name: create key
         #this will not overwrite an existing key
@@ -56,6 +59,7 @@
   gather_facts: no
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   tasks:
     - name: copy ssh-key to nodes
       authorized_key: user=root key="{{ lookup('file', '/tmp/ssh_keys/id_rsa.pub') }}"
@@ -65,6 +69,7 @@
   gather_facts: no
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   tasks:
       - name: exclude python-sqlalchemy from rhel-7.2 repo for rhos-5.0
         command: yum-config-manager --save --setopt=rhelosp-rhel-7-server.exclude=python-sqlalchemy
@@ -75,6 +80,7 @@
   hosts: controller
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   tasks:
       - name: Enable patched_rpms repository
         shell: sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/patched_rpms.repo

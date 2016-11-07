@@ -1,6 +1,7 @@
 - name: Make a copy of our undercloud for virthost installation
   hosts: virthost
   gather_facts: no
+  any_errors_fatal: true
   vars:
       undercloud: "{{ hostvars[(groups.undercloud|first)].inventory_hostname }}"
       undercloud_image_file: "undercloud-quickstart-{{ hostvars[(groups.undercloud|first)].director_puddle_version | default(hostvars[(groups.undercloud|first)].core_puddle_version) }}.qcow2"

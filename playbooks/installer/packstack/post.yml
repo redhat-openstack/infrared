@@ -5,6 +5,7 @@
   gather_facts: no
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   tasks:
     - name:
       shell: hexdump -n 32 -v -e '/1 "%02x"' /dev/urandom
@@ -33,6 +34,7 @@
 - name: Check if BZ1300662 is enabled
   hosts: controller
   gather_facts: no
+  any_errors_fatal: true
   tasks:
     - group_by: key=workaround_rhbz1300662
       when: workarounds.rhbz1300662 is defined
@@ -42,6 +44,7 @@
   gather_facts: yes
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   tasks:
     - name: Configure auth_uri in cinder.conf
       ini_file: dest=/etc/cinder/cinder.conf
@@ -66,6 +69,7 @@
   gather_facts: no
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   tasks:
       - group_by: key=workaround_bz1138740
         when: workarounds.bz1138740 is defined
@@ -75,6 +79,7 @@
   gather_facts: yes
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   tasks:
     - name: Get the current endpoint
       shell: source /root/keystonerc_admin; keystone endpoint-list| grep -v AUTH | awk '/[0-9]{1,3}:8080/ {print $2}'
@@ -112,6 +117,7 @@
   hosts: controller
   gather_facts: no
   become: no
+  any_errors_fatal: true
   tasks:
       - group_by: key=workaround_bz1210411
         when: workarounds.bz1210411 is defined
@@ -121,6 +127,7 @@
   gather_facts: yes
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   tasks:
     - name: Get packstack's floating ip pool value
       shell: crudini --get packstack_config.txt general CONFIG_NOVA_NETWORK_DEFAULTFLOATINGPOOL
@@ -141,6 +148,7 @@
   hosts: controller
   gather_facts: no
   become: yes
+  any_errors_fatal: true
   tasks:
     - name: Enable l3-ha (VRRP) in neutron
       ini_file:

@@ -13,6 +13,7 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   vars:
       first_controller: "{{ groups.controller | first }}"
       template_base: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}"
