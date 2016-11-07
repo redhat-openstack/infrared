@@ -65,3 +65,25 @@
   lineinfile:
       dest: "/etc/sudoers"
       line: "{{ installer.user.name }} ALL=(root) NOPASSWD:ALL"
+
+- name: create home .ssh folder:
+      path: '/home/{{ installer.user.name }}/.ssh'
+      mode: 0700
+      owner: '{{ installer.user.name }}'
+      state: directory
+
+- name: enable ssh without key check (stack)
+  file:
+      dest: '/home/{{ installer.user.name }}/.ssh/config'
+      src: ssh.config
+      owner: '{{ installer.user.name }}'
+      mode: 0600
+
+- name: enable ssh without key check (root)
+  file:
+      dest: '/root/.ssh/config'
+      src: ssh.config
+      owner: 'root'
+      mode: 0600
+
+
