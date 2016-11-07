@@ -1,6 +1,7 @@
 ---
 - name: Copy to Task Files Rally
   hosts: tester
+  any_errors_fatal: true
   tasks:
   - name: Copy Task file from settings
     copy:
@@ -11,6 +12,7 @@
 
 - name: Run Rally Task
   hosts: tester
+  any_errors_fatal: true
   tasks:
   - name: Check Rally deployment
     command: "{{ tester.rally.path }}/bin/rally deployment check"

@@ -16,6 +16,7 @@
   become: yes
   become_user: root
   gather_facts: no
+  any_errors_fatal: true
   vars:
       horizon_hosts_conf: /etc/httpd/conf.d/10-horizon_vhost.conf
   tasks:
@@ -32,6 +33,7 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   gather_facts: no
+  any_errors_fatal: true
   environment:
     OS_USERNAME: "{{ oc_username }}"
     OS_PASSWORD: "{{ oc_password }}"
@@ -79,6 +81,7 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   gather_facts: no
+  any_errors_fatal: true
   vars:
       controller_name: "{{ groups['undercloud'][0] }}"
       horizon_tests:

@@ -2,6 +2,7 @@
 - name: Add host to host list
   hosts: localhost
   gather_facts: no
+  any_errors_fatal: true
   vars:
       hypervisor: "{{ provisioner.host }}"
   tasks:
@@ -17,6 +18,7 @@
 - name: Remove all VMs and networks that were created
   hosts: virthost
   gather_facts: no
+  any_errors_fatal: true
   vars:
       ignore_virsh_nodes: []
       # ignore virsh's default network
