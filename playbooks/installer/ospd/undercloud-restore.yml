@@ -5,6 +5,7 @@
 - name: Run rhos-release to get puddle numbers
   hosts: virthost
   gather_facts: no
+  any_errors_fatal: true
   vars:
       tmp_repos: "/tmp/uc_snapshot_repos"
   pre_tasks:
@@ -32,6 +33,7 @@
 - name: Prepare our undercloud
   hosts: virthost
   gather_facts: no
+  any_errors_fatal: true
   vars:
       undercloud_image_file: "undercloud-quickstart-{{ director_puddle_version | default(core_puddle_version) }}"
       # todo(yfried): add external refs so users can override these values and customize the Undercloud
@@ -199,3 +201,4 @@
 - name: gather facts from the undercloud
   hosts: undercloud
   gather_facts: yes
+  any_errors_fatal: true

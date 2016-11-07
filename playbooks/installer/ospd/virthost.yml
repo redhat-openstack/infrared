@@ -2,6 +2,7 @@
   hosts: virthost
   tags: backup
   gather_facts: yes
+  any_errors_fatal: true
   roles:
       - role: installer/rhos-release
         rr_rpm_url: "{{ installer.product.rpm }}"
@@ -41,6 +42,7 @@
   hosts: all:!localhost
   gather_facts: no
   tags: virthost
+  any_errors_fatal: true
   tasks:
       - name: Dumping facts
         setup:
@@ -51,6 +53,7 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   vars:
       - instack_file: "/home/{{ installer.user.name }}/instackenv.json"
   tasks:
@@ -82,6 +85,7 @@
 - name: Create the stack user on the virthost and allow SSH to hypervisor
   hosts: virthost
   gather_facts: no
+  any_errors_fatal: true
   tasks:
       - name: create stack user on virthost
         user:
@@ -113,6 +117,7 @@
 - name: Power off overcloud nodes VMs so they can be properly registered
   hosts: virthost
   gather_facts: no
+  any_errors_fatal: true
   tasks:
       - name: power off overcloud nodes
         shell: "virsh destroy {{ item }}"

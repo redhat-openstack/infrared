@@ -6,6 +6,7 @@
       - undercloud
       - backup
   hosts: undercloud
+  any_errors_fatal: true
   roles:
       - role: installer/rhos-release
         rr_rpm_url: "{{ installer.product.rpm }}"
@@ -26,6 +27,7 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   roles:
       - {role: installer/ospd/images}
 
@@ -40,6 +42,7 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   vars:
       undercloud_provision_cidr: "{{ ansible_br_ctlplane.ipv4.network }}/{{ ansible_br_ctlplane.ipv4.netmask }}"
       custom_instack: "{{ (installer.instackenv|default({})).file | default('') }}"
@@ -122,6 +125,7 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   roles:
       - {role: installer/ospd/overcloud/tagging, when: "'overcloud_nodes' in groups"}
 
@@ -133,6 +137,7 @@
   gather_facts: yes
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   vars:
       template_base: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}"
       network_environment_file: "network-environment{{ (installer.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
@@ -231,6 +236,7 @@
   gather_facts: yes
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   tasks:
       - name: the create overcloud script
         shell: "cat {{ overcloud_deploy_script }}"
@@ -276,6 +282,7 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   tasks:
       - fail: msg="Overcloud deployment failed... :("
         when: overcloud_deploy_registered.rc != 0
@@ -292,6 +299,7 @@
   become_user: "root"
   become_method: "sudo"
   gather_facts: no
+  any_errors_fatal: true
   tasks:
       - selinux:
             policy: "targeted"
