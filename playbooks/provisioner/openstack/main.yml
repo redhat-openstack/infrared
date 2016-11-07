@@ -8,6 +8,7 @@
 - name: OpenStack Provisioner SSH wait
   hosts: openstack_nodes
   gather_facts: no
+  any_errors_fatal: true
   tasks:
   - name: Waiting for OpenStack nodes to be SSH-able
     wait_for:
@@ -23,6 +24,7 @@
   gather_facts: no
   become: yes
   become_user: root
+  any_errors_fatal: true
   tasks:
       - name: Setup data interface
         template:

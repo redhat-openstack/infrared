@@ -3,6 +3,7 @@
   hosts: tester
   gather_facts: yes
   become: no
+  any_errors_fatal: true
   tasks:
     - command: "easy_install pip"
       when: "ansible_distribution in ['RedHat', 'CentOS'] and tester.component.pip_packages|default([])|length > 0"
@@ -11,6 +12,7 @@
   hosts: tester
   gather_facts: no
   become: no
+  any_errors_fatal: true
   tasks:
       # test-specific packages
       - yum: name="{{ item }}" state=present
@@ -27,6 +29,7 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   gather_facts: no
+  any_errors_fatal: true
   tasks:
       - name: Clone repo with integration tests
         git:
@@ -54,6 +57,7 @@
   become: yes
   become_user: "{{ installer.user.name }}"
   gather_facts: no
+  any_errors_fatal: true
   roles:
       - openstack/ensure_shade
       - openstack/create_users

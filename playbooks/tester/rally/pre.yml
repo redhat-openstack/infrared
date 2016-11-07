@@ -2,6 +2,7 @@
 - name: Install dependencies on the tester
   hosts: tester
   gather_facts: no
+  any_errors_fatal: true
   tags:
     - rally_dependencies
   tasks:
@@ -23,6 +24,7 @@
 - name: Install Rally on the machine
   hosts: tester
   gather_facts: no
+  any_errors_fatal: true
   tasks:
     - name: Clone Rally from git repo
       git:
@@ -43,6 +45,7 @@
 
 - name: Prepare Openstack
   hosts: tester
+  any_errors_fatal: true
   tasks:
 
     - shell: "cat /home/{{ installer.user.name }}/overcloudrc | grep AUTH | cut -d '=' -f 2"
@@ -107,6 +110,7 @@
 
 - name: Setup Rally
   hosts: tester
+  any_errors_fatal: true
   tasks:
   # TODO (tjamrisk): Need to somehow skip this if deployment exists
   - name: Create Rally deployment
