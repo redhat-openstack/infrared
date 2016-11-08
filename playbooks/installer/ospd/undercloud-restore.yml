@@ -1,4 +1,22 @@
 ---
+# This hack will install rhos-release temporarily,
+# gather iformation about latest puddles and then
+# remove all rhos-release repositories.
+- name: Run rhos-release to get puddle numbers
+  hosts: virthost
+  gather_facts: no
+  roles:
+      - role: installer/rhos-release
+        rr_rpm_url: "{{ installer.product.rpm }}"
+        director_version: "{{ installer.product.version }}"
+        director_build: "{{ installer.product.build }}"
+        core_version: "{{ installer.product.core.version }}"
+        core_build: "{{ installer.product.core.build }}"
+        mirror: "{{ installer.mirror | default(omit) }}"
+  tasks:
+      - name: "Remove rhos-release repos"
+        shell: rhos-release -x
+
 # Any step that should happen before initiating the osp-d playbook
 # This could be validation of the hosts, package installation that is assumed as per the guide, etc..
 - name: Prepare our undercloud

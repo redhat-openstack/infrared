@@ -26,12 +26,13 @@
             state: latest
             name: ipxe-roms-qemu
         register: update
+        when: "{{ ansible_distribution_version }} == 7.2"
 
       # (fhubik) Detect bug in ansible, packages with long names aren't parsed correctly and upgraded
       # Remove when fixed (https://github.com/ansible/ansible-modules-core/issues/4318)
       - name: make sure we have latest ipxe-roms-qemu (workaround ansible-modules-core yum bug 4318)
         shell: yum install ipxe-roms-qemu -y
-        when: not update|changed
+        when: "{{ ansible_distribution_version }} == 7.2 and not update|changed"
 
 - include: "undercloud-restore.yml"
   when: "'undercloud' not in groups"
