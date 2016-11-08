@@ -175,13 +175,9 @@ def _parse_output(module, cmd, stdout):
         match = pattern.search(line)
         if not match:
             _fail(module, "Failed to parse release line %s" % line, cmd, out=stdout)
-        elif match.group("version") is None:
-            _fail(module, "Cannot determine puddle version. " +
-                  "Check whether the specified puddle version exists!",
-                  cmd, out=stdout)
         return dict(
             release=match.group("release"),
-            version=match.group("version"),
+            version=match.group("version") or 'undetermined!',
             repo_type="poodle" if match.group("poodle") else "puddle",
             channel="product" if match.group("director") else "core",
         )
