@@ -96,17 +96,6 @@
 
   roles:
       - {role: installer/ospd/overcloud/introspection, when: "installer.overcloud is defined"}
-  tasks:
-      - name: get subnet ID to update neutron's DNS server
-        shell: "source ~/stackrc; neutron subnet-list | grep '{{ undercloud_provision_cidr | ipsubnet }}' | awk '{print $2;}'"
-        register: subnet_id
-
-      - name: get the nameserver
-        shell: "cat /etc/resolv.conf | grep -m 1 'nameserver' | awk '{print $2}'"
-        register: nameserver
-
-      - name: update neutron DNS server
-        shell: "source ~/stackrc; neutron subnet-update {{ subnet_id.stdout }} --dns-nameserver {{ nameserver.stdout }}"
 
 - name: Tag hosts with flavors
   tags: tagging
