@@ -19,6 +19,17 @@ subparsers:
                           If not set, it will look under the `templates` path for a file named `undercloud.conf`.
                           If no `undercloud.conf` file found, it will use the default `/usr/share/instack-undercloud/undercloud.conf.sample`
                           that is provided by the installation.
+                  undercloud-ext-vlan:
+                      type: Value
+                      choices: ['yes', 'no']
+                      default: 'no'
+                      help: |
+                          Set this to "yes" if OverCloud external network in on a VLAN that's unreachable from the
+                          UnderCloud.
+                          This will configure network access from UnderCloud to OverCloud's API/External(floating ips)
+                          network, creating a new VLAN interface connected to ovs's "br-ctlplane" bridge.
+                          NOTE: If your UnderCloud's network is already configured properly, this could disrupt it, making OverCloud API unreachable
+                          For more details, see: "VALIDATING THE OVERCLOUD" on https://access.redhat.com/documentation/en/red-hat-openstack-platform/10-beta/paged/director-installation-and-usage/chapter-6-performing-tasks-after-overcloud-creation
 
             - title: Deployment Files
               options:
