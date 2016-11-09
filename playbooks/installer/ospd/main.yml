@@ -198,7 +198,8 @@
 
       - name: Enable external network access through newly created vlan interface on undercloud
         include: undercloud-ext-vlan.yml
-        when: "'virthost' not in groups"
+        when: 'virthost' not in groups and installer.undercloud.ext.vlan == 'yes'
+
   roles:
       - {role: installer/ospd/overcloud/storage, when: "overcloud_deploy_script == '' and installer.storage.backend is defined and installer.storage.backend"}
       - {role: installer/ospd/overcloud/network, when: "{{ (overcloud_deploy_script == '') }}" }
