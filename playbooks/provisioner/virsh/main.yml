@@ -21,10 +21,13 @@
   roles:
       - {role: provisioner/virsh}
 
-- name: Check SSH connection to newly created VMs
+- name: Create Non-Root User
   hosts: all:!localhost:!virthost
   gather_facts: no
   any_errors_fatal: true
+  vars:
+      non_root_user: stack
+      non_root_pw: redhat
   tasks:
       - name: wait for hosts to be reachable
         wait_for:
@@ -32,3 +35,27 @@
             host: "{{ ansible_ssh_host }}"
             search_regex: OpenSSH
         delegate_to: virthost
+
+      - name: create non root user
+        user:
+            name: "{{ non_root_user }}"
+            state: present
+            password: "{{ non_root_pw | password_hash('sha512') }}"
+
+      - name: add user to sudoers
+        lineinfile:
+            dest: "/etc/sudoers"
+            line: "{{ non_root_user }} ALL=(root) NOPASSWD:ALL"
+
+      - name: Set up authorized_keys for non root user
+        authorized_key:
+            user: "{{ non_root_user }}"
+            key: "{{ item }}"
+        with_file:
+            - "{{ inventory_dir }}/id_rsa.pub"
+
+      - name: Update hosts user
+        add_host:
+            name: "{{ inventory_hostname }}"
+            ansible_ssh_user: "{{ non_root_user }}"
+            ansible_ssh_pass: "{{ non_root_pw | password_hash('sha512') }}"
