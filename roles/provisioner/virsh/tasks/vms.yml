@@ -74,29 +74,29 @@
 
 # now continue with creating vm's
 # Import disk images if necessary
-- name: "import disks for each VM if specified"
-  include: "vms_0_import_disk.yml"
+- name: import disks for each VM if specified
+  include: vms_0_import_disk.yml
   with_dict: "{{ provisioner.topology.nodes }}"
   loop_control:
       loop_var: node
 
-- name: "create disks for each VM if not import"
-  include: "vms_1_create_disk.yml"
+- name: create disks for each VM if not import
+  include: vms_1_create_disk.yml
 
 # Build our VMs
-- name: "define libvirt VMs"
-  include: "vms_2_install.yml"
+- name: define libvirt VMs
+  include: vms_2_install.yml
   with_dict: "{{ provisioner.topology.nodes }}"
   loop_control:
       loop_var: node
 
-- name: "wait for VMs to come up, fix their ip and add to inventory"
-  include: "vms_3_netip.yml"
+- name: wait for VMs to come up, fix their ip and add to inventory
+  include: vms_3_netip.yml
   with_dict: "{{ provisioner.topology.nodes }}"
   loop_control:
       loop_var: node
 
-- name: "update ansible.ssh.config template"
+- name: update tunneling conf
   template:
       src: ansible.ssh.config.j2
       dest: "{{ inventory_dir }}/ansible.ssh.config"

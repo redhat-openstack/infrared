@@ -46,6 +46,13 @@ subparsers:
                       type: Topology
                       help: Provision topology.
                       required: yes
+                  topology-username:
+                      type: Value
+                      default: cloud-user
+                      help: |
+                          Non-root username with sudo privileges that will be created on nodes.
+                          Will be use as main ssh user subsequently.
+
 
             - title: cleanup
               options:
