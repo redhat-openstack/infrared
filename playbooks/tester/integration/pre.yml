@@ -1,13 +1,4 @@
 ---
-- name: "Install pip if it's needed"
-  hosts: tester
-  gather_facts: yes
-  become: no
-  any_errors_fatal: true
-  tasks:
-    - command: "easy_install pip"
-      when: "ansible_distribution in ['RedHat', 'CentOS'] and tester.component.pip_packages|default([])|length > 0"
-
 - name: Install required packages
   hosts: tester
   gather_facts: no
@@ -23,6 +14,14 @@
 
       - yum: name=python-virtualenv state=present
         when: "tester.component.pip_packages is defined and tester.component.pip_packages|length > 0"
+
+- name: "Install pip if it's needed"
+  hosts: tester
+  gather_facts: yes
+  become: no
+  tasks:
+    - command: "easy_install pip"
+      when: "ansible_distribution in ['RedHat', 'CentOS'] and tester.component.pip_packages|default([])|length > 0"
 
 - name: Prepare repository with tests
   hosts: tester
