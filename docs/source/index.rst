@@ -19,6 +19,7 @@ Contents:
    advanced
    contributions
    spec
+   requirements
    contacts
    release
 
