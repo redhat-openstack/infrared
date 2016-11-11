@@ -24,11 +24,13 @@
   hosts: localhost
   gather_facts: no
   tasks:
-    - template:
+    - name: generate inventory file
+      template:
         dest: "{{ lookup('env', 'PWD') }}/hosts-prov"
         src: "{{ inventory_dir }}/templates/inventory.j2"
 
-    - file:
+    - name: update inventory file symlink
+      file:
         dest: "{{ lookup('env', 'PWD') }}/hosts"
         state: link
         src: "{{ lookup('env', 'PWD') }}/hosts-prov"
