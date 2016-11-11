@@ -39,3 +39,14 @@
         shell: |
           ifdown eth1
           ifup eth1
+
+      - name: Update to latest kernel
+        shell: "sudo yum update -y http://download.eng.bos.redhat.com/brewroot/packages/kernel/3.10.0/519.el7/x86_64/kernel-3.10.0-519.el7.x86_64.rpm"
+
+      - name: Reboot machine
+        shell: reboot
+        async: 0
+        poll: 0
+
+      - name: Wait for machine to comeback
+        local_action: wait_for host={{ ansible_ssh_host }} state=started
