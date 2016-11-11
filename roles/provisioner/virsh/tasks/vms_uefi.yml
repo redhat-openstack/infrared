@@ -1,0 +1,21 @@
+#According to https://fedoraproject.org/wiki/Using_UEFI_with_QEMU there is only one way
+#to get the UEFI mode boot working with VMs, that often requires by Ironic team due to
+#lack of hardware or impossiblity to automate mode switching on baremetal nodes.
+- name: add required repo for OVMF binaries
+  yum_repository:
+    name: OVMF firmware
+    description: UEFI for x86 QEMU/KVM VMs is called OVMF (Open Virtual Machine Firmware).
+    baseurl: http://www.kraxel.org/repos/firmware.repo
+
+- name: install OVMF
+  yum:
+    name: edk2.git-ovmf-x64
+    state: present
+
+- name: update qemu conf
+  blockinfile:
+    dest: /etc/libvirt/qemu.conf
+    content: |
+      nvram = [
+        "/usr/share/edk2.git/ovmf-x64/OVMF_CODE-pure-efi.fd:/usr/share/edk2.git/ovmf-x64/OVMF_VARS-pure-efi.fd"
+      ]

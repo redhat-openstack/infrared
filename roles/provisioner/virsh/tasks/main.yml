@@ -5,6 +5,12 @@
   with_items: "{{ provisioner.packages }}"
   register: yum_result
 
+#install additional binaries for UEFI mode VM boot
+#that required for Ironic testing
+- name: install uefi related libs
+  include: vms_uefi.yml
+  when: provisioner.boot_mode == 'uefi'
+
 - name: stop libvirtd
   service:
       name: "libvirtd"

@@ -102,6 +102,7 @@
         shell: |
             virt-install --name {{ undercloud_node.name }} \
                --disk path={{ undercloud_disk_path }},device=disk,bus=virtio,format=qcow2,cache={{ undercloud_node.disk_cache }} \
+               --boot {{ provisioner.boot_mode }} \
                --network network:data \
                --network network:management \
                --network network:external \
