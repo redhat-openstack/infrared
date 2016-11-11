@@ -5,6 +5,10 @@
   with_items: "{{ provisioner.packages }}"
   register: yum_result
 
+- name: install uefi related libs
+  include: vms_uefi.yml
+  when: provisioner.boot_mode == 'uefi'
+
 - name: stop libvirtd
   service:
       name: "libvirtd"

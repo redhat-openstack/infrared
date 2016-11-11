@@ -54,3 +54,12 @@ subparsers:
                       help: Clean given system instead of running playbooks on a new one.
                       silent:
                           - image
+
+            - title: boot_mode
+              options:
+                  boot_mode:
+                      type: Value
+                      help: |
+                        Desired boot mode for VMs.
+                      choices: ['hd', 'uefi']
+                      default: hd

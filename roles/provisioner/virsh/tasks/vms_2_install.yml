@@ -11,6 +11,7 @@
              --disk path={{ disk_values.path }}/{{ node.value.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
             {% endif -%}
             {% endfor %}
+            --boot {{ provisioner.boot_mode }} \
             {% for interface_name in node.value.interfaces | sort %}
              --network network:{{ node.value.interfaces[interface_name].network }} \
             {% endfor -%}
