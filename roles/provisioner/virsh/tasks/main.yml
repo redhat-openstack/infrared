@@ -5,6 +5,17 @@
   with_items: "{{ provisioner.packages }}"
   register: yum_result
 
+#check if additional binaries for UEFI mode VM boot installed
+- name: check if uefi binaries installed
+  shell: "rpm -q edk2.git-ovmf-x64"
+  register: rpm_check
+  ignore_errors: True
+  when: provisioner.boot_mode == 'uefi'
+
+- fail:
+      msg: "UEFI related binaries is missing, please refer http://infrared.readthedocs.io/en/latest/advanced.html#uefi-mode-related-binaries"
+  when: provisioner.boot_mode == 'uefi' and rpm_check.stdout.find('is not installed') != -1
+
 - name: stop libvirtd
   service:
       name: "libvirtd"
