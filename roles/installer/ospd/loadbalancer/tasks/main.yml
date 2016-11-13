@@ -1,6 +1,6 @@
 ---
 - name: create VLAN interface for internal_api network
-  become_user: root
+  become: yes
   template:
       src: vlan-internal_api.cfg.j2
       dest: "/etc/sysconfig/network-scripts/ifcfg-{{ installer.loadbalancer.network.undercloud.oc_interface }}.{{ installer.loadbalancer.network.internal_api.vlanid }}"
