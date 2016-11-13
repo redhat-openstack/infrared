@@ -25,8 +25,6 @@
       - backup
   hosts: undercloud
   gather_facts: no
-  become: yes
-  become_user: "{{ installer.user.name }}"
   any_errors_fatal: true
   roles:
       - {role: installer/ospd/images}
@@ -40,8 +38,6 @@
   tags: introspection
   hosts: undercloud
   gather_facts: no
-  become: yes
-  become_user: "{{ installer.user.name }}"
   any_errors_fatal: true
   vars:
       undercloud_provision_cidr: "{{ ansible_br_ctlplane.ipv4.network }}/{{ ansible_br_ctlplane.ipv4.netmask }}"
@@ -54,8 +50,6 @@
             policy: "targeted"
             state: "{{ installer.selinux | default('enforcing') }}"
         become: yes
-        become_user: "root"
-        become_method: "sudo"
 
       # User provided file overwrites everything
       - name: check if instackenv is under the deployment folder
@@ -112,8 +106,6 @@
   tags: tagging
   hosts: undercloud
   gather_facts: no
-  become: yes
-  become_user: "{{ installer.user.name }}"
   any_errors_fatal: true
   roles:
       - {role: installer/ospd/overcloud/tagging, when: "'overcloud_nodes' in groups"}
@@ -124,8 +116,6 @@
       - overcloud_init
   hosts: undercloud
   gather_facts: yes
-  become: yes
-  become_user: "{{ installer.user.name }}"
   any_errors_fatal: true
   vars:
       template_base: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}"
@@ -224,8 +214,6 @@
       - overcloud_deploy
   hosts: undercloud
   gather_facts: yes
-  become: yes
-  become_user: "{{ installer.user.name }}"
   any_errors_fatal: true
   tasks:
       - name: the create overcloud script
@@ -251,7 +239,7 @@
             mode: 0755
 
       - name: Execute the deployment summary script
-        become_user: root
+        become: yes
         shell: "mkdir -p /var/log/extra/; source /home/{{ installer.user.name }}/stackrc; /home/{{ installer.user.name }}/deploy_info.sh 2>&1 | tee -a /var/log/extra/deploy_resources.log"
 
 
@@ -270,8 +258,6 @@
       - overcloud_deploy
   hosts: undercloud
   gather_facts: no
-  become: yes
-  become_user: "{{ installer.user.name }}"
   any_errors_fatal: true
   tasks:
       - fail: msg="Overcloud deployment failed... :("
@@ -286,8 +272,6 @@
 - name: "Set selinux state on overcloud"
   hosts: overcloud_nodes
   become: yes
-  become_user: "root"
-  become_method: "sudo"
   gather_facts: no
   any_errors_fatal: true
   tasks:
