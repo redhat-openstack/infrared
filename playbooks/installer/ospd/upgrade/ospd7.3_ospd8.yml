@@ -13,8 +13,6 @@
 - name: Upgrade the undercloud
   hosts: undercloud
   gather_facts: no
-  become: yes
-  become_user: "{{ installer.user.name }}"
   any_errors_fatal: true
   vars:
       pacemaker_template: "pacemaker_template.sh.j2"
@@ -45,7 +43,6 @@
           state: latest
           update_cache: yes
         become: yes
-        become_user: root
 
       - name: "Upgrade undercloud"
         shell: "openstack undercloud upgrade"

@@ -2,7 +2,6 @@
 - name: Use rhos-release to install the repositories
   hosts: odl_controller
   become: yes
-  become_user: root
   any_errors_fatal: true
   roles:
     - role: installer/rhos-release
@@ -30,7 +29,6 @@
 - name: Install OpenDaylight distribution and iptables-service package
   hosts: odl_controller
   become: yes
-  become_user: root
   any_errors_fatal: true
   vars:
       - ansible_python_interpreter: "/usr/bin/python"
@@ -57,7 +55,6 @@
   hosts:
     - controller
     - compute
-  become_user: root
   become: yes
   any_errors_fatal: true
   tasks:
@@ -71,7 +68,6 @@
 - name: Set Iptables rules on opendaylight controller
   hosts:
     - odl_controller
-  become_user: root
   become: yes
   any_errors_fatal: true
   tasks:
@@ -87,7 +83,6 @@
     - controller
     - compute
     - odl_controller
-  become_user: root
   become: yes
   any_errors_fatal: true
   tasks:
@@ -97,7 +92,6 @@
 - name: Start OpenDaylight distribution
   hosts:
     - odl_controller
-  become_user: root
   become: yes
   any_errors_fatal: true
   tasks:
