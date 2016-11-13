@@ -14,7 +14,6 @@
 - name: Allow access to horizon from floating IP
   hosts: controller
   become: yes
-  become_user: root
   gather_facts: no
   any_errors_fatal: true
   vars:
@@ -30,8 +29,6 @@
 
 - name: Get the list of avaialble services
   hosts: undercloud
-  become: yes
-  become_user: "{{ installer.user.name }}"
   gather_facts: no
   any_errors_fatal: true
   environment:
@@ -78,8 +75,6 @@
 
 - name: Prepare repository with tests
   hosts: tester
-  become: yes
-  become_user: "{{ installer.user.name }}"
   gather_facts: no
   any_errors_fatal: true
   vars:

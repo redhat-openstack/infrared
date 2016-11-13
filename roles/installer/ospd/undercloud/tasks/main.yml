@@ -29,8 +29,6 @@
       force: yes
 
 - name: create the base undercloud deploy script
-  become: yes
-  become_user: "{{ installer.user.name }}"
   template:
       src: "undercloud_deploy.sh.j2"
       dest: "/home/{{ installer.user.name }}/undercloud_deploy.sh"
@@ -40,21 +38,15 @@
   shell: "cat /home/{{ installer.user.name }}/undercloud_deploy.sh"
 
 - name: install the undercloud
-  become: yes
-  become_user: "{{ installer.user.name }}"
   shell: "bash ~/undercloud_deploy.sh"
   register: undercloud_deployment
   ignore_errors: yes
 
 - name: print the last 60 lines of the undercloud installation
-  become: yes
-  become_user: "{{ installer.user.name }}"
   shell: "tail -n60 undercloud_install.log"
 
 - fail:
       msg: "Undercloud deployment failed... :("
-  become: yes
-  become_user: "{{ installer.user.name }}"
   when: undercloud_deployment.rc != 0
 
 - name: gathering new facts about the undercloud
