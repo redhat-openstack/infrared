@@ -11,8 +11,6 @@
 - name: External network creation
   hosts: undercloud
   gather_facts: no
-  become: yes
-  become_user: "{{ installer.user.name }}"
   any_errors_fatal: true
   vars:
       first_controller: "{{ groups.controller | first }}"
@@ -24,7 +22,6 @@
         shell: "grep -oP \"(?<=default_floating_pool=)(.*$)\" /etc/nova/nova.conf"
         register: pool_name
         delegate_to: "{{ first_controller }}"
-        become_user: root
         become: yes
 
 # FIXME(yfried): this is commented because virthost solution is misconfiguring vlan. Need to reevaluate the vlan indicators
@@ -32,8 +29,7 @@
 #        shell: "grep -E \"^network_vlan_ranges\\s*=\" /etc/neutron/plugin.ini"
 #        register: vlan_trunks
 #        delegate_to: "{{ first_controller }}"
-#        become_user: root
-#        become: yes
+#        become_user: yes
 
       - name: check the deployment network configuration file
         find:
