@@ -2,7 +2,6 @@
 - name: Stop controller networking services
   hosts:
     - controller
-  become_user: root
   become: yes
   any_errors_fatal: true
   tasks:
@@ -23,7 +22,6 @@
   hosts:
     - controller
     - compute
-  become_user: root
   become: yes
   any_errors_fatal: true
   tasks:
@@ -40,7 +38,6 @@
   hosts:
     - controller
     - compute
-  become_user: root
   become: yes
   any_errors_fatal: true
   tasks:
@@ -54,7 +51,6 @@
   hosts:
     - controller
     - compute
-  become_user: root
   become: yes
   any_errors_fatal: true
   tasks:
@@ -68,7 +64,6 @@
 
 - name: Install opendaylight driver using rpm
   hosts: controller
-  become_user: root
   become: yes
   any_errors_fatal: true
   tasks:
@@ -76,7 +71,6 @@
         yum: name=python-networking-odl state=latest
 - name: Configure neutron to use opendaylight
   hosts: controller
-  become_user: root
   become: yes
   any_errors_fatal: true
   vars:
@@ -131,7 +125,6 @@
   hosts:
     - controller
     - compute
-  become_user: root
   become: yes
   any_errors_fatal: true
   vars:
@@ -160,7 +153,6 @@
 
 - name: Post odl-installation steps
   hosts: controller
-  become_user: root
   become: yes
   any_errors_fatal: true
   tasks:

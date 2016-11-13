@@ -54,14 +54,3 @@
   yum:
       name: "{{ (installer.product.version == '7') | ternary('python-rdomanager-oscplugin', 'python-tripleoclient') }}"
       state: present
-
-- name: create user
-  user:
-      name: "{{ installer.user.name }}"
-      state: present
-      password: "{{ installer.user.password | password_hash('sha512') }}"
-
-- name: add user to sudoers
-  lineinfile:
-      dest: "/etc/sudoers"
-      line: "{{ installer.user.name }} ALL=(root) NOPASSWD:ALL"

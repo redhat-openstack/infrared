@@ -2,8 +2,6 @@
   hosts: undercloud
   tags: inventory_update
   gather_facts: no
-  become: yes
-  become_user: "{{ installer.user.name }}"
   any_errors_fatal: true
   vars:
       user: heat-admin
@@ -25,7 +23,6 @@
 
       - name: Install python-virtualenv, gcc, python-devel for the pip tasks
         become: yes
-        become_user: root
         yum:
             name: "{{ item }}"
             state: present
