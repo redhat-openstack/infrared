@@ -6,6 +6,7 @@
       - undercloud
       - backup
   hosts: undercloud
+  any_errors_fatal: true
   roles:
       - role: installer/rhos-release
         rr_rpm_url: "{{ installer.product.rpm }}"
@@ -26,6 +27,7 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   roles:
       - {role: installer/ospd/images}
 
@@ -40,12 +42,14 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   vars:
       undercloud_provision_cidr: "{{ ansible_br_ctlplane.ipv4.network }}/{{ ansible_br_ctlplane.ipv4.netmask }}"
       custom_instack: "{{ (installer.instackenv|default({})).file | default('') }}"
   pre_tasks:
 
       - name: "Set selinux state on undercloud after install"
+        tags: ironic
         selinux:
             policy: "targeted"
             state: "{{ installer.selinux | default('enforcing') }}"
@@ -55,6 +59,7 @@
 
       # User provided file overwrites everything
       - name: check if instackenv is under the deployment folder
+        tags: ironic
         stat:
             path: "{{ installer.deployment.files.rstrip('/') }}/instackenv.json"
         delegate_to: localhost
@@ -66,8 +71,10 @@
       - set_fact:
             old_custom_instack_path: "{{ old_custom_instack.stat.path }}"
         when: old_custom_instack|changed and old_custom_instack.stat.exists != false
+        tags: ironic
 
       - name: copy instackenv if provided by the user
+        tags: ironic
         copy:
             src: "{{ (custom_instack != '') | ternary(custom_instack, old_custom_instack_path) }}"
             dest: "/home/{{ installer.user.name }}/{{ custom_instack | basename }}"
@@ -77,8 +84,10 @@
       - set_fact:
             inject_instackenv_name: "{{ inject_instackenv.dest|basename }}"
         when: inject_instackenv|changed
+        tags: ironic
 
       - name: verify that instackenv json file exists
+        tags: ironic
         vars:
             target: "{{ (inject_instackenv|changed) | ternary((inject_instackenv_name), 'instackenv.json') }}"
 
@@ -89,10 +98,12 @@
       - set_fact:
             instack_file: "{{ instack_file_path.stat.path }}"
         when: instack_file_path.stat.exists
+        tags: ironic
 
       - fail:
             msg: "instackenv file is missing"
         when: not instack_file_path.stat.exists
+        tags: ironic
 
   roles:
       - {role: installer/ospd/overcloud/introspection, when: "installer.overcloud is defined"}
@@ -103,6 +114,7 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   roles:
       - {role: installer/ospd/overcloud/tagging, when: "'overcloud_nodes' in groups"}
 
@@ -114,6 +126,7 @@
   gather_facts: yes
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   vars:
       template_base: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}"
       network_environment_file: "network-environment{{ (installer.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
@@ -179,7 +192,8 @@
 
       - name: Enable external network access through newly created vlan interface on undercloud
         include: undercloud-ext-vlan.yml
-        when: "'virthost' not in groups"
+        when: "'virthost' not in groups and installer.undercloud.ext.vlan == 'yes'"
+
   roles:
       - {role: installer/ospd/overcloud/storage, when: "overcloud_deploy_script == '' and installer.storage.backend is defined and installer.storage.backend"}
       - {role: installer/ospd/overcloud/network, when: "{{ (overcloud_deploy_script == '') }}" }
@@ -198,7 +212,7 @@
           - name: append the invocation line to the base overcloud deploy script
             lineinfile:
                 dest: "~/overcloud_deploy.sh"
-                line: "--log-file overcloud_deployment_{{ 100 | random }}.log &> overcloud_install.log"
+                line: "--log-file overcloud_deployment_{{ 100 | random }}.log"
 
           - set_fact:
                 overcloud_deploy_script: '~/overcloud_deploy.sh'
@@ -212,6 +226,7 @@
   gather_facts: yes
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   tasks:
       - name: the create overcloud script
         shell: "cat {{ overcloud_deploy_script }}"
@@ -219,7 +234,7 @@
       - name: execute the overcloud deploy script
         shell: |
             source ~/stackrc
-            bash {{ overcloud_deploy_script }}
+            bash {{ overcloud_deploy_script }} &> overcloud_install.log
         register: overcloud_deploy_registered
         ignore_errors: yes
 
@@ -257,6 +272,7 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   tasks:
       - fail: msg="Overcloud deployment failed... :("
         when: overcloud_deploy_registered.rc != 0
@@ -272,10 +288,16 @@
   become: yes
   become_user: "root"
   become_method: "sudo"
+  gather_facts: no
+  any_errors_fatal: true
   tasks:
       - selinux:
             policy: "targeted"
             state: "{{ installer.selinux | default('enforcing') }}"
+
+- include: post_install/lbaas_v2.yml
+  tags: lbaas
+  when: installer.network.lbaas|default('no') == 'yes'
 
 - include: post_install/create_external_network.yml
   tags: public_network

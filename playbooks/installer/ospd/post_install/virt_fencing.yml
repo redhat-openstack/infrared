@@ -1,6 +1,7 @@
 ---
 - name: Set a fence key file path as a fact
   hosts: localhost:virthost:controller:compute
+  any_errors_fatal: true
   tasks:
       - set_fact:
           fence_key_file: "{{ lookup('env', 'PWD') }}/fence_xvm.key"
@@ -18,6 +19,7 @@
   become: yes
   become_method: sudo
   gather_facts: yes
+  any_errors_fatal: true
   tasks:
       - name: Create remote /etc/cluster folder
         file:
@@ -34,6 +36,7 @@
   hosts: virthost
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   tasks:
       - name: Install virt fencing packages
         yum:
@@ -65,13 +68,24 @@
   gather_facts: yes
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   tasks:
       - setup:
+
+- name: Ease iptables rules on controllers for fence_xvm
+  hosts: controller
+  become: yes
+  become_method: sudo
+  any_errors_fatal: true
+  tasks:
+      - shell: "iptables -I INPUT -p tcp --dport 1229 -j ACCEPT"
+      - shell: "/sbin/service iptables save"
 
 - name: Configure fencing on overcloud controllers
   hosts: controller[0]
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   tasks:
       - name: Make sure stonith property is set to false
         command: pcs property set stonith-enabled=false

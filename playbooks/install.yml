@@ -4,6 +4,7 @@
   tags: init
   gather_facts: no
   become: yes
+  any_errors_fatal: true
   tasks:
     - selinux:
           policy: "targeted"
@@ -14,6 +15,7 @@
   gather_facts: no
   tags: init
   become: yes
+  any_errors_fatal: true
   tasks:
     - shell: python -c 'import yum' || (dnf install -y yum yum-utils && ln -snf /usr/bin/yum-deprecated /usr/bin/yum)
 
@@ -21,6 +23,7 @@
   hosts: openstack_nodes
   gather_facts: no
   tags: dump_facts
+  any_errors_fatal: true
   tasks:
       - name: Dumping all facts
         setup:
@@ -35,6 +38,7 @@
 - name: Deploy and configure external loadbalancer instance
   hosts: loadbalancer
   tags: loadbalancer
+  any_errors_fatal: true
   roles:
     - role: installer/rhos-release
       rr_rpm_url: "{{ installer.product.rpm }}"

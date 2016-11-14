@@ -17,6 +17,13 @@
       version: "{{ item.value.version | default(omit) }}"
   with_dict: "{{ plugins }}"
 
+- name: install extra system requirements for tests
+  yum:
+    name: "{{ item.value.dependencies }}"
+    state: present
+  with_dict: "{{ plugins }}"
+  when: item.value.dependencies is defined
+
 - block:
   # some repos have "test-requirements" files and some don't.
     - name: check if test-requirements exists

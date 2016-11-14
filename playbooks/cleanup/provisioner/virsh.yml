@@ -2,6 +2,7 @@
 - name: Add host to host list
   hosts: localhost
   gather_facts: no
+  any_errors_fatal: true
   vars:
       hypervisor: "{{ provisioner.host }}"
   tasks:
@@ -17,6 +18,7 @@
 - name: Remove all VMs and networks that were created
   hosts: virthost
   gather_facts: no
+  any_errors_fatal: true
   vars:
       ignore_virsh_nodes: []
       # ignore virsh's default network
@@ -34,15 +36,3 @@
       # Don't cleanup if the libvirtd process is unavailable
       - include: "{{ inventory_dir }}/playbooks/provisioner/virsh/cleanup.yml"
         when: libvirtd_available | success
-
-
-- name: Remove hypervisor from the known_hosts
-  hosts: localhost
-  gather_facts: no
-  vars:
-      hypervisor: "{{ provisioner.host }}"
-  tasks:
-    - name: Cleanup known_hosts file
-      known_hosts:
-          name: "{{ hypervisor.address }}"
-          state: absent

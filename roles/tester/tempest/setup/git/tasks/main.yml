@@ -1,15 +1,16 @@
-- name: Install pip
-  become: yes
-  easy_install:
-      name: pip
-      state: latest
-
 - name: Install devel packages for package build dependencies
   become: yes
   yum:
       name: "{{ item }}"
       state: present
   with_items: "{{ tester.setup.packages }}"
+
+- name: Install pip
+  become: yes
+  easy_install:
+      name: pip
+      state: latest
+
 
 - name: Clone tempest
   git:
@@ -75,7 +76,7 @@
   with_dict: "{{ tester.tests }}"
   loop_control:
       loop_var: test_suite
-  when: openstack_version|int < 7
+  when: openstack_version|int >= 7
 
 - name: warning message
   debug:

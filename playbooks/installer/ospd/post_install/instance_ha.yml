@@ -1,6 +1,7 @@
 - name: Stop and disable openstack services and libvirtd
   hosts: compute
   become: yes
+  any_errors_fatal: true
   tasks:
       - service:
             name: "{{ item }}"
@@ -21,6 +22,7 @@
   hosts: controller:compute
   become: yes
   gather_facts: yes
+  any_errors_fatal: true
   tasks:
       - name: Make sure pacemaker config dir exists
         file:
@@ -37,6 +39,7 @@
 - name: Enable and start remote_pacemaker on computes
   hosts: compute
   become: yes
+  any_errors_fatal: true
   tasks:
       - name: Open pacemaker_remote port
         shell: "iptables -I INPUT -p tcp --dport 3121 -j ACCEPT"
@@ -55,6 +58,7 @@
   gather_facts: no
   become: yes
   become_user: "{{ installer.user.name }}"
+  any_errors_fatal: true
   tasks:
       - fetch:
             src: "~/overcloudrc"
@@ -63,6 +67,7 @@
 
 - name: Set overcloud credentials
   hosts: controller[0]
+  any_errors_fatal: true
   roles:
       - {role: installer/ospd/overcloud/credentials, overcloudrc: "{{ inventory_dir }}/keystonerc" }
 
@@ -71,6 +76,7 @@
   gather_facts: yes
   become: yes
   become_method: sudo
+  any_errors_fatal: true
   tasks:
       - setup:
 
@@ -83,6 +89,7 @@
       OS_PASSWORD: "{{ oc_password.stdout }}"
       OS_AUTH_URL: "{{ oc_auth.stdout }}"
       OS_TENANT_NAME: "{{ oc_tenant.stdout | default('admin') }}"
+  any_errors_fatal: true
   tasks:
       - name: Create NovaEvacuate resource
         shell: "pcs resource create nova-evacuate ocf:openstack:NovaEvacuate auth_url=$OS_AUTH_URL username=$OS_USERNAME password=$OS_PASSWORD tenant_name=$OS_TENANT_NAME no_shared_storage=0"
@@ -147,10 +154,11 @@
             pcs constraint order start libvirtd-compute-clone then ceilometer-compute-clone
             pcs constraint colocation add ceilometer-compute-clone with libvirtd-compute-clone
 
-            pcs resource create nova-compute-checkevacuate ocf:openstack:nova-compute-wait auth_url=$OS_AUTH_URL username=$OS_USERNAME password=$OS_PASSWORD tenant_name=$OS_TENANT_NAME no_shared_storage=0 op start timeout=300 --clone interleave=true --disabled --force
+            pcs resource create nova-compute-checkevacuate ocf:openstack:nova-compute-wait auth_url=$OS_AUTH_URL username=$OS_USERNAME password=$OS_PASSWORD tenant_name=$OS_TENANT_NAME domain=localdomain op start timeout=300 --clone interleave=true --disabled --force
             pcs constraint location nova-compute-checkevacuate-clone rule resource-discovery=exclusive score=0 osprole eq compute
 
             pcs resource create nova-compute systemd:openstack-nova-compute --clone interleave=true --disabled --force
+            pcs constraint order promote galera-master then nova-compute-clone require-all=false
             pcs constraint location nova-compute-clone rule resource-discovery=exclusive score=0 osprole eq compute
             pcs constraint order start nova-compute-checkevacuate-clone then nova-compute-clone require-all=true
 
@@ -176,7 +184,7 @@
         when: "'virthost' in groups"
 
       - name: Create fence-nova pacemaker resource
-        shell: "pcs stonith create fence-nova fence_compute auth-url=$OS_AUTH_URL login=$OS_USERNAME passwd=$OS_PASSWORD tenant-name=$OS_TENANT_NAME domain=localdomain record-only=1 no_shared_storage=0 action=off --force"
+        shell: "pcs stonith create fence-nova fence_compute auth-url=$OS_AUTH_URL login=$OS_USERNAME passwd=$OS_PASSWORD tenant-name=$OS_TENANT_NAME domain=localdomain record-only=1 no-shared-storage=False action=off --force"
 
       - name: Set cluster recheck interval to 1 minute
         shell: "pcs property set cluster-recheck-interval=1min"
@@ -218,16 +226,25 @@
             - nova-compute-checkevacuate
             - nova-compute
 
-- name: Wait for libvirt resource to be available on compute nodes
+- name: Wait for libvirt and nova-compute resources to be available on compute nodes
   hosts: compute
+  any_errors_fatal: true
   tasks:
       - wait_for:
             port: 16509
             delay: 20
+      - name: Wait for nova-service service to be started
+        shell: "systemctl show openstack-nova-compute --property=ActiveState"
+        register: compute_status_result
+        until: compute_status_result.stdout.find('inactive') == -1 and compute_status_result.stdout.find('activating') == -1
+        retries: 180
+        delay: 1
 
 - name: Cleanup all pacemaker resource
   hosts: controller[0]
   become: yes
+  any_errors_fatal: true
   tasks:
       - name: Cleanup all pacemaker resources
         shell: "pcs --force resource cleanup"
+        when: "{{ installer.product.version | int }} < 10"

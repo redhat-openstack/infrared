@@ -5,7 +5,10 @@ according to the specification (spec) files.
 
 import argparse
 import collections
-import ConfigParser
+try:  # py2
+    import ConfigParser
+except ImportError:  # py3
+    import configparser as ConfigParser
 import glob
 import os
 import re

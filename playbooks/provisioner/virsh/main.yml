@@ -17,12 +17,14 @@
 - name: Setup the virthost
   hosts: virthost
   gather_facts: yes
+  any_errors_fatal: true
   roles:
       - {role: provisioner/virsh}
 
 - name: Check SSH connection to newly created VMs
   hosts: all:!localhost:!virthost
   gather_facts: no
+  any_errors_fatal: true
   tasks:
       - name: wait for hosts to be reachable
         wait_for:

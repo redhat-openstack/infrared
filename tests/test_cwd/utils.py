@@ -1,7 +1,7 @@
 import os
 import pytest
 
-import utils
+from cli import utils
 
 TESTS_CWD = os.path.dirname(__file__)
 SETTINGS_PATH = os.path.join(TESTS_CWD, "settings")

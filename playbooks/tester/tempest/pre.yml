@@ -2,6 +2,7 @@
 - name: Configure tempest
   hosts: tester
   gather_facts: yes
+  any_errors_fatal: true
   vars:
       default_rc_file: "{{ inventory_dir }}/keystonerc"
       rc_file: "{{ tester.openstackrc | default(default_rc_file) }}"

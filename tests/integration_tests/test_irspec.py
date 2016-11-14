@@ -1,6 +1,8 @@
 # holds the integration tests for IRSpec
-import ConfigParser
-
+try:  # py2
+    import ConfigParser
+except ImportError:  # py3
+    import configparser as ConfigParser
 import os
 import yaml
 import pytest

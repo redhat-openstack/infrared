@@ -3,7 +3,7 @@ plugin: ml2
 name: gre
 
 config:
-    CONFIG_NEUTRON_L2_PLUGIN: "{{ !lookup installer.network.plugin }}"
+    CONFIG_NEUTRON_L2_PLUGIN: "{{ !lookup installer.network.variant.plugin }}"
     CONFIG_NEUTRON_ML2_TENANT_NETWORK_TYPES: "{{ !lookup installer.network.variant.name }}"
     CONFIG_NEUTRON_ML2_TUNNEL_ID_RANGES: "1:1000"
     CONFIG_NEUTRON_ML2_TYPE_DRIVERS: 'local,flat,gre'
