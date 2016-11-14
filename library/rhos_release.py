@@ -251,7 +251,7 @@ def main():
     base_cmd = 'rhos-release'
     state = module.params['state']
     repo_directory = module.params['target_directory']
-    release = module.params['director_version']
+    release = str(module.params['director_version']) + '-director'
     puddle = module.params['build_date']
     # core params
     core_release = module.params['core_version']
