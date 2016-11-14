@@ -1,10 +1,11 @@
 ---
 - set_fact:
-    rr_download_fqdn: ''
-    rr_distro_version: "{{ rr_distro_version | default(ansible_distribution_version) }}"
-    rr_target_directory: "{{ rr_target_directory|default('/etc/yum.repos.d') }}"
-    director_version_value: "{{ (director_version is defined and director_version | int < 10) | ternary(director_version | default('') + '-director', None) }}"
-    director_build_date_value: "{{ (director_build is defined and director_version is defined and director_version | int < 10) | ternary(director_build, None) }}"
+      rr_download_fqdn: ''
+      rr_distro_version: "{{ rr_distro_version | default(ansible_distribution_version) }}"
+      rr_target_directory: "{{ rr_target_directory|default('/etc/yum.repos.d') }}"
+      director_version_value: "{{ (director_version is defined and director_version | int < 10) | ternary(director_version, None) }}"
+      director_build_date_value: "{{ (director_build is defined and director_version is defined and director_version | int < 10) | ternary(director_build, None) }}"
+
 - block:
     - name: copy select-mirror.sh into home
       copy:
@@ -103,3 +104,5 @@
 
 - name: repolist
   command: yum -d 7 repolist
+
+- fail:
