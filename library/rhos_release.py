@@ -283,6 +283,8 @@ def main():
         # do some basic validateion
         releases = []
 
+        # If release was passed, suffix it with "-director"
+        release = release and str(release) + '-director'
         if release:
             releases.append((release, puddle))
         if core_release:
