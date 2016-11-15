@@ -4,15 +4,14 @@
 - name: Pre tasks
   hosts: localhost
 
-# TODO(yfried): enable on a different commit once gate is modified
-#- name: Verify input
-#  hosts: localhost
-#  tags:
-#      - always
-#  tasks:
-#      - fail:
-#            msg: "'--product-core-version' and '--product-core-build' are not supported for OSPD 10 and above"
-#        when: installer.product.version|int >= 10 and (installer.product.core.version|int != installer.product.version|int or installer.product.core.build !=  'latest' )
+- name: Verify input
+  hosts: localhost
+  tags:
+      - always
+  tasks:
+      - fail:
+            msg: "'--product-core-version' and '--product-core-build' are not supported for OSPD 10 and above"
+        when: installer.product.version|int >= 10 and (installer.product.core.version|int != installer.product.version|int or installer.product.core.build !=  'latest' )
 
 
 - name: Setup non-root User
