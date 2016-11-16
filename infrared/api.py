@@ -130,7 +130,8 @@ class DefaultInfraredPluginSpec(SpecObject):
                     module_path=self.plugin.modules_dir,
                     verbose=control_args.get('verbose', None),
                     settings=playbook_settings,
-                    inventory=invnetory_name
+                    inventory=invnetory_name,
+                    additional_args=control_args.get('ansible-args', None)
                 ))
             proc.start()
             proc.join()
@@ -177,7 +178,8 @@ class DefaultInfraredPluginSpec(SpecObject):
 
     @staticmethod
     def _ansible_worker(root_dir, playbook,
-                        module_path, verbose, settings, inventory):
+                        module_path, verbose, settings, inventory,
+                        additional_args):
         # hack to change cwd to the plugin root folder
         os.environ['PWD'] = os.path.abspath(root_dir)
         os.chdir(root_dir)
@@ -187,7 +189,8 @@ class DefaultInfraredPluginSpec(SpecObject):
                                           module_path=module_path,
                                           verbose=verbose,
                                           settings=settings,
-                                          inventory=inventory)
+                                          inventory=inventory,
+                                          additional_args=additional_args)
         sys.exit(result)
 
 
