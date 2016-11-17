@@ -27,10 +27,10 @@
   debug:
       var=file_list
 
-- name: update overcloud image to core build
-  include: update_overcloud_images.yml
+- name: modify overcloud image - update to core build and install packages
+  include: modify_overcloud_images.yml
   # update is a func name (dict.update) so it must be used as str explicitly
-  when: "{{ installer.images['update'] in ['yes', 'verbose'] }}"
+  when: "{{ installer.images['update'] in ['yes', 'verbose'] or installer.images.packages != None }}"
 
 - name: upload the overcloud images to glance
   shell: "source ~/stackrc; openstack overcloud image upload --update-existing"
