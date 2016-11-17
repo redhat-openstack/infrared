@@ -7,7 +7,7 @@
 - name: look in undercloud's default templates
   stat:
       path: "{{ default_templates_dir }}/{{ item }}"
-  with_items: "{{ installer.overcloud.templates | default([]) }}"
+  with_items: "{{ templates_list.value | default([]) }}"
   register: default_templates
 
 - name: include templates from default location
@@ -21,6 +21,7 @@
       missing_templates: "{{ default_templates.results|rejectattr('stat.exists')|map(attribute='item')|list }}"
   fail:
       msg:
-          error: Unable to locate templates from file
+          error: "Unable to locate templates from file '{{ templates_list.key }}'"
+          source_file: "{{ templates_list.key }}"
           missing_templates: "{{ missing_templates }}"
   when: missing_templates | default([])
