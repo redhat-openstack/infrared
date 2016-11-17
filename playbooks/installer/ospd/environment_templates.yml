@@ -1,0 +1,26 @@
+# include environment template files in overcloud_deploy script from /usr/share/openstack-tripleo-heat-templates
+
+- name: set default templates
+  set_fact:
+      default_templates_dir: /usr/share/openstack-tripleo-heat-templates
+
+- name: look in undercloud's default templates
+  stat:
+      path: "{{ default_templates_dir }}/{{ item }}"
+  with_items: "{{ installer.overcloud.templates | default([]) }}"
+  register: default_templates
+
+- name: include templates from default location
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: "--environment-file {{ item }}"
+  with_items: "{{ default_templates.results|selectattr('stat.exists')|map(attribute='stat.path')|list }}"
+
+- name: fail because file not found
+  vars:
+      missing_templates: "{{ default_templates.results|rejectattr('stat.exists')|map(attribute='item')|list }}"
+  fail:
+      msg:
+          error: Unable to locate templates from file
+          missing_templates: "{{ missing_templates }}"
+  when: missing_templates | default([])
