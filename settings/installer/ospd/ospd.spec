@@ -183,6 +183,13 @@ subparsers:
                     choices: ['no', 'yes', 'verbose']
                     default: 'no'
 
+                images-packages:
+                    type: Value
+                    help: |
+                        List of packages to install sperated by commas.
+                        Example: vim,git
+                        Note: images-updae must be set to 'yes' to use this option.
+
                 images-cleanup:
                     type: Value
                     help: |
