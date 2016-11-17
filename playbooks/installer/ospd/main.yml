@@ -200,9 +200,14 @@
                 line: '-e {{ item.path }} \'
             with_items: "{{ template_list.files }}"
 
+          - debug:
+                var: installer.overcloud.templates
+
           - name: append extra templates provided by user
             include: environment_templates.yml
-            when: installer.overcloud.templates | default([])
+            with_dict: installer.overcloud.templates|default({})
+            loop_control:
+                loop_var: templates_list
 
           - name: append the invocation line to the base overcloud deploy script
             lineinfile:
