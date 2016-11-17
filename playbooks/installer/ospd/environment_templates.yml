@@ -1,13 +1,36 @@
-# include environment template files in overcloud_deploy script from /usr/share/openstack-tripleo-heat-templates
-
+# include environment template files in overcloud_deploy script
+# search order:
+#     1. local machine, absolute path
+#     2. undercloud default templates (/usr/share/openstack-tripleo-heat-templates/)
+#     3. undercloud absolute paths
 - name: set default templates
   set_fact:
       default_templates_dir: /usr/share/openstack-tripleo-heat-templates
 
+- name: look for templates locally
+  delegate_to: localhost
+  stat:
+      path: "{{ item }}"
+  with_items: installer.overcloud.templates | default([])
+  register: local_paths
+
+- name: copy local templates to undercloud
+  copy:
+      src: "{{ item }}"
+      dest: "/home/{{ installer.user.name }}/{{ item | basename}}"
+  with_items: "{{ local_paths.results|selectattr('stat.exists')|map(attribute='stat.path')|list }}"
+  register: copied_files
+
+- name: include local templates
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: "--environment-file {{ item.dest }}"
+  when: copied_files.results
+
 - name: look in undercloud's default templates
   stat:
       path: "{{ default_templates_dir }}/{{ item }}"
-  with_items: "{{ installer.overcloud.templates | default([]) }}"
+  with_items: "{{ local_paths.results|rejectattr('stat.exists')|map(attribute='item')|list }}"
   register: default_templates
 
 - name: include templates from default location
@@ -16,9 +39,21 @@
       line: "--environment-file {{ item }}"
   with_items: "{{ default_templates.results|selectattr('stat.exists')|map(attribute='stat.path')|list }}"
 
+- name: look in undercloud's absolute path
+  stat:
+      path: "{{ item }}"
+  with_items: "{{ default_templates.results|rejectattr('stat.exists')|map(attribute='item')|list }}"
+  register: undercloud_templates
+
+- name: include templates from general undercloud location
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: "--environment-file {{ item }}"
+  with_items: "{{ undercloud_templates.results|selectattr('stat.exists')|map(attribute='stat.path')|list }}"
+
 - name: fail because file not found
   vars:
-      missing_templates: "{{ default_templates.results|rejectattr('stat.exists')|map(attribute='item')|list }}"
+      missing_templates: "{{ undercloud_templates.results|rejectattr('stat.exists')|map(attribute='item')|list }}"
   fail:
       msg:
           error: Unable to locate templates from file

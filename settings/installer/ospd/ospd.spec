@@ -111,8 +111,12 @@ subparsers:
                       help: |
                             Add extra environment template files to "overcloud deploy" command
                             File (in YAML format) containing a list of paths to template files.
-                            Paths will be searched in undercloud's default templates directory (/usr/share/openstack-tripleo-heat-templates/)
                             NOTE: Omit this to not include any extra files
+
+                            Paths will be searched in the following order:
+                                1. local machine, absolute path
+                                2. undercloud default templates (/usr/share/openstack-tripleo-heat-templates/)
+                                3. undercloud absolute paths
 
             - title: Overcloud Network Isolation
               options:
