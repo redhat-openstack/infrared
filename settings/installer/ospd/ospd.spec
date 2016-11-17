@@ -107,12 +107,12 @@ subparsers:
                             provided templates / options.
 
                   overcloud-templates:
-                      type: YamlFile
+                      type: ListOfYamls
                       help: |
                             Add extra environment template files to "overcloud deploy" command
                             File (in YAML format) containing a list of paths to template files.
                             Paths will be searched in undercloud's default templates directory (/usr/share/openstack-tripleo-heat-templates/)
-                            NOTE: Omit this to not include any extra files
+                            NOTE: Omit this to not include any extra files, or use "none"
 
             - title: Overcloud Network Isolation
               options:
