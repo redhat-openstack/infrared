@@ -13,7 +13,7 @@
 - name: include templates from default location
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: "--environment-file {{ item }}"
+      line: "--environment-file {{ item }} \\"
   with_items: "{{ default_templates.results|selectattr('stat.exists')|map(attribute='stat.path')|list }}"
 
 - name: fail because file not found
