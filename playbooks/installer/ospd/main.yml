@@ -202,9 +202,7 @@
 
           - name: append extra templates provided by user
             include: environment_templates.yml
-            with_dict: installer.overcloud.templates|default({})
-            loop_control:
-                loop_var: templates_list
+            when: installer.overcloud.templates | default([])
 
           - name: append the invocation line to the base overcloud deploy script
             lineinfile:
