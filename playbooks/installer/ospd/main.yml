@@ -194,17 +194,17 @@
 
   tasks:
       - block:
-          - name: append all custom templates provided by the user
-            lineinfile:
-                dest: "~/overcloud_deploy.sh"
-                line: '-e {{ item.path }} \'
-            with_items: "{{ template_list.files }}"
-
           - name: append extra templates provided by user
             include: environment_templates.yml
             with_dict: installer.overcloud.templates|default({})
             loop_control:
                 loop_var: templates_list
+
+          - name: append all custom templates provided by the user
+            lineinfile:
+                dest: "~/overcloud_deploy.sh"
+                line: '-e {{ item.path }} \'
+            with_items: "{{ template_list.files }}"
 
           - name: append the invocation line to the base overcloud deploy script
             lineinfile:
