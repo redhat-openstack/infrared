@@ -1,6 +1,7 @@
 ---
 - name: Install dependencies on the tester
   hosts: tester
+  become: yes
   gather_facts: no
   any_errors_fatal: true
   tags:
@@ -23,6 +24,7 @@
 
 - name: Install Rally on the machine
   hosts: tester
+  become: yes
   gather_facts: no
   any_errors_fatal: true
   tasks:
@@ -110,6 +112,7 @@
 
 - name: Setup Rally
   hosts: tester
+  become: yes
   any_errors_fatal: true
   tasks:
   # TODO (tjamrisk): Need to somehow skip this if deployment exists
