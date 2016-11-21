@@ -26,8 +26,6 @@
 
 - name: Prepare repository with tests
   hosts: tester
-  become: yes
-  become_user: "{{ installer.user.name }}"
   gather_facts: no
   any_errors_fatal: true
   tasks:
@@ -54,8 +52,6 @@
 
 - name: Prepare the environment (users and tenant)
   hosts: undercloud
-  become: yes
-  become_user: "{{ installer.user.name }}"
   gather_facts: no
   any_errors_fatal: true
   roles:

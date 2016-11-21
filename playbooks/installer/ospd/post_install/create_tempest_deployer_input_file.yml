@@ -2,8 +2,6 @@
 - name: Generate Deployer output for Tester
   hosts: undercloud
   gather_facts: no
-  become: yes
-  become_user: "{{ installer.user.name }}"
   any_errors_fatal: true
   tasks:
       - name: "Workaround RHBZ#1357579 - non-default region=regionOne"
@@ -31,6 +29,22 @@
             option: storage_protocol
             value: ceph
         when:  "installer.storage.backend.startswith('ceph')"
+
+      - name: "Configure nfs protocol"
+        ini_file:
+            dest: "~/tempest-deployer-input.conf"
+            section: volume
+            option: storage_protocol
+            value: nfs
+        when:  "'nfs' in installer.storage.backend"
+
+      - name: "Configure storage vendor for netapp: https://bugs.launchpad.net/tripleo/+bug/1642948"
+        ini_file:
+            dest: "~/tempest-deployer-input.conf"
+            section: volume
+            option: vendor_name
+            value: NetApp
+        when:  "installer.storage.backend.startswith('netapp')"
 
       - name: fetch deployer output for tester
         fetch:

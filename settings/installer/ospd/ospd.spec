@@ -106,6 +106,13 @@ subparsers:
                             If not set, it will auto generate a deployment according to the
                             provided templates / options.
 
+                  overcloud-templates:
+                      type: ListOfYamls
+                      help: |
+                            Add extra environment template files to "overcloud deploy" command
+                            File (in YAML format) containing a list of paths to template files on the UnderCloud.
+                            NOTE: Omit this to not include any extra files, or use "none"
+
             - title: Overcloud Network Isolation
               options:
                   network-backend:

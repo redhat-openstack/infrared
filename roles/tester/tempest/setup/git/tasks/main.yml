@@ -44,6 +44,12 @@
       - setuptools
       - pbr
 
+- name: quickly workaround recent requests bug in 2.12
+  pip:
+      name: "requests"
+      version: "2.11.1"
+      virtualenv: "~/{{ tester.dir }}/.venv"
+
 - name: get repo requirements
   pip:
       virtualenv: "~/{{ tester.dir }}/.venv"

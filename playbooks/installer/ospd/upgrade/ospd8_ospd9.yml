@@ -2,8 +2,6 @@
 - name: Run upgrade from OSPD_8 to OSPD_9
   hosts: undercloud
   gather_facts: no
-  become: yes
-  become_user: "{{ installer.user.name }}"
   any_errors_fatal: true
   vars:
       major_upgrade_script: "~/major_upgrade.sh"
@@ -19,7 +17,6 @@
       - name: enable ospd9 repos
         shell: "rhos-release 9-director -P"
         become: yes
-        become_user: root
 
       - name: upgrade undercloud
         shell: "openstack undercloud upgrade"
