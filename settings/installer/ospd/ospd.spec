@@ -152,7 +152,7 @@ subparsers:
               options:
                   storage-backend:
                       type: Value
-                      choices: ['ceph', 'ceph2', 'swift', 'netapp-iscsi', 'netapp-nfs', 'lvm']
+                      choices: ['ceph', 'swift', 'netapp-iscsi', 'netapp-nfs', 'lvm']
                       default: 'lvm'
                       help: |
                         The storage that we would like to use.
