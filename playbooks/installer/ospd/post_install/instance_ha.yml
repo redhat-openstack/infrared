@@ -224,6 +224,18 @@
             - nova-compute-checkevacuate
             - nova-compute
 
+  # Creation of neutron-openvswitch-agent resource may cause stopping the service on controllers since we do not
+  # manage the service on controllers by pacemaker from RHOS10, make sure the service is started on controllers.
+- name: Make sure that neutron-openvswitch-agent service is started
+  hosts: controller
+  become: yes
+  any_errors_fatal: true
+  tasks:
+      - service:
+            name: neutron-openvswitch-agent
+            state: started
+        when: "{{ installer.product.version | int }} > 9"
+
 - name: Wait for libvirt and nova-compute resources to be available on compute nodes
   hosts: compute
   any_errors_fatal: true
