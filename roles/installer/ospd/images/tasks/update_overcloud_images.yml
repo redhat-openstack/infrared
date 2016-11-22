@@ -25,6 +25,9 @@
 - name: push core repos to overcloud image
   shell: "virt-copy-in -a {{ overcloud_image_file }} {{ tmp_oc_repos_dir }} /etc/"
 
+- name: Install u/s opendaylight RPM package
+  shell: "virt-customize -a {{ overcloud_image_file }} --run-command 'yum -y localinstall http://cbs.centos.org/repos/nfv7-opendaylight-5-testing/x86_64/os/Packages/opendaylight-5.2.0-0.1.20161121rel1586.el7.noarch.rpm'"
+
 - name: Install packages in overcloud image
   shell: "virt-customize -a {{ overcloud_image_file }} --install {{ installer.images.packages }}"
   when: installer.images.packages is defined and installer.images.packages != None
