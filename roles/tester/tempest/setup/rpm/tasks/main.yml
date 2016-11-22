@@ -57,10 +57,21 @@
       deployer_input: "{{ '(result | success)' | ternary('--deployer-input ~/tempest-deployer-input.conf', '') }}"
       orchestration: "{{ (installer.type == 'ospd') | ternary('orchestration.stack_owner_role heat_stack_owner', '') }}"
       region: "{{ (installer.type == 'ospd') | ternary('identity.region regionOne', '') }}"
+      config_options: "{{ tester.get('config', {}).get('options', {}) }}"
   shell: |
       source ~/keystonerc
       tools/config_tempest.py {{ deployer_input }} --debug \
       --create identity.uri $OS_AUTH_URL \
+      {# custom global config options #}
+      {% for name,value in config_options.iteritems() %}
+      {{name}} {{value}} \
+      {% endfor %}
+      {# insert test suite config options #}
+      {% for suite_name,suite_params in tester.tests.iteritems() %}
+      {% for name, value in suite_params.get('config_options', {}).iteritems() %}
+      {{name}} {{value}} \
+      {% endfor %}
+      {% endfor %}
       identity.admin_password $OS_PASSWORD {{ orchestration }} {{ region }}
   args:
       chdir: "~/{{ tester.dir }}"
