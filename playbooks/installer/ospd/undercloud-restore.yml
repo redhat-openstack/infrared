@@ -19,7 +19,7 @@
         rr_rpm_url: "{{ installer.product.rpm }}"
         director_version: "{{ installer.product.version }}"
         director_build: "{{ installer.product.build }}"
-        core_version: "{{ installer.product.core.version }}"
+        core_version: "{{ (installer.product.core.version is defined and installer.product.core.version) | ternary(installer.product.core.version, installer.product.version) }}"
         core_build: "{{ installer.product.core.build }}"
         mirror: "{{ installer.mirror | default(omit) }}"
   tasks:
