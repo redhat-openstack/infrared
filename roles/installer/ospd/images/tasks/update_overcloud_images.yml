@@ -14,7 +14,7 @@
 - name: "create overcloud build's repos locally"
   rhos_release:
       state: install
-      core_version: "{{ installer.product.core.version }}"
+      core_version: "{{ (installer.product.core.version is defined and installer.product.core.version) | ternary(installer.product.core.version, installer.product.version) }}"
       core_build_date: "{{ installer.product.core.build }}"
       target_directory: "{{ tmp_oc_repos_dir }}"
   register: command_result

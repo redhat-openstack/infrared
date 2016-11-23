@@ -17,7 +17,7 @@
   shell: "source ~/stackrc; openstack overcloud image build --all > openstack-build-images.log"
   environment:
       DIB_LOCAL_IMAGE: "/home/{{ installer.user.name }}/base_image.qcow2"
-      DIB_YUM_REPO_CONF: "/etc/yum.repos.d/rhos-release-{{ installer.product.version }}-director.repo /etc/yum.repos.d/rhos-release-{{ installer.product.core.version }}.repo /etc/yum.repos.d/rhos-release-{{ ansible_product_version.split() | first | lower }}-{{ ansible_distribution_version }}.repo"
+      DIB_YUM_REPO_CONF: "/etc/yum.repos.d/rhos-release-{{ installer.product.version }}-director.repo /etc/yum.repos.d/rhos-release-{{ (installer.product.core.version is defined and installer.product.core.version) | ternary(installer.product.core.version, installer.product.version) }}.repo /etc/yum.repos.d/rhos-release-{{ ansible_product_version.split() | first | lower }}-{{ ansible_distribution_version }}.repo"
       NODE_DIST: "rhel7"
       RHOS: 1
       RUN_RHOS_RELEASE: 1
