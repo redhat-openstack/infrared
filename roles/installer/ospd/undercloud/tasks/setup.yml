@@ -19,14 +19,14 @@
       enabled: "{{ item.enabled | default(omit) }}"
       gpgcheck: "{{ item.gpgcheck | default(omit) }}"
   with_items: "{{ (installer.extra_repos|default({})).explicit | default([]) }}"
-  when: (installer.extra_repos|default({})).from_config is defined
+  when: (installer.extra_repos|default({})).from_config is defined and installer.product.type == 'rhos'
 
 - name: Downloading extra repositories
   get_url:
       url: "{{ item }}"
       dest: /etc/yum.repos.d/
   with_items: "{{ (installer.extra_repos|default({})).from_url | default([]) }}"
-  when: (installer.extra_repos|default({})).from_url is defined
+  when: (installer.extra_repos|default({})).from_url is defined and installer.product.type == 'rhos'
 
 - name: update system packages
   yum:

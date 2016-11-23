@@ -17,6 +17,11 @@
         rr_distro_version: "{{ hostvars[groups.undercloud[0]].ansible_distribution_version }}"
         mirror: "{{ installer.mirror | default(omit) }}"
         become: yes
+        when: installer.product.type == 'rhos'
+
+      - role: installer/rdo-release
+        product_version: "{{ installer.product.version }}"
+        when: installer.product.type == 'rdo'
 
       - role: installer/ospd/undercloud
 
@@ -286,6 +291,7 @@
       - selinux:
             policy: "targeted"
             state: "{{ installer.selinux | default('enforcing') }}"
+        when: installer.product.type == 'rhos'
 
 - include: post_install/lbaas_v2.yml
   tags: lbaas
