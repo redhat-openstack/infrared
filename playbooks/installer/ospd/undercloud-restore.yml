@@ -55,6 +55,9 @@
                   url: "http://{{ private.storage.oc_image_repo.server }}/{{ private.storage.oc_image_repo.path }}/{{ installer.product.version }}/{{ undercloud_image_file }}.qcow2"
                   dest: "~/{{ undercloud_image_file }}.qcow2"
 
+            - name: print useful properties of image file
+              shell: ls -la ~/{{ undercloud_image_file }}.qcow2
+
           # Old images are tar'ed
           rescue:
             - name: download the undercloud tar file
@@ -69,6 +72,9 @@
                   copy: no
                   list_files: yes
               register: tar
+
+            - name: print useful properties of extracted files
+              shell: ls -la ~/{{ undercloud_image_file }}*
 
             - name: remove the old XML
               file:
