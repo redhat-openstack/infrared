@@ -101,6 +101,8 @@
             name: libguestfs-tools
             state: present
 
+      # Copy virthost's key into UC root and also for "installer.user" as we this user since next hosts task update inventory
+      # This is necesarry for muffin because we need to refresh the auhtortized_keys with new virthost's pubkey
       - name: inject our key into the undercloud image
         shell: |
             virt-customize -a {{ undercloud_disk_path }} \
@@ -108,8 +110,9 @@
                --mkdir /root/.ssh \
                --chmod 0700:/root/.ssh \
                --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys \
-               --chmod 0700:/home/{{ installer.user.name }}/.ssh \
                --upload /root/.ssh/id_rsa.pub:/home/{{ installer.user.name }}/.ssh/authorized_keys \
+               --chmod 0700:/home/{{ installer.user.name }}/.ssh \
+               --run-command "chown {{ installer.user.name }}:{{ installer.user.name }} /home/{{ installer.user.name }}/.ssh/authorized_keys" \
                --selinux-relabel
 
       - name: create Undercloud VM from snapshot
