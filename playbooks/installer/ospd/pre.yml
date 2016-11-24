@@ -32,12 +32,16 @@
             dest: "/etc/sudoers"
             line: "{{ installer.user.name }} ALL=(root) NOPASSWD:ALL"
 
+      - name: Retrieve public key from private key
+        command: "ssh-keygen -y -f {{ ansible_ssh_private_key_file }}"
+        register: public_key_output
+        delegate_to: localhost
+        become: false
+
       - name: set up authorized_keys for non root user
         authorized_key:
             user: "{{ installer.user.name }}"
-            key: "{{ item }}"
-        with_file:
-            - "{{ inventory_dir }}/id_rsa.pub"
+            key: "{{ public_key_output.stdout }}"
 
       - name: Update hosts user
         add_host:
