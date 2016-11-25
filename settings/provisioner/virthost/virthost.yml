@@ -1,37 +1,34 @@
 ---
 
 provisioner:
-    type: virsh
+    type: virthost
 
     host:
         name: virthost
         groups:
             - virthost
-    image:
-        memory: "16384"
-        cpu: "4"
-        os:
-            variant: rhel7
-        disk:
-            size: "40G"
 
-    # TODO(psedlak): clean(remove) this list later (see settings/provisioner/virthost/migration_todo)
     packages:
         - libvirt
         - libguestfs
         - libguestfs-tools-c
         - libguestfs-xfs
         - qemu-kvm
-        - virt-manager
+        - virt-manager  # for managing vm's on computes (through ssh -X)
         - virt-install
-        - xorg-x11-apps
+        - xorg-x11-apps  # to have ssh -X capability (virt-manager, horizon)
         - xauth
         - virt-viewer
         - wget
+
+    openstack_packages:
+        ipxe-roms-qemu: 20160127  # for Ironic so it can reprovision VMs
+
 
 job:
   archive:
   - /etc/selinux
   - /etc/yum.repos.d
+  - /etc/libvirt/
   - /root/
   - /var/log/

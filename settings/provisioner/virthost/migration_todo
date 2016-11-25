@@ -1,0 +1,20 @@
+1time virthost setup
+====================
+
+to extract virthost setup to single individual place
+as atm it is spread all across virsh & installer playbooks
+it needs to be done in two steps:
+
+1) new virthost provisioner created (describe virthost expectations in one place)
+2) deprecated/announce need to use virthost provisioner on clean machine once, before using virsh
+3) remove parts of code for virthost configuration from virsh & installer completely
+
+After step 1 user would be expected to use:
+
+  ir-provisioner virthost --host-address=some.fqdn --host-key=$HOME/.ssh/something [--host-user=cloud-user]
+
+
+... at least once, after clean (re)installation of system (or on major change of virthost requirements)
+
+Though it could be also integrated (later?) into virsh provisioner itself,
+maybe even as option (e.g. --openstack-virthost, default on?).

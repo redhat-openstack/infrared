@@ -1,8 +1,11 @@
+
 - name: check if host supports virtualization
   command: "virt-host-validate"
   register: result
   failed_when: "'FAIL' in result.stdout_lines"
 
+# TODO(psedlak): remove all bellow later (see settings/provisioner/virthost/migration_todo)
+#
 - name: check if CPU supports INTEL based KVM
   shell: "egrep -c 'vmx' /proc/cpuinfo"
   ignore_errors: True
