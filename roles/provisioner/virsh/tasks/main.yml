@@ -1,3 +1,4 @@
+# TODO(psedlak): remove later (see settings/provisioner/virthost/migration_todo)
 - name: install packages
   yum:
       name: "{{ item }}"
@@ -5,6 +6,7 @@
   with_items: "{{ provisioner.packages }}"
   register: yum_result
 
+# TODO(psedlak): remove later (see settings/provisioner/virthost/migration_todo)
 - name: stop libvirtd
   service:
       name: "libvirtd"
@@ -28,11 +30,13 @@
 - name: setup the networks
   include: network.yml
 
+# TODO(psedlak): remove later (see settings/provisioner/virthost/migration_todo)
 - name: check if private key exist on system
   stat:
       path: "/root/.ssh/id_rsa"
   register: result
 
+# TODO(psedlak): remove later (see settings/provisioner/virthost/migration_todo)
 - name: if private key doesn't exist, create it
   shell: "ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''"
   when: result.stat.exists != true
@@ -55,6 +59,7 @@
       - "{{ inventory_dir }}/id_rsa.pub"
   delegate_to: localhost
 
+# TODO(psedlak): remove later (see settings/provisioner/virthost/migration_todo)
 - name: Set up authorized_keys for the deploy user
   authorized_key:
       user: root

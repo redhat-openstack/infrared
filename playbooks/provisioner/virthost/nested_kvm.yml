@@ -1,5 +1,31 @@
-# TODO(psedlak): remove this file later (see settings/provisioner/virthost/migration_todo)
+# Figure out what is supported
+- name: check if host supports virtualization
+  command: "virt-host-validate"
+  register: result
+  failed_when: "'FAIL' in result.stdout_lines"
 
+- name: check if CPU supports INTEL based KVM
+  shell: "egrep -c 'vmx' /proc/cpuinfo"
+  ignore_errors: True
+  register: kvm_intel
+
+- name: set fact for Intel based KVM
+  set_fact:
+      kvm_base: "intel"
+  when: kvm_intel.rc == 0
+
+- name: check if CPU supports AMD based KVM
+  shell: "egrep -c 'svm' /proc/cpuinfo"
+  ignore_errors: True
+  register: kvm_amd
+
+- name: set fact for AMD based KVM
+  set_fact:
+      kvm_base: "amd"
+  when: kvm_amd.rc == 0
+
+
+# Enable nested support in modprobe
 - name: enable nested KVM support for Intel
   lineinfile:
       dest: "/etc/modprobe.d/dist.conf"
@@ -15,6 +41,7 @@
       state: present
       create: yes
   when: kvm_base is defined
+
 
 # A change in the modprove requires to reload the module
 - name: unload KVM module
@@ -36,6 +63,7 @@
       name: "qemu-kvm"
       state: present
   when: kvm_base is defined
+
 
 # Make sure the net-virtio module is enabled
 - name: unload vhost-net module

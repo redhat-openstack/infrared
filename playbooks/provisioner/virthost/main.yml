@@ -1,0 +1,118 @@
+# VirtHost provisioner - main.yml
+
+- name: Add host to host list
+  hosts: localhost
+  gather_facts: no
+  vars:
+      hypervisor: "{{ provisioner.host }}"
+  tasks:
+      - name: add hosts to host list
+        add_host:
+            name: "{{ hypervisor.name }}"
+            groups: "{{ hypervisor.groups| join(',') }}"
+            node_label: "virthost"
+            ansible_ssh_user: "{{ hypervisor.user }}"
+            ansible_ssh_host: "{{ hypervisor.address }}"
+            ansible_ssh_private_key_file: "{{ hypervisor.key }}"
+
+- name: Setup the virthost
+  hosts: virthost
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - fail: "Red Hat Enterprise Linux 7.3 required"
+        when: "ansible_distribution != 'RedHat' or ansible_distribution_version != 7.3"
+
+      - name: install packages
+        yum:
+            name: "{{ item }}"
+            state: present
+        with_items: "{{ provisioner.packages }}"
+        register: yum_result
+
+      - name: configure nested KVM support
+        include: nested_kvm.yml
+
+      - name: check if private key exists on system
+        stat:
+            path: "/root/.ssh/id_rsa"
+        register: result
+
+      - name: "if private key doesn't exist, create it"
+        shell: "ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''"
+        when: result.stat.exists != true
+
+      - fail: msg="FIXME no fetched id_rsa.pub yet"
+# FIXME(psedlak): convert to remote path
+# ... or better - do not generate on virthost, push key from inv_dir
+      - name: Set up authorized_keys for the deploy user
+        authorized_key:
+            user: root
+            key: "{{ item }}"
+        with_file:
+          - "{{ inventory_dir }}/id_rsa.pub"
+
+
+- name: Check if we should prepare for OpenStack/TripleO
+  hosts: virthost
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+    - group_by: key=virthost4openstack
+      when: (openstack.prepare | default('no')) == 'yes'
+
+- name: Prepare for OpenStack/TripleO deployment
+  hosts: virthost4openstack
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: install required versions of packages
+        yum:
+            name: "{{ item }}"
+            state: latest
+        with_items: "{{ provisioner.openstack_packages }}"
+        register: yum_updated
+
+      # (fhubik|psedlak) Workaround bug in ansible, packages with long names aren't parsed correctly and upgraded
+      # Remove when fixed (https://github.com/ansible/ansible-modules-core/issues/4318)
+      # Done individualy (one yum call for one pkg) to not hit yum's "some package missing but rest ok" case.
+      - name: make sure we have required latest packages (workaround ansible-modules-core yum bug 4318)
+        shell: "yum install -y {{ item }}"
+        with_items: "{{ provisioner.openstack_packages.keys() }}"
+
+      - name: test that we have required version of packages
+        command: "rpm -q --qf '%{version}' {{ key }}"
+        register: pkg_version
+        failed_when: "pkg_version.rc != 0 || (value != '' and pkg_version.stdout | version_compare(value, '<'))"
+        with_dict: "{{ provisioner.openstack_packages }}"
+
+      - name: create stack user on virthost
+        user:
+            name: "{{ openstack.user.name }}"
+            state: present
+            password: "{{ openstack.user.password | password_hash('sha512') }}"
+
+      - name: set permissions for the user to access the hypervisor
+        copy:
+            content: |
+                [libvirt Management Access]
+                Identity=unix-user:{{ openstack.user.name }}
+                Action=org.libvirt.unix.manage
+                ResultAny=yes
+                ResultInactive=yes
+                ResultActive=yes
+            dest: "/etc/polkit-1/localauthority/50-local.d/50-libvirt-user-{{ openstack.user.name }}.pkla"
+
+      - fail: msg="FIXME no undercloud key"
+# FIXME(psedlak): at this step there is no undercloud key
+# so we need to use same key as for virthost
+# and later push that key into undercloud instead (doing it reversed)
+      - name: print the public key
+        shell: "cat {{ inventory_dir }}/id_rsa_undercloud.pub"
+        register: undercloud_public_key
+        delegate_to: localhost
+
+      - name: insert the public key to the known hosts in virthost
+        authorized_key:
+            user: "{{ installer.user.name }}"
+            key: "{{ undercloud_public_key.stdout }}"
