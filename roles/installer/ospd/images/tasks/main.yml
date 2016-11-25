@@ -1,7 +1,13 @@
 - block:
+    - name: Retrieve public key from private key
+      command: "ssh-keygen -y -f {{ ansible_ssh_private_key_file }}"
+      register: public_key_output
+      delegate_to: localhost
+      become: false
+
     - name: copy our public key to inject the images of the overcloud nodes
       copy:
-          src: "{{ inventory_dir }}/id_rsa.pub"
+          content: "{{ public_key_output.stdout }}"
           dest: "/home/{{ installer.user.name }}/id_rsa.pub"
           mode: 0600
   rescue:
