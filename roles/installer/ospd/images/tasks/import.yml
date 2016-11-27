@@ -1,9 +1,27 @@
 ---
+# TODO(yfried): fetch checksum if available to verify DL of large files (1.5GB)
+#- block:
+#
+#      - name: download the pre-built overcloud images
+#        get_url:
+#            dest: "~/{{ item }}"
+#            url: "{{ installer.images.url }}/{{ item }}.md5"
+#            timeout: 1000
+#        with_items: "{{ tar_images }}"
+#
+#      - name: get md5 from file
+#        command: "awk '{print $1}' ~/{{ item }}.md5"
+#        with_items: "{{ tar_images }}"
+#        register: md5
+#
+#  when: overcloud.images.md5
+
 - name: download the pre-built overcloud images
   get_url:
       dest: "~/{{ item }}"
       url: "{{ installer.images.url }}/{{ item }}"
       timeout: 1000
+#      checksum: "{{ (overcloud.images.md5) | ternary('md5:' + , 'omit')}}"
   with_items: "{{ tar_images }}"
 
 - name: untar the images
