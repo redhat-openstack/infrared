@@ -176,7 +176,7 @@ listen swift_proxy_server
 server {{ installer.loadbalancer.controllers.name_prefix }}{{x}} {{ installer.loadbalancer.network.storage.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8080 check fall 5 inter 2000 rise 2
   {% endfor %}
 
-{% if installer.product.version|int > 8 %}
+{% if openstack_release > 8 %}
 listen aodh
   bind {{ installer.loadbalancer.network.external.vip | ipaddr('address') }}:8042 transparent
   bind {{ installer.loadbalancer.network.internal_api.vip | ipaddr('address') }}:8042 transparent

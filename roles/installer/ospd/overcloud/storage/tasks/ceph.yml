@@ -26,9 +26,10 @@
   vars:
       # we have different keyrings mapped to each ospd version capabilities
       ceph_compt_version: "
-          {%- if installer.product.version|int < 8 -%}8
-          {%- elif installer.product.version|int >= 10 -%}10
-          {%- else -%}{{ installer.product.version }}{%- endif -%}"
+          {%- if installer.product.version|openstack_release < 8 -%}8
+          {%- elif installer.product.version|openstack_release >= 10 -%}10
+          {%- else -%}{{ installer.product.version|openstack_release }}{%- endif -%}"
+      openstack_release: "{{ installer.product.version|openstack_release }}"
   template:
       src: "ceph.yml.j2"
       dest: "{{ template_base }}/ceph.yaml"
