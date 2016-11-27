@@ -165,7 +165,7 @@
 
       - name: Create nova-compute order constraint on galera-master
         shell: "pcs constraint order promote galera-master then nova-compute-clone require-all=false"
-        when: "{{ installer.product.version|openstack_release }} > 9"
+        when: "{{ installer.product.version|openstack_release > 9 }}"
 
       - name: Create pacemaker constraint for neutron-server, nova-conductor and ceilometer-notification
         shell: |
@@ -260,4 +260,4 @@
   tasks:
       - name: Cleanup all pacemaker resources
         shell: "pcs --force resource cleanup"
-        when: "{{ installer.product.version|openstack_release }} < 8"
+        when: "{{ installer.product.version|openstack_release < 8 }}"
