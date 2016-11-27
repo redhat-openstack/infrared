@@ -15,6 +15,7 @@
         when: "ansible_distribution_version == 7.2 and installer.product.version|openstack_distribution == 'OSP'"
 
       - role: installer/rdo-release
+        become: yes
         product_version: "{{ installer.product.version }}"
         when: installer.product.version|openstack_distribution == 'RDO'
   tasks:
