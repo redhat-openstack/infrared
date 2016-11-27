@@ -17,7 +17,7 @@
                section: keymgr
                option: fixed_key
                value: "{{ randkey.stdout }}"
-      when: "installer.product.version|int < 9"
+      when: "installer.product.version|openstack_release < 9"
 
     - name: Setup fixed key for encrypted volumes
       ini_file:
@@ -25,7 +25,7 @@
                section: key_manager
                option: fixed_key
                value: "{{ randkey.stdout }}"
-      when: "installer.product.version|int >= 9"
+      when: "installer.product.version|openstack_release >= 9"
 
 
     - name: Restart openstack-nova-compute
@@ -165,7 +165,7 @@
         section: ml2
         option: extension_drivers
         value: port_security
-      when: installer.network.type == 'neutron' and installer.product.version|int >= 7
+      when: installer.network.type == 'neutron' and installer.product.version|openstack_release >= 7
       register: portsec
 
     - name: restart neutron server

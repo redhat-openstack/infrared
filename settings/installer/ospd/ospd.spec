@@ -42,15 +42,12 @@ subparsers:
 
             - title: Product
               options:
-                  product-type:
-                      type: Value
-                      help: The product type
-                      choices: ["rhos", "rdo"]
-                      default: rhos
-
                   product-version:
                       type: Value
-                      help: The product version (product == director)
+                      help: |
+                          The product version (product == director)
+                          Numbers are for OSP releases
+                          Names are for RDO releases
                       choices: ["7", "8", "9", "10", "kilo", "liberty", "mitaka", "newton"]
                       default: 9
 
