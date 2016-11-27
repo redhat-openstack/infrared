@@ -104,16 +104,16 @@
             - openstack-glance-api-clone
             - neutron-metadata-agent-clone
             - openstack-nova-conductor-clone
-        when: "{{ installer.product.version | int }} < 10"
+        when: "{{ installer.product.version|openstack_release }} < 10"
 
       - name: Disable keystone resource
         shell: "pcs resource disable openstack-keystone --wait=900"
-        when: "{{ installer.product.version | int }} < 9"
+        when: "{{ installer.product.version|openstack_release }} < 9"
 
       # Keystone resource was replaced by openstack-core resource in RHOS9
       - name: Disable openstack-core resource
         shell: "pcs resource disable openstack-core --wait=900"
-        when: "{{ installer.product.version | int }} == 9"
+        when: "{{ installer.product.version|openstack_release }} == 9"
 
       - name: Set controller pacemaker property on controllers
         shell: "pcs property set --node {{ hostvars[item]['ansible_hostname'] }} osprole=controller"
@@ -169,7 +169,7 @@
             pcs constraint order start neutron-server-clone then neutron-openvswitch-agent-compute-clone require-all=false
             pcs constraint order start openstack-ceilometer-notification-clone then ceilometer-compute-clone require-all=false
             pcs constraint order start openstack-nova-conductor-clone then nova-compute-checkevacuate-clone require-all=false
-        when: "{{ installer.product.version | int }} < 10"
+        when: "{{ installer.product.version|openstack_release }} < 10"
 
       # TODO (mkrcmari) Create a play for baremetal computes fencing setup
       - name: Set up virt-fencing for compute nodes
@@ -201,11 +201,11 @@
 
       - name: Enable keystone resource
         shell: "pcs resource enable openstack-keystone"
-        when: "{{ installer.product.version | int }} < 9"
+        when: "{{ installer.product.version|openstack_release }} < 9"
 
       - name: Enable openstack-core resource
         shell: "pcs resource enable openstack-core"
-        when: "{{ installer.product.version | int }} == 9"
+        when: "{{ installer.product.version|openstack_release }} == 9"
 
       - name: Wait for httpd service to be started
         shell: "systemctl show httpd --property=ActiveState"
@@ -213,7 +213,7 @@
         until: httpd_status_result.stdout.find('inactive') == -1 and httpd_status_result.stdout.find('activating') == -1
         retries: 30
         delay: 10
-        when: "{{ installer.product.version | int }} > 8"
+        when: "{{ installer.product.version|openstack_release }} > 8"
 
       - name: Enable compute resources
         shell: "pcs resource enable {{ item }}"
@@ -234,7 +234,7 @@
       - service:
             name: neutron-openvswitch-agent
             state: started
-        when: "{{ installer.product.version | int }} > 9"
+        when: "{{ installer.product.version|openstack_release }} > 9"
 
 - name: Wait for libvirt and nova-compute resources to be available on compute nodes
   hosts: compute
@@ -257,4 +257,4 @@
   tasks:
       - name: Cleanup all pacemaker resources
         shell: "pcs --force resource cleanup"
-        when: "{{ installer.product.version | int }} < 10"
+        when: "{{ installer.product.version|openstack_release }} < 10"

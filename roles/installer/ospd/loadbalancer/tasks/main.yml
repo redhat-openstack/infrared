@@ -10,6 +10,8 @@
   shell: "sudo /usr/sbin/ifup {{ installer.loadbalancer.network.undercloud.oc_interface }}.{{ installer.loadbalancer.network.internal_api.vlanid }}"
 
 - name: copy the loadbalancer template
+  vars:
+      openstack_release: "{{ installer.product.version|openstack_release }}"
   template:
       src: "external-lb.yaml.j2"
       dest: "~/external-lb.yaml"

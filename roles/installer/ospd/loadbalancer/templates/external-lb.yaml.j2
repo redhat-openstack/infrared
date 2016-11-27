@@ -1,4 +1,4 @@
-{% if installer.product.version|int < 9 %}
+{% if openstack_release < 9 %}
 parameters:
   ServiceNetMap:
     NeutronTenantNetwork: tenant
@@ -32,7 +32,7 @@ parameters:
 {% endif %}
 
 parameter_defaults:
-{% if installer.product.version|int > 8 %}
+{% if openstack_release > 8 %}
   ServiceNetMap:
     NeutronTenantNetwork: tenant
     CeilometerApiNetwork: internal_api
@@ -66,7 +66,7 @@ parameter_defaults:
     GnocchiApiNetwork: internal_api
     SaharaApiNetwork: internal_api
 {% endif %}
-{% if installer.product.version|int > 7 %}
+{% if openstack_release > 7 %}
   RedisPassword: 'examplepassword'
 {% endif %}
   ControlPlaneIP: {{ installer.loadbalancer.network.plain.ip | ipaddr('address') }}
