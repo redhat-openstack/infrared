@@ -135,6 +135,12 @@
             owner: "{{ installer.user.name }}"
             group: "{{ installer.user.name }}"
 
+      - name: inject debug.yaml so it will be auto discovered with user templates
+        copy:
+            src: files/debug.yaml
+            dest: "{{ template_base }}"
+        when: installer.overcloud.debug == 'yes'
+
       - name: check for list of user defined templates
         find:
             paths: "{{ template_base }}"
