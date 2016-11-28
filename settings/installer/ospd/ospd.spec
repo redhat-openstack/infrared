@@ -81,6 +81,14 @@ subparsers:
 
             - title: Overcloud
               options:
+                  overcloud-debug:
+                      type: Value
+                      help: Specifies whether overcloud service should enable debug mode
+                      default: 'yes'
+                      choices:
+                          - 'yes'
+                          - 'no'
+
                   overcloud-ssl:
                       type: Value
                       help: Specifies whether ths SSL should be used for overcloud

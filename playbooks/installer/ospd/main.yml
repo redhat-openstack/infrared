@@ -200,6 +200,12 @@
             loop_control:
                 loop_var: templates_list
 
+          - name: inject debug.yaml to deployment files
+            copy:
+                src: files/debug.yaml
+                dest: "{{ template_base }}"
+            when: overcloud.debug == 'yes'
+
           - name: append all custom templates provided by the user
             lineinfile:
                 dest: "~/overcloud_deploy.sh"
