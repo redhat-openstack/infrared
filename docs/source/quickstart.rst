@@ -123,7 +123,7 @@ Done. Quick & Easy!
 Installing
 ----------
 
-Now let's demonstrate the installation process by deploy an OpenStack environment using redhat OSPD (OpenStack Director) on the nodes we have provisioned in the previous stage (The deployment in this case will be 'virthost' type).
+Now let's demonstrate the installation process by deploy an OpenStack environment using redhat OSPD (OpenStack Director) on the nodes we have provisioned in the previous stage (The deployment in this case will be 'virthost' type, see how to `setup Virthost machine`_).
 
 Just like in the provisioning stage, here also the user should take care of the mandatory parameters (by CLI or INI file) in order to be able to start the installation process. Lets provide the mandatory parameter (``deployment-files``) and choose to work with RHOS version 8, this time using the CLI only::
 
@@ -131,8 +131,9 @@ Just like in the provisioning stage, here also the user should take care of the 
 
 .. note:: Please notice that the ``deployment-file`` parameters requires a full path of the deployment files dir.
 
-
 Done.
+
+.. _setup Virthost machine: setup.html#virthost-machine
 
 OSPD Quickstart
 ---------------
