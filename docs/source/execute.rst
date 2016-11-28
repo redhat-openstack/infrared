@@ -204,7 +204,7 @@ By default, cleanup will only ignore ``default`` network (automatically created 
 
 Network layout
 """"""""""""""
-Baremetal machine used as host for such setup is called `virthost`. The whole deployment is designed to work within boundaries of this machine and (except public/natted traffic) shouldn't reach beyond. Following layout is part of default setup defined in `default.yml <https://github.com/rhosqeauto/InfraRed/blob/master/settings/provisioner/virsh/topology/network/default.yml>`_. User can also provide his own network layout (example `network-sample.yml <https://github.com/rhosqeauto/InfraRed/blob/master/settings/provisioner/virsh/topology/network/network.sample.yml>`_).
+Baremetal machine used as host for such setup is called `Virthost`_. The whole deployment is designed to work within boundaries of this machine and (except public/natted traffic) shouldn't reach beyond. Following layout is part of default setup defined in `default.yml <https://github.com/rhosqeauto/InfraRed/blob/master/settings/provisioner/virsh/topology/network/default.yml>`_. User can also provide his own network layout (example `network-sample.yml <https://github.com/rhosqeauto/InfraRed/blob/master/settings/provisioner/virsh/topology/network/network.sample.yml>`_).
 
 .. code-block:: plain
 
@@ -342,7 +342,7 @@ different assumptions are made for each deployment type:
 
 * Virthost (VH)
 
-  Using `virsh`_ provisioner, deploy openstack on virtual machines hosted on a single hypervisor
+  Using `virsh`_ provisioner, deploy openstack on virtual machines hosted on a single hypervisor (aka `Virthost`_).
 
   This is a common use-case for POC, development and testing, where hardware is limited.
   OSPD requires special customization to be nested on OpenStack clouds, so using local virsh VMs is a common solution.
@@ -367,7 +367,7 @@ different assumptions are made for each deployment type:
     * Routes external traffic for nested VMs outside of the overcloud (connects to neutron external network and br-ex bridge...)
     * The testers (i.e. Tempest) use this network to ssh to the VMs (cirros) nested in the OverCloud
 
-  To build a `Virthost` deployment, use the preset deployment-files provided in ``settings``::
+  To build a `Virthost`_ deployment, use the preset deployment-files provided in ``settings``::
 
     ir-installer ospd --deployment-files=$PWD/settings/installer/ospd/deployment/virt [...]
 
@@ -485,3 +485,5 @@ Usage examples:
 
     mv ansible.ssh.config.2016-07-11_10-31-28 ansible.ssh.config
     ir-installer --inventory hosts-2016-07-11_10-31-28 ospd ...
+
+.. _Virthost: setup.html#virthost-machine
