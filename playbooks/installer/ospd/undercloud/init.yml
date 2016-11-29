@@ -10,8 +10,8 @@
 
 - name: copy our configuration if provided by the user
   vars:
-      local_src: "{%- if installer.undercloud is defined and installer.undercloud.config is defined and installer.undercloud.config -%}
-          {{ installer.undercloud.config }}
+      local_src: "{%- if installer.undercloud|default('') and installer.undercloud.config|default('') and installer.undercloud.config.file|default('') -%}
+          {{ installer.undercloud.config.file }}
           {%- elif undercloud_conf.stat.exists -%}
           {{ undercloud_conf.stat.path }}
           {%- elif 'virthost' in groups.all -%}
@@ -28,6 +28,14 @@
       group: "{{ installer.user.name }}"
       mode: 0755
       force: yes
+
+- name: override values in undercloud conf
+  ini_file:
+      dest: "/home/{{ installer.user.name }}/undercloud.conf"
+      section: "{{ item.key.split('.')[0] }}"
+      option: "{{ item.key.split('.')[1] }}"
+      value: "{{ item.value }}"
+  with_dict: "{{ ((installer.undercloud|default({})).config|default({})).options|default({}) }}"
 
 - name: enable undercloud-ssl
   include: ssl.yml
