@@ -12,13 +12,19 @@ subparsers:
 
             - title: Undercloud configuration
               options:
-                  undercloud-config:
+                  undercloud-config-file:
                       type: Value
                       help: |
                           Path to our custom undercloud.conf file that we wish to use for our deployment.
                           If not set, it will look under the `templates` path for a file named `undercloud.conf`.
                           If no `undercloud.conf` file found, it will use the default `/usr/share/instack-undercloud/undercloud.conf.sample`
                           that is provided by the installation.
+
+                  undercloud-config-options:
+                      type: DictValue
+                      help: |
+                          Forces additional Undercloud configuration (undercloud.conf) options.
+                          Format: --undercloud-config-options="section.option=value1;section.option=value".
 
                   undercloud-ssl:
                       help: |
