@@ -143,6 +143,14 @@ subparsers:
                       choices: ['yes', 'no']
                       default: 'no'
 
+                  network-dvr:
+                      type: Value
+                      help: Activate Neutron DVR extension on the OverCloud.
+                      default: 'no'
+                      choices:
+                          - 'yes'
+                          - 'no'
+
                   public-network:
                       type: Value
                       help: Deploy "public" external network on the OverCloud as post-install.

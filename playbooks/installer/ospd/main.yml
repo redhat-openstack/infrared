@@ -192,6 +192,12 @@
             mode: 0755
         when: overcloud_deploy_script == ''
 
+      - name: append extra templates provided by user
+        include: environment_templates.yml
+        with_dict: installer.overcloud.templates|default({})
+        loop_control:
+            loop_var: templates_list
+
       - name: Enable external network access through newly created vlan interface on undercloud
         include: undercloud-ext-vlan.yml
         when: "'virthost' not in groups and installer.undercloud.ext.vlan == 'yes'"
@@ -205,12 +211,6 @@
 
   tasks:
       - block:
-          - name: append extra templates provided by user
-            include: environment_templates.yml
-            with_dict: installer.overcloud.templates|default({})
-            loop_control:
-                loop_var: templates_list
-
           - name: append all custom templates provided by the user
             lineinfile:
                 dest: "~/overcloud_deploy.sh"
