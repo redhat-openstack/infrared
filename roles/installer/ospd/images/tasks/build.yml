@@ -4,13 +4,13 @@
   stat:
       path: "/home/{{ installer.user.name }}/base_image.qcow2"
   register: stat_result
-  when: installer.product.type == 'rhos'
+  when: installer.product.version|openstack_distribution == 'OSP'
 
 - name: Download guest image for build if needed
   get_url:
       dest: "/home/{{ installer.user.name }}/base_image.qcow2"
       url: "{{ private.images.base_url }}/rhel-guest-image-latest.qcow2"
-  when: installer.product.type == 'rhos' and stat_result.stat.exists == False
+  when: installer.product.version|openstack_distribution == 'OSP' and stat_result.stat.exists == False
 
 # TODO: Move environment to a file / template so a user can make customize it
 - name: Build OC images (RHOS)
@@ -24,7 +24,7 @@
       RUN_RHOS_RELEASE: 1
       RHOS_RELEASE: "{{ installer.product.version }}-director"
       USE_DELOREAN_TRUNK: 0
-  when: installer.product.type == 'rhos'
+  when: installer.product.version|openstack_distribution == 'OSP'
 
 # TODO: Move environment to a file / template so a user can make customize it
 - name: Build OC images (RDO)
@@ -32,7 +32,7 @@
   shell: "source ~/stackrc; openstack overcloud image build --all --builder-extra-args rdo-release > openstack-build-images.log"
   environment:
       RDO_RELEASE: "{{ installer.product.version }}"
-  when: installer.product.type == 'rdo'
+  when: installer.product.version|openstack_distribution == 'OSP'
 
 - name: tar our images
   tags: backup
