@@ -18,12 +18,19 @@
         mirror: "{{ installer.mirror | default(omit) }}"
         become: yes
         when: installer.product.version|openstack_distribution == 'OSP'
+        tags: undercloud_init
 
       - role: installer/rdo-release
         product_version: "{{ installer.product.version }}"
         when: installer.product.version|openstack_distribution == 'RDO'
+        tags: undercloud_init
 
-      - role: installer/ospd/undercloud
+  post_tasks:
+      - include: undercloud/init.yml
+        tags: undercloud_init
+
+      - include: undercloud/deploy.yml
+        tags: undercloud_deploy
 
 - name: Preparing the images
   tags:

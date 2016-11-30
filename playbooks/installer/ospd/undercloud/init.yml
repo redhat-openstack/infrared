@@ -37,18 +37,4 @@
 
 - name: the create undercloud script
   shell: "cat /home/{{ installer.user.name }}/undercloud_deploy.sh"
-
-- name: install the undercloud
-  shell: "bash ~/undercloud_deploy.sh"
-  register: undercloud_deployment
-  ignore_errors: yes
-
-- name: print the last 60 lines of the undercloud installation
-  shell: "tail -n60 undercloud_install.log"
-
-- fail:
-      msg: "Undercloud deployment failed... :("
-  when: undercloud_deployment.rc != 0
-
-- name: gathering new facts about the undercloud
-  setup:
+  tags: undercloud_deploy
