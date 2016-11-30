@@ -1,0 +1,10 @@
+- name: undercloud post provision
+  hosts: undercloud
+  tasks:
+    - name: Set VLAN interface for public API network
+      template:
+          src: odl-vlan.cfg.j2
+          dest: /etc/sysconfig/network-scripts/ifcfg-eth1.10
+
+    - name: Setting up interface for public API on undercloud
+      shell: ifup eth1.10
