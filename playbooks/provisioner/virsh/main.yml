@@ -59,3 +59,7 @@
             name: "{{ inventory_hostname }}"
             ansible_ssh_user: "{{ provisioner.topology.username }}"
             ansible_ssh_pass: "{{ non_root_pw | password_hash('sha512') }}"
+
+- name: Including post provision tasks for virsh
+  include: "post/{{ provisioner.post|default('') }}.yml"
+  when: "{{ provisioner.post|default('') }}"
