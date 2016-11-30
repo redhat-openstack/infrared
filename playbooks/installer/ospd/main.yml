@@ -1,29 +1,15 @@
 ---
 - include: pre.yml
 
-- name: Installing the undercloud
+- include: undercloud/init.yml
   tags:
       - undercloud
       - backup
-  hosts: undercloud
-  any_errors_fatal: true
-  roles:
-      - role: installer/rhos-release
-        rr_rpm_url: "{{ installer.product.rpm }}"
-        director_version: "{{ installer.product.version }}"
-        director_build: "{{ installer.product.build }}"
-        core_version: "{{ (installer.product.core.version is defined and installer.product.core.version) | ternary(installer.product.core.version, installer.product.version) }}"
-        core_build: "{{ installer.product.core.build }}"
-        rr_distro_version: "{{ hostvars[groups.undercloud[0]].ansible_distribution_version }}"
-        mirror: "{{ installer.mirror | default(omit) }}"
-        become: yes
-        when: installer.product.version|openstack_distribution == 'OSP'
 
-      - role: installer/rdo-release
-        product_version: "{{ installer.product.version }}"
-        when: installer.product.version|openstack_distribution == 'RDO'
-
-      - role: installer/ospd/undercloud
+- include: undercloud/deploy.yml
+  tags:
+      - undercloud
+      - backup
 
 - name: Preparing the images
   tags:
