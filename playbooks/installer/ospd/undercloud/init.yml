@@ -50,6 +50,10 @@
             mode: 0755
             force: yes
 
+      - name: enable undercloud-ssl
+        include: ssl.yml
+        when: installer.undercloud.ssl == 'yes'
+
       - name: create the base undercloud deploy script
         template:
             src: "undercloud_deploy.sh.j2"
