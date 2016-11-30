@@ -19,6 +19,17 @@ subparsers:
                           If not set, it will look under the `templates` path for a file named `undercloud.conf`.
                           If no `undercloud.conf` file found, it will use the default `/usr/share/instack-undercloud/undercloud.conf.sample`
                           that is provided by the installation.
+
+                  undercloud-ssl:
+                      help: |
+                          Specifies whether ths SSL should be used for undercloud
+                          A self-signed SSL cert will be generated.
+                      type: Value
+                      default: 'no'
+                      choices:
+                          - 'yes'
+                          - 'no'
+
                   undercloud-ext-vlan:
                       type: Value
                       choices: ['yes', 'no']
