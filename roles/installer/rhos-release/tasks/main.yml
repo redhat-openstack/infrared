@@ -21,6 +21,7 @@
           mirror_fqdn: "{{ selected_mirror.stdout | trim }}"
           rr_download_fqdn: "{{ selected_mirror.stdout | trim | ternary(selected_mirror.stdout|trim, '') }}"
   when: "mirror is defined and mirror"
+  become: true
 
 - name: gather repo file names to remove
   find:
@@ -31,7 +32,8 @@
   file:
       state: absent
       path: "{{ item.path }}"
-  with_items: "{{ files_to_remove.files }}"
+  with_items: "{{ files_to_remove.files|default([]) }}"
+  become: true
 
 - name: get the rhos-release RPM
   get_url:
@@ -39,14 +41,17 @@
       dest: "/tmp/rhos-release-latest.rpm"
       force: yes
       validate_certs: "no"
+  become: true
 
 - name: install the rhos-release RPM
   shell: "yum localinstall -y /tmp/rhos-release-latest.rpm"
+  become: true
 
 - name: remove rhos-release repos if needed
   rhos_release:
       state: uninstall
       target_directory: "{{ rr_target_directory }}"
+  become: true
 
 
 - name: create necessary repos for director using rhos-release
@@ -63,6 +68,7 @@
   until: command_result.stderr.find('Connection reset by peer') == -1
   retries: 40
   delay: 5
+  become: true
 
 - block:
     - name: parse specific number of director puddle used from rhos-release output
@@ -72,6 +78,7 @@
     - debug:
           msg: "Build mark: director_puddle={{ director_puddle_version }}"
   when: director_version_value
+  become: true
 
 - name: parse specific number of puddle used from rhos-release output
   set_fact:
@@ -94,12 +101,15 @@
       register: mirror_used_cmd
       changed_when: "'Skipping mirror' not in mirror_used_cmd.stdout"
   when: "mirror_fqdn is defined and mirror_fqdn"
+  become: true
 
 - name: refresh yum cache
   yum:
       name: kernel
       state: present
       update_cache: yes
+  become: true
 
 - name: repolist
   command: yum -d 7 repolist
+  become: true
