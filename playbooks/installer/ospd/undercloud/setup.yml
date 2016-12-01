@@ -49,6 +49,7 @@
       delay: 10
   delegate_to: "{% if 'virthost' in groups %}virthost{% else %}localhost{% endif %}"
   when: update.changed
+  become: no
 
 - name: install the oscplugin/tripleO client
   yum:
