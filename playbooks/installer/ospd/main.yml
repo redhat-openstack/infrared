@@ -1,24 +1,17 @@
 ---
 - include: pre.yml
 
-- name: Installing the undercloud
+- include: undercloud/init.yml
   tags:
       - undercloud
+      - undercloud_init
       - backup
-  hosts: undercloud
-  any_errors_fatal: true
-  roles:
-      - role: installer/rhos-release
-        rr_rpm_url: "{{ installer.product.rpm }}"
-        director_version: "{{ installer.product.version }}"
-        director_build: "{{ installer.product.build }}"
-        core_version: "{{ installer.product.core.version }}"
-        core_build: "{{ installer.product.core.build }}"
-        rr_distro_version: "{{ hostvars[groups.undercloud[0]].ansible_distribution_version }}"
-        mirror: "{{ installer.mirror | default(omit) }}"
-        become: yes
 
-      - role: installer/ospd/undercloud
+- include: undercloud/deploy.yml
+  tags:
+      - undercloud
+      - undercloud_deploy
+      - backup
 
 - name: Preparing the images
   tags:
@@ -130,6 +123,12 @@
             owner: "{{ installer.user.name }}"
             group: "{{ installer.user.name }}"
 
+      - name: inject debug.yaml so it will be auto discovered with user templates
+        copy:
+            src: files/debug.yaml
+            dest: "{{ template_base }}"
+        when: installer.overcloud.debug == 'yes'
+
       - name: check for list of user defined templates
         find:
             paths: "{{ template_base }}"
@@ -181,6 +180,12 @@
             mode: 0755
         when: overcloud_deploy_script == ''
 
+      - name: append extra templates provided by user
+        include: environment_templates.yml
+        with_dict: installer.overcloud.templates|default({})
+        loop_control:
+            loop_var: templates_list
+
       - name: Enable external network access through newly created vlan interface on undercloud
         include: undercloud-ext-vlan.yml
         when: "'virthost' not in groups and installer.undercloud.ext.vlan == 'yes'"
@@ -194,12 +199,6 @@
 
   tasks:
       - block:
-          - name: append extra templates provided by user
-            include: environment_templates.yml
-            with_dict: installer.overcloud.templates|default({})
-            loop_control:
-                loop_var: templates_list
-
           - name: append all custom templates provided by the user
             lineinfile:
                 dest: "~/overcloud_deploy.sh"
@@ -286,6 +285,7 @@
       - selinux:
             policy: "targeted"
             state: "{{ installer.selinux | default('enforcing') }}"
+        when: installer.product.version|openstack_distribution == 'OSP'
 
 - include: post_install/lbaas_v2.yml
   tags: lbaas

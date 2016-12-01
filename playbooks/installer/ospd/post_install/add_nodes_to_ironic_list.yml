@@ -49,6 +49,7 @@
   tags: ironic
   hosts: undercloud
   gather_facts: yes
+  become: true
   any_errors_fatal: true
   tasks:
     - name: enable ironic inspector
@@ -86,7 +87,7 @@
         rr_rpm_url: "{{ installer.product.rpm }}"
         director_version: "{{ installer.product.version }}"
         director_build: "{{ installer.product.build }}"
-        core_version: "{{ installer.product.core.version }}"
+        core_version: "{{ (installer.product.core.version is defined and installer.product.core.version) | ternary(installer.product.core.version, installer.product.version) }}"
         core_build: "{{ installer.product.core.build }}"
         rr_distro_version: "{{ hostvars[groups.undercloud[0]].ansible_distribution_version }}"
         mirror: "{{ installer.mirror | default(omit) }}"

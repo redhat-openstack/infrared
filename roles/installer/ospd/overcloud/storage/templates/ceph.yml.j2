@@ -8,20 +8,16 @@ parameter_defaults:
     CinderRbdPoolName: "automation-volumes"
     NovaRbdPoolName: "automation-vms"
     GlanceRbdPoolName: "automation-images"
-    CephClientUserName: "automation"
     CinderBackupRbdPoolName: "automation-backups"
-{% if installer.storage.backend == "ceph2" %}
-    CephClientKey: "{{ private.storage.ceph2.CephClientKey }}"
-    CephClusterFSID: "{{ private.storage.ceph2.CephClusterFSID }}"
-    CephExternalMonHost: "{{ private.storage.ceph2.CephExternalMonHost }}"
-{% else %}
-    CephClientKey: "{{ private.storage.ceph.CephClientKey }}"
-    CephClusterFSID: "{{ private.storage.ceph.CephClusterFSID }}"
-    CephExternalMonHost: "{{ private.storage.ceph.CephExternalMonHost }}"
-{% endif %}
+{% for key, value in private.storage.ceph.common.iteritems() %}
+    {{ key }}: {{ value }}
+{% endfor %}
+{% for key, value in private.storage.ceph[ceph_compt_version].iteritems() %}
+    {{ key }}: {{ value }}
+{% endfor %}
 
 resource_registry:
-{% if installer.product.version|int >= 10 %}
+{% if installer.product.version|openstack_release >= 10 %}
     OS::TripleO::Services::CephExternal: /usr/share/openstack-tripleo-heat-templates/puppet/services/ceph-external.yaml
     OS::TripleO::Services::CephMon: OS::Heat::None
     OS::TripleO::Services::CephClient: OS::Heat::None

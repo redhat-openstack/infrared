@@ -1,7 +1,7 @@
 ---
 subparsers:
     ospd:
-        help: Installs openstack using OSP Director
+        help: Installs openstack using TripleO
         include_groups: ['Ansible options', 'Inventory hosts options', 'Common options', 'Configuration file options']
         groups:
             - title: Introspection
@@ -12,13 +12,30 @@ subparsers:
 
             - title: Undercloud configuration
               options:
-                  undercloud-config:
+                  undercloud-config-file:
                       type: Value
                       help: |
                           Path to our custom undercloud.conf file that we wish to use for our deployment.
                           If not set, it will look under the `templates` path for a file named `undercloud.conf`.
                           If no `undercloud.conf` file found, it will use the default `/usr/share/instack-undercloud/undercloud.conf.sample`
                           that is provided by the installation.
+
+                  undercloud-config-options:
+                      type: DictValue
+                      help: |
+                          Forces additional Undercloud configuration (undercloud.conf) options.
+                          Format: --undercloud-config-options="section.option=value1;section.option=value".
+
+                  undercloud-ssl:
+                      help: |
+                          Specifies whether ths SSL should be used for undercloud
+                          A self-signed SSL cert will be generated.
+                      type: Value
+                      default: 'no'
+                      choices:
+                          - 'yes'
+                          - 'no'
+
                   undercloud-ext-vlan:
                       type: Value
                       choices: ['yes', 'no']
@@ -44,8 +61,11 @@ subparsers:
               options:
                   product-version:
                       type: Value
-                      help: The product version (product == director)
-                      choices: ["7", "8", "9", "10"]
+                      help: |
+                          The product version (product == director)
+                          Numbers are for OSP releases
+                          Names are for RDO releases
+                      choices: ["7", "8", "9", "10", "11", "kilo", "liberty", "mitaka", "newton", "ocata"]
                       default: 9
 
                   product-build:
@@ -55,9 +75,8 @@ subparsers:
 
                   product-core-version:
                       type: Value
-                      help: The product core version (product-core == overcloud)
-                      choices: ["7", "8", "9", "10"]
-                      default: 9
+                      help: The product core version (product-core == overcloud). If not supplied, same version as 'product-version' will be used.
+                      choices: ["7", "8", "9", "10", "11"]
 
                   product-core-build:
                       type: Value
@@ -82,6 +101,14 @@ subparsers:
 
             - title: Overcloud
               options:
+                  overcloud-debug:
+                      type: Value
+                      help: Specifies whether overcloud service should enable debug mode
+                      default: 'yes'
+                      choices:
+                          - 'yes'
+                          - 'no'
+
                   overcloud-ssl:
                       type: Value
                       help: Specifies whether ths SSL should be used for overcloud
@@ -133,6 +160,14 @@ subparsers:
                       choices: ['yes', 'no']
                       default: 'no'
 
+                  network-dvr:
+                      type: Value
+                      help: Activate Neutron DVR extension on the OverCloud.
+                      default: 'no'
+                      choices:
+                          - 'yes'
+                          - 'no'
+
                   public-network:
                       type: Value
                       help: Deploy "public" external network on the OverCloud as post-install.
@@ -152,7 +187,7 @@ subparsers:
               options:
                   storage-backend:
                       type: Value
-                      choices: ['ceph', 'ceph2', 'swift', 'netapp-iscsi', 'netapp-nfs', 'lvm']
+                      choices: ['ceph', 'swift', 'netapp-iscsi', 'netapp-nfs', 'lvm']
                       default: 'lvm'
                       help: |
                         The storage that we would like to use.

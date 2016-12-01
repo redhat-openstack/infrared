@@ -8,11 +8,15 @@
         rr_rpm_url: "{{ installer.product.rpm }}"
         director_version: "{{ installer.product.version }}"
         director_build: "{{ installer.product.build }}"
-        core_version: "{{ installer.product.core.version }}"
+        core_version: "{{ (installer.product.core.version is defined and installer.product.core.version) | ternary(installer.product.core.version, installer.product.version) }}"
         core_build: "{{ installer.product.core.build }}"
-        rr_distro_version: "{% if installer.product.version|int < 10 %}7.2{% else %}7.3{% endif %}"
+        rr_distro_version: "{% if installer.product.version|openstack_release < 10 %}7.2{% else %}7.3{% endif %}"
         mirror: "{{ installer.mirror | default(omit) }}"
-        when: "{{ ansible_distribution_version }} == 7.2"
+        when: "ansible_distribution_version == 7.2 and installer.product.version|openstack_distribution == 'OSP'"
+
+      - role: installer/rdo-release
+        product_version: "{{ installer.product.version }}"
+        when: installer.product.version|openstack_distribution == 'RDO'
   tasks:
       - name: update /etc/hosts with VMs details
         lineinfile:
@@ -120,7 +124,7 @@
       - name: power off overcloud nodes
         shell: "virsh destroy {{ item }}"
         with_items: "{{ groups['overcloud_nodes'] }}"
-        when: "{{ installer.product.version | int == 10 }}"
+        when: "{{ installer.product.version|openstack_release == 10 }}"
 
 - include: "undercloud-backup.yml"
   tags: backup

@@ -62,6 +62,8 @@
                 ansible_python_interpreter: "/tmp/venv_shade/bin/python"
             os_server_facts:
                 auth: "{{ creds.stdout | from_yaml }}"
+                # Required for SSL
+                validate_certs: no
 
           - name: add hosts to host list
             add_host:

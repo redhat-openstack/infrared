@@ -61,3 +61,13 @@ subparsers:
                       help: Clean given system instead of running playbooks on a new one.
                       silent:
                           - image
+
+            - title: boot_mode
+              options:
+                  boot_mode:
+                      type: Value
+                      help: |
+                        Desired boot mode for VMs.
+                        May require additional packages, please refer http://infrared.readthedocs.io/en/latest/advanced.html#uefi-mode-related-binaries
+                      choices: ['hd', 'uefi']
+                      default: hd
