@@ -15,11 +15,12 @@
   gather_facts: no
   any_errors_fatal: true
   vars:
+      version: "{{ installer.product.core.version|int + 1 }}"
       pacemaker_template: "pacemaker_template.sh.j2"
       pacemaker_init: "~/pacemaker_init.sh"
       pacemaker_upgrade: "~/pacemaker_upgrade.sh"
       pacemaker_converge: "~/pacemaker_converge.sh"
-      rhos_release_yaml: "~/rhos-release-8.yaml"
+      rhos_release_yaml: "~/rhos-release-{{ version }}.yaml"
   tasks:
       - name: "Get storage template line"
         shell: "cat ~/overcloud_deploy.sh | grep storage-environment"
@@ -33,7 +34,7 @@
 
       - name: "Prepare rhos-release yaml"
         template:
-            src: "templates/rhos-release-8.yaml.j2"
+            src: "templates/rhos-release.yaml.j2"
             dest: "{{ rhos_release_yaml }}"
             mode: 0644
 
