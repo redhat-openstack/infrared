@@ -1,0 +1,133 @@
+tester:
+  rally:
+    tmp:
+      net1: "{{ !lookup provisioner.nodes.network1.name }}{{ !lookup provisioner.network.domain }}"
+      net2: "{{ !lookup provisioner.nodes.network2.name }}{{ !lookup provisioner.network.domain }}"
+      net3: "{{ !lookup provisioner.nodes.network3.name }}{{ !lookup provisioner.network.domain }}"
+      private_key: ~/.ssh/cloud.key
+    task:
+      VRRPScenario.boot_failover_poll:
+        -
+          args:
+            username: "cirros"
+            floating_network: "public"
+            command:
+              script_inline: "nohup echo b > /proc/sysrq-trigger &"
+              interpreter: "sudo /bin/sh"
+            l3_nodes:
+              username: "cloud-user"
+              key_filename: !lookup tester.rally.tmp.private_key
+              nodes:
+                - host: !lookup tester.rally.tmp.net1
+                - host: !lookup tester.rally.tmp.net2
+                - host: !lookup tester.rally.tmp.net3
+            image:
+              name: "^cirros.*"
+            use_floatingip: true
+            flavor:
+              name: "nano"
+          runner:
+            type: "constant"
+            concurrency: 1
+            times: 10
+          sla:
+            failure_rate:
+              max: 0
+          context:
+            users:
+              users_per_tenant: 1
+              tenants: 1
+            network:
+              networks_per_tenant: 1
+
+      NeutronNetworks.create_and_delete_networks:
+        -
+          args:
+            network_create_args: {}
+          runner:
+            type: "constant"
+            times: 1000
+            concurrency: 100
+          sla:
+            failure_rate:
+              max: 0
+          context:
+            users:
+              tenants: 1
+              users_per_tenant: 1
+            quotas:
+              neutron:
+                network: 100
+      NeutronNetworks.create_and_delete_subnets:
+        -
+          args:
+            network_create_args: {}
+            subnet_create_args: {}
+            subnet_cidr_start: "1.1.0.0/30"
+            subnets_per_network: 2
+          runner:
+            type: "constant"
+            times: 1000
+            concurrency: 100
+          sla:
+            failure_rate:
+              max: 0
+          context:
+            users:
+              tenants: 1
+              users_per_tenant: 1
+            quotas:
+              neutron:
+                network: -1
+                subnet: 200
+      NeutronNetworks.create_and_delete_ports:
+        -
+          args:
+            network_create_args: {}
+            port_create_args: {}
+            ports_per_network: 1
+          runner:
+            type: "constant"
+            times: 1000
+            concurrency: 100
+          sla:
+            failure_rate:
+              max: 0
+          context:
+            users:
+              tenants: 1
+              users_per_tenant: 1
+            quotas:
+              neutron:
+                network: -1
+                port: 200
+      NovaServers.boot_server:
+        -
+          args:
+            auto_assign_nic: "True"
+            flavor:
+              name: "nano"
+            image:
+              name: "^cirros.*"
+          runner:
+            type: "constant"
+            times: 100
+            concurrency: 50
+          sla:
+            failure_rate:
+              min: 72
+              max: 72
+          context:
+            users:
+              tenants: 1
+              users_per_tenant: 1
+            network:
+              networks_per_tenant: 1
+              start_cidr: "1.1.1.0/27"
+            quotas:
+              nova:
+                instances: -1
+                cores: -1
+              neutron:
+                port: -1
+                security_group: -1
