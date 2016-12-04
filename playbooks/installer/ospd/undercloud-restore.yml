@@ -50,6 +50,10 @@
   tasks:
       - block:
         - block:
+            - fail:
+                msg: "1 - this is quickstart and it shouldn't be used. groups={{ groups }}"
+              name: debug nested
+
             - name: download the undercloud image file
               get_url:
                   url: "http://{{ private.storage.oc_image_repo.server }}/{{ private.storage.oc_image_repo.path }}/{{ installer.product.version }}/{{ undercloud_image_file }}.qcow2"
@@ -60,6 +64,10 @@
 
           # Old images are tar'ed
           rescue:
+            - fail:
+                msg: "2 - this is quickstart and it shouldn't be used. groups={{ groups }}"
+              name: debug nested
+
             - name: download the undercloud tar file
               get_url:
                   url: "http://{{ private.storage.oc_image_repo.server }}/{{ private.storage.oc_image_repo.path }}/{{ installer.product.version }}/{{ undercloud_image_file }}.tar"
@@ -84,6 +92,14 @@
           - fail: msg="Image couldn't be downloaded - check first, if it was even built. Possible causes are
                        a) Check if phase1 for your version of OSPd (OSPd-{{ installer.product.version }}) passed
                        b) Check if job for image build (qe-uc-snapshot-XY) passed."
+
+      - name: fail nested
+        fail:
+          msg: "3 - this is quickstart and it shouldn't be used. groups={{ groups }}"
+
+      - name: debug nested
+        debug:
+          msg: "3 - this is quickstart and it shouldn't be used. groups={{ groups | list}}"
 
       - name: copy the image into libvirt images folder
         vars:
