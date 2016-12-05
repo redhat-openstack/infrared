@@ -225,6 +225,12 @@ subparsers:
                     choices: ['no', 'yes', 'verbose']
                     default: 'no'
 
+                images-packages:
+                    type: Value
+                    help: |
+                        List of packages to install seperated by commas.
+                        Example: vim,git
+
                 images-cleanup:
                     type: Value
                     help: |
