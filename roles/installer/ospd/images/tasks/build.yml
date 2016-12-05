@@ -1,23 +1,26 @@
 ---
-- name: Check if there is a guest image is present
-  tags: backup
-  stat:
-      path: "/home/{{ installer.user.name }}/base_image.qcow2"
-  register: stat_result
-  when: installer.product.version|openstack_distribution == 'OSP'
+# Doc origin
+# http://docs.openstack.org/developer/tripleo-docs/basic_deployment/basic_deployment_cli.html
+# This should run as non-root
 
 - name: Download guest image for build if needed
+  # Keep "private" here in case someone doesn't understand why it's gone
+  # images_source: private.images.base_url + '/rhel-guest-image-latest.qcow2'
   get_url:
-      dest: "/home/{{ installer.user.name }}/base_image.qcow2"
-      url: "{{ private.images.base_url }}/rhel-guest-image-latest.qcow2"
-  when: installer.product.version|openstack_distribution == 'OSP' and stat_result.stat.exists == False
+      dest: "{{ images_dest }}"
+      url: "{{ images_source }}"
+      # don't download image if it's already here
+      force: no
+  # TODO(yfried): add to pre-run verification:
+  # Image source is mandatory for OSP so we should fail if it's missing
+  when: images_source or installer.product.version|openstack_distribution == 'OSP'
 
 # TODO: Move environment to a file / template so a user can make customize it
 - name: Build OC images (RHOS)
   tags: backup
   shell: "source ~/stackrc; openstack overcloud image build --all > openstack-build-images.log"
   environment:
-      DIB_LOCAL_IMAGE: "/home/{{ installer.user.name }}/base_image.qcow2"
+      DIB_LOCAL_IMAGE: "{{ images_dest }}"
       DIB_YUM_REPO_CONF: "/etc/yum.repos.d/rhos-release-{{ installer.product.version }}-director.repo /etc/yum.repos.d/rhos-release-{{ (installer.product.core.version is defined and installer.product.core.version) | ternary(installer.product.core.version, installer.product.version) }}.repo /etc/yum.repos.d/rhos-release-{{ ansible_product_version.split() | first | lower }}-{{ ansible_distribution_version }}.repo"
       NODE_DIST: "rhel7"
       RHOS: 1
@@ -27,12 +30,14 @@
   when: installer.product.version|openstack_distribution == 'OSP'
 
 # TODO: Move environment to a file / template so a user can make customize it
+# TODO(yfried): add delorean env vars http://docs.openstack.org/developer/tripleo-docs/basic_deployment/basic_deployment_cli.html#get-images
 - name: Build OC images (RDO)
   tags: backup
   shell: "source ~/stackrc; openstack overcloud image build --all --builder-extra-args rdo-release > openstack-build-images.log"
   environment:
       RDO_RELEASE: "{{ installer.product.version }}"
-  when: installer.product.version|openstack_distribution == 'OSP'
+      DIB_LOCAL_IMAGE: "{{ (images_source|default('')) | ternary(images_dest, omit) }}"
+  when: installer.product.version|openstack_distribution == 'RDO'
 
 - name: tar our images
   tags: backup
