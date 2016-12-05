@@ -214,7 +214,10 @@ subparsers:
 
                 images-url:
                     type: Value
-                    help: Specifies the import image url. Required only when images task is 'import'
+                    help: |
+                        Specifies the import image url.
+                        Required when images task is 'import'
+                        When images task is 'build', this is an optional source for base_image to start from.
                     required_when: "images-task == import"
 
                 images-update:
