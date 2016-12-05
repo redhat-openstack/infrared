@@ -156,13 +156,16 @@
             pcs constraint location nova-compute-checkevacuate-clone rule resource-discovery=exclusive score=0 osprole eq compute
 
             pcs resource create nova-compute systemd:openstack-nova-compute --clone interleave=true --disabled --force
-            pcs constraint order promote galera-master then nova-compute-clone require-all=false
             pcs constraint location nova-compute-clone rule resource-discovery=exclusive score=0 osprole eq compute
             pcs constraint order start nova-compute-checkevacuate-clone then nova-compute-clone require-all=true
 
             pcs constraint order start nova-compute-clone then nova-evacuate require-all=false
             pcs constraint order start libvirtd-compute-clone then nova-compute-clone
             pcs constraint colocation add nova-compute-clone with libvirtd-compute-clone
+
+      - name: Create nova-compute order constraint on galera-master
+        shell: "pcs constraint order promote galera-master then nova-compute-clone require-all=false"
+        when: "{{ installer.product.version|openstack_release }} > 9"
 
       - name: Create pacemaker constraint for neutron-server, nova-conductor and ceilometer-notification
         shell: |
@@ -257,4 +260,4 @@
   tasks:
       - name: Cleanup all pacemaker resources
         shell: "pcs --force resource cleanup"
-        when: "{{ installer.product.version|openstack_release }} < 10"
+        when: "{{ installer.product.version|openstack_release }} < 8"
