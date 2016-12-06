@@ -20,6 +20,10 @@
       set_fact:
           mirror_fqdn: "{{ selected_mirror.stdout | trim }}"
           rr_download_fqdn: "{{ selected_mirror.stdout | trim | ternary(selected_mirror.stdout|trim, '') }}"
+    - name: switch rhos-release url to mirror
+      set_fact:
+          rr_rpm_url: "http://{{ mirror_fqdn }}/rhos-release/repos/rhos-release/rhos-release-latest.noarch.rpm"
+      when: "mirror_fqdn and ('url.corp.' in rr_rpm_url)"
   when: "mirror is defined and mirror"
   become: true
 
