@@ -16,7 +16,7 @@
 - name: Generate authkey for remote pacemaker
   hosts: localhost
   tasks:
-      - shell: "dd if=/dev/urandom of=authkey bs=4096 count=1"
+      - shell: "dd if=/dev/urandom of='{{ inventory_dir }}/authkey' bs=4096 count=1"
 
 - name: Deploy auth key
   hosts: controller:compute
