@@ -6,10 +6,15 @@
 Welcome to InfraRed's documentation!
 ====================================
 
+Contents:
+^^^^^^^^^
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   quickstart
+   profile
 
 
 Indices and tables
