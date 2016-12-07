@@ -19,7 +19,7 @@
         timeout: 500
     delegate_to: localhost
 
-- name: Setup data interface for the openstack_nodes
+- name: Setup data interface and sshd on the openstack_nodes
   hosts: openstack_nodes
   gather_facts: no
   become: yes
@@ -36,5 +36,19 @@
 
       - name: Start interfaces
         shell: |
-          ifdown eth1
-          ifup eth1
+            ifdown eth1
+            ifup eth1
+
+      - name: sshd - disable reverse dns lookup
+        lineinfile:
+            dest: /etc/ssh/sshd_config
+            regexp: .*UseDNS .*
+            line: UseDNS no
+            state: present
+        register: sshd_dns_config
+
+      - name: restart sshd after config change
+        service:
+            name: sshd
+            state: restarted
+        when: sshd_dns_config | changed
