@@ -15,6 +15,7 @@ Contents:
 
    quickstart
    profile
+   changes
 
 
 Indices and tables
