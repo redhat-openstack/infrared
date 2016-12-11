@@ -13,6 +13,7 @@ LOCAL_HOSTS = """[local]
 localhost ansible_connection=local ansible_python_interpreter=python
 """
 
+
 class ProfileRegistry(object):
     """Profile resitry holds the profile variable data
 
@@ -73,7 +74,7 @@ class Profile(object):
         """Clears all the created links."""
 
         first = self.registy.pop()
-        while first != None:
+        while first is not None:
             if os.path.islink(first):
                 LOG.debug("Removing link: %s", first)
                 os.unlink(first)
@@ -115,7 +116,8 @@ class Profile(object):
                 target_path = os.path.join(
                     self.path,
                     os.path.basename(os.path.normpath(abs_path)))
-                if not os.path.exists(target_path) or not os.path.samefile(abs_path, target_path):
+                if not (os.path.exists(target_path) and
+                        os.path.samefile(abs_path, target_path)):
                     LOG.debug("Copying file: src='%s', dest='%s'",
                               abs_path,
                               self.path)
