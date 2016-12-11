@@ -2,6 +2,8 @@
 import argparse
 import abc
 
+from infrared import SHARED_GROUPS
+from infrared.core.inspector.inspector import SpecParser
 from infrared.core.utils import logger
 
 LOG = logger.LOG
@@ -37,6 +39,46 @@ class SpecObject(object):
         :return:
         """
         raise NotImplemented()
+
+
+class InfraRedGroupedPluginsSpec(SpecObject):
+
+    add_base_groups = True
+
+    def __init__(self, action_type, description, plugins):
+        """
+
+        :param action_type: Action type (provision/install/test)
+        :param description: Action description
+        :param plugins: All plugins from the same type
+        """
+        self.plugins = plugins
+        self.description = description
+        self.specification = None
+        super(self.__class__, self).__init__(action_type)
+
+    def extend_cli(self, root_subparsers):
+        user_dict = {}
+        if self.add_base_groups:
+            user_dict = dict(
+                description=self.description,
+                shared_groups=SHARED_GROUPS)
+
+        self.specification = SpecParser.from_files(
+            '',
+            self.name,
+            '',
+            user_dict,
+            root_subparsers,
+            *[plugin.spec for plugin in self.plugins]
+            # FIXME(yfried): why don't explicit names work?
+            # settings_folders='',
+            # app_name=self.name,
+            # app_subfolder='',
+            # user_dict=user_dict,
+            # subparser=root_subparsers,
+            # *[plugin.spec for plugin in self.plugins]
+        )
 
 
 class SpecManager(object):
