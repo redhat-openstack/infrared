@@ -12,9 +12,7 @@ LOG = logger.LOG
 
 
 class ProfileManagerSpec(api.SpecObject):
-    """
-    THe profile manager CLI.
-    """
+    """THe profile manager CLI. """
 
     def __init__(self, name, *args, **kwargs):
         super(ProfileManagerSpec, self).__init__(name, *args, **kwargs)
@@ -77,9 +75,70 @@ class ProfileManagerSpec(api.SpecObject):
             profile_manager.cleanup(args.get('name'))
 
 
+class PluginManagerSpec(api.SpecObject):
+
+    def __init__(self, name, plugin_manager, *args, **kwargs):
+        self.plugin_mamanger = plugin_manager
+        super(PluginManagerSpec, self).__init__(name, *args, **kwargs)
+
+    def extend_cli(self, root_subparsers):
+        plugin_parser = root_subparsers.add_parser(self.name, **self.kwargs)
+        plugin_subparsers = plugin_parser.add_subparsers(dest="command0")
+
+        # Add plugin
+        add_parser = plugin_subparsers.add_parser(
+            'add', help='Add a plugin')
+        add_parser.add_argument("path", help="Plugin path")
+
+        # Remove plugin
+        remove_parser = plugin_subparsers.add_parser(
+            'remove', help='Remove a plugin')
+        remove_parser.add_argument("type", help="Plugin type")
+        remove_parser.add_argument("name", help="Plugin name")
+
+        # List command
+        plugin_subparsers.add_parser(
+            'list', help='List all the available plugins')
+
+    def spec_handler(self, parser, args):
+        """Handles all the plugin manager commands
+
+        :param parser: the infrared parser object.
+        :param args: the list of arguments received from cli.
+        """
+        command0 = args.get('command0', '')
+
+        if command0 == 'list':
+            self._list_plugins()
+        elif command0 == 'add':
+            self.plugin_mamanger.add_plugin(args['path'])
+        elif command0 == 'remove':
+            self.plugin_mamanger.remove_plugin(args['type'], args['name'])
+
+    def _list_plugins(self):
+        """
+        Print a list of available plugins sorted by type
+        :return:
+        """
+        longest_type = max(self.plugin_mamanger.supported_plugin_types,
+                           key=len)
+
+        print("Available plugins:")
+        for plugin_type, plugins in \
+                self.plugin_mamanger.PLUGINS_DICT.iteritems():
+            plugins_names = [plugin.name for plugin in plugins]
+            plugins_names.sort()
+            print('  {:{align}{width}} {{{}}}'.format(
+                plugin_type, ','.join(plugins_names), align='<',
+                width=len(longest_type) + 6))
+
+
 def main():
     # configure core services
     CoreServices.from_ini_file('infrared.cfg')
+
+    # Init Managers
+    plugin_manager = CoreServices.plugins_manager()
 
     specs_manager = api.SpecManager()
 
@@ -89,8 +148,18 @@ def main():
                                        "Allows to create and use an isolated "
                                        "environement  for plugins execution.")
     )
+    specs_manager.register_spec(PluginManagerSpec(
+        'plugin',
+        plugin_manager=plugin_manager,
+        description="Plugin management"))
+    for action_type in plugin_manager.supported_plugin_types:
+        specs_manager.register_spec(api.InfraRedGroupedPluginsSpec(
+            action_type,
+            plugin_manager.get_desc_of_type(action_type),
+            plugin_manager.PLUGINS_DICT[action_type]))
 
     specs_manager.run_specs()
+
 
 if __name__ == '__main__':
     sys.exit(int(main() or 0))
