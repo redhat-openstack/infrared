@@ -65,19 +65,12 @@ class InfraRedGroupedPluginsSpec(SpecObject):
                 shared_groups=SHARED_GROUPS)
 
         self.specification = SpecParser.from_files(
-            '',
-            self.name,
-            '',
-            user_dict,
-            root_subparsers,
-            *[plugin.spec for plugin in self.plugins]
-            # FIXME(yfried): why don't explicit names work?
-            # settings_folders='',
-            # app_name=self.name,
-            # app_subfolder='',
-            # user_dict=user_dict,
-            # subparser=root_subparsers,
-            # *[plugin.spec for plugin in self.plugins]
+            settings_folders='',
+            app_name=self.name,
+            app_subfolder='',
+            user_dict=user_dict,
+            subparser=root_subparsers,
+            specs_list=[plugin.spec for plugin in self.plugins]
         )
 
 

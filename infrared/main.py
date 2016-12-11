@@ -12,7 +12,7 @@ LOG = logger.LOG
 
 
 class ProfileManagerSpec(api.SpecObject):
-    """THe profile manager CLI. """
+    """The profile manager CLI. """
 
     def __init__(self, name, *args, **kwargs):
         super(ProfileManagerSpec, self).__init__(name, *args, **kwargs)

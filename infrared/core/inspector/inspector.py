@@ -14,12 +14,12 @@ class SpecParser(object):
 
     @classmethod
     def from_files(cls, settings_folders, app_name, app_subfolder,
-                   user_dict, subparser, *spec_files):
+                   user_dict, subparser, specs_list):
         """Reads specs files and constructs the parser instance. """
         if user_dict is None:
             user_dict = {}
         result = user_dict
-        for spec_file in spec_files:
+        for spec_file in specs_list:
             with open(spec_file) as stream:
                 spec = yaml.load(stream) or {}
                 utils.dict_merge(
