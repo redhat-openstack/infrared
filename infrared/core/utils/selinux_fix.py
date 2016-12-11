@@ -46,7 +46,7 @@ def copy_system_selinux(force=True):
             _selinux_file = os.path.join(
                 sysconfig.get_python_lib(plat_specific=True,
                                          prefix=sys.real_prefix),
-             "_selinux.so")
+                "_selinux.so")
             if os.path.exists(_selinux_file):
                 shutil.copy(_selinux_file, os.path.dirname(dest))
         else:
@@ -56,5 +56,3 @@ def copy_system_selinux(force=True):
 if __name__ == '__main__':
     copy_system_selinux()
     # import selinux  # noqa
-
-

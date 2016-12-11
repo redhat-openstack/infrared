@@ -1,8 +1,5 @@
-import os
-import shutil
 import sys
 
-import pip
 from tabulate import tabulate
 
 from infrared import api
@@ -61,7 +58,7 @@ class ProfileManagerSpec(api.SpecObject):
 
         profile_manager = CoreServices.profile_manager()
         if command0 == 'create':
-            profile = profile_manager.create(args.get('name'))
+            profile_manager.create(args.get('name'))
             print("Profile '{}' added".format(args.get('name')))
         elif command0 == 'activate':
             profile_manager.activate(args.get('name'))
@@ -86,10 +83,12 @@ def main():
 
     specs_manager = api.SpecManager()
 
-    specs_manager.register_spec(ProfileManagerSpec(
-        'profile', description="Profile manager. " \
-        "Allows to create and use an isolated environement " \
-        "for plugins execution."))
+    specs_manager.register_spec(
+        ProfileManagerSpec('profile',
+                           description="Profile manager. "
+                                       "Allows to create and use an isolated "
+                                       "environement  for plugins execution.")
+    )
 
     specs_manager.run_specs()
 
