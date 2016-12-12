@@ -6,9 +6,10 @@ from infrared.core.utils import logger
 LOG = logger.LOG
 
 
-def ansible_playbook(playbook_path, verbose=2):
+def ansible_playbook(inventory, playbook_path, verbose=2):
     """Wraps the 'ansible-playbook' CLI.
 
+     :param inventory: inventory file to use.
      :param playbook_path: the playbook to invoke
      :param verbose: Ansible verbosity level
     """
@@ -19,7 +20,8 @@ def ansible_playbook(playbook_path, verbose=2):
 
     cli_args = ['execute',
                 playbook_path,
-                "-v" if not verbose else '-' + 'v' * verbose]
+                "-v" if not verbose else '-' + 'v' * verbose,
+                '--inventory', inventory]
 
     results = _run_playbook(cli_args)
 

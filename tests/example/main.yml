@@ -1,7 +1,12 @@
 - name: Main Play
   hosts: localhost
   tasks:
+      - debug:
+            var: inventory_dir
+
       - name: touch file
+        vars:
+            output_file: output.example
         file:
-            path: /tmp/example.playbook
+            path: "{{ inventory_dir }}/{{ output_file }}"
             state: touch
