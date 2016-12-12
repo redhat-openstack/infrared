@@ -9,6 +9,7 @@ LOG = logger.LOG
 
 TIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
 
+INVENTORY_LINK = "hosts"
 LOCAL_HOSTS = """[local]
 localhost ansible_connection=local ansible_python_interpreter=python
 """
@@ -57,18 +58,31 @@ class Profile(object):
         self.path = path
         self.registy = ProfileRegistry(self.path)
 
-    def create_default_inventory(self, name):
-        """Creates the deafault inventory file in the profile dir.
+    @property
+    def inventory(self):
+        """Profile inventory file.
 
-        Creates also the hosts symlink which points the default inventory file.
+        Creates the default inventory file in the profile dir if missing.
+
+        The inventory file is the profile's "source of truth".
+        * It tells ansibe where the profile is ({{ inventory_dir}})
+        * It tells InfraRed the profile node list.
+        * It holds node attributes and ssh tunneling if required
+
+        Over time, multiple files might be created in the directory. The active
+        one is always the target of INVENTORY_LINK symlink.
         """
 
-        abs_path = os.path.join(self.path, name)
-        with open(abs_path, 'w') as stream:
-            stream.write(LOCAL_HOSTS)
-
-        # create a 'hosts' link
-        self.link_file(abs_path, dest_name='hosts', add_to_reg=False)
+        if not getattr(self, '_inventory', None):
+            self._inventory = os.path.join(self.path, INVENTORY_LINK)
+            if not os.path.exists(self._inventory):
+                with open(os.path.join(self.path, 'local_hosts'),
+                          'w') as stream:
+                    stream.write(LOCAL_HOSTS)
+                # create a 'hosts' link
+                self.link_file(stream.name, dest_name=self._inventory,
+                               add_to_reg=False)
+        return self._inventory
 
     def clear_links(self):
         """Clears all the created links."""
@@ -162,7 +176,6 @@ class ProfileManager(object):
         os.makedirs(path)
         LOG.debug("Profile {} created in {}".format(name, path))
         profile = Profile(name, path)
-        profile.create_default_inventory('local_hosts')
         return profile
 
     def activate(self, name):

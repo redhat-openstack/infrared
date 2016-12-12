@@ -9,6 +9,8 @@ from infrared.core.utils import logger
 
 
 LOG = logger.LOG
+
+
 DEFAULT_PLUGIN_INI = dict(
     supported_types=dict(
         provision='Provisioning plugins',
@@ -16,6 +18,7 @@ DEFAULT_PLUGIN_INI = dict(
         test='Testing plugins'
     )
 )
+MAIN_PLAYBOOK = "main.yml"
 
 
 # TODO(aopincar): add use in abspath everywhere file paths are in use
@@ -202,6 +205,11 @@ class InfraRedPlugin(object):
     @property
     def path(self):
         return self._path
+
+    @property
+    def playbook(self):
+        """Plugin's main playbook"""
+        return os.path.join(self.path, MAIN_PLAYBOOK)
 
     @path.setter
     def path(self, plugin_dir):

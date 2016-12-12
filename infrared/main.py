@@ -158,7 +158,7 @@ def main():
             plugin_manager.get_desc_of_type(action_type),
             plugin_manager.PLUGINS_DICT[action_type]))
 
-    specs_manager.run_specs()
+    return specs_manager.run_specs()
 
 
 if __name__ == '__main__':
