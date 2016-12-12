@@ -2,12 +2,11 @@
 import argparse
 import abc
 
-import os
-import sys
-
 from infrared import SHARED_GROUPS
 from infrared.core import execute
 from infrared.core.inspector.inspector import SpecParser
+from infrared.core.services import CoreServices
+from infrared.core.utils import exceptions
 from infrared.core.utils import logger
 
 LOG = logger.LOG
@@ -40,12 +39,13 @@ class SpecObject(object):
         with the spec name is called from cli.
         :param parser:
         :param args:
-        :return:
+        :return: exit code to be propagated out.
         """
         raise NotImplemented()
 
 
 class InfraRedGroupedPluginsSpec(SpecObject):
+    """Collect plugins of the same type under a single subparser"""
 
     add_base_groups = True
 
@@ -78,17 +78,28 @@ class InfraRedGroupedPluginsSpec(SpecObject):
         )
 
     def spec_handler(self, parser, args):
-        plugin = self.plugins[args['command0']]
-        playbook = os.path.join(plugin.path, 'main.yml')
+        """Execute plugin's main playbook.
 
-        result = execute.ansible_playbook(playbook)
-        sys.exit(result)
+        :param parser:
+        :param args:
+        :return: Ansible exit code
+        """
+        plugin = self.plugins[args['command0']]
+
+        active_profile = CoreServices.profile_manager().get_active_profile()
+        if not active_profile:
+            raise exceptions.IRNoActiveProfileFound()
+
+        # TODO(yfried): when accepting inventory from CLI, need to update:
+        # profile.inventory = CLI[inventory]
+
+        result = execute.ansible_playbook(inventory=active_profile.inventory,
+                                          playbook_path=plugin.playbook)
+        return result
 
 
 class SpecManager(object):
-    """
-    Manages all the available specifications (specs).
-    """
+    """Manages all the available specifications (specs). """
 
     def __init__(self):
         # create entry point
@@ -106,4 +117,5 @@ class SpecManager(object):
         subcommand = args.get('subcommand', '')
 
         if subcommand in self.spec_objects:
-            self.spec_objects[subcommand].spec_handler(self.parser, args)
+            return self.spec_objects[subcommand].spec_handler(self.parser,
+                                                              args)

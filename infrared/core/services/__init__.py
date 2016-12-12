@@ -12,7 +12,7 @@ class CoreServices(object):
     """Holds and configures all the required for core services. """
 
     INFRARED_CONF = None
-    SERVICES = {}
+    _SERVICES = {}
     DEFAULTS = {
         'profiles_base_folder': '.profiles',
         'plugins_conf_file': '.plugins.ini'
@@ -44,15 +44,23 @@ class CoreServices(object):
 
     @classmethod
     def _configure(cls, profile_dir, plugins_conf):
-        cls.SERVICES['profile_manager'] = profiles.ProfileManager(profile_dir)
-        cls.SERVICES['plugins_manager'] = \
-            plugins.InfraRedPluginManager(plugins_conf)
+        """Register services to manager. """
+
+        cls.register_service('profile_manager',
+                             profiles.ProfileManager(profile_dir))
+        cls.register_service('plugins_manager',
+                             plugins.InfraRedPluginManager(plugins_conf))
+
+    @classmethod
+    def register_service(cls, service_name, service):
+        """Protect the _SERVICES dict"""
+        CoreServices._SERVICES[service_name] = service
 
     @classmethod
     def _get_service(cls, name):
-        if name not in cls.SERVICES:
+        if name not in cls._SERVICES:
             cls.from_defaults()
-        return cls.SERVICES[name]
+        return cls._SERVICES[name]
 
     @classmethod
     def profile_manager(cls):
