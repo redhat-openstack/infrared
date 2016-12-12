@@ -28,7 +28,6 @@ class InfraRedPluginManager(object):
 
     __metaclass__ = Singleton
 
-    PLUGINS_LIST = []
     PLUGINS_DICT = OrderedDict()
     SUPPORTED_TYPES_SECTION = 'supported_types'
 
@@ -42,14 +41,13 @@ class InfraRedPluginManager(object):
     def _load_plugins(self):
         for plugin_type_section in self.config.options(
                 self.SUPPORTED_TYPES_SECTION):
-            self.__class__.PLUGINS_DICT[plugin_type_section] = []
+            self.__class__.PLUGINS_DICT[plugin_type_section] = {}
             if self.config.has_section(plugin_type_section):
                 for plugin_name, plugin_path in self.config.items(
                         plugin_type_section):
                     plugin = InfraRedPlugin(plugin_path)
-                    self.__class__.PLUGINS_LIST.append(plugin)
-                    self.__class__.PLUGINS_DICT[plugin_type_section].append(
-                        plugin)
+                    self.__class__.PLUGINS_DICT[
+                        plugin_type_section][plugin_name] = plugin
 
     @property
     def config_file(self):
@@ -179,7 +177,7 @@ class InfraRedPlugin(object):
 
     @path.setter
     def path(self, plugin_dir):
-        full_path = os.path.expanduser(plugin_dir)
+        full_path = os.path.abspath(os.path.expanduser(plugin_dir))
         if not os.path.isdir(full_path):
             # TODO(aopincar): Replace with a proper InfraRed exception
             raise IOError(
