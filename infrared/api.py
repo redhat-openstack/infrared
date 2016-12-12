@@ -2,7 +2,11 @@
 import argparse
 import abc
 
+import os
+import sys
+
 from infrared import SHARED_GROUPS
+from infrared.core import execute
 from infrared.core.inspector.inspector import SpecParser
 from infrared.core.utils import logger
 
@@ -70,8 +74,15 @@ class InfraRedGroupedPluginsSpec(SpecObject):
             app_subfolder='',
             user_dict=user_dict,
             subparser=root_subparsers,
-            specs_list=[plugin.spec for plugin in self.plugins]
+            specs_list=[plugin.spec for plugin in self.plugins.values()]
         )
+
+    def spec_handler(self, parser, args):
+        plugin = self.plugins[args['command0']]
+        playbook = os.path.join(plugin.path, 'main.yml')
+
+        result = execute.ansible_playbook(playbook)
+        sys.exit(result)
 
 
 class SpecManager(object):
