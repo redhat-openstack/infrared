@@ -15,6 +15,7 @@ Contents:
 
    quickstart
    profile
+   plugins
    changes
 
 

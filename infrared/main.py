@@ -126,7 +126,7 @@ class PluginManagerSpec(api.SpecObject):
         print("Available plugins:")
         for plugin_type, plugins in \
                 self.plugin_mamanger.PLUGINS_DICT.iteritems():
-            plugins_names = [plugin.name for plugin in plugins]
+            plugins_names = [plugin.name for plugin in plugins.values()]
             plugins_names.sort()
             print('  {:{align}{width}} {{{}}}'.format(
                 plugin_type, ','.join(plugins_names), align='<',
