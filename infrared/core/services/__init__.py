@@ -11,8 +11,8 @@ from infrared.core.services import plugins
 class CoreServices(object):
     """Holds and configures all the required for core services. """
 
+    INFRARED_CONF = None
     SERVICES = {}
-
     DEFAULTS = {
         'profiles_base_folder': '.profiles',
         'plugins_conf_file': '.plugins.ini'
@@ -32,6 +32,8 @@ class CoreServices(object):
         import ConfigParser
         config = ConfigParser.ConfigParser()
         config.read(config_file)
+
+        cls.INFRARED_CONF = os.path.abspath(config_file)
 
         profile_dir = os.path.abspath(
             config.get(section, 'profiles_base_folder'))

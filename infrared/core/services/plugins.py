@@ -7,14 +7,22 @@ import pip
 
 from infrared.core.utils import logger
 
+
 LOG = logger.LOG
+DEFAULT_PLUGIN_INI = dict(
+    supported_types=dict(
+        provision='Provisioning plugins',
+        install='Installing plugins',
+        test='Testing plugins'
+    )
+)
+
 
 # TODO(aopincar): add use in abspath everywhere file paths are in use
 
 
 # TODO(aopincar): replace this Singleton class with anonymous class
 class Singleton(type):
-
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
@@ -25,14 +33,13 @@ class Singleton(type):
 
 
 class InfraRedPluginManager(object):
-
     __metaclass__ = Singleton
 
     PLUGINS_LIST = []
     PLUGINS_DICT = OrderedDict()
     SUPPORTED_TYPES_SECTION = 'supported_types'
 
-    def __init__(self, plugins_conf):
+    def __init__(self, plugins_conf=None):
         """
         :param plugins_conf: A path to the main plugins configuration file
         """
@@ -61,11 +68,32 @@ class InfraRedPluginManager(object):
 
     @config.setter
     def config(self, plugins_conf):
-        plugins_conf_full_path = os.path.expanduser(plugins_conf)
+
+        if plugins_conf is None:
+            from infrared.core.services import CoreServices
+            plugins_conf = os.path.join(
+                os.path.dirname(CoreServices.INFRARED_CONF),
+                CoreServices.DEFAULTS['plugins_conf_file']
+            )
+            LOG.warning("Plugin conf file hasn't been given, trying to load "
+                        "it from the default path: '{}'".format(plugins_conf))
+
+        plugins_conf_full_path = \
+            os.path.abspath(os.path.expanduser(plugins_conf))
+
         if not os.path.isfile(plugins_conf_full_path):
-            # TODO(aopincar): Replace with a proper InfraRed exception
-            raise IOError(
-                "Plugins config '{}' doesn't exist".format(plugins_conf))
+            LOG.warning("Plugin conf ('{}') not found, creating it with "
+                        "default data".format(plugins_conf_full_path))
+            with open(plugins_conf_full_path, 'w') as fp:
+                config = ConfigParser()
+
+                for section, section_data in DEFAULT_PLUGIN_INI.items():
+                    if not config.has_section(section):
+                        config.add_section(section)
+                    for option, value in section_data.items():
+                        config.set(section, option, value)
+
+                config.write(fp)
 
         self._config_file = plugins_conf_full_path
 
@@ -156,8 +184,8 @@ class InfraRedPluginManager(object):
 
 
 class InfraRedPlugin(object):
-
     PLUGIN_SPEC_FILE = 'plugin.spec'
+
     # PLUGIN_DIRS = dict(
     #     settings='settings',
     #     modules='library',
