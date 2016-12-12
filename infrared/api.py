@@ -61,7 +61,7 @@ class InfraRedGroupedPluginsSpec(SpecObject):
         user_dict = {}
         if self.add_base_groups:
             user_dict = dict(
-                description=self.description,
+                type_description=self.description,
                 shared_groups=SHARED_GROUPS)
 
         self.specification = SpecParser.from_files(

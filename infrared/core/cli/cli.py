@@ -30,7 +30,7 @@ class CliParser(object):
     Allows to handle the CLI arguments.
     """
 
-    def __init__(self, parser):
+    def __init__(self):
         pass
 
     @classmethod
@@ -39,13 +39,13 @@ class CliParser(object):
 
         if subparsers is None:
             arg_parser = argparse.ArgumentParser(
-                description=parser_dict.get('description', ''),
+                description=parser_dict.get('type_description', ''),
                 formatter_class=parser_dict.get(
                     'formatter_class', argparse.RawTextHelpFormatter))
         else:
             arg_parser = subparsers.add_parser(
                 spec.app_name,
-                help=parser_dict.get('description', ''),
+                help=parser_dict.get('type_description', ''),
                 formatter_class=parser_dict.get(
                     'formatter_class', argparse.RawTextHelpFormatter))
 

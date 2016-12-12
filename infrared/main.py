@@ -78,7 +78,7 @@ class ProfileManagerSpec(api.SpecObject):
 class PluginManagerSpec(api.SpecObject):
 
     def __init__(self, name, plugin_manager, *args, **kwargs):
-        self.plugin_mamanger = plugin_manager
+        self.plugin_manager = plugin_manager
         super(PluginManagerSpec, self).__init__(name, *args, **kwargs)
 
     def extend_cli(self, root_subparsers):
@@ -111,21 +111,21 @@ class PluginManagerSpec(api.SpecObject):
         if command0 == 'list':
             self._list_plugins()
         elif command0 == 'add':
-            self.plugin_mamanger.add_plugin(args['path'])
+            self.plugin_manager.add_plugin(args['path'])
         elif command0 == 'remove':
-            self.plugin_mamanger.remove_plugin(args['type'], args['name'])
+            self.plugin_manager.remove_plugin(args['type'], args['name'])
 
     def _list_plugins(self):
         """
         Print a list of available plugins sorted by type
         :return:
         """
-        longest_type = max(self.plugin_mamanger.supported_plugin_types,
+        longest_type = max(self.plugin_manager.supported_plugin_types,
                            key=len)
 
         print("Available plugins:")
         for plugin_type, plugins in \
-                self.plugin_mamanger.PLUGINS_DICT.iteritems():
+                self.plugin_manager.PLUGINS_DICT.iteritems():
             plugins_names = [plugin.name for plugin in plugins]
             plugins_names.sort()
             print('  {:{align}{width}} {{{}}}'.format(
@@ -146,12 +146,12 @@ def main():
         ProfileManagerSpec('profile',
                            description="Profile manager. "
                                        "Allows to create and use an isolated "
-                                       "environement  for plugins execution.")
-    )
-    specs_manager.register_spec(PluginManagerSpec(
-        'plugin',
-        plugin_manager=plugin_manager,
-        description="Plugin management"))
+                                       "environement  for plugins execution."))
+    specs_manager.register_spec(
+        PluginManagerSpec('plugin',
+                          plugin_manager=plugin_manager,
+                          description="Plugin management"))
+
     for action_type in plugin_manager.supported_plugin_types:
         specs_manager.register_spec(api.InfraRedGroupedPluginsSpec(
             action_type,
