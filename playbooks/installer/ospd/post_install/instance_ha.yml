@@ -155,17 +155,13 @@
             pcs resource create nova-compute-checkevacuate ocf:openstack:nova-compute-wait auth_url=$OS_AUTH_URL username=$OS_USERNAME password=$OS_PASSWORD tenant_name=$OS_TENANT_NAME domain=localdomain op start timeout=300 --clone interleave=true --disabled --force
             pcs constraint location nova-compute-checkevacuate-clone rule resource-discovery=exclusive score=0 osprole eq compute
 
-            pcs resource create nova-compute systemd:openstack-nova-compute --clone interleave=true --disabled --force
+            pcs resource create nova-compute systemd:openstack-nova-compute op start timeout=60s --clone interleave=true --disabled --force
             pcs constraint location nova-compute-clone rule resource-discovery=exclusive score=0 osprole eq compute
             pcs constraint order start nova-compute-checkevacuate-clone then nova-compute-clone require-all=true
 
             pcs constraint order start nova-compute-clone then nova-evacuate require-all=false
             pcs constraint order start libvirtd-compute-clone then nova-compute-clone
             pcs constraint colocation add nova-compute-clone with libvirtd-compute-clone
-
-      - name: Create nova-compute order constraint on galera-master
-        shell: "pcs constraint order promote galera-master then nova-compute-clone require-all=false"
-        when: "{{ installer.product.version|openstack_release }} > 9"
 
       - name: Create pacemaker constraint for neutron-server, nova-conductor and ceilometer-notification
         shell: |
@@ -186,6 +182,12 @@
 
       - name: Create fence-nova pacemaker resource
         shell: "pcs stonith create fence-nova fence_compute auth-url=$OS_AUTH_URL login=$OS_USERNAME passwd=$OS_PASSWORD tenant-name=$OS_TENANT_NAME domain=localdomain record-only=1 no-shared-storage=False action=off --force"
+
+      - name: Create pacemaker constraint for fence-nova to start after galera
+        shell: "pcs constraint order promote galera-master then fence-nova require-all=false"
+
+      - name: Create nova-compute order constraint on fence-nova
+        shell: "pcs constraint order start fence-nova then nova-compute-clone"
 
       - name: Set cluster recheck interval to 1 minute
         shell: "pcs property set cluster-recheck-interval=1min"
