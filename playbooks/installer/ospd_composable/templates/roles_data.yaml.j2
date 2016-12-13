@@ -1,0 +1,13 @@
+{% for _, role in installer.roles.data.iteritems() %}
+- name: {{ role.name }}
+  CountDefault: {{ role.amount | default(0) }}
+  ServicesDefault:
+{% for service in role.services %}
+{%- if service %}
+    - {{ service }}
+{% endif -%} 
+{% endfor %}
+{% if 'host_name_format' in role %}
+  HostnameFormatDefault: {{ role.host_name_format   }}
+{% endif %}
+{% endfor %}
