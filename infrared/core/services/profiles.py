@@ -1,6 +1,7 @@
 import datetime
 import os
 import shutil
+import tarfile
 import time
 
 from infrared.core.utils import exceptions, logger
@@ -124,6 +125,9 @@ class Profile(object):
         if unlink and os.path.islink(target_path):
             os.unlink(target_path)
 
+        # NOTE(oanufrii): Make file_path relative if it in self.path
+        file_path = file_path.replace(self.path, ".")
+
         LOG.debug("Creating link: src='%s', dest='%s'", file_path, target_path)
         os.symlink(file_path, target_path)
         if add_to_reg:
@@ -241,6 +245,51 @@ class ProfileManager(object):
             with open(self.active_file) as prf_file:
                 active_name = prf_file.read().strip()
                 return self.get(active_name)
+
+    def export_profile(self, profile_name, file_name=None):
+        """Export content of profile folder as gzipped tar file
+
+           Replaces existing .tgz file
+        """
+
+        if profile_name:
+            profile = self.get(profile_name)
+            if profile is None:
+                raise exceptions.IRProfileMissing(profile=profile_name)
+        else:
+            profile = self.get_active_profile()
+            if profile is None:
+                raise exceptions.IRNoActiveProfileFound()
+
+        fname = file_name or profile.name
+
+        LOG.debug("Exporting profile {} to file {}.tbz".format(profile.name,
+                                                               fname))
+
+        tar = tarfile.open(fname + '.tgz', "w:gz")
+        tar.add(os.path.join(profile.path, ""), "./")
+
+        tar.close()
+
+    def import_profile(self, file_name, profile_name=None):
+        """Import profile from gzipped tar file
+
+           Profile name should be unique
+        """
+
+        if not os.path.exists(file_name):
+            raise IOError("File {} not found.".format(file_name))
+        if profile_name is None:
+            basename = os.path.basename(file_name)
+            profile_name = ".".join(basename.split(".")[:-1])
+
+        new_profile = self.create(name=profile_name)
+
+        LOG.debug("Importing profile from file {} to path {}".format(
+            file_name, new_profile.path))
+        tar = tarfile.open(file_name)
+        tar.extractall(path=new_profile.path)
+        tar.close()
 
     def is_active(self, name):
         """Checks if profile is active."""

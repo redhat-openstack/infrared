@@ -134,3 +134,79 @@ def test_profile_link_file(profile_manager_fixture, test_profile,
     profile_inventory = py.path.local(target_path)
     assert profile_inventory.islink()
     assert inventory_content == profile_inventory.read()
+
+
+@pytest.mark.parametrize('profile_name', ["new_test_profile", None])
+def test_profile_import(profile_manager_fixture, test_profile, profile_name,
+                        tmpdir):
+
+    cwd = os.getcwd()
+    os.chdir(tmpdir.strpath)
+    profile_manager_fixture.export_profile(test_profile.name, "test_boo")
+
+    profile_manager_fixture.import_profile("test_boo.tgz", profile_name)
+
+    if profile_name is None:
+        assert profile_manager_fixture.get("test_boo")
+    else:
+        assert profile_manager_fixture.get(profile_name)
+
+    os.chdir(cwd)
+
+
+def test_profile_import_no_file(profile_manager_fixture):
+    with pytest.raises(IOError):
+        profile_manager_fixture.import_profile("zooooo.tgz", None)
+
+
+def test_profile_import_profile_exists(profile_manager_fixture, mocker):
+    tprof = profile_manager_fixture.create("new_t_prof")
+    profile_manager_fixture.activate(tprof.name)
+    mock_os = mocker.patch.object(profiles, "os")
+    mock_os.path.exists.return_value = True
+    back_get = profile_manager_fixture.get
+    profile_manager_fixture.get = lambda x: test_profile
+    with pytest.raises(exceptions.IRProfileExists):
+        profile_manager_fixture.import_profile("zooooo.tgz", tprof.name)
+
+    profile_manager_fixture.get = back_get
+
+
+def test_profile_export(profile_manager_fixture, test_profile, tmpdir):
+    cwd = os.getcwd()
+
+    os.chdir(tmpdir.strpath)
+
+    back_get = profile_manager_fixture.get
+    profile_manager_fixture.get = lambda x: test_profile
+    profile_manager_fixture.export_profile(test_profile.name, "some_file")
+    profile_manager_fixture.get = back_get
+
+    assert os.path.exists("some_file.tgz")
+    os.remove("some_file.tgz")
+
+    back_get = profile_manager_fixture.get
+    profile_manager_fixture.get = lambda x: test_profile
+    profile_manager_fixture.export_profile(test_profile.name)
+    profile_manager_fixture.get = back_get
+    assert os.path.exists("{}.tgz".format(test_profile.name))
+    os.remove("{}.tgz".format(test_profile.name))
+
+    back_get = profile_manager_fixture.get
+    profile_manager_fixture.activate(test_profile.name)
+    profile_manager_fixture.get = lambda x: test_profile
+    profile_manager_fixture.export_profile(None)
+    profile_manager_fixture.get = back_get
+    assert os.path.exists("{}.tgz".format(test_profile.name))
+
+    os.chdir(cwd)
+
+
+def test_profile_export_not_excists(profile_manager_fixture):
+    with pytest.raises(exceptions.IRProfileMissing):
+        profile_manager_fixture.export_profile("some_profile")
+
+
+def test_profile_export_no_active(profile_manager_fixture, test_profile):
+    with pytest.raises(exceptions.IRNoActiveProfileFound):
+        profile_manager_fixture.export_profile(None)
