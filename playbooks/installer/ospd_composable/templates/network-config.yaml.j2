@@ -1,0 +1,13 @@
+{% macro eval(value) -%}
+{{ value | replace('${ipv6_postfix}', ipv6_postfix) | replace('${deployment_dir}', deployment_folder_path ) }}
+{%- endmacro %}
+resource_registry:
+{% for role_key, role in installer.roles.data.iteritems() -%}
+{% for option, value in role.get("resource_registry", {}).iteritems() %}
+    {{ option }}: {{ eval(value) }}
+{% endfor %}
+{% endfor %}
+
+# neutron settings
+{{ installer.roles.neutron | to_nice_yaml }}
+
