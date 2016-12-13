@@ -1,0 +1,8 @@
+parameter_defaults:
+{% for role_key, role in installer.roles.data.iteritems() %}
+  {{ role.name }}Count: {{ role.amount }}
+{% endfor %}
+
+{% for role_key, role in installer.roles.data.iteritems() %}
+  Overcloud{{ flavor_name_mapping.get(role.name, role.name) }}Flavor: {{ role.flavor | default(role_default_flavor) }}
+{% endfor %}
