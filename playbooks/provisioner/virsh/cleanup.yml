@@ -26,6 +26,7 @@
       name: "{{ item }}"
       state: destroyed
   with_items: "{{ virt_status.list_vms }}"
+  ignore_errors: yes
 
 - name: Clean /etc/hostshosts file
   become: yes

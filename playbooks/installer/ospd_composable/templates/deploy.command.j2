@@ -1,0 +1,11 @@
+export THT=/usr/share/openstack-tripleo-heat-templates/
+
+openstack overcloud deploy --templates $THT \
+  -r {{ template_base }}/roles/roles_data.yaml \
+  --libvirt-type kvm \
+  --ntp-server clock.redhat.com \
+  -e {{ template_base }}/roles/nodes.yaml \
+  -e {{ template_base }}/roles/network-config.yaml \
+{% if installer.overcloud.debug %}
+  -e {{ template_base  }}/debug.yaml \
+{% endif %}
