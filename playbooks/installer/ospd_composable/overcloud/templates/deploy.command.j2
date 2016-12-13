@@ -1,0 +1,17 @@
+source ~/stackrc
+export THT=/usr/share/openstack-tripleo-heat-templates/
+
+openstack overcloud deploy --templates $THT \
+  -r {{ template_base }}/roles/roles_data.yaml \
+  -e {{ template_base }}/roles/nodes.yaml \
+  -e {{ template_base }}/roles/network-config.yaml \
+{% if installer.network.protocol == 'ipv4' %}
+  -e $THT/environments/network-isolation.yaml \
+  -e {{ template_base }}/network/network-environment.yaml \
+{% else %}
+  -e $THT/environments/network-isolation-v6.yaml \
+  -e {{ template_base }}/network/network-environment-v6.yaml \
+{% endif %}
+{% if installer.overcloud.debug %}
+  -e {{ template_base  }}/debug.yaml \
+{% endif %}
