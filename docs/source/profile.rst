@@ -52,7 +52,7 @@ Export:
 
         Profile example1 exported to /tmp/look/at/my/profile
 
-Import::
+Import:
     Load a previously exported profile::
 
         infrared profile import /tmp/look/at/my/newprofile
