@@ -47,6 +47,22 @@ class ProfileManagerSpec(api.SpecObject):
             'cleanup', help='Removes all the files from profile')
         cleanup_parser.add_argument("name", help="Profie name")
 
+        # import settings
+        importer_parser = profile_subparsers.add_parser(
+            'import', help='Import deployment configs.')
+        importer_parser.add_argument("filename", help="Archive file name.")
+        importer_parser.add_argument("-P", "--profile", dest="profilename",
+                                     help="Profile name to import with.")
+
+        # exort settings
+        exporter_parser = profile_subparsers.add_parser(
+            'export', help='Export deployment configurations.')
+        exporter_parser.add_argument("-P", "--profile", dest="profilename",
+                                     help="Profile name. If not sepecified - "
+                                     "active profile will be used.")
+        exporter_parser.add_argument("-D", "--dest", dest="filename",
+                                     help="Archive file name.")
+
     def spec_handler(self, parser, args):
         """
         Handles all the plugin manager commands
@@ -75,6 +91,10 @@ class ProfileManagerSpec(api.SpecObject):
             print("Profile '{}' deleted".format(pargs.name))
         elif subcommand == 'cleanup':
             profile_manager.cleanup(pargs.name)
+        elif subcommand == 'export':
+            profile_manager.export_profile(pargs.profilename, pargs.filename)
+        elif subcommand == 'import':
+            profile_manager.import_profile(pargs.filename, pargs.profilename)
 
 
 class PluginManagerSpec(api.SpecObject):
