@@ -1,0 +1,35 @@
+---
+- name: Create roles templates
+  hosts: undercloud
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+      role_default_flavor: baremetal
+      flavor_name_mapping:
+          Controller: Control
+  tasks:
+      - name: Create roles folder
+        file:
+            path: "{{ template_base }}/roles"
+            state: directory
+
+      - name: Create the roles_data file
+        template:
+            src: roles_data.yml.j2
+            dest: "{{ template_base }}/roles/roles_data.yaml"
+            force: yes
+
+      - name: Create the nodes file
+        template:
+            src: nodes.yml.j2
+            dest: "{{ template_base }}/roles/nodes.yaml"
+            force: yes
+
+      - name: Create the network template file
+        vars:
+            ipv6_postfix: "{{  (installer.network.protocol == 'ipv4') | ternary('', '_v6')}}"
+            deployment_folder_path: "{{ template_base }}"
+        template:
+            src: network-config.yml.j2
+            dest: "{{ template_base }}/roles/network-config.yaml"
+            force: yes

@@ -1107,7 +1107,7 @@ class ListOfYamls(YamlFile):
         result = {}
         if value is not None:
             # validate value. Check that we have comma separated values
-            pattern = re.compile("^[-\w\s\.]+(?:,[-\w\s]*)*$")
+            pattern = re.compile("^[-\w\s\.]+(?:,[-\w\s\.]*)*$")
             if pattern.match(value) is None:
                 raise exceptions.IRWrongYamlListFormat(value)
 
@@ -1148,12 +1148,14 @@ class Topology(ComplexType):
         """
         topology_dirs = [os.path.join(path, self.app_name, 'topology')
                          for path in self.settings_dirs]
+        # search then for topology in default locations.
+        topology_dirs.extend(self.get_file_locations())
 
         topology_dict = {}
         for topology_item in value.split(','):
-            pattern = re.compile("^[A-Za-z]+:[0-9]+$")
+            pattern = re.compile("^[A-Za-z/_]+:[0-9]+$")
             if pattern.match(topology_item) is None:
-                pattern = re.compile("^[0-9]+_[A-Za-z]+$")
+                pattern = re.compile("^[0-9]+_[A-Za-z_/]+$")
                 if pattern.match(topology_item) is None:
                     raise exceptions.IRWrongTopologyFormat(value)
                 number, node_type = topology_item.split('_')
