@@ -16,6 +16,7 @@ class SpecObject(object):
     """
     Base object to describe basic specification.
     """
+
     def __init__(self, name, *args, **kwargs):
         self.name = name
         self.args = args
@@ -25,12 +26,13 @@ class SpecObject(object):
         return self.name
 
     @abc.abstractmethod
-    def extend_cli(self, root_subparsers):
-        """
-        Adds the spec cli options to to the main entry point.
-        :param root_subparsers: the subprasers objects to extend.
+    def extend_cli(self, subparser):
+        """Adds the spec cli options to to the main entry point.
+
+        :param subparser: the subparser object to extend.
         """
 
+    @abc.abstractmethod
     def spec_handler(self, parser, args):
         """
         The main method for the spec.
@@ -41,40 +43,35 @@ class SpecObject(object):
         :param args:
         :return: exit code to be propagated out.
         """
-        raise NotImplemented()
 
 
-class InfraRedGroupedPluginsSpec(SpecObject):
+class InfraRedPluginsSpec(SpecObject):
+    """Integrates Plugin object with Specs"""
 
     add_base_groups = True
 
-    def __init__(self, action_type, description, plugins):
-        """
+    def __init__(self, plugin, *args, **kwargs):
+        """Initialize Plugin spec
 
-        :param action_type: Action type (provision/install/test)
-        :param description: Action description
-        :param plugins: All plugins from the same type
+        :param plugin: plugin object
         """
-        self.plugins = plugins
-        self.description = description
+        self.plugin = plugin
         self.specification = None
-        super(self.__class__, self).__init__(action_type)
+        super(InfraRedPluginsSpec, self).__init__(plugin.name, *args, **kwargs)
 
     def extend_cli(self, root_subparsers):
+        """Extend CLI with plugin subparser. """
+        spec_file = self.plugin.spec
+
         user_dict = {}
         if self.add_base_groups:
-            user_dict = dict(
-                type_description=self.description,
-                shared_groups=SHARED_GROUPS)
+            user_dict = dict(shared_groups=SHARED_GROUPS)
 
         self.specification = SpecParser.from_files(
-            settings_folders='',
-            app_name=self.name,
-            app_subfolder='',
-            user_dict=user_dict,
             subparser=root_subparsers,
-            specs_list=[plugin.spec for plugin in self.plugins.values()]
-        )
+            spec_file=spec_file,
+            settings_folders='',
+            base_groups=user_dict)
 
     def spec_handler(self, parser, args):
         """Execute plugin's main playbook.
@@ -83,7 +80,6 @@ class InfraRedGroupedPluginsSpec(SpecObject):
         :param args:
         :return: Ansible exit code
         """
-        plugin = self.plugins[args['command0']]
 
         active_profile = CoreServices.profile_manager().get_active_profile()
         if not active_profile:
@@ -93,7 +89,7 @@ class InfraRedGroupedPluginsSpec(SpecObject):
         # profile.inventory = CLI[inventory]
 
         result = execute.ansible_playbook(inventory=active_profile.inventory,
-                                          playbook_path=plugin.playbook)
+                                          playbook_path=self.plugin.playbook)
         return result
 
 

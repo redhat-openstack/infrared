@@ -37,7 +37,7 @@ Execute:
     Plugins are added as subparsers under ``plugin type`` and will execute
     the ``main.yml`` `playbook <playbooks>`_::
 
-        infrared provision example
+        infrared example
 
 
 Specification
