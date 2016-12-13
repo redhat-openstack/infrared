@@ -1,0 +1,9 @@
+---
+- name: create the network template file 
+  vars:
+      ipv6_postfix: "{{  (installer.network.protocol == 'ipv4') | ternary('', '_v6')}}"
+  template:
+      src: network-environment.yml.j2
+      dest: "{{ destination }}"
+      force: yes
+

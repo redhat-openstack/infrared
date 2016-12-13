@@ -1,0 +1,43 @@
+name: "ceph"
+prefix: null
+amount: "1"
+cpu: "2"
+memory: "6144"
+os:
+    type: "linux"
+    variant: "rhel7"
+disks:
+    disk1: &disk1
+        import_url: null
+        path: "/var/lib/libvirt/images"
+        dev: "/dev/vda"
+        size: "20G"
+        cache: "unsafe"
+        preallocation: "metadata"
+    disk2:
+        <<: *disk1
+        import_url: null
+        dev: /dev/vdb
+        size: "25G"
+        cache: "unsafe"
+        preallocation: "metadata"
+    disk3:
+        <<: *disk1
+        import_url: null
+        dev: /dev/vdc
+        size: "25G"
+        cache: "unsafe"
+        preallocation: "metadata"
+interfaces:
+    nic1:
+        network: "provision"
+    nic2:
+        network: "storage"
+    nic3:
+        network: "management"
+external_network: management
+
+groups:
+    - ceph
+    - openstack_nodes
+    - overcloud_nodes

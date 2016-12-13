@@ -1,0 +1,38 @@
+---
+net1:
+    external_connectivity: no
+    name: "provision"
+    ip_address: "192.168.0.126"
+    netmask: "255.255.255.128"
+    forward:
+        type: "route"
+net2: 
+    name: "internal"
+
+net3: 
+    name: "storage"
+
+net4:
+    external_connectivity: yes
+    name: "external"
+    ip_address: "172.16.17.126"
+    netmask: "255.255.255.128"
+    forward:
+        type: "nat"
+
+net5:
+    external_connectivity: yes
+    name: "management"
+    ipv6:
+        ip_address: "2001:db8:ca2:3::1"
+        prefix: "64"
+    ip_address: "172.16.17.254"
+    netmask: "255.255.255.128"
+    forward:
+        type: "nat"
+    dhcp:
+        range:
+            start: "172.16.17.130"
+            end: "172.16.17.180"
+        subnet_cidr: "172.16.17.128/25"
+        subnet_gateway: "172.16.17.254"

@@ -1,0 +1,38 @@
+---
+name: Compute
+amount: 1
+resource_registry:
+    "OS::TripleO::Compute::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/compute.yaml"
+    "OS::TripleO::Compute::Ports::ExternalPort": "/usr/share/openstack-tripleo-heat-templates/network/ports/noop.yaml"
+    "OS::TripleO::Compute::Ports::InternalApiPort": "/usr/share/openstack-tripleo-heat-templates/network/ports/internal_api_from_pool${ipv6_postfix}.yaml"
+    "OS::TripleO::Compute::Ports::StoragePort": "/usr/share/openstack-tripleo-heat-templates/network/ports/storage_from_pool${ipv6_postfix}.yaml"
+    "OS::TripleO::Compute::Ports::StorageMgmtPort": "/usr/share/openstack-tripleo-heat-templates/network/ports/noop.yaml"
+    "OS::TripleO::Compute::Ports::TenantPort": "/usr/share/openstack-tripleo-heat-templates/network/ports/tenant_from_pool.yaml"
+    "OS::TripleO::Compute::Ports::ManagementPort": "/usr/share/openstack-tripleo-heat-templates/network/ports/management_from_pool.yaml"
+
+host_name_format: "%stackname%-compute-%index%"
+flavor: compute-{{ 'compute' | to_uuid }}
+
+services:
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephClient
+    - OS::TripleO::Services::CephExternal
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::Ntp
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::NovaCompute
+    - OS::TripleO::Services::NovaLibvirt
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::ComputeNeutronCorePlugin
+    - OS::TripleO::Services::ComputeNeutronOvsAgent
+    - OS::TripleO::Services::ComputeCeilometerAgent
+    - OS::TripleO::Services::ComputeNeutronL3Agent
+    - OS::TripleO::Services::ComputeNeutronMetadataAgent
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::NeutronSriovAgent
+    - OS::TripleO::Services::OpenDaylightOvs
+    - OS::TripleO::Services::SensuClient
+    - OS::TripleO::Services::FluentdClient
+    - OS::TripleO::Services::VipHosts
+

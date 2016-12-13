@@ -1,0 +1,11 @@
+---
+- name: combine all the extra properties
+  set_fact:
+      extra_data: "{{ extra_data | default({}) | combine(item.value) }}"
+  with_dict: "{{ installer.roles.extra }}"
+
+- name: generate template with extra parameters
+  template:
+      src: "extra.yml.j2"
+      dest: "{{ destination }}"
+      force: yes

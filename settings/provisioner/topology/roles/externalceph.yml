@@ -1,0 +1,38 @@
+name: "externalceph"
+prefix: null
+amount: "1"
+cpu: "4"
+memory: "10240"
+os:
+    type: "linux"
+    variant: "rhel7"
+disks:
+    disk1: &disk1
+        import_url: null
+        path: "/var/lib/libvirt/images"
+        dev: "/dev/vda"
+        size: "20G"
+        cache: "unsafe"
+        preallocation: "metadata"
+    disk2:
+        <<: *disk1
+        import_url: null
+        dev: /dev/vdb
+        size: "25G"
+        cache: "unsafe"
+        preallocation: "metadata"
+    disk3:
+        <<: *disk1
+        import_url: null
+        dev: /dev/vdc
+        size: "25G"
+        cache: "unsafe"
+interfaces:
+    nic1:
+        network: "storage"
+    nic2:
+        network: "management"
+external_network: management
+
+groups:
+    - externalceph

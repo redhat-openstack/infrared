@@ -1,0 +1,27 @@
+name: "undercloud"
+prefix: null
+amount: "1"
+cpu: "8"
+memory: "32768"
+os:
+    type: "linux"
+    variant: "rhel7"
+disks:
+    disk1:
+        import_url: null
+        path: "/var/lib/libvirt/images"
+        dev: "/dev/vda"
+        size: "40G"
+        cache: "unsafe"
+        preallocation: "falloc"
+interfaces:
+    nic1:
+        network: "management"
+    nic2:
+        network: "provision"
+external_network: management
+
+groups:
+  - undercloud
+  - tester
+  - openstack_nodes

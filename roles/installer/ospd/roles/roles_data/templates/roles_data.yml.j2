@@ -1,0 +1,8 @@
+{% for role_key, role in installer.roles.data.iteritems() %}
+{% if 'host_name_format' in role %}
+{% set role_data = { 'name': role.name, 'CountDefault': role.get('amount', 1),  'ServicesDefault': role.services, 'HostnameFormatDefault': role.host_name_format } %}
+{% else %}
+{% set role_data = { 'name': role.name, 'CountDefault': role.get('amount', 1),  'ServicesDefault': role.services } %}
+{% endif %}
+{{ [role_data] | to_nice_yaml  }}
+{% endfor %}

@@ -1,0 +1,101 @@
+# Run vercloud preparation and installation with composable roles.
+# Requires OSPD10
+- name: Prepare the overcloud configuration with composable roles
+  tags:
+      - composable_roles
+      - overcloud
+      - overcloud_init
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      template_base: "/home/{{ installer.user.name }}/{{ installer.deployment.files.rstrip('/') | basename }}"
+      network_environment_file: "network-environment{{ (installer.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
+      network_vips_file: "vips{{ (installer.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
+      overcloud_deploy_roles: ''
+  pre_tasks:
+      # todo (obaranov) support user custom deploy script as in the regual deployment
+      - name: copy our deployment folder
+        copy:
+            src: "{{ installer.deployment.files.rstrip('/') }}"
+            dest: "{{ template_base | dirname }}/"
+            directory_mode: u=rwX,g=rX,o=rX
+            owner: "{{ installer.user.name }}"
+            group: "{{ installer.user.name }}"
+
+      - name: inject debug.yaml so it will be auto discovered with user templates
+        copy:
+            src: files/debug.yaml
+            dest: "{{ template_base }}"
+        when: installer.overcloud.debug == 'yes'
+
+      - name: check for the network-environment file
+        find:
+            paths: "{{ template_base }}"
+            patterns: "{{ network_environment_file }}"
+            recurse: yes
+        register: network_environment_file_path
+
+      # TODO: Move this to pre run verification
+      - fail:
+            msg: "The {{ network_environment_file }} file is missing"
+        when: 'network_environment_file_path.matched == 0'
+  roles:
+      - { role: installer/ospd/roles/roles_data, destination: "{{ template_base }}/roles_data.yaml" }
+      - { role: installer/ospd/roles/nodes, destination: "{{ template_base }}/nodes.yaml" }
+      - { role: installer/ospd/roles/network,
+          deployment_folder_path: "{{ template_base }}",
+          destination: "{{ template_base }}/network-config.yaml"  }
+      - { role: installer/ospd/roles/extra, destination: "{{ template_base }}/extra.yaml" }
+      - { role: installer/ospd/overcloud/hostname }
+
+  tasks:
+      # todo(obaranov) support that. this also requires extra tempaltes in the deploy command
+      # - name: run ssl setup
+      #  include: ssl.yml
+      #  when: installer.overcloud.ssl == 'yes'
+
+      - name: install crudini and openstack-service
+        yum: name=openstack-utils state=installed
+        become: yes
+        become_user: root
+
+      - name: adjust max number of concurrent builds to prevent undercloud overload
+        shell: "crudini --set /etc/nova/nova.conf DEFAULT max_concurrent_builds 5; openstack-service restart nova"
+        become: yes
+        become_user: root
+
+      - name: set domain name in nova.conf
+        shell: "crudini --set /etc/nova/nova.conf DEFAULT dhcp_domain redhat.local; openstack-service restart nova"
+        become: yes
+        become_user: root
+
+      - name: recreate baremetal flavor; there are nodes with < 40G disks which are not covered by the default one
+        shell: "source ~/stackrc; nova flavor-delete baremetal; openstack flavor delete baremetal; openstack flavor create --id auto --ram 2048 --disk 10 --vcpus 1 baremetal; openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' baremetal"
+
+      - name: assign per node capabilities
+        shell: "source ~/stackrc; ironic node-update {{ item }} replace properties/capabilities=node:{{ item }},boot_option:local"
+        with_items:
+            - "{{ groups['overcloud_nodes'] }}"
+        ignore_errors: true
+
+      - name: create deploy command
+        template: src=overcloud_deploy_roles.sh.j2 dest=~/deploy.command
+
+      - name: print deploy command
+        shell: "cat ~/deploy.command"
+
+      - name: execute the overcloud deploy script
+        shell: "bash ~/deploy.command"
+        register: overcloud_deploy
+        ignore_errors: yes
+
+      - name: print the last few lines of the output to spot failures
+        shell: "tail -n30 overcloud_install.log"
+
+      - name: print stack failures
+        shell: "source ~/stackrc; openstack stack failures list overcloud"
+        when: overcloud_deploy.rc != 0
+
+      - fail: msg="Overcloud deployment failed... :("
+        when: overcloud_deploy.rc != 0

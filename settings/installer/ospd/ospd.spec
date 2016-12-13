@@ -4,6 +4,21 @@ subparsers:
         help: Installs openstack using TripleO
         include_groups: ['Ansible options', 'Inventory hosts options', 'Common options', 'Configuration file options']
         groups:
+            - title: Roles
+              options:
+                  roles-data:
+                      type: Topology
+                      help: The list of roles to use in deployment
+
+                  roles-neutron:
+                      type: YamlFile
+                      help: The list of neutron settings to use in deployment
+                      default: default.yml
+
+                  roles-extra:
+                      type: ListOfYamls
+                      help: The list of extra parameters
+
             - title: Introspection
               options:
                   instackenv-file:

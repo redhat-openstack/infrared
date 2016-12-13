@@ -1,0 +1,30 @@
+name: "novaapi"
+prefix: null
+amount: "1"
+cpu: "2"
+memory: "8192"
+os:
+    type: "linux"
+    variant: "rhel7"
+disks:
+    disk1:
+        import_url: null
+        path: "/var/lib/libvirt/images"
+        dev: "/dev/vda"
+        size: "40G"
+        cache: "unsafe"
+        preallocation: "metadata"
+interfaces:
+    nic1:
+        network: "provision"
+    nic2:
+        network: "internal"
+    nic3:
+        network: "management"
+external_network: management
+
+groups:
+    - nova
+    - openstack_nodes
+    - overcloud_nodes
+    - network

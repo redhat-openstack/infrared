@@ -1,0 +1,34 @@
+name: "controller"
+prefix: null
+amount: "1"
+cpu: "4"
+memory: "12288"
+os:
+    type: "linux"
+    variant: "rhel7"
+disks:
+    disk1:
+        import_url: null
+        path: "/var/lib/libvirt/images"
+        dev: "/dev/vda"
+        size: "40G"
+        cache: "default"
+        preallocation: "falloc"
+interfaces:
+    nic1:
+        network: "provision"
+    nic2:
+        network: "external"
+    nic3:
+        network: "internal"
+    nic4:
+        network: "storage"
+    nic5:
+        network: "management"
+external_network: management
+
+groups:
+    - controller
+    - openstack_nodes
+    - overcloud_nodes
+    - network
