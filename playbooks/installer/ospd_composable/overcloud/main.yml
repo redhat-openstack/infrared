@@ -1,0 +1,28 @@
+---
+- name: Prepare deployment folder
+  include: pre.yml
+  tags:
+      - overcloud_init
+      - roles_pre
+
+- name: Prepare composable roles templates
+  include: templates.yml
+  tags:
+      - overcloud_init
+      - roles_templates
+
+- name: Prepare deply script and run deployment
+  include: deploy.yml
+  tags:
+      - overcloud_deploy
+
+- name: Update inventory
+  include: update_inventory.yml
+  tags:
+      - inventory_update
+      - overcloud_deploy
+
+- name: Perform post install tasks
+  include: post/main.yml
+  tags:
+      - overcloud_post

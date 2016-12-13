@@ -1,0 +1,20 @@
+---
+name: CephStorage
+amount: 1
+
+resource_registry:
+      "OS::TripleO::CephStorage::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/ceph-storage.yaml"
+
+flavor: ceph-{{ 'ceph' | to_uuid }}
+
+services:
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephOSD
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::Ntp
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::SensuClient
+    - OS::TripleO::Services::FluentdClient
+    - OS::TripleO::Services::VipHosts
