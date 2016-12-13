@@ -134,3 +134,51 @@ def test_profile_link_file(profile_manager_fixture, test_profile,
     profile_inventory = py.path.local(target_path)
     assert profile_inventory.islink()
     assert inventory_content == profile_inventory.read()
+
+
+@pytest.mark.parametrize('profile_name', ["new_test_profile", None])
+def test_profile_import(profile_manager_fixture, profile_name, mocker):
+    tfile = mocker.patch.object(profiles, "tarfile")
+    tfile.open.return_value = mocker.MagicMock()
+    mock_os = mocker.patch.object(profiles, "os")
+    mock_os.path.exists.return_value = True
+    mock_os.path.basename.return_value = "moved_test_profile.tgz"
+    if profile_name is not None:
+        mock_os.path.join.return_value = os.path.join(
+            profile_manager_fixture.profile_dir, profile_name)
+    else:
+        mock_os.path.join.return_value = os.path.join(
+            profile_manager_fixture.profile_dir, "moved_test_profile")
+
+    profile_manager_fixture.list = lambda: []
+
+    profile_manager_fixture.import_profile("/some_path/moved_test_profile.tgz",
+                                           profile_name)
+
+    if profile_name is not None:
+        mock_os.path.join.assert_called_with(
+            profile_manager_fixture.profile_dir, profile_name)
+    else:
+        mock_os.path.join.assert_called_with(
+            profile_manager_fixture.profile_dir, "moved_test_profile")
+
+    tfile.open.assert_called_with("/some_path/moved_test_profile.tgz")
+
+    tfile.open.return_value.extractall.assert_called_with(
+        path=mock_os.path.join.return_value
+    )
+
+
+def test_profile_import_no_file(profile_manager_fixture):
+    with pytest.raises(IOError):
+        profile_manager_fixture.import_profile("zooooo.tgz", None)
+
+
+def test_profile_import_profile_exists(profile_manager_fixture, mocker):
+    tprof = profile_manager_fixture.create("new_t_prof")
+    profile_manager_fixture.activate(tprof.name)
+    mock_os = mocker.patch.object(profiles, "os")
+    mock_os.path.exists.return_value = True
+    profile_manager_fixture.get = lambda x: True
+    with pytest.raises(exceptions.IRProfileExists):
+        profile_manager_fixture.import_profile("zooooo.tgz", tprof.name)
