@@ -51,13 +51,11 @@ class InfraRedPluginManager(object):
     def _load_plugins(self):
         for plugin_type_section in self.config.options(
                 self.SUPPORTED_TYPES_SECTION):
-            self.__class__.PLUGINS_DICT[plugin_type_section] = {}
             if self.config.has_section(plugin_type_section):
                 for plugin_name, plugin_path in self.config.items(
                         plugin_type_section):
                     plugin = InfraRedPlugin(plugin_path)
-                    self.__class__.PLUGINS_DICT[
-                        plugin_type_section][plugin_name] = plugin
+                    self.__class__.PLUGINS_DICT[plugin_name] = plugin
 
     @property
     def config_file(self):
