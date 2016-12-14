@@ -15,7 +15,9 @@ New In InfraRed 2.0
     Each plugins is fully contained within a single directory.
     Plugin structure is fully defined and plugins can be loaded from any location on the system.
     `"Example plugin"` shows contributors how to structure their Ansible projects to plug into `InfraRed`
-
+#. Answers file:
+    The switch ``--generate-conf-file`` is renamed ``--generate-answers-file`` to avoid confusion
+    with configuration files.
 .. OVB
 .. Rename OSPD to tripleo
 
