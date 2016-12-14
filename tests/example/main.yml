@@ -10,3 +10,11 @@
         file:
             path: "{{ inventory_dir }}/{{ output_file }}"
             state: touch
+
+      - name: Test output
+        vars:
+            output_file: output.example
+        copy:
+            content: "{{ provision | to_nice_json }}"
+            dest: "{{ inventory_dir }}/{{ output_file }}"
+        when: "{{ provision is defined }}"

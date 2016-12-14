@@ -34,7 +34,6 @@ SHARED_GROUPS = [
         'title': 'Inventory options',
         'options': {
             'inventory': {
-                'default': 'local_hosts',
                  'help': 'Inventory file',
                  'type': 'str'
             }
@@ -83,11 +82,15 @@ SHARED_GROUPS = [
         'title': 'Configuration file options',
         'options': {
             'from-file': {
-                'action': 'read-config',
+                'action': 'read-answers',
                 'help': 'reads arguments from file.'
             },
             'generate-conf-file': {
-                'action': 'generate-config',
+                'action': 'generate-answers',
+                'help': 'DEPRECATED. see --generate-answers-file'
+            },
+            'generate-answers-file': {
+                'action': 'generate-answers',
                 'help': 'generate configuration file with default values'
             }
         },

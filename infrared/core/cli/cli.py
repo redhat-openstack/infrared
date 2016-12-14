@@ -63,13 +63,25 @@ class CliParser(object):
         return subparsers
 
     @classmethod
-    def parse_args(cls, spec, arg_parser):
-        parse_args, unrecognized = arg_parser.parse_known_args()
+    def parse_cli_input(cls, arg_parser, args=None):
+        """
+
+        :param arg_parser: argparse object
+        :param args: replace sys.argv[1:]
+        :return: dict. Parsed CLI input
+        """
+
+        parse_args, unknown_args = arg_parser.parse_known_args(args)
+        # todo(obaranov) Pass all the unknown arguments to the ansible
+        # For now just raise exception
+        if unknown_args:
+            raise exceptions.IRUnrecognizedOptionsException(unknown_args)
+
         parse_args = parse_args.__dict__
 
         # move sub commands to the nested dicts
         result = collections.defaultdict(dict)
-        expr = '^(?P<subcmd_name>command[0-9])+(?P<arg_name>.*)$$'
+        expr = '^(?P<subcmd_name>subcommand)+(?P<arg_name>.*)$$'
         for arg, value in parse_args.items():
             if value is None:
                 continue
@@ -85,10 +97,8 @@ class CliParser(object):
                 cmd_name = match.group('subcmd_name')
                 sub_name = parse_args[cmd_name]
                 result[sub_name][arg_name] = value
-            else:
-                result[spec.app_name][arg] = value
 
-        return result, CliParser._transform_unknown_args(unrecognized)
+        return result
 
     @classmethod
     def _add_groups(cls, spec, arg_parser, parser_name, parser_data,
@@ -168,7 +178,7 @@ class CliParser(object):
             allowed_values = opt_kwargs['choices']
         elif option_data.get('type', None) and \
                 option_data['type'] in COMPLEX_TYPES:
-            action = spec.create_custom_type(
+            action = spec.create_complex_argumet_type(
                 subparser,
                 option_data['type'],
                 option_name)
@@ -239,11 +249,8 @@ class CliParser(object):
 
 
 # custom argparse actions
-class ReadConfigAction(argparse.Action):
-    """
-    Custom action to read configuration file and
-    inject arguments into argparse from file
-    """
+class ReadAnswersAction(argparse.Action):
+    """Custom action to read input from answers file into argparse object. """
 
     def __call__(self, parser, namespace, values, option_string=None):
         # reading file
@@ -273,11 +280,8 @@ class ReadConfigAction(argparse.Action):
         setattr(namespace, self.dest, res_dict)
 
 
-class GenerateConfigAction(argparse._StoreAction):
-    """
-    Placeholder to identify an action to generate
-    config file with the default values
-    """
+class GenerateAnswersAction(argparse._StoreAction):
+    """Stub action for answers fiele generation. """
     pass
 
 
@@ -293,13 +297,10 @@ class ComplexType(object):
 
     def __init__(self, arg_name,
                  settings_dirs,
-                 app_name,
-                 app_subfolder,
                  sub_command_name):
+        # FIXME(yfried): this should take plugin as input
         self.arg_name = arg_name
         self.sub_command_name = sub_command_name
-        self.app_name = app_name
-        self.app_subfolder = app_subfolder
         self.settings_dirs = settings_dirs
 
     def resolve(self, value):
@@ -512,8 +513,8 @@ class Topology(ComplexType):
 
 # register custom actions
 ACTIONS = {
-    'read-config': ReadConfigAction,
-    'generate-config': GenerateConfigAction
+    'read-answers': ReadAnswersAction,
+    'generate-answers': GenerateAnswersAction
 }
 
 # register complex Types. See ComplexType to implement new types

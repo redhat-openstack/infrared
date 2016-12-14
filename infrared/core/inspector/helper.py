@@ -26,7 +26,7 @@ class SpecDictHelper(object):
 
     def iterate_parsers(self):
         """Iterates over the main parsers and subparsers. """
-        yield self.spec_dict
+
         for subparser_name, subparser_dict in self.spec_dict.get(
                 'subparsers', {}).items():
             yield dict(name=subparser_name, **subparser_dict)
@@ -68,6 +68,7 @@ class SpecDictHelper(object):
 
     def get_option_spec(self, command_name, argument_name):
         """Gets the specification for the specified option name. """
+
         options = self.get_parser_option_specs(command_name)
         return next((opt for opt in options
                      if opt['name'] == argument_name), None)
