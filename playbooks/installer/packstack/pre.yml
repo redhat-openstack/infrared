@@ -15,6 +15,18 @@
       - name: Update all packages
         yum: name=* state=latest
 
+- name: Ensure data interface has an IP adddress
+  hosts: openstack_nodes
+  tags: setup_data_interface
+  become: yes
+  become_method: sudo
+  any_errors_fatal: true
+  tasks:
+      - name: assign temporary ip address for the data interfaces
+        shell: |
+            ip addr add {{ hostvars[inventory_hostname].data_interface_ip }} dev {{ installer.network.interfaces.data.label }}
+        ignore_errors: yes
+
 - name: Ensure hostname is configured properly
   hosts: openstack_nodes
   gather_facts: yes

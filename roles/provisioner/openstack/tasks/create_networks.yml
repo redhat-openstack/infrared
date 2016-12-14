@@ -1,0 +1,36 @@
+- name: Create networks
+  os_network:
+      state: present
+      name: "{{ provisioner.prefix }}{{ item.key }}"
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      external: "{{ item.value.external_connectivity | default(omit) }}"
+      shared: "{{ item.value.shared | default(omit) }}"
+      timeout: "{{ item.value.timeout | default(omit) }}"
+  with_dict: "{{ provisioner.topology.network }}"
+  register: networks
+
+- name: Create subnets
+  os_subnet:
+      state: present
+      name: "{{ provisioner.prefix }}{{ item.key }}-subnet"
+      network_name: "{{ provisioner.prefix }}{{ item.key }}"
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      cidr: "{{ item.value.subnet.cidr | default(omit) }}"
+      allocation_pool_start: "{{ item.value.subnet.allocation_pool_start }}"
+      allocation_pool_end: "{{ item.value.subnet.allocation_pool_end }}"
+      dns_nameservers: "{{ item.value.subnet.dns | default(omit) }}"
+      enable_dhcp: "{{ item.value.subnet.enable_dhcp | default(enable_dhcp) }}"
+      gateway_ip: "{{ item.value.subnet.gateway_ip | default(omit) }}"
+  with_dict: "{{ provisioner.topology.network }}"
+  register: subnets
+  when: networks|changed
+
+- name: Register externally accessible networks
+  os_networks_facts:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      filters:
+          router:external: true
+  register: external_networks
+
+- set_fact:
+      external_network: "{{ external_networks.ansible_facts.openstack_networks | first }}"

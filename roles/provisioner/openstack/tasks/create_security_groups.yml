@@ -1,0 +1,19 @@
+- name: Create security groups
+  os_security_group:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      name: "{{ provisioner.prefix }}{{ item.value.name }}"
+      state: present
+  register: security_groups
+  with_dict: "{{ provisioner.security_groups }}"
+
+- name: Create security group rules
+  os_security_group_rule:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      security_group: "{{ provisioner.prefix }}{{ item.value.name }}"
+      protocol: "{{ item.value.protocol | default(omit) }}"
+      port_range_min: "{{ item.value.port_range_min | default(omit) }}"
+      port_range_max: "{{ item.value.port_range_max | default(omit) }}"
+      remote_ip_prefix: "{{ item.value.remote_ip_prefix | default(omit) }}"
+      state: present
+  register: security_group_rules
+  with_dict: "{{ provisioner.security_groups.rules }}"

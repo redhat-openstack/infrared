@@ -1,0 +1,24 @@
+# TODO: add release floating IP mechanism
+- name: Clean floating IPs
+  os_floating_ip:
+      state: absent
+      purge: yes
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      server: "{{ provisioner.prefix }}{{ node.value.name }}-{{ item }}"
+      wait: yes
+  with_sequence: start=0 end="{{ node.value.amount | int - 1 }}"
+  register: floating_ips
+  ignore_errors: yes
+
+- name: Clean instances
+  os_server:
+      state: absent
+      name: "{{ provisioner.prefix }}{{ node.value.name }}-{{ item }}"
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+  with_sequence: start=0 end="{{ node.value.amount | int - 1 }}"
+  register: instances
+  ignore_errors: yes
+
+- name: Fail run if one of nova cleanups tasks failed/skipped
+  fail: msg="The run failed because one of nova cleanup tasks failed/skipped"
+  when: instances|skipped or floating_ips|skipped

@@ -1,0 +1,47 @@
+---
+- name: Clean instances
+  include: "cleanup_instances.yml"
+  with_dict: "{{ provisioner.topology.nodes }}"
+  loop_control:
+      loop_var: node
+  when: provisioner.topology.nodes is defined
+
+- name: Cleanup routers
+  os_router:
+      state: absent
+      name: "{{ provisioner.prefix }}{{ item.key }}"
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+  with_dict: "{{ provisioner.topology.routers }}"
+  when: provisioner.topology.routers is defined
+  register: routers
+
+- name: Cleanup subnets
+  os_subnet:
+      state: absent
+      name: "{{ provisioner.prefix }}{{ item.key }}-subnet"
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+  with_dict: "{{ provisioner.topology.network }}"
+  when: provisioner.topology.network is defined
+  register: subnets
+
+- name: Cleanup networks
+  os_network:
+      state: absent
+      name: "{{ provisioner.prefix }}{{ item.key }}"
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+  with_dict: "{{ provisioner.topology.network }}"
+  when: provisioner.topology.network is defined
+  register: networks
+
+- name: Cleanup security groups
+  os_security_group:
+      state: absent
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      name: "{{ provisioner.prefix }}{{ item.value.name }}"
+  register: security_groups
+  with_dict: "{{ provisioner.security_groups | default({}) }}"
+  when: provisioner.security_groups is defined
+
+- name: Fail run if one of neutron cleanups tasks failed/skipped
+  fail: msg="The run failed because one of neutron cleanup tasks failed/skipped"
+  when: (routers|skipped or subnets|skipped or networks|skipped)

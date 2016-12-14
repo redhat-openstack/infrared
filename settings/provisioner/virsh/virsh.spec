@@ -39,12 +39,12 @@ subparsers:
             - title: topology
               options:
                   topology-network:
-                      type: YamlFile
-                      help: 'A YAML file representing the network configuration to be used. Please see "settings/provisioner/virsh/topology/network/network.sample.yml" as reference'
-                      default: default.yml
+                      type: ListOfYamls
+                      help: 'Network topology. In the form of: <network>[,<network>] Example: net1,net2'
+                      default: "data,external,management"
                   topology-nodes:
                       type: Topology
-                      help: Provision topology.
+                      help: 'Provision topology. In the form of: <node>:<amount>[,<node>:<amount>] Example: undercloud:1,controller:3'
                       required: yes
                   topology-username:
                       type: Value
@@ -52,7 +52,6 @@ subparsers:
                       help: |
                           Non-root username with sudo privileges that will be created on nodes.
                           Will be use as main ssh user subsequently.
-
 
             - title: cleanup
               options:

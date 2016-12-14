@@ -83,7 +83,7 @@
             pool: "{{ subnet.allocation_pool|default({}) }}"
             # Check that provisioner data is discoverable if not, all its values are set to False and will trigger "omit"
             # Module will fail if data is not discoverable or provided by user.
-            p_data: "{{ ((((provisioner|default({})).neutron|default({})).subnets|default({})).external|default({})).nested|default({}) }}"
+            p_data: "{{ ((((provisioner|default({})).topology|default({})).network|default({})).external|default({})).nested|default({}) }}"
             p_cidr: "{{ p_data.subnet_cidr|default(False) }}"
             p_gateway: "{{ p_data.subnet_gateway|default(False) }}"
             p_pool_start: "{{ p_data.allocation_pool_start|default(False) }}"

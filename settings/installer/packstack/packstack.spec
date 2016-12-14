@@ -61,6 +61,7 @@ subparsers:
                           Gateway
 
                           If empty, will try to discover using "neutron.subnets.external" details
+                      default: default.yml
                   # TODO(yfried): decouple this from openstack provisioner.
 
             - title: Product

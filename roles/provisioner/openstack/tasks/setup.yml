@@ -1,0 +1,62 @@
+- include: "create_networks.yml"
+  tags: networks
+  when: provisioner.topology.network is defined
+
+- name: Create routers
+  os_router:
+      state: present
+      name: "{{ provisioner.prefix }}{{ item.key | default(router_name) }}"
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      external_fixed_ips: "{{ item.value.external_fixed_ips | default(omit) }}"
+      interfaces: "{{ item.value.attach_to_networks | map('regex_replace', '(.*)', provisioner.prefix + '\\1-subnet') | join(',') }}"
+      network: "{{ external_network.id }}"
+  register: routers
+  with_dict: "{{ provisioner.topology.routers }}"
+  when: provisioner.topology.routers is defined
+
+- include: "create_security_groups.yml"
+  when: provisioner.security_groups is defined
+
+# This is needed for os_keypair as it uses public key
+- name: Retrieve public key from private key
+  shell: "ssh-keygen -y -f {{ provisioner.key.file }}"
+  register: public_key_content
+
+- name: Add keypair
+  os_keypair:
+      state: present
+      name: "{{ provisioner.key.name }}"
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+      public_key: "{{ public_key_content.stdout }}"
+  when: not provisioner.key.name
+
+- include: create_instances.yml
+  with_dict: "{{ provisioner.topology.nodes }}"
+  loop_control:
+      loop_var: node
+  when: provisioner.topology.nodes is defined
+
+- name: Generate new Inventory file
+  template:
+      src: "{{ lookup('env', 'PWD') }}/templates/inventory.j2"
+      dest: "{{ lookup('env', 'PWD') }}/hosts-provision"
+
+- name: Link to new Inventory file
+  file:
+      dest: "{{ lookup('env', 'PWD') }}/hosts"
+      state: link
+      src: "{{ lookup('env', 'PWD') }}/hosts-provision"
+
+- name: Waiting for OpenStack nodes to be SSH-able
+  wait_for:
+      host: "{{ hostvars[item].ansible_ssh_host }}"
+      port: 22
+      search_regex: OpenSSH
+      delay: 10
+  with_items: "{{ groups.all | difference(['localhost']) }}"
+
+- name: "update ansible.ssh.config template"
+  template:
+      src: ansible.ssh.config.j2
+      dest: "{{ inventory_dir }}/ansible.ssh.config"
+  delegate_to: localhost
