@@ -147,6 +147,7 @@ class InfraRedPluginManager(object):
             self.config.write(fp)
 
         self._install_requirements(plugin_path)
+        self._load_plugins()
 
     def remove_plugin(self, plugin_type, plugin_name):
         if plugin_type not in self.config.options(
@@ -168,6 +169,7 @@ class InfraRedPluginManager(object):
                 self.config.remove_section(plugin_type)
             with open(self.config_file, 'w') as fp:
                 self.config.write(fp)
+            self._load_plugins()
 
     @property
     def supported_plugin_types(self):
