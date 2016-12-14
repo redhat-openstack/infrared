@@ -1,7 +1,7 @@
 plugin_type: provision
-description: Example provisioner plugin
+description: Example1 provisioner plugin
 subparsers:
-    example:
+    provision_example1:
         # FIXME(yfried): duplicates "description"
         help: Example provisioner plugin
         include_groups: []
