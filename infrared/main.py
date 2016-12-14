@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import sys
 
 from tabulate import tabulate
@@ -109,28 +110,34 @@ class PluginManagerSpec(api.SpecObject):
         command0 = args.get('command0', '')
 
         if command0 == 'list':
-            self._list_plugins()
+            print '\nAvailable plugins:' \
+                  '\n------------------'
+            print self.get_formatted_plugins_list(self.plugin_manager)
         elif command0 == 'add':
             self.plugin_manager.add_plugin(args['path'])
         elif command0 == 'remove':
             self.plugin_manager.remove_plugin(args['type'], args['name'])
 
-    def _list_plugins(self):
+    @classmethod
+    def get_formatted_plugins_list(cls, plugin_manager):
         """
         Print a list of available plugins sorted by type
         :return:
         """
-        longest_type = max(self.plugin_manager.supported_plugin_types,
-                           key=len)
+        plugins_str = ''
+        longest_type = max(plugin_manager.supported_plugin_types, key=len)
 
-        print("Available plugins:")
-        for plugin_type, plugins in \
-                self.plugin_manager.PLUGINS_DICT.iteritems():
+        sorted_plugins_dict = OrderedDict(
+            sorted(plugin_manager.PLUGINS_DICT.items(), key=lambda t: t[0]))
+
+        for plugin_type, plugins in sorted_plugins_dict.iteritems():
             plugins_names = [plugin.name for plugin in plugins]
             plugins_names.sort()
-            print('  {:{align}{width}} {{{}}}'.format(
+            plugins_str += '  {:{align}{width}} {{{}}}\n'.format(
                 plugin_type, ','.join(plugins_names), align='<',
-                width=len(longest_type) + 6))
+                width=len(longest_type) + 6)
+
+        return plugins_str
 
 
 def main():
