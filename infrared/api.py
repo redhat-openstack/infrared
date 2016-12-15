@@ -80,14 +80,21 @@ class InfraRedPluginsSpec(SpecObject):
 
         :param parser: argparse object
         :param args: dict, input arguments as parsed by the parser.
-        :return: Ansible exit code
+        :return:
+            * Ansible exit code if ansible is executed.
+            * None if answers file is generated
         """
         if self.specification is None:
             # FIXME(yfried): Create a proper exception type
             raise Exception("Unable to create specification "
                             "for '{}' plugin. Check plugin "
                             "config and settings folders".format(self.name))
-        nested_args, control_args = self.specification.parse_args(parser, args)
+        parsed_args = self.specification.parse_args(parser, args)
+        if parsed_args is None:
+            return None
+
+        # unpack parsed arguments
+        nested_args, control_args = parsed_args
 
         if control_args.get('debug', None):
             logger.LOG.setLevel(logging.DEBUG)

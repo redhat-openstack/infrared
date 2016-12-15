@@ -15,7 +15,7 @@ LOG = logger.LOG
 
 
 class SpecParser(object):
-    """Parses the input arguments from different sources (cli, file, env). """
+    """Parses input arguments from different sources (cli, answers file). """
 
     @classmethod
     def from_files(cls, subparser, spec_file, settings_folders, base_groups):
@@ -61,7 +61,7 @@ class SpecParser(object):
         self.spec_helper.spec_dict['shared_groups'] = shared_groups
 
     def _get_defaults(self, default_getter_func):
-        """Resolve arguments' values from env, cli or answers file.
+        """Resolve arguments' values from cli or answers file.
 
         :param default_getter_func: callable. will be called for all the
             available options in spec file.
@@ -102,7 +102,7 @@ class SpecParser(object):
              option_spec) in self._iterate_received_arguments(cli_args):
             file_result[parser_name] = file_result.get(parser_name, {})
             if option_spec and option_spec.get(
-                    'action', '') == 'read-config':
+                    'action', '') == 'read-answers':
                 # we have config option. saving it.
                 self._convert_non_cli_args(
                     parser_name, parser_dict[arg_name])
@@ -230,7 +230,7 @@ class SpecParser(object):
             subcommand)
 
     def parse_args(self, arg_parser, args=None):
-        """Parses all the arguments (cli, file, env)
+        """Parses all the arguments (cli, answers file)
 
         :return: None, if ``--generate-answers-file`` in arg_arg_parser
         :return: (dict, dict):
