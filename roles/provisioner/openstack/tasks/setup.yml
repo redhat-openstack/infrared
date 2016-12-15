@@ -53,7 +53,7 @@
       port: 22
       search_regex: OpenSSH
       delay: 10
-  with_items: "{{ groups.all | difference(['localhost']) }}"
+  with_items: "{{ groups.all | difference(['localhost']) | difference(groups.ovb) }}"
 
 - name: "update ansible.ssh.config template"
   template:

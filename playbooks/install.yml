@@ -1,6 +1,6 @@
 ---
 - name: Set selinux state
-  hosts: all:!localhost
+  hosts: all:!localhost:!ovb
   tags: init
   gather_facts: no
   become: yes
@@ -11,7 +11,7 @@
           state: "{{ installer.selinux|default('enforcing') }}"
 
 - name: Ensure yum presence
-  hosts: all:!localhost
+  hosts: all:!localhost:!ovb
   gather_facts: no
   tags: init
   become: yes
@@ -20,7 +20,7 @@
     - shell: python -c 'import yum' || (dnf install -y yum yum-utils && ln -snf /usr/bin/yum-deprecated /usr/bin/yum)
 
 - name: Dump all facts before the installation begins
-  hosts: openstack_nodes
+  hosts: openstack_nodes:!ovb
   gather_facts: no
   tags: dump_facts
   any_errors_fatal: true

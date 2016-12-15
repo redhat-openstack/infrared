@@ -1,0 +1,11 @@
+---
+{% macro setvar(name) -%}
+{% if name in hostvars[item] -%}
+{{ name }}: {{ hostvars[item][name] }}
+{%- endif %}
+{%- endmacro %}
+{% set os_host_vars = ['ram', 'disk', 'vcpus', 'ipmi_ip', 'ipmi_mac'] %}
+{% for os_var in os_host_vars %}
+{{ setvar(os_var) }}
+{% endfor %}
+
