@@ -21,6 +21,7 @@
       image: "{{ provisioner.image.name }}"
       nics: "{{ nics.results | map(attribute='stdout') | list }}"
       key_name: "{{ provisioner.key.name }}"
+      security_groups: "{{ node.value.security_groups | default(omit) }}"
       wait: "yes"
   with_sequence: start=0 end="{{ node.value.amount | int - 1 }}"
   register: instances
@@ -44,11 +45,17 @@
   register: servers
 
 - name: Add created servers to inventory
+  vars:
+      - node_user: "{%- if node.value.image is defined -%}{{ node.value.image.ssh_user }}{%- else -%}{{ provisioner.image.ssh_user }}{%- endif -%}"
+      - instance_flavor: "{{ flavor.ansible_facts.openstack_flavors | first }}"
   add_host:
       name: "{{ item.name }}"
       groups: "{{ node.value.groups | join(',') }}"
-      ansible_ssh_user: "{{ provisioner.image.ssh_user }}"
-      ansible_ssh_host: "{{ item.interface_ip }}"
+      ansible_ssh_user: "{{ node_user }}"
+      ansible_ssh_host: "{{ item.interface_ip | default(item.private_v4) }}"
       ansible_ssh_private_key_file: "{{ provisioner.key.file }}"
+      ram: "{{ instance_flavor.ram }}"
+      disk: "{{ instance_flavor.disk }}"
+      vcpus: "{{ instance_flavor.vcpus }}"
       data_interface_ip: "{{ item.addresses.get(provisioner.prefix + 'data', [{},])[0].addr | default('') }}"
   with_items: "{{ servers.ansible_facts.openstack_servers }}"

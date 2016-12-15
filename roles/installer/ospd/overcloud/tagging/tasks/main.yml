@@ -14,21 +14,47 @@
   register: overcloud_facts
   when: "'virthost' in groups"
 
-- name: create the flavors for our machines
-  vars:
-      flv_min_disk_size: 19
-      flv_min_cpu: 1
-  shell: >
-      source ~/stackrc;
-      openstack flavor create
-      --id auto
-      --ram {{ item.ansible_facts.node_facts.ansible_memtotal_mb }}
-      --disk {{ [(item.ansible_facts.node_facts.ansible_devices.vda.size | regex_replace('^([0-9]+).*$', '\1') | int) - 1, flv_min_disk_size] | max }}
-      --vcpus {{ [(item.ansible_facts.node_facts.ansible_processor_vcpus | int) - 1, flv_min_cpu] | max }}
-      {{ item.item.rstrip('1234567890-') }}-{{ item.item.rstrip('1234567890-') | to_uuid }}
-  register: flavor_result
-  failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item.item }}-{{ item.item | to_uuid }} already exists') != -1"
-  with_items: "{{ overcloud_facts.results | default([]) }}"
+- block:
+    - name: Read overcloud facts from files
+      set_fact: node_facts="{{lookup('file', '{{ inventory_dir }}/{{ item }}')}}"
+      with_items: "{{ groups['overcloud_nodes'] }}"
+      register: overcloud_facts
+
+    - name: create the flavors for our machines
+      vars:
+          flv_min_disk_size: 19
+          flv_min_cpu: 1
+      shell: >
+          source ~/stackrc;
+          openstack flavor create
+          --id auto
+          --ram {{ item.ansible_facts.node_facts.ansible_memtotal_mb }}
+          --disk {{ [(item.ansible_facts.node_facts.ansible_devices.vda.size | regex_replace('^([0-9]+).*$', '\1') | int) - 1, flv_min_disk_size] | max }}
+          --vcpus {{ [(item.ansible_facts.node_facts.ansible_processor_vcpus | int) - 1, flv_min_cpu] | max }}
+          {{ item.item.rstrip('1234567890-') }}-{{ item.item.rstrip('1234567890-') | to_uuid }}
+      register: flavor_result
+      failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item.item }}-{{ item.item | to_uuid }} already exists') != -1"
+      with_items: "{{ overcloud_facts.results | default([]) }}"
+  when: "'virthost' in groups"
+
+
+  # use host vars for openstack deployments
+  # todo(obaranov) use the same approach for virsh
+- block:
+    - name: create the flavors for our machines
+      shell: >
+            source ~/stackrc;
+            openstack flavor create
+            --id auto
+            --ram {{ hostvars[item.item].ram }}
+            --disk {{ (hostvars[item.item].disk|int) - 1 }}
+            --vcpus {{ (hostvars[item.item].vcpus|int) - 1 }}
+            {{ item.item.rstrip('1234567890-') }}-{{ item.item.rstrip('1234567890-') | to_uuid }}
+      register: flavor_result
+      failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item.item }}-{{ item.item | to_uuid }} already exists') != -1"
+      with_items: "{{ overcloud_facts.results | default([]) }}"
+  when: "'bmc' in groups"
+
 
 - set_fact:
       tagged_flavors: "{{ flavor_result.results }}"

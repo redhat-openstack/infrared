@@ -1,0 +1,36 @@
+name: "controller"
+prefix: null
+amount: "1"
+cpu: "4"
+memory: "8192"
+swap: "0"
+os:
+    type: "linux"
+    variant: "rhel7"
+image:
+    name: "ipxe-boot"
+    ssh_user: "root"
+disks:
+    disk1:
+        import_url: null
+        path: "/var/lib/libvirt/images"
+        dev: "/dev/vda"
+        size: "40G"
+        cache: "unsafe"
+        preallocation: "metadata"
+interfaces:
+    nic1:
+        network: "data"
+    nic2:
+        network: "management"
+    nic3:
+        network: "external"
+baremetal: yes
+external_network: external
+
+groups:
+    - controller
+    - openstack_nodes
+    - overcloud_nodes
+    - network
+    - ovb

@@ -1,0 +1,38 @@
+# todo(obaranov) dynamically get/read from settings the ipmi interface name
+- name: Update undercloud for ovb
+  tags: ovb
+  hosts: undercloud
+  become: yes
+  become_method: sudo
+  vars:
+      ipmi_interface: "eth0"
+  tasks:
+      - name: Set MTU values
+        shell: >
+          ip link set {{ ipmi_interface }} mtu 1450;
+          echo "MTU=1450" >> /etc/sysconfig/network-scripts/ifcfg-{{ item }}
+        with_items:
+          - "{{ ipmi_interface }}"
+
+      - name: Ensure neutron will use needed MTU
+        lineinfile: dest="/etc/dnsmasq-ironic.conf" line="dhcp-option-force=26,1450"
+
+      - name: Restart neutron services
+        command: systemctl restart 'neutron-*'
+
+      - name: Restart ironic conductor
+        command: systemctl restart openstack-ironic-conductor
+
+- name: change quotas
+  tags: ovb
+  hosts: undercloud
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  tasks:
+    - name: set neutron subnet quota to unlimited
+      ignore_errors: true
+      shell: >
+        source ~/stackrc;
+        neutron quota-update --subnet -1;
+        neutron quota-update --network -1;
+        neutron quota-update --security_group -1;
