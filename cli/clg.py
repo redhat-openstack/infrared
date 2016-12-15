@@ -1148,12 +1148,13 @@ class Topology(ComplexType):
         """
         topology_dirs = [os.path.join(path, self.app_name, 'topology')
                          for path in self.settings_dirs]
+        topology_dirs.extend(self.get_file_locations())
 
         topology_dict = {}
         for topology_item in value.split(','):
-            pattern = re.compile("^[A-Za-z]+:[0-9]+$")
+            pattern = re.compile("^[A-Za-z/]+:[0-9]+$")
             if pattern.match(topology_item) is None:
-                pattern = re.compile("^[0-9]+_[A-Za-z]+$")
+                pattern = re.compile("^[0-9]+_[A-Za-z/]+$")
                 if pattern.match(topology_item) is None:
                     raise exceptions.IRWrongTopologyFormat(value)
                 number, node_type = topology_item.split('_')

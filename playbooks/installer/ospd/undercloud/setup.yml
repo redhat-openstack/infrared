@@ -3,6 +3,15 @@
       name: "{{ inventory_hostname }}.redhat.local"
 
 - name: update /etc/hosts with undercloud details
+  vars:
+      host_address: "{%- if 'bmc' in groups -%}{{ ansible_default_ipv4.address }}{%- else -%}{{ ansible_ssh_host }}{%- endif -%}"
+  lineinfile:
+      dest: "/etc/hosts"
+      line: "{{ host_address }}   {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
+      state: present
+
+
+- name: update /etc/hosts with undercloud details
   lineinfile:
       dest: "/etc/hosts"
       line: "{{ ansible_ssh_host }}    {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"

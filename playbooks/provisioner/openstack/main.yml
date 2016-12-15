@@ -1,11 +1,34 @@
 ---
+- name: Cleanup overcloud nodes host vars
+  hosts: localhost
+  tags: host_vars
+  any_errors_fatal: true
+  roles:
+      - { role: provisioner/hostvars, action: cleanup, pattern: "{{ provisioner.prefix }}*" }
+
 - name: Provision OpenStack resources
   hosts: localhost
+  any_errors_fatal: true
   roles:
       - { role: provisioner/openstack, action: "setup" }
 
+- name: Provision Baremetal controller (BMC)
+  hosts: bmc
+  become: yes
+  tags: bmc-setup
+  any_errors_fatal: true
+  roles:
+      - { role: provisioner/openstack/bmc, when: "'bmc' in groups" }
+
+- name: Save overcloud nodes host vars
+  hosts: localhost
+  tags: host_vars
+  any_errors_fatal: true
+  roles:
+      - { role: provisioner/hostvars, action: save, host_names: "{{ groups['overcloud_nodes'] }}" }
+
 - name: OpenStack Provisioner SSH wait
-  hosts: openstack_nodes
+  hosts: openstack_nodes:!ovb
   gather_facts: no
   any_errors_fatal: true
   tasks:
