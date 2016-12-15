@@ -1,0 +1,33 @@
+- name: Prepare machine for undercloud installation
+  include: init.yml
+  tags:
+      - undercloud_init
+      - undercloud
+      - backup
+
+- name: Deploy our undercloud
+  include: deploy.yml
+  tags:
+      - undercloud_deploy
+      - undercloud
+      - backup
+
+- name: Setup our images on the undercloud
+  include: images/main.yml
+  tags:
+      - images
+      - backup
+
+- name: Patch virthost for undercloud deployment (if present)
+  tags: virthost
+  include: virthost.yml
+  when: "'virthost' in groups"
+
+- name: Introspect our machines
+  include: introspect.yml
+  tags: introspection
+  when: "installer.overcloud is defined"
+
+- name: Tag our machines with proper flavors
+  include: tag.yml
+  tags: tagging

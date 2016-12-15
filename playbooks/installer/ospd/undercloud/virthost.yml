@@ -39,7 +39,7 @@
         shell: yum install ipxe-roms-qemu -y
         when: not update|changed
 
-- include: "undercloud-restore.yml"
+- include: "restore.yml"
   when: "'undercloud' not in groups"
 
 # Dumping all facts for later use
@@ -59,7 +59,12 @@
   any_errors_fatal: true
   vars:
       - instack_file: "/home/{{ installer.user.name }}/instackenv.json"
+      - undercloud_conf: "/home/{{ installer.user.name }}/undercloud.conf"
   tasks:
+        # Using crudini since lookup('ini', ...) doesn't seem to work
+      - shell: "crudini --get undercloud.conf DEFAULT local_interface"
+        register: undercloud_gateway_interface
+
       - name: copy our undercloud public key
         fetch:
             src: "/home/{{ installer.user.name }}/.ssh/id_rsa.pub"
@@ -82,7 +87,6 @@
             # Don't push a new file if folder contains a user-injected instackenv file
             force: no
         when: not (installer.instackenv is defined and installer.instackenv.file is defined and installer.instackenv.file)
-
 
 # In case we're dealing with virthost, we need to make sure the undercloud is able to ssh to the hypervisor
 - name: Create the stack user on the virthost and allow SSH to hypervisor
@@ -127,6 +131,6 @@
         with_items: "{{ groups['overcloud_nodes'] }}"
         when: "{{ installer.product.version|openstack_release == 10 }}"
 
-- include: "undercloud-backup.yml"
+- include: "backup.yml"
   tags: backup
   when: "backup is defined"
