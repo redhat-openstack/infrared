@@ -112,9 +112,12 @@ class InfraRedPluginsSpec(SpecObject):
         # TODO(yfried): when accepting inventory from CLI, need to update:
         # profile.inventory = CLI[inventory]
 
-        result = execute.ansible_playbook(inventory=active_profile.inventory,
-                                          playbook_path=self.plugin.playbook,
-                                          extra_vars=vars_dict)
+        result = execute.ansible_playbook(
+            inventory=active_profile.inventory,
+            playbook_path=self.plugin.playbook,
+            verbose=control_args.get('verbose', None),
+            extra_vars=vars_dict,
+            ansible_args=control_args.get('ansible-args', None))
         return result
 
 

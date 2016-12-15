@@ -6,6 +6,8 @@ according to the specification (spec) files.
 import argparse
 import collections
 import glob
+
+import abc
 import os
 import re
 import sys
@@ -303,16 +305,15 @@ class ComplexType(object):
         self.sub_command_name = sub_command_name
         self.settings_dirs = settings_dirs
 
+    @abc.abstractmethod
     def resolve(self, value):
-        """
-        Resolves the value of the complex type.
+        """Resolves the value of the complex type.
+
         :return: the resulting complex type value.
         """
-        raise NotImplemented()
 
     def get_allowed_values(self):
-        """
-        Gets the list of possible values for the complex type.
+        """Gets the list of possible values for the complex type.
 
         Should be overridden in the subclasses.
         """
@@ -336,23 +337,20 @@ class ComplexType(object):
 
 
 class Value(ComplexType):
-    """
-    The simple nested value option.
-    """
+    """The simple nested value option. """
 
     def resolve(self, value):
-        """
-        Returns the argument value
-        """
+        """Returns the argument value. """
         return value
 
 
 class AdditionalOptionsType(ComplexType):
-    """
+    """Plumb ansible-playbook arguments to ansible executor
+
     This is a custom type to handle passing additional arguments to some part
     of infrared.
 
-    Format should be --additional-args=option1=value1;option2=value2
+    Format should be --additional-args option1=value1;option2=value2
     """
 
     ARG_SEPARATOR = ';'

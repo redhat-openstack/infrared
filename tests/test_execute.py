@@ -136,3 +136,24 @@ def test_generate_answers_file(spec_fixture, profile_manager_fixture,  # noqa
     output_file = "output.example"
     inventory_dir = test_profile.path
     assert not path.exists(path.join(inventory_dir, output_file))
+
+
+def test_ansible_args(spec_fixture, profile_manager_fixture,          # noqa
+                      test_profile):
+    """Verify execution runs with --ansible-args. """
+
+    input_string = ['example', '--ansible-args',
+                    'start-at-task="Test output";tags=only_this']
+
+    sm = api.SpecManager()
+    sm.register_spec(spec_fixture)
+
+    inventory_dir = test_profile.path
+    output_file = "output.example"
+    assert not path.exists(path.join(inventory_dir, output_file))
+
+    profile_manager_fixture.activate(test_profile.name)
+    sm.run_specs(args=input_string)
+
+    # Combination of tags and start-at-task should avoid the file creation
+    assert not path.exists(path.join(inventory_dir, output_file))

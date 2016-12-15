@@ -60,8 +60,19 @@ Answers File:
     is used.
 
 Common Options:
-    * ``dry-run``: Don't execute Ansible playbook. Only write generated vars dict to stdout
-    * ``output``: Redirect generated vars dict from stdout to an explicit file (YAML format).
+    * ``--dry-run``: Don't execute Ansible playbook. Only write generated vars dict to stdout
+    * ``--output``: Redirect generated vars dict from stdout to an explicit file (YAML format).
+
+Ansible options:
+    * ``--verbose``: Set ansible verbosity level
+    * ``--ansible-args``: Pass all subsequent input to Ansible as raw arguments. This is for power-users wishing to access
+      Ansible functionality not exposed by `Infrared`::
+
+         infrared [...] --ansible-args step;tags=tag1,tag2;forks=500
+
+      Is the equivalent of::
+
+         ansible-playbook [...] --step --tags=tag1,tag2 --forks 500
 
 Complex option types
 ~~~~~~~~~~~~~~~~~~~~
