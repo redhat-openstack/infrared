@@ -1,0 +1,73 @@
+- block:
+    - name: copy our undercloud public key
+      fetch:
+          src: "/home/{{ installer.user.name }}/.ssh/id_rsa.pub"
+          dest: "{{ inventory_dir }}/id_rsa_undercloud.pub"
+          flat: yes
+
+    - name: grab undercloud private key
+      shell: "cat /home/{{ installer.user.name }}/.ssh/id_rsa"
+      register: uc_pkey_result
+
+    - name: store undercloud private key
+      set_fact:
+          # json file shouldn't hold newlines
+          undercloud_private_key: "{{ uc_pkey_result.stdout_lines | join('\\n')}}"
+  when: "'virthost' in groups"
+  tags: ironic
+
+# User provided file overwrites everything
+- name: check if instackenv is under the deployment folder
+  tags: ironic
+  stat:
+      path: "{{ installer.deployment.files.rstrip('/') }}/instackenv.json"
+  delegate_to: localhost
+  become: no
+  register: old_custom_instack
+  when: custom_instack == ''
+  changed_when: custom_instack == ''
+
+- set_fact:
+      old_custom_instack_path: "{{ old_custom_instack.stat.path }}"
+  when: old_custom_instack|changed and old_custom_instack.stat.exists != false
+  tags: ironic
+
+- name: copy instackenv if provided by the user
+  copy:
+      src: "{{ (custom_instack != '') | ternary(custom_instack, old_custom_instack_path) }}"
+      dest: "/home/{{ installer.user.name }}/{{ custom_instack | basename }}"
+  when: custom_instack != '' or old_custom_instack.stat.exists
+  register: inject_instackenv
+  tags: ironic
+
+- set_fact:
+      inject_instackenv_name: "{{ inject_instackenv.dest|basename }}"
+  when: inject_instackenv|changed
+  tags: ironic
+
+- name: prepare instack.json if one doesn't exist
+  tags: ironic
+  template:
+      src: "instackenv.json{{ ('bmc' in groups) | ternary('-bmc','')}}.j2"
+      dest: "/home/{{ installer.user.name }}/instackenv.json"
+      # Don't push a new file if folder contains a user-injected instackenv file
+      force: no
+  when: not (installer.instackenv is defined and installer.instackenv.file is defined and installer.instackenv.file) or 'virthost' in groups
+
+- name: verify that instackenv json file exists
+  tags: ironic
+  vars:
+      target: "{{ (inject_instackenv|changed) | ternary((inject_instackenv_name), 'instackenv.json') }}"
+  stat:
+      path: "/home/{{ installer.user.name }}/{{ target }}"
+  register: instack_file_path
+
+- set_fact:
+      instack_file: "{{ instack_file_path.stat.path }}"
+  when: instack_file_path.stat.exists
+  tags: ironic
+
+- fail:
+      msg: "instackenv file is missing"
+  when: not instack_file_path.stat.exists
+  tags: ironic

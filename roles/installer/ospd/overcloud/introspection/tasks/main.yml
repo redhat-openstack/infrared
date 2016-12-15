@@ -1,6 +1,12 @@
+- include: "prepare_nodes_for_introspection.yml"
+  tags: instack
+
 - name: register our hosts to instack
   tags: ironic
   shell: "source ~/stackrc; openstack baremetal import --json {{ instack_file }}"
+
+- include: "ovb.yml"
+  when: "'bmc' in groups"
 
 - name: assign the kernel and ramdisk before introspection begins
   tags: ironic
