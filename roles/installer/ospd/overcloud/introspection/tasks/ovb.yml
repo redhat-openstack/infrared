@@ -1,0 +1,13 @@
+# set root device to have correct disk size on ovb deployments
+# todo(obaranov) should be removed once ipxe_boot image is no longer used for ovb nodes porvision
+# http://tripleo.org/advanced_deployment/root_device.html
+#
+#  Supported hints are: 'model, wwn, vendor, serial, size'
+#  NOT supported: 'name'
+
+- name: set the root device for baremetal nodes (with size hint)
+  shell: |
+      source ~/stackrc
+      ironic node-list
+      ironic node-update {{ item }} add properties/root_device='{"size": {{ hostvars[item].disk  }} }'
+  with_items: "{{ groups['overcloud_nodes'] | default([])}}"

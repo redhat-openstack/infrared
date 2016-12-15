@@ -3,9 +3,11 @@
       name: "{{ inventory_hostname }}.redhat.local"
 
 - name: update /etc/hosts with undercloud details
+  vars:
+      host_address: "{{ ('bmc' in groups) | ternary(ansible_default_ipv4.address, ansible_ssh_host) }}"
   lineinfile:
       dest: "/etc/hosts"
-      line: "{{ ansible_ssh_host }}    {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
+      line: "{{ host_address }}   {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
       state: present
 
 - name: Creating extra repositories

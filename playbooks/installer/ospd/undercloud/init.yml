@@ -35,7 +35,7 @@
                 {{ installer.undercloud.config.file }}
                 {%- elif undercloud_conf.stat.exists -%}
                 {{ undercloud_conf.stat.path }}
-                {%- elif 'virthost' in groups.all -%}
+                {%- elif 'virthost' in groups or 'bmc' in groups -%}
                 templates/undercloud.conf
                 {%- else -%}
                 False
