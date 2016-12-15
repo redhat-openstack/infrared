@@ -18,6 +18,7 @@ New In InfraRed 2.0
 #. Answers file:
     The switch ``--generate-conf-file`` is renamed ``--generate-answers-file`` to avoid confusion
     with configuration files.
+
 .. OVB
 .. Rename OSPD to tripleo
 

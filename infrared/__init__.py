@@ -40,16 +40,6 @@ SHARED_GROUPS = [
         },
     },
     {
-        'title': 'Inventory hosts options',
-        'options': {
-            'inventory': {
-                'default': 'hosts',
-                'help': 'Inventory file',
-                'type': 'str'
-            }
-        },
-    },
-    {
         'title': 'Common options',
         'options': {
             'dry-run': {
@@ -79,7 +69,7 @@ SHARED_GROUPS = [
         },
     },
     {
-        'title': 'Configuration file options',
+        'title': 'Answers file',
         'options': {
             'from-file': {
                 'action': 'read-answers',
