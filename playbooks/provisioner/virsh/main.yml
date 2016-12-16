@@ -36,6 +36,18 @@
             search_regex: OpenSSH
         delegate_to: virthost
 
+      - name: Get disks space
+        command: df -h
+        register:  df
+
+      - debug: msg="{{ df.stdout }}"
+
+      - name: Get disks info
+        command: fdisk -l
+        register:  fdisk
+
+      - debug: msg="{{ fdisk.stdout }}"
+
       - name: create non root user
         user:
             name: "{{ provisioner.topology.username }}"
