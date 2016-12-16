@@ -34,6 +34,14 @@
   async: 7200
   poll: 0
 
+- name: Get disks amount
+  command: df -h
+  register: "df"
+
+- debug: msg="{{ fg.stdout }}"
+
+- debug: msg="{{ df.stderr }}"
+
 - name: Wait for our disks to be created
   async_status:
       jid: "{{ item.ansible_job_id }}"
