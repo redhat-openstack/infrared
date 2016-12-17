@@ -8,27 +8,81 @@
 - name: set additional properties
   shell: "source ~/stackrc; openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' baremetal"
 
-- name: Read overcloud facts from files
-  set_fact: node_facts="{{lookup('file', '{{ inventory_dir }}/{{ item }}')}}"
-  with_items: "{{ groups['overcloud_nodes'] }}"
-  register: overcloud_facts
+- block:
+      - name: Read overcloud facts from files
+        set_fact: node_facts="{{lookup('file', '{{ inventory_dir }}/{{ item }}')}}"
+        with_items: "{{ groups['overcloud_nodes'] }}"
+        register: overcloud_facts
+
+      - name: create the flavors for our machines
+        vars:
+            flv_min_disk_size: 19
+            flv_min_cpu: 1
+        shell: >
+            source ~/stackrc;
+            openstack flavor create
+            --id auto
+            --ram {{ item.ansible_facts.node_facts.ansible_memtotal_mb }}
+            --disk {{ [(item.ansible_facts.node_facts.ansible_devices.vda.size | regex_replace('^([0-9]+).*$', '\1') | int) - 1, flv_min_disk_size] | max }}
+            --vcpus {{ [(item.ansible_facts.node_facts.ansible_processor_vcpus | int) - 1, flv_min_cpu] | max }}
+            {{ item.item.rstrip('1234567890-') }}-{{ item.item.rstrip('1234567890-') | to_uuid }}
+        register: flavor_result
+        failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item.item }}-{{ item.item | to_uuid }} already exists') != -1"
+        with_items: "{{ overcloud_facts.results | default([]) }}"
+
+      - name: get the node UUID
+        shell: "source ~/stackrc; ironic node-list | grep {{ item.name | default(item) }} | awk '{print $2}'"
+        with_items: "{{ groups['overcloud_nodes'] | default([])}}"
+        register: node_list
   when: "'virthost' in groups"
 
-- name: create the flavors for our machines
-  vars:
-      flv_min_disk_size: 19
-      flv_min_cpu: 1
-  shell: >
-      source ~/stackrc;
-      openstack flavor create
-      --id auto
-      --ram {{ item.ansible_facts.node_facts.ansible_memtotal_mb }}
-      --disk {{ [(item.ansible_facts.node_facts.ansible_devices.vda.size | regex_replace('^([0-9]+).*$', '\1') | int) - 1, flv_min_disk_size] | max }}
-      --vcpus {{ [(item.ansible_facts.node_facts.ansible_processor_vcpus | int) - 1, flv_min_cpu] | max }}
-      {{ item.item.rstrip('1234567890-') }}-{{ item.item.rstrip('1234567890-') | to_uuid }}
-  register: flavor_result
-  failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item.item }}-{{ item.item | to_uuid }} already exists') != -1"
-  with_items: "{{ overcloud_facts.results | default([]) }}"
+- name: read instackenv file for bm deployment
+  command: cat "{{ instack_file }}"
+  register: overcloud_hosts_facts
+
+- set_fact:
+      overcloud_facts: "{{ overcloud_hosts_facts.stdout | from_json }}"
+
+- block:
+      - name: check for original flavors
+        shell: >
+            source ~/stackrc;
+            openstack flavor list | awk '/{{ item.name.rstrip('1234567890-') }}/ {print $4}'
+        with_items: "{{ overcloud_facts.nodes | default([]) }}"
+        register: original_flavors
+
+      - name: delete original flavors
+        shell: >
+            source ~/stackrc;
+            openstack flavor delete
+            {{ item[0].name.rstrip('1234567890-') }}
+        when: "item[0].name.rstrip('1234567890-') in item[1].cmd"
+        with_together:
+            - "{{ overcloud_facts.nodes | default([]) }}"
+            - "{{ original_flavors.results }}"
+        ignore_errors: yes
+
+      - name: create the flavors for our machines
+        vars:
+            flv_min_disk_size: 19
+            flv_min_cpu: 1
+        shell: >
+            source ~/stackrc;
+            openstack flavor create
+            --id auto
+            --ram {{ item.memory }}
+            --disk {{ [(item.disk | int) - 1, flv_min_disk_size] | max }}
+            --vcpus {{ [(item.cpu | int) - 1, flv_min_cpu] | max }}
+            {{ item.name.rstrip('1234567890-') }}
+        register: flavor_result
+        failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item.name }} already exists') != -1"
+        with_items: "{{ overcloud_facts.nodes | default([]) }}"
+
+      - name: get the node UUID
+        shell: "source ~/stackrc; ironic node-list | grep {{ item.name | default(item) }} | awk '{print $2}'"
+        with_items: "{{ overcloud_facts.nodes | default([])}}"
+        register: node_list
+  when: "'baremetal' in groups and overcloud_facts.nodes[0].name is defined"
 
 - set_fact:
       tagged_flavors: "{{ flavor_result.results }}"
@@ -38,14 +92,16 @@
   when: item.cmd is defined
   with_items: "{{ tagged_flavors | default([]) }}"
 
-- name: get the node UUID
-  shell: "source ~/stackrc; ironic node-list | grep {{ item }} | awk '{print $2}'"
-  with_items: "{{ groups['overcloud_nodes'] | default([])}}"
-  register: node_list
-
-- name: tag our nodes with the proper profile
+- name: tag our nodes with the proper profile for vm deployment
   shell: "source ~/stackrc; ironic node-update {{ item[0].stdout }} add properties/capabilities='profile:{{ item[1].cmd.split() | last }},boot_option:local'"
   when: "item[0].item is defined and item[1].cmd is defined and item[0].item.rstrip('1234567890-') in item[1].cmd"
-  with_nested:
+  with_together:
+      - "{{ node_list.results }}"
+      - "{{ tagged_flavors | default([]) }}"
+
+- name: tag our nodes with the proper profile for baremetal deployment
+  shell: "source ~/stackrc; ironic node-update {{ item[0].stdout }} add properties/capabilities='profile:{{ item[1].cmd.split() | last }},boot_option:local'"
+  when: "item[0].item.name is defined and item[1].cmd is defined and item[0].item.name.rstrip('1234567890-') in item[1].cmd"
+  with_together:
       - "{{ node_list.results }}"
       - "{{ tagged_flavors | default([]) }}"
