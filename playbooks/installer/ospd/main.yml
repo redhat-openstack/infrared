@@ -101,8 +101,22 @@
   hosts: undercloud
   gather_facts: no
   any_errors_fatal: true
+  pre_tasks:
+      - name: Check for the instackenv file
+        stat:
+            path: "/home/{{ installer.user.name }}/instackenv.json"
+        register: instack_file_path
+
+      - set_fact:
+            instack_file: "{{ instack_file_path.stat.path }}"
+        when: instack_file_path.stat.exists
+
+      - fail:
+            msg: "instackenv file is missing"
+        when: not instack_file_path.stat.exists
+
   roles:
-      - {role: installer/ospd/overcloud/tagging, when: "'overcloud_nodes' in groups"}
+      - {role: installer/ospd/overcloud/tagging}
 
 - name: Prepare the overcloud configuration
   tags:
