@@ -102,6 +102,17 @@ class InfraRedPluginManager(object):
             self._config = ConfigParser()
             self.config.readfp(fp)
 
+    @classmethod
+    def get_all_plugins(cls):
+        """
+        Returns list of all available plugins
+        """
+        all_plugins_list = []
+        for all_plugins_of_a_type in cls.PLUGINS_DICT.values():
+            all_plugins_list += all_plugins_of_a_type
+
+        return all_plugins_list
+
     def get_desc_of_type(self, s_type):
         """ Return the description of the given supported plugin type
 
@@ -118,7 +129,7 @@ class InfraRedPluginManager(object):
         :param plugin_name: Plugin name
         :return: InfraRedPlugin instance
         """
-        for plugin in cls.PLUGINS_DICT[plugin_type]:
+        for plugin in cls.PLUGINS_DICT[plugin_type].values():
             if plugin.name == plugin_name:
                 return plugin
 
