@@ -3,6 +3,8 @@ import argparse
 import abc
 import logging
 
+import yaml
+
 from infrared import SHARED_GROUPS
 from infrared.core import execute
 from infrared.core.inspector.inspector import SpecParser
@@ -78,11 +80,21 @@ class InfraRedPluginsSpec(SpecObject):
     def spec_handler(self, parser, args):
         """Execute plugin's main playbook.
 
+        if "--generate-answers-file":
+            only generate answers file
+        if "--dry-run":
+            only generate vars dict
+        else:
+            run Ansible with vars dict as input
+        if "-o":
+            write vars dict to file
+
         :param parser: argparse object
         :param args: dict, input arguments as parsed by the parser.
         :return:
             * Ansible exit code if ansible is executed.
-            * None if answers file is generated
+            * None if "--generate-answers-file" or "--dry-run" answers file is
+              generated
         """
         if self.specification is None:
             # FIXME(yfried): Create a proper exception type
@@ -104,6 +116,19 @@ class InfraRedPluginsSpec(SpecObject):
             self.plugin.config["plugin_type"],
             nested_args,
         )
+
+        LOG.debug("Dumping vars dict...")
+        vars_yaml = yaml.safe_dump(vars_dict,
+                                   default_flow_style=False)
+        output_filename = control_args.get("output")
+        if output_filename:
+            LOG.debug("Output file: {}".format(output_filename))
+            with open(output_filename, 'w') as output_file:
+                output_file.write(vars_yaml)
+        else:
+            print vars_yaml
+        if control_args.get("dry-run"):
+            return None
 
         active_profile = CoreServices.profile_manager().get_active_profile()
         if not active_profile:
