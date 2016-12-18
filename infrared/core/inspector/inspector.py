@@ -13,36 +13,38 @@ class SpecParser(object):
     """Parses the input arguments from different sources (cli, file, env). """
 
     @classmethod
-    def from_files(cls, settings_folders, app_name, app_subfolder,
-                   user_dict, subparser, specs_list):
-        """Reads specs files and constructs the parser instance. """
-        if user_dict is None:
-            user_dict = {}
-        result = user_dict
-        for spec_file in specs_list:
-            with open(spec_file) as stream:
-                spec = yaml.load(stream) or {}
-                utils.dict_merge(
-                    result,
-                    spec,
-                    utils.ConflictResolver.unique_append_list_resolver)
+    def from_files(cls, subparser, spec_file, settings_folders, base_groups):
+        """Reads specs file and constructs the parser instance
 
-        return SpecParser(
-            result, settings_folders, app_name, app_subfolder, subparser)
+        :param subparser: argparse.subparser to extend
+        :param spec_file: plugin spec file
+        :param settings_folders:
+        :param base_groups: dict, included groups
+        :return:
+        """
 
-    def __init__(self, spec_dict, settings_folders,
-                 app_name, app_subfolder, subparser):
-        self.app_name = app_name
-        self.app_subfolder = app_subfolder
+        spec_dict = base_groups or {}
+        with open(spec_file) as stream:
+            spec = yaml.load(stream) or {}
+            utils.dict_merge(
+                base_groups,
+                spec,
+                utils.ConflictResolver.unique_append_list_resolver)
+
+        return SpecParser(subparser, spec_dict, settings_folders)
+
+    def __init__(self, subparser, spec_dict, settings_folders):
+        """
+
+        :param subparser: argparse.subparser to extend
+        :param spec_dict: dict with CLI description
+        :param settings_folders:
+        """
         self.settings_folders = settings_folders
-        self.subparser = subparser
-
-        # inject name to the spec_dict to handle it as regular subparser
-        spec_dict['name'] = app_name
         self.spec_helper = helper.SpecDictHelper(spec_dict)
 
         # create parser
-        self.parser = CliParser.create_parser(self, subparsers=subparser)
+        self.parser = CliParser.create_parser(self, subparser)
 
     def add_shared_groups(self, list_of_groups):
         """ Adds the user defined shared groups

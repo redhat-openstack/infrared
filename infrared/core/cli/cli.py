@@ -34,33 +34,17 @@ class CliParser(object):
         pass
 
     @classmethod
-    def create_parser(cls, spec, subparsers=None):
+    def create_parser(cls, spec, subparser):
         parser_dict = spec.spec_helper.spec_dict
-
-        if subparsers is None:
-            arg_parser = argparse.ArgumentParser(
-                description=parser_dict.get('type_description', ''),
-                formatter_class=parser_dict.get(
-                    'formatter_class', argparse.RawTextHelpFormatter))
-        else:
-            arg_parser = subparsers.add_parser(
-                spec.app_name,
-                help=parser_dict.get('type_description', ''),
-                formatter_class=parser_dict.get(
-                    'formatter_class', argparse.RawTextHelpFormatter))
-
-        cls._add_groups(spec, arg_parser, spec.app_name, parser_dict)
 
         # process subparsers
         subparsers = parser_dict.get('subparsers', {})
         if subparsers:
-            dest_path = 'command0'
-            arg_subparser = arg_parser.add_subparsers(
-                dest=dest_path)
+            dest_path = 'subcommand'
 
             for subparser_name, subparser_dict in parser_dict.get(
                     'subparsers', {}).items():
-                cmd_parser = arg_subparser.add_parser(
+                cmd_parser = subparser.add_parser(
                     subparser_name,
                     help=subparser_dict.get('help', ''),
                     description=subparser_dict.get(
@@ -75,7 +59,8 @@ class CliParser(object):
                     subparser_dict,
                     path_prefix=dest_path)
 
-        return arg_parser
+        # cls._add_groups(spec, arg_parser, spec.app_name, parser_dict)
+        return subparsers
 
     @classmethod
     def parse_args(cls, spec, arg_parser):
@@ -108,8 +93,9 @@ class CliParser(object):
     @classmethod
     def _add_groups(cls, spec, arg_parser, parser_name, parser_data,
                     path_prefix=''):
-        """
-        Adds groups to the parser.
+        """Adds groups to the parser.
+
+        This will group argument in HELP MESSAGE according to specifications.
         """
         options = []
         # add parser groups
