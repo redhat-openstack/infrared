@@ -77,6 +77,42 @@ def test_nested_value_CLI(spec_fixture, profile_manager_fixture,
 
 
 @pytest.mark.parametrize("input_value", ["explicit", ""])  # noqa
+def test_nested_value_dry_run_output_file(spec_fixture,
+                                          profile_manager_fixture,
+                                          test_profile, input_value, tmpdir):
+    dry_output = tmpdir.mkdir("tmp").join("dry_output.yml")
+
+    if input_value:
+        input_string = ['example', '--foo-bar', input_value]
+    else:
+        input_string = ['example']
+
+    input_string.extend(["--dry-run", "-o", str(dry_output)])
+
+    # if no input, check that default value is loaded
+    expected_output_dict = {"foo": {"bar": input_value or "default string"}}
+
+    sm = api.SpecManager()
+    sm.register_spec(spec_fixture)
+
+    inventory_dir = test_profile.path
+    output_file = "output.example"
+    assert not path.exists(path.join(inventory_dir, output_file))
+
+    profile_manager_fixture.activate(test_profile.name)
+    return_value = sm.run_specs(args=input_string)
+
+    assert return_value is None
+    assert not path.exists(path.join(inventory_dir, output_file))
+
+    import yaml
+    output_dict = yaml.load(dry_output.read())["provision"]
+    # asserts expected_output_dict is subset of output
+    assert all(item in output_dict.items()
+               for item in expected_output_dict.items())
+
+
+@pytest.mark.parametrize("input_value", ["explicit", ""])  # noqa
 def test_nested_value_CLI_with_answers_file(spec_fixture, tmpdir,
                                             profile_manager_fixture,
                                             test_profile, input_value):
