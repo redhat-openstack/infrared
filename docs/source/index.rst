@@ -16,10 +16,11 @@ Contents:
    quickstart
    setup
    execute
+   plugins
    advanced
-   contributions
    spec
    contacts
+   contributions
    release
 
 Indices and tables
