@@ -1,21 +1,22 @@
 - name: Main Play
   hosts: localhost
   tasks:
+      - name: fail if no vars dict
+        when: "provision is not defined"
+        fail:
+
+      - name: fail if input calls for it
+        when: "provision.foo.bar == 'fail'"
+        fail:
+
       - debug:
             var: inventory_dir
         tags: only_this
 
-      - name: touch file
+      - name: Test output
         vars:
             output_file: output.example
         file:
             path: "{{ inventory_dir }}/{{ output_file }}"
             state: touch
-
-      - name: Test output
-        vars:
-            output_file: output.example
-        copy:
-            content: "{{ provision | to_nice_json }}"
-            dest: "{{ inventory_dir }}/{{ output_file }}"
         when: "{{ provision is defined }}"
