@@ -1,0 +1,14 @@
+language: python
+python:
+  - "2.7"
+  - "3.5"
+# command to install dependencies
+before_script:
+  - export PATH=$HOME/.local/bin:$PATH
+install:
+- pip install --upgrade pip tox-travis
+- pip install .
+# command to run tests
+script:
+- pip check
+- tox
