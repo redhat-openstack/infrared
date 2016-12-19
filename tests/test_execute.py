@@ -24,14 +24,14 @@ def spec_fixture():
 def test_execute_no_profile(spec_fixture, profile_manager_fixture):   # noqa
     """Verify execution fails without an active profile. """
 
-    sm = api.SpecManager()
-    sm.register_spec(spec_fixture)
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
 
     input_string = ['example']
 
     from infrared.core.utils import exceptions
     with pytest.raises(exceptions.IRNoActiveProfileFound):
-        sm.run_specs(args=input_string)
+        spec_manager.run_specs(args=input_string)
 
 
 def test_execute_fail(spec_fixture, profile_manager_fixture,          # noqa
@@ -40,15 +40,15 @@ def test_execute_fail(spec_fixture, profile_manager_fixture,          # noqa
 
     input_string = ['example', "--foo-bar", "fail"]
 
-    sm = api.SpecManager()
-    sm.register_spec(spec_fixture)
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_profile.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
 
     profile_manager_fixture.activate(test_profile.name)
-    return_value = sm.run_specs(args=input_string)
+    return_value = spec_manager.run_specs(args=input_string)
 
     # Assert return code != 0
     assert return_value
@@ -67,15 +67,15 @@ def test_execute_main(spec_fixture, profile_manager_fixture,          # noqa
 
     input_string = ['example']
 
-    sm = api.SpecManager()
-    sm.register_spec(spec_fixture)
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_profile.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
 
     profile_manager_fixture.activate(test_profile.name)
-    return_value = sm.run_specs(args=input_string)
+    return_value = spec_manager.run_specs(args=input_string)
 
     assert return_value == 0
     assert path.exists(path.join(inventory_dir, output_file))
@@ -102,15 +102,15 @@ def test_nested_value_CLI(spec_fixture,
     # if no input, check that default value is loaded
     expected_output_dict = {"foo": {"bar": input_value or "default string"}}
 
-    sm = api.SpecManager()
-    sm.register_spec(spec_fixture)
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_profile.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
 
     profile_manager_fixture.activate(test_profile.name)
-    return_value = sm.run_specs(args=input_string)
+    return_value = spec_manager.run_specs(args=input_string)
 
     assert return_value == 0
     assert path.exists(path.join(inventory_dir, output_file))
@@ -139,15 +139,15 @@ def test_nested_value_dry_run(spec_fixture,
     else:
         input_string = ['example']
 
-    sm = api.SpecManager()
-    sm.register_spec(spec_fixture)
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_profile.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
 
     profile_manager_fixture.activate(test_profile.name)
-    return_value = sm.run_specs(args=input_string)
+    return_value = spec_manager.run_specs(args=input_string)
 
     assert return_value is None if dry else return_value == 0
     # assert that playbook didn't run if "--dry-run" requested
@@ -183,15 +183,15 @@ def test_nested_value_CLI_with_answers_file(spec_fixture, tmpdir,
     # if no input, check that default value is loaded
     expected_output_dict = {"foo": {"bar": input_value or 'from_answers_file'}}
 
-    sm = api.SpecManager()
-    sm.register_spec(spec_fixture)
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_profile.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
 
     profile_manager_fixture.activate(test_profile.name)
-    return_value = sm.run_specs(args=input_string)
+    return_value = spec_manager.run_specs(args=input_string)
 
     assert return_value == 0
     assert path.exists(path.join(inventory_dir, output_file))
@@ -210,11 +210,11 @@ def test_generate_answers_file(spec_fixture, profile_manager_fixture,  # noqa
     answers_file = tmpdir.mkdir("tmp").join("answers_file")
     input_string = ['example', '--generate-answers-file', str(answers_file)]
 
-    sm = api.SpecManager()
-    sm.register_spec(spec_fixture)
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
 
     profile_manager_fixture.activate(test_profile.name)
-    return_value = sm.run_specs(args=input_string)
+    return_value = spec_manager.run_specs(args=input_string)
     assert return_value is None
 
     config = ConfigParser.ConfigParser()
@@ -234,15 +234,15 @@ def test_ansible_args(spec_fixture, profile_manager_fixture,          # noqa
     input_string = ['example', '--ansible-args',
                     'start-at-task="Test output";tags=only_this']
 
-    sm = api.SpecManager()
-    sm.register_spec(spec_fixture)
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_profile.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
 
     profile_manager_fixture.activate(test_profile.name)
-    return_value = sm.run_specs(args=input_string)
+    return_value = spec_manager.run_specs(args=input_string)
     assert return_value == 0
 
     # Combination of tags and start-at-task should avoid the file creation
