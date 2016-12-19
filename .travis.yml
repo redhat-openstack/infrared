@@ -1,3 +1,4 @@
+sudo: false
 language: python
 python:
   - "2.7"
@@ -6,7 +7,8 @@ python:
 before_script:
   - export PATH=$HOME/.local/bin:$PATH
 install:
-- pip install --upgrade pip tox-travis
+# if setuptools<17.1 installing even dependencies could fail
+- pip install --upgrade pip setuptools tox-travis
 - pip install .
 # command to run tests
 script:
