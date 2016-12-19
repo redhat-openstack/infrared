@@ -1,0 +1,64 @@
+- name: Preparing the images
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  vars:
+      tar_files:
+        7:
+            - "discovery-ramdisk.tar"
+            - "deploy-ramdisk-ironic.tar"
+            - "overcloud-full.tar"
+        8:
+            - "ironic-python-agent.tar"
+            - "overcloud-full.tar"
+        # Any higher version defaults to 8
+
+      tar_images: "{{ installer.images.files | default(tar_files[installer.product.version|openstack_release]) | default(tar_files[8])}}"
+      tmp_oc_repos_dir: /tmp/oc_repos/yum.repos.d
+      overcloud_image_file: overcloud-full.qcow2
+  tasks:
+      - block:
+          - name: Retrieve public key from private key
+            command: "ssh-keygen -y -f {{ ansible_ssh_private_key_file }}"
+            register: public_key_output
+            delegate_to: localhost
+            become: false
+
+          - name: copy our public key to inject the images of the overcloud nodes
+            copy:
+                content: "{{ public_key_output.stdout }}"
+                dest: "/home/{{ installer.user.name }}/id_rsa.pub"
+                mode: 0600
+        rescue:
+          - name: copy our public key to inject the images of the overcloud nodes
+            copy:
+                src: "~/.ssh/id_rsa.pub"
+                dest: "/home/{{ installer.user.name }}/id_rsa.pub"
+                mode: 0600
+
+      - include: "{{ installer.images.task }}.yml"
+
+      - name: list current directory
+        shell: "ls -l"
+        register: file_list
+
+      - name: print file list
+        debug:
+            var=file_list
+
+      - name: modify images - update to core build and install packages
+        include: modify_images.yml
+        # update is a func name (dict.update) so it must be used as str explicitly
+        when: "{{ installer.images['update'] in ['yes', 'verbose'] or (installer.images.packages is defined and installer.images.packages != None )}}"
+
+      - name: upload the overcloud images to glance
+        shell: "source ~/stackrc; openstack overcloud image upload --update-existing"
+
+      - name: remove downloaded images
+        file:
+            path: "/home/{{ installer.user.name }}/{{ item[1] }}"
+            state: absent
+        with_subelements:
+          - "{{ image_files.results }}"
+          - "files"
+        when: image_files is defined and installer.images.cleanup == 'yes'
