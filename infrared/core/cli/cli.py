@@ -14,6 +14,7 @@ import sys
 import ConfigParser
 from copy import deepcopy
 
+from infrared.core.services import CoreServices
 from infrared.core.utils import logger, utils, exceptions
 
 LOG = logger.LOG
@@ -372,6 +373,24 @@ class AdditionalOptionsType(ComplexType):
         return res
 
 
+class Inventory(ComplexType):
+    """Accepts an Ansible Inventory file to set active profile's inventory. """
+
+    is_nested = False
+
+    def resolve(self, value):
+        """Set active profile's inventory
+
+        Assumes active profile exists, as ComplexType objects are resolved
+        after profile is verified.
+
+        Calls profile.inventory setter. See source for more information.
+
+        :param value: path to inventory file.
+        """
+        CoreServices.profile_manager().get_active_profile().inventory = value
+
+
 class YamlFile(ComplexType):
     """
     The complex type for yaml arguments.
@@ -518,6 +537,7 @@ ACTIONS = {
 # register complex Types. See ComplexType to implement new types
 COMPLEX_TYPES = {
     'Value': Value,
+    'Inventory': Inventory,
     'YamlFile': YamlFile,
     'ListOfYamls': ListOfYamls,
     'Topology': Topology,

@@ -63,6 +63,14 @@ Common Options:
     * ``--dry-run``: Don't execute Ansible playbook. Only write generated vars dict to stdout
     * ``--output``: Redirect generated vars dict from stdout to an explicit file (YAML format).
 
+Inventory:
+    Load a new inventory to active `profile <profile.html>`_. The file is copied to
+    profile directory so all ``{{ inventory_dir }}`` references in playbooks still point to
+    profile directory (and not to the input file's directory).
+
+    .. note:: This file permenantly becomes the profile's inventory. To revert to original profile
+        the profile must be cleaned.
+
 Ansible options:
     * ``--verbose``: Set ansible verbosity level
     * ``--ansible-args``: Pass all subsequent input to Ansible as raw arguments. This is for power-users wishing to access

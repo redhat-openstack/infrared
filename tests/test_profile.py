@@ -3,7 +3,7 @@ import os
 import py
 import pytest
 
-from infrared.core.services.profiles import ProfileManager
+from infrared.core.services import profiles
 from infrared.core.utils import exceptions
 
 
@@ -12,7 +12,7 @@ def profile_manager_fixture(tmpdir_factory):
     """Sets the default profile direcotry to the temporary one. """
 
     temp_profile_dir = tmpdir_factory.mktemp('pmtest')
-    profile_manager = ProfileManager(str(temp_profile_dir))
+    profile_manager = profiles.ProfileManager(str(temp_profile_dir))
     from infrared.core.services import CoreServices
     CoreServices.register_service("profile_manager", profile_manager)
     yield profile_manager
@@ -62,6 +62,43 @@ def test_profile_remove(profile_manager_fixture, test_profile):
     profile_manager_fixture.delete(test_profile.name)
     assert not profile_manager_fixture.is_active(test_profile.name)
     assert not os.path.exists(test_profile.path)
+
+
+def test_profile_user_inventory(profile_manager_fixture, test_profile, tmpdir):
+    """Verify profile inventory can be updated. """
+
+    inventory_symlink = test_profile.inventory
+
+    inventory_file = os.path.realpath(test_profile.inventory)
+    assert os.path.basename(inventory_file) == "local_hosts"
+
+    myfile = tmpdir.mkdir("ir_dir").join("fake_hosts_file")
+    myfile.write("fake_content")
+    test_profile.inventory = str(myfile)
+
+    # assert symlink is the same file
+    assert inventory_symlink == test_profile.inventory
+    inventory_file = os.path.realpath(test_profile.inventory)
+    # assert target is the new file, copied to profile dir
+    assert os.path.dirname(inventory_file) == test_profile.path
+    assert os.path.basename(inventory_file) == myfile.basename
+
+
+def test_profile_inventory_setter(profile_manager_fixture, test_profile,
+                                  tmpdir):
+    """Verify profile inventory can be set
+
+    Without calling getter first.
+    """
+
+    myfile = tmpdir.mkdir("ir_dir").join("fake_hosts_file")
+    myfile.write("fake_content")
+    test_profile.inventory = str(myfile)
+
+    inventory_file = os.path.realpath(test_profile.inventory)
+    # assert target is the new file, copied to profile dir
+    assert os.path.dirname(inventory_file) == test_profile.path
+    assert os.path.basename(inventory_file) == myfile.basename
 
 
 @pytest.mark.parametrize('inventory_content', ["fake content", ""])

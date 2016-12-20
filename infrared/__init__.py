@@ -31,11 +31,11 @@ SHARED_GROUPS = [
         }
     },
     {
-        'title': 'Inventory options',
+        'title': 'Inventory',
         'options': {
             'inventory': {
                  'help': 'Inventory file',
-                 'type': 'str'
+                 'type': 'Inventory'
             }
         },
     },

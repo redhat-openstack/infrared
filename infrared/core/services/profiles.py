@@ -84,6 +84,20 @@ class Profile(object):
                                add_to_reg=False)
         return self._inventory
 
+    @inventory.setter
+    def inventory(self, filename):
+        """Updates profiles inventory
+
+        Copy filename into profile dir.
+        Update inventory symnlink to point to new local file.
+
+        :param filename: new inventory file
+        """
+        new_inventory = self.copy_file(file_path=filename)
+        self._inventory = os.path.join(self.path, INVENTORY_LINK)
+        self.link_file(new_inventory, dest_name=self._inventory,
+                       add_to_reg=False)
+
     def clear_links(self):
         """Clears all the created links."""
 

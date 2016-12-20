@@ -81,6 +81,51 @@ def test_execute_main(spec_fixture, profile_manager_fixture,          # noqa
     assert path.exists(path.join(inventory_dir, output_file))
 
 
+def test_fake_inventory(spec_fixture, profile_manager_fixture,          # noqa
+                        test_profile):
+    """Verify "--inventory" updates profile's inventory. """
+
+    input_string = ['example', '--inventory', 'fake']
+
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
+
+    inventory_dir = test_profile.path
+    output_file = "output.example"
+    assert not path.exists(path.join(inventory_dir, output_file))
+
+    profile_manager_fixture.activate(test_profile.name)
+    with pytest.raises(IOError) as exc:
+        spec_manager.run_specs(args=input_string)
+    assert exc.value.message == "File not found: fake"
+
+
+def test_bad_user_inventory(spec_fixture, profile_manager_fixture,   # noqa
+                            test_profile, tmpdir):
+    """Verify user-inventory is loaded and not default inventory.
+
+    tests/example/main.yml playbook runs on all hosts. New inventory defines
+    unreachable node.
+    """
+
+    fake_inventory = tmpdir.mkdir("ir_dir").join("fake_hosts_file")
+    fake_inventory.write("host2")
+    test_profile.inventory = str(fake_inventory)
+
+    input_string = ['example', '--inventory', str(fake_inventory)]
+
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
+
+    inventory_dir = test_profile.path
+    output_file = "output.example"
+    assert not path.exists(path.join(inventory_dir, output_file))
+
+    profile_manager_fixture.activate(test_profile.name)
+    return_value = spec_manager.run_specs(args=input_string)
+    assert return_value == 3
+
+
 @pytest.mark.parametrize("input_value", ["explicit", ""])  # noqa
 def test_nested_value_CLI(spec_fixture,
                           profile_manager_fixture,

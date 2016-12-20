@@ -4,7 +4,7 @@ subparsers:
     example:
         # FIXME(yfried): duplicates "description"
         help: Example provisioner plugin
-        include_groups: ["Ansible options", "Inventory options", "Common options", "Answers file"]
+        include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Group A
               options:

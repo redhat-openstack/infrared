@@ -96,6 +96,13 @@ class InfraRedPluginsSpec(SpecObject):
             * None if "--generate-answers-file" or "--dry-run" answers file is
               generated
         """
+        active_profile = CoreServices.profile_manager().get_active_profile()
+        if not active_profile:
+            raise exceptions.IRNoActiveProfileFound()
+
+        # TODO(yfried): when accepting inventory from CLI, need to update:
+        # profile.inventory = CLI[inventory]
+
         if self.specification is None:
             # FIXME(yfried): Create a proper exception type
             raise Exception("Unable to create specification "
@@ -129,13 +136,6 @@ class InfraRedPluginsSpec(SpecObject):
             print(vars_yaml)
         if control_args.get("dry-run"):
             return None
-
-        active_profile = CoreServices.profile_manager().get_active_profile()
-        if not active_profile:
-            raise exceptions.IRNoActiveProfileFound()
-
-        # TODO(yfried): when accepting inventory from CLI, need to update:
-        # profile.inventory = CLI[inventory]
 
         result = execute.ansible_playbook(
             inventory=active_profile.inventory,
