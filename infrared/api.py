@@ -126,7 +126,7 @@ class InfraRedPluginsSpec(SpecObject):
             with open(output_filename, 'w') as output_file:
                 output_file.write(vars_yaml)
         else:
-            print vars_yaml
+            print(vars_yaml)
         if control_args.get("dry-run"):
             return None
 

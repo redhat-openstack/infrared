@@ -3,7 +3,7 @@ import os
 
 def copy_system_selinux(force=True):
     try:
-        print "Try import..."
+        print("Try import...")
         import selinux
     except ImportError as e:
         new_error = type(e)(e.message + ". check that 'python-libselinux is "
