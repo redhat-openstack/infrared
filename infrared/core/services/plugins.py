@@ -243,5 +243,9 @@ class InfraRedPlugin(object):
             raise Exception("Only one plugin should be defined in spec")
         return plugins[0]
 
+    @property
+    def description(self):
+        return self.config['description']
+
     def __repr__(self):
         return self.name
