@@ -43,9 +43,6 @@ class CallbackModule(CallbackBase if ANSIBLE2 else object):
                     print("\n{0}: {1}".format(field, output_replace))
 
     def _format_output(self, output):
-        # Strip unicode
-        if type(output) == unicode:
-            output = output.encode('ascii', 'replace')
 
         # If output is a dict
         if type(output) == dict:
@@ -82,6 +79,9 @@ class CallbackModule(CallbackBase if ANSIBLE2 else object):
                 return "\n" + "\n".join(real_output)
             else:
                 return " ".join(real_output)
+
+        # Strip unicode
+        output = output.encode('ascii', 'replace')
 
         # Otherwise it's a string, (or an int, float, etc.) just return it
         return str(output)
