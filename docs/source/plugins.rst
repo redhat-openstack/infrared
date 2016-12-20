@@ -87,7 +87,17 @@ Complex option types
 `InfraRed` extends `argparse <https://docs.python.org/2/library/argparse.html>`_ with the following option types.
 These options are nested into the vars dict that is later passed as input to ansible.
 
-* Value: Regular string value.
+* Value:
+    Regular string value.
+* KeyValueList:
+    String representation of a flat dict ``--options option1=value1;option2=value2``
+    becomes:
+
+        .. code:: json
+           :name: KeyValueList
+
+            {"options": {"option1": "value1",
+                         "option2": "value2"}}
 
 The nesting is done in the following manner: option name is splited by ``-`` delimiter and each part is
 a key of a dict nested in side the previous one, starting with "plugin_type". Then value is nested at the

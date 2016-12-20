@@ -12,3 +12,7 @@ subparsers:
                       type: Value
                       help: "foo.bar option"
                       default: "default string"
+
+                  dictionary-val:
+                      type: KeyValueList
+                      help: "dictionary-val option"

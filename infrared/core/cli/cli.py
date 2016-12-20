@@ -391,6 +391,35 @@ class Inventory(ComplexType):
         CoreServices.profile_manager().get_active_profile().inventory = value
 
 
+class KeyValueList(ComplexType):
+    """Accept a flat dict as string input.
+
+    Format should be --options="option1=value1;option2=value2"
+
+    Resulting vars-dict entry will look like:
+    options:
+        option1: value1
+        option2: value2
+    """
+    ARG_SEPARATOR = ';'
+
+    def resolve(self, value):
+        arguments = value.split(self.ARG_SEPARATOR)
+        res = {}
+        for argument in arguments:
+            argument = argument.strip()
+            if '=' in argument:
+                name, value = argument.split('=', 1)
+                res[name] = value
+            else:
+                raise exceptions.IRException(
+                    "Wrong argument format for {}. \n\t Use format: "
+                    "'--options=\"option1=value1;option2=value2\"'".format(
+                        value))
+
+        return res
+
+
 class YamlFile(ComplexType):
     """
     The complex type for yaml arguments.
@@ -538,6 +567,7 @@ ACTIONS = {
 COMPLEX_TYPES = {
     'Value': Value,
     'Inventory': Inventory,
+    'KeyValueList': KeyValueList,
     'YamlFile': YamlFile,
     'ListOfYamls': ListOfYamls,
     'Topology': Topology,
