@@ -1,16 +1,38 @@
 sudo: false
-language: python
-python:
-  - "2.7"
-  - "3.5"
+cache: pip
+matrix:
+    include:
+        - os: linux
+          python: 2.7
+          env: TOXENV=pep8,py27,ansible-lint
+          language: python
+        - os: linux
+          python: 3.5
+          env: TOXENV=py35
+          language: python
+        - os: osx
+          sudo: required
+          language: generic
+          env: TOXENV=py27
 # command to install dependencies
-before_script:
-  - export PATH=$HOME/.local/bin:$PATH
+#before_script:
+#  - export PATH=$HOME/.local/bin:$PATH
 install:
 # if setuptools<17.1 installing even dependencies could fail
-- pip install --upgrade pip setuptools tox-travis
-- pip install .
+#- if [ "$TRAVIS_OS_NAME" == "osx" ]; then travis_retry wget https://repo.continuum.io/miniconda/Miniconda2-latest-MacOSX-x86_64.sh -O miniconda.sh;bash miniconda.sh -b -p $HOME/miniconda; export PATH="$HOME/miniconda/bin:$PATH" ;  fi
+- |
+  set -e
+  if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+    rvm get stable
+    which python || travis_retry brew install python && brew link --overwrite python
+    which python
+    python --version
+  fi
+#- if [ "$TRAVIS_OS_NAME" != "osx" ]; then travis_retry pip install --upgrade pip setuptools ;  fi
+#- travis_retry pip install --upgrade tox-travis
+- travis_retry pip install --upgrade pip setuptools tox-travis
 # command to run tests
 script:
-- pip check
+# pip check disabled on MacOS because the version of pip that comes with conda does not support it yet
+- if [ "$TRAVIS_OS_NAME" != "osx" ]; then pip check; fi
 - tox
