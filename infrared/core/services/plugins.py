@@ -101,35 +101,13 @@ class InfraRedPluginManager(object):
             self.config.readfp(fp)
 
     @classmethod
-    def get_all_plugins(cls):
-        """
-        Returns list of all available plugins
-        """
-        all_plugins_list = []
-        for all_plugins_of_a_type in cls.PLUGINS_DICT.values():
-            all_plugins_list += all_plugins_of_a_type
+    def get_plugin(cls, plugin_name):
+        """Returns an instance of plugin based on name
 
-        return all_plugins_list
-
-    def get_desc_of_type(self, s_type):
-        """ Return the description of the given supported plugin type
-
-        :param s_type: The type of the plugin you want the description
-        :return: String of the supported plugin description
-        """
-        return self.config.get(self.SUPPORTED_TYPES_SECTION, s_type)
-
-    @classmethod
-    def get_plugin(cls, plugin_type, plugin_name):
-        """Returns an instance of plugin based on the given type & name
-
-        :param plugin_type: Plugin type
         :param plugin_name: Plugin name
         :return: InfraRedPlugin instance
         """
-        for plugin in cls.PLUGINS_DICT[plugin_type].values():
-            if plugin.name == plugin_name:
-                return plugin
+        return cls.PLUGINS_DICT[plugin_name]
 
     def __iter__(self):
         for plugin in self.PLUGINS_DICT.iteritems():
@@ -260,25 +238,5 @@ class InfraRedPlugin(object):
             raise Exception("Only one plugin should be defined in spec")
         return plugins[0]
 
-    @property
-    def description(self):
-        return self.config['description']
-
-    @property
-    def help(self):
-        subparsers = self.config['subparsers']
-        return subparsers[self.name]['help']
-
     def __repr__(self):
         return self.name
-
-    @property
-    def settings_file(self, ext='.yml'):
-        """Returns the main plugin's settings file. """
-
-        settings_file = os.path.join(self.path, self.name + ext)
-        if not os.path.isfile(settings_file):
-            # TODO(aopincar): Replace with a proper InfraRed exception
-            raise IOError("Settings file for plugin {} not found")
-
-        return settings_file

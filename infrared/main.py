@@ -6,8 +6,6 @@ from infrared import api
 from infrared.core.services import CoreServices
 from infrared.core.utils import logger
 
-PLUGIN_SETTINGS = 'plugins/settings.yml'
-
 LOG = logger.LOG
 
 

@@ -4,7 +4,7 @@ import os
 import yaml
 
 from infrared.core.utils import logger
-from infrared.core.utils import utils
+from infrared.core.utils import dict_utils
 from infrared.core.utils import exceptions
 from infrared.core.cli.cli import CliParser
 from infrared.core.cli.cli import COMPLEX_TYPES
@@ -31,10 +31,10 @@ class SpecParser(object):
         spec_dict = base_groups or {}
         with open(spec_file) as stream:
             spec = yaml.load(stream) or {}
-            utils.dict_merge(
+            dict_utils.dict_merge(
                 base_groups,
                 spec,
-                utils.ConflictResolver.unique_append_list_resolver)
+                dict_utils.ConflictResolver.unique_append_list_resolver)
 
         return SpecParser(subparser, spec_dict, settings_folders)
 
@@ -106,7 +106,7 @@ class SpecParser(object):
                 # we have config option. saving it.
                 self._convert_non_cli_args(
                     parser_name, parser_dict[arg_name])
-                utils.dict_merge(
+                dict_utils.dict_merge(
                     file_result[parser_name],
                     parser_dict[arg_name])
                 # remove from cli args
@@ -260,8 +260,8 @@ class SpecParser(object):
         self._merge_duplicated_cli_args(cli_args)
         self._merge_duplicated_cli_args(file_args)
 
-        utils.dict_merge(defaults, file_args)
-        utils.dict_merge(defaults, cli_args)
+        dict_utils.dict_merge(defaults, file_args)
+        dict_utils.dict_merge(defaults, cli_args)
         self.validate_requires_args(defaults)
 
         # now resolve complex types.
@@ -349,7 +349,7 @@ class SpecParser(object):
         for command_data in self.spec_helper.iterate_parsers():
             cmd_name = command_data['name']
             if cmd_name in args:
-                utils.dict_merge(
+                dict_utils.dict_merge(
                     res,
                     validate_parser(
                         cmd_name,

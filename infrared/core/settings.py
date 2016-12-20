@@ -1,4 +1,4 @@
-from infrared.core.utils import exceptions, utils
+from infrared.core.utils import exceptions, dict_utils
 
 
 class SettingsManager(object):
@@ -31,9 +31,9 @@ class SettingsManager(object):
         settings_dict = {entry_point: {}}
         try:
             for _name, argument in nested_args.items():
-                utils.dict_insert(settings_dict[entry_point],
-                                  argument,
-                                  *_name.split(delimiter))
+                dict_utils.dict_insert(settings_dict[entry_point],
+                                       argument,
+                                       *_name.split(delimiter))
 
         # handle errors here and provide more output for user if required
         except exceptions.IRKeyNotFoundException as key_exception:
