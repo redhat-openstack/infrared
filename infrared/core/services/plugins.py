@@ -6,9 +6,7 @@ import os
 import pip
 
 from infrared.core.utils import logger
-
-
-LOG = logger.LOG
+from infrared.core.utils.exceptions import IRFailedToAddPlugin
 
 
 DEFAULT_PLUGIN_INI = dict(
@@ -19,12 +17,9 @@ DEFAULT_PLUGIN_INI = dict(
     )
 )
 MAIN_PLAYBOOK = "main.yml"
+LOG = logger.LOG
 
 
-# TODO(aopincar): add use in abspath everywhere file paths are in use
-
-
-# TODO(aopincar): replace this Singleton class with anonymous class
 class Singleton(type):
     _instances = {}
 
@@ -49,6 +44,7 @@ class InfraRedPluginManager(object):
         self._load_plugins()
 
     def _load_plugins(self):
+        self.__class__.PLUGINS_DICT.clear()
         for plugin_type_section in self.config.options(
                 self.SUPPORTED_TYPES_SECTION):
             if self.config.has_section(plugin_type_section):
@@ -100,17 +96,6 @@ class InfraRedPluginManager(object):
             self._config = ConfigParser()
             self.config.readfp(fp)
 
-    @classmethod
-    def get_all_plugins(cls):
-        """
-        Returns list of all available plugins
-        """
-        all_plugins_list = []
-        for all_plugins_of_a_type in cls.PLUGINS_DICT.values():
-            all_plugins_list += all_plugins_of_a_type
-
-        return all_plugins_list
-
     def get_desc_of_type(self, s_type):
         """ Return the description of the given supported plugin type
 
@@ -120,14 +105,13 @@ class InfraRedPluginManager(object):
         return self.config.get(self.SUPPORTED_TYPES_SECTION, s_type)
 
     @classmethod
-    def get_plugin(cls, plugin_type, plugin_name):
+    def get_plugin(cls, plugin_name):
         """Returns an instance of plugin based on the given type & name
 
-        :param plugin_type: Plugin type
         :param plugin_name: Plugin name
         :return: InfraRedPlugin instance
         """
-        for plugin in cls.PLUGINS_DICT[plugin_type].values():
+        for plugin in cls.PLUGINS_DICT.values():
             if plugin.name == plugin_name:
                 return plugin
 
@@ -144,12 +128,14 @@ class InfraRedPluginManager(object):
 
         if plugin_type not in self.config.options(
                 self.SUPPORTED_TYPES_SECTION):
-            # TODO(aopincar): Replace with a proper InfraRed exception
-            raise Exception(
+            raise IRFailedToAddPlugin(
                 "Unsupported plugin type: '{}'".format(plugin_type))
 
         if not self.config.has_section(plugin_type):
             self.config.add_section(plugin_type)
+        elif self.config.has_option(plugin_type, plugin.name):
+            raise IRFailedToAddPlugin(
+                "Plugin with the same name & type already exists")
 
         self.config.set(plugin_type, plugin.name, plugin.path)
 
@@ -162,7 +148,6 @@ class InfraRedPluginManager(object):
     def remove_plugin(self, plugin_type, plugin_name):
         if plugin_type not in self.config.options(
                 self.SUPPORTED_TYPES_SECTION):
-            # TODO(aopincar): Replace with a proper InfraRed exception
             LOG.error(
                 "Unsupported plugin type: '{}'".format(plugin_type))
         elif not self.config.has_section(plugin_type):

@@ -196,3 +196,8 @@ class IRNoActiveProfileFound(IRException):
                   "\n infrared profile create <profile_name>" \
                   "\n infrared profile activate <profile_name>"
         super(IRNoActiveProfileFound, self).__init__(message)
+
+
+class IRFailedToAddPlugin(IRException):
+    def __init__(self, reason_str):
+        super(self.__class__, self).__init__(reason_str)
