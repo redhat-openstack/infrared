@@ -1,11 +1,9 @@
-"""
-This module provide some general helper methods
-"""
+"""This module provide some general helper methods.     """
 
 import os
+import yaml
 
-from infrared.core.utils import logger, exceptions, yamls
-
+from infrared.core.utils import logger, exceptions
 
 LOG = logger.LOG
 
@@ -100,98 +98,9 @@ def dict_merge(first, second,
             first[key] = second[key]
 
 
-def search_tree(needle, haystack, _res=None):
-    """Find all values of key `needle` inside a nested dict tree `haystack`.
-
-    :param haystack: nested dict tree to search
-    :param needle: key name to search for
-    :param _res: helper argument holding return value for internal recursion
-    :return: list. All values of key `needle` in tree `haystack`. Order is not
-        guaranteed.
-    """
-    if _res is None:
-        _res = []
-    if needle in haystack:
-        _res.append(haystack[needle])
-    for key, value in haystack.iteritems():
-        if isinstance(value, dict):
-            search_tree(needle, value, _res)
-        if isinstance(value, list):
-            for item in value:
-                if isinstance(item, dict):
-                    search_tree(needle, item, _res)
-    return _res
-
-
-def load_settings_files(settings_files):
-    """
-    Loads and merges settings (YAML) files into a new dictionary object.
-
-    :param settings_files: List of strings representing paths to YAML files.
-    :return: The newly created Dictionary object containing the merging
-    results of all the settings files.
-    """
-    settings_dict = {}
-
-    for settings_file in settings_files:
-        loaded_dict = yamls.load(settings_file, True)
-        dict_merge(
-            settings_dict,
-            loaded_dict,
-            conflict_resolver=ConflictResolver.unique_append_list_resolver)
-
-    return settings_dict
-
-
-def merge_extra_vars(settings, extra_vars):
-    """
-    Merging 'extra-vars' into 'settings'
-
-    :param settings: Dictionary to merge extra-vars into
-    :param extra_vars: List of extra-vars
-    """
-    for extra_var in extra_vars or []:
-        if extra_var.startswith('@'):
-            if not len(extra_var[1:]):
-                raise exceptions.IRExtraVarsException(extra_var)
-            settings_file = normalize_file(extra_var[1:])
-            dict_merge(
-                settings,
-                yamls.load(settings_file),
-                conflict_resolver=ConflictResolver.unique_append_list_resolver)
-
-        else:
-            if '=' not in extra_var:
-                raise exceptions.IRExtraVarsException(extra_var)
-            key, value = extra_var.split("=")
-            dict_insert(settings, value, *key.split("."))
-
-
-# todo: convert into a file object to be consumed by argparse
-def normalize_file(file_path):
-    """Return a normalized absolutized version of a file
-
-    :param file_path: path to file to be normalized
-    :return: normalized path of a file
-    :raise: IRFileNotFoundException if the file doesn't exist
-    """
-    file_path = os.path.expanduser(file_path)
-    if not os.path.isabs(file_path):
-        abspath = os.path.abspath(file_path)
-        LOG.debug(
-            'Setting the absolute path of "%s" to: "%s"'
-            % (file_path, abspath)
-        )
-        file_path = abspath
-
-    if not os.path.exists(file_path):
-        raise exceptions.IRFileNotFoundException(file_path)
-
-    return file_path
-
-
 def load_yaml(filename, *search_paths):
     """Find YAML file. search default path first.
+
     :param filename: path to file
     :param search_paths: the list of paths to search for a file.
     :returns: dict. loaded YAML file.
@@ -209,7 +118,12 @@ def load_yaml(filename, *search_paths):
 
     if path is not None:
         LOG.debug("Loading YAML file: %s" % path)
-        return yamls.load(path)
+        with open(path) as f_obj:
+            loaded_yml = yaml.load(f_obj)
+
+        # Handling case of empty file
+        if loaded_yml is None:
+            raise exceptions.IREmptySettingsFile(path)
     else:
         raise exceptions.IRFileNotFoundException(
             file_path=searched_files)
