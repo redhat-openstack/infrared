@@ -47,7 +47,7 @@ def test_yamls_file_locations(spec_app):
     assert locations[1] == file1.dirname
     assert locations[2] == os.getcwd()
 
-    files = yaml_file_arg.get_allowed_values()
+    files = list(yaml_file_arg.get_allowed_values())
 
     assert len(files) == 2
     assert files[0] == os.path.basename(file2.strpath)

@@ -501,7 +501,8 @@ class Spec(object):
         for spec_parser in self.spec_helper.iterate_parsers():
             if spec_parser['name'] in args:
                 parser_dict = args[spec_parser['name']]
-                for arg_name, arg_val in parser_dict.items():
+                for arg_name in list(parser_dict.keys()):
+                    arg_val = parser_dict[arg_name]
                     arg_spec = self.spec_helper.get_option_spec(
                         spec_parser['name'], arg_name)
                     yield (spec_parser['name'], parser_dict,

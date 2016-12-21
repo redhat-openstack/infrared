@@ -17,7 +17,7 @@ def test_get_config_dir_project_defaults(our_cwd_setup):
     file_default_options = conf_file.options('defaults')
     file_default_options.sort()
 
-    module_default_options = conf.DEFAULT_SECTIONS['defaults'].keys()
+    module_default_options = list(conf.DEFAULT_SECTIONS['defaults'].keys())
     module_default_options.sort()
 
     assert file_default_options == module_default_options, \

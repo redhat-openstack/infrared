@@ -28,7 +28,7 @@ def test_dict_merge():
 
     dict_merge(first_dict, second_dict)
 
-    assert not cmp(first_dict, expected_result)
+    assert first_dict == expected_result
 
 
 @pytest.mark.parametrize("first, second, expected", [
@@ -44,7 +44,7 @@ def test_dict_merge_none_resolver(first, second, expected):
     from cli.utils import dict_merge, ConflictResolver
 
     dict_merge(first, second, conflict_resolver=ConflictResolver.none_resolver)
-    assert not cmp(first, expected)
+    assert first == expected
 
 
 @pytest.mark.parametrize("haystack, output", [

@@ -199,8 +199,7 @@ def load_yaml(filename, *search_paths):
     """
     path = None
     searched_files = []
-    files_to_search = map(
-        lambda search_path: os.path.join(search_path, filename), search_paths)
+    files_to_search = [os.path.join(x, filename) for x in search_paths]
 
     for filename in files_to_search:
         searched_files.append(os.path.abspath(filename))
