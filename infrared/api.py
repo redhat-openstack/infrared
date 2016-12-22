@@ -163,7 +163,6 @@ class SpecManager(object):
     def run_specs(self, args=None):
         spec_args = vars(self.parser.parse_args(args))
         subcommand = spec_args.get('subcommand', '')
-
         if subcommand in self.spec_objects:
-            return self.spec_objects[subcommand].spec_handler(self.parser,
-                                                              args=args)
+            return self.spec_objects[subcommand].spec_handler(
+                self.parser, args=args if args else spec_args)
