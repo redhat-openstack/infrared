@@ -112,3 +112,9 @@ class IRNoActiveProfileFound(IRException):
                   "\n infrared profile create <profile_name>" \
                   "\n infrared profile activate <profile_name>"
         super(IRNoActiveProfileFound, self).__init__(message)
+
+
+class IRSshException(IRException):
+    def __init__(self, msg):
+        message = msg
+        super(IRSshException, self).__init__(message)
