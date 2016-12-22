@@ -14,40 +14,34 @@ structure (see ``tests/example`` for an example plugin)::
     ├── filter_plugins          # Add here custom jinja2 filters
     │   └── myfilter.py
     ├── roles                   # Add here roles for the project to use
+    │   └── example_role
+    │       └── tasks
+    │           └── main.yml
     └── vars                    # Add here variable files
 
 .. note:: This structure will work without any ``ansible.cfg`` file provided, as Ansible will search for references in the
         relative paths described above. To use an ``ansible.cfg`` config file, use absolute paths to the plugin directory.
 
-Add:
-    InfraRed will look for a `plugin.spec <Specification>`_ file in the given directory and
-    register the plugin under the given plugin-type::
+Plugin structure
+^^^^^^^^^^^^^^^^
 
-        infrared plugin add tests/example
+Playbooks
+---------
+InfraRed will look for a playbook called ``main.yml`` to start the execution from.
 
-.. note:: Supported plugin types are defined in plugin settings file which is auto generated and can be found in ``infrared.cfg``.
+Plugins are regular Ansible projects, and as such, they might include or reference any item
+(files, roles, var files, ansible plugins, modules, templates, etc...) using relative paths
+to current playbook
 
-List:
-    List all available plugins, by type::
+.. literalinclude:: ../../tests/example/main.yml
+   :emphasize-lines: 3-6
+   :linenos:
 
-        infrared plugin list
+.. note:: the vars-dict defined by `Complex option types`_ is nested under ``plugin_type`` root key, and passed
+ to Ansible using ``--extra-vars`` meaning that any vars file that has ``plugin_type`` as a root key, will be
+ overriden by that vars-dict. See `Ansible variable precidence`_ for more details.
 
-        Available plugins:
-          provision       {example}
-          install         {}
-          test            {}
-
-Remove:
-    Remove an exisitng plugin::
-
-        infrared plugin remove provision example
-
-Execute:
-    Plugins are added as subparsers under ``plugin type`` and will execute
-    the ``main.yml`` `playbook <playbooks>`_::
-
-        infrared example
-
+.. _Ansible variable precidence: http://docs.ansible.com/ansible/playbooks_variables.html#variable-precedence-where-should-i-put-a-variable
 
 Specification
 -------------
@@ -94,7 +88,7 @@ Ansible options:
 Complex option types
 ~~~~~~~~~~~~~~~~~~~~
 `InfraRed` extends `argparse <https://docs.python.org/2/library/argparse.html>`_ with the following option types.
-These options are nested into the vars dict that is later passed as input to ansible.
+These options are nested into the vars dict that is later passed to Ansible as extra-vars.
 
 * Value:
     Regular string value.
@@ -129,7 +123,39 @@ inner-most level. Example::
        }
    }
 
-Playbooks
----------
-InfraRed will look for a playbook called ``main.yml`` to start the execution from.
+
+Plugin Manager
+^^^^^^^^^^^^^^
+
+The following commands are used to manage `InfraRed` plugins
+
+Add:
+    InfraRed will look for a `plugin.spec <Specification>`_ file in the given directory and
+    register the plugin under the given plugin-type::
+
+        infrared plugin add tests/example
+
+
+List:
+    List all available plugins, by type::
+
+        infrared plugin list
+
+        Available plugins:
+          provision       {example}
+          install         {}
+          test            {}
+.. note:: Supported plugin types are defined in plugin settings file which is auto generated and can be found in ``infrared.cfg``.
+
+Remove:
+    Remove an exisitng plugin::
+
+        infrared plugin remove provision example
+
+Execute:
+    Plugins are added as subparsers under ``plugin type`` and will execute
+    the ``main.yml`` `playbook <playbooks>`_::
+
+        infrared example
+
 

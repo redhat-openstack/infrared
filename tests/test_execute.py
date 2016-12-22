@@ -79,6 +79,8 @@ def test_execute_main(spec_fixture, profile_manager_fixture,          # noqa
     Implicitly covers that vars dict is passed, since we know it will fail
     on task "fail if no vars dict" because test_test_execute_fail verifies
     failure is respected and output file isn't generated.
+
+    Verifies that plugin roles are invoked properly.
     """
 
     input_string = ['example']
@@ -89,12 +91,16 @@ def test_execute_main(spec_fixture, profile_manager_fixture,          # noqa
     inventory_dir = test_profile.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
+    assert not path.exists(path.join(inventory_dir, "role_" + output_file))
 
     profile_manager_fixture.activate(test_profile.name)
     return_value = spec_manager.run_specs(args=input_string)
 
     assert return_value == 0
     assert path.exists(path.join(inventory_dir, output_file))
+    assert path.exists(path.join(
+        inventory_dir,
+        "role_" + output_file)), "Plugin role not invoked"
 
 
 def test_fake_inventory(spec_fixture, profile_manager_fixture,          # noqa
