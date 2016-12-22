@@ -122,3 +122,9 @@ class IRFailedToAddPlugin(IRException):
 class IRFailedToRemovePlugin(IRException):
     def __init__(self, reason_str):
         super(self.__class__, self).__init__(reason_str)
+
+
+class IRSshException(IRException):
+    def __init__(self, msg):
+        message = msg
+        super(IRSshException, self).__init__(message)
