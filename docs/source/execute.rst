@@ -334,7 +334,7 @@ different assumptions are made for each deployment type:
 
   Both paths must be absolute paths::
 
-        ir-provisioner ospd [...] --deployment-files=/absolute/path/to/templates/directory [...] --undercloud-config=/home/myuser/undercloud.conf
+        ir-installer ospd [...] --deployment-files=/absolute/path/to/templates/directory [...] --undercloud-config=/home/myuser/undercloud.conf
 
   The details of such directory can be found under `settings tree <https://github.com/rhosqeauto/InfraRed/tree/master/settings/installer/ospd/deployment/example>`_
 
