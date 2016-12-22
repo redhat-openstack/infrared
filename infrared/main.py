@@ -5,6 +5,7 @@ from tabulate import tabulate
 from infrared import api
 from infrared.core.services import CoreServices
 from infrared.core.utils import logger
+from infrared.core.utils import interactive_ssh
 
 LOG = logger.LOG
 
@@ -140,6 +141,33 @@ class PluginManagerSpec(api.SpecObject):
                 width=len(longest_type) + 6))
 
 
+class SSHSpec(api.SpecObject):
+
+    def __init__(self, name, *args, **kwargs):
+        super(SSHSpec, self).__init__(name, *args, **kwargs)
+
+    def extend_cli(self, root_subparsers):
+        issh_parser = root_subparsers.add_parser(
+            self.name,
+            help=self.kwargs["description"],
+            **self.kwargs)
+
+        issh_parser.add_argument("node_name", help="Node name. "
+                                 "Ex.: controller-0")
+
+    def spec_handler(self, parser, args):
+        """Handles the ssh command
+
+        :param parser: the infrared parser object.
+        :param args: the list of arguments received from cli.
+        """
+        pargs = parser.parse_args(args)
+        self._issh(pargs.node_name)
+
+    def _issh(self, node_name):
+        interactive_ssh.ssh_to_host(node_name)
+
+
 def main(args=None):
     # configure core services
     CoreServices.from_ini_file('infrared.cfg')
@@ -158,6 +186,11 @@ def main(args=None):
         PluginManagerSpec('plugin',
                           plugin_manager=plugin_manager,
                           description="Plugin management"))
+
+    specs_manager.register_spec(
+        SSHSpec(
+            'ssh',
+            description="Interactive ssh session to node from inventory."))
 
     # register all plugins
     for plugin in plugin_manager.PLUGINS_DICT.values():
