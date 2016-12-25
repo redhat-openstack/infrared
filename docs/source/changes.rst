@@ -18,6 +18,9 @@ New In InfraRed 2.0
 #. Answers file:
     The switch ``--generate-conf-file`` is renamed ``--generate-answers-file`` to avoid confusion
     with configuration files.
+#. Topoloy:
+    The topology input type has been deprecated. Use `KeyValueList` to define node types and amounts, and ``include_vars``
+    to add relevant files to playbooks
 
 .. OVB
 .. Rename OSPD to tripleo

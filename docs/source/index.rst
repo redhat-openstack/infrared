@@ -19,6 +19,11 @@ Contents:
    changes
    contacts
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Plugins:
+
+   virsh
 
 Indices and tables
 ==================

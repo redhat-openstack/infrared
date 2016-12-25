@@ -7,8 +7,17 @@ structure (see ``tests/example`` for an example plugin)::
 
     tests/example
     ├── main.yml                # Main playbook. All execution starts here
-    └── plugin.spec             # Plugin definition
+    ├── plugin.spec             # Plugin definition
+    ├── callback_plugins        # Useful to format Ansible console output
+    │   ├── human_log.py
+    │   ├── timing.py
+    ├── filter_plugins          # Add here custom jinja2 filters
+    │   └── myfilter.py
+    ├── roles                   # Add here roles for the project to use
+    └── vars                    # Add here variable files
 
+.. note:: This structure will work without any ``ansible.cfg`` file provided, as Ansible will search for references in the
+        relative paths described above. To use an ``ansible.cfg`` config file, use absolute paths to the plugin directory.
 
 Add:
     InfraRed will look for a `plugin.spec <Specification>`_ file in the given directory and
