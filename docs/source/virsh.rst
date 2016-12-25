@@ -5,7 +5,7 @@ VIRSH
 
 Virsh provisioner is explicitly designed to be used for setup of virtual OpenStack environments.
 Such environments are used to emulate production environment of `Tripleo installer`_
-instances on one baremetal machine. It requires one prepared baremetal host (designated ``virthost``)
+instances on one baremetal machine. It requires one prepared baremetal host (designated ``hypervisor``)
 to be reachable through SSH initially.
 
 First, Libvirt and KVM environment is installed and configured to provide virtualized environment.
@@ -16,12 +16,12 @@ Please see `Quickstart <quickstart.html>`_ guide where usage is demonstrated.
 
 Network layout
 """"""""""""""
-Baremetal machine used as host for such setup is called `Virthost`. The whole deployment is designed to
+Baremetal machine used as host for such setup is called `hypervisor`. The whole deployment is designed to
 work within boundaries of this machine and (except public/natted traffic) shouldn't reach beyond.
 The following layout is part of default setup defined in
-`plugins defaults <https://github.com/rhosqeauto/InfraRed/blob/IR2/plugins/virsh/defaults/network.yml>`_::
+`plugins defaults <https://github.com/rhosqeauto/InfraRed/blob/IR2/plugins/virsh/vars/topology/networks/3_nets.yml>`_::
 
-              Virthost
+              hypervisor
                   |
                   +--------+ nic0 - public IP
                   |
@@ -37,7 +37,7 @@ The following layout is part of default setup defined in
 
 .. User can also provide his own network layout (example `network-sample.yml <https://github.com/rhosqeauto/InfraRed/blob/master/settings/provisioner/virsh/topology/network/network.sample.yml>`_).
 
-On `virthost`, there are 3 new bridges created with libvirt - data, management and external.
+On `hypervisor`, there are 3 new bridges created with libvirt - data, management and external.
 Most important is data network which does not have DHCP and NAT enabled.
 This network can later be used as ``ctlplane`` for OSP director deployments (`Tripleo installer`_).
 Other (usually physical) interfaces are not used (nic0, nic1, ...) except for public/natted traffic.
