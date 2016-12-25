@@ -11,6 +11,7 @@ import re
 import sys
 import ConfigParser
 from copy import deepcopy
+import yaml
 
 from infrared.core.services import CoreServices
 from infrared.core.utils import logger, exceptions
@@ -282,6 +283,18 @@ class Value(ComplexType):
         return value
 
 
+class Bool(Value):
+    """The simple nested value option. """
+
+    def resolve(self, value=True):
+        """Returns the YAML boolean value. """
+        value = yaml.load(str(value))
+        if not isinstance(value, bool):
+            raise exceptions.IRException("--{} expects boolean values".
+                                         format(self.arg_name))
+        return value
+
+
 class AdditionalOptionsType(ComplexType):
     """Plumb ansible-playbook arguments to ansible executor
 
@@ -366,6 +379,7 @@ ACTIONS = {
 # register complex Types. See ComplexType to implement new types
 COMPLEX_TYPES = {
     'Value': Value,
+    'Bool': Bool,
     'Inventory': Inventory,
     'KeyValueList': KeyValueList,
     'AdditionalArgs': AdditionalOptionsType

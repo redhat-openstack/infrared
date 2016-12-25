@@ -1,0 +1,10 @@
+- name: set loop control
+  set_fact:
+      name: "{{ node.key }}"
+      amount: "{{ node.value }}"
+
+# save current node to "{{ node_dict }}"
+- include_vars: "vars/topology/{{ name }}.yml"
+
+- set_fact:
+      nodes: "{{ nodes|default([]) + [node_dict] }}"
