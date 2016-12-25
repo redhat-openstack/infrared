@@ -61,7 +61,7 @@ That is it, the machines are now provisioned and accessible::
     controller-0               : ok=5    changed=4    unreachable=0    failed=0
     localhost                  : ok=4    changed=3    unreachable=0    failed=0
     undercloud-0               : ok=4    changed=3    unreachable=0    failed=0
-    virthost                   : ok=85   changed=29   unreachable=0    failed=0
+    hypervisor                   : ok=85   changed=29   unreachable=0    failed=0
 
                          [[ previous task time: 0:00:00.237104 = 0.24s / 209.94s ]]
                          [[ previous play time: 0:00:00.555806 = 0.56s / 209.94s ]]
