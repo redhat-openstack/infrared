@@ -1,0 +1,26 @@
+<network>
+  <name>{{ item.value.name }}</name>
+    {% if item.value.forward is defined %}
+        <forward mode="{{ item.value.forward.type }}" />
+    {% endif %}
+        <bridge name="{{ item.value.name }}" stp='on' delay='0'/>
+    {% if item.value.ip_address is defined %}
+  <ip address="{{ item.value.ip_address }}" netmask="{{ item.value.netmask }}">
+    {% if item.value.dhcp is defined %}
+        <dhcp>
+            <range start="{{ item.value.dhcp.range.start }}" end="{{ item.value.dhcp.range.end }}"/>
+        </dhcp>
+    {% endif %}
+  </ip>
+    {% endif %}
+
+  {% if item.value.ipv6 is defined %}
+  <ip family="ipv6" address="{{ item.value.ipv6.ip_address }}" prefix="{{ item.value.ipv6.prefix }}" >
+  {% if item.value.ipv6.dhcp is defined %}
+        <dhcp>
+            <range start="{{ item.value.ipv6.dhcp.range.start }}" end="{{ item.value.ipv6.dhcp.range.end }}" />
+        </dhcp>
+  {% endif %}
+  </ip>
+  {% endif %}
+</network>
