@@ -165,5 +165,5 @@ class SpecManager(object):
         subcommand = spec_args.get('subcommand', '')
 
         if subcommand in self.spec_objects:
-            return self.spec_objects[subcommand].spec_handler(self.parser,
-                                                              args=args)
+            return self.spec_objects[subcommand].spec_handler(
+                self.parser, args=args) or 0

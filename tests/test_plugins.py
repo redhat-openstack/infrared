@@ -5,6 +5,7 @@ import yaml
 import pytest
 
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
+from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 from infrared.core.utils.dict_utils import dict_insert
 from infrared.core.services.plugins import InfraRedPluginManager
 from infrared.core.services.plugins import InfraRedPlugin
@@ -237,3 +238,46 @@ def test_remove_plugin(plugin_manager_fixture):
             plugin_name=plugin_dict['name']), \
             "Plugin wasn't removed from conf file."
         assert len(plugin_manager.PLUGINS_DICT) == plugins_cnt
+
+
+def test_remove_unexisting_plugin(plugin_manager_fixture):
+    """Tests the behavior of removing unexisting plugin
+
+    Checks that no exception is being raised and no changes in
+    InfraredPluginManager dict and configuration file
+    :param plugin_manager_fixture: Fixture object which yields
+    InfraRedPluginManger object
+    """
+
+    plugin_manager = plugin_manager_fixture({})
+
+    plugins_cfg_mtime_before_add = os.path.getmtime(plugin_manager.config_file)
+    plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
+
+    with pytest.raises(IRFailedToRemovePlugin):
+        plugin_manager.remove_plugin('supported_type1', 'unexisting_plugin')
+
+    assert plugins_cnt_before_try == len(plugin_manager.PLUGINS_DICT)
+    assert os.path.getmtime(
+        plugin_manager.config_file) == plugins_cfg_mtime_before_add, \
+        "Plugins configuration file has been modified."
+
+
+@pytest.mark.parametrize("input_args", [
+    "plugin list",
+    "plugin add tests/example/plugins/type1_plugin1",
+    "plugin remove supported_type1 type1_plugin1",
+])
+def test_plugin_cli(plugin_manager_fixture, input_args):
+    """Tests that plugin CLI works
+
+    :param plugin_manager_fixture: Fixture object which yields
+    InfraRedPluginManger object (necessary for this test, even though there no
+    use of it in the method itself)
+    """
+
+    from infrared.main import main as ir_main
+    rc = ir_main(input_args.split())
+
+    assert rc == 0, \
+        "Return code ({}) != 0, cmd='infrared {}'".format(rc, input_args)
