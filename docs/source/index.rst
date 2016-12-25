@@ -17,6 +17,7 @@ Contents:
    profile
    plugins
    changes
+   contacts
 
 
 Indices and tables
