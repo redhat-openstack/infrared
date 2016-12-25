@@ -53,15 +53,16 @@ class ProfileManagerSpec(api.SpecObject):
         :param parser: the infrared parser object.
         :param args: the list of arguments received from cli.
         """
-        subcommand = args.get('command0', '')
+        pargs = parser.parse_args(args)
+        subcommand = pargs.command0
 
         profile_manager = CoreServices.profile_manager()
         if subcommand == 'create':
-            profile_manager.create(args.get('name'))
-            print("Profile '{}' added".format(args.get('name')))
+            profile_manager.create(pargs.name)
+            print("Profile '{}' added".format(pargs.name))
         elif subcommand == 'activate':
-            profile_manager.activate(args.get('name'))
-            print("Profile '{}' activated".format(args.get('name')))
+            profile_manager.activate(pargs.name)
+            print("Profile '{}' activated".format(pargs.name))
         elif subcommand == 'list':
             profiles = profile_manager.list()
             print(
@@ -70,10 +71,10 @@ class ProfileManagerSpec(api.SpecObject):
                          headers=("Name", "Is Active"),
                          tablefmt='orgtbl'))
         elif subcommand == 'delete':
-            profile_manager.delete(args.get('name'))
-            print("Profile '{}' deleted".format(args.get('name')))
+            profile_manager.delete(pargs.name)
+            print("Profile '{}' deleted".format(pargs.name))
         elif subcommand == 'cleanup':
-            profile_manager.cleanup(args.get('name'))
+            profile_manager.cleanup(pargs.name)
 
 
 class PluginManagerSpec(api.SpecObject):
@@ -110,14 +111,15 @@ class PluginManagerSpec(api.SpecObject):
         :param parser: the infrared parser object.
         :param args: the list of arguments received from cli.
         """
-        subcommand = args.get('command0', '')
+        pargs = parser.parse_args(args)
+        subcommand = pargs.command0
 
         if subcommand == 'list':
             self._list_plugins()
         elif subcommand == 'add':
-            self.plugin_manager.add_plugin(args['path'])
+            self.plugin_manager.add_plugin(pargs.path)
         elif subcommand == 'remove':
-            self.plugin_manager.remove_plugin(args['type'], args['name'])
+            self.plugin_manager.remove_plugin(pargs.type, pargs.name)
 
     def _list_plugins(self):
         """
