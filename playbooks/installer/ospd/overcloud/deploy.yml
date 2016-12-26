@@ -1,0 +1,84 @@
+---
+- name: Run overcloud deploy
+  hosts: undercloud
+  any_errors_fatal: true
+  gather_facts: no
+  tasks:
+      - name: Check if custom overcloud_deploy.sh exists
+        tags: overcloud_deploy
+        stat:
+            path: "{{ template_base }}/overcloud_deploy.sh"
+        register: deploy_script
+
+      - name: Copy our overcloud deployment script if provided by the user
+        tags: overcloud_deploy
+        copy:
+            src: "{{ installer.overcloud.script }}"
+            dest: "/home/{{ installer.user.name }}/{{ installer.overcloud.script | basename }}"
+            owner: "{{ installer.user.name }}"
+            group: "{{ installer.user.name }}"
+            mode: 0644
+            force: yes
+        when: installer.overcloud.script is defined and installer.overcloud.script
+
+      - set_fact:
+            overcloud_deploy_script: "
+                {%- if deploy_script.stat.exists -%}
+                {{ template_base }}/overcloud_deploy.sh
+                {%- elif installer.overcloud.script is defined and installer.overcloud.script -%}
+                /home/{{ installer.user.name }}/{{ installer.overcloud.script | basename }}
+                {%- else -%}{%- endif -%}"
+        tags: overcloud_deploy
+
+      - name: create the base overcloud deploy script
+        template:
+            src: "{{ overcloud_deploy_template }}"
+            dest: "~/overcloud_deploy.sh"
+            mode: 0755
+        when: overcloud_deploy_script == ''
+
+      - name: append extra templates provided by user
+        include: environment_templates.yml
+        with_dict: installer.overcloud.templates|default({})
+        loop_control:
+            loop_var: templates_list
+
+      - name: Enable external network access through newly created vlan interface on undercloud
+        include: undercloud-ext-vlan.yml
+        when: "'virthost' not in groups and installer.undercloud.ext.vlan == 'yes'"
+
+      - include: append_script.yml
+        when: overcloud_deploy_script == ''
+
+      - include: loadbalancer.yml
+        when: "overcloud_deploy_script == '' and groups.loadbalancer is defined"
+
+      - name: Print deploy command
+        shell: "cat {{ overcloud_deploy_script }}"
+
+      - name: Execute the overcloud deploy script
+        shell: |
+            source ~/stackrc
+            bash {{ overcloud_deploy_script }} &> overcloud_install.log
+        register: overcloud_deploy
+        ignore_errors: yes
+
+      - name: Print the last few lines of the output to spot failures
+        shell: "tail -n60 overcloud_install.log"
+
+      - name: Print stack failures
+        shell: "source ~/stackrc; openstack stack failures list overcloud"
+        when: overcloud_deploy.rc != 0
+
+      - name: copy summary script
+        copy:
+            src: files/deploy_info.sh
+            dest: /home/{{ installer.user.name }}/deploy_info.sh
+            mode: 0755
+
+      - name: Execute the deployment summary script
+        become: yes
+        shell: "mkdir -p /var/log/extra/; source /home/{{ installer.user.name }}/stackrc; /home/{{ installer.user.name }}/deploy_info.sh 2>&1 | tee -a /var/log/extra/deploy_resources.log"
+
+      - fail: msg="Overcloud deployment failed... :("
+        when: overcloud_deploy.rc != 0

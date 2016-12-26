@@ -1,0 +1,32 @@
+- name: Deploy OverCloud post verify
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - fail: msg="Overcloud deployment failed... :("
+        when: overcloud_deploy is defined and overcloud_deploy.rc != 0
+
+      - name: verify overcloudrc was created
+        wait_for:
+            path: "/home/stack/overcloudrc"
+            state: present
+            timeout: 60
+
+- name: "Set selinux state on overcloud"
+  hosts: overcloud_nodes
+  become: yes
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - selinux:
+            policy: "targeted"
+            state: "{{ installer.selinux | default('enforcing') }}"
+        when: installer.product.version|openstack_distribution == 'OSP'
+
+- include: post/lbaas_v2.yml
+  tags: lbaas
+  when: installer.network.lbaas|default('no') == 'yes'
+
+- include: post/create_external_network.yml
+  tags: public_network
+  when: installer.public.network == 'yes'
