@@ -7,6 +7,7 @@ import pip
 
 from infrared.core.utils import logger
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
+from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 
 
 DEFAULT_PLUGIN_INI = dict(
@@ -146,14 +147,14 @@ class InfraRedPluginManager(object):
     def remove_plugin(self, plugin_type, plugin_name):
         if plugin_type not in self.config.options(
                 self.SUPPORTED_TYPES_SECTION):
-            LOG.error(
+            raise IRFailedToRemovePlugin(
                 "Unsupported plugin type: '{}'".format(plugin_type))
         elif not self.config.has_section(plugin_type):
-            LOG.error(
+            raise IRFailedToRemovePlugin(
                 "There are no plugins of type '{}' installed".format(
                     plugin_type))
         elif not self.config.has_option(plugin_type, plugin_name):
-            LOG.error(
+            raise IRFailedToRemovePlugin(
                 "Plugin named '{}' of type '{}' isn't installed".format(
                     plugin_name, plugin_type))
         else:

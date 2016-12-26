@@ -140,7 +140,7 @@ class PluginManagerSpec(api.SpecObject):
                 width=len(longest_type) + 6))
 
 
-def main():
+def main(args=None):
     # configure core services
     CoreServices.from_ini_file('infrared.cfg')
 
@@ -163,7 +163,7 @@ def main():
     for plugin in plugin_manager.PLUGINS_DICT.values():
         specs_manager.register_spec(api.InfraRedPluginsSpec(plugin))
 
-    return specs_manager.run_specs()
+    return specs_manager.run_specs(args) or 0
 
 
 if __name__ == '__main__':
