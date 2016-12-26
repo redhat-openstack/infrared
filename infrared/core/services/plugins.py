@@ -8,7 +8,6 @@ import pip
 from infrared.core.utils import logger
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
 
-
 DEFAULT_PLUGIN_INI = dict(
     supported_types=dict(
         provision='Provisioning plugins',
@@ -209,8 +208,7 @@ class InfraRedPlugin(object):
     def path(self, plugin_dir):
         full_path = os.path.abspath(os.path.expanduser(plugin_dir))
         if not os.path.isdir(full_path):
-            # TODO(aopincar): Replace with a proper InfraRed exception
-            raise IOError(
+            raise IRFailedToAddPlugin(
                 "Path to plugin dir '{}' doesn't exist".format(plugin_dir))
         self._path = full_path
 
@@ -226,13 +224,7 @@ class InfraRedPlugin(object):
 
     @config.setter
     def config(self, plugin_spec):
-        if not os.path.isfile(plugin_spec):
-            # TODO(aopincar): Replace with a proper InfraRed exception
-            raise IOError(
-                "Plugin config '{}' doesn't exist".format(plugin_spec))
-        import yaml
-        with open(plugin_spec) as fp:
-            self._config = yaml.load(fp)
+        self._config = self.spec_validator(plugin_spec)
 
     @property
     def name(self):
@@ -246,6 +238,56 @@ class InfraRedPlugin(object):
     @property
     def description(self):
         return self.config['description']
+
+    @staticmethod
+    def spec_validator(spec_file):
+        """Loads & validates that spec (YAML) file has all required fields
+
+        :param spec_file: Path to plugin's spec file
+        :raise IRFailedToAddPlugin: when mandatory data is missing in spec file
+        :return: Dictionary with data loaded from a spec (YAML) file
+        """
+        if not os.path.isfile(spec_file):
+            raise IRFailedToAddPlugin(
+                "Plugin spec doesn't exist: {}".format(spec_file))
+        import yaml
+        with open(spec_file) as fp:
+            spec_dict = yaml.load(fp)
+
+        try:
+            assert isinstance(spec_dict, dict), \
+                "Spec file is empty or corrupted: '{}'".format(spec_file)
+            for required_key in ('plugin_type', 'description'):
+                assert required_key in spec_dict, \
+                    "Required key '{}' is missing in plugin spec " \
+                    "file: {}".format(required_key, spec_file)
+                assert isinstance(spec_dict[required_key], str), \
+                    "Value of 'str' is expected for key '{}' " \
+                    "in spec file '{}'".format(required_key, spec_file)
+                assert len(spec_dict[required_key]), \
+                    "String value of key '{}' in spec file '{}' " \
+                    "can't be empty.".format(required_key, spec_file)
+
+            key = 'subparsers'
+            assert key in spec_dict, \
+                "'{}' key is missing in spec file: '{}'".format(key, spec_file)
+            assert isinstance(spec_dict[key], dict), \
+                "Value of '{}' in spec file '{}' should be 'dict' " \
+                "type".format(key, spec_file)
+            assert len(spec_dict[key]) == 1, \
+                "One subparser should be defined under '{}' " \
+                "in spec file '{}'".format(key, spec_file)
+            assert isinstance(spec_dict[key].values()[0], dict), \
+                "Subparser '{}' should be 'dict' type and not '{}' type in " \
+                "spec file '{}'".format(
+                    spec_dict[key].keys()[0],
+                    type(spec_dict[key].values()[0]),
+                    spec_file)
+
+        except AssertionError as ex:
+            raise IRFailedToAddPlugin(ex.message)
+
+        return spec_dict
 
     def __repr__(self):
         return self.name
