@@ -281,3 +281,69 @@ def test_plugin_cli(plugin_manager_fixture, input_args):
 
     assert rc == 0, \
         "Return code ({}) != 0, cmd='infrared {}'".format(rc, input_args)
+
+
+def test_add_plugin_no_spec(plugin_manager_fixture):
+    """Tests that it's not possible to add plugin without a spec file
+
+    :param plugin_manager_fixture: Fixture object which yields
+    InfraRedPluginManger object
+    """
+
+    plugin_dir = os.path.join(SAMPLE_PLUGINS_DIR, 'plugin_without_spec')
+
+    plugin_manager = plugin_manager_fixture({})
+
+    plugins_cfg_mtime_before_add = os.path.getmtime(plugin_manager.config_file)
+    plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
+
+    with pytest.raises(IRFailedToAddPlugin):
+        plugin_manager.add_plugin(plugin_dir)
+
+    assert plugins_cnt_before_try == len(plugin_manager.PLUGINS_DICT)
+    assert os.path.getmtime(
+        plugin_manager.config_file) == plugins_cfg_mtime_before_add, \
+        "Plugins configuration file has been modified."
+
+
+@pytest.mark.parametrize("description, plugin_spec", [
+    ('no_description', {
+        'plugin_type': 'supported_type',
+        'subparsers': {
+            'sample_plugin1:': {}}}),
+    ('no_type', {
+        'description': 'some plugin description',
+        'subparsers': {
+            'sample_plugin1:': {}}}),
+    ('no_value', {
+        'plugin_type': '',
+        'subparsers': {
+            'sample_plugin1:': {}}}),
+    ('no_subparsers_key', {
+        'plugin_type': 'supported_type',
+        'description': 'some plugin description'}),
+    ('no_subparsers_value', {
+        'plugin_type': 'supported_type',
+        'description': 'some plugin description',
+        'subparsers': ''}),
+])
+def test_add_plugin_corrupted_spec(tmpdir_factory, description, plugin_spec):
+    """Tests that it's not possible to add a plugin with invalid spec file
+
+    :param tmpdir_factory: pytest builtin fixture for creating temp dirs
+    :param description: test description (adds a description in pytest run)
+    :param plugin_spec: dictionary with data for spec file
+    :return:
+    """
+
+    lp_dir = tmpdir_factory.mktemp('test_tmp_dir')
+    lp_file = lp_dir.join('plugin.spec')
+
+    with open(lp_file.strpath, 'w') as fp:
+        yaml.dump(plugin_spec, fp, default_flow_style=True)
+
+    try:
+        with pytest.raises(IRFailedToAddPlugin):
+            InfraRedPlugin.spec_validator(lp_file.strpath)
+    finally:
+        lp_dir.remove()
