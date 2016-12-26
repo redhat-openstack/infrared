@@ -15,11 +15,12 @@
           list_nets: "{{ vm_nets.list_nets | difference(ignore_virsh_nets) }}"
 
 #in case VM was created in UEFI mode libvirt requires undefine task first
-#- name: undefine relevant VMs
-#  virt:
-#      name: "{{ item }}"
-#      command: undefine
-#  with_items: "{{ virt_status.list_vms }}"
+- name: undefine relevant VMs
+  virt:
+      name: "{{ item }}"
+      command: undefine
+  with_items: "{{ virt_status.list_vms }}"
+  when: provision.boot_mode == 'uefi'
 
 - name: destroy relevant vms
   virt:
@@ -32,6 +33,7 @@
       name: "{{ item }}"
       command: undefine
   with_items: "{{ virt_status.list_vms }}"
+  when: provision.boot_mode != 'uefi'
 
 - name: Clean /etc/hostshosts file
   become: yes
