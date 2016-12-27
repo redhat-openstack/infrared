@@ -16,6 +16,7 @@ Contents:
    quickstart
    profile
    plugins
+   interactive_ssh
    changes
    contacts
 

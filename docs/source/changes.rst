@@ -7,6 +7,10 @@ New In InfraRed 2.0
     which allows easy migration of workspace, and avoids accidental overwrites of data,
     or corrupting the working directory.
     The deprecates ``ir-archive`` in favor of ``profile import`` and ``profile export``
+#. SSH:
+   Added ability to establish interactive ssh connection to nodes, managed by profile
+   using profile's inventory
+   ``infrared ssh <hostname>``
 #. Single Entry-Point:
     ``ir-provisioner``, ``ir-installer``, ``ir-tester``
     commands are deprecated in favor of a single ``infrared`` entry point (``ir`` also works).
