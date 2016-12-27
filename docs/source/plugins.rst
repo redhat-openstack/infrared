@@ -92,6 +92,9 @@ These options are nested into the vars dict that is later passed to Ansible as e
 
 * Value:
     Regular string value.
+* Bool:
+    Boolean value. Accepts any form of YAML boolean: ``yes``/``no``, ``true``/``false`` ``on``/``off``.
+    Will fail if the string can't be resolved to this type.
 * KeyValueList:
     String representation of a flat dict ``--options option1=value1;option2=value2``
     becomes:
