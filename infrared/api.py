@@ -66,15 +66,13 @@ class InfraRedPluginsSpec(SpecObject):
     def extend_cli(self, root_subparsers):
         """Extend CLI with plugin subparser. """
 
-        spec_file = self.plugin.spec
         user_dict = {}
         if self.add_base_groups:
             user_dict = dict(shared_groups=SHARED_GROUPS)
 
         self.specification = SpecParser.from_files(
             subparser=root_subparsers,
-            spec_file=spec_file,
-            settings_folders='',
+            plugin=self.plugin,
             base_groups=user_dict)
 
     def spec_handler(self, parser, args):

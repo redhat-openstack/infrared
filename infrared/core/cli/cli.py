@@ -7,6 +7,7 @@ import argparse
 import collections
 
 import abc
+import os
 import re
 import sys
 import ConfigParser
@@ -26,6 +27,8 @@ TYPES['suppress'] = argparse.SUPPRESS
 
 OPTION_ARGPARSE_ATTRIBUTES = ['action', 'nargs', 'const', 'default', 'choices',
                               'required', 'help', 'metavar', 'type', 'version']
+
+YAMLS_PLACEHODER = '__LISTYAMLS__'
 
 
 class CliParser(object):
@@ -181,21 +184,20 @@ class CliParser(object):
             opt_kwargs['help'] += "\nThis argument is required."
 
         # put allowed values to the help.
-        allowed_values = []
-        if opt_kwargs.get('choices', None):
-            allowed_values = opt_kwargs['choices']
-        elif option_data.get('type', None) and \
-                option_data['type'] in COMPLEX_TYPES:
-            action = spec.create_complex_argumet_type(
-                subparser,
-                option_data['type'],
-                option_name)
-
-            allowed_values = action.get_allowed_values()
+        allowed_values = opt_kwargs.get('choices', None)
 
         if allowed_values:
             opt_kwargs['help'] += "\nAllowed values: {}.".format(
                 allowed_values)
+        elif YAMLS_PLACEHODER in opt_kwargs['help']:
+            option_dir = os.path.join(
+                spec.settings_folders, *option_name.split('-'))
+            yaml_files = [yml.strip('.yml') for yml in os.listdir(option_dir)
+                          if yml.endswith('.yml')]
+            yaml_files.sort()
+
+            opt_kwargs['help'] = opt_kwargs['help'].replace(
+                YAMLS_PLACEHODER, "Available values: {}".format(yaml_files))
 
         # update help
         option_data['help'] = opt_kwargs.get('help', '')

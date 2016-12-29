@@ -18,18 +18,17 @@ class SpecParser(object):
     """Parses input arguments from different sources (cli, answers file). """
 
     @classmethod
-    def from_files(cls, subparser, spec_file, settings_folders, base_groups):
+    def from_files(cls, subparser, plugin, base_groups):
         """Reads specs file and constructs the parser instance
 
         :param subparser: argparse.subparser to extend
-        :param spec_file: plugin spec file
-        :param settings_folders:
+        :param plugin: InfraRedPlugin object
         :param base_groups: dict, included groups
         :return:
         """
 
         spec_dict = base_groups or {}
-        with open(spec_file) as stream:
+        with open(plugin.spec) as stream:
             spec = yaml.load(stream) or {}
             dict_utils.dict_merge(
                 base_groups,
@@ -39,19 +38,19 @@ class SpecParser(object):
         # The "try-excpet" block here is for adding spec file path if it
         # includes an unsupported option type
         try:
-            return SpecParser(subparser, spec_dict, settings_folders)
+            return SpecParser(subparser, spec_dict, plugin.vars_dir)
         except exceptions.IRUnsupportedSpecOptionType as ex:
-            ex.message += ' in file: {}'.format(spec_file)
+            ex.message += ' in file: {}'.format(plugin.spec)
             raise ex
 
-    def __init__(self, subparser, spec_dict, settings_folders):
+    def __init__(self, subparser, spec_dict, vars_dir):
         """
 
         :param subparser: argparse.subparser to extend
         :param spec_dict: dict with CLI description
-        :param settings_folders:
+        :param vars_dir: Path to plugin's vars dir
         """
-        self.settings_folders = settings_folders
+        self.settings_folders = vars_dir
         self.spec_helper = helper.SpecDictHelper(spec_dict)
 
         # create parser
