@@ -1,0 +1,73 @@
+- name: Configure and Install UnderCloud Repositories
+  hosts: undercloud
+  become: yes
+  vars:
+      custom_repos: "{{ install.repos|default({}) }}"
+      rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+  tags: install
+  roles:
+      - role: rhos-release
+        release: "{{ install.version }}"
+        build: "{{ install.build }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        when: install.version|openstack_distribution == 'OSP'
+        tags: rhos-release
+
+      - role: rdo-release
+        release: "{{ install.version }}"
+        build: "{{ install.build }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        when: install.version|openstack_distribution == 'RDO'
+        tags: rhos-release
+
+  tasks:
+      - name: load custom repos configuration file
+        include_vars: "{{ custom_repos.config|default('') }}"
+        when: "custom_repos.config|default('')"
+
+      - name: Creating extra repositories
+        yum_repository:
+            name: "{{ item.name }}"
+            state: "{{ item.name | default(omit) }}"
+            file: "{{ item.file| default(omit) }}"
+            description: "{{ item.description | default(omit) }}"
+            baseurl: "{{ item.baseurl | default(omit) }}"
+            mirrorlist: "{{ item.mirrorlist | default(omit) }}"
+            enabled: "{{ item.enabled | default(omit) }}"
+            gpgcheck: "{{ item.gpgcheck | default(omit) }}"
+        with_items: "{{ extra_repos|default({}) }}"
+        when: "extra_repos|default({})"
+
+      - name: Downloading extra repositories
+        get_url:
+            url: "{{ item }}"
+            dest: /etc/yum.repos.d/
+        with_items: "{{ custom_repos.urls|default([]) }}"
+
+      - name: update system packages
+        yum:
+            state: latest
+            name: "*"
+        register: update
+
+      - name: reboot the undercloud
+        shell: "sleep 2 && shutdown -r now"
+        async: 1
+        poll: 0
+        ignore_errors: true
+        when: update|changed
+
+      - name: waiting for the undercloud to be available
+        wait_for:
+            port: 22
+            host: "{{ ansible_ssh_host }}"
+            search_regex: OpenSSH
+            delay: 10
+        delegate_to: "('hypervisr' in groups) | ternary('hypervisor', 'localhost')"
+        when: update|changed
+        become: no
+
+      - name: install the oscplugin/tripleO client
+        yum:
+            name: "{{ (install.version|openstack_release == 7) | ternary('python-rdomanager-oscplugin', 'python-tripleoclient') }}"
+            state: present
