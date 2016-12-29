@@ -25,6 +25,7 @@ Contents:
    :caption: Plugins:
 
    virsh
+   tripleo-undercloud
 
 Indices and tables
 ==================

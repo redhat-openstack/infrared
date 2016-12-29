@@ -1,0 +1,11 @@
+---
+- name: use rhos-release to fetch internal rdo repos
+  include: rdo-release.yml
+  # FIXME(yfried): When rhos-release supports CentOS, replace this test with "is rpm reachable?"
+  when: ansible_distribution == 'RedHat'
+  # todo(yfried): use rdo hash (~puddle?) to sort matching overcloud images
+
+- name: use public repos
+  include: public-repos.yml
+  when: ansible_distribution == 'CentOS'
+#  when: not install.product.rpm
