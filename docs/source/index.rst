@@ -24,6 +24,7 @@ Contents:
    :caption: Plugins:
 
    virsh
+   tripleo
 
 Indices and tables
 ==================
