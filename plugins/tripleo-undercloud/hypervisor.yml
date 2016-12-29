@@ -1,0 +1,64 @@
+- name: Add rhos-release repos and update ipxe-roms (for Ironic)
+  hosts: hypervisor
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+  roles:
+      - role: rhos-release
+        release: "{{ install.version }}"
+        build: "{{ install.build }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        when: "install.version|openstack_distribution == 'OSP'"
+        become: yes
+
+      - role: rdo-release
+        product_version: "{{ install.version }}"
+        when: install.version|openstack_distribution == 'RDO'
+        become: yes
+  tasks:
+      - name: update /etc/hosts with VMs details
+        lineinfile:
+            dest: /etc/hosts
+            line: "{{ hostvars[item].ansible_ssh_host }}    {{ item }}.redhat.local {{ item }}"
+            regexp: ".*{{ item }}$"
+            state: present
+        with_items: "{{ groups.all | difference(['localhost']) | difference(['hypervisor']) }}"
+
+      - name: get Ironic requirement
+        yum:
+            state: latest
+            name: ipxe-roms-qemu
+        register: update
+
+      # (fhubik) Detect bug in ansible, packages with long names aren't parsed correctly and upgraded
+      # Remove when fixed (https://github.com/ansible/ansible-modules-core/issues/4318)
+      - name: make sure we have latest ipxe-roms-qemu (workaround ansible-modules-core yum bug 4318)
+        command: 'yum install ipxe-roms-qemu -y'
+        when: not update|changed
+
+
+# In case we're dealing with hypervisor, we need to make sure the undercloud is able to ssh to the hypervisor
+- name: Create the stack user on the hypervisor and allow SSH to hypervisor
+  hosts: hypervisor
+  gather_facts: no
+  any_errors_fatal: true
+  vars:
+      undercloud_node: "{{ groups.undercloud | first }}"
+  tasks:
+      - name: create stack user on hypervisor
+        user:
+            name: "{{ install.user.name }}"
+            state: present
+            password: "{{ install.user.password | password_hash('sha512') }}"
+
+      - name: set permissions for the user to access the hypervisor
+        copy:
+            content: |
+                [libvirt Management Access]
+                Identity=unix-user:{{ install.user.name }}
+                Action=org.libvirt.unix.manage
+                ResultAny=yes
+                ResultInactive=yes
+                ResultActive=yes
+            dest: "/etc/polkit-1/localauthority/50-local.d/50-libvirt-user-{{ install.user.name }}.pkla"
