@@ -210,3 +210,26 @@ def test_profile_export_not_excists(profile_manager_fixture):
 def test_profile_export_no_active(profile_manager_fixture, test_profile):
     with pytest.raises(exceptions.IRNoActiveProfileFound):
         profile_manager_fixture.export_profile(None)
+
+
+def test_profile_node_list(profile_manager_fixture, test_profile):
+    profile_manager_fixture.activate(test_profile.name)
+    test_boo = profile_manager_fixture.create("test_list_prof")
+    test_boo.inventory = "tests/example/test_ssh_inventory"
+
+    # active profile
+    node_lst = profile_manager_fixture.node_list()
+    assert node_lst == []
+
+    # not active profile
+    node_lst_boo = profile_manager_fixture.node_list(
+        profile_name="test_list_prof")
+    assert node_lst_boo == ["test_host"]
+
+
+def test_profile_node_list_errors(profile_manager_fixture):
+    with pytest.raises(exceptions.IRNoActiveProfileFound):
+        profile_manager_fixture.node_list()
+
+    with pytest.raises(exceptions.IRProfileMissing):
+        profile_manager_fixture.node_list("strange_profile")

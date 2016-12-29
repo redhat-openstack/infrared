@@ -65,6 +65,16 @@ Import:
 
         Profile example3 was imported
 
+Node list:
+    List nodes, managed by a specific profile::
+
+        infrared profile node-list
+
+        | Node name   |
+        |-------------|
+
+        infrared profile node-list --name some_profile_name
+
 .. note:: To change the directory where Profiles are managed, edit ``infrared.cfg``:
 
     .. code-block:: ini
