@@ -14,17 +14,16 @@
         list_vms: "{{ vm_names.list_vms | difference(ignore_virsh_nodes)}}"
         list_nets: "{{ vm_nets.list_nets | difference(ignore_virsh_nets) }}"
 
-#in case VM was created in UEFI mode libvirt requires undefine task first
-- name: undefine relevant VMs
-  virt:
-      name: "{{ item }}"
-      command: undefine
-  with_items: "{{ virt_status.list_vms }}"
-
 - name: stop relevant vms
   virt:
       name: "{{ item }}"
       state: destroyed
+  with_items: "{{ virt_status.list_vms }}"
+
+#in case VM was created in UEFI libvirt fails to undefine destroyed one
+# https://bugzilla.redhat.com/show_bug.cgi?id=1195667
+- name: undefine relevant VMs
+  shell: "virsh undefine {{ item }} --nvram"
   with_items: "{{ virt_status.list_vms }}"
 
 - name: Clean /etc/hostshosts file
