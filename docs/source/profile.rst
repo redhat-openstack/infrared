@@ -65,6 +65,16 @@ Import:
 
         Profile example3 was imported
 
+Node list:
+    List nodes, described in profile's inventory file except nodes with connection type 'local'::
+
+        infrared profile node-list
+
+        | Node name   |
+        |-------------|
+
+        infrared profile node-list --name some_profile_name
+
 .. note:: To change the directory where Profiles are managed, edit ``infrared.cfg``:
 
     .. code-block:: ini

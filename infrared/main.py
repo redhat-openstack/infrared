@@ -66,6 +66,12 @@ class ProfileManagerSpec(api.SpecObject):
         exporter_parser.add_argument("-D", "--dest", dest="filename",
                                      help="Archive file name.")
 
+        # node list
+        nodelist_parser = profile_subparsers.add_parser(
+            'node-list',
+            help='List node names deskribes on profiles\'s inventory.')
+        nodelist_parser.add_argument("-n", "--name", help="Profie name")
+
     def spec_handler(self, parser, args):
         """
         Handles all the plugin manager commands
@@ -98,6 +104,12 @@ class ProfileManagerSpec(api.SpecObject):
             profile_manager.export_profile(pargs.profilename, pargs.filename)
         elif subcommand == 'import':
             profile_manager.import_profile(pargs.filename, pargs.profilename)
+        elif subcommand == 'node-list':
+            nodes = profile_manager.node_list(pargs.name)
+            print(
+                tabulate([n for n in nodes],
+                         headers=("Node name",),
+                         tablefmt='orgtbl'))
 
 
 class PluginManagerSpec(api.SpecObject):
