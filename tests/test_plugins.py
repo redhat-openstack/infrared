@@ -23,17 +23,52 @@ SUPPORTED_TYPES_DICT = dict(
 )
 
 
-@pytest.fixture(scope='function')
-def plugin_manager_fixture(tmpdir_factory):
+@pytest.fixture()
+def plugins_conf_fixture(tmpdir):
+    """Creates temporary IR & plugins conf files for tests (restore when done)
+
+    :param tmpdir: builtin pytest fixtures to create temporary files & dirs
+    :return: plugins conf file as a LocalPath object (py.path)
+    """
+
+    # TODO(aopincar): Create a const for project's conf file in project core
+    ir_conf = 'infrared.cfg'
+
+    # Creates temporary plugins conf file
+    lp_dir = tmpdir.mkdir('test_tmp_dir')
+    lp_file = lp_dir.join('.plugins.ini')
+
+    # Backups original infrared conf file
+    with open(ir_conf) as fp_ir_cfg:
+        ir_cfg_backup = fp_ir_cfg.read()
+
+    # Updates infrared conf with the newly created plugins conf
+    cfg_parser = ConfigParser.ConfigParser()
+    cfg_parser.read(ir_conf)
+    cfg_parser.set('core', 'plugins_conf_file', lp_file.strpath)
+    with open(ir_conf, 'w') as fp_ir_cfg:
+        cfg_parser.write(fp_ir_cfg)
+
+    try:
+        yield lp_file
+    finally:
+        with open(ir_conf, 'w') as fp_ir_cfg:
+            fp_ir_cfg.write(ir_cfg_backup)
+        lp_dir.remove()
+
+
+@pytest.fixture()
+def plugin_manager_fixture(plugins_conf_fixture):
     """Creates a PluginManager fixture
 
     Creates a fixture which returns a PluginManager object based on
     temporary plugins conf with default values(sections - provision, install &
     test)
+    :param plugins_conf_fixture: fixture that returns a path of a temporary
+    plugins conf
     """
 
-    lp_dir = tmpdir_factory.mktemp('test_tmp_dir')
-    lp_file = lp_dir.join('.plugins.ini')
+    lp_file = plugins_conf_fixture
 
     def plugin_manager_helper(plugins_conf_dict=None):
 
@@ -52,7 +87,6 @@ def plugin_manager_fixture(tmpdir_factory):
         return InfraRedPluginManager(lp_file.strpath)
 
     yield plugin_manager_helper
-    lp_dir.remove()
 
 
 def get_plugin_spec_flatten_dict(plugin_dir):
@@ -250,7 +284,7 @@ def test_remove_unexisting_plugin(plugin_manager_fixture):
     InfraRedPluginManger object
     """
 
-    plugin_manager = plugin_manager_fixture({})
+    plugin_manager = plugin_manager_fixture()
 
     plugins_cfg_mtime_before_add = os.path.getmtime(plugin_manager.config_file)
     plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
@@ -264,18 +298,22 @@ def test_remove_unexisting_plugin(plugin_manager_fixture):
         "Plugins configuration file has been modified."
 
 
-@pytest.mark.parametrize("input_args", [
-    "plugin list",
-    "plugin add tests/example/plugins/type1_plugin1",
-    "plugin remove supported_type1 type1_plugin1",
+@pytest.mark.parametrize("input_args, plugins_conf", [
+    ("plugin list", None),
+    ("plugin add tests/example/plugins/type1_plugin1", None),
+    ("plugin remove supported_type1 type1_plugin1", dict(
+        supported_type1=dict(
+            type1_plugin1='tests/example/plugins/type1_plugin1'))),
 ])
-def test_plugin_cli(plugin_manager_fixture, input_args):
+def test_plugin_cli(plugin_manager_fixture, input_args, plugins_conf):
     """Tests that plugin CLI works
 
     :param plugin_manager_fixture: Fixture object which yields
-    InfraRedPluginManger object (necessary for this test, even though there no
-    use of it in the method itself)
+    InfraRedPluginManger object
+    :param input_args: InfraRed's testing arguments
+    :param plugins_conf: Plugins conf data as a dictionary
     """
+    plugin_manager_fixture(plugins_conf)
 
     from infrared.main import main as ir_main
     rc = ir_main(input_args.split())
