@@ -6,6 +6,7 @@ import pytest
 
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
+from infrared.core.utils.exceptions import IRUnsupportedSpecOptionType
 from infrared.core.utils.dict_utils import dict_insert
 from infrared.core.services.plugins import InfraRedPluginManager
 from infrared.core.services.plugins import InfraRedPlugin
@@ -347,3 +348,21 @@ def test_add_plugin_corrupted_spec(tmpdir_factory, description, plugin_spec):
             InfraRedPlugin.spec_validator(lp_file.strpath)
     finally:
         lp_dir.remove()
+
+
+def test_plugin_with_unsupporetd_option_type_in_spec(plugin_manager_fixture):
+    """Tests that the user get a proper error
+
+    :param plugin_manager_fixture: Fixture object which yields
+    InfraRedPluginManger object
+    """
+    plugin_dir = os.path.join(SAMPLE_PLUGINS_DIR,
+                              'plugin_with_unsupported_option_type_in_spec')
+    plugin_dict = get_plugin_spec_flatten_dict(plugin_dir)
+
+    plugin_manager = plugin_manager_fixture()
+    plugin_manager.add_plugin(plugin_dir)
+
+    from infrared.main import main as ir_main
+    with pytest.raises(IRUnsupportedSpecOptionType):
+        ir_main([plugin_dict['name'], '--help'])
