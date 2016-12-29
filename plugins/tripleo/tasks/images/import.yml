@@ -1,0 +1,17 @@
+---
+# TODO(yfried): fetch checksum if available to verify DL of large files (1.5GB)
+- name: download the pre-built overcloud images
+  get_url:
+      dest: "~/{{ item }}"
+      url: "{{ install.images.url }}/{{ item }}"
+      timeout: 1000
+  with_items: "{{ tar_images }}"
+
+- name: untar the images
+  unarchive:
+      src: "~/{{ item }}"
+      dest: "~/"
+      copy: no
+      list_files: yes
+  register: image_files
+  with_items: "{{ tar_images }}"

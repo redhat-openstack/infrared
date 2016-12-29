@@ -1,0 +1,35 @@
+---
+- name: install libguestfs-tools to get virt-customize
+  become: yes
+  yum:
+      name: libguestfs-tools
+      state: present
+
+- name: tmp repos.d for overcloud
+  file:
+      name: "{{ tmp_oc_repos_dir }}"
+      state: directory
+
+# TODO(psedlak): use install/rhos-release / mirror urls (do we want it here?)
+- name: "create overcloud build's repos locally"
+  ospd_rhos_release:
+      state: install
+      release: "{{ install.product.version }}"
+      build_date: "{{ install.product.core.build }}"
+      # explicitly avoid director packages for images
+      director_build_date: no
+      target_directory: "{{ tmp_oc_repos_dir }}"
+      # Assume images distro is the same as undercloud
+  register: command_result
+  until: command_result.stderr.find('Connection reset by peer') == -1
+  retries: 40
+  delay: 5
+
+- name: push core repos to overcloud image
+  shell: "virt-copy-in -a {{ overcloud_image_file }} {{ tmp_oc_repos_dir }} /etc/"
+
+- name: Install packages in overcloud image
+  shell: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }}"
+  when: install.images.packages|default(None) != None
+
+# Don't use virt-customize to update images. It's unreliable.
