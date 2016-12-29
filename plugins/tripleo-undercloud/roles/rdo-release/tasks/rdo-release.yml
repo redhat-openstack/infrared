@@ -1,0 +1,113 @@
+---
+- set_fact:
+    rr_files: ../rhos-release/files
+
+- block:
+    - name: copy select-mirror.sh into home
+      copy:
+          src: "{{ rr_files }}/select-mirror.sh"
+          dest: "~/select-mirror.sh"
+          mode: "0755"
+
+    - name: run select-mirror with provided mirror value
+      command: "~/select-mirror.sh {{ mirror }}"
+      register: selected_mirror
+
+    - name: process results of mirror selection
+      set_fact:
+          mirror_fqdn: "{{ selected_mirror.stdout | trim }}"
+
+    - name: switch rhos-release url to mirror
+      set_fact:
+          rhos_release_rpm: "http://{{ mirror_fqdn }}/rhos-release/repos/rhos-release/rhos-release-latest.noarch.rpm"
+      when: "mirror_fqdn and ('url.corp.' in rhos_release_rpm)"
+
+  when: "mirror|default('')"
+  become: true
+
+- name: gather repo file names to remove
+  find:
+      path: "{{ rr_target_directory }}"
+  register: files_to_remove
+
+- name: remove all repo files
+  file:
+      state: absent
+      path: "{{ item.path }}"
+  with_items: "{{ files_to_remove.files|default([]) }}"
+  become: true
+
+- name: get the rhos-release RPM
+  get_url:
+      url: "{{ rhos_release_rpm }}"
+      dest: "/tmp/rhos-release-latest.rpm"
+      force: yes
+      validate_certs: no
+  become: true
+
+- name: install the rhos-release RPM
+  yum:
+      name: /tmp/rhos-release-latest.rpm
+      state: present
+  become: true
+
+- name: remove rhos-release repos if needed
+  rhos_release:
+      state: uninstall
+      target_directory: "{{ rr_target_directory }}"
+  become: true
+
+- name: create necessary repos for director using rhos-release
+  # todo(yfried): verify input on pre.yml
+  rhos_release:
+      state: install
+      release: "rdotrunk-{{ release }}"
+      build_date: "{{ build | default(omit) }}"
+      target_directory: "{{ rr_target_directory }}"
+      distro_version: "{{ rr_distro_version }}"
+      source_hostname: "{{ selected_mirror.stdout|trim or '' }}"
+  register: command_result
+  until: command_result.stderr.find('Connection reset by peer') == -1
+  retries: 40
+  delay: 5
+  become: true
+
+# FIXME(yfried): No puddle discovery in rdotrunk mode
+#- name: parse specific number of director puddle used from rhos-release output
+#  set_fact:
+#      director_puddle_version: "{{ command_result.releases.version }}"
+#- debug:
+#      msg: "Build mark: director_puddle={{ director_puddle_version }}"
+#
+#- name: parse specific number of puddle used from rhos-release output
+#  set_fact:
+#      core_puddle_version: "{{ command_result.releases.core.version }}"
+#- debug:
+#      msg: "Build mark: core_puddle={{ core_puddle_version }}"
+
+- block:
+    - name: copy use-mirror.sh to home
+      copy:
+          src: "{{ rr_files }}/use-mirror.sh"
+          dest: "~/use-mirror.sh"
+          mode: 0755
+
+    - name: reconfigure system to use mirror
+      command: "~/use-mirror.sh {{ mirror_fqdn }}"
+      args:
+          chdir: "{{ rr_target_directory }}"
+      register: mirror_used_cmd
+      changed_when: "'Skipping mirror' not in mirror_used_cmd.stdout"
+  when: "mirror_fqdn|default('')"
+  become: true
+
+- name: refresh yum cache
+  yum:
+      name: kernel
+      state: present
+      update_cache: yes
+  become: true
+
+- name: repolist
+  command: "yum -d 7 repolist"
+  become: true

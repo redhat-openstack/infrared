@@ -24,7 +24,13 @@ New In InfraRed 2.0
 #. Cleanup:
     the ``--cleanup`` options now accepts boolean values. Any YAML boolean is accpeted
     ("yes/no", "true/false", "on/off")
+#. Tripleo:
+    ``ir-installer ospd`` is broken to 2 plugins: ``tripleo-undercloud`` and ``tripleo-overcloud``
+#. `Tripleo Undercloud <tripleo-undercloud.html>`_:
+    Install undercloud up-to and including overcloud image creation
+#. Bootstrap:
+    On virtual environmants, tripleo-undercloud <tripleo-undercloud.html>` can create a snapshot
+    out of the undercloud VM that can later be used to bypass the installation process.
 
 .. OVB
-.. Rename OSPD to tripleo
-
+.. tripleo overcloudg

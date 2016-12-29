@@ -1,0 +1,28 @@
+- name: Pre Run Adjustments
+  hosts: undercloud
+  tags: init
+  gather_facts: no
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: Set selinux state
+      selinux:
+          policy: "targeted"
+          state: "{{ install.selinux|default('enforcing') }}"
+
+    - name: Ensure yum presence
+      shell: python -c 'import yum' || (dnf install -y yum yum-utils && ln -snf /usr/bin/yum-deprecated /usr/bin/yum)
+
+    - name: set hostname
+      hostname:
+          name: "{{ inventory_hostname }}.redhat.local"
+
+    - name: update /etc/hosts with undercloud details
+      lineinfile:
+          dest: "/etc/hosts"
+          line: "{{ ansible_ssh_host }}    {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
+          state: present
+
+- include: create_user.yml
+  tags: user
+

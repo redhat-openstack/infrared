@@ -1,0 +1,62 @@
+# this registers the {{ ssl }} dict
+- name: ssl defaults
+  include_vars: vars/ssl/defaults.yml
+# FIXME(yfried) Ansible 2.2 syntax
+#      file: ssl.yml
+#      name: ssl
+
+- name: grab undercloud_public_vip from undercloud.conf
+  command: 'awk -F= "/^undercloud_public_vip\s*=\s*/ {print $2}" ~/undercloud.conf'
+  register: awk_undercloud_public_vip
+
+- name: create cert directory
+  become: yes
+  file:
+      state: directory
+      path: "{{ ssl.final_cert | dirname }}"
+
+# These files are created in $pwd and will be combined final_cert
+- name: create the self signed SSL
+  command: "openssl genrsa -out {{ ssl.privkey }} 2048"
+  args:
+      creates: "{{ ssl.final_cert }}"
+
+- name: create the self signed CA certificate
+  become: yes
+  vars:
+      public_vip: "{{ awk_undercloud_public_vip.stdout|trim | ternary(awk_undercloud_public_vip.stdout|trim, '192.0.2.2')}}"
+      shell_command: "
+          openssl req -new -x509
+          -days 365
+          -key {{ ssl.privkey }}
+          -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ public_vip }}'
+          -out {{ ssl.cacert }}"
+  # Ansible had trouble templating the above command straight to the shell module hence the var
+  command: "{{ shell_command }}"
+  args:
+      creates: "{{ ssl.final_cert }}"
+
+- name: combine the two files into one for HAProxy
+  become: yes
+  shell: "cat {{ ssl.privkey }} {{ ssl.cacert }} > {{ ssl.final_cert }}"
+  args:
+      creates: "{{ ssl.final_cert }}"
+
+# FIXME(yfried): Ansible 2.2 has sefcontext module
+#- sefcontext:
+#  become: yes
+#      target: "{{ ssl.final_cert | dirname }}(/.*)?"
+
+- name: change SELinux context and update ca-trust
+  become: yes
+  shell: |
+      semanage fcontext -a -t etc_t "{{ ssl.final_cert | dirname }}(/.*)?"
+      restorecon -R {{ ssl.final_cert | dirname }}
+      update-ca-trust extract
+
+- name: update undercloud.conf with cert details
+  ini_file:
+      dest: ~/undercloud.conf
+      section: DEFAULT
+      option: undercloud_service_certificate
+      value: "{{ ssl.final_cert }}"
