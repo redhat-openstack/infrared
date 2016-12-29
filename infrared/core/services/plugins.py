@@ -189,11 +189,6 @@ class InfraRedPlugin(object):
     def path(self):
         return self._path
 
-    @property
-    def playbook(self):
-        """Plugin's main playbook"""
-        return os.path.join(self.path, MAIN_PLAYBOOK)
-
     @path.setter
     def path(self, plugin_dir):
         full_path = os.path.abspath(os.path.expanduser(plugin_dir))
@@ -201,6 +196,15 @@ class InfraRedPlugin(object):
             raise IRFailedToAddPlugin(
                 "Path to plugin dir '{}' doesn't exist".format(plugin_dir))
         self._path = full_path
+
+    @property
+    def vars_dir(self):
+        return os.path.join(self.path, 'vars')
+
+    @property
+    def playbook(self):
+        """Plugin's main playbook"""
+        return os.path.join(self.path, MAIN_PLAYBOOK)
 
     @property
     def spec(self):
