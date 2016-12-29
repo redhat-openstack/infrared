@@ -39,7 +39,8 @@ class SpecParser(object):
         # The "try-excpet" block here is for adding spec file path if it
         # includes an unsupported option type
         try:
-            return SpecParser(subparser, spec_dict, settings_folders)
+            return SpecParser(subparser, spec_dict,
+                              os.path.join(os.path.dirname(spec_file), 'vars'))
         except exceptions.IRUnsupportedSpecOptionType as ex:
             ex.message += ' in file: {}'.format(spec_file)
             raise ex
