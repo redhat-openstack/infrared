@@ -1,0 +1,19 @@
+- name: Installing the undercloud
+  tags: deploy
+  hosts: undercloud
+  any_errors_fatal: true
+  tasks:
+      - name: install the undercloud
+        command: bash ~/undercloud_deploy.sh
+        register: undercloud_deployment
+        ignore_errors: yes
+
+      - name: print the last 60 lines of the undercloud installation
+        command: tail -n60 undercloud_install.log
+
+      - fail:
+            msg: "Undercloud deployment failed... :("
+        when: undercloud_deployment.rc != 0
+
+      - name: gathering new facts about the undercloud
+        setup:
