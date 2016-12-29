@@ -18,6 +18,7 @@ from infrared.core.utils import logger, exceptions
 
 LOG = logger.LOG
 
+# TODO(aopincar): Replace TYPES with supported types only (str, int, bool...)
 BUILTINS = sys.modules[
     'builtins' if sys.version_info.major == 3 else '__builtin__']
 TYPES = {builtin: getattr(BUILTINS, builtin) for builtin in vars(BUILTINS)}
@@ -143,6 +144,11 @@ class CliParser(object):
             'dest', path_prefix + option_name)
         if 'type' in option_data:
             opt_kwargs['type'] = TYPES.get(option_data['type'])
+            if opt_kwargs['type'] is None \
+                    and option_data['type'] not in COMPLEX_TYPES:
+                raise exceptions.IRUnsupportedSpecOptionType(
+                    "Unsupported type '{}' of spec's option '{}'".format(
+                        option_data['type'], option_name))
 
         for option_key in OPTION_ARGPARSE_ATTRIBUTES:
             if option_key != 'type' and option_key in option_data:
