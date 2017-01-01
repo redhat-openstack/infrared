@@ -105,6 +105,9 @@ These options are nested into the vars dict that is later passed to Ansible as e
             {"options": {"option1": "value1",
                          "option2": "value2"}}
 
+    .. note:: | Input value in 'colon-comma' (old) format are acceptable but deprecated. It's recommended to use the 'equal-semicolon' (new) format as shown in the example above.
+              | 'colon-comma' input example: ``--options option1:value1,option2:value2``
+
 The nesting is done in the following manner: option name is splited by ``-`` delimiter and each part is
 a key of a dict nested in side the previous one, starting with "plugin_type". Then value is nested at the
 inner-most level. Example::
@@ -148,6 +151,7 @@ List:
           provision       {example}
           install         {}
           test            {}
+
 .. note:: Supported plugin types are defined in plugin settings file which is auto generated and can be found in ``infrared.cfg``.
 
 Remove:
