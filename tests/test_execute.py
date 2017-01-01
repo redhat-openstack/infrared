@@ -205,6 +205,20 @@ def test_nested_value_CLI(spec_fixture,
         {"dictionary": {"val": {"option1": "value1",
                                 "option2": "value2"}}}
     ],
+    [
+        ['--dictionary-val', "option1:value1"],
+        {"dictionary": {"val": {"option1": "value1"}}}
+    ],
+    [
+        ['--dictionary-val=option1:value1,option2:value2'],
+        {"dictionary": {"val": {"option1": "value1",
+                                "option2": "value2"}}}
+    ],
+    [
+        ['--dictionary-val', 'option1:value1,option2:value2'],
+        {"dictionary": {"val": {"option1": "value1",
+                                "option2": "value2"}}}
+    ],
 ])
 def test_nested_KeyValueList_CLI(spec_fixture,
                                  profile_manager_fixture,
