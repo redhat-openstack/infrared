@@ -348,32 +348,55 @@ class Inventory(ComplexType):
 
 
 class KeyValueList(ComplexType):
-    """Accept a flat dict as string input.
+    """Accept a key-value like list.
 
-    Format should be --options="option1=value1;option2=value2"
+    Format should be in one of two acceptable styles: New / Old
+    New style: --options="option1:value1,option2:value2"
+    Old style: --options="option1=value1;option2=value2"
 
-    Resulting vars-dict entry will look like:
-    options:
-        option1: value1
-        option2: value2
+    :returns: A flat dict: ex. {'option1': 'value1', 'option2': 'value2'}
     """
-    ARG_SEPARATOR = ';'
+
+    new_format = 'NodeA:1,NodeB:2...'
+    old_format = 'NodeA=1;NodeB=2...'
+
+    re_pattern = \
+        '([\w\-\.]+{assign}[\w\-\.]+\{separate})*([\w\-\.]+{assign}[\w\-\.]+)'
+    regex_formats = dict(
+        new_style=dict(assign='=', separate=';'),
+        old_style=dict(assign=':', separate=','),
+    )
 
     def resolve(self, value):
-        arguments = value.split(self.ARG_SEPARATOR)
-        res = {}
-        for argument in arguments:
-            argument = argument.strip()
-            if '=' in argument:
-                name, value = argument.split('=', 1)
-                res[name] = value
-            else:
-                raise exceptions.IRException(
-                    "Wrong argument format for {}. \n\t Use format: "
-                    "'--options=\"option1=value1;option2=value2\"'".format(
-                        value))
+        result_dict = {}
+        for style, data in self.regex_formats.iteritems():
+            p = self.re_pattern.format(
+                assign=data['assign'], separate=data['separate'])
+            match_obj = re.match(pattern=p, string=value)
 
-        return res
+            if match_obj is None:
+                continue
+
+            match_str = match_obj.group(0)
+            if match_str is not value:
+                continue
+
+            if style is 'old_style':
+                LOG.warning("This format of KeyValue value is deprecated, "
+                            "Please enter values in the following "
+                            "format: {}".format(self.new_format))
+
+            result_dict = dict([pair.split(data['assign'])
+                                for pair in value.split(data['separate'])])
+            break
+
+        else:
+            raise exceptions.IRKeyValueListException(
+                "'{}' is a wrong format for '{}' argument type. Please enter "
+                "values in the following format: {}".format(
+                    value, self.__class__.__name__, self.new_format))
+
+        return result_dict
 
 
 # register custom actions
