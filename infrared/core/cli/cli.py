@@ -376,6 +376,51 @@ class KeyValueList(ComplexType):
         return res
 
 
+class KeyValueType(ComplexType):
+
+    new_format = 'NodeA=1;NodeB=2...'
+    old_format = 'NodeA:1,NodeB:2...'
+
+    # regex = '([a-zA-Z]+{assign}[0-9]+\{separate})*([a-zA-Z]+{assign}[0-9]+)'
+    regex = '([\w]+{assign}[\w]+\{separate})*([\w]+{assign}[\w]+)'
+    regex_formats = dict(
+        new=dict(assign='=', separate=';'),
+        old=dict(assign=':', separate=','),
+    )
+
+    def resolve(self, value):
+        result_dict = {}
+        for ver, data in self.regex_formats.iteritems():
+            p = self.regex.format(assign=data['assign'],
+                                  separate=data['separate'])
+            m = re.match(pattern=p, string=value)
+
+            if m is None:
+                continue
+
+            match_str = m.group(0)
+            if match_str is not value:
+                continue
+
+            if ver is 'old':
+                LOG.warning("This format of KeyValue value is deprecated, "
+                            "Please enter values in the following "
+                            "format: {}".format(self.new_format))
+
+            result_dict = {
+                pair.split(data['assign'])[0]: pair.split(data['assign'])[1]
+                for pair in value.split(data['separate'])}
+            break
+
+        else:
+            raise exceptions.IRKeyValueTypeException(
+                "'{}' is a wrong format for '{}' value. Please enter values "
+                "in the following format: {}".format(
+                    value, self.__class__.__name__, self.new_format))
+
+        return result_dict
+
+
 # register custom actions
 ACTIONS = {
     'read-answers': ReadAnswersAction,
@@ -387,6 +432,6 @@ COMPLEX_TYPES = {
     'Value': Value,
     'Bool': Bool,
     'Inventory': Inventory,
-    'KeyValueList': KeyValueList,
+    'KeyValueList': KeyValueType,  # KeyValueList,
     'AdditionalArgs': AdditionalOptionsType
 }
