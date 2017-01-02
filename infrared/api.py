@@ -98,6 +98,8 @@ class InfraRedPluginsSpec(SpecObject):
         if not active_profile:
             raise exceptions.IRNoActiveProfileFound()
 
+        active_profile.save_archives_list(self.plugin.archive)
+
         # TODO(yfried): when accepting inventory from CLI, need to update:
         # profile.inventory = CLI[inventory]
 

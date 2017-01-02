@@ -186,6 +186,10 @@ class InfraRedPlugin(object):
         self.config = os.path.join(self.path, self.PLUGIN_SPEC_FILE)
 
     @property
+    def archive(self):
+        return self.config.get('archive', [])
+
+    @property
     def path(self):
         return self._path
 
@@ -265,6 +269,21 @@ class InfraRedPlugin(object):
                 raise IRFailedToAddPlugin(
                     "String value of key '{}' in spec file '{}' can't "
                     "be empty.".format(required_key, spec_file))
+
+        if 'archive' in spec_dict:
+            archive_list = spec_dict['archive']
+            if not isinstance(archive_list, list):
+                raise IRFailedToAddPlugin(
+                    "Archive field in spec file ('{}') should be 'list' type, "
+                    "not '{}'".format(spec_file, type(archive_list)))
+            for list_elem in archive_list:
+                # TODO(aopincar): should check if 'list_elem' is a valid path
+                if not isinstance(list_elem, str):
+                    raise IRFailedToAddPlugin(
+                        "All archive list elements in spec file ('{}') should "
+                        "be 'str' type. '{}' is of '{}' type".format(
+                            spec_file, list_elem, type(list_elem)))
+            spec_dict['archive'] = spec_dict['archive']
 
         key = 'subparsers'
         if key not in spec_dict:
