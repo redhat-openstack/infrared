@@ -3,6 +3,7 @@ import os
 import shutil
 import tarfile
 import time
+import yaml
 
 from ansible.parsing.dataloader import DataLoader
 from ansible import inventory
@@ -61,6 +62,7 @@ class Profile(object):
         self.name = name
         self.path = path
         self.registy = ProfileRegistry(self.path)
+        self.archive_file = os.path.join(self.path, '.archive')
 
     @property
     def inventory(self):
@@ -161,6 +163,30 @@ class Profile(object):
         if target_path is None:
             raise IOError("File not found: {}".format(file_path))
         return target_path
+
+    def get_archives_list(self):
+        """Returns a list of paths to be archived from profile's archive file
+        """
+        if not os.path.isfile(self.archive_file):
+            return []
+
+        with open(self.archive_file) as fp:
+            archives_dict = yaml.safe_load(fp)
+
+        return archives_dict['archives_list']
+
+    def save_archives_list(self, archives_list):
+        """Writes paths to be archived into the profile's archive (YAML) file
+
+        :param archives_list: List with paths to be archived
+        """
+        archives_list += self.get_archives_list()
+
+        with open(self.archive_file, 'w') as fp:
+            yaml.safe_dump(
+                data=dict(archives_list=list(set(archives_list))),
+                stream=fp, default_flow_style=False
+            )
 
 
 class ProfileManager(object):

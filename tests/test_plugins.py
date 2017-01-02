@@ -102,7 +102,8 @@ def get_plugin_spec_flatten_dict(plugin_dir):
         name=spec_yaml['subparsers'].keys()[0],
         dir=plugin_dir,
         description=spec_yaml['description'],
-        type=spec_yaml['plugin_type']
+        type=spec_yaml['plugin_type'],
+        archive=spec_yaml.get('archive')
     )
 
     return plugin_spec_dict
@@ -404,3 +405,26 @@ def test_plugin_with_unsupporetd_option_type_in_spec(plugin_manager_fixture):
     from infrared.main import main as ir_main
     with pytest.raises(IRUnsupportedSpecOptionType):
         ir_main([plugin_dict['name'], '--help'])
+
+
+def test_get_archive_from_spec(plugin_manager_fixture):
+    """Tests archive in plugin spec
+
+    :param plugin_manager_fixture: Fixture object which yields
+    InfraRedPluginManger object
+    """
+
+    plugin_manager = plugin_manager_fixture()
+    plugin_dir = os.path.join(SAMPLE_PLUGINS_DIR, 'plugin_with_archive')
+    plugin_dict = get_plugin_spec_flatten_dict(plugin_dir)
+
+    plugin_manager.add_plugin(plugin_dir)
+    plugin = plugin_manager.get_plugin(plugin_name=plugin_dict['name'])
+
+    plugin_archive_list = plugin.archive
+
+    assert isinstance(plugin_archive_list, list), \
+        "Expected type of InfraRedPlugin.archive returned value " \
+        "should be 'list', actually: {}".format(type(plugin_archive_list))
+    assert plugin_archive_list == plugin_dict['archive'], \
+        "There are differences between archives in spec and in plugin object"
