@@ -1,0 +1,210 @@
+---
+- name: Gather Logs
+  hosts: all:!localhost:!hypervisor
+  gather_facts: no
+  become: yes
+  any_errors_fatal: false  # as we are happy to collect whatever we can
+  vars:
+      - dest_dir: "{{ (install.dest|default({})).dir|default('') | absolute_path }}"
+  vars_files:
+      - vars/default_archives_list.yml
+  tasks:
+      - name: Ensure required rpms for logging are installed
+        yum:
+            name: "{{ item }}"
+            state: present
+        with_items:
+            - gzip
+            - tar
+            - psmisc  # pstree
+            - lsof
+            - pciutils  # lspci
+
+      - name: collect list of installed rpms
+        shell: rpm -qa > /var/log/rpm.list
+
+      - name: collect list of running kernel modules
+        shell: lsmod > /var/log/module_list
+        ignore_errors: true
+
+      - name: prepare directory with extra logs
+        file:
+            dest: /var/log/extra
+            state: directory
+
+      - name: list pkg+repo
+        shell: yum -C list installed > /var/log/extra/packages
+
+      - name: collect status of all systemd units
+        shell: systemctl --all > /var/log/extra/service 2>&1
+        ignore_errors: true
+
+      - name: collect logs from all failed systemd services
+        shell: >
+            systemctl -t service --failed --no-legend | awk '{print $1}'
+            | xargs -r -n1 journalctl -u > /var/log/extra/service-failed 2>&1
+        ignore_errors: true
+
+      - name: collect network status info
+        shell: |
+            (ip a; ip r; iptables-save;iptables -nL) &> /var/log/extra/network;
+            (for NS in $(ip netns list); do
+              echo "==== $NS ====";
+              ip netns exec $NS ip a;
+              ip netns exec $NS ip r;
+              ip netns exec $NS ip iptables-save;
+              PIDS="$(ip netns pids $NS)";
+              [[ ! -z "$PIDS" ]] && ps --no-headers -f --pids "$PIDS";
+              echo "";
+              done) &> /var/log/extra/network-netns
+            (for NB in $(ovs-vsctl show | grep Bridge |awk '{print $2}'); do
+              echo "==== Bridge name - $NB ====";
+              ovs-ofctl show $NB
+              ovs-ofctl dump-flows $NB
+              echo "";
+              done;ovsdb-client dump) &> /var/log/extra/network-bridges
+        ignore_errors: true
+
+      - shell: "lsof -P &> /var/log/extra/lsof"
+        ignore_errors: true
+
+      - shell: "pstree -p &> /var/log/extra/pstree"
+        ignore_errors: true
+
+      - shell: "dmesg &> /var/log/extra/dmesg"
+        ignore_errors: true
+
+      - shell: "sysctl -a &> /var/log/extra/sysctl"
+        ignore_errors: true
+
+      - shell: "netstat -lnp &> /var/log/extra/netstat"
+        ignore_errors: true
+
+      # todo(yfried): adjust for ospd
+      - shell: "which openstack-status &> /dev/null && (. ~/keystonerc_admin; openstack-status &> /var/log/extra/openstack-status)"
+        when: "inventory_hostname in groups.controller"
+        ignore_errors: true
+
+      - shell: "lsmod &> /var/log/extra/lsmod"
+        ignore_errors: true
+
+      - shell: "lspci &> /var/log/extra/lspci"
+        ignore_errors: true
+
+      - shell: "pip list &> /var/log/extra/pip"
+        ignore_errors: true
+
+      - shell: "(set -x; blkid; lsblk; df -T; df -i) &> /var/log/extra/disk"
+        ignore_errors: true
+
+      - shell: "(vgs; pvs; lvs) &> /var/log/extra/lvm"
+        ignore_errors: true
+
+      - name: generate human-readable SAR logs
+        shell: "[[ -f /usr/lib64/sa/sa2 ]] && /usr/lib64/sa/sa2 -A"
+        ignore_errors: true
+
+      - name: Create directory for mysql db dumps
+        file:
+            state: directory
+            dest: /var/log/extra/mysqldump
+
+      - name: backup the mysql databases
+        shell: "echo show databases\\;| mysql | awk 'BEGIN {a=0}; { if (a>0) print $1; a=a+1}' | while read a; do echo Dump $a..; mysqldump --lock-all-tables \"$a\" | xz >\"/var/log/extra/mysqldump/$a.sql.xz\"; done"
+        ignore_errors: true
+
+      - name: Search for AVC denied
+        become: yes
+        shell: "! grep -i denied /var/log/audit/audit*"
+        register: result
+        ignore_errors: yes
+
+      - name: Publish selinux issues as fact
+        set_fact:
+            selinux_problems_found: "{{ result.stdout_lines }}"
+        ignore_errors: yes
+
+      - name: Search for segfault in logs
+        become: yes
+        shell: "! grep -v ansible-command /var/log/messages | grep segfault"
+        register: result
+        ignore_errors: yes
+
+      - name: Publish segfault issues as fact
+        set_fact:
+            segfault_problems_found: "{{ result.stdout_lines }}"
+        ignore_errors: yes
+
+      - name: Search for OOM issues in logs
+        become: yes
+        shell: "! grep -v ansible-command /var/log/messages | grep oom-killer"
+        register: result
+        ignore_errors: yes
+
+      - name: Publish oom issues as fact
+        set_fact:
+            oom_killer_problems_found: "{{ result.stdout_lines }}"
+        ignore_errors: yes
+
+      - name: erase temporary log directory if exists
+        file: path=/tmp/{{ inventory_hostname }} state=absent
+        ignore_errors: true
+
+      - name: collect logs
+        shell: |
+            mkdir -p /tmp/{{ inventory_hostname }};
+            find /var/log/rpm.list /var/log/extra {{ archives_list|join(' ') }} -maxdepth 3 -type f -size -1024M -not -path '/var/log/journal/*' -not -path '*/\.*' -not -path '/root/*.tar*' -not -path '/root/*.qcow*' -not -path '/root/*.initrd*' -not -path '/root/*.vmlinuz*' -exec cp -rL --parents {} /tmp/{{ inventory_hostname }} \;
+            find /tmp/{{ inventory_hostname }} -type d -print0 | xargs -0 chmod 755;
+            find /tmp/{{ inventory_hostname }} -type f -print0 | xargs -0 chmod 644;
+        ignore_errors: true
+
+      - name: compress logs in tar ball
+        command: "tar cf{{ install.gzip|ternary ('z', '') }} {{ inventory_hostname }}.tar{{ install.gzip|ternary ('.gz', '') }} {{ inventory_hostname }}"
+        args:
+            chdir: /tmp
+        ignore_errors: true
+
+      - name: fetch log archive
+        fetch:
+            flat: yes
+            src: "/tmp/{{ inventory_hostname }}.tar{{ install.gzip|ternary ('.gz', '') }}"
+            dest: "{{ dest_dir }}/"
+            validate_checksum: no
+        ignore_errors: true
+        become: no
+
+      - name: delete temporary log directory after collection
+        file:
+            path: "/tmp/{{ inventory_hostname }}"
+            state: absent
+        ignore_errors: true
+
+- name: Aggregate and print info for build marks
+  hosts: localhost
+  gather_facts: no
+  become: no
+  tasks:
+      - name: "initialize temp variables"
+        set_fact:
+            selinux_problems: 0
+            segfault_problems: 0
+            oom_killer_problems: 0
+            counted_hosts: "{{ groups['all'] | difference( groups['local'] + (groups['tester'] | default([]) | difference(groups['controller'])) ) }}"
+
+      - debug:
+            msg: "counting issues from hosts: {{ counted_hosts }}"
+
+      - name: "add together all issue counts from all hosts except localhost and tester"
+        set_fact:
+            selinux_problems: "{{ selinux_problems | int + ( hostvars[item]['selinux_problems_found'] | default([]) | length ) }}"
+            segfault_problems: "{{ segfault_problems | int + ( hostvars[item]['segfault_problems_found'] | default([]) | length ) }}"
+            oom_killer_problems: "{{ oom_killer_problems | int + ( hostvars[item]['oom_killer_problems_found'] | default([]) | length ) }}"
+        with_items: "{{ counted_hosts }}"
+
+      - name: "print out build marks"
+        debug:
+            msg: "Build mark: {{ item }}_found={{ hostvars[inventory_hostname][item] }}"
+        with_items:
+            - selinux_problems
+            - segfault_problems
+            - oom_killer_problems
