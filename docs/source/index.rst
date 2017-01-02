@@ -23,6 +23,7 @@ Welcome to InfraRed's documentation!
 
    virsh
    tripleo-undercloud
+   collect-logs
 
 Indices and tables
 ==================
