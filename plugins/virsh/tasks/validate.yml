@@ -4,7 +4,7 @@
   failed_when: "'FAIL' in result.stdout_lines"
 
 - name: check if CPU supports INTEL based KVM
-  shell: "egrep -c 'vmx' /proc/cpuinfo"
+  command: "egrep -c 'vmx' /proc/cpuinfo"
   ignore_errors: True
   register: kvm_intel
 
@@ -14,7 +14,7 @@
   when: kvm_intel.rc == 0
 
 - name: check if CPU supports AMD based KVM
-  shell: "egrep -c 'svm' /proc/cpuinfo"
+  command: "egrep -c 'svm' /proc/cpuinfo"
   ignore_errors: True
   register: kvm_amd
 

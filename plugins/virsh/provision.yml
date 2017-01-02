@@ -49,7 +49,7 @@
 
       #check if additional binaries for UEFI mode VM boot installed
       - name: check if uefi binaries installed
-        shell: "rpm -q edk2.git-ovmf-x64"
+        command: "rpm -q edk2.git-ovmf-x64"
         register: rpm_check
         ignore_errors: True
         when: provision.boot_mode == 'uefi'
@@ -87,7 +87,7 @@
         register: result
 
       - name: if private key doesn't exist, create it
-        shell: "ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''"
+        command: "ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''"
         when: result.stat.exists != true
 
       - name: copy server private key from hypervisor for SSH proxy
