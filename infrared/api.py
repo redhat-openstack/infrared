@@ -138,6 +138,8 @@ class InfraRedPluginsSpec(SpecObject):
         if control_args.get("dry-run"):
             return None
 
+        print active_profile.inventory
+
         result = execute.ansible_playbook(
             inventory=active_profile.inventory,
             playbook_path=self.plugin.playbook,
