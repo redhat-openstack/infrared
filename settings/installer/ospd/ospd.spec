@@ -66,7 +66,7 @@ subparsers:
                           Numbers are for OSP releases
                           Names are for RDO releases
                       choices: ["7", "8", "9", "10", "11", "kilo", "liberty", "mitaka", "newton", "ocata"]
-                      default: 9
+                      default: 10
 
                   product-build:
                       type: Value
