@@ -126,6 +126,67 @@ inner-most level. Example::
        }
    }
 
+Placeholders
+~~~~~~~~~~~~
+Placeholders allow users to add a level of sophistication in options help field.
+
+* ``__LISTYAMLS__``:
+    Will be replaced with a list of available YAML (``.yml``) file from the option's settings dir.
+    | Assume a plugin with the following  directory tree is installed::
+
+        plugin_dir
+        ├── main.yml                 # Main playbook. All execution starts here
+        ├── plugin.spec                 # Plugin definition
+        └── vars                     # Add here variable files
+            ├── yamlsopt
+            │   ├── file_A1.yml      # This file will be listed for yamlsopt
+            │   └── file_A2.yml      # This file will be listed also for yamlsopt
+            └── another
+                └──yamlsopt
+                    ├── file_B1.yml  # This file will be listed for another-yamlsopt
+                    └── file_B2.yml  # This file will be listed also for another-yamlsopt
+
+    Content of ``plugin_dir/plugin.spec``:
+
+    .. code:: text
+       :name: list-yamls-spec-file
+
+        plugin_type: provision
+        description: Example provisioner plugin
+        subparsers:
+            example:
+                groups:
+                    - title: GroupA
+                          yamlsopt:
+                             type: Value
+                             help: |
+                                   help of yamlsopt option
+                                   __LISTYAMLS__
+
+                          another-yamlsopt:
+                             type: Value
+                             help: |
+                                   help of another-yamlsopt option
+                                   __LISTYAMLS__
+
+    Execution of help command (``infrared example --help``) for the 'example' plugin, will produce the following help screen:
+
+    .. code:: text
+       :name: list-yamls-help-screen
+
+       usage: infrared example [-h] [--another-yamlsopt ANOTHER-YAMLSOPT]
+                                    [--yamlsopt YAMLSOPT]
+
+       optional arguments:
+         -h, --help            show this help message and exit
+
+       GroupA:
+         --another-yamlsopt ANOTHER-YAMLSOPT
+                               help of another-yamlsopt option
+                               Available values: ['file_B1', 'file_B2']
+         --yamlsopt YAMLSOPT   help of yamlsopt option
+                               Available values: ['file_A1', 'file_A2']
+
 
 Plugin Manager
 ^^^^^^^^^^^^^^
@@ -148,6 +209,7 @@ List:
           provision       {example}
           install         {}
           test            {}
+
 .. note:: Supported plugin types are defined in plugin settings file which is auto generated and can be found in ``infrared.cfg``.
 
 Remove:
