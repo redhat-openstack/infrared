@@ -17,3 +17,10 @@
 
       - name: gathering new facts about the undercloud
         setup:
+
+      # FIXME(yfried): why?
+      - name: "Set selinux state on undercloud after install"
+        selinux:
+            policy: "targeted"
+            state: "{{ install.selinux | default('enforcing') }}"
+        become: yes
