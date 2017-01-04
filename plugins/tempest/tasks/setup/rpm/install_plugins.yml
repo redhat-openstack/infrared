@@ -1,0 +1,17 @@
+---
+- name: Include test vars
+  include_vars: "vars/tests/{{ test_suite }}.yml"
+
+- name: Install plugin packages for "{{ test_suite }}" suite
+  become: yes
+  yum:
+      name: "{{ item.value.package }}"
+      state: present
+  with_dict: "{{ test_dict.plugins | default({}) }}"
+
+- name: Install extra system requirements for tests
+  yum:
+    name: "{{ item.value.dependencies }}"
+    state: present
+  with_dict: "{{ test_dict.plugins | default({}) }}"
+  when: item.value.dependencies is defined
