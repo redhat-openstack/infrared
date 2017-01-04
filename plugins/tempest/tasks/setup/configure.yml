@@ -1,0 +1,47 @@
+- name: Check if deployer file is present
+  stat:
+      path: "{{ deployer_input }}"
+  register: deployer_input_stat
+
+- name: Run tempest configuration tool
+  vars:
+      installer_options:
+          tripleo:
+              orchestration.stack_owner_role: heat_stack_owner
+              identity.region: regionOne
+          packstack: {}
+
+      openstack_config_options: "{{ installer_options.get(test.openstack.installer, {}) }}"
+      config_options: "{{ openstack_config_options | combine(test.get('config', {}).get('options', {})) }}"
+
+  shell: |
+      test -e .venv/bin/activate && source .venv/bin/activate
+      source ~/keystonerc
+      tools/config_tempest.py \
+              {% if deployer_input_stat.stat.exists %}
+              --deployer-input {{ deployer_input }} \
+              {% endif %}
+              --debug \
+              -v \
+              --create \
+              identity.uri $OS_AUTH_URL \
+              identity.admin_password $OS_PASSWORD \
+              scenario.img_dir ~/{{ test.dir }}/etc \
+              {# config options #}
+              {% for name,value in config_options.iteritems() %}
+              {{name}} {{value}} \
+              {% endfor %}
+              --out ~/{{ test.dir }}/etc/tempest.conf
+  args:
+      chdir: "{{ test.dir }}"
+  register: config_result
+
+- name: Print configuration cmd
+  debug:
+        var: config_result.cmd
+        verbosity: 3
+
+- name: Print configuration stdout
+  debug:
+        var: config_result.stdout_lines
+        verbosity: 3

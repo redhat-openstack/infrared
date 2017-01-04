@@ -1,0 +1,9 @@
+# (TODO) This shouldn't be here according afazekas, but it's required to
+# run tempest
+- name: Create heat_stack_owner
+  tags: skip_ansible_lint
+  # todo(yfried): convert to built-in
+  shell: |
+      source ~/keystonerc
+      openstack role create heat_stack_owner
+  ignore_errors: yes
