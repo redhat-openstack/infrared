@@ -1,0 +1,72 @@
+- name: set facts for test suite
+  set_fact:
+      test_output_file: "tempest-results-{{ test_suite }}.xml"
+      blacklistfile: ''
+      whitelistfile: ''
+      regex: ''
+
+- name: remove old test list for "{{ test_suite }}"
+  file:
+      state: absent
+      name: "{{ test.dir }}/{{ item }}"
+  with_items:
+      - white_list
+      - black_list
+      - "{{ test_output_file }}"
+
+- block:
+    - name: create Test List - Whitelist for "{{ test_suite }}"
+      lineinfile:
+          create: yes
+          dest: "{{ test.dir }}/white_list"
+          line: "{{ item }}"
+          regexp: "^{{ item }}$"
+      with_items: "{{ tests[test_suite].whitelist | default([]) }}"
+
+    - name: add whitelist invocation
+      set_fact:
+          whitelistfile: "--whitelist_file white_list"
+
+  when: tests[test_suite].whitelist is defined and tests[test_suite].whitelist
+
+- block:
+    - name: create Test List - Blacklist for "{{ test_suite }}"
+      lineinfile:
+          create: yes
+          dest: "{{ test.dir }}/black_list"
+          line: "{{ item }}"
+          regexp: "^{{ item }}$"
+      with_items: "{{ tests[test_suite].blacklist | default([]) }}"
+
+    - name: add blacklist invocation
+      set_fact:
+          blacklistfile: "--blacklist_file black_list"
+  when: tests[test_suite].blacklist is defined and tests[test_suite].blacklist
+
+- name: add regex invoke for "{{ test_suite }}"
+  set_fact:
+      regex: "{{ tests[test_suite].test_regex }}"
+  when: tests[test_suite].test_regex is defined and tests[test_suite].test_regex
+
+- block:
+      - name: run tempest "{{ test_suite }}" suite
+        shell: >
+            [ -e .venv/bin/activate ] && source .venv/bin/activate;
+            ostestr -s --no-pretty --regex '{{ regex | default('') }}' {{ whitelistfile }} {{ blacklistfile }}
+            | subunit2junitxml --output-to={{ test_output_file }} | subunit2pyunit
+        args:
+            executable: /bin/bash
+            chdir: "{{ test.dir }}"
+        ignore_errors: true
+
+      - name: inject the test suite name to the XML name atribute
+        shell: "sed '/^<testsuite/s/name=\"\"/name=\"{{ test_suite }}\"/' -i {{ test_output_file }}"
+        args:
+            chdir: "{{ test.dir }}"
+
+      - name: Fetch resulting file
+        fetch:
+            src: "{{ test.dir }}/{{ test_output_file }}"
+            dest: "{{ lookup('env', 'PWD') }}/{{ test_output_file }}"
+            flat: yes
+  when: tests[test_suite].test_regex is defined or whitelistfile is defined or blacklistfile is defined

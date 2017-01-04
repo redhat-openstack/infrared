@@ -1,0 +1,48 @@
+---
+- name: set plugins list iterator
+  set_fact:
+      plugins: "{{ tests[test_suite].plugins | default({}) }}"
+      plugins_dir: "{{ ('~/' + test.dir) | dirname }}/plugins"
+
+- name: create plugins directory
+  file:
+      state: directory
+      path: "{{ plugins_dir }}"
+  when: "{{ plugins }}"
+
+- name: Clone tempest plugins
+  git:
+      repo: "{{ item.value.repo }}"
+      dest: "{{ plugins_dir }}/{{ item.key }}"
+      version: "{{ item.value.version | default(omit) }}"
+  with_dict: "{{ plugins }}"
+
+- name: Install extra system requirements for tests
+  yum:
+    name: "{{ item.value.dependencies }}"
+    state: present
+  with_dict: "{{ plugins }}"
+  when: item.value.dependencies is defined
+
+- block:
+  # some repos have "test-requirements" files and some don't.
+    - name: Check if test-requirements exists
+      stat:
+          path: "{{ plugins_dir }}/{{ item }}/test-requirements.txt"
+      with_items: "{{ plugins.keys() }}"
+      register: plugins_reqs
+
+    - name: Get repo requirements
+      pip:
+          virtualenv: "~/{{ test.dir }}/.venv"
+          chdir: "~/{{ test.dir }}"
+          requirements: "{{ item }}"
+      with_items: "{{ plugins_reqs.results|selectattr('stat.exists')|map(attribute='stat.path')|list }}"
+
+- name: Install plugin packages
+  pip:
+      virtualenv: "~/{{ test.dir }}/.venv"
+      name: "{{ plugins_dir }}/{{ item }}"
+      state: present
+      editable: true
+  with_items: "{{ plugins.keys() }}"
