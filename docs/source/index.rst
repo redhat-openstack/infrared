@@ -10,7 +10,7 @@ Welcome to InfraRed's documentation!
    :maxdepth: 2
    :caption: Core
 
-   quickstart
+   bootstrap
    profile
    plugins
    interactive_ssh

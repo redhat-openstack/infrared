@@ -11,7 +11,7 @@ First, Libvirt and KVM environment is installed and configured to provide virtua
 Then, virtual machines are created for all requested nodes.
 These VM's are used in `tripleo-undercloud`_ and `tripleo-overcloud`_ as undercloud, overcloud and auxiliary nodes.
 
-Please see `Quickstart <quickstart.html>`_ guide where usage is demonstrated.
+Please see `Bootstrap <bootstrap.html>`_ guide where usage is demonstrated.
 
 .. toctree::
    :maxdepth: 1

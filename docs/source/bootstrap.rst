@@ -1,5 +1,5 @@
-QuickStart
-==========
+Bootstrap
+=========
 
 Setup
 -----
@@ -16,8 +16,8 @@ Clone InfraRed 2.0 from GitHub::
 
 You must have an active `profile <profile.html#profile>`_ to work. This profile will manage your environment details::
 
-    infrared profile create quickstart
-    infrared profile activate quickstart
+    infrared profile create bootstrap
+    infrared profile activate bootstrap
 
 Provision
 ---------
@@ -118,3 +118,24 @@ Execute provisioning using the newly created answers file::
     infrared virsh --from-file=virsh_prov.ini --topology-nodes="undercloud=1;controller=1;compute=1;ceph=1"
 
 Done. Quick & Easy!
+
+Installing
+----------
+
+Now let's demonstrate the installation process by deploy an OpenStack environment using RHEL-OSP on the
+nodes we have provisioned in the previous stage.
+
+Undercloud
+^^^^^^^^^^
+
+.. TODO(yfried): replace this with RDO for upstream support, once RDO is verifed
+
+Just like in the provisioning stage, here also the user should take care of the mandatory parameters
+(by CLI or INI file) in order to be able to start the installation process.
+Let's depoly a `Tripleo Undercloud`_::
+
+  infrared tripleo-undercloud --version 10 --images-task rpm
+
+This will deploy OSP 10 (``Newton``) on the node ``undercloud-0`` provisioned previously.
+
+.. _Tripleo Undercloud: tripleo-undercloud.html
