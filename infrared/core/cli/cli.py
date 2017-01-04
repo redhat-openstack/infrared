@@ -400,6 +400,23 @@ class KeyValueList(ComplexType):
         return result_dict
 
 
+class ListValue(ComplexType):
+    """Accept a list as string input.
+
+    Format should be --options="option1,option2,option3"
+
+    Resulting vars-dict entry will look like:
+    options:
+        - option1
+        - option2
+        - option3
+    """
+    ARG_SEPARATOR = ','
+
+    def resolve(self, value):
+        return value.split(self.ARG_SEPARATOR)
+
+
 # register custom actions
 ACTIONS = {
     'read-answers': ReadAnswersAction,
@@ -412,5 +429,6 @@ COMPLEX_TYPES = {
     'Bool': Bool,
     'Inventory': Inventory,
     'KeyValueList': KeyValueList,
-    'AdditionalArgs': AdditionalOptionsType
+    'AdditionalArgs': AdditionalOptionsType,
+    'ListValue': ListValue
 }
