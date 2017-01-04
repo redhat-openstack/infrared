@@ -24,7 +24,7 @@ Network layout
 Baremetal machine used as host for such setup is called `hypervisor`. The whole deployment is designed to
 work within boundaries of this machine and (except public/natted traffic) shouldn't reach beyond.
 The following layout is part of default setup defined in
-`plugins defaults <https://github.com/rhosqeauto/InfraRed/blob/IR2/plugins/virsh/vars/topology/networks/3_nets.yml>`_::
+`plugins defaults <https://github.com/rhosqeauto/InfraRed/blob/IR2/plugins/virsh/vars/topology/network/3_nets.yml>`_::
 
               hypervisor
                   |

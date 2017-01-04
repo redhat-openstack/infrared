@@ -34,16 +34,20 @@ subparsers:
             - title: topology
               options:
                   # fixme(yfried): add support for user files
-#                  topology-network:
-#                      type: YamlFile
-#                      help: 'A YAML file representing the network configuration to be used. Please see "settings/provisioner/virsh/topology/network/network.sample.yml" as reference'
-#                      default: default.yml
+                  topology-network:
+                      type: Value
+                      help: |
+                          Network configuration to be used
+                          __LISTYAMLS__
+                      default: 3_nets
+
                   topology-nodes:
                       type: KeyValueList
                       help: |
                           Provision topology.
                           List of of nodes types and they amount, in a "key=value" format.
                           Example: "'--topology-nodes 'undercloud=1;controller=3;compute=2'"
+                          __LISTYAMLS__
                       required: yes
                   topology-username:
                       type: Value
