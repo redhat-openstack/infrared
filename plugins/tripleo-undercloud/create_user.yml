@@ -29,6 +29,13 @@
             dest: "/etc/sudoers"
             line: "{{ install.user.name }} ALL=(root) NOPASSWD:ALL"
 
+      - name: create .ssh direcotry for non-root user
+        file:
+            path: "{{ default_privatekey | dirname }}"
+            state: directory
+        become_user: "{{ install.user.name }}"
+        become: yes
+
       - block:
           - name: inject local private key to undercloud
             copy:
@@ -37,9 +44,14 @@
                 mode: 0600
                 force: yes
             register: key_injection
+            become_user: "{{ install.user.name }}"
+            become: yes
+
 
           - name: Retrieve public key from private key
             shell: "ssh-keygen -y -f {{ default_privatekey }} > {{ default_pubkey }}"
+            become_user: "{{ install.user.name }}"
+            become: yes
 
           - name: Retrieve public key from private key to localhost
             shell: "ssh-keygen -y -f {{ ansible_ssh_private_key_file }} > {{ local_undercloud_pubkey }}"
@@ -56,6 +68,8 @@
             with_items:
                 - "{{ default_privatekey }}"
                 - "{{ default_pubkey }}"
+            become_user: "{{ install.user.name }}"
+            become: yes
 
       - set_fact:
             src_privatekey: "{{ (key_injection|success) | ternary(local_undercloud_pubkey, local_pubkey) }}"
