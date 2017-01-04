@@ -132,6 +132,21 @@ class InfraRedPluginManager(object):
         self._install_requirements(plugin_path)
         self._load_plugins()
 
+    def add_all(self, path):
+        if not os.path.exists(path):
+            LOG.error("{} does not exists".format(path))
+            return None
+
+        abspath = os.path.abspath(path)
+        pldirs = [pd for pd in os.listdir(
+            abspath) if os.path.isdir(os.path.join(abspath, pd))]
+        for pldir in pldirs:
+            print(pldir)
+            try:
+                self.add_plugin(os.path.join(abspath, pldir))
+            except IRFailedToAddPlugin as e:
+                LOG.error(e.message)
+
     def remove_plugin(self, plugin_type, plugin_name):
         if plugin_type not in self.config.options(
                 self.SUPPORTED_TYPES_SECTION):

@@ -130,6 +130,11 @@ class PluginManagerSpec(api.SpecObject):
             'add', help='Add a plugin')
         add_parser.add_argument("path", help="Plugin path")
 
+        # Add all plugins
+        add_parser = plugin_subparsers.add_parser(
+            'add-all', help='Add all plugins')
+        add_parser.add_argument("path", help="Plugins path")
+
         # Remove plugin
         remove_parser = plugin_subparsers.add_parser(
             'remove', help='Remove a plugin')
@@ -153,6 +158,8 @@ class PluginManagerSpec(api.SpecObject):
             self._list_plugins()
         elif subcommand == 'add':
             self.plugin_manager.add_plugin(pargs.path)
+        elif subcommand == 'add-all':
+            self.plugin_manager.add_all(pargs.path)
         elif subcommand == 'remove':
             self.plugin_manager.remove_plugin(pargs.type, pargs.name)
 

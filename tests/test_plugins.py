@@ -19,6 +19,9 @@ SUPPORTED_TYPES_DICT = dict(
     supported_types=dict(
         supported_type1='Tools of supported_type1',
         supported_type2='Tools of supported_type2',
+        provision='Provisioning plugins',
+        install='Installing plugins',
+        test='Testing plugins'
     )
 )
 
@@ -76,6 +79,7 @@ def plugin_manager_fixture(plugins_conf_fixture):
             plugins_conf_dict = {}
 
         plugins_conf_dict.update(SUPPORTED_TYPES_DICT)
+
         with lp_file.open(mode='w') as fp:
             config = ConfigParser.ConfigParser()
             for section, section_data in plugins_conf_dict.items():
@@ -404,3 +408,15 @@ def test_plugin_with_unsupporetd_option_type_in_spec(plugin_manager_fixture):
     from infrared.main import main as ir_main
     with pytest.raises(IRUnsupportedSpecOptionType):
         ir_main([plugin_dict['name'], '--help'])
+
+
+def test_plugin_add_all(plugin_manager_fixture):
+    plug_man = plugin_manager_fixture()
+    plug_man.add_all('plugins')
+    plugdir_ls = os.listdir('plugins')
+    for item in ['virsh', 'tripleo-undercloud']:
+        assert item in plugdir_ls
+
+    loaded_plugins = [plg[0] for plg in plug_man]
+    for name in plugdir_ls:
+        assert name in loaded_plugins
