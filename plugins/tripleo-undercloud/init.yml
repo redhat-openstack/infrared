@@ -23,6 +23,10 @@
           line: "{{ ansible_ssh_host }}    {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
           state: present
 
+    - name: debug host vars
+      debug:
+          var: hostvars[inventory_hostname]
+
 - include: create_user.yml
   tags: user
 
