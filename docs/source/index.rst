@@ -6,12 +6,9 @@
 Welcome to InfraRed's documentation!
 ====================================
 
-Contents:
-^^^^^^^^^
-
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Core
 
    quickstart
    profile
@@ -22,7 +19,7 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Plugins:
+   :caption: Plugins
 
    virsh
    tripleo-undercloud

@@ -89,16 +89,17 @@ will be later created.
   the `setup <Setup Undercloud Packages>`_ stage to the image (Allowing later update of the OverCloud)
 * Use ``--images-packages`` to define a list of additional packages to install on the OverCloud image
 * ``--images-cleanup`` tells `InfraRed` do remove the images files original after they are uploaded
- to the undercloud's Glance service.
+  to the undercloud's Glance service.
 
 Backup
 ------
 Working on a virtual environment, `InfraRed` can create a snapshot of the installed undercloud.
+
 .. TODO(yfried): enable when Restore is done
 .. that can be later used to `restore`_ it on a future run, thus saving installation time.
 
-..
-Restore
--------
-Skip the above process and use a `backup`_ snapshot image of the undercloud.
+.. TODO(yfried): add when restore is done
+    Restore
+    -------
+    Skip the above process and use a `backup`_ snapshot image of the undercloud.
 
