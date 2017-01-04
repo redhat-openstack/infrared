@@ -4,8 +4,11 @@ import shutil
 import tarfile
 import time
 
-from infrared.core.utils import exceptions, logger
+from ansible.parsing.dataloader import DataLoader
+from ansible import inventory
+from ansible.vars import VariableManager
 
+from infrared.core.utils import exceptions, logger
 LOG = logger.LOG
 
 TIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
@@ -302,3 +305,26 @@ class ProfileManager(object):
         self.create(name)
         if was_active:
             self.activate(name)
+
+    def node_list(self, profile_name=None):
+        """Lists nodes and connection types from profile's inventory
+
+           nodes with connection type 'local' are skipped
+           :param profile_name: profile name to list nodes from.
+                                Use active profile as default
+        """
+
+        profile = self.get(
+            profile_name) if profile_name else self.get_active_profile()
+
+        if profile is None:
+            if profile_name is None:
+                raise exceptions.IRNoActiveProfileFound()
+            else:
+                raise exceptions.IRProfileMissing(profile=profile_name)
+
+        invent = inventory.Inventory(DataLoader(), VariableManager(),
+                                     host_list=profile.inventory)
+        hosts = invent.get_hosts()
+        return [host.name for host in hosts if host.vars.get(
+            "ansible_connection") != "local"]
