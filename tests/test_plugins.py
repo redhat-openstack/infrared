@@ -19,6 +19,9 @@ SUPPORTED_TYPES_DICT = dict(
     supported_types=dict(
         supported_type1='Tools of supported_type1',
         supported_type2='Tools of supported_type2',
+        provision='Provisioning plugins',
+        install='Installing plugins',
+        test='Testing plugins'
     )
 )
 
@@ -76,6 +79,7 @@ def plugin_manager_fixture(plugins_conf_fixture):
             plugins_conf_dict = {}
 
         plugins_conf_dict.update(SUPPORTED_TYPES_DICT)
+
         with lp_file.open(mode='w') as fp:
             config = ConfigParser.ConfigParser()
             for section, section_data in plugins_conf_dict.items():
