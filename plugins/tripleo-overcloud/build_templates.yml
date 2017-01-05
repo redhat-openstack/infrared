@@ -1,0 +1,106 @@
+- name: Prepare the overcloud configuration
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      source_dir: "{{ install.deployment.files }}"
+      # FIXME(yfried): use '~/' once https://github.com/ansible/ansible/issues/19869 is resolved
+      template_base: "{{ ansible_user_dir }}/deployment_files"
+      network_environment_file: "network-environment{{ (install.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
+      templates:
+          generate_host_name_template: yes
+          # indicates whether we need to add --scale and flavor options to the build script for storage nodes.
+          storage_add_scale: yes
+  tasks:
+      - name: find deployment files directory
+        find:
+            file_type: directory
+            pattern: "{{ source_dir | basename }}"
+            paths:
+                # plugin vars
+                - "{{ playbook_dir }}/vars/deployment/files/{{ source_dir | dirname }}"
+                # relative to working directory
+                - "{{ lookup('env', 'PWD') }}/{{ source_dir | dirname }}"
+                - "{{ source_dir | expanduser | dirname }}"
+        register: src_find
+        delegate_to: localhost
+
+      - name: copy deployment folder
+        copy:
+            # get first match according to priority list.
+            src: "{{ src_find.files[0].path }}/"
+            dest: "{{ template_base }}"
+            directory_mode: u=rwX,g=rX,o=rX
+            force: yes
+
+      - name: inject debug.yaml so it will be auto discovered with user templates
+        copy:
+            src: files/debug.yaml
+            dest: "{{ template_base }}"
+        when: install.overcloud.debug
+
+      - name: check for the network-environment file
+        find:
+            # find doesn't resolve '~': https://github.com/ansible/ansible/issues/19869
+            paths: "{{ template_base }}"
+            patterns: "{{ network_environment_file }}"
+            recurse: yes
+        register: network_environment_file_path
+
+      # TODO: Move this to pre run verification
+      - fail:
+            msg: "The {{ network_environment_file }} file is missing"
+        when: 'network_environment_file_path.matched == 0'
+
+      - name: check if custom overcloud_deploy.sh exists
+        stat:
+            path: "{{ template_base }}/overcloud_deploy.sh"
+        register: deploy_script
+        tags: deploy
+
+      - name: copy our overcloud deployment script if provided by the user
+        tags: overcloud_deploy
+        copy:
+            src: "{{ install.overcloud.script }}"
+            dest: "~/{{ install.overcloud.script | basename }}"
+            mode: 0644
+            force: yes
+        when: install.overcloud.script|default('')
+
+      - set_fact:
+            overcloud_deploy_script: "{{ install.overcloud.script|default('') or deploy_script.stat.path|default('') | basename }}"
+
+      - name: create the base overcloud deploy script
+        template:
+            src: "templates/overcloud_deploy.sh.j2"
+            dest: "~/overcloud_deploy.sh"
+            mode: 0755
+        when: not overcloud_deploy_script|default('')
+
+      - name: append extra templates provided by user
+        include: tasks/environment_templates.yml
+        with_items: "{{ (install.overcloud.templates|default('')).split(',') }}"
+        loop_control:
+            loop_var: templates_list_file
+        # avoid empty strings
+        when: "templates_list_file != ''"
+
+      - name: Enable external network access through newly created vlan interface on undercloud
+        include: tasks/undercloud-ext-vlan.yml
+        when: "'hypervisor' not in groups and install.public.vlan"
+
+      - include: tasks/append_script.yml
+        when: not overcloud_deploy_script|default('')
+
+      - name: set overcloud_deploy script
+        set_fact:
+           overcloud_deploy_script: '~/overcloud_deploy.sh'
+        when: not overcloud_deploy_script|default('')
+        tags: deploy
+
+      - include: tasks/loadbalancer.yml
+        when: "not overcloud_deploy_script|default('') and groups.loadbalancer is defined"
+
+      - name: Print deploy command
+        command: "cat {{ overcloud_deploy_script }}"
+        tags: deploy

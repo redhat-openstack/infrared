@@ -139,3 +139,19 @@ Let's depoly a `Tripleo Undercloud`_::
 This will deploy OSP 10 (``Newton``) on the node ``undercloud-0`` provisioned previously.
 
 .. _Tripleo Undercloud: tripleo-undercloud.html
+
+Overcloud
+^^^^^^^^^
+
+Let's depoly a `Tripleo Overcloud`_::
+
+  infrared tripleo-overcloud --deployment-files virt --version 10
+
+This will deploy OSP 10 (``Newton``) overcloud from the undercloud defined previously previously.
+Given the topology defined by the `Answers File`_ earlier, the overcloud should contain:
+- 1 controller
+- 1 compute
+- 1 ceph storage
+
+
+.. _Tripleo Overcloud: tripleo-overcloud.html

@@ -1,0 +1,11 @@
+DEVICE={{ installer.loadbalancer.network.undercloud.oc_interface }}.{{ installer.loadbalancer.network.internal_api.vlanid }}
+BOOTPROTO=static
+ONBOOT=yes
+{% if installer.network.protocol == 'ipv6' %}
+IPV6INIT=yes
+IPV6_AUTOCONF=no
+{% endif %}
+IP{{ (installer.network.protocol == 'ipv6') | ternary('V6','') }}ADDR={{ installer.loadbalancer.network.undercloud.internal_ip | ipaddr('address') }}
+{{ (installer.network.protocol == 'ipv6') | ternary('IPV6','') }}PREFIX={{ installer.loadbalancer.network.undercloud.internal_ip  | ipaddr('prefix') }}
+VLAN=yes
+NM_CONTROLLED=no

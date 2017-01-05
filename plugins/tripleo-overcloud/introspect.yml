@@ -1,0 +1,56 @@
+- name: Introspect our machines
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  vars:
+      undercloud_provision_cidr: "{{ ansible_br_ctlplane.ipv4.network }}/{{ ansible_br_ctlplane.ipv4.netmask }}"
+      instack_input: "{{ (install.instackenv|default({})).file | default('') }}"
+  tasks:
+      - name: inject instackenv file if provided by the user
+        tags: ironic
+        copy:
+            src: "{{ instack_input }}"
+            dest: "~/{{ instack_input | basename }}"
+        when: instack_input
+        register: inject_instackenv
+
+      - name: verify that instackenv json file exists
+        stat:
+            path: "~/{{ (instack_input or 'instackenv.json') | basename }}"
+        register: instack_file_path
+        tags: ironic
+
+      - name: fail if instackenv file is missing
+        fail:
+            msg: instackenv file is missing
+        when: not instack_file_path.stat.exists
+        tags: ironic
+
+      - name: register hosts to instack
+        shell: |
+            source ~/stackrc
+            openstack baremetal import --json {{ instack_file_path.stat.path }}
+        tags:
+            - ironic
+            # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
+            - skip_ansible_lint
+
+      # FIXME(yfried): unify in above shell?
+      - name: assign the kernel and ramdisk before introspection begins
+        shell: |
+            source ~/stackrc
+            openstack baremetal configure boot
+        tags:
+            - ironic
+            # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
+            - skip_ansible_lint
+
+      - name: start node introspection
+        shell: |
+            source ~/stackrc
+            openstack baremetal introspection bulk start
+        register: introspection_result
+        failed_when: introspection_result.rc != 0
+        tags:
+            # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
+            - skip_ansible_lint

@@ -1,0 +1,47 @@
+# In BM deployment case we need to masquerade overcloud's external network
+# traffic thru UC node which is also BM node. Such traffic is in this
+# case closed in VLAN and we don't have access to the that network on UC.
+# First we need to enable masqurading for external network with undercloud.conf's
+# "masquerade_network" setting for each infra. Then following role will add
+# interface connected to external network using same cidr as ExternalNetCidr.
+# These two cidr's must match!
+# On hypervisor we don't need such tweak as external traffic is handled by libvirt.
+- name: check for the network-environment file
+  find:
+      paths: "{{ template_base }}"
+      patterns: "{{ network_environment_file }}"
+      recurse: yes
+  register: network_environment_file_path
+
+- name: get the vlan number where external network should be served
+  shell: "cat {{ network_environment_file_path.files[0].path }} | grep ExternalNetworkVlanID | awk -F' ' '{print $2}'"
+  register: vlan_result
+
+- name: create new vlan interface in ovs system
+  become: yes
+  command: "ovs-vsctl add-port br-ctlplane vlan{{ vlan_result.stdout | replace(\"'\",'') }} tag={{ vlan_result.stdout | replace(\"'\",'') }} -- set interface vlan{{ vlan_result.stdout | replace(\"'\",'') }} type=internal"
+  register: result
+  failed_when: "result.stderr != '' and 'port named vlan{{ vlan_result.stdout | replace(\"'\",'') }} already exists' not in result.stderr"
+
+- name: get the IP address for the external network interface
+  shell: "cat {{ network_environment_file_path.files[0].path }} | grep ExternalInterfaceDefaultRoute | awk -F' ' '{print $2}'"
+  register: stat_ip_result
+
+- name: configure external gateway's IP for this interface
+  become: yes
+  command: "ip addr add {{ stat_ip_result.stdout | replace(\"'\",'') }} dev vlan{{ vlan_result.stdout | replace(\"'\",'') }}"
+  register: iface_ip_result
+  failed_when: "result.rc != 0 and result.stderr.find('RTNETLINK answers: File exists') != -1"
+
+- name: switch on the newly added vlan interface
+  command: "ip link set vlan{{ vlan_result.stdout | replace(\"'\",'') }} up"
+  become: yes
+
+- name: get cidr of the external network
+  shell: "cat {{ network_environment_file_path.files[0].path }} | grep ExternalNetCidr | awk -F' ' '{print $2}'"
+  register: route_result
+
+- name: add new static route for external network
+  become: yes
+  command: "ip route add {{ route_result.stdout | replace(\"'\",'') }} dev vlan{{ vlan_result.stdout | replace(\"'\",'') }}"
+  failed_when: "result.rc != 0 and result.stderr.find('RTNETLINK answers: File exists') != -1"
