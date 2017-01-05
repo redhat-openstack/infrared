@@ -1,0 +1,36 @@
+---
+# This template configures each role to use Vlans on a single nic for
+# each isolated network, but uses multiple nic's on each node:
+#
+# nic1 = pxe/management/ctlplane
+# nic2 = VLAN trunk for network isolation
+# nic3 = public/external access
+#
+# This template assumes use of network-isolation.yaml.
+#
+# FIXME: if/when we add functionality to heatclient to include heat
+# environment files we should think about using it here to automatically
+# include network-isolation.yaml.
+resource_registry:
+  OS::TripleO::BlockStorage::Net::SoftwareConfig: three-nics-vlans/cinder-storage.yaml
+  OS::TripleO::Compute::Net::SoftwareConfig: three-nics-vlans/compute.yaml
+  OS::TripleO::Controller::Net::SoftwareConfig: three-nics-vlans/controller-v6.yaml
+  OS::TripleO::ObjectStorage::Net::SoftwareConfig: three-nics-vlans/swift-storage.yaml
+  OS::TripleO::CephStorage::Net::SoftwareConfig: three-nics-vlans/ceph-storage.yaml
+
+parameter_defaults:
+    ExternalNetCidr: '2620:52:0:13b8::/64'
+    ExternalAllocationPools: [{'start': '2620:52:0:13b8:5054:ff:fe3e:1', 'end': '2620:52:0:13b8:5054:ff:fe3e:9'}]
+    ExternalInterfaceDefaultRoute: 2620:52:0:13b8::fe
+    ExternalNetworkVlanID: 10
+    InternalApiNetCidr: 'fd00:fd00:fd00:2000::/64'
+    InternalApiAllocationPools: [{'start': 'fd00:fd00:fd00:2000::10', 'end': 'fd00:fd00:fd00:2000:ffff:ffff:ffff:fffe'}]
+    StorageNetCidr: 'fd00:fd00:fd00:3000::/64'
+    StorageAllocationPools: [{'start': 'fd00:fd00:fd00:3000::10', 'end': 'fd00:fd00:fd00:3000:ffff:ffff:ffff:fffe'}]
+    StorageMgmtNetCidr: 'fd00:fd00:fd00:4000::/64'
+    StorageMgmtAllocationPools: [{'start': 'fd00:fd00:fd00:4000::10', 'end': 'fd00:fd00:fd00:4000:ffff:ffff:ffff:fffe'}]
+#    DnsServers: ["2620:52:0:13b8::fe"]
+    DnsServers: ["10.35.64.1"]
+    EC2MetadataIp: 192.0.2.1
+    ControlPlaneDefaultRoute: 192.0.2.1
+    NeutronExternalNetworkBridge: "''"

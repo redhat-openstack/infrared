@@ -1,0 +1,104 @@
+{% if installer.product.version|openstack_release < 9 %}
+parameters:
+  ServiceNetMap:
+    NeutronTenantNetwork: tenant
+    CeilometerApiNetwork: internal_api
+    MongoDbNetwork: internal_api
+    CinderApiNetwork: internal_api
+    CinderIscsiNetwork: storage
+    GlanceApiNetwork: storage
+    GlanceRegistryNetwork: internal_api
+    KeystoneAdminApiNetwork: internal_api
+    KeystonePublicApiNetwork: internal_api
+    NeutronApiNetwork: internal_api
+    HeatApiNetwork: internal_api
+    NovaApiNetwork: internal_api
+    NovaMetadataNetwork: internal_api
+    NovaVncProxyNetwork: internal_api
+    SwiftMgmtNetwork: storage_mgmt
+    SwiftProxyNetwork: storage
+    HorizonNetwork: internal_api
+    MemcachedNetwork: internal_api
+    RabbitMqNetwork: internal_api
+    RedisNetwork: internal_api
+    MysqlNetwork: internal_api
+    CephClusterNetwork: storage_mgmt
+    CephPublicNetwork: storage
+    ControllerHostnameResolveNetwork: internal_api
+    ComputeHostnameResolveNetwork: internal_api
+    BlockStorageHostnameResolveNetwork: internal_api
+    ObjectStorageHostnameResolveNetwork: internal_api
+    CephStorageHostnameResolveNetwork: storage
+{% endif %}
+
+parameter_defaults:
+{% if installer.product.version|openstack_release > 8 %}
+  ServiceNetMap:
+    NeutronTenantNetwork: tenant
+    CeilometerApiNetwork: internal_api
+    MongoDbNetwork: internal_api
+    CinderApiNetwork: internal_api
+    CinderIscsiNetwork: storage
+    GlanceApiNetwork: storage
+    GlanceRegistryNetwork: internal_api
+    KeystoneAdminApiNetwork: internal_api
+    KeystonePublicApiNetwork: internal_api
+    NeutronApiNetwork: internal_api
+    HeatApiNetwork: internal_api
+    NovaApiNetwork: internal_api
+    NovaMetadataNetwork: internal_api
+    NovaVncProxyNetwork: internal_api
+    SwiftMgmtNetwork: storage_mgmt
+    SwiftProxyNetwork: storage
+    HorizonNetwork: internal_api
+    MemcachedNetwork: internal_api
+    RabbitMqNetwork: internal_api
+    RedisNetwork: internal_api
+    MysqlNetwork: internal_api
+    CephClusterNetwork: storage_mgmt
+    CephPublicNetwork: storage
+    ControllerHostnameResolveNetwork: internal_api
+    ComputeHostnameResolveNetwork: internal_api
+    BlockStorageHostnameResolveNetwork: internal_api
+    ObjectStorageHostnameResolveNetwork: internal_api
+    CephStorageHostnameResolveNetwork: storage
+    AodhApiNetwork: internal_api
+    GnocchiApiNetwork: internal_api
+    SaharaApiNetwork: internal_api
+{% endif %}
+{% if installer.product.version|openstack_release > 7 %}
+  RedisPassword: 'examplepassword'
+{% endif %}
+  ControlPlaneIP: {{ installer.loadbalancer.network.plain.ip | ipaddr('address') }}
+  ExternalNetworkVip: {{ installer.loadbalancer.network.external.vip | ipaddr('address') }}
+  InternalApiNetworkVip: {{ installer.loadbalancer.network.internal_api.vip | ipaddr('address') }}
+  StorageNetworkVip: {{ installer.loadbalancer.network.storage.vip | ipaddr('address') }}
+  StorageMgmtNetworkVip: {{ installer.loadbalancer.network.storage_mgmnt.vip | ipaddr('address') }}
+  ServiceVips:
+    redis: {{ installer.loadbalancer.network.redis.vip | ipaddr('address') }}
+  ControllerIPs:
+    external_cidr: "{{ installer.loadbalancer.network.external.vip | ipaddr('prefix') }}"
+    internal_api_cidr: "{{ installer.loadbalancer.network.internal_api.vip | ipaddr('prefix') }}"
+    storage_cidr: "{{ installer.loadbalancer.network.storage.vip | ipaddr('prefix') }}"
+    storage_mgmt_cidr: "{{ installer.loadbalancer.network.storage_mgmnt.vip | ipaddr('prefix') }}"
+    tenant_cidr: "{{ installer.loadbalancer.network.tenant.vip | ipaddr('prefix') }}"
+    external:
+{% for x in range(provisioner.topology.nodes.controller.amount) %}
+    - {{ installer.loadbalancer.network.external.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+{% endfor %}
+    internal_api:
+{% for x in range(provisioner.topology.nodes.controller.amount) %}
+    - {{ installer.loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+{% endfor %}
+    storage:
+{% for x in range(provisioner.topology.nodes.controller.amount) %}
+    - {{ installer.loadbalancer.network.storage.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+{% endfor %}
+    storage_mgmt:
+{% for x in range(provisioner.topology.nodes.controller.amount) %}
+    - {{ installer.loadbalancer.network.storage_mgmnt.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+{% endfor %}
+    tenant:
+{% for x in range(provisioner.topology.nodes.controller.amount) %}
+    - {{ installer.loadbalancer.network.tenant.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+{% endfor %}
