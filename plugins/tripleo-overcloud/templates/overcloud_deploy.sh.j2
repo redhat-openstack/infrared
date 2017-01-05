@@ -1,0 +1,20 @@
+#!/bin/bash
+
+openstack overcloud deploy --debug \
+--templates \
+--libvirt-type kvm \
+--ntp-server clock.redhat.com \
+--neutron-network-type {{ install.network.backend }} \
+{% if install.network.backend == "vlan" %}
+--neutron-disable-tunneling \
+--neutron-bridge-mappings datacentre:br-ex,tenant:br-isolated \
+--neutron-network-vlan-ranges tenant:1000:2000 \
+{% else %}
+--neutron-tunnel-types {{ install.network.backend }} \
+{% endif %}
+--control-scale {% if install.controller is defined and install.controller.nodes is defined and install.controller.nodes %}{{ install.controller.nodes }}{% elif groups['controller'] is defined %}{{ groups['controller'] | length }}{% else %}1{% endif %} \
+--control-flavor {% if groups['controller'] is defined %}controller \{% else %}baremetal \
+{% endif %}
+--compute-scale {% if install.compute is defined and install.compute.nodes is defined and install.compute.nodes %}{{ install.compute.nodes }}{% elif groups['compute'] is defined %}{{ groups['compute'] | length }}{% else %}1{% endif %} \
+--compute-flavor {% if groups['compute'] is defined %}compute \{% else %}baremetal \
+{% endif %}

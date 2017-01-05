@@ -1,0 +1,37 @@
+- include: init.yml
+  tags:
+      - init
+      - ironic
+
+- include: baremetal.yml
+  tags:
+      - instack
+      - baremetal
+      - ironic
+  when: "'hypervisor' in groups"
+
+- name: Introspect our machines
+  include: introspect.yml
+  tags: introspection
+
+- name: Tag our machines with proper flavors
+  include: tag.yml
+  tags: tagging
+
+- name: Populate the overcloud deploy script
+  include: build_templates.yml
+  tags: templates
+
+- name: Deploy the Overcloud
+  include: deploy.yml
+  tags: deploy
+
+- name: Update inventory
+  include: update_inventory.yml
+  tags:
+      - inventory_update
+      - deploy
+
+- name: Perform post install tasks
+  include: post.yml
+  tags: post
