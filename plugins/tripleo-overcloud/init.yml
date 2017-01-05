@@ -1,0 +1,29 @@
+- name: Dump all facts before the installation begins
+  hosts: all:!localhost
+  gather_facts: no
+  tags: init
+  any_errors_fatal: true
+  tasks:
+      - name: Dumping all facts
+        setup:
+        register: initial_facts
+
+      - name: Writing facts into files
+        copy:
+            content: "{{ initial_facts.ansible_facts }}"
+            dest: "{{ inventory_dir }}/{{ inventory_hostname }}"
+        delegate_to: localhost
+
+- name: Pre Run Adjustments
+  hosts: undercloud
+  tags: init
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: fetch undercloud.conf for lookup
+        fetch:
+            flat: yes
+            fail_on_missing: yes
+            src: ~/undercloud.conf
+            # use src basename
+            dest: "{{ inventory_dir }}/"

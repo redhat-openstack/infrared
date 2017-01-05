@@ -1,0 +1,41 @@
+parameter_defaults:
+    CinderEnableIscsiBackend: false
+    CinderEnableRbdBackend: true
+    CinderEnableNfsBackend: false
+    NovaEnableRbdBackend: true
+    GlanceBackend: rbd
+{% if install.storage.external %}
+    CinderRbdPoolName: "automation-volumes"
+    NovaRbdPoolName: "automation-vms"
+    GlanceRbdPoolName: "automation-images"
+    CinderBackupRbdPoolName: "automation-backups"
+{% for key, value in private.storage.ceph.common.iteritems() %}
+    {{ key }}: {{ value }}
+{% endfor %}
+{% for key, value in private.storage.ceph[ceph_compt_version].iteritems() %}
+    {{ key }}: {{ value }}
+{% endfor %}
+
+resource_registry:
+{% if install.version|openstack_release >= 10 %}
+    OS::TripleO::Services::CephExternal: /usr/share/openstack-tripleo-heat-templates/puppet/services/ceph-external.yaml
+    OS::TripleO::Services::CephMon: OS::Heat::None
+    OS::TripleO::Services::CephClient: OS::Heat::None
+    OS::TripleO::Services::CephOSD: OS::Heat::None
+{% else %}
+    OS::TripleO::CephClusterConfig::SoftwareConfig: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/ceph/ceph-external-config.yaml
+{% endif %}
+
+{% else %}
+    GlanceBackend: rbd
+    CinderRbdPoolName: "volumes"
+    NovaRbdPoolName: "vms"
+    GlanceRbdPoolName: "images"
+    ExtraConfig:
+      ceph::profile::params::osds:
+{% for disk in ceph_facts.ansible_devices.keys()[1:] %}
+       '/dev/{{ disk }}':
+           journal: ''
+{% endfor %}
+{% endif %}
+
