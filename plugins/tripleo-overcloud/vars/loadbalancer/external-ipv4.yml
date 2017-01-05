@@ -1,0 +1,45 @@
+---
+loadbalancer:
+    network:
+        oc_interface: "eth0"
+        provision_interface: "eth1"
+        ex_interface: "eth2"
+        undercloud:
+            oc_interface: "eth1"
+            internal_ip: 172.17.1.248/24
+        plain:
+            ip: 192.0.2.200/24
+            gateway: 192.0.2.1
+            dns1: 192.0.2.1
+        internal_api:
+            net: 172.17.1.0/24
+            vip: 172.17.1.250/24
+            vlanid: 20
+        external:
+            net: 10.0.0.0/24
+            vip: 10.0.0.250/24
+            vlanid: 10
+        storage:
+            net: 172.17.3.0/24
+            vip: 172.17.3.250/24
+            vlanid: 30
+        storage_mgmnt:
+            net: 172.17.4.0/24
+            vip: 172.17.4.250/24
+            vlanid: 40
+        redis:
+            vip: 172.17.1.249/24
+        tenant:
+            net: 172.17.2.0/24
+            vip: 172.17.2.250/24
+            vlanid: 50
+        interfaces:
+            management:
+                label: "eth0"
+            data:
+                label: "eth1"
+            external:
+                label: "eth2"
+    controllers:
+        pool_start: 251
+        name_prefix: "controller-"

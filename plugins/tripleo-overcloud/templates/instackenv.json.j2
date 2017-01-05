@@ -1,0 +1,23 @@
+{
+  "ssh-user": "{{ ansible_ssh_user }}",
+  "ssh-key": "{{ undercloud_private_key }}",
+  "power_manager": "nova.virt.baremetal.virtual_power_driver.VirtualPowerManager",
+  "host-ip": "{{ hostvars['hypervisor'].ansible_management.ipv4.address }}",
+  "arch": "x86_64",
+  "nodes": [
+{% for host_name in groups['overcloud_nodes'] %}
+    {
+      "name": "{{ hostvars[host_name].inventory_hostname }}",
+      "pm_addr": "{{ hostvars['hypervisor'].ansible_management.ipv4.address }}",
+      "pm_password": "{{ undercloud_private_key }}",
+      "pm_type": "pxe_ssh",
+      "mac": ["{{ hostvars[host_name]['ansible_eth0']['macaddress'] }}"],
+      "cpu": "{{ hostvars[host_name]['ansible_processor_cores'] }}",
+      "memory": "{{ hostvars[host_name]['ansible_memtotal_mb'] }}",
+      "disk": "{{ hostvars[host_name].ansible_devices.vda.size.split()[0] | int }}",
+      "arch": "{{ hostvars[host_name]['ansible_architecture'] }}",
+      "pm_user": "{{ ansible_ssh_user }}"
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
+    ]
+}

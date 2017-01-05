@@ -1,0 +1,30 @@
+- name: Generate the instackenv.json
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: grab undercloud private key
+        command: "cat ~/.ssh/id_rsa"
+        register: uc_pkey_result
+
+      - name: prepare instack.json if one doesn't exist
+        vars:
+            instack_input: "{{ (install.instackenv|default({})).file|default('') }}"
+            instack_output: "~/instackenv.json"
+            # json file shouldn't hold newlines
+            undercloud_private_key: "{{ uc_pkey_result.stdout_lines | join('\\n')}}"
+        template:
+            src: templates/instackenv.json.j2
+            dest: "{{ instack_output }}"
+        when: not instack_input
+
+- name: Power off overcloud nodes VMs so they can be properly registered
+  hosts: hypervisor
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: power off overcloud nodes
+        virt:
+            name: "{{ item }}"
+            state: destroyed
+        with_items: "{{ groups['overcloud_nodes'] }}"

@@ -1,0 +1,14 @@
+- name: "Set selinux state on overcloud"
+  hosts: overcloud_nodes
+  become: yes
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - selinux:
+            policy: "targeted"
+            state: "{{ install.selinux | default('enforcing') }}"
+        when: install.version|openstack_distribution == 'OSP'
+
+- include: post/lbaas_v2.yml
+  tags: lbaas
+  when: install.network.lbaas|default(False)
