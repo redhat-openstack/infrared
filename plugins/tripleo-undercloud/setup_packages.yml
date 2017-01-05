@@ -1,11 +1,16 @@
 - name: Configure and Install Undercloud Repositories
   any_errors_fatal: true
   hosts: undercloud
+  gather_facts: yes
   become: yes
   vars:
       custom_repos: "{{ install.repos|default({}) }}"
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
   tags: install
+  pre_tasks:
+      # FIXME(yfried): figure why this is required in gate only
+      - name: gather undercloud facts since sometimes they are missing
+        setup:
   roles:
       - role: rhos-release
         release: "{{ install.version }}"
