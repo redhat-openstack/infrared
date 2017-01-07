@@ -15,6 +15,7 @@ Welcome to InfraRed's documentation!
    plugins
    interactive_ssh
    changes
+   advance_features
    contacts
 
 .. toctree::
