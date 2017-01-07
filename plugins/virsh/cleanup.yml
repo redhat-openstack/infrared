@@ -32,3 +32,12 @@
       # Don't cleanup if the libvirtd process is unavailable
       - include: tasks/cleanup.yml
         when: not install_libvirt|changed
+
+- name: Clean old inventory file
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - file:
+          dest: "{{ inventory_dir }}/hosts"
+          state: link
+          src: "{{ inventory_dir }}/local_hosts"

@@ -9,15 +9,6 @@
           mode: 0600
       when: provision.key_file is defined
 
-- name: clean old inventory file
-  hosts: localhost
-  gather_facts: no
-  tasks:
-    - file:
-          dest: "{{ inventory_dir }}/hosts"
-          state: link
-          src: "{{ inventory_dir }}/local_hosts"
-
 - name: Add host to host list
   hosts: localhost
   gather_facts: no
