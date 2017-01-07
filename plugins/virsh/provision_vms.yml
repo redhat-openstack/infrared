@@ -1,0 +1,42 @@
+---
+- name: Provision VMs
+  hosts: hypervisor
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+    - name: build nodes list into nodes var
+      include: tasks/add_nodes.yml
+      with_dict: "{{ provision.topology.nodes }}"
+      loop_control:
+          loop_var: node
+
+    # now continue with creating vm's
+    # Import disk images if necessary
+    - name: import disks for each VM if specified
+      include: tasks/vms_0_import_disk.yml
+      with_items: "{{ nodes }}"
+      loop_control:
+          loop_var: node
+
+    - name: create disks for each VM if not import
+      include: tasks/vms_1_create_disk.yml
+
+    # Build our VMs
+    - name: define libvirt VMs
+      include: tasks/vms_2_install.yml
+      with_items: "{{ nodes }}"
+      loop_control:
+          loop_var: node
+
+    - name: wait for VMs to come up, fix their ip and add to inventory
+      include: tasks/vms_3_netip.yml
+      with_items: "{{ nodes }}"
+      loop_control:
+          loop_var: node
+
+    - name: update tunneling conf
+      template:
+          src: ansible.ssh.config.j2
+          dest: "{{ inventory_dir }}/ansible.ssh.config"
+      delegate_to: localhost
+

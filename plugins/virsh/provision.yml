@@ -1,158 +1,20 @@
 ---
-- name: Change key file permissions
-  hosts: localhost
-  gather_facts: no
-  tasks:
-    - file:
-          path: "{{ provision.key_file }}"
-          state: touch
-          mode: 0600
-      when: provision.key_file is defined
+- name: Pre run configuration
+  include: "{{ provision_pre | default('pre.yml') }}"
 
-- name: Add host to host list
-  hosts: localhost
-  gather_facts: no
-  vars:
-      hypervisor: "{{ provision.host }}"
-      hypervisor_name: hypervisor
-  tasks:
-      - name: add hosts to host list
-        add_host:
-            name: "{{ hypervisor.name | default(hypervisor_name) }}"
-            groups: "{{ hypervisor.groups|default([hypervisor_name]) | join(',') }}"
-            ansible_ssh_user: "{{ hypervisor.user }}"
-            ansible_ssh_host: "{{ hypervisor.address }}"
-            ansible_ssh_private_key_file: "{{ hypervisor.key }}"
+- name: Prepare the hypervisor for provisioning
+  include: "{{ prepare_hypervisor | default('prepare_hypervisor.yml') }}"
 
-- name: Setup the hypervisor
-  hosts: hypervisor
-  gather_facts: yes
-  any_errors_fatal: true
-  vars_files:
-      - vars/hypervisor.yml
-  tasks:
-      - name: install packages
-        yum:
-            name: "{{ item }}"
-            state: present
-        with_items: "{{ packages }}"
-        register: yum_result
+- name: Create Networks
+  include: "{{ provision_networks | default('provision_networks.yml') }}"
 
-      #check if additional binaries for UEFI mode VM boot installed
-      - name: check if uefi binaries installed
-        command: "rpm -q edk2.git-ovmf-x64"
-        register: rpm_check
-        ignore_errors: True
-        when: provision.bootmode == 'uefi'
+- name: Provision Vms
+  include: "{{ provision_vms | default('provision_vms.yml') }}"
 
-      - fail:
-            msg: "UEFI related binaries is missing, please refer http://infrared.readthedocs.io/en/latest/advanced.html#uefi-mode-related-binaries"
-        when: provision.bootmode == 'uefi' and rpm_check.stdout.find('is not installed') != -1
+- name: Create a sudoer user for non root SSH login
+  include: "{{ provision_user | default('provision_user.yml') }}"
 
-      - name: stop libvirtd
-        service:
-            name: "libvirtd"
-            state: "stopped"
-        when: yum_result.changed
-
-      # NOTE(psedlak): due to some flakiness in >few days running libvirt/dbus
-      # lets always restart libvirt at beginning of provisioning
-      - name: "always restart libvirtd"
-        service:
-            name: "libvirtd"
-            state: "restarted"
-            enabled: yes
-
-      - name: check if host supports virtualization and enable it if possible
-        include: tasks/enable_virtualization.yml
-        when: provision.host.validate
-
-      - name: setup the networks
-        include: tasks/network.yml
-
-      - name: check if private key exist on system
-        stat:
-            path: "/root/.ssh/id_rsa"
-        register: result
-
-      - name: if private key doesn't exist, create it
-        command: "ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''"
-        when: result.stat.exists != true
-
-      - name: copy server private key from hypervisor for SSH proxy
-        fetch:
-            src: "{{ item.src }}"
-            dest: "{{ item.dest }}"
-            flat: yes
-        with_items:
-            - {src: "~/.ssh/id_rsa", dest: "{{ inventory_dir }}/id_rsa"}
-            - {src: "~/.ssh/id_rsa.pub", dest: "{{ inventory_dir }}/id_rsa.pub"}
-
-      - name: update file permissions
-        file:
-            path: "{{ item }}"
-            mode: 0600
-        with_items:
-            - "{{ inventory_dir }}/id_rsa"
-            - "{{ inventory_dir }}/id_rsa.pub"
-        delegate_to: localhost
-
-      - name: Set up authorized_keys for the deploy user
-        authorized_key:
-            user: root
-            key: "{{ item }}"
-        with_file:
-          - "{{ inventory_dir }}/id_rsa.pub"
-
-      - name: Build nodes list into nodes var
-        include: tasks/add_nodes.yml
-        with_dict: "{{ provision.topology.nodes }}"
-        loop_control:
-            loop_var: node
-
-      - name: create images and vms
-        include: tasks/vms.yml
-
-
-- name: Create Non-Root User
-  hosts: all:!localhost:!hypervisor
-  gather_facts: no
-  any_errors_fatal: true
-  vars:
-      # Password isn't exposed by by default
-      non_root_pw: "{{ provision.topology.password | default('redhat') }}"
-  tasks:
-      - name: wait for hosts to be reachable
-        wait_for:
-            port: 22
-            host: "{{ ansible_ssh_host }}"
-            search_regex: OpenSSH
-        delegate_to: hypervisor
-
-      - name: create non root user
-        user:
-            name: "{{ provision.topology.username }}"
-            state: present
-            password: "{{ non_root_pw | password_hash('sha512') }}"
-
-      - name: add user to sudoers
-        lineinfile:
-            dest: "/etc/sudoers"
-            line: "{{ provision.topology.username }} ALL=(root) NOPASSWD:ALL"
-
-      - name: Set up authorized_keys for non root user
-        authorized_key:
-            user: "{{ provision.topology.username }}"
-            key: "{{ item }}"
-        with_file:
-            - "{{ inventory_dir }}/id_rsa.pub"
-
-      - name: Update hosts user
-        add_host:
-            name: "{{ inventory_hostname }}"
-            ansible_ssh_user: "{{ provision.topology.username }}"
-
-- name: Including post provision tasks for virsh
+- name: Including post provision tasks
   include: "{{ provision_post | default('post.yml') }}"
 
 - name: generate inventory file
