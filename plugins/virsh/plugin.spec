@@ -20,6 +20,13 @@ subparsers:
                       type: Value
                       help: "User's SSH key"
                       required: yes
+                  host-validate:
+                      type: Bool
+                      help: |
+                          Validate and enable virtualization on the hypervisor.
+                          Disable this option if you already know your hypervisor support virtualization and that it
+                          is enabled.
+                      default: True
 
             - title: image
               options:

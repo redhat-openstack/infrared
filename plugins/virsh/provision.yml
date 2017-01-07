@@ -72,11 +72,9 @@
             state: "restarted"
             enabled: yes
 
-      - name: check if host supports virtualization
-        include: tasks/validate.yml
-
-      - name: setup the hypervisor
-        include: tasks/setup.yml
+      - name: check if host supports virtualization and enable it if possible
+        include: tasks/enable_virtualization.yml
+        when: provision.host.validate
 
       - name: setup the networks
         include: tasks/network.yml
