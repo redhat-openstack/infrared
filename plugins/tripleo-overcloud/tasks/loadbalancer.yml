@@ -1,0 +1,27 @@
+---
+- include_vars: "vars/loadbalancer/external-{{ install.network.protocol }}.yml"
+
+- name: create VLAN interface for internal_api network
+  become: yes
+  template:
+      src: loadbalancer/vlan-internal_api.cfg.j2
+      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ install.loadbalancer.network.undercloud.oc_interface }}.{{ install.loadbalancer.network.internal_api.vlanid }}"
+  when: installer.loadbalancer.network.internal_api is defined
+
+- name: Start internal_api interface
+  command: "ifup {{ install.loadbalancer.network.undercloud.oc_interface }}.{{ install.loadbalancer.network.internal_api.vlanid }}"
+  become: yes
+
+- name: copy the loadbalancer template
+  template:
+      src: loadbalancer/external-lb.yaml.j2
+      dest: "~/external-lb.yaml"
+
+- name: append the External LB template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/external-loadbalancer-vip{{ (install.network.protocol == "ipv6") | ternary("-v6","") }}.yaml \'
+- name: append External LB config to the base overcloud deply script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e ~/external-lb.yaml \'

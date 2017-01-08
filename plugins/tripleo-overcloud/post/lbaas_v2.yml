@@ -1,0 +1,75 @@
+---
+# OSPD is unable to configure LBaaS, so post-install steps are required.
+# This is LBaaS v2.
+- name: Activate Neutron LBaaS (v2)
+  hosts: controller
+  become: true
+  any_errors_fatal: true
+  vars:
+      # command switch deprecated on Mitaka
+      project_switch: "--{{ (install.version|openstack_release < 9) | ternary('service ', 'subproject neutron-') }}lbaas"
+  tasks:
+    - name: Update neutron mariaDB with lbaas tables
+      command: >
+          neutron-db-manage
+          {{ project_switch }}
+          --config-file /etc/neutron/neutron.conf
+          --config-file /etc/neutron/plugins/ml2/ml2_conf.ini
+          upgrade head
+    - name: Change the Default lbaas_agent ini file
+      ini_file:
+          dest: /etc/neutron/lbaas_agent.ini
+          section: DEFAULT
+          option: "{{item.opt}}"
+          value: "{{item.val}}"
+      with_items:
+          - opt: debug
+            val: 'False'
+          - opt: interface_driver
+            val: neutron.agent.linux.interface.OVSInterfaceDriver
+          - opt: ovs_use_veth
+            val: 'False'
+      notify:
+          - restart_lbaas_agent
+
+    - name: Change the haproxy params in lbaas_agent ini file
+      ini_file:
+          dest: /etc/neutron/lbaas_agent.ini
+          section: haproxy
+          option: user_group
+          value: haproxy
+      notify:
+          - restart_lbaas_agent
+
+    - name: Change the service_providers in neutron_lbaas conf file
+      ini_file:
+           dest: /etc/neutron/neutron_lbaas.conf
+           section: service_providers
+           option: service_provider
+           value: LOADBALANCERV2:Haproxy:neutron_lbaas.drivers.haproxy.plugin_driver.HaproxyOnHostPluginDriver:default
+      notify:
+          - restart_lbaas_agent
+
+    - name: Change the service_providers in neutron conf file
+      lineinfile:
+          dest: /etc/neutron/neutron.conf
+          backrefs: yes
+          state: present
+          regexp: '^service_plugins.*=(?!.*,neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2)(.*)'
+          line: 'service_plugins=\1,neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2'
+      notify:
+          - restart_lbaas_agent
+          - restart_neutron
+
+
+  handlers:
+    - name: restart_lbaas_agent
+      service:
+          name: neutron-lbaasv2-agent.service
+          state: restarted
+          enabled: yes
+
+    - name: restart_neutron
+      service:
+          name: neutron-server.service
+          state: restarted

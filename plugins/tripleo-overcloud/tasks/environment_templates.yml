@@ -1,0 +1,44 @@
+# include environment template files from undercloud in overcloud_deploy script
+
+- name: find template file
+  vars:
+      input: "{{ templates_list_file }}"
+      default_path: vars/overcloud/templates
+  find:
+      file_type: file
+      patterns:
+        - "{{ input | basename }}"
+        - "{{ input | basename }}.yml"
+      paths:
+          # relative to working directory
+          - "{{ lookup('env', 'PWD') }}/{{ input | dirname }}"
+          # absolute path
+          - "{{ input | expanduser | dirname }}"
+          # plugin vars
+          - "{{ playbook_dir }}/{{ default_path }}/{{ input | dirname }}"
+  register: src_find
+  delegate_to: localhost
+
+- include_vars: "{{ src_find.files[0].path }}"
+
+- name: look in undercloud's default templates
+  stat:
+      path: "{{ item }}"
+  with_items: "{{ tripleo_heat_templates | default([]) }}"
+  register: default_templates
+
+- name: include templates from default location
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: "--environment-file {{ item }} \\"
+  with_items: "{{ default_templates.results|selectattr('stat.exists')|map(attribute='stat.path')|list }}"
+
+- name: fail because file not found
+  vars:
+      missing_templates: "{{ default_templates.results|rejectattr('stat.exists')|map(attribute='item')|list }}"
+  fail:
+      msg:
+          error: "Unable to locate templates from file '{{ templates_list.key }}'"
+          source_file: "{{ templates_list.key }}"
+          missing_templates: "{{ missing_templates }}"
+  when: missing_templates | default([])
