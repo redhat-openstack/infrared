@@ -1,42 +1,46 @@
 ---
 # This is the most common network topology for OpenStack Testing deployments
+# FixMe(aopincar): Eliminates recursive loop. Should be moved into root level togther with 'networks_data' data when moving to Ansible => 2.2 (incluve_vars with 'name')
+temporary_networks_vars:
+    networks:
+        data:
+            name: 'data'
+        external:
+            name: 'external'
+        management:
+            name: 'management'
 
-networks:
-    data:
-        name: 'data'
-    external:
-        name: 'external'
-    management:
-        name: 'management'
+networks_data:
+    networks: "{{ temporary_networks_vars.networks }}"
 
-subnets:
-    data:
-        name: "{{ !lookup provision.topology.network.networks.data.name }}"
-        network_name: "{{ !lookup provision.topology.network.networks.data.name }}"
-        allocation_pool_start: 172.16.1.10
-        allocation_pool_end: 172.16.1.100
-        cidr: 172.16.1.0/24
-    external:
-        name: "{{ !lookup provision.topology.network.networks.external.name }}"
-        network_name: "{{ !lookup provision.topology.network.networks.external.name }}"
-        allocation_pool_start: 172.31.0.10
-        allocation_pool_end: 172.31.0.100
-        cidr: 172.31.0.0/23
-        nested:
-            subnet_cidr: 172.31.0.0/23
-            subnet_gateway: 172.31.0.1
-            allocation_pool_start: 172.31.1.10
-            allocation_pool_end: 172.31.1.100
-    management:
-        name: "{{ !lookup provision.topology.network.networks.management.name }}"
-        network_name: "{{ !lookup provision.topology.network.networks.management.name }}"
-        allocation_pool_start: 192.168.1.10
-        allocation_pool_end: 192.168.1.100
-        cidr: 192.168.1.0/24
+    subnets:
+        data:
+            name: "{{ temporary_networks_vars.networks.data.name }}"
+            network_name: "{{ temporary_networks_vars.networks.data.name }}"
+            allocation_pool_start: 172.16.1.10
+            allocation_pool_end: 172.16.1.100
+            cidr: 172.16.1.0/24
+        external:
+            name: "{{ temporary_networks_vars.networks.external.name }}"
+            network_name: "{{ temporary_networks_vars.networks.external.name }}"
+            allocation_pool_start: 172.31.0.10
+            allocation_pool_end: 172.31.0.100
+            cidr: 172.31.0.0/23
+            nested:
+                subnet_cidr: 172.31.0.0/23
+                subnet_gateway: 172.31.0.1
+                allocation_pool_start: 172.31.1.10
+                allocation_pool_end: 172.31.1.100
+        management:
+            name: "{{ temporary_networks_vars.networks.management.name }}"
+            network_name: "{{ temporary_networks_vars.networks.management.name }}"
+            allocation_pool_start: 192.168.1.10
+            allocation_pool_end: 192.168.1.100
+            cidr: 192.168.1.0/24
 
-routers:
-    router:
-        name: 'router'
-        attach_subnets:
-            - "{{ !lookup provision.topology.network.networks.management.name }}"
-            - "{{ !lookup provision.topology.network.networks.external.name }}"
+    routers:
+        router:
+            name: 'router'
+            attach_subnets:
+                - "{{ temporary_networks_vars.networks.management.name }}"
+                - "{{ temporary_networks_vars.networks.external.name }}"
