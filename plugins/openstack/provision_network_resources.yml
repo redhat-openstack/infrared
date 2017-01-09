@@ -1,0 +1,72 @@
+---
+- name: Provision OpenStack network resources
+  hosts: localhost
+  tasks:
+      - include_vars: "../vars/topology/network/{{ provision.topology.network }}.yml"
+
+      - name: Create the resources directory
+        file:
+            dest: "{{ inventory_dir }}/resources"
+            state: directory
+
+      - name: Create networks
+        os_network:
+            cloud: "{{ provision.cloud | default(omit) }}"
+            external: "{{ item.value.external | default(omit) }}"
+            name: "{{ provision.prefix }}{{ item.value.name }}"
+            state: present
+            shared: "{{ item.value.shared | default(omit) }}"
+            timeout: "{{ item.value.timeout | default(180) }}"
+        register: networks
+        with_dict: "{{ networks_data.networks }}"
+        when: networks_data.networks is defined
+
+      - name: register networks resources
+        copy:
+            content: "{{ networks.results | map(attribute='network') | list | to_nice_yaml }}"
+            dest: "{{ inventory_dir }}/resources/networks.yml"
+
+      - name: Register externally accessible networks
+        os_networks_facts:
+            cloud: "{{ provision.cloud | default(omit) }}"
+            filters:
+                router:external: true
+
+      - name: Create subnets
+        os_subnet:
+            allocation_pool_start: "{{ item.value.allocation_pool_start }}"
+            allocation_pool_end: "{{ item.value.allocation_pool_end }}"
+            cidr: "{{ item.value.cidr | default(omit) }}"
+            cloud: "{{ provision.cloud | default(omit) }}"
+            dns_nameservers: "{{ provision.dns }}"
+            enable_dhcp: "{{ item.value.enable_dhcp | default(True) }}"
+            name: "{{ provision.prefix }}{{ item.value.name }}"
+            network_name: "{{ provision.prefix }}{{ item.value.network_name }}"
+            state: present
+        register: subnets
+        with_dict: "{{ networks_data.subnets }}"
+        when: networks_data.subnets is defined
+
+      - name: register subnets resources
+        copy:
+            content: "{{ subnets.results | map(attribute='subnet') | list | to_nice_yaml }}"
+            dest: "{{ inventory_dir }}/resources/subnets.yml"
+
+      - name: Create routers
+        os_router:
+            cloud: "{{ provision.cloud | default(omit) }}"
+            external_fixed_ips: "{{ item.value.external_fixed_ips | default(omit) }}"
+            interfaces: "{{ item.value.attach_subnets | map('add_prefix', provision.prefix) | join(',') }}"
+            name: "{{ provision.prefix }}{{ item.value.name | default('router1') }}"
+            network: "{{ openstack_networks[0].id }}"
+            state: present
+        register: routers
+        with_dict: "{{ networks_data.routers }}"
+        when: networks_data.routers is defined
+
+      - name: register routers resources
+        copy:
+            content: "{{ routers.results | map(attribute='router') | list |  to_nice_yaml }}"
+            dest: "{{ inventory_dir }}/resources/routers.yml"
+
+#      TODO(aopincar): Add 'security groups' dynamic creation

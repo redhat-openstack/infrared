@@ -1,0 +1,8 @@
+---
+- name: Cleanup subnets
+  os_subnet:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      name: "{{ item.id }}"
+      state: absent
+  with_items: "{{ lookup('file', inventory_dir + '/resources/subnets.yml') | from_yaml }}"
+  register: subnets_cleanup
