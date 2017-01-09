@@ -1,0 +1,12 @@
+# This is needed for os_keypair as it uses public key
+- name: Retrieve public key from private key
+  command: "ssh-keygen -y -f {{ provision.key.file }}"
+  register: public_key_content
+
+- name: Add keypair
+  os_keypair:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      name: "{{ prefix }}{{ provision.key.file | basename }}"
+      public_key: "{{ public_key_content.stdout }}"
+      state: present
+  when: not provision.key.name

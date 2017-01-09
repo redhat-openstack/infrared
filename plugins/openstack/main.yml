@@ -1,2 +1,12 @@
 ---
 - include: tasks/create_network_resources.yml
+- include: tasks/create_flavors.yml
+- include: tasks/create_keypair.yml
+
+# This includes the tasks for instances and floating IPs creation
+- include: tasks/setup_nodes.yml
+  with_dict: "{{ provision.topology.nodes }}"
+  loop_control:
+      loop_var: node
+
+- include: tasks.post_creation.yml

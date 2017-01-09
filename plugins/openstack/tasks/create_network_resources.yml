@@ -61,8 +61,8 @@
 #          name: "{{ provision.prefix }}{{ item.value.name | default(security_group_name) }}"
 #          state: present
 #      register: security_groups
-#      with_dict: "{{ provision.neutron.security_groups }}"
-#      when: provision.neutron.security_groups is defined
+#      with_dict: "{{ provision.topology.network.security_groups }}"
+#      when: provision.topology.network.security_groups is defined
 #
 #    - name: Create security group rules
 #      os_security_group_rule:
@@ -74,5 +74,5 @@
 #          remote_ip_prefix: "{{ item.value.remote_ip_prefix | default(omit) }}"
 #          state: present
 #      register: security_group_rules
-#      with_dict: "{{ provision.neutron.security_groups.rules }}"
-#      when: provision.neutron.security_groups is defined
+#      with_dict: "{{ provision.topology.network.security_groups.rules }}"
+#      when: provision.topology.network.security_groups is defined
