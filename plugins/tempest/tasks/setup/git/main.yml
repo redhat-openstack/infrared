@@ -1,0 +1,86 @@
+- name: Install devel packages for package build dependencies
+  become: yes
+  yum:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ setup.packages }}"
+
+- name: Install pip
+  become: yes
+  easy_install:
+      name: pip
+      state: latest
+
+- name: Clone tempest
+  git:
+      repo: "{{ setup.repo }}"
+      version: "{{ test.revision | default(omit) }}"
+      dest: "~/{{ test.dir }}"
+  register: tempest_repo
+  when: setup.local_dir is not defined
+
+- name: Fetch tempest from change
+  synchronize: dest={{ tester.dir }} src={{ tester.local_dir }}/
+                 archive=no recursive=yes perms=yes links=yes
+  register: tempest_local_dir
+  when: setup.local_dir is defined
+
+- name: Print repo version
+  command: "git log -1 --pretty=format:%h"
+  args:
+      chdir: "{{ test.dir }}"
+  register: tempest_repo_version
+
+- debug: "msg='Build mark: tempest={{ tempest_repo_version.stdout }}'"
+
+- name: Create venv with latest pip, setuptools and pbr
+  pip:
+      virtualenv: "~/{{ test.dir }}/.venv"
+      name: "{{ item }}"
+      state: latest
+  with_items:
+      - pip
+      - setuptools
+      - pbr
+
+- name: Quickly workaround recent requests bug in 2.12
+  pip:
+      name: "requests"
+      version: "2.11.1"
+      virtualenv: "~/{{ test.dir }}/.venv"
+
+- name: Get repo requirements
+  pip:
+      virtualenv: "~/{{ test.dir }}/.venv"
+      chdir: "~/{{ test.dir }}"
+      requirements: "{{ item }}"
+  with_items:
+      - requirements.txt
+      - test-requirements.txt
+
+- name: Install extra requirements
+  pip:
+      chdir: "~/{{ test.dir }}"
+      virtualenv: "~/{{ test.dir }}/.venv"
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ setup.pip_packages }}"
+
+- name: Install Tempest package
+  pip:
+      chdir: "~/{{ test.dir }}"
+      virtualenv: "~/{{ test.dir }}/.venv"
+      name: "."
+      editable: true
+
+- name: Install test plugins
+  include: install_plugins.yml
+  with_items: "{{ test.tests }}"
+  loop_control:
+      loop_var: test_suite
+  when: test.openstack.version|int >= 7
+
+- name: Warning message
+  debug:
+      msg: WARNING! Plugins are not available for RHOS version < 7
+  when: test.openstack.version|int < 7

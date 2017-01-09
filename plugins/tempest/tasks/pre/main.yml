@@ -1,0 +1,27 @@
+---
+- name: copy the openstackrc to the tester
+  vars:
+      openstackrc:  "{{ test.openstackrc | default(inventory_dir + '/keystonerc') }}"
+  copy:
+      src: "{{ openstackrc }}"
+      dest: "~/keystonerc"
+      force: yes
+
+- name: copy the tempest-deployer-input to the tester
+  copy:
+      src: "{{ test.deployer.input.file }}"
+      dest: "{{ deployer_input }}"
+  when: test.deployer.input.file is defined and test.deployer.input.method == 'copy'
+
+- name: set fact for local deployer config
+  set_fact:
+      deployer_input: "~/{{ test.dir }}/{{ test.deployer.input.file }}"
+  when: test.deployer.input.file is defined and test.deployer.input.method == 'local'
+
+- name: print deployer input file to be used
+  debug:
+      var: deployer_input
+      verbosity: 3
+
+- name: run configuration tasks for installer '{{ test.openstack.installer }}'
+  include: "{{ test.openstack.installer }}.yml"

@@ -1,0 +1,8 @@
+- name: Include setup vars
+  include_vars: "vars/setup/{{ test.setup }}.yml"
+
+- name: Setup tempest
+  include: "{{ test.setup }}/main.yml"
+
+- name: Run tempest comfiguration tool
+  include: configure.yml
