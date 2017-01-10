@@ -53,17 +53,17 @@ class ProfileManagerSpec(api.SpecObject):
             'import', help='Import deployment configs.')
         importer_parser.add_argument("filename", help="Archive file name.")
         importer_parser.add_argument(
-            "-N", "--name", dest="profilename",
+            "-n", "--name", dest="profilename",
             help="Profile name to import with."
             "If not specified - file name will be used.")
 
         # exort settings
         exporter_parser = profile_subparsers.add_parser(
             'export', help='Export deployment configurations.')
-        exporter_parser.add_argument("-P", "--profile", dest="profilename",
+        exporter_parser.add_argument("-n", "--name", dest="profilename",
                                      help="Profile name. If not sepecified - "
                                      "active profile will be used.")
-        exporter_parser.add_argument("-D", "--dest", dest="filename",
+        exporter_parser.add_argument("-f", "--filename", dest="filename",
                                      help="Archive file name.")
 
         # node list
