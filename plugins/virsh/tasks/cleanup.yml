@@ -20,7 +20,7 @@
       name: "{{ item }}"
       command: undefine
   with_items: "{{ virt_status.list_vms }}"
-  when: provision.boot_mode == 'uefi'
+  when: provision.bootmode == 'uefi'
 
 - name: destroy relevant vms
   virt:
@@ -33,7 +33,7 @@
       name: "{{ item }}"
       command: undefine
   with_items: "{{ virt_status.list_vms }}"
-  when: provision.boot_mode != 'uefi'
+  when: provision.bootmode != 'uefi'
 
 - name: Clean /etc/hostshosts file
   become: yes

@@ -74,9 +74,9 @@ subparsers:
                       silent:
                           - topology-nodes
 
-            - title: boot_mode
+            - title: Boot Mode
               options:
-                  boot_mode:
+                  bootmode:
                       type: Value
                       help: |
                         Desired boot mode for VMs.
