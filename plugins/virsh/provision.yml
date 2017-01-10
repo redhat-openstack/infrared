@@ -43,11 +43,11 @@
         command: "rpm -q edk2.git-ovmf-x64"
         register: rpm_check
         ignore_errors: True
-        when: provision.boot_mode == 'uefi'
+        when: provision.bootmode == 'uefi'
 
       - fail:
             msg: "UEFI related binaries is missing, please refer http://infrared.readthedocs.io/en/latest/advanced.html#uefi-mode-related-binaries"
-        when: provision.boot_mode == 'uefi' and rpm_check.stdout.find('is not installed') != -1
+        when: provision.bootmode == 'uefi' and rpm_check.stdout.find('is not installed') != -1
 
       - name: stop libvirtd
         service:
