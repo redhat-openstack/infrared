@@ -266,11 +266,11 @@ class ProfileManager(object):
 
         fname = file_name or profile.name
 
-        LOG.debug("Exporting profile {} to file {}.tbz".format(profile.name,
-                                                               fname))
-
         with tarfile.open(fname + '.tgz', "w:gz") as tar:
             tar.add(profile.path, arcname="./")
+
+        print("Profile {} is exported to file {}.tbz".format(profile.name,
+                                                             fname))
 
     def import_profile(self, file_name, profile_name=None):
         """Import profile from gzipped tar file
