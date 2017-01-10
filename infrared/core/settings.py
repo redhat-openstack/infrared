@@ -1,11 +1,12 @@
+import yaml
+
 from infrared.core.utils import exceptions, dict_utils
 
 
-class SettingsManager(object):
+class VarsDictManager(object):
 
-    @classmethod
-    def generate_settings(cls,
-                          entry_point,
+    @staticmethod
+    def generate_settings(entry_point,
                           nested_args,
                           delimiter='-'):
         """Unifies all input into a single dict of Ansible extra-vars
@@ -21,17 +22,17 @@ class SettingsManager(object):
         :param delimiter: character to split keys by.
         :return: dict. nest input with keys splitted by delimiter
 
-        >>> SettingsManager.generate_settings(
+        >>> VarsDictManager.generate_settings(
         ... 'entry_point', {'foo-bar': 'value1',
         ...                 'foo2': 'value2',
         ...                 'foo-another-bar': 'value3'})
         {'entry_point': {'foo': {'bar': 'value1', 'another':\
  {'bar': 'value3'}}, 'foo2': 'value2'}}
         """
-        settings_dict = {entry_point: {}}
+        vars_dict = {entry_point: {}}
         try:
             for _name, argument in nested_args.items():
-                dict_utils.dict_insert(settings_dict[entry_point],
+                dict_utils.dict_insert(vars_dict[entry_point],
                                        argument,
                                        *_name.split(delimiter))
 
@@ -42,4 +43,28 @@ class SettingsManager(object):
                     key_exception.key)
             else:
                 raise
-        return settings_dict
+        return vars_dict
+
+    @staticmethod
+    def merge_extra_vars(vars_dict, extra_vars=None):
+        """Extend ``vars_dict`` with ``extra-vars``
+
+        :param vars_dict: Dictionary to merge extra-vars into
+        :param extra_vars: List of extra-vars
+        """
+        for extra_var in extra_vars or []:
+            if extra_var.startswith('@'):
+                with open(extra_var[1:]) as f_obj:
+                    loaded_yml = yaml.load(f_obj)
+
+                dict_utils.dict_merge(
+                    vars_dict,
+                    loaded_yml,
+                    conflict_resolver=dict_utils.ConflictResolver.
+                    unique_append_list_resolver)
+
+            else:
+                if '=' not in extra_var:
+                    raise exceptions.IRExtraVarsException(extra_var)
+                key, value = extra_var.split("=")
+                dict_utils.dict_insert(vars_dict, value, *key.split("."))

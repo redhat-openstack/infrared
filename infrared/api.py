@@ -9,7 +9,7 @@ from infrared import SHARED_GROUPS
 from infrared.core import execute
 from infrared.core.inspector.inspector import SpecParser
 from infrared.core.services import CoreServices
-from infrared.core.settings import SettingsManager
+from infrared.core.settings import VarsDictManager
 from infrared.core.utils import exceptions
 from infrared.core.utils import logger
 
@@ -116,11 +116,14 @@ class InfraRedPluginsSpec(SpecObject):
         if control_args.get('debug', None):
             logger.LOG.setLevel(logging.DEBUG)
 
-        vars_dict = SettingsManager.generate_settings(
+        vars_dict = VarsDictManager.generate_settings(
             # TODO(yfried): consider whether to use type (for legacy) or name
             self.plugin.config["plugin_type"],
             nested_args,
         )
+
+        VarsDictManager.merge_extra_vars(vars_dict,
+                                         control_args.get('extra-vars'))
 
         LOG.debug("Dumping vars dict...")
         vars_yaml = yaml.safe_dump(vars_dict,

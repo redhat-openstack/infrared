@@ -190,6 +190,132 @@ def test_nested_value_CLI(spec_fixture,
                                                      output_dict)
 
 
+@pytest.mark.parametrize("input_args, expected_output_dict",       # noqa
+                         [
+                             # No spaces
+                             (["--extra-vars=key=val"],
+                              {"key": "val"}),
+                             # Single var
+                             (["--extra-vars", "key=val"],
+                              {"key": "val"}),
+                             # multiple usage
+                             (["--extra-vars", "key=val",
+                               "-e", "another.key=val1",
+                               "-e", "another.key2=val2"],
+                              {"key": "val",
+                               "another": {"key": "val1",
+                                           "key2": "val2"}}),
+                             # nested vars
+                             (["--extra-vars", "nested.key=val"],
+                              {"nested": {"key": "val"}}),
+                             # Mixed with spec input
+                             (["--foo-bar", "val1",
+                               "--extra-vars", "provision.foo.key=val2"],
+                              {"provision": {"foo": {"bar": "val1",
+                                                     "key": "val2"}}}),
+                         ])
+def test_extra_vars(spec_fixture,
+                    profile_manager_fixture,
+                    test_profile, input_args, expected_output_dict, tmpdir):
+    """Tests that "--extra-vars" are inserted to vars_dict. """
+
+    dry_output = tmpdir.mkdir("tmp").join("dry_output.yml")
+
+    input_string = ['example'] + input_args + ["-o", str(dry_output),
+                                               "--dry-run"]
+
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
+
+    profile_manager_fixture.activate(test_profile.name)
+    return_value = spec_manager.run_specs(args=input_string)
+
+    # dry run returns None
+    assert return_value is None
+
+    output_dict = yaml.load(dry_output.read())
+    # asserts expected_output_dict is subset of output
+    assert subdict_in_dict(
+        expected_output_dict,
+        output_dict), "expected:{} actual:{}".format(expected_output_dict,
+                                                     output_dict)
+
+
+@pytest.mark.parametrize("input_args, file_dicts, expected_output_dict",       # noqa
+                         [
+                             # No spaces
+                             (["--extra-vars=@dict_file"],
+                              [{"filename": "dict_file",
+                                "content": {"key": "val"}}],
+                              {"key": "val"}),
+                             # Single var
+                             (["--extra-vars", "@dict_file"],
+                              [{"filename": "dict_file",
+                                "content": {"key": "val"}}],
+                              {"key": "val"}),
+                             # multiple usage
+                             (["--extra-vars", "key=val",
+                               "-e", "another.key=val1",
+                               "-e", "another.key2=val2",
+                               "--extra-vars", "@dict_file1",
+                               "--extra-vars", "@dict_file2"],
+                              [{"filename": "dict_file1",
+                                "content": {"file-key": "file-val"}},
+                               {"filename": "dict_file2",
+                                "content": {"file-key-list": ["a", "b"]}}],
+                              {"key": "val",
+                               "another": {"key": "val1",
+                                           "key2": "val2"},
+                               "file-key": "file-val",
+                               "file-key-list": ["a", "b"]}),
+                             # Mixed with spec input
+                             (["--foo-bar", "val1",
+                               "--extra-vars", "@dict_file"],
+                              [{"filename": "dict_file",
+                                "content":
+                                    {"provision": {"foo": {"key": "val2"}}}}],
+                              {"provision": {"foo": {"bar": "val1",
+                                                     "key": "val2"}}}),
+                         ])
+def test_extra_vars_with_file(spec_fixture,
+                              profile_manager_fixture,
+                              test_profile, input_args,
+                              file_dicts, expected_output_dict, tmpdir):
+    """Tests that extra-vars supports yaml file with "@". """
+
+    tmp_dir = tmpdir.mkdir("tmp")
+    dry_output = tmp_dir.join("dry_output.yml")
+    for file_dict in file_dicts:
+        tmp_file = tmp_dir.join(file_dict["filename"])
+        # write dict to tmp yaml file
+        with open(str(tmp_file), 'wb') as yaml_file:
+            yaml_file.write(yaml.safe_dump(file_dict["content"],
+                                           default_flow_style=False))
+        # Inject full file path to command
+        for i, arg in enumerate(input_args):
+            input_args[i] = arg.replace(file_dict["filename"],
+                                        str(tmp_file))
+
+    input_string = ['example'] + input_args + ["-o", str(dry_output),
+                                               "--dry-run"]
+
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
+
+    profile_manager_fixture.activate(test_profile.name)
+    return_value = spec_manager.run_specs(args=input_string)
+
+    # dry run returns None
+    assert return_value is None
+
+    output_dict = yaml.load(dry_output.read())
+    # asserts expected_output_dict is subset of output
+    assert subdict_in_dict(
+        expected_output_dict,
+        output_dict), "expected:{} actual:{}".format(expected_output_dict,
+                                                     output_dict)
+
+
 @pytest.mark.parametrize("input_value, expected_output_dict", [  # noqa
     # Old style cases
     [
