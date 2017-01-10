@@ -151,10 +151,7 @@ class SpecParser(object):
         for (parser_name, parser_dict, arg_name, arg_value,
              option_spec) in self._iterate_received_arguments(cli_args):
             if option_spec and option_spec.get(
-                    'action', '') in ['generate-config', 'generate-answers']:
-                if option_spec['action'] == 'generate-config':
-                    LOG.warn('"--generate-conf-file" is DEPRECATED.'
-                             ' Use "--generate-answers-file" instead')
+                    'action', '') == 'generate-answers':
                 options_to_save = \
                     self.spec_helper.get_parser_option_specs(parser_name)
                 out_answers = ConfigParser.ConfigParser(allow_no_value=True)
