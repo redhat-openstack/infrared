@@ -75,15 +75,8 @@ Node list:
 
         infrared profile node-list --name some_profile_name
 
-.. note:: To change the directory where Profiles are managed, edit ``infrared.cfg``:
-
-    .. code-block:: ini
-       :name: infrared.cfg
-       :caption: infrared.cfg
-
-       [core]
-       profiles_base_folder = .profiles
-
+.. note:: To change the directory where Profiles are managed, edit the ``profiles_base_folder`` option.
+   Check the  `Infrared Configuration <configuration.html>`_ for details.
 
 
 
