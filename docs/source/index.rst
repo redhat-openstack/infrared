@@ -11,6 +11,7 @@ Welcome to InfraRed's documentation!
    :caption: Core
 
    bootstrap
+   configuration
    profile
    plugins
    interactive_ssh

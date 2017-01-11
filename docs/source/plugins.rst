@@ -215,7 +215,7 @@ List:
           install         {}
           test            {}
 
-.. note:: Supported plugin types are defined in plugin settings file which is auto generated and can be found in ``infrared.cfg``.
+.. note:: Supported plugin types are defined in plugin settings file which is auto generated. Check  `Infrared Configuration <configuration.html>`_ for details.
 
 Remove:
     Remove an exisitng plugin::
