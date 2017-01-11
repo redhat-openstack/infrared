@@ -13,17 +13,30 @@
           dest: "~/overcloud_deploy.sh"
           line: '--neutron-tunnel-types {{ install.network.backend }} \'
       when: install.network.backend != "vlan"
+
+    - name: append the network type
+      lineinfile:
+          dest: "~/overcloud_deploy.sh"
+          line: '{{ item }} \'
+      with_items:
+          - "--neutron-disable-tunneling"
+          - "--neutron-bridge-mappings datacentre:br-ex,tenant:br-isolated"
+          - "--neutron-network-vlan-ranges tenant:1000:2000"
+      when: install.network.backend == "vlan"
   when: "{{ install.version|openstack_release < 11 }}"
 
-- name: append the network type
-  lineinfile:
-      dest: "~/overcloud_deploy.sh"
-      line: '{{ item }} \'
-  with_items:
-      - "--neutron-disable-tunneling"
-      - "--neutron-bridge-mappings datacentre:br-ex,tenant:br-isolated"
-      - "--neutron-network-vlan-ranges tenant:1000:2000"
-  when: install.network.backend == "vlan"
+# Starting from OSP11, the overcloud deploy deprecated the neutron flags (above) and moved to env variables (below)
+- block:
+    - name: append the network type
+      lineinfile:
+          dest: "{{ template_base }}/network/{{ network_environment_file }}"
+          line: "{{ item }}"
+      with_items:
+        - "NeutronNetworkType: {{ install.network.backend }}"
+        - "NeutronTunnelTypes: {{ (install.network.backend == vlan) | ternary('', install.network.backend) }}"
+        - "NeutronBridgeMappings: 'datacentre:br-ex,tenant:br-isolated'"
+        - "NeutronNetworkVLANRanges: 'tenant:1000:2000'"
+  when: "{{ install.version|openstack_release > 10 }}"
 
 - name: append the network environment template line to the base overcloud deploy script
   lineinfile:
