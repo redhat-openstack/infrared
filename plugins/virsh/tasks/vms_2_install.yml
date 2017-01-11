@@ -1,38 +1,37 @@
 ---
+# save current node to "{{ node_dict }}"
+- name: get node_dict
+  include_vars: "vars/topology/nodes/{{ node.key }}.yml"
+
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
 - name: create vm's
   shell: |
-
-          virt-install --name {{ node.name }}-{{ item }} \
-            {% for disk_name, disk_values in node.disks.iteritems() %}
-            {% if disk_values.import_url is defined and disk_values.import_url %}
-             --disk path={{ base_image_path }}/{{ node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
-            {% else %}
-             --disk path={{ disk_values.path }}/{{ node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
-            {% endif -%}
-            {% endfor %}
-            --boot {{ provision.bootmode }} \
-            {% for interface_name in node.interfaces | sort %}
-             --network network:{{ node.interfaces[interface_name].network }} \
-            {% endfor -%}
-             --virt-type kvm \
-             --cpu host-model \
-             --ram {{ node.memory }} \
-             --vcpus {{ node.cpu }} \
-             --os-variant {{ node.os.variant }} \
-             --import \
-             --noautoconsole \
-             --autostart \
-             --vnc
-  with_sequence: start=0 end={{ node.amount|int - 1 }}
+      virt-install --name {{ node_dict.name }}-{{ item }} \
+          {% for disk_name, disk_values in node_dict.disks.iteritems() %}
+          {% if disk_values.import_url is defined and disk_values.import_url %}
+           --disk path={{ base_image_path }}/{{ node_dict.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
+          {% else %}
+           --disk path={{ disk_values.path }}/{{ node_dict.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
+          {% endif -%}
+          {% endfor %}
+          --boot {{ provision.bootmode }} \
+          {% for interface_name in node_dict.interfaces | sort %}
+           --network network:{{ node_dict.interfaces[interface_name].network }} \
+          {% endfor -%}
+           --virt-type kvm \
+           --cpu host-model \
+           --ram {{ node_dict.memory }} \
+           --vcpus {{ node_dict.cpu }} \
+           --os-variant {{ node_dict.os.variant }} \
+           --import \
+           --noautoconsole \
+           --autostart \
+           --vnc
+  with_sequence: start=0 end={{ node.value|int - 1 }}
   register: vm_install
   async: 7200
   poll: 0
 
-- name: Wait for our VMs to be created
-  async_status:
-      jid: "{{ item.ansible_job_id }}"
-  register: install_tasks
-  until: install_tasks.finished
-  retries: 300
-  with_items: "{{ vm_install.results }}"
+- name: save install jids
+  set_fact:
+      async_install: "{{ async_install|default([]) + vm_install.results|map(attribute='ansible_job_id')|list }}"
