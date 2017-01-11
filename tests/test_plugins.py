@@ -10,7 +10,7 @@ from infrared.core.utils.exceptions import IRUnsupportedSpecOptionType
 from infrared.core.utils.dict_utils import dict_insert
 from infrared.core.services.plugins import InfraRedPluginManager
 from infrared.core.services.plugins import InfraRedPlugin
-
+from infrared.core.services import CoreServices, ServiceName
 
 PLUGIN_SPEC = 'plugin.spec'
 SAMPLE_PLUGINS_DIR = 'tests/example/plugins'
@@ -28,35 +28,19 @@ SUPPORTED_TYPES_DICT = dict(
 
 @pytest.fixture()
 def plugins_conf_fixture(tmpdir):
-    """Creates temporary IR & plugins conf files for tests (restore when done)
+    """Creates temporary IR
 
     :param tmpdir: builtin pytest fixtures to create temporary files & dirs
     :return: plugins conf file as a LocalPath object (py.path)
     """
 
-    # TODO(aopincar): Create a const for project's conf file in project core
-    ir_conf = 'infrared.cfg'
-
     # Creates temporary plugins conf file
     lp_dir = tmpdir.mkdir('test_tmp_dir')
     lp_file = lp_dir.join('.plugins.ini')
 
-    # Backups original infrared conf file
-    with open(ir_conf) as fp_ir_cfg:
-        ir_cfg_backup = fp_ir_cfg.read()
-
-    # Updates infrared conf with the newly created plugins conf
-    cfg_parser = ConfigParser.ConfigParser()
-    cfg_parser.read(ir_conf)
-    cfg_parser.set('core', 'plugins_conf_file', lp_file.strpath)
-    with open(ir_conf, 'w') as fp_ir_cfg:
-        cfg_parser.write(fp_ir_cfg)
-
     try:
         yield lp_file
     finally:
-        with open(ir_conf, 'w') as fp_ir_cfg:
-            fp_ir_cfg.write(ir_cfg_backup)
         lp_dir.remove()
 
 
@@ -88,7 +72,10 @@ def plugin_manager_fixture(plugins_conf_fixture):
                     config.set(section, option, value)
             config.write(fp)
 
-        return InfraRedPluginManager(lp_file.strpath)
+        # replace core service with or test service
+        CoreServices.register_service(ServiceName.PLUGINS_MANAGER,
+                                      InfraRedPluginManager(lp_file.strpath))
+        return CoreServices.plugins_manager()
 
     yield plugin_manager_helper
 

@@ -53,16 +53,6 @@ class InfraRedPluginManager(object):
 
     @config.setter
     def config(self, plugins_conf):
-
-        if plugins_conf is None:
-            from infrared.core.services import CoreServices
-            plugins_conf = os.path.join(
-                os.path.dirname(CoreServices.INFRARED_CONF),
-                CoreServices.DEFAULTS['plugins_conf_file']
-            )
-            LOG.warning("Plugin conf file hasn't been given, trying to load "
-                        "it from the default path: '{}'".format(plugins_conf))
-
         plugins_conf_full_path = \
             os.path.abspath(os.path.expanduser(plugins_conf))
 
