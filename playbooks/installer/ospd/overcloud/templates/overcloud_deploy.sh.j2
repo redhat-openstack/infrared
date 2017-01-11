@@ -4,14 +4,6 @@ openstack overcloud deploy --debug \
 --templates \
 --libvirt-type kvm \
 --ntp-server clock.redhat.com \
---neutron-network-type {{ installer.network.backend }} \
-{% if installer.network.backend == "vlan" %}
---neutron-disable-tunneling \
---neutron-bridge-mappings datacentre:br-ex,tenant:br-isolated \
---neutron-network-vlan-ranges tenant:1000:2000 \
-{% else %}
---neutron-tunnel-types {{ installer.network.backend }} \
-{% endif %}
 --control-scale {% if installer.controller is defined and installer.controller.nodes is defined and installer.controller.nodes %}{{ installer.controller.nodes }}{% elif groups['controller'] is defined %}{{ groups['controller'] | length }}{% else %}1{% endif %} \
 --control-flavor {% if groups['controller'] is defined %}controller \{% else %}baremetal \
 {% endif %}
