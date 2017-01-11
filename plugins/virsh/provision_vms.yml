@@ -4,12 +4,6 @@
   gather_facts: yes
   any_errors_fatal: true
   tasks:
-    - name: build nodes list into nodes var
-      include: tasks/add_nodes.yml
-      with_dict: "{{ provision.topology.nodes }}"
-      loop_control:
-          loop_var: node
-
     # now continue with creating vm's
     # Import disk images if necessary
     - name: import disks for each VM if specified

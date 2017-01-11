@@ -10,6 +10,12 @@
           base_image_path: /var/lib/libvirt/images
           url: "{{ provision.image.url }}"
 
+    - name: build nodes list into nodes var
+      include: tasks/add_nodes.yml
+      with_dict: "{{ provision.topology.nodes }}"
+      loop_control:
+          loop_var: node
+
     # to not have to repeat base image download/setup
     # (nodes.count * node.disks.count) times (very big waste of time)
     # we do small math/logic here
