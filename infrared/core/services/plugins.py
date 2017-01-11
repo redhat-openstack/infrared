@@ -17,6 +17,7 @@ DEFAULT_PLUGIN_INI = dict(
     )
 )
 MAIN_PLAYBOOK = "main.yml"
+BUILTIN_PLUGINS_PATH = "./plugins"
 LOG = logger.LOG
 
 
@@ -65,9 +66,11 @@ class InfraRedPluginManager(object):
         plugins_conf_full_path = \
             os.path.abspath(os.path.expanduser(plugins_conf))
 
+        init_plugins_conf = False
         if not os.path.isfile(plugins_conf_full_path):
             LOG.warning("Plugin conf ('{}') not found, creating it with "
                         "default data".format(plugins_conf_full_path))
+            init_plugins_conf = True
             with open(plugins_conf_full_path, 'w') as fp:
                 config = ConfigParser()
 
@@ -84,6 +87,13 @@ class InfraRedPluginManager(object):
         with open(plugins_conf_full_path) as fp:
             self._config = ConfigParser()
             self.config.readfp(fp)
+
+        if init_plugins_conf:
+            abspath = os.path.abspath(BUILTIN_PLUGINS_PATH)
+            pldirs = [pd for pd in os.listdir(
+                abspath) if os.path.isdir(os.path.join(abspath, pd))]
+            for pldir in pldirs:
+                self.add_plugin(os.path.join(abspath, pldir))
 
     def get_desc_of_type(self, s_type):
         """Returns the description of the given supported plugin type
