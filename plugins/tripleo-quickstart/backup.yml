@@ -5,17 +5,19 @@
   vars:
       undercloud: "{{ hostvars[(groups.undercloud|first)].inventory_hostname }}"
   tasks:
-      - block:
-          - name: read puddle from file
-            command: cat ~/core_puddle_version
-            register: puddle_file
-            delegate_to: "{{ undercloud }}"
+      - name: read puddle from file
+        command: cat ~/core_puddle_version
+        register: puddle_file
+        delegate_to: "{{ undercloud }}"
+        ignore_errors: True
+        
+      - set_fact:
+          undercloud_image_file: "undercloud-quickstart-{{ puddle_file.stdout|trim  }}.qcow2"
+        when: puddle_file | succeeded
 
-          - set_fact:
-                undercloud_image_file: "undercloud-quickstart-{{ puddle_file.stdout|trim  }}.qcow2"
-        rescue:
-          - set_fact:
-                undercloud_image_file: "undercloud-quickstart.qcow2"
+      - set_fact:
+          undercloud_image_file: "undercloud-quickstart.qcow2"
+        when: puddle_file | failed
 
       - name: install package with virt-sparsify
         yum:
