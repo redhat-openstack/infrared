@@ -9,7 +9,7 @@
       - vars/topology/undercloud.yml
   vars:
       undercloud_image_file: "{{ install.filename }}"
-      undercloud_disk_path: "/var/lib/libvirt/images/{{ install.filename }}-disk1.qcow2"
+      undercloud_disk_path: "/var/lib/libvirt/images/{{ install.filename.rstrip('.qcow2') | basename }}-disk1.qcow2"
       # todo(yfried): add external refs so users can override these values and customize the Undercloud
   tasks:
       # todo(atalmor): add support to download image
