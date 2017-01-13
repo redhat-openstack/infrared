@@ -1,0 +1,11 @@
+---
+- name: Fetch openstackrc file
+  hosts: undercloud
+  any_errors_fatal: true
+  tasks:
+      - name: fetch openstackrc file to "{{ inventory_dir }}/{{ dest|default('keystonerc') }}"
+        fetch:
+            src: "{{ ansible_user_dir }}/{{ source|default('overcloudrc') }}"
+            dest: "{{ inventory_dir }}/{{ dest|default('keystonerc') }}"
+            flat: yes
+            fail_on_missing: yes
