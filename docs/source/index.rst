@@ -27,6 +27,7 @@ Welcome to InfraRed's documentation!
    tripleo-undercloud
    tripleo-overcloud
    collect-logs
+   tempest
 
 Indices and tables
 ==================
