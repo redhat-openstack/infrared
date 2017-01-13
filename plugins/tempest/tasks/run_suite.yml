@@ -70,6 +70,7 @@
       - name: Fetch resulting file
         fetch:
             src: "{{ test.dir }}/{{ test_output_file }}"
-            dest: "{{ lookup('env', 'PWD') }}/{{ test_output_file }}"
+            dest: "{{ inventory_dir }}/tempest_results/{{ test_output_file }}"
             flat: yes
+            fail_on_missing: yes
   when: test_dict.test_regex is defined or whitelistfile is defined or blacklistfile is defined
