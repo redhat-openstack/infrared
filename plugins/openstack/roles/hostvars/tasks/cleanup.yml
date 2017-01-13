@@ -1,0 +1,11 @@
+- name: find all the files that match the pattern
+  find:
+      paths: "{{ host_vars_dir }}"
+      pattern: "{{ pattern }}"
+  register: files_to_cleanup
+
+- name: remove host_vars folder
+  file:
+      state: absent
+      path: "{{ item.path }}"
+  with_items: "{{ files_to_cleanup.files }}"

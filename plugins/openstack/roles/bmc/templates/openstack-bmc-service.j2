@@ -1,0 +1,13 @@
+{% set base_subnet = '.'.join(internal_default_gateway.split('.')[:-1]) %}
+{% set last = node.private_v4.split('.')[-1] %}
+[Unit]
+Description=openstack-bmc {{ node.name }} Service
+Requires=config-bmc-ips.service
+After=config-bmc-ips.service
+[Service]
+ExecStart=/usr/local/bin/openstackbmc --os-user {{ cloud_auth_info.username }} --os-password {{ cloud_auth_info.password }} --os-tenant {{ cloud_auth_info.project_name }} --os-auth-url {{ cloud_auth_info.auth_url }} --instance {{ node.name }} --address {{ base_subnet }}.{{ last }}
+User=root
+StandardOutput=kmsg+console
+StandardError=inherit
+[Install]
+WantedBy=multi-user.target

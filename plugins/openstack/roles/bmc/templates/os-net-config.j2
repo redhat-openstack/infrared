@@ -1,0 +1,17 @@
+network_config:
+    -
+        type: interface
+        name: {{ bmc_interface_name }}
+        use_dhcp: false
+        mtu: 1450
+        routes:
+            - default: true
+              next_hop: {{ internal_default_gateway }}/{{ internal_cidr_prefix }}
+        addresses:
+{% set base_subnet = '.'.join(internal_default_gateway.split('.')[:-1]) %}
+{% for host in server_facts.ansible_facts.openstack_servers %}
+{% if "undercloud" not in host.name %}
+{% set last = host.private_v4.split('.')[-1] %}
+            - ip_netmask: {{ base_subnet }}.{{ last }}/{{ internal_cidr_prefix }}
+{% endif %}
+{% endfor %}
