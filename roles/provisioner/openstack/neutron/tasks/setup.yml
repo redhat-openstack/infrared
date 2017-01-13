@@ -12,6 +12,9 @@
   register: networks
   with_dict: "{{ provisioner.neutron.networks }}"
   when: provisioner.neutron.networks is defined
+  until: "{{ not (networks | default({})).failed | default(omit) }}"
+  retries: "{{ provisioner.retries | default(omit) }}"
+  delay: "{{ provisioner.delay | default(omit) }}"
 
 - name: Register externally accessible networks
   os_networks_facts:
@@ -40,6 +43,9 @@
   register: subnets
   with_dict: "{{ provisioner.neutron.subnets }}"
   when: provisioner.neutron.subnets is defined
+  until: "{{ not (subnets | default({})).failed | default(omit) }}"
+  retries: "{{ provisioner.retries | default(omit) }}"
+  delay: "{{ provisioner.delay | default(omit) }}"
 
 - name: Create routers
   os_router:
@@ -52,6 +58,9 @@
   register: routers
   with_dict: "{{ provisioner.neutron.routers }}"
   when: provisioner.neutron.routers is defined
+  until: "{{ not (routers | default({})).failed | default(omit) }}"
+  retries: "{{ provisioner.retries | default(omit) }}"
+  delay: "{{ provisioner.delay | default(omit) }}"
 
 #TODO(abregman): Enable 'security groups' tasks when ansible 2.1 is out
 #- name: Create security groups
