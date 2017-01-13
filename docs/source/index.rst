@@ -25,6 +25,7 @@ Welcome to InfraRed's documentation!
    virsh
    tripleo-undercloud
    tripleo-overcloud
+   tempest
 
 Indices and tables
 ==================
