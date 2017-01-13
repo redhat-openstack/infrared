@@ -49,7 +49,16 @@ subparsers:
                       type: Topology
                       help: Provision topology.
                       default: "controller:1"
-
+            - title: retries
+              options:
+                  count:
+                    type: Value
+                    help: How many times to retry tasks that can temporary fail due to resource limites on the cloud.
+                    default: 20
+                  delay:
+                    type: Value
+                    help: How many seconds to wait between two retries.
+                    default: 300
             - title: cleanup
               options:
                   cleanup:

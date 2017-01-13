@@ -16,6 +16,11 @@
   register: nodes
   with_sequence: "count={{ node.value.amount }}"
   when: provisioner.nodes is defined
+  until: not nodes.failed
+  retries: "{{ provisioner.retries.count }}"
+  delay: "{{ provisioner.retries.delay }}"
+  # 20 * 300s = ~100 mins retry window which should avoid failures caused
+  # by resource limitation.
 
 - name: Create floating IPs
   os_floating_ip:
@@ -28,6 +33,9 @@
   register: floating_ips
   with_sequence: "count={{ node.value.amount }}"
   when: provisioner.nodes is defined
+  until: not floating_ips.failed
+  retries: "{{ provisioner.retries.count }}"
+  delay: "{{ provisioner.retries.delay }}"
 
 - name: Gather created servers facts
   os_server_facts:
