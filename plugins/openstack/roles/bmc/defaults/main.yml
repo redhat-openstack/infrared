@@ -1,0 +1,14 @@
+---
+# helper varaibles to read from the provision settings
+bmc_name_prefix: "{{ (provision|default{}).prefix|default('') }}"
+bmc_node_name: "ovb/bmc"
+
+# the full network name to use for IMPI commands
+bmc_ipmi_network_name: "{{ bmc_name_prefix}}{{ (provision|default({})).get('topology',{}).get('nodes', {}).get('bmc_node_name', {}).get('ipmi_network', 'undefined')"
+bmc_ipmi_network_subnet: "{{ bmc_ipmi_network_name }}-subnet"
+
+# the filter for the nodes to be controllable by the bmc
+bmc_nodes_filter:  "{{ bmc_name_prefix }}*"
+bmc_provision_cloud: "{{ (provision|default({})).cloud | default('rhos-qe-ci') }}"
+bmc_rhos_release: 10
+bmc_interface_name: eth0
