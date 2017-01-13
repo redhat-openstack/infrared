@@ -16,6 +16,9 @@
   register: nodes
   with_sequence: "count={{ node.value.amount }}"
   when: provisioner.nodes is defined
+  until: "'failed' not in nodes or not nodes.failed"
+  retries: "{{ provisioner.retries | default(omit) }}"
+  delay: "{{ provisioner.delay | default(omit) }}"
 
 - name: Create floating IPs
   os_floating_ip:
@@ -28,6 +31,9 @@
   register: floating_ips
   with_sequence: "count={{ node.value.amount }}"
   when: provisioner.nodes is defined
+  until: "'failed' not in floating_ips or not floating_ips.failed"
+  retries: "{{ provisioner.retries | default(omit) }}"
+  delay: "{{ provisioner.delay | default(omit) }}"
 
 - name: Gather created servers facts
   os_server_facts:
