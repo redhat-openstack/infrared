@@ -1,10 +1,19 @@
-- name: set loop control
-  set_fact:
+- block:
+    - find:
+      patterns: "{{ name }}.yml"
+      paths:
+          # search here first
+          - vars/topology/nodes
+          # search here later
+          - defaults/topology/nodes
+      register: topology_file
+      delegate_to: localhost
+
+    # save current node to "{{ node_dict }}"
+    - include_vars: "{{ (file.stat.exists) | ternary(file.stat.path, 'vars/topology/nodes/default/{0}.yml'.format(node.key)) }}"
+
+    - set_fact:
+          nodes: "{{ nodes|default([]) + [node_dict] }}"
+  vars:
       name: "{{ node.key }}"
       amount: "{{ node.value }}"
-
-# save current node to "{{ node_dict }}"
-- include_vars: "vars/topology/nodes/{{ name }}.yml"
-
-- set_fact:
-      nodes: "{{ nodes|default([]) + [node_dict] }}"

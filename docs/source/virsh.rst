@@ -2,14 +2,27 @@
 
 VIRSH
 =====
-Virsh provisioner is explicitly designed to be used for setup of virtual OpenStack environments.
-Such environments are used to emulate production environment of `tripleo-undercloud`_
+Virsh provisioner is explicitly designed to be used for setup of virtual environments.
+Such environments are used to emulate production environment like `tripleo-undercloud`_
 instances on one baremetal machine. It requires one prepared baremetal host (designated ``hypervisor``)
 to be reachable through SSH initially.
 
-First, Libvirt and KVM environment is installed and configured to provide virtualized environment.
+First, Libvirt and KVM are installed and configured to provide a virtualized environment.
 Then, virtual machines are created for all requested nodes.
-These VM's are used in `tripleo-undercloud`_ and `tripleo-overcloud`_ as undercloud, overcloud and auxiliary nodes.
+
+TOPOLOGY
+========
+The first thing you need to decide before you deploy your environment is the ``Topology``.
+This refers to the number and type of VMs in your desired deployment environment.
+If we use Openstack as an example, a topology may look something like:
+1 VM called undercloud
+1 VM called controller
+1 VM called compute
+
+In order to control how each VM is created, we have creates a YAML file that describe the
+specification of each VM.
+For more information about the structure of the topology files and how to create your own,
+please refer to `Topology <topology.html>`_.
 
 Please see `Bootstrap <bootstrap.html>`_ guide where usage is demonstrated.
 
