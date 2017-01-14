@@ -4,7 +4,18 @@
   gather_facts: yes
   any_errors_fatal: true
   tasks:
-    - include_vars: "vars/topology/network/{{ provision.topology.network }}.yml"
+    - name: load the network topology file
+      find:
+          patterns: "{{ provision.topology.network }}.yml"
+          paths:
+              # search here first
+              - vars/topology/network
+              # search here later
+              - defaults/topology/network
+      register: topology_file
+      delegate_to: localhost
+
+    - include_vars: "{{ topology_file.files[0].path }}"
 
     - name: check for existing networks
       virt_net:
