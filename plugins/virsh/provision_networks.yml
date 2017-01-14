@@ -4,7 +4,12 @@
   gather_facts: yes
   any_errors_fatal: true
   tasks:
-    - include_vars: "vars/topology/network/{{ provision.topology.network }}.yml"
+    - stat:
+          path: "vars/topology/network/{{ provision.topology.network }}.yml"
+      register: file
+      delegate_to: localhost
+
+    - include_vars: "{{ (file.stat.exists) | ternary(file.stat.path, 'vars/topology/network/default/{0}.yml'.format(provision.topology.network)) }}"
 
     - name: check for existing networks
       virt_net:
