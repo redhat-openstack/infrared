@@ -1,6 +1,9 @@
 # save current node to "{{ node_dict }}"
 - name: get node_dict
-  include_vars: "vars/topology/nodes/{{ node.key }}.yml"
+  include: tasks/var_lookup.yml
+  vars:
+      var_file: "{{ node.key }}"
+      partial_path: topology/nodes
 
 - name: download base image for node
   vars:

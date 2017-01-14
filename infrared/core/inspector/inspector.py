@@ -38,19 +38,22 @@ class SpecParser(object):
         # The "try-excpet" block here is for adding spec file path if it
         # includes an unsupported option type
         try:
-            return SpecParser(subparser, spec_dict, plugin.vars_dir)
+            return SpecParser(subparser, spec_dict, plugin.vars_dir,
+                              plugin.defaults_dir)
         except exceptions.IRUnsupportedSpecOptionType as ex:
             ex.message += ' in file: {}'.format(plugin.spec)
             raise ex
 
-    def __init__(self, subparser, spec_dict, vars_dir):
+    def __init__(self, subparser, spec_dict, vars_dir, defaults_dir):
         """
 
         :param subparser: argparse.subparser to extend
         :param spec_dict: dict with CLI description
         :param vars_dir: Path to plugin's vars dir
+        :param defaults_dir: Path to plugin's defaults dir
         """
         self.vars = vars_dir
+        self.defaults = defaults_dir
         self.spec_helper = helper.SpecDictHelper(spec_dict)
 
         # create parser
@@ -228,7 +231,7 @@ class SpecParser(object):
                 "Unknown complex type: {}".format(type_name))
         return complex_action(
             option_name,
-            self.vars,
+            (self.vars, self.defaults),
             subcommand)
 
     def parse_args(self, arg_parser, args=None):
