@@ -190,14 +190,22 @@ class CliParser(object):
             opt_kwargs['help'] += "\nAllowed values: {}.".format(
                 allowed_values)
         elif YAMLS_PLACEHODER in opt_kwargs['help']:
-            option_dir = os.path.join(spec.vars, *option_name.split('-'))
-            yaml_files = [os.path.splitext(yml)[0]
-                          for yml in os.listdir(option_dir)
-                          if yml.endswith('.yml')]
-            yaml_files.sort()
+            yaml_set = set()
+            for dirname in (spec.vars, spec.defaults):
+                option_dir = os.path.join(dirname, *option_name.split('-'))
+                if not os.path.exists(option_dir):
+                    continue
+                yaml_files = [os.path.splitext(yml)[0]
+                              for yml in os.listdir(option_dir)
+                              if yml.endswith('.yml')]
+                # yaml_files.sort()
+                # set union operator
+                yaml_set |= set(yaml_files)
 
+            # convert set back to list
             opt_kwargs['help'] = opt_kwargs['help'].replace(
-                YAMLS_PLACEHODER, "Available values: {}".format(yaml_files))
+                YAMLS_PLACEHODER, "Available values: {}".
+                format(list(yaml_set)))
 
         # update help
         option_data['help'] = opt_kwargs.get('help', '')

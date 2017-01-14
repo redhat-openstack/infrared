@@ -4,7 +4,11 @@
   gather_facts: yes
   any_errors_fatal: true
   tasks:
-    - include_vars: "vars/topology/network/{{ provision.topology.network }}.yml"
+    - name: get node_dict
+      include: tasks/var_lookup.yml
+      vars:
+          var_file: "{{ provision.topology.network }}"
+          partial_path: topology/network
 
     - name: check for existing networks
       virt_net:

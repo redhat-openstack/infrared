@@ -227,6 +227,10 @@ class InfraRedPlugin(object):
         return os.path.join(self.path, 'vars')
 
     @property
+    def defaults_dir(self):
+        return os.path.join(self.path, 'defaults')
+
+    @property
     def playbook(self):
         """Plugin's main playbook"""
         return os.path.join(self.path, MAIN_PLAYBOOK)
