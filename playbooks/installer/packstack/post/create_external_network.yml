@@ -16,6 +16,7 @@
         become: yes
         shell: "grep -oP '(?<=default_floating_pool=)(.*$)' /etc/nova/nova.conf"
         register: pool_name
+        changed_when: false
 
       # create shade venv on target machine
       # TODO(yfried): remove this if/when packstack uses floating ips and localhost can access cloud
@@ -58,6 +59,18 @@
             project_name: $OS_TENANT_NAME
             "
         register: creds
+        changed_when: false
+
+
+      # Workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1404763
+      - name: "workaround for rhbz #1404763"
+        become: yes
+        shell: iptables -I INPUT -j ACCEPT -p tcp
+        args:
+            warn: no
+        changed_when: true
+        tags:
+            - skip_ansible_lint
 
       # TODO(yfried): Use localhost where shade is mandatory
       - name: create the external network
