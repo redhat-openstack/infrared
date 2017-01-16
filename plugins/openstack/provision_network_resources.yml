@@ -4,11 +4,6 @@
   tasks:
       - include_vars: "../vars/topology/network/{{ provision.topology.network }}.yml"
 
-      - name: Create the resources directory
-        file:
-            dest: "{{ inventory_dir }}/resources"
-            state: directory
-
       - name: Create networks
         os_network:
             cloud: "{{ provision.cloud | default(omit) }}"
@@ -22,9 +17,10 @@
         when: networks_data.networks is defined
 
       - name: register networks resources
-        copy:
-            content: "{{ networks.results | map(attribute='network') | list | to_nice_yaml }}"
-            dest: "{{ inventory_dir }}/resources/networks.yml"
+        vars:
+            input:
+                networks: "{{ networks.results | map(attribute='network') | list }}"
+        include: tasks/register_resources_file.yml
 
       - name: Register externally accessible networks
         os_networks_facts:
@@ -48,9 +44,10 @@
         when: networks_data.subnets is defined
 
       - name: register subnets resources
-        copy:
-            content: "{{ subnets.results | map(attribute='subnet') | list | to_nice_yaml }}"
-            dest: "{{ inventory_dir }}/resources/subnets.yml"
+        vars:
+            input:
+                subnets: "{{ subnets.results | map(attribute='subnet') | list }}"
+        include: tasks/register_resources_file.yml
 
       - name: Create routers
         os_router:
@@ -65,8 +62,9 @@
         when: networks_data.routers is defined
 
       - name: register routers resources
-        copy:
-            content: "{{ routers.results | map(attribute='router') | list |  to_nice_yaml }}"
-            dest: "{{ inventory_dir }}/resources/routers.yml"
+        vars:
+            input:
+                routers: "{{ routers.results | map(attribute='router') | list }}"
+        include: tasks/register_resources_file.yml
 
 #      TODO(aopincar): Add 'security groups' dynamic creation
