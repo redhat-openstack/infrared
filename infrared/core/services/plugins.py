@@ -1,6 +1,9 @@
 from ConfigParser import ConfigParser
 from collections import OrderedDict
 import os
+import shutil
+import subprocess
+import tempfile
 
 # TODO(aopincar): Add pip to the project's requirements
 import pip
@@ -108,7 +111,29 @@ class InfraRedPluginManager(object):
         else:
             raise StopIteration
 
-    def add_plugin(self, plugin_path):
+    def add_plugin(self, plugin_path, dest=None):
+
+        dest = dest or "plugins"
+        destination = os.path.abspath(dest)
+        if not os.path.exists(plugin_path):
+            tmpdir = tempfile.mkdtemp(prefix="ir-")
+            cwd = os.getcwdu()
+            os.chdir(tmpdir)
+            try:
+                subprocess.check_output(["git", "clone", plugin_path])
+            except subprocess.CalledProcessError:
+                shutil.rmtree(tmpdir)
+                raise IRFailedToAddPlugin(
+                    "Cloning git repo {} is failed".format(plugin_path))
+            cloned = os.listdir(tmpdir)
+            plugin_dir_name = cloned[0]
+
+            plugin_path = os.path.join(destination, plugin_dir_name)
+            shutil.copytree(os.path.join(tmpdir, plugin_dir_name),
+                            plugin_path)
+            os.chdir(cwd)
+            shutil.rmtree(tmpdir)
+
         plugin = InfraRedPlugin(plugin_path)
         plugin_type = plugin.config['plugin_type']
         # FIXME(yfried) validate spec and throw exception on missing input

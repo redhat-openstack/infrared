@@ -129,6 +129,9 @@ class PluginManagerSpec(api.SpecObject):
         add_parser = plugin_subparsers.add_parser(
             'add', help='Add a plugin')
         add_parser.add_argument("path", help="Plugin path")
+        add_parser.add_argument("--dest", help="Destination directory to "
+                                "clone plugin under, in case of Git URL is "
+                                "provided as path")
 
         # Remove plugin
         remove_parser = plugin_subparsers.add_parser(
@@ -152,7 +155,7 @@ class PluginManagerSpec(api.SpecObject):
         if subcommand == 'list':
             self._list_plugins()
         elif subcommand == 'add':
-            self.plugin_manager.add_plugin(pargs.path)
+            self.plugin_manager.add_plugin(pargs.path, pargs.dest)
         elif subcommand == 'remove':
             self.plugin_manager.remove_plugin(pargs.type, pargs.name)
 
