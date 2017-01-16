@@ -1,0 +1,16 @@
+- name: import ceph facts
+  set_fact:
+      ceph_facts: "{{ lookup('file', '{{ inventory_dir }}/{{ hostvars[(groups.ceph|first)].inventory_hostname }}') }}"
+
+# If you reached this stage, it means a user explicitely entered the storage flag therefore he wants at least 1 node
+- name: append the ceph storage template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '--ceph-storage-scale {{ storage_nodes }} \'
+  when: "templates.storage_add_scale | default('yes') == 'yes'"
+
+- name: append the ceph storage template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '--ceph-storage-flavor {% if groups["ceph"] is defined %}ceph{% else %}baremetal{% endif %} \'
+  when: "templates.storage_add_scale | default('yes') == 'yes'"

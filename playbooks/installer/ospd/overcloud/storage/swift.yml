@@ -1,21 +1,4 @@
-- block:
-    - name: import swift facts
-      set_fact:
-          ceph_facts: "{{ lookup('file', '{{ inventory_dir }}/{{ hostvars[(groups.swift|first)].inventory_hostname }}') }}"
-
-    # If you reached this stage, it means a user explicitely entered the storage flag therefore he wants at least 1 node
-    - name: append the swift storage template line to the base overcloud deploy script
-      lineinfile:
-          dest: "~/overcloud_deploy.sh"
-          line: '--swift-storage-scale {{ storage_nodes }} \'
-      when: "templates.storage_add_scale | default('yes') == 'yes'"
-
-    - name: append the swift storage template line to the base overcloud deploy script
-      lineinfile:
-          dest: "~/overcloud_deploy.sh"
-          line: '--swift-storage-flavor {% if groups["swift"] is defined %}swift{% else %}baremetal{% endif %} \'
-      when: "templates.storage_add_scale | default('yes') == 'yes'"
-
+- include: "internal_swift.yml"
   when: installer.storage.external != "yes"
   vars:
       storage_nodes: "{{ (installer.storage.nodes == None) |ternary([1, groups['ceph'] |default([])|length] | max, installer.storage.nodes) }}"

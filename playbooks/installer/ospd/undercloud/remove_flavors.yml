@@ -1,0 +1,51 @@
+- name: check for original flavors
+  shell: >
+      source ~/stackrc;
+      openstack flavor list | awk '/{{ item.name.rstrip('1234567890-') }}/ {print $4}'
+  with_items: "{{ overcloud_facts.nodes | default([]) }}"
+  register: original_flavors
+
+- name: delete original flavors
+  shell: >
+      source ~/stackrc;
+      openstack flavor delete
+      {{ item[0].name.rstrip('1234567890-') }}
+  when: "item[0].name.rstrip('1234567890-') in item[1].cmd"
+  with_together:
+      - "{{ overcloud_facts.nodes | default([]) }}"
+      - "{{ original_flavors.results }}"
+  ignore_errors: yes
+  register: flavor_delete
+
+- name: Workarond for BZ #1317312
+  shell: >
+     source ~/stackrc;
+     nova flavor-delete
+     {{ item[0].name.rstrip('1234567890-') }}
+  when: "item[0].name.rstrip('1234567890-') in item[1].cmd and item[2].stderr == 'public endpoint for messaging service not found'"
+  with_together:
+      - "{{ overcloud_facts.nodes | default([]) }}"
+      - "{{ original_flavors.results }}"
+      - "{{ flavor_delete.results }}"
+  ignore_errors: yes
+
+- name: create the flavors for our machines
+  vars:
+      flv_min_disk_size: 15
+      flv_min_cpu: 1
+  shell: >
+      source ~/stackrc;
+      openstack flavor create
+      --id auto
+      --ram {{ item.memory }}
+      --disk {{ [(item.disk | int) - 3, flv_min_disk_size] | max }}
+      --vcpus {{ [(item.cpu | int) - 1, flv_min_cpu] | max }}
+      {{ item.name.rstrip('1234567890-') }}
+  register: flavor_result
+  failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item.name }} already exists') != -1"
+  with_items: "{{ overcloud_facts.nodes | default([]) }}"
+
+- name: get the node UUID
+  shell: "source ~/stackrc; ironic node-list | grep {{ item.name | default(item) }} | awk '{print $2}'"
+  with_items: "{{ overcloud_facts.nodes | default([])}}"
+  register: node_list
