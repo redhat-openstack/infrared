@@ -1,10 +1,12 @@
 ---
 - name: Cleanup OpenStack resources
   hosts: localhost
+  # try to delete everything possible
+  ignore_errors: yes
   tasks:
 #      TODO(aopincar): Add 'Cleanup flavors' task
-      - name: clean network resources
-        include: tasks/cleanup_network_resources.yml
+      - name: clean resources
+        include: tasks/cleanup_resources.yml
 
       - name: Unlink hosts file
         file:

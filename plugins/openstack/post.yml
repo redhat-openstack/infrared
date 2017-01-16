@@ -1,0 +1,91 @@
+- name: OpenStack Provisioner SSH wait
+  hosts: openstack_nodes
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: Waiting for OpenStack nodes to be SSH-able
+        wait_for:
+            host: "{{ ansible_ssh_host }}"
+            port: 22
+            search_regex: OpenSSH
+            delay: 10
+            timeout: 500
+        delegate_to: localhost
+
+      - name: sshd - disable reverse dns lookup
+        lineinfile:
+            dest: /etc/ssh/sshd_config
+            regexp: .*UseDNS .*
+            line: UseDNS no
+            state: present
+        register: sshd_dns_config
+        become: yes
+
+      - name: restart sshd after config change
+        service:
+            name: sshd
+            state: restarted
+        when: sshd_dns_config | changed
+        become: yes
+
+      - os_server_facts:
+            cloud: "{{ provision.cloud }}"
+        delegate_to: localhost
+
+      - os_port_facts:
+            cloud: "{{ provision.cloud }}"
+        delegate_to: localhost
+
+      # gather facts once ssh is properly configured
+      - setup:
+
+      - name: setup unbooted nics
+        vars:
+            nic: "{{ hostvars[inventory_hostname]['ansible_' + item ]}}"
+            server: "{{ openstack_servers | selectattr('name', 'equalto', inventory_hostname) | list | first }}"
+            port: "{{ openstack_ports |
+                        selectattr('device_id', 'equalto', server.id) |
+                        selectattr('mac_address', 'equalto', nic.macaddress) |
+                        list | first }}"
+            # todo(yfried): add subnets to know if dhcp is on or no
+        copy:
+            content: |
+                BOOTPROTO=static
+                IPADDR={{ port.fixed_ips[0].ip_address }}
+                NETMASK=255.255.255.0
+                NM_CONTROLLED="no"
+                TYPE=ethernet
+                ONBOOT=yes
+                DEVICE={{ item }}
+            dest: "/etc/sysconfig/network-scripts/ifcfg-{{ item }}"
+        become: yes
+        when: "{{ not nic.ipv4|default(False) }}"
+        with_items: "{{ ansible_interfaces | difference(['lo']) }}"
+        register: nics
+
+      - name: start nics
+        shell: |
+            ifdown {{ item.item }}
+            ifup {{ item.item }}
+        tags: skip_ansible_lint
+        when: item|changed
+        with_items: "{{ nics.results }}"
+        become: yes
+
+- name: generate inventory file
+  hosts: localhost
+  gather_facts: no
+  tags: always
+  tasks:
+    - name: generate inventory file
+      template:
+        dest: "{{ inventory_dir }}/hosts-prov"
+        src: templates/inventory.j2
+        force: yes
+
+    - name: update inventory file symlink
+      file:
+        dest: "{{ inventory_dir }}/hosts"
+        state: link
+        src: hosts-prov
+
