@@ -1,0 +1,34 @@
+node_dict:
+    name: aio
+    prefix: null
+    cpu: "8"
+    memory: "16384"
+    swap: "0"
+    flavor: "m1.xlarge"
+    os:
+        type: "linux"
+        variant: "rhel7"
+    disks:
+        disk1:
+            import_url: null
+            path: "/var/lib/libvirt/images"
+            dev: "/dev/vda"
+            size: "64G"
+            cache: "unsafe"
+            preallocation: "metadata"
+    interfaces:
+        nic1:
+            network: "data"
+        nic2:
+            network: "management"
+        nic3:
+            network: "external"
+    external_network: management
+
+    groups:
+        - controller
+        - tester
+        - network
+        - compute
+        - openstack_nodes
+        - overcloud_nodes
