@@ -1,0 +1,31 @@
+- name: Provision VMs
+  hosts: localhost
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      # Instances defaults
+      prefix: "{{ provision.prefix }}"
+      auto_ip: no
+      config_drive: no
+      wait: yes
+      # Flavor defaults
+      flavor_id: m1.large
+      flavor_name: ir-flavor
+  tasks:
+      # TODO(yfried): add dynamic falvor creation
+      - name: provision keys
+        include: tasks/keys.yml
+        tags: keys
+
+      - name: provision image for each node
+        include: tasks/servers.yml
+        with_dict: "{{ provision.topology.nodes }}"
+        loop_control:
+            loop_var: node
+        tags: vms
+
+      - name: register servers
+        vars:
+            input:
+                servers: "{{ server_list }}"
+        include: tasks/register_resources_file.yml
