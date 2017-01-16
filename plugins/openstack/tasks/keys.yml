@@ -1,0 +1,24 @@
+# This is needed for os_keypair as it uses public key
+- name: Retrieve public key from private key
+  command: "ssh-keygen -y -f {{ provision.key.file }}"
+  register: public_key_content
+  when: not provision.key.name
+
+- name: Add keypair
+  os_keypair:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      name: "{{ prefix }}{{ provision.key.file | basename }}"
+      public_key: "{{ public_key_content.stdout }}"
+      state: present
+  register: key
+  when: not public_key_content|skipped
+
+- name: register keypaoir
+  vars:
+      input:
+          keypairs:
+              # use default to avoid warnings on skip
+              - "{{ key.key|default('') }}"
+  include: tasks/register_resources_file.yml
+  when: not public_key_content|skipped
+

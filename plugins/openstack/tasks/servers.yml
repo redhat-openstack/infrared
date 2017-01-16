@@ -1,0 +1,56 @@
+---
+# This file includes tasks for instances and floating IPs creation.
+# These tasks done for each type of node according to 'amount' variable.
+
+# save current node to "{{ node_dict }}"
+- name: get node_dict
+  include_vars: "vars/topology/nodes/{{ node.key }}.yml"
+
+
+- name: Create instances
+  vars:
+      resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
+  os_server:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      auto_ip: "{{ node_dict.auto_ip | default(auto_ip) }}"
+      config_drive: "{{ node_dict.config_drive | default(config_drive) }}"
+      flavor: "{{ node_dict.flavor | default(flavor_id) }}"
+      image: "{{ node_dict.image | default(provision.image) }}"
+      name: "{{ prefix }}{{ node_dict.name }}-{{ item }}"
+      # use regiterd networks
+      nics: "{{ resources.networks | map(attribute='id') | list | map('add_prefix', 'net-id=') | list }}"
+      key_name: "{{ provision.key.name if provision.key.name else (prefix + provision.key.file | basename) }}"
+      state: present
+      wait: "{{ node_dict.wait | default(wait) }}"
+  register: servers
+  with_sequence: "count={{ node.value }}"
+
+# need to write all servers to file at once
+- name: save servers for registration
+  set_fact:
+      server_list: "{{ server_list|default([]) + (servers.results | map(attribute='server') | list) }}"
+
+- name: Create floating IPs
+  vars:
+      external_network_id: "{{ openstack_networks[0].id }}"
+  os_floating_ip:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      network: "{{ external_network_id }}"
+      internal_network: "{{ prefix }}{{ node_dict.external_network }}"
+      server: "{{ item.id }}"
+      state: present
+      # always wait for floating ip
+      wait: yes
+  register: floating_ips
+  with_items: "{{ servers.results | map(attribute='server') | list }}"
+
+- name: Add created servers to inventory
+  add_host:
+      # item.item is the server object
+      name: "{{ item.item.name }}"
+      ansible_ssh_host: "{{ item.floating_ip.floating_ip_address }}"
+      groups: "{{ node_dict.groups | join(',') }}"
+      ansible_ssh_private_key_file: "{{ provision.key.file }}"
+      ansible_ssh_user: "{{ provision.username }}"
+#      eth1_interface_ip: "{{ item.item.addresses[data_network.name][0].addr }}"
+  with_items: "{{ floating_ips.results }}"

@@ -26,6 +26,7 @@ Welcome to InfraRed's documentation!
    virsh
    tripleo-undercloud
    tripleo-overcloud
+   openstack_provisioner
    collect-logs
 
 Indices and tables
