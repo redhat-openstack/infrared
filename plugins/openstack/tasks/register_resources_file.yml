@@ -1,0 +1,5 @@
+- name: register resources
+  copy:
+      content: "{{ item.value | to_nice_yaml }}"
+      dest: "{{ inventory_dir }}/resources/{{ item.key }}.yml"
+  with_dict: "{{ input }}"
