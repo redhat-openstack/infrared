@@ -25,6 +25,9 @@ New In InfraRed 2.0
 #. Topoloy:
     The topology input type has been deprecated. Use `KeyValueList` to define node types and amounts, and ``include_vars``
     to add relevant files to playbooks
+    Removed ``key1=value1;key2=value2...`` format.
+    Only ``key1:value1,key2:value2...`` format is valid now.
+
 #. Cleanup:
     the ``--cleanup`` options now accepts boolean values. Any YAML boolean is accpeted
     ("yes/no", "true/false", "on/off")
