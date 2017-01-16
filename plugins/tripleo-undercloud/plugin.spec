@@ -20,7 +20,7 @@ subparsers:
                       type: KeyValueList
                       help: |
                           Forces additional Undercloud configuration (undercloud.conf) options.
-                          Format: --config-options="section.option=value1;section.option=value".
+                          Format: --config-options="section.option:value1,section.option:value".
 
                   ssl:
                       type: Bool
