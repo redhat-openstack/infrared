@@ -1,0 +1,11 @@
+- name: check if default deployer file is present
+  stat:
+      path: "{{ inventory_dir }}/tempest-deployer-input.conf"
+  delegate_to: localhost
+  register: default_deployer_result
+
+- name: use default deployer input file
+  copy:
+      src: "{{ inventory_dir }}/tempest-deployer-input.conf"
+      dest: "{{ deployer_input }}"
+  when: default_deployer_result.stat.exists

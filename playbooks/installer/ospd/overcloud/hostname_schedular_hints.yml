@@ -1,0 +1,13 @@
+- name: get node details
+  shell: |
+      source ~/stackrc
+      ironic --json node-show {{ item }}
+  with_items: "{{ groups['overcloud_nodes'] }}"
+  register: ironic_nodes
+
+- name: update node capabilities with node name for scheduler hints
+  shell: >
+      source ~/stackrc;
+      ironic node-update {{ (item | from_json)['name'] }} replace
+      properties/capabilities='node:{{ (item | from_json)['name'] }},{{ (item | from_json)['properties']['capabilities'] }}'
+  with_items: "{{ ironic_nodes.results | default([]) | map(attribute='stdout') | list }}"

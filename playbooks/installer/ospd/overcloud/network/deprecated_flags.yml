@@ -1,0 +1,20 @@
+- name: append the network type
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '--neutron-network-type {{ installer.network.backend }} \'
+
+- name: append the network tunnel type
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '--neutron-tunnel-types {{ installer.network.backend }} \'
+  when: installer.network.backend != "vlan"
+
+- name: append the network type
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '{{ item }} \'
+  with_items:
+      - "--neutron-disable-tunneling"
+      - "--neutron-bridge-mappings datacentre:br-ex,tenant:br-isolated"
+      - "--neutron-network-vlan-ranges tenant:1000:2000"
+  when: installer.network.backend == "vlan"
