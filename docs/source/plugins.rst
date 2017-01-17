@@ -203,6 +203,7 @@ Add:
     register the plugin under the given plugin-type::
 
         infrared plugin add tests/example
+        infrared plugin add git_url
 
 
 List:

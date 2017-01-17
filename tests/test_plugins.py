@@ -1,5 +1,6 @@
 import ConfigParser
 import os
+import subprocess
 import yaml
 
 import pytest
@@ -395,3 +396,66 @@ def test_plugin_with_unsupporetd_option_type_in_spec(plugin_manager_fixture):
     from infrared.main import main as ir_main
     with pytest.raises(IRUnsupportedSpecOptionType):
         ir_main([plugin_dict['name'], '--help'])
+
+
+@pytest.mark.parametrize("dest,real_dest", [(
+    SAMPLE_PLUGINS_DIR, SAMPLE_PLUGINS_DIR),
+    (None, "plugins")])
+def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
+
+    plugin_manager = plugin_manager_fixture()
+
+    mock_subprocess = mocker.patch(
+        "infrared.core.services.plugins.subprocess")
+    mock_os = mocker.patch("infrared.core.services.plugins.os")
+    mock_os.path.exists.return_value = False
+    mock_os.listdir.return_value = ["sample_plugin"]
+    mock_tempfile = mocker.patch("infrared.core.services.plugins.tempfile")
+    mock_shutil = mocker.patch("infrared.core.services.plugins.shutil")
+
+    plugin_dict = get_plugin_spec_flatten_dict(
+        os.path.join(SAMPLE_PLUGINS_DIR, 'type1_plugin1'))
+    mock_os.path.join.return_value = os.path.join(plugin_dict["dir"],
+                                                  PLUGIN_SPEC)
+
+    # add_plugin call
+    plugin_manager.add_plugin(
+        "https://sample_github.null/plugin_repo.git", dest)
+
+    mock_os.path.abspath.assert_has_calls([mocker.call(real_dest)])
+
+    mock_tempfile.mkdtemp.assert_called_once()
+    mock_os.getcwdu.assert_called_once()
+    mock_os.chdir.assert_has_calls(mock_tempfile.mkdtemp.return_value)
+    mock_subprocess.check_output.assert_called_with(
+        ['git', 'clone', 'https://sample_github.null/plugin_repo.git'])
+    mock_os.listdir.assert_called_once()
+    mock_os.join.has_call(real_dest, mock_os.listdir.return_value[0])
+    mock_os.join.has_call(mock_tempfile.mkdtemp.return_value,
+                          mock_os.listdir.return_value[0])
+    mock_shutil.copytree.assert_called_with(mock_os.path.join.return_value,
+                                            mock_os.path.join.return_value)
+    mock_os.chdir.assert_has_calls(mock_os.getcwdu.return_value)
+    mock_shutil.rmtree.assert_called_with(mock_tempfile.mkdtemp.return_value)
+
+
+def test_add_plugin_from_git_exception(plugin_manager_fixture, mocker):
+
+    plugin_manager = plugin_manager_fixture()
+
+    mock_subprocess = mocker.patch(
+        "infrared.core.services.plugins.subprocess")
+    mock_subprocess.check_output.side_effect = subprocess.CalledProcessError(
+        1, "some_git_cmd")
+    mock_subprocess.CalledProcessError = subprocess.CalledProcessError
+    mock_tempfile = mocker.patch("infrared.core.services.plugins.tempfile")
+    mock_shutil = mocker.patch("infrared.core.services.plugins.shutil")
+    mock_os = mocker.patch("infrared.core.services.plugins.os")
+    mock_os.path.exists.return_value = False
+
+    # add_plugin call
+    with pytest.raises(IRFailedToAddPlugin):
+        plugin_manager.add_plugin(
+            "https://sample_github.null/plugin_repo.git")
+
+    mock_shutil.rmtree.assert_called_with(mock_tempfile.mkdtemp.return_value)
