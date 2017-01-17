@@ -353,20 +353,17 @@ class KeyValueList(ComplexType):
     """Accept a key-value like list.
 
     Format should be in one of two acceptable styles: New / Old
-    New style: --options="option1:value1,option2:value2"
-    Old style: --options="option1=value1;option2=value2"
+    Default style: --options="option1:value1,option2:value2"
 
     :returns: A flat dict: ex. {'option1': 'value1', 'option2': 'value2'}
     """
 
     new_format = 'NodeA:1,NodeB:2...'
-    old_format = 'NodeA=1;NodeB=2...'
 
     re_pattern = \
         '([\w\-\.]+{assign}[\w\-\.]+\{separate})*([\w\-\.]+{assign}[\w\-\.]+)'
     regex_formats = dict(
-        new_style=dict(assign='=', separate=';'),
-        old_style=dict(assign=':', separate=','),
+        default_style=dict(assign=':', separate=','),
     )
 
     def resolve(self, value):

@@ -52,8 +52,8 @@ subparsers:
                       type: KeyValueList
                       help: |
                           Provision topology.
-                          List of of nodes types and they amount, in a "key=value" format.
-                          Example: "'--topology-nodes 'undercloud=1;controller=3;compute=2'"
+                          List of of nodes types and they amount, in a "key:value" format.
+                          Example: "'--topology-nodes 'undercloud:1,controller:3,compute:2'"
                           __LISTYAMLS__
                       required: yes
                   topology-username:

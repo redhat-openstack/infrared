@@ -58,7 +58,7 @@ subparsers:
                        type: KeyValueList
                        help: |
                            Forces additional Tempest configuration (tempest.conf) options.
-                           Format: --config-options="section.option=value1;section.option=value".
+                           Format: --config-options="section.option:value1,section.option:value".
                   revision:
                       type: Value
                       help: The setup (git) revision if applicable

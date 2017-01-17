@@ -317,27 +317,7 @@ def test_extra_vars_with_file(spec_fixture,
 
 
 @pytest.mark.parametrize("input_value, expected_output_dict", [  # noqa
-    # Old style cases
-    [
-        ['--dictionary-val', "option1=value1"],
-        {"dictionary": {"val": {"option1": "value1"}}}
-    ],
-    [
-        ['--dictionary-val=option1=value1;option2=value2'],
-        {"dictionary": {"val": {"option1": "value1",
-                                "option2": "value2"}}}
-    ],
-    [
-        ['--dictionary-val', 'option1=value1;option2=value2'],
-        {"dictionary": {"val": {"option1": "value1",
-                                "option2": "value2"}}}
-    ],
-    [
-        ['--dictionary-val', 'my-nice.key=some_value;option2=value2'],
-        {"dictionary": {"val": {"my-nice.key": "some_value",
-                                "option2": "value2"}}}
-    ],
-    # New style cases
+    # DEFAULT style
     [
         ['--dictionary-val', "option1:value1"],
         {"dictionary": {"val": {"option1": "value1"}}}
@@ -396,22 +376,14 @@ def test_nested_KeyValueList_CLI(spec_fixture,
 
 @pytest.mark.parametrize("bad_input", [  # noqa
     "keyNoVal", "bad-input",       # Key, no sign, no value, no sep
-    "KeyNoValSign1=",              # Key, sign1 ('='), no value, no spe
     "KeyNoValSign2:",              # Key, sign2 (':'), no value, no sep
     "KeyNoValOtherSign@",          # Key, other sign, no val, no spe
-    "=value",                      # No key, sign1 ('='), value
     ":value",                      # No key, sign2 (':'), value
     "key:val,",                    # End with separator1 (',')
-    "key=val;",                    # End with separator1 (',')
-    "ke^y=val", "key=v!al",        # Invalid sign in key & val - old style
-    "ke*y:val", "key:v@al",        # Invalid sign in key & val - new style
-    "k1=v1,k2=v2", "k1:v1;k2:v2",  # Mixing sign from new & old styles
-    "k1:v1;k2:v2*blabla",          # All input should be match - new style
-    "blabla(k1:v1;k2:v2",          # All input should be match - new style
-    "k1:v1;blabla~k2:v2",          # All input should be match - new style
-    "k1=v1,k2=v2+blabla",          # All input should be match - old style
-    "blabla}k1=v1,k2=v2",          # All input should be match - old style
-    "k1=v1,blabla/k2=v2",          # All input should be match - old style
+    "ke*y:val", "key:v@al",        # Invalid sign in key & val - default style
+    "k1:v1;k2:v2*blabla",          # All input should be match - default style
+    "blabla(k1:v1;k2:v2",          # All input should be match - default style
+    "k1:v1;blabla~k2:v2",          # All input should be match - default style
 ])
 def test_nested_KeyValueList_negative(
         spec_fixture, profile_manager_fixture, test_profile, bad_input):

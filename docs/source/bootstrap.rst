@@ -44,11 +44,11 @@ Notice the only three mandatory paramters in `virsh` provisioner are:
 
   * ``--host-address`` - the host IP or FQDN to ssh to
   * ``--host-key`` - the private key file used to authenticate to your ``host-address`` server
-  * ``--topology-nodes`` - type and role of nodes you would like to deploy (e.g: ``controller=3`` == 3 VMs that will act as controllers)
+  * ``--topology-nodes`` - type and role of nodes you would like to deploy (e.g: ``controller:3`` == 3 VMs that will act as controllers)
 
 We can now execute the provisioning process by providing those parameters through the CLI::
 
-    infrared virsh --host-address $HOST --host-key $HOST_KEY --topology-nodes "undercloud=1;controller=1;compute=1"
+    infrared virsh --host-address $HOST --host-key $HOST_KEY --topology-nodes "undercloud:1,controller:1,compute:1"
 
 That is it, the machines are now provisioned and accessible::
 
@@ -104,7 +104,7 @@ Edit mandatory parameters values in the answers file::
    [virsh]
    host-key = ~/.ssh/id_rsa
    host-address = my.host.address
-   topology-nodes = undercloud=1;controller=1;compute=1
+   topology-nodes = undercloud:1,controller:1,compute:1
    host-user = root
 
 Execute provisioning using the newly created answers file::
@@ -115,7 +115,7 @@ Execute provisioning using the newly created answers file::
 
   .. code-block:: text
 
-    infrared virsh --from-file=virsh_prov.ini --topology-nodes="undercloud=1;controller=1;compute=1;ceph=1"
+    infrared virsh --from-file=virsh_prov.ini --topology-nodes="undercloud:1,controller:1,compute:1,ceph:1"
 
 Done. Quick & Easy!
 
