@@ -4,19 +4,8 @@
   any_errors_fatal: true
   vars:
       undercloud: "{{ hostvars[(groups.undercloud|first)].inventory_hostname }}"
+      undercloud_image_file: "{{ install.filename.rstrip('.qcow2') }}.qcow2"
   tasks:
-      - block:
-          - name: read puddle from file
-            command: cat ~/core_puddle_version
-            register: puddle_file
-            delegate_to: "{{ undercloud }}"
-
-          - set_fact:
-                undercloud_image_file: "undercloud-quickstart-{{ puddle_file.stdout|trim  }}.qcow2"
-        rescue:
-          - set_fact:
-                undercloud_image_file: "undercloud-quickstart.qcow2"
-
       - name: install package with virt-sparsify
         yum:
             name: libguestfs-tools-c
