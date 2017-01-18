@@ -34,9 +34,8 @@ OpenStack Cloud Details
 * ``--key-name``: Name of an existing `keypair` under the OpenStack account, that matches the provided ``--key-file``.
     Use ``openstack --os-cloud cloud_name keypair list`` to see a list of available keypairs.
 * ``--dns``: A Local DNS server used for the provisioned networks and VMs
-
-.. TODO - Someone elaborate here please what are the exact reasons for not using default DNS and what exactly is affected.
-
+    If not provided, openstack will use default DNS settings, which, in most cases,
+    will not resolve internal URLs.
 
 Topology
 --------

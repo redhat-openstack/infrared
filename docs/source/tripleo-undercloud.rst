@@ -1,4 +1,4 @@
-TripelO Undercloud
+TripleO Undercloud
 ==================
 
 Deploys a Tripleo undercloud
