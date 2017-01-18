@@ -14,6 +14,7 @@ Welcome to InfraRed's documentation!
    configuration
    profile
    plugins
+   topology
    interactive_ssh
    changes
    advance_features

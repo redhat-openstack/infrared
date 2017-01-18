@@ -7,11 +7,17 @@ Such environments are used to emulate production environment like `tripleo-under
 instances on one baremetal machine. It requires one prepared baremetal host (designated ``hypervisor``)
 to be reachable through SSH initially.
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Requirements
+
+   hypervisor
+
 First, Libvirt and KVM are installed and configured to provide a virtualized environment.
 Then, virtual machines are created for all requested nodes.
 
-TOPOLOGY
-========
+Topology
+--------
 The first thing you need to decide before you deploy your environment is the ``Topology``.
 This refers to the number and type of VMs in your desired deployment environment.
 If we use Openstack as an example, a topology may look something like:
@@ -27,14 +33,8 @@ please refer to `Topology <topology.html>`_.
 
 Please see `Bootstrap <bootstrap.html>`_ guide where usage is demonstrated.
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Requirements
-
-   hypervisor
-
 Network layout
---------------
+~~~~~~~~~~~~~~
 Baremetal machine used as host for such setup is called `hypervisor`. The whole deployment is designed to
 work within boundaries of this machine and (except public/natted traffic) shouldn't reach beyond.
 The following layout is part of default setup defined in
