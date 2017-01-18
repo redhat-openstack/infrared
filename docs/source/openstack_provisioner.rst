@@ -40,6 +40,7 @@ OpenStack Cloud Details
 
 Topology
 --------
+
 * ``--prefix``: prefix all resources with a string.
     Use this with shared tenants to have unique resource names.
 
@@ -54,15 +55,18 @@ Topology
 * ``--topology-nodes``: `KeyValueList` description of the nodes.
     A floating IP will be provisioned on a designated network.
 
-.. todo(yfried): create description of topology input in a different doc
+For more information about the structure of the topology files and how to create your own,
+please refer to `Topology`_ and `Virsh plugin`_ description.
 
 * ``--image``: default image name or id for the VMs
     use ``openstack --os-cloud cloud_name image list`` to see a list of available images
-
-.. _`os-client-config`: http://docs.openstack.org/developer/os-client-config
 
 * ``--cleanup`` Boolean. Whether to provision resources, or clean them from the tenant.
     `InfraRed` registers all provisioned resources to the `profile <profile.html>`_ on creation,
     and will clean only registered resources::
 
         infrared openstack --cleanup yes
+
+.. _`Topology`: topology.html
+.. _`Virsh plugin`: virsh.html#topology
+.. _`os-client-config`: http://docs.openstack.org/developer/os-client-config

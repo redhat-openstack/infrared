@@ -1,0 +1,15 @@
+# Lookup {{ var_file }}.yml in priority order
+# under {{ partial_path }}
+
+- name: lookup var file in priority order
+  find:
+      patterns: "{{ var_file }}.yml"
+      paths:
+          # search here first
+          - "vars/{{ partial_path }}"
+          # search here later
+          - "defaults/{{ partial_path }}"
+  register: var_file_find
+  delegate_to: localhost
+
+- include_vars: "{{ var_file_find.files[0].path }}"
