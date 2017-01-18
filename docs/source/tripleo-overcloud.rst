@@ -1,4 +1,4 @@
-TripelO Overcloud
+TripleO Overcloud
 =================
 
 Deploys a Tripleo overcloud from an existing undercloud
