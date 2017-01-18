@@ -27,6 +27,12 @@
             name: libguestfs-tools
             state: present
 
+      - name: resets undercloud image configurations
+        environment:
+            LIBGUESTFS_BACKEND: direct
+        command: >
+            virt-sysprep -a {{ undercloud_disk_path }}
+                --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net,ssh-hostkeys
       # Copy hypervisor's key into UC root and also for "install.user" as we this user since next hosts task update inventory
       # This is necesarry for muffin because we need to refresh the auhtortized_keys with new hypervisor's pubkey
       - name: inject our key into the undercloud image
