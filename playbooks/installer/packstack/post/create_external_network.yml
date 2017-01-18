@@ -72,6 +72,16 @@
         tags:
             - skip_ansible_lint
 
+      # similar to `neutron net-list --name NAME -f value -c id`
+      # openstack_networks.id should contain the id of the network if it exists
+      - name: get network_id of the pool_name
+        vars:
+            # Here can't be used {{ path_venv }}, because it's not a Jinja template
+            ansible_python_interpreter: "/tmp/venv_shade/bin/python"
+        os_networks_facts:
+          name: "{{ pool_name }}"
+        ignore_errors: true
+
       # TODO(yfried): Use localhost where shade is mandatory
       - name: create the external network
         vars:
@@ -85,6 +95,8 @@
             provider_physical_network: "{{ installer.network.label }}"
             provider_network_type: "{{ installer.network.external.provider_network_type }}"
             provider_segmentation_id: "{{ ('vlan' == installer.network.external.provider_network_type) | ternary(installer.network.external.provider_segmentation_id, omit) }}"
+            # needed for avoiding creation of duplicate networks with same name
+            id: "{{ openstack_networks.id | default(omit) }}"
         register: net_create
 
       - name: create the external subnet
