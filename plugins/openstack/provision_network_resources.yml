@@ -2,7 +2,11 @@
 - name: Provision OpenStack network resources
   hosts: localhost
   tasks:
-      - include_vars: "../vars/topology/network/{{ provision.topology.network }}.yml"
+      - name: get network dict
+        include: tasks/var_lookup.yml
+        vars:
+            var_file: "{{ provision.topology.network }}"
+            partial_path: topology/network
 
       - name: Create networks
         os_network:
