@@ -11,6 +11,8 @@
       undercloud_image_file: "{{ install.filename }}"
       undercloud_disk_path: "/var/lib/libvirt/images/{{ install.filename.rstrip('.qcow2') | basename }}-disk1.qcow2"
       # todo(yfried): add external refs so users can override these values and customize the Undercloud
+  environment:
+      LIBGUESTFS_BACKEND=direct
   tasks:
       # todo(atalmor): add support to download image
       - name: copy the image into libvirt images folder
@@ -27,6 +29,10 @@
             name: libguestfs-tools
             state: present
 
+      - name: resets undercloud image configurations
+        command: >
+            virt-sysprep -a {{ undercloud_disk_path }}
+                --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net,ssh-hostkeys
       # Copy hypervisor's key into UC root and also for "install.user" as we this user since next hosts task update inventory
       # This is necesarry for muffin because we need to refresh the auhtortized_keys with new hypervisor's pubkey
       - name: inject our key into the undercloud image
