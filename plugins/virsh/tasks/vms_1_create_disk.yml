@@ -22,7 +22,7 @@
 - name: create disk(s) from vm base image
   vars:
       amount: "{{ node.value }}"
-      image_name: "{{ node_dict.disks.disk1.import_url|default('') or url | basename}}"
+      image_name: "{{ (node_dict.disks.disk1.import_url|default('') or url) | basename}}"
   shell: |
       set -ex
       export LIBGUESTFS_BACKEND=direct
@@ -52,8 +52,11 @@
       {% endif %}{# endif disk1 #}
 
       # todo(yfried): use builtin module for chown
-      chown qemu:qemu {{ disk_values.path }}/{{ node_image }}
+      {% else %}{# else import_url #}
+      # in case of import simply copy that image to use as a disk
+      cp -rf {{ base_image_path }}/{{ image_name }} {{ disk_values.path }}/{{ node_image }}
       {% endif %}{# endif not import_url #}
+      chown qemu:qemu {{ disk_values.path }}/{{ node_image }}
       {% endfor %}{# endfor vm disks #}
       {% endfor %}{# endfor vm-type(controller etc).amount #}
 #  todo(yfried) needs a "creates"
