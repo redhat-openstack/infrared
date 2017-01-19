@@ -15,7 +15,7 @@ class ProfileManagerSpec(api.SpecObject):
 
     def __init__(self, name, *args, **kwargs):
         super(ProfileManagerSpec, self).__init__(name, **kwargs)
-        self.profile_manager = None
+        self.profile_manager = CoreServices.profile_manager()
 
     def extend_cli(self, root_subparsers):
         profile_plugin = root_subparsers.add_parser(
@@ -29,10 +29,11 @@ class ProfileManagerSpec(api.SpecObject):
             'create', help='Creates a new profile')
         create_parser.add_argument("name", help="Profie name")
 
-        # activate
-        activate_parser = profile_subparsers.add_parser(
-            'activate', help='Activates a profile')
-        activate_parser.add_argument("name", help="Profie name")
+        # checkout
+        checkout_parser = profile_subparsers.add_parser(
+            'checkout',
+            help='Creates a profile if it is not presents and switches to it')
+        checkout_parser.add_argument("name", help="Profie name")
 
         # list
         profile_subparsers.add_parser(
@@ -81,35 +82,48 @@ class ProfileManagerSpec(api.SpecObject):
         pargs = parser.parse_args(args)
         subcommand = pargs.command0
 
-        profile_manager = CoreServices.profile_manager()
         if subcommand == 'create':
-            profile_manager.create(pargs.name)
-            print("Profile '{}' added".format(pargs.name))
-        elif subcommand == 'activate':
-            profile_manager.activate(pargs.name)
-            print("Profile '{}' activated".format(pargs.name))
+            self._create_profile(pargs.name)
+        elif subcommand == 'checkout':
+            self._checkout_profile(pargs.name)
         elif subcommand == 'list':
-            profiles = profile_manager.list()
+            profiles = self.profile_manager.list()
             print(
-                tabulate([[p.name, profile_manager.is_active(p.name) or ""]
+                tabulate([[p.name, self.profile_manager.is_active(p.name) or ""]
                          for p in profiles],
                          headers=("Name", "Is Active"),
                          tablefmt='orgtbl'))
         elif subcommand == 'delete':
-            profile_manager.delete(pargs.name)
+            self.profile_manager.delete(pargs.name)
             print("Profile '{}' deleted".format(pargs.name))
         elif subcommand == 'cleanup':
-            profile_manager.cleanup(pargs.name)
+            self.profile_manager.cleanup(pargs.name)
         elif subcommand == 'export':
-            profile_manager.export_profile(pargs.profilename, pargs.filename)
+            self.profile_manager.export_profile(
+                pargs.profilename, pargs.filename)
         elif subcommand == 'import':
-            profile_manager.import_profile(pargs.filename, pargs.profilename)
+            self.profile_manager.import_profile(
+                pargs.filename, pargs.profilename)
         elif subcommand == 'node-list':
-            nodes = profile_manager.node_list(pargs.name)
+            nodes = self.profile_manager.node_list(pargs.name)
             print(
                 tabulate([node_name for node_name in nodes],
                          headers=("Name", "Address"),
                          tablefmt='orgtbl'))
+
+    def _create_profile(self, name):
+        """Creates a profile """
+
+        self.profile_manager.create(name)
+        print("Profile '{}' added".format(name))
+
+    def _checkout_profile(self, name):
+        """Checkouts (create+activate) a profile """
+
+        if not self.profile_manager.has_profile(name):
+            self._create_profile(name)
+        self.profile_manager.activate(name)
+        print("Now using profile: '{}'".format(name))
 
 
 class PluginManagerSpec(api.SpecObject):
