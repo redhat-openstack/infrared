@@ -227,9 +227,13 @@ class ProfileManager(object):
         walk returns the basedir as well. need to remove it and avoid listing
         subfolders
         """
-        return [Profile(os.path.basename(d),
-                        os.path.join(self.profile_dir, d))
-                for d in next(os.walk(self.profile_dir))[1]]
+        dirlist = list(os.walk(self.profile_dir))
+        if dirlist:
+            return [Profile(os.path.basename(d),
+                            os.path.join(self.profile_dir, d))
+                    for d in dirlist[0][1]]
+        else:
+            return []
 
     def get(self, name):
         """Gets an exisiting profile."""
