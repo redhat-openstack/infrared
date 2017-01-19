@@ -24,6 +24,32 @@ Activate
         infrared profile active example2
 
         Profile has been activated
+
+.. note:: active profile is tracked via a status file in profiles_dir, which means active profile is persistent across shell sessions::
+
+    ir profile list
+    | Name   | Is Active   |
+    |--------+-------------|
+    | bee    | True        |
+    | zoo    |             |
+    
+    IR_ACTIVE_PROFILE=zoo ir profile list
+    | Name   | Is Active   |
+    |--------+-------------|
+    | bee    |             |
+    | zoo    | True        |
+    
+    ir profile list
+    | Name   | Is Active   |
+    |--------+-------------|
+    | bee    | True        |
+    | zoo    |             |
+
+.. note:: While ``IR_ACTIVE_PROFILE`` is set `ir profile activate` is disabled::
+
+    IR_ACTIVE_PROFILE=zoo ir profile activate zoo
+    ERROR   'profile activate' command is disabled while IR_ACTIVE_PROFILE environment variable is set.
+
 List:
     List all profiles. Active profile will be marked.::
 
@@ -31,9 +57,9 @@ List:
 
         | Name        | Is Active   |
         |-------------+-------------|
-        | example     | False       |
+        | example     |             |
         | example2    | True        |
-        | rdo_testing | False       |
+        | rdo_testing |             |
 Cleanup:
     Removes all the files from profile. Unlike delete, this will keep the profile namespace and keep it active if it was active before.::
 
