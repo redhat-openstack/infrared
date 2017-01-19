@@ -94,9 +94,14 @@ class InfraRedPluginsSpec(SpecObject):
             * None if "--generate-answers-file" or "--dry-run" answers file is
               generated
         """
-        active_profile = CoreServices.profile_manager().get_active_profile()
+        profile_manager = CoreServices.profile_manager()
+
+        active_profile = profile_manager.get_active_profile()
         if not active_profile:
-            raise exceptions.IRNoActiveProfileFound()
+            LOG.warn("There are no profiles. Creating new profile: %s",
+                     active_profile.name)
+            active_profile = profile_manager.create()
+            profile_manager.activate(active_profile.name)
 
         # TODO(yfried): when accepting inventory from CLI, need to update:
         # profile.inventory = CLI[inventory]
