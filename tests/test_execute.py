@@ -38,16 +38,14 @@ def spec_fixture():
 
 
 def test_execute_no_profile(spec_fixture, profile_manager_fixture):   # noqa
-    """Verify execution fails without an active profile. """
+    """Verify new profile was been created when there are no profiles. """
 
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     input_string = ['example']
-
-    from infrared.core.utils import exceptions
-    with pytest.raises(exceptions.IRNoActiveProfileFound):
-        spec_manager.run_specs(args=input_string)
+    spec_manager.run_specs(args=input_string)
+    assert profile_manager_fixture.get_active_profile()
 
 
 def test_execute_fail(spec_fixture, profile_manager_fixture,          # noqa
