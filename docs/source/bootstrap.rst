@@ -8,9 +8,10 @@ Clone InfraRed 2.0 from GitHub::
 
     git clone https://github.com/rhos-infra/InfraRed.git -b IR2
 
-`Install <setup.html#Install>`_ from source using pip::
+Setup virtualenv and `install <setup.html#Install>`_ from source using pip::
 
     cd InfraRed
+    virtualenv .venv && source .venv/bin/activate
     pip install --upgrade pip setuptools
     pip install .
 
