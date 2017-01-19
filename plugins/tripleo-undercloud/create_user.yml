@@ -82,15 +82,6 @@
             user: "{{ install.user.name }}"
             key: "{{ privatekey }}"
 
-      - name: insert the public key to the known hosts in hypervisor
-        tags: hypervisor
-        authorized_key:
-            user: "{{ install.user.name }}"
-            key: "{{ privatekey }}"
-        delegate_to: hypervisor
-        become: no
-        when: "'hypervisor' in groups"
-
       - name: Update hosts user
         add_host:
             name: "{{ inventory_hostname }}"
