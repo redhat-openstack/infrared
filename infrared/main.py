@@ -91,7 +91,7 @@ class ProfileManagerSpec(api.SpecObject):
         elif subcommand == 'list':
             profiles = profile_manager.list()
             print(
-                tabulate([[p.name, profile_manager.is_active(p.name)]
+                tabulate([[p.name, profile_manager.is_active(p.name) or ""]
                          for p in profiles],
                          headers=("Name", "Is Active"),
                          tablefmt='orgtbl'))
