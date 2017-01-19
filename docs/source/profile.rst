@@ -11,19 +11,26 @@ Create:
 
         infrared profile create example
 
-        Profile has been added
+        Profile 'example' added
 Delete:
     Deletes a profile::
 
         infrared profile delete example
 
-        Profile has been deleted
-Activate
-    Set the active profile::
+        Profile 'example' deleted
+Switch
+    Switches to the profile and sets it as active::
 
-        infrared profile active example2
+        infrared profile switch example2
 
-        Profile has been activated
+        Now using profile: example2
+Checkout
+    Creates new profile if it is not present and switches to it::
+
+        infrared profile checkout example3
+
+        Profile 'example3' added
+        Now using profile: 'example3'
 List:
     List all profiles. Active profile will be marked.::
 

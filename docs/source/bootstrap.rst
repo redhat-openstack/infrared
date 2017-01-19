@@ -15,10 +15,9 @@ Setup virtualenv and `install <setup.html#Install>`_ from source using pip::
     pip install --upgrade pip setuptools
     pip install .
 
-You must have an active `profile <profile.html#profile>`_ to work. This profile will manage your environment details::
 
-    infrared profile create bootstrap
-    infrared profile activate bootstrap
+.. note:: InfraRed will create a default `profile <profile.html#profile>`_ for you. This profile will manage your environment details.
+
 
 Provision
 ---------
