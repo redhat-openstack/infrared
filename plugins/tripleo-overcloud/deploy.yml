@@ -2,6 +2,8 @@
   hosts: undercloud
   gather_facts: yes
   any_errors_fatal: true
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/overcloudrc"
   tasks:
       - name: Execute the overcloud deploy script
         shell: |
@@ -42,6 +44,15 @@
 
       - name: verify overcloudrc was created
         wait_for:
-            path: "/home/stack/overcloudrc"
+            path: "{{ overcloudrc_file }}"
             state: present
             timeout: 60
+
+      - name: fetch the overcloud rc file
+        tags:
+            - fetch_rc_file
+        fetch:
+            src: "{{ overcloudrc_file }}"
+            dest: "{{ inventory_dir }}/keystonerc"
+            flat: yes
+            fail_on_missing: yes

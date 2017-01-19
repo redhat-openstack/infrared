@@ -28,6 +28,7 @@ Welcome to InfraRed's documentation!
    tripleo-overcloud
    openstack_provisioner
    collect-logs
+   tempest
 
 Indices and tables
 ==================
