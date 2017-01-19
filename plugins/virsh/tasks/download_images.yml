@@ -26,8 +26,6 @@
   with_dict: "{{ node_dict.disks }}"
 
 - name: adjust base image for this run
-  vars:
-      image:
   shell: |
       set -ex
       export LIBGUESTFS_BACKEND=direct
@@ -35,7 +33,9 @@
           --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
 
       virt-customize -a {{ item.dest }} \
+      {% if not item.item.value.image_url|default('') %}
           --run-command 'yum remove -y cloud-init*' \
+      {% endif %}
           --root-password password:redhat \
           --run-command 'echo "UseDNS no" >> /etc/ssh/sshd_config' \
           --mkdir /root/.ssh \
