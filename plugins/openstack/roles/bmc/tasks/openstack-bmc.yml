@@ -1,0 +1,24 @@
+# This file is used once per node in 'overcloud_nodes' group
+- block:
+    - name: Deploy openstack-bmc service file
+      template:
+          src: "openstack-bmc-service.j2"
+          dest: "/usr/lib/systemd/system/openstack-bmc-{{ node.name }}.service"
+
+    - name: Start the service for the node
+      service:
+          name: "openstack-bmc-{{ node.name }}.service"
+          state: started
+          enabled: yes
+
+    # mac address is required to pass introspection during installation
+    - name: Update our host with it's ipmi ip
+      vars:
+          base_subnet: "{{ internal_default_gateway.split('.')[:-1] | join('.') }}"
+          last: "{{ node.private_v4.split('.')[-1] }}"
+      add_host:
+          name: "{{ node.name }}"
+          ipmi_ip: "{{ base_subnet }}.{{ last }}"
+          ipmi_mac: "{{ node.addresses[bmc_ipmi_network_name][0]['OS-EXT-IPS-MAC:mac_addr'] }}"
+
+  when: "'undercloud' not in node.name"

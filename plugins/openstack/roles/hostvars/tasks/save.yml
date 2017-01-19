@@ -1,0 +1,12 @@
+- name: create host_vars folder
+  file:
+      state: directory
+      path: "{{ host_vars_dir }}"
+  with_items: "{{ host_names }}"
+
+- name: save host vars
+  template:
+      force: yes
+      src: "host_vars.yml.j2"
+      dest: "{{ host_vars_dir }}/{{ item }}.yml"
+  with_items: "{{ host_names }}"

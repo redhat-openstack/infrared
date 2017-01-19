@@ -1,0 +1,94 @@
+---
+- name: Validate network name is defined
+  fail:
+      msg: "The 'bmc_ipmi_network_name' variable if not  defined "
+  when: "not bmc_ipmi_network_name or bmc_ipmi_network_name=='undefined'"
+
+- name: Install rhos-release
+  package:
+      name: "{{ private.distro.rhel.rhos_release_rpm }}"
+      state: present
+
+# todo(obaranov) avoid "latest". either use the same rhos-release as ospd uses, or use "passed_phase1" for a verified puddle
+- name: Run rhos release
+  command: rhos-release "{{ bmc_rhos_release  }}"
+
+# Install the necessary packages to setup the bmc node
+- name: Install repos
+  package:
+      name: "{{ bmc_repos }}"
+      state: present
+
+# This is a separate task due to the way Ansible handle RPMs installation.
+# Before able to install 'python-pip' the right repos from previous task, should be installed.
+- name: Install RPM packages
+  package:
+      name: "{{ bmc_rpms }}"
+      state: present
+      disable_gpg_check: yes
+
+- name: Install pip packages
+  pip:
+      name: "{{ item }}"
+  with_items: "{{ bmc_pip }}"
+
+- name: Deploy openstackbmc
+  template:
+      src: "openstackbmc"
+      dest: "/usr/local/bin/openstackbmc"
+      mode: "u=rwx,g=rwx,o=rwx"
+
+- name: Register internal subnet details
+  os_subnets_facts:
+      cloud: "{{ bmc_provision_cloud  | default(omit) }}"
+      filters:
+          name: "{{ bmc_ipmi_network_subnet  }}"
+  delegate_to: localhost
+  become: no
+  register: internal_subnet_details
+
+- name: Set fact for internal subnet - default gateway
+  set_fact:
+      internal_default_gateway: "{{ internal_subnet_details.ansible_facts.openstack_subnets[0].gateway_ip }}"
+      internal_cidr_prefix: "{{ internal_subnet_details.ansible_facts.openstack_subnets[0].cidr | ipaddr('prefix') }}"
+
+- name: Register external subnet details
+  os_server_facts:
+      cloud: "{{ bmc_provision_cloud | default(omit) }}"
+      server: "{{ bmc_nodes_filter }}*"
+  delegate_to: localhost
+  become: no
+  register: server_facts
+
+# todo (obaranov): investigate how to get cloud rc parameters in more simplier way
+- name: Get cloud auth info
+  os_client_config:
+      clouds:
+          - "{{ bmc_provision_cloud | default(omit) }}"
+  delegate_to: localhost
+  become: no
+  register: cloud_details
+
+- set_fact:
+      cloud_auth_info: "{{ cloud_details.ansible_facts.openstack.clouds[0].auth }}"
+
+- name: Deploy config-bmc-ips
+  copy:
+      src: "config-bmc-ips.service"
+      dest: "/usr/lib/systemd/system/config-bmc-ips.service"
+
+- name: Ensure /etc/os-net-config directory exists
+  file:
+      path: "/etc/os-net-config"
+      state: "directory"
+
+- name: Deploy os-net-config configuration
+  template:
+      src: "os-net-config.j2"
+      dest: "/etc/os-net-config/config.yaml"
+
+# Deploy service file for each node in 'overcloud_nodes' group
+- include: openstack-bmc.yml
+  with_items: "{{ server_facts.ansible_facts.openstack_servers }}"
+  loop_control:
+      loop_var: node
