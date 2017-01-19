@@ -10,7 +10,6 @@ from infrared.core import execute
 from infrared.core.inspector.inspector import SpecParser
 from infrared.core.services import CoreServices
 from infrared.core.settings import VarsDictManager
-from infrared.core.utils import exceptions
 from infrared.core.utils import logger
 
 LOG = logger.LOG
@@ -94,9 +93,14 @@ class InfraRedPluginsSpec(SpecObject):
             * None if "--generate-answers-file" or "--dry-run" answers file is
               generated
         """
-        active_profile = CoreServices.profile_manager().get_active_profile()
+        profile_manager = CoreServices.profile_manager()
+
+        active_profile = profile_manager.get_active_profile()
         if not active_profile:
-            raise exceptions.IRNoActiveProfileFound()
+            active_profile = profile_manager.create()
+            profile_manager.activate(active_profile.name)
+            LOG.warn("There are no profiles. New profile added: %s",
+                     active_profile.name)
 
         # TODO(yfried): when accepting inventory from CLI, need to update:
         # profile.inventory = CLI[inventory]
