@@ -69,9 +69,10 @@ Node list:
     List nodes, managed by a specific profile::
 
         infrared profile node-list
-
-        | Node name   |
-        |-------------|
+        | Name         | Address     |
+        |--------------+-------------|
+        | controller-0 | 172.16.0.94 |
+        | controller-1 | 172.16.0.97 |
 
         infrared profile node-list --name some_profile_name
 

@@ -107,8 +107,8 @@ class ProfileManagerSpec(api.SpecObject):
         elif subcommand == 'node-list':
             nodes = profile_manager.node_list(pargs.name)
             print(
-                tabulate([[node_name] for node_name in nodes],
-                         headers=("Node name",),
+                tabulate([node_name for node_name in nodes],
+                         headers=("Name", "Address"),
                          tablefmt='orgtbl'))
 
 

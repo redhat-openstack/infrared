@@ -326,5 +326,5 @@ class ProfileManager(object):
         invent = inventory.Inventory(DataLoader(), VariableManager(),
                                      host_list=profile.inventory)
         hosts = invent.get_hosts()
-        return [host.name for host in hosts if host.vars.get(
+        return [(host.name, host.address) for host in hosts if host.vars.get(
             "ansible_connection") != "local"]

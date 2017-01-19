@@ -224,7 +224,7 @@ def test_profile_node_list(profile_manager_fixture, test_profile):
     # not active profile
     node_lst_boo = profile_manager_fixture.node_list(
         profile_name="test_list_prof")
-    assert node_lst_boo == ["test_host"]
+    assert node_lst_boo == [("test_host", "0.0.0.0")]
 
 
 def test_profile_node_list_errors(profile_manager_fixture):
