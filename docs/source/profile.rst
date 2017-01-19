@@ -25,6 +25,40 @@ Delete:
         infrared profile delete example
 
         Profile 'example' deleted
+Activate
+    Set the active profile::
+
+        infrared profile active example2
+
+        Profile has been activated
+
+.. note:: Checked out profile is tracked via a status file in profiles_dir, which means checked out profile is persistent across shell sessions.
+          You can pass checked out profile by envitonment vriable ``IR_CHECKEDOUT_PROFILE``, which is non persistent::
+
+    ir profile list
+    | Name   | Is Active   |
+    |--------+-------------|
+    | bee    | True        |
+    | zoo    |             |
+
+    IR_CHECKEDOUT_PROFILE=zoo ir profile list
+    | Name   | Is Active   |
+    |--------+-------------|
+    | bee    |             |
+    | zoo    | True        |
+
+    ir profile list
+    | Name   | Is Active   |
+    |--------+-------------|
+    | bee    | True        |
+    | zoo    |             |
+
+.. warning:: While ``IR_CHECKEDOUT_PROFILE`` is set `ir profile checkout` is disabled::
+
+    export IR_CHECKEDOUT_PROFILE=zoo
+    ir profile checkout zoo
+    ERROR   'profile checkout' command is disabled while IR_CHECKEDOUT_PROFILE environment variable is set.
+
 List:
     List all profiles. Active profile will be marked.::
 
@@ -32,9 +66,9 @@ List:
 
         | Name        | Is Active   |
         |-------------+-------------|
-        | example     | False       |
+        | example     |             |
         | example2    | True        |
-        | rdo_testing | False       |
+        | rdo_testing |             |
 Cleanup:
     Removes all the files from profile. Unlike delete, this will keep the profile namespace and keep it active if it was active before.::
 
