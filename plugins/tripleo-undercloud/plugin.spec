@@ -55,7 +55,6 @@ subparsers:
                         - mitaka
                         - newton
                         - ocata
-                      required: true
 
                   build:
                       help: |
@@ -130,10 +129,3 @@ subparsers:
                       help: |
                           Removes all the downloaded images when images-task is in 'rpm' or 'import'
                       default: yes
-
-            - title: Backup
-              options:
-                  backup:
-                      type: Bool
-                      help: backup undercloud image to use for bootstrap
-                      default: no
