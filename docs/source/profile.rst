@@ -24,6 +24,32 @@ Activate
         infrared profile active example2
 
         Profile has been activated
+
+.. note:: active profile is tracked via a status file in profiles_dir, which means active profile is persistent across shell sessions::
+
+    ir profile list
+    | Name   | Is Active   |
+    |--------+-------------|
+    | bee    | True        |
+    | zoo    | False       |
+    
+    IR_ACTIVE_PROFILE=zoo ir profile list
+    | Name   | Is Active   |
+    |--------+-------------|
+    | bee    | False       |
+    | zoo    | True        |
+    
+    ir profile list
+    | Name   | Is Active   |
+    |--------+-------------|
+    | bee    | True        |
+    | zoo    | False       |
+
+.. note:: While ``IR_ACTIVE_PROFILE`` is set `ir profile activate` is disabled::
+
+    IR_ACTIVE_PROFILE=zoo ir profile activate zoo
+    ERROR   'profile activate' command is disabled while IR_ACTIVE_PROFILE environment variable is set.
+
 List:
     List all profiles. Active profile will be marked.::
 

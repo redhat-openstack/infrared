@@ -12,6 +12,7 @@ from infrared.core.utils import exceptions, logger
 LOG = logger.LOG
 
 TIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
+ACTIVE_PROFILE_ENV_NAME = "IR_ACTIVE_PROFILE"
 
 INVENTORY_LINK = "hosts"
 LOCAL_HOSTS = """[local]
@@ -202,6 +203,12 @@ class ProfileManager(object):
     def activate(self, name):
         """Activates the profile."""
 
+        if ACTIVE_PROFILE_ENV_NAME in os.environ:
+            raise exceptions.IRException(
+                message="'profile activate' command is disabled while "
+                "{} environment variable is set.".format(
+                    ACTIVE_PROFILE_ENV_NAME))
+
         if self.has_profile(name):
             with open(self.active_file, 'w') as prf_file:
                 prf_file.write(name)
@@ -243,11 +250,14 @@ class ProfileManager(object):
         If active profile is present then return the Profile object.
         Otherwise returns None
         """
+        active_name = os.environ.get(ACTIVE_PROFILE_ENV_NAME)
 
-        if os.path.isfile(self.active_file):
-            with open(self.active_file) as prf_file:
-                active_name = prf_file.read().strip()
-                return self.get(active_name)
+        if active_name is None:
+            if os.path.isfile(self.active_file):
+                with open(self.active_file) as prf_file:
+                    active_name = prf_file.read().strip()
+
+        return self.get(active_name)
 
     def export_profile(self, profile_name, file_name=None):
         """Export content of profile folder as gzipped tar file
