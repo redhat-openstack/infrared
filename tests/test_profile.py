@@ -55,6 +55,33 @@ def test_profile_activate_negative(profile_manager_fixture):
         profile_manager_fixture.activate("wrong_profile")
 
 
+def test_active_profile_from_env(profile_manager_fixture, test_profile):
+    """Verify that active profile from env"""
+
+    tprof_name = test_profile.name
+
+    assert profile_manager_fixture.get_active_profile() is None
+    os.environ[profiles.ACTIVE_PROFILE_ENV_NAME] = test_profile.name
+    assert profile_manager_fixture.get_active_profile().name == tprof_name
+    os.environ.pop(profiles.ACTIVE_PROFILE_ENV_NAME)
+
+    profile_manager_fixture.create("new_profile")
+    profile_manager_fixture.activate("new_profile")
+    assert profile_manager_fixture.get_active_profile().name == "new_profile"
+
+    os.environ[profiles.ACTIVE_PROFILE_ENV_NAME] = test_profile.name
+    assert profile_manager_fixture.get_active_profile().name == tprof_name
+    os.environ.pop(profiles.ACTIVE_PROFILE_ENV_NAME)
+
+
+def test_activate_profile_env_exception(profile_manager_fixture, test_profile):
+
+    os.environ[profiles.ACTIVE_PROFILE_ENV_NAME] = test_profile.name
+    with pytest.raises(exceptions.IRException):
+        profile_manager_fixture.activate(test_profile.name)
+    os.environ.pop(profiles.ACTIVE_PROFILE_ENV_NAME)
+
+
 def test_profile_remove(profile_manager_fixture, test_profile):
     """Verify profile can be removed. """
 
