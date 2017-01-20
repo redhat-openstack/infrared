@@ -35,25 +35,16 @@ subparsers:
                           The setup type for tests
                           __LISTYAMLS__
                       default: git
-                  deployer-input-method:
-                      type: Value
-                      help: |
-                          Possible values:
-                             - copy: The deployer-input specified by the '--deployer-input-file' argument will be copied from the host station.
-                             - local: The deployer-input file to use from the tester folder on tester station.
-                      choices: [copy, local]
-                      default: copy
                   deployer-input-file:
                       type: Value
                       help: |
-                          Required when the 'deployer-input-method' option is set.
-                          Specifies the deployer-input file location. When  deployer-input-method == 'copy' the absolute path to the file should be specified.
-                          When  deployer-input-method == 'local' the tempest-dir relative path should be specified (e.g. etc/deployer-config-icehouse.conf).
+                          The deployer input file absolute or relative path.
+                          By default will try to use the 'deployer-input-file.conf' file from active workspace folder.
                   openstackrc:
                       type: Value
                       help: |
-                          The full path to the openstackrc file.
-                          When empty, will search active workspace for 'keystonerc' file"
+                          The full path or relative path to the openstackrc file.
+                          When empty, InfraRed will search active workspace for the 'keystonerc' file and use it.
                   config-options:
                        type: IniType
                        action: append
