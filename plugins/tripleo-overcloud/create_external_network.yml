@@ -52,6 +52,8 @@
         set_fact:
             network_template:  "{{ network_template_out.stdout | from_yaml }}"
 
+      # for openstack v11 the OS_TENANT_NAME is replaced with OS_PROJECT_NAME
+      # Trying to resolve OS_PROJECT_NAME and then OS_TENANT_NAME
       - name: grab auth data from openstackrc file and publish it as YAML
         vars:
         shell: |
@@ -60,8 +62,14 @@
             auth_url: $OS_AUTH_URL
             username: $OS_USERNAME
             password: $OS_PASSWORD
-            project_name: $OS_TENANT_NAME
+            project_name: ${OS_PROJECT_NAME:-$OS_TENANT_NAME}
             "
+            if [ -n "$OS_PROJECT_DOMAIN_NAME" ]; then
+                echo "project_domain_name: $OS_PROJECT_DOMAIN_NAME"
+            fi
+            if [ -n "$OS_USER_DOMAIN_NAME" ]; then
+                echo "user_domain_name: $OS_USER_DOMAIN_NAME"
+            fi
         register: creds
 
       - name: create the external network
