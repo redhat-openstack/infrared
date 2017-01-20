@@ -8,6 +8,7 @@
   any_errors_fatal: true
   vars:
       overcloudrc_file: "{{ ansible_user_dir }}/overcloudrc"
+      deployer_input: "{{ ansible_user_dir }}/tempest-deployer-input.conf"
   tasks:
       - name: Execute the overcloud deploy script
         shell: |
@@ -60,3 +61,12 @@
             dest: "{{ inventory_dir }}/keystonerc"
             flat: yes
             fail_on_missing: yes
+
+      - name: fetch the deploy input file
+        tags:
+            - fetch_deploy_input
+        fetch:
+            src: "{{ deployer_input }}"
+            dest: "{{ inventory_dir }}/{{ deployer_input | basename }}"
+            flat: yes
+            fail_on_missing: no
