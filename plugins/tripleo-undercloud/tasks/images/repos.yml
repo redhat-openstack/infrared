@@ -14,7 +14,7 @@
 - name: setup repositories locally
   rhos_release:
       state: install
-      release: "{{ install.version }}"
+      release: "{{ install.version | default(undercloud_version) }}"
       build_date: "{{ install.build }}"
       # explicitly avoid director packages for images
       director: no
