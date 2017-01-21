@@ -6,6 +6,23 @@ subparsers:
         help: Install Tripleo on a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
+            - title: Quickstart Menu
+              options:
+                  quickstart-backup:
+                      type: Bool
+                      help: |
+                          This will create an undercloud snapshot for use with the `--quickstart-restore` flag
+                  quickstart-restore:
+                      type: Bool
+                      help: |
+                          This will restore an undercloud from a pre-made snapshot created by the `--quickstart-backup` flag
+                  quickstart-filename:
+                      type: Value
+                      help: |
+                          When used with `quickstart-backup`, it will create this file
+                          When used with `quickstart-restore`, it will use this file as source
+                      default: "undercloud-quickstart.qcow2"
+
             - title: Undercloud Configuration
               options:
                   config-file:

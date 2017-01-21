@@ -3,8 +3,8 @@ TripleO Undercloud
 
 Deploys a Tripleo undercloud
 
-Setup Undercloud Packages
--------------------------
+Setup an Undercloud
+-------------------
 
 * ``--version``: Tripleo release to install.
     Accepts either an integer for RHEL-OSP release, or a community release
@@ -93,13 +93,27 @@ will be later created.
 
 Backup
 ------
-Working on a virtual environment, `InfraRed` can create a snapshot of the installed undercloud.
+When working on a virtual environment, `InfraRed` can create a snapshot of the installed undercloud that can be later used
+to `restore`_ it on a future run, thus saving installation time.
 
-.. TODO(yfried): enable when Restore is done
-.. that can be later used to `restore`_ it on a future run, thus saving installation time.
+In order to use this feature, first follow the `Setup an Undercloud`_ section.
+Once an undercloud VM is up and ready, run the following::
 
-.. TODO(yfried): add when restore is done
-    Restore
-    -------
-    Skip the above process and use a `backup`_ snapshot image of the undercloud.
+    ir tripleo-undercloud --quickstart-backup yes
 
+Or optionally, provide the file name of the image to create (defaults to "undercloud-quickstart.qcow2").
+.. note:: the filename refers to a path on the hypervisor.
+
+    ir tripleo-undercloud --quickstart-backup yes --quickstart-filename custom-name.qcow2
+
+This will prepare a qcow2 image of your undercloud ready for usage with `Restore`_.
+
+Restore
+-------
+When working on a virtual environment, `InfraRed` can use a pre-made undercloud image to quickly set up an environment.
+To use this feature, simply run::
+
+    ir tripleo-undercloud --quickstart-restore yes
+
+Or optionally, provide the file name of the image to restore from (defaults to "undercloud-quickstart.qcow2").
+.. note:: the filename refers to a path on the hypervisor.
