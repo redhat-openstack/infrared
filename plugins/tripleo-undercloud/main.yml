@@ -3,15 +3,23 @@
   hosts: localhost
   tasks:
       - fail:
-            msg: "Please provide either --version OR --images-task"
-        when: not (install.version|default('') or install.images.task|default(''))
+            msg: "Please provide either --version OR --images-task OR --quickstart-{backup|restore}"
+        when: not (install.version|default('') or install.images.task|default('') or install.quickstart.backup|default('') or install.quickstart.restore|default(''))
 
-- name: Undercloud setup
+- name: Deploy the Undercloud
   include: "{{ install_undercloud | default('undercloud.yml') }}"
   when: install.version|default('')
   tags: undercloud
 
-- name: Setup OverCloud-images on the undercloud
+- name: Create an undercloud backup image (for quickstart)
+  include: "{{ install_backup | default('backup.yml') }}"
+  when: install.quickstart.backup|default('')
+
+- name: Restore an undercloud from image (using quickstart)
+  include: "{{ install_restore | default('restore.yml') }}"
+  when: install.quickstart.restore|default('')
+
+- name: Setup Overcloud images on the undercloud
   include: "{{ install_images | default('images.yml') }}"
   when: install.images.task|default('')
   tags: images
