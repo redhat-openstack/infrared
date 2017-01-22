@@ -175,6 +175,10 @@ class ProfileManager(object):
 
     def __init__(self, profiles_base_dir):
         self.profile_dir = profiles_base_dir
+
+        if not os.path.isdir(self.profile_dir):
+            os.makedirs(self.profile_dir)
+
         self.active_file = os.path.join(self.profile_dir, ".active")
 
     def has_profile(self, name):
