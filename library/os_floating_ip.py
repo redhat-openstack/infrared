@@ -162,13 +162,7 @@ def main():
     purge = module.params['purge']
     internal_network = module.params['internal_network']
 
-    # cloud = shade.openstack_cloud(**module.params)
-    # shade breaks when key "internal_network" is supplied
-    cloud_keywargs = dict((k,module.params[k]) for k in module.params if k != 'internal_network')
-    if internal_network:
-        cloud_keywargs["networks"] = [dict(name=internal_network,
-                                           routes_externally=False)]
-    cloud = shade.openstack_cloud(**cloud_keywargs)
+    cloud = shade.openstack_cloud(**module.params)
 
     try:
         server = cloud.get_server(server_name_or_id)
