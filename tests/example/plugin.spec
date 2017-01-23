@@ -16,3 +16,10 @@ subparsers:
                   dictionary-val:
                       type: KeyValueList
                       help: "dictionary-val option"
+
+            - title: Group B
+              options:
+                  iniopt:
+                      type: IniType
+                      help: "Help for '--iniopt'"
+                      action: append
