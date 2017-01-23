@@ -55,10 +55,11 @@ subparsers:
                           The full path to the openstackrc file.
                           When empty, will search active profile for 'keystonerc' file"
                   config-options:
-                       type: KeyValueList
+                       type: IniType
+                       action: append
                        help: |
                            Forces additional Tempest configuration (tempest.conf) options.
-                           Format: --config-options="section.option:value1,section.option:value".
+                           Format: --config-options section.option:value1 --config-options section.option:value
                   revision:
                       type: Value
                       help: The setup (git) revision if applicable
