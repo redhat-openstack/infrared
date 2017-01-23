@@ -29,6 +29,31 @@
   with_sequence: "count={{ node.value.amount }}"
   when: provisioner.nodes is defined
 
+- os_server_facts:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+- os_port_facts:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+- os_networks_facts:
+      cloud: "{{ provisioner.cloud | default(omit) }}"
+
+- name: fail if FLIP is not new
+  vars:
+      output:
+        fips: "{{ floating_ips }}"
+        provisioned_servers: "{{ nodes }}"
+        old_flips: "{{ floating_ips.results | rejectattr('changed') | list}}"
+        networks: "{{ openstack_networks }}"
+        servers: "{{ openstack_servers }}"
+        ports: "{{ openstack_ports }}"
+  copy:
+      content: "{{ output | to_nice_yaml }}"
+      dest: "{{ inventory_dir }}/debug_data.yml"
+      force: yes
+  when: output.old_flips| length
+
+- fail:
+  when : "{{ floating_ips.results | rejectattr('changed') | list | length}}"
+
 - name: Gather created servers facts
   os_server_facts:
       server: "{{ prefix }}{{ node.value.name }}*"
