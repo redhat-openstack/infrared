@@ -34,7 +34,7 @@ subparsers:
                           that is provided by the installation.
 
                   config-options:
-                      type: KeyValueList
+                      type: IniType
                       help: |
                           Forces additional Undercloud configuration (undercloud.conf) options.
                           Format: --config-options="section.option:value1,section.option:value".
