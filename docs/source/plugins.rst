@@ -9,7 +9,7 @@ structure (see ``tests/example`` for an example plugin)::
     ├── main.yml                # Main playbook. All execution starts here
     ├── plugin.spec             # Plugin definition
     ├── callback_plugins        # Useful to format Ansible console output
-    │   ├── human_log.py
+    │   ├── debug.py            # Formerly known as human_log.py (backported from Ansible 2.2)
     │   ├── timing.py
     ├── filter_plugins          # Add here custom jinja2 filters
     │   └── myfilter.py
@@ -226,5 +226,3 @@ Execute:
     the ``main.yml`` `playbook <playbooks>`_::
 
         infrared example
-
-
