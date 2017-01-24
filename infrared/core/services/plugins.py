@@ -13,11 +13,11 @@ from infrared.core.utils.exceptions import IRFailedToAddPlugin
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 
 DEFAULT_PLUGIN_INI = dict(
-    supported_types=dict(
-        provision='Provisioning plugins',
-        install='Installing plugins',
-        test='Testing plugins'
-    )
+    supported_types=OrderedDict([
+        ('provision', 'Provisioning plugins'),
+        ('install', 'Installing plugins'),
+        ('test', 'Testing plugins')
+    ])
 )
 MAIN_PLAYBOOK = "main.yml"
 BUILTIN_PLUGINS_PATH = "./plugins"
