@@ -1,0 +1,1 @@
+../../../plugins/collect-logs/callback_plugins/debug.py
