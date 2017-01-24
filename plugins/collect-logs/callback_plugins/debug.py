@@ -1,0 +1,1 @@
+/Users/ssbarnea/redhat/infrared2/plugins/callbacks/debug.py
