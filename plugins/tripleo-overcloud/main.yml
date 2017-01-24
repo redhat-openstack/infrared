@@ -3,6 +3,13 @@
       - init
       - ironic
 
+- name: Deploy loadbalancer
+  include: loadbalancer.yml
+  tags:
+      - loadbalancer
+      - loadbalancer_setup
+  when: "'loadbalancer' in groups"
+
 - include: hypervisor.yml
   tags:
       - hypervisor
