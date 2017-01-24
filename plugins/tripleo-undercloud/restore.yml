@@ -147,7 +147,15 @@
             line: "{{ hostvars[groups['undercloud'][0]].ansible_ssh_host }}    {{ groups['undercloud'][0] }}.redhat.local {{ groups['undercloud'][0] }}"
             state: present
 
-#- name: gather facts from the undercloud
-#  hosts: undercloud
-#  gather_facts: yes
-#  any_errors_fatal: true
+# workaround for selinux errors while introspection from qs image
+- name: fix selinux configurations
+  hosts: undercloud
+  become: true
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - name: Change setype of /httpboot/ to httpd_sys
+        file:
+            path: /httpboot
+            setype: httpd_sys_content_t
+            recurse: yes
