@@ -3,6 +3,13 @@
       - init
       - ironic
 
+- name: Provision loadbalancer node
+  include: loadbalancer.yml
+  tags:
+      - loadbalancer
+      - loadbalancer_setup
+  when: "'loadbalancer' in groups"
+
 - include: hypervisor.yml
   tags:
       - hypervisor

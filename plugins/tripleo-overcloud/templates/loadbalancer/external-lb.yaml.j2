@@ -1,4 +1,4 @@
-{% if installer.product.version|openstack_release < 9 %}
+{% if install.version|openstack_release < 9 %}
 parameters:
   ServiceNetMap:
     NeutronTenantNetwork: tenant
@@ -32,7 +32,7 @@ parameters:
 {% endif %}
 
 parameter_defaults:
-{% if installer.product.version|openstack_release > 8 %}
+{% if install.version|openstack_release > 8 %}
   ServiceNetMap:
     NeutronTenantNetwork: tenant
     CeilometerApiNetwork: internal_api
@@ -66,39 +66,39 @@ parameter_defaults:
     GnocchiApiNetwork: internal_api
     SaharaApiNetwork: internal_api
 {% endif %}
-{% if installer.product.version|openstack_release > 7 %}
+{% if install.version|openstack_release > 7 %}
   RedisPassword: 'examplepassword'
 {% endif %}
-  ControlPlaneIP: {{ installer.loadbalancer.network.plain.ip | ipaddr('address') }}
-  ExternalNetworkVip: {{ installer.loadbalancer.network.external.vip | ipaddr('address') }}
-  InternalApiNetworkVip: {{ installer.loadbalancer.network.internal_api.vip | ipaddr('address') }}
-  StorageNetworkVip: {{ installer.loadbalancer.network.storage.vip | ipaddr('address') }}
-  StorageMgmtNetworkVip: {{ installer.loadbalancer.network.storage_mgmnt.vip | ipaddr('address') }}
+  ControlPlaneIP: {{ loadbalancer.network.plain.ip | ipaddr('address') }}
+  ExternalNetworkVip: {{ loadbalancer.network.external.vip | ipaddr('address') }}
+  InternalApiNetworkVip: {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}
+  StorageNetworkVip: {{ loadbalancer.network.storage.vip | ipaddr('address') }}
+  StorageMgmtNetworkVip: {{ loadbalancer.network.storage_mgmnt.vip | ipaddr('address') }}
   ServiceVips:
-    redis: {{ installer.loadbalancer.network.redis.vip | ipaddr('address') }}
+    redis: {{ loadbalancer.network.redis.vip | ipaddr('address') }}
   ControllerIPs:
-    external_cidr: "{{ installer.loadbalancer.network.external.vip | ipaddr('prefix') }}"
-    internal_api_cidr: "{{ installer.loadbalancer.network.internal_api.vip | ipaddr('prefix') }}"
-    storage_cidr: "{{ installer.loadbalancer.network.storage.vip | ipaddr('prefix') }}"
-    storage_mgmt_cidr: "{{ installer.loadbalancer.network.storage_mgmnt.vip | ipaddr('prefix') }}"
-    tenant_cidr: "{{ installer.loadbalancer.network.tenant.vip | ipaddr('prefix') }}"
+    external_cidr: "{{ loadbalancer.network.external.vip | ipaddr('prefix') }}"
+    internal_api_cidr: "{{ loadbalancer.network.internal_api.vip | ipaddr('prefix') }}"
+    storage_cidr: "{{ loadbalancer.network.storage.vip | ipaddr('prefix') }}"
+    storage_mgmt_cidr: "{{ loadbalancer.network.storage_mgmnt.vip | ipaddr('prefix') }}"
+    tenant_cidr: "{{ loadbalancer.network.tenant.vip | ipaddr('prefix') }}"
     external:
-{% for x in range(provisioner.topology.nodes.controller.amount) %}
-    - {{ installer.loadbalancer.network.external.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+{% for x in range(groups.controller|length) %}
+    - {{ loadbalancer.network.external.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
 {% endfor %}
     internal_api:
-{% for x in range(provisioner.topology.nodes.controller.amount) %}
-    - {{ installer.loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+{% for x in range(groups.controller|length) %}
+    - {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
 {% endfor %}
     storage:
-{% for x in range(provisioner.topology.nodes.controller.amount) %}
-    - {{ installer.loadbalancer.network.storage.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+{% for x in range(groups.controller|length) %}
+    - {{ loadbalancer.network.storage.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
 {% endfor %}
     storage_mgmt:
-{% for x in range(provisioner.topology.nodes.controller.amount) %}
-    - {{ installer.loadbalancer.network.storage_mgmnt.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+{% for x in range(groups.controller|length) %}
+    - {{ loadbalancer.network.storage_mgmnt.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
 {% endfor %}
     tenant:
-{% for x in range(provisioner.topology.nodes.controller.amount) %}
-    - {{ installer.loadbalancer.network.tenant.net | ipaddr('net') | ipaddr(installer.loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+{% for x in range(groups.controller|length) %}
+    - {{ loadbalancer.network.tenant.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
 {% endfor %}
