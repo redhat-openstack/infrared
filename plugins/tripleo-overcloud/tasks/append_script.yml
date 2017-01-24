@@ -17,6 +17,13 @@
   include: hostname.yml
   when: templates.generate_host_name_template|default(True)
 
+- name: Setup loadbalancer
+  include: tasks/loadbalancer_templates.yml
+  when: "'loadbalancer' in groups"
+  tags:
+      - loadbalancer
+      - loadbalancer_templates
+
 - name: check for list of user defined templates
   find:
       paths: "{{ template_base }}"
