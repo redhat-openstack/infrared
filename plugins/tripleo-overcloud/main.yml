@@ -1,6 +1,13 @@
 - name: Perform pre install tasks
   include: "{{ overcloud_pre | default('pre.yml') }}"
 
+- name: Provision loadbalancer node
+  include: loadbalancer.yml
+  tags:
+      - loadbalancer
+      - loadbalancer_setup
+  when: "'loadbalancer' in groups"
+
 - name: Introspect our machines
   include: "{{ overcloud_introspect | default('introspect.yml') }}"
   when: not install.manual or install.overcloud.introspect|default(False)
