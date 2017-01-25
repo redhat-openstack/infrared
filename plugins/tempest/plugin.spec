@@ -55,6 +55,10 @@ subparsers:
                       type: Value
                       help: The setup (git) revision if applicable
                       default: HEAD
+                  version:
+                      type: Value
+                      help: The setup (pip) version if applicable
+                      default: latest
                   threads:
                       type: Value
                       help: The number of concurrent threads to run tests
