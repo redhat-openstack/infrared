@@ -43,6 +43,7 @@ setup(
     entry_points={
         'console_scripts': generate_entry_scripts()
     },
+    setup_requires=['setuptools>=17.1'],
     install_requires=reqs,
     author='rhos-qe',
     author_email='rhos-qe-dept@redhat.com'
