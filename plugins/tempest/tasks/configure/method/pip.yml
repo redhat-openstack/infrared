@@ -1,0 +1,43 @@
+- name: Include configuration vars
+  include_vars: "vars/config/git.yml"
+
+- name: Clone tempest_conf
+  git:
+      repo: "{{ tempest_conf.repo }}"
+      version: "{{ tempest_conf.revision | default(omit) }}"
+      dest: "{{ tempest_conf.dir }}"
+  register: tempest_conf_repo
+
+- name: Create tempest conf venv with latest pip, setuptools and pbr
+  pip:
+      virtualenv: "{{ tempest_conf.dir }}/.venv"
+      name: "{{ item }}"
+      state: latest
+  with_items:
+      - pip
+      - setuptools
+      - pbr
+
+- name: Install tempest_conf
+  pip:
+      name: "."
+      virtualenv: "{{ tempest_conf.dir }}/.venv"
+      chdir: "{{ tempest_conf.dir }}"
+
+- name: Init tempest
+  shell: |
+      source ~/.tempest_venv/bin/activate
+      tempest init ~/"{{ test.dir }}"
+  args:
+      creates: "~/{{ test.dir }}/etc"
+
+- name: Link tempest virtualenv to "{{ test.dir }}"
+  file:
+      src: ~/.tempest_venv
+      dest: ~/{{ test.dir }}/.venv
+      state: link
+
+- name: Set facts for configuration run
+  set_fact:
+      config_command: "discover-tempest-config"
+      config_dir: "{{ tempest_conf.dir }}"
