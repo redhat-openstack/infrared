@@ -1,0 +1,111 @@
+---
+ManilaShares.list_shares:
+  -
+    args:
+      detailed: True
+    runner:
+      type: "constant"
+      times: 10
+      concurrency: 1
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+    sla:
+      failure_rate:
+        max: 0
+
+ManilaShares.create_share_network_and_delete:
+  -
+    args:
+      name: "rally"
+    runner:
+      type: "constant"
+      times: 10
+      concurrency: 10
+    context:
+      quotas:
+        manila:
+          share_networks: -1
+      users:
+        tenants: 2
+        users_per_tenant: 1
+    sla:
+      failure_rate:
+        max: 0
+
+ManilaShares.create_share_network_and_list:
+  -
+    args:
+      name: "rally"
+      detailed: True
+      search_opts:
+        name: "rally"
+    runner:
+      type: "constant"
+      times: 10
+      concurrency: 10
+    context:
+      quotas:
+        manila:
+          share_networks: -1
+      users:
+        tenants: 2
+        users_per_tenant: 1
+    sla:
+      failure_rate:
+        max: 0
+
+ManilaShares.list_share_servers:
+  -
+    args:
+      search_opts: {}
+    runner:
+      type: "constant"
+      times: 10
+      concurrency: 10
+    sla:
+      failure_rate:
+        max: 0
+
+ManilaShares.create_security_service_and_delete:
+  -
+    args:
+      security_service_type: "kerberos"
+      dns_ip: "fake_dns_ip"
+      server: "fake-server"
+      domain: "fake_domain"
+      user: "fake_user"
+      password: "fake_password"
+      name: "fake_name"
+      description: "fake_description"
+    runner:
+      type: "constant"
+      times: 10
+      concurrency: 10
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+    sla:
+      failure_rate:
+        max: 0
+
+ManilaShares.attach_security_service_to_share_network:
+  -
+    args:
+      security_service_type: "kerberos"
+    runner:
+      type: "constant"
+      times: 10
+      concurrency: 10
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+      quotas:
+        manila:
+          share_networks: -1
+    sla:
+      failure_rate:
+        max: 0

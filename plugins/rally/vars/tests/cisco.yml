@@ -1,0 +1,327 @@
+---
+Authenticate.keystone:
+  -
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+
+Authenticate.validate_cinder:
+  -
+    args:
+      repetitions: 2
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+Authenticate.validate_glance:
+  -
+    args:
+      repetitions: 2
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+Authenticate.validate_neutron:
+  -
+    args:
+      repetitions: 2
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+Authenticate.validate_nova:
+  -
+    args:
+      repetitions: 2
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+CinderVolumes.create_and_list_volume:
+  -
+    args:
+      size: 1
+      detailed: true
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+CinderVolumes.create_and_delete_volume:
+  -
+    args:
+      size: 1
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+CinderVolumes.create_volume:
+  -
+    args:
+      size: 1
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+GlanceImages.create_and_delete_image:
+  -
+    args:
+      image_location: "{{ guest_image.url }}"
+      container_format: "bare"
+      disk_format: "qcow2"
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+GlanceImages.create_and_list_image:
+  -
+    args:
+      image_location: "{{ guest_image.url }}"
+      container_format: "bare"
+      disk_format: "qcow2"
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+NeutronNetworks.create_and_list_networks:
+  -
+    args:
+      network_create_args: {}
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+      quotas:
+        neutron:
+          network: -1
+NeutronNetworks.create_and_list_ports:
+  -
+    args:
+      network_create_args: {}
+      port_create_args: {}
+      ports_per_network: 10
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+      quotas:
+        neutron:
+          network: -1
+          port: -1
+NeutronNetworks.create_and_list_routers:
+  -
+    args:
+      network_create_args: {}
+      subnet_create_args: {}
+      subnet_cidr_start: "1.1.0.0/30"
+      subnets_per_network: 2
+      router_create_args: {}
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+      quotas:
+        neutron:
+          network: -1
+          subnet: -1
+          router: -1
+NeutronNetworks.create_and_list_subnets:
+  -
+    args:
+      network_create_args: {}
+      subnet_create_args: {}
+      subnet_cidr_start: "1.1.0.0/30"
+      subnets_per_network: 2
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+      quotas:
+        neutron:
+          network: -1
+          subnet: -1
+NovaServers.boot_server:
+  -
+    args:
+      flavor:
+        name: "m1.nano"
+      image:
+        regex: "^cirros.*alt"
+      auto_assign_nic: true
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+      network:
+        start_cidr: "10.0.0.0/16"
+      quotas:
+        nova:
+          instances: -1
+          cores: -1
+          ram: -1
+          metadata_items: -1
+        neutron:
+          network: -1
+          subnet: -1
+          port: -1
+          router: -1
+          floatingip: -1
+          security_group: -1
+          security_group_rule: -1
+NovaServers.boot_server_from_volume:
+  -
+    args:
+      flavor:
+        name: "m1.nano"
+      image:
+        regex: "^cirros.*alt"
+      volume_size: 10
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+      quotas:
+        nova:
+          instances: -1
+          cores: -1
+          ram: -1
+          metadata_items: -1
+        neutron:
+          network: -1
+          subnet: -1
+          port: -1
+          router: -1
+          floatingip: -1
+          security_group: -1
+          security_group_rule: -1
+NovaServers.boot_and_live_migrate_server:
+  -
+    args:
+      flavor:
+        name: "m1.nano"
+      image:
+        regex: "^cirros.*alt"
+      block_migration: true
+    runner:
+      type: "constant"
+      times: 1
+      concurrency: 1
+    sla:
+      failure_rate:
+        max: 0
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
