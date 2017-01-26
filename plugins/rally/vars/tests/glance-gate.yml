@@ -1,0 +1,45 @@
+---
+GlanceImages.create_and_list_image:
+  -
+    args:
+      image_location: "{{ guest_image.url }}"
+      container_format: "bare"
+      disk_format: "qcow2"
+    runner:
+      type: "constant"
+      times: 20
+      concurrency: 5
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
+
+GlanceImages.create_and_delete_image:
+  -
+    args:
+      image_location: "{{ guest_image.url }}"
+      container_format: "bare"
+      disk_format: "qcow2"
+    runner:
+      type: "constant"
+      times: 20
+      concurrency: 5
+    context:
+      users:
+        tenants: 5
+        users_per_tenant: 2
+
+GlancePlugin.create_and_list:
+  -
+    args:
+      image_location: "~/.rally/extra/fake.img"
+      container_format: "bare"
+      disk_format: "qcow2"
+    runner:
+      type: "constant"
+      times: 700
+      concurrency: 7
+    context:
+      users:
+        tenants: 1
+        users_per_tenant: 1
