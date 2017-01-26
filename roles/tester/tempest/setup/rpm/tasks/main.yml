@@ -45,21 +45,12 @@
 - name: Get the script which configures the tempest directory
   shell: ls -d /usr/share/openstack-tempest-*/tools/configure-tempest-directory
   register: configure_tempest_dir
-  ignore_errors: true
 
-- name: Initialize tempest workspace directory using configure-tempest-directory
+- name: Initialize tempest workspace directory
   command: "{{ configure_tempest_dir.stdout_lines[0] }}"
   args:
       chdir: "~/{{ tester.dir }}"
       creates: "~/{{ tester.dir }}/LICENSE"
-  when: configure_tempest_dir.rc == 0
-
-- name: Initialize tempest workspace directory using tempest init
-  command: "tempest init"
-  args:
-      chdir: "~/{{ tester.dir }}"
-      creates: "~/{{ tester.dir }}/etc"
-  when: configure_tempest_dir.rc != 0
 
 - name: run tempest configuration tool
   vars:
@@ -69,12 +60,7 @@
       config_options: "{{ tester.get('config', {}).get('options', {}) }}"
   shell: |
       source ~/keystonerc
-      if [ -f /usr/bin/discover-tempest-config ]; then
-        export TEMPESTCONF="/usr/bin/discover-tempest-config"
-      else
-        export TEMPESTCONF="tools/config_tempest.py"
-      fi
-      ${TEMPESTCONF} {{ deployer_input }} --debug \
+      tools/config_tempest.py {{ deployer_input }} --debug \
       --create identity.uri $OS_AUTH_URL \
       {# custom global config options #}
       {% for name,value in config_options.iteritems() %}
