@@ -51,7 +51,7 @@
         with_items: "{{ custom_repos.urls|default([]) }}"
 
       - name: update system packages
-        yum:
+        package:
             state: latest
             name: "*"
         register: update
@@ -89,6 +89,6 @@
         when: update|changed
 
       - name: install the oscplugin/tripleO client
-        yum:
+        package:
             name: "{{ (install.version|openstack_release == 7) | ternary('python-rdomanager-oscplugin', 'python-tripleoclient') }}"
             state: present
