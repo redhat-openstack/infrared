@@ -1,0 +1,36 @@
+---
+- name: Use beaker to provision/release the machine
+  hosts: localhost
+  vars_files:
+    - "vars/image/{{ provision.image }}.yml"
+  tasks:
+    - name: Provisioning the machine
+      beaker_provisioner:
+          url: "{{ provision.url }}"
+          username: "{{ provision.user }}"
+          password: "{{ provision.password }}"
+          host: "{{ provision.host.address }}"
+          action: "provision"
+          distro_tree_id: "{{ distro_id }}"
+          web_service: "{{ provision.web.service }}"
+          ca_cert: "{{ (provision.ca|default({})).cert | default(omit) }}"
+
+    - name: wait for ssh
+      wait_for:
+          port: 22
+          host: "{{ provision.host.address }}"
+          search_regex: OpenSSH
+      delay: 10
+
+- name: Add the host to our inventory
+  hosts: localhost
+  tasks:
+    - name: Add the host to host list
+      add_host:
+          name: "{{ provision.host.address }}"
+          # TODO: Move tester and even undercloud grouping to later phases in future
+          groups: "baremetal"
+          ansible_ssh_host: "{{ provision.host.address }}"
+          ansible_ssh_user: "{{ provision.host.user }}"
+          ansible_ssh_pass: "{{ provision.host.password | default(omit) }}"
+          ansible_ssh_private_key_file: "{{ provision.host.key | default(omit) }}"

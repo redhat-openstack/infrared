@@ -1,0 +1,16 @@
+---
+- name: Use Beaker to release the machine
+  hosts: localhost
+  vars_files:
+    - "vars/image/{{ provision.image }}.yml"
+  tasks:
+    - name: Releasing machine using the 'beaker_provisioner' module
+      beaker_provisioner:
+          url: "{{ provision.url }}"
+          username: "{{ provision.user }}"
+          password: "{{ provision.password }}"
+          host: "{{ provision.host.address }}"
+          action: "release"
+          distro_tree_id: "{{ distro_id }}"
+          web_service: "{{ provision.web.service }}"
+          ca_cert: "{{ (provision.ca|default({})).cert | default(omit) }}"
