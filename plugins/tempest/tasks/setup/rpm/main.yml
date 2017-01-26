@@ -45,9 +45,18 @@
 - name: Get the script which configures the tempest directory
   shell: ls -d /usr/share/openstack-tempest-*/tools/configure-tempest-directory
   register: configure_tempest_dir
+  ignore_errors: true
 
 - name: Initialize tempest workspace directory
   command: "{{ configure_tempest_dir.stdout_lines[0] }}"
   args:
       chdir: "~/{{ test.dir }}"
       creates: "~/{{ test.dir }}/LICENSE"
+  when: configure_tempest_dir.rc == 0
+
+- name: Initialize tempest workspace directory using tempest init
+  command: "tempest init"
+  args:
+      chdir: "~/{{ tester.dir }}"
+      creates: "~/{{ tester.dir }}/etc"
+  when: configure_tempest_dir.rc != 0
