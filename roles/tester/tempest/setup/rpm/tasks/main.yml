@@ -52,6 +52,7 @@
       chdir: "~/{{ tester.dir }}"
       creates: "~/{{ tester.dir }}/LICENSE"
 
+
 - name: run tempest configuration tool
   vars:
       deployer_input: "{{ '(result | success)' | ternary('--deployer-input ~/tempest-deployer-input.conf', '') }}"
@@ -60,7 +61,12 @@
       config_options: "{{ tester.get('config', {}).get('options', {}) }}"
   shell: |
       source ~/keystonerc
-      tools/config_tempest.py {{ deployer_input }} --debug \
+      if [ -f /usr/bin/discover-tempest-config ]; then
+        export TEMPESTCONF="/usr/bin/discover-tempest-config"
+      else
+        export TEMPESTCONF="tools/config_tempest.py"
+      fi
+      ${TEMPESTCONF} {{ deployer_input }} --debug \
       --create identity.uri $OS_AUTH_URL \
       {# custom global config options #}
       {% for name,value in config_options.iteritems() %}
