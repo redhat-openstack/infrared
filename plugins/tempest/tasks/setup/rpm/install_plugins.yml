@@ -4,13 +4,13 @@
 
 - name: Install plugin packages for "{{ test_suite }}" suite
   become: yes
-  yum:
+  package:
       name: "{{ item.value.package }}"
       state: present
   with_dict: "{{ test_dict.plugins | default({}) }}"
 
 - name: Install extra system requirements for tests
-  yum:
+  package:
     name: "{{ item.value.dependencies }}"
     state: present
   with_dict: "{{ test_dict.plugins | default({}) }}"
