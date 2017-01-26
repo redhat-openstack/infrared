@@ -24,13 +24,14 @@ Welcome to InfraRed's documentation!
    :maxdepth: 2
    :caption: Plugins
 
+   beaker
+   foreman
+   openstack_provisioner
    virsh
    tripleo-undercloud
    tripleo-overcloud
-   openstack_provisioner
-   collect-logs
    tempest
-   foreman
+   collect-logs
 
 Indices and tables
 ==================
