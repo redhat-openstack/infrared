@@ -1,0 +1,166 @@
+# rhpkg is used by rdopkg
+- name: Install rhpkg and rdopkg repos
+  become: yes
+  copy:
+    src="{{ item }}.repo"
+    dest="/etc/yum.repos.d/{{ item }}.repo"
+    mode=0755
+  with_items:
+    - 'rhpkg'
+    - 'rdopkg'
+
+# TODO(abregman): Switch to yum_repository when Ansible 2.2 is released
+- name: Install epel repoistory
+  become: yes
+  shell: yum localinstall -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+  tags:
+    - skip_ansible_lint
+
+# Although pyrpkg pulled by rhpkg, we install it directly because at the moment, an older
+# version of pyrpkg is pulled (1.40) while we need a newer version (1.43)
+- name: Install packages required for patching
+  become: yes
+  yum:
+    name="{{ item }}"
+    state=present
+  with_items:
+    - 'pyrpkg'
+    - 'createrepo'
+    - 'python-pip'
+    - 'python-cryptography'
+    - 'python-devel'
+    - 'libffi-devel'
+    - 'openssl-devel'
+    - 'rhpkg'
+    - 'git'
+    - 'gcc'
+
+# Using 0.38 specifically due to this bug: https://github.com/openstack-packages/rdopkg/issues/80
+- name: Install rdopkg
+  become: yes
+  pip:
+    name=rdopkg
+    version=0.38
+
+# TODO(abregman): Switch to yum_repository when Ansible 2.2 is released
+# EPEL is removed, since it is used only for installing rdopkg
+# https://github.com/ansible/ansible-modules-extras/issues/2384
+- name: Remove epel repository
+  become: yes
+  shell: "yum remove -y epel-*"
+  args:
+    warn: no
+  changed_when: true
+
+# mock group is needed for for the mockbuild
+# without creating mock group, rdopkg will try to use root and ask for password
+- name: Create mock group
+  become: yes
+  group:
+    name=mock
+    state=present
+
+- name: Add ansible ssh user to mock group
+  become: yes
+  user:
+    name="{{ ansible_user }}"
+    groups=mock
+
+# Clone component dist-git repo
+- name: Clone the component dist-git repo
+  git:
+    repo="{{ component_dist_git_url }}"
+    version="rhos-{{ component.version }}.0-rhel-{{ ansible_distribution_version|int }}"
+    dest="{{ ansible_env.HOME }}/dist-git/{{ component_dist_git_name }}"
+    accept_hostkey=true
+
+- name: Prepare branch for patching
+  shell: "git checkout -b gerrit-patch && git branch rhos-{{ component.version }}.0-patches"
+  args:
+    chdir: "{{ ansible_env.HOME }}/{{ component.name }}"
+  tags:
+    - skip_ansible_lint
+
+- name: Prepare dist-git repo for patching
+  shell: >
+    git remote add -f patches {{ ansible_env.HOME}}/{{ component.name }} &&
+    git fetch patches &&
+    git fetch patches --tags &&
+    git branch rhos-{{ component.version }}.0-patches patches/gerrit-patch;
+  args:
+    chdir: "{{ ansible_env.HOME }}/dist-git/{{ component_dist_git_name }}"
+  tags:
+    - skip_ansible_lint
+
+# The actual patching part
+- name: Apply patch(es) on dist-git repo and bump release
+  shell: >
+    git config --global user.name patchy &&
+    git config --global user.email patchy@patch.com &&
+    rdopkg patch;
+  args:
+    chdir: "{{ ansible_env.HOME }}/dist-git/{{ component_dist_git_name }}"
+  changed_when: true
+  tags:
+    - skip_ansible_lint
+
+# Now that the repo is patched, generate RPMs from it
+- name: Build new RPM from patched dist-git repo
+  shell: "rdopkg mockbuild"
+  ignore_errors: true
+  args:
+    chdir: "{{ ansible_env.HOME }}/dist-git/{{ component_dist_git_name }}"
+  register: rpm_mockbuild
+  changed_when: true
+  tags:
+    - skip_ansible_lint
+
+# Some build errors are lagitimate and should not fail the run
+# Like '.gitreview: does not exist in index'
+- name: Check for legitimate build errors
+  shell: grep -R -i -E "can't find file to patch|No such file or directory|does not exist in index" results*
+  ignore_errors: true
+  args:
+    chdir: "{{ ansible_env.HOME }}/dist-git/{{ component_dist_git_name }}"
+  register: common_build_errors
+  changed_when: false
+
+- name: Fail run if mockbuild failed
+  fail: msg="The mockbuild has failed for some reason. Check tags exist and you have sudo on remote host"
+  when: rpm_mockbuild.rc != 0 and common_build_errors.rc != 0
+
+# Create directorty to hold the RPMs
+- name: Create '/patched_rpms' directory`
+  become: yes
+  file:
+    path=/patched_rpms
+    state=directory
+    mode=0777
+  when: rpm_mockbuild.rc == 0
+
+- name: Copy new generated RPMs to /patched_rpms
+  shell: "cp {{ ansible_env.HOME }}/dist-git/{{ component_dist_git_name }}/results*/*/*/*.rpm /patched_rpms/"
+  when: rpm_mockbuild.rc == 0
+
+- name: Create patching logs directory
+  become: yes
+  file:
+    path=/var/log/patching_logs
+    state=directory
+    mode=0777
+
+- name: Save patching logs
+  become: yes
+  shell: "cp {{ ansible_env.HOME }}/dist-git/{{ component_dist_git_name }}/results*/*/*/*.log /var/log/patching_logs"
+  changed_when: true
+
+- name: Create repository for patched RPMs
+  shell: "createrepo /patched_rpms;"
+  when: rpm_mockbuild.rc == 0
+
+- name: Setup repository in /etc/yum.repos.d
+  become: yes
+  template:
+    src='patched_rpms.j2'
+    dest='/etc/yum.repos.d/patched_rpms.repo'
+  when: rpm_mockbuild.rc == 0
