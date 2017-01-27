@@ -76,6 +76,49 @@
         when: (workarounds['rhbz1265306']['enabled'] is defined and workarounds['rhbz1265306']['enabled'] | bool) and
               installer.product.version == '5'
 
+- name: run patched_rpm role
+  hosts: local 
+#  become: yes
+#  become_method: sudo
+  any_errors_fatal: true
+  roles:
+      - role: installer/patch_rpm
+
+# TODO  - move to parametrized role
+- name: Create local repo for patched rpm
+  hosts: openstack_nodes
+  tasks:
+    - name: Install release tool
+      sudo: yes
+      command: "yum localinstall -y {{ product.rpm }}"
+
+    - name: Execute rhos-release for packstack poodle/puddle
+      sudo: yes
+      command: "rhos-release {{ product.version.major }} {{ product.repo.rhos_release.extra_args|join(' ') }}"
+
+    - name: Install createrepo
+      sudo: yes
+      yum:  name=createrepo state=present
+
+    - name: create repo folder
+      file: path=/home/{{ ansible_ssh_user }}/dist-git/ state=directory
+
+    - name: copy the generated rpms
+      copy: src={{ item }} dest=/home/{{ ansible_ssh_user }}/dist-git/{{ patch.dist_git.name }}/
+      with_fileglob:
+       - "{{ lookup('env', 'PWD') }}/generated_rpms/*.rpm"
+
+    - name: Setup repository for patched rpm
+      sudo: yes
+      template: "src={{ lookup('env', 'PWD') }}/roles/installer/patch_rpm/templates/patched_rpms.j2 dest=/etc/yum.repos.d/patched_rpms.repo"
+      when: "{{ hostvars['localhost'].rpm_build_rc }} == 0"
+
+    - name: Create local repo for patched rpm
+      sudo: yes
+      shell: "createrepo /home/{{ ansible_ssh_user }}/dist-git/{{ patch.dist_git.name }}"
+      when: "{{ hostvars['localhost'].rpm_build_rc }} == 0"
+
+
 - name: Enable patched_rpm repo
   hosts: controller
   become: yes
