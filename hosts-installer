@@ -1,0 +1,47 @@
+localhost ansible_connection=local ansible_python_interpreter=python
+virthost ansible_ssh_host=10.35.7.124 ansible_ssh_user=root ansible_ssh_private_key_file=/home/dsariel/.ssh/id_rsa.pub ansible_ssh_common_args='-o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i /home/dsariel/.ssh/id_rsa.pub root@10.35.7.124"'
+
+ceph-0 ansible_ssh_host=192.0.2.12 ansible_ssh_user=heat-admin ansible_ssh_private_key_file=/home/dsariel/projects/InfraRed_orig/id_rsa_overcloud ansible_ssh_common_args='-o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i /home/dsariel/.ssh/id_rsa.pub root@10.35.7.124"'
+
+controller-0 ansible_ssh_host=192.0.2.7 ansible_ssh_user=heat-admin ansible_ssh_private_key_file=/home/dsariel/projects/InfraRed_orig/id_rsa_overcloud ansible_ssh_common_args='-o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i /home/dsariel/.ssh/id_rsa.pub root@10.35.7.124"'
+
+undercloud-0 ansible_ssh_host=172.16.0.16 ansible_ssh_user=root ansible_ssh_private_key_file=/home/dsariel/projects/InfraRed_orig/id_rsa ansible_ssh_common_args='-o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i /home/dsariel/.ssh/id_rsa.pub root@10.35.7.124"'
+
+compute-0 ansible_ssh_host=192.0.2.15 ansible_ssh_user=heat-admin ansible_ssh_private_key_file=/home/dsariel/projects/InfraRed_orig/id_rsa_overcloud ansible_ssh_common_args='-o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i /home/dsariel/.ssh/id_rsa.pub root@10.35.7.124"'
+
+
+[overcloud_nodes]
+ceph-0
+controller-0
+compute-0
+
+[ceph]
+ceph-0
+
+[virthost]
+virthost
+
+[compute]
+compute-0
+
+[network]
+controller-0
+
+[tester]
+undercloud-0
+tester-0
+
+[openstack_nodes]
+ceph-0
+controller-0
+undercloud-0
+compute-0
+
+[undercloud]
+undercloud-0
+
+[controller]
+controller-0
+
+[local]
+localhost
