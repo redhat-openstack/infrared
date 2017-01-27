@@ -1,0 +1,8 @@
+- name: Create a directory to hold the generated rpm
+  file: path={{ lookup('env', 'PWD') }}/generated_rpms/ state=directory
+
+- name: Copy and rename the generated rpm
+  shell: >
+    cp {{ tmp_dir }}/dist-git/{{ patch.dist_git.name }}/results*/*/*/*.rpm {{ lookup('env', 'PWD') }}/generated_rpms/;
+    rm {{ lookup('env', 'PWD') }}/generated_rpms/*src.rpm;
+  when: rpm_build.rc == 0

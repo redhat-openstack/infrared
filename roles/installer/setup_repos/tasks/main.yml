@@ -1,0 +1,29 @@
+---
+# This task will register all repos on the system to disable each one of them
+# with the second task.
+- name: Register all the repsitories
+  shell: "{{ ls_bin }} /etc/yum.repos.d/*.repo"
+  register: yum_repos
+  changed_when: False
+
+- name: Disable any existing repos
+  become: yes
+  become_method: sudo
+  replace:
+    dest: "{{ item }}"
+    regexp: "enabled=1"
+    replace: "enabled=0"
+  with_items: "{{ yum_repos.stdout_lines }}"
+
+# rhos-release used for installing the rhos repos.
+- name: Install rhos-release
+  become: yes
+  yum:
+    name="http://rhos-release.virt.bos.redhat.com/repos/rhos-release/rhos-release-latest.noarch.rpm"
+
+- name: Execute rhos-release to install rhos repos
+  vars:
+    component_version: "{{ component.version }}"
+  become: yes
+  shell: "{{ rhos_release_bin }} -x; {{ rhos_release_bin }} {{ component_version }}"
+  changed_when: true

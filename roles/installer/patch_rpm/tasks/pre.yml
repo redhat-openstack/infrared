@@ -1,0 +1,86 @@
+# rhpkg is used by rdopkg
+- name: Install rhpkg and rdopkg repos
+  become: yes
+  copy:
+    src="{{ item }}.repo"
+    dest="/etc/yum.repos.d/{{ item }}.repo"
+    mode=0755
+  with_items:
+    - 'rhpkg'
+    - 'rdopkg'
+
+# TODO(abregman): Switch to yum_repository when Ansible 2.2 is released
+- name: Install epel repoistory
+  become: yes
+  shell: yum localinstall -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+  tags:
+    - skip_ansible_lint
+
+
+- name: Install packages required for patching
+  become: yes
+  yum:
+    name="{{ item }}"
+    state=present
+  with_items:
+    - 'pyrpkg'
+    - 'createrepo'
+    - 'python-pip'
+    - 'python-cryptography'
+    - 'python-devel'
+    - 'libffi-devel'
+    - 'openssl-devel'
+    - 'rhpkg'
+    - 'git'
+    - 'gcc'
+    - 'rdopkg'
+
+# Using 0.38 specifically due to this bug: https://github.com/openstack-packages/rdopkg/issues/80
+# - name: Install rdopkg
+#   become: yes
+#     pip:
+#         name=rdopkg
+#
+- name: Clone upstream
+  git: repo="{{ patch.upstream.url }}"
+       dest="{{ tmp_dir }}/dist-git/{{ patch.upstream.name }}"
+       accept_hostkey=true
+  when: patch.upstream is defined
+
+- name: Clone patch
+  git: repo="{{ patch.gerrit.url }}"
+       version="{{ patch.gerrit.branch }}"
+       dest="{{ tmp_dir }}/dist-git/{{ patch.gerrit.name }}"
+       accept_hostkey=true
+
+- name: Setup patch branch
+  shell: >
+      cd {{ tmp_dir }}/dist-git/{{ patch.gerrit.name }};
+      git fetch {{ patch.gerrit.url }} {{ patch.gerrit.refspec}} && git checkout FETCH_HEAD -b gerrit-patch
+
+- name: Clone dist-git
+  git: repo="{{ patch.dist_git.url }}"
+       dest="{{ tmp_dir }}/dist-git/{{ patch.dist_git.name }}"
+       accept_hostkey=true
+
+- name: Set branch_name
+  set_fact: branch_name={{ patch.dist_git.get("branch", {}).get(product.full_version, "{}-{}.{}-rhel-{}".format(product.name, product.version.major, product.version.minor, distro.version.major))}}
+
+- name: Setup dist-git branch
+  shell: >
+      cd {{ tmp_dir }}/dist-git/{{ patch.dist_git.name }};
+      git checkout {{ branch_name }};
+
+- name: Setup git configurations
+  shell: >
+      git remote add -f patches {{ tmp_dir }}/dist-git/{{ patch.gerrit.name }};
+      git fetch patches;
+      git fetch patches --tags;
+      git branch {{ product.name }}-{{ product.version.major }}.{{ product.version.minor }}-patches patches/gerrit-patch;
+      if [ "{{ patch.upstream is defined }}" == "True" ]; then
+          git remote add -f upstream {{ tmp_dir }}/dist-git/{{ patch.upstream is defined and patch.upstream.name }};
+          git fetch upstream;
+          git fetch upstream --tags;
+      fi;
+  args:
+    chdir: "{{ tmp_dir }}/dist-git/{{ patch.dist_git.name }}"
