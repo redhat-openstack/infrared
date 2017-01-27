@@ -1,0 +1,32 @@
+- name: Apply patch on dist-git
+  shell: "rdopkg update-patches"
+  args:
+    chdir: "{{ tmp_dir }}/dist-git/{{ patch.dist_git.name }}"
+
+- name: Write the epoch so the package does not get updated by older versions
+  shell: >
+    (grep -q "^Epoch:" *.spec && sed -i "s/^Epoch.*/Epoch: 99999/" *.spec) || sed -i "/^Summary.*/a Epoch: 99999" *.spec;
+    sed -i -e's/\(^Requires.*\)\([^:]\)\(%{version}-%{release}\)/\1\2%{epoch}:\3/' *.spec
+  args:
+    chdir: "{{ tmp_dir }}/dist-git/{{ patch.dist_git.name }}"
+
+- name: Build an rpm from patched dist-git
+  shell: "rdopkg mockbuild"
+  ignore_errors: true
+  register: rpm_build
+  args:
+    chdir: "{{ tmp_dir }}/dist-git/{{ patch.dist_git.name }}"
+
+- name: set fact - rpm build result
+  set_fact: rpm_build_rc={{ rpm_build.rc }}
+
+- name: Check for 'non-exist file' errors
+  shell: grep -R -i -E "can't find file to patch|No such file or directory|does not exist in index" results*
+  register: file_exists
+  ignore_errors: true
+  args:
+    chdir: "{{ tmp_dir }}/dist-git/{{ patch.dist_git.name }}"
+
+- name: Fail run if rpm build failed
+  fail: msg="The mockbuild has failed for some reason, other than missing file"
+  when: rpm_build.rc != 0 and file_exists.rc != 0

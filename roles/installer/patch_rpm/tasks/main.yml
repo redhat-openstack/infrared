@@ -1,0 +1,12 @@
+---
+- name: Clean previous and create tmp_dir for all the building
+  register: tmp_dir_shell
+  shell: "rm -rf tmp.patch_rpm_{{ lookup('env', 'EXECUTOR_NUMBER') }}*; mktemp -d --tmpdir tmp.patch_rpm_{{ lookup('env', 'EXECUTOR_NUMBER') }}.XXXXXXXX"
+
+- name: Set tmp_dir for all the building
+  set_fact: tmp_dir={{tmp_dir_shell.stdout}}
+
+- include: pre.yml
+- include: patch-rpm.yml
+- include: copy-rpm.yml
+

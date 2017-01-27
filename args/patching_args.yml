@@ -1,0 +1,74 @@
+# ===========================
+
+# This assumes component 'neutron' is in octario root.
+# If not, please add 'path' variable to specify it.
+
+# component can be any of openstack components: nova, cinder, keystone, etc.
+# version 10 is based on 'Newton' release
+
+component:
+  name: cinder 
+  version: 9
+  
+# Dist-git
+# --------
+component_dist_git_name: 'openstack-cinder'
+component_dist_git_url: 'git://pkgs.devel.redhat.com/rpms/openstack-cinder'
+
+
+
+patch:
+  gerrit:
+    name: cinder
+    url: https://code.engineering.redhat.com/gerrit/cinder
+    branch: rhos-9.0-patches
+    refspec: +refs/heads/rhos-9.0-patches:refs/remotes/origin/rhos-9.0-patches
+  dist_git:
+    name: openstack-cinder
+    url: git://pkgs.devel.redhat.com/rpms/openstack-cinder
+
+
+product:
+  rpmrepo:
+    RedHat: http://rhos-release.virt.bos.redhat.com/repos/rhos-release/
+  name: rhos
+  short_name: rh
+  rpm: http://rhos-release.virt.bos.redhat.com/repos/rhos-release/rhos-release-latest.noarch.rpm
+  full_version: '9.0'
+  repo:
+    state: pinned
+    location: bos
+    mirror: download.eng.bos.redhat.com
+    release: latest
+    rhos_release:
+      extra_args:
+      - -p
+      - latest
+    type: puddle
+    short_type: pud
+  version:
+    major: 9
+    minor: 0
+    code_name: mitaka
+  config:
+    enable_epel: n
+
+distro:
+  epel_release: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+  name: rhel
+  short_name: rh
+  full_version: '7.3'
+  latest_version: '7.3'
+  repo:
+    rhpkg: http://download.eng.bos.redhat.com/rel-eng/dist-git/rhel/rhpkg.repo
+    rdopkg: https://copr.fedoraproject.org/coprs/jruzicka/rdopkg/repo/epel-7/jruzicka-rdopkg-epel-7.repo
+  version:
+    major: '7'
+    minor: '3'
+  short_version: '73'
+
+# Additional optional variables ( Not under component variable )
+# -----------------------------
+# tempest_skipfile (tempest skip file path)
+# tempes_venv (tempest virtual environment path)
+# rc_file (rc file path)
