@@ -77,10 +77,12 @@
               installer.product.version == '5'
 
 - name: Enable patched_rpm repo
-  hosts: controller
+  hosts: local
   become: yes
   become_method: sudo
   any_errors_fatal: true
+  roles:
+      - role: installer/patch_rpm
   tasks:
       - name: Enable patched_rpms repository
         shell: sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/patched_rpms.repo
