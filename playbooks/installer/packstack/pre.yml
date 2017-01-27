@@ -76,6 +76,14 @@
         when: (workarounds['rhbz1265306']['enabled'] is defined and workarounds['rhbz1265306']['enabled'] | bool) and
               installer.product.version == '5'
 
+- name: run patched_rpm role
+  hosts: local 
+  become: yes
+  become_method: sudo
+  any_errors_fatal: true
+  roles:
+      - role: installer/patch_rpm
+
 - name: Enable patched_rpm repo
   hosts: controller
   become: yes
