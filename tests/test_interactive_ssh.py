@@ -2,34 +2,34 @@ import pytest
 
 from infrared.core.utils import interactive_ssh as issh
 from infrared.core.utils import exceptions
-from infrared.core.services import profiles
+from infrared.core.services import workspaces
 
 
 @pytest.fixture(scope="session")
-def profile_manager_fixture(tmpdir_factory):
-    """Sets the default profile direcotry to the temporary one. """
+def workspace_manager_fixture(tmpdir_factory):
+    """Sets the default workspace direcotry to the temporary one. """
 
-    temp_profile_dir = tmpdir_factory.mktemp('pmtest')
-    profile_manager = profiles.ProfileManager(str(temp_profile_dir))
+    temp_workspace_dir = tmpdir_factory.mktemp('pmtest')
+    workspace_manager = workspaces.WorkspaceManager(str(temp_workspace_dir))
     from infrared.core.services import CoreServices
-    CoreServices.register_service("profile_manager", profile_manager)
-    yield profile_manager
+    CoreServices.register_service("workspace_manager", workspace_manager)
+    yield workspace_manager
 
 
 @pytest.fixture()
-def test_profile(profile_manager_fixture):
-    """Creates test profile in the temp directory. """
+def test_workspace(workspace_manager_fixture):
+    """Creates test workspace in the temp directory. """
 
-    name = 'test_profile'
-    test_profile = profile_manager_fixture.create(name)
-    profile_manager_fixture.activate(test_profile.name)
-    test_profile.inventory = "tests/example/test_ssh_inventory"
-    yield test_profile
-    if profile_manager_fixture.has_profile(name):
-        profile_manager_fixture.delete(name)
+    name = 'test_workspace'
+    test_workspace = workspace_manager_fixture.create(name)
+    workspace_manager_fixture.activate(test_workspace.name)
+    test_workspace.inventory = "tests/example/test_ssh_inventory"
+    yield test_workspace
+    if workspace_manager_fixture.has_workspace(name):
+        workspace_manager_fixture.delete(name)
 
 
-def test_parse_inventory(profile_manager_fixture, test_profile, mocker):
+def test_parse_inventory(workspace_manager_fixture, test_workspace, mocker):
 
     mock_os = mocker.patch.object(issh, "os")
     issh.ssh_to_host("test_host")
@@ -52,14 +52,14 @@ def test_parse_inventory(profile_manager_fixture, test_profile, mocker):
     mock_os.system.assert_called_with(ssh_cmd_str)
 
 
-def test_wrong_host_exception(profile_manager_fixture, test_profile):
+def test_wrong_host_exception(workspace_manager_fixture, test_workspace):
 
     with pytest.raises(exceptions.IRSshException):
         issh.ssh_to_host("wrong_host")
 
 
-def test_wrong_connection_type_exception(profile_manager_fixture,
-                                         test_profile):
+def test_wrong_connection_type_exception(workspace_manager_fixture,
+                                         test_workspace):
 
     with pytest.raises(exceptions.IRSshException):
         issh.ssh_to_host("localhost")

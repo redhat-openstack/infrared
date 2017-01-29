@@ -40,11 +40,11 @@ def ssh_to_host(hostname):
         :param hostname: str. Hostname from inventory
     """
 
-    profile_manager = CoreServices.profile_manager()
-    profile = profile_manager.get_active_profile()
-    if profile is None:
-        raise exceptions.IRNoActiveProfileFound()
-    inventory_file = profile.inventory
+    workspace_manager = CoreServices.workspace_manager()
+    workspace = workspace_manager.get_active_workspace()
+    if workspace is None:
+        raise exceptions.IRNoActiveWorkspaceFound()
+    inventory_file = workspace.inventory
 
     invent = inventory.Inventory(DataLoader(), VariableManager(),
                                  host_list=inventory_file)

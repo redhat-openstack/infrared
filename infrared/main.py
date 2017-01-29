@@ -10,67 +10,69 @@ from infrared.core.utils import interactive_ssh
 LOG = logger.LOG
 
 
-class ProfileManagerSpec(api.SpecObject):
-    """The profile manager CLI. """
+class WorkspaceManagerSpec(api.SpecObject):
+    """The workspace manager CLI. """
 
     def __init__(self, name, *args, **kwargs):
-        super(ProfileManagerSpec, self).__init__(name, **kwargs)
-        self.profile_manager = CoreServices.profile_manager()
+        super(WorkspaceManagerSpec, self).__init__(name, **kwargs)
+        self.workspace_manager = CoreServices.workspace_manager()
 
     def extend_cli(self, root_subparsers):
-        profile_plugin = root_subparsers.add_parser(
+        workspace_plugin = root_subparsers.add_parser(
             self.name,
             help=self.kwargs["description"],
             **self.kwargs)
-        profile_subparsers = profile_plugin.add_subparsers(dest="command0")
+        workspace_subparsers = workspace_plugin.add_subparsers(dest="command0")
 
         # create
-        create_parser = profile_subparsers.add_parser(
-            'create', help='Creates a new profile')
+        create_parser = workspace_subparsers.add_parser(
+            'create', help='Creates a new workspace')
         create_parser.add_argument("name", help="Profie name")
 
         # checkout
-        checkout_parser = profile_subparsers.add_parser(
+        checkout_parser = workspace_subparsers.add_parser(
             'checkout',
-            help='Creates a profile if it is not presents and switches to it')
+            help='Creates a workspace if it is not presents and '
+                 'switches to it')
         checkout_parser.add_argument("name", help="Profie name")
 
         # list
-        profile_subparsers.add_parser(
-            'list', help='Lists all the profiles')
+        workspace_subparsers.add_parser(
+            'list', help='Lists all the workspaces')
 
         # delete
-        delete_parser = profile_subparsers.add_parser(
-            'delete', help='Deletes a profile')
+        delete_parser = workspace_subparsers.add_parser(
+            'delete', help='Deletes a workspace')
         delete_parser.add_argument("name", help="Profie name")
 
         # cleanup
-        cleanup_parser = profile_subparsers.add_parser(
-            'cleanup', help='Removes all the files from profile')
+        cleanup_parser = workspace_subparsers.add_parser(
+            'cleanup', help='Removes all the files from workspace')
         cleanup_parser.add_argument("name", help="Profie name")
 
         # import settings
-        importer_parser = profile_subparsers.add_parser(
+        importer_parser = workspace_subparsers.add_parser(
             'import', help='Import deployment configs.')
         importer_parser.add_argument("filename", help="Archive file name.")
         importer_parser.add_argument(
-            "-n", "--name", dest="profilename",
-            help="Profile name to import with."
+            "-n", "--name", dest="workspacename",
+            help="Workspace name to import with."
             "If not specified - file name will be used.")
 
         # exort settings
-        exporter_parser = profile_subparsers.add_parser(
+        exporter_parser = workspace_subparsers.add_parser(
             'export', help='Export deployment configurations.')
-        exporter_parser.add_argument("-n", "--name", dest="profilename",
-                                     help="Profile name. If not sepecified - "
-                                     "active profile will be used.")
+        exporter_parser.add_argument("-n", "--name", dest="workspacename",
+                                     help="Workspace name. "
+                                          "If not sepecified - active "
+                                          "workspace will be used.")
         exporter_parser.add_argument("-f", "--filename", dest="filename",
                                      help="Archive file name.")
 
         # node list
-        nodelist_parser = profile_subparsers.add_parser(
+        nodelist_parser = workspace_subparsers.add_parser(
             'node-list',
-            help='List nodes, managed by profile')
+            help='List nodes, managed by workspace')
         nodelist_parser.add_argument("-n", "--name", help="Profie name")
 
     def spec_handler(self, parser, args):
@@ -83,48 +85,48 @@ class ProfileManagerSpec(api.SpecObject):
         subcommand = pargs.command0
 
         if subcommand == 'create':
-            self._create_profile(pargs.name)
+            self._create_workspace(pargs.name)
         elif subcommand == 'checkout':
-            self._checkout_profile(pargs.name)
+            self._checkout_workspace(pargs.name)
         elif subcommand == 'list':
-            profiles = self.profile_manager.list()
+            workspaces = self.workspace_manager.list()
             print(
                 tabulate(
-                    [[p.name, self.profile_manager.is_active(p.name) or ""]
-                     for p in profiles],
+                    [[p.name, self.workspace_manager.is_active(p.name) or ""]
+                     for p in workspaces],
                     headers=("Name", "Is Active"),
                     tablefmt='orgtbl'))
         elif subcommand == 'delete':
-            self.profile_manager.delete(pargs.name)
-            print("Profile '{}' deleted".format(pargs.name))
+            self.workspace_manager.delete(pargs.name)
+            print("Workspace '{}' deleted".format(pargs.name))
         elif subcommand == 'cleanup':
-            self.profile_manager.cleanup(pargs.name)
+            self.workspace_manager.cleanup(pargs.name)
         elif subcommand == 'export':
-            self.profile_manager.export_profile(
-                pargs.profilename, pargs.filename)
+            self.workspace_manager.export_workspace(
+                pargs.workspacename, pargs.filename)
         elif subcommand == 'import':
-            self.profile_manager.import_profile(
-                pargs.filename, pargs.profilename)
+            self.workspace_manager.import_workspace(
+                pargs.filename, pargs.workspacename)
         elif subcommand == 'node-list':
-            nodes = self.profile_manager.node_list(pargs.name)
+            nodes = self.workspace_manager.node_list(pargs.name)
             print(
                 tabulate([node_name for node_name in nodes],
                          headers=("Name", "Address"),
                          tablefmt='orgtbl'))
 
-    def _create_profile(self, name):
-        """Creates a profile """
+    def _create_workspace(self, name):
+        """Creates a workspace """
 
-        self.profile_manager.create(name)
-        print("Profile '{}' added".format(name))
+        self.workspace_manager.create(name)
+        print("Workspace '{}' added".format(name))
 
-    def _checkout_profile(self, name):
-        """Checkouts (create+activate) a profile """
+    def _checkout_workspace(self, name):
+        """Checkouts (create+activate) a workspace """
 
-        if not self.profile_manager.has_profile(name):
-            self._create_profile(name)
-        self.profile_manager.activate(name)
-        print("Now using profile: '{}'".format(name))
+        if not self.workspace_manager.has_workspace(name):
+            self._create_workspace(name)
+        self.workspace_manager.activate(name)
+        print("Now using workspace: '{}'".format(name))
 
 
 class PluginManagerSpec(api.SpecObject):
@@ -230,10 +232,11 @@ def main(args=None):
     specs_manager = api.SpecManager()
 
     specs_manager.register_spec(
-        ProfileManagerSpec('profile',
-                           description="Profile manager. "
-                                       "Allows to create and use an isolated "
-                                       "environement  for plugins execution."))
+        WorkspaceManagerSpec('workspace',
+                             description="Workspace manager. "
+                                         "Allows to create and use an "
+                                         "isolated environment for plugins "
+                                         "execution."))
     specs_manager.register_spec(
         PluginManagerSpec('plugin',
                           plugin_manager=plugin_manager,

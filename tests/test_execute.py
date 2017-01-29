@@ -7,7 +7,7 @@ import yaml
 from infrared import api
 from infrared.core.services import plugins
 import tests
-from tests.test_profile import profile_manager_fixture, test_profile  # noqa
+from tests.test_workspace import workspace_manager_fixture, test_workspace  # noqa
 
 
 def subdict_in_dict(subdict, superdict):
@@ -37,19 +37,19 @@ def spec_fixture():
     yield spec
 
 
-def test_execute_no_profile(spec_fixture, profile_manager_fixture):   # noqa
-    """Verify new profile was been created when there are no profiles. """
+def test_execute_no_workspace(spec_fixture, workspace_manager_fixture):   # noqa
+    """Verify new workspace was been created when there are no workspaces. """
 
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     input_string = ['example']
     spec_manager.run_specs(args=input_string)
-    assert profile_manager_fixture.get_active_profile()
+    assert workspace_manager_fixture.get_active_workspace()
 
 
-def test_execute_fail(spec_fixture, profile_manager_fixture,          # noqa
-                      test_profile):
+def test_execute_fail(spec_fixture, workspace_manager_fixture,          # noqa
+                      test_workspace):
     """Verify execution fails as expected with CLI input. """
 
     input_string = ['example', "--foo-bar", "fail"]
@@ -57,11 +57,11 @@ def test_execute_fail(spec_fixture, profile_manager_fixture,          # noqa
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
-    inventory_dir = test_profile.path
+    inventory_dir = test_workspace.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
 
-    profile_manager_fixture.activate(test_profile.name)
+    workspace_manager_fixture.activate(test_workspace.name)
     return_value = spec_manager.run_specs(args=input_string)
 
     # Assert return code != 0
@@ -70,8 +70,8 @@ def test_execute_fail(spec_fixture, profile_manager_fixture,          # noqa
     assert not path.exists(path.join(inventory_dir, output_file))
 
 
-def test_execute_main(spec_fixture, profile_manager_fixture,          # noqa
-                      test_profile):
+def test_execute_main(spec_fixture, workspace_manager_fixture,          # noqa
+                      test_workspace):
     """Verify execution runs the main.yml playbook.
 
     Implicitly covers that vars dict is passed, since we know it will fail
@@ -86,12 +86,12 @@ def test_execute_main(spec_fixture, profile_manager_fixture,          # noqa
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
-    inventory_dir = test_profile.path
+    inventory_dir = test_workspace.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
     assert not path.exists(path.join(inventory_dir, "role_" + output_file))
 
-    profile_manager_fixture.activate(test_profile.name)
+    workspace_manager_fixture.activate(test_workspace.name)
     return_value = spec_manager.run_specs(args=input_string)
 
     assert return_value == 0
@@ -101,27 +101,27 @@ def test_execute_main(spec_fixture, profile_manager_fixture,          # noqa
         "role_" + output_file)), "Plugin role not invoked"
 
 
-def test_fake_inventory(spec_fixture, profile_manager_fixture,          # noqa
-                        test_profile):
-    """Verify "--inventory" updates profile's inventory. """
+def test_fake_inventory(spec_fixture, workspace_manager_fixture,          # noqa
+                        test_workspace):
+    """Verify "--inventory" updates workspace's inventory. """
 
     input_string = ['example', '--inventory', 'fake']
 
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
-    inventory_dir = test_profile.path
+    inventory_dir = test_workspace.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
 
-    profile_manager_fixture.activate(test_profile.name)
+    workspace_manager_fixture.activate(test_workspace.name)
     with pytest.raises(IOError) as exc:
         spec_manager.run_specs(args=input_string)
     assert exc.value.message == "File not found: fake"
 
 
-def test_bad_user_inventory(spec_fixture, profile_manager_fixture,   # noqa
-                            test_profile, tmpdir):
+def test_bad_user_inventory(spec_fixture, workspace_manager_fixture,   # noqa
+                            test_workspace, tmpdir):
     """Verify user-inventory is loaded and not default inventory.
 
     tests/example/main.yml playbook runs on all hosts. New inventory defines
@@ -130,26 +130,26 @@ def test_bad_user_inventory(spec_fixture, profile_manager_fixture,   # noqa
 
     fake_inventory = tmpdir.mkdir("ir_dir").join("fake_hosts_file")
     fake_inventory.write("host2")
-    test_profile.inventory = str(fake_inventory)
+    test_workspace.inventory = str(fake_inventory)
 
     input_string = ['example', '--inventory', str(fake_inventory)]
 
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
-    inventory_dir = test_profile.path
+    inventory_dir = test_workspace.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
 
-    profile_manager_fixture.activate(test_profile.name)
+    workspace_manager_fixture.activate(test_workspace.name)
     return_value = spec_manager.run_specs(args=input_string)
     assert return_value == 3
 
 
 @pytest.mark.parametrize("input_value", ["explicit", ""])  # noqa
 def test_nested_value_CLI(spec_fixture,
-                          profile_manager_fixture,
-                          test_profile, input_value, tmpdir):
+                          workspace_manager_fixture,
+                          test_workspace, input_value, tmpdir):
     """Tests that CLI input of Complex type Value is nested in vars dict.
 
     Use "-o output_file" and evaluate output YAML file.
@@ -170,11 +170,11 @@ def test_nested_value_CLI(spec_fixture,
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
-    inventory_dir = test_profile.path
+    inventory_dir = test_workspace.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
 
-    profile_manager_fixture.activate(test_profile.name)
+    workspace_manager_fixture.activate(test_workspace.name)
     return_value = spec_manager.run_specs(args=input_string)
 
     assert return_value == 0
@@ -213,8 +213,8 @@ def test_nested_value_CLI(spec_fixture,
                                                      "key": "val2"}}}),
                          ])
 def test_extra_vars(spec_fixture,
-                    profile_manager_fixture,
-                    test_profile, input_args, expected_output_dict, tmpdir):
+                    workspace_manager_fixture,
+                    test_workspace, input_args, expected_output_dict, tmpdir):
     """Tests that "--extra-vars" are inserted to vars_dict. """
 
     dry_output = tmpdir.mkdir("tmp").join("dry_output.yml")
@@ -225,7 +225,7 @@ def test_extra_vars(spec_fixture,
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
-    profile_manager_fixture.activate(test_profile.name)
+    workspace_manager_fixture.activate(test_workspace.name)
     return_value = spec_manager.run_specs(args=input_string)
 
     # dry run returns None
@@ -276,8 +276,8 @@ def test_extra_vars(spec_fixture,
                                                      "key": "val2"}}}),
                          ])
 def test_extra_vars_with_file(spec_fixture,
-                              profile_manager_fixture,
-                              test_profile, input_args,
+                              workspace_manager_fixture,
+                              test_workspace, input_args,
                               file_dicts, expected_output_dict, tmpdir):
     """Tests that extra-vars supports yaml file with "@". """
 
@@ -300,7 +300,7 @@ def test_extra_vars_with_file(spec_fixture,
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
-    profile_manager_fixture.activate(test_profile.name)
+    workspace_manager_fixture.activate(test_workspace.name)
     return_value = spec_manager.run_specs(args=input_string)
 
     # dry run returns None
@@ -337,8 +337,8 @@ def test_extra_vars_with_file(spec_fixture,
     ],
 ])
 def test_nested_KeyValueList_CLI(spec_fixture,
-                                 profile_manager_fixture,
-                                 test_profile, tmpdir,
+                                 workspace_manager_fixture,
+                                 test_workspace, tmpdir,
                                  input_value, expected_output_dict):
     """Tests that CLI input of Complex type KeyValueList is nested in vars dict.
 
@@ -354,11 +354,11 @@ def test_nested_KeyValueList_CLI(spec_fixture,
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
-    inventory_dir = test_profile.path
+    inventory_dir = test_workspace.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
 
-    profile_manager_fixture.activate(test_profile.name)
+    workspace_manager_fixture.activate(test_workspace.name)
     return_value = spec_manager.run_specs(args=input_string)
 
     assert return_value == 0
@@ -384,7 +384,7 @@ def test_nested_KeyValueList_CLI(spec_fixture,
     "k1:v1;blabla~k2:v2",          # All input should be match - default style
 ])
 def test_nested_KeyValueList_negative(
-        spec_fixture, profile_manager_fixture, test_profile, bad_input):
+        spec_fixture, workspace_manager_fixture, test_workspace, bad_input):
     """Tests that bad input for KeyValueList raises exception. """
 
     input_string = list(('example', "--dry-run", "--dictionary-val"))
@@ -393,11 +393,11 @@ def test_nested_KeyValueList_negative(
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
-    inventory_dir = test_profile.path
+    inventory_dir = test_workspace.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
 
-    profile_manager_fixture.activate(test_profile.name)
+    workspace_manager_fixture.activate(test_workspace.name)
 
     from infrared.core.utils import exceptions
     with pytest.raises(exceptions.IRKeyValueListException):
@@ -411,8 +411,8 @@ def test_nested_KeyValueList_negative(
     [""],
 ])
 def test_nested_value_dry_run(spec_fixture,
-                              profile_manager_fixture,
-                              test_profile, input_value):
+                              workspace_manager_fixture,
+                              test_workspace, input_value):
     """Verifies that --dry-run doesn't run playbook. """
 
     dry = "--dry-run" in input_value
@@ -425,11 +425,11 @@ def test_nested_value_dry_run(spec_fixture,
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
-    inventory_dir = test_profile.path
+    inventory_dir = test_workspace.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
 
-    profile_manager_fixture.activate(test_profile.name)
+    workspace_manager_fixture.activate(test_workspace.name)
     return_value = spec_manager.run_specs(args=input_string)
 
     assert return_value is None if dry else return_value == 0
@@ -440,8 +440,8 @@ def test_nested_value_dry_run(spec_fixture,
 
 @pytest.mark.parametrize("input_value", ["explicit", ""])  # noqa
 def test_nested_value_CLI_with_answers_file(spec_fixture, tmpdir,
-                                            profile_manager_fixture,
-                                            test_profile, input_value):
+                                            workspace_manager_fixture,
+                                            test_workspace, input_value):
     """Verfies answers file is loaded and that CLI overrides it.
 
     Use "-o output_file" and evaluate output YAML file.
@@ -469,11 +469,11 @@ def test_nested_value_CLI_with_answers_file(spec_fixture, tmpdir,
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
-    inventory_dir = test_profile.path
+    inventory_dir = test_workspace.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
 
-    profile_manager_fixture.activate(test_profile.name)
+    workspace_manager_fixture.activate(test_workspace.name)
     return_value = spec_manager.run_specs(args=input_string)
 
     assert return_value == 0
@@ -487,8 +487,8 @@ def test_nested_value_CLI_with_answers_file(spec_fixture, tmpdir,
                                                      output_dict)
 
 
-def test_generate_answers_file(spec_fixture, profile_manager_fixture,  # noqa
-                               test_profile, tmpdir):
+def test_generate_answers_file(spec_fixture, workspace_manager_fixture,  # noqa
+                               test_workspace, tmpdir):
     """Verify answers-file is generated to destination. """
 
     answers_file = tmpdir.mkdir("tmp").join("answers_file")
@@ -497,7 +497,7 @@ def test_generate_answers_file(spec_fixture, profile_manager_fixture,  # noqa
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
-    profile_manager_fixture.activate(test_profile.name)
+    workspace_manager_fixture.activate(test_workspace.name)
     return_value = spec_manager.run_specs(args=input_string)
     assert return_value is None
 
@@ -507,12 +507,12 @@ def test_generate_answers_file(spec_fixture, profile_manager_fixture,  # noqa
 
     # verify playbook didn't run
     output_file = "output.example"
-    inventory_dir = test_profile.path
+    inventory_dir = test_workspace.path
     assert not path.exists(path.join(inventory_dir, output_file))
 
 
-def test_ansible_args(spec_fixture, profile_manager_fixture,          # noqa
-                      test_profile):
+def test_ansible_args(spec_fixture, workspace_manager_fixture,          # noqa
+                      test_workspace):
     """Verify execution runs with --ansible-args. """
 
     input_string = ['example', '--ansible-args',
@@ -521,11 +521,11 @@ def test_ansible_args(spec_fixture, profile_manager_fixture,          # noqa
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
-    inventory_dir = test_profile.path
+    inventory_dir = test_workspace.path
     output_file = "output.example"
     assert not path.exists(path.join(inventory_dir, output_file))
 
-    profile_manager_fixture.activate(test_profile.name)
+    workspace_manager_fixture.activate(test_workspace.name)
     return_value = spec_manager.run_specs(args=input_string)
     assert return_value == 0
 

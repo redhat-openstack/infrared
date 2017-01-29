@@ -16,7 +16,7 @@ Setup virtualenv and `install <setup.html#Install>`_ from source using pip::
     pip install .
 
 
-.. note:: InfraRed will create a default `profile <profile.html#profile>`_ for you. This profile will manage your environment details.
+.. note:: InfraRed will create a default `workspace <workspace.html#workspace>`_ for you. This workspace will manage your environment details.
 
 
 Provision

@@ -9,7 +9,7 @@ try:  # py2
 except ImportError:  # py3
     import configparser as ConfigParser
 
-from infrared.core.services import profiles
+from infrared.core.services import workspaces
 from infrared.core.services import plugins
 from infrared.core.utils import logger
 
@@ -18,7 +18,7 @@ LOG = logger.LOG
 
 class ServiceName(object):
     """Holds the supported services names. """
-    PROFILE_MANAGER = "profile_manager"
+    WORKSPACE_MANAGER = "workspace_manager"
     PLUGINS_MANAGER = "plugins_manager"
 
 
@@ -27,7 +27,7 @@ class CoreServices(object):
 
     _SERVICES = {}
     DEFAULTS = {
-        'profiles_base_folder': '.profiles',
+        'workspaces_base_folder': '.workspaces',
         'plugins_conf_file': '.plugins.ini'
     }
 
@@ -41,18 +41,18 @@ class CoreServices(object):
         # if file not found no exception will be raised
         config.read(file_path)
         cls._configure(
-            os.path.abspath(config.get(section, 'profiles_base_folder')),
+            os.path.abspath(config.get(section, 'workspaces_base_folder')),
             os.path.abspath(config.get(section, 'plugins_conf_file'))
         )
 
     @classmethod
-    def _configure(cls, profile_dir, plugins_conf):
+    def _configure(cls, workspace_dir, plugins_conf):
         """Register services to manager. """
 
-        # create profile manager
-        if ServiceName.PROFILE_MANAGER not in CoreServices._SERVICES:
-            cls.register_service(ServiceName.PROFILE_MANAGER,
-                                 profiles.ProfileManager(profile_dir))
+        # create workspace manager
+        if ServiceName.WORKSPACE_MANAGER not in CoreServices._SERVICES:
+            cls.register_service(ServiceName.WORKSPACE_MANAGER,
+                                 workspaces.WorkspaceManager(workspace_dir))
         # create plugins manager
         if ServiceName.PLUGINS_MANAGER not in CoreServices._SERVICES:
             cls.register_service(ServiceName.PLUGINS_MANAGER,
@@ -70,9 +70,9 @@ class CoreServices(object):
         return cls._SERVICES[name]
 
     @classmethod
-    def profile_manager(cls):
-        """Gets the profile manager. """
-        return cls._get_service(ServiceName.PROFILE_MANAGER)
+    def workspace_manager(cls):
+        """Gets the workspace manager. """
+        return cls._get_service(ServiceName.WORKSPACE_MANAGER)
 
     @classmethod
     def plugins_manager(cls):
