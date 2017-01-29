@@ -1,15 +1,15 @@
 New In InfraRed 2.0
 ===================
 
-#. Profiles:
-    Added `Profiles <profile.html>`_. Every session must be tied to an active profile.
-    All input and output file are taken from, and written to, the active profile directory.
+#. Workspaces:
+    Added `Workspaces <workspace.html>`_. Every session must be tied to an active workspace.
+    All input and output file are taken from, and written to, the active workspace directory.
     which allows easy migration of workspace, and avoids accidental overwrites of data,
     or corrupting the working directory.
-    The deprecates ``ir-archive`` in favor of ``profile import`` and ``profile export``
+    The deprecates ``ir-archive`` in favor of ``workspace import`` and ``workspace export``
 #. SSH:
-   Added ability to establish interactive ssh connection to nodes, managed by profile
-   using profile's inventory
+   Added ability to establish interactive ssh connection to nodes, managed by workspace
+   using workspace's inventory
    ``infrared ssh <hostname>``
 #. Single Entry-Point:
     ``ir-provisioner``, ``ir-installer``, ``ir-tester``

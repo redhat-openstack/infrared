@@ -33,9 +33,9 @@ The following useful arguments can be provided to tune tempest tester. Complete 
 Tempest results
 ---------------
 
-Infrared fetches all the tempest output files, like results to the ``tempest_results`` folder under the active `profile <profile.html>`_ folder::
+Infrared fetches all the tempest output files, like results to the ``tempest_results`` folder under the active `workspace <workspace.html>`_ folder::
 
-    ll .profile/my_profile/tempest_results/tempest-*
+    ll .workspace/my_workspace/tempest_results/tempest-*
 
     -rw-rw-r--. tempest-results-minimal.xml
     -rw-rw-r--. tempest-results-neutron.xml

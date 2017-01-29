@@ -53,7 +53,7 @@ subparsers:
                       type: Value
                       help: |
                           The full path to the openstackrc file.
-                          When empty, will search active profile for 'keystonerc' file"
+                          When empty, will search active workspace for 'keystonerc' file"
                   config-options:
                        type: KeyValueList
                        help: |

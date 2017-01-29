@@ -93,17 +93,17 @@ class InfraRedPluginsSpec(SpecObject):
             * None if "--generate-answers-file" or "--dry-run" answers file is
               generated
         """
-        profile_manager = CoreServices.profile_manager()
+        workspace_manager = CoreServices.workspace_manager()
 
-        active_profile = profile_manager.get_active_profile()
-        if not active_profile:
-            active_profile = profile_manager.create()
-            profile_manager.activate(active_profile.name)
-            LOG.warn("There are no profiles. New profile added: %s",
-                     active_profile.name)
+        active_workspace = workspace_manager.get_active_workspace()
+        if not active_workspace:
+            active_workspace = workspace_manager.create()
+            workspace_manager.activate(active_workspace.name)
+            LOG.warn("There are no workspaces. New workspace added: %s",
+                     active_workspace.name)
 
         # TODO(yfried): when accepting inventory from CLI, need to update:
-        # profile.inventory = CLI[inventory]
+        # workspace.inventory = CLI[inventory]
 
         if self.specification is None:
             # FIXME(yfried): Create a proper exception type
@@ -143,7 +143,7 @@ class InfraRedPluginsSpec(SpecObject):
             return None
 
         result = execute.ansible_playbook(
-            inventory=active_profile.inventory,
+            inventory=active_workspace.inventory,
             playbook_path=self.plugin.playbook,
             verbose=control_args.get('verbose', None),
             extra_vars=vars_dict,

@@ -12,7 +12,7 @@ Welcome to InfraRed's documentation!
 
    bootstrap
    configuration
-   profile
+   workspace
    plugins
    topology
    interactive_ssh

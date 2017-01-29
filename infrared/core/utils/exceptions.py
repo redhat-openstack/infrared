@@ -64,54 +64,54 @@ class SpecParserException(Exception):
         self.errors = errors
 
 
-# profile exceptions
-class IRProfileExists(IRException):
-    def __init__(self, profile):
-        message = "Profile {} already exists".format(profile)
-        super(IRProfileExists, self).__init__(message)
+# workspace exceptions
+class IRWorkspaceExists(IRException):
+    def __init__(self, workspace):
+        message = "Workspace {} already exists".format(workspace)
+        super(IRWorkspaceExists, self).__init__(message)
 
 
-class IRProfileMissing(IRException):
-    def __init__(self, profile):
-        message = "Profile {} doesn't exist".format(profile)
-        super(IRProfileMissing, self).__init__(message)
+class IRWorkspaceMissing(IRException):
+    def __init__(self, workspace):
+        message = "Workspace {} doesn't exist".format(workspace)
+        super(IRWorkspaceMissing, self).__init__(message)
 
 
-class IRProfileUndefined(IRConfigurationException):
+class IRWorkspaceUndefined(IRConfigurationException):
     def __init__(self):
-        message = "'profiles' path undefined in 'infrared.cfg'. If you wish " \
-                  "to use 'profiles' feature, please define it. Use " \
+        message = "'workspaces' path undefined in 'infrared.cfg'. If you wish " \
+                  "to use 'workspaces' feature, please define it. Use " \
                   "'infrared.cfg.example as template."
-        super(IRProfileUndefined, self).__init__(message)
+        super(IRWorkspaceUndefined, self).__init__(message)
 
 
-class IRProfileMissingFile(IRException):
-    def __init__(self, profile, filename):
-        message = "File {} not found in Profile {}".format(filename,
-                                                           profile)
-        super(IRProfileMissingFile, self).__init__(message)
+class IRWorkspaceMissingFile(IRException):
+    def __init__(self, workspace, filename):
+        message = "File {} not found in Workspace {}".format(filename,
+                                                             workspace)
+        super(IRWorkspaceMissingFile, self).__init__(message)
 
 
-class IRDefultProfileException(IRException):
+class IRDefultWorkspaceException(IRException):
     def __init__(self):
-        message = "Unable to remove or deactivate default profile"
-        super(IRDefultProfileException, self).__init__(message)
+        message = "Unable to remove or deactivate default workspace"
+        super(IRDefultWorkspaceException, self).__init__(message)
 
 
-class IRProfileIsActive(IRException):
-    def __init__(self, profile):
-        message = "Profile is active: {}".format(profile)
-        super(IRProfileIsActive, self).__init__(message)
+class IRWorkspaceIsActive(IRException):
+    def __init__(self, workspace):
+        message = "Workspace is active: {}".format(workspace)
+        super(IRWorkspaceIsActive, self).__init__(message)
 
 
-class IRNoActiveProfileFound(IRException):
+class IRNoActiveWorkspaceFound(IRException):
     def __init__(self):
-        message = "There is no active profile found. " \
-                  "You can create and activate profile by" \
+        message = "There is no active workspace found. " \
+                  "You can create and activate workspace by" \
                   " running the following commands: " \
-                  "\n infrared profile create <profile_name>" \
-                  "\n infrared profile activate <profile_name>"
-        super(IRNoActiveProfileFound, self).__init__(message)
+                  "\n infrared workspace create <workspace_name>" \
+                  "\n infrared workspace activate <workspace_name>"
+        super(IRNoActiveWorkspaceFound, self).__init__(message)
 
 
 class IRFailedToAddPlugin(IRException):

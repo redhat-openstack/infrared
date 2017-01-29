@@ -340,21 +340,22 @@ class AdditionalOptionsType(ComplexType):
 
 
 class Inventory(ComplexType):
-    """Accepts an Ansible Inventory file to set active profile's inventory. """
+    """Accepts an Ansible Inventory file as active workspace's inventory. """
 
     is_nested = False
 
     def resolve(self, value):
-        """Set active profile's inventory
+        """Set active workspace's inventory
 
-        Assumes active profile exists, as ComplexType objects are resolved
-        after profile is verified.
+        Assumes active workspace exists, as ComplexType objects are resolved
+        after workspace is verified.
 
-        Calls profile.inventory setter. See source for more information.
+        Calls workspace.inventory setter. See source for more information.
 
         :param value: path to inventory file.
         """
-        CoreServices.profile_manager().get_active_profile().inventory = value
+        CoreServices.workspace_manager()\
+            .get_active_workspace().inventory = value
 
 
 class KeyValueList(ComplexType):
