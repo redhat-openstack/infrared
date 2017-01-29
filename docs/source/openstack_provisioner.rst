@@ -68,7 +68,7 @@ please refer to `Topology`_ and `Virsh plugin`_ description.
     use ``openstack --os-cloud cloud_name image list`` to see a list of available images
 
 * ``--cleanup`` Boolean. Whether to provision resources, or clean them from the tenant.
-    `InfraRed` registers all provisioned resources to the `profile <profile.html>`_ on creation,
+    `InfraRed` registers all provisioned resources to the `workspace <workspace.html>`_ on creation,
     and will clean only registered resources::
 
         infrared openstack --cleanup yes

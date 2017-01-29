@@ -3,7 +3,7 @@ Configuration
 
 InfraRed allows to change default options such as:
 
-* ``profiles_base_folder``: the profiles base folder
+* ``workspaces_base_folder``: the workspaces base folder
 * ``plugins_conf_file``: the plugins configuration file path
 
 This can be done by creating a configuration file, ``./infrared.cfg``, and overriding default values in it::

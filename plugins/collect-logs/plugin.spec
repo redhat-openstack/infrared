@@ -1,9 +1,9 @@
 # FIXME(aopincar): This plugin should be in a type of its own
 plugin_type: install
-description: Collect log from all nodes in the active profile.
+description: Collect log from all nodes in the active workspace.
 subparsers:
     collect-logs:
-        help: Collect log from all nodes in the active profile.
+        help: Collect log from all nodes in the active workspace.
         include_groups: ["Ansible options", "Common options"]
         options:
           dest-dir:

@@ -68,12 +68,12 @@ Common Options:
     * ``--extra-vars``: Inject custom input into the `vars-dict <Complex option types>`_
 
 Inventory:
-    Load a new inventory to active `profile <profile.html>`_. The file is copied to
-    profile directory so all ``{{ inventory_dir }}`` references in playbooks still point to
-    profile directory (and not to the input file's directory).
+    Load a new inventory to active `workspace <workspace.html>`_. The file is copied to
+    workspace directory so all ``{{ inventory_dir }}`` references in playbooks still point to
+    workspace directory (and not to the input file's directory).
 
-    .. note:: This file permenantly becomes the profile's inventory. To revert to original profile
-        the profile must be cleaned.
+    .. note:: This file permenantly becomes the workspace's inventory. To revert to original workspace
+        the workspace must be cleaned.
 
 Ansible options:
     * ``--verbose``: Set ansible verbosity level
