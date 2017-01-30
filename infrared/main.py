@@ -179,18 +179,16 @@ class PluginManagerSpec(api.SpecObject):
         Print a list of available plugins sorted by type
         :return:
         """
-        longest_type = max(self.plugin_manager.supported_plugin_types,
-                           key=len)
-
-        print("Available plugins:")
+        headers = ["Plugin Type", "Available Plugins"]
+        table = []
         for plugin_type in self.plugin_manager.supported_plugin_types:
+            plugins = [name for name, plugin in self.plugin_manager
+                       if plugin.config["plugin_type"] == plugin_type]
+            plugins.sort()
+            table.append([plugin_type, ','.join(plugins)])
 
-            plugins_names = [name for name, plugin in self.plugin_manager
-                             if plugin.config["plugin_type"] == plugin_type]
-            plugins_names.sort()
-            print('  {:{align}{width}} {{{}}}'.format(
-                plugin_type, ','.join(plugins_names), align='<',
-                width=len(longest_type) + 6))
+        print tabulate(tabular_data=table, headers=headers,
+                       tablefmt="fancy_grid", numalign="stralign")
 
 
 class SSHSpec(api.SpecObject):
