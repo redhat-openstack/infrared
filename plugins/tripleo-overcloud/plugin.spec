@@ -38,7 +38,6 @@ subparsers:
                         - mitaka
                         - newton
                         - ocata
-                      required: true
 
                   controller-nodes:
                       type: Value
@@ -80,6 +79,16 @@ subparsers:
                             File (in YAML format) containing a list of paths to template files on the UnderCloud.
                             NOTE: Omit this to not include any extra files, or use "none"
                             __LISTYAMLS__
+
+                  overcloud-introspect:
+                      type: Bool
+                      default: yes
+                      help: Specifies whether to run introspection
+
+                  overcloud-tagging:
+                      type: Bool
+                      default: yes
+                      help: Specifies whether to create flavors automatically and tag our hosts with them
 
             - title: Network Configuration
               options:
@@ -156,3 +165,10 @@ subparsers:
                         The storage that we would like to use.
                         If not supplied, OSPD will default to local LVM on the controllers.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
+
+            - title: Post tasks
+              options:
+                  post:
+                      type: Bool
+                      help: Specifies whether we should run post install tasks
+                      default: yes
