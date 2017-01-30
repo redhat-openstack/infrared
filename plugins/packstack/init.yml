@@ -1,0 +1,79 @@
+---
+- name: Ensure hostname is configured properly
+  hosts: openstack_nodes
+  gather_facts: yes
+  become: yes
+  any_errors_fatal: true
+  tasks:
+      - name: Configure hostname
+        hostname:
+            name: "{{ hostvars[inventory_hostname].inventory_hostname }}"
+
+      - name: Gather updated facts after hostname configuration
+        setup:
+
+      - name: Ensure hostname is in /etc/hosts
+        lineinfile:
+            dest: /etc/hosts
+            line: "{{ hostvars[item].ansible_default_ipv4.address }} {{ hostvars[item].inventory_hostname }}.{{ hostvars[item].ansible_dns.search[0] }} {{ hostvars[item].inventory_hostname }}"
+            state: present
+        with_items: "{{ groups['openstack_nodes'] }}"
+        when: hostvars[inventory_hostname].ansible_default_ipv4.address is defined
+
+      - name: restart systemd-hostnamed
+        service:
+            name: systemd-hostnamed
+            state: restarted
+            sleep: 5
+        when: ansible_distribution_version|int > 6
+
+- name: Initialize Controller
+  hosts: controller
+  gather_facts: no
+  become: yes
+  any_errors_fatal: true
+  tasks:
+      # AIO risks OOM problems.
+      - name: Create swap file
+        shell: |
+            if [ -e /swap ]
+            then
+                echo "you already have a swap file"
+            else
+                dd if=/dev/zero bs=128M count=32 of=/swap && mkswap /swap && swapon /swap && echo "DONE"
+            fi
+
+      - name: create key
+        #this will not overwrite an existing key
+        user:
+            name: root
+            generate_ssh_key: yes
+
+      - name: fetch ssh-key generated from controller
+        fetch:
+            src: /root/.ssh/id_rsa.pub
+            dest: /tmp/ssh_keys/
+            flat: yes
+            fail_on_missing: yes
+
+- name: Copy ssh-key to compute and network hosts
+  hosts: openstack_nodes
+  gather_facts: no
+  become: yes
+  any_errors_fatal: true
+  tasks:
+      - name: copy ssh-key to nodes
+        authorized_key:
+            user: root
+            key: "{{ lookup('file', '/tmp/ssh_keys/id_rsa.pub') }}"
+
+- name: "Workaround RHBZ#1265306 updated sqlalchemy breaks rhos-5 db_sync"
+  hosts: openstack_nodes
+  gather_facts: no
+  become: yes
+  any_errors_fatal: true
+  tasks:
+      - name: exclude python-sqlalchemy from rhel-7.2 repo for rhos-5.0
+        command: yum-config-manager --save --setopt=rhelosp-rhel-7-server.exclude=python-sqlalchemy
+        when: (workarounds['rhbz1265306']['enabled'] is defined and workarounds['rhbz1265306']['enabled'] | bool) and
+              install.version == '5'
