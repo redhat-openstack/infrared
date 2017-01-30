@@ -1,0 +1,190 @@
+---
+# There is a necessary step to add in nova.conf for encrypted volumes
+- name: Update the encrypted key on compute nodes
+  hosts: compute
+  gather_facts: no
+  become: yes
+  any_errors_fatal: true
+  tasks:
+      - name: Create a random key string
+        command: hexdump -n 32 -v -e '/1 "%02x"' /dev/urandom
+        register: randkey
+
+      - name: Setup fixed key for encrypted volumes
+        ini_file:
+            dest: /etc/nova/nova.conf
+            section: keymgr
+            option: fixed_key
+            value: "{{ randkey.stdout }}"
+        when: "install.version|openstack_release < 9"
+
+      - name: Setup fixed key for encrypted volumes
+        ini_file:
+            dest: /etc/nova/nova.conf
+            section: key_manager
+            option: fixed_key
+            value: "{{ randkey.stdout }}"
+        when: "install.version|openstack_release >= 9"
+
+      - name: Restart openstack-nova-compute
+        service:
+            name: openstack-nova-compute
+            state: restarted
+
+- name: Check if BZ1300662 is enabled
+  hosts: controller
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - group_by: key=workaround_rhbz1300662
+        when: workarounds.rhbz1300662 is defined
+
+- name: "Workaround RHBZ1300662: Keystone auth_uri set wrongly in cinder.conf"
+  hosts: workaround_rhbz1300662
+  gather_facts: yes
+  become: yes
+  any_errors_fatal: true
+  tasks:
+      - name: Configure auth_uri in cinder.conf
+        ini_file:
+            dest: /etc/cinder/cinder.conf
+            section: keystone_authtoken
+            option: auth_uri
+            value: "http://{{ ansible_default_ipv4.address }}:5000/"
+
+      - name: Restart openstack-cinder-api
+        service:
+            name: openstack-cinder-api
+            state: restarted
+
+      - name: Restart openstack-cinder-backup
+        service:
+            name: openstack-cinder-backup
+            state: restarted
+
+      - name: Restart openstack-cinder-scheduler
+        service:
+            name: openstack-cinder-scheduler
+            state: restarted
+
+      - name: Restart openstack-cinder-volume
+        service:
+            name: openstack-cinder-volume
+            state: restarted
+
+
+- name: Check if BZ1138740 S3/boto workaround is enabled
+  hosts: controller
+  gather_facts: no
+  become: yes
+  any_errors_fatal: true
+  tasks:
+      - group_by: key=workaround_bz1138740
+        when: workarounds.bz1138740 is defined
+
+- name: "Workaround BZ1138740: Install nova-objectstore for S3/boto tests"
+  hosts: workaround_bz1138740
+  gather_facts: yes
+  become: yes
+  any_errors_fatal: true
+  tasks:
+      - name: Get the current endpoint
+        shell: source /root/keystonerc_admin; keystone endpoint-list| grep -v AUTH | awk '/[0-9]{1,3}:8080/ {print $2}'
+        register: old_endpoint
+
+      - name: Get the current endpoint for S3
+        shell: source /root/keystonerc_admin; keystone endpoint-list| grep -v AUTH | awk '/[0-9]{1,3}:8080/ {print $12}'
+        register: endpoint_s3
+
+      - name: Create new endpoint
+        shell: source /root/keystonerc_admin; keystone endpoint-create
+                  --publicurl http://{{ ansible_default_ipv4.address }}:3333
+                  --internalurl http://{{ ansible_default_ipv4.address }}:3333
+                  --adminurl http://{{ ansible_default_ipv4.address }}:3333
+                  --service {{ endpoint_s3.stdout }}
+        when: old_endpoint.stdout and endpoint_s3.stdout
+        register: new_s3_endpoint
+
+      - name: Delete old endpoint
+        shell: source /root/keystonerc_admin; keystone endpoint-delete {{ old_endpoint.stdout }}
+        when: new_s3_endpoint.changed
+
+      - name: Install openstack-nova-objectstore package
+        yum: name=openstack-nova-objectstore state=present
+
+      - name: Start and enable openstack-nova-objectstore
+        service:
+            name: openstack-nova-objectstore
+            state: started
+            enabled: yes
+
+      - name: Open firewall for objectstore api
+        shell: |
+            ( iptables -C INPUT -p tcp -m multiport --dports 3333 -m comment --comment "bz1138740 - nova objectstore api incoming" -j ACCEPT && echo "Already open" ) || \
+            ( iptables -A INPUT -p tcp -m multiport --dports 3333 -m comment --comment "bz1138740 - nova objectstore api incoming" -j ACCEPT && echo "Opened" )
+
+- name: Check if BZ1210411 packstack/floating_ip_pool is enabled
+  hosts: controller
+  gather_facts: no
+  become: no
+  any_errors_fatal: true
+  tasks:
+      - group_by: key=workaround_bz1210411
+        when: workarounds.bz1210411 is defined
+
+- name: "Workaround BZ1210411: Update floating_ip_pool in nova.conf"
+  hosts: workaround_bz1210411
+  gather_facts: yes
+  become: yes
+  any_errors_fatal: true
+  tasks:
+      - name: Get packstack's floating ip pool value
+        command: "crudini --get {{ install.answer.file }} general CONFIG_NOVA_NETWORK_DEFAULTFLOATINGPOOL"
+        args:
+            chdir: /root
+        register: packstack_floating_ip_pool
+
+      - name: Apply packstack's floating ip pool value to nova.conf
+        ini_file:
+            dest: /etc/nova/nova.conf
+            section: DEFAULT
+            option: default_floating_pool
+            value: "{{ packstack_floating_ip_pool.stdout }}"
+
+      - name: Restart nova services to apply changes in nova.conf
+        command: openstack-service restart nova
+
+      - name: Restart neutron service to apply changes in floating ip pool
+        command: openstack-service restart neutron
+
+- name:  Post install for Neutron server
+  hosts: controller
+  gather_facts: no
+  become: yes
+  any_errors_fatal: true
+  vars_files:
+      - "vars/network/service/{{ install.network.service }}.yml"
+  tasks:
+      - name: Enable l3-ha (VRRP) in neutron
+        ini_file:
+            dest: /etc/neutron/neutron.conf
+            section: DEFAULT
+            option: l3_ha
+            value: true
+        when: "network_service_common.ha|default(False)"
+        register: ha
+
+      - name: Enable port-security in neutron
+        ini_file:
+            dest: /etc/neutron/plugins/ml2/ml2_conf.ini
+            section: ml2
+            option: extension_drivers
+            value: port_security
+        when: "install.network.service == 'neutron' and install.version|openstack_release >= 7"
+        register: portsec
+
+      - name: restart neutron server
+        service:
+            name: neutron-server
+            state: restarted
+        when: ha|changed or portsec|changed
