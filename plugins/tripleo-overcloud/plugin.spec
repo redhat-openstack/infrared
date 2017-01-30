@@ -38,7 +38,6 @@ subparsers:
                         - mitaka
                         - newton
                         - ocata
-                      required: true
 
                   controller-nodes:
                       type: Value
@@ -156,3 +155,26 @@ subparsers:
                         The storage that we would like to use.
                         If not supplied, OSPD will default to local LVM on the controllers.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
+
+            - title: Post tasks
+              options:
+                  manual:
+                      type: Bool
+                      help: |
+                        Specifies whether we want to explicitly state which steps to run.
+                        This is used together with "--overcloud-introspect" and "--overcloud-tagging" to manually run
+                        only these steps rather than the whole deployment.
+                      default: no
+
+                  manual-introspect:
+                      type: Bool
+                      help: Specifies whether to run introspection
+
+                  manual-tagging:
+                      type: Bool
+                      help: Specifies whether to create flavors automatically and tag our hosts with them
+
+                  post:
+                      type: Bool
+                      help: Specifies whether we should run post install tasks
+                      default: yes
