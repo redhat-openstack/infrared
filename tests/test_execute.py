@@ -561,7 +561,7 @@ def test_ansible_args(spec_fixture, workspace_manager_fixture,          # noqa
      {'secx': {'optx': 'valx'}}),
 ])
 def test_output_with_IniType(spec_fixture, tmpdir,
-                             profile_manager_fixture, test_profile,
+                             workspace_manager_fixture, test_workspace,
                              cli_args, from_file, expected_output):
     """Verifies the output file with IniType complex type args from CLI & file
     """
@@ -579,7 +579,7 @@ def test_output_with_IniType(spec_fixture, tmpdir,
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
-    profile_manager_fixture.activate(test_profile.name)
+    workspace_manager_fixture.activate(test_workspace.name)
     return_value = spec_manager.run_specs(args=input_string)
 
     assert return_value is None
