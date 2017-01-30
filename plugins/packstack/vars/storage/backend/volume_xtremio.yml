@@ -1,0 +1,27 @@
+---
+storage:
+  services:
+    - cinder
+  volume:
+    variant:
+      share: !placeholder
+      shares_file: "/etc/cinder/xtremio.shares"
+    config:
+      cinder:
+        "icehouse":
+          &cinder_cfg
+          DEFAULT:
+            volume_driver: "cinder.volume.drivers.emc.xtremio.XtremIOISCSIDriver"
+            san_ip: !placeholder
+            san_login: !placeholder
+            san_password: !placeholder
+        "juno":
+          *cinder_cfg
+        "5.0":
+          *cinder_cfg
+        "6.0":
+          *cinder_cfg
+        "7.0":
+          *cinder_cfg
+        "8.0":
+          *cinder_cfg

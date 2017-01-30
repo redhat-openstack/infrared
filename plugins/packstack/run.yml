@@ -1,0 +1,72 @@
+---
+- name: Setup packstack on controller
+  hosts: controller
+  gather_facts: no
+  become: yes
+  become_method: sudo
+  any_errors_fatal: true
+  vars_files:
+      - "vars/config/{{ install.config }}.yml"
+      - "vars/network/common/common.yml"
+      - "vars/network/service/{{ install.network.service }}.yml"
+      - "vars/network/variant/{{ install.network.variant }}.yml"
+  vars:
+      packstack_config: "{{ basic_config | combine(network_config) | combine(network_variant_config) }}"
+  tasks:
+      - name: debug gathered packstack_config
+        debug:
+            msg: "{{ packstack_config }}"
+
+      - name: Install packstack package
+        package:
+            name: openstack-packstack
+            state: present
+
+      - name: Generate answer file
+        shell: "packstack --gen-answer-file=/root/{{ install.answer.file }}"
+
+      - name: Default to kvm
+        ini_file:
+            dest: "/root/{{ install.answer.file }}"
+            section: general
+            option: CONFIG_NOVA_LIBVIRT_VIRT_TYPE
+            value: kvm
+
+      - name: Edit packstack answer-file from the config
+        lineinfile:
+            dest: "/root/{{ install.answer.file }}"
+            regexp: "{{ item.key }}=.*"
+            line: "{{ item.key }}={{ item.value }}"
+        with_dict: "{{ packstack_config }}"
+
+      - name: Update password values in answer file with default password
+        replace:
+            dest: "/root/{{ install.answer.file }}"
+            regexp: (.*_PASSWORD|.*_PW)=.*
+            replace: \1=redhat
+
+      - name: Update network hosts
+        replace:
+            dest: "/root/{{ install.answer.file }}"
+            regexp: ^CONFIG_NETWORK_HOSTS=.*$
+            replace: CONFIG_NETWORK_HOSTS={% for host in groups.get('network', []) %}{{ hostvars[host]['ansible_default_ipv4']['address'] }}{% if not loop.last %},{% endif %}{% endfor %}
+
+      - name: Update compute hosts
+        replace:
+            dest: "/root/{{ install.answer.file }}"
+            regexp: ^CONFIG_COMPUTE_HOSTS=.*$
+            replace: CONFIG_COMPUTE_HOSTS={% for host in groups.compute %}{{ hostvars[host]['ansible_default_ipv4']['address'] }}{% if not loop.last %},{% endif %}{% endfor %}
+        when: groups.compute is defined
+
+      - name: Running packstack
+        shell: "packstack --debug --answer-file=/root/{{ install.answer.file }} && touch /root/packstack-already-done"
+        args:
+            creates: /root/packstack-already-done
+        register: result
+
+      - name: Fetch the keystonerc file to the workspace's dir
+        fetch:
+            src: "/root/keystonerc_admin"
+            dest: "{{ inventory_dir }}/keystonerc"
+            flat: yes
+            validate_checksum: yes
