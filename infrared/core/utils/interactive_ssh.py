@@ -33,7 +33,7 @@ def _get_magic_var(hostobj, varname, default=""):
         return default
 
 
-def ssh_to_host(hostname):
+def ssh_to_host(hostname, remote_command=None):
     """ Compose cmd string of ssh and execute
 
         Uses Ansible to parse inventory file, gets ssh connection options
@@ -58,7 +58,7 @@ def ssh_to_host(hostname):
         raise exceptions.IRSshException("Only ssh transport acceptable.")
 
     cmd = " ".join(["ssh {priv_key} {comm_args}",
-                    "{extra_args} -p {port} {user}@{host}"])
+                    "{extra_args} -p {port} -t {user}@{host}"])
 
     cmd_fields = {}
     cmd_fields["user"] = _get_magic_var(host, "remote_user", default="root")
@@ -72,6 +72,12 @@ def ssh_to_host(hostname):
     cmd_fields["extra_args"] = _get_magic_var(host, "ssh_extra_args")
 
     LOG.debug("Establishing ssh connection to {}".format(cmd_fields["host"]))
-    os.system(cmd.format(**cmd_fields))
+
+    compiled_cmd = cmd.format(**cmd_fields)
+    if remote_command is not None:
+        compiled_cmd = " ".join(
+            [compiled_cmd, '"{}"'.format(remote_command)])
+
+    os.system(compiled_cmd)
 
     LOG.debug("Connection to {} closed".format(cmd_fields["host"]))

@@ -206,6 +206,9 @@ class SSHSpec(api.SpecObject):
 
         issh_parser.add_argument("node_name", help="Node name. "
                                  "Ex.: controller-0")
+        issh_parser.add_argument("remote_command", nargs="?", help="Run "
+                                 "provided command line on remote host and "
+                                 "return its output.")
 
     def spec_handler(self, parser, args):
         """Handles the ssh command
@@ -214,10 +217,8 @@ class SSHSpec(api.SpecObject):
         :param args: the list of arguments received from cli.
         """
         pargs = parser.parse_args(args)
-        self._issh(pargs.node_name)
-
-    def _issh(self, node_name):
-        interactive_ssh.ssh_to_host(node_name)
+        interactive_ssh.ssh_to_host(pargs.node_name,
+                                    remote_command=pargs.remote_command)
 
 
 def main(args=None):

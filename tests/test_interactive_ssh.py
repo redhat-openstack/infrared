@@ -32,7 +32,6 @@ def test_workspace(workspace_manager_fixture):
 def test_parse_inventory(workspace_manager_fixture, test_workspace, mocker):
 
     mock_os = mocker.patch.object(issh, "os")
-    issh.ssh_to_host("test_host")
 
     ssh_cmd_str = " ".join([
         "ssh -i /some_key_path",
@@ -46,8 +45,29 @@ def test_parse_inventory(workspace_manager_fixture, test_workspace, mocker):
         "-o StrictHostKeyChecking=no",
         "-o UserKnownHostsFile=/dev/null",
         "-W %h:%p -i /some_another_key_path ttest@tthost\"",
-        " -p 33 test-user@0.0.0.0"
+        " -p 33 -t test-user@0.0.0.0"
     ])
+
+    issh.ssh_to_host("test_host")
+
+    mock_os.system.assert_called_with(ssh_cmd_str)
+
+    ssh_cmd_str = " ".join([
+        "ssh -i /some_key_path",
+        " -o ForwardAgent=yes",
+        "-o ServerAliveInterval=30",
+        "-o ControlMaster=auto",
+        "-o ControlPersist=30m",
+        "-o StrictHostKeyChecking=no",
+        "-o UserKnownHostsFile=/dev/null",
+        "-o ProxyCommand=\"ssh",
+        "-o StrictHostKeyChecking=no",
+        "-o UserKnownHostsFile=/dev/null",
+        "-W %h:%p -i /some_another_key_path ttest@tthost\"",
+        " -p 33 -t test-user@0.0.0.0 \"some cmd line\""
+    ])
+
+    issh.ssh_to_host("test_host", "some cmd line")
 
     mock_os.system.assert_called_with(ssh_cmd_str)
 
