@@ -30,6 +30,7 @@ Welcome to InfraRed's documentation!
    openstack_provisioner
    collect-logs
    tempest
+   foreman
 
 Indices and tables
 ==================
