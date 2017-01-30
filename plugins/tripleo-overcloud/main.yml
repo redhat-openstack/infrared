@@ -1,43 +1,18 @@
-- include: init.yml
-  tags:
-      - init
-      - ironic
-
-- include: hypervisor.yml
-  tags:
-      - hypervisor
-      - ironic
-      - instack
-  when: "'hypervisor' in groups"
+- name: Perform pre install tasks
+  include: "{{ overcloud_pre | default('pre.yml') }}"
 
 - name: Introspect our machines
-  include: introspect.yml
+  include: "{{ overcloud_introspect | default('introspect.yml') }}"
   tags: introspection
 
 - name: Tag our machines with proper flavors
-  include: tag.yml
+  include: "{{ overcloud_flavors | default('tag.yml') }}"
   tags: tagging
 
-- name: Populate the overcloud deploy script
-  include: build_templates.yml
-  tags: templates
-
 - name: Deploy the Overcloud
-  include: deploy.yml
+  include: "{{ overcloud_deploy | default('deploy.yml') }}"
   tags: deploy
 
-- name: Update inventory
-  include: update_inventory.yml
-  tags:
-      - inventory_update
-      - deploy
-
-- include: create_external_network.yml
-  tags:
-      - public_network
-      - post
-  when: install.public.network
-
 - name: Perform post install tasks
-  include: post.yml
+  include: "{{ overcloud_post | default('post.yml') }}"
   tags: post

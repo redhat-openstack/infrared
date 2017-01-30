@@ -13,17 +13,3 @@
             content: "{{ initial_facts.ansible_facts }}"
             dest: "{{ inventory_dir }}/{{ inventory_hostname }}"
         delegate_to: localhost
-
-- name: Pre Run Adjustments
-  hosts: undercloud
-  tags: init
-  gather_facts: no
-  any_errors_fatal: true
-  tasks:
-      - name: fetch undercloud.conf for lookup
-        fetch:
-            flat: yes
-            fail_on_missing: yes
-            src: ~/undercloud.conf
-            # use src basename
-            dest: "{{ inventory_dir }}/"
