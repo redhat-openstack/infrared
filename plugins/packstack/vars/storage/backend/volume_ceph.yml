@@ -1,0 +1,103 @@
+---
+nodes:
+  controller:
+    packages:
+      default: ceph-common
+
+storage:
+  services:
+    - cinder
+    - nova
+    - glance
+  ceph_conf_repo: !placeholder
+  ceph_conf_files:
+    - ceph.client.admin.keyring
+    - ceph.client.automation-cinder-backup.keyring
+    - ceph.client.automation-cinder.keyring
+    - ceph.client.automation-glance.keyring
+    - ceph.conf
+    - client.automation-cinder.key
+  volume:
+    variant:
+      share: !placeholder
+      shares_file: "/etc/cinder/ceph.shares"
+    config:
+      cinder:
+        "icehouse":
+          &cinder_cfg
+          DEFAULT:
+            volume_driver: "cinder.volume.drivers.rbd.RBDDriver"
+            rbd_user: "automation-volumes"
+            rbd_pool: "automation-volumes"
+            rbd_ceph_conf: "/etc/ceph/ceph.conf"
+            rbd_flatten_volume_from_snapshot: "false"
+            rbd_max_clone_depth: "5"
+            glance_api_version: "2"
+            backup_driver: "cinder.backup.drivers.ceph"
+            backup_ceph_conf: "/etc/ceph/ceph.conf"
+            backup_ceph_user: "automation-cinder-backups"
+            backup_ceph_pool: "automation-cinder-backups"
+            backup_ceph_chunk_size: "134217728"
+            backup_ceph_stripe_unit: "0"
+            backup_ceph_stripe_count: "0"
+            restore_discard_excess_bytes: "true"
+        "juno":
+          *cinder_cfg
+        "kilo":
+          *cinder_cfg
+        "5.0":
+          *cinder_cfg
+        "6.0":
+          *cinder_cfg
+        "7.0":
+          *cinder_cfg
+        "8.0":
+          *cinder_cfg
+      nova:
+        "icehouse":
+          &nova_cfg
+          DEFAULT:
+            rbd_user: "automation-volumes"
+        "juno":
+          *nova_cfg
+        "kilo":
+          *nova_cfg
+        "5.0":
+          *nova_cfg
+        "6.0":
+          *nova_cfg
+        "7.0":
+          *nova_cfg
+        "8.0":
+          *nova_cfg
+      glance:
+        "icehouse":
+          &glance_cfg_old
+          DEFAULT:
+            default_store: "rbd"
+            rbd_store_user: "automation-images"
+            rbd_store_pool: "automation-images"
+            show_image_direct_url: "True"
+            rbd_store_ceph_conf: "/etc/ceph/ceph.conf"
+            rbd_store_chunk_size: "8"
+        "juno":
+          &glance_cfg_new
+          glance_store:
+            rbd_store_user: "automation-images"
+            rbd_store_pool: "automation-images"
+            show_image_direct_url: "True"
+            rbd_store_ceph_conf: "/etc/ceph/ceph.conf"
+            rbd_store_chunk_size: "8"
+            stores: "glance.store.rbd.Store, glance.store.filesystem.Store, glance.store.http.Store"
+          DEFAULT:
+            default_store: "rbd"
+        "kilo":
+          *glance_cfg_new
+        "5.0":
+          *glance_cfg_old
+        "6.0":
+          *glance_cfg_new
+        "7.0":
+          *glance_cfg_new
+        "8.0":
+          *glance_cfg_new
