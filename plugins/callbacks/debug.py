@@ -26,12 +26,22 @@ class CallbackModule(CallbackModule_default):  # pylint: \
     '''
     Override for the default callback module.
 
-    Render std err/out outside of the rest of the result which it prints with
-    indentation.
+    Render cmd and stderr/out outside of the rest of the result
+    which it prints with indentation.
+
+    It is done by overriding default callback,
+    removing few fields from result before letting default callback process it,
+    extending generated output with nicely presentation of those fields
+    and then returning them back to result before returning from this module.
     '''
     CALLBACK_VERSION = 2.0
     CALLBACK_TYPE = 'stdout'
     CALLBACK_NAME = 'debug'
+
+    # List of keys which we want to hide from default output handler
+    HIDE_KEYS = ['stdout_lines', 'stderr_lines']
+    # List of keys which we want to print out nicely formatted at the end
+    PRETTIFY_KEYS = ['cmd', 'stdout', 'stderr', 'msg']
 
     def _dump_results(self, result):
         '''Return the text to output for a result.'''
@@ -39,17 +49,23 @@ class CallbackModule(CallbackModule_default):  # pylint: \
         # Enable JSON identation
         result['_ansible_verbose_always'] = True
 
+        # Save keys we handle in custom way
+        # (so we can return them back at the end)
         save = {}
-        for key in ['stdout', 'stdout_lines', 'stderr', 'stderr_lines', 'msg']:
+        for key in (self.HIDE_KEYS + self.PRETTIFY_KEYS):
             if key in result:
                 save[key] = result.pop(key)
 
+        # Let default handler print the rest (without keys we handle here)
         output = CallbackModule_default._dump_results(self, result)
 
-        for key in ['stdout', 'stderr', 'msg']:
+        # And now print nicely formatted those keys we have extra interest in
+        for key in self.PRETTIFY_KEYS:
             if key in save and save[key]:
                 output += '\n\n%s:\n\n%s\n' % (key.upper(), save[key])
 
+        # Now return original keys/values back to result
+        # to be transparent for rest of ansible
         for key, value in save.items():
             result[key] = value
 
