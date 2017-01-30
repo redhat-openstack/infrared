@@ -1,12 +1,12 @@
 - name: Enable the OpenStack repository on CentOS
-  yum:
+  package:
       state: present
       name: "centos-release-openstack-{{ product_version }}"
   when: ansible_distribution == 'CentOS'
   become: true
 
 - name: Enable the OpenStack repository on RHEL
-  yum:
+  package:
       state: present
       name:  "https://rdoproject.org/repos/openstack-{{ product_version }}/rdo-release-{{ product_version }}.rpm"
   when: ansible_distribution == 'RedHat'
