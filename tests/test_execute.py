@@ -531,3 +531,61 @@ def test_ansible_args(spec_fixture, workspace_manager_fixture,          # noqa
 
     # Combination of tags and start-at-task should avoid the file creation
     assert not path.exists(path.join(inventory_dir, output_file))
+
+
+@pytest.mark.parametrize("cli_args, from_file, expected_output", [    # noqa
+    # Tests CLI (no section)
+    ("--iniopt opt1=val1",
+     None,
+     {'defaults': {'opt1': 'val1'}}),
+
+    # Tests CLI
+    ("--iniopt sec1.opt1=val1",
+     None,
+     {'sec1': {'opt1': 'val1'}}),
+
+    # Tests CLI (multiple args)
+    ("--iniopt sec1.opt1=val1 --iniopt sec1.opt2=val2",
+     None,
+     {'sec1': {'opt1': 'val1', 'opt2': 'val2'}}),
+
+    # Tests from-file
+    (None,
+     'tests/example/files/answers_file.yml',
+     {'sec1': {'opt1': 'f_val1', 'opt2': 'f_val2'},
+      'sec2': {'opt1': 'f_val3'}}),
+
+    # Tests CLI with from-file
+    ("--iniopt secx.optx=valx",
+     'tests/example/files/answers_file.yml',
+     {'secx': {'optx': 'valx'}}),
+])
+def test_output_with_IniType(spec_fixture, tmpdir,
+                             profile_manager_fixture, test_profile,
+                             cli_args, from_file, expected_output):
+    """Verifies the output file with IniType complex type args from CLI & file
+    """
+    my_temp_dir = tmpdir.mkdir("tmp")
+    dry_output = my_temp_dir.join("dry_output.yml")
+
+    input_string = ['example', "--dry-run", "-o", str(dry_output)]
+
+    if from_file:
+        input_string += ['--from-file', from_file]
+
+    if cli_args:
+        input_string += cli_args.split()
+
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
+
+    profile_manager_fixture.activate(test_profile.name)
+    return_value = spec_manager.run_specs(args=input_string)
+
+    assert return_value is None
+    assert path.exists(dry_output.strpath),\
+        "Output file doesn't exit: {}".format(dry_output.strpath)
+
+    with open(dry_output.strpath) as fp:
+        loaded_yml = yaml.safe_load(fp)
+        assert loaded_yml['provision']['iniopt'] == expected_output

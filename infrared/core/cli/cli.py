@@ -407,6 +407,43 @@ class KeyValueList(ComplexType):
         return result_dict
 
 
+class IniType(ComplexType):
+    """Returns a dict from a dict-like string / list of strings
+
+    For example:
+      "section.option=value"
+        -> {'section': {'option': 'value'}}
+
+      "section1.option1=value1,section1.option2=value2"
+        -> {'section1': {'option1': 'value1', 'option2': 'value2'}}
+
+      ["section1.option1=value1", "section1.option2=value2"]
+        -> {'section1': {'option1': 'value1', 'option2': 'value2'}}
+    """
+
+    def resolve(self, value):
+        results_dict = {}
+
+        if isinstance(value, str):
+            value = value.split(',')
+
+        for item in value:
+            item = item.strip()
+            key, _value = item.split('=')
+            if '.' in key:
+                section, option = key.split('.')
+            else:
+                section = 'defaults'
+                option = key
+
+            if section not in results_dict:
+                results_dict[section] = {}
+
+            results_dict[section][option] = _value
+
+        return results_dict
+
+
 class ListValue(ComplexType):
     """Accept a list as string input.
 
@@ -437,5 +474,6 @@ COMPLEX_TYPES = {
     'Inventory': Inventory,
     'KeyValueList': KeyValueList,
     'AdditionalArgs': AdditionalOptionsType,
-    'ListValue': ListValue
+    'ListValue': ListValue,
+    'IniType': IniType
 }
