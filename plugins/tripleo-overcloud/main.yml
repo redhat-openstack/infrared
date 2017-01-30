@@ -1,18 +1,19 @@
 - name: Perform pre install tasks
   include: "{{ overcloud_pre | default('pre.yml') }}"
+  when: install.introspect|default('')
 
 - name: Introspect our machines
   include: "{{ overcloud_introspect | default('introspect.yml') }}"
-  when: not install.manual or install.overcloud.introspect|default(False)
+  when: install.introspect|default('')
 
 - name: Tag our machines with proper flavors
   include: "{{ overcloud_flavors | default('tag.yml') }}"
-  when: not install.manual or install.overcloud.tagging|default(False)
+  when: install.tagging|default('')
 
 - name: Deploy the Overcloud
   include: "{{ overcloud_deploy | default('deploy.yml') }}"
-  when: not install.manual or install.version|default('')
+  when: install.version|default('')
 
 - name: Perform post install tasks
   include: "{{ overcloud_post | default('post.yml') }}"
-  when: not install.manual or install.post
+  when: install.post|default('')

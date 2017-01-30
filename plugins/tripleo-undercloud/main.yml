@@ -9,7 +9,6 @@
 - name: Deploy the Undercloud
   include: "{{ install_undercloud | default('undercloud.yml') }}"
   when: install.version|default('')
-  tags: undercloud
 
 - name: Create an undercloud backup image (for quickstart)
   include: "{{ install_backup | default('backup.yml') }}"
@@ -22,4 +21,3 @@
 - name: Setup Overcloud images on the undercloud
   include: "{{ install_images | default('images.yml') }}"
   when: install.images.task|default('')
-  tags: images
