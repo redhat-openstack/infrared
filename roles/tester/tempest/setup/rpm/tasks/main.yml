@@ -23,6 +23,12 @@
   loop_control:
       loop_var: test_suite
 
+- name: Install junitxml
+  become: yes
+  yum:
+      name: "python-junitxml"
+      state: present
+
 # TODO(psedlak): make subunit2junitxml usage opt. in script, add the flag for run-tests.sh in run.yml after that
 - name: Install subunit filters - needed for subunit2junitxml
   become: yes
