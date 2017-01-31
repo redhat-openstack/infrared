@@ -7,12 +7,23 @@
   tasks:
       - name: Prepare tempest files
         include: tasks/pre/main.yml
+        tags:
+            - pre
 
       - name: Setup tempest
         include: "tasks/setup/main.yml"
+        tags:
+            - setup
+
+      - name: Configure tempest
+        include: "tasks/configure/main.yml"
+        tags:
+           - configure
 
       - name: Run tempest test suites
         include: "tasks/run_suite.yml"
         with_items: "{{ test.tests }}"
         loop_control:
             loop_var: test_suite
+        tags:
+            - run

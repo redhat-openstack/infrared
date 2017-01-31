@@ -19,12 +19,7 @@
   shell: |
       test -e .venv/bin/activate && source .venv/bin/activate
       source ~/keystonerc
-      if [ -f /usr/bin/discover-tempest-config ]; then
-        export TEMPESTCONF="/usr/bin/discover-tempest-config"
-      else
-        export TEMPESTCONF="tools/config_tempest.py"
-      fi
-      ${TEMPESTCONF} \
+      {{ config_command | default("tools/config_tempest.py") }} \
               {% if deployer_input_stat.stat.exists %}
               --deployer-input {{ deployer_input }} \
               {% endif %}
@@ -42,7 +37,7 @@
               {% endfor %}
               --out ~/{{ test.dir }}/etc/tempest.conf
   args:
-      chdir: "{{ test.dir }}"
+      chdir: "{{ config_dir | default('~/' + test.dir) }}"
   register: config_result
 
 - name: Print configuration cmd
