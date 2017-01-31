@@ -2,6 +2,13 @@
   include: "{{ overcloud_pre | default('pre.yml') }}"
   when: install.introspect|default('')
 
+- name: Provision loadbalancer node
+  include: loadbalancer.yml
+  tags:
+      - loadbalancer
+      - loadbalancer_setup
+  when: "'loadbalancer' in groups"
+
 - name: Introspect our machines
   include: "{{ overcloud_introspect | default('introspect.yml') }}"
   when: install.introspect|default('')

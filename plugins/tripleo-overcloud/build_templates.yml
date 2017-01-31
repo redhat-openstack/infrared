@@ -98,9 +98,6 @@
         when: not overcloud_deploy_script|default('')
         tags: deploy
 
-      - include: tasks/loadbalancer.yml
-        when: "not overcloud_deploy_script|default('') and groups.loadbalancer is defined"
-
       - name: Print deploy command
         command: "cat {{ overcloud_deploy_script }}"
         tags: deploy
