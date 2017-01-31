@@ -32,7 +32,7 @@ subparsers:
                   setup:
                       type: Value
                       help: |
-                          The setup type for tests
+                          The setup type for tests and for the tempestconf tool.
                           __LISTYAMLS__
                       default: git
                   deployer-input-file:
@@ -63,3 +63,10 @@ subparsers:
                       type: Value
                       help: The tempest wokring direcotry on the tester node
                       default: tempest-dir
+                  legacy-config:
+                      type: Bool
+                      help: |
+                          Specifies whether the tempest configuration should use legacy method by running configuration
+                          from the tempest repo itself without using the tempestconf package. Suitable only when
+                          setup is 'git'
+                      default: no
