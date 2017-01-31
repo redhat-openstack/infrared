@@ -7,8 +7,10 @@
   vars:
       installer_options:
           tripleo:
-              orchestration.stack_owner_role: heat_stack_owner
-              identity.region: regionOne
+              orchestration:
+                  stack_owner_role: heat_stack_owner
+              identity:
+                  region: regionOne
           packstack: {}
 
       openstack_config_options: "{{ installer_options.get(test.openstack.installer, {}) }}"
@@ -28,8 +30,10 @@
               identity.admin_password $OS_PASSWORD \
               scenario.img_dir ~/{{ test.dir }}/etc \
               {# config options #}
-              {% for name,value in config_options.iteritems() %}
-              {{name}} {{value}} \
+              {% for section_name,options in config_options.iteritems() %}
+              {% for option_name,value in options.iteritems() %}
+              {{section_name}}.{{option_name}} {{value}} \
+              {% endfor %}
               {% endfor %}
               --out ~/{{ test.dir }}/etc/tempest.conf
   args:
