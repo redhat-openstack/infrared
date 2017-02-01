@@ -56,7 +56,7 @@
     - shell: "cat /home/{{ installer.user.name }}/overcloudrc | grep USERNAME | cut -d '=' -f 2"
       register: oc_username
 
-    - shell: "cat /home/{{ installer.user.name }}/overcloudrc | grep TENANT | cut -d '=' -f 2"
+    - shell: "cat /home/{{ installer.user.name }}/overcloudrc | grep -E 'TENANT|PROJECT_NAME' | cut -d '=' -f 2"
       register: oc_tenant
 
     - shell: "source /home/{{ installer.user.name }}/overcloudrc && env | grep OS_PASSWORD | cut -d '=' -f 2"
