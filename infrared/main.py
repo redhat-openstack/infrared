@@ -7,6 +7,8 @@ from infrared.core.services import CoreServices
 from infrared.core.utils import logger
 from infrared.core.utils import interactive_ssh
 
+TABLEFMT = 'fancy_grid'
+
 LOG = logger.LOG
 
 
@@ -92,10 +94,11 @@ class WorkspaceManagerSpec(api.SpecObject):
             workspaces = self.workspace_manager.list()
             print(
                 tabulate(
-                    [[p.name, self.workspace_manager.is_active(p.name) or ""]
+                    [[p.name,
+                      "*" if self.workspace_manager.is_active(p.name) else ""]
                      for p in workspaces],
-                    headers=("Name", "Is Active"),
-                    tablefmt='orgtbl'))
+                    headers=("Name", "Active"),
+                    tablefmt=TABLEFMT))
         elif subcommand == 'delete':
             self.workspace_manager.delete(pargs.name)
             print("Workspace '{}' deleted".format(pargs.name))
@@ -112,7 +115,7 @@ class WorkspaceManagerSpec(api.SpecObject):
             print(
                 tabulate([node_name for node_name in nodes],
                          headers=("Name", "Address"),
-                         tablefmt='orgtbl'))
+                         tablefmt=TABLEFMT))
 
     def _create_workspace(self, name):
         """Creates a workspace """
@@ -190,7 +193,7 @@ class PluginManagerSpec(api.SpecObject):
             table.append([plugin_type, ','.join(plugins)])
 
         print tabulate(tabular_data=table, headers=headers,
-                       tablefmt="fancy_grid", numalign="stralign")
+                       tablefmt=TABLEFMT, numalign="stralign")
 
 
 class SSHSpec(api.SpecObject):
