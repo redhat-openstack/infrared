@@ -1,6 +1,7 @@
 import sys
 
 from tabulate import tabulate
+from functools import partial
 
 from infrared import api
 from infrared.core.services import CoreServices
@@ -8,6 +9,9 @@ from infrared.core.utils import logger
 from infrared.core.utils import interactive_ssh
 
 LOG = logger.LOG
+
+
+fancy_table = partial(tabulate, tablefmt='fancy_grid', numalign="stralign")
 
 
 class WorkspaceManagerSpec(api.SpecObject):
@@ -91,11 +95,11 @@ class WorkspaceManagerSpec(api.SpecObject):
         elif subcommand == 'list':
             workspaces = self.workspace_manager.list()
             print(
-                tabulate(
-                    [[p.name, self.workspace_manager.is_active(p.name) or ""]
+                fancy_table(
+                    [[p.name,
+                      "*" if self.workspace_manager.is_active(p.name) else ""]
                      for p in workspaces],
-                    headers=("Name", "Is Active"),
-                    tablefmt='orgtbl'))
+                    headers=("Name", "Active")))
         elif subcommand == 'delete':
             self.workspace_manager.delete(pargs.name)
             print("Workspace '{}' deleted".format(pargs.name))
@@ -110,9 +114,9 @@ class WorkspaceManagerSpec(api.SpecObject):
         elif subcommand == 'node-list':
             nodes = self.workspace_manager.node_list(pargs.name)
             print(
-                tabulate([node_name for node_name in nodes],
-                         headers=("Name", "Address"),
-                         tablefmt='orgtbl'))
+                fancy_table(
+                    [node_name for node_name in nodes],
+                    headers=("Name", "Address")))
 
     def _create_workspace(self, name):
         """Creates a workspace """
@@ -189,8 +193,7 @@ class PluginManagerSpec(api.SpecObject):
             plugins.sort()
             table.append([plugin_type, ','.join(plugins)])
 
-        print tabulate(tabular_data=table, headers=headers,
-                       tablefmt="fancy_grid", numalign="stralign")
+        print(fancy_table(tabular_data=table, headers=headers))
 
 
 class SSHSpec(api.SpecObject):
