@@ -57,7 +57,7 @@
       target_directory: "{{ rr_target_directory }}"
   become: true
 
-- name: create necessary repos for director using rhos-release
+- name: create necessary repos for rdo using rhos-release
   # todo(yfried): verify input on pre.yml
   rhos_release:
       state: install
@@ -65,7 +65,7 @@
       build_date: "{{ build | default(omit) }}"
       target_directory: "{{ rr_target_directory }}"
       distro_version: "{{ rr_distro_version }}"
-      source_hostname: "{{ selected_mirror.stdout|trim or '' }}"
+      source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
   register: command_result
   until: command_result.stderr.find('Connection reset by peer') == -1
   retries: 40

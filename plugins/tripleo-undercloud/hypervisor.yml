@@ -13,8 +13,8 @@
         become: yes
 
       - role: rdo-release
-        product_version: "{{ install.version }}"
-        when: install.version|openstack_distribution == 'RDO'
+        release: "{{ install.version }}"
+        when: "install.version|openstack_distribution == 'RDO'"
         become: yes
   tasks:
       - name: update /etc/hosts with VMs details

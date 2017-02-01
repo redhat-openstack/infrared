@@ -213,7 +213,7 @@ def main():
         argument_spec=dict(
             state=dict(default="install",
                        choices=['install', 'uninstall', 'update']),
-            release=dict(type='int'),
+            release=dict(),
             build_date=dict(),
             director=dict(type='bool', default=True),
             pin_puddle=dict(default=True),
