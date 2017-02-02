@@ -3,6 +3,8 @@
 # These tasks done for each type of node according to 'amount' variable.
 
 # save current node to "{{ node_dict }}"
+- debug: var=node.key
+
 - name: get node_dict
   include: var_lookup.yml
   vars:
@@ -22,11 +24,11 @@
       auto_ip: "{{ node_dict.auto_ip | default(auto_ip) }}"
       config_drive: "{{ node_dict.config_drive | default(config_drive) }}"
       flavor: "{{ node_dict.flavor | default(flavor_id) }}"
-      image: "{{ node_dict.image | default(provision.image) }}"
-      name: "{{ prefix }}{{ node_dict.name }}-{{ item }}"
-      # use regiterd networks
+      image: "{{ (node_dict.image|default({})).name | default(provision.image) }}"
+      name: "{{ prefix }}{{ node_dict.name }}-{{ item|int - 1 }}"
       nics: "{{ nics.results | map(attribute='stdout') | list }}"
       key_name: "{{ provision.key.name if provision.key.name else (prefix + provision.key.file | basename) }}"
+      security_groups: "{{ node_dict.security_groups | default(omit) }}"
       state: present
       wait: "{{ node_dict.wait | default(wait) }}"
   register: servers
@@ -51,13 +53,24 @@
   register: floating_ips
   with_items: "{{ servers.results | map(attribute='server') | list }}"
 
+- name: Get flavor facts
+  os_flavor_facts:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      name: "{{ node_dict.flavor | default(flavor_id) }}"
+      limit: 1
+
 - name: Add created servers to inventory
+  vars:
+      instance_flavor: "{{ openstack_flavors | first }}"
   add_host:
       # item.item is the server object
       name: "{{ item.item.name }}"
       ansible_ssh_host: "{{ item.floating_ip.floating_ip_address }}"
       groups: "{{ node_dict.groups | join(',') }}"
       ansible_ssh_private_key_file: "{{ provision.key.file }}"
-      ansible_ssh_user: "{{ provision.username }}"
+      ansible_ssh_user: "{{ node_dict.get('image', {}).ssh_user | default(provision.username) }}"
 #      eth1_interface_ip: "{{ item.item.addresses[data_network.name][0].addr }}"
+      ram: "{{ instance_flavor.ram }}"
+      disk: "{{ instance_flavor.disk }}"
+      vcpus: "{{ instance_flavor.vcpus }}"
   with_items: "{{ floating_ips.results }}"
