@@ -1,0 +1,41 @@
+---
+#  common topology for the ovb deployemnt using tripleo
+networks_vars:
+    networks:
+        data:
+            name: 'data'
+        external:
+            name: 'external'
+        management:
+            name: 'management'
+
+networks_data:
+    networks: "{{ networks_vars.networks }}"
+
+    subnets:
+        data:
+            name: "{{ networks_vars.networks.data.name }}-subnet"
+            network_name: "{{ networks_vars.networks.data.name }}"
+            allocation_pool_start: 192.168.24.10
+            allocation_pool_end: 192.168.24.99
+            cidr: 192.168.24.0/24
+            enable_dhcp: no
+        external:
+            name: "{{ networks_vars.networks.external.name }}-subnet"
+            network_name: "{{ networks_vars.networks.external.name }}"
+            allocation_pool_start: 10.0.0.10
+            allocation_pool_end: 10.0.0.99
+            cidr: 10.0.0.0/24
+        management:
+            name: "{{ networks_vars.networks.management.name }}-subnet"
+            network_name: "{{ networks_vars.networks.management.name }}"
+            allocation_pool_start: 172.16.1.10
+            allocation_pool_end: 172.16.1.99
+            cidr: 172.16.1.0/24
+            enable_dhcp: no
+
+    routers:
+        router:
+            name: 'router'
+            attach_subnets:
+                - "{{ networks_vars.networks.external.name }}-subnet"

@@ -11,6 +11,10 @@
       # Flavor defaults
       flavor_id: m1.large
       flavor_name: ir-flavor
+  roles:
+     - role: hostvars
+       action: cleanup
+       pattern: "{{ provision.prefix }}*"
   tasks:
       # TODO(yfried): add dynamic falvor creation
       - name: provision keys
