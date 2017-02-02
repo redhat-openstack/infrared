@@ -4,9 +4,16 @@
       msg: "The 'bmc_ipmi_network_name' variable if not  defined "
   when: "not bmc_ipmi_network_name or bmc_ipmi_network_name=='undefined'"
 
-- name: Install rhos-release
+- name: Get the rhos-release RPM
+  get_url:
+      url: "{{ rhos_release_rpm }}"
+      dest: "/tmp/rhos-release-latest.rpm"
+      force: yes
+      validate_certs: no
+
+- name: Install the rhos-release RPM
   package:
-      name: "{{ private.distro.rhel.rhos_release_rpm }}"
+      name: /tmp/rhos-release-latest.rpm
       state: present
 
 # todo(obaranov) avoid "latest". either use the same rhos-release as ospd uses, or use "passed_phase1" for a verified puddle
@@ -42,7 +49,7 @@
   os_subnets_facts:
       cloud: "{{ bmc_provision_cloud  | default(omit) }}"
       filters:
-          name: "{{ bmc_ipmi_network_subnet  }}"
+          name: "{{ bmc_ipmi_network_subnet }}"
   delegate_to: localhost
   become: no
   register: internal_subnet_details
@@ -58,7 +65,6 @@
       server: "{{ bmc_nodes_filter }}*"
   delegate_to: localhost
   become: no
-  register: server_facts
 
 # todo (obaranov): investigate how to get cloud rc parameters in more simplier way
 - name: Get cloud auth info
@@ -67,10 +73,9 @@
           - "{{ bmc_provision_cloud | default(omit) }}"
   delegate_to: localhost
   become: no
-  register: cloud_details
 
 - set_fact:
-      cloud_auth_info: "{{ cloud_details.ansible_facts.openstack.clouds[0].auth }}"
+      cloud_auth_info: "{{ openstack.clouds[0].auth }}"
 
 - name: Deploy config-bmc-ips
   copy:
@@ -89,6 +94,6 @@
 
 # Deploy service file for each node in 'overcloud_nodes' group
 - include: openstack-bmc.yml
-  with_items: "{{ server_facts.ansible_facts.openstack_servers }}"
+  with_items: "{{ groups.overcloud_nodes }}"
   loop_control:
       loop_var: node
