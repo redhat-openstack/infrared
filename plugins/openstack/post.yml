@@ -1,5 +1,5 @@
 - name: OpenStack Provisioner SSH wait
-  hosts: openstack_nodes
+  hosts: openstack_nodes:bmc:!ovb
   gather_facts: no
   any_errors_fatal: true
   tasks:
@@ -89,3 +89,8 @@
         state: link
         src: hosts-prov
 
+- name: Perform OVB configuration
+  include: ovb.yml
+  tags:
+      - ovb
+      - bmc_setup
