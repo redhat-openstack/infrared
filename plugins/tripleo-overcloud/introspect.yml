@@ -6,6 +6,14 @@
       - instack
   when: "'hypervisor' in groups"
 
+- name: Auto generate instackenv.json for ovb
+  include: "{{ overcloud_ovb | default('ovb.yml') }}"
+  tags:
+     - ironic
+     - instack
+     - ovb
+  when: "'bmc' in groups"
+
 - name: Introspect our machines
   hosts: undercloud
   gather_facts: no
@@ -52,6 +60,13 @@
             - ironic
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
             - skip_ansible_lint
+
+      - name: set the root device for baremetal nodes (with size hint)
+        shell: |
+            source ~/stackrc
+            ironic node-update {{ item }} add properties/root_device='{"size": {{ hostvars[item].disk  }} }'
+        with_items: "{{ groups['overcloud_nodes'] | default([])}}"
+        when: "'bmc' in groups"
 
       - name: start node introspection
         shell: |
