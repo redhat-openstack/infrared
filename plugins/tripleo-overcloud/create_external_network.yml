@@ -10,7 +10,7 @@
 
 - name: External network creation
   hosts: undercloud
-  gather_facts: no
+  gather_facts: yes
   any_errors_fatal: true
   vars_files:
       - "vars/public/subnet/{{ install.public.subnet }}.yml"
@@ -40,17 +40,20 @@
             recurse: yes
         register: network_environment_file_path
 
-      - fail:
-            msg: "Unable to find the deployment network configuration file"
-        when: 'network_environment_file_path.matched == 0'
+      # do not fail on missing template file.
+      # if template is missing then network islation is not used
+      # and the default parameters will be used for deployment
 
       - name: read deployment network configuration
         command: "cat {{ network_environment_file_path.files[0].path }}"
         register: network_template_out
+        when: network_environment_file_path.matched > 0
+
 
       - name: load deployment network configuration as YAML
         set_fact:
             network_template:  "{{ network_template_out.stdout | from_yaml }}"
+        when: network_environment_file_path.matched > 0
 
       # for openstack v11 the OS_TENANT_NAME is replaced with OS_PROJECT_NAME
       # Trying to resolve OS_PROJECT_NAME and then OS_TENANT_NAME
@@ -77,8 +80,8 @@
             # FIXME(yfried): this is commented because virthost solution is misconfiguring vlan. Need to reevaluate the vlan indicators
             # # If 'datacentre' physnet is in vlan trunk, this means ext-net must be of vlan type
             # physnet_type: "{{ (physnet_name in vlan_trunks.stdout) | ternary('vlan', 'flat') }}"
-            physnet_type: "{{ ('hypervisor' in groups) | ternary('flat', 'vlan') }}"
-            vlan_id: "{{ network_template.parameter_defaults.ExternalNetworkVlanID|default('') }}"
+            physnet_type: "{{ ('hypervisor' in groups or 'ovb' in groups) | ternary('flat', 'vlan') }}"
+            vlan_id: "{{ ((network_template|default({})).parameter_defaults|default({})).ExternalNetworkVlanID|default('') }}"
             # Here can't be used {{ path_venv }}, because it's not a Jinja template
             ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
             auth: "{{ creds.stdout | from_yaml }}"

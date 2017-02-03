@@ -10,7 +10,7 @@
         vars:
             local_src: "{%- if conf.file|default('') -%}
                 {{ conf.file }}
-                {%- elif 'hypervisor' in groups.all -%}
+                {%- elif 'hypervisor' in groups.all or 'bmc' in groups -%}
                 templates/undercloud.conf
                 {%- else -%}
                 False

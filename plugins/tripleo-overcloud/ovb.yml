@@ -1,0 +1,58 @@
+- name: Generate the instackenv.json
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  vars:
+      # todo(obaranov) dynamically get/read from settings the ipmi interface name
+      ipmi_interface: "eth0"
+  tasks:
+      - name: Get undercloud private key
+        command: "cat ~/.ssh/id_rsa"
+        register: uc_pkey_result
+
+      - name: Prepare instack.json if one doesn't exist
+        vars:
+            instack_input: "{{ (install.instackenv|default({})).file|default('') }}"
+            instack_output: "~/instackenv.json"
+        template:
+            src: templates/instackenv-bmc.json.j2
+            dest: "{{ instack_output }}"
+        when: not instack_input
+
+      - name: Set MTU values
+        become: yes
+        command: "ip link set {{ ipmi_interface }} mtu 1450"
+        with_items:
+          - "{{ ipmi_interface }}"
+
+      - name: Save MTU values
+        become: yes
+        lineinfile:
+            dest: "/etc/sysconfig/network-scripts/ifcfg-{{ item }}"
+            line: "MTU=1450"
+            regexp: '^MTU='
+        with_items:
+          - "{{ ipmi_interface }}"
+
+      - name: Ensure neutron will use needed MTU
+        become: yes
+        lineinfile: dest="/etc/dnsmasq-ironic.conf" line="dhcp-option-force=26,1450"
+
+      - name: Restart neutron and ironic services
+        become: yes
+        service:
+            name: "{{ item }}"
+            state: restarted
+        with_items:
+            - "openstack-ironic-conductor"
+            - "neutron-server.service"
+            - "neutron-openvswitch-agent.service"
+            - "neutron-dhcp-agent.service"
+
+      - name: Set neutron subnet quota to unlimited
+        ignore_errors: true
+        shell: >
+            source ~/stackrc;
+            neutron quota-update --subnet -1;
+            neutron quota-update --network -1;
+            neutron quota-update --security_group -1;
