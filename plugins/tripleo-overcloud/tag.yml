@@ -42,15 +42,15 @@
             - name: check for original flavors
               shell: >
                   source ~/stackrc;
-                  openstack flavor list | awk '/{{ item.name.rstrip('1234567890-') }}/ {print $4}'
+                  openstack flavor list | awk '/{{ item.name.rstrip('1234567890-').split('-')[-1] }}/ {print $4}'
               with_items: "{{ overcloud_facts.nodes | default([]) }}"
               register: original_flavors
 
             - name: delete original flavors
               shell: |
                   source ~/stackrc
-                  openstack flavor delete {{ item[0].name.rstrip('1234567890-') }}
-              when: "item[0].name.rstrip('1234567890-') in item[1].cmd"
+                  openstack flavor delete {{ item[0].name.rstrip('1234567890-').split('-')[-1] }}
+              when: "item[0].name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
               tags: skip_ansible_lint
               with_together:
                   - "{{ overcloud_facts.nodes | default([]) }}"
@@ -61,9 +61,9 @@
             - name: Workarond for BZ #1317312
               shell: |
                  source ~/stackrc
-                 nova flavor-delete {{ item[0].name.rstrip('1234567890-') }}
+                 nova flavor-delete {{ item[0].name.rstrip('1234567890-').split('-')[-1] }}
               tags: skip_ansible_lint
-              when: "item[0].name.rstrip('1234567890-') in item[1].cmd and item[2].stderr == 'public endpoint for messaging service not found'"
+              when: "item[0].name.rstrip('1234567890-').split('-')[-1] in item[1].cmd and item[2].stderr == 'public endpoint for messaging service not found'"
               with_together:
                   - "{{ overcloud_facts.nodes | default([]) }}"
                   - "{{ original_flavors.results }}"
@@ -78,10 +78,10 @@
                   source ~/stackrc;
                   openstack flavor create
                   --id auto
-                  --ram {{ item.memory }}
-                  --disk {{ [(item.disk | int) - 3, flv_min_disk_size] | max }}
-                  --vcpus {{ [(item.cpu | int) - 1, flv_min_cpu] | max }}
-                  {{ item.name.rstrip('1234567890-') }}
+                  --ram {{ hostvars[item.name].ram | default(item.memory) }}
+                  --disk {{ [(hostvars[item.name].disk | default(item.disk) | int) - 3, flv_min_disk_size] | max }}
+                  --vcpus {{ [(hostvars[item.name].vcpus | default(item.cpu) | int) - 1, flv_min_cpu] | max }}
+                  {{ item.name.rstrip('1234567890-').split('-')[-1] }}
               register: flavor_result
               failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item.name }} already exists') != -1"
               with_items: "{{ overcloud_facts.nodes | default([]) }}"
@@ -110,7 +110,7 @@
             source ~/stackrc
             ironic node-update {{ item[0].stdout }} add properties/capabilities='profile:{{ item[1].cmd.split() | last }},boot_option:local'
         tags: skip_ansible_lint
-        when: "item[0].item.name is defined and item[1].cmd is defined and item[0].item.name.rstrip('1234567890-') in item[1].cmd"
+        when: "item[0].item.name is defined and item[1].cmd is defined and item[0].item.name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
         with_together:
             - "{{ node_list.results }}"
             - "{{ tagged_flavors | default([]) }}"
