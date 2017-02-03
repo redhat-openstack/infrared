@@ -4,9 +4,16 @@
   tags: storage
   when: "install.storage.backend is defined and install.storage.backend"
 
+- name: Check if user provided netwrok templates
+  tags: network
+  stat:
+      path: "{{ template_base }}/network"
+  register: network
+
 - name: Append netwrok templates to the deploy script
   include: network.yml
   tags: network
+  when: network.stat.exists
 
 - name: Setup the overcloud ssl
   include: ssl.yml
