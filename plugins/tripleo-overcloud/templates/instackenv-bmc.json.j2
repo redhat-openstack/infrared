@@ -1,0 +1,15 @@
+{
+  "nodes": [
+{% for host_name in groups['overcloud_nodes'] %}
+    {
+      "name": "{{ host_name }}",
+      "pm_addr": "{{ hostvars[host_name].ipmi_ip }}",
+      "mac": ["{{ hostvars[host_name].ipmi_mac }}"],
+      "pm_password": "password",
+      "pm_type": "pxe_ipmitool",
+      "arch": "x86_64",
+      "pm_user": "admin"
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
+    ]
+}
