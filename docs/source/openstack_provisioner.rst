@@ -25,7 +25,7 @@ OpenStack Cloud Details
     ``clouds.yml`` is expected in either ``~/.config/openstack`` or ``/etc/openstack`` directories
     according to `documentation <http://docs.openstack.org/developer/os-client-config/#config-files>`_:
 
-        .. note:: You can also omit the cloud parameter, and InfraRed will sourced openstackrc file:
+        .. note:: You can also omit the cloud parameter, and `infrared` will sourced openstackrc file:
 
           .. code-block:: plain
 
@@ -68,7 +68,7 @@ please refer to `Topology`_ and `Virsh plugin`_ description.
     use ``openstack --os-cloud cloud_name image list`` to see a list of available images
 
 * ``--cleanup`` Boolean. Whether to provision resources, or clean them from the tenant.
-    `InfraRed` registers all provisioned resources to the `workspace <workspace.html>`_ on creation,
+    `Infrared` registers all provisioned resources to the `workspace <workspace.html>`_ on creation,
     and will clean only registered resources::
 
         infrared openstack --cleanup yes

@@ -6,7 +6,7 @@ SHARED_GROUPS = [
         'options': {
             'debug': {
                 'action': 'store_true',
-                'help': 'Run InfraRed in DEBUG mode',
+                'help': 'Run infrared in DEBUG mode',
                 'short': 'd'
             }
         }

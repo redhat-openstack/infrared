@@ -22,7 +22,7 @@ class SpecParser(object):
         """Reads spec & vars from plugin and constructs the parser instance
 
         :param subparser: argparse.subparser to extend
-        :param plugin: InfraRedPlugin object
+        :param plugin: InfraredPlugin object
         :param base_groups: dict, included groups
         :return: SpecParser object based on given plugin spec & vars
         """

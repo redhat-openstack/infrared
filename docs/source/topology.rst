@@ -22,7 +22,7 @@ For example, if we choose the `Virsh <virsh.html>`_ provisioner::
 The above command will create 1 VM of type ``undercloud`` and 3 VMs of type ``controller``
 
 For any node that is provided in the CLI ``--topology-nodes`` flag,
-`InfraRed` looks for the node first under ``vars/topology/nodes/NODENAME.yml``
+`infrared` looks for the node first under ``vars/topology/nodes/NODENAME.yml``
 and if not found, under ``default/topology/nodes/NODENAME.yml``
 where we supply a default set of supported / recommended topology files.
 
@@ -58,8 +58,8 @@ Lets examine the structure of topology file (located: var/topology/nodes/control
 
 For more topology file examples, please check out the default `available nodes <virsh>`_
 
-.. _`virsh`: https://github.com/rehdat-openstack/InfraRed/tree/IR2/plugins/virsh/defaults/topology/nodes
-.. .. _`openstack`: https://github.com/rehdat-openstack/InfraRed/tree/IR2/plugins/openstack/defaults/topology/nodes
+.. _`virsh`: https://github.com/rehdat-openstack/infrared/tree/IR2/plugins/virsh/defaults/topology/nodes
+.. .. _`openstack`: https://github.com/rehdat-openstack/infrared/tree/IR2/plugins/openstack/defaults/topology/nodes
 
 Network topology
 ----------------

@@ -24,7 +24,7 @@ BUILTIN_PLUGINS_PATH = "./plugins"
 LOG = logger.LOG
 
 
-class InfraRedPluginManager(object):
+class InfraredPluginManager(object):
 
     PLUGINS_DICT = OrderedDict()
     SUPPORTED_TYPES_SECTION = 'supported_types'
@@ -43,7 +43,7 @@ class InfraRedPluginManager(object):
             if self.config.has_section(plugin_type_section):
                 for plugin_name, plugin_path in self.config.items(
                         plugin_type_section):
-                    plugin = InfraRedPlugin(plugin_path)
+                    plugin = InfraredPlugin(plugin_path)
                     self.__class__.PLUGINS_DICT[plugin_name] = plugin
 
     @property
@@ -101,7 +101,7 @@ class InfraRedPluginManager(object):
         """Returns an instance of plugin based on name
 
         :param plugin_name: Plugin name
-        :return: InfraRedPlugin instance
+        :return: InfraredPlugin instance
         """
         return cls.PLUGINS_DICT[plugin_name]
 
@@ -134,7 +134,7 @@ class InfraRedPluginManager(object):
             os.chdir(cwd)
             shutil.rmtree(tmpdir)
 
-        plugin = InfraRedPlugin(plugin_path)
+        plugin = InfraredPlugin(plugin_path)
         plugin_type = plugin.config['plugin_type']
         # FIXME(yfried) validate spec and throw exception on missing input
 
@@ -192,7 +192,7 @@ class InfraRedPluginManager(object):
             pip.main(args=pip_args)
 
 
-class InfraRedPlugin(object):
+class InfraredPlugin(object):
     PLUGIN_SPEC_FILE = 'plugin.spec'
 
     # PLUGIN_DIRS = dict(
@@ -254,7 +254,7 @@ class InfraRedPlugin(object):
         subparsers = self.config['subparsers']
         plugins = subparsers.keys()
         if len(plugins) != 1:
-            # TODO(aopincar): Replace with a proper InfraRed exception
+            # TODO(aopincar): Replace with a proper infrared exception
             raise Exception("Only one plugin should be defined in spec")
         return plugins[0]
 

@@ -31,9 +31,9 @@ def spec_fixture():
     """Generates plugin spec for testing, using tests/example plugin dir. """
     plugin_dir = path.join(path.abspath(path.dirname(tests.__file__)),
                            'example')
-    test_plugin = plugins.InfraRedPlugin(plugin_dir=plugin_dir)
-    from infrared.api import InfraRedPluginsSpec
-    spec = InfraRedPluginsSpec(test_plugin)
+    test_plugin = plugins.InfraredPlugin(plugin_dir=plugin_dir)
+    from infrared.api import InfraredPluginsSpec
+    spec = InfraredPluginsSpec(test_plugin)
     yield spec
 
 

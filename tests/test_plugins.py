@@ -9,8 +9,8 @@ from infrared.core.utils.exceptions import IRFailedToAddPlugin
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 from infrared.core.utils.exceptions import IRUnsupportedSpecOptionType
 from infrared.core.utils.dict_utils import dict_insert
-from infrared.core.services.plugins import InfraRedPluginManager
-from infrared.core.services.plugins import InfraRedPlugin
+from infrared.core.services.plugins import InfraredPluginManager
+from infrared.core.services.plugins import InfraredPlugin
 from infrared.core.services import CoreServices, ServiceName
 
 PLUGIN_SPEC = 'plugin.spec'
@@ -75,7 +75,7 @@ def plugin_manager_fixture(plugins_conf_fixture):
 
         # replace core service with or test service
         CoreServices.register_service(ServiceName.PLUGINS_MANAGER,
-                                      InfraRedPluginManager(lp_file.strpath))
+                                      InfraredPluginManager(lp_file.strpath))
         return CoreServices.plugins_manager()
 
     yield plugin_manager_helper
@@ -119,7 +119,7 @@ def test_add_plugin(plugin_manager_fixture):
     """Tests the ability to add plugins
 
     :param plugin_manager_fixture: Fixture object which yields
-    InfraRedPluginManger object
+    InfraredPluginManger object
     """
 
     plugin_manager = plugin_manager_fixture()
@@ -148,7 +148,7 @@ def test_load_plugin(plugin_manager_fixture):
     """Test that an existing plugin can be loaded and it's properties
 
     :param plugin_manager_fixture: Fixture object which yields
-    InfraRedPluginManger object
+    InfraredPluginManger object
     """
 
     plugin_dir = 'type1_plugin1'
@@ -162,7 +162,7 @@ def test_load_plugin(plugin_manager_fixture):
 
     plugin = plugin_manager.get_plugin(plugin_name=plugin_dict['name'])
 
-    assert type(plugin) is InfraRedPlugin, "Failed to add a plugin"
+    assert type(plugin) is InfraredPlugin, "Failed to add a plugin"
     assert plugin.name == plugin_dict['name'], "Wrong plugin name"
     assert plugin.description == plugin_dict['description'], \
         'Wrong plugin description'
@@ -173,7 +173,7 @@ def test_add_plugin_with_same_name(plugin_manager_fixture):
     exists
 
     :param plugin_manager_fixture: Fixture object which yields
-    InfraRedPluginManger object
+    InfraredPluginManger object
     """
 
     plugin_dir = 'type1_plugin1'
@@ -201,7 +201,7 @@ def test_add_plugin_unsupported_type(plugin_manager_fixture):
     """Test that it's not possible to add a plugin from unsupported type
 
     :param plugin_manager_fixture: Fixture object which yields
-    InfraRedPluginManger object
+    InfraredPluginManger object
     """
 
     plugin_manager = plugin_manager_fixture()
@@ -230,7 +230,7 @@ def test_remove_plugin(plugin_manager_fixture):
     """ Tests the ability to remove a plugin
 
     :param plugin_manager_fixture: Fixture object which yields
-    InfraRedPluginManger object
+    InfraredPluginManger object
     """
 
     plugins_conf = {}
@@ -273,7 +273,7 @@ def test_remove_unexisting_plugin(plugin_manager_fixture):
     Checks that no exception is being raised and no changes in
     InfraredPluginManager dict and configuration file
     :param plugin_manager_fixture: Fixture object which yields
-    InfraRedPluginManger object
+    InfraredPluginManger object
     """
 
     plugin_manager = plugin_manager_fixture()
@@ -301,8 +301,8 @@ def test_plugin_cli(plugin_manager_fixture, input_args, plugins_conf):
     """Tests that plugin CLI works
 
     :param plugin_manager_fixture: Fixture object which yields
-    InfraRedPluginManger object
-    :param input_args: InfraRed's testing arguments
+    InfraredPluginManger object
+    :param input_args: infrared's testing arguments
     :param plugins_conf: Plugins conf data as a dictionary
     """
     plugin_manager_fixture(plugins_conf)
@@ -318,7 +318,7 @@ def test_add_plugin_no_spec(plugin_manager_fixture):
     """Tests that it's not possible to add plugin without a spec file
 
     :param plugin_manager_fixture: Fixture object which yields
-    InfraRedPluginManger object
+    InfraredPluginManger object
     """
 
     plugin_dir = os.path.join(SAMPLE_PLUGINS_DIR, 'plugin_without_spec')
@@ -375,7 +375,7 @@ def test_add_plugin_corrupted_spec(tmpdir_factory, description, plugin_spec):
 
     try:
         with pytest.raises(IRFailedToAddPlugin):
-            InfraRedPlugin.spec_validator(lp_file.strpath)
+            InfraredPlugin.spec_validator(lp_file.strpath)
     finally:
         lp_dir.remove()
 
@@ -384,7 +384,7 @@ def test_plugin_with_unsupporetd_option_type_in_spec(plugin_manager_fixture):
     """Tests that the user get a proper error
 
     :param plugin_manager_fixture: Fixture object which yields
-    InfraRedPluginManger object
+    InfraredPluginManger object
     """
     plugin_dir = os.path.join(SAMPLE_PLUGINS_DIR,
                               'plugin_with_unsupported_option_type_in_spec')

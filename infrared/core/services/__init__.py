@@ -56,7 +56,7 @@ class CoreServices(object):
         # create plugins manager
         if ServiceName.PLUGINS_MANAGER not in CoreServices._SERVICES:
             cls.register_service(ServiceName.PLUGINS_MANAGER,
-                                 plugins.InfraRedPluginManager(plugins_conf))
+                                 plugins.InfraredPluginManager(plugins_conf))
 
     @classmethod
     def register_service(cls, service_name, service):

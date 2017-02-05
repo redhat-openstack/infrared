@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = InfraRed
+SPHINXPROJ    = infrared
 SOURCEDIR     = source
 BUILDDIR      = build
 

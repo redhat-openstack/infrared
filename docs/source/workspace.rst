@@ -3,13 +3,13 @@
 Workspaces
 ^^^^^^^^^^
 
-With `workspaces`, user can manage several environments created by `InfraRed` and alternate between them.
+With `workspaces`, user can manage several environments created by `infrared` and alternate between them.
 All runtime files (Inventory, hosts, ssh configuration, ansible.cfg, etc...) will be loaded from a workspace directory and all output files
 (Inventory, ssh keys, environment settings, facts caches, etc...) will be generated into that directory.
 
 
 Create:
-    Create new workspace. If name isn't provided, InfraRed will generate one based on timestamp::
+    Create new workspace. If name isn't provided, `infrared` will generate one based on timestamp::
 
         infrared workspace create example
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# InfraRed documentation build configuration file, created by
+# infrared documentation build configuration file, created by
 # sphinx-quickstart on Wed Dec  7 11:34:21 2016.
 #
 # This file is execfile()d with the current directory set to its
@@ -51,7 +51,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'InfraRed'
+project = u'infrared'
 copyright = u'2016, Red Hat'
 author = u'Yair Fried'
 
@@ -104,7 +104,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'InfraReddoc'
+htmlhelp_basename = 'infrareddoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -131,7 +131,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'InfraRed.tex', u'InfraRed Documentation',
+    (master_doc, 'infrared.tex', u'infrared Documentation',
      u'Yair Fried', 'manual'),
 ]
 
@@ -141,7 +141,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'infrared', u'InfraRed Documentation',
+    (master_doc, 'infrared', u'infrared Documentation',
      [author], 1)
 ]
 
@@ -152,8 +152,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'InfraRed', u'InfraRed Documentation',
-     author, 'InfraRed', 'One line description of project.',
+    (master_doc, 'infrared', u'infrared Documentation',
+     author, 'infrared', 'One line description of project.',
      'Miscellaneous'),
 ]
 

@@ -48,7 +48,7 @@ class SpecObject(object):
         """
 
 
-class InfraRedPluginsSpec(SpecObject):
+class InfraredPluginsSpec(SpecObject):
     """Adds Plugin object as subparser to ``infrared`` commnad. """
 
     add_base_groups = True
@@ -60,7 +60,7 @@ class InfraRedPluginsSpec(SpecObject):
         """
         self.plugin = plugin
         self.specification = None
-        super(InfraRedPluginsSpec, self).__init__(plugin.name, *args, **kwargs)
+        super(InfraredPluginsSpec, self).__init__(plugin.name, *args, **kwargs)
 
     def extend_cli(self, root_subparsers):
         """Extend CLI with plugin subparser. """
@@ -157,7 +157,7 @@ class SpecManager(object):
     def __init__(self):
         # create entry point
         self.parser = argparse.ArgumentParser(
-            description='Infrared entry point')
+            description='infrared entry point')
         self.root_subparsers = self.parser.add_subparsers(dest="subcommand")
         self.spec_objects = {}
 

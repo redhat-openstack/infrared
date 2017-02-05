@@ -3,7 +3,7 @@
 Hypervisor machine
 ------------------
 
-Hypervisor machine is the target machine where InfraRed's virsh provisioner will create
+Hypervisor machine is the target machine where `infrared`'s virsh provisioner will create
 virtual machines and networks (using libvirt) to emulate baremetal infrastructure.
 
 As such there are several specific requirements it has to meet.
@@ -19,8 +19,8 @@ Especially, for Ironic (TripleO) to control them, those **libvirt VMs** need to 
 for **iPXE provisioning**.
 And also extra user has to exist, which can ssh in the hypervisor and control (restart...) libvirt VMs.
 
-.. note:: InfraRed is currently attempting to configure or validate all (most) of this but it's scattered across all provisiner/installer steps.
-          Due to nature of installers such as OSPd and current InfraRed structure it may not be 100% safe for rerunning
+.. note:: `infrared` is currently attempting to configure or validate all (most) of this but it's scattered across all provisiner/installer steps.
+          Due to nature of installers such as OSPd and current`infrared` structure it may not be 100% safe for rerunning
           (failure in previous run may prevent following one from succeeding in these preparation steps).
           We are currently working on a more idempotent approach which should resolve the above issues (if present).
 
@@ -39,11 +39,11 @@ What **user has to provide**:
 
       + may work with other distributions (best-effort/limited support)
 
-    - **yum repositories** has to be **preconfigured** by user (foreman/...) before using InfraRed so it can install dependencies
+    - **yum repositories** has to be **preconfigured** by user (foreman/...) before using `infrared` so it can install dependencies
 
-      + esp. for InfraRed to handle ``ipxe-roms-qemu`` it requires either **RHEL-7.3-server channel**
+      + esp. for `infrared` to handle ``ipxe-roms-qemu`` it requires either **RHEL-7.3-server channel**
 
-What **InfraRed takes care of**:
+What **infrared takes care of**:
 
     - ``ipxe-roms-qemu`` package of at least ``version 2016xxyy`` needs to be installed
 
@@ -57,7 +57,7 @@ What **InfraRed takes care of**:
       + ideally with **nested=1** support
 
     - ``stack`` user created with polkit privileges for *org.libvirt.unix.manage*
-    - **ssh key** with which InfraRed can authenticate (created and) added for *root* and *stack* user,
+    - **ssh key** with which `infrared` can authenticate (created and) added for *root* and *stack* user,
       ATM they are handled differently/separately:
 
       + for *root* the ``infared/id_rsa.pub`` gets added to authorized_keys
