@@ -29,7 +29,7 @@
 - name: append the network type
   lineinfile:
       dest: "{{ template_base }}/network/{{ network_environment_file }}"
-      line: "{{ item }}"
+      line: "    {{ item }}"
   with_items:
     - 'NeutronNetworkType: {{ install.network.backend }}'
     - 'NeutronTunnelTypes: {{ (install.network.backend == "vlan") | ternary("", install.network.backend) }}'
