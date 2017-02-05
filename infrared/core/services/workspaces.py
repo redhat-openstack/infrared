@@ -71,7 +71,7 @@ class Workspace(object):
 
         The inventory file is the workspace's "source of truth".
         * It tells ansibe where the workspace is ({{ inventory_dir}})
-        * It tells InfraRed the workspace node list.
+        * It tells infrared the workspace node list.
         * It holds node attributes and ssh tunneling if required
 
         Over time, multiple files might be created in the directory. The active

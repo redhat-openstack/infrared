@@ -1,8 +1,8 @@
 Plugins
 =======
 
-In InfraRed 2.0, `plugins` are fully self contained Ansible projects.
-Any ansible project can become an InfraRed plugin by adhering to the following
+In `infrared` 2.0, `plugins` are fully self contained Ansible projects.
+Any ansible project can become an`infrared` plugin by adhering to the following
 structure (see ``tests/example`` for an example plugin)::
 
     tests/example
@@ -27,7 +27,7 @@ Plugin structure
 
 Playbooks
 ---------
-InfraRed will look for a playbook called ``main.yml`` to start the execution from.
+`infrared` will look for a playbook called ``main.yml`` to start the execution from.
 
 Plugins are regular Ansible projects, and as such, they might include or reference any item
 (files, roles, var files, ansible plugins, modules, templates, etc...) using relative paths
@@ -45,7 +45,7 @@ to current playbook
 
 Specification
 -------------
-InfraRed gets all plugin info from ``plugin.spec`` file. Following `YAML` format.
+`infrared` gets all plugin info from ``plugin.spec`` file. Following `YAML` format.
 This file define the CLI this plugin exposes, its name and its type.
 
 .. literalinclude:: ../../tests/example/plugin.spec
@@ -55,7 +55,7 @@ Include Groups
 A plugin can reference preset control arguments to be included in its CLI
 
 Answers File:
-    Instead of explicitly listing all CLI options every time, `InfraRed` plugins
+    Instead of explicitly listing all CLI options every time, `infrared` plugins
     can read their input from ``INI`` answers file, using ``--from-file`` switch.
     use ``--generate-answers-file`` switch to generate such file. It will list all
     input arguments a plugin accepts, with their help and defaults.
@@ -78,7 +78,7 @@ Inventory:
 Ansible options:
     * ``--verbose``: Set ansible verbosity level
     * ``--ansible-args``: Pass all subsequent input to Ansible as raw arguments. This is for power-users wishing to access
-      Ansible functionality not exposed by `Infrared`::
+      Ansible functionality not exposed by `infrared`::
 
          infrared [...] --ansible-args step;tags=tag1,tag2;forks=500
 
@@ -88,7 +88,7 @@ Ansible options:
 
 Complex option types
 ~~~~~~~~~~~~~~~~~~~~
-`InfraRed` extends `argparse <https://docs.python.org/2/library/argparse.html>`_ with the following option types.
+`Infrared` extends `argparse <https://docs.python.org/2/library/argparse.html>`_ with the following option types.
 These options are nested into the vars dict that is later passed to Ansible as extra-vars.
 
 * Value:
@@ -196,10 +196,10 @@ Placeholders allow users to add a level of sophistication in options help field.
 Plugin Manager
 ^^^^^^^^^^^^^^
 
-The following commands are used to manage `InfraRed` plugins
+The following commands are used to manage `infrared` plugins
 
 Add:
-    InfraRed will look for a `plugin.spec <Specification>`_ file in the given directory and
+    `infrared` will look for a `plugin.spec <Specification>`_ file in the given directory and
     register the plugin under the given plugin-type::
 
         infrared plugin add tests/example

@@ -16,7 +16,7 @@ Required arguments
     The complete list of the available suites can be found by running ``ir tempest --help``
 
 * ``--openstackrc``: The `OpenStack RC <http://docs.openstack.org/user-guide/common/cli-set-environment-variables-using-openstack-rc.html>`_ file.
-    The absolute and relative paths to the file are supported.  When this option is not provided, the InfraRed will try to use the `keystonerc` file from the active workspace.
+    The absolute and relative paths to the file are supported.  When this option is not provided, `infrared` will try to use the `keystonerc` file from the active workspace.
     The openstackrc file is copied to the tester station and used to configure and run Tempest.
 
 
@@ -34,7 +34,7 @@ The following useful arguments can be provided to tune tempest tester. Complete 
     Default value is ``HEAD``.
 
 * ``--deployer-input-file``: The deployer input file to use for Tempest configuration.
-     The absolute and relative paths to the file are supported. When this option is not provided InfraRed will try to use the `deployer-input-file.conf` file from active workspace folder.
+     The absolute and relative paths to the file are supported. When this option is not provided `infrared` will try to use the `deployer-input-file.conf` file from active workspace folder.
 
      For some OpenStack versions(kilo, juno, liberty) Tempest provides predefined deployer files. Those files can be downloaded from the git repo and passed to the Tempest tester::
 
@@ -49,7 +49,7 @@ The following useful arguments can be provided to tune tempest tester. Complete 
 Tempest results
 ---------------
 
-Infrared fetches all the tempest output files, like results to the ``tempest_results`` folder under the active `workspace <workspace.html>`_ folder::
+`infrared` fetches all the tempest output files, like results to the ``tempest_results`` folder under the active `workspace <workspace.html>`_ folder::
 
     ll .workspace/my_workspace/tempest_results/tempest-*
 

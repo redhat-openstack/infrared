@@ -11,7 +11,7 @@ Deployment Description
     Choose ``virt`` to enable preset templates for virtual POC environment (`virsh`_ or `ovb`_).
 * ``--instackenv-file``:
     Path to the instackenv.json configuration file used for introspection.
-    For `virsh`_ and `ovb`_ deployment, InfraRed can generate this file automatically.
+    For `virsh`_ and `ovb`_ deployment, `infrared` can generate this file automatically.
 * ``--version``: Tripleo release to install.
     Accepts either an integer for RHEL-OSP release, or a community release
     name (``Liberty``, ``Mitaka``, ``Newton``, etc...) for RDO release
@@ -44,7 +44,7 @@ Overcloud Options
 
 Overcloud Public Network
 ------------------------
-* ``--public-network``: Bool. Whether to have `InfraRed` create a public network on the overcloud.
+* ``--public-network``: Bool. Whether to have `infrared` create a public network on the overcloud.
 * ``--public-subnet``:
     Path to file containing different values for the subnet of the network above.
 * ``--public-vlan``:

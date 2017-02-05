@@ -1,4 +1,4 @@
-New In InfraRed 2.0
+New In infrared 2.0
 ===================
 
 #. Workspaces:
@@ -18,7 +18,7 @@ New In InfraRed 2.0
 #. Stand-Alone Plugins:
     Each plugins is fully contained within a single directory.
     Plugin structure is fully defined and plugins can be loaded from any location on the system.
-    `"Example plugin"` shows contributors how to structure their Ansible projects to plug into `InfraRed`
+    `"Example plugin"` shows contributors how to structure their Ansible projects to plug into `infrared`
 #. Answers file:
     The switch ``--generate-conf-file`` is renamed ``--generate-answers-file`` to avoid confusion
     with configuration files.

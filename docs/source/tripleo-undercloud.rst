@@ -19,7 +19,7 @@ Undercloud Configuration
 ------------------------
 
 Undercloud is configured according to ``undercloud.conf`` file.
-Use ``--config-file`` to provide this file, or let `InfraRed` generate one automatically, based on
+Use ``--config-file`` to provide this file, or let `infrared` generate one automatically, based on
 a sample file provided by the project.
 Use ``--config-options`` to provide a list of ``section.option=value`` that will override
 specific fields in it.
@@ -85,15 +85,15 @@ will be later created.
                 Starting from OSP 8, Tripleo is packages with pre-built images avialable via RPM.
                 .. note:: This option is invalid for `RDO` installation.
 
-* Use ``--images-repos`` to instruct `InfraRed` wither to inject the repositories defined in
+* Use ``--images-repos`` to instruct `infrared` wither to inject the repositories defined in
   the `setup <Setup Undercloud Packages>`_ stage to the image (Allowing later update of the OverCloud)
 * Use ``--images-packages`` to define a list of additional packages to install on the OverCloud image
-* ``--images-cleanup`` tells `InfraRed` do remove the images files original after they are uploaded
+* ``--images-cleanup`` tells `infrared` do remove the images files original after they are uploaded
   to the undercloud's Glance service.
 
 Backup
 ------
-When working on a virtual environment, `InfraRed` can create a snapshot of the installed undercloud that can be later used
+When working on a virtual environment, `infrared` can create a snapshot of the installed undercloud that can be later used
 to `restore`_ it on a future run, thus saving installation time.
 
 In order to use this feature, first follow the `Setup an Undercloud`_ section.
@@ -110,7 +110,7 @@ This will prepare a qcow2 image of your undercloud ready for usage with `Restore
 
 Restore
 -------
-When working on a virtual environment, `InfraRed` can use a pre-made undercloud image to quickly set up an environment.
+When working on a virtual environment, `infrared` can use a pre-made undercloud image to quickly set up an environment.
 To use this feature, simply run::
 
     ir tripleo-undercloud --quickstart-restore yes

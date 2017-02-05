@@ -31,9 +31,9 @@ First, lets create an empty playbook called: ``noop.yml``::
           debug:
               msg: "Hello!"
 
-Next, when invoking `InfraRed`, we will pass the variable that points to our new empty playbook::
+Next, when invoking `infrared`, we will pass the variable that points to our new empty playbook::
 
-    infrared virsh --host-address $HOST --host-key $HOST_KEY --topology-nodes $TOPOLOGY --cleanup yes -e provision_cleanup=noop.yml
+   infrared virsh --host-address $HOST --host-key $HOST_KEY --topology-nodes $TOPOLOGY --cleanup yes -e provision_cleanup=noop.yml
 
 Now lets run see the results::
 

@@ -1,7 +1,7 @@
 Configuration
 =============
 
-InfraRed allows to change default options such as:
+`infrared` allows to change default options such as:
 
 * ``workspaces_base_folder``: the workspaces base folder
 * ``plugins_conf_file``: the plugins configuration file path

@@ -11,7 +11,7 @@ subparsers:
                       type: Value
                       help: |
                           The full path or relative path to the openstackrc file.
-                          When empty, InfraRed will search active profile for the 'keystonerc' file and use it.
+                          When empty, infrared will search active profile for the 'keystonerc' file and use it.
                   git-repo:
                       type: Value
                       help: URL of the git repository to clone

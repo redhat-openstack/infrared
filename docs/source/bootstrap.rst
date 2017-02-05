@@ -4,25 +4,25 @@ Bootstrap
 Setup
 -----
 
-Clone InfraRed 2.0 from GitHub::
+Clone `infrared` 2.0 from GitHub::
 
-    git clone https://github.com/rehdat-openstack/InfraRed.git
+    git clone https://github.com/rehdat-openstack/infrared.git
 
 Setup virtualenv and `install <setup.html#Install>`_ from source using pip::
 
-    cd InfraRed
+    cd infrared
     virtualenv .venv && source .venv/bin/activate
     pip install --upgrade pip setuptools
     pip install .
 
 
-.. note:: InfraRed will create a default `workspace <workspace.html#workspace>`_ for you. This workspace will manage your environment details.
+.. note:: `infrared` will create a default `workspace <workspace.html#workspace>`_ for you. This workspace will manage your environment details.
 
 
 Provision
 ---------
 
-In this example we'll use `virsh <execute.html#virsh>`_ provisioner in order to demonstrate how easy and fast it is to provision machines using `InfraRed`.
+In this example we'll use `virsh <execute.html#virsh>`_ provisioner in order to demonstrate how easy and fast it is to provision machines using `infrared`.
 
 Add the virsh `plugin <plugin.html>`_::
 
@@ -96,7 +96,7 @@ Review the config file and edit as required:
 .. note:: ``host-key``, ``host-address`` and ``topology-nodes`` don't have default values. All arguments can be edited in file or overridden directly from CLI.
 
 .. note:: Do not use double quotes or apostrophes for the string values
-    in the answers file. `InfraRed` will NOT remove those quotation marks
+    in the answers file. `Infrared` will NOT remove those quotation marks
     that surround the values.
 
 Edit mandatory parameters values in the answers file::

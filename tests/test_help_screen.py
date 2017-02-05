@@ -17,7 +17,7 @@ def test_list_yamls_in_help_screen(plugin_manager_fixture):  # noqa
     '__LISTYAMLS__' placeholder in help field of spec's option should be
     replaced with a list pf available YAML files
     :param plugin_manager_fixture: Fixture object which yields
-    InfraRedPluginManger object
+    InfraredPluginManger object
     """
 
     topology_help = """  --topology TOPOLOGY   help of topology option

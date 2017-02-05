@@ -248,7 +248,7 @@ def main(args=None):
 
     # register all plugins
     for plugin in plugin_manager.PLUGINS_DICT.values():
-        specs_manager.register_spec(api.InfraRedPluginsSpec(plugin))
+        specs_manager.register_spec(api.InfraredPluginsSpec(plugin))
 
     return specs_manager.run_specs(args) or 0
 

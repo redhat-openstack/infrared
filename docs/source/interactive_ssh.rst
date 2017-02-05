@@ -1,7 +1,7 @@
 Interactive SSH
 ^^^^^^^^^^^^^^^
 
-There are situation, when user needs to establish interactive ssh session to host, managed  by InfraRed.
+There are situation, when user needs to establish interactive ssh session to host, managed  by `infrared`.
 One provides simpliest way to do this. Just call:
 
 .. code-block:: console

@@ -44,7 +44,7 @@ subparsers:
                       type: Value
                       help: |
                           The full path or relative path to the openstackrc file.
-                          When empty, InfraRed will search active workspace for the 'keystonerc' file and use it.
+                          When empty, infrared will search active workspace for the 'keystonerc' file and use it.
                   config-options:
                        type: IniType
                        action: append
