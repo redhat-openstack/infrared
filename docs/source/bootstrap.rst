@@ -6,7 +6,7 @@ Setup
 
 Clone InfraRed 2.0 from GitHub::
 
-    git clone https://github.com/rhos-infra/InfraRed.git -b IR2
+    git clone https://github.com/rehdat-openstack/InfraRed.git
 
 Setup virtualenv and `install <setup.html#Install>`_ from source using pip::
 

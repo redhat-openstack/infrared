@@ -14,8 +14,8 @@ Team:
 GitHub:
 -------
 
-Issues are tracked via `GitHub <https://github.com/rhos-infra/InfraRed/issues>`_.
-For any concern, please create a `new issue <https://github.com/rhosqeauto/InfraRed/issues/new>`_.
+Issues are tracked via `GitHub <https://github.com/rehdat-openstack/InfraRed/issues>`_.
+For any concern, please create a `new issue <https://github.com/redhat-openstack/InfraRed/issues/new>`_.
 
 IRC:
 ----

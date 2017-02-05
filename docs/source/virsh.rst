@@ -38,7 +38,7 @@ Network layout
 Baremetal machine used as host for such setup is called `hypervisor`. The whole deployment is designed to
 work within boundaries of this machine and (except public/natted traffic) shouldn't reach beyond.
 The following layout is part of default setup defined in
-`plugins defaults <https://github.com/rhosqeauto/InfraRed/blob/IR2/plugins/virsh/vars/topology/network/3_nets.yml>`_::
+`plugins defaults <https://github.com/redhat-openstack/InfraRed/blob/IR2/plugins/virsh/vars/topology/network/3_nets.yml>`_::
 
               hypervisor
                   |
@@ -54,7 +54,7 @@ The following layout is part of default setup defined in
             |     |                                                        |
             ------+--------+ external bridge (nat, dhcp, 10.0.0/24)        +------+ external (nic2)
 
-.. User can also provide his own network layout (example `network-sample.yml <https://github.com/rhosqeauto/InfraRed/blob/master/settings/provisioner/virsh/topology/network/network.sample.yml>`_).
+.. User can also provide his own network layout (example `network-sample.yml <https://github.com/redhat-openstack/InfraRed/blob/master/settings/provisioner/virsh/topology/network/network.sample.yml>`_).
 
 On `hypervisor`, there are 3 new bridges created with libvirt - data, management and external.
 Most important is data network which does not have DHCP and NAT enabled.
