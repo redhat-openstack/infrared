@@ -72,7 +72,7 @@ Installation
 ------------
 Clone stable branch from Github repository::
 
-  git clone https://github.com/redhat-openstack/infrared.git
+  git clone https://github.com/redhat-openstack/infrared.git -b IR2
 
 Install ``infrared`` from source::
 
