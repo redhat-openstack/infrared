@@ -12,10 +12,11 @@ Setup virtualenv and `install <setup.html#Install>`_ from source using pip::
 
     cd infrared
     virtualenv .venv && source .venv/bin/activate
-    pip install --upgrade pip setuptools
+    pip install --upgrade pip
+    pip install --upgrade setuptools
     pip install .
 
-
+.. warning:: It's important to upgrade ``pip`` first, as default ``pip`` version in RHEL (1.4) might fail on dependencies
 .. note:: `infrared` will create a default `workspace <workspace.html#workspace>`_ for you. This workspace will manage your environment details.
 
 
