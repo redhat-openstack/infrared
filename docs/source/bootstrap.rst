@@ -8,7 +8,7 @@ Clone `infrared` 2.0 from GitHub::
 
     git clone https://github.com/rehdat-openstack/infrared.git
 
-Setup virtualenv and `install <setup.html#Install>`_ from source using pip::
+Setup virtualenv and `install <setup.html#Installation>`_ from source using pip::
 
     cd infrared
     virtualenv .venv && source .venv/bin/activate
@@ -23,7 +23,7 @@ Setup virtualenv and `install <setup.html#Install>`_ from source using pip::
 Provision
 ---------
 
-In this example we'll use `virsh <execute.html#virsh>`_ provisioner in order to demonstrate how easy and fast it is to provision machines using `infrared`.
+In this example we'll use `virsh <virsh.html>`_ provisioner in order to demonstrate how easy and fast it is to provision machines using `infrared`.
 
 Add the virsh `plugin <plugin.html>`_::
 

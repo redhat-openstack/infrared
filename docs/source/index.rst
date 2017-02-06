@@ -11,6 +11,7 @@ Welcome to infrared's documentation!
    :caption: Core
 
    bootstrap
+   setup
    configuration
    workspace
    plugins
@@ -19,6 +20,7 @@ Welcome to infrared's documentation!
    changes
    advance_features
    contacts
+   contribute
 
 .. toctree::
    :maxdepth: 2
