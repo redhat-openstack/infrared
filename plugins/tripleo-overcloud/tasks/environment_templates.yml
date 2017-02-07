@@ -19,6 +19,10 @@
   register: src_find
   delegate_to: localhost
 
+- fail:
+      msg: "Local overcloud templates list '{{ templates_list_file }}' is not found"
+  when: "{{ src_find.files|length == 0 }}"
+
 - include_vars: "{{ src_find.files[0].path }}"
 
 - name: look in undercloud's default templates
@@ -38,7 +42,7 @@
       missing_templates: "{{ default_templates.results|rejectattr('stat.exists')|map(attribute='item')|list }}"
   fail:
       msg:
-          error: "Unable to locate templates from file '{{ templates_list.key }}'"
-          source_file: "{{ templates_list.key }}"
+          error: "Unable to locate templates from file '{{ templates_list_file }}'"
+          source_file: "{{ templates_list_file }}"
           missing_templates: "{{ missing_templates }}"
   when: missing_templates | default([])
