@@ -1,6 +1,9 @@
 New In infrared 2.0
 ===================
 
+Highlights
+----------
+
 #. Workspaces:
     Added `Workspaces <workspace.html>`_. Every session must be tied to an active workspace.
     All input and output file are taken from, and written to, the active workspace directory.
@@ -8,9 +11,9 @@ New In infrared 2.0
     or corrupting the working directory.
     The deprecates ``ir-archive`` in favor of ``workspace import`` and ``workspace export``
 #. SSH:
-   Added ability to establish interactive ssh connection to nodes, managed by workspace
-   using workspace's inventory
-   ``infrared ssh <hostname>``
+    Added ability to establish interactive ssh connection to nodes, managed by workspace
+    using workspace's inventory
+    ``infrared ssh <hostname>``
 #. Single Entry-Point:
     ``ir-provisioner``, ``ir-installer``, ``ir-tester``
     commands are deprecated in favor of a single ``infrared`` entry point (``ir`` also works).
@@ -41,3 +44,16 @@ New In infrared 2.0
     out of the undercloud VM that can later be used to bypass the installation process.
 
 .. OVB
+
+Example Script Upgrade
+----------------------
+
+.. list-table::
+   :header-rows: 1
+
+   * - `infrared` v2
+     - `infrared` v1
+   * - .. literalinclude:: v2_syntax.sh
+          :language: bash
+     - .. literalinclude:: v1_syntax.sh
+          :language: bash
