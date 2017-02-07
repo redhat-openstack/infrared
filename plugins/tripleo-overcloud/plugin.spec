@@ -74,6 +74,7 @@ subparsers:
 
                   overcloud-templates:
                       type: Value
+                      default: none
                       help: |
                             Add extra environment template files to "overcloud deploy" command
                             File (in YAML format) containing a list of paths to template files on the UnderCloud.
