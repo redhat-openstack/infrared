@@ -256,13 +256,15 @@ def main():
 
     elif state in ['install', 'update']:
         if not release:
-            _fail("'release' option should be specified.", cmd)
+            _fail(module, "'release' option should be specified.", cmd)
 
         releases = [(str(release), puddle)]
-        if release < 10 and director:
-            releases = [(str(release) + '-director', puddle)] + releases
-
-        # TODO(yfried): enable this if/when need to support mixed versions
+        try:
+            if int(release) < 10 and director:
+                releases = [(str(release) + '-director', puddle)] + releases
+        except ValueError:
+            # RDO versions shouldn't try to get director repos
+            pass
 
         for release, build in releases:
             if state == 'update':
