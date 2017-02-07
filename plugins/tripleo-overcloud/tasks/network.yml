@@ -49,37 +49,41 @@
       dest: "~/overcloud_deploy.sh"
       line: '-e /usr/share/openstack-tripleo-heat-templates/environments/{{ isolation_file }} \'
 
-- block:
-    - name: find the controller network template file in deployment files
-      vars:
-          basename: "controller{{ (install.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
-      find:
-          paths: "{{ template_base }}"
-          patterns: "{{ basename }}"
-          recurse: yes
-      register: controller_path
+- name: find the controller network template file in deployment files
+  vars:
+      basename: "controller{{ (install.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
+  find:
+      paths: "{{ template_base }}"
+      patterns: "{{ basename }}"
+      recurse: yes
+  register: controller_path
+  when: install.network.dvr
 
-    - name: fail unless 1 file was found
-      fail:
-          msg:
-              error: found multiple controller network templates, or not at all.
-              files: "{{ controller_path.files|map(attribute='path')|list }}"
-      when: "{{ controller_path .matched != 1 }}"
+- name: fail unless 1 file was found
+  fail:
+      msg:
+          error: found multiple controller network templates, or not at all.
+          files: "{{ controller_path.files|map(attribute='path')|list }}"
+  when:
+      - install.network.dvr
+      - "{{ controller_path.matched != 1 }}"
 
-    - name: inject dvr override template
-      vars:
-          controller_abspath: "{{ controller_path.files[0].path }}"
-      template:
-          src: dvr-override.yaml.j2
-          dest: "{{ template_base }}/network/dvr-override.yaml"
+- name: inject dvr override template
+  vars:
+      controller_abspath: "{{ controller_path.files[0].path }}"
+  template:
+      src: dvr-override.yaml.j2
+      dest: "{{ template_base }}/network/dvr-override.yaml"
+  when: install.network.dvr
 
-    - name: append the dvr template line to the base overcloud deploy script
-      lineinfile:
-          dest: "~/overcloud_deploy.sh"
-          line: '-e /usr/share/openstack-tripleo-heat-templates/environments/neutron-ovs-dvr.yaml \'
+- name: append the dvr template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/neutron-ovs-dvr.yaml \'
+  when: install.network.dvr
 
-    - name: append the network dvr overrides
-      lineinfile:
-          dest: "~/overcloud_deploy.sh"
-          line: '-e {{ template_base }}/network/dvr-override.yaml \'
+- name: append the network dvr overrides
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ template_base }}/network/dvr-override.yaml \'
   when: install.network.dvr

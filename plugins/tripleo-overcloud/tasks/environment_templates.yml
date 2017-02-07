@@ -19,7 +19,9 @@
   register: src_find
   delegate_to: localhost
 
-- include_vars: "{{ src_find.files[0].path }}"
+- include_vars:
+      file: "{{ src_find.files[0].path }}"
+  when: "{{ src_find.files|length > 0 }}"
 
 - name: look in undercloud's default templates
   stat:
