@@ -37,5 +37,5 @@ infrared tempest -v \
     --tests sanity
 
 # Fetch inventory from active workspace
-WORKSPACE=$(ir workspace list | awk '/True/ {print $2}')
+WORKSPACE=$(ir workspace list | awk '/*/ {print $2}')
 ansible -i .workspaces/$WORKSPACE/hosts all -m ping
