@@ -1,17 +1,12 @@
 import sys
 
-from tabulate import tabulate
-from functools import partial
-
 from infrared import api
 from infrared.core.services import CoreServices
 from infrared.core.utils import logger
 from infrared.core.utils import interactive_ssh
+from infrared.core.utils.print_formats import fancy_table
 
 LOG = logger.LOG
-
-
-fancy_table = partial(tabulate, tablefmt='fancy_grid', numalign="stralign")
 
 
 class WorkspaceManagerSpec(api.SpecObject):
@@ -94,12 +89,12 @@ class WorkspaceManagerSpec(api.SpecObject):
             self._checkout_workspace(pargs.name)
         elif subcommand == 'list':
             workspaces = self.workspace_manager.list()
-            print(
-                fancy_table(
-                    [[p.name,
-                      "*" if self.workspace_manager.is_active(p.name) else ""]
-                     for p in workspaces],
-                    headers=("Name", "Active")))
+            headers = ("Name", "Active")
+            print fancy_table(
+                headers,
+                *[(workspace.name, ' ' * (len(headers[-1])/2) + "*" if
+                    self.workspace_manager.is_active(workspace.name) else "")
+                  for workspace in workspaces])
         elif subcommand == 'delete':
             self.workspace_manager.delete(pargs.name)
             print("Workspace '{}' deleted".format(pargs.name))
@@ -113,10 +108,8 @@ class WorkspaceManagerSpec(api.SpecObject):
                 pargs.filename, pargs.workspacename)
         elif subcommand == 'node-list':
             nodes = self.workspace_manager.node_list(pargs.name)
-            print(
-                fancy_table(
-                    [node_name for node_name in nodes],
-                    headers=("Name", "Address")))
+            print fancy_table(
+                ("Name", "Address"), *[node_name for node_name in nodes])
 
     def _create_workspace(self, name):
         """Creates a workspace """
@@ -161,8 +154,12 @@ class PluginManagerSpec(api.SpecObject):
         remove_parser.add_argument("name", help="Plugin name")
 
         # List command
-        plugin_subparsers.add_parser(
+        list_parser = plugin_subparsers.add_parser(
             'list', help='List all the available plugins')
+        list_parser.add_argument(
+            "--available", action='store_true',
+            help="Prints all available plugins in addition "
+                 "to installed plugins")
 
     def spec_handler(self, parser, args):
         """Handles all the plugin manager commands
@@ -174,26 +171,47 @@ class PluginManagerSpec(api.SpecObject):
         subcommand = pargs.command0
 
         if subcommand == 'list':
-            self._list_plugins()
+            self._list_plugins(pargs.available)
         elif subcommand == 'add':
             self.plugin_manager.add_plugin(pargs.path, pargs.dest)
         elif subcommand == 'remove':
             self.plugin_manager.remove_plugin(pargs.type, pargs.name)
 
-    def _list_plugins(self):
-        """
-        Print a list of available plugins sorted by type
-        :return:
-        """
-        headers = ["Plugin Type", "Available Plugins"]
-        table = []
-        for plugin_type in self.plugin_manager.supported_plugin_types:
-            plugins = [name for name, plugin in self.plugin_manager
-                       if plugin.config["plugin_type"] == plugin_type]
-            plugins.sort()
-            table.append([plugin_type, ','.join(plugins)])
+    def _list_plugins(self, print_available=False):
+        """Print a list of installed & available plugins"""
+        table_rows = []
+        table_headers = ["Type", "Installed"]
+        installed_mark = ' ' * (len(table_headers[-1]) / 2) + '*'
 
-        print(fancy_table(tabular_data=table, headers=headers))
+        all_plugins_dict = self.plugin_manager.get_all_plugins()
+
+        for plugins_type, plugins in all_plugins_dict.iteritems():
+            all_plugins_list = []
+            installed_plugins_list = []
+            plugins_names = plugins.keys()
+            plugins_names.sort()
+            for plugin_name in plugins_names:
+                all_plugins_list.append(plugin_name)
+                if plugins[plugin_name]:
+                    installed_plugins_list.append(plugin_name)
+
+            if print_available:
+                installed_plugins_mark_list = \
+                    [installed_mark if plugin_name in installed_plugins_list
+                     else '' for plugin_name in all_plugins_list]
+                table_rows.append([
+                    plugins_type,
+                    '\n'.join(all_plugins_list),
+                    '\n'.join(installed_plugins_mark_list)])
+            else:
+                table_rows.append([
+                    plugins_type,
+                    '\n'.join(installed_plugins_list)])
+
+        if print_available:
+            table_headers.insert(1, "Name")
+
+        print fancy_table(table_headers, *table_rows)
 
 
 class SSHSpec(api.SpecObject):

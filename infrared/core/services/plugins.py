@@ -1,5 +1,6 @@
 from ConfigParser import ConfigParser
 from collections import OrderedDict
+import glob
 import os
 import shutil
 import subprocess
@@ -20,7 +21,7 @@ DEFAULT_PLUGIN_INI = dict(
     ])
 )
 MAIN_PLAYBOOK = "main.yml"
-BUILTIN_PLUGINS_PATH = "./plugins"
+PROJECT_PLUGINS_DIR = "./plugins"
 LOG = logger.LOG
 
 
@@ -45,6 +46,48 @@ class InfraredPluginManager(object):
                         plugin_type_section):
                     plugin = InfraredPlugin(plugin_path)
                     self.__class__.PLUGINS_DICT[plugin_name] = plugin
+
+    @staticmethod
+    def get_project_plugins():
+        """Returns a dict with project's plugins categorized by type"""
+        plugins_dir = os.path.abspath(PROJECT_PLUGINS_DIR)
+
+        plugins_dict = {}
+
+        for plugin_dir in glob.glob(plugins_dir + '/*/'):
+            plugin = InfraredPlugin(plugin_dir)
+
+            if plugin.type not in plugins_dict:
+                plugins_dict[plugin.type] = [plugin.name]
+            else:
+                plugins_dict[plugin.type].append(plugin.name)
+
+        return plugins_dict
+
+    def get_all_plugins(self):
+        """Returns a dict with all plugins (installed & available)
+
+        The plugins categorized by type and each plugin name contains a boolean
+        value which tells if the plugin installed or not"""
+        all_plugins_dict = OrderedDict()
+        for installed_plugin_name in self.PLUGINS_DICT:
+            plugin = self.get_plugin(installed_plugin_name)
+            if plugin.type not in all_plugins_dict:
+                all_plugins_dict[plugin.type] = {plugin.name: True}
+            else:
+                all_plugins_dict[plugin.type][plugin.name] = True
+
+        for plugins_type, plugins in self.get_project_plugins().iteritems():
+            for plugin_name in plugins:
+                if plugin_name in self.PLUGINS_DICT:
+                    continue
+
+                if plugins_type not in all_plugins_dict:
+                    all_plugins_dict[plugins_type] = {plugin_name: False}
+                else:
+                    all_plugins_dict[plugins_type][plugin_name] = False
+
+        return all_plugins_dict
 
     @property
     def config_file(self):
@@ -82,7 +125,7 @@ class InfraredPluginManager(object):
             self.config.readfp(fp)
 
         if init_plugins_conf:
-            abspath = os.path.abspath(BUILTIN_PLUGINS_PATH)
+            abspath = os.path.abspath(PROJECT_PLUGINS_DIR)
             pldirs = [pd for pd in os.listdir(
                 abspath) if os.path.isdir(os.path.join(abspath, pd))]
             for pldir in pldirs:
@@ -257,6 +300,10 @@ class InfraredPlugin(object):
             # TODO(aopincar): Replace with a proper infrared exception
             raise Exception("Only one plugin should be defined in spec")
         return plugins[0]
+
+    @property
+    def type(self):
+        return self.config['plugin_type']
 
     @property
     def description(self):
