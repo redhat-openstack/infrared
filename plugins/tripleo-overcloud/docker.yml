@@ -1,0 +1,61 @@
+- name: Deploy the Overcloud
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      osp_version: '11.0'
+      date_version: '20170127.1'
+      base_docker: "openstack-base-docker/{{ osp_version }}/{{ date_version }}/images/docker-image-sha256:066c1591cbd8821351e8ac937f3eb5e5a546a89d1d6ee80e46b89871cc6c8d30.x86_64.tar.gz"
+      docker_dependencies: "openstack-dependencies-docker/{{ osp_version }}/{{ date_version }}/images/docker-image-sha256:2492dc7e0b5c18fe9486964053eaece45f984e35c2cc6dc81316bd06b1a4718b.x86_64.tar.gz"
+      heat_docker_agents: "openstack-heat-docker-agents-docker/{{ osp_version }}/{{ date_version }}/images/docker-image-sha256:2ecaa76a7dec3c8f4ad23e2008c48faa568674ee2fd3599e1bae0889b0210391.x86_64.tar.gz"
+      neutron_base_docker: "openstack-neutron-base-docker/{{ osp_version }}/{{ date_version }}/images/docker-image-sha256:9b89ed6c87e92465940e0adce454d39839b0e76d9eb37fecfad15d2865c7364e.x86_64.tar.gz"
+      neutron_openvswitch_agent_docker: "openstack-neutron-openvswitch-agent-docker/{{ osp_version }}/{{ date_version }}/images/docker-image-sha256:7c2b48c10f6da8de707f880428b2e4a4b3f31f57135373fce04c3022728bf31a.x86_64.tar.gz"
+      nova_base_docker: "openstack-nova-base-docker/{{ osp_version }}/{{ date_version }}/images/docker-image-sha256:955c9b175b3e2c4a27a7a89677ae533d2e081e60cf819c3f6086b1e535278222.x86_64.tar.gz"
+      nova_compute_docker: "openstack-nova-compute-docker/{{ osp_version }}/{{ date_version }}/images/docker-image-sha256:598886af0947cd74736ee26d798a22052cff5084a03e7840b3752c91179d7a8f.x86_64.tar.gz"
+      nova_libvirt_docker: "openstack-nova-libvirt-docker/{{ osp_version }}/{{ date_version }}/images/docker-image-sha256:70fd6cddfa631979961385d8ccecdf90f737a4f668ef8009da47e6feb335b8d3.x86_64.tar.gz"
+      openvswitch_base_docker: "openstack-openvswitch-base-docker/{{ osp_version }}/{{ date_version }}/images/docker-image-sha256:b17c129b6f25240b55bc3746b9d50738d918ceb8c24f7663fdc2ca0cd7c76d02.x86_64.tar.gz"
+      openvswitch_db_server_docker: "openstack-openvswitch-db-server-docker/{{ osp_version }}/{{ date_version }}/images/docker-image-sha256:45ee7496ede7989a9280f3365f46d0a826c1807f53650bda80a359f549897961.x86_64.tar.gz"
+      openvswitch_vswitchd_docker: "openstack-openvswitch-vswitchd-docker/{{ osp_version }}/{{ date_version }}/images/docker-image-sha256:eb33a80f99bcb14f25783935c84eb78e7b446a8c282547a7c23428e38568b9e1.x86_64.tar.gz"
+  tasks:
+    - name: Create directory for docker images
+      file: path=/home/stack/docker-images state=directory owner=stack group=stack mode=0775
+
+    - name: Download docker images
+      get_url:
+        url: "{{ item.url }}"
+        dest: "/home/stack/docker-images/{{ item.name }}"
+      with_items:
+        - { url: "http://download.eng.bos.redhat.com/brewroot/packages/{{ base_docker }}",                      name: 'openstack-base-docker'}
+        - { url: "http://download.eng.bos.redhat.com/brewroot/packages/{{ docker_dependencies }}",              name: 'openstack-dependencies-docker'}
+        - { url: "http://download.eng.bos.redhat.com/brewroot/packages/{{ heat_docker_agents }}",               name: 'openstack-heat-docker-agents-docker'}
+        - { url: "http://download.eng.bos.redhat.com/brewroot/packages/{{ neutron_base_docker }}",              name: 'openstack-neutron-base-docker'}
+        - { url: "http://download.eng.bos.redhat.com/brewroot/packages/{{ neutron_openvswitch_agent_docker }}", name: 'openstack-neutron-openvswitch-agent-docker'}
+        - { url: "http://download.eng.bos.redhat.com/brewroot/packages/{{ nova_base_docker }}",                 name: 'openstack-nova-base-docker'}
+        - { url: "http://download.eng.bos.redhat.com/brewroot/packages/{{ nova_compute_docker }}",              name: 'openstack-nova-compute-docker'}
+        - { url: "http://download.eng.bos.redhat.com/brewroot/packages/{{ nova_libvirt_docker }}",              name: 'openstack-nova-libvirt-docker'}
+        - { url: "http://download.eng.bos.redhat.com/brewroot/packages/{{ openvswitch_base_docker }}",          name: 'openstack-openvswitch-base-docker'}
+        - { url: "http://download.eng.bos.redhat.com/brewroot/packages/{{ openvswitch_db_server_docker }}",     name: 'openstack-openvswitch-db-server-docker'}
+        - { url: "http://download.eng.bos.redhat.com/brewroot/packages/{{ openvswitch_vswitchd_docker }}",      name: 'openstack-openvswitch-vswitchd-docker'}
+
+    - name: Get list of docker images
+      find:
+          paths: "/home/stack/docker-images"
+      register: docker_images
+
+    - name: Import images
+      shell: "docker load < {{ item.path }}"
+      with_items:
+        - "{{ docker_images.files }}"
+      become: yes
+
+    - name: Tag images
+      shell: "docker tag $(docker images --format '{{ '{{' }}.ID{{ '}}' }} {{ '{{' }}.Repository{{ '}}' }}' | grep {{ item.path|basename }} | awk '{print $1}') {{ ansible_br_ctlplane.ipv4.address }}:8787/{{ item.path|basename }}:osp11-test"
+      with_items:
+        - "{{ docker_images.files }}"
+      become: yes
+
+    - name: Push images to the local registry
+      shell: "docker push {{ ansible_br_ctlplane.ipv4.address }}:8787/{{ item.path|basename }}"
+      with_items:
+        - "{{ docker_images.files }}"
+      become: yes
