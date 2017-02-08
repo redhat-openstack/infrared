@@ -166,6 +166,9 @@ subparsers:
                       type: Bool
                       help: Specifies whether to create flavors automatically and tag our hosts with them
 
+                  docker:
+                      type: Bool
+
                   post:
                       type: Bool
                       help: Specifies whether we should run post install tasks
