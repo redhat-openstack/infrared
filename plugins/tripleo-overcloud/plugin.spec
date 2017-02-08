@@ -13,6 +13,10 @@ subparsers:
                       type: Bool
                       help: Specifies whether to run introspection
 
+                  docker:
+                      type: Bool
+                      help: Whether or not we are using docker
+
                   tagging:
                       type: Bool
                       help: Specifies whether to create flavors automatically and tag our hosts with them

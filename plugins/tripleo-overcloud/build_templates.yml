@@ -29,6 +29,12 @@
             directory_mode: u=rwX,g=rX,o=rX
             force: yes
 
+      - name: add docker configuration file
+        template:
+          src: "templates/docker-osp11.yaml.j2"
+          dest: "{{ template_base }}/docker-osp11.yaml"
+        when: install.docker|default('')
+
       - name: inject debug.yaml so it will be auto discovered with user templates
         copy:
             src: files/debug.yaml
