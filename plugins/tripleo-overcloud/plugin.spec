@@ -173,3 +173,21 @@ subparsers:
                         The storage that we would like to use.
                         If not supplied, OSPD will default to local LVM on the controllers.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
+
+            - title: Others
+              options:
+                  introspect:
+                      type: Bool
+                      help: Specifies whether to run introspection
+
+                  tagging:
+                      type: Bool
+                      help: Specifies whether to create flavors automatically and tag our hosts with them
+
+                  docker:
+                      type: Bool
+                      help: Whether or not we are using docker 
+
+                  post:
+                      type: Bool
+                      help: Specifies whether we should run post install tasks
