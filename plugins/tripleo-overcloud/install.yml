@@ -22,6 +22,10 @@
   include: "{{ overcloud_flavors | default('tag.yml') }}"
   when: install.tagging|default('')
 
+- name: Prepare docker images
+  include: "{{ overcloud_docker | default('docker.yml') }}"
+  when: install.docker|default('')
+
 - name: Deploy the Overcloud
   vars:
       templates:
