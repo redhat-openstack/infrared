@@ -1,0 +1,30 @@
+resource_registry:
+    # Docker container with heat agents for containerized compute node.
+    OS::TripleO::Compute::NodeUserData: /usr/share/openstack-tripleo-heat-templates/docker/firstboot/install_docker_agents.yaml
+    OS::TripleO::Services::NovaLibvirt: /usr/share/openstack-tripleo-heat-templates/docker/services/nova-libvirt.yaml
+    OS::TripleO::Services::ComputeNeutronOvsAgent: /usr/share/openstack-tripleo-heat-templates/docker/services/neutron-ovs-agent.yaml
+    OS::TripleO::Services::NovaCompute: /usr/share/openstack-tripleo-heat-templates/docker/services/nova-compute.yaml
+    # NOTE (dprince) here we set new roles to be docker enabled as we add support
+    #OS::TripleO::ComputePostDeploySteps: /usr/share/openstack-tripleo-heat-templates/docker/post.yaml
+    # NOTE (mandre) Defining per role post deploy steps doesn't work yet
+    # Set a global PostDeploySteps that works for both containerized and
+    # non-containerized roles
+    OS::TripleO::PostDeploySteps: /usr/share/openstack-tripleo-heat-templates/docker/post.yaml
+    OS::TripleO::Services: /usr/share/openstack-tripleo-heat-templates/docker/services/services.yaml
+
+parameter_defaults:
+    # Defaults to 'tripleoupstream'.  Specify a local docker registry
+    # Example: 192.0.2.1:8787/tripleoupstream
+    DockerNamespace: 192.168.24.1:8787
+    # Enable local Docker registry
+    DockerNamespaceIsRegistry: true
+    DockerAgentImage: openstack-heat-docker-agents-docker:osp11-test
+    # Docker containers
+    DockerNovaComputeImage: openstack-nova-compute-docker:osp11-test
+    DockerLibvirtImage: openstack-nova-libvirt-docker:osp11-test
+    DockerOpenvswitchImage: openstack-neutron-openvswitch-agent-docker:osp11-test
+
+    ComputeServices:
+        - OS::TripleO::Services::NovaCompute
+        - OS::TripleO::Services::NovaLibvirt
+        - OS::TripleO::Services::ComputeNeutronOvsAgent
