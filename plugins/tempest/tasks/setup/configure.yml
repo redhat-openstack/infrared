@@ -19,7 +19,12 @@
   shell: |
       test -e .venv/bin/activate && source .venv/bin/activate
       source ~/keystonerc
-      tools/config_tempest.py \
+      if [ -f /usr/bin/discover-tempest-config ]; then
+        export TEMPESTCONF="/usr/bin/discover-tempest-config"
+      else
+        export TEMPESTCONF="tools/config_tempest.py"
+      fi
+      ${TEMPESTCONF} \
               {% if deployer_input_stat.stat.exists %}
               --deployer-input {{ deployer_input }} \
               {% endif %}
