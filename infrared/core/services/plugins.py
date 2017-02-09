@@ -21,7 +21,7 @@ DEFAULT_PLUGIN_INI = dict(
     ])
 )
 MAIN_PLAYBOOK = "main.yml"
-INSTALLED_PLUGINS_DIR = "./plugins"
+PLUGINS_DIR = os.path.abspath("./plugins")
 LOG = logger.LOG
 
 
@@ -50,11 +50,9 @@ class InfraredPluginManager(object):
     @staticmethod
     def get_installed_plugins():
         """Returns a dict with project's plugins categorized by type"""
-        plugins_dir = os.path.abspath(INSTALLED_PLUGINS_DIR)
-
         plugins_dict = {}
 
-        for plugin_dir in glob.glob(plugins_dir + '/*/'):
+        for plugin_dir in glob.glob(PLUGINS_DIR + '/*/'):
             plugin = InfraredPlugin(plugin_dir)
 
             if plugin.type not in plugins_dict:
@@ -126,11 +124,10 @@ class InfraredPluginManager(object):
             self.config.readfp(fp)
 
         if init_plugins_conf:
-            abspath = os.path.abspath(INSTALLED_PLUGINS_DIR)
             pldirs = [pd for pd in os.listdir(
-                abspath) if os.path.isdir(os.path.join(abspath, pd))]
+                PLUGINS_DIR) if os.path.isdir(os.path.join(PLUGINS_DIR, pd))]
             for pldir in pldirs:
-                self.add_plugin(os.path.join(abspath, pldir))
+                self.add_plugin(os.path.join(PLUGINS_DIR, pldir))
 
     def get_desc_of_type(self, s_type):
         """Returns the description of the given supported plugin type
@@ -155,30 +152,61 @@ class InfraredPluginManager(object):
         else:
             raise StopIteration
 
-    def add_plugin(self, plugin_path, dest=None):
+    @staticmethod
+    def _clone_git_plugin(git_url, dest_dir=None):
+        """Clone a plugin into a given destination directory
 
-        dest = dest or "plugins"
-        destination = os.path.abspath(dest)
-        if not os.path.exists(plugin_path):
-            tmpdir = tempfile.mkdtemp(prefix="ir-")
-            cwd = os.getcwdu()
-            os.chdir(tmpdir)
-            try:
-                subprocess.check_output(["git", "clone", plugin_path])
-            except subprocess.CalledProcessError:
-                shutil.rmtree(tmpdir)
-                raise IRFailedToAddPlugin(
-                    "Cloning git repo {} is failed".format(plugin_path))
-            cloned = os.listdir(tmpdir)
-            plugin_dir_name = cloned[0]
+        :param git_url: Plugin's Git URL
+        :param dest_dir: destination where to clone a plugin into (if 'source'
+          is a Git URL)
+        :return: Path to plugin cloned directory (str)
+        """
+        dest_dir = os.path.abspath(dest_dir or "plugins")
 
-            plugin_path = os.path.join(destination, plugin_dir_name)
-            shutil.copytree(os.path.join(tmpdir, plugin_dir_name),
-                            plugin_path)
-            os.chdir(cwd)
+        tmpdir = tempfile.mkdtemp(prefix="ir-")
+        cwd = os.getcwdu()
+        os.chdir(tmpdir)
+        try:
+            subprocess.check_output(["git", "clone", git_url])
+        except subprocess.CalledProcessError:
             shutil.rmtree(tmpdir)
+            raise IRFailedToAddPlugin(
+                "Cloning git repo {} is failed".format(git_url))
+        cloned = os.listdir(tmpdir)
+        plugin_dir_name = cloned[0]
 
-        plugin = InfraredPlugin(plugin_path)
+        plugin_source = os.path.join(dest_dir, plugin_dir_name)
+        shutil.copytree(os.path.join(tmpdir, plugin_dir_name),
+                        plugin_source)
+        os.chdir(cwd)
+        shutil.rmtree(tmpdir)
+
+        return plugin_dir_name
+
+    def add_plugin(self, plugin_source, dest=None):
+        """Adds (install) a plugin
+
+        :param plugin_source: Plugin source.
+          Can be:
+            1. Plugin name to install from the registry (project's plugins)
+            2. Path to a local directory
+            3. Git URL
+        :param dest: destination where to clone a plugin into (if 'source' is
+          a Git URL)
+        """
+        project_plugin_dir = os.path.join(PLUGINS_DIR, plugin_source)
+        # Available plugin
+        if os.path.exists(project_plugin_dir) and \
+                os.path.isdir(project_plugin_dir):
+            plugin_source = project_plugin_dir
+        # Local dir plugin
+        elif os.path.exists(plugin_source):
+            pass
+        # Git Plugin
+        else:
+            plugin_source = self._clone_git_plugin(plugin_source, dest)
+
+        plugin = InfraredPlugin(plugin_source)
         plugin_type = plugin.config['plugin_type']
         # FIXME(yfried) validate spec and throw exception on missing input
 
@@ -198,7 +226,7 @@ class InfraredPluginManager(object):
         with open(self.config_file, 'w') as fp:
             self.config.write(fp)
 
-        self._install_requirements(plugin_path)
+        self._install_requirements(plugin_source)
         self._load_plugins()
 
     def remove_plugin(self, plugin_type, plugin_name):
@@ -247,9 +275,9 @@ class InfraredPlugin(object):
     # )
 
     def __init__(self, plugin_dir):
-        """
+        """InfraredPlugin initializer
 
-        :param plugin_path: A path to the plugin's root dir
+        :param plugin_dir: A path to the plugin's root dir
         """
         self.path = plugin_dir
         self.config = os.path.join(self.path, self.PLUGIN_SPEC_FILE)
