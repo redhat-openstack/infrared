@@ -17,26 +17,22 @@ networks_data:
         data:
             name: "{{ networks_vars.networks.data.name }}"
             network_name: "{{ networks_vars.networks.data.name }}"
-            allocation_pool_start: 172.16.1.10
-            allocation_pool_end: 172.16.1.100
-            cidr: 172.16.1.0/24
+            allocation_pool_start: 192.168.24.10
+            allocation_pool_end: 192.168.24.99
+            cidr: 192.168.24.0/24
+            enable_dhcp: no
         external:
             name: "{{ networks_vars.networks.external.name }}"
             network_name: "{{ networks_vars.networks.external.name }}"
-            allocation_pool_start: 172.31.0.10
-            allocation_pool_end: 172.31.0.100
-            cidr: 172.31.0.0/23
-            nested:
-                subnet_cidr: 172.31.0.0/23
-                subnet_gateway: 172.31.0.1
-                allocation_pool_start: 172.31.1.10
-                allocation_pool_end: 172.31.1.100
+            allocation_pool_start: 10.0.0.10
+            allocation_pool_end: 10.0.0.99
+            cidr: 10.0.0.0/24
         management:
             name: "{{ networks_vars.networks.management.name }}"
             network_name: "{{ networks_vars.networks.management.name }}"
-            allocation_pool_start: 192.168.1.10
-            allocation_pool_end: 192.168.1.100
-            cidr: 192.168.1.0/24
+            allocation_pool_start: 172.16.1.10
+            allocation_pool_end: 172.16.1.99
+            cidr: 172.16.1.0/24
 
     routers:
         router:
