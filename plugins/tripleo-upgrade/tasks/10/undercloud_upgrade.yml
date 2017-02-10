@@ -1,0 +1,25 @@
+- name: Undercloud Upgrade
+  hosts: undercloud
+  become: True
+  become_user: root
+  become_method: sudo
+  gather_facts: no
+  any_errors_fatal: true
+  tags: upgrade
+  tasks:
+    - name: Setup repos
+      command: "rhos-release -P 10"
+
+    - name: Disable old repos
+      command: "yum-config-manager --disable 'rhelosp-9.0*'"
+
+    - name: Stopping services
+      command: "systemctl stop 'openstack*'; systemctl stop 'neutron-*'"
+
+- name: Start Undercloud Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags: upgrade
+  tasks:
+    - shell: "openstack undercloud upgrade &> undercloud_upgrade.log"
