@@ -220,9 +220,9 @@ List:
    Check the  `Infrared Configuration <configuration.html>`_ for details.
 
 Remove:
-    Remove an exisitng plugin::
+    Remove an existing plugin::
 
-        infrared plugin remove provision example
+        infrared plugin remove example
 
 Execute:
     Plugins are added as subparsers under ``plugin type`` and will execute

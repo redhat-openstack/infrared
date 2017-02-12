@@ -242,26 +242,24 @@ class InfraredPluginManager(object):
         self._install_requirements(plugin_source)
         self._load_plugins()
 
-    def remove_plugin(self, plugin_type, plugin_name):
-        if plugin_type not in self.config.options(
-                self.SUPPORTED_TYPES_SECTION):
+    def remove_plugin(self, plugin_name):
+        """Removes an installed plugin
+
+        :param plugin_name: Plugin name to be removed
+        """
+        if plugin_name not in self.PLUGINS_DICT:
             raise IRFailedToRemovePlugin(
-                "Unsupported plugin type: '{}'".format(plugin_type))
-        elif not self.config.has_section(plugin_type):
-            raise IRFailedToRemovePlugin(
-                "There are no plugins of type '{}' installed".format(
-                    plugin_type))
-        elif not self.config.has_option(plugin_type, plugin_name):
-            raise IRFailedToRemovePlugin(
-                "Plugin named '{}' of type '{}' isn't installed".format(
-                    plugin_name, plugin_type))
-        else:
-            self.config.remove_option(plugin_type, plugin_name)
-            if not self.config.options(plugin_type):
-                self.config.remove_section(plugin_type)
-            with open(self.config_file, 'w') as fp:
-                self.config.write(fp)
-            self._load_plugins()
+                "Plugin '{}' isn't installed and can't be removed".format(
+                    plugin_name))
+
+        plugin = InfraredPluginManager.get_plugin(plugin_name)
+
+        self.config.remove_option(plugin.type, plugin_name)
+        if not self.config.options(plugin.type):
+            self.config.remove_section(plugin.type)
+        with open(self.config_file, 'w') as fp:
+            self.config.write(fp)
+        self._load_plugins()
 
     @property
     def supported_plugin_types(self):
