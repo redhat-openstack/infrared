@@ -1,0 +1,356 @@
+- name: Overcloud Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_overcloud
+  tasks:
+    - name: Creating temp dir
+      command: mktemp -d
+      register: temp_dir_raw
+
+    - name: Setting temp_dir
+      set_fact: temp_dir={{ ' '.join(temp_dir_raw.stdout_lines) }}
+
+    - name: Copy overcloud_deploy script to undercloud
+      copy:
+        src: "{{ install.deployment.script }}"
+        dest: "{{ temp_dir }}/overcloud_deploy.sh"
+        mode: 0755
+
+    - name: Setting overcloud_deploy_script
+      set_fact: overcloud_deploy_script="{{ temp_dir }}/overcloud_deploy.sh"
+
+- name: Pre-Upgrade Ceilometer migration
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_overcloud
+    - upgrade_ceilometer
+  vars:
+    - ceilometer_migration_script: "~/ceilometer_migration.sh"
+  tasks:
+    - name: Uploading Ceilometer Patch
+      copy:
+        src: "{{ plugin_dir }}/files/10/ceilometer_patch1"
+        dest: "{{ temp_dir }}/ceilometer_patch1"
+
+    - name: Checking if patch is already applied
+      become: true
+      become_user: root
+      become_method: sudo
+      shell: "patch -N -d /usr/share/openstack-tripleo-heat-templates -p1 --dry-run --silent  < {{ temp_dir }}/ceilometer_patch1"
+      ignore_errors: yes
+      register: check_ceilometer_patch
+
+    - name: Applying patch
+      become: true
+      become_user: root
+      become_method: sudo
+      patch:
+        src: "{{ temp_dir }}/ceilometer_patch1"
+        remote_src: true
+        basedir: /usr/share/openstack-tripleo-heat-templates
+        strip: 1
+        backup: yes
+      when: check_ceilometer_patch|succeeded
+
+    - name: Create Ceilometer migration base script
+      copy:
+        src: "{{ overcloud_deploy_script }}"
+        dest: "{{ ceilometer_migration_script }}"
+        mode: 0755
+        remote_src: true
+
+    - name: Append params to Ceilometer migration script
+      lineinfile:
+        dest: "{{ ceilometer_migration_script }}"
+        insertbefore: '^--log-file.*'
+        line: '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-ceilometer-wsgi-mitaka-newton.yaml \'
+
+    - name: Change log file name of Ceilometer migration script
+      lineinfile:
+        dest: "{{ ceilometer_migration_script }}"
+        regexp: '^--log-file.*'
+        line: '--log-file ceilometer-migration.log'
+
+    - name: Print Ceilometer migration command
+      command: "cat {{ ceilometer_migration_script }}"
+
+    - name: Executing Ceilometer migration command
+      shell: |
+          source ~/stackrc
+          bash {{ ceilometer_migration_script }} &> ceilometer-migration2.log
+
+    - name: Reverse Ceilometer Patch
+      become: true
+      become_user: root
+      become_method: sudo
+      shell: "patch -R -d /usr/share/openstack-tripleo-heat-templates -p1 < {{ temp_dir }}/ceilometer_patch1"
+      when: check_ceilometer_patch.rc == 0
+
+- name: Overcloud Upgrade Init
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_overcloud
+    - upgrade_init
+  vars:
+    - upgrade_init_script: "~/upgrade_init.sh"
+  tasks:
+    - name: Copy overcloud-repos.yaml
+      copy:
+        src: "{{ plugin_dir }}/files/10/overcloud-repos.yaml"
+        dest: "{{ temp_dir }}/overcloud-repos.yaml"
+
+    - name: Create Upgrade Unit base script
+      copy:
+        src: "{{ overcloud_deploy_script }}"
+        dest: "{{ upgrade_init_script }}"
+        mode: 0755
+        remote_src: true
+
+    - name: Append params to Upgrade Unit script
+      lineinfile:
+        dest: "{{ upgrade_init_script }}"
+        insertbefore: '^--log-file.*'
+        line: '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker-init.yaml \'
+
+    - name: Append params to Upgrade Unit script
+      lineinfile:
+        dest: "{{ upgrade_init_script }}"
+        insertbefore: '^--log-file.*'
+        line: '-e {{ temp_dir }}/overcloud-repos.yaml \'
+
+    - name: Change log file name of Upgrade Unit script
+      lineinfile:
+        dest: "{{ upgrade_init_script }}"
+        regexp: '^--log-file.*'
+        line: '--log-file upgrade-unit.log'
+
+    - name: Print Upgrade Init command
+      command: "cat {{ upgrade_init_script }}"
+
+    - name: Executing Init Upgrade command
+      shell: |
+          source ~/stackrc
+          bash {{ upgrade_init_script }} &> upgrade-unit2.log
+
+- name: Scan OCs ssh keys and upload node_upgrade script
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_overcloud
+    - upgrade_ssh_key_scan
+  tasks:
+    - name: Nodes ssh key scan
+      shell: |
+          source ~/stackrc
+          for host in $(nova list | awk '$1 !~ /^\+/ && NR>3{print gensub(/.*=([0-9.]+).*/, "\\1",$12)}'); do grep -q ${host} ~/.ssh/known_hosts || ssh-keyscan -t rsa ${host} >> ~/.ssh/known_hosts; done
+
+- name: Object Storage Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_overcloud
+    - upgrade_object_storage
+  tasks:
+    - name: Object Storage Upgrade
+      shell : |
+          source ~/stackrc
+          for NODE in `nova list | grep swift | awk -F "|" '{ print $2 }'` ; do upgrade-non-controller.sh --upgrade $NODE &>> swift-upgrade.log; done
+
+- name: Controller And Block Storage Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_overcloud
+    - upgrade_controller
+  vars:
+    - controller_upgrade_script: "~/controller_upgrade.sh"
+  tasks:
+    - name: Copy ignore-ceph-warnings.yaml
+      copy:
+        src: "{{ plugin_dir }}/files/10/ignore-ceph-warnings.yaml"
+        dest: "{{ temp_dir }}/ignore-ceph-warnings.yaml"
+
+    - name: Create Controler upgrade base script
+      copy:
+        src: "{{ overcloud_deploy_script }}"
+        dest: "{{ controller_upgrade_script }}"
+        mode: 0755
+        remote_src: true
+
+    - name: Append params to Controler upgrade script
+      lineinfile:
+        dest: "{{ controller_upgrade_script }}"
+        insertbefore: '^--log-file.*'
+        line: '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker.yaml \'
+
+    - name: Append params to Controler upgrade script
+      lineinfile:
+        dest: "{{ controller_upgrade_script }}"
+        insertbefore: '^--log-file.*'
+        line: '-e {{ temp_dir }}/ignore-ceph-warnings.yaml \'
+
+    - name: Change log file name of Controler upgrade script
+      lineinfile:
+        dest: "{{ controller_upgrade_script }}"
+        regexp: '^--log-file.*'
+        line: '--log-file controller-upgrade.log'
+
+    - name: Print Controller Upgrade command
+      command: "cat {{ controller_upgrade_script }}"
+
+    - name: Executing Controller Upgrade command
+      shell: |
+          source ~/stackrc
+          bash {{ controller_upgrade_script }} &> controller-upgrade2.log
+
+- name: Compute Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_overcloud
+    - upgrade_compute
+  tasks:
+    - name: Compute Upgrade
+      shell : |
+          source ~/stackrc
+          for NODE in `nova list | grep compute | awk -F "|" '{ print $2 }'` ; do upgrade-non-controller.sh --upgrade $NODE &>> compute-upgrade.log; done
+
+- name: Ceph Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_overcloud
+    - upgrade_ceph
+  tasks:
+    - name: Ceph Upgrade
+      shell : |
+          source ~/stackrc
+          for NODE in `nova list | grep ceph | awk -F "|" '{ print $2 }'` ; do upgrade-non-controller.sh --upgrade $NODE &>> ceph-upgrade.log; done
+
+- name: Convergence
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_overcloud
+    - upgrade_convergence
+  vars:
+    - convergence_script: "~/convergence.sh"
+  tasks:
+    - name: Create Convergence base script
+      copy:
+        src: "{{ overcloud_deploy_script }}"
+        dest: "{{ convergence_script }}"
+        mode: 0755
+        remote_src: true
+
+    - name: Append params to Convergence script
+      lineinfile:
+        dest: "{{ convergence_script }}"
+        insertbefore: '^--log-file.*'
+        line: '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker-converge.yaml \'
+
+    - name: Change log file name of Convergence script
+      lineinfile:
+        dest: "{{ convergence_script }}"
+        regexp: '^--log-file.*'
+        line: '--log-file convergence.log'
+
+    - name: Print Convergence command
+      command: "cat {{ convergence_script }}"
+
+    - name: Executing Convergence command
+      shell: |
+          source ~/stackrc
+          bash {{ convergence_script }} &> convergence2.log
+
+- name: Overcloud Post-Upgrade Aodh migration
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_overcloud
+    - upgrade_aodh
+  vars:
+    - aodh_migration_script: "~/aodh_migration.sh"
+  tasks:
+    - name: Create Aodh Migration base script
+      copy:
+        src: "{{ overcloud_deploy_script }}"
+        dest: "{{ aodh_migration_script }}"
+        mode: 0755
+        remote_src: true
+
+    - name: Append params to Aodh Migration script
+      lineinfile:
+        dest: "{{ aodh_migration_script }}"
+        insertbefore: '^--log-file.*'
+        line: '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-aodh-migration.yaml \'
+
+    - name: Change log file name of Aodh Migration script
+      lineinfile:
+        dest: "{{ aodh_migration_script }}"
+        regexp: '^--log-file.*'
+        line: '--log-file aodh-migration.log'
+
+    - name: Print Aodh Migration command
+      command: "cat {{ aodh_migration_script }}"
+
+    - name: Executing Aodh migration command
+      shell: |
+          source ~/stackrc
+          bash {{ aodh_migration_script }} &> aodh-migration2.log
+
+- name: Image Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_overcloud
+    - upgrade_images
+  tasks:
+    - name: Image Upgrade
+      shell: |
+          mkdir -p new-images && cd new-images
+          tar xvf /usr/share/rhosp-director-images/overcloud-full-latest-10*.tar
+          tar xvf /usr/share/rhosp-director-images/ironic-python-agent-latest-10*.tar
+          . ~/stackrc
+          openstack overcloud image upload --update-existing
+          openstack baremetal configure boot
+          cd ../ && rm -rf new-images
+
+
+- name: Deleting temp folder
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_overcloud
+  tasks:
+    - name: Deleting temp folder
+      file:
+        path: "{{ temp_dir }}"
+        state: absent
