@@ -1,0 +1,11 @@
+- name: Set plugin_dir
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tags: upgrade
+  tasks:
+    - set_fact : plugin_dir="{{ playbook_dir }}"
+
+- name: Version 10 Upgrade
+  include: "tasks/10/upgrade.yml"
+  when: install.version == "10"
