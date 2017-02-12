@@ -254,7 +254,7 @@ def test_remove_plugin(plugin_manager_fixture):
         assert plugin_dict['name'] in plugin_manager.PLUGINS_DICT, \
             "Can't remove unexisting plugin"
 
-        plugin_manager.remove_plugin(plugin_dict['type'], plugin_dict['name'])
+        plugin_manager.remove_plugin(plugin_dict['name'])
 
         with pytest.raises(KeyError):
             plugin_manager.get_plugin(plugin_name=plugin_dict['name'])
@@ -282,7 +282,7 @@ def test_remove_unexisting_plugin(plugin_manager_fixture):
     plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
 
     with pytest.raises(IRFailedToRemovePlugin):
-        plugin_manager.remove_plugin('supported_type1', 'unexisting_plugin')
+        plugin_manager.remove_plugin('unexisting_plugin')
 
     assert plugins_cnt_before_try == len(plugin_manager.PLUGINS_DICT)
     assert os.path.getmtime(
@@ -293,7 +293,7 @@ def test_remove_unexisting_plugin(plugin_manager_fixture):
 @pytest.mark.parametrize("input_args, plugins_conf", [
     ("plugin list", None),
     ("plugin add tests/example/plugins/type1_plugin1", None),
-    ("plugin remove supported_type1 type1_plugin1", dict(
+    ("plugin remove type1_plugin1", dict(
         supported_type1=dict(
             type1_plugin1='tests/example/plugins/type1_plugin1'))),
 ])

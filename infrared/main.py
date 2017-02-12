@@ -150,7 +150,6 @@ class PluginManagerSpec(api.SpecObject):
         # Remove plugin
         remove_parser = plugin_subparsers.add_parser(
             'remove', help='Remove a plugin')
-        remove_parser.add_argument("type", help="Plugin type")
         remove_parser.add_argument("name", help="Plugin name")
 
         # List command
@@ -175,7 +174,7 @@ class PluginManagerSpec(api.SpecObject):
         elif subcommand == 'add':
             self.plugin_manager.add_plugin(pargs.path, pargs.dest)
         elif subcommand == 'remove':
-            self.plugin_manager.remove_plugin(pargs.type, pargs.name)
+            self.plugin_manager.remove_plugin(pargs.name)
 
     def _list_plugins(self, print_available=False):
         """Print a list of installed & available plugins"""
