@@ -64,15 +64,15 @@ class InfraredPluginManager(object):
     @staticmethod
     def get_installed_plugins():
         """Returns a dict with project's plugins categorized by type"""
-        plugins_dict = {}
+        plugins_dict = OrderedDict()
+
+        # Needed to get the wanted order of plugin type in 'ir plugin list'
+        for plugin_type in DEFAULT_PLUGIN_INI['supported_types']:
+            plugins_dict[plugin_type] = []
 
         for plugin_dir in glob.glob(PLUGINS_DIR + '/*/'):
             plugin = InfraredPlugin(plugin_dir)
-
-            if plugin.type not in plugins_dict:
-                plugins_dict[plugin.type] = [plugin.name]
-            else:
-                plugins_dict[plugin.type].append(plugin.name)
+            plugins_dict[plugin.type].append(plugin.name)
 
         return plugins_dict
 
@@ -115,11 +115,9 @@ class InfraredPluginManager(object):
         plugins_conf_full_path = \
             os.path.abspath(os.path.expanduser(plugins_conf))
 
-        init_plugins_conf = False
         if not os.path.isfile(plugins_conf_full_path):
             LOG.warning("Plugin conf ('{}') not found, creating it with "
                         "default data".format(plugins_conf_full_path))
-            init_plugins_conf = True
             with open(plugins_conf_full_path, 'w') as fp:
                 config = ConfigParser()
 
@@ -136,12 +134,6 @@ class InfraredPluginManager(object):
         with open(plugins_conf_full_path) as fp:
             self._config = ConfigParser()
             self.config.readfp(fp)
-
-        if init_plugins_conf:
-            pldirs = [pd for pd in os.listdir(
-                PLUGINS_DIR) if os.path.isdir(os.path.join(PLUGINS_DIR, pd))]
-            for pldir in pldirs:
-                self.add_plugin(os.path.join(PLUGINS_DIR, pldir))
 
     def get_desc_of_type(self, s_type):
         """Returns the description of the given supported plugin type
