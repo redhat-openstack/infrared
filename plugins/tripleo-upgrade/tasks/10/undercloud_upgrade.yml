@@ -1,0 +1,24 @@
+- name: Undercloud Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_undercloud
+  tasks:
+    - name: Setup repos
+      become: true
+      become_user: root
+      become_method: sudo
+      command: "rhos-release -x -P {{ install.version }}"
+
+    - name: Stopping services
+      become: true
+      become_user: root
+      become_method: sudo
+      shell: |
+           systemctl stop 'openstack-*'
+           systemctl stop 'neutron-*'
+
+    - name: Start Undercloud Upgrade
+      shell: "openstack undercloud upgrade &> undercloud_upgrade.log"
