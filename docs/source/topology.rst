@@ -58,8 +58,8 @@ Lets examine the structure of topology file (located: var/topology/nodes/control
 
 For more topology file examples, please check out the default `available nodes <virsh>`_
 
-.. _`virsh`: https://github.com/rehdat-openstack/infrared/tree/IR2/plugins/virsh/defaults/topology/nodes
-.. .. _`openstack`: https://github.com/rehdat-openstack/infrared/tree/IR2/plugins/openstack/defaults/topology/nodes
+.. _`virsh`: https://github.com/rehdat-openstack/infrared/tree/master/plugins/virsh/defaults/topology/nodes
+.. _`openstack`: https://github.com/rehdat-openstack/infrared/tree/master/plugins/openstack/defaults/topology/nodes
 
 Network topology
 ----------------
