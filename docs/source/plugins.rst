@@ -206,6 +206,12 @@ Add:
         infrared plugin add git_url
 
 
+Initialize:
+    Initialize (install) all available plugins::
+
+        infrared plugin init-all
+
+
 List:
     List all available plugins, by type::
 

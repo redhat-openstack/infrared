@@ -2,6 +2,7 @@ import sys
 
 from infrared import api
 from infrared.core.services import CoreServices
+from infrared.core.services.plugins import PLUGINS_REGISTRY
 from infrared.core.utils import logger
 from infrared.core.utils import interactive_ssh
 from infrared.core.utils.print_formats import fancy_table
@@ -147,6 +148,10 @@ class PluginManagerSpec(api.SpecObject):
                                 "clone plugin under, in case of Git URL is "
                                 "provided as path")
 
+        # Initialize (install) all plugins
+        plugin_subparsers.add_parser('init-all', help='Initialize (install)'
+                                                      'all available plugins')
+
         # Remove plugin
         remove_parser = plugin_subparsers.add_parser(
             'remove', help='Remove a plugin')
@@ -173,6 +178,11 @@ class PluginManagerSpec(api.SpecObject):
             self._list_plugins(pargs.available)
         elif subcommand == 'add':
             self.plugin_manager.add_plugin(pargs.path, pargs.dest)
+        elif subcommand == 'init-all':
+            # Add only plugins which aren't installed
+            for plugin in set(PLUGINS_REGISTRY) - \
+                    set(self.plugin_manager.PLUGINS_DICT):
+                self.plugin_manager.add_plugin(plugin)
         elif subcommand == 'remove':
             self.plugin_manager.remove_plugin(pargs.name)
 
