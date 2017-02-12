@@ -200,35 +200,62 @@ Plugin Manager
 The following commands are used to manage `infrared` plugins
 
 Add:
-    `infrared` will look for a `plugin.spec <Specification>`_ file in the given directory and
-    register the plugin under the given plugin-type::
+    `infrared` will look for a `plugin.spec <Specification>`_ file in the given source and
+    register the plugin under the given plugin-type (when source is 'all', all available plugins will be installed)::
 
-        infrared plugin add tests/example
-        infrared plugin add git_url
+        $ infrared plugin add tests/example
+        $ infrared plugin add git_url
+        $ infrared plugin add all
 
 
 List:
     List all available plugins, by type::
 
-        infrared plugin list
+        $ infrared plugin list
 
-        Available plugins:
-          provision       {example}
-          install         {}
-          test            {}
+        ┌───────────┬─────────┐
+        │ Type      │ Name    │
+        ├───────────┼─────────┤
+        │ provision │ example │
+        ├───────────┼─────────┤
+        │ install   │         │
+        ├───────────┼─────────┤
+        │ test      │         │
+        └───────────┴─────────┘
+
+        $ infrared plugin list --available
+
+        ┌───────────┬────────────────────┬───────────┐
+        │ Type      │ Name               │ Installed │
+        ├───────────┼────────────────────┼───────────┤
+        │ provision │ example            │     *     │
+        │           │ foreman            │           │
+        │           │ openstack          │           │
+        │           │ virsh              │           │
+        ├───────────┼────────────────────┼───────────┤
+        │ install   │ collect-logs       │           │
+        │           │ packstack          │           │
+        │           │ tripleo-overcloud  │           │
+        │           │ tripleo-undercloud │           │
+        ├───────────┼────────────────────┼───────────┤
+        │ test      │ rally              │           │
+        │           │ tempest            │           │
+        └───────────┴────────────────────┴───────────┘
+
 
 .. note:: Supported plugin types are defined in plugin settings file which is auto generated.
    Check the  `Infrared Configuration <configuration.html>`_ for details.
 
 Remove:
-    Remove an existing plugin::
+    Remove the given plugin (when name is 'all', all plugins will be removed)::
 
-        infrared plugin remove example
+        $ infrared plugin remove example
+        $ infrared plugin remove all
+
 
 Execute:
     Plugins are added as subparsers under ``plugin type`` and will execute
     the ``main.yml`` `playbook <playbooks>`_::
 
-        infrared example
-
+        $ infrared example
 
