@@ -20,6 +20,20 @@ DEFAULT_PLUGIN_INI = dict(
         ('test', 'Testing plugins')
     ])
 )
+
+PLUGINS_REGISTRY = {
+    'beaker': 'plugins/beaker',
+    'collect-logs': 'plugins/collect-logs',
+    'foreman': 'plugins/foreman',
+    'openstack': 'plugins/openstack',
+    'packstack': 'plugins/packstack',
+    'rally': 'plugins/rally',
+    'tempest': 'plugins/tempest',
+    'tripleo-overcloud': 'plugins/tripleo-overcloud',
+    'tripleo-undercloud': 'plugins/tripleo-undercloud',
+    'virsh': 'plugins/virsh',
+}
+
 MAIN_PLAYBOOK = "main.yml"
 PLUGINS_DIR = os.path.abspath("./plugins")
 LOG = logger.LOG
@@ -188,19 +202,18 @@ class InfraredPluginManager(object):
 
         :param plugin_source: Plugin source.
           Can be:
-            1. Plugin name to install from the registry (project's plugins)
+            1. Plugin name (from available in registry)
             2. Path to a local directory
             3. Git URL
         :param dest: destination where to clone a plugin into (if 'source' is
           a Git URL)
         """
-        project_plugin_dir = os.path.join(PLUGINS_DIR, plugin_source)
-        # Available plugin
-        if os.path.exists(project_plugin_dir) and \
-                os.path.isdir(project_plugin_dir):
-            plugin_source = project_plugin_dir
+        # Check if a plugin is in the registry
+        if plugin_source in PLUGINS_REGISTRY:
+            plugin_source = PLUGINS_REGISTRY[plugin_source]
+
         # Local dir plugin
-        elif os.path.exists(plugin_source):
+        if os.path.exists(plugin_source):
             pass
         # Git Plugin
         else:
