@@ -2,6 +2,7 @@ import sys
 
 from infrared import api
 from infrared.core.services import CoreServices
+from infrared.core.services.plugins import PLUGINS_REGISTRY
 from infrared.core.utils import logger
 from infrared.core.utils import interactive_ssh
 from infrared.core.utils.print_formats import fancy_table
@@ -142,14 +143,21 @@ class PluginManagerSpec(api.SpecObject):
         # Add plugin
         add_parser = plugin_subparsers.add_parser(
             'add', help='Add a plugin')
-        add_parser.add_argument("path", help="Plugin path")
+        add_parser.add_argument("src",
+                                help="Plugin Source (name/path/git URL)\n'all'"
+                                     " will install all available plugins")
         add_parser.add_argument("--dest", help="Destination directory to "
                                 "clone plugin under, in case of Git URL is "
                                 "provided as path")
 
+        # Initialize (install) all plugins
+        plugin_subparsers.add_parser('init-all', help='Initialize (install)'
+                                                      'all available plugins')
+
         # Remove plugin
         remove_parser = plugin_subparsers.add_parser(
-            'remove', help='Remove a plugin')
+            "remove",
+            help="Remove a plugin, 'all' will remove all installed plugins")
         remove_parser.add_argument("name", help="Plugin name")
 
         # List command
@@ -172,9 +180,18 @@ class PluginManagerSpec(api.SpecObject):
         if subcommand == 'list':
             self._list_plugins(pargs.available)
         elif subcommand == 'add':
-            self.plugin_manager.add_plugin(pargs.path, pargs.dest)
+            if pargs.src == 'all':
+                for plugin in set(PLUGINS_REGISTRY) - \
+                        set(self.plugin_manager.PLUGINS_DICT):
+                    self.plugin_manager.add_plugin(plugin)
+            else:
+                self.plugin_manager.add_plugin(pargs.src, pargs.dest)
         elif subcommand == 'remove':
-            self.plugin_manager.remove_plugin(pargs.name)
+            if pargs.name == 'all':
+                for plugin in self.plugin_manager.PLUGINS_DICT:
+                    self.plugin_manager.remove_plugin(plugin)
+            else:
+                self.plugin_manager.remove_plugin(pargs.name)
 
     def _list_plugins(self, print_available=False):
         """Print a list of installed & available plugins"""
