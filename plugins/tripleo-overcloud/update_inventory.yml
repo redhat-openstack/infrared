@@ -65,7 +65,7 @@
           - name: update IP of overcloud nodes
             vars:
                 # Here can't be used {{ path_venv }}, because it's not a Jinja template
-                ansible_python_interpreter: "/tmp/venv_shade/bin/python"
+                ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
             os_server_facts:
                 auth: "{{ creds.stdout | from_yaml }}"
                 # Required for SSL
@@ -85,7 +85,7 @@
 
             with_items: "{{ openstack_servers }}"
         vars:
-            path_venv: "/tmp/venv_shade"
+            path_venv: "/var/tmp/venv_shade"
 
       # Connection for baremetals must be forwarded through UC as OC nodes
       # lie on ctplane not accessible from anywhere else.

@@ -6,7 +6,7 @@
 # Playbook is idempotent
 # This playbook uses ansible openstack modules and assumes the undercloud already has
 # a virtualenv containing shade.
-# venv is created in playbooks/installer/ospd/ospd_inventory_update.yml as /tmp/venv_shade
+# venv is created in playbooks/installer/ospd/ospd_inventory_update.yml as /var/tmp/venv_shade
 
 - name: External network creation
   hosts: undercloud
@@ -80,7 +80,7 @@
             physnet_type: "{{ ('hypervisor' in groups) | ternary('flat', 'vlan') }}"
             vlan_id: "{{ network_template.parameter_defaults.ExternalNetworkVlanID|default('') }}"
             # Here can't be used {{ path_venv }}, because it's not a Jinja template
-            ansible_python_interpreter: "/tmp/venv_shade/bin/python"
+            ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
             auth: "{{ creds.stdout | from_yaml }}"
         os_network:
             # Required for SSL
@@ -106,7 +106,7 @@
       - name: create the external subnet
         vars:
             # Here can't be used {{ path_venv }}, because it's not a Jinja template
-            ansible_python_interpreter: "/tmp/venv_shade/bin/python"
+            ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
             auth: "{{ creds.stdout | from_yaml }}"
             # It's cleaner to define top defaults first
             pool: "{{ subnet.allocation_pool|default({}) }}"

@@ -50,7 +50,7 @@
           shade: "1.7.0"
           pip: "8.1"
   vars:
-      path_venv: "/tmp/venv_shade"
+      path_venv: "/var/tmp/venv_shade"
 
 - name: Grab auth data from openstackrc file and publish it as YAML
   vars:
@@ -73,11 +73,11 @@
 - name: Download cirros image
   get_url:
       url: " {{ guest_image.url }}"
-      dest: "/tmp/{{ guest_image.name }}"
+      dest: "/var/tmp/{{ guest_image.name }}"
 
 - name: Create nano flavor
   vars:
-      ansible_python_interpreter: "/tmp/venv_shade/bin/python"
+      ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
   os_nova_flavor:
       auth: "{{ creds.stdout | from_yaml }}"
       name: m1.nano
@@ -88,13 +88,13 @@
 
 - name: Create Glance Image
   vars:
-      ansible_python_interpreter: "/tmp/venv_shade/bin/python"
+      ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
   os_image:
       auth: "{{ creds.stdout | from_yaml }}"
       name: "{{ guest_image.name }}"
       disk_format: qcow2
       container_format: bare
       state: present
-      filename: "/tmp/{{ guest_image.name }}"
+      filename: "/var/tmp/{{ guest_image.name }}"
       properties:
           visibility: public
