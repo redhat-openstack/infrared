@@ -10,16 +10,18 @@
       - "vars/network/variant/{{ install.network.variant }}.yml"
   vars:
       basic_config:
+          CONFIG_CEILOMETER_INSTALL: y
+          CONFIG_HEAT_CFN_INSTALL: y
+          CONFIG_HEAT_INSTALL: y
+          CONFIG_HORIZON_INSTALL: y
+          CONFIG_NEUTRON_USE_NAMESPACES: y
+          CONFIG_NOVA_NETWORK_DEFAULTFLOATINGPOOL: public
           CONFIG_PROVISION_DEMO: n
           CONFIG_PROVISION_TEMPEST: n
-          CONFIG_USE_EPEL: n
+          CONFIG_SAHARA_INSTALL: "{% if install.component.sahara %}y{% else %}n{% endif %}"
           CONFIG_SWIFT_INSTALL: y
-          CONFIG_CEILOMETER_INSTALL: y
-          CONFIG_HEAT_INSTALL: y
-          CONFIG_HEAT_CFN_INSTALL: y
-          CONFIG_NEUTRON_USE_NAMESPACES: y
-          CONFIG_HORIZON_INSTALL: y
-          CONFIG_NOVA_NETWORK_DEFAULTFLOATINGPOOL: public
+          CONFIG_TROVE_INSTALL: "{% if install.component.trove %}y{% else %}n{% endif %}"
+          CONFIG_USE_EPEL: n
       packstack_config: "{{ basic_config | combine(network_config) | combine(network_variant_config) }}"
       answers_file: "/root/{{ install.answer.file }}"
   tasks:
