@@ -20,6 +20,8 @@
           CONFIG_NEUTRON_USE_NAMESPACES: y
           CONFIG_HORIZON_INSTALL: y
           CONFIG_NOVA_NETWORK_DEFAULTFLOATINGPOOL: public
+          CONFIG_SAHARA_INSTALL: "{% if install.component.sahara %}y{% else %}n{% endif %}"
+          CONFIG_TROVE_INSTALL: "{% if install.component.trove %}y{% else %}n{% endif %}"
       packstack_config: "{{ basic_config | combine(network_config) | combine(network_variant_config) }}"
       answers_file: "/root/{{ install.answer.file }}"
   tasks:
