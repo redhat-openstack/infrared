@@ -1,0 +1,36 @@
+- name: install vnc server
+  package:
+      name: tigervnc-server
+      state: present
+  become: yes
+
+- name: set password for current user
+  vars:
+      password: secret
+  shell: |
+      mkdir -p {{ ansible_env.HOME }}/.vnc
+      echo {{ password }} | vncpasswd -f > {{ ansible_env.HOME }}/.vnc/passwd
+      chmod 0600 {{ ansible_env.HOME }}/.vnc/passwd
+  become: no
+
+- name: create service file
+  template:
+      src: vncserver.service.j2
+      dest: "/etc/systemd/system/vncserver.service"
+  become: yes
+
+- name: reload systemd
+  command: systemctl daemon-reload
+  become: yes
+
+- name: start vnc service
+  service:
+      name: "vncserver.service"
+      state: restarted
+      enabled: yes
+  become: yes
+
+- name: configure firewall
+  command: iptables -I INPUT -m state --state NEW -p tcp --destination-port 5901 -j ACCEPT
+  become: yes
+

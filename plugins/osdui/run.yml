@@ -1,0 +1,33 @@
+- name: Run test suite
+  hosts: uitester
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: include tests suite var
+        include_vars: "vars/tests/{{ test.tests }}.yml"
+
+      - name: create venv with latest pip, setuptools and pbr
+        pip:
+            virtualenv: "{{ setup.ospdui.dir }}/.venv"
+            name: "{{ item }}"
+            state: latest
+        with_items:
+            - pytest
+
+      - name: run ospdui tests
+        shell: |
+            source .venv/bin/activate
+            export PATH=$PATH:{{ ansible_user_dir }}/bin
+            DISPLAY=:1 py.test -s {{ test_pattern }} \
+                --junit-xml={{ test.tests }}.xml
+        args:
+            chdir: "{{ setup.ospdui.dir }}"
+            executable: /bin/bash
+        ignore_errors: true
+
+      - name: fetch resulting file
+        fetch:
+            src: "{{ setup.ospdui.dir }}/{{ test.tests }}.xml"
+            dest: "{{ inventory_dir }}/ospdui_results/{{ test.tests }}.xml"
+            flat: yes
+            fail_on_missing: yes
