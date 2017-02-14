@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fabf19d9_d58720b3",
+        "filename": "plugins/tripleo-upgrade/plugin.spec",
+        "patchSetId": 3
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1006589
+      },
+      "writtenOn": "2017-02-14T11:03:54Z",
+      "side": 1,
+      "message": "Again, here you are referring to the undercloud machine. The idea was to remove that reference and work only with local files. \n\nSo scenario should be next: \n1) Look into the profile folder {{ invnetory_dir }} and check if we have overcloud_deploy.sh file there. \n2) If yes for 1), then copy it to the undercloud and use. \n3) If not for 1) then use ~/overcloud_deploy.sh from undercloud (this setep is options)\n\nThis approach will require fetching of the overcloud_deploy scrip from the undercloud prior running that upgrade plugin.\n\nBut I\u0027d suggest to ask about that Tal, wether we need to use that approach here",
+      "range": {
+        "startLine": 23,
+        "startChar": 32,
+        "endLine": 23,
+        "endChar": 54
+      },
+      "revId": "2629274e9e312b7d9ecc47a13dfb447e0dfbef53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fabf19d9_b5fb8c46",
+        "filename": "plugins/tripleo-upgrade/tasks/10/upgrade.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1006589
+      },
+      "writtenOn": "2017-02-14T11:03:54Z",
+      "side": 1,
+      "message": "Looks like upgrade tag tags all the task. So when you will run ansible with \u0027upgrade\u0027 it will actually run all the tasks and plays. So there is not sence to have that tag (correct?). I\u0027d porpose to mark this one with \u0027verification\u0027 tag.",
+      "range": {
+        "startLine": 3,
+        "startChar": 6,
+        "endLine": 3,
+        "endChar": 13
+      },
+      "revId": "2629274e9e312b7d9ecc47a13dfb447e0dfbef53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
