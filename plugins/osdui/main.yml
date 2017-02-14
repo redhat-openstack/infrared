@@ -1,0 +1,20 @@
+---
+- name: setup rhos release
+  include: release.yml
+  tags:
+      - release
+
+- name: enable display and allow vnc access to the tester
+  include: vnc.yml
+  tags:
+      - vnc
+
+- name: setup test framework and dependencies
+  include: setup.yml
+  tags:
+      - setup
+
+- name: run tests
+  include: run.yml
+  tags:
+      - run

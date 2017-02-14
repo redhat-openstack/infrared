@@ -1,0 +1,70 @@
+- name: install common packages
+  package:
+      name: "{{ item }}"
+      state: present
+  with_items:
+      - git
+      - python-virtualenv
+      - gcc
+      - java-openjdk
+      - openssl-devel
+      - unzip
+      - gzip
+  become: yes
+
+# todo(obaranov) make sure 46+ version is installed.
+- name: install firefox
+  package:
+      name: firefox
+      state: latest
+  become: yes
+
+- name: create yum repo to download Chrome
+  yum_repository:
+      name: google-chrome
+      description: Google chrome official repo
+      baseurl: http://dl.google.com/linux/chrome/rpm/stable/$basearch
+      gpgcheck: yes
+      gpgkey: https://dl-ssl.google.com/linux/linux_signing_key.pub
+
+  become: yes
+
+- name: install google chrome browser
+  yum:
+      name: google-chrome-stable
+      state: installed
+  become: yes
+
+- name: create user bin directory
+  file:
+      path: "{{ ansible_env.HOME }}/bin"
+      state: directory
+
+- name: download chrome webdriver
+  get_url:
+      url: "{{ setup.selenium.chrome_driver.url }}"
+      dest: "/tmp/{{ setup.selenium.chrome_driver.url | basename }}"
+
+- name: unpack chrome webdriver
+  unarchive:
+      src: "/tmp/{{ setup.selenium.chrome_driver.url | basename }}"
+      dest: "{{ ansible_env.HOME }}/bin"
+      copy: no
+
+- name: download firefox driver
+  get_url:
+      url: "{{ setup.selenium.firefox_driver.url }}"
+      dest: "/tmp/{{ setup.selenium.firefox_driver.url | basename }}"
+
+- name: unpack firefox driver
+  unarchive:
+      src:  "/tmp/{{ setup.selenium.firefox_driver.url | basename }}"
+      dest: "{{ ansible_user_dir }}/bin"
+      copy: no
+
+- name: rename geckodriver to wires
+  copy:
+      src: "{{ ansible_env.HOME }}/bin/{{ setup.selenium.firefox_driver.binary_name }}"
+      dest: "{{ ansible_env.HOME }}/bin/wires"
+      remote_src: yes
+
