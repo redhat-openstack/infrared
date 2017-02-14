@@ -3,7 +3,7 @@ Plugins
 
 In `infrared` 2.0, `plugins` are fully self contained Ansible projects.
 Any ansible project can become an`infrared` plugin by adhering to the following
-structure (see ``tests/example`` for an example plugin)::
+structure (see `tests/example`_ for an example plugin)::
 
     tests/example
     ├── main.yml                # Main playbook. All execution starts here
@@ -21,6 +21,7 @@ structure (see ``tests/example`` for an example plugin)::
 
 .. note:: This structure will work without any ``ansible.cfg`` file provided, as Ansible will search for references in the
         relative paths described above. To use an ``ansible.cfg`` config file, use absolute paths to the plugin directory.
+.. _tests/example: https://github.com/redhat-openstack/infrared/tree/master/tests/example
 
 Plugin structure
 ^^^^^^^^^^^^^^^^

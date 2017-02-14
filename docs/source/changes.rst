@@ -12,7 +12,7 @@ Highlights
     The deprecates ``ir-archive`` in favor of ``workspace import`` and ``workspace export``
 #. Stand-Alone Plugins:
     Each plugins is fully contained within a single directory.
-    Plugin structure is fully defined and plugins can be loaded from any location on the system.
+    `Plugin structure`_ is fully defined and plugins can be loaded from any location on the system.
     `"Example plugin"` shows contributors how to structure their Ansible projects to plug into `infrared`
 #. SSH:
     Added ability to establish interactive ssh connection to nodes, managed by workspace
@@ -33,7 +33,7 @@ Highlights
     with configuration files.
 #. Topoloy:
     The topology input type has been deprecated. Use `KeyValueList` to define node types and amounts, and ``include_vars``
-    to add relevant files to playbooks
+    to add relevant files to playbooks, see `Topology`_ description for more information
 #. Cleanup:
     the ``--cleanup`` options now accepts boolean values. Any YAML boolean is accpeted
     ("yes/no", "true/false", "on/off")
@@ -41,6 +41,8 @@ Highlights
     On virtual environmants, `tripleo-undercloud <tripleo-undercloud.html>`_ can create a snapshot
     out of the undercloud VM that can later be used to bypass the installation process.
 
+.. _Plugin structure: plugins.html
+.. _Topology: topology.html
 .. OVB
 
 Example Script Upgrade

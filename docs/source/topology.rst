@@ -1,7 +1,7 @@
 Topology
 ========
 A topology is a description of an environment you wish to provision.
-We have divided it into two, network topology and nodes topology.
+We have divided it into two, `network topology`_ and `nodes topology`_.
 
 Nodes topology
 --------------
