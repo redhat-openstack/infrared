@@ -18,5 +18,14 @@
             msg: "Undercloud deployment failed... :("
         when: undercloud_deployment.rc != 0
 
+      - name: fetch the stackrc file
+        tags:
+            - fetch_rc_file
+        fetch:
+            src: "~/stackrc"
+            dest: "{{ inventory_dir }}/stackrc"
+            flat: yes
+            fail_on_missing: yes
+
       - name: gathering new facts about the undercloud
         setup:

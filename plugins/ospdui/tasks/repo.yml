@@ -1,0 +1,106 @@
+- name: find udnercloud file
+  find:
+      file_type: file
+      pattern: "{{ test.undercloudrc | basename }}"
+      paths:
+          - "{{ lookup('env', 'PWD') }}/{{ test.undercloudrc | dirname }}"
+          - "{{ test.undercloudrc | expanduser | dirname }}"
+  register: undercloudrc_find
+  delegate_to: localhost
+  when: test.undercloudrc|default('')
+
+- name: fail when rc file was not found
+  fail:
+      msg: "Unable to find rc file: {{ test.undercloudrc }}"
+  when: test.undercloudrc|default('') and undercloudrc_find.matched == 0
+
+- name: copy udnercloud file
+  vars:
+      file_src: "{{ undercloudrc_find.files[0].path if test.undercloudrc is defined else inventory_dir + '/stackrc' }}"
+  copy:
+      src: "{{ file_src }}"
+      dest: "~/undercloudrc"
+      force: yes
+
+- name: clone ospdui framework
+  git:
+      repo: "{{ setup.ospdui.repo }}"
+      version: "{{ setup.ospdui.revision }}"
+      dest: "{{ setup.ospdui.dir }}"
+  register: tempest_repo
+
+- name: create venv with latest pip, setuptools and pbr
+  pip:
+      virtualenv: "{{ setup.ospdui.dir }}/.venv"
+      name: "{{ item }}"
+      state: latest
+  with_items:
+      - pip
+      - setuptools
+      - pbr
+
+- name: install repo requirements
+  pip:
+      virtualenv: "{{ setup.ospdui.dir }}/.venv"
+      chdir: "{{ setup.ospdui.dir }}"
+      requirements: requirements.txt
+
+- name: get admin password from the undercloud
+  delegate_to: "{{ groups.undercloud | first }}"
+  become: yes
+  command: hiera admin_password
+  register: admin_password
+
+- name: get home page from the undercloud
+  delegate_to: "{{ groups.undercloud | first }}"
+  become: yes
+  command: grep -o -P '(?<=VirtualHost ).*(?=>)' /etc/httpd/conf.d/25-tripleo-ui.conf
+  register: home_page
+
+- name: get public VIP from the undercloud rc
+  command: grep -o -P 'OS_AUTH_URL=https?://\K.*(?=:)' ~/undercloudrc
+  register: public_vip
+
+- name: create default config
+  copy:
+      src: "{{ setup.ospdui.dir }}/conf/sample_default.conf.json"
+      dest: "{{ setup.ospdui.dir }}/conf/default.conf.json"
+      remote_src: yes
+
+- name: create ospdui config
+  vars:
+      ui_admin_password: "{{ admin_password.stdout }}"
+      ui_home_page: "{{ home_page.stdout }}"
+      ui_public_vip: "{{ public_vip.stdout }}"
+  template:
+      src: ospduiTests.conf.json.j2
+      dest: "{{ setup.ospdui.dir }}/conf/ospduiTests.conf.json"
+  when: test.config is not defined
+
+- name: find config file
+  find:
+      file_type: file
+      pattern: "{{ test.config | basename }}"
+      paths:
+          - "{{ lookup('env', 'PWD') }}/{{ test.config | dirname }}"
+          - "{{ test.config | expanduser | dirname }}"
+  register: config_find
+  delegate_to: localhost
+  when: test.config|default('')
+
+- name: fail when config file was not found
+  fail:
+      msg: "Unable to find config file: {{ test.config }}"
+  when: test.config|default('') and openstackrc_find.matched == 0
+
+- name: copy config file
+  vars:
+      file_src: "{{ config_find.files[0].path if test.openstackrc is defined else inventory_dir + '/keystonerc' }}"
+  copy:
+      src: "{{ config_find.files[0].path }}"
+      dest: "{{ setup.ospdui.dir }}/conf/ospduiTests.conf.json"
+      force: yes
+  when: test.config|default('')
+
+
+

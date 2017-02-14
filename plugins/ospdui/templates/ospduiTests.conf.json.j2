@@ -1,0 +1,36 @@
+{
+  "browser": {
+    "webdriver": "{{ test.browser }}",
+{% if test.ssl %}
+    "homepage": "https://{{ ui_public_vip }}",
+{% else %}
+    "homepage": "http://{{ ui_home_page }}",
+{% endif %}
+    "marionette_binary": "{{ ansible_env.HOME }}/bin/wires"
+    },
+  "credentials": {
+    "username": "admin",
+    "password": "{{ ui_admin_password }}"
+    },
+  "connector": {
+    "hostname": "{{ hostvars[groups.undercloud | first].ansible_ssh_host }}",
+    "username": "stack",
+    "password": "stack",
+    "rcFile": "stackrc"
+    },
+  "environment": {
+    "environment_files": "{{ test.environment.url }}",
+    "plan_tgz": "{{ test.plan }}",
+    "topology": {
+      "controller": "3",
+      "compute": "2",
+      "ceph": "0",
+      "swift": "0",
+      "cinder": "0"
+      },
+      "use_network_isolation": "no"
+    },
+  "logger": {
+    "level": "warning"
+    }
+}
