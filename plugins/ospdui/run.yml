@@ -1,0 +1,43 @@
+- name: Run test suite
+  hosts: tester
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: include tests suite var
+        include_vars: "vars/tests/{{ test.tests }}.yml"
+
+      - name: install test runner
+        pip:
+            virtualenv: "{{ setup.ospdui.dir }}/.venv"
+            name: "{{ item }}"
+            state: latest
+        with_items:
+            - pytest
+
+      - name: switch ui widgets for 11
+        command: ./osp_switcher.sh
+        args:
+            chdir: "{{ setup.ospdui.dir }}/webui/ospdui/widget_containers/"
+            executable: /bin/bash
+        when: test.openstack.version|int == 11
+
+      - name: run ospdui tests
+        environment:
+            DISPLAY: ":1"
+            PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/bin"
+        shell: |
+            source .venv/bin/activate
+            py.test -s {{ test_pattern }} \
+                --junit-xml={{ test.tests }}.xml
+        args:
+            chdir: "{{ setup.ospdui.dir }}"
+            executable: /bin/bash
+        ignore_errors: true
+        tags: skip_ansible_lint
+
+      - name: fetch resulting file
+        fetch:
+            src: "{{ setup.ospdui.dir }}/{{ test.tests }}.xml"
+            dest: "{{ inventory_dir }}/ospdui_results/{{ test.tests }}.xml"
+            flat: yes
+            fail_on_missing: yes
