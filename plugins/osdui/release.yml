@@ -1,0 +1,23 @@
+- name: Setup vnc accesss
+  hosts: tester
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+  pre_tasks:
+      - name: get the rhos-release RPM
+        get_url:
+            url: "{{ rhos_release_rpm }}"
+            dest: "/tmp/rhos-release-latest.rpm"
+            force: yes
+            validate_certs: no
+
+      - name: install the rhos-release RPM
+        package:
+            name: /tmp/rhos-release-latest.rpm
+            state: present
+        become: yes
+
+      - name: run rhos release
+        command: rhos-release "{{ test.openstack.version  }}"
+        become: yes

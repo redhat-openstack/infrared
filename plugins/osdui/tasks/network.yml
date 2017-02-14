@@ -1,0 +1,14 @@
+- name: setup static ip to access the undercloud
+  template:
+     src: ifcfg.conf.j2
+     dest: "/etc/sysconfig/network-scripts/ifcfg-{{ setup.network.dev }}"
+  become: yes
+  register: nic_conf
+
+- name: restart interface
+  shell: |
+      ifdown {{ setup.network.dev }}
+      ifup {{ setup.network.dev }}
+  tags: skip_ansible_lint
+  become: yes
+  when: nic_conf|changed
