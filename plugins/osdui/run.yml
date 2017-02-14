@@ -1,0 +1,28 @@
+- name: Run test suite
+  hosts: uitester
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: include tests suite var
+        include_vars: "vars/tests/{{ test.tests }}.yml"
+
+      - name: run ospdui tests
+        shell: |
+            source .venv/bin/activate
+            export DISPLAY=:1
+            export PATH=$PATH:{{ ansible_user_dir }}/bin
+            nosetests {{ test_pattern }} \
+                --with-xunit \
+                --xunit-file={{ test.tests }}.xml \
+                --xunit-testsuite-name={{ test.tests }}
+        args:
+            chdir: "{{ setup.ospdui.dir }}"
+            executable: /bin/bash
+        ignore_errors: true
+
+      - name: fetch resulting file
+        fetch:
+            src: "{{ setup.ospdui.dir }}/{{ test.tests }}.xml"
+            dest: "{{ inventory_dir }}/ospdui_results/{{ test.tests }}.xml"
+            flat: yes
+            fail_on_missing: yes

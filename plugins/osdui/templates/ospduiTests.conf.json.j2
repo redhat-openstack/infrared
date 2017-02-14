@@ -1,0 +1,32 @@
+{
+  "browser": {
+    "webdriver": "Firefox",
+    "homepage": "{{ "https" if test.ssl else "http" }}://192.168.24.1:3000/",
+    "marionette_binary": "{{ ansible_user_dir }}/bin/wires"
+    },
+  "credentials": {
+    "username": "admin",
+    "password": "{{ ui_admin_password }}"
+    },
+  "connector": {
+    "hostname": "192.168.24.1",
+    "username": "stack",
+    "password": "stack",
+    "rcFile": "stackrc"
+    },
+  "environment": {
+    "environment_files": "http://<host>/path_to_environments/env_name/",
+    "plan_tgz": "plan.tgz",
+    "topology": {
+      "controller": "3",
+      "compute": "2",
+      "ceph": "0",
+      "swift": "0",
+      "cinder": "0"
+      },
+      "use_network_isolation": "no"
+    },
+  "logger": {
+    "level": "warning"
+    }
+}
