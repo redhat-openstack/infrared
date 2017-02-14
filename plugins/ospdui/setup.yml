@@ -1,0 +1,26 @@
+- name: Setup OSPD UI framework
+  hosts: tester
+  gather_facts: no
+  any_errors_fatal: true
+  become: no
+  tasks:
+      - name: include setup vars
+        include_vars: "vars/setup/{{ test.setup }}.yml"
+        tags:
+            - always
+
+      - name: setup selenium related packages
+        include: tasks/selenium.yml
+        tags:
+            - setup_selenium
+
+      - name: setup access to the undercloud
+        include: tasks/network.yml
+        tags:
+            - setup_network
+
+      - name: setup ospdui repo
+        include: tasks/repo.yml
+        tags:
+            - setup_repo
+
