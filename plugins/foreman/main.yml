@@ -31,9 +31,20 @@
       - name: Add hosts to host list
         add_host:
             name: "{{ provision.host.address }}"
-            # TODO: Move tester and even undercloud grouping to later phases in future
-            groups: "baremetal"
+            groups: "{{ provision.roles | join(',') }}"
             ansible_ssh_host: "{{ provision.host.address }}"
             ansible_ssh_user: "{{ provision.host.user }}"
             ansible_ssh_pass: "{{ provision.host.password | default(omit) }}"
             ansible_ssh_private_key_file: "{{ provision.host.key | default(omit) }}"
+
+      - name: Generate inventory file
+        template:
+          dest: "{{ inventory_dir }}/hosts-prov"
+          src: templates/inventory.j2
+          force: yes
+
+      - name: Update inventory file symlink
+        file:
+          dest: "{{ inventory_dir }}/hosts"
+          state: link
+          src: "hosts-prov"
