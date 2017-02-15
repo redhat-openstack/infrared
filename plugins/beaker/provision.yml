@@ -7,30 +7,81 @@
     - name: Provisioning the machine
       beaker_provisioner:
           url: "{{ provision.url }}"
-          username: "{{ provision.user }}"
-          password: "{{ provision.password }}"
+          username: "{{ provision.beaker.user }}"
+          password: "{{ provision.beaker.password }}"
           host: "{{ provision.host.address }}"
           action: "provision"
           distro_tree_id: "{{ distro_id }}"
           web_service: "{{ provision.web.service }}"
           ca_cert: "{{ (provision.ca|default({})).cert | default(omit) }}"
+      when: not provision.dry
+      # Make beaker module prone to instance outages/failures, retry 3 times
+      register: provisioner_result
+      until: provisioner_result|success
+      retries: 3
+      delay: 30
 
-    - name: wait for ssh
+    - name: Add the host to host list
+      add_host:
+          name: "{{ provision.host.address }}"
+          groups: "beaker-baremetal,undercloud"
+          ansible_ssh_host: "{{ provision.host.address }}"
+          ansible_ssh_user: "{{ provision.host.user }}"
+          ansible_ssh_pass: "{{ provision.host.password }}"
+          # Temporarily disable strict host checking and Ipv6 as this can introduce
+          # issues when accessing host by SSH password initially.
+          # Moreover ssh-askpass doesn't support Host Key checking enabled,
+          # we need to forcefully disable it until PKI is enabled.
+          ansible_ssh_common_args: "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o AddressFamily=inet -o HostbasedAuthentication=no"
+
+    - name: Wait for ssh port to be open
       wait_for:
           port: 22
           host: "{{ provision.host.address }}"
           search_regex: OpenSSH
       delay: 10
 
-- name: Add the host to our inventory
-  hosts: localhost
+- name: Enable SSH access to provisioned host (this tasks connect using sshpass and Beaker host password)
+  hosts: beaker-baremetal
+  gather_facts: no
+  any_errors_fatal: true
   tasks:
-    - name: Add the host to host list
+    - name: Inject our public SSH key to the autorized_keys
+      authorized_key:
+          user: "{{ provision.host.user }}"
+          key: "{{ lookup('file', provision.host.pubkey ) }}"
+
+    - name: Refresh the hosts list with publickey access enabled, remove password from now on
       add_host:
           name: "{{ provision.host.address }}"
-          # TODO: Move tester and even undercloud grouping to later phases in future
-          groups: "baremetal"
+          groups: "beaker-baremetal"
           ansible_ssh_host: "{{ provision.host.address }}"
           ansible_ssh_user: "{{ provision.host.user }}"
-          ansible_ssh_pass: "{{ provision.host.password | default(omit) }}"
-          ansible_ssh_private_key_file: "{{ provision.host.key | default(omit) }}"
+          ansible_ssh_pass: ''
+          ansible_ssh_private_key_file: "{{ provision.host.privkey }}"
+
+- name: Generate inventory file with SSH PKI enabled
+  hosts: localhost
+  gather_facts: no
+  tags: always
+  tasks:
+    - name: Generate inventory file
+      template:
+        dest: "{{ inventory_dir }}/hosts-prov"
+        src: templates/inventory.j2
+        force: yes
+
+    - name: Update inventory file symlink
+      file:
+        dest: "{{ inventory_dir }}/hosts"
+        state: link
+        src: "hosts-prov"
+
+- name: Check SSH sanity with PKI in place
+  hosts: beaker-baremetal
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+    # Verify working access using SSH PKI (as previous steps used sshpass instead)
+    - name: Test direct SSH access
+      debug: msg="SSH access OK"

@@ -6,58 +6,79 @@ subparsers:
         help: Provision systems using Beaker
         include_groups: ['Ansible options', 'Inventory', 'Common options', 'Answers file']
         groups:
-            - title: Beaker server
+            - title: Beaker instance access details
               options:
                   url:
                       type: Value
-                      help: 'The Beaker url'
+                      help: 'URL of Beaker instance'
                       required: True
-                  user:
+                  beaker-user:
                       type: Value
-                      help: 'Login username to authenticate to Beaker'
+                      help: 'Valid username in Beaker instance'
                       default: admin
-                  password:
+                      required: True
+                  beaker-password:
                       type: Value
-                      help: 'Password of login user'
+                      help: "User's password"
                       required: True
                   web-service:
                       type: Value
-                      help: 'For cases where the beaker user is not part of the kerberos system, we require to set the Web service to RPC for authentication rather than rest.'
-                      default: 'rest'
+                      help: 'For cases where the beaker user is not part of the kerberos system, we require to set the Web service to RPC for authentication rather than rest'
+                      default: rpc
                       choices: ['rest', 'rpc']
+                      required: True
                   ca-cert:
                       type: Value
-                      help: 'For cases where the beaker user is not part of the kerberos system, a CA Certificate is required for authentication with the Beaker server.'
+                      help: 'For cases where the beaker user is not part of the kerberos system, a CA Certificate is required for authentication with the Beaker server'
+                      required: False
+                  dry:
+                      type: Bool
+                      help: 'Skip provisioning/releasing but run rest of playbooks - useful for debugging'
+                      default: False
                       required: False
 
-            - title: Host details
+            - title: Details of provisioned host
               options:
                   host-address:
                       type: Value
-                      help: 'Address/FQDN of the BM'
-                      required: yes
+                      help: 'Address/FQDN of the machine registered in Beaker instance'
+                      required: True
                   host-user:
                       type: Value
                       help: 'User to SSH to the host with'
                       default: root
+                      required: False
                   host-password:
                       type: Value
-                      help: "User's SSH password"
-                  host-key:
-                      type: Value
-                      help: "User's SSH key"
+                      help: "User's/group's 'Default root password' which is host initially accessible by (can be found in User preferences in web GUI)"
+                      required: False
 
-            - title: Image
+            - title: Base Beaker image to be used for provisioning
               options:
                   image:
                       type: Value
                       help: |
                           The image to use for nodes provisioning. Check the "sample.yml.example" for example.
+                          Should default to latest RHEL released.
                           __LISTYAMLS__
                       default: 'rhel-7.3'
+                      required: False
 
-            - title: Cleanup
+            - title: Post-deploy options
               options:
-                  cleanup:
+                  host-privkey:
+                      type: Value
+                      help: "Specify path to private SSH key to be added to 'hosts' file used later to connect to host where 'host-pubkey' will be inserted"
+                      required: True
+
+                  host-pubkey:
+                      type: Value
+                      help: "Spefify file with user's public SSH key which will be inserted to authorized_keys of host-user as post-deployment step"
+                      required: True
+
+            - title: Release host and return it to Beaker's pool
+              options:
+                  release:
                       type: Bool
-                      help: 'Release the system'
+                      help: 'Release system which was previously reserved by beaker-user'
+                      default: False
