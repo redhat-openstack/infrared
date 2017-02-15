@@ -46,7 +46,7 @@
                 shade: "1.7.0"
                 pip: "8.1"
         vars:
-            path_venv: "/tmp/venv_shade"
+            path_venv: "/var/tmp/venv_shade"
 
       # TODO(yfried): if/when packstack uses floating ips and localhost can access cloud
       # Use inject floatingip to access controller from localhost
@@ -77,7 +77,7 @@
       - name: create the external network
         vars:
             # Here can't be used {{ path_venv }}, because it's not a Jinja template
-            ansible_python_interpreter: "/tmp/venv_shade/bin/python"
+            ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
         os_network:
             auth: "{{ creds.stdout | from_yaml }}"
             name: "{{ pool_name.stdout_lines|last }}"
@@ -91,7 +91,7 @@
       - name: create the external subnet
         vars:
             # Here can't be used {{ path_venv }}, because it's not a Jinja template
-            ansible_python_interpreter: "/tmp/venv_shade/bin/python"
+            ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
             # It's cleaner to define top defaults first
             subnet: "{{ public_subnet|default({}) }}"
             pool: "{{ subnet.allocation_pool|default({}) }}"
