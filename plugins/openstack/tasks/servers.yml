@@ -9,6 +9,11 @@
       var_file: "{{ node.key }}"
       partial_path: topology/nodes
 
+- name: Set the nic order
+  command: "echo net-name={{ provision.prefix }}{{ node_dict.interfaces[item].network }}"
+  with_items: "{{ node_dict.interfaces | sort }}"
+  register: nics
+
 - name: Create instances
   vars:
       resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
@@ -20,7 +25,7 @@
       image: "{{ node_dict.image | default(provision.image) }}"
       name: "{{ prefix }}{{ node_dict.name }}-{{ item }}"
       # use regiterd networks
-      nics: "{{ resources.networks | map(attribute='id') | list | map('add_prefix', 'net-id=') | list }}"
+      nics: "{{ nics.results | map(attribute='stdout') | list }}"
       key_name: "{{ provision.key.name if provision.key.name else (prefix + provision.key.file | basename) }}"
       state: present
       wait: "{{ node_dict.wait | default(wait) }}"
