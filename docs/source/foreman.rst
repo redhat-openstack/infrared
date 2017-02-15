@@ -34,6 +34,8 @@ Optional arguments
 
 * ``--host-ipmi-password``: Host IPMI password.
 
+* ``--roles``: Host roles
+
 .. note:: Please run ``ir foreman --help`` for a full detailed list of all available options.
 
 
