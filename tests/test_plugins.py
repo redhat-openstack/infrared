@@ -9,7 +9,6 @@ from infrared.core.utils.exceptions import IRFailedToAddPlugin
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 from infrared.core.utils.exceptions import IRUnsupportedSpecOptionType
 from infrared.core.utils.dict_utils import dict_insert
-import infrared.core.services.plugins
 from infrared.core.services.plugins import InfraredPluginManager
 from infrared.core.services.plugins import InfraredPlugin
 from infrared.core.services import CoreServices, ServiceName
@@ -460,69 +459,3 @@ def test_add_plugin_from_git_exception(plugin_manager_fixture, mocker):
             "https://sample_github.null/plugin_repo.git")
 
     mock_shutil.rmtree.assert_called_with(mock_tempfile.mkdtemp.return_value)
-
-
-def validate_plugins_presence_in_conf(
-        plugin_manager, plugins_dict, present=True):
-    """Validate presence of plugins in the configuration file
-
-    :param plugin_manager: InfraredPluginManager object
-    :param plugins_dict:  Dict of plugins
-    {plugin_name: plugin_dir_path, ...}
-    :param present: Whether all plugins in the dict should be present in the
-    plugins configuration file or not.
-    """
-    assert present in (True, False), \
-        "'absent' accept only Boolean values, got: '{}'".format(str(present))
-
-    with open(plugin_manager.config_file) as config_file:
-        plugins_cfg = ConfigParser.ConfigParser()
-        plugins_cfg.readfp(config_file)
-
-        for plugin_path in plugins_dict.values():
-            plugin = InfraredPlugin(plugin_path)
-
-            if present:
-                assert plugins_cfg.has_option(plugin.type, plugin.name), \
-                    "Plugin '{}' was suppose to be in the plugins " \
-                    "configuration file".format(plugin.name)
-            else:
-                assert not plugins_cfg.has_option(plugin.type, plugin.name), \
-                    "Plugin '{}' wasn't suppose to be in the plugins " \
-                    "configuration file".format(plugin.name)
-
-
-def test_plugin_add_all(plugin_manager_fixture):
-    """Tests the add and remove all plugins functioning
-
-    :param plugin_manager_fixture: Fixture object which yields
-    InfraredPluginManger object
-    """
-    tests_plugins = (
-        'provision_plugin1', 'provision_plugin2',
-        'install_plugin1', 'install_plugin2',
-        'test_plugin1', 'test_plugin2'
-    )
-    tests_plugins_dir = 'tests/example/plugins/add_remove_all_plugins/'
-
-    infrared.core.services.plugins.PLUGINS_REGISTRY = {
-        plugin_name: os.path.join(tests_plugins_dir, plugin_name)
-        for plugin_name in tests_plugins
-        }
-
-    plugins_registry = infrared.core.services.plugins.PLUGINS_REGISTRY
-    plugin_manager = plugin_manager_fixture()
-
-    # Validates that plugins aren't in configuration file from the beginning
-    validate_plugins_presence_in_conf(
-        plugin_manager, plugins_registry, present=False)
-
-    # Validates all plugins are in the configuration file
-    plugin_manager.add_all_available()
-    validate_plugins_presence_in_conf(
-        plugin_manager, plugins_registry, present=True)
-
-    # Validates all plugins are no longer in the configuration file
-    plugin_manager.remove_all()
-    validate_plugins_presence_in_conf(
-        plugin_manager, plugins_registry, present=False)
