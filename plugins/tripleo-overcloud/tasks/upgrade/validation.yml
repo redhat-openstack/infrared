@@ -1,0 +1,27 @@
+- name: Collect Undercloud Info
+  hosts: undercloud
+  become: True
+  become_user: root
+  become_method: sudo
+  gather_facts: yes
+  any_errors_fatal: true
+  tags: validation
+  tasks:
+    - name: Get Undercloud version
+      find:
+          use_regex: yes
+          patterns: 'rhos-release-[0-9]+.*'
+          paths:
+            - '/etc/yum.repos.d/'
+      register: result
+
+    - set_fact:
+          undercloud_version: "{{ result.files[0]['path'] | basename | regex_replace('^rhos-release-([0-9]+).*$', '\\1') }}"
+
+    - fail:
+          msg: "Upgrade is supported only from 9 to 10"
+      when: install.version == "9" and not undercloud_version == "10"
+
+    - fail:
+          msg: "Upgrade is supported only from 9 to 10"
+      when: undercloud_version == "10" and not install.version == "9"

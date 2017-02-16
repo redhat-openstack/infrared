@@ -1,0 +1,22 @@
+- name: Set plugin_dir
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tags: upgrade
+  tasks:
+    - set_fact : plugin_dir="{{ playbook_dir }}"
+
+- name: Validation
+  include: "tasks/upgrade/validation.yml"
+  tags:
+   - upgrade
+   - upgrade_validation
+
+- name: Populate the overcloud deploy script
+  include: build_templates.yml
+  tags:
+    - upgrade
+
+- name: Overcloud Upgrade
+  include: "upgrade_10.yml"
+  when: undercloud_version == "10"

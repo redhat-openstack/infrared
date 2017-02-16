@@ -1,0 +1,160 @@
+- name: Overcloud Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+  tasks:
+    - name: Creating temp dir
+      command: mktemp -d
+      register: temp_dir_raw
+
+    - name: Setting temp_dir
+      set_fact: temp_dir={{ ' '.join(temp_dir_raw.stdout_lines) }}
+
+    - name: Setting overcloud_deploy_script
+      set_fact: overcloud_deploy_script="~/overcloud_deploy.sh"
+
+- name: Pre-Upgrade Ceilometer migration
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_ceilometer
+  vars:
+    - ceilometer_migration_script: "~/ceilometer_migration.sh"
+  tasks:
+    - include: "tasks/upgrade/10/ceilometer_migration.yml"
+
+- name: Overcloud Upgrade Init
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_init
+  vars:
+    - upgrade_init_script: "~/upgrade_init.sh"
+  tasks:
+    - include: "tasks/upgrade/10/upgrade_init.yml"
+
+- name: Scan OCs ssh keys and upload node_upgrade script
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_ssh_key_scan
+  tasks:
+    - name: Nodes ssh key scan
+      shell: |
+          source ~/stackrc
+          for host in $(nova list | awk '$1 !~ /^\+/ && NR>3{print gensub(/.*=([0-9.]+).*/, "\\1",$12)}'); do grep -q ${host} ~/.ssh/known_hosts || ssh-keyscan -t rsa ${host} >> ~/.ssh/known_hosts; done
+
+- name: Object Storage Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_object_storage
+  tasks:
+    - name: Object Storage Upgrade
+      shell : |
+          source ~/stackrc
+          for NODE in `nova list | grep swift | awk -F "|" '{ print $2 }'` ; do upgrade-non-controller.sh --upgrade $NODE &>> swift-upgrade.log; done
+
+- name: Controller And Block Storage Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_controller
+  vars:
+    - controller_upgrade_script: "~/controller_upgrade.sh"
+  tasks:
+    - include: "tasks/upgrade/10/controller_upgrade.yml"
+
+
+- name: Compute Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_compute
+  tasks:
+    - name: Compute Upgrade
+      shell : |
+          source ~/stackrc
+          for NODE in `nova list | grep compute | awk -F "|" '{ print $2 }'` ; do upgrade-non-controller.sh --upgrade $NODE &>> compute-upgrade.log; done
+
+- name: Ceph Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_ceph
+  tasks:
+    - name: Ceph Upgrade
+      shell : |
+          source ~/stackrc
+          for NODE in `nova list | grep ceph | awk -F "|" '{ print $2 }'` ; do upgrade-non-controller.sh --upgrade $NODE &>> ceph-upgrade.log; done
+
+- name: Convergence
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_convergence
+  vars:
+    - convergence_script: "~/convergence.sh"
+  tasks:
+    - include: "tasks/upgrade/10/convergence.yml"
+
+- name: Overcloud Post-Upgrade Aodh migration
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_aodh
+  vars:
+    - aodh_migration_script: "~/aodh_migration.sh"
+  tasks:
+    - include: "tasks/upgrade/10/aodh_migration.yml"
+
+- name: Image Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+    - upgrade_images
+  tasks:
+    - name: Image Upgrade
+      shell: |
+          mkdir -p new-images && cd new-images
+          tar xvf /usr/share/rhosp-director-images/overcloud-full-latest-10*.tar
+          tar xvf /usr/share/rhosp-director-images/ironic-python-agent-latest-10*.tar
+          . ~/stackrc
+          openstack overcloud image upload --update-existing
+          openstack baremetal configure boot
+          cd ../ && rm -rf new-images
+
+
+- name: Deleting temp folder
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+  tasks:
+    - name: Deleting temp folder
+      file:
+        path: "{{ temp_dir }}"
+        state: absent
