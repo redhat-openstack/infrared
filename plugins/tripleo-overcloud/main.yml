@@ -23,8 +23,9 @@
           generate_host_name_template: yes
           storage_add_scale: yes
   include: "{{ overcloud_deploy | default('deploy.yml') }}"
-  # Remove "version" when gate is updated
-  when: (install.deploy|default('') or install.version|default('')) and not install.role|default('')
+  when:
+      - install.deploy|default('')
+      - not install.role|default('')
 
 - name: Deploy the Overcloud with composable roles
   vars:
@@ -33,7 +34,9 @@
           generate_host_name_template: no
           storage_add_scale: no
   include: "{{ composable_roles | default('composable_roles.yml') }}"
-  when: (install.deploy|default('') or install.version|default('')) and install.role is defined
+  when:
+      - install.deploy|default('')
+      - install.role is defined
 
 - name: Perform post install tasks
   include: "{{ overcloud_post | default('post.yml') }}"
