@@ -35,5 +35,6 @@
 
     - name: Update hosts user
       add_host:
-          name: "{{ inventory_hostname }}"
+          name: "{{ item }}"
           ansible_ssh_user: "{{ provision.topology.username }}"
+      with_items: "{{ ansible_play_hosts }}"
