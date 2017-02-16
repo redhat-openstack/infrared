@@ -195,7 +195,7 @@ class InfraredPluginManager(object):
         os.chdir(cwd)
         shutil.rmtree(tmpdir)
 
-        return plugin_dir_name
+        return plugin_source
 
     def add_plugin(self, plugin_source, dest=None):
         """Adds (install) a plugin
