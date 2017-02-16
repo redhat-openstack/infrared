@@ -23,6 +23,7 @@ infrared tripleo-overcloud -v \
     --version 10 \
     --introspect yes \
     --tagging yes \
+    --deploy yes \
     --post yes \
     --deployment-files virt \
     --network-backend vxlan \

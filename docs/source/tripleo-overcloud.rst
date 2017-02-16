@@ -3,6 +3,16 @@ TripleO Overcloud
 
 Deploys a Tripleo overcloud from an existing undercloud
 
+Stages Control
+--------------
+
+Run is broken into the following stages. Omitting any of the flags (or setting it to ``no``) will skip that stage
+
+* ``--introspect`` the overcloud nodes
+* ``--tag`` overcloud nodes with proper flavors
+* ``--deploy`` overcloud of given ``--version``(see below)
+* Execute ``--post`` installation steps (like creating a public network - see below)
+
 Deployment Description
 ----------------------
 
