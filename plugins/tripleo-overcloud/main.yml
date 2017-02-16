@@ -19,8 +19,12 @@
 
 - name: Deploy the Overcloud
   include: "{{ overcloud_deploy | default('deploy.yml') }}"
-  when: install.version|default('')
+  when: install.version|default('') and not install.upgrade|default('')
 
 - name: Perform post install tasks
   include: "{{ overcloud_post | default('post.yml') }}"
   when: install.post|default('')
+
+- name: Overcloud Upgrade
+  include: "{{ overcloud_upgrade | default('upgrade.yml') }}"
+  when: install.upgrade|default('') and install.version|default('')

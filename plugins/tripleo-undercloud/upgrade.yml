@@ -1,0 +1,22 @@
+- name: Validation
+  hosts: undercloud
+  become: True
+  become_user: root
+  become_method: sudo
+  gather_facts: yes
+  any_errors_fatal: true
+  tags: validation
+  tasks:
+    - name: Validation
+      include: "tasks/upgrade/validation.yml"
+
+- name: Undercloud Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+  tasks:
+    - name: Upgrade to version 10
+      include: "tasks/upgrade/upgrade_10.yml"
+      when: undercloud_version == "9"

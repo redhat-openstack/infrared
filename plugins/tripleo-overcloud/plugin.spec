@@ -156,6 +156,15 @@ subparsers:
                         If not supplied, OSPD will default to local LVM on the controllers.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
 
+            - title: Overcloud Upgrade
+              options:
+                  upgrade:
+                      type: Bool
+                      help: |
+                          Upgrade Overcloud.
+                          Note: For the upgrade you need all params used during the deploy including --version.
+                          Currently, there is upgrade possibility from version 9 to version 10 only.
+
             - title: Others
               options:
                   introspect:
