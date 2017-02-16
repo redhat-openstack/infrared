@@ -147,6 +147,12 @@ class PluginManagerSpec(api.SpecObject):
                                 "clone plugin under, in case of Git URL is "
                                 "provided as path")
 
+        # Update plugin
+        update_parser = plugin_subparsers.add_parser(
+            name='update', help='Update a (Git) plugin')
+        update_parser.add_argument('name', help="Name of plugin to be updated")
+        update_parser.add_argument('--revision', help="Revision number")
+
         # Remove plugin
         remove_parser = plugin_subparsers.add_parser(
             'remove', help='Remove a plugin')
@@ -173,6 +179,8 @@ class PluginManagerSpec(api.SpecObject):
             self._list_plugins(pargs.available)
         elif subcommand == 'add':
             self.plugin_manager.add_plugin(pargs.path, pargs.dest)
+        elif subcommand == 'update':
+            self.plugin_manager.update_plugin(pargs.name, pargs.revision)
         elif subcommand == 'remove':
             self.plugin_manager.remove_plugin(pargs.name)
 

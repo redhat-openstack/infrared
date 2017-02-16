@@ -4,6 +4,7 @@ import glob
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 
 # TODO(aopincar): Add pip to the project's requirements
@@ -12,6 +13,8 @@ import pip
 from infrared.core.utils import logger
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
+from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
+from infrared.core.utils.exceptions import IRPluginNotFound
 
 DEFAULT_PLUGIN_INI = dict(
     supported_types=OrderedDict([
@@ -241,6 +244,62 @@ class InfraredPluginManager(object):
 
         self._install_requirements(plugin_source)
         self._load_plugins()
+
+    def update_plugin(self, plugin_name, desired_revision=None):
+        """Updates Git's plugins
+
+        :param plugin_name: Name of the plugin to be updated
+        :param desired_revision: Full SHA o
+        :return:
+        """
+        # FIXME(aopincar): Replace 'subprocess' with pip git module
+        if plugin_name not in self.PLUGINS_DICT:
+            raise IRPluginNotFound(plugin_name)
+
+        cwd = os.getcwd()
+        plugin = self.get_plugin(plugin_name)
+
+        try:
+            from subprocess import STDOUT
+            # Check if plugin's dir is a git dir
+            subprocess.check_output(
+                ['git', 'ls-remote', plugin.path], stderr=STDOUT)
+
+            os.chdir(plugin.path)
+            original_revision = subprocess.check_output(
+                ['git', 'rev-parse', 'HEAD'], stderr=STDOUT).rstrip()
+
+            if desired_revision is not None and desired_revision in original_revision:
+                LOG.info(
+                    "The desired revision '{}' is already "
+                    "checked out".format(desired_revision))
+            else:
+                subprocess.check_output(
+                    ['git', 'pull'], stderr=STDOUT)
+
+                updated_revision = subprocess.check_output(
+                        ['git', 'rev-parse', 'HEAD'], stderr=STDOUT).rstrip()
+
+                if desired_revision and desired_revision != updated_revision:
+                    subprocess.check_output(
+                        ['git', 'checkout', desired_revision], stderr=STDOUT)
+
+                    post_revision = subprocess.check_output(
+                        ['git', 'rev-parse', 'HEAD'], stderr=STDOUT)
+
+                    if post_revision != desired_revision:
+                        raise IRFailedToUpdatePlugin(
+                            "Checked out revision '{}' is different from the"
+                            " desired revision '{}'".format(
+                                post_revision, desired_revision))
+
+                LOG.info("Plugin '{}' has been"
+                         " successfully updated".format(plugin_name))
+
+        except subprocess.CalledProcessError as ex:
+            raise IRFailedToUpdatePlugin(plugin_name, ex.output)
+        finally:
+            os.chdir(cwd)
 
     def remove_plugin(self, plugin_name):
         """Removes an installed plugin

@@ -124,6 +124,20 @@ class IRFailedToRemovePlugin(IRException):
         super(self.__class__, self).__init__(reason_str)
 
 
+class IRFailedToUpdatePlugin(IRException):
+    def __init__(self, plugin_name, extended_info=''):
+        err_msg = "Failed to update plugin '{}'".format(plugin_name)
+        if extended_info:
+            err_msg += '\n\n' + extended_info
+        super(self.__class__, self).__init__(err_msg)
+
+
+class IRPluginNotFound(IRException):
+    def __init__(self, plugin_name):
+        super(self.__class__, self).__init__(
+            "Plugin '{}' isn't installed.".format(plugin_name))
+
+
 class IRSshException(IRException):
     def __init__(self, msg):
         message = msg
