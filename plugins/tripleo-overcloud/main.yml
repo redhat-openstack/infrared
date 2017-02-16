@@ -19,7 +19,8 @@
 
 - name: Deploy the Overcloud
   include: "{{ overcloud_deploy | default('deploy.yml') }}"
-  when: install.version|default('')
+  # Remove "version" when gate is updated
+  when: install.deploy|default('') or install.version|default('')
 
 - name: Perform post install tasks
   include: "{{ overcloud_post | default('post.yml') }}"
