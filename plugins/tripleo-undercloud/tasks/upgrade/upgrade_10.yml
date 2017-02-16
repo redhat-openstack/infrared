@@ -1,0 +1,32 @@
+- name: Undercloud Upgrade
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+    - upgrade
+  tasks:
+    - name: Remove old repos
+      become: true
+      become_user: root
+      become_method: sudo
+      rhos_release:
+          state: uninstall
+
+    - name: Setup new repos
+      become: true
+      become_user: root
+      become_method: sudo
+      rhos_release:
+          state: install
+          release: 10
+
+    - name: Stopping services
+      become: true
+      become_user: root
+      become_method: sudo
+      shell: |
+           systemctl stop 'openstack-*'
+           systemctl stop 'neutron-*'
+
+    - name: Start Undercloud Upgrade
+      shell: "openstack undercloud upgrade &> undercloud_upgrade.log"
