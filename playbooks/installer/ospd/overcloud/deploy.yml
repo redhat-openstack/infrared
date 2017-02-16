@@ -1,8 +1,9 @@
 ---
-- name: Run overcloud deploy
+- name: Build overcloud deploy
   hosts: undercloud
   any_errors_fatal: true
   gather_facts: no
+  tags: overcloud_init
   tasks:
       - name: Check if custom overcloud_deploy.sh exists
         tags: overcloud_deploy
@@ -56,6 +57,11 @@
       - name: Print deploy command
         shell: "cat {{ overcloud_deploy_script }}"
 
+- name: Run overcloud deploy
+  hosts: undercloud
+  any_errors_fatal: true
+  gather_facts: no
+  tasks:
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
