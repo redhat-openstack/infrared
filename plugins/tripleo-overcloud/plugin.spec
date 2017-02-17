@@ -173,3 +173,12 @@ subparsers:
                         The storage that we would like to use.
                         If not supplied, OSPD will default to local LVM on the controllers.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
+
+
+            - title: Composable roles
+              options:
+                  role-files:
+                      type: Value
+                      help:
+                        Specifies a sub-folder under the files/roles/ folder where InfraRed should look for the roles files.
+                        InfraRed will use the composable roles appraoch when this flag is defined

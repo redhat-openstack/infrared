@@ -1,0 +1,23 @@
+- name: set vars
+  set_fact:
+      # controller, compute, etc
+      node_name: "{{ role.rstrip('1234567890-').split('-') | last }}"
+
+- name: set additional vars
+  set_fact:
+      # controller_role
+      role_var_name: "{{ node_name + '_role' }}"
+
+- name: check if we have vars in user defined role folder
+  stat:
+      path: "files/roles/{{ install.role.files }}/{{ node_name }}.yml"
+  register: user_role
+  delegate_to: localhost
+  when: "{{ role_var_name}} is not defined"
+
+- name: include role vars for "{{ node_name }}"
+  vars:
+      folder: "{{ 'default' if not user_role.stat.exists else install.role.files }}"
+  include_vars: "files/roles/{{ folder }}/{{ node_name }}.yml"
+  when: "{{ role_var_name}} is not defined"
+
