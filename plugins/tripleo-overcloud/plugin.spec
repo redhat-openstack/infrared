@@ -169,3 +169,9 @@ subparsers:
                   post:
                       type: Bool
                       help: Specifies whether we should run post install tasks
+
+            - title: Composable roles
+              options:
+                  role-files:
+                      type: Value
+                      default: None

@@ -1,0 +1,15 @@
+{% macro eval(value) -%}
+{{ value | replace('${ipv6_postfix}', ipv6_postfix) | replace('${deployment_dir}', deployment_folder_path ) }}
+{%- endmacro %}
+resource_registry:
+{% set saved_roles = [] %}
+{% for host_name in groups.overcloud_nodes %}
+{% set node_name = host_name.rstrip('1234567890-').split('-')[-1] %}
+{%- if node_name not in saved_roles -%}
+{% set role = hostvars[ansible_play_hosts[0]].get(node_name + '_role') %}
+{% for option, value in role.get("resource_registry", {}).iteritems() %}
+    {{ option }}: {{ eval(value) }}
+{% endfor %}
+{% if saved_roles.append(node_name) %}{% endif %}
+{%- endif -%}
+{% endfor %}
