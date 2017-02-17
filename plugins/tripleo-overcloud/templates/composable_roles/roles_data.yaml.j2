@@ -1,0 +1,20 @@
+{% set saved_roles = [] %}
+{% for host_name in groups.overcloud_nodes %}
+{% set node_name = host_name.rstrip('1234567890-').split('-')[-1] %}
+{%- if node_name not in saved_roles %}
+{% set role = hostvars[ansible_play_hosts[0]].get(node_name + '_role') %}
+- name: {{ role.name }}
+  CountDefault: 1
+  ServicesDefault:
+{% for service in role.services %}
+{%- if service %}
+    - {{ service }}
+{% endif -%}
+{% endfor %}
+{% if 'host_name_format' in role %}
+  HostnameFormatDefault: {{ role.host_name_format   }}
+{% endif %}
+{%- if saved_roles.append(node_name) %}{% endif -%}
+{% endif -%} {# end of if node_name not in saved_roles #}
+{% endfor %}
+

@@ -1,0 +1,21 @@
+---
+ceph_role:
+    name: CephStorage
+
+    resource_registry:
+        "OS::TripleO::Compute::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/ceph-storage.yaml"
+
+    flavor: ceph
+    host_name_format: 'ceph-%index%'
+
+    services:
+        - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::CephOSD
+        - OS::TripleO::Services::Kernel
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::Timezone
+        - OS::TripleO::Services::TripleoPackages
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::FluentdClient
+        - OS::TripleO::Services::VipHosts
