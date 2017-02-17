@@ -62,6 +62,12 @@
             password: $OS_PASSWORD
             project_name: ${OS_PROJECT_NAME:-$OS_TENANT_NAME}
             "
+            if [ -n "$OS_PROJECT_DOMAIN_NAME" ]; then
+                echo "project_domain_name: $OS_PROJECT_DOMAIN_NAME"
+            fi
+            if [ -n "$OS_USER_DOMAIN_NAME" ]; then
+                echo "user_domain_name: $OS_USER_DOMAIN_NAME"
+            fi
         register: creds
         changed_when: false
 
