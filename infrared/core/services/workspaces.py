@@ -12,7 +12,7 @@ from infrared.core.utils import exceptions, logger
 LOG = logger.LOG
 
 TIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
-ACTIVE_WORKSPACE_ENV_NAME = "IR_CHECKEDOUT_WORKSPACE"
+ACTIVE_WORKSPACE_ENV_NAME = "IR_WORKSPACE"
 
 INVENTORY_LINK = "hosts"
 LOCAL_HOSTS = """[local]

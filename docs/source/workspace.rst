@@ -23,7 +23,7 @@ Checkout
         Now using workspace: 'example3'
 
     .. note:: Checked out workspace is tracked via a status file in workspaces_dir, which means checked out workspace is persistent across shell sessions.
-              You can pass checked out workspace by envitonment vriable ``IR_CHECKEDOUT_WORKSPACE``, which is non persistent
+              You can pass checked out workspace by envitonment variable ``IR_WORKSPACE``, which is non persistent
               ::
 
                     ir workspace list
@@ -32,7 +32,7 @@ Checkout
                     | bee    | True        |
                     | zoo    |             |
 
-                    IR_CHECKEDOUT_WORKSPACE=zoo ir workspace list
+                    IR_WORKSPACE=zoo ir workspace list
                     | Name   | Is Active   |
                     |--------+-------------|
                     | bee    |             |
@@ -44,12 +44,12 @@ Checkout
                     | bee    | True        |
                     | zoo    |             |
 
-    .. warning:: While ``IR_CHECKEDOUT_WORKSPACE`` is set `ir workspace checkout` is disabled
+    .. warning:: While ``IR_WORKSPACE`` is set `ir workspace checkout` is disabled
               ::
 
-                    export IR_CHECKEDOUT_WORKSPACE=zoo
+                    export IR_WORKSPACE=zoo
                     ir workspace checkout zoo
-                    ERROR   'workspace checkout' command is disabled while IR_CHECKEDOUT_WORKSPACE environment variable is set.
+                    ERROR   'workspace checkout' command is disabled while IR_WORKSPACE environment variable is set.
 
 List:
     List all workspaces. Active workspace will be marked.::
