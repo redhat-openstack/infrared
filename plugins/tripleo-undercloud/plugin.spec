@@ -146,3 +146,11 @@ subparsers:
                       help: |
                           Removes all the downloaded images when images-task is in 'rpm' or 'import'
                       default: yes
+
+            - title: Undercloud Upgrade
+              options:
+                  upgrade:
+                      type: Bool
+                      help: |
+                          Undercloud Upgrade.
+                          Note: Currently, there is upgrade possibility from version 9 to version 10 only.
