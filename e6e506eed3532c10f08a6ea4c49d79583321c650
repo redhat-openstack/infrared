@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fabf19d9_9aad3eeb",
+        "filename": "plugins/tripleo-overcloud/upgrade.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002471
+      },
+      "writtenOn": "2017-02-20T09:01:14Z",
+      "side": 1,
+      "message": "this line is redundant, please use \"{{ playbook_dir }}\" explicitely",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 48
+      },
+      "revId": "e6e506eed3532c10f08a6ea4c49d79583321c650",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fabf19d9_ba6b62b6",
+        "filename": "plugins/tripleo-overcloud/upgrade.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1002471
+      },
+      "writtenOn": "2017-02-20T09:01:14Z",
+      "side": 1,
+      "message": "Please use \"auto detection\" for the upgrade process.\nWhat I mean is, when the undercloud / overcloud are installed, you will have the version stated in the file names under /etc/yum.repos.d/\nI would like you to parse these files for the installed version so we can use it to \"auto detect\" what version is installed and what playbook we should call to.\nSomething in the lines of:\n\n// some task to parse the version from /etc/yum.repos.d/\n\n- name: Overcloud Upgrade\n  include: \"tasks/upgrade/{{ overcloud_version }}/main.yml\"\n(without the \"when\")",
+      "range": {
+        "startLine": 20,
+        "startChar": 2,
+        "endLine": 22,
+        "endChar": 34
+      },
+      "revId": "e6e506eed3532c10f08a6ea4c49d79583321c650",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
