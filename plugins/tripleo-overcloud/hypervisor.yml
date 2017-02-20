@@ -32,13 +32,12 @@
             key: "{{ uc_pubkey_result.stdout }}"
         delegate_to: hypervisor
 
-- name: Power off overcloud nodes VMs so they can be properly registered
-  hosts: hypervisor
-  gather_facts: no
-  any_errors_fatal: true
-  tasks:
+      # Using delegete here because of
+      # https://github.com/ansible/ansible/issues/16972
+      # This issue causes an exception when that playbook is included with the false condition
       - name: power off overcloud nodes
         virt:
             name: "{{ item }}"
             state: destroyed
         with_items: "{{ groups['overcloud_nodes'] }}"
+        delegate_to: hypervisor
