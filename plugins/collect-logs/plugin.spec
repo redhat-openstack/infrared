@@ -1,5 +1,5 @@
 # FIXME(aopincar): This plugin should be in a type of its own
-plugin_type: install
+plugin_type: other
 description: Collect log from all nodes in the active workspace.
 subparsers:
     collect-logs:

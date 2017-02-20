@@ -17,7 +17,8 @@ DEFAULT_PLUGIN_INI = dict(
     supported_types=OrderedDict([
         ('provision', 'Provisioning plugins'),
         ('install', 'Installing plugins'),
-        ('test', 'Testing plugins')
+        ('test', 'Testing plugins'),
+        ('other', 'Other type plugins'),
     ])
 )
 
