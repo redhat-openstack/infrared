@@ -82,7 +82,8 @@ class InfraredPluginManager(object):
         The plugins categorized by type and each plugin name contains a boolean
         value which tells if the plugin installed or not
         """
-        all_plugins_dict = OrderedDict()
+        all_plugins_dict = OrderedDict((plugin_type, {}) for plugin_type
+                                       in self.supported_plugin_types)
         for installed_plugin_name in self.PLUGINS_DICT:
             plugin = self.get_plugin(installed_plugin_name)
             if plugin.type not in all_plugins_dict:
