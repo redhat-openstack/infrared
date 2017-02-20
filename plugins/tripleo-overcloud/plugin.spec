@@ -7,22 +7,28 @@ subparsers:
         help: Install a Tripleo overcloud using a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
+            - title: Stages Control
+              options:
+                  introspect:
+                      type: Bool
+                      help: Specifies whether to run introspection
+
+                  tagging:
+                      type: Bool
+                      help: Specifies whether to create flavors automatically and tag our hosts with them
+
+                  deploy:
+                      type: Bool
+
+                  post:
+                      type: Bool
+                      help: Specifies whether we should run post install tasks
+
             - title: Deployment Description
               options:
-                  deployment-files:
-                      type: Value
-                      help: |
-                          The absolute path to the folder containing the templates of the overcloud deployment.
-                          Please see `settings/installer/ospd/deployment/example` as reference.
-                          Use "virt" to enable preset templates for virtual POC environment.
-                      required: yes
-
-                  instackenv-file:
-                      type: Value
-                      help: The path to the instackenv.json configuration file used for introspection.
-
                   version:
                       type: Value
+                      required_when: "deploy == yes"
                       help: |
                           The product version (product == director)
                           Numbers are for OSP releases
@@ -38,6 +44,18 @@ subparsers:
                         - mitaka
                         - newton
                         - ocata
+
+                  deployment-files:
+                      type: Value
+                      help: |
+                          The absolute path to the folder containing the templates of the overcloud deployment.
+                          Please see `settings/installer/ospd/deployment/example` as reference.
+                          Use "virt" to enable preset templates for virtual POC environment.
+                      required: yes
+
+                  instackenv-file:
+                      type: Value
+                      help: The path to the instackenv.json configuration file used for introspection.
 
                   controller-nodes:
                       type: Value
@@ -155,17 +173,3 @@ subparsers:
                         The storage that we would like to use.
                         If not supplied, OSPD will default to local LVM on the controllers.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
-
-            - title: Others
-              options:
-                  introspect:
-                      type: Bool
-                      help: Specifies whether to run introspection
-
-                  tagging:
-                      type: Bool
-                      help: Specifies whether to create flavors automatically and tag our hosts with them
-
-                  post:
-                      type: Bool
-                      help: Specifies whether we should run post install tasks

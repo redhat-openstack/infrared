@@ -317,8 +317,11 @@ class SpecParser(object):
             if option_spec and 'required_when' in option_spec:
                 # validate condition
                 req_arg, req_value = option_spec['required_when'].split('==')
-                if args.get(command_name, {}).get(
-                        req_arg.strip(), None) == req_value.strip() \
+                req_value = yaml.load(str(req_value))
+                actual_value = args.get(command_name, {}).get(req_arg.strip(),
+                                                              None)
+                actual_value = yaml.load(str(actual_value))
+                if actual_value == req_value \
                         and self.spec_helper.get_option_state(
                             command_name,
                             option_spec['name'],
