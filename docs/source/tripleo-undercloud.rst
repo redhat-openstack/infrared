@@ -13,7 +13,41 @@ Setup an Undercloud
     Examples: ``passed_phase1``, ``2016-08-11.1``
     Not used in case of RDO.
 
+To deploy a working undercloud::
+
+  infrared tripleo-undercloud --version 10
+
 For better fine-tuning of packages, see `custom repositories`_.
+
+Overcloud Images
+----------------
+The final part of the undercloud installation calls for creating the images from which the OverCloud
+will be later created.
+
+* Depending on ``--images-task`` these the undercloud can be either:
+
+        * ``build`` images:
+                Build the images from a scratch. Use ``--images-url`` to define base image than CentOS.
+                For OSP installation, you must provide a url with a valid RHEL image.
+        * ``import`` images from url:
+                Download pre-built images from ``--images-url``.
+        * Download images via ``rpm``:
+                Starting from OSP 8, Tripleo is packages with pre-built images avialable via RPM.
+                .. note:: This option is invalid for `RDO` installation.
+
+* Use ``--images-repos`` to instruct `infrared` wither to inject the repositories defined in
+  the `setup <Setup Undercloud Packages>`_ stage to the image (Allowing later update of the OverCloud)
+* Use ``--images-packages`` to define a list of additional packages to install on the OverCloud image
+* ``--images-cleanup`` tells `infrared` do remove the images files original after they are uploaded
+  to the undercloud's Glance service.
+
+To configure overcloud images::
+
+  infrared tripleo-undercloud --images-task rpm
+
+.. note:: This assumes an undercloud was already installed and
+    will skip `installation <Setup an Undercloud>`_ stage
+    because ``--version`` is missing.
 
 Undercloud Configuration
 ------------------------
@@ -70,27 +104,6 @@ Tripleo Undercloud User
 for the undercloud. Acorrding to Tripleo guidelines, the default username is ``stack``.
 User will be created if necessary.
 
-Overcloud Images
-----------------
-The final part of the undercloud installation calls for creating the images from which the OverCloud
-will be later created.
-* Depending on ``--images-task`` these the undercloud can be either:
-
-        * ``build`` images:
-                Build the images from a scratch. Use ``--images-url`` to define base image than CentOS.
-                For OSP installation, you must provide a url with a valid RHEL image.
-        * ``import`` images from url:
-                Download pre-built images from ``--images-url``.
-        * Download images via ``rpm``:
-                Starting from OSP 8, Tripleo is packages with pre-built images avialable via RPM.
-                .. note:: This option is invalid for `RDO` installation.
-
-* Use ``--images-repos`` to instruct `infrared` wither to inject the repositories defined in
-  the `setup <Setup Undercloud Packages>`_ stage to the image (Allowing later update of the OverCloud)
-* Use ``--images-packages`` to define a list of additional packages to install on the OverCloud image
-* ``--images-cleanup`` tells `infrared` do remove the images files original after they are uploaded
-  to the undercloud's Glance service.
-
 Backup
 ------
 When working on a virtual environment, `infrared` can create a snapshot of the installed undercloud that can be later used
@@ -107,6 +120,9 @@ Or optionally, provide the file name of the image to create (defaults to "underc
     ir tripleo-undercloud --quickstart-backup yes --quickstart-filename custom-name.qcow2
 
 This will prepare a qcow2 image of your undercloud ready for usage with `Restore`_.
+
+.. note:: this assumes an undercloud is already installed and will skip
+    `installation <Setup an Undercloud>`_ and `images <Overcloud Images>`_ stages.
 
 Restore
 -------
