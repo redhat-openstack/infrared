@@ -56,3 +56,13 @@ subparsers:
                   host-ipmi-password:
                       type: Value
                       help: "Host IPMI password"
+
+            - title: Host roles
+              options:
+                  roles:
+                      type: ListValue
+                      help: |
+                          Comma separated list of roles to apply to host.
+                          For example - baremetal,undercloud,tester
+                          Possible values: baremetal, undercloud, tester, hypervisor
+                      default: baremetal
