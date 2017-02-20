@@ -1,0 +1,34 @@
+- name: Undercloud Upgrade
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tags: upgrade
+  vars:
+      rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+  pre_tasks:
+      - name: Get Undercloud version
+        become: true
+        become_user: root
+        become_method: sudo
+        find:
+            use_regex: yes
+            patterns: 'rhos-release-[0-9]+.*'
+            paths:
+              - '/etc/yum.repos.d/'
+        register: result
+
+      - set_fact:
+            undercloud_version: "{{ result.files[0]['path'] | basename | regex_replace('^rhos-release-([0-9]+).*$', '\\1') }}"
+
+      - name: Validation
+        include: "tasks/upgrade/validation.yml"
+        tags: validation
+  roles:
+      - role: rhos-release
+        release: "{{ (undercloud_version|int) + 1 }}"
+        build: "{{ install.build }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        tags: upgrade
+  tasks:
+      - name: "Upgrade from version {{ undercloud_version }} to {{ (undercloud_version|int) + 1 }}"
+        include: "tasks/upgrade/upgrade_{{ (undercloud_version|int) + 1 }}.yml"

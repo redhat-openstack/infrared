@@ -4,11 +4,11 @@
   tasks:
       - fail:
             msg: "Please provide either --version OR --images-task OR --quickstart-{backup|restore}"
-        when: not (install.version|default('') or install.images.task|default('') or install.quickstart.backup|default('') or install.quickstart.restore|default(''))
+        when: not (install.version|default('') or install.images.task|default('') or install.quickstart.backup|default('') or install.quickstart.restore|default('') or install.upgrade|default(''))
 
 - name: Deploy the Undercloud
   include: "{{ install_undercloud | default('undercloud.yml') }}"
-  when: install.version|default('')
+  when: install.version|default('') and not install.upgrade|default('')
 
 - name: Create an undercloud backup image (for quickstart)
   include: "{{ install_backup | default('backup.yml') }}"
@@ -21,3 +21,7 @@
 - name: Setup Overcloud images on the undercloud
   include: "{{ install_images | default('images.yml') }}"
   when: install.images.task|default('')
+
+- name: Undercloud Upgrade
+  include: "{{ upgrade_undercloud | default('upgrade.yml') }}"
+  when: install.upgrade|default('')
