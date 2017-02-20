@@ -68,7 +68,6 @@ class InfraredPluginManager(object):
 
         for plugin_dir in glob.glob(PLUGINS_DIR + '/*/'):
             plugin = InfraredPlugin(plugin_dir)
-
             if plugin.type not in plugins_dict:
                 plugins_dict[plugin.type] = [plugin.name]
             else:
@@ -82,7 +81,7 @@ class InfraredPluginManager(object):
         The plugins categorized by type and each plugin name contains a boolean
         value which tells if the plugin installed or not
         """
-        all_plugins_dict = OrderedDict()
+        all_plugins_dict = {}
         for installed_plugin_name in self.PLUGINS_DICT:
             plugin = self.get_plugin(installed_plugin_name)
             if plugin.type not in all_plugins_dict:
@@ -100,7 +99,9 @@ class InfraredPluginManager(object):
                 else:
                     all_plugins_dict[plugins_type][plugin_name] = False
 
-        return all_plugins_dict
+        return OrderedDict(
+            [(plugin_type, all_plugins_dict.get(plugin_type, {}))
+             for plugin_type in self.supported_plugin_types])
 
     @property
     def config_file(self):
@@ -137,11 +138,9 @@ class InfraredPluginManager(object):
             self._config = ConfigParser()
             self.config.readfp(fp)
 
+        # TODO(aopincar): Remove auto plugins installation when conf is missing
         if init_plugins_conf:
-            pldirs = [pd for pd in os.listdir(
-                PLUGINS_DIR) if os.path.isdir(os.path.join(PLUGINS_DIR, pd))]
-            for pldir in pldirs:
-                self.add_plugin(os.path.join(PLUGINS_DIR, pldir))
+            self.add_all_available()
 
     def get_desc_of_type(self, s_type):
         """Returns the description of the given supported plugin type
@@ -242,6 +241,14 @@ class InfraredPluginManager(object):
         self._install_requirements(plugin_source)
         self._load_plugins()
 
+    def add_all_available(self):
+        """Add all available plugins which aren't already installed"""
+        for plugin in set(PLUGINS_REGISTRY) - \
+                set(self.PLUGINS_DICT):
+            self.add_plugin(plugin)
+            LOG.warning(
+                "Plugin '{}' has been successfully installed".format(plugin))
+
     def remove_plugin(self, plugin_name):
         """Removes an installed plugin
 
@@ -260,6 +267,12 @@ class InfraredPluginManager(object):
         with open(self.config_file, 'w') as fp:
             self.config.write(fp)
         self._load_plugins()
+
+    def remove_all(self):
+        for plugin in self.PLUGINS_DICT:
+            self.remove_plugin(plugin)
+            LOG.warning(
+                "Plugin '{}' has been successfully removed".format(plugin))
 
     @property
     def supported_plugin_types(self):
@@ -401,6 +414,9 @@ class InfraredPlugin(object):
                 "spec file '{}'".format(
                     spec_dict[key].keys()[0],
                     type(spec_dict[key].values()[0]), spec_file))
+        if spec_dict[key].keys()[0].lower() == 'all':
+            raise IRFailedToAddPlugin(
+                "Adding a plugin named 'all' isn't allowed")
 
         return spec_dict
 
