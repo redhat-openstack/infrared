@@ -133,3 +133,12 @@ To use this feature, simply run::
 
 Or optionally, provide the file name of the image to restore from (defaults to "undercloud-quickstart.qcow2").
 .. note:: the filename refers to a path on the hypervisor.
+
+Undercloud Upgrade
+---------------------
+Upgrade is discovering current Undercloud version and upgrade it to the next major one.
+To upgrade Undercloud run the following command::
+
+    infrared tripleo-undercloud -v --upgrade yes
+
+.. note:: Currently, there is upgrade possibility from version 9 to version 10 only.
