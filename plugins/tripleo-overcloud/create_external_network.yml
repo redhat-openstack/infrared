@@ -15,10 +15,11 @@
   vars_files:
       - "vars/public/subnet/{{ install.public.subnet }}.yml"
   vars:
+      source_dir: "{{ install.deployment.files }}"
       first_controller: "{{ groups.controller | first }}"
       network_environment_file: "network-environment{{ (install.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
       physnet_name: datacentre
-      template_base: "{{ ansible_user_dir }}/deployment_files"
+      template_base: "{{ ansible_user_dir }}/{{ source_dir | basename }}"
   tasks:
       - name: get the default floating ip pool name from the controller
         command: "grep -oP \"(?<=default_floating_pool=)(.*$)\" /etc/nova/nova.conf"
