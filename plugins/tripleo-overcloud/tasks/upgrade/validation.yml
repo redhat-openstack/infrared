@@ -1,0 +1,8 @@
+---
+- fail:
+      msg: "Upgrade is supported only from 9 to 10"
+  when: install.version == "9" and not undercloud_version == "10"
+
+- fail:
+      msg: "Upgrade is supported only from 9 to 10"
+  when: undercloud_version == "10" and not install.version == "9"
