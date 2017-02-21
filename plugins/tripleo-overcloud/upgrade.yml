@@ -1,0 +1,28 @@
+- name: Set plugin_dir
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tags: upgrade
+  tasks:
+    - name: Get Undercloud version
+      become: true
+      find:
+          use_regex: yes
+          patterns: 'rhos-release-[0-9]+.*'
+          paths:
+            - '/etc/yum.repos.d/'
+      register: result
+
+    - set_fact:
+          undercloud_version: "{{ result.files[0]['path'] | basename | regex_replace('^rhos-release-([0-9]+).*$', '\\1') }}"
+
+    - name: Validation
+      include: "tasks/upgrade/validation.yml"
+      tags:
+        - upgrade
+        - upgrade_validation
+
+    - name: Overcloud Upgrade
+      include: "tasks/upgrade/{{ undercloud_version }}/main.yml"
+      tags:
+        - upgrade
