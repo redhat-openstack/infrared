@@ -33,6 +33,7 @@ Welcome to infrared's documentation!
    contacts
    contribute
    ovb
+   troubleshoot.rst
 
 .. toctree::
    :maxdepth: 2
