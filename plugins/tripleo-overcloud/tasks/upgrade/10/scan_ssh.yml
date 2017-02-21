@@ -1,0 +1,57 @@
+- name: Install python-virtualenv, gcc, python-devel for the pip tasks
+  become: yes
+  package:
+      name: "{{ item }}"
+      state: present
+  with_items:
+     - python-virtualenv
+     - gcc
+     - python-devel
+
+- pip:
+      name: "{{ item.key }}"
+      version: "{{ item.value }}"
+      virtualenv: "{{ path_venv }}"
+  with_dict:
+      setuptools: "17.0"
+      pytz: "2016.4"
+      shade: "1.7.0"
+      requests: "2.11.1"
+      pip: "8.1"
+
+- name: grab auth data from openstackrc file and publish it as YAML
+  shell: |
+      source {{ undercloud_rc }}
+      echo "
+      auth_url: $OS_AUTH_URL
+      username: $OS_USERNAME
+      password: $OS_PASSWORD
+      project_name: ${OS_PROJECT_NAME:-$OS_TENANT_NAME}
+      "
+      if [ -n "$OS_PROJECT_DOMAIN_NAME" ]; then
+          echo "project_domain_name: $OS_PROJECT_DOMAIN_NAME"
+      fi
+      if [ -n "$OS_USER_DOMAIN_NAME" ]; then
+          echo "user_domain_name: $OS_USER_DOMAIN_NAME"
+      fi
+  register: creds
+
+- name: update IP of overcloud nodes
+  vars:
+      # Here can't be used {{ path_venv }}, because it's not a Jinja template
+      ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
+  os_server_facts:
+      auth: "{{ creds.stdout | from_yaml }}"
+      # Required for SSL
+      validate_certs: no
+  register: result
+
+- shell: |
+      source {{ undercloud_rc }}
+      grep -q {{ item.accessIPv4 }} ~/.ssh/known_hosts || ssh-keyscan -t rsa {{ item.accessIPv4 }} >> ~/.ssh/known_hosts
+  with_items: "{{ openstack_servers }}"
+
+- name: Deleting venv folder
+  file:
+      path: "{{ path_venv }}"
+      state: absent
