@@ -75,3 +75,10 @@ Overcloud Strorage
 .. _`tripleo-undercloud`: tripleo-undercloud.html
 .. _`virsh`: virsh.html
 .. _`ovb`: missing
+
+Overcloud Upgrade
+-----------------
+* ``--upgrade``: Bool
+    If `yes`, the overcloud will be upgraded from current version to the next major one.
+    Upgrade requires ``--deployment-files``,
+    Overcloud deployment script and templates/files used during overcloud deploy have to be available on the undercloud node.
