@@ -1,27 +1,7 @@
-- name: Perform pre install tasks
-  include: "{{ overcloud_pre | default('pre.yml') }}"
-  when: install.introspect|default('')
+- name: Overcloud install
+  include: "{{ overcloud_install | default('install.yml') }}"
+  when: not install.upgrade|default('')
 
-- name: Provision loadbalancer node
-  include: loadbalancer.yml
-  tags:
-      - loadbalancer
-      - loadbalancer_setup
-  when: "'loadbalancer' in groups"
-
-- name: Introspect our machines
-  include: "{{ overcloud_introspect | default('introspect.yml') }}"
-  when: install.introspect|default('')
-
-- name: Tag our machines with proper flavors
-  include: "{{ overcloud_flavors | default('tag.yml') }}"
-  when: install.tagging|default('')
-
-- name: Deploy the Overcloud
-  include: "{{ overcloud_deploy | default('deploy.yml') }}"
-  # Remove "version" when gate is updated
-  when: install.deploy|default('') or install.version|default('')
-
-- name: Perform post install tasks
-  include: "{{ overcloud_post | default('post.yml') }}"
-  when: install.post|default('')
+- name: Overcloud Upgrade
+  include: "{{ overcloud_upgrade | default('upgrade.yml') }}"
+  when: install.upgrade|default('') and install.version|default('')
