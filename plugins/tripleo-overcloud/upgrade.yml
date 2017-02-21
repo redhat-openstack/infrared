@@ -1,0 +1,72 @@
+- name: Collecting Info
+  hosts: undercloud,overcloud_nodes
+  gather_facts: yes
+  any_errors_fatal: true
+  tags: upgrade_collect_info
+  tasks:
+      - name: Get Undercloud version
+        become: true
+        find:
+            use_regex: yes
+            patterns: 'rhos-release-[0-9]+.*'
+            paths:
+              - '/etc/yum.repos.d/'
+        register: result
+        when: "'undercloud' in group_names"
+
+      - name: Setting undercloud_version
+        set_fact:
+            undercloud_version: "{{ hostvars[groups['undercloud'][0]]['result'].files[0]['path'] | basename | regex_replace('^rhos-release-([0-9]+).*$', '\\1') }}"
+
+- name: Undercloud Validation
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tags:
+      - upgrade_validation
+      - upgrade_undercloud_validation
+  tasks:
+      - name: Validation
+        include: "tasks/upgrade/undercloud_validation.yml"
+
+- name: Overcloud Validation
+  hosts: overcloud_nodes
+  gather_facts: yes
+  any_errors_fatal: true
+  tags:
+      - upgrade_validation
+      - upgrade_overcloud_validation
+  tasks:
+      - name: Validation
+        include: "tasks/upgrade/overcloud_validation.yml"
+
+- name: Update Overcloud repos
+  hosts: overcloud_nodes
+  gather_facts: yes
+  any_errors_fatal: true
+  tags:
+      - upgrade
+      - upgrade_repos
+  vars:
+      rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+  roles:
+      - role: rhos-release
+        release: "{{ (undercloud_version|int) }}"
+        build: "latest"
+        mirror: "{{ install.mirror | default(omit) }}"
+
+- name: Overcloud Upgrade
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      undercloud_rc: "~/stackrc"
+      overcloud_rc: "~/overcloudrc"
+      temp_dir: "/tmp/overcloud_upgrade"
+      overcloud_deploy_script: "~/overcloud_deploy.sh"
+      overcloud_upgrade_script: "~/overcloud_upgrade.sh"
+  tags:
+      - upgrade
+  tasks:
+      - name: Overcloud Upgrade
+        include: "tasks/upgrade/{{ undercloud_version }}/main.yml"
