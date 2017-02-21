@@ -1,0 +1,19 @@
+parameter_defaults:
+    UpgradeInitCommand: |
+        # You need Red-Hat 7.3, see
+        # https://bugzilla.redhat.com/show_bug.cgi?id=1373140
+        yum install -y wget
+        wget --no-check-certificate https://url.corp.redhat.com/rhos-release-latest-rpm -O /tmp/rhos-release-latest.rpm
+        yum localinstall -y /tmp/rhos-release-latest.rpm
+        rhos-release -P 10
+        if [[ -f /etc/yum.repos.d/mirror-info ]]; then
+            if [[ `cat /etc/yum.repos.d/mirror-info | grep mirror_domain | wc -l` -eq "1" ]]; then
+                cd /etc/yum.repos.d/
+                mirror=$(cat /etc/yum.repos.d/mirror-info | grep mirror_domain | awk '{print $2}')
+                sed -i "s/download.*\.lab.*\.redhat\.com/${mirror}/" *.repo
+                sed -i "s/download\.eng.*\.redhat\.com/${mirror}/" *.repo
+                sed -i "s/rhos-release.*\.redhat\.com/${mirror}\/rhos-release/" *.repo
+                sed -r -i "s/ayanami.*\.redhat.com/${mirror}\/ayanami/" *.repo
+                sed -i "s/pulp.*\.redhat\.com/${mirror}\/pulp/" *.repo
+            fi
+        fi
