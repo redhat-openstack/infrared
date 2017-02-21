@@ -75,3 +75,17 @@ Overcloud Strorage
 .. _`tripleo-undercloud`: tripleo-undercloud.html
 .. _`virsh`: virsh.html
 .. _`ovb`: missing
+
+Overcloud Upgrade
+-----------------
+Upgrade will detect Undercloud version and will  upgrade Overcloud to the same version.
+
+* ``--upgrade``: Bool
+  If `yes`, the overcloud will be upgraded from current version to the next major one.
+
+Example::
+
+  infrared tripleo-overcloud -v --upgrade yes  --deployment-files virt
+
+.. note:: Upgrade requires ``--deployment-files``,
+  Overcloud deployment script and templates/files used during overcloud deploy have to be available on the undercloud node.
