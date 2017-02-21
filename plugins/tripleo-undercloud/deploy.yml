@@ -11,6 +11,9 @@
       - name: print the last 60 lines of the undercloud installation
         command: tail -n60 undercloud_install.log
 
+      - name: print any nested error entries in undercloud installation
+        shell: "grep -B2 -A5 -i 'info:.*error:' undercloud_install.log || true"
+
       - fail:
             msg: "Undercloud deployment failed... :("
         when: undercloud_deployment.rc != 0
