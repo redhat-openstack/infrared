@@ -21,6 +21,7 @@ Welcome to infrared's documentation!
    advance_features
    contacts
    contribute
+   troubleshoot
 
 .. toctree::
    :maxdepth: 2
