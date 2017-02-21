@@ -1,0 +1,94 @@
+---
+- name: Creating temp dir
+  command: mktemp -d
+  register: temp_dir_raw
+
+- name: Setting temp_dir
+  set_fact: temp_dir={{ ' '.join(temp_dir_raw.stdout_lines) }}
+
+- name: Setting overcloud_deploy_script
+  set_fact: overcloud_deploy_script="~/overcloud_deploy.sh"
+
+- name: Setting overcloud_upgrade_script
+  set_fact: overcloud_upgrade_script="~/overcloud_upgrade.sh"
+
+- name: Create overcloud upgrade base script
+  copy:
+      src: "{{ overcloud_deploy_script }}"
+      dest: "{{ overcloud_upgrade_script }}"
+      mode: 0755
+      remote_src: true
+
+- name: SSL Config
+  include: "ssl.yml"
+  tags:
+    - upgrade
+    - upgrade_ssl
+
+- name: Pre-Upgrade Ceilometer migration
+  include: "ceilometer_migration.yml"
+  tags:
+    - upgrade
+    - upgrade_ceilometer
+
+- name: Overcloud Upgrade Init
+  include: "upgrade_init.yml"
+  tags:
+    - upgrade
+    - upgrade_init
+
+- name: Scan OCs ssh keys and upload node_upgrade script
+  shell: |
+      source ~/stackrc
+      for host in $(nova list | awk '$1 !~ /^\+/ && NR>3{print gensub(/.*=([0-9.]+).*/, "\\1",$12)}'); do grep -q ${host} ~/.ssh/known_hosts || ssh-keyscan -t rsa ${host} >> ~/.ssh/known_hosts; done
+  tags:
+    - upgrade
+    - upgrade_ssh_key_scan
+
+
+- name: Object Storage Upgrade
+  shell : |
+      source ~/stackrc
+      for NODE in `nova list | grep swift | awk -F "|" '{ print $2 }'` ; do upgrade-non-controller.sh --upgrade $NODE &>> swift-upgrade.log; done
+  tags:
+    - upgrade
+    - upgrade_object_storage
+
+- name: Controller And Block Storage Upgrade
+  include: "controller_upgrade.yml"
+  tags:
+    - upgrade
+    - upgrade_controller
+
+- name: Compute Upgrade
+  shell : |
+      source ~/stackrc
+      for NODE in `nova list | grep compute | awk -F "|" '{ print $2 }'` ; do upgrade-non-controller.sh --upgrade $NODE &>> compute-upgrade.log; done
+  tags:
+    - upgrade
+    - upgrade_compute
+
+- name: Ceph Upgrade
+  shell : |
+      source ~/stackrc
+      for NODE in `nova list | grep ceph | awk -F "|" '{ print $2 }'` ; do upgrade-non-controller.sh --upgrade $NODE &>> ceph-upgrade.log; done
+  tags:
+    - upgrade
+    - upgrade_ceph
+
+- name: Convergence
+  include: "convergence.yml"
+  tags:
+    - upgrade
+    - upgrade_convergence
+
+- name: Overcloud Post-Upgrade Aodh migration
+  include: "aodh_migration.yml"
+  tags:
+    - upgrade
+    - upgrade_aodh
+
+- name: Deleting temp folder
+  file:
+      path: "{{ temp_dir }}"
+      state: absent

@@ -1,0 +1,41 @@
+---
+- name: Setting upgrade_init_script
+  set_fact: upgrade_init_script="~/upgrade_init.sh"
+
+- name: Copy overcloud-repos.yaml
+  copy:
+      src: "{{ playbook_dir }}/files/upgrade/10/overcloud-repos.yaml"
+      dest: "{{ temp_dir }}/overcloud-repos.yaml"
+
+- name: Create Upgrade Unit base script
+  copy:
+      src: "{{ overcloud_upgrade_script }}"
+      dest: "{{ upgrade_init_script }}"
+      mode: 0755
+      remote_src: true
+
+- name: Append params to Upgrade Unit script
+  lineinfile:
+      dest: "{{ upgrade_init_script }}"
+      insertbefore: '^--log-file.*'
+      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker-init.yaml \'
+
+- name: Append params to Upgrade Unit script
+  lineinfile:
+      dest: "{{ upgrade_init_script }}"
+      insertbefore: '^--log-file.*'
+      line: '-e {{ temp_dir }}/overcloud-repos.yaml \'
+
+- name: Change log file name of Upgrade Unit script
+  lineinfile:
+      dest: "{{ upgrade_init_script }}"
+      regexp: '^--log-file.*'
+      state: absent
+
+- name: Print Upgrade Init command
+  command: "cat {{ upgrade_init_script }}"
+
+- name: Executing Init Upgrade command
+  shell: |
+      source ~/stackrc
+      bash {{ upgrade_init_script }} &> upgrade-unit.log
