@@ -1,0 +1,56 @@
+- name: Deploy the Overcloud
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tags: fetch_deploy_input
+  vars:
+      deployer_input: "{{ ansible_user_dir }}/tempest-deployer-input.conf"
+      value_list:
+            # Workaround RHBZ#1357579 - non-default region=regionOne
+            - section: identity
+              option: region
+              value: regionOne
+              condition: true
+            # Enable console logging: https://review.openstack.org/#/c/387445/
+            - section: compute-feature-enabled
+              option: console_output
+              value: true
+              condition: true
+            # Disable encrypted volume tests rhbz#1383377
+            - section: compute-feature-enabled
+              option: attach_encrypted_volume
+              value: false
+              condition: true
+            # Configure storage protocol when ceph: https://bugs.launchpad.net/tripleo/+bug/1634499
+            - section: volume
+              option: storage_protocol
+              value: ceph
+              condition: "{{ install.storage.backend.startswith('ceph') }}"
+            # Configure nfs protocol
+            - section: volume
+              option: storage_protocol
+              value: nfs
+              condition: "{{ 'nfs' in install.storage.backend }}"
+            # Configure storage vendor for netapp: https://bugs.launchpad.net/tripleo/+bug/1642948
+            - section: volume
+              option: vendor_name
+              value: NetApp
+              condition: "{{ install.storage.backend.startswith('netapp') }}"
+
+  tasks:
+      - name: fetch the deploy input file
+        fetch:
+            src: "{{ deployer_input }}"
+            dest: "{{ inventory_dir }}/{{ deployer_input | basename }}"
+            flat: yes
+            fail_on_missing: no
+
+      - name: Update deployer input with missing data
+        ini_file:
+            dest: "{{ inventory_dir }}/{{ deployer_input | basename }}"
+            section: "{{ item.section }}"
+            option: "{{ item.option }}"
+            value: "{{ item.value }}"
+        # Do this on localhost because it's faster
+        delegate_to: localhost
+        with_items: "{{ value_list | selectattr('condition') | list }}"
