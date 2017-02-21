@@ -1,0 +1,27 @@
+---
+- name: Create Aodh Migration base script
+  copy:
+      src: "{{ overcloud_upgrade_script }}"
+      dest: "{{ aodh_migration_script }}"
+      mode: 0755
+      remote_src: true
+
+- name: Append params to Aodh Migration script
+  lineinfile:
+      dest: "{{ aodh_migration_script }}"
+      insertbefore: '^--log-file.*'
+      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-aodh-migration.yaml \'
+
+- name: Change log file name of Aodh Migration script
+  lineinfile:
+      dest: "{{ aodh_migration_script }}"
+      regexp: '^--log-file.*'
+      state: absent
+
+- name: Print Aodh Migration command
+  command: "cat {{ aodh_migration_script }}"
+
+- name: Executing Aodh migration command
+  shell: |
+      source {{ undercloud_rc }}
+      bash {{ aodh_migration_script }} &> aodh-migration.log

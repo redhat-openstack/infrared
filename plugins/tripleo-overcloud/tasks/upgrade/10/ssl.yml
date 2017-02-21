@@ -1,0 +1,57 @@
+---
+- name: Check for ssl in overcloudrc
+  command: "grep -Fq OS_AUTH_URL=https {{ overcloud_rc }}"
+  register: check_for_ssl
+  ignore_errors: true
+
+- name: Check for IPV6 network environment file
+  stat:
+      path: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/network/network-environment-v6.yaml"
+  register: net_env_ipv6
+  when: check_for_ssl|succeeded
+
+- name: Set network_environment_file to IPV6 file
+  set_fact:
+      network_environment_file: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/network/network-environment-v6.yaml"
+  when: check_for_ssl|succeeded and net_env_ipv6.stat.exists
+
+- name: Check for IPV4 network environment file
+  stat:
+      path: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/network/network-environment.yaml"
+  register: net_env_ipv4
+  when: check_for_ssl|succeeded
+
+- name: Set network_environment_file to IPV4 file
+  set_fact:
+      network_environment_file: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/network/network-environment.yaml"
+  when: check_for_ssl|succeeded and net_env_ipv4.stat.exists
+
+- name: Extract our external allocation pools start value
+  command: "cat {{ network_environment_file }}"
+  register: result
+  when: check_for_ssl|succeeded
+
+- name: Setting external_allocation_pool_start
+  set_fact:
+      external_allocation_pool_start: "{{ (result.stdout | from_yaml).parameter_defaults.ExternalAllocationPools[0].start }}"
+  when: check_for_ssl|succeeded
+
+- name: Create public VIP environment file
+  template:
+      src: ssl/public_vip.yaml.j2
+      dest: "{{ temp_dir }}/public_vip.yaml"
+  when: check_for_ssl|succeeded
+
+- name: Append the invocation line to the base overcloud upgrade script
+  lineinfile:
+      dest: "{{ overcloud_upgrade_script }}"
+      insertbefore: '^--log-file.*'
+      line: '-e {{ temp_dir }}/public_vip.yaml \'
+  when: check_for_ssl|succeeded
+
+- name: Append the invocation line to the base overcloud upgrade script
+  lineinfile:
+      dest: "{{ overcloud_upgrade_script }}"
+      insertbefore: '^--log-file.*'
+      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/tls-endpoints-public-ip.yaml \'
+  when: check_for_ssl|succeeded

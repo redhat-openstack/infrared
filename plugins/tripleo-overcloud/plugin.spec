@@ -194,3 +194,18 @@ subparsers:
                       help: |
                           Whether to enable SSH communication between compute nodes.
                           This is required when a migration needs to work on a non shared storage scenarios.
+
+            - title: Overcloud Upgrade
+              options:
+                  upgrade:
+                      type: Bool
+                      help: |
+                          Upgrade Overcloud.
+                          NOTE: Upgrade require overcloud deployment script to be available in home directory of undercloud
+                          user at undercloud node
+                          Currently, there is upgrade possibility from version 9 to version 10 only.
+                  mirror:
+                      type: Value
+                      help: |
+                          Enable usage of specified mirror (for rpm, pip etc) [brq,qeos,tlv - or hostname].
+                          (Specified mirror needs to proxy multiple rpm source hosts and pypi packages.)

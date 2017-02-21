@@ -1,0 +1,28 @@
+---
+- name: Create Ceilometer migration base script
+  copy:
+      src: "{{ overcloud_upgrade_script }}"
+      dest: "{{ ceilometer_migration_script }}"
+      mode: 0755
+      remote_src: true
+
+- name: Append params to Ceilometer migration script
+  lineinfile:
+      dest: "{{ ceilometer_migration_script }}"
+      insertbefore: '^--log-file.*'
+      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-ceilometer-wsgi-mitaka-newton.yaml \'
+
+- name: Change log file name of Ceilometer migration script
+  lineinfile:
+      dest: "{{ ceilometer_migration_script }}"
+      regexp: '^--log-file.*'
+      state: absent
+
+- name: Print Ceilometer migration command
+  command: "cat {{ ceilometer_migration_script }}"
+
+- name: Executing Ceilometer migration command
+  shell: |
+      source {{ undercloud_rc }}
+      bash {{ ceilometer_migration_script }} &> ceilometer-migration.log
+
