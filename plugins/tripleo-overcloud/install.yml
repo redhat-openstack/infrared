@@ -1,0 +1,48 @@
+- name: Perform validations
+  include: "{{ overcloud_validate | default('validate.yml') }}"
+  tags:
+      - validation
+
+- name: Perform pre install tasks
+  include: "{{ overcloud_pre | default('pre.yml') }}"
+  when: install.introspect|default('')
+
+- name: Provision loadbalancer node
+  include: loadbalancer.yml
+  tags:
+      - loadbalancer
+      - loadbalancer_setup
+  when: "'loadbalancer' in groups"
+
+- name: Introspect our machines
+  include: "{{ overcloud_introspect | default('introspect.yml') }}"
+  when: install.introspect|default('')
+
+- name: Tag our machines with proper flavors
+  include: "{{ overcloud_flavors | default('tag.yml') }}"
+  when: install.tagging|default('')
+
+- name: Deploy the Overcloud
+  vars:
+      templates:
+          generate_host_name_template: yes
+          storage_add_scale: yes
+  include: "{{ overcloud_deploy | default('deploy.yml') }}"
+  when:
+      - install.deploy|default('')
+      - not install.role|default('')
+
+- name: Deploy the Overcloud with composable roles
+  vars:
+      deploy_script_template: templates/composable_roles/overcloud_deploy.sh.j2
+      templates:
+          generate_host_name_template: no
+          storage_add_scale: no
+  include: "{{ composable_roles | default('composable_roles.yml') }}"
+  when:
+      - install.deploy|default('')
+      - install.role is defined
+
+- name: Perform post install tasks
+  include: "{{ overcloud_post | default('post.yml') }}"
+  when: install.post|default('')

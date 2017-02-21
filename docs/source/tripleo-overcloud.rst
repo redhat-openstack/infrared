@@ -76,8 +76,24 @@ Overcloud Strorage
 .. _`virsh`: virsh.html
 .. _`ovb`: missing
 
-
 Composable Roles
 ----------------
 
 InfraRed allows to use custom roles to deploy overcloud. Check the `Composable roles <composable_roles.html>`_ page for details.
+
+Overcloud Upgrade
+-----------------
+.. warning:: Before Overcloud upgrade you need to perform upgrade of `Undercloud <tripleo-undercloud.html>`_
+
+Upgrade will detect Undercloud version and will upgrade Overcloud to the same version.
+
+* ``--upgrade``: Bool
+  If `yes`, the overcloud will be upgraded.
+
+Example::
+
+  infrared tripleo-overcloud -v --upgrade yes  --deployment-files virt
+
+.. note:: Upgrade is assuming that Overcloud Deployment script and files/templates, which were used during the initial
+  deployment are available at Undercloud node in home directory of Undercloud user. Deployment script location is
+  assumed to be "~/overcloud_deploy.sh"
