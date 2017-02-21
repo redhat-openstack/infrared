@@ -1,0 +1,23 @@
+# performs bmc node cofiguration
+- name: Provision Baremetal controller (BMC)
+  hosts: bmc
+  become: yes
+  any_errors_fatal: true
+  pre_tasks:
+      - name: get the bmc node_dict
+        include: tasks/var_lookup.yml
+        vars:
+            var_file: 'bmc'
+            partial_path: topology/nodes
+        delegate_to: localhost
+        become: no
+  roles:
+      - bmc
+
+- name: Save overcloud nodes host vars
+  hosts: localhost
+  any_errors_fatal: true
+  roles:
+      - role: hostvars
+        action: save
+        host_names: "{{ groups['overcloud_nodes'] }}"

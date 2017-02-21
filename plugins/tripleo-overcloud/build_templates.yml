@@ -39,19 +39,6 @@
             dest: "{{ template_base }}"
         when: install.overcloud.debug
 
-      - name: check for the network-environment file
-        find:
-            # find doesn't resolve '~': https://github.com/ansible/ansible/issues/19869
-            paths: "{{ template_base }}"
-            patterns: "{{ network_environment_file }}"
-            recurse: yes
-        register: network_environment_file_path
-
-      # TODO: Move this to pre run verification
-      - fail:
-            msg: "The {{ network_environment_file }} file is missing"
-        when: 'network_environment_file_path.matched == 0'
-
       - name: check if custom overcloud_deploy.sh exists
         stat:
             path: "{{ template_base }}/overcloud_deploy.sh"
