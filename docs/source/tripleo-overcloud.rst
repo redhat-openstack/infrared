@@ -39,9 +39,8 @@ Overcloud Options
 * ``--overcloud-templates``: Add extra environment template files to "overcloud deploy" command
     Format:
 
-
-    .. code:: yml
-       :name: sahara.yml
+    .. code-block:: plain
+       :caption: sahara.yml
 
        ---
        tripleo_heat_templates:
