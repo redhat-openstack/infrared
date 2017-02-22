@@ -5,7 +5,7 @@
   become: yes
   any_errors_fatal: false  # as we are happy to collect whatever we can
   vars:
-      - dest_dir: "{{ (install.dest|default({})).dir|default('') | absolute_path }}"
+      - dest_dir: "{{ (other.dest|default({})).dir|default('') | absolute_path }}"
   vars_files:
       - vars/default_archives_list.yml
   tasks:
@@ -159,7 +159,7 @@
         ignore_errors: true
 
       - name: compress logs in tar ball
-        command: "tar cf{{ install.gzip|ternary ('z', '') }} {{ inventory_hostname }}.tar{{ install.gzip|ternary ('.gz', '') }} {{ inventory_hostname }}"
+        command: "tar cf{{ other.gzip|ternary ('z', '') }} {{ inventory_hostname }}.tar{{ other.gzip|ternary ('.gz', '') }} {{ inventory_hostname }}"
         args:
             chdir: /tmp
         ignore_errors: true
@@ -167,7 +167,7 @@
       - name: fetch log archive
         fetch:
             flat: yes
-            src: "/tmp/{{ inventory_hostname }}.tar{{ install.gzip|ternary ('.gz', '') }}"
+            src: "/tmp/{{ inventory_hostname }}.tar{{ other.gzip|ternary ('.gz', '') }}"
             dest: "{{ dest_dir }}/"
             validate_checksum: no
         ignore_errors: true
