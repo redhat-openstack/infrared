@@ -8,16 +8,10 @@ structure (see `tests/example`_ for an example plugin)::
     tests/example
     ├── main.yml                # Main playbook. All execution starts here
     ├── plugin.spec             # Plugin definition
-    ├── callback_plugins        # Useful to format Ansible console output
-    │   ├── human_log.py
-    │   ├── timing.py
-    ├── filter_plugins          # Add here custom jinja2 filters
-    │   └── myfilter.py
     ├── roles                   # Add here roles for the project to use
     │   └── example_role
     │       └── tasks
     │           └── main.yml
-    └── vars                    # Add here variable files
 
 .. note:: This structure will work without any ``ansible.cfg`` file provided, as Ansible will search for references in the
         relative paths described above. To use an ``ansible.cfg`` config file, use absolute paths to the plugin directory.
@@ -26,30 +20,38 @@ structure (see `tests/example`_ for an example plugin)::
 Plugin structure
 ^^^^^^^^^^^^^^^^
 
-Playbooks
----------
+Main entry
+----------
 `infrared` will look for a playbook called ``main.yml`` to start the execution from.
 
 Plugins are regular Ansible projects, and as such, they might include or reference any item
 (files, roles, var files, ansible plugins, modules, templates, etc...) using relative paths
 to current playbook
 
+An example of ``plugin_dir/main.yml``:
+
 .. literalinclude:: ../../tests/example/main.yml
    :emphasize-lines: 3-6
    :linenos:
+
+Plugin Specification
+--------------------
+`infrared` gets all plugin info from ``plugin.spec`` file. Following `YAML` format.
+This file define the CLI this plugin exposes, its name and its type.
+
+.. literalinclude:: ../../tests/example/plugin.spec
+
+Plugin type can be one of the following: ``provision``, ``install``, ``test``, ``other``.
+
+To access the options defined in the spec from your playbooks and roles use
+the plugin type with the option name.
+For example, to access ``dictionary-val`` use ``{{ provision.dictionary.val }}``.
 
 .. note:: the vars-dict defined by `Complex option types`_ is nested under ``plugin_type`` root key, and passed
  to Ansible using ``--extra-vars`` meaning that any vars file that has ``plugin_type`` as a root key, will be
  overriden by that vars-dict. See `Ansible variable precidence`_ for more details.
 
 .. _Ansible variable precidence: http://docs.ansible.com/ansible/playbooks_variables.html#variable-precedence-where-should-i-put-a-variable
-
-Specification
--------------
-`infrared` gets all plugin info from ``plugin.spec`` file. Following `YAML` format.
-This file define the CLI this plugin exposes, its name and its type.
-
-.. literalinclude:: ../../tests/example/plugin.spec
 
 Include Groups
 ~~~~~~~~~~~~~~
@@ -93,7 +95,7 @@ Complex option types
 These options are nested into the vars dict that is later passed to Ansible as extra-vars.
 
 * Value:
-    Regular string value.
+    String value.
 * Bool:
     Boolean value. Accepts any form of YAML boolean: ``yes``/``no``, ``true``/``false`` ``on``/``off``.
     Will fail if the string can't be resolved to this type.
@@ -204,7 +206,7 @@ Add:
     register the plugin under the given plugin-type (when source is 'all', all available plugins will be installed)::
 
         infrared plugin add tests/example
-        infrared plugin add git_url
+        infrared plugin add <git_url>
         infrared plugin add all
 
 
