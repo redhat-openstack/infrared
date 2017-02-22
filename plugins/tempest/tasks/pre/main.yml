@@ -47,7 +47,7 @@
 
 - name: copy the tempest-deployer-input to the tester
   vars:
-      input_file: "{{ deployer_find.files[0].path if not deployer_find|skipped else default_deployer_stat.path|default('') }}"
+      input_file: "{{ deployer_find.files[0].path if not deployer_find|skipped else default_deployer_stat.stat.path|default('') }}"
   copy:
       src: "{{ input_file }}"
       dest: "{{ deployer_input }}"
