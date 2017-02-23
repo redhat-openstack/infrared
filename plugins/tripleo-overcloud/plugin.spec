@@ -132,7 +132,9 @@ subparsers:
                   public-network:
                       type: Bool
                       default: yes
-                      help: Deploy "public" external network on the overcloud as post-install.
+                      help: |
+                          Deploy "public" external network on the overcloud as post-install.
+                          This will also enable
 
                   public-subnet:
                       type: Value
@@ -152,6 +154,15 @@ subparsers:
                           network, creating a new VLAN interface connected to ovs's "br-ctlplane" bridge.
                           NOTE: If your UnderCloud's network is already configured properly, this could disrupt it, making overcloud API unreachable
                           For more details, see: "VALIDATING THE OVERCLOUD" on https://access.redhat.com/documentation/en/red-hat-openstack-platform/10-beta/paged/director-installation-and-usage/chapter-6-performing-tasks-after-overcloud-creation
+
+                  public-extrouter-undercloud:
+                      type: Bool
+                      default: no
+                      help: |
+                          This setting will add VLAN interface to undercloud node which will be used to route overcloud's public-network traffic.
+                          This is useful when overcloud's external VLAN network doesn't have ability to reach Internet by default.
+                          Note: This require masquerading enabled during installation of undercloud in undercloud.conf (masquerade_network option)
+                          or manual configuration of iptables.
 
             - title: Overcloud storage
               options:
