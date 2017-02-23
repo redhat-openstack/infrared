@@ -69,4 +69,8 @@ subparsers:
                           Specifies whether the tempest configuration should use legacy method by running configuration
                           from the tempest repo itself without using the tempestconf package. Suitable only when
                           setup is 'git'
+                  cleanup:
+                      type: Bool
+                      help: |
+                          Use tempest cleanup to clean the leftover from the tests (usually when tests fail)
                       default: no

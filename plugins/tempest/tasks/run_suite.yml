@@ -52,6 +52,11 @@
   when: test_dict.test_regex is defined and test_dict.test_regex
 
 - block:
+      - name: save the current state for the later cleanup
+        shell: >
+            test -e .venv/bin/activate && source .venv/bin/activate;
+            tempest cleanup --init-saved-state
+        when: test.cleanup
       - name: run tempest "{{ test_suite }}" suite
         shell: >
             test -e .venv/bin/activate && source .venv/bin/activate;
@@ -73,4 +78,9 @@
             dest: "{{ inventory_dir }}/tempest_results/{{ test_output_file }}"
             flat: yes
             fail_on_missing: yes
+      - name: cleanup the resources created by the test and not cleaned
+        shell: >
+            test -e .venv/bin/activate && source .venv/bin/activate;
+            tempest cleanup
+        when: test.cleanup
   when: test_dict.test_regex is defined or whitelistfile is defined or blacklistfile is defined
