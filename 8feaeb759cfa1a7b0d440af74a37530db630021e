@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "fabf19d9_8eda8be8",
+        "filename": "plugins/tripleo-overcloud/tasks/upgrade/10/ceilometer_migration.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1010429
+      },
+      "writtenOn": "2017-02-23T09:26:51Z",
+      "side": 1,
+      "message": "I will check.",
+      "parentUuid": "fabf19d9_fd10a3ad",
+      "revId": "8feaeb759cfa1a7b0d440af74a37530db630021e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fabf19d9_dd7cbfed",
         "filename": "plugins/tripleo-overcloud/tasks/upgrade/10/main.yml",
         "patchSetId": 3
@@ -81,6 +99,24 @@
       "writtenOn": "2017-02-22T16:16:25Z",
       "side": 1,
       "message": "Is this going to work? In public_vip.yaml.j2 we have:\nPublicVirtualFixedIPs: [{\u0027ip_address\u0027:\u0027{{ external_allocation_pool_start }}\u0027}]\n\nbut external_allocation_pool_start gets set as part of the ssl tasks which I believe gets run only during installation:\n\nhttps://github.com/redhat-openstack/infrared/blob/d117ed746d22f95f59eb37ae1b0d30ecf70ddcf2/plugins/tripleo-overcloud/tasks/ssl.yml#L20-L21",
+      "revId": "8feaeb759cfa1a7b0d440af74a37530db630021e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fabf19d9_aeeb0f78",
+        "filename": "plugins/tripleo-overcloud/tasks/upgrade/10/ssl.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010429
+      },
+      "writtenOn": "2017-02-23T09:26:51Z",
+      "side": 1,
+      "message": "Before we trigger the upgrade, we generate the oc deployment script, which we use latter as base script for the upgrade phases. \n\nSo if in upgrade command we have --overcloud-ssl yes, we will run plugins/tripleo-overcloud/tasks/ssl.yml, but because we upgrade from 9 to 10, in command we will have --version 9, which will not trigger the part for generating public_vip.yaml, so I added it here.",
+      "parentUuid": "fabf19d9_fd02e371",
       "revId": "8feaeb759cfa1a7b0d440af74a37530db630021e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
