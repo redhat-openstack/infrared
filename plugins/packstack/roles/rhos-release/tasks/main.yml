@@ -44,12 +44,21 @@
       path: "{{ rr_target_directory }}"
   register: files_to_remove
 
+- name: remove all repo files (except for patched RPMs)
+  file:
+      state: absent
+      path: "{{ item.path }}"
+  with_items: "{{ files_to_remove.files|default([]) }}"
+  become: true
+  when: install.patch.repo and "'{{ item.path | basename }}' != 'patched_rpms.repo'"
+
 - name: remove all repo files
   file:
       state: absent
       path: "{{ item.path }}"
   with_items: "{{ files_to_remove.files|default([]) }}"
   become: true
+  when: not install.patch.repo
 
 - name: debug rr_rpm_url2
   debug:
