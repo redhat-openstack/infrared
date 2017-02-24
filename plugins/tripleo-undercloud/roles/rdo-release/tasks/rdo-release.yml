@@ -32,18 +32,6 @@
   when: "mirror|default('')"
   become: true
 
-- name: gather repo file names to remove
-  find:
-      path: "{{ rr_target_directory }}"
-  register: files_to_remove
-
-- name: remove all repo files
-  file:
-      state: absent
-      path: "{{ item.path }}"
-  with_items: "{{ files_to_remove.files|default([]) }}"
-  become: true
-
 - name: get the rhos-release RPM
   get_url:
       url: "{{ rhos_release_rpm }}"
