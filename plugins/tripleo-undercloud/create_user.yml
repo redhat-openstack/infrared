@@ -59,7 +59,7 @@
             become: no
 
         rescue:
-          - name: inject local private key to undercloud
+          - name: inject local SSH keys to undercloud
             copy:
                 src: "{{ item }}"
                 dest: "{{ item }}"
@@ -72,15 +72,15 @@
             become: yes
 
       - set_fact:
-            src_privatekey: "{{ (key_injection|success) | ternary(local_undercloud_pubkey, local_pubkey) }}"
+            src_publickey: "{{ (key_injection|success) | ternary(local_undercloud_pubkey, local_pubkey) }}"
 
       - set_fact:
-            privatekey: "{{ lookup('file', src_privatekey) }}"
+            publickey: "{{ lookup('file', src_publickey) }}"
 
       - name: set up authorized_keys for non root user
         authorized_key:
             user: "{{ install.user.name }}"
-            key: "{{ privatekey }}"
+            key: "{{ publickey }}"
 
       - name: Update hosts user
         add_host:
