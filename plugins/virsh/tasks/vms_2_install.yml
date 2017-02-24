@@ -18,8 +18,8 @@
           {% endif -%}
           {% endfor %}
           --boot {{ provision.bootmode }} \
-          {% for interface_name in node_dict.interfaces | sort %}
-           --network network:{{ node_dict.interfaces[interface_name].network }} \
+          {% for interface in node_dict.interfaces %}
+           --network {{ 'bridge' if (interface.bridged|default(False)) else 'network' }}:{{ interface.network }} \
           {% endfor -%}
            --virt-type kvm \
            --cpu host-model \
