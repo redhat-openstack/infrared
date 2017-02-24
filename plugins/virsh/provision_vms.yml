@@ -62,7 +62,7 @@
           register: ip_tasks
           until: ip_tasks.finished
           retries: 300
-          with_items: "{{ async_ips }}"
+          with_items: "{{ async_ips|default([]) }}"
       tags: ips
 
     - name: update tunneling conf

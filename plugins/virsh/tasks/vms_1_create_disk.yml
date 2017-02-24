@@ -23,6 +23,7 @@
   vars:
       amount: "{{ node.value }}"
       image_name: "{{ (node_dict.disks.disk1.import_url|default('') or url) | basename}}"
+      net_scripts: /etc/sysconfig/network-scripts
   shell: |
       set -ex
       export LIBGUESTFS_BACKEND=direct
@@ -38,10 +39,12 @@
       # expand (copy-content) into new image in case of system disk
       # virt-resize needs target file with expected size to already exists
       virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ image_name }} {{ disk_values.path }}/{{ node_image }}
+      # incjet DEFROUT to file and set it on for external network only
       virt-customize -a {{ disk_values.path }}/{{ node_image }} \
-      {%- for index in range(node_dict.interfaces | length - 1) %}
-          --run-command 'cp /etc/sysconfig/network-scripts/ifcfg-eth{0,{{ index + 1 }}} && sed -i s/DEVICE=.*/DEVICE=eth{{ index + 1 }}/g /etc/sysconfig/network-scripts/ifcfg-eth{{ index +1 }}' {% if not loop.last %}\
-          {% endif %}
+      {% for interface in node_dict.interfaces %}
+          {% if loop.index0 == 0 %}--run-command 'grep DEFROUTE {{ net_scripts }}/ifcfg-eth{{ loop.index0 }} || echo "DEFROUTE=yes" >> {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}'
+          {%- else -%}--run-command 'cp {{ net_scripts }}/ifcfg-eth{0,{{ loop.index0 }}} && sed -i s/DEVICE=.*/DEVICE=eth{{ loop.index0 }}/g {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' {% endif %} \
+          --run-command 'sed -i s/DEFROUTE=.*/DEFROUTE={{ 'yes' if (node_dict.external_network.network == interface.network) else 'no' }}/g {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' \
       {% endfor %}
       {%- if node_dict.swap|default('0')|int > 0 -%}
           --run-command 'dd if=/dev/zero of=/swapfile bs=1M count={{ node_dict.swap }}' \
@@ -50,6 +53,7 @@
           --run-command 'echo /swapfile none swap defaults 0 0 >> /etc/fstab'
       {% endif -%}{# endif swap #}
       {% endif %}{# endif disk1 #}
+          --selinux-relabel
 
       # todo(yfried): use builtin module for chown
       {% else %}{# else import_url #}
