@@ -1,0 +1,53 @@
+# Set IP for natted VMs with ssh tunneling
+
+- name: get MAC list
+  shell: "virsh domiflist {{ node_dict.name }}-{{ item }} | awk '/{{ node_dict.external_network }}/ {print $5};'"
+  with_sequence: start=0 end={{ node.value|int - 1 }}
+  register: mac_list
+
+- set_fact:
+      vm_mac_list: "{{ mac_list.results }}"
+
+- name: wait until one of the VMs gets an IP
+  shell: |
+        virsh net-dhcp-leases {{ node_dict.external_network }} | awk '($4 == "ipv4")  && ($3 == "{{ item.1 }}") {print $5}'
+  register: ip_list
+  until: "ip_list.stdout != ''"
+  retries: 40
+  delay: 5
+  with_subelements:
+      - "{{ vm_mac_list }}"
+      - stdout_lines
+
+- set_fact:
+      # todo(yfried): filter results - grap 'stdout' and convert to ip using ipaddr
+      vm_ip_list: "{{ ip_list.results }}"
+
+- name: make IPs persistent
+  shell: "virsh net-update {{ node_dict.external_network }} add ip-dhcp-host \"<host mac='{{ item.item[1] }}' name='{{ item.item[0].cmd.split()[2] }}' ip='{{ item.stdout | ipaddr('address') }}' />\" --live --config"
+  with_items: "{{ vm_ip_list }}"
+  register: vm_ips
+  async: 7200
+  poll: 0
+
+- name: save IPs jids
+  set_fact:
+      async_ips: "{{ async_ips|default([]) + vm_ips.results|map(attribute='ansible_job_id')|list }}"
+
+# We can write nodes to inventory while we wait for ips
+- name: add hosts to host list
+  add_host:
+      name: "{{ item.item[0].cmd.split()[2] }}"
+      groups: "{{ node_dict.groups | join(',') }}"
+      ansible_ssh_user: "root"
+      ansible_ssh_host: "{{ item.stdout | ipaddr('address') }}"
+      ansible_ssh_private_key_file: "{{ inventory_dir }}/id_rsa"
+      ansible_ssh_common_args: "
+          -o ForwardAgent=yes
+          -o ServerAliveInterval=30
+          -o ControlMaster=auto
+          -o ControlPersist=30m
+          -o StrictHostKeyChecking=no
+          -o UserKnownHostsFile=/dev/null
+          -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }}\""
+  with_items: "{{ vm_ip_list }}"
