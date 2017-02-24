@@ -61,6 +61,17 @@
 - name: push repos to overcloud image
   command: "virt-copy-in -a {{ overcloud_image_file }} {{ tmp_oc_repos_dir }} /etc/"
 
+- stat:
+      path: /etc/yum.repos.d/patched_rpms.repo
+  register: patched_rpms
+
+- name: push patched_rpms.repo to overcloud image
+  command: "{{ item }}"
+  with_items:
+    - "virt-copy-in -a {{ overcloud_image_file }} /etc/yum.repos.d/patched_rpms.repo /etc/yum.repos.d"
+    - "virt-copy-in -a {{ overcloud_image_file }} /patched_rpms /"
+  when: patched_rpms.stat.exists
+
 - name: Install packages in overcloud image
   command: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel"
   when: install.images.packages|default(None) != None
