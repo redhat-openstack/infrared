@@ -7,10 +7,6 @@
       # FIXME(yfried): use '~/' once https://github.com/ansible/ansible/issues/19869 is resolved
       template_base: "{{ ansible_user_dir }}/{{ source_dir | basename }}"
       network_environment_file: "network-environment{{ (install.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
-      templates:
-          generate_host_name_template: yes
-          # indicates whether we need to add --scale and flavor options to the build script for storage nodes.
-          storage_add_scale: yes
   tasks:
       - name: find deployment files directory
         find:
@@ -59,7 +55,7 @@
 
       - name: create the base overcloud deploy script
         template:
-            src: "templates/overcloud_deploy.sh.j2"
+            src: "{{ deploy_script_template | default('templates/overcloud_deploy.sh.j2') }}"
             dest: "~/overcloud_deploy.sh"
             mode: 0755
         when: not overcloud_deploy_script|default('')

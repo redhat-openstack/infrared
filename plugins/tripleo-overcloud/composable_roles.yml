@@ -1,0 +1,50 @@
+---
+- name: Create roles templates
+  hosts: undercloud
+  any_errors_fatal: true
+  gather_facts: yes
+  vars:
+      template_base: "{{ ansible_user_dir }}/{{ source_dir | basename }}"
+      role_default_flavor: baremetal
+      flavor_name_mapping:
+          Controller: Control
+          ObjectStorage: SwiftStorage
+      vars:
+          roles_config: {}
+  tasks:
+      - name: include roles according to the topology
+        include: tasks/composable_roles/add_role_vars.yml
+        with_items: "{{ groups.overcloud_nodes }}"
+        loop_control:
+            loop_var: role
+
+      - name: create roles folder
+        file:
+            path: "{{ template_base }}/roles"
+            state: directory
+
+      - name: create the roles_data file
+        template:
+            src: composable_roles/roles_data.yaml.j2
+            dest: "{{ template_base }}/roles/roles_data.yaml"
+            force: yes
+
+      - name: create the nodes file
+        template:
+            src: composable_roles/nodes.yaml.j2
+            dest: "{{ template_base }}/roles/nodes.yaml"
+            force: yes
+
+      - name: create the network template file
+        vars:
+            ipv6_postfix: "{{  (install.network.protocol == 'ipv4') | ternary('', '_v6')}}"
+            deployment_folder_path: "{{ template_base }}"
+        template:
+            src: composable_roles/network-config.yaml.j2
+            dest: "{{ template_base }}/roles/network-config.yaml"
+            force: yes
+
+- name: Deploy the Overcloud with composable roles
+  include: "{{ overcloud_deploy | default('deploy.yml') }}"
+  tags:
+      - composables_roles_deploy
