@@ -80,3 +80,13 @@ subparsers:
                       type: Bool
                       help: Trove enabled
                       default: 'no'
+
+            - title: Patching options Menu
+              options:
+                  repos-patch:
+                      type: Bool
+                      help: |
+                          Indicating `yes` instructs the undercloud installer to use temprorary patched_rpms.repo
+                          that is created and copied to undercloud machine by the patch-components plugin.
+                          The plugin usage instructions can be found at review.gerrithub.io/rhos-infra/patch-components
+                      default: no
