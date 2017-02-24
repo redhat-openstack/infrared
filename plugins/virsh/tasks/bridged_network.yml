@@ -1,0 +1,75 @@
+# https://jamielinux.com/docs/libvirt-networking-handbook/bridged-network.html#bridged-network
+
+- fail:
+      msg: can't have multiple bridged networks
+  when: bridges|length > 1
+
+- name: disable netfilter for bridges
+  become: yes
+  copy:
+      dest: /etc/sysctl.d/bridge.conf
+      content: |
+          net.bridge.bridge-nf-call-ip6tables=0
+          net.bridge.bridge-nf-call-iptables=0
+          net.bridge.bridge-nf-call-arptables=0
+
+- name: set bridge rules
+  become: yes
+  copy:
+      dest: /etc/udev/rules.d/99-bridge.rules
+      content: |
+          ACTION=="add", SUBSYSTEM=="module", KERNEL=="bridge", RUN+="/sbin/sysctl -p /etc/sysctl.d/bridge.conf"
+
+- name: install bridge utils
+  package:
+      name: bridge-utils
+
+- name: backup interface network configuration
+  become: yes
+  copy:
+      dest: "/etc/sysconfig/network-scripts/ir_bkp_ifcfg-{{ nic.interface }}"
+      src: "/etc/sysconfig/network-scripts/ifcfg-{{ nic.interface }}"
+      remote_src: yes
+      force: no
+
+# todo(yfried): replace with nmcli module once this works
+- name: interface network configuration
+  become: yes
+  copy:
+      force: yes
+#      backup: yes
+      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ nic.interface }}"
+      content: |
+          DEVICE={{ nic.interface }}
+          NAME={{ nic.interface }}
+          HWADDR={{ nic.macaddress }}
+          BRIDGE={{ bridge_name }}
+          # Change to 'no' to disable NetworkManager for this interface.
+          NM_CONTROLLED=yes
+          ONBOOT=yes
+          TYPE=Ethernet
+
+- name: bridge network configuration
+  become: yes
+  copy:
+      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ bridge_name }}"
+      content: |
+          DEVICE={{ bridge_name }}
+          NAME={{ bridge_name }}
+          TYPE=Bridge
+
+          # Change to 'no' to disable NetworkManager for this interface.
+          BOOTPROTO=dhcp
+          NM_CONTROLLED=yes
+          ONBOOT=yes
+          # If you want to turn on Spanning Tree Protocol, ask your hosting
+          # provider first as it may conflict with their network.
+          STP=off
+          # If STP is off, set to 0. If STP is on, set to 2 (or greater).
+          DELAY=0
+
+- name: restart interface
+  become: yes
+  shell: "ifdown {{ nic.interface }} && ifup {{ bridge_name }} && ifup {{ nic.interface }}"
+# TODO(yfried): why doesn't this work?
+#  shell: "nmcli connection reload && nmcli connection down {{ nic.interface }} && nmcli connection up {{ nic.interface }}"

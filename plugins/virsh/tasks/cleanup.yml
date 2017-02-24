@@ -6,34 +6,34 @@
 
 - name: get the list of networks
   virt_net:
-      command: list_nets
+      command: info
   register: vm_nets
-
-- set_fact:
-      virt_status:
-          list_vms: "{{ vm_names.list_vms | difference(ignore_virsh_nodes)}}"
-          list_nets: "{{ vm_nets.list_nets | difference(ignore_virsh_nets) }}"
 
 #in case VM was created in UEFI mode libvirt requires undefine task first
 - name: undefine relevant VMs
   virt:
       name: "{{ item }}"
       command: undefine
-  with_items: "{{ virt_status.list_vms }}"
-  when: provision.bootmode == 'uefi'
+  with_items: "{{ vm_names.list_vms }}"
+  when:
+      - provision.bootmode == 'uefi'
+      - "item not in ignore_virsh_nodes"
 
-- name: destroy relevant vms
+- name: destroy undfined vms
   virt:
       name: "{{ item }}"
       state: destroyed
-  with_items: "{{ virt_status.list_vms }}"
+  with_items: "{{ vm_names.list_vms }}"
+  when: "item not in ignore_virsh_nodes"
 
 - name: undefine relevant VMs
   virt:
       name: "{{ item }}"
       command: undefine
-  with_items: "{{ virt_status.list_vms }}"
-  when: provision.bootmode != 'uefi'
+  with_items: "{{ vm_names.list_vms }}"
+  when:
+      - provision.bootmode != 'uefi'
+      - "item not in ignore_virsh_nodes"
 
 - name: Clean /etc/hostshosts file
   become: yes
@@ -41,16 +41,28 @@
       dest: /etc/hosts
       regexp: ".*{{ item }}.*"
       state: absent
-  with_items: "{{ virt_status.list_vms }}"
+  with_items: "{{ vm_names.list_vms }}"
+  when: item not in ignore_virsh_nodes
 
 - name: remove the networks we created
   virt_net:
-      name: "{{ item }}"
+      name: "{{ item.key }}"
       state: absent
-  with_items: "{{ virt_status.list_nets }}"
+  with_dict: "{{ vm_nets.networks }}"
+  when: item.key not in ignore_virsh_nets
+
+- name: restore bridge
+  include: tasks/restore_bridged_interface.yml
+  with_dict: "{{ vm_nets.networks }}"
+  vars:
+      bridge_name: "{{ item.key }}"
+  when:
+      - item.key not in ignore_virsh_nets
+      - item.value.forward_mode|default('') == 'bridge'
 
 - name: remove any existing VM disks that we created
   shell: "rm -f {{ item }}*disk*.qcow*"
   args:
       chdir: /var/lib/libvirt/images
-  with_items: "{{ virt_status.list_vms }}"
+  with_items: "{{ vm_names.list_vms }}"
+  when: "item not in ignore_virsh_nodes"

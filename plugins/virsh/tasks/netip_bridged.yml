@@ -1,0 +1,103 @@
+# Discover IP for bridged VMs
+# We can't query the DHCP for the actual IP, so we use a natted leg to access
+# the VM once get the default NIC.
+
+- name: get the list of networks
+  virt_net:
+      command: info
+  register: vm_nets
+
+- name: get MAC list
+  shell: >
+      virsh domiflist {{ node_dict.name }}-{{ item }} | awk '/{{ node_dict.external_network.network }}/ {print $5}'
+  with_sequence: start=0 end={{ node.value|int - 1 }}
+  register: external_mac
+
+# Incremenatlly add host details.
+# Save macs for future use (They will not be written to inventory at the end)
+- name: store bridged mac
+  add_host:
+      name: "{{ item.cmd.split()[2] }}"
+      mac_ext: "{{ item.stdout | trim }}"
+      groups: "{{ node_dict.groups | join(',') }}"
+      ansible_ssh_user: "root"
+      ansible_ssh_private_key_file: "{{ inventory_dir }}/id_rsa"
+  with_items: "{{ external_mac.results }}"
+
+- name: get natted MACs list
+  shell: "virsh domiflist {{ node_dict.name }}-{{ item }} | awk '/network/ {print $3,$5}'"
+  with_sequence: start=0 end={{ node.value|int - 1 }}
+  register: natted_mac_list
+
+- name: store natted mac
+  vars:
+      network_tuple: "{{ item.1.split(' ') }}"
+      network_details: "{{ vm_nets.networks[network_tuple[0]] }}"
+      t_item:
+          network_name: "{{ network_tuple[0] }}"
+          mac: "{{ network_tuple[1] }}"
+  add_host:
+      name: "{{ item.0.cmd.split()[2] }}"
+      mac_natted: "{{ t_item }}"
+  with_subelements:
+      - "{{ natted_mac_list.results }}"
+      - stdout_lines
+  when: "network_details.forward_mode|default('') == 'nat'"
+
+- name: wait until one of the VMs gets an IP
+  vars:
+      node_name: "{{ node_dict.name }}-{{ item }}"
+      node_facts: "{{ hostvars[node_name] }}"
+  shell: >
+      virsh net-dhcp-leases {{ node_facts.mac_natted.network_name }} |
+      awk '($4 == "ipv4")  && ($3 == "{{ node_facts.mac_natted.mac }}") {print $5}'
+  with_sequence: start=0 end={{ node.value|int - 1 }}
+  register: ip_list
+  until: "ip_list.stdout != ''"
+  retries: 40
+  delay: 5
+
+- set_fact:
+      # store hypervisor details to use next
+      hvisor:
+          user: "{{ ansible_ssh_user }}"
+          host: "{{ ansible_ssh_host }}"
+          key: "{{ ansible_ssh_private_key_file }}"
+
+- name: wait for hosts to be reachable
+  wait_for:
+      host: "{{ item.stdout | ipaddr('address') }}"
+      port: 22
+      search_regex: OpenSSH
+  with_items: "{{ ip_list.results }}"
+
+- name: get bridged address from VM
+  # Use vars instead of "delegate_to" because vars are evaluated inside the loop
+  # while "delegate_to" is evaluated outside
+  vars:
+      node_name: "{{ node_dict.name }}-{{ item.item }}"
+      node_facts: "{{ hostvars[node_name] }}"
+      ansible_ssh_user: "{{ node_facts.ansible_ssh_user }}"
+      ansible_ssh_private_key_file: "{{ node_facts.ansible_ssh_private_key_file }}"
+      ansible_ssh_host: "{{ item.stdout | ipaddr('address') }}"
+      ansible_ssh_common_args: "
+          -o ForwardAgent=yes
+          -o ServerAliveInterval=30
+          -o ControlMaster=auto
+          -o ControlPersist=30m
+          -o StrictHostKeyChecking=no
+          -o UserKnownHostsFile=/dev/null
+          -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ hvisor.key }} {{ hvisor.user }}@{{ hvisor.host }}\""
+  setup:
+      # Bridged NIC should be default nic
+      gather_subset: network
+      filter: ansible_default_ipv4
+  with_items: "{{ ip_list.results }}"
+  register: external_address
+
+- name: add nic to host
+  add_host:
+      name: "{{ node_dict.name }}-{{ item.item.item }}"
+      ansible_ssh_host: "{{ item.ansible_facts.ansible_default_ipv4.address }}"
+  with_items: "{{ external_address.results }}"
+
