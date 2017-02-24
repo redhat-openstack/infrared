@@ -62,6 +62,39 @@ This network can later be used as ``ctlplane`` for OSP director deployments (`tr
 Other (usually physical) interfaces are not used (nic0, nic1, ...) except for public/natted traffic.
 External network is used for SSH forwarding so client (or Ansible) can access dynamically created nodes.
 
+NAT Forwarding
+^^^^^^^^^^^^^^
+
+By default, all networks above are `NATed <NAT network>`_, meaninng that they
+private networks only reachable via the `hypervisor` node.
+`infrared` configures the nodes SSH connection to use the `hypervisor` host as
+proxy.
+
+Bridged Network
+^^^^^^^^^^^^^^^
+
+However, some use-cases call for `direct access <bridged network>`_ to some of the nodes.
+This is achieved by adding a network with ``forward: bridge`` in its attributes to the
+network-topology file, and marking this network as external network on the relevant node
+files.
+
+The result will create a virtual bridge on the `hypervisor` connected to the main NIC.
+VMs attached to this bridge will be served by the same LAN as the `hypervisor`.
+
+.. warning:: Be careful when using this feature. For example, an ``undercloud`` connected
+    in this manner can disrupt the LAN by serving as an unauthorized DHCP server.
+
+Fore example, see ``ironic`` `node <ironic>`_ used in conjunction with ``3_net_1_bridge``
+`network file <1_bridge>`_::
+
+   infrared virsh [...] --topology-nodes ironic:1,[...] --topology-network 3_net_1_bridge [...]
+
+.. _`bridged network`: https://wiki.libvirt.org/page/Networking#Bridged_networking_.28aka_.22shared_physical_device.22.29
+.. _`NAT network`: https://wiki.libvirt.org/page/Networking#NAT_forwarding_.28aka_.22virtual_networks.22.29
+.. _`ironic`: https://github.com/rehdat-openstack/infrared/tree/master/plugins/virsh/defaults/topology/nodes/ironic.yml
+.. _`1_bridge`: https://github.com/rehdat-openstack/infrared/tree/master/plugins/virsh/defaults/topology/network/3_nets_1_bridge.yml
+
+
 Workflow
 --------
 
