@@ -44,12 +44,20 @@
       path: "{{ rr_target_directory }}"
   register: files_to_remove
 
+- debug:
+  msg: "{{ install.patch.repo }}"
+
+- name: remove all repo files (except for patched RPMs) 
+  shell: find /etc/yum.repos.d/ ! -name 'patched_rpms.repo' -type f -exec rm -f {} +
+  when: install.patch.repo == true
+
 - name: remove all repo files
   file:
       state: absent
       path: "{{ item.path }}"
   with_items: "{{ files_to_remove.files|default([]) }}"
   become: true
+  when: install.patch.repo == false 
 
 - name: debug rr_rpm_url2
   debug:
