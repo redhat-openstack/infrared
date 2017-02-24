@@ -6,6 +6,14 @@ subparsers:
         help: Install Tripleo on a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
+            - title: Patching options Menu
+              options:
+                  patch-repo:
+                      type: Bool
+                      help: |
+                          Indicating `yes` instructs the udercloud installer to use temprorary patch.repo repository
+                      default: no
+
             - title: Quickstart Menu
               options:
                   quickstart-backup:
