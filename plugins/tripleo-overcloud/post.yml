@@ -19,3 +19,7 @@
 - include: post/lbaas_v2.yml
   tags: lbaas
   when: install.network.lbaas|default(False)
+
+- include: post/ssh_between_compute.yml
+  tags: enable_compute_ssh
+  when: install.compute.ssh|default(Yes)
