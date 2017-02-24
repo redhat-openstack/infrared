@@ -39,9 +39,11 @@
   when: "mirror is defined and mirror"
   become: true
 
-- name: gather repo file names to remove
+- name: gather repo file names to remove (all but patched_repos.repo)
   find:
       path: "{{ rr_target_directory }}"
+      patterns: '\b(?!((p)(a)(t)(c)(h)(e)(d)(_)(r)(p)(m)(s)(\.)(r)(e)(p)(o)))(\S+)'
+      use_regex: True
   register: files_to_remove
 
 - name: remove all repo files
