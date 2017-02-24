@@ -70,3 +70,8 @@ subparsers:
                           from the tempest repo itself without using the tempestconf package. Suitable only when
                           setup is 'git'
                       default: no
+                  cleanup:
+                      type: Bool
+                      help: |
+                          Use tempest cleanup to clean the leftover from the tests (usually when tests fail)
+                      default: no
