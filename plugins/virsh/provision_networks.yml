@@ -4,11 +4,18 @@
   gather_facts: yes
   any_errors_fatal: true
   tasks:
-    - name: get node_dict
+    - name: get networks dict
       include: tasks/var_lookup.yml
       vars:
           var_file: "{{ provision.topology.network }}"
           partial_path: topology/network
+
+    - name: create bridged network
+      include: tasks/bridged_network.yml
+      when: bridge is defined
+      vars:
+          nic: "{{ ansible_default_ipv4 }}"
+          bridge_name: "{{ bridge.name if bridge is defined else '' }}"
 
     - name: check for existing networks
       virt_net:
