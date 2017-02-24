@@ -7,6 +7,7 @@
       user: heat-admin
       # The var "private_key" is used outside this scope and cannot be overridden
       overcloud_pkey: "{{ inventory_dir }}/id_rsa_overcloud"
+      overcloud_authkey: "{{ inventory_dir }}/authorized_keys_overcloud"
   tasks:
       - name: fetch the private key file from the undercloud
         fetch:
@@ -20,6 +21,12 @@
         file:
             path: "{{ overcloud_pkey }}"
             mode: 0600
+
+      - name: fetch authorized_keys file from the undercloud
+        fetch:
+          src: "~/.ssh/authorized_keys"
+          dest: "{{ overcloud_authkey }}"
+          flat: yes
 
       - name: Install python-virtualenv, gcc, python-devel for the pip tasks
         become: yes

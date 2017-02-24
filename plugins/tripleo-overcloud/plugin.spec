@@ -173,3 +173,12 @@ subparsers:
                         The storage that we would like to use.
                         If not supplied, OSPD will default to local LVM on the controllers.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
+
+            - title: Overcloud compute
+              options:
+                  compute-ssh:
+                      type: Bool
+                      default: yes
+                      help: |
+                          Whether to enable SSH communication between compute nodes.
+                          This is required when a migration needs to work on a non shared storage scenarios.
