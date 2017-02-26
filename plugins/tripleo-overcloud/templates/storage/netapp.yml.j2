@@ -5,9 +5,9 @@ parameter_defaults:
     CinderEnableIscsiBackend: false
     CinderEnableNetappBackend: true
     CinderNetappBackendName: 'tripleo_netapp'
-    CinderNetappLogin: "{{ private.storage.netapp.CinderNetappLogin }}"
-    CinderNetappPassword: "{{ private.storage.netapp.CinderNetappPassword }}"
-    CinderNetappServerHostname: "{{ private.storage.netapp.CinderNetappServerHostname }}"
+    CinderNetappLogin: "{{ external_storage.netapp.CinderNetappLogin }}"
+    CinderNetappPassword: "{{ external_storage.netapp.CinderNetappPassword }}"
+    CinderNetappServerHostname: "{{ external_storage.netapp.CinderNetappServerHostname }}"
     CinderNetappServerPort: '80'
     CinderNetappSizeMultiplier: '1.2'
     CinderNetappStorageFamily: 'ontap_7mode'
@@ -15,14 +15,14 @@ parameter_defaults:
     CinderNetappEseriesHostType: ''
 {%  if 'iscsi' in install.storage.backend %}
     CinderNetappStorageProtocol: 'iscsi'
-    CinderNetappVolumeList: "{{ private.storage.netapp.CinderNetappVolumeList }}"
+    CinderNetappVolumeList: "{{ external_storage.netapp.CinderNetappVolumeList }}"
 {%  elif 'nfs' in install.storage.backend %}
     CinderNetappStorageProtocol: 'nfs'
     CinderNetappVfiler: ''
     CinderNetappVolumeList: ''
     CinderNetappVserver: ''
     CinderNetappPartnerBackendName: ''
-    CinderNetappNfsShares: "{{ private.storage.netapp.CinderNetappNfsShares }}"
+    CinderNetappNfsShares: "{{ external_storage.netapp.CinderNetappNfsShares }}"
     CinderNetappNfsSharesConfig: '/etc/cinder/shares.conf'
-    CinderNetappNfsMountOptions: "{{ private.storage.netapp.CinderNetappNfsMountOptions }}"
+    CinderNetappNfsMountOptions: "{{ external_storage.netapp.CinderNetappNfsMountOptions }}"
 {% endif %}

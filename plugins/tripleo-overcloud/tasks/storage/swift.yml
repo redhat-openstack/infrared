@@ -16,7 +16,7 @@
           line: '--swift-storage-flavor {% if groups["swift"] is defined %}swift{% else %}baremetal{% endif %} \'
       when: "templates.storage_add_scale|default(True)"
 
-  when: not install.storage.external
+  when: install.storage.external is not defined
   vars:
       storage_nodes: "{{ (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 }}"
 

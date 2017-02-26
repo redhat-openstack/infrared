@@ -4,15 +4,15 @@ parameter_defaults:
     CinderEnableNfsBackend: false
     NovaEnableRbdBackend: true
     GlanceBackend: rbd
-{% if install.storage.external %}
+{% if install.storage.external is defined %}
     CinderRbdPoolName: "automation-volumes"
     NovaRbdPoolName: "automation-vms"
     GlanceRbdPoolName: "automation-images"
     CinderBackupRbdPoolName: "automation-backups"
-{% for key, value in private.storage.ceph.common.iteritems() %}
+{% for key, value in external_storage.ceph.common.iteritems() %}
     {{ key }}: {{ value }}
 {% endfor %}
-{% for key, value in private.storage.ceph[ceph_compt_version].iteritems() %}
+{% for key, value in external_storage.ceph[ceph_compt_version].iteritems() %}
     {{ key }}: {{ value }}
 {% endfor %}
 
