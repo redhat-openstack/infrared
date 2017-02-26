@@ -156,9 +156,10 @@ subparsers:
             - title: Overcloud storage
               options:
                   storage-external:
-                      type: Bool
-                      help: Whether to use an external storage rather than setting it up with the director
-                      default: no
+                      type: Value
+                      help: |
+                          A YAML file contains data for the external storage.
+                          __LISTYAMLS__
 
                   storage-backend:
                       type: Value
