@@ -1,20 +1,20 @@
 - block:
-    - name: import ceph facts
-      set_fact:
-          ceph_facts: "{{ lookup('file', '{{ inventory_dir }}/{{ hostvars[(groups.ceph|first)].inventory_hostname }}') }}"
+      - name: import ceph facts
+        set_fact:
+            ceph_facts: "{{ lookup('file', '{{ inventory_dir }}/{{ hostvars[(groups.ceph|first)].inventory_hostname }}') }}"
 
-    # If you reached this stage, it means a user explicitely entered the storage flag therefore he wants at least 1 node
-    - name: append the ceph storage template line to the base overcloud deploy script
-      lineinfile:
-          dest: "~/overcloud_deploy.sh"
-          line: '--ceph-storage-scale {{ storage_nodes }} \'
-      when: "templates.storage_add_scale | default(True)"
+      # If you reached this stage, it means a user explicitely entered the storage flag therefore he wants at least 1 node
+      - name: append the ceph storage template line to the base overcloud deploy script
+        lineinfile:
+            dest: "~/overcloud_deploy.sh"
+            line: '--ceph-storage-scale {{ storage_nodes }} \'
+        when: "templates.storage_add_scale | default(True)"
 
-    - name: append the ceph storage template line to the base overcloud deploy script
-      lineinfile:
-          dest: "~/overcloud_deploy.sh"
-          line: '--ceph-storage-flavor {% if groups["ceph"] is defined %}ceph{% else %}baremetal{% endif %} \'
-      when: "templates.storage_add_scale | default(True)"
+      - name: append the ceph storage template line to the base overcloud deploy script
+        lineinfile:
+            dest: "~/overcloud_deploy.sh"
+            line: '--ceph-storage-flavor {% if groups["ceph"] is defined %}ceph{% else %}baremetal{% endif %} \'
+        when: "templates.storage_add_scale | default(True)"
 
   when: "not install.storage.external"
   vars:
@@ -25,19 +25,56 @@
       dest: "~/overcloud_deploy.sh"
       line: '-e /usr/share/openstack-tripleo-heat-templates/environments/storage-environment.yaml \'
 
-- name: prepare ceph storage template
-  vars:
-      # we have different keyrings mapped to each ospd version capabilities
-      ceph_compt_version: "
-          {%- if install.version|openstack_release < 8 -%}8
-          {%- elif install.version|openstack_release >= 10 -%}10
-          {%- else -%}{{ install.version|openstack_release }}{%- endif -%}"
-  template:
-      src: "storage/ceph.yml.j2"
-      dest: "{{ template_base }}/ceph.yaml"
-      mode: 0755
+#- name: include cpeh external storage data
+#  include_vars: "vars/storage/external/{{ install.storage.external }}.yml"
+#  when: install.storage.external is defined
+#
+#- name: prepare ceph storage template
+#  vars:
+#      # we have different keyrings mapped to each ospd version capabilities
+#      ceph_compt_version: "
+#          {%- if install.version|openstack_release < 8 -%}8
+#          {%- elif install.version|openstack_release >= 10 -%}10
+#          {%- else -%}{{ install.version|openstack_release }}{%- endif -%}"
+#  template:
+#      src: "storage/ceph.yml.j2"
+#      dest: "{{ template_base }}/ceph.yaml"
+#      mode: 0755
+#
+#- name: append the storage ceph custom template line to the base overcloud deploy script
+#  lineinfile:
+#      dest: "~/overcloud_deploy.sh"
+#      line: '-e {{ template_base }}/ceph.yaml \'
 
-- name: append the storage ceph custom template line to the base overcloud deploy script
-  lineinfile:
-      dest: "~/overcloud_deploy.sh"
-      line: '-e {{ template_base }}/ceph.yaml \'
+- block:
+      - name: prepare ceph storage template
+        vars:
+            # we have different keyrings mapped to each ospd version capabilities
+            ceph_compt_version: "
+                {%- if install.version|openstack_release < 8 -%}8
+                {%- elif install.version|openstack_release >= 10 -%}10
+                {%- else -%}{{ install.version|openstack_release }}{%- endif -%}"
+        template:
+            src: "storage/{{ install.storage.config }}.yml.j2"
+            dest: "{{ template_base }}/{{ install.storage.config }}.yaml"
+            mode: 0755
+
+      - name: append the storage ceph custom template line to the base overcloud deploy script
+        lineinfile:
+            dest: "~/overcloud_deploy.sh"
+            line: '-e {{ template_base }}/{{ install.storage.config }}.yaml \'
+
+  when: install.storage.config == 'internal'
+
+- block:
+      - name: Copy storage configuration file to the remote
+        copy:
+            src: "vars/storage/config/{{ install.storage.config }}.yml"
+            dest: "{{ template_base }}/{{ install.storage.config }}.yaml"
+
+      - name: Append the storage configuration line to the base overcloud deploy script
+        lineinfile:
+            dest: "~/overcloud_deploy.sh"
+            line: '-e {{ template_base }}/{{ install.storage.config }}.yaml \'
+
+  when: install.storage.config != 'internal'
