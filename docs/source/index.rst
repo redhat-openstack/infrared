@@ -3,6 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+=================
+What is InfraRed?
+=================
+
+InfraRed is a plugin based system that aims to provide an easy-to-use CLI for Ansible based projects.
+It aims to leverage the power of Ansible in managing / deploying systems, while providing an alternative, fully customized,
+CLI experience that can be used by anyone, without prior Ansible knowledge.
+
+The project originated from Red Hat Openstack infrastructure team that looked for a solution to provide an "easier" method
+for installing Openstack from CLI but has since grown and can be used for *any* Ansible based projects.
+
 Welcome to infrared's documentation!
 ====================================
 
