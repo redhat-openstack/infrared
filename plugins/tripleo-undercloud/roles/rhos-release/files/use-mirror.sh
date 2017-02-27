@@ -5,6 +5,7 @@
 set -ex
 
 mirror="$1"
+remote="$2"
 
 # drop previous override to resolve ip again
 sed '/.* download\.lab.*redhat\.com.*/d' -i /etc/hosts
@@ -26,8 +27,15 @@ sed -i "s/pulp.*\.redhat\.com/${mirror}\/pulp/" *.repo
 
 # patch hosts to enforce communication only with mirror
 
-echo "$mirror_ip  $mirror download.lab.bos.redhat.com download.eng.bos.redhat.com download-node-02.eng.bos.redhat.com" >> /etc/hosts
-echo "In case you want to disable mirror usage, also remove its entry from /etc/hosts" >> mirror-readme
+if [[ "$remote" != "yes" ]]; then
+    echo "$mirror_ip  $mirror download.lab.bos.redhat.com download.eng.bos.redhat.com download-node-02.eng.bos.redhat.com" >> /etc/hosts
+    echo "In case you want to disable mirror usage, also remove its entry from /etc/hosts" >> mirror-readme
+else
+    echo "127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4" >> hosts
+    echo "::1         localhost localhost.localdomain localhost6 localhost6.localdomain6" >> hosts
+    echo "$mirror_ip  $mirror download.lab.bos.redhat.com download.eng.bos.redhat.com download-node-02.eng.bos.redhat.com" >> hosts
+    echo "In case you want to disable mirror usage, also remove its entry from /etc/hosts" >> mirror-readme
+fi
 
 # FIXME(psedlak):
 # pypi mirror usage disabled atm, seems to cause issue with ansible's 'pip: virtualenv='
