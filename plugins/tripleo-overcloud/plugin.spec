@@ -188,7 +188,7 @@ subparsers:
               options:
                   compute-ssh:
                       type: Bool
-                      default: yes
+                      default: no
                       help: |
                           Whether to enable SSH communication between compute nodes.
                           This is required when a migration needs to work on a non shared storage scenarios.
