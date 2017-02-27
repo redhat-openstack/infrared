@@ -6,6 +6,9 @@ set -ex
 
 mirror="$1"
 
+# drop previous override to resolve ip again
+sed '/.* download\.lab.*redhat\.com.*/d' -i /etc/hosts
+
 mirror_ip=$(ping -c1 ${mirror}|head -n1|sed -r 's/^[^\(]+\(([^\)]+)\).*/\1/')
 if [[ -z "$mirror_ip" ]]; then
     echo "Skipping mirror usage - unable to ping and get ip"
@@ -21,7 +24,8 @@ sed -i "s/rhos-release.*\.redhat\.com/${mirror}\/rhos-release/" *.repo
 sed -r -i "s/ayanami.*\.redhat.com/${mirror}\/ayanami/" *.repo
 sed -i "s/pulp.*\.redhat\.com/${mirror}\/pulp/" *.repo
 
-sed '/.* download\.lab.*redhat\.com.*/d' -i /etc/hosts
+# patch hosts to enforce communication only with mirror
+
 echo "$mirror_ip  $mirror download.lab.bos.redhat.com download.eng.bos.redhat.com download-node-02.eng.bos.redhat.com" >> /etc/hosts
 echo "In case you want to disable mirror usage, also remove its entry from /etc/hosts" >> mirror-readme
 

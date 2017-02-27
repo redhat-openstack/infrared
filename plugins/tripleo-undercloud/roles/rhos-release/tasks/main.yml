@@ -1,4 +1,11 @@
 ---
+- name: ensure previous repo mirror config is removed
+  become: true
+  lineinfile:
+      dest: '/etc/hosts'
+      regexp: '.* (download\.lab.*redhat\.com|rhos-qe-mirror).*'
+      state: absent
+
 - block:
     - name: copy select-mirror.sh into home
       copy:

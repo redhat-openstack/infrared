@@ -1,4 +1,12 @@
 ---
+
+- name: ensure previous repo mirror config is removed
+  become: true
+  lineinfile:
+      dest: '/etc/hosts'
+      regexp: '.* (download\.lab.*redhat\.com|rhos-qe-mirror).*'
+      state: absent
+
 - set_fact:
     rr_download_fqdn: ''
     rr_distro_version: "{{ rr_distro_version | default(ansible_distribution_version) }}"
