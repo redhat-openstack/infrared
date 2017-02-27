@@ -133,7 +133,7 @@ Undercloud
 
 Just like in the provisioning stage, here also the user should take care of the mandatory parameters
 (by CLI or INI file) in order to be able to start the installation process.
-Let's depoly a `Tripleo Undercloud`_::
+Let's deploy a `Tripleo Undercloud`_::
 
   infrared tripleo-undercloud --version 10 --images-task rpm
 
