@@ -1,4 +1,5 @@
 import tempfile
+import os
 
 import yaml
 from ansible.utils.display import Display
@@ -58,6 +59,7 @@ def _run_playbook(cli_args, vars_dict):
         # make sure created file is readable.
         tmp.flush()
         cli_args.extend(['--extra-vars', "@" + tmp.name])
+        cli_args.extend(['--extra-vars', "infrared_cwd=" + os.getcwd()])
         cli = PlaybookCLI(cli_args)
         LOG.debug('Starting ansible cli with args: {}'.format(cli_args[1:]))
         cli.parse()
