@@ -6,7 +6,9 @@ local_interface = eth0
 # 192.168.24.0 subnet is by default used since RHOS11
 local_ip = 192.168.24.1/24
 network_gateway = 192.168.24.1
-undercloud_public_vip = 192.168.24.2
+{# variable name changed in OSPD11 #}
+{# Starting with OSPD 10 we can use addresss outside network_cidr as VIP#}
+undercloud_public_{% if install.version|openstack_release <= 10 %}vip{% else %}host{% endif %} = {% if install.version|openstack_release < 10 %}192.168.24.2{% else %}{{ ansible_ssh_host }}{% endif %}
 undercloud_admin_vip = 192.168.24.3
 network_cidr = 192.168.24.0/24
 masquerade_network = 192.168.24.0/24
@@ -16,8 +18,4 @@ dhcp_end = 192.168.24.24
 If we use "inspection_iprange" there, range won't
 be propagated to ironic-dnsmasq config and introspection
 will fail. #}
-{% if install.version == '7' or install.version == 'kilo' %}
-discovery_iprange = 192.168.24.100,192.168.24.120
-{% else %}
-inspection_iprange = 192.168.24.100,192.168.24.120
-{% endif %}
+{% if install.version|openstack_release == 7 %}discovery{% else %}inspection{% endif %}_iprange = 192.168.24.100,192.168.24.120
