@@ -14,13 +14,17 @@
                 False
                 {%- endif -%}"
   tasks:
+      - name: display local_src
+        debug:
+          msg: "{{ local_src }}"
+
       - name: template the undercloud.conf from local machine
         template:
             src: "{{ local_src }}"
             dest: ~/undercloud.conf
             force: yes
             mode: 0755
-        when: local_src
+        when: local_src is defined and local_src != False
 
       - name: copy default undercloud config
         copy:
