@@ -2,9 +2,6 @@
   hosts: all:!localhost:!ovb
   any_errors_fatal: true
 
-- include: tasks/ironic_pxe_ipmitool.yml
-  when: install.version | default(0) | int >= 11
-
 - name: Generate the instackenv.json
   hosts: undercloud
   gather_facts: no
@@ -21,7 +18,7 @@
             # json file shouldn't hold newlines
             undercloud_private_key: "{{ uc_pkey_result.stdout_lines | join('\\n')}}"
         template:
-            src: "templates/{{ (install.version|int >= 11) | ternary('instackenv_ironic_pxe_ipmitool.json.j2', 'instackenv.json.j2') }}"
+            src: templates/instackenv.json.j2
             dest: "{{ instack_output }}"
         when: not instack_input
 
