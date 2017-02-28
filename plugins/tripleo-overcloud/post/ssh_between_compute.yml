@@ -8,6 +8,7 @@
   become: yes
   tags: enable_compute_ssh
   any_errors_fatal: true
+  gather_facts: no
   vars:
       user_name: "nova"
       default_shell: "/bin/bash"
@@ -16,6 +17,13 @@
       local_undercloud_pubkey: "{{ inventory_dir }}/id_rsa_undercloud.pub"
 
   tasks:
+      - block:
+        - name: Gather facts
+          setup:
+        rescue:
+        - name: Reactivate unreachable hosts
+          meta: clear_host_errors
+
       # By default overcloud nova user is disabled and shell set to /sbin/nologin
       - name: Enable login for nova user
         user:
