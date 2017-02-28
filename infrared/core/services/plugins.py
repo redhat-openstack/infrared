@@ -23,16 +23,17 @@ DEFAULT_PLUGIN_INI = dict(
 )
 
 PLUGINS_REGISTRY = {
+    # TODO(yfried): replace these paths with repo urls as we move to on-demand
     'beaker': {
-        'src': 'plugins/beaker',
+        'src': 'beaker',
         'desc': 'Provision systems using Beaker'
     },
     'collect-logs': {
-        'src': 'plugins/collect-logs',
+        'src': 'collect-logs',
         'desc': 'Collect log from all nodes in the active workspace'
     },
     'foreman': {
-        'src': 'plugins/foreman',
+        'src': 'foreman',
         'desc': 'Provision systems using Foreman'
     },
     'gabbi': {
@@ -44,42 +45,41 @@ PLUGINS_REGISTRY = {
         'desc': 'Octario test runner'
     },
     'openstack': {
-        'src': 'plugins/openstack',
+        'src': 'openstack',
         'desc': 'Provision systems using Ansible OpenStack modules'
     },
     'ospdui': {
-        'src': 'plugins/ospdui',
+        'src': 'ospdui',
         'desc': 'The ospdui test runner'
     },
     'packstack': {
-        'src': 'plugins/packstack',
+        'src': 'packstack',
         'desc': 'OpenStack installation using Packstack'
     },
     'rally': {
-        'src': 'plugins/rally',
+        'src': 'rally',
         'desc': 'Rally tests runner'
     },
     'tempest': {
-        'src': 'plugins/tempest',
+        'src': 'tempest',
         'desc': 'The tempest test runner'
     },
     'tripleo-overcloud': {
-        'src': 'plugins/tripleo-overcloud',
+        'src': 'tripleo-overcloud',
         'desc': 'Install Tripleo overcloud using a designated undercloud node'
     },
     'tripleo-undercloud': {
-        'src': 'plugins/tripleo-undercloud',
+        'src': 'tripleo-undercloud',
         'desc': 'Install Tripleo on a designated undercloud node'
     },
     'virsh': {
-        'src': 'plugins/virsh',
+        'src': 'virsh',
         'desc':
             'Provision virtual machines on a single Hypervisor using libvirt'
     },
 }
 
 MAIN_PLAYBOOK = "main.yml"
-PLUGINS_DIR = os.path.abspath("./plugins")
 LOG = logger.LOG
 
 
@@ -88,10 +88,11 @@ class InfraredPluginManager(object):
     PLUGINS_DICT = OrderedDict()
     SUPPORTED_TYPES_SECTION = 'supported_types'
 
-    def __init__(self, plugins_conf=None):
+    def __init__(self, plugins_conf=None, plugins_dir="./plugins"):
         """
         :param plugins_conf: A path to the main plugins configuration file
         """
+        self.plugins_dir = plugins_dir
         self.config = plugins_conf
         self._load_plugins()
 
@@ -105,12 +106,11 @@ class InfraredPluginManager(object):
                     plugin = InfraredPlugin(plugin_path)
                     self.__class__.PLUGINS_DICT[plugin_name] = plugin
 
-    @staticmethod
-    def get_installed_plugins():
+    def get_installed_plugins(self):
         """Returns a dict with project's plugins categorized by type"""
         plugins_dict = {}
 
-        for plugin_dir in glob.glob(PLUGINS_DIR + '/*/'):
+        for plugin_dir in glob.glob(self.plugins_dir + '/*/'):
             plugin = InfraredPlugin(plugin_dir)
             if plugin.type not in plugins_dict:
                 plugins_dict[plugin.type] = [plugin.name]
@@ -208,8 +208,7 @@ class InfraredPluginManager(object):
         else:
             raise StopIteration
 
-    @staticmethod
-    def _clone_git_plugin(git_url, dest_dir=None):
+    def _clone_git_plugin(self, git_url, dest_dir=None):
         """Clone a plugin into a given destination directory
 
         :param git_url: Plugin's Git URL
@@ -217,7 +216,7 @@ class InfraredPluginManager(object):
           is a Git URL)
         :return: Path to plugin cloned directory (str)
         """
-        dest_dir = os.path.abspath(dest_dir or "plugins")
+        dest_dir = os.path.abspath(dest_dir or self.plugins_dir)
 
         tmpdir = tempfile.mkdtemp(prefix="ir-")
         cwd = os.getcwdu()
@@ -255,13 +254,14 @@ class InfraredPluginManager(object):
             plugin_source = PLUGINS_REGISTRY[plugin_source]['src']
 
         # Local dir plugin
-        if os.path.exists(plugin_source):
+        if os.path.exists(
+                os.path.join(self.plugins_dir, plugin_source)):
             pass
         # Git Plugin
         else:
             plugin_source = self._clone_git_plugin(plugin_source, dest)
 
-        plugin = InfraredPlugin(plugin_source)
+        plugin = InfraredPlugin(os.path.join(self.plugins_dir, plugin_source))
         plugin_type = plugin.config['plugin_type']
         # FIXME(yfried) validate spec and throw exception on missing input
 

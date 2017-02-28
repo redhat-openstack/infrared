@@ -75,8 +75,11 @@ def plugin_manager_fixture(plugins_conf_fixture):
             config.write(fp)
 
         # replace core service with or test service
-        CoreServices.register_service(ServiceName.PLUGINS_MANAGER,
-                                      InfraredPluginManager(lp_file.strpath))
+        CoreServices.register_service(
+            ServiceName.PLUGINS_MANAGER,
+            InfraredPluginManager(plugins_conf=lp_file.strpath,
+                                  plugins_dir=os.path.abspath(
+                                      SAMPLE_PLUGINS_DIR)))
         return CoreServices.plugins_manager()
 
     yield plugin_manager_helper
@@ -133,7 +136,7 @@ def test_add_plugin(plugin_manager_fixture):
         plugin_dict = get_plugin_spec_flatten_dict(
             os.path.join(SAMPLE_PLUGINS_DIR, plugin_dir))
 
-        plugin_manager.add_plugin(plugin_dict['dir'])
+        plugin_manager.add_plugin(plugin_dict['name'])
 
         assert plugin_dict['name'] in plugin_manager.PLUGINS_DICT,\
             "Plugin wasn't added to the plugins manager."
@@ -154,7 +157,7 @@ def test_load_plugin(plugin_manager_fixture):
 
     plugin_dir = 'type1_plugin1'
     plugin_dict = get_plugin_spec_flatten_dict(
-        os.path.join(os.path.abspath(SAMPLE_PLUGINS_DIR), plugin_dir))
+        os.path.join(SAMPLE_PLUGINS_DIR, plugin_dir))
 
     plugin_manager = plugin_manager_fixture({
         plugin_dict['type']: {
@@ -190,7 +193,7 @@ def test_add_plugin_with_same_name(plugin_manager_fixture):
     plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
 
     with pytest.raises(IRFailedToAddPlugin):
-        plugin_manager.add_plugin(plugin_dict['dir'])
+        plugin_manager.add_plugin(plugin_dict['name'])
 
     assert plugins_cnt_before_try == len(plugin_manager.PLUGINS_DICT)
     assert os.path.getmtime(
@@ -214,7 +217,7 @@ def test_add_plugin_unsupported_type(plugin_manager_fixture):
     plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
 
     with pytest.raises(IRFailedToAddPlugin):
-        plugin_manager.add_plugin(plugin_dict['dir'])
+        plugin_manager.add_plugin(plugin_dict['name'])
 
     assert not plugin_in_conf(
         plugins_conf=plugin_manager.config_file,
@@ -237,7 +240,7 @@ def test_remove_plugin(plugin_manager_fixture):
     plugins_conf = {}
     for plugin_dir in ('type1_plugin1', 'type1_plugin2', 'type2_plugin1'):
         plugin_dict = get_plugin_spec_flatten_dict(
-            os.path.join(os.path.abspath(SAMPLE_PLUGINS_DIR), plugin_dir))
+            os.path.join(SAMPLE_PLUGINS_DIR, plugin_dir))
         dict_insert(plugins_conf,
                     plugin_dict['dir'],
                     plugin_dict['type'],
@@ -293,10 +296,10 @@ def test_remove_unexisting_plugin(plugin_manager_fixture):
 
 @pytest.mark.parametrize("input_args, plugins_conf", [
     ("plugin list", None),
-    ("plugin add tests/example/plugins/type1_plugin1", None),
-    ("plugin remove type1_plugin1", dict(
-        supported_type1=dict(
-            type1_plugin1='tests/example/plugins/type1_plugin1'))),
+    ("plugin add test_plugin1", None),
+    ("plugin remove test_plugin1", dict(test=dict(
+        test_plugin1="tests/example/plugins/add_remove_all_plugins/"
+        "test_plugin1")))
 ])
 def test_plugin_cli(plugin_manager_fixture, input_args, plugins_conf):
     """Tests that plugin CLI works
@@ -306,7 +309,8 @@ def test_plugin_cli(plugin_manager_fixture, input_args, plugins_conf):
     :param input_args: infrared's testing arguments
     :param plugins_conf: Plugins conf data as a dictionary
     """
-    plugin_manager_fixture(plugins_conf)
+    plugin_manager = plugin_manager_fixture(plugins_conf)
+    plugin_manager.plugins_dir = "tests/example/plugins/add_remove_all_plugins"
 
     from infrared.main import main as ir_main
     rc = ir_main(input_args.split())
@@ -322,15 +326,13 @@ def test_add_plugin_no_spec(plugin_manager_fixture):
     InfraredPluginManger object
     """
 
-    plugin_dir = os.path.join(SAMPLE_PLUGINS_DIR, 'plugin_without_spec')
-
     plugin_manager = plugin_manager_fixture({})
 
     plugins_cfg_mtime_before_add = os.path.getmtime(plugin_manager.config_file)
     plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
 
     with pytest.raises(IRFailedToAddPlugin):
-        plugin_manager.add_plugin(plugin_dir)
+        plugin_manager.add_plugin('plugin_without_spec')
 
     assert plugins_cnt_before_try == len(plugin_manager.PLUGINS_DICT)
     assert os.path.getmtime(
@@ -392,7 +394,7 @@ def test_plugin_with_unsupporetd_option_type_in_spec(plugin_manager_fixture):
     plugin_dict = get_plugin_spec_flatten_dict(plugin_dir)
 
     plugin_manager = plugin_manager_fixture()
-    plugin_manager.add_plugin(plugin_dir)
+    plugin_manager.add_plugin('plugin_with_unsupported_option_type_in_spec')
 
     from infrared.main import main as ir_main
     with pytest.raises(IRUnsupportedSpecOptionType):
@@ -401,7 +403,7 @@ def test_plugin_with_unsupporetd_option_type_in_spec(plugin_manager_fixture):
 
 @pytest.mark.parametrize("dest,real_dest", [(
     SAMPLE_PLUGINS_DIR, SAMPLE_PLUGINS_DIR),
-    (None, "plugins")])
+    (None, SAMPLE_PLUGINS_DIR)])
 def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
 
     plugin_manager = plugin_manager_fixture()
@@ -422,8 +424,6 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
     # add_plugin call
     plugin_manager.add_plugin(
         "https://sample_github.null/plugin_repo.git", dest)
-
-    mock_os.path.abspath.assert_has_calls([mocker.call(real_dest)])
 
     mock_tempfile.mkdtemp.assert_called_once()
     mock_os.getcwdu.assert_called_once()
@@ -463,7 +463,7 @@ def test_add_plugin_from_git_exception(plugin_manager_fixture, mocker):
 
 
 def validate_plugins_presence_in_conf(
-        plugin_manager, plugins_dict, present=True):
+        plugin_manager, plugins_dict, plugins_dir, present=True):
     """Validate presence of plugins in the configuration file
 
     :param plugin_manager: InfraredPluginManager object
@@ -472,6 +472,7 @@ def validate_plugins_presence_in_conf(
     :param present: Whether all plugins in the dict should be present in the
     plugins configuration file or not.
     """
+
     assert present in (True, False), \
         "'absent' accept only Boolean values, got: '{}'".format(str(present))
 
@@ -480,7 +481,7 @@ def validate_plugins_presence_in_conf(
         plugins_cfg.readfp(config_file)
 
         for plugin_path in plugins_dict.values():
-            plugin = InfraredPlugin(plugin_path['src'])
+            plugin = InfraredPlugin(os.path.join(plugins_dir, plugin_path['src']))
 
             if present:
                 assert plugins_cfg.has_option(plugin.type, plugin.name), \
@@ -506,23 +507,24 @@ def test_plugin_add_all(plugin_manager_fixture):
     tests_plugins_dir = 'tests/example/plugins/add_remove_all_plugins/'
 
     infrared.core.services.plugins.PLUGINS_REGISTRY = {
-        plugin_name: {'src': os.path.join(tests_plugins_dir, plugin_name)}
+        plugin_name: {'src': plugin_name}
         for plugin_name in tests_plugins
         }
 
     plugins_registry = infrared.core.services.plugins.PLUGINS_REGISTRY
     plugin_manager = plugin_manager_fixture()
+    plugin_manager.plugins_dir = tests_plugins_dir
 
     # Validates that plugins aren't in configuration file from the beginning
     validate_plugins_presence_in_conf(
-        plugin_manager, plugins_registry, present=False)
+        plugin_manager, plugins_registry, tests_plugins_dir, present=False)
 
     # Validates all plugins are in the configuration file
     plugin_manager.add_all_available()
     validate_plugins_presence_in_conf(
-        plugin_manager, plugins_registry, present=True)
+        plugin_manager, plugins_registry, tests_plugins_dir, present=True)
 
     # Validates all plugins are no longer in the configuration file
     plugin_manager.remove_all()
     validate_plugins_presence_in_conf(
-        plugin_manager, plugins_registry, present=False)
+        plugin_manager, plugins_registry, tests_plugins_dir, present=False)
