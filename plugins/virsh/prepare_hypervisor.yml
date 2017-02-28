@@ -67,6 +67,7 @@
           - "{{ inventory_dir }}/id_rsa"
           - "{{ inventory_dir }}/id_rsa.pub"
       delegate_to: localhost
+      when: not provision.cleanup|default(False)
 
     - name: Set up authorized_keys for the deploy user
       authorized_key:
