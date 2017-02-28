@@ -70,6 +70,7 @@
                   - "{{ flavor_delete.results }}"
               ignore_errors: yes
 
+            # Remember, hostvars are special: https://github.com/ansible/ansible/issues/13838, https://github.com/ansible/ansible/issues/21084
             - name: create the flavors for our machines
               vars:
                   flv_min_disk_size: 15
@@ -78,9 +79,9 @@
                   source ~/stackrc;
                   openstack flavor create
                   --id auto
-                  --ram {{ hostvars.get(item.name, {}).ram | default(item.memory) }}
-                  --disk {{ [(hostvars.get(item.name, {}).disk | default(item.disk) | int) - 3, flv_min_disk_size] | max }}
-                  --vcpus {{ [(hostvars.get(item.name, {}).vcpus | default(item.cpu) | int) - 1, flv_min_cpu] | max }}
+                  --ram {{ (hostvars[item.name] | default({})).ram | default(item.memory) }}
+                  --disk {{ [((hostvars[item.name] | default({})).disk | default(item.disk) | int) - 3, flv_min_disk_size] | max }}
+                  --vcpus {{ [((hostvars[item.name] | default({})).vcpus | default(item.cpu) | int) - 1, flv_min_cpu] | max }}
                   {{ item.name.rstrip('1234567890-').split('-')[-1] }}
               register: flavor_result
               failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item.name }} already exists') != -1"
