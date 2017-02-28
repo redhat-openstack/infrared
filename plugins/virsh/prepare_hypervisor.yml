@@ -13,15 +13,19 @@
       with_items: "{{ packages }}"
       register: yum_result
 
-    #check if additional binaries for UEFI mode VM boot installed
-    - name: check if uefi binaries installed
+    # check if additional binaries for UEFI mode VM boot installed
+    - name: check if UEFI binaries are installed
       command: "rpm -q edk2.git-ovmf-x64"
+      args:
+        warn: no
       register: rpm_check
       ignore_errors: True
       when: provision.bootmode == 'uefi'
+      changed_when: False
 
-    - fail:
-          msg: "UEFI related binaries is missing, please refer http://infrared.readthedocs.io/en/latest/advanced.html#uefi-mode-related-binaries"
+    - name: "Fail if UEFI related binaries are missing"
+      fail:
+          msg: "UEFI related binaries are missing, please refer http://infrared.readthedocs.io/en/latest/advanced.html#uefi-mode-related-binaries"
       when: provision.bootmode == 'uefi' and rpm_check.stdout.find('is not installed') != -1
 
     - name: stop libvirtd
@@ -71,6 +75,8 @@
     - name: Set up authorized_keys for the deploy user
       authorized_key:
           user: root
-          key: "{{ item }}"
-      with_file:
-        - "{{ inventory_dir }}/id_rsa.pub"
+          key: "{{ lookup('file', item) }}"
+      with_first_found:
+          - files:
+            - "{{ inventory_dir }}/id_rsa.pub"
+            skip: true
