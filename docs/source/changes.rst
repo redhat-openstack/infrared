@@ -4,6 +4,7 @@ New In infrared 2.0
 Highlights
 ----------
 
+#. infrared works from every directory, out of the box. See `configuration. <configuration.html>`_ for more details
 #. Workspaces:
     Added `Workspaces <workspace.html>`_. Every session must be tied to an active workspace.
     All input and output file are taken from, and written to, the active workspace directory.
