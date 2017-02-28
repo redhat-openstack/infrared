@@ -31,7 +31,9 @@
           - "{{ test.deployer.input.file | expanduser | dirname }}"
   register: deployer_find
   delegate_to: localhost
-  when: test.deployer.input.file is defined
+  when: 
+    - test.deployer is defined
+    - test.deployer.input.file is defined
 
 - name: fail when deployer file was not found
   fail:
