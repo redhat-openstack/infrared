@@ -23,22 +23,22 @@ DEFAULT_PLUGIN_INI = dict(
 )
 
 PLUGINS_REGISTRY = {
-    'beaker': 'plugins/beaker',
-    'collect-logs': 'plugins/collect-logs',
-    'foreman': 'plugins/foreman',
-    'openstack': 'plugins/openstack',
-    'packstack': 'plugins/packstack',
-    'rally': 'plugins/rally',
-    'tempest': 'plugins/tempest',
-    'tripleo-overcloud': 'plugins/tripleo-overcloud',
-    'tripleo-undercloud': 'plugins/tripleo-undercloud',
-    'virsh': 'plugins/virsh',
-    'ospdui': 'plugins/ospdui',
+    # TODO(yfried): replace these paths with repo urls as we move to on-demand
+    'beaker': 'beaker',
+    'collect-logs': 'collect-logs',
+    'foreman': 'foreman',
+    'openstack': 'openstack',
+    'packstack': 'packstack',
+    'rally': 'rally',
+    'tempest': 'tempest',
+    'tripleo-overcloud': 'tripleo-overcloud',
+    'tripleo-undercloud': 'tripleo-undercloud',
+    'virsh': 'virsh',
+    'ospdui': 'ospdui',
     'gabbi': 'https://github.com/rhos-infra/gabbi.git'
 }
 
 MAIN_PLAYBOOK = "main.yml"
-PLUGINS_DIR = os.path.abspath("./plugins")
 LOG = logger.LOG
 
 
@@ -47,10 +47,11 @@ class InfraredPluginManager(object):
     PLUGINS_DICT = OrderedDict()
     SUPPORTED_TYPES_SECTION = 'supported_types'
 
-    def __init__(self, plugins_conf=None):
+    def __init__(self, plugins_conf=None, plugins_dir="./plugins"):
         """
         :param plugins_conf: A path to the main plugins configuration file
         """
+        self.plugins_dir = plugins_dir
         self.config = plugins_conf
         self._load_plugins()
 
@@ -64,12 +65,11 @@ class InfraredPluginManager(object):
                     plugin = InfraredPlugin(plugin_path)
                     self.__class__.PLUGINS_DICT[plugin_name] = plugin
 
-    @staticmethod
-    def get_installed_plugins():
+    def get_installed_plugins(self):
         """Returns a dict with project's plugins categorized by type"""
         plugins_dict = {}
 
-        for plugin_dir in glob.glob(PLUGINS_DIR + '/*/'):
+        for plugin_dir in glob.glob(self.plugins_dir + '/*/'):
             plugin = InfraredPlugin(plugin_dir)
             if plugin.type not in plugins_dict:
                 plugins_dict[plugin.type] = [plugin.name]
@@ -167,8 +167,7 @@ class InfraredPluginManager(object):
         else:
             raise StopIteration
 
-    @staticmethod
-    def _clone_git_plugin(git_url, dest_dir=None):
+    def _clone_git_plugin(self, git_url, dest_dir=None):
         """Clone a plugin into a given destination directory
 
         :param git_url: Plugin's Git URL
@@ -176,7 +175,7 @@ class InfraredPluginManager(object):
           is a Git URL)
         :return: Path to plugin cloned directory (str)
         """
-        dest_dir = os.path.abspath(dest_dir or "plugins")
+        dest_dir = os.path.abspath(dest_dir or self.plugins_dir)
 
         tmpdir = tempfile.mkdtemp(prefix="ir-")
         cwd = os.getcwdu()
@@ -214,13 +213,14 @@ class InfraredPluginManager(object):
             plugin_source = PLUGINS_REGISTRY[plugin_source]
 
         # Local dir plugin
-        if os.path.exists(plugin_source):
+        if os.path.exists(
+                os.path.join(self.plugins_dir, plugin_source)):
             pass
         # Git Plugin
         else:
             plugin_source = self._clone_git_plugin(plugin_source, dest)
 
-        plugin = InfraredPlugin(plugin_source)
+        plugin = InfraredPlugin(os.path.join(self.plugins_dir, plugin_source))
         plugin_type = plugin.config['plugin_type']
         # FIXME(yfried) validate spec and throw exception on missing input
 
