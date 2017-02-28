@@ -143,7 +143,7 @@ def test_bad_user_inventory(spec_fixture, workspace_manager_fixture,   # noqa
 
     workspace_manager_fixture.activate(test_workspace.name)
     return_value = spec_manager.run_specs(args=input_string)
-    assert return_value == 3
+    assert return_value == 4
 
 
 @pytest.mark.parametrize("input_value", ["explicit", ""])  # noqa
