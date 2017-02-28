@@ -1,6 +1,7 @@
 =================
 What is InfraRed?
 =================
+ dummy
 
 InfraRed is a plugin based system that aims to provide an easy-to-use CLI for Ansible based projects.
 It aims to leverage the power of Ansible in managing / deploying systems, while providing an alternative, fully customized,
