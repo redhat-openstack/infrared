@@ -37,7 +37,9 @@
   any_errors_fatal: true
   tasks:
       - group_by: key=workaround_rhbz1300662
-        when: workarounds.rhbz1300662 is defined
+        when:
+          - workarounds is defined
+          - workarounds.rhbz1300662 is defined
 
 - name: "Workaround RHBZ1300662: Keystone auth_uri set wrongly in cinder.conf"
   hosts: workaround_rhbz1300662
@@ -80,7 +82,9 @@
   any_errors_fatal: true
   tasks:
       - group_by: key=workaround_bz1138740
-        when: workarounds.bz1138740 is defined
+        when:
+          - workarounds is defined
+          - workarounds.bz1138740 is defined
 
 - name: "Workaround BZ1138740: Install nova-objectstore for S3/boto tests"
   hosts: workaround_bz1138740
@@ -130,7 +134,9 @@
   any_errors_fatal: true
   tasks:
       - group_by: key=workaround_bz1210411
-        when: workarounds.bz1210411 is defined
+        when:
+          - workarounds is defined
+          - workarounds.bz1210411 is defined
 
 - name: "Workaround BZ1210411: Update floating_ip_pool in nova.conf"
   hosts: workaround_bz1210411
