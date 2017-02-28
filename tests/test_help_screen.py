@@ -35,7 +35,7 @@ def test_list_yamls_in_help_screen(plugin_manager_fixture):  # noqa
                               'help_screen_plugin_with_list_yamls')
     plugin_dict = get_plugin_spec_flatten_dict(plugin_dir)
 
-    plugin_manager.add_plugin(plugin_dir)
+    plugin_manager.add_plugin('help_screen_plugin_with_list_yamls')
 
     help_cmd = ['ir', plugin_dict['name'], '--help']
     # Also replaces sys.argv[0] from 'pytest' to 'ir'

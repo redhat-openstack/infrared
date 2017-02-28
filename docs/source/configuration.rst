@@ -1,17 +1,26 @@
 Configuration
 =============
 
-`infrared` allows to change default options such as:
+`Infrared` configuration is stored in special directory, called ``.infrared``.
 
-* ``workspaces_base_folder``: the workspaces base folder
-* ``plugins_conf_file``: the plugins configuration file path
+`Infrared` looks for configuration directory in working path (``./.infrared/``),
+if not found it will look in the user's home (``~/.infrared``), and then under
+the active `virtualenv`_ (``$VIRTUAL_ENV/.infrared`` if exists).
+When non of those is found, `infrared` will create a new configuration directory
+in `virtualenv`_ or or in user's home.
 
-This can be done by creating a configuration file, ``./infrared.cfg``, and overriding default values in it::
+.. note:: Users can override configuration dir location using environment variable
+  ``INFRARED_CONF_DIR``. In this case directory will be automatically created too.
 
-    cp infrared.cfg.example infrared.cfg
+Configuration directory holds ``infrared.cfg`` which controls the location of:
+
+* ``workspaces_base_folder``: the workspaces base directory
+* ``plugins_conf_file``: path to ``plugins.ini`` file
+
+By default, both are placed inside ``.infrared/``. To change that replace the default file with your own and edit it::
+
+    cp infrared.cfg.example ./.infrared/infrared.cfg
 
 
-When ``infrared.cfg`` file is not found, default options defined in ``infrared.cfg.example`` file will be used:
 
-.. literalinclude:: ../../infrared.cfg.example
-   :language: ini
+.. _virtualenv: setup.html#virtualenv
