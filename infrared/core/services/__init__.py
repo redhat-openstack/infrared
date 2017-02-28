@@ -16,6 +16,27 @@ from infrared.core.utils import logger
 LOG = logger.LOG
 
 
+def set_conf_location():
+    virtualenv_path = os.environ.get("VIRTUAL_ENV", None)
+    order_list = [
+        os.getcwd(),
+        os.path.expanduser("~"),
+    ]
+
+    if virtualenv_path is not None:
+        order_list.append(virtualenv_path)
+
+    for directory in order_list:
+        confdir = os.path.join(os.path.abspath(directory), ".infrared")
+        if os.path.isdir(confdir):
+            return confdir
+    else:
+        return confdir
+
+INFRARED_CONF_DIR = set_conf_location()
+INFRARED_CONF_DIR = os.environ.get("INFRARED_CONF_DIR", INFRARED_CONF_DIR)
+
+
 class ServiceName(object):
     """Holds the supported services names. """
     WORKSPACE_MANAGER = "workspace_manager"
@@ -27,26 +48,35 @@ class CoreServices(object):
 
     _SERVICES = {}
     DEFAULTS = {
-        'workspaces_base_folder': '.workspaces',
-        'plugins_conf_file': '.plugins.ini'
+        'workspaces_base_folder': os.path.join(INFRARED_CONF_DIR,
+                                               'workspaces'),
+        'plugins_conf_file': os.path.join(INFRARED_CONF_DIR, 'plugins.ini'),
+        'plugins_dir': os.path.abspath("./plugins")
     }
 
     @classmethod
-    def setup(cls, file_path='infrared.cfg', section='core'):
+    def setup(cls, file_path=None, section='core'):
         """Creates configuration from file or from defaults. """
+
+        if file_path is None:
+            file_path = os.path.join(INFRARED_CONF_DIR, 'infrared.cfg')
 
         config = ConfigParser.SafeConfigParser(defaults=cls.DEFAULTS)
         config.add_section(section)
+
+        if not os.path.isdir(INFRARED_CONF_DIR):
+            os.mkdir(INFRARED_CONF_DIR)
 
         # if file not found no exception will be raised
         config.read(file_path)
         cls._configure(
             os.path.abspath(config.get(section, 'workspaces_base_folder')),
-            os.path.abspath(config.get(section, 'plugins_conf_file'))
+            os.path.abspath(config.get(section, 'plugins_conf_file')),
+            config.get(section, "plugins_dir")
         )
 
     @classmethod
-    def _configure(cls, workspace_dir, plugins_conf):
+    def _configure(cls, workspace_dir, plugins_conf, plugins_dir):
         """Register services to manager. """
 
         # create workspace manager
@@ -56,7 +86,8 @@ class CoreServices(object):
         # create plugins manager
         if ServiceName.PLUGINS_MANAGER not in CoreServices._SERVICES:
             cls.register_service(ServiceName.PLUGINS_MANAGER,
-                                 plugins.InfraredPluginManager(plugins_conf))
+                                 plugins.InfraredPluginManager(
+                                     plugins_conf, plugins_dir))
 
     @classmethod
     def register_service(cls, service_name, service):
