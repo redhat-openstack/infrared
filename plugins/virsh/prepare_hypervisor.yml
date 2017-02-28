@@ -74,3 +74,7 @@
           key: "{{ item }}"
       with_file:
         - "{{ inventory_dir }}/id_rsa.pub"
+      # NOTE(ovorobio) ansible 2.2.1 evaluates all tasks in a playbook even the
+      # whole playbook is skipped due to condition. This tasks throws an error since ansible
+      # tries to check files which were not created due to skipped tasks.
+      ignore_errors: yes
