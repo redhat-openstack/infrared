@@ -277,7 +277,7 @@ class SSHSpec(api.SpecObject):
 
 def main(args=None):
     # configure core services
-    CoreServices.setup('infrared.cfg')
+    CoreServices.setup()
 
     # Init Managers
     plugin_manager = CoreServices.plugins_manager()
