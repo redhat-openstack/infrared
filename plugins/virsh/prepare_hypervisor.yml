@@ -72,5 +72,7 @@
       authorized_key:
           user: root
           key: "{{ item }}"
-      with_file:
-        - "{{ inventory_dir }}/id_rsa.pub"
+      with_first_found:
+          - files:
+            - "{{ inventory_dir }}/id_rsa.pub"
+            skip: true
