@@ -4,6 +4,11 @@ New In infrared 2.0
 Highlights
 ----------
 
+#. Configuration directory:
+   Worpspaces base directory, plugins.ini, infrared.cfg now moved to special config directory.
+   By default it is `~/.infrared`.
+   If directory, named `.infrared` is presend in your CWD - it will be used instead `~/.infrared`
+   Alternative directory can be explicitly set by environment variable `INFRARED_CONF_DIR`
 #. Workspaces:
     Added `Workspaces <workspace.html>`_. Every session must be tied to an active workspace.
     All input and output file are taken from, and written to, the active workspace directory.
