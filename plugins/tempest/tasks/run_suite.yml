@@ -73,4 +73,13 @@
             dest: "{{ inventory_dir }}/tempest_results/{{ test_output_file }}"
             flat: yes
             fail_on_missing: yes
+
+      - name: cleanup the resources created by the test and not cleaned
+        shell: >
+            test -e .venv/bin/activate && source .venv/bin/activate;
+            tempest cleanup
+        args:
+            executable: /bin/bash
+            chdir: "{{ test.dir }}"
+        when: test.cleanup
   when: test_dict.test_regex is defined or whitelistfile is defined or blacklistfile is defined
