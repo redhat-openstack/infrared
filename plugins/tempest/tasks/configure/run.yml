@@ -40,6 +40,16 @@
       chdir: "{{ config_dir | default('~/' + test.dir) }}"
   register: config_result
 
+
+- name: Save the current state for the later cleanup
+  shell: >
+      test -e .venv/bin/activate && source .venv/bin/activate;
+      tempest cleanup --init-saved-state
+  args:
+      executable: /bin/bash
+      chdir: "{{ test.dir }}"
+
+
 - name: Print configuration cmd
   debug:
         var: config_result.cmd
