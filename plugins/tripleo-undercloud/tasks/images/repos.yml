@@ -37,6 +37,7 @@
       # explicitly avoid director packages for images
       director: no
       target_directory: "{{ tmp_oc_repos_dir }}"
+      source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
       # Assume images distro is the same as undercloud
   register: command_result
   until: command_result.stderr.find('Connection reset by peer') == -1
@@ -76,4 +77,5 @@
   command: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel"
   when: install.images.packages|default(None) != None
 
-# Don't use virt-customize to update images. It's unreliable.
+- command: "virt-customize -a {{ overcloud_image_file }} --update -m {{ (ansible_memtotal_mb/2)|round|int }} --smp {{ (ansible_processor_vcpus/2)|round|int }}  --selinux-relabel"
+  when: install.images['update'] or patched_rpms.stat.exists
