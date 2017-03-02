@@ -135,6 +135,12 @@ subparsers:
                           Update OverCloud image with repo details.
                       default: yes
 
+                  images-update:
+                      type: Bool
+                      help: |
+                          Update OverCloud image with repo details.
+                      default: no
+
                   images-packages:
                       type: Value
                       help: |
