@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fabf19d9_300cdc41",
+        "filename": "plugins/tripleo-overcloud/files/upgrade/10/overcloud-repos.yaml",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010429
+      },
+      "writtenOn": "2017-03-02T07:23:39Z",
+      "side": 1,
+      "message": "Changed to the url used in other plugins",
+      "parentUuid": "fabf19d9_3dacdb8b",
+      "revId": "8feaeb759cfa1a7b0d440af74a37530db630021e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fabf19d9_1da9177c",
         "filename": "plugins/tripleo-overcloud/files/upgrade/10/overcloud-repos.yaml",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2017-02-22T16:16:25Z",
       "side": 1,
       "message": "This command will install the default repos in /etc/yum.repos.d. We need to adjust them based on the mirror argument to speed up things.",
+      "revId": "8feaeb759cfa1a7b0d440af74a37530db630021e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fabf19d9_1009d831",
+        "filename": "plugins/tripleo-overcloud/files/upgrade/10/overcloud-repos.yaml",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010429
+      },
+      "writtenOn": "2017-03-02T07:23:39Z",
+      "side": 1,
+      "message": "Implemented a script to apply mirror",
+      "parentUuid": "fabf19d9_1da9177c",
       "revId": "8feaeb759cfa1a7b0d440af74a37530db630021e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -71,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "fabf19d9_f0054414",
+        "filename": "plugins/tripleo-overcloud/tasks/upgrade/10/ceilometer_migration.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1010429
+      },
+      "writtenOn": "2017-03-02T07:23:39Z",
+      "side": 1,
+      "message": "removed, not needed",
+      "parentUuid": "fabf19d9_8eda8be8",
+      "revId": "8feaeb759cfa1a7b0d440af74a37530db630021e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fabf19d9_dd7cbfed",
         "filename": "plugins/tripleo-overcloud/tasks/upgrade/10/main.yml",
         "patchSetId": 3
@@ -82,6 +136,24 @@
       "writtenOn": "2017-02-22T16:16:25Z",
       "side": 1,
       "message": "Why do we do this? I don\u0027t think it\u0027s needed.",
+      "revId": "8feaeb759cfa1a7b0d440af74a37530db630021e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fabf19d9_d002400b",
+        "filename": "plugins/tripleo-overcloud/tasks/upgrade/10/main.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1010429
+      },
+      "writtenOn": "2017-03-02T07:23:39Z",
+      "side": 1,
+      "message": "We need it, if we don\u0027t do it, there is possibility one of these steps down to stuck:\n- Object Storage Upgrade\n- Compute Upgrade\n- Ceph Upgrade",
+      "parentUuid": "fabf19d9_dd7cbfed",
       "revId": "8feaeb759cfa1a7b0d440af74a37530db630021e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -207,6 +279,24 @@
       "side": 1,
       "message": "You could extract it from the network environment file with the same steps as in the ssl task:\n\nhttps://github.com/redhat-openstack/infrared/blob/master/plugins/tripleo-overcloud/tasks/ssl.yml#L16-L21\n\nor if that doesn\u0027t work you can extract it by running cli commands but it\u0027s ugly, something like:\n\nsource ~/stackrc; openstack port list -f json | jq -r -c \u0027.[] | select (.Name | contains(\"public_virtual_ip\"))| .[\"Fixed IP Addresses\"]\u0027 | awk  {\u0027print $1\u0027} | grep -oP \u0027[0-9.]+\u0027",
       "parentUuid": "fabf19d9_1449ec8e",
+      "revId": "8feaeb759cfa1a7b0d440af74a37530db630021e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fabf19d9_abfe3d03",
+        "filename": "plugins/tripleo-overcloud/tasks/upgrade/10/ssl.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010429
+      },
+      "writtenOn": "2017-03-02T07:23:39Z",
+      "side": 1,
+      "message": "Done as you proposed.",
+      "parentUuid": "fabf19d9_af2309a7",
       "revId": "8feaeb759cfa1a7b0d440af74a37530db630021e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
