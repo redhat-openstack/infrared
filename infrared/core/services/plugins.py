@@ -33,6 +33,7 @@ PLUGINS_REGISTRY = {
     'tripleo-overcloud': 'plugins/tripleo-overcloud',
     'tripleo-undercloud': 'plugins/tripleo-undercloud',
     'virsh': 'plugins/virsh',
+    'octario': 'https://github.com/redhat-openstack/octario',
 }
 
 MAIN_PLAYBOOK = "main.yml"
@@ -166,7 +167,7 @@ class InfraredPluginManager(object):
             raise StopIteration
 
     @staticmethod
-    def _clone_git_plugin(git_url, dest_dir=None):
+    def _clone_git_plugin(git_url, plugin_name=None, dest_dir=None):
         """Clone a plugin into a given destination directory
 
         :param git_url: Plugin's Git URL
@@ -176,27 +177,39 @@ class InfraredPluginManager(object):
         """
         dest_dir = os.path.abspath(dest_dir or "plugins")
 
-        tmpdir = tempfile.mkdtemp(prefix="ir-")
-        cwd = os.getcwdu()
-        os.chdir(tmpdir)
-        try:
-            subprocess.check_output(["git", "clone", git_url])
-        except subprocess.CalledProcessError:
-            shutil.rmtree(tmpdir)
-            raise IRFailedToAddPlugin(
-                "Cloning git repo {} is failed".format(git_url))
-        cloned = os.listdir(tmpdir)
-        plugin_dir_name = cloned[0]
+        plugin_source = None
 
-        plugin_source = os.path.join(dest_dir, plugin_dir_name)
-        shutil.copytree(os.path.join(tmpdir, plugin_dir_name),
-                        plugin_source)
-        os.chdir(cwd)
-        shutil.rmtree(tmpdir)
+        if plugin_name and os.path.isdir(os.path.join(dest_dir, plugin_name)):
+            LOG.warning("Git plugin '{}' was found in plugin "
+                        "directory, reusing.".format(plugin_name))
+            plugin_source = os.path.join(dest_dir, plugin_name)
+        else:
+            tmpdir = tempfile.mkdtemp(prefix="ir-")
+            cwd = os.getcwdu()
+            os.chdir(tmpdir)
+            try:
+                subprocess.check_output(["git", "clone", git_url])
+            except subprocess.CalledProcessError:
+                shutil.rmtree(tmpdir)
+                raise IRFailedToAddPlugin(
+                    "Cloning git repo {} is failed".format(git_url))
+            cloned = os.listdir(tmpdir)
+            plugin_dir_name = cloned[0]
+
+            plugin_source = os.path.join(dest_dir, plugin_dir_name)
+            shutil.copytree(os.path.join(tmpdir, plugin_dir_name),
+                            plugin_source)
+            os.chdir(cwd)
+            shutil.rmtree(tmpdir)
+
+        if not plugin_source:
+            raise IRFailedToAddPlugin(
+                "Unable to find source "
+                "for GIT plugin in: '{}'".format(plugin_destdir))
 
         return plugin_source
 
-    def add_plugin(self, plugin_source, dest=None):
+    def add_plugin(self, plugin_name, dest=None):
         """Adds (install) a plugin
 
         :param plugin_source: Plugin source.
@@ -208,15 +221,16 @@ class InfraredPluginManager(object):
           a Git URL)
         """
         # Check if a plugin is in the registry
-        if plugin_source in PLUGINS_REGISTRY:
-            plugin_source = PLUGINS_REGISTRY[plugin_source]
+        if plugin_name in PLUGINS_REGISTRY:
+            plugin_source = PLUGINS_REGISTRY[plugin_name]
 
         # Local dir plugin
         if os.path.exists(plugin_source):
             pass
         # Git Plugin
         else:
-            plugin_source = self._clone_git_plugin(plugin_source, dest)
+            plugin_source = self._clone_git_plugin(plugin_source,
+                                                   plugin_name, dest)
 
         plugin = InfraredPlugin(plugin_source)
         plugin_type = plugin.config['plugin_type']
@@ -315,7 +329,8 @@ class InfraredPlugin(object):
         full_path = os.path.abspath(os.path.expanduser(plugin_dir))
         if not os.path.isdir(full_path):
             raise IRFailedToAddPlugin(
-                "Path to plugin dir '{}' doesn't exist".format(plugin_dir))
+                "Path to plugin dir '{}' is not "
+                "readable folder".format(plugin_dir))
         self._path = full_path
 
     @property
