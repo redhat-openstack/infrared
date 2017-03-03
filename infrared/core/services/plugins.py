@@ -34,6 +34,7 @@ PLUGINS_REGISTRY = {
     'tripleo-undercloud': 'plugins/tripleo-undercloud',
     'virsh': 'plugins/virsh',
     'ospdui': 'plugins/ospdui',
+    'octario': 'https://github.com/redhat-openstack/octario.git',
     'gabbi': 'https://github.com/rhos-infra/gabbi.git'
 }
 
