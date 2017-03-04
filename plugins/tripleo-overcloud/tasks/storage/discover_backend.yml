@@ -1,0 +1,19 @@
+- name: auto detect storage
+  set_fact:
+      storage_backend : "{{ item }}"
+  when:
+      - not (install.storage|default({})).backend | default(False)
+      - item in groups
+  with_items:
+      - ceph
+      - swift
+
+- name: set default storage backend
+  set_fact:
+      storage_backend: "{{ (install.storage|default({})).backend | default('lvm') }}"
+  when: storage_backend is not defined
+
+- name: print storage backend
+  debug:
+      var: storage_backend
+      verbosity: 3
