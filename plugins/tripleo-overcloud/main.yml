@@ -1,3 +1,8 @@
+- name: Perform validations
+  include: "{{ overcloud_validate | default('validate.yml') }}"
+  tags:
+      - validation
+
 - name: Perform pre install tasks
   include: "{{ overcloud_pre | default('pre.yml') }}"
   when: install.introspect|default('')
