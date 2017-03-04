@@ -168,7 +168,6 @@ subparsers:
                           - netapp-iscsi
                           - netapp-nfs
                           - lvm
-                      default: 'lvm'
                       help: |
                         The storage that we would like to use.
                         If not supplied, OSPD will default to local LVM on the controllers.
