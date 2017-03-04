@@ -1,8 +1,11 @@
+- name: try to discover storage storage
+  include: discover_backend.yml
+
 - name: check if user provided storage templates
   stat:
       path: "{{ template_base }}/storage"
   register: storage
 
 # If user provided storage templates, nothing to do here :)
-- include: "{{ install.storage.backend }}.yml"
+- include: "{{ storage_backend }}.yml"
   when: not storage.stat.exists
