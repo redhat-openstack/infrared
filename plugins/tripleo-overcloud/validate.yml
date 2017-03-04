@@ -1,0 +1,14 @@
+- name: Perform pre-deployment validations
+  hosts: localhost
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+
+      - name: validate storage nodes
+        fail:
+            msg: "To many storage nodes to discover storage backend. Provide --storage-backend cli option with the backend to use. "
+        when:
+            - install.deploy|default('')
+            - not (install.storage|default({})).backend|default(False)
+            - "'swift' in groups"
+            - "'ceph' in groups"
