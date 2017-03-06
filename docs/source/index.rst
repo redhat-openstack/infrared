@@ -47,6 +47,7 @@ Welcome to infrared's documentation!
    tripleo-overcloud
    tempest
    collect-logs
+   gabbi_tester
 
 Indices and tables
 ==================

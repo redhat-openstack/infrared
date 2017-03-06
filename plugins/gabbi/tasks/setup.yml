@@ -1,0 +1,77 @@
+- name: load all the required vars
+  include_vars: "vars/setup/{{ test.setup}}.yml"
+
+- name: prepares variables to disable ipv6
+  shell: |
+      /usr/sbin/sysctl -a 2>/dev/null | grep 'ipv6\.conf\..*\.disabl' | sed -e 's/= 0/= 1/' -e 's/\ //g'
+  register: sysctl_status
+  ignore_errors: yes
+
+- name: debug sysctl_status
+  debug:
+      var: sysctl_status
+      verbosity: 3
+
+- name: disable IPv6 with sysctl
+  command: "/usr/sbin/sysctl -w {{ item }}"
+  register: sysctl_update
+  with_items: "{{ sysctl_status.stdout_lines }}"
+  ignore_errors: yes
+
+- name: debug sysctl_update
+  debug:
+      var: sysctl_update
+      verbosity: 3
+
+- name: clone repo with branch rhos-{{ test.openstack.version }}
+  git:
+      accept_hostkey: yes
+      repo: "{{ setup.gabbits_repo }}"
+      dest: "{{ setup.repo_dest }}"
+      version: "rhos-{{ test.openstack.version }}"
+  register: clone_result
+
+- name: debug repo clone
+  debug:
+      var: "{{ clone_result }}"
+      verbosity: 3
+
+# rpm python deps
+- name: install virtualenv from rpm
+  package:
+      name: python-virtualenv
+      state: present
+  become: yes
+
+- name: list rpm requirements
+  shell: cat {{ setup.repo_dest }}/requirements-rpm.txt | grep -v "^#" | sed '/^$/d'
+  register: required_rpms
+
+- name: install required RPMs for Gabbi-Run
+  package:
+      name: "{{ item }}"
+      state: installed
+  with_items: "{{ required_rpms.stdout_lines }}"
+  become: yes
+
+# Virtualenv setup
+- name: update pip and setuptools
+  pip:
+      name: "{{ item }}"
+      state: latest
+      virtualenv: "{{ setup.gabbi_venv }}"
+      virtualenv_site_packages: no
+  with_items:
+      - pip
+      - setuptools
+  register: install_setuptools
+
+- name: debug setuptools update
+  debug:
+      var: install_setuptools
+      verbosity: 3
+
+- name: install gabbi requirements
+  pip:
+      virtualenv: "{{ setup.gabbi_venv }}"
+      requirements: "{{ setup.repo_dest }}/requirements.txt"
