@@ -1,0 +1,23 @@
+- name: find rc file
+  find:
+      file_type: file
+      pattern: "{{ rc_file_name | basename }}"
+      paths:
+          - "{{ lookup('env', 'PWD') }}/{{ rc_file_name | dirname }}"
+          - "{{ rc_file_name | expanduser | dirname }}"
+  register: rc_find
+  delegate_to: localhost
+  when: rc_file_name
+
+- name: fail when rc file was not found
+  fail:
+      msg: "Unable to find rc file: {{ rc_file_name }}"
+  when: rc_file_name and rc_find.matched == 0
+
+- name: copy rc file
+  vars:
+      file_src: "{{ rc_find.files[0].path if rc_file_name  else inventory_dir + '/' + rc_file_default_name }}"
+  copy:
+      src: "{{ file_src }}"
+      dest: "{{ rc_dest }}"
+      force: yes
