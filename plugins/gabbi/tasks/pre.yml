@@ -1,0 +1,17 @@
+- name: setup rhos release
+  include: release.yml
+
+- name: get overcloudrc
+  include: fetchrc.yml
+  vars:
+      rc_file_name: "{{ test.overcloudrc|default('') }}"
+      rc_file_default_name: keystonerc
+      rc_dest: ~/keystonerc
+
+- name: get stackrc
+  include: fetchrc.yml
+  vars:
+      rc_file_name: "{{ test.undercloudrc|default('') }}"
+      rc_file_default_name: stackrc
+      rc_dest: ~/undercloudrc
+

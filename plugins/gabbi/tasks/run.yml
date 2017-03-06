@@ -1,0 +1,212 @@
+- name: include network vars
+  include_vars: "vars/network/{{ test.network }}.yml"
+
+- name: prepares variables to re-enable ipv6
+  become: yes
+  shell: |
+      /usr/sbin/sysctl -a 2>/dev/null | grep 'ipv6\.conf\..*\.disabl' | sed -e 's/= 1/= 0/' -e 's/\ //g'
+  register: reenable_ipv6
+  ignore_errors: yes
+  when: "'{{ network.protocol }}' == 'ipv6'"
+
+- name: debug reenable_ipv6
+  debug:
+      var: sysctl_status
+      verbosity: 3
+  when: "'{{ network.protocol }}' == 'ipv6'"
+
+- name: reenable IPv6 with sysctl
+  become: yes
+  shell: |
+      /usr/sbin/sysctl -w {{ item }}
+  register: sysctl_update
+  with_items: "{{ reenable_ipv6.stdout_lines|default([]) }}"
+  ignore_errors: yes
+  when: "'{{ network.protocol }}' == 'ipv6'"
+
+- name: debug sysctl_update
+  debug:
+      var: sysctl_update
+      verbosity: 3
+  when: "'{{ network.protocol }}' == 'ipv6'"
+
+- name: restart connections
+  become: yes
+  shell: |
+      /usr/bin/nmcli connection down "System {{ item.name }}" ; /usr/bin/nmcli connection up "System {{ item.name }}"
+  with_items: "{{ network.interfaces }}"
+  when: "'{{ network.protocol }}' == 'ipv6'"
+
+- name: assert AODH installed on undercloud
+  shell: |
+      source ~/undercloudrc
+      command openstack catalog show aodh
+  register: aodh_available
+  ignore_errors: yes
+
+- name: assert Ceilometer installed on undercloud
+  shell: |
+      source ~/undercloudrc
+      command openstack catalog show ceilometer
+  register: ceilometer_available
+  ignore_errors: yes
+
+- name: gabbi run metering undercloud
+  shell: |
+      source ~/undercloudrc
+      source {{ setup.gabbi_venv }}/bin/activate
+      ./run.sh METERING/
+      deactivate
+  args:
+      chdir: "{{ setup.repo_dest }}"
+  when: "'{{ ceilometer_available.stdout }}' != ''"
+
+- name: fetch metering results
+  fetch:
+      src: "{{ setup.repo_dest }}/{{ item }}"
+      dest: "{{ inventory_dir }}/gabbi_results/telemetry-metering-undercloud-{{ item }}"
+      flat: yes
+  with_items:
+      - results.html
+      - results.xml
+      - results.txt
+  when: "'{{ ceilometer_available.stdout }}' != ''"
+
+- name: gabbi run alarming undercloud
+  shell: |
+      source ~/undercloudrc
+      source {{ setup.gabbi_venv }}/bin/activate
+      ./run.sh ALARMING/UndercloudAodh/
+      deactivate
+  args:
+      chdir: "{{ setup.repo_dest }}"
+  when: "'{{ aodh_available.stdout }}' != ''"
+
+- name: fetch alarming results
+  fetch:
+      src: "{{ setup.repo_dest }}/{{ item }}"
+      dest: "{{ inventory_dir }}/gabbi_results/telemetry-aodh-undercloud-{{ item }}"
+      flat: yes
+  with_items:
+      - results.html
+      - results.xml
+      - results.txt
+  when: "'{{ aodh_available.stdout }}' != ''"
+
+- name: assert Ceilometer installed on overcloud
+  shell: |
+      source ~/keystonerc
+      command ceilometer meter-list
+  register: ceilometer_overcloud
+  ignore_errors: True
+
+- name: gabbi run metering overcloud
+  shell: |
+      source ~/keystonerc
+      source {{ setup.gabbi_venv }}/bin/activate
+      ./run.sh METERING/
+      deactivate
+  args:
+      chdir: "{{ setup.repo_dest }}"
+  when: "{{ ceilometer_overcloud.rc | int }} != 1"
+
+- name: fetch METERING results
+  fetch:
+      src: "{{ setup.repo_dest }}/{{ item }}"
+      dest: "{{ inventory_dir }}/gabbi_results/telemetry-metering-overcloud-{{ item }}"
+      flat: yes
+  with_items:
+      - results.html
+      - results.xml
+      - results.txt
+  when: "{{ ceilometer_overcloud.rc | int }} != 1"
+
+- name: gabbi run gnocchi overcloud
+  shell: |
+      source ~/keystonerc
+      source {{ setup.gabbi_venv }}/bin/activate
+      ./run.sh GNOCCHI/ ;
+      deactivate
+  args:
+      chdir: "{{ setup.repo_dest }}"
+
+- name: fetch GNOCCHI results
+  fetch:
+      src: "{{ setup.repo_dest }}/{{ item }}"
+      dest: "{{ inventory_dir }}/gabbi_results/telemetry-gnocchi-overcloud-{{ item }}"
+      flat: yes
+  with_items:
+      - results.html
+      - results.xml
+      - results.txt
+
+- name: setup gnocchi resources
+  shell: |
+      source ~/keystonerc
+      source {{ setup.gabbi_venv }}/bin/activate
+      USER_TOKEN=$( keystone token-get 2>/dev/null | grep -w id | awk -F '|' '{ print $3 }' )
+      GNOCCHI_ENDPOINT=$( keystone endpoint-list 2>/dev/null | grep 8041 | awk -F '|' '{ print $4 }' )
+      export GNOCCHI_SERVICE_TOKEN=${USER_TOKEN}
+      gabbi-run ${GNOCCHI_ENDPOINT} < ALARMING/SETUP-ENV
+      deactivate
+  args:
+      chdir: "{{ setup.repo_dest }}"
+  when: "{{ test.openstack.version }} < 10"
+
+- name: setup gnocchi resources RHOS10+
+  shell: |
+      source ~/keystonerc
+      source {{ setup.gabbi_venv }}/bin/activate
+      USER_TOKEN=$( openstack token issue -f value -c id 2>/dev/null )
+      GNOCCHI_ENDPOINT=$( openstack catalog show gnocchi -f value -c endpoints 2>/dev/null | grep public |  awk -F 'publicURL:' '{ print $2 }' )
+      export GNOCCHI_SERVICE_TOKEN=${USER_TOKEN}
+      gabbi-run ${GNOCCHI_ENDPOINT} < ALARMING/SETUP-ENV
+      deactivate
+  args:
+      chdir: "{{ setup.repo_dest  }}"
+  when: "{{ test.openstack.version }} >= 10"
+
+- name: gabbi run alarming overcloud
+  shell: |
+      source ~/keystonerc
+      source {{ setup.gabbi_venv }}/bin/activate
+      ./run.sh ALARMING/OvercloudAodh/ ;
+      deactivate
+  args:
+      chdir: "{{ setup.repo_dest }}"
+
+- name: fetch AODH results
+  fetch:
+      src: "{{ setup.repo_dest }}/{{ item }}"
+      dest: "{{ inventory_dir }}/gabbi_results//telemetry-aodh-overcloud-{{ item }}"
+      flat: yes
+  with_items:
+      - results.html
+      - results.xml
+      - results.txt
+
+- name: tear-down gnocchi resources
+  shell: |
+      source ~/keystonerc
+      source {{ setup.gabbi_venv }}/bin/activate
+      USER_TOKEN=$( keystone token-get 2>/dev/null | grep -w id | awk -F '|' '{ print $3 }' )
+      GNOCCHI_ENDPOINT=$( keystone endpoint-list 2>/dev/null | grep 8041 | awk -F '|' '{ print $4 }' )
+      export GNOCCHI_SERVICE_TOKEN=${USER_TOKEN}
+      gabbi-run ${GNOCCHI_ENDPOINT} < ALARMING/TEARDOWN-ENV
+      deactivate
+  args:
+      chdir: "{{ setup.repo_dest }}"
+  when: "{{ test.openstack.version }} < 10"
+
+- name: tear-down gnocchi resource RHOS10
+  shell: |
+      source ~/keystonerc
+      source {{ setup.gabbi_venv }}/bin/activate
+      USER_TOKEN=$( openstack token issue -f value -c id 2>/dev/null )
+      GNOCCHI_ENDPOINT=$( openstack catalog show gnocchi -f value -c endpoints 2>/dev/null | grep public |  awk -F 'publicURL:' '{ print $2 }' )
+      export GNOCCHI_SERVICE_TOKEN=${USER_TOKEN}
+      gabbi-run ${GNOCCHI_ENDPOINT} < ALARMING/TEARDOWN-ENV
+      deactivate
+  args:
+      chdir: "{{ setup.repo_dest }}"
+  when: "{{ test.openstack.version }} >= 10"
