@@ -75,3 +75,8 @@ subparsers:
                       help: |
                           Use tempest cleanup to clean the leftover from the tests (usually when tests fail)
                       default: no
+                  remove-network-extension:
+                      type: Value
+                      help: |
+                          A list of network api extensions needs to be removed from tempest.conf.
+                      default: None
