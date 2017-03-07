@@ -75,3 +75,7 @@ subparsers:
                       help: |
                           Use tempest cleanup to clean the leftover from the tests (usually when tests fail)
                       default: no
+                  config-flags:
+                      type: IniType
+                      help: |
+                          Adds given flags to the tempest config invocation.
