@@ -75,3 +75,9 @@ subparsers:
                       help: |
                           Use tempest cleanup to clean the leftover from the tests (usually when tests fail)
                       default: no
+                  config-flags:
+                      type: IniType
+                      help: |
+                          Removes additional neutron api extensions from tempest.conf
+                          Format: --config-flags value1,value2 --config-flags dvr,ha
+                      default: dvr
