@@ -1,0 +1,48 @@
+---
+- name: Install required packages (ironic's 'pxe_ipmitool' driver)
+  hosts: hypervisor
+  gather_facts: True
+  any_errors_fatal: True
+  tags: pre
+  tasks:
+      - name: Install packages required for 'pxe_ipmitool' ironic's driver
+        package:
+            name: "{{ item }}"
+            state: latest
+        with_items:
+            - python-virtualbmc
+            - ipmitool
+
+- name: Configure vbmc (ironic's 'pxe_ipmitool' driver)
+  hosts: openstack_nodes
+  vars:
+      vbmc_start_port: 6230
+  gather_facts: False
+  any_errors_fatal: True
+  tags: pre
+  tasks:
+      - name: Define vbmc_port for each VM
+        set_fact:
+            vbmc_port: "{{vbmc_start_port + groups.openstack_nodes.index(inventory_hostname) }}"
+
+      - name: vbmc ports
+        debug:
+            msg: "{{inventory_hostname}}: {{vbmc_port}}"
+
+      - name: Add nodes to vbmc
+        command: "vbmc add {{ inventory_hostname }} --port {{ vbmc_port }}"
+        delegate_to: hypervisor
+
+      - name: Start nodes using vbmc
+        command: "vbmc start {{ inventory_hostname }}"
+        delegate_to: hypervisor
+
+      - name: Get vbmc VMs power status using ipmitool
+        command: "ipmitool -I lanplus -U admin -P password -H 127.0.0.1 -p {{ vbmc_port }} power status"
+        register: ipmitool_result
+        delegate_to: hypervisor
+
+      - name: Validate that all VMs are powered on
+        fail:
+            msg: "'{{ inventory_hostname }}' is not powered on! (ipmitool stdout: '{{ ipmitool_result.stdout }}'"
+        when: "ipmitool_result.stdout != 'Chassis Power is on'"
