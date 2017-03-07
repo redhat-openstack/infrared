@@ -117,3 +117,24 @@
             allocation_pool_start: "{{ pool.start|default(p_pool_start or omit) }}"
             allocation_pool_end: "{{ pool.end|default(p_pool_end or omit) }}"
         register: subnet_create
+
+      # in AIO, outer network may not be correctly prepared for routing our FlIP ranges etc (or have broken mtu's)
+      # ensure our communication stays inside
+      - name: "self-contained public network for AIO case"
+        vars:
+            # reuse some variables used/defined above in step to create ext network
+            subnet: "{{ installer.public.subnet|default({}) }}"
+            p_data: "{{ ((((provisioner|default({})).neutron|default({})).subnets|default({})).external|default({})).nested|default({}) }}"
+            p_cidr: "{{ p_data.subnet_cidr|default(False) }}"
+            p_gateway: "{{ p_data.subnet_gateway|default(False) }}"
+            # and create those we need, based on HOW above vars are used
+            ext_cidr: "{{ subnet.cidr|default(p_cidr) }}"
+            ext_gw: "{{ subnet.gateway|default(p_gateway) }}"
+        shell: |
+            set -ex
+            source /root/keystonerc_admin;
+            ip a add {{ ext_gw }}/{{ ext_cidr.split('/')[1] }} dev br-myphysnet;
+            ip l set br-myphysnet up;
+        become: yes
+        # when controllers are at the same time also testers (AIO)
+        when: not ( groups['tester'] | symmetric_difference(groups['controller']) )
