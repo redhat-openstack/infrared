@@ -2,6 +2,9 @@
   hosts: all:!localhost:!ovb
   any_errors_fatal: true
 
+- include: tasks/ironic_pxe_ipmitool.yml
+  when: install.version | int >= 11
+
 - name: Generate the instackenv.json
   hosts: undercloud
   gather_facts: no
