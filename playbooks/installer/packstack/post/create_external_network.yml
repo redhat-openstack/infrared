@@ -117,3 +117,14 @@
             allocation_pool_start: "{{ pool.start|default(p_pool_start or omit) }}"
             allocation_pool_end: "{{ pool.end|default(p_pool_end or omit) }}"
         register: subnet_create
+
+
+        # in AIO, outer network may not be correctly prepared for routing our FlIP ranges etc (or have broken mtu's)
+        # ensure our communication stays inside
+      - name: self-contained public network for AIO case
+        shell: |
+            set -ex
+            source /root/keystonerc_admin;
+            ip a add $(echo -n "$(openstack subnet show external_subnet -f value -c gateway_ip)"; openstack subnet show external_subnet -f value -c cidr | sed 's|.*/|/|') dev br-myphysnet; ip l set br-myphysnet up;
+        become: yes
+        when: controller[0] == tester[0]
