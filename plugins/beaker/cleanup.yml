@@ -14,3 +14,12 @@
           distro_tree_id: "{{ distro_id }}"
           web_service: "{{ provision.web.service }}"
           ca_cert: "{{ (provision.ca|default({})).cert | default(omit) }}"
+
+    # We need to recreate hosts file as there might be remaining assumptions
+    # from previous run (openstack_nodes, controllers) which might break
+    # idempotency.
+    - name: Clean old inventory file
+      file:
+          dest: "{{ inventory_dir }}/hosts"
+          state: link
+          src: "local_hosts"
