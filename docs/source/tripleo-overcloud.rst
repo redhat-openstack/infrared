@@ -75,3 +75,9 @@ Overcloud Strorage
 .. _`tripleo-undercloud`: tripleo-undercloud.html
 .. _`virsh`: virsh.html
 .. _`ovb`: missing
+
+
+Composable Roles
+----------------
+
+InfraRed allows to use custom roles to deploy overcloud. Check the `Composable roles <composable_roles.html>`_ page for details.
