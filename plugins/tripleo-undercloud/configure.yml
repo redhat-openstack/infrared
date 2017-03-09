@@ -4,24 +4,32 @@
   gather_facts: no
   any_errors_fatal: true
   vars:
-      conf: "{{ install.config|default({}) }}"
-  tasks:
-      - name: copy undercloud.conf if provided by the user
-        vars:
-            local_src: "{%- if conf.file|default('') -%}
+      - conf: "{{ install.config|default({}) }}"
+      - deafult_conf: /usr/share/instack-undercloud/undercloud.conf.sample
+      - local_src: "{%- if conf.file|default('') -%}
                 {{ conf.file }}
                 {%- elif 'hypervisor' in groups.all or 'bmc' in groups -%}
                 templates/undercloud.conf
                 {%- else -%}
                 False
                 {%- endif -%}"
-            deafult_conf: /usr/share/instack-undercloud/undercloud.conf.sample
-        copy:
-            remote_src: "{{ not local_src }}"
-            src: "{{ local_src | ternary(local_src, deafult_conf)}}"
+  tasks:
+      - name: template the undercloud.conf from local machine
+        template:
+            src: "{{ local_src }}"
             dest: ~/undercloud.conf
             force: yes
             mode: 0755
+        when: local_src
+
+      - name: copy default undercloud config
+        copy:
+            remote_src: yes
+            src: "{{ deafult_conf }}"
+            dest: ~/undercloud.conf
+            force: yes
+            mode: 0755
+        when: not local_src
 
       - name: enable undercloud-ssl
         include: tasks/ssl.yml
