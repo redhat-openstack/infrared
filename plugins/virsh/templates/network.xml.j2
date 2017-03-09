@@ -1,9 +1,9 @@
 <network>
   <name>{{ item.value.name }}</name>
     {% if item.value.forward is defined %}
-        <forward mode="{{ item.value.forward.type }}" />
+        <forward mode="{{ item.value.forward }}" />
     {% endif %}
-        <bridge name="{{ item.value.name }}" stp='on' delay='0'/>
+        <bridge name="{{ item.value.name }}"{% if item.value.forward|default('') != 'bridge' %} stp='on' delay='0'{% endif %}/>
     {% if item.value.ip_address is defined %}
   <ip address="{{ item.value.ip_address }}" netmask="{{ item.value.netmask }}">
     {% if item.value.dhcp is defined %}
