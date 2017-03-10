@@ -76,6 +76,16 @@ subparsers:
                       help: "Spefify file with user's public SSH key which will be inserted to authorized_keys of host-user as post-deployment step"
                       required: True
 
+            - title: Host groups
+              options:
+                  groups:
+                      type: ListValue
+                      help: |
+                          Comma separated list of groups to which your host should be added.
+                          For example - baremetal,undercloud,tester.
+                          Possible values: baremetal, undercloud, tester, hypervisor.
+                      default: baremetal,undercloud,tester
+
             - title: Release host and return it to Beaker's pool
               options:
                   release:
