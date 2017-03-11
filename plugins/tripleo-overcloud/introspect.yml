@@ -68,12 +68,25 @@
         with_items: "{{ groups['overcloud_nodes'] | default([])}}"
         when: "'bmc' in groups"
 
+      # Because introspection is faulty and tricky especially on baremetals
+      # we need to check multiple times if any failure occured. Reasonable time
+      # for this process to take is < 3 minutes, which covers baremetals.
+      # Virthosts setups don't suffer from long timeouts caused by delays in boot
+      # process, BIOS timeouts and errors in firmware so they are covered by 3 mins seamlessly.
+      # This must be async task because we need to enforce explicit timeout
+      # for this process, otherwise timeout is controlled by ironic and seriously long.
+      # -------------------------------------------------------------------------------
+      # TODO(fhubik): This task is synchronous currently which is bad, need to try hack
+      # with conditional includes of task-books with async task inside as next step.
       - name: start node introspection
         shell: |
             source ~/stackrc
             openstack baremetal introspection bulk start
-        register: introspection_result
-        failed_when: introspection_result.rc != 0
+        register: introspection_status
+        retries: 5
+        delay: 10
+        until: introspection_status.rc == 0
+        #ignore_errors: yes
         tags:
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
             - skip_ansible_lint
