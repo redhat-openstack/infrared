@@ -68,12 +68,59 @@
         with_items: "{{ groups['overcloud_nodes'] | default([])}}"
         when: "'bmc' in groups"
 
+      # Because introspection is faulty and tricky especially on baremetals
+      # we need to check multiple times if any failure occured. Reasonable time
+      # for this process to take is < 3 minutes, which covers baremetals.
+      # Virtual setups don't suffer from long timeouts caused by delays in boot
+      # process, BIOS timeouts and errors in firmware so they are covered by 3 mins seamlessly.
+      # This must be async task because we need to enforce explicit timeout
+      # for this process, otherwise timeout is controlled by ironic and seriously long.
+      # -------------------------------------------------------------------------------
+      # TODO(fhubik): This task is synchronous currently which is bad, need to try hack
+      # with conditional includes of task-books with async task inside as next step.
       - name: start node introspection
         shell: |
             source ~/stackrc
             openstack baremetal introspection bulk start
-        register: introspection_result
-        failed_when: introspection_result.rc != 0
+        register: introspection_sleeper
+        poll: 50
+        async: 600
+        retries: 10
+        delay: 90
+        ignore_errors: yes
         tags:
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
             - skip_ansible_lint
+
+      - debug: var=introspection_sleeper
+
+      # Wait until ironic recovers from possibly killed async task
+      - wait_for: timeout=15
+        sudo: no
+
+      - name: Get overall status during failure
+        shell: |
+            source ~/stackrc
+            ironic node-list
+            openstack baremetal introspection bulk status
+        ignore_errors: yes
+        when: introspection_sleeper.failed != 0
+
+      - name: get full list of UUIDs of nodes who failed introspection
+        shell: |
+             source ~/stackrc
+             ironic node-list | grep -Ei '(False|Timeout)' |  awk '{print $2}'
+        register: failed_node_uuids
+        when: introspection_sleeper.failed != 0
+
+      - debug: var=failed_node_uuids
+        when: introspection_sleeper.failed != 0
+
+      - name: Try introspection for failed nodes manually if bulk failed
+        shell: |
+            source ~/stackrc
+            echo {{ item }}
+            openstack baremetal introspection start {{ item }}
+        with_items: failed_node_uuids.stdout_lines
+        when: introspection_sleeper.failed != 0
+
