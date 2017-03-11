@@ -68,12 +68,113 @@
         with_items: "{{ groups['overcloud_nodes'] | default([])}}"
         when: "'bmc' in groups"
 
+      # Because introspection is faulty and tricky especially on baremetals
+      # we need to check multiple times if any failure occured. Reasonable time
+      # for this process to take is < 10 minutes no matter how many nodes for baremetals.
+      # Virtual setups don't suffer from long timeouts caused by delays in boot
+      # process, BIOS timeouts and errors in firmware so they are covered by such timeout
+      # seamlessly. This must be async task because we need to enforce explicit timeout
+      # for this process, otherwise timeout is controlled by ironic and seriously long
+      # (usually one must wait for 1 hour if any failure on any node occurs).
       - name: start node introspection
         shell: |
             source ~/stackrc
             openstack baremetal introspection bulk start
-        register: introspection_result
-        failed_when: introspection_result.rc != 0
+        register: introspection_sleeper
+        poll: 50
+        async: 600
+        retries: 10
+        delay: 90
+        ignore_errors: yes
         tags:
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
             - skip_ansible_lint
+
+      # Figure if previous async bulk introspection task ended in reasonable time.
+      # If not, expect bulk introspection failed and play rest of the playbook in verbose and debug mode.
+      - set_fact:
+            bulk_intro_ok: "{{ true if introspection_sleeper.rc is defined and introspection_sleeper.rc == 0 else false }}"
+
+      # Assuming ironic's introspection was killed when stuck we need to give it time to recover
+      # and respond to API calls (especially in clumsy OSPd7).
+      - name: give ironic time to recover after async introspection was killed
+        wait_for: timeout=20
+        when: bulk_intro_ok == false
+
+      # Following steps are NOT done in block as ansible's (2.1.0) blocks are buggy
+      # when used with conditionals currently!
+      - name: get overall bulk status during failure
+        shell: |
+            source ~/stackrc
+            ironic node-list
+            openstack baremetal introspection bulk status
+        ignore_errors: yes
+        when: bulk_intro_ok == false
+        tags:
+            - skip_ansible_lint
+
+      - name: get and store full list of UUIDs of nodes that failed introspection
+        shell: |
+             source ~/stackrc
+             openstack baremetal introspection bulk status | grep -Ei '(False|Timeout)' |  awk '{print $2}'
+        register: failed_node_uuids
+        ignore_errors: yes
+        when: bulk_intro_ok == false
+        tags:
+            - skip_ansible_lint
+
+      - name: print UUID's of failed nodes
+        debug:
+            msg: "Introspection failed on these nodes: {{ failed_node_uuids.stdout_lines }}"
+        when: bulk_intro_ok == false and failed_node_uuids.stdout_lines is defined
+
+      - name: get details about failed nodes
+        shell: |
+            source ~/stackrc
+            ironic node-show {{ item }}
+        register: failed_node_details
+        ignore_errors: yes
+        with_items: "{{ failed_node_uuids.stdout_lines }}"
+        when: bulk_intro_ok == false and failed_node_uuids.stdout_lines is defined
+        tags:
+            - skip_ansible_lint
+
+      - name: prettify info about failed nodes
+        set_fact:
+          failed_nodes: "{{ failed_nodes|default({}) | combine( {item.stdout: ''} ) }}"
+        with_items: "{{ failed_node_details.results }}"
+        when: bulk_intro_ok == false and failed_node_details.results is defined
+
+      - name: print prettified info about failed nodes
+        debug:
+            msg: "{{ failed_nodes }}"
+        when: bulk_intro_ok == false and failed_nodes is defined
+
+      - name: introspect and retry sequentially node by node the khaleesi way
+        shell: >
+            source ~/stackrc;
+            openstack baremetal introspection start {{ item }};
+            export STATUS=$(openstack baremetal introspection status {{ item }} | grep 'finished');
+            while [[ $STATUS != *"True"* ]]; do
+                echo "Waiting for instrospection of {{ item }} to complete.";
+                sleep 10;
+                export STATUS=$(openstack baremetal introspection status {{ item }} | grep 'finished');
+            done;
+            openstack baremetal introspection status {{ item }} | grep 'error'
+        register: introspect_status
+        retries: 3
+        delay: 5
+        until: introspect_status.stdout.find("None") != -1
+        with_items: "{{ failed_node_uuids.stdout_lines }}"
+        when: bulk_intro_ok == false and failed_node_uuids.stdout_lines is defined
+        tags:
+            - skip_ansible_lint
+
+      - name: see overall status after node-by-node introspection was done
+        shell: |
+            source ~/stackrc
+            openstack baremetal introspection bulk status
+        when: bulk_intro_ok == false
+        tags:
+            - skip_ansible_lint
+
