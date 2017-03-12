@@ -181,10 +181,17 @@
         when: "'virthost' in groups"
 
       - name: Create fence-nova pacemaker resource
-        shell: "pcs stonith create fence-nova fence_compute auth-url=$OS_AUTH_URL login=$OS_USERNAME passwd=$OS_PASSWORD tenant-name=$OS_TENANT_NAME domain=localdomain record-only=1 no-shared-storage=False action=off --force"
+        shell: "pcs stonith create fence-nova fence_compute auth-url=$OS_AUTH_URL login=$OS_USERNAME passwd=$OS_PASSWORD tenant-name=$OS_TENANT_NAME domain=localdomain record-only=1 no-shared-storage=False --force"
+
+      - name: Create constraint for fence-nova in order not to stop whole control plane when cleaning fence-nova stonith device up
+        shell: "pcs constraint location fence-nova rule resource-discovery=never score=0 osprole eq controller --force"
 
       - name: Create pacemaker constraint for fence-nova to start after galera
         shell: "pcs constraint order promote galera-master then fence-nova require-all=false"
+
+      - name: Create pacemaker constraint for nova-fence to start after all nova resource started on older release with all services managed by pcs
+        shell: "pcs constraint order start openstack-nova-conductor-clone then start fence-nova require-all=false"
+        when: "{{ installer.product.version|openstack_release }} < 10"
 
       - name: Create nova-compute order constraint on fence-nova
         shell: "pcs constraint order start fence-nova then nova-compute-clone"
@@ -252,8 +259,8 @@
         shell: "systemctl show openstack-nova-compute --property=ActiveState"
         register: compute_status_result
         until: compute_status_result.stdout.find('inactive') == -1 and compute_status_result.stdout.find('activating') == -1
-        retries: 180
-        delay: 1
+        retries: 600
+        delay: 3
 
 - name: Cleanup all pacemaker resource
   hosts: controller[0]
