@@ -70,6 +70,11 @@
         shell: "source ~/stackrc; openstack baremetal configure boot"
 
       - name: start node introspection
-        shell: "source ~/stackrc; openstack baremetal introspection bulk start"
-        register: introspection_result
-        failed_when: introspection_result.rc != 0
+        shell: |  
+            source ~/stackrc
+            openstack baremetal introspection bulk start
+        register: introspection_status
+        retries: 5
+        delay: 10
+        until: introspection_status.rc == 0
+        #ignore_errors: yes
