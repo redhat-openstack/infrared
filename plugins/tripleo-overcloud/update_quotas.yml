@@ -1,0 +1,14 @@
+---
+- name: Neutron quotas update
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - name: Set neutron quotas to unlimited
+        ignore_errors: true
+        shell: >
+            source ~/overcloudrc;
+            neutron quota-update --subnet -1;
+            neutron quota-update --network -1;
+            neutron quota-update --security_group -1;
+        tags: skip_ansible_lint
