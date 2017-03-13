@@ -9,14 +9,21 @@
     {
       "name": "{{ hostvars[host_name].inventory_hostname }}",
       "pm_addr": "{{ hostvars['hypervisor'].ansible_management.ipv4.address }}",
-      "pm_password": "{{ undercloud_private_key }}",
-      "pm_type": "pxe_ssh",
       "mac": ["{{ hostvars[host_name]['ansible_eth0']['macaddress'] }}"],
       "cpu": "{{ hostvars[host_name]['ansible_processor_cores'] }}",
       "memory": "{{ hostvars[host_name]['ansible_memtotal_mb'] }}",
       "disk": "{{ hostvars[host_name].ansible_devices.vda.size.split()[0] | int }}",
       "arch": "{{ hostvars[host_name]['ansible_architecture'] }}",
-      "pm_user": "{{ ansible_ssh_user }}"
+      {% if install.version | int >= 11 %}
+        "pm_type": "pxe_ipmitool",
+        "pm_user": "admin",
+        "pm_password": "password",
+        "pm_port": "{{ hostvars[host_name]['vbmc_port'] }}"
+      {% else %}
+        "pm_type": "pxe_ssh",
+        "pm_user": "{{ ansible_ssh_user }}",
+        "pm_password": "{{ undercloud_private_key }}"
+      {% endif %}
     }{% if not loop.last %},{% endif %}
 {% endfor %}
     ]
