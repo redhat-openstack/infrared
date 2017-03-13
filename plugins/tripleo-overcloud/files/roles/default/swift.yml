@@ -19,4 +19,4 @@ swift_role:
         - OS::TripleO::Services::TripleoFirewall
         - OS::TripleO::Services::SensuClient
         - OS::TripleO::Services::FluentdClient
-        - OS::TripleO::Services::VipHosts
+        - "{% if install.version |int < 11 %}OS::TripleO::Services::VipHosts{% endif %}"

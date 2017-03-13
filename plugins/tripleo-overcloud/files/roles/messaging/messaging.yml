@@ -1,0 +1,27 @@
+---
+messaging_role:
+    name: Messaging
+
+    resource_registry:
+        OS::TripleO::Messaging::Net::SoftwareConfig: ${deployment_dir}/network/nic-configs/messaging.yaml
+        OS::TripleO::Messaging::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/external.yaml
+        OS::TripleO::Messaging::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api.yaml
+        OS::TripleO::Messaging::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage.yaml
+        OS::TripleO::Messaging::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_mgmt.yaml
+        OS::TripleO::Messaging::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/tenant.yaml
+
+    flavor: messaging
+    host_name_format: 'messaging-%index%'
+
+    services:
+        - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::Timezone
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::Snmp
+        - OS::TripleO::Services::Kernel
+        - OS::TripleO::Services::Pacemaker
+        - OS::TripleO::Services::RabbitMQ
+        - OS::TripleO::Services::TripleoPackages
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::FluentdClient

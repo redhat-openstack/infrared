@@ -10,7 +10,7 @@ controller_role:
 
     services:
         - OS::TripleO::Services::CACerts
-        - OS::TripleO::Services::CephMon
+        - OS::TripleO::Services::CephClient
         - OS::TripleO::Services::CephExternal
         - OS::TripleO::Services::CephRgw
         - OS::TripleO::Services::CinderApi
@@ -27,9 +27,12 @@ controller_role:
         - OS::TripleO::Services::HeatApiCloudwatch
         - OS::TripleO::Services::HeatEngine
         - OS::TripleO::Services::MySQL
+        - OS::TripleO::Services::NeutronDhcpAgent
+        - OS::TripleO::Services::NeutronL3Agent
+        - OS::TripleO::Services::NeutronMetadataAgent
         - OS::TripleO::Services::NeutronApi
         - OS::TripleO::Services::NeutronCorePlugin
-        - OS::TripleO::Services::RabbitMQ
+        - OS::TripleO::Services::NeutronOvsAgent
         - OS::TripleO::Services::HAproxy
         - OS::TripleO::Services::Keepalived
         - OS::TripleO::Services::Memcached
@@ -75,6 +78,7 @@ controller_role:
         - OS::TripleO::Services::TripleoPackages
         - OS::TripleO::Services::TripleoFirewall
         - OS::TripleO::Services::OpenDaylightApi
+        - OS::TripleO::Services::OpenDaylightOvs
         - OS::TripleO::Services::SensuClient
         - OS::TripleO::Services::FluentdClient
-        - OS::TripleO::Services::VipHosts
+        - "{% if install.version |int < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
