@@ -1,0 +1,29 @@
+- name: Backup the Undercloud image
+  hosts: hypervisor
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      undercloud: "{{ hostvars[(groups.undercloud|first)].inventory_hostname }}"
+      undercloud_image_file: "{{ install.quickstart.filename.rstrip('.qcow2') }}.qcow2"
+  tasks:
+      - name: install package with virt-sparsify
+        package:
+            name: libguestfs-tools-c
+            state: present
+
+      - name: shutdown the undercloud VM
+        virt:
+            name: "{{ undercloud }}"
+            state: destroyed
+
+      - name: copy and shrink undercloud image
+        command: "virt-sparsify --compress /var/lib/libvirt/images/{{ undercloud }}-disk1.qcow2 {{ undercloud_image_file }}"
+
+      - name: copy our auth key to the hypervisor
+        copy:
+            src: "{{ ansible_ssh_private_key_file | expanduser | realpath }}"
+            dest: "~/backup_server_auth_key"
+            mode: "0400"
+
+# TODO(yfried): accept a destination to push image to, and cleanup. Use ansible modules instead
+# of hard-coded scp

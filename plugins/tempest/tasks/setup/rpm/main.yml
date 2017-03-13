@@ -1,0 +1,44 @@
+- name: Install tempest from rpm
+  become: yes
+  package:
+      name: "openstack-tempest"
+      state: present
+  register: tempest_rpm
+
+- name: List tempest version
+  become: yes
+  command: "rpm -q --qf %{VERSION} openstack-tempest"
+  register: tempest_rpm_version
+
+- name: List tempest release
+  become: yes
+  command: "rpm -q --qf %{RELEASE} openstack-tempest"
+  register: tempest_rpm_release
+
+- debug: "msg='Build mark: tempest={{ tempest_rpm_version.stdout }}-{{ tempest_rpm_release.stdout }}'"
+
+- name: Install test plugins
+  include: install_plugins.yml
+  with_items: "{{ test.tests }}"
+  loop_control:
+      loop_var: test_suite
+
+- name: Install junitxml
+  become: yes
+  package:
+      name: "python-junitxml"
+      state: present
+
+# TODO(psedlak): make subunit2junitxml usage opt. in script, add the flag for run-tests.sh in run.yml after that
+- name: Install subunit filters - needed for subunit2junitxml
+  become: yes
+  package:
+      name: "subunit-filters"
+      state: present
+
+- name: Install test dependency
+  become: yes
+  package:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ setup.dependencies }}"

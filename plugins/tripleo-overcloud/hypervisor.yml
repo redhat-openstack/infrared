@@ -1,0 +1,43 @@
+- name: Gather facts from hosts
+  hosts: all:!localhost:!ovb
+  any_errors_fatal: true
+
+- name: Generate the instackenv.json
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: grab undercloud private key
+        command: "cat ~/.ssh/id_rsa"
+        register: uc_pkey_result
+
+      - name: prepare instack.json if one doesn't exist
+        vars:
+            instack_input: "{{ (install.instackenv|default({})).file|default('') }}"
+            instack_output: "~/instackenv.json"
+            # json file shouldn't hold newlines
+            undercloud_private_key: "{{ uc_pkey_result.stdout_lines | join('\\n')}}"
+        template:
+            src: templates/instackenv.json.j2
+            dest: "{{ instack_output }}"
+        when: not instack_input
+
+      - name: Retrieve public key from private key to localhost
+        command: "ssh-keygen -y -f ~/.ssh/id_rsa"
+        register: uc_pubkey_result
+
+      - name: insert the public key to the known hosts in hypervisor
+        authorized_key:
+            user: "{{ ansible_ssh_user }}"
+            key: "{{ uc_pubkey_result.stdout }}"
+        delegate_to: hypervisor
+
+      # Using delegete here because of
+      # https://github.com/ansible/ansible/issues/16972
+      # This issue causes an exception when that playbook is included with the false condition
+      - name: power off overcloud nodes
+        virt:
+            name: "{{ item }}"
+            state: destroyed
+        with_items: "{{ groups['overcloud_nodes'] }}"
+        delegate_to: hypervisor

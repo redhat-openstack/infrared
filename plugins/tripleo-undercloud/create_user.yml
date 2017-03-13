@@ -1,0 +1,90 @@
+---
+- name: Setup non-root User
+  gather_facts: no
+  hosts: undercloud
+  any_errors_fatal: true
+  # Ensure root access for this
+  become: yes
+  become_user: root
+  vars:
+      local_undercloud_pubkey: "{{ inventory_dir }}/id_rsa_undercloud.pub"
+      default_privatekey: "~/.ssh/id_rsa"
+      default_pubkey: "{{ default_privatekey }}.pub"
+
+  tasks:
+      - name: sudoers no tty
+        lineinfile:
+            dest: /etc/sudoers
+            state: absent
+            regexp: 'Defaults\s+requiretty'
+
+      - name: create default user
+        user:
+            name: "{{ install.user.name }}"
+            state: present
+            password: "{{ install.user.password | password_hash('sha512') }}"
+
+      - name: add user to sudoers
+        lineinfile:
+            dest: "/etc/sudoers"
+            line: "{{ install.user.name }} ALL=(root) NOPASSWD:ALL"
+
+      - name: create .ssh direcotry for non-root user
+        file:
+            path: "{{ default_privatekey | dirname }}"
+            state: directory
+        become_user: "{{ install.user.name }}"
+        become: yes
+
+      - block:
+          - name: inject local private key to undercloud
+            copy:
+                src: "{{ ansible_ssh_private_key_file }}"
+                dest: "{{ default_privatekey }}"
+                mode: 0600
+                force: yes
+            register: key_injection
+            become_user: "{{ install.user.name }}"
+            become: yes
+
+
+          - name: Retrieve public key from private key
+            shell: "ssh-keygen -y -f {{ default_privatekey }} > {{ default_pubkey }}"
+            become_user: "{{ install.user.name }}"
+            become: yes
+
+          - name: Retrieve public key from private key to localhost
+            shell: "ssh-keygen -y -f {{ ansible_ssh_private_key_file }} > {{ local_undercloud_pubkey }}"
+            delegate_to: localhost
+            become: no
+
+        rescue:
+          - name: inject local SSH keys to undercloud
+            copy:
+                src: "{{ item }}"
+                dest: "{{ item }}"
+                mode: 0600
+                force: yes
+            with_items:
+                - "{{ default_privatekey }}"
+                - "{{ default_pubkey }}"
+            become_user: "{{ install.user.name }}"
+            become: yes
+
+      - set_fact:
+            src_publickey: "{{ (key_injection|success) | ternary(local_undercloud_pubkey, local_pubkey) }}"
+
+      - set_fact:
+            publickey: "{{ lookup('file', src_publickey) }}"
+
+      - name: set up authorized_keys for non root user
+        authorized_key:
+            user: "{{ install.user.name }}"
+            key: "{{ publickey }}"
+
+      - name: Update hosts user
+        add_host:
+            name: "{{ inventory_hostname }}"
+            ansible_ssh_user: "{{ install.user.name }}"
+
+- include: update_inventory.yml

@@ -1,0 +1,91 @@
+---
+- name: Setup packstack on controller
+  hosts: controller
+  gather_facts: no
+  become: yes
+  any_errors_fatal: true
+  vars_files:
+      - vars/network/common/3_nics_common.yml
+      - "vars/network/service/{{ install.network.service }}.yml"
+      - "vars/network/variant/{{ install.network.variant }}.yml"
+  vars:
+      basic_config:
+          CONFIG_PROVISION_DEMO: n
+          CONFIG_PROVISION_TEMPEST: n
+          CONFIG_USE_EPEL: n
+          CONFIG_SWIFT_INSTALL: y
+          CONFIG_CEILOMETER_INSTALL: y
+          CONFIG_HEAT_INSTALL: y
+          CONFIG_HEAT_CFN_INSTALL: y
+          CONFIG_NEUTRON_USE_NAMESPACES: y
+          CONFIG_HORIZON_INSTALL: y
+          CONFIG_NOVA_NETWORK_DEFAULTFLOATINGPOOL: public
+          CONFIG_SAHARA_INSTALL: "{% if install.component.sahara %}y{% else %}n{% endif %}"
+          CONFIG_TROVE_INSTALL: "{% if install.component.trove %}y{% else %}n{% endif %}"
+      packstack_config: "{{ basic_config | combine(network_config) | combine(network_variant_config) }}"
+      answers_file: "/root/{{ install.answer.file }}"
+  tasks:
+      - name: Install packstack package
+        package:
+            name: openstack-packstack
+            state: present
+
+      - name: Generate answer file
+        command: "packstack --gen-answer-file={{ answers_file }}"
+
+      - name: Default to kvm
+        ini_file:
+            dest: "{{ answers_file }}"
+            section: general
+            option: CONFIG_NOVA_LIBVIRT_VIRT_TYPE
+            value: kvm
+
+#      - name: Edit packstack answer-file from the config
+#        lineinfile:
+#            dest: "{{ answers_file }}"
+#            regexp: "^{{ item.key }}=.*"
+#            line: "{{ item.key }}={{ item.value }}"
+#        with_dict: "{{ packstack_config }}"
+
+      # TODO(yfried): consider "delegate_to: localhost" to save ssh connections
+      - name: Edit packstack answer-file from the config
+        ini_file:
+            dest: "{{ answers_file }}"
+            section: general
+            option: "{{ item.key }}"
+            value: "{{ item.value }}"
+        with_dict: "{{ packstack_config }}"
+
+      - name: Update network hosts
+        ini_file:
+            dest: "{{ answers_file }}"
+            section: general
+            option: CONFIG_NETWORK_HOSTS
+            value: "{% for host in groups.get('network', []) %}{{ hostvars[host]['ansible_default_ipv4']['address'] }}{% if not loop.last %},{% endif %}{% endfor %}"
+
+      - name: Update compute hosts
+        ini_file:
+            dest: "{{ answers_file }}"
+            section: general
+            option: CONFIG_COMPUTE_HOSTS
+            value: "{% for host in groups.compute %}{{ hostvars[host]['ansible_default_ipv4']['address'] }}{% if not loop.last %},{% endif %}{% endfor %}"
+        when: groups.compute is defined
+
+      - name: Update password values in answer file with default password
+        replace:
+            dest: "{{ answers_file }}"
+            regexp: (.*_PASSWORD|.*_PW)=.*
+            replace: \1=redhat
+
+      - name: Running packstack
+        shell: "packstack --debug --answer-file={{ answers_file }} && touch /root/packstack-already-done"
+        args:
+            creates: /root/packstack-already-done
+        register: result
+
+      - name: Fetch the keystonerc file to the workspace's dir
+        fetch:
+            src: "/root/keystonerc_admin"
+            dest: "{{ inventory_dir }}/keystonerc"
+            flat: yes
+            validate_checksum: yes

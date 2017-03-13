@@ -1,0 +1,40 @@
+- name: Create the tempest directory
+  file:
+      dest: "~/{{ test.dir }}"
+      state: directory
+
+- name: Get the script which configures the tempest directory
+  shell: ls -d /usr/share/openstack-tempest-*/tools/configure-tempest-directory
+  register: configure_tempest_dir
+  ignore_errors: true
+
+- name: Initialize tempest workspace directory using configure-tempest-directory
+  command: "{{ configure_tempest_dir.stdout_lines[0] }}"
+  args:
+      chdir: "~/{{ test.dir }}"
+      creates: "~/{{ test.dir }}/LICENSE"
+  when: configure_tempest_dir.rc == 0
+
+- name: Install tempestconf if config script is not part of tempest
+  become: yes
+  package:
+      name: python-tempestconf
+      state: present
+  when: configure_tempest_dir.rc != 0
+
+- name: Initialize tempest workspace directory using tempest init
+  command: "tempest init"
+  args:
+      chdir: "~/{{ test.dir }}"
+      creates: "~/{{ test.dir }}/etc"
+  when: configure_tempest_dir.rc != 0
+
+- name: Check if we have tempestconf tool installed
+  stat:
+      path: /usr/bin/discover-tempest-config
+  register: tempest_conf_tool
+
+- name: Set facts for configuration run
+  set_fact:
+      config_command: /usr/bin/discover-tempest-config
+  when: tempest_conf_tool.stat.exists

@@ -1,0 +1,19 @@
+---
+- name: Patch hypervisor for undercloud deployment (if present)
+  tags: hypervisor
+  include: hypervisor.yml
+  when: "'hypervisor' in groups"
+
+- include: init.yml
+  tags: init
+
+# FIXME(yfried): dump facts?
+
+- include: setup_packages.yml
+  tags: install
+
+- include: configure.yml
+  tags: configure
+
+- include: deploy.yml
+  tags: deploy

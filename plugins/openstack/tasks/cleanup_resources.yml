@@ -1,0 +1,59 @@
+---
+# If file is missing, nothing to do.
+- name: include resource registery file
+  include_vars: "{{ inventory_dir }}/resources.yml"
+
+- name: Cleanup keypairs
+  os_keypair:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      name: "{{ item.id }}"
+      state: absent
+  with_items: "{{ keypairs|default([]) }}"
+  register: keypairs_cleanup
+
+- name: Cleanup servers
+  os_server:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      name: "{{ item.id }}"
+      state: absent
+      delete_fip: yes
+  with_items: "{{ servers|default([]) }}"
+  register: servers_cleanup
+
+- name: Cleanup routers
+  os_router:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      name: "{{ item.id }}"
+      state: absent
+  with_items: "{{ routers|default([]) }}"
+  register: routers_cleanup
+
+- name: Cleanup subnets
+  os_subnet:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      name: "{{ item.id }}"
+      state: absent
+  with_items: "{{ subnets|default([]) }}"
+  register: subnets_cleanup
+
+- name: Cleanup networks
+  os_network:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      name: "{{ item.id }}"
+      state: absent
+  with_items: "{{ networks|default([]) }}"
+  register: networks_cleanup
+
+#TODO(aopincar): Add 'security groups' cleanup task
+
+- name: Fail run if one of neutron cleanups tasks failed/skipped
+  fail:
+      msg: "The run failed because one of cleanup tasks failed/skipped"
+  when: >
+      not (routers_cleanup|succeeded and
+           subnets_cleanup|succeeded and
+           networks_cleanup|succeeded and
+           keypairs_cleanup|succeeded and
+           servers_cleanup|succeeded)
+
+

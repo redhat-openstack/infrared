@@ -1,0 +1,28 @@
+resource_registry:
+    OS::TripleO::ControllerExtraConfigPre: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/pre_deploy/controller/cinder-netapp.yaml
+
+parameter_defaults:
+    CinderEnableIscsiBackend: false
+    CinderEnableNetappBackend: true
+    CinderNetappBackendName: 'tripleo_netapp'
+    CinderNetappLogin: "{{ private.storage.netapp.CinderNetappLogin }}"
+    CinderNetappPassword: "{{ private.storage.netapp.CinderNetappPassword }}"
+    CinderNetappServerHostname: "{{ private.storage.netapp.CinderNetappServerHostname }}"
+    CinderNetappServerPort: '80'
+    CinderNetappSizeMultiplier: '1.2'
+    CinderNetappStorageFamily: 'ontap_7mode'
+    CinderNetappTransportType: 'http'
+    CinderNetappEseriesHostType: ''
+{%  if 'iscsi' in install.storage.backend %}
+    CinderNetappStorageProtocol: 'iscsi'
+    CinderNetappVolumeList: "{{ private.storage.netapp.CinderNetappVolumeList }}"
+{%  elif 'nfs' in install.storage.backend %}
+    CinderNetappStorageProtocol: 'nfs'
+    CinderNetappVfiler: ''
+    CinderNetappVolumeList: ''
+    CinderNetappVserver: ''
+    CinderNetappPartnerBackendName: ''
+    CinderNetappNfsShares: "{{ private.storage.netapp.CinderNetappNfsShares }}"
+    CinderNetappNfsSharesConfig: '/etc/cinder/shares.conf'
+    CinderNetappNfsMountOptions: "{{ private.storage.netapp.CinderNetappNfsMountOptions }}"
+{% endif %}

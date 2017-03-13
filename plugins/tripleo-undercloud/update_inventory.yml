@@ -1,0 +1,15 @@
+---
+- name: Update the inventory file
+  hosts: localhost
+  gather_facts: no
+  tasks:
+      - name: generate inventory file
+        template:
+            dest: "{{ inventory_dir }}/hosts-install"
+            src: templates/inventory.j2
+
+      - name: update inventory file symlink
+        file:
+            src: "hosts-install"
+            dest: "{{ inventory_dir }}/hosts"
+            state: link

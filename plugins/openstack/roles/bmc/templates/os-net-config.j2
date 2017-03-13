@@ -1,0 +1,17 @@
+network_config:
+    -
+        type: interface
+        name: {{ bmc_interface_name }}
+        use_dhcp: false
+        mtu: 1450
+        routes:
+            - default: true
+              next_hop: {{ internal_default_gateway }}/{{ internal_cidr_prefix }}
+        addresses:
+{% for invnetory_name in groups.ovb + groups.bmc %}
+{% for host in openstack_servers %}
+{% if invnetory_name == host.name %}
+            - ip_netmask: {{ host.addresses[bmc_ipmi_network_name][0].addr }}/{{ internal_cidr_prefix }}
+{% endif %}
+{% endfor %}
+{% endfor %}

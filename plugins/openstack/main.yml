@@ -1,0 +1,6 @@
+---
+- include: cleanup.yml
+  when: provision.cleanup|default(False)
+
+- include: provision.yml
+  when: not provision.cleanup|default(False)

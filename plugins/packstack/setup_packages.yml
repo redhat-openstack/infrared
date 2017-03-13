@@ -1,0 +1,24 @@
+---
+- name: Setup openstack repos
+  hosts: openstack_nodes
+  gather_facts: yes
+  become: yes
+  any_errors_fatal: true
+  roles:
+      - role: rhos-release
+        rr_rpm_url: https://url.corp.redhat.com/rhos-release-latest-rpm
+        release: "{{ install.version }}"
+        build: "{{ install.build }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+  tasks:
+      - name: Update all packages
+        package:
+            name: "*"
+            state: latest
+
+      - name: Enable patched_rpms repository
+        yum_repository:
+            enabled: true
+            name: patched_rpms
+        when: patch is defined
+

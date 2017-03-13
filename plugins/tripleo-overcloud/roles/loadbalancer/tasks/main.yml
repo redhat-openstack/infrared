@@ -1,0 +1,118 @@
+---
+- name: switch selinux to permissive
+  selinux: policy=targeted state=permissive
+
+#this is required to have the 22 port free on haproxy VIP's
+- name: setup ssh to listen on existing external IP
+  lineinfile:
+      dest: "/etc/ssh/sshd_config"
+      line: "ListenAddress {{ hostvars[inventory_hostname].ansible_ssh_host }}"
+
+- name: setup ssh for loadbalancer to listen on external VIP
+  lineinfile:
+      dest: "/etc/ssh/sshd_config"
+      line: "ListenAddress {{ loadbalancer.network.external.vip | ipaddr('address') }}"
+
+- name: restart sshd service
+  service:
+      name: sshd
+      state: restarted
+
+- name: enable vlan kernel module
+  lineinfile:
+      dest: "/etc/sysconfig/modules/vlan.modules"
+      state: present
+      create: yes
+      line: "exec /sbin/modprobe 8021q >/dev/null 2>&1"
+
+
+- name: create VLAN interface for plain network
+  template:
+      src: vlan-plain.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ loadbalancer.network.oc_interface }}
+  when: loadbalancer.network.plain is defined
+
+- name: create IPV4 VLAN interface for external network as alias
+  template:
+      src: vlan-external.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ loadbalancer.network.ex_interface }}:0
+  when: loadbalancer.network.external is defined and install.network.protocol == 'ipv4'
+
+- name: create IPV6 VLAN interface for external network
+  lineinfile:
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ loadbalancer.network.ex_interface }}
+      line: "{{ item }}"
+  with_items:
+      - "IPV6_AUTOCONF=no"
+      - "IPV6ADDR={{ loadbalancer.network.external.vip | ipaddr('address') }}"
+      - "IPV6PREFIX={{ loadbalancer.network.external.vip | ipaddr('prefix') }}"
+  when: loadbalancer.network.external is defined and install.network.protocol == 'ipv6'
+
+- name: create VLAN interface for internal_api network
+  template:
+      src: vlan-internal_api.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ loadbalancer.network.oc_interface }}.{{ loadbalancer.network.internal_api.vlanid }}
+  when: loadbalancer.network.internal_api is defined
+
+- name: create VLAN interface for storage network
+  template:
+      src: vlan-storage.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ loadbalancer.network.oc_interface }}.{{ loadbalancer.network.storage.vlanid }}
+  when: loadbalancer.network.storage is defined
+
+- name: create VLAN interface for storage_mgmnt network
+  template:
+      src: vlan-storage_mgmt.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ loadbalancer.network.oc_interface }}.{{ loadbalancer.network.storage_mgmnt.vlanid }}
+  when: loadbalancer.network.storage_mgmnt is defined
+
+- name: create VLAN interface for tenant network
+  template:
+      src: vlan-tenant.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ loadbalancer.network.oc_interface }}.{{ loadbalancer.network.tenant.vlanid }}
+  when: loadbalancer.network.tenant is defined
+
+- name: update all packages
+  yum: name=* state=latest
+
+- name: install haproxy service
+  yum: name=haproxy state=present
+
+- name: copy haproxy configuration file
+  vars:
+      controllers_number: "{{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or 1 }}"
+  template:
+      src: haproxy.cfg.j2
+      dest: /etc/haproxy/haproxy.cfg
+
+- name: start haproxy service
+  service:
+      name: haproxy
+      state: started
+      enabled: yes
+
+- name: reboot the loadbalancer
+  command: "virsh reboot {{ inventory_hostname }}"
+  delegate_to: virthost
+  when: "'virthost' in groups"
+  become: no
+
+- name: reboot the loadbalancer
+  shell: "sleep 2 && shutdown -r now"
+  async: 1
+  poll: 0
+  ignore_errors: true
+  when: "'virthost' not in groups"
+
+- name: Waiting for the loadbalancer to be available
+  delegate_to: localhost
+  wait_for:
+      host: "{{ hostvars[inventory_hostname].ansible_ssh_host }}"
+      timeout: 120
+  become: no
+
+- name: Make sure haproxy service is started
+  service:
+      name: haproxy
+      state: started
+      enabled: yes

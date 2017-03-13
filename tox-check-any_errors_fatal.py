@@ -49,7 +49,7 @@ def print_explanation():
         To pass this test, ALL ansible PLAYS in this repo need to have
         any_errors_fatal explicitely defined.
 
-        And in most cases in InfraRed set to true, e.g.:
+        And in most cases in infrared set to true, e.g.:
 
         - name: blah
           hosts: compute

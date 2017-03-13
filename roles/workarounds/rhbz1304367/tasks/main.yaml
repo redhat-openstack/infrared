@@ -1,7 +1,0 @@
-- name: Get the ceph nodes IPs
-  shell: "source ~/stackrc; nova list | awk '/ceph/ {print $12}' | grep -oP '[0-9.]+'"
-  register: ip_list
-
-- name: Workaround for CEPH
-  shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ item }} 'sudo systemctl restart ceph'"
-  with_items: "{{ ip_list.stdout_lines }}"

@@ -1,0 +1,57 @@
+- name: Install devel packages for package build dependencies
+  become: yes
+  yum:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ setup.packages }}"
+
+- name: Create venv with latest pip, setuptools and pbr
+  pip:
+      virtualenv: "~/.tempest_venv"
+      virtualenv_site_packages: yes
+      name: "{{ item }}"
+      state: latest
+  with_items:
+      - pip
+      - setuptools
+      - pbr
+
+- name: Quickly workaround recent requests bug in 2.12
+  pip:
+      name: "requests"
+      version: "2.11.1"
+      virtualenv: "~/.tempest_venv"
+
+- name: Install tempest from pip
+  pip:
+      virtualenv: "~/.tempest_venv"
+      name: "Tempest"
+      state: latest
+  register: tempest_pip
+
+- name: Print pip tempest version
+  shell: |
+      source ~/.tempest_venv/bin/activate
+      tempest --version 2>&1 | awk {'print $2'}
+  register: tempest_pip_version
+
+- debug: "msg='Build mark: tempest={{ tempest_pip_version.stdout }}'"
+
+- name: Install test plugins
+  include: install_plugins.yml
+  with_items: "{{ test.tests }}"
+  loop_control:
+      loop_var: test_suite
+  when: test.openstack.version|int >= 7
+
+- name: Install test dependency
+  become: yes
+  package:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ setup.dependencies }}"
+
+- name: Warning message
+  debug:
+      msg: WARNING! Plugins are not available for RHOS version < 7
+  when: test.openstack.version|int < 7

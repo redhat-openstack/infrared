@@ -1,0 +1,21 @@
+- name: Pre run configuration
+  include: "{{ provision_pre | default('pre.yml') }}"
+  tags: pre
+
+- name: Create Networks
+  include: "{{ provision_network_resources | default('provision_network_resources.yml') }}"
+  tags: networks
+
+- name: Provision Vms
+  include: "{{ provision_vms | default('provision_vms.yml') }}"
+  tags: vms
+
+- name: Post provision node configuration
+  include: "{{ provision_post | default('post.yml') }}"
+  tags: post
+#
+#- handlers:
+#    - name: write resources
+#      debug:
+#          var: resource_collection
+#

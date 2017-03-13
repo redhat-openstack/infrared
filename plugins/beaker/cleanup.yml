@@ -1,0 +1,25 @@
+---
+- name: Use Beaker to release the machine
+  hosts: localhost
+  vars_files:
+    - "vars/image/{{ provision.image }}.yml"
+  tasks:
+    - name: Releasing machine using the 'beaker_provisioner' module
+      beaker_provisioner:
+          url: "{{ provision.url }}"
+          username: "{{ provision.beaker.user }}"
+          password: "{{ provision.beaker.password }}"
+          host: "{{ provision.host.address }}"
+          action: "release"
+          distro_tree_id: "{{ distro_id }}"
+          web_service: "{{ provision.web.service }}"
+          ca_cert: "{{ (provision.ca|default({})).cert | default(omit) }}"
+
+    # We need to recreate hosts file as there might be remaining assumptions
+    # from previous run (openstack_nodes, controllers) which might break
+    # idempotency.
+    - name: Clean old inventory file
+      file:
+          dest: "{{ inventory_dir }}/hosts"
+          state: link
+          src: "local_hosts"

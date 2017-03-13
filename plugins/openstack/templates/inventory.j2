@@ -1,0 +1,22 @@
+{% for host in groups['all'] %}
+{% if hostvars[host].get('ansible_connection', '') == 'local' %}
+{{ host }} ansible_connection=local ansible_python_interpreter=python
+{%- else %}
+
+{{ host }} ansible_ssh_host={{ hostvars[host]['ansible_ssh_host'] }} ansible_ssh_user={{ hostvars[host]['ansible_ssh_user'] }}
+{%- if hostvars[host]['ansible_ssh_private_key_file'] is defined %} ansible_ssh_private_key_file={{ hostvars[host]['ansible_ssh_private_key_file'] }}
+{%- endif %}
+{%- if hostvars[host]['ansible_ssh_common_args'] is defined %} ansible_ssh_common_args='{{ hostvars[host]['ansible_ssh_common_args'] }}'
+{%- endif %}
+{% endif %}
+{% endfor %}
+
+{% for group in groups %}
+{% if group not in ['ungrouped', 'all'] %}
+
+[{{ group }}]
+{% for host in groups[group] %}
+{{ host }}
+{% endfor %}
+{% endif %}
+{% endfor %}

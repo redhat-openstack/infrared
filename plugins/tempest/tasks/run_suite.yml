@@ -1,0 +1,85 @@
+- name: set facts for test suite
+  set_fact:
+      test_output_file: "tempest-results-{{ test_suite }}.xml"
+      blacklistfile: ''
+      whitelistfile: ''
+      regex: ''
+
+- name: Include test suite vars
+  include_vars: "vars/tests/{{ test_suite }}.yml"
+
+- name: remove old test list for "{{ test_suite }}"
+  file:
+      state: absent
+      name: "{{ test.dir }}/{{ item }}"
+  with_items:
+      - white_list
+      - black_list
+      - "{{ test_output_file }}"
+
+- block:
+    - name: create Test List - Whitelist for "{{ test_suite }}"
+      lineinfile:
+          create: yes
+          dest: "{{ test.dir }}/white_list"
+          line: "{{ item }}"
+          regexp: "^{{ item }}$"
+      with_items: "{{ test_dict.whitelist | default([]) }}"
+
+    - name: add whitelist invocation
+      set_fact:
+          whitelistfile: "--whitelist_file white_list"
+
+  when: test_dict.whitelist is defined and test_dict.whitelist
+
+- block:
+    - name: create Test List - Blacklist for "{{ test_suite }}"
+      lineinfile:
+          create: yes
+          dest: "{{ test.dir }}/black_list"
+          line: "{{ item }}"
+          regexp: "^{{ item }}$"
+      with_items: "{{ test_dict.blacklist | default([]) }}"
+
+    - name: add blacklist invocation
+      set_fact:
+          blacklistfile: "--blacklist_file black_list"
+  when: test_dict.blacklist is defined and test_dict.blacklist
+
+- name: add regex invoke for "{{ test_suite }}"
+  set_fact:
+      regex: "{{ test_dict.test_regex }}"
+  when: test_dict.test_regex is defined and test_dict.test_regex
+
+- block:
+      - name: run tempest "{{ test_suite }}" suite
+        shell: >
+            test -e .venv/bin/activate && source .venv/bin/activate;
+            ostestr -s --no-pretty --regex '{{ regex | default('') }}' {{ whitelistfile }} {{ blacklistfile }}
+            | subunit2junitxml --output-to={{ test_output_file }} | subunit2pyunit
+        args:
+            executable: /bin/bash
+            chdir: "{{ test.dir }}"
+        ignore_errors: true
+
+      - name: inject the test suite name to the XML name atribute
+        command: "sed '/^<testsuite/s/name=\"\"/name=\"{{ test_suite }}\"/' -i {{ test_output_file }}"
+        args:
+            chdir: "{{ test.dir }}"
+
+      - name: Fetch resulting file
+        fetch:
+            src: "{{ test.dir }}/{{ test_output_file }}"
+            dest: "{{ inventory_dir }}/tempest_results/{{ test_output_file }}"
+            flat: yes
+            fail_on_missing: yes
+
+      - name: cleanup the resources created by the test and not cleaned
+        shell: >
+            test -e .venv/bin/activate && source .venv/bin/activate;
+            tempest cleanup
+        args:
+            executable: /bin/bash
+            chdir: "{{ test.dir }}"
+        when: test.cleanup
+  when: test_dict.test_regex is defined or whitelistfile is defined or blacklistfile is defined

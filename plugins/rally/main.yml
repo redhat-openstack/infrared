@@ -1,0 +1,50 @@
+- name: Run rally tester
+  hosts: tester
+  gather_facts: yes
+  any_errors_fatal: yes
+  vars:
+      rally:
+          dir: "{{ ansible_user_dir }}/rally_repo"
+          path: "{{ ansible_user_dir }}/rally"
+          outputdir: /tmp/rally_output
+      packages:
+          - git
+          - wget
+          - which
+          - gcc
+          - libffi-devel
+          - libxml2-devel
+          - libxslt-devel
+          - openssl-devel
+          - python-virtualenv
+          - python-setuptools
+          - postgresql-devel
+          - python-devel
+          - gmp-devel
+      pip_packages:
+          - six
+  tasks:
+      - name: Include image vars
+        include_vars: "vars/image/{{ test.image }}.yml"
+        tags:
+            - always
+
+      - name: Setup rally
+        include: tasks/setup_rally.yml
+        tags:
+            - rally_dependencies
+
+      - name: Setup openstack for rally
+        include: tasks/setup_openstack.yml
+        tags:
+            - rally_openstack
+
+      - name: Run rally
+        include: tasks/run.yml
+        tags:
+            - rally_run
+
+      - name: Rally report
+        include: tasks/make_report.yml
+        tags:
+            - rally_report

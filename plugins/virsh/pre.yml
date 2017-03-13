@@ -1,0 +1,34 @@
+- name: Change key file permissions
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - file:
+          path: "{{ provision.key_file }}"
+          state: touch
+          mode: 0600
+      when: provision.key_file is defined
+
+- name: clean old inventory file
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - file:
+          dest: "{{ inventory_dir }}/hosts"
+          state: link
+          src: "local_hosts"
+
+- name: Add host to host list
+  hosts: localhost
+  gather_facts: no
+  tags: always
+  vars:
+      hypervisor: "{{ provision.host }}"
+      hypervisor_name: hypervisor
+  tasks:
+    - name: add hosts to host list
+      add_host:
+          name: "{{ hypervisor.name | default(hypervisor_name) }}"
+          groups: "{{ hypervisor.groups|default([hypervisor_name]) | join(',') }}"
+          ansible_ssh_user: "{{ hypervisor.user }}"
+          ansible_ssh_host: "{{ hypervisor.address }}"
+          ansible_ssh_private_key_file: "{{ hypervisor.key }}"

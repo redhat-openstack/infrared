@@ -1,0 +1,42 @@
+---
+- name: Pre run configuration
+  include: "{{ provision_pre | default('pre.yml') }}"
+  tags: pre
+
+- name: Prepare the hypervisor for provisioning
+  include: "{{ prepare_hypervisor | default('prepare_hypervisor.yml') }}"
+  tags: hypervisor
+
+- name: Create Networks
+  include: "{{ provision_networks | default('provision_networks.yml') }}"
+  tags: networks
+
+- name: Provision Vms
+  include: "{{ provision_vms | default('provision_vms.yml') }}"
+  tags: vms
+
+- name: Create a sudoer user for non root SSH login
+  include: "{{ provision_user | default('provision_user.yml') }}"
+  tags: user
+
+- name: Including post provision tasks
+  include: "{{ provision_post | default('post.yml') }}"
+  tags: post
+
+- name: generate inventory file
+  hosts: localhost
+  gather_facts: no
+  tags: always
+  tasks:
+    - name: generate inventory file
+      template:
+        dest: "{{ inventory_dir }}/hosts-prov"
+        src: templates/inventory.j2
+        force: yes
+
+    - name: update inventory file symlink
+      file:
+        dest: "{{ inventory_dir }}/hosts"
+        state: link
+        src: "hosts-prov"
+

@@ -1,0 +1,25 @@
+{#
+    For more details see:
+    http://docs.openstack.org/developer/tripleo-docs/advanced_deployment/node_placement.html
+#}
+
+parameter_defaults:
+{% if install.scheduler_hints|default(False) %}
+{% for node_type, details in node_types.iteritems() %}
+{% if groups[node_type]|default([])|length %}
+    {{ details.heat_name }}SchedulerHints:
+        'capabilities:node': '{{ node_type }}-%index%'
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% for node_type, details in node_types.iteritems() %}
+    {{ details.heat_name }}HostnameFormat: '{{ node_type }}-%index%'
+{% endfor %}
+
+{% if install.get("overcloud", {}).get("hostname", {}).get("HostnameMap", false) %}
+    HostnameMap:
+{% for old_name, new_name in install.overcloud.hostname.HostnameMap.iteritems() %}
+        {{ old_name }}: {{ new_name }}
+{% endfor %}
+{% endif %}

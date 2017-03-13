@@ -1,0 +1,22 @@
+swift_role:
+    name: ObjectStorage
+
+    resource_registry:
+        "OS::TripleO::ObjectStorage::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/swift-storage.yaml"
+
+    flavor: swift
+    host_name_format: 'swift-%index%'
+
+    services:
+        - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::Kernel
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::SwiftStorage
+        - OS::TripleO::Services::SwiftRingBuilder
+        - OS::TripleO::Services::Snmp
+        - OS::TripleO::Services::Timezone
+        - OS::TripleO::Services::TripleoPackages
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::FluentdClient
+        - OS::TripleO::Services::VipHosts

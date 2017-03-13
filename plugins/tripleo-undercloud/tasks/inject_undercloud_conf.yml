@@ -1,0 +1,8 @@
+# This is a helper task for a nested loop
+- name: override values in undercloud conf
+  ini_file:
+      dest: ~/undercloud.conf
+      section: "{{ section.key }}"
+      option: "{{ item.key }}"
+      value: "{{ item.value }}"
+  with_dict: "{{ section.value }}"

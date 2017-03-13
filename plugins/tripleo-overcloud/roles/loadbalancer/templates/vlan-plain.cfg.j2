@@ -1,0 +1,11 @@
+DEVICE="{{ loadbalancer.network.oc_interface }}"
+BOOTPROTO="static"
+ONBOOT="yes"
+TYPE="Ethernet"
+IPADDR={{ loadbalancer.network.plain.ip | ipaddr('address') }}
+PREFIX={{ loadbalancer.network.plain.ip | ipaddr('prefix') }}
+GATEWAY={{ loadbalancer.network.plain.gateway }}
+PERSISTENT_DHCLIENT="yes"
+DNS1={{ loadbalancer.network.plain.dns1 }}
+NM_CONTROLLED=no
+METRIC=20

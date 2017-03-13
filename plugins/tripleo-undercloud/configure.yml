@@ -1,0 +1,53 @@
+- name: Configure Undercloud
+  hosts: undercloud
+  tags: configure
+  gather_facts: no
+  any_errors_fatal: true
+  vars:
+      - conf: "{{ install.config|default({}) }}"
+      - deafult_conf: /usr/share/instack-undercloud/undercloud.conf.sample
+      - local_src: "{%- if conf.file|default('') -%}
+                {{ conf.file }}
+                {%- elif 'hypervisor' in groups.all or 'bmc' in groups -%}
+                templates/undercloud.conf
+                {%- else -%}
+                False
+                {%- endif -%}"
+  tasks:
+      - name: template the undercloud.conf from local machine
+        template:
+            src: "{{ local_src }}"
+            dest: ~/undercloud.conf
+            force: yes
+            mode: 0755
+        when: local_src
+
+      - name: copy default undercloud config
+        copy:
+            remote_src: yes
+            src: "{{ deafult_conf }}"
+            dest: ~/undercloud.conf
+            force: yes
+            mode: 0755
+        when: not local_src
+
+      - name: enable undercloud-ssl
+        include: tasks/ssl.yml
+        when: install.ssl
+        tags: ssl
+
+      - name: override values in undercloud conf
+        include: tasks/inject_undercloud_conf.yml
+        with_dict: "{{ conf.options|default({}) }}"
+        loop_control:
+            loop_var: section
+
+      - name: create the base undercloud deploy script
+        template:
+            src: undercloud_deploy.sh.j2
+            dest: ~/undercloud_deploy.sh
+            mode: 0755
+
+      - name: the undercloud deploy script
+        command: "cat undercloud_deploy.sh"
+        tags: deploy

@@ -1,0 +1,76 @@
+---
+- name: Prepare the hypervisor
+  hosts: hypervisor
+  gather_facts: yes
+  any_errors_fatal: true
+  vars_files:
+    - vars/hypervisor.yml
+  tasks:
+    - name: install packages
+      package:
+          name: "{{ item }}"
+          state: present
+      with_items: "{{ packages }}"
+      register: yum_result
+
+    #check if additional binaries for UEFI mode VM boot installed
+    - name: check if uefi binaries installed
+      command: "rpm -q edk2.git-ovmf-x64"
+      register: rpm_check
+      ignore_errors: True
+      when: provision.bootmode == 'uefi'
+
+    - fail:
+          msg: "UEFI related binaries is missing, please refer http://infrared.readthedocs.io/en/latest/advanced.html#uefi-mode-related-binaries"
+      when: provision.bootmode == 'uefi' and rpm_check.stdout.find('is not installed') != -1
+
+    - name: stop libvirtd
+      service:
+          name: "libvirtd"
+          state: "stopped"
+      when: yum_result.changed
+
+    # NOTE(psedlak): due to some flakiness in >few days running libvirt/dbus
+    # lets always restart libvirt at beginning of provisioning
+    - name: "always restart libvirtd"
+      service:
+          name: "libvirtd"
+          state: "restarted"
+          enabled: yes
+
+    - name: check if host supports virtualization
+      include: tasks/enable_virtualization.yml
+
+    - name: check if private key exist on system
+      stat:
+          path: "/root/.ssh/id_rsa"
+      register: result
+
+    - name: if private key doesn't exist, create it
+      command: "ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''"
+      when: result.stat.exists != true
+
+    - name: copy server private key from hypervisor for SSH proxy
+      fetch:
+          src: "{{ item.src }}"
+          dest: "{{ item.dest }}"
+          flat: yes
+      with_items:
+          - {src: "~/.ssh/id_rsa", dest: "{{ inventory_dir }}/id_rsa"}
+          - {src: "~/.ssh/id_rsa.pub", dest: "{{ inventory_dir }}/id_rsa.pub"}
+
+    - name: update file permissions
+      file:
+          path: "{{ item }}"
+          mode: 0600
+      with_items:
+          - "{{ inventory_dir }}/id_rsa"
+          - "{{ inventory_dir }}/id_rsa.pub"
+      delegate_to: localhost
+
+    - name: Set up authorized_keys for the deploy user
+      authorized_key:
+          user: root
+          key: "{{ item }}"
+      with_file:
+        - "{{ inventory_dir }}/id_rsa.pub"

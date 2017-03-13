@@ -1,0 +1,40 @@
+---
+# save current node to "{{ node_dict }}"
+- name: get node_dict
+  include: var_lookup.yml
+  vars:
+      var_file: "{{ node.key }}"
+      partial_path: topology/nodes
+
+# For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
+- name: create vm's
+  shell: |
+      virt-install --name {{ node_dict.name }}-{{ item }} \
+          {% for disk_name, disk_values in node_dict.disks.iteritems() %}
+          {% if disk_values.import_url is defined and disk_values.import_url %}
+           --disk path={{ base_image_path }}/{{ node_dict.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
+          {% else %}
+           --disk path={{ disk_values.path }}/{{ node_dict.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
+          {% endif -%}
+          {% endfor %}
+          --boot {{ provision.bootmode }} \
+          {% for interface in node_dict.interfaces %}
+           --network {{ 'bridge' if (interface.bridged|default(False)) else 'network' }}:{{ interface.network }} \
+          {% endfor -%}
+           --virt-type kvm \
+           --cpu host-model \
+           --ram {{ node_dict.memory }} \
+           --vcpus {{ node_dict.cpu }} \
+           --os-variant {{ node_dict.os.variant }} \
+           --import \
+           --noautoconsole \
+           --autostart \
+           --vnc
+  with_sequence: start=0 end={{ node.value|int - 1 }}
+  register: vm_install
+  async: 7200
+  poll: 0
+
+- name: save install jids
+  set_fact:
+      async_install: "{{ async_install|default([]) + vm_install.results|map(attribute='ansible_job_id')|list }}"

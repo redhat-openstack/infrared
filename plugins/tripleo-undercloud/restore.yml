@@ -1,0 +1,161 @@
+---
+# Any step that should happen before initiating the osp-d playbook
+# This could be validation of the hosts, package installation that is assumed as per the guide, etc..
+- name: Prepare our undercloud
+  hosts: hypervisor
+  gather_facts: yes
+  any_errors_fatal: true
+  vars_files:
+      - vars/topology/undercloud.yml
+  vars:
+      undercloud_image_file: "{{ install.quickstart.filename }}"
+      undercloud_disk_path: "/var/lib/libvirt/images/{{ install.quickstart.filename.rstrip('.qcow2') | basename }}-disk1.qcow2"
+      undercloud_user: "{{ install.user.name | default('stack') }}"
+      # todo(yfried): add external refs so users can override these values and customize the Undercloud
+  tasks:
+      # todo(atalmor): add support to download image
+      - name: copy the image into libvirt images folder
+        copy:
+            remote_src: yes
+            force: yes
+            src: "{{ undercloud_image_file }}"
+            dest: "{{ undercloud_disk_path }}"
+            owner: qemu
+            group: qemu
+
+      - name: install libguestfs-tool / virt-customize
+        package:
+            name: libguestfs-tools
+            state: present
+
+      - name: resets undercloud image configurations
+        environment:
+            LIBGUESTFS_BACKEND: direct
+        command: >
+            virt-sysprep -a {{ undercloud_disk_path }}
+                --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net,ssh-hostkeys
+      # Copy hypervisor's key into UC root and also for "undercloud_user" as we need this user since next hosts task update inventory
+      # This is necesarry for muffin because we need to refresh the auhtortized_keys with new hypervisor's pubkey
+      - name: inject our key into the undercloud image
+        command: >
+            virt-customize -a {{ undercloud_disk_path }}
+               --root-password password:redhat
+               --mkdir /root/.ssh
+               --chmod 0700:/root/.ssh
+               --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys
+               --upload /root/.ssh/id_rsa.pub:/home/{{ undercloud_user }}/.ssh/authorized_keys
+               --chmod 0700:/home/{{ undercloud_user }}/.ssh
+               --run-command "chown {{ undercloud_user }}:{{ undercloud_user }} /home/{{ undercloud_user }}/.ssh/authorized_keys"
+               --selinux-relabel
+
+      - name: create Undercloud VM from snapshot
+        command: >
+            virt-install --name {{ undercloud_node.name }}
+               --disk path={{ undercloud_disk_path }},device=disk,bus=virtio,format=qcow2,cache={{ undercloud_node.disks.disk1.cache }}
+               --network network:data
+               --network network:management
+               --network network:external
+               --virt-type kvm
+               --cpu host-model
+               --ram {{ undercloud_node.memory }}
+               --vcpus {{ undercloud_node.cpu }}
+               --os-variant {{ undercloud_node.os.variant }}
+               --import
+               --noautoconsole
+               --autostart
+               --vnc
+               --dry-run --print-xml
+        register: virt_xml
+
+      - name: define the undercloud VM
+        virt:
+            name: "{{ undercloud_node.name }}"
+            command: define
+            xml: "{{ virt_xml.stdout }}"
+
+      - name: get correct MAC of external interface for undercloud (in case we have multiple dhcp leases in libvirt's db)
+        shell: |
+            virsh dumpxml undercloud-0 | grep external -B 1 | grep mac | cut -d\' -f2
+        register: mac_ext
+
+      - name: start the undercloud VM
+        virt:
+            name: "{{ undercloud_node.name }}"
+            state: running
+
+      #TODO(yfried): cleanup should be in a block/allways format
+      # todo: make this optional
+#      - name: remove quickstart tar file
+#        file:
+#            state: absent
+#            path: "{{ undercloud_image_file }}.{{ (tar is defined) | ternary('tar', 'qcow2') }}"
+
+      - name: wait for the undercloud IP to become available
+        shell: |
+            virsh net-dhcp-leases external | grep {{ mac_ext.stdout }} | awk '($4 == "ipv4") && ($6 =="{{ undercloud_node.name }}") {print $5}'
+        register: undercloud_ip
+        until: undercloud_ip.stdout != ''
+        retries: 15
+        delay: 15
+
+      - name: waiting for the undercloud to be SSH available
+        wait_for:
+            port: 22
+            host: "{{ undercloud_ip.stdout | ipaddr('address') }}"
+            search_regex: OpenSSH
+        delay: 10
+
+      - name: add undercloud to host list
+        add_host:
+            name: "{{ undercloud_node.name }}"
+            hostname: "undercloud-0"
+            node_label: "undercloud-0"
+            groups: "undercloud,tester,openstack_nodes"
+            ansible_ssh_user: "{{ undercloud_user }}"
+            ansible_ssh_private_key_file: "{{ hostvars[groups['overcloud_nodes'][0]].ansible_ssh_private_key_file }}"
+            ansible_ssh_host: "{{ undercloud_ip.stdout | ipaddr('address') }}"
+            ansible_ssh_common_args: "
+                -o ForwardAgent=yes
+                -o ServerAliveInterval=30
+                -o ControlMaster=auto
+                -o ControlPersist=30m
+                -o StrictHostKeyChecking=no
+                -o UserKnownHostsFile=/dev/null
+                -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }}\""
+        notify:
+            - update hosts
+            - Link to new Inventory file
+            - update /etc/hosts with undercloud's details
+
+  handlers:
+      - name: update hosts
+        template:
+            dest: "{{ inventory_dir }}/hosts-installer"
+            src: inventory.j2
+        delegate_to: localhost
+
+      - name: Link to new Inventory file
+        file:
+            dest: "{{ inventory_dir }}/hosts"
+            state: link
+            src: hosts-installer
+        delegate_to: localhost
+
+      - name: update /etc/hosts with undercloud's details
+        lineinfile:
+            dest: "/etc/hosts"
+            line: "{{ hostvars[groups['undercloud'][0]].ansible_ssh_host }}    {{ groups['undercloud'][0] }}.redhat.local {{ groups['undercloud'][0] }}"
+            state: present
+
+# workaround for selinux errors while introspection from qs image
+- name: fix selinux configurations
+  hosts: undercloud
+  become: true
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - name: Change setype of /httpboot/ to httpd_sys
+        file:
+            path: /httpboot
+            setype: httpd_sys_content_t
+            recurse: yes

@@ -1,0 +1,39 @@
+---
+- name: Create networks
+  hosts: hypervisor
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+    - name: get networks dict
+      include: tasks/var_lookup.yml
+      vars:
+          var_file: "{{ provision.topology.network }}"
+          partial_path: topology/network
+
+    - name: create bridged network
+      include: tasks/bridged_network.yml
+      vars:
+          nic: "{{ ansible_default_ipv4 }}"
+          bridges: "{{ networks.values() | selectattr('forward', 'defined') | selectattr('forward', 'equalto', 'bridge') | list }}"
+          bridge_name: "{{ bridges[0].name if bridges else '' }}"
+      when: bridges|length
+
+    - name: check for existing networks
+      virt_net:
+          command: "list_nets"
+      register: network_list
+
+    - name: create the networks for the topology
+      virt_net:
+          command: "define"
+          name: "{{ item.value.name }}"
+          xml: "{{ lookup('template', 'templates/network.xml.j2') }}"
+      when: "item.value.name not in network_list.list_nets"
+      with_dict: "{{ networks }}"
+
+    - name: check if network is active
+      virt_net:
+          name: "{{ item.value.name }}"
+          state: active
+          autostart: yes
+      with_dict: "{{ networks }}"

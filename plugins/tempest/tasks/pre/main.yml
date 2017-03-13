@@ -1,0 +1,58 @@
+---
+- name: find openstackrc file
+  find:
+      file_type: file
+      pattern: "{{ test.openstackrc | basename }}"
+      paths:
+          - "{{ lookup('env', 'PWD') }}/{{ test.openstackrc | dirname }}"
+          - "{{ test.openstackrc | expanduser | dirname }}"
+  register: openstackrc_find
+  delegate_to: localhost
+  when: test.openstackrc|default('')
+
+- name: fail when rc file was not found
+  fail:
+      msg: "Unable to find rc file: {{ test.openstackrc }}"
+  when: test.openstackrc|default('') and openstackrc_find.matched == 0
+
+- name: copy openstackrc file
+  vars:
+      file_src: "{{ openstackrc_find.files[0].path if test.openstackrc is defined else inventory_dir + '/keystonerc' }}"
+  copy:
+      src: "{{ file_src }}"
+      dest: "~/keystonerc"
+      force: yes
+
+- name: find deployer-input file
+  find:
+      pattern: "{{ test.deployer.input.file | basename }}"
+      paths:
+          - "{{ lookup('env', 'PWD') }}/{{ test.deployer.input.file | dirname }}"
+          - "{{ test.deployer.input.file | expanduser | dirname }}"
+  register: deployer_find
+  delegate_to: localhost
+  when: test.deployer.input.file is defined
+
+- name: fail when deployer file was not found
+  fail:
+      msg: "Unable to find deployer input file: {{ test.deployer.input.file }}"
+  when: not deployer_find|skipped and deployer_find.matched == 0
+
+- name: check if default deployer file is present
+  stat:
+      path: "{{ inventory_dir }}/tempest-deployer-input.conf"
+  delegate_to: localhost
+  register: default_deployer_stat
+  when: deployer_find|skipped
+
+- name: copy the tempest-deployer-input to the tester
+  vars:
+      input_file: "{{ deployer_find.files[0].path if not deployer_find|skipped else default_deployer_stat.stat.path|default('') }}"
+  copy:
+      src: "{{ input_file }}"
+      dest: "{{ deployer_input }}"
+      force: yes
+  when: input_file|default('')
+
+- name: run configuration tasks for installer '{{ test.openstack.installer }}'
+  include: "{{ test.openstack.installer }}.yml"

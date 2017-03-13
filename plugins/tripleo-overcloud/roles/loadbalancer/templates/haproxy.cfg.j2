@@ -1,0 +1,200 @@
+global
+  daemon
+  group  haproxy
+  log  /dev/log local0
+  maxconn  10000
+  pidfile  /var/run/haproxy.pid
+  user  haproxy
+
+defaults
+  log  global
+  maxconn  4096
+  mode  tcp
+  retries  3
+  timeout  http-request 10s
+  timeout  queue 1m
+  timeout  connect 10s
+  timeout  client 1m
+  timeout  server 1m
+  timeout  check 10s
+
+listen ceilometer
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8777
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8777
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8777 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen cinder
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8776
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8776
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8776 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen glance_api
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:9292
+  bind {{ loadbalancer.network.storage.vip | ipaddr('address') }}:9292
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.storage.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:9292 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen glance_registry
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:9191
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:9191 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen haproxy.stats
+{% if loadbalancer.network.plain is defined %}
+  bind  {{loadbalancer.network.plain.ip | ipaddr('address')}}:1993
+{% endif %}
+{% if loadbalancer.network.plain is not defined %}
+  bind  {{loadbalancer.network.external.vip | ipaddr('address')}}:1993
+{% endif %}
+  mode http
+  stats enable
+  stats uri /
+
+listen heat_api
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8004
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8004
+  mode http
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8004 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen heat_cfn
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8000
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8000
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8000 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen heat_cloudwatch
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8003
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8003
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8003 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen horizon
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:80
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:80
+  mode http
+  cookie SERVERID insert indirect nocache
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:80 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen keystone_admin
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:35357
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:35357
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:35357 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen keystone_admin_ssh
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:22
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:22 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen keystone_public
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:5000
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:5000
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:5000 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen mysql
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:3306
+  option tcpka
+  option httpchk
+  stick on dst
+  stick-table type ip size 1000
+  timeout client 0
+  timeout server 0
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:3306 backup check fall 5 inter 2000 on-marked-down shutdown-sessions port 9200 rise 2
+  {% endfor %}
+
+listen neutron
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:9696
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:9696
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:9696 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen nova_ec2
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8773
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8773
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8773 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen nova_metadata
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8775
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8775 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen nova_novncproxy
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:6080
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:6080
+  balance source
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:6080 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen nova_osapi
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8774
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8774
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8774 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen redis
+  bind {{ loadbalancer.network.redis.vip | ipaddr('address') }}:6379 transparent
+  balance first
+  option tcp-check
+  tcp-check send AUTH\ examplepassword\r\n
+  tcp-check send PING\r\n
+  tcp-check expect string +PONG
+  tcp-check send info\ replication\r\n
+  tcp-check expect string role:master
+  tcp-check send QUIT\r\n
+  tcp-check expect string +OK
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:6379 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen swift_proxy_server
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8080
+  bind {{ loadbalancer.network.storage.vip | ipaddr('address') }}:8080
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.storage.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8080 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+{% if install.version|openstack_release > 8 %}
+listen aodh
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8042 transparent
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8042 transparent
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8042 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen gnocchi
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8041 transparent
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8041 transparent
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8041 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen sahara
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8386 transparent
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8386 transparent
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8386 check fall 5 inter 2000 rise 2
+  {% endfor %}
+{% endif %}

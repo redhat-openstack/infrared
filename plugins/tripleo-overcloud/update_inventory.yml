@@ -1,0 +1,123 @@
+---
+- name: Update Inventory from OSPD
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      user: heat-admin
+      # The var "private_key" is used outside this scope and cannot be overridden
+      overcloud_pkey: "{{ inventory_dir }}/id_rsa_overcloud"
+  tasks:
+      - name: fetch the private key file from the undercloud
+        fetch:
+            src: "~/.ssh/id_rsa"
+            dest: "{{ overcloud_pkey }}"
+            flat: yes
+
+      - name: update file permissions
+        delegate_to: localhost
+        become: no
+        file:
+            path: "{{ overcloud_pkey }}"
+            mode: 0600
+
+      - name: Install python-virtualenv, gcc, python-devel for the pip tasks
+        become: yes
+        package:
+            name: "{{ item }}"
+            state: present
+        with_items:
+           - python-virtualenv
+           - gcc
+           - python-devel
+
+      - block:
+          - pip:
+                name: "{{ item.key }}"
+                version: "{{ item.value }}"
+                virtualenv: "{{ path_venv }}"
+            with_dict:
+                setuptools: "17.0"
+                pytz: "2016.4"
+                shade: "1.7.0"
+                requests: "2.11.1"
+                pip: "8.1"
+
+          - name: grab auth data from openstackrc file and publish it as YAML
+            vars:
+                undercloud_rc: ~/stackrc
+            shell: |
+                source {{ undercloud_rc }}
+                echo "
+                auth_url: $OS_AUTH_URL
+                username: $OS_USERNAME
+                password: $OS_PASSWORD
+                project_name: ${OS_PROJECT_NAME:-$OS_TENANT_NAME}
+                "
+                if [ -n "$OS_PROJECT_DOMAIN_NAME" ]; then
+                    echo "project_domain_name: $OS_PROJECT_DOMAIN_NAME"
+                fi
+                if [ -n "$OS_USER_DOMAIN_NAME" ]; then
+                    echo "user_domain_name: $OS_USER_DOMAIN_NAME"
+                fi
+            register: creds
+
+          - name: update IP of overcloud nodes
+            vars:
+                # Here can't be used {{ path_venv }}, because it's not a Jinja template
+                ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
+            os_server_facts:
+                auth: "{{ creds.stdout | from_yaml }}"
+                # Required for SSL
+                validate_certs: no
+
+          - name: add hosts to host list
+            add_host:
+                name: "{{ item.name }}"
+                # only add groups for new nodes. don't touch existing nodes' groups
+                groups: "{{ ( item.name in groups.all ) | ternary(omit,
+                    ['overcloud_nodes', 'openstack_nodes', item.name.split('-')[0]] | join(',')
+                   ) }}"
+                ansible_ssh_user: "{{ user }}"
+                ansible_ssh_pass: ""
+                ansible_ssh_host: "{{ item.accessIPv4 }}"
+                ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
+
+            with_items: "{{ openstack_servers }}"
+        vars:
+            path_venv: "/var/tmp/venv_shade"
+
+      # Connection for baremetals must be forwarded through UC as OC nodes
+      # lie on ctplane not accessible from anywhere else.
+      # Done as "redundant" block because Ansible can not reference
+      # one variable multiple times in block context.
+      - block:
+          - name: Enable SSH forwarding using UC node for baremetal OC nodes
+            add_host:
+                name: "{{ item.name }}"
+                ansible_ssh_common_args: "-o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                                          -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
+                                          {{ hostvars[groups['undercloud'][0]].ansible_ssh_user }}@{{ hostvars[groups['undercloud'][0]].ansible_ssh_host }}\""
+            when: "'hypervisor' not in groups"
+
+            with_items: "{{ openstack_servers }}"
+        vars:
+            path_venv: "/tmp/venv_shade"
+
+- name: Update the inventory file
+  hosts: localhost
+  gather_facts: no
+  tasks:
+      - name: generate inventory file
+        template:
+            dest: "{{ inventory_dir }}/hosts-install"
+            src: inventory.j2
+
+      - name: update inventory file symlink
+        file:
+            src: "hosts-install"
+            dest: "{{ inventory_dir }}/hosts"
+            state: link
+
+      - name: refresh dynamic inventory
+        meta: refresh_inventory

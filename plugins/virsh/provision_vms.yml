@@ -1,0 +1,74 @@
+---
+- name: Provision VMs
+  hosts: hypervisor
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      base_image_path: /var/lib/libvirt/images
+      url: "{{ provision.image.url }}"
+  tasks:
+    - name: provision image for each node
+      include: tasks/download_images.yml
+      with_dict: "{{ provision.topology.nodes }}"
+      loop_control:
+          loop_var: node
+      tags: images
+
+    # Create Disks
+    - block:
+        - name: create disks for each VM if not import
+          include: tasks/vms_1_create_disk.yml
+          with_dict: "{{ provision.topology.nodes }}"
+          loop_control:
+              loop_var: node
+
+        - name: Wait for all disks to be created
+          async_status:
+              jid: "{{ item }}"
+          register: disk_tasks
+          until: disk_tasks.finished
+          retries: 300
+          with_items: "{{ async_disks }}"
+      tags: disks
+
+    # Build VMs
+    - block:
+        - name: define libvirt VMs
+          include: tasks/vms_2_install.yml
+          with_dict: "{{ provision.topology.nodes }}"
+          loop_control:
+              loop_var: node
+
+        - name: Wait for VMs to be created
+          async_status:
+              jid: "{{ item }}"
+          register: install_tasks
+          until: install_tasks.finished
+          retries: 300
+          with_items: "{{ async_install }}"
+      tags: install
+
+    # Fetch IP addresses
+    - block:
+        - name: wait for VMs to come up, fix their ip and add to inventory
+          include: tasks/vms_3_netip.yml
+          with_dict: "{{ provision.topology.nodes }}"
+          loop_control:
+              loop_var: node
+
+        - name: Wait for IPs to be updated
+          async_status:
+              jid: "{{ item }}"
+          register: ip_tasks
+          until: ip_tasks.finished
+          retries: 300
+          with_items: "{{ async_ips|default([]) }}"
+      tags: ips
+
+    - name: update tunneling conf
+      template:
+          src: ansible.ssh.config.j2
+          dest: "{{ inventory_dir }}/ansible.ssh.config"
+      delegate_to: localhost
+      tags: ssh_tunnel
+

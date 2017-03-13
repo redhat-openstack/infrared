@@ -1,1 +1,0 @@
-# This folder is meant to hold any other custom templates you would like to add as a "-e <file_name>" part of the overcloud deployment.

@@ -1,0 +1,117 @@
+- name: Tag our machines with flavors
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: Check for the instackenv file
+        stat:
+            path: "~/instackenv.json"
+        register: instack_file_path
+
+      - set_fact:
+            instack_file: "{{ instack_file_path.stat.path }}"
+        when: instack_file_path.stat.exists
+
+      - fail:
+            msg: "instackenv file is missing"
+        when: not instack_file_path.stat.exists
+
+      - name: create the baremetal flavor for our machines
+        shell: |
+            source ~/stackrc
+            openstack flavor create --id auto --ram 4096 --disk 16 --vcpus 1 baremetal
+        tags: skip_ansible_lint
+        register: result
+        ignore_errors: yes
+        failed_when: "result.rc != 0 and result.stderr.find('Flavor with name baremetal already exists') != -1"
+
+      - name: set additional properties
+        shell: |
+            source ~/stackrc
+            openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' baremetal
+        tags: skip_ansible_lint
+
+      - name: read instackenv file for bm deployment
+        command: cat "{{ instack_file }}"
+        register: overcloud_hosts_facts
+
+      - set_fact:
+            overcloud_facts: "{{ overcloud_hosts_facts.stdout | from_json }}"
+
+      - block:
+            - name: check for original flavors
+              shell: >
+                  source ~/stackrc;
+                  openstack flavor list | awk '/{{ item.name.rstrip('1234567890-').split('-')[-1] }}/ {print $4}'
+              with_items: "{{ overcloud_facts.nodes | default([]) }}"
+              register: original_flavors
+
+            - name: delete original flavors
+              shell: |
+                  source ~/stackrc
+                  openstack flavor delete {{ item[0].name.rstrip('1234567890-').split('-')[-1] }}
+              when: "item[0].name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
+              tags: skip_ansible_lint
+              with_together:
+                  - "{{ overcloud_facts.nodes | default([]) }}"
+                  - "{{ original_flavors.results }}"
+              ignore_errors: yes
+              register: flavor_delete
+
+            - name: Workarond for BZ #1317312
+              shell: |
+                 source ~/stackrc
+                 nova flavor-delete {{ item[0].name.rstrip('1234567890-').split('-')[-1] }}
+              tags: skip_ansible_lint
+              when: "item[0].name.rstrip('1234567890-').split('-')[-1] in item[1].cmd and item[2].stderr == 'public endpoint for messaging service not found'"
+              with_together:
+                  - "{{ overcloud_facts.nodes | default([]) }}"
+                  - "{{ original_flavors.results }}"
+                  - "{{ flavor_delete.results }}"
+              ignore_errors: yes
+
+            # Remember, hostvars are special: https://github.com/ansible/ansible/issues/13838, https://github.com/ansible/ansible/issues/21084
+            - name: create the flavors for our machines
+              vars:
+                  flv_min_disk_size: 6
+                  flv_min_cpu: 1
+              shell: >
+                  source ~/stackrc;
+                  openstack flavor create
+                  --id auto
+                  --ram {{ (hostvars[item.name] | default({})).ram | default(item.memory) }}
+                  --disk {{ [((hostvars[item.name] | default({})).disk | default(item.disk) | int) - 3, flv_min_disk_size] | max }}
+                  --vcpus {{ [((hostvars[item.name] | default({})).vcpus | default(item.cpu) | int) - 1, flv_min_cpu] | max }}
+                  {{ item.name.rstrip('1234567890-').split('-')[-1] }}
+              register: flavor_result
+              failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item.name }} already exists') != -1"
+              with_items: "{{ overcloud_facts.nodes | default([]) }}"
+
+            - name: get the node UUID
+              shell: |
+                  source ~/stackrc
+                  ironic node-list | grep {{ item.name | default(item) }} | awk '{print $2}'
+              with_items: "{{ overcloud_facts.nodes | default([])}}"
+              register: node_list
+        when: "overcloud_facts.nodes[0].name is defined"
+
+      - set_fact:
+            tagged_flavors: "{{ flavor_result.results }}"
+
+      - name: set additional properties
+        shell: |
+            source ~/stackrc
+            openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' --property 'capabilities:profile'='{{ item.cmd.split() | last }}' {{ item.cmd.split() | last }}
+        tags: skip_ansible_lint
+        when: item.cmd is defined
+        with_items: "{{ tagged_flavors | default([]) }}"
+
+      - name: tag our nodes with the proper profile
+        shell: |
+            source ~/stackrc
+            ironic node-update {{ item[0].stdout }} add properties/capabilities='profile:{{ item[1].cmd.split() | last }},boot_option:local'
+        tags: skip_ansible_lint
+        when: "item[0].item.name is defined and item[1].cmd is defined and item[0].item.name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
+        with_together:
+            - "{{ node_list.results }}"
+            - "{{ tagged_flavors | default([]) }}"

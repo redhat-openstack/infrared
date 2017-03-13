@@ -1,0 +1,49 @@
+---
+- name: Append storage templates to the deploy script
+  include: storage/main.yml
+  tags: storage
+  when: "install.storage.backend is defined and install.storage.backend"
+
+- name: Check if user provided netwrok templates
+  tags: network
+  stat:
+      path: "{{ template_base }}/network"
+  register: network
+
+- name: Append netwrok templates to the deploy script
+  include: network.yml
+  tags: network
+  when: network.stat.exists
+
+- name: Setup the overcloud ssl
+  include: ssl.yml
+  tags: overcloud_ssl
+  when: install.overcloud.ssl
+
+- name: Generate the hostnames template
+  include: hostname.yml
+  when: templates.generate_host_name_template|default(True)
+
+- name: Setup loadbalancer
+  include: tasks/loadbalancer_templates.yml
+  when: "'loadbalancer' in groups"
+  tags:
+      - loadbalancer
+      - loadbalancer_templates
+
+- name: check for list of user defined templates
+  find:
+      paths: "{{ template_base }}"
+      patterns: "*.yaml"
+  register: template_list
+
+- name: append all custom templates provided by the user
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ item.path }} \'
+  with_items: "{{ template_list.files }}"
+
+- name: Append the invocation line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: "--log-file overcloud_deployment_{{ 100 | random }}.log"

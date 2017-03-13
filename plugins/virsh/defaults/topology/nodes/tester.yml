@@ -1,0 +1,27 @@
+node_dict:
+    name: tester
+    prefix: null
+    cpu: "8"
+    memory: "8192"
+    swap: "0"
+    os:
+        type: "linux"
+        variant: "rhel7"
+    disks:
+        disk1:
+            import_url: null
+            path: "/var/lib/libvirt/images"
+            dev: "/dev/vda"
+            size: "30G"
+            cache: "unsafe"
+            preallocation: "metadata"
+    interfaces:
+        - network: "data"
+        - &external
+          network: management
+        - network: "external"
+    external_network: *external
+
+    groups:
+        - tester
+        - openstack_nodes

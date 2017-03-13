@@ -1,0 +1,68 @@
+- name: Populate the overcloud deploy script
+  include: build_templates.yml
+  tags: templates
+
+- name: Deploy the Overcloud
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/overcloudrc"
+  tasks:
+      - name: Execute the overcloud deploy script
+        shell: |
+            source ~/stackrc
+            bash {{ overcloud_deploy_script }} &> overcloud_install.log
+        register: overcloud_deploy
+        ignore_errors: yes
+
+      - name: Print the last few lines of the output to spot failures
+        command: tail -n60 overcloud_install.log
+
+      - name: Print stack failures
+        shell: |
+            source ~/stackrc
+            openstack stack failures list overcloud
+        when: overcloud_deploy.rc != 0
+        tags: skip_ansible_lint
+
+      - name: copy summary script
+        copy:
+            src: files/deploy_info.sh
+            dest: ~/deploy_info.sh
+            mode: 0755
+        tags: summary
+
+      - name: Prepare Execute the deployment summary script
+        become: yes
+        # TODO(yfried): use "file" module intead mkdir
+        shell: |
+            mkdir -p /var/log/extra/
+            source ~/stackrc
+            ~{{ ansible_ssh_user }}/deploy_info.sh 2>&1 | tee -a /var/log/extra/deploy_resources.log
+        tags: summary
+
+      - fail:
+            msg: "Overcloud deployment failed... :("
+        when: overcloud_deploy.rc != 0
+
+      - name: verify overcloudrc was created
+        wait_for:
+            path: "{{ overcloudrc_file }}"
+            state: present
+            timeout: 60
+
+      - name: fetch the overcloud rc file
+        tags:
+            - fetch_rc_file
+        fetch:
+            src: "{{ overcloudrc_file }}"
+            dest: "{{ inventory_dir }}/keystonerc"
+            flat: yes
+            fail_on_missing: yes
+
+- name: Update inventory with overcloud details
+  include: update_inventory.yml
+  tags:
+      - inventory_update
+      - deploy

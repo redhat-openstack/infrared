@@ -1,9 +1,0 @@
----
-- name: check if user provided storage templates
-  stat:
-      path: "{{ template_base }}/storage"
-  register: storage
-
-# If user provided storage templates, nothing to do here :)
-- include: "{{ installer.storage.backend }}.yml"
-  when: storage.stat.exists == False and installer.storage.backend is defined and installer.storage.backend

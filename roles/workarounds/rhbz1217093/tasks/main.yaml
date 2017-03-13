@@ -1,7 +1,0 @@
-- name: Get the controller nodes IPs
-  shell: "source ~/stackrc; nova list | awk '/controller/ {print $12}' | grep -oP '[0-9.]+'"
-  register: ip_list
-
-- name: make sure openstack-nova-cert service has started
-  shell: "ssh -o StrictHostKeyChecking=no -l heat-admin {{ item }} 'sudo systemctl start openstack-nova-cert'"
-  with_items: "{{ ip_list.stdout_lines }}"
