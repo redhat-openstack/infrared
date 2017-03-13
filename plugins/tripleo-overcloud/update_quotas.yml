@@ -1,0 +1,34 @@
+---
+- name: Neutron quotas update
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - name: Collect auth data from openstack RC file
+        shell: |
+            source ~/overcloudrc
+            echo "
+            auth_url: $OS_AUTH_URL
+            username: $OS_USERNAME
+            password: $OS_PASSWORD
+            project_name: ${OS_PROJECT_NAME:-$OS_TENANT_NAME}
+            "
+            if [ -n "$OS_PROJECT_DOMAIN_NAME" ]; then
+                echo "project_domain_name: $OS_PROJECT_DOMAIN_NAME"
+            fi
+            if [ -n "$OS_USER_DOMAIN_NAME" ]; then
+                echo "user_domain_name: $OS_USER_DOMAIN_NAME"
+            fi
+        register: creds
+
+      - name: Set neutron quotas to unlimited
+        vars:
+            ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
+            auth: "{{ creds.stdout | from_yaml }}"
+        os_quota:
+            validate_certs: no
+            state: present
+            auth: "{{ auth }}"
+            network: -1
+            subnet: -1
+            security_group: -1
