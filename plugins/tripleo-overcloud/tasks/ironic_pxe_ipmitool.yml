@@ -13,6 +13,9 @@
             - python-virtualbmc
             - ipmitool
 
+      - name: Remove existing Vitrual BMCs
+        shell: for vbmc_node in `vbmc list | grep ^\| | grep -v 'Domain' | awk {'print $2'}`; do vbmc delete $vbmc_node; done
+
 - name: Configure vbmc (ironic's 'pxe_ipmitool' driver)
   hosts: openstack_nodes
   vars:
