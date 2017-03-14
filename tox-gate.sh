@@ -1,6 +1,6 @@
 #!/bin/bash
 set -x
-RUN_ENVS="pep8 py27 ansible-lint any-errors-fatal"
+RUN_ENVS="pep8 py27 cli ansible-lint any-errors-fatal"
 if which python3.5 &> /dev/null; then
     RUN_ENVS="${RUN_ENVS} py35"
 fi
