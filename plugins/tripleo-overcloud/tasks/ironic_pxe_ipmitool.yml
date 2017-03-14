@@ -1,0 +1,65 @@
+---
+- name: Install required packages (ironic's 'pxe_ipmitool' driver)
+  hosts: hypervisor
+  gather_facts: True
+  any_errors_fatal: True
+  tags: pre
+  tasks:
+      - name: Install packages required for 'pxe_ipmitool' ironic's driver
+        package:
+            name: "{{ item }}"
+            state: latest
+        with_items:
+            - python-setuptools
+            - python-virtualbmc
+            - ipmitool
+
+      - name: Remove existing Virtual BMCs
+        # grab only lines with port number (more than 2 digits)
+        shell: |
+            for node in `vbmc list | awk '/[0-9]{2}/ {print $2}'`
+            do
+                vbmc delete ${node}
+            done
+
+- name: Configure vbmc (ironic's 'pxe_ipmitool' driver)
+  hosts: overcloud_nodes
+  vars:
+      vbmc_start_port: 6230
+  gather_facts: False
+  any_errors_fatal: True
+  tags: pre
+  tasks:
+      - name: Define vbmc_port for each VM
+        set_fact:
+            vbmc_port: "{{vbmc_start_port + groups.overcloud_nodes.index(inventory_hostname) }}"
+
+      - name: vbmc ports
+        debug:
+            msg: "{{inventory_hostname}}: {{vbmc_port}}"
+
+      - name: allow access to port {{ vbmc_port }} from undercloud
+        become: True
+        command: iptables -I INPUT 1 -w 3 -s {{ hostvars['undercloud-0'].ansible_default_ipv4.address }} -p {{ item }} --dport {{ vbmc_port }} -j ACCEPT
+        with_items:
+          - 'udp'
+          - 'tcp'
+        delegate_to: hypervisor
+
+      - name: Add nodes to vbmc
+        command: "vbmc add {{ inventory_hostname }} --port {{ vbmc_port }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }}"
+        delegate_to: hypervisor
+
+      - name: Start nodes using vbmc
+        command: "vbmc start {{ inventory_hostname }}"
+        delegate_to: hypervisor
+
+      - name: Get vbmc VMs power status using ipmitool
+        command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H 127.0.0.1 -p {{ vbmc_port }} power status"
+        register: ipmitool_result
+        delegate_to: hypervisor
+
+      - name: Validate that all VMs are powered on
+        fail:
+            msg: "'{{ inventory_hostname }}' is not powered on! (ipmitool stdout: '{{ ipmitool_result.stdout }}'"
+        when: "ipmitool_result.stdout != 'Chassis Power is on'"
