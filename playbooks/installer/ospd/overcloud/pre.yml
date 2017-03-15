@@ -19,6 +19,12 @@
             dest: "{{ template_base }}"
         when: installer.overcloud.debug == 'yes'
 
+      - name: Inject debug-neutron.yaml
+        copy:
+            src: files/debug-neutron.yaml
+            dest: "{{ template_base }}"
+        when: installer.overcloud.debug.neutron == 'yes'
+
       - name: Check for the network-environment file
         find:
             paths: "{{ template_base }}"

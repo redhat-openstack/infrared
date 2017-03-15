@@ -109,6 +109,14 @@ subparsers:
                           - 'yes'
                           - 'no'
 
+                  overcloud-debug-neutron:
+                      type: Value
+                      help: Specifies whether neutron should run with debug turned on
+                      default: 'yes'
+                      choices:
+                          - 'yes'
+                          - 'no'
+
                   overcloud-ssl:
                       type: Value
                       help: Specifies whether ths SSL should be used for overcloud
