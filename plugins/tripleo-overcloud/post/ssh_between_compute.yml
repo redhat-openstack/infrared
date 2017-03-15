@@ -12,7 +12,7 @@
       user_name: "nova"
       default_shell: "/bin/bash"
       default_privatekey: "/var/lib/nova/.ssh/id_rsa"
-      default_known_hosts: "/etc/ssh/ssh_known_hosts"
+      default_ssh_config: "/var/lib/nova/.ssh/config"
       local_undercloud_pubkey: "{{ inventory_dir }}/id_rsa_undercloud.pub"
 
   tasks:
@@ -38,16 +38,11 @@
             group: "{{ user_name }}"
             mode: 0600
 
-      - name: Get SSH keys from overcloud nodes
-        shell: >
-            ssh-keyscan -t rsa $(os-apply-config --key hosts --type raw --key-default '' |sed 's/^\\n//' | awk '{print $1}' | uniq)
-        register: overcloud_keys
-
-      - name: Add SSH keys of overcloud nodes into known hosts
-        blockinfile:
-            dest: "{{ default_known_hosts }}"
+      - name: Set SSH StrictHostKeyChecking to NO for nova user in overcloud
+        lineinfile:
+            path: "{{ default_ssh_config }}"
+            line: "StrictHostKeyChecking no"
+            owner: "{{ user_name }}"
+            group: "{{ user_name }}"
+            mode: 0600
             create: yes
-            owner: root
-            group: root
-            block: |
-                {{ overcloud_keys.stdout }}
