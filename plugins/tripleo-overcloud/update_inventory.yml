@@ -72,12 +72,18 @@
                 validate_certs: no
 
           - name: add hosts to host list
+            vars:
+                host_groups:
+                    - overcloud_nodes
+                    - openstack_nodes
+                    - "{{ item.name.split('-')[0] }}"
+                    # FIXME(yfried) Ansible 2.3 should allow to flush inventory instead of just reloading file
+                    # tag deployed machines, as inventory might hold undeployed machines
+                    - deployed
             add_host:
                 name: "{{ item.name }}"
-                # only add groups for new nodes. don't touch existing nodes' groups
-                groups: "{{ ( item.name in groups.all ) | ternary(omit,
-                    ['overcloud_nodes', 'openstack_nodes', item.name.split('-')[0]] | join(',')
-                   ) }}"
+                # groups can only be added
+                groups: "{{ host_groups | join(',') }}"
                 ansible_ssh_user: "{{ user }}"
                 ansible_ssh_pass: ""
                 ansible_ssh_host: "{{ item.accessIPv4 }}"

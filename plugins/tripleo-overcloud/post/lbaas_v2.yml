@@ -2,7 +2,8 @@
 # OSPD is unable to configure LBaaS, so post-install steps are required.
 # This is LBaaS v2.
 - name: Activate Neutron LBaaS (v2)
-  hosts: controller
+  # avoid undeployed overcloud machines
+  hosts: controller:&deployed
   become: true
   any_errors_fatal: true
   vars:
