@@ -13,10 +13,10 @@ parameter_defaults:
     CinderNetappStorageFamily: 'ontap_7mode'
     CinderNetappTransportType: 'http'
     CinderNetappEseriesHostType: ''
-{%  if 'iscsi' in install.storage.backend %}
+{%  if 'iscsi' in storage_backend %}
     CinderNetappStorageProtocol: 'iscsi'
     CinderNetappVolumeList: "{{ private.storage.netapp.CinderNetappVolumeList }}"
-{%  elif 'nfs' in install.storage.backend %}
+{%  elif 'nfs' in storage_backend %}
     CinderNetappStorageProtocol: 'nfs'
     CinderNetappVfiler: ''
     CinderNetappVolumeList: ''
