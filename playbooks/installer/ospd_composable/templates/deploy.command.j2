@@ -7,3 +7,6 @@ openstack overcloud deploy --templates /usr/share/openstack-tripleo-heat-templat
 {% if installer.overcloud.debug %}
   -e {{ template_base  }}/debug.yaml \
 {% endif %}
+{% if installer.overcloud.debug.neutron %}
+  -e {{ template_base  }}/debug-neutron.yaml \
+{% endif %}
