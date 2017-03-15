@@ -28,9 +28,7 @@ subparsers:
               options:
                   version:
                       type: Value
-                      required_when:
-                          - "introspect == yes"
-                          - "deploy == yes"
+                      required_when: "deploy == yes"
                       help: |
                           The product version (product == director)
                           Numbers are for OSP releases
