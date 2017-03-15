@@ -29,4 +29,4 @@ compute_role:
         - OS::TripleO::Services::OpenDaylightOvs
         - OS::TripleO::Services::SensuClient
         - OS::TripleO::Services::FluentdClient
-        - OS::TripleO::Services::VipHosts
+        - "{% if install.version |int < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
