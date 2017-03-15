@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57a47040_2e020a34",
+        "filename": "plugins/tripleo-overcloud/tasks/upgrade/10/main.yml",
+        "patchSetId": 16
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-03-15T08:23:34Z",
+      "side": 1,
+      "message": "Please use ansible builtin module instead of bash\nhttp://docs.ansible.com/ansible/known_hosts_module.html\n\n\n  - name: get all public keys:\n    command: ssh-keyscan \"{{ hostvars[item].ansible_ssh_host }}\"\n\n    with_items: \"{{ groups.overcloud_nodes|default([]) }}\"\n    register: pubkeys\n\n\n  - name: add nodes to known_hosts\n    known_hosts:\n        name: \"{{ item.item }}\"\n        key: \"{{ item.stdout }}\"\n    with_items: \"{{ pubkeys.results }}\"",
+      "revId": "b85b5a3aa846472103d4f4600309fc09ee4deede",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ababab05_3441ea02",
+        "filename": "plugins/tripleo-overcloud/tasks/upgrade/10/ssl.yml",
+        "patchSetId": 16
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-03-15T08:23:34Z",
+      "side": 1,
+      "message": "redundant. Please fix all instances of this check",
+      "range": {
+        "startLine": 27,
+        "startChar": 60,
+        "endLine": 27,
+        "endChar": 68
+      },
+      "revId": "b85b5a3aa846472103d4f4600309fc09ee4deede",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
