@@ -16,8 +16,10 @@ controller_role:
     #  - "{% if install.version |int < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
     services:
         - OS::TripleO::Services::CACerts
-        - OS::TripleO::Services::CephClient
+        - "{% if install.version |int > 10 %}OS::TripleO::Services::CephMds{% endif %}"
+        - OS::TripleO::Services::CephMon
         - OS::TripleO::Services::CephExternal
+        - "{% if install.version |int > 10 %}OS::TripleO::Services::CephRbdMirror{% endif %}"
         - OS::TripleO::Services::CephRgw
         - OS::TripleO::Services::CinderApi
         - OS::TripleO::Services::CinderBackup
