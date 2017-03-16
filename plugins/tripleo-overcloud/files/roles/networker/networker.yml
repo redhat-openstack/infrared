@@ -4,12 +4,13 @@ networker_role:
 
     # include resources
     # the following vars can be used here:
-    #  - ${ipv6_postfix}: will be replaced with _v6 when the ipv6 protocol is used for installation, otherwise is empty
+    #  - ${ipv6_postfix}: will be replaced with -v6 when the ipv6 protocol is used for installation, otherwise is empty
+    #  - ${ipv6_postfix_underscore}: same as 'ipv6_postfix' but will be replaced with _v6
     #  - ${deployment_dir} - will be replaced by the deployment folder location on the undercloud. Deployment folder can be specified with the ospd --deployment flag
     resource_registry:
         OS::TripleO::Networker::Net::SoftwareConfig: ${deployment_dir}/network/nic-configs/networker.yaml
         OS::TripleO::Networker::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/tenant.yaml
-        OS::TripleO::Networker::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api${ipv6_postfix}.yaml
+        OS::TripleO::Networker::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api${ipv6_postfix_underscore}.yaml
 
     flavor: networker
     host_name_format: 'networker-%index%'

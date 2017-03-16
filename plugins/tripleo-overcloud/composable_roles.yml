@@ -38,6 +38,7 @@
       - name: create the network template file
         vars:
             ipv6_postfix: "{{  (install.network.protocol == 'ipv4') | ternary('', '-v6')}}"
+            ipv6_postfix_underscore: "{{  (install.network.protocol == 'ipv4') | ternary('', '_v6')}}"
             deployment_folder_path: "{{ template_base }}"
         template:
             src: composable_roles/network-config.yaml.j2
