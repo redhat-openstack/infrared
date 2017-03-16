@@ -24,7 +24,7 @@
     - name: Add the host to host list
       add_host:
           name: "{{ provision.host.address }}"
-          groups: "beaker-baremetal,undercloud"
+          groups: "beaker-baremetal"
           ansible_ssh_host: "{{ provision.host.address }}"
           ansible_ssh_user: "{{ provision.host.user }}"
           ansible_ssh_pass: "{{ provision.host.password }}"
@@ -54,7 +54,7 @@
     - name: Refresh the hosts list with publickey access enabled, remove password from now on
       add_host:
           name: "{{ provision.host.address }}"
-          groups: "beaker-baremetal"
+          groups: "{{ provision.groups | join(',') }}"
           ansible_ssh_host: "{{ provision.host.address }}"
           ansible_ssh_user: "{{ provision.host.user }}"
           ansible_ssh_pass: ''
