@@ -1,21 +1,8 @@
 ---
-- name: Check for user input
-  hosts: localhost
-  tasks:
-      - fail:
-            msg: "Please provide either --version OR --images-task OR --quickstart-{backup|restore} OR --upgrade"
-        when:
-            - not install.version|default('')
-            - not install.images.task|default('')
-            - not install.quickstart.backup|default('')
-            - not install.quickstart.restore|default('')
-            - not install.upgrade|default('')
-
-      - fail:
-            msg: "Please provide either --version OR --upgrade, not both"
-        when:
-            - install.version|default('')
-            - install.upgrade|default('')
+- name: Perform validations
+  include: "{{ validate_undercloud | default('validate.yml') }}"
+  tags:
+      - validation
 
 - name: Deploy the Undercloud
   include: "{{ install_undercloud | default('undercloud.yml') }}"
