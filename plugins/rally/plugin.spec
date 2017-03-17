@@ -25,7 +25,7 @@ subparsers:
                       help: |
                           The set of tests to execute
                           __LISTYAMLS__
-                      required: no
+                      default: none
                   image:
                       type: Value
                       help: |
