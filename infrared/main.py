@@ -35,6 +35,13 @@ class WorkspaceManagerSpec(api.SpecObject):
                  'switches to it')
         checkout_parser.add_argument("name", help="Workspace name")
 
+        # inventory
+        inventory_parser = workspace_subparsers.add_parser(
+            'inventory',
+            help="prints workspace's inventory file")
+        inventory_parser.add_argument("name", help="Workspace name",
+                                      nargs="?")
+
         # list
         workspace_subparsers.add_parser(
             'list', help='Lists all the workspaces')
@@ -87,6 +94,12 @@ class WorkspaceManagerSpec(api.SpecObject):
             self._create_workspace(pargs.name)
         elif subcommand == 'checkout':
             self._checkout_workspace(pargs.name)
+        elif subcommand == 'inventory':
+            if pargs.name:
+                wkspc = self.workspace_manager.get(pargs.name)
+            else:
+                wkspc = self.workspace_manager.get_active_workspace()
+            print wkspc.inventory
         elif subcommand == 'list':
             workspaces = self.workspace_manager.list()
             headers = ("Name", "Active")
