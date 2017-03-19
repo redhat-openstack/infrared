@@ -14,6 +14,12 @@ Create:
         infrared workspace create example
 
         Workspace 'example' added
+Inventory:
+    Fetch workspace inventory file (a symlink to the real file that might be changed by `infrared` executions)::
+
+        infrared workspace inventory
+
+        /home/USER/.infrared/workspaces/example/hosts
 Checkout
     Creates new workspace if it is not present and switches to it::
 
