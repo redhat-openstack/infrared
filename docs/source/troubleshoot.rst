@@ -70,3 +70,42 @@ Check that all the ovs bridges are properly configured on the hypervisor::
 To fix the problem remove the broken bridge::
 
     $ ovs-vsctl del-br brbm
+
+
+Frequently Asked Questions
+==========================
+
+Where's my inventory file?
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+I'd like to run some personal Ansible playbook and/or "ad-hoc" but I can't find my inventory file
+
+All Ansible environment files are read from, and written to, `workspaces <workspace>`_
+Use ``infrared workspace inventory`` to fetch a symlink to the active workspace's inventory
+or ``infrared workspace inventory WORKSPACE`` for any workspace by name::
+
+    ansible -i `infrared workspace inventory` all -m ping
+
+    compute-0 | SUCCESS => {
+        "changed": false,
+        "ping": "pong"
+    }
+    compute-1 | SUCCESS => {
+        "changed": false,
+        "ping": "pong"
+    }
+    controller-0 | SUCCESS => {
+        "changed": false,
+        "ping": "pong"
+    }
+    localhost | SUCCESS => {
+        "changed": false,
+        "ping": "pong"
+    }
+    hypervisor | SUCCESS => {
+        "changed": false,
+        "ping": "pong"
+    }
+    undercloud-0 | SUCCESS => {
+        "changed": false,
+        "ping": "pong"
