@@ -1,0 +1,24 @@
+- name: Update neutron quotas
+  hosts: controller
+  become: true
+  any_errors_fatal: true
+  vars:
+  tasks:
+    - name: Change the default neutron quotas
+      ini_file:
+          dest: /etc/neutron/neutron.conf
+          section: quoats
+          option: "{{ item }}"
+          value: "500"
+      with_items:
+          - 'quota_network'
+          - 'quota_port'
+          - 'quota_subnet'
+      notify:
+          - restart_neutron
+
+  handlers:
+    - name: restart_neutron
+      service:
+          name: neutron-server.service
+          state: restarted

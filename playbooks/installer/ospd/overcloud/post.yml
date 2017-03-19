@@ -16,6 +16,9 @@
   tags: lbaas
   when: installer.network.lbaas|default('no') == 'yes'
 
+- include: post/update_quotas.yml
+  tags: quota
+
 - include: post/create_external_network.yml
   tags: public_network
   when: installer.public.network == 'yes'
