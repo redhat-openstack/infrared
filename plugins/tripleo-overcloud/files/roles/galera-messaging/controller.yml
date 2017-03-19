@@ -44,6 +44,7 @@ controller_role:
         - OS::TripleO::Services::NovaScheduler
         - OS::TripleO::Services::NovaConsoleauth
         - OS::TripleO::Services::NovaVncProxy
+        - "{% if install.version |int > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
         - OS::TripleO::Services::Ntp
         - OS::TripleO::Services::SwiftProxy
         - OS::TripleO::Services::SwiftStorage
@@ -81,3 +82,4 @@ controller_role:
         - OS::TripleO::Services::SensuClient
         - OS::TripleO::Services::FluentdClient
         - "{% if install.version |int < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+        - "{% if install.version |int > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"

@@ -19,3 +19,4 @@ ceph_role:
         - OS::TripleO::Services::SensuClient
         - OS::TripleO::Services::FluentdClient
         - "{% if install.version |int < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+        - "{% if install.version |int > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
