@@ -22,6 +22,13 @@
       version: "{{ test.git.revision }}"
       dest: "{{ rally.dir }}"
 
+- name: Clone Rally-Plugins git repo
+  git:
+      repo: "{{ test.git.plugins.repo }}"
+      version: "{{ test.git.plugins.revision }}"
+      dest: "~/.rally/plugins"
+  when: test.git.plugins.repo is defined
+
 - name: Run Rally installation script
   shell: "{{ rally.dir }}/install_rally.sh -v -y -d {{ rally.path }} | tee {{ rally.dir }}/rally_install.log"
   args:

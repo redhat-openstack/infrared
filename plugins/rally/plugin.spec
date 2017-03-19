@@ -20,6 +20,14 @@ subparsers:
                       type: Value
                       help: Revision of rally repository
                       default: HEAD
+                  git-plugins-repo:
+                      type: Value
+                      help: URL of the git plugins repository to clone
+                      required: no
+                  git-plugins-revision:
+                      type: Value
+                      help: Revision of rally plugins repository
+                      default: HEAD
                   tests:
                       type: Value
                       help: |
