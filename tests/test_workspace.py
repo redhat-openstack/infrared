@@ -139,6 +139,19 @@ def test_workspace_inventory_setter(workspace_manager_fixture, test_workspace,
     assert os.path.basename(inventory_file) == myfile.basename
 
 
+def test_workspace_fetch_inventory(workspace_manager_fixture, test_workspace):
+    """Verify workspace inventory returns path to workspace link. """
+
+    inventory_path = test_workspace.inventory
+
+    # assert result is in workspace dir (abs path
+    assert os.path.dirname(inventory_path) == os.path.abspath(
+        test_workspace.path)
+    # assert result is "hosts" symlink
+    assert os.path.islink(inventory_path)
+    assert os.path.basename(inventory_path) == "hosts"
+
+
 @pytest.mark.parametrize('inventory_content', ["fake content", ""])
 def test_workspace_copy_file(workspace_manager_fixture, test_workspace,
                              tmpdir, inventory_content):
