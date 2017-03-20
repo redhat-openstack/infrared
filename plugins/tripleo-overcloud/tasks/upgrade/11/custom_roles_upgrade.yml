@@ -1,0 +1,18 @@
+---
+- name: Register {{ node_name }} ip address
+  shell: "source {{ undercloud_rc }}; openstack server list -f json | jq -r -c '.[] | select(.Name | contains(\"{{ node_name }}\")) | .Networks' | grep -oP '[0-9.]+'"
+  register: node_ip
+
+- name: Reboot Node
+  include: 'reboot_node.yml'
+  tags: custom_role_reboot
+
+- name: Wait for {{ node_name }} to come back up
+  shell: "ssh -q -o StrictHostKeyChecking=no heat-admin@{{ node_ip.stdout }} 'systemctl show os-collect-config --property ActiveState'"
+  register: node_svc
+  until: node_svc.stdout.find("ActiveState=active") > -1
+  retries: 30
+  delay: 5
+
+- name: Packages Check
+  include: 'packages_check.yml'
