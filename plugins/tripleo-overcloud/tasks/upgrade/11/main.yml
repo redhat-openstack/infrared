@@ -1,0 +1,150 @@
+---
+- name: Create overcloud upgrade base script
+  copy:
+      src: "{{ overcloud_deploy_script }}"
+      dest: "{{ overcloud_upgrade_script }}"
+      mode: 0755
+      remote_src: true
+
+- name: Scan nodes ssh keys
+  command: "ssh-keyscan -t rsa {{ hostvars[item].ansible_ssh_host }}"
+  with_items: "{{ groups.overcloud_nodes|default([]) }}"
+  register: pubkeys
+
+- name: Add nodes to known_hosts
+  known_hosts:
+      name: "{{ hostvars[item.item].ansible_ssh_host  }}"
+      key: "{{ item.stdout }}"
+  with_items: "{{ pubkeys.results }}"
+
+- name: Patch tht
+  include: tht_patch.yml
+  tags: tht_patch
+
+- name: Generate ~/deprecated_cli_options.yaml
+  include: convert_cli_options.yml
+  vars:
+      value_list:
+          - searched: neutron-flat-networks
+            parameter_name: NeutronFlatNetworks
+          - searched: neutron-physical-bridge
+            parameter_name: NeutronPhysicalBridge
+          - searched: neutron-bridge-mappings
+            parameter_name: NeutronBridgeMappings
+          - searched: neutron-public-interface
+            parameter_name: NeutronPublicInterface
+          - searched: neutron-network-type
+            parameter_name: NeutronNetworkType
+          - searched: neutron-tunnel-types
+            parameter_name: NeutronTunnelTypes
+          - searched: neutron-disable-tunneling
+            parameter_name: NeutronTunnelTypes
+          - searched: neutron-tunnel-id-ranges
+            parameter_name: NeutronTunnelIdRanges
+          - searched: neutron-vni-ranges
+            parameter_name: NeutronVniRanges
+          - searched: neutron-network-vlan-ranges
+            parameter_name: NeutronNetworkVLANRanges
+          - searched: neutron-mechanism-drivers
+            parameter_name: NeutronMechanismDrivers
+  with_items: "{{ value_list | default([]) }}"
+  loop_control:
+      loop_var: item
+  tags: convert_cli_options
+
+- name: Check for ~/deprecated_cli_options.yaml
+  stat:
+      path: ~/deprecated_cli_options.yaml
+  register: is_deprecated
+  tags: convert_cli_options
+
+- block:
+    - name: Store last deploy command line
+      shell: "tail -1 {{ overcloud_upgrade_script }}"
+      register: deploy_lastline
+
+    - name: Add the environment to the deploy command
+      lineinfile:
+          dest: "{{ overcloud_upgrade_script }}"
+          insertbefore: "{{ deploy_lastline.stdout }}"
+          line: "-e ~/deprecated_cli_options.yaml \\"
+  when: is_deprecated.stat.exists
+  tags: convert_cli_options
+
+- name: Determine if a custom roles_data was used
+  shell: "grep '\\-r\\ \\|\\-\\-roles' {{ overcloud_upgrade_script }}"
+  ignore_errors: true
+  register: is_roles
+  tags: convert_roles_data
+
+- name: Convert roles_data.yaml
+  include: convert_roles_data.yml
+  when: is_roles.rc == 0
+  tags: convert_roles_data
+
+- name: Initiate composable upgrade process
+  include: composable_upgrade.yml
+  tags: composable_upgrade
+  vars:
+      composable_upgrade_script: "~/overcloud_upgrade_composable.sh"
+
+- name: Compute Upgrade
+  include: compute_upgrade.yml
+  with_items: "{{ groups.compute|default([]) }}"
+  loop_control:
+      loop_var: node_name
+  tags: computes_upgrade
+
+- name: Swift Upgrade
+  include: swift_upgrade.yml
+  with_items: "{{ groups.swift|default([]) }}"
+  loop_control:
+      loop_var: node_name
+  tags: swift_upgrade
+
+- name: Converge
+  include: converge_upgrade.yml
+  tags: converge_upgrade
+  vars:
+      converge_script: "~/overcloud_upgrade_converge.sh"
+
+- name: Ceph Upgrade
+  include: ceph_upgrade.yml
+  with_items: "{{ groups.ceph|default([]) }}"
+  loop_control:
+      loop_var: node_name
+  tags: upgrade_ceph
+
+- name: List custom roles nodes
+  shell: |
+      source {{ undercloud_rc }}
+      openstack server list -f json
+  register: custom_nodes
+  tags: custom_role_post
+
+- include: custom_roles_upgrade.yml
+  with_items: "{{ custom_nodes.stdout|default([]) }}"
+  when:
+      - "'objectstorage' not in '{{ item.Name }}'"
+      - "'swift-r' not in '{{ item.Name }}'"
+      - "'ceph' not in '{{ item.Name }}'"
+      - "'stor-r' not in '{{ item.Name }}'"
+      - "'controller' not in '{{ item.Name }}'"
+      - "'ctrl' not in '{{ item.Name }}'"
+      - "'compute' not in '{{ item.Name }}'"
+      - "'comp' not in '{{ item.Name }}'"
+  vars:
+      node_name: "{{ item.Name }}"
+  tags: custom_role_post
+
+- name: Post upgrade controller nodes
+  include: controller_postupgrade.yml
+  with_items: "{{ groups.controller|default([]) }}"
+  loop_control:
+      loop_var: node_name
+  tags: controller_post
+
+- name: Update images
+  include: images.yml
+  tags: images_update
+
