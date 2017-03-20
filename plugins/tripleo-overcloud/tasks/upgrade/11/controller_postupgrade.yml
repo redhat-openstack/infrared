@@ -1,0 +1,55 @@
+---
+- name: Reboot controller node
+  shell: |
+      sleep 2
+      ssh -q heat-admin@{{ hostvars[controllernode].ansible_ssh_host }} sudo shutdown -r now
+  async: 1
+  poll: 0
+  ignore_errors: true
+  tags: controller_reboot
+
+- name: Wait for {{ controllernode }} to go down
+  shell: "ping -c1 {{ hostvars[controllernode].ansible_ssh_host }}"
+  ignore_errors: true
+  register: controllerdown
+  until: controllerdown.rc != 0
+  retries: 60
+  delay: 5
+
+- name: Wait for {{ controllernode }} to come back online and check it's part of the cluster
+  shell: "ssh -q heat-admin@{{ hostvars[controllernode].ansible_ssh_host }} sudo pcs status | grep Online"
+  register: pcs_status
+  until: pcs_status.stdout.find("{{ controllernode }}") > -1
+  retries: 30
+  delay: 5
+
+- name: Check for any stopped/failed pcs resources
+  shell: "ssh -q heat-admin@{{ hostvars[controllernode].ansible_ssh_host }} sudo pcs status | { grep {{ item }} || true; }"
+  register: pcs_status
+  until: pcs_status.stdout.find("{{ item }}") == -1
+  retries: 30
+  delay: 5
+  with_items:
+    - 'Stopped'
+    - 'unmanaged'
+
+- name: Check for any DOWN haproxy backend services;
+  shell: "ssh -q heat-admin@{{ hostvars[controllernode].ansible_ssh_host }} \"sudo sh -c 'echo show stat | nc -U /var/run/haproxy.sock | grep -v redis'\""
+  register: haproxy_stats
+  until: haproxy_stats.stdout.find("DOWN") == -1
+  retries: 30
+  delay: 5
+
+- name: Check for redis slaves in haproxy backend services;
+  shell: "ssh -q heat-admin@{{ hostvars[controllernode].ansible_ssh_host }} \"sudo sh -c 'echo show stat | nc -U /var/run/haproxy.sock | grep redis | grep UP | grep -v BACKEND | wc -l'\""
+  register: haproxy_stats
+  until: haproxy_stats.stdout.find("1") > -1
+  retries: 30
+  delay: 5
+
+- name: Check if there any remaining updates on {{ controllernode }}
+  shell: "ssh -q heat-admin@{{ hostvars[controllernode].ansible_ssh_host }} yum check-update --quiet | wc -l"
+  register: yumupdate
+
+- fail: msg="There are remaining packages to be updated on {{ controllernode }} or yum didn't run successfully"
+  when: yumupdate.stdout != '0'

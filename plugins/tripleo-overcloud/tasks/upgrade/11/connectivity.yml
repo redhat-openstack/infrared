@@ -1,0 +1,48 @@
+---
+- name: check if instance is connected to provider network
+  shell: "source {{ overcloud_rc }}; openstack server show {{ novainst }}  -f json | jq -r -c '.addresses' | grep provider"
+  ignore_errors: yes
+  register: provnet
+
+- block:
+  - name: register instance IP address
+    shell: "source {{ overcloud_rc }}; openstack server show {{ novainst }} -f json | jq -r -c '.addresses'| awk -F '=' {'print $2'}"
+    register: novainstaddr
+
+  - name: wait for instance to be SSHable
+    delegate_to: undercloud-0
+    wait_for:
+      host: "{{ novainstaddr.stdout }}"
+      port: 22
+      search_regex: OpenSSH
+      delay: 10
+      timeout: 300
+
+  - name: check icmp connectivity
+    shell: "ping -c1 {{ novainstaddr.stdout }}"
+    ignore_errors: yes
+    register: pingvm
+
+  - fail: msg="{{ novainstaddr.stdout }} is pingable and it shouldn't"
+    when: pingvm.rc == 0
+  when: provnet.rc == 0
+
+- block:
+  - name: register instance IP address
+    shell: "source {{ overcloud_rc }}; openstack server show {{ novainst }} -f json | jq -r -c '.addresses' | awk {'print $2'}"
+    register: novainstaddr
+
+  - name: wait for instance to be sshable
+    shell: "echo something | nc {{ novainstaddr.stdout }} 22 | grep SSH"
+    register: log_output
+    until: log_output.stdout.find("SSH-2.0-OpenSSH") > -1
+    retries: 90
+    delay: 10
+
+  - name: check icmp connectivity
+    shell: "ping -c1 {{ novainstaddr.stdout }}"
+    register: pingvm
+
+  - fail: msg="{{ novainstaddr.stdout }} is not pingable"
+    when: pingvm.rc != 0
+  when: provnet.rc != 0

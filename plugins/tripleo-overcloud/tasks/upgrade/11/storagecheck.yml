@@ -1,0 +1,22 @@
+---
+- name: check if instance has a volume attached
+  shell: "source {{ overcloud_rc }}; openstack server show {{ novainst }} -f json | jq -r -c '.volumes_attached' | grep id"
+  ignore_errors: yes
+  register: hasvolume
+
+- block:
+  - name: register instance IP address
+    shell: "source {{ overcloud_rc }}; openstack server show {{ novainst }} -f json | jq -r -c '.addresses'| awk {'print $2'}"
+    register: novainstaddr
+
+  - name: generate an uuid
+    command: uuidgen
+    register: fileuuid
+
+  - name: write a file to the cinder volume
+    shell: "ssh -o StrictHostKeyChecking=no fedora@{{ novainstaddr.stdout }} 'dd if=/dev/zero of=/mnt/{{ fileuuid.stdout }} bs=1M count=1'"
+
+  - name: read the test file
+    shell: "ssh -o StrictHostKeyChecking=no fedora@{{ novainstaddr.stdout }} dd if=/mnt/{{ fileuuid.stdout }} of=/dev/null"
+
+  when: hasvolume.rc == 0

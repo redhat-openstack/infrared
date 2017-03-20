@@ -1,0 +1,343 @@
+---
+- name: Check if neutron-flat-networks was used
+  shell: "grep neutron-flat-networks {{ overcloud_upgrade_script }}"
+  ignore_errors: true
+  register: isneutronflatnetworks
+
+- block:
+    - name: Create environmen tfile
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          create: yes
+          line: "parameter_defaults:"
+          insertbefore: BOF
+
+    - name: Register neutron-flat-networks
+      shell: "grep neutron-flat-networks {{ overcloud_upgrade_script }} | awk {'print $2'}"
+      register: neutronflatnetworks
+
+    - name: Convert it to environment file
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          line: "  NeutronFlatNetworks: '{{ neutronflatnetworks.stdout }}'"
+
+    - name: Remove cli option from upgrade command
+      lineinfile:
+          dest: "{{ overcloud_upgrade_script }}"
+          regexp: ".*neutron-flat-networks.*"
+          state: absent
+
+  when: isneutronflatnetworks.rc == 0
+
+- name: Check if neutron-physical-bridge was used
+  shell: "grep neutron-physical-bridge {{ overcloud_upgrade_script }}"
+  ignore_errors: true
+  register: isneutronphysicalbridge
+
+- block:
+    - name: Create environmentfile
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          create: yes
+          line: "parameter_defaults:"
+          insertbefore: BOF
+
+    - name: Register neutron-physical-bridge
+      shell: "grep neutron-physical-bridge {{ overcloud_upgrade_script }} | awk {'print $2'}"
+      register: neutronphysicalbridge
+
+    - name: Convert it to environment file
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          line: "  NeutronPhysicalBridge: '{{ neutronphysicalbridge.stdout }}'"
+
+    - name: Remove cli option from upgrade command
+      lineinfile:
+          dest: "{{ overcloud_upgrade_script }}"
+          regexp: ".*neutron-physical-bridge.*"
+          state: absent
+
+  when: isneutronphysicalbridge.rc == 0
+
+- name: Check if neutron-bridge-mappings was used
+  shell: "grep neutron-bridge-mappings {{ overcloud_upgrade_script }}"
+  ignore_errors: true
+  register: isneutronbridgemappings
+
+- block:
+    - name: Create environmentfile
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          create: yes
+          line: "parameter_defaults:"
+          insertbefore: BOF
+
+    - name: Register neutron-bridge-mappings
+      shell: "grep neutron-bridge-mappings {{ overcloud_upgrade_script }} | awk {'print $2'}"
+      register: neutronbridgemappings
+
+    - name: Convert it to environment file
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          line: "  NeutronBridgeMappings: '{{ neutronbridgemappings.stdout }}'"
+
+    - name: Remove cli option from upgrade command
+      lineinfile:
+          dest: "{{ overcloud_upgrade_script }}"
+          regexp: ".*neutron-bridge-mappings.*"
+          state: absent
+
+  when: isneutronbridgemappings.rc == 0
+
+- name: Check if neutron-public-interface was used
+  shell: "grep neutron-public-interface {{ overcloud_upgrade_script }}"
+  ignore_errors: true
+  register: isneutronpublicint
+
+- block:
+    - name: Create environmentfile
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          create: yes
+          line: "parameter_defaults:"
+          insertbefore: BOF
+
+    - name: Register neutron-public-interface
+      shell: "grep neutron-public-interface {{ overcloud_upgrade_script }} | awk {'print $2'}"
+      register: neutronpublicint
+
+    - name: Convert it to environment file
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          line: "  NeutronPublicInterface: '{{ neutronpublicint.stdout }}'"
+
+    - name: Remove cli option from upgrade command
+      lineinfile:
+          dest: "{{ overcloud_upgrade_script }}"
+          regexp: ".*neutron-public-interface.*"
+          state: absent
+
+  when: isneutronpublicint.rc == 0
+
+- name: Check if neutron-network-type was used
+  shell: "grep neutron-network-type {{ overcloud_upgrade_script }}"
+  ignore_errors: true
+  register: isneutronnetworktype
+
+- block:
+    - name: Create environmentfile
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          create: yes
+          line: "parameter_defaults:"
+          insertbefore: BOF
+
+    - name: Register neutron-network-type
+      shell: "grep neutron-network-type {{ overcloud_upgrade_script }} | awk {'print $2'}"
+      register: neutronnetworktype
+
+    - name: Convert it to environment file
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          line: "  NeutronNetworkType: '{{ neutronnetworktype.stdout }}'"
+
+    - name: Remove cli option from upgrade command
+      lineinfile:
+          dest: "{{ overcloud_upgrade_script }}"
+          regexp: ".*neutron-network-type.*"
+          state: absent
+
+  when: isneutronnetworktype.rc == 0
+
+- name: Check if neutron-tunnel-types was used
+  shell: "grep neutron-tunnel-types {{ overcloud_upgrade_script }}"
+  ignore_errors: true
+  register: isneutrontunneltype
+
+- block:
+    - name: Create environmentfile
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          create: yes
+          line: "parameter_defaults:"
+          insertbefore: BOF
+
+    - name: Register neutron-tunnel-types
+      shell: "grep neutron-tunnel-types {{ overcloud_upgrade_script }} | awk {'print $2'}"
+      register: neutrontunneltype
+
+    - name: Convert it to environment file
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          line: "  NeutronTunnelTypes: '{{ neutrontunneltype.stdout }}'"
+
+    - name: Remove cli option from upgrade command
+      lineinfile:
+          dest: "{{ overcloud_upgrade_script }}"
+          regexp: ".*neutron-tunnel-types.*"
+          state: absent
+
+  when: isneutronnetworktype.rc == 0
+
+- name: Check if neutron-disable-tunneling was used
+  shell: "grep neutron-disable-tunneling {{ overcloud_upgrade_script }}"
+  ignore_errors: true
+  register: isneutrondisabletun
+
+- block:
+    - name: Create environmentfile
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          create: yes
+          line: "parameter_defaults:"
+          insertbefore: BOF
+
+    - name: Convert it to environment file
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          line: "  NeutronTunnelTypes: ''"
+
+    - name: Remove cli option from upgrade command
+      lineinfile:
+          dest: "{{ overcloud_upgrade_script }}"
+          regexp: ".*neutron-disable-tunneling.*"
+          state: absent
+
+  when: isneutrondisabletun.rc == 0
+
+- name: Check if neutron-tunnel-id-ranges was used
+  shell: "grep neutron-tunnel-id-ranges {{ overcloud_upgrade_script }}"
+  ignore_errors: true
+  register: isneutrontunnelid
+
+- block:
+    - name: Create environmentfile
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          create: yes
+          line: "parameter_defaults:"
+          insertbefore: BOF
+
+    - name: Register neutron-tunnel-id-ranges
+      shell: "grep neutron-tunnel-id-ranges {{ overcloud_upgrade_script }} | awk {'print $2'}"
+      register: neutrontunnelid
+
+    - name: Convert it to environment file
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          line: "  NeutronTunnelIdRanges: '{{ neutrontunnelid.stdout }}'"
+
+    - name: Remove cli option from upgrade command
+      lineinfile:
+          dest: "{{ overcloud_upgrade_script }}"
+          regexp: ".*neutron-tunnel-id-ranges.*"
+          state: absent
+
+  when: isneutrontunnelid.rc == 0
+
+
+- name: Check if neutron-vni-ranges was used
+  shell: "grep neutron-vni-ranges {{ overcloud_upgrade_script }}"
+  ignore_errors: true
+  register: isneutronvni
+
+- block:
+    - name: Create environmentfile
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          create: yes
+          line: "parameter_defaults:"
+          insertbefore: BOF
+
+    - name: register neutron-vni-ranges
+      shell: "grep neutron-vni-ranges {{ overcloud_upgrade_script }} | awk {'print $2'}"
+      register: neutronvni
+
+    - name: Convert it to environment file
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          line: "  NeutronVniRanges: '{{ neutronvni.stdout }}'"
+
+    - name: Remove cli option from upgrade command
+      lineinfile:
+          dest: "{{ overcloud_upgrade_script }}"
+          regexp: ".*neutron-vni-ranges.*"
+          state: absent
+
+  when: isneutronvni.rc == 0
+
+- name: Check if neutron-network-vlan-ranges was used
+  shell: "grep neutron-network-vlan-ranges {{ overcloud_upgrade_script }}"
+  ignore_errors: true
+  register: isneutronvlanranges
+
+- block:
+    - name: Create environmentfile
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          create: yes
+          line: "parameter_defaults:"
+          insertbefore: BOF
+
+    - name: Register neutron-network-vlan-ranges
+      shell: "grep neutron-network-vlan-ranges {{ overcloud_upgrade_script }} | awk {'print $2'}"
+      register: neutronvlanranges
+
+    - name: Convert it to environment file
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          line: "  NeutronNetworkVLANRanges: '{{ neutronvlanranges.stdout }}'"
+
+    - name: Remove cli option from upgrade command
+      lineinfile:
+          dest: "{{ overcloud_upgrade_script }}"
+          regexp: ".*neutron-network-vlan-ranges.*"
+          state: absent
+
+  when: isneutronvlanranges.rc == 0
+
+- name: Check if neutron-mechanism-drivers was used
+  shell: "grep neutron-mechanism-drivers {{ overcloud_upgrade_script }}"
+  ignore_errors: true
+  register: isneutronmechanism
+
+- block:
+    - name: create environmentfile
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          create: yes
+          line: "parameter_defaults:"
+          insertbefore: BOF
+
+    - name: Register neutron-mechanism-drivers
+      shell: "grep neutron-mechanism-drivers {{ overcloud_upgrade_script }} | awk {'print $2'}"
+      register: neutronmechanism
+
+    - name: Convert it to environment file
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          line: "  NeutronMechanismDrivers: '{{ neutronmechanism.stdout }}'"
+
+    - name: Remove cli option from upgrade command
+      lineinfile:
+          dest: "{{ overcloud_upgrade_script }}"
+          regexp: ".*neutron-mechanism-drivers.*"
+          state: absent
+
+  when: isneutronmechanism.rc == 0
+
+- stat:
+    path: ~/deprecated_cli_options.yaml
+  register: isdeprecated
+
+- block:
+    - name: Store last deploy command line
+      shell: "tail -1 {{ overcloud_upgrade_script }}"
+      register: deploy_lastline
+
+    - name: Add the environment to the deploy command
+      lineinfile:
+          dest: "{{ overcloud_upgrade_script }}"
+          insertbefore: "{{ deploy_lastline.stdout }}"
+          line: "-e ~/deprecated_cli_options.yaml \\"
+  when: isdeprecated.stat.exists

@@ -1,0 +1,11 @@
+---
+- name: list custom roles nodes
+  shell: |
+    source {{ undercloud_rc }}
+    openstack server list -f json | jq -r -c '.[] | select(.Name | contains("ceph") or contains("stor-r") or contains("controller") or contains("ctrl") or contains("objectstorage") or contains("swift-r") or contains("compute") or contains("comp") | not ) | .Name'
+  register: customnodes
+
+- include: customroles_upgrade.yml
+  with_items: "{{ customnodes.stdout_lines }}"
+  loop_control:
+    loop_var: customnode
