@@ -1,0 +1,8 @@
+---
+- name: Check if there any remaining updates on {{ node_name }}
+  shell: "ssh -q -o StrictHostKeyChecking=no heat-admin@{{ hostvars[node_name].ansible_ssh_host }} yum check-update --quiet | wc -l"
+  register: yum_update
+
+- fail:
+      msg: "There are remaining packages to be updated on {{ hostvars[node_name].ansible_fqdn }} or yum didn't run successfully"
+  when: yum_update.stdout != '0'
