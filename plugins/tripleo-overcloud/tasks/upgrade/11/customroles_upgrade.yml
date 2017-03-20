@@ -1,0 +1,35 @@
+---
+- name: register {{ customnode }} ip address
+  shell: "source {{ undercloud_rc }}; openstack server list -f json | jq -r -c '.[] | select(.Name | contains(\"{{ customnode }}\")) | .Networks' | grep -oP '[0-9.]+'"
+  register: customnodeip
+
+- name: reboot {{ customnode }}
+  shell: "sleep 2; ssh -q -o StrictHostKeyChecking=no heat-admin@{{ customnodeip.stdout }} sudo shutdown -r now"
+  async: 1
+  poll: 0
+  ignore_errors: true
+  tags: customrole_reboot
+
+- name: wait for {{ customnode }} to go down
+  shell: "ping -c1 {{ customnodeip.stdout }}"
+  ignore_errors: true
+  register: customnodedown
+  until: customnodedown.rc != 0
+  retries: 30
+  delay: 5
+  tags: customrole_reboot
+
+- name: wait for {{ customnode }} to come back up
+  shell: "ssh -q -o StrictHostKeyChecking=no heat-admin@{{ customnodeip.stdout }} 'systemctl show os-collect-config --property ActiveState'"
+  register: customnode_svc
+  until: customnode_svc.stdout.find("ActiveState=active") > -1
+  retries: 30
+  delay: 5
+
+- name: check if there any remaining updates on {{ customnode }}
+  shell: "ssh -q -o StrictHostKeyChecking=no heat-admin@{{ customnodeip.stdout }} yum check-update --quiet | wc -l"
+  register: yumupdate
+
+- fail:
+      msg: "There are remaining packages to be updated on {{ customnode }} or yum didn't run successfully"
+  when: yumupdate.stdout != '0'

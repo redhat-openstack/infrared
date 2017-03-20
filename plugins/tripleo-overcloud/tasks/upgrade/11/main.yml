@@ -1,0 +1,88 @@
+---
+- name: Create overcloud upgrade base script
+  copy:
+      src: "{{ overcloud_deploy_script }}"
+      dest: "{{ overcloud_upgrade_script }}"
+      mode: 0755
+      remote_src: true
+
+- name: Scan nodes ssh keys
+  command: "ssh-keyscan -t rsa {{ hostvars[item].ansible_ssh_host }}"
+  with_items: "{{ groups.overcloud_nodes|default([]) }}"
+  register: pubkeys
+
+- name: Add nodes to known_hosts
+  known_hosts:
+      name: "{{ hostvars[item.item].ansible_ssh_host  }}"
+      key: "{{ item.stdout }}"
+  with_items: "{{ pubkeys.results }}"
+
+- name: Patch tht
+  include: tht_patch.yml
+  tags: tht_patch
+
+- name: Convert old cli arguments
+  include: convert_cli_options.yml
+  tags: convert_cli_options
+
+- name: Determine if a custom roles_data was used
+  shell: "grep '\\-r\\ \\|\\-\\-roles' {{ overcloud_upgrade_script }}"
+  ignore_errors: true
+  register: isroles
+  tags: convert_roles_data
+
+- name: Convert roles_data.yaml
+  include: convert_roles_data.yml
+  when: isroles.rc == 0
+  tags: convert_roles_data
+
+- name: Initiate composable upgrade process
+  include: composable_upgrade.yml
+  tags: composable_upgrade
+  vars:
+      composable_upgrade_script: "~/overcloud_upgrade_composable.sh"
+
+- name: Compute Upgrade
+  include: 'compute_upgrade.yml'
+  with_indexed_items: "{{ groups.compute|default([]) }}"
+  loop_control:
+      loop_var: compute
+  tags: computes_upgrade
+
+- name: Swift Upgrade
+  include: 'swift_upgrade.yml'
+  with_items: "{{ groups.swift|default([]) }}"
+  loop_control:
+      loop_var: swiftnode
+  tags: swift_upgrade
+
+- name: Converge
+  include: converge_upgrade.yml
+  tags: converge_upgrade
+  vars:
+      converge_script: "~/overcloud_upgrade_converge.sh"
+
+- name: Ceph Upgrade
+  include: 'ceph_upgrade.yml'
+  with_items: "{{ groups.ceph|default([]) }}"
+  loop_control:
+      loop_var: cephnode
+  tags: upgrade_ceph
+
+- name: Check if we have any custom roles nodes deployed
+  shell: "source ~/stackrc; openstack server list | grep -v \"objectstorage\\|swift-r\\|ceph\\|stor-r\\|controller\\|ctrl\\|compute\\|comp\" > /dev/null"
+  register: customroledeployed
+  ignore_errors: true
+  tags: customrole_post
+
+- name: Custom role nodes post upgrade
+  include: customrole.yml
+  when: customroledeployed.rc == 0
+  tags: customrole_post
+
+- name: Post upgrade controller nodes
+  include: 'controller_postupgrade.yml'
+  with_items: "{{ groups.controller|default([]) }}"
+  loop_control:
+      loop_var: controllernode
+  tags: controller_post
