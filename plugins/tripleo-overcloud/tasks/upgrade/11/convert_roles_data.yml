@@ -1,0 +1,100 @@
+---
+- name: Register roles_data file location
+  shell: "grep '\\-r\\ \\|\\-\\-roles' {{ overcloud_upgrade_script }} | awk {'print $2'}"
+  register: roles
+
+- name: Copy OSP10 roles_data.yaml
+  copy:
+      src: "{{ roles.stdout }}"
+      dest: "~/roles_data.yaml.old"
+      remote_src: true
+
+- name: Add disable_upgrade_deployment to roles
+  replace:
+      dest: '{{ roles.stdout }}'
+      regexp: '^(- name: (Compute|ObjectStorage).*$)'
+      replace: '\1\n  disable_upgrade_deployment: True'
+
+- name: Clear removed service for roles_data.yaml file
+  lineinfile:
+      dest: '{{ roles.stdout }}'
+      regexp: "{{ item }}"
+      state: absent
+  with_items:
+      - 'OS::TripleO::Services::Core'
+      - 'OS::TripleO::Services::VipHosts'
+      - 'OS::TripleO::Services::GlanceRegistry'
+
+## Note - I'm trying to tie the new services introduced in Ocata
+## to already existing services from OSP10. In case of the new
+## unrelated services they are being placed on the Controller role.
+## Since they new services have not been used for the initial deployment
+## most of them would probably remain undeployed but it's best to keep the
+## roles_data.yaml file up to date with the introduced changes.
+
+- name: Add base services introduced in Ocata
+  lineinfile:
+      dest: "{{ roles.stdout }}"
+      insertafter: '\s+- OS::TripleO::Services::Timezone$'
+      line: "{{ item }}"
+  with_items:
+      - '    - OS::TripleO::Services::Sshd'
+      - '    - OS::TripleO::Services::AuditD'
+      - '    - OS::TripleO::Services::Collectd'
+      - '    - OS::TripleO::Services::MySQLClient'
+
+- name: Add Neutron ML2 services introduced in Ocata
+  lineinfile:
+      dest: "{{ roles.stdout }}"
+      insertafter: '\s+- OS::TripleO::Services::NeutronCorePlugin$'
+      line: "{{ item }}"
+  with_items:
+      - '    - OS::TripleO::Services::NeutronML2FujitsuCfab'
+      - '    - OS::TripleO::Services::NeutronML2FujitsuFossw'
+
+- name: Add CinderHPELeftHandISCSI service introduced in Ocata
+  lineinfile:
+      dest: "{{ roles.stdout }}"
+      insertafter: '\s+- OS::TripleO::Services::CinderVolume$'
+      line: '    - OS::TripleO::Services::CinderHPELeftHandISCSI'
+
+- name: Add Nova services introduced in Ocata
+  lineinfile:
+      dest: "{{ roles.stdout }}"
+      insertafter: '\s+- OS::TripleO::Services::NovaApi$'
+      line: "{{ item }}"
+  with_items:
+      - '    - OS::TripleO::Services::NovaPlacement'
+      - '    - OS::TripleO::Services::Ec2Api'
+
+- name: Add Ceph services introduced in Ocata
+  lineinfile:
+      dest: "{{ roles.stdout }}"
+      insertafter: '\s+- OS::TripleO::Services::CephMon$'
+      line: "{{ item }}"
+  with_items:
+      - '    - OS::TripleO::Services::CephMds'
+      - '    - OS::TripleO::Services::CephRbdMirror'
+
+- name: Add Telemetry services introduced in Ocata
+  lineinfile:
+      dest: "{{ roles.stdout }}"
+      insertafter: '\s+- OS::TripleO::Services::CeilometerApi$'
+      line: '    - OS::TripleO::Services::PankoApi'
+
+- name: Add the rest of the new services introduced in Ocata to Controller role
+  lineinfile:
+      dest: "{{ roles.stdout }}"
+      insertafter: '^(- name: Controller\n.*\n.*ServicesDefault.*)'
+      line: "{{ item }}"
+  with_items:
+      - '    - OS::TripleO::Services::Congress'
+      - '    - OS::TripleO::Services::BarbicanApi'
+      - '    - OS::TripleO::Services::Tacker'
+      - '    - OS::TripleO::Services::Zaqar'
+      - '    - OS::TripleO::Services::OVNDBs'
+      - '    - OS::TripleO::Services::Etcd'
+      - '    - OS::TripleO::Services::OctaviaApi'
+      - '    - OS::TripleO::Services::OctaviaHealthManager'
+      - '    - OS::TripleO::Services::OctaviaHousekeeping'
+      - '    - OS::TripleO::Services::OctaviaWorker'

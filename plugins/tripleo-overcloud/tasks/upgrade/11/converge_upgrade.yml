@@ -1,0 +1,37 @@
+---
+- name: Create Converge base script
+  copy:
+      src: "{{ overcloud_upgrade_script }}"
+      dest: "{{ converge_script }}"
+      mode: 0755
+      remote_src: true
+
+- name: Store last deploy command line
+  command: "tail -1 {{ converge_script }}"
+  register: deploy_lastline
+
+- name: Build the upgrade converge command
+  lineinfile:
+      dest: "{{ converge_script }}"
+      insertbefore: "{{ deploy_lastline.stdout }}"
+      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-converge.yaml \'
+
+- name: Print upgrade converge command
+  command: "cat {{ converge_script }}"
+
+- name: Run upgrade converge step
+  shell: |
+      source {{ undercloud_rc }}
+      bash {{ converge_script }} &> overcloud_upgrade_converge.log
+  register: overcloud_upgrade_converge
+  ignore_errors: yes
+
+- name: Print stack failures
+  shell: |
+      source {{ undercloud_rc }}
+      openstack stack failures list overcloud
+  when: overcloud_upgrade_converge.rc != 0
+
+- fail:
+      msg: "Overcloud upgrade converge failed... :("
+  when: overcloud_upgrade_converge.rc != 0

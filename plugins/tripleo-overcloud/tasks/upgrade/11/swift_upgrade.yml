@@ -1,0 +1,35 @@
+---
+- name: Upgrade {{ node_name }}
+  shell: |
+      source {{ undercloud_rc }}
+      upgrade-non-controller.sh --upgrade {{ node_name }} &> {{ node_name }}-upgrade.log
+
+- name: Reboot Node
+  include: reboot_node.yml
+  tags: swift_reboot
+
+- name: Wait for the swift services to come back up
+  command: "systemctl show {{ item }} --property ActiveState"
+  register: swift_svc
+  until: swift_svc.stdout.find("ActiveState=active") > -1
+  retries: 30
+  delay: 5
+  with_items:
+      - 'openstack-swift-account-auditor.service'
+      - 'openstack-swift-account-reaper.service'
+      - 'openstack-swift-account-replicator.service'
+      - 'openstack-swift-account.service'
+      - 'openstack-swift-container-auditor.service'
+      - 'openstack-swift-container-replicator.service'
+      - 'openstack-swift-container-updater.service'
+      - 'openstack-swift-container.service'
+      - 'openstack-swift-object-auditor.service'
+      - 'openstack-swift-object-replicator.service'
+      - 'openstack-swift-object-updater.service'
+      - 'openstack-swift-object.service'
+  delegate_to: "{{ node_name }}"
+
+## We should add some additional checks here to make sure that the nodes have correctly rejoined the cluster ##
+
+- name: Packages Check
+  include: packages_check.yml

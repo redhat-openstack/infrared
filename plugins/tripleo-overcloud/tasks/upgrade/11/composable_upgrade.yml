@@ -1,0 +1,37 @@
+---
+- name: Create Composable upgrade base script
+  copy:
+      src: "{{ overcloud_upgrade_script }}"
+      dest: "{{ composable_upgrade_script }}"
+      mode: 0755
+      remote_src: true
+
+- name: Store last deploy command line
+  command: "tail -1 {{ composable_upgrade_script }}"
+  register: deploy_lastline
+
+- name: Build the upgrade command
+  lineinfile:
+      dest: "{{ composable_upgrade_script }}"
+      insertbefore: "{{ deploy_lastline.stdout }}"
+      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-composable-steps.yaml \'
+
+- name: Print upgrade command
+  command: "cat {{ composable_upgrade_script }}"
+
+- name: Running composable upgrade step
+  shell: |
+      source {{ undercloud_rc }}
+      bash {{ composable_upgrade_script }} &> overcloud_upgrade_composable.log
+  register: overcloud_upgrade_composable
+  ignore_errors: yes
+
+- name: Print stack failures
+  shell: |
+      source {{ undercloud_rc }}
+      openstack stack failures list overcloud
+  when: overcloud_upgrade_composable.rc != 0
+
+- fail:
+      msg: "Overcloud upgrade composable step failed... :("
+  when: overcloud_upgrade_composable.rc != 0

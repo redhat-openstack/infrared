@@ -1,0 +1,51 @@
+---
+- name: Ceph osd set noout on {{ node_name }}
+  become: true
+  command: ceph osd set noout
+  delegate_to: "{{ node_name }}"
+  when: groups.ceph|length > 2
+
+- name: Ceph osd set norebalance {{ node_name }}
+  become: true
+  command: ceph osd set norebalance
+  delegate_to: "{{ node_name }}"
+  when: groups.ceph|length > 2
+
+- name: Reboot Node
+  include: reboot_node.yml
+  tags: ceph_reboot
+
+- name: Wait for OSDs on {{ node_name }} to come back online
+  become: true
+  command: ceph pg stat
+  register: active_osd
+  until: active_osd.stdout.find("active+clean") > -1
+  retries: 30
+  delay: 5
+  delegate_to: "{{ node_name }}"
+  when: groups.ceph|length > 2
+
+- name: Ceph osd unset noout {{ node_name }}
+  become: true
+  command: ceph osd unset noout
+  delegate_to: "{{ node_name }}"
+  when: groups.ceph|length > 2
+
+- name: Ceph osd unset norebalance {{ node_name }}
+  become: true
+  command: ceph osd unset norebalance
+  delegate_to: "{{ node_name }}"
+  when: groups.ceph|length > 2
+
+- name: Make sure that cluster is in healthy state
+  become: true
+  command: ceph health
+  register: ceph_health
+  until: ceph_health.stdout.find("HEALTH_OK") > -1
+  retries: 30
+  delay: 5
+  delegate_to: "{{ node_name }}"
+  when: groups.ceph|length > 2
+
+- name: Packages Check
+  include: packages_check.yml
