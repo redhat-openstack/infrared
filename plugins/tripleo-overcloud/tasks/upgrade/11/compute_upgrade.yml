@@ -1,0 +1,126 @@
+---
+- name: Register compute nodes count
+  set_fact:
+      compute_count: "{{ groups['compute'] | length }}"
+
+- block:
+## nova live-migration could silently fail when it runs for the 1st time so we try it twice
+    - name: List compute nodes
+      shell: "source {{ overcloud_rc }}; openstack hypervisor list -f json | jq -r -c '.[] | .[\"Hypervisor Hostname\"]'"
+      register: hypervisors
+
+    - name: Get instances running on {{ node_name }}
+      shell: |
+          source {{ overcloud_rc }}
+          openstack server list --host {{ hostvars[node_name].ansible_fqdn }} -f json | jq -r -c '.[] | select(.Status | contains("ACTIVE")) | .Name'
+      register: instances
+
+    - name: Migrate instances from {{ node_name }}
+      shell: |
+          source {{ overcloud_rc }}
+          nova live-migration {{ item }} {{ hypervisors.stdout_lines[node_name | int + 1] }}
+      with_items: "{{ instances.stdout_lines|default([]) }}"
+      when: "'{{ hostvars[node_name].ansible_fqdn }}' not in '{{ hypervisors.stdout_lines[-1] }}'"
+
+    - name: Migrate instances from {{ node_name }}
+      shell: |
+          source {{ overcloud_rc }}
+          nova live-migration {{ item }} {{ hypervisors.stdout_lines[0] }}
+      with_items: "{{ instances.stdout_lines|default([]) }}"
+      when: "'{{ hostvars[node_name].ansible_fqdn }}' in '{{ hypervisors.stdout_lines[-1] }}'"
+
+    - name: Wait for instances to be in ACTIVE state
+      shell: |
+          source {{ overcloud_rc }}
+          openstack server show {{ item }} -f json | jq -r -c '.status'
+      with_items: "{{ instances.stdout_lines|default([]) }}"
+      register: running_instances
+      until: running_instances.stdout.find("ACTIVE") > -1
+      retries: 30
+      delay: 5
+
+    - name: Check if the compute node is quiesced
+      shell: |
+          source {{ overcloud_rc }}
+          openstack server list --host {{ hostvars[node_name].ansible_fqdn }} -f json | jq -r -c '. | length'
+      register: empty_compute
+
+    - block:
+        - name: Migrate instances from {{ node_name }}
+          shell: |
+              source {{ overcloud_rc }}
+              nova live-migration {{ item }} {{ hypervisors.stdout_lines[node_name | int + 1] }}
+          with_items: "{{ instances.stdout_lines|default([]) }}"
+          when: "'{{ hostvars[node_name].ansible_fqdn }}' not in '{{ hypervisors.stdout_lines[-1] }}'"
+
+        - name: Migrate instances from {{ node_name }}
+          shell: |
+              source {{ overcloud_rc }}
+              nova live-migration {{ item }} {{ hypervisors.stdout_lines[0] }}
+          with_items: "{{ instances.stdout_lines|default([]) }}"
+          when: "'{{ hostvars[node_name].ansible_fqdn }}' in '{{ hypervisors.stdout_lines[-1] }}'"
+
+        - name: Wait for instances to be in ACTIVE state
+          shell: |
+              source {{ overcloud_rc }}
+              openstack server show {{ item }} -f json | jq -r -c '.status'
+          with_items: "{{ instances.stdout_lines|default([]) }}"
+          register: running_instances
+          until: running_instances.stdout.find("ACTIVE") > -1
+          retries: 30
+          delay: 5
+
+        - name: Check if the compute node is quiesced
+          shell: |
+              source {{ overcloud_rc }}
+              openstack server list --host {{ hostvars[node_name].ansible_fqdn }} -f json | jq -r -c '. | length'
+          register: compute_instances
+
+        - fail:
+              msg: "Instance live migration failed"
+          when: compute_instances.stdout | int != 0
+      when:  empty_compute.stdout | int != 0
+
+  when: compute_count | int > 1
+  tags: compute_migrate
+
+- name: Upgrade {{ node_name }}
+  shell: |
+      source {{ undercloud_rc }}
+      upgrade-non-controller.sh --upgrade {{ node_name }} &> {{ node_name }}-upgrade.log
+
+- name: Reboot Node
+  include: 'reboot_node.yml'
+  tags: compute_reboot
+
+- name: Wait for nova-compute to be up on {{ node_name }}
+  shell: "systemctl show openstack-nova-compute --property ActiveState"
+  register: active_nova
+  until: active_nova.stdout.find("ActiveState=active") > -1
+  retries: 30
+  delay: 5
+  delegate_to: "{{ node_name }}"
+
+- name: Packages Check
+  include: 'packages_check.yml'
+
+- name: Check that nova-compute binary for {{ node_name }} is up
+  shell: "source {{ overcloud_rc }}; openstack compute service list -f json |  jq -r -c '.[] | select(.Binary | contains(\"nova-compute\")) | select(.Host | contains(\"{{ hostvars[node_name].ansible_fqdn }}\")) | .State'"
+  register: nova_compute_state
+  until: nova_compute_state.stdout.find("up") > -1
+  retries: 30
+  delay: 5
+
+- block:
+    - name: migrate instance back to {{ node_name }}
+      shell: |
+          source {{ overcloud_rc }}
+          nova live-migration {{ item }} {{ hostvars[node_name].ansible_fqdn }}
+          openstack server show {{ item }}  -f json | jq -r -c '. | .["OS-EXT-SRV-ATTR:host"]'
+      register: instance_host
+      until: instance_host.stdout.find("{{ hostvars[node_name].ansible_fqdn }}") > -1
+      retries: 30
+      delay: 5
+      with_items: "{{ instances.stdout_lines|default([]) }}"
+  when: compute_count | int > 1
+  tags: compute_migrate
