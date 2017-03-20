@@ -1,0 +1,15 @@
+---
+- name: Reboot Node
+  include: reboot_node.yml
+  tags: custom_role_reboot
+
+- name: Wait for {{ node_name }} to come back up
+  command: systemctl show os-collect-config --property ActiveState
+  register: node_svc
+  until: node_svc.stdout.find("ActiveState=active") > -1
+  retries: 30
+  delay: 5
+  delegate_to: "{{ node_name }}"
+
+- name: Packages Check
+  include: packages_check.yml

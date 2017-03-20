@@ -1,0 +1,23 @@
+---
+- name: Reboot {{ node_name }}
+  become: true
+  shell: "sleep 2; shutdown -r now"
+  async: 1
+  poll: 0
+  ignore_errors: true
+  delegate_to: "{{ node_name }}"
+
+- name: Wait for {{ node_name }} to go down
+  command: "ping -c1 {{ hostvars[node_name].ansible_ssh_host }}"
+  ignore_errors: true
+  register: node_down
+  until: node_down.rc != 0
+  retries: 30
+  delay: 5
+
+- name: waiting for the {{ node_name }} to be available
+  wait_for:
+      port: 22
+      host: "{{ hostvars[node_name].ansible_ssh_host }}"
+      search_regex: OpenSSH
+      delay: 5
