@@ -1,0 +1,47 @@
+---
+# todo(ansible 2.3): use builtin module https://docs.ansible.com/ansible/pacemaker_cluster_module.html
+- name: Reboot Node
+  include: reboot_node.yml
+  tags: controller_reboot
+
+- name: Wait for {{ node_name }} to come back online and check it's part of the cluster
+  become: true
+  shell: "pcs status | grep Online"
+  register: pcs_status
+  until: pcs_status.stdout.find("{{ node_name }}") > -1
+  retries: 30
+  delay: 5
+  delegate_to: "{{ node_name }}"
+
+- name: Check for any stopped/failed pcs resources
+  become: true
+  shell: "pcs status | { grep {{ item }} || true; }"
+  register: pcs_status
+  until: pcs_status.stdout.find("{{ item }}") == -1
+  retries: 30
+  delay: 5
+  with_items:
+      - 'Stopped'
+      - 'unmanaged'
+  delegate_to: "{{ node_name }}"
+
+- name: Check for any DOWN haproxy backend services;
+  become: true
+  shell: "echo show stat | nc -U /var/run/haproxy.sock | grep -v redis"
+  register: haproxy_stats
+  until: haproxy_stats.stdout.find("DOWN") == -1
+  retries: 30
+  delay: 5
+  delegate_to: "{{ node_name }}"
+
+- name: Check for redis slaves in haproxy backend services;
+  become: true
+  shell: "echo show stat | nc -U /var/run/haproxy.sock | grep redis | grep UP | grep -v BACKEND | wc -l"
+  register: haproxy_stats
+  until: haproxy_stats.stdout.find("1") > -1
+  retries: 30
+  delay: 5
+  delegate_to: "{{ node_name }}"
+
+- name: Packages Check
+  include: packages_check.yml

@@ -4,13 +4,6 @@
       path: "{{ temp_dir }}"
       state: directory
 
-- name: Create overcloud upgrade base script
-  copy:
-      src: "{{ overcloud_deploy_script }}"
-      dest: "{{ overcloud_upgrade_script }}"
-      mode: 0755
-      remote_src: true
-
 - name: SSL Config
   include: "ssl.yml"
   tags:
@@ -32,17 +25,6 @@
       - upgrade_init
   vars:
       upgrade_init_script: "~/upgrade_init.sh"
-
-- name: Scan nodes ssh keys
-  command: "ssh-keyscan -t rsa {{ hostvars[item].ansible_ssh_host }}"
-  with_items: "{{ groups.overcloud_nodes|default([]) }}"
-  register: pubkeys
-
-- name: Add nodes to known_hosts
-  known_hosts:
-      name: "{{ hostvars[item.item].ansible_ssh_host  }}"
-      key: "{{ item.stdout }}"
-  with_items: "{{ pubkeys.results }}"
 
 - name: Object Storage Upgrade
   shell : |
