@@ -1,0 +1,58 @@
+---
+- name: Register ceph nodes count
+  set_fact:
+      cephcount: "{{ groups['ceph'] | length }}"
+
+- block:
+    - name: Ceph osd set noout on {{ cephnode }}
+      shell: "ssh -q heat-admin@{{ hostvars[cephnode].ansible_ssh_host }} 'sudo ceph osd set noout'"
+
+    - name: Ceph osd set norebalance {{ cephnode }}
+      shell: "ssh -q heat-admin@{{ hostvars[cephnode].ansible_ssh_host }} 'sudo ceph osd set norebalance'"
+
+  when: cephcount | int > 1
+
+- name: Reboot {{ cephnode }}
+  shell: "sleep 2; ssh -q heat-admin@{{ hostvars[cephnode].ansible_ssh_host }} sudo shutdown -r now"
+  async: 1
+  poll: 0
+  ignore_errors: true
+
+- name: Wait for {{ cephnode }} to go down
+  shell: "ping -c1 {{ hostvars[cephnode].ansible_ssh_host }}"
+  ignore_errors: true
+  register: cephdown
+  until: cephdown.rc != 0
+  retries: 30
+  delay: 5
+
+- block:
+    - name: Wait for OSDs on {{ cephnode }} to come back online
+      shell: "ssh -q heat-admin@{{ hostvars[cephnode].ansible_ssh_host }} sudo ceph pg stat"
+      register: active_osd
+      until: active_osd.stdout.find("active+clean") > -1
+      retries: 30
+      delay: 5
+
+    - name: Ceph osd unset noout {{ cephnode }}
+      shell: "ssh -q heat-admin@{{ hostvars[cephnode].ansible_ssh_host }} 'sudo ceph osd unset noout'"
+
+    - name: Ceph osd unset norebalance {{ cephnode }}
+      shell: "ssh -q heat-admin@{{ hostvars[cephnode].ansible_ssh_host }} 'sudo ceph osd unset norebalance'"
+
+  when: cephcount | int > 1
+
+- name: Make sure that cluster is in healthy state
+  shell: "ssh -q heat-admin@{{ hostvars[cephnode].ansible_ssh_host }} sudo ceph health"
+  register: ceph_health
+  until: ceph_health.stdout.find("HEALTH_OK") > -1
+  retries: 30
+  delay: 5
+
+- name: Check if there any remaining updates on {{ cephnode }}
+  shell: "ssh -q heat-admin@{{ hostvars[cephnode].ansible_ssh_host }} yum check-update --quiet | wc -l"
+  register: yumupdate
+
+- fail:
+      msg: "There are remaining packages to be updated on {{ cephnode }} or yum didn't run successfully"
+  when: yumupdate.stdout != '0'
