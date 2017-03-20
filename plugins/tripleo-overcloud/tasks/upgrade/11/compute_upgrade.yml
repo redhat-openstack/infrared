@@ -1,0 +1,67 @@
+---
+- name: Get servers info
+  vars:
+      # Here can't be used {{ path_venv }}, because it's not a Jinja template
+      ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
+  os_server_facts:
+      auth: "{{ creds.stdout | from_yaml }}"
+      validate_certs: no
+  when: groups.compute|length > 1
+  tags: compute_migrate
+
+- name: List compute nodes
+  shell: |
+      source {{ overcloud_rc }}
+      openstack hypervisor list -f json
+  when: groups.compute|length > 1
+  register: hypervisors_result
+  tags: compute_migrate
+
+- name: Migrate instance from {{ node_name }}
+  include: evacute_compute.yml
+  when:
+      - groups.compute|length > 1
+      - "'{{ hostvars[node_name].ansible_fqdn }}' in '{{ item['OS-EXT-SRV-ATTR:host'] }}'"
+  with_items: "{{ openstack_servers }}"
+  vars:
+      new_hypervisor: "{{ hypervisors_result.stdout|from_json|map(attribute='Hypervisor Hostname')|list|difference(hostvars[node_name].ansible_fqdn)|random }}"
+  tags: compute_migrate
+
+- name: Upgrade {{ node_name }}
+  shell: |
+      source {{ undercloud_rc }}
+      upgrade-non-controller.sh --upgrade {{ node_name }} &> {{ node_name }}-upgrade.log
+
+- name: Reboot Node
+  include: reboot_node.yml
+  tags: compute_reboot
+
+- name: Wait for nova-compute to be up on {{ node_name }}
+  command: systemctl show openstack-nova-compute --property ActiveState
+  register: active_nova
+  until: active_nova.stdout.find("ActiveState=active") > -1
+  retries: 30
+  delay: 5
+  delegate_to: "{{ node_name }}"
+
+- name: Packages Check
+  include: packages_check.yml
+
+- name: Check that nova-compute binary for {{ node_name }} is up
+  shell: |
+      source {{ overcloud_rc }}
+      openstack compute service list --host {{ hostvars[node_name].ansible_fqdn }} -f json
+  register: nova_compute_state
+  until: (nova_compute_state.stdout|from_json|selectattr('Binary', 'equalto', 'nova-compute')|first).State.find("up") > -1
+  retries: 30
+  delay: 5
+
+- name: Migrate instance back to {{ node_name }}
+  include: evacute_compute.yml
+  when:
+      - groups.compute|length > 1
+      - "'{{ hostvars[node_name].ansible_fqdn }}' in '{{ item['OS-EXT-SRV-ATTR:host'] }}'"
+  with_items: "{{ openstack_servers }}"
+  vars:
+      new_hypervisor: "{{ hostvars[node_name].ansible_fqdn }}"
+  tags: compute_migrate
