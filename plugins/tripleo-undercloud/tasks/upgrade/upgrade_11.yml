@@ -1,0 +1,54 @@
+---
+- name: Stopping services
+  become: true
+  shell: |
+       systemctl stop 'openstack-*'
+       systemctl stop 'neutron-*'
+
+- name: Stop httpd
+  become: true
+  service:
+        name: httpd
+        state: stopped
+
+- name: update packages prior upgrade
+  become: true
+  yum:
+      name: "{{ item }}"
+      state: latest
+  with_items:
+      - 'instack-undercloud'
+      - 'openstack-puppet-modules'
+      - 'openstack-tripleo-common'
+      - 'python-tripleoclient'
+
+- name: Undercloud upgrade
+  shell: "openstack undercloud upgrade &> undercloud_upgrade.log"
+
+- name: Reboot the Undercloud
+  become: true
+  shell: "sleep 2 && shutdown -r now"
+  async: 1
+  poll: 0
+  ignore_errors: true
+  tags: undercloud_reboot
+
+- block:
+      - name: waiting for the undercloud to be available
+        wait_for:
+            port: 22
+            host: "{{ ansible_ssh_host }}"
+            search_regex: OpenSSH
+            delay: 10
+        delegate_to: localhost
+        when: "'hypervisor' not in groups"
+
+      - name: waiting for the undercloud to be available
+        become: no
+        wait_for:
+            host: "{{ ansible_ssh_host }}"
+            search_regex: OpenSSH
+            delay: 10
+        delegate_to: hypervisor
+        when: "'hypervisor' in groups"
+  tags: undercloud_reboot
