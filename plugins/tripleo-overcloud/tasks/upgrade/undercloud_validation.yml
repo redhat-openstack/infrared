@@ -1,7 +1,9 @@
 ---
 - fail:
-      msg: "Upgrade is supported only from 9 to 10"
-  when: not (undercloud_version == "10")
+      msg: "Upgrade is supported only for versions 9 and 10"
+  when:
+      - not (undercloud_version == "10")
+      - not (undercloud_version == "11")
 
 - name: Checking overcloud_deploy_file
   stat:

@@ -1,0 +1,50 @@
+---
+- name: Include Compute migrate
+  include: instance_migrate.yml
+  tags: compute_migrate
+  when: groups.compute|length > 1
+
+- name: Upgrade {{ node_name }}
+  shell: |
+      source {{ undercloud_rc }}
+      upgrade-non-controller.sh --upgrade {{ node_name }} &> {{ node_name }}-upgrade.log
+
+- name: Reboot Node
+  include: reboot_node.yml
+  tags: compute_reboot
+
+- name: Wait for nova-compute to be up on {{ node_name }}
+  shell: "systemctl show openstack-nova-compute --property ActiveState"
+  register: active_nova
+  until: active_nova.stdout.find("ActiveState=active") > -1
+  retries: 30
+  delay: 5
+  delegate_to: "{{ node_name }}"
+
+- name: Packages Check
+  include: packages_check.yml
+
+- name: Check that nova-compute binary for {{ node_name }} is up
+  shell: |
+      source {{ overcloud_rc }}
+      openstack compute service list --host {{ hostvars[node_name].ansible_fqdn }} -f json
+  register: nova_compute_state
+  until: (nova_compute_state.stdout|from_json|selectattr('Binary', 'equalto', 'nova-compute')|first).State.find("up") > -1
+  retries: 30
+  delay: 5
+
+- name: migrate instance back to {{ node_name }}
+  shell: |
+      source {{ overcloud_rc }}
+      nova live-migration {{ item }} {{ hostvars[node_name].ansible_fqdn }}
+      sleep 10
+      openstack server show {{ item }}  -f json
+  register: instance_host
+  until: ((instance_host.stdout|from_json)['OS-EXT-SRV-ATTR:host']).find("{{ hostvars[node_name].ansible_fqdn }}") > -1
+  retries: 30
+  delay: 5
+  with_items: "{{ instances }}"
+  vars:
+      instances: "{{ instances_result.stdout|from_json|map(attribute='Name')|list }}"
+  tags: compute_migrate
+  when: groups.compute|length > 1

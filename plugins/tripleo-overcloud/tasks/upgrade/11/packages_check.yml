@@ -1,0 +1,10 @@
+---
+- name: Check if there any remaining updates on {{ node_name }}
+  become: true
+  shell: "yum check-update --quiet | wc -l"
+  register: yum_update
+  delegate_to: "{{ node_name }}"
+
+- fail:
+      msg: "There are remaining packages to be updated on {{ hostvars[node_name].ansible_fqdn }} or yum didn't run successfully"
+  when: yum_update.stdout != '0'
