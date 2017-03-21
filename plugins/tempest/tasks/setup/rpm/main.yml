@@ -41,4 +41,10 @@
   package:
       name: "{{ item }}"
       state: present
-  with_items: "{{ setup.dependencies }}"
+  with_items: "{{ setup.dependencies[test.openstack.version]|default(setup.dependencies.default) }}"
+  when: test.openstack.version|int >= 7
+
+- name: Warning message
+  debug:
+      msg: WARNING! Plugins are not available for RHOS version < 7
+  when: test.openstack.version|int < 7
