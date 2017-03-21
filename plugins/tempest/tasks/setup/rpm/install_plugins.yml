@@ -5,6 +5,6 @@
 - name: Install plugin packages for "{{ test_suite }}" suite
   become: yes
   package:
-      name: "{{ item.value.package }}"
+      name: "{{ item.value.package[openstack.version]|default(item.value.package.default) }}"
       state: present
   with_dict: "{{ test_dict.plugins | default({}) }}"
