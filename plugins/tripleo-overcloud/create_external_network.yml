@@ -16,15 +16,23 @@
       - "vars/public/subnet/{{ install.public.subnet }}.yml"
   vars:
       source_dir: "{{ install.deployment.files }}"
-      first_controller: "{{ groups.controller | first }}"
       network_environment_file: "network-environment{{ (install.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
       physnet_name: datacentre
       template_base: "{{ ansible_user_dir }}/{{ source_dir | basename }}"
   tasks:
-      - name: get the default floating ip pool name from the controller
+      - name: find a server with the nova control plane service running
+        shell: |
+            source ~/overcloudrc
+            nova service-list | grep nova-scheduler | awk '{print $6}' | head -1
+        register: nova_host
+
+      - name: server found
+        debug: msg="{{ nova_host.stdout.split('.') | first }}"
+
+      - name: get the default floating ip pool name from the server
         command: "grep -oP \"(?<=default_floating_pool=)(.*$)\" /etc/nova/nova.conf"
         register: pool_name
-        delegate_to: "{{ first_controller }}"
+        delegate_to: "{{ nova_host.stdout.split('.') | first }}"
         become: yes
 
 # FIXME(yfried): this is commented because virthost solution is misconfiguring vlan. Need to reevaluate the vlan indicators
