@@ -42,3 +42,9 @@
       name: "{{ item }}"
       state: present
   with_items: "{{ setup.dependencies }}"
+  when: test.openstack.version|int >= 10
+
+- name: Warning message
+  debug:
+      msg: WARNING! Plugins are installed by openstack-tempest rpm.
+  when: test.openstack.version|int < 10
