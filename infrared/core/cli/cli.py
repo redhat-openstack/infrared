@@ -461,6 +461,83 @@ class ListValue(ComplexType):
         return value.split(self.ARG_SEPARATOR)
 
 
+class FileType(ComplexType):
+    """Transforms a value to the absolute path"""
+
+    def get_check_locations(self, value):
+        """
+        Get the file names of possible location of the file.
+        :param value:
+        :return:
+        """
+        return [value,
+                os.path.join(os.path.join(*self.arg_name.split('-')), value)]
+
+    def resolve(self, value):
+        pathes = self.get_check_locations(value)
+        # check also for files with yml extension
+        pathes.extend([path + '.yml' for path in pathes])
+
+        target_file = next(
+            (file_path for file_path in pathes if os.path.isfile(
+                os.path.abspath(file_path))),
+            None)
+
+        if target_file is None:
+            raise exceptions.FileNotFoundException(pathes)
+
+        return os.path.abspath(target_file)
+
+
+class VarFileType(FileType):
+    """Represents the file on a disk.
+
+    Looks for a file in the following locations:
+        * in the given file_name location. Can be absolute or relative
+        * arg/name/file_name
+        * plugin_dir/defaults/arg/name/file_name
+        * plugin_dir/vars/arg/name/file_name
+    """
+
+    def __init__(self, arg_name,
+                 settings_dirs,
+                 sub_command_name):
+        super(VarFileType, self).__init__(
+            arg_name, settings_dirs, sub_command_name)
+        self.vars_dir = settings_dirs[0]
+        self.defaults_dir = settings_dirs[1]
+
+    def get_check_locations(self, value):
+        pathes = [
+            os.path.join(
+                os.path.join(self.vars_dir, *self.arg_name.split('-')),
+                value),
+            os.path.join(
+                os.path.join(self.defaults_dir, *self.arg_name.split('-')),
+                value)
+        ]
+
+        # check also for files with yml extension
+        result = super(VarFileType, self).get_check_locations(value)
+        result.extend(pathes)
+        return result
+
+
+class ListFileType(VarFileType):
+    """
+    The list of var files. Files names should be separated
+    by the comma:
+
+        fil1,file2,dir/file3
+    """
+
+    ARG_SEPARATOR = ','
+
+    def resolve(self, value):
+        return list(set([super(ListFileType, self).resolve(file_name.strip())
+                        for file_name in value.split(self.ARG_SEPARATOR)]))
+
+
 # register custom actions
 ACTIONS = {
     'read-answers': ReadAnswersAction,
@@ -475,5 +552,8 @@ COMPLEX_TYPES = {
     'KeyValueList': KeyValueList,
     'AdditionalArgs': AdditionalOptionsType,
     'ListValue': ListValue,
-    'IniType': IniType
+    'IniType': IniType,
+    'FileValue': FileType,
+    'VarFile': VarFileType,
+    'ListOfVarFiles': ListFileType
 }
