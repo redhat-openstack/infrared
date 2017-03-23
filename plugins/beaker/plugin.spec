@@ -56,7 +56,7 @@ subparsers:
             - title: Base Beaker image to be used for provisioning
               options:
                   image:
-                      type: Value
+                      type: VarFile
                       help: |
                           The image to use for nodes provisioning. Check the "sample.yml.example" for example.
                           Should default to latest RHEL released.
