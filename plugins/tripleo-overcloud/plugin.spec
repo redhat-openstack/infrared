@@ -91,7 +91,7 @@ subparsers:
                             provided templates / options.
 
                   overcloud-templates:
-                      type: Value
+                      type: ListOfVarFiles
                       help: |
                             Add extra environment template files to "overcloud deploy" command
                             File (in YAML format) containing a list of paths to template files on the UnderCloud.
@@ -135,7 +135,7 @@ subparsers:
                       help: Deploy "public" external network on the overcloud as post-install.
 
                   public-subnet:
-                      type: Value
+                      type: VarFile
                       help: |
                           Subnet detail for "public" external network on the overcloud as post-install.
                           (CIDR, Allocation Pool, Gateway)
