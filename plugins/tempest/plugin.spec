@@ -8,7 +8,7 @@ subparsers:
             - title: Tempest
               options:
                   tests:
-                      type: ListValue
+                      type: ListOfVarFiles
                       help: |
                         The set of tests to execute. Should be specified as list
                         constructed from the allowed values.
