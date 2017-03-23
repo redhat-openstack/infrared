@@ -35,7 +35,7 @@ subparsers:
                           An prefix which would be concatenated to each provisioned resource.
                       default: ''
                   topology-network:
-                      type: Value
+                      type: VarFile
                       help: |
                           Network resources
                           __LISTYAMLS__

@@ -1,29 +1,5 @@
 # include environment template files from undercloud in overcloud_deploy script
-
-- name: find template file
-  vars:
-      input: "{{ templates_list_file }}"
-      default_path: vars/overcloud/templates
-  find:
-      file_type: file
-      patterns:
-        - "{{ input | basename }}"
-        - "{{ input | basename }}.yml"
-      paths:
-          # relative to working directory
-          - "{{ lookup('env', 'PWD') }}/{{ input | dirname }}"
-          # absolute path
-          - "{{ input | expanduser | dirname }}"
-          # plugin vars
-          - "{{ playbook_dir }}/{{ default_path }}/{{ input | dirname }}"
-  register: src_find
-  delegate_to: localhost
-
-- fail:
-      msg: "Local overcloud templates list '{{ templates_list_file }}' is not found"
-  when: "{{ src_find.files|length == 0 }}"
-
-- include_vars: "{{ src_find.files[0].path }}"
+- include_vars: "{{ templates_list_file}}"
 
 - name: look in undercloud's default templates
   stat:
