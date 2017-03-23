@@ -461,6 +461,60 @@ class ListValue(ComplexType):
         return value.split(self.ARG_SEPARATOR)
 
 
+class FileType(ComplexType):
+    """Represents the file on a disk."""
+
+    def __init__(self, arg_name,
+                 settings_dirs,
+                 sub_command_name):
+        super(FileType, self).__init__(
+            arg_name, settings_dirs, sub_command_name)
+        self.vars_dir = settings_dirs[0]
+        self.defaults_dir = settings_dirs[1]
+
+    def resolve(self, value):
+        pathes = [
+            value,
+            os.path.join(
+                os.path.join(*self.arg_name.split('-')),
+                value),
+            os.path.join(
+                os.path.join(self.defaults_dir, *self.arg_name.split('-')),
+                value),
+            os.path.join(
+                os.path.join(self.vars_dir, *self.arg_name.split('-')),
+                value)
+        ]
+
+        # check also for files with yml extension
+        pathes.extend([path + '.yml' for path in pathes])
+
+        target_file = next(
+            (file_path for file_path in pathes if os.path.isfile(
+                os.path.abspath(file_path))),
+            None)
+
+        if target_file is None:
+            raise exceptions.FileNotFoundException(pathes)
+
+        return os.path.abspath(target_file)
+
+
+class ListFileType(FileType):
+    """
+    The list of var files. Files names should be separated
+    by the comma:
+
+        fil1,file2,dir/file3
+    """
+
+    ARG_SEPARATOR = ','
+
+    def resolve(self, value):
+        return list(set([super(ListFileType, self).resolve(file_name.strip())
+                        for file_name in value.split(self.ARG_SEPARATOR)]))
+
+
 # register custom actions
 ACTIONS = {
     'read-answers': ReadAnswersAction,
@@ -475,5 +529,7 @@ COMPLEX_TYPES = {
     'KeyValueList': KeyValueList,
     'AdditionalArgs': AdditionalOptionsType,
     'ListValue': ListValue,
-    'IniType': IniType
+    'IniType': IniType,
+    'VarFile': FileType,
+    'ListOfVarFiles': ListFileType
 }

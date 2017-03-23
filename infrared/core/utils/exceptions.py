@@ -138,3 +138,10 @@ class IRUnsupportedSpecOptionType(IRException):
 class IRKeyValueListException(IRException):
     def __init__(self, message):
         super(self.__class__, self).__init__(message)
+
+
+class FileNotFoundException(IRException):
+    def __init__(self, files):
+        message = "Unable to find file in the following locations: {}".format(
+            files)
+        super(self.__class__, self).__init__(message)

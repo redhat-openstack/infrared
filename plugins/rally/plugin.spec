@@ -21,13 +21,13 @@ subparsers:
                       help: Revision of rally repository
                       default: HEAD
                   tests:
-                      type: Value
+                      type: VarFile
                       help: |
                           The set of tests to execute
                           __LISTYAMLS__
                       required: no
                   image:
-                      type: Value
+                      type: VarFile
                       help: |
                           The guest image to upload.
                           __LISTYAMLS__
