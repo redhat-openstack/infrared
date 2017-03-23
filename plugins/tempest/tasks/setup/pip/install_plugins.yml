@@ -1,8 +1,8 @@
 ---
 - name: Include test vars
-  include_vars: "vars/tests/{{ test_suite }}.yml"
+  include_vars: "{{ test_suite_file }}"
 
-- name: Install plugin packages for "{{ test_suite }}" suite
+- name: Install plugin packages for "{{ test_suite_file }}" suite
   become: yes
   package:
       name: "{{ item.value.package }}"

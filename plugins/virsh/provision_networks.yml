@@ -5,10 +5,7 @@
   any_errors_fatal: true
   tasks:
     - name: get networks dict
-      include: tasks/var_lookup.yml
-      vars:
-          var_file: "{{ provision.topology.network }}"
-          partial_path: topology/network
+      include_vars: "{{ provision.topology.network }}"
 
     - name: create bridged network
       include: tasks/bridged_network.yml

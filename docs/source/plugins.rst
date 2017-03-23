@@ -134,6 +134,58 @@ inner-most level. Example::
        }
    }
 
+* FileValue
+    The absolute or relative path to a file. Infrared validates whether file exists and
+    passes absolute path forward to vars_dict.
+
+* VarFile
+    Same as the ``FileValue`` type but additionally Infrared will the check the following locations for a file:
+        - ``<plugin_root>/argument/name/option_value``
+        - ``<plugin_root>/defaults/argument/name/option_value``
+        - ``<plugin_root>/var/argument/name/option_value``
+
+    In that example above the CLI option name is ``--argument-name``.
+    The ``VarFile`` suites very well to describe an option which points to the file with variables.
+
+    For example, user can describe network topologies parameters in separate files.
+    In that case, all these files can be put to the ``<plugin_root>/defaults/network`` folder,
+    and plugin specification can look like::
+
+        plugin_type: provision
+        description: Description
+        subparsers:
+        my_plugin:
+
+        help: Provisioner virtual machines on a single Hypervisor using libvirt
+        groups:
+            - title: topology
+              options:
+                  network:
+                      type: VarFile
+                      help: |
+                          Network configuration to be used
+                          __LISTYAMLS__
+                      default: defautl_3_nets
+
+    Then, the cli call is simply::
+
+        infrared my_pluign --network=my_file
+
+    Here, the ``my_file`` file should be present in the ``/{defaults|var}/network`` folder, otherwise an
+    error will be displayed by the Infrared.
+    Infared will transform that option to the absolute path and will put it to the provision.network variable::
+
+        provision.network: /home/user/..../my_plugin/defaults/my_file
+
+    That variable can later be used in Ansible playbooks to load the appropriate network parameters.
+
+    .. Note:: Infared automatically check for the files with .yml extension. So the ``my_file`` and
+              ``my_file.yml`` will be validated.
+
+* ListOfVarFiles
+    The list of files. Same as ``VarFile`` but represents the list of files delimited by comma (``,``).
+
+
 Placeholders
 ~~~~~~~~~~~~
 Placeholders allow users to add a level of sophistication in options help field.

@@ -79,8 +79,8 @@ class IRWorkspaceMissing(IRException):
 
 class IRWorkspaceUndefined(IRConfigurationException):
     def __init__(self):
-        message = "'workspaces' path undefined in 'infrared.cfg'. If you wish " \
-                  "to use 'workspaces' feature, please define it. Use " \
+        message = "'workspaces' path undefined in 'infrared.cfg'. If you " \
+                  "wish to use 'workspaces' feature, please define it. Use " \
                   "'infrared.cfg.example as template."
         super(IRWorkspaceUndefined, self).__init__(message)
 
@@ -137,4 +137,11 @@ class IRUnsupportedSpecOptionType(IRException):
 
 class IRKeyValueListException(IRException):
     def __init__(self, message):
+        super(self.__class__, self).__init__(message)
+
+
+class FileNotFoundException(IRException):
+    def __init__(self, files):
+        message = "Unable to find file in the following locations: {}".format(
+            files)
         super(self.__class__, self).__init__(message)

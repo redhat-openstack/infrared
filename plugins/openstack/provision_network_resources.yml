@@ -3,10 +3,7 @@
   hosts: localhost
   tasks:
       - name: get network dict
-        include: tasks/var_lookup.yml
-        vars:
-            var_file: "{{ provision.topology.network }}"
-            partial_path: topology/network
+        include_vars: "{{ provision.topology.network }}"
 
       - name: Create networks
         os_network:

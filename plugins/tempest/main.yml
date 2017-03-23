@@ -23,7 +23,9 @@
       - name: Run tempest test suites
         include: "tasks/run_suite.yml"
         with_items: "{{ test.tests }}"
+        vars:
+            test_suite: "{{ test_suite_file | basename | splitext | first }}"
         loop_control:
-            loop_var: test_suite
+            loop_var: test_suite_file
         tags:
             - run

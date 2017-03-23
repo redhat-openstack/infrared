@@ -1,12 +1,12 @@
-- name: set facts for test suite
+- name: set facts
   set_fact:
       test_output_file: "tempest-results-{{ test_suite }}.xml"
       blacklistfile: ''
       whitelistfile: ''
       regex: ''
 
-- name: Include test suite vars
-  include_vars: "vars/tests/{{ test_suite }}.yml"
+- name: include test suite vars
+  include_vars: "{{ test_suite_file }}"
 
 - name: remove old test list for "{{ test_suite }}"
   file:
