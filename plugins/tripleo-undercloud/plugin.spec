@@ -98,11 +98,11 @@ subparsers:
             - title: Custom Repositories
               options:
                   repos-config:
-                      type: Value
+                      type: VarFile
                       help: |
                           YAML file
-                          define new repositories or update exsiting according to file.
-                          see documentaion for more details
+                          define new repositories or update existing according to file.
+                          see documentation for more details
                   repos-urls:
                       type: Value
                       help: |
