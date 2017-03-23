@@ -29,13 +29,13 @@ subparsers:
                       help: Revision of Rally plugins git repository
                       default: HEAD
                   tests:
-                      type: Value
+                      type: VarFile
                       help: |
                           The set of tests to execute
                           __LISTYAMLS__
-                      required: no
+                      default: none.yml
                   image:
-                      type: Value
+                      type: VarFile
                       help: |
                           The guest image to upload.
                           __LISTYAMLS__

@@ -62,7 +62,7 @@
 
       - name: append extra templates provided by user
         include: tasks/environment_templates.yml
-        with_items: "{{ (install.overcloud.templates|default('')).split(',') }}"
+        with_items: "{{ install.overcloud.templates|default([]) }}"
         loop_control:
             loop_var: templates_list_file
         # avoid empty strings
