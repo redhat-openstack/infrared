@@ -39,6 +39,7 @@
       state: absent
       path: "{{ item.path }}"
   with_items: "{{ files_to_remove.files|default([]) }}"
+  when: item.path != '/etc/yum.repos.d/patched_rpms.repo'
   become: true
 
 - name: get the rhos-release RPM
