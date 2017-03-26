@@ -70,6 +70,7 @@
   with_items:
     - "virt-copy-in -a {{ overcloud_image_file }} /etc/yum.repos.d/patched_rpms.repo /etc/yum.repos.d"
     - "virt-copy-in -a {{ overcloud_image_file }} /patched_rpms /"
+    - "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }}"
   when: patched_rpms.stat.exists
 
 - name: Install packages in overcloud image
