@@ -33,7 +33,8 @@ PLUGINS_REGISTRY = {
     'tripleo-overcloud': 'plugins/tripleo-overcloud',
     'tripleo-undercloud': 'plugins/tripleo-undercloud',
     'virsh': 'plugins/virsh',
-    'ospdui': 'plugins/ospdui'
+    'ospdui': 'plugins/ospdui',
+    'gabbi': 'https://github.com/rhos-infra/gabbi.git'
 }
 
 MAIN_PLAYBOOK = "main.yml"

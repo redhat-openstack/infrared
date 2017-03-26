@@ -2,42 +2,24 @@
 - set_fact:
       isolation_file: "network-isolation{{ (install.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
 
-# ansible blocks have most likely an issue with own conditions and tasks conditions
-# so for now moving block common condition below every task
-- block:
-    - name: append the network type
-      lineinfile:
-          dest: "~/overcloud_deploy.sh"
-          line: '--neutron-network-type {{ install.network.backend }} \'
-      when: "install.version|openstack_release < 11"
-
-    - name: append the network tunnel type
-      lineinfile:
-          dest: "~/overcloud_deploy.sh"
-          line: '--neutron-tunnel-types {{ install.network.backend }} \'
-      when: "install.version|openstack_release < 11 and install.network.backend != 'vlan'"
-
-    - name: append the network type
-      lineinfile:
-          dest: "~/overcloud_deploy.sh"
-          line: '{{ item }} \'
-      with_items:
-          - "--neutron-disable-tunneling"
-          - "--neutron-bridge-mappings datacentre:br-ex,tenant:br-isolated"
-          - "--neutron-network-vlan-ranges tenant:1000:2000"
-      when: "install.version|openstack_release < 11 and install.network.backend == 'vlan'"
-
-# Starting from OSP11, the overcloud deploy deprecated the neutron flags (above) and moved to env variables (below)
+# Starting from OSP11, the overcloud deploy deprecated the neutron flags
+# and because they should be used even in older releases, there is no reason
+# to not do so.
 - name: append the network type
   lineinfile:
       dest: "{{ template_base }}/network/{{ network_environment_file }}"
       line: "    {{ item }}"
   with_items:
     - 'NeutronNetworkType: {{ install.network.backend }}'
+
+# OSPd7 can not recognize NeutronTunnelTypes option at all
+- name: append the network type
+  lineinfile:
+      dest: "{{ template_base }}/network/{{ network_environment_file }}"
+      line: "    {{ item }}"
+  with_items:
     - 'NeutronTunnelTypes: {{ (install.network.backend == "vlan") | ternary("''''", install.network.backend) }}'
-    - 'NeutronBridgeMappings: "datacentre:br-ex,tenant:br-isolated"'
-    - 'NeutronNetworkVLANRanges: "tenant:1000:2000"'
-  when: "{{ install.version|openstack_release > 10 }}"
+  when: install.version|openstack_release >= 8
 
 - name: append the network environment template line to the base overcloud deploy script
   lineinfile:

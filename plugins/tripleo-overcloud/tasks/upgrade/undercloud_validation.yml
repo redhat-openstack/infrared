@@ -1,0 +1,13 @@
+---
+- fail:
+      msg: "Upgrade is supported only from 9 to 10"
+  when: not (undercloud_version == "10")
+
+- name: Checking overcloud_deploy_file
+  stat:
+      path: "~/overcloud_deploy.sh"
+  register: overcloud_deploy_file
+
+- fail:
+      msg: "Overcloud deployment script not found. Expected path: ~/overcloud_deploy.sh "
+  when: overcloud_deploy_file.stat.exists == False

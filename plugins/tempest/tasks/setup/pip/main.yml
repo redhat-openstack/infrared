@@ -49,7 +49,7 @@
   package:
       name: "{{ item }}"
       state: present
-  with_items: "{{ setup.dependencies }}"
+  with_items: "{{ setup.dependencies[test.openstack.version]|default(setup.dependencies.defaults) }}"
 
 - name: Warning message
   debug:

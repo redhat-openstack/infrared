@@ -3,7 +3,8 @@ controller_role:
 
     # include resources
     # the following vars can be used here:
-    #  - ${ipv6_postfix}: will be replaced with _v6 when the ipv6 protocol is used for installation, otherwise is empty
+    #  - ${ipv6_postfix}: will be replaced with -v6 when the ipv6 protocol is used for installation, otherwise is empty
+    #  - ${ipv6_postfix_underscore}: same as 'ipv6_postfix' but will be replaced with _v6
     #  - ${deployment_dir} - will be replaced by the deployment folder location on the undercloud. Deployment folder can be specified with the ospd --deployment flag
     resource_registry:
         "OS::TripleO::Controller::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/controller${ipv6_postfix}.yaml"
@@ -16,14 +17,16 @@ controller_role:
     #  - "{% if install.version |int < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
     services:
         - OS::TripleO::Services::CACerts
-        - OS::TripleO::Services::CephClient
+        - "{% if install.version |int > 10 %}OS::TripleO::Services::CephMds{% endif %}"
+        - OS::TripleO::Services::CephMon
         - OS::TripleO::Services::CephExternal
+        - "{% if install.version |int > 10 %}OS::TripleO::Services::CephRbdMirror{% endif %}"
         - OS::TripleO::Services::CephRgw
         - OS::TripleO::Services::CinderApi
         - OS::TripleO::Services::CinderBackup
         - OS::TripleO::Services::CinderScheduler
         - OS::TripleO::Services::CinderVolume
-        - OS::TripleO::Services::Core
+        - "{% if install.version |int < 11 %}OS::TripleO::Services::Core{% endif %}"
         - OS::TripleO::Services::Kernel
         - OS::TripleO::Services::Keystone
         - OS::TripleO::Services::GlanceApi
@@ -52,6 +55,7 @@ controller_role:
         - OS::TripleO::Services::NovaScheduler
         - OS::TripleO::Services::NovaConsoleauth
         - OS::TripleO::Services::NovaVncProxy
+        - "{% if install.version |int > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
         - OS::TripleO::Services::Ntp
         - OS::TripleO::Services::SwiftProxy
         - OS::TripleO::Services::SwiftStorage
@@ -88,4 +92,5 @@ controller_role:
         - OS::TripleO::Services::OpenDaylightOvs
         - OS::TripleO::Services::SensuClient
         - OS::TripleO::Services::FluentdClient
-        - OS::TripleO::Services::VipHosts
+        - "{% if install.version |int < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+        - "{% if install.version |int > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"

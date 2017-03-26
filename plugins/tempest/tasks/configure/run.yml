@@ -48,6 +48,7 @@
   args:
       executable: /bin/bash
       chdir: "{{ test.dir }}"
+  when: test.openstack.version|int > 7 or test.setup != 'rpm'
 
 
 - name: Print configuration cmd

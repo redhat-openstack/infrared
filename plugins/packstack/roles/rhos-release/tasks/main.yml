@@ -47,18 +47,6 @@
   when: "mirror is defined and mirror"
   become: true
 
-- name: gather repo file names to remove
-  find:
-      path: "{{ rr_target_directory }}"
-  register: files_to_remove
-
-- name: remove all repo files
-  file:
-      state: absent
-      path: "{{ item.path }}"
-  with_items: "{{ files_to_remove.files|default([]) }}"
-  become: true
-
 - name: debug rr_rpm_url2
   debug:
       msg: "{{ rr_rpm_url }}"
