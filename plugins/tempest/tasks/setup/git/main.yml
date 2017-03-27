@@ -33,6 +33,13 @@
 
 - debug: "msg='Build mark: tempest={{ tempest_repo_version.stdout }}'"
 
+- name: Checkout tempest release branch
+  command: "git fetch origin {{ setup.tempest_version[test.openstack.version|int] }};
+            git checkout {{ setup.tempest_version[test.openstack.version|int] }}"
+  args:
+      chdir: "{{ test.dir }}"
+  register: checkout_tempest_release_branch
+
 - name: Create venv with latest pip, setuptools and pbr
   pip:
       virtualenv: "~/{{ test.dir }}/.venv"
