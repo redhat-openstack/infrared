@@ -15,6 +15,15 @@
       delegate_to: hypervisor
       tags: vms
 
+    - name: get root's id
+      shell: |
+           id root
+      register: tmp_info
+      until: tmp_info.rc == 0
+      retries: 3
+      delay: 15
+      ignore_errors: True
+
     - name: create non root user
       user:
           name: "{{ provision.topology.username }}"
