@@ -112,9 +112,9 @@ subparsers:
                       type: Value
                       help: |
                           Specifies the source for the OverCloud images:
-                          * RPM - packaged with product (versions 8 and above)
-                          * IMPORT - fetch from external source (versions 7 and 8). Requires to specify '--image-url'.
-                          * BUILD - build images locally (takes longer)
+                          * rpm - packaged with product (versions 8 and above)
+                          * import - Download pre-built images from a given source (versions 7 and 8). Requires '--image-url'.
+                          * build - build images locally (takes longer) on top of regular cloud guest image. CentOS/RHEL will be used for RDO/OSP.
                       choices:
                           - rpm
                           - import
@@ -123,9 +123,9 @@ subparsers:
                   images-url:
                       type: Value
                       help: |
-                          Specifies the import image url.
-                          Required when images task is 'import'
-                          When images task is 'build', this is an optional source for base_image to start from.
+                          Images source for 'import' and 'build' tasks.
+                          For 'import' - points to pre-build overcloud images. Required.
+                          For 'build' - points to an image that will be used as the base for building the overcloud, instead of the default cloud guest image.
                       required_when: "images-task == import"
 
                   images-repos:

@@ -27,10 +27,12 @@ will be later created.
 * Depending on ``--images-task`` these the undercloud can be either:
 
         * ``build`` images:
-                Build the images from a scratch. Use ``--images-url`` to define base image than CentOS.
-                For OSP installation, you must provide a url with a valid RHEL image.
+                Build the overcloud images from a fresh guest image.
+                To use a different image than the default CentOS cloud
+                guest image, use ``--images-url`` to define base image than CentOS.
+                For OSP installation, you must provide a url of a valid RHEL image.
         * ``import`` images from url:
-                Download pre-built images from ``--images-url``.
+                Download pre-built images from a given ``--images-url``.
         * Download images via ``rpm``:
                 Starting from OSP 8, Tripleo is packages with pre-built images avialable via RPM.
                 .. note:: This option is invalid for `RDO` installation.
@@ -48,6 +50,22 @@ To configure overcloud images::
 .. note:: This assumes an undercloud was already installed and
     will skip `installation <Setup an Undercloud>`_ stage
     because ``--version`` is missing.
+
+When using RDO (or for OSP 7), ``rpm`` strategy in unavailable. Use ``import`` with ``--image-url`` to download
+overcloud images from web::
+
+  infrared tripleo-undercloud --images-task import --images-url http://buildlogs.centos.org/centos/7/cloud/x86_64/tripleo_images/mitaka/delorean
+
+If pre-packaged images are unavailable, tripleo can build the images locally on top of a regular cloud guest image::
+
+  infrared tripleo-undercloud --images-task build
+
+CentOS or RHEL guest images will be used for RDO and OSP respectively.
+To use a different image specify ``--images-url``::
+
+  infrared tripleo-undercloud --images-task build --image-url http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
+
+.. note:: building the images takes a long time and it's usually quicker to download them.
 
 Undercloud Configuration
 ------------------------
