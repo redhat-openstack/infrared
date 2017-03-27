@@ -61,6 +61,25 @@
             executable: /bin/bash
             chdir: "{{ test.dir }}"
         ignore_errors: true
+        when: test.openstack.version|int != 7 or test.setup != 'rpm'
+
+      - name: run tempest "{{ test_suite }}" suite 7
+        shell: |
+            {% if test_dict is not defined or test_dict.whitelist is not defined -%}{% set parts = [] -%}
+            {%- else %} {% set parts = test_dict.whitelist -%}{%- endif -%}
+            {% if regexp is defined -%}
+            {% set  parts = parts + [regexp] -%}
+            {%- endif -%}
+            {% if not parts -%}{% set parts = [''] -%}{%- endif -%}
+            set -x
+            echo "Warning: Test black listing is not implemented!" >&2
+            test -e ".testrepository" || testr init
+            testr run --subunit '{{ '|'.join(parts) }}' | subunit2junitxml --output-to={{ test_output_file }} | subunit2pyunit
+        args:
+            executable: /bin/bash
+            chdir: "{{ test.dir }}"
+        ignore_errors: true
+        when: test.openstack.version|int == 7 and test.setup == 'rpm'
 
       - name: inject the test suite name to the XML name atribute
         command: "sed '/^<testsuite/s/name=\"\"/name=\"{{ test_suite }}\"/' -i {{ test_output_file }}"
