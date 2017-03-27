@@ -32,6 +32,10 @@
       line: '-e {{ item.path }} \'
   with_items: "{{ template_list.files }}"
 
+- name: append loadbalancer templates
+  include: loadbalancer.yml
+  when: "groups.loadbalancer is defined"
+
 - name: Append the invocation line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"

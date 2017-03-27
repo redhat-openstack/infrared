@@ -51,9 +51,6 @@
       - include: append_script.yml
         when: overcloud_deploy_script == ''
 
-      - include: loadbalancer.yml
-        when: "overcloud_deploy_script == '' and groups.loadbalancer is defined"
-
       - name: Print deploy command
         shell: "cat {{ overcloud_deploy_script }}"
 
