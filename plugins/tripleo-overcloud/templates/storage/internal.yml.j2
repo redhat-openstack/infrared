@@ -1,0 +1,15 @@
+parameter_defaults:
+    CinderEnableIscsiBackend: false
+    CinderEnableRbdBackend: true
+    CinderEnableNfsBackend: false
+    NovaEnableRbdBackend: true
+    GlanceBackend: rbd
+    CinderRbdPoolName: "volumes"
+    NovaRbdPoolName: "vms"
+    GlanceRbdPoolName: "images"
+    ExtraConfig:
+      ceph::profile::params::osds:
+{% for disk in ceph_facts.ansible_devices.keys()[1:] %}
+       '/dev/{{ disk }}':
+           journal: ''
+{% endfor %}

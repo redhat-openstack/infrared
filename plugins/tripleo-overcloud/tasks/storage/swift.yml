@@ -20,13 +20,25 @@
   vars:
       storage_nodes: "{{ (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 }}"
 
-- name: prepare swift storage template
-  template:
-      src: "storage/swift.yml.j2"
-      dest: "{{ template_base }}/swift.yaml"
-      mode: 0755
+#- name: prepare swift storage template
+#  template:
+#      src: "storage/swift.yml.j2"
+#      dest: "{{ template_base }}/swift.yaml"
+#      mode: 0755
+#
+#- name: append the storage swift custom template line to the base overcloud deploy script
+#  lineinfile:
+#      dest: "~/overcloud_deploy.sh"
+#      line: '-e {{ template_base }}/swift.yaml \'
 
-- name: append the storage swift custom template line to the base overcloud deploy script
-  lineinfile:
-      dest: "~/overcloud_deploy.sh"
-      line: '-e {{ template_base }}/swift.yaml \'
+- block:
+      - name: Copy storage configuration file to the remote
+        copy:
+            src: "vars/storage/config/{{ install.storage.config }}.yml"
+            dest: "{{ template_base }}/{{ install.storage.config }}.yaml"
+
+      - name: Append the storage configuration line to the base overcloud deploy script
+        lineinfile:
+            dest: "~/overcloud_deploy.sh"
+            line: '-e {{ template_base }}/{{ install.storage.config }}.yaml \'
+  when: install.storage.config != 'internal'
