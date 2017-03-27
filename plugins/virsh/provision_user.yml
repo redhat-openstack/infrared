@@ -15,6 +15,16 @@
       delegate_to: hypervisor
       tags: vms
 
+    - name: get {{ ansible_ssh_user }} info
+      shell: |
+           id {{ ansible_ssh_user }}
+      register: tmp_info
+      delay: 15
+      retries: 3
+      until: tmp_info.rc == 0
+      ignore_errors: True
+      tags: skip_ansible_lint
+
     - name: create non root user
       user:
           name: "{{ provision.topology.username }}"
