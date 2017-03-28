@@ -20,6 +20,8 @@ sed -i "s/download\.eng.*\.redhat\.com/${mirror}/" *.repo
 sed -i "s/rhos-release.*\.redhat\.com/${mirror}\/rhos-release/" *.repo
 sed -r -i "s/ayanami.*\.redhat.com/${mirror}\/ayanami/" *.repo
 sed -i "s/pulp.*\.redhat\.com/${mirror}\/pulp/" *.repo
+sed -i "s|cdn\.stage\.redhat\.com|${mirror}/cdn-stage|" *.repo
+sed -i "s|https://copr-be\.cloud\.fedoraproject\.org|${mirror}/copr-be|" *.repo
 
 sed '/.* download\.lab.*redhat\.com.*/d' -i /etc/hosts
 echo "$mirror_ip  $mirror download.lab.bos.redhat.com download.eng.bos.redhat.com download-node-02.eng.bos.redhat.com" >> /etc/hosts
