@@ -29,6 +29,11 @@
               identity.uri $OS_AUTH_URL \
               identity.admin_password $OS_PASSWORD \
               scenario.img_dir ~/{{ test.dir }}/etc \
+              {# https://bugzilla.redhat.com/show_bug.cgi?id=1382048 #}
+              {# https://github.com/openstack/tripleo-heat-templates/commit/9b739012b71e2833e59e94cbe423cda77405c6cb#diff-2df80226aa5ac8fe81e6159bda8d4d2f #}
+              {% if test.openstack.version|int < 10 %}
+              volume-feature-enabled.backup false \
+              {% endif %}
               {# config options #}
               {% for section_name,options in config_options.iteritems() %}
               {% for option_name,value in options.iteritems() %}
