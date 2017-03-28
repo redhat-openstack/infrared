@@ -51,7 +51,7 @@ To configure overcloud images::
     will skip `installation <Setup an Undercloud>`_ stage
     because ``--version`` is missing.
 
-When using RDO (or for OSP 7), ``rpm`` strategy in unavailable. Use ``import`` with ``--image-url`` to download
+When using RDO (or for OSP 7), ``rpm`` strategy in unavailable. Use ``import`` with ``--images-url`` to download
 overcloud images from web::
 
   infrared tripleo-undercloud --images-task import --images-url http://buildlogs.centos.org/centos/7/cloud/x86_64/tripleo_images/mitaka/delorean
@@ -63,7 +63,7 @@ If pre-packaged images are unavailable, tripleo can build the images locally on 
 CentOS or RHEL guest images will be used for RDO and OSP respectively.
 To use a different image specify ``--images-url``::
 
-  infrared tripleo-undercloud --images-task build --image-url http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
+  infrared tripleo-undercloud --images-task build --images-url http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
 
 .. note:: building the images takes a long time and it's usually quicker to download them.
 
