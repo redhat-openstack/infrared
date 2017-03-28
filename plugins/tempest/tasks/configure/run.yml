@@ -21,21 +21,21 @@
       source ~/keystonerc
       {{ config_command | default("tools/config_tempest.py") }} \
               {% if deployer_input_stat.stat.exists %}
-              --deployer-input {{ deployer_input }} \
+              --deployer-input '{{ deployer_input }}' \
               {% endif %}
               --debug \
               -v \
               --create \
-              identity.uri $OS_AUTH_URL \
-              identity.admin_password $OS_PASSWORD \
-              scenario.img_dir ~/{{ test.dir }}/etc \
+              identity.uri "$OS_AUTH_URL" \
+              identity.admin_password "$OS_PASSWORD" \
+              scenario.img_dir '~/{{ test.dir }}/etc' \
               {# config options #}
               {% for section_name,options in config_options.iteritems() %}
               {% for option_name,value in options.iteritems() %}
-              {{section_name}}.{{option_name}} {{value}} \
+              '{{section_name}}.{{option_name}}' '{{value}}' \
               {% endfor %}
               {% endfor %}
-              --out ~/{{ test.dir }}/etc/tempest.conf
+              --out '~/{{ test.dir }}/etc/tempest.conf'
   args:
       chdir: "{{ config_dir | default('~/' + test.dir) }}"
   register: config_result
