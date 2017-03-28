@@ -19,6 +19,8 @@ subparsers:
 
                   deploy:
                       type: Bool
+                      help: Specify whether to deploy the overcloud.
+                      default: no
 
                   post:
                       type: Bool
