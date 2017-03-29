@@ -76,7 +76,7 @@ subparsers:
                           The product version (product == director)
                           Numbers are for OSP releases
                           Names are for RDO releases
-                      choices: ["10", "11", "newton", "ocata"]
+                      choices: ["10", "11", "12", "newton", "ocata", "pike"]
                       default: 10
 
                   product-build:
@@ -87,7 +87,7 @@ subparsers:
                   product-core-version:
                       type: Value
                       help: The product core version (product-core == overcloud). If not supplied, same version as 'product-version' will be used.
-                      choices: ["10", "11"]
+                      choices: ["10", "11", "12"]
 
                   product-core-build:
                       type: Value
