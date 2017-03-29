@@ -2,7 +2,6 @@ import tempfile
 
 import yaml
 from ansible.utils.display import Display
-from ansible.cli.playbook import PlaybookCLI
 
 from infrared.core.utils import logger
 
@@ -52,6 +51,7 @@ def _run_playbook(cli_args, vars_dict):
     """
 
     # TODO(yfried): use ansible vars object instead of tmpfile
+    from ansible.cli.playbook import PlaybookCLI
     with tempfile.NamedTemporaryFile(
             prefix="ir-settings-", delete=True) as tmp:
         tmp.write(yaml.safe_dump(vars_dict, default_flow_style=False))
