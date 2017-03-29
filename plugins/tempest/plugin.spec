@@ -19,7 +19,7 @@ subparsers:
                        type: Value
                        help: |
                            The Openstack under test version.
-                       choices: ['5', '6', '7', '8', '9', '10', '11']
+                       choices: ['5', '6', '7', '8', '9', '10', '11', '12']
                        required: yes
                   openstack-installer:
                        type: Value
