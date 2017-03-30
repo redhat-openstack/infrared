@@ -45,7 +45,7 @@
   os_floating_ip:
       cloud: "{{ provision.cloud | default(omit) }}"
       network: "{{ external_network_id }}"
-      internal_network: "{{ prefix }}{{ node_dict.external_network }}"
+      nat_destination: "{{ prefix }}{{ node_dict.external_network }}"
       server: "{{ item.id }}"
       state: present
       # always wait for floating ip
