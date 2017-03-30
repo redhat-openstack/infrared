@@ -21,7 +21,7 @@
   os_floating_ip:
       cloud: "{{ provisioner.cloud | default(omit) }}"
       network: "{{ external_network_id }}"
-      internal_network: "{{ prefix }}{{ node.value.external_network }}"
+      nat_destination: "{{ prefix }}{{ node.value.external_network }}"
       server: "{{ prefix }}{{ node.value.name }}-{{ item }}"
       state: present
       wait: yes
