@@ -76,7 +76,7 @@ subparsers:
                   product-core-version:
                       type: Value
                       help: The product core version (product-core == overcloud). If not supplied, same version as 'product-version' will be used.
-                      choices: ["7", "8", "9", "10", "11"]
+                      choices: ["7", "8", "9", "10", "11", "12"]
 
                   product-core-build:
                       type: Value
