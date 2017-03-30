@@ -1,0 +1,28 @@
+---
+- name: Get {{ item['name'] }} info
+  shell: |
+      source {{ overcloud_rc }}
+      openstack server show  {{ item['name'] }} -f json
+  register: instance_info
+
+- name: Migrate {{ item['name'] }}
+  shell: |
+      source {{ overcloud_rc }}
+      openstack server migrate {{ item['name'] }}  --live {{ new_hypervisor }}
+      sleep 10
+      openstack server show {{ item['name'] }}  -f json
+  register: instance_mig
+  until: ((instance_mig.stdout|from_json)['OS-EXT-SRV-ATTR:host']) != "{{ old_hypervisor }}"
+  retries: 30
+  delay: 5
+  vars:
+      old_hypervisor: "{{ (instance_info.stdout|from_json)['OS-EXT-SRV-ATTR:host'] }}"
+
+- name: Wait for instances to be in ACTIVE state
+  shell: |
+      source {{ overcloud_rc }}
+      openstack server show  {{ item['name'] }} -f json
+  register: running_instances
+  until: ((running_instances.stdout|from_json)['status']) == 'ACTIVE'
+  retries: 30
+  delay: 5

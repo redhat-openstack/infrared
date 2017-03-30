@@ -1,0 +1,31 @@
+---
+- name: Check if {{ item.searched }} was used
+  command: "grep {{ item.searched }} {{ overcloud_upgrade_script }}"
+  ignore_errors: true
+  register: search_result
+
+- block:
+    - name: Create environment file
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          create: yes
+          line: "parameter_defaults:"
+          insertbefore: BOF
+
+    - name: Register {{ item.searched }}
+      shell: "grep {{ item.searched }} {{ overcloud_upgrade_script }} | awk {'print $2'}"
+      register: parameter_value
+
+    - name: Convert it to environment file
+      lineinfile:
+          dest: ~/deprecated_cli_options.yaml
+          line: "    {{ item.parameter_name }}: '{{ parameter_value.stdout }}'"
+
+    - name: Remove cli option from upgrade command
+      lineinfile:
+          dest: "{{ overcloud_upgrade_script }}"
+          regexp: ".*{{ item.searched }}.*"
+          state: absent
+
+  when: search_result.rc == 0
+
