@@ -198,3 +198,15 @@ listen sahara
 server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8386 check fall 5 inter 2000 rise 2
   {% endfor %}
 {% endif %}
+
+{% if install.version|openstack_release > 10 %}
+listen nova_placement
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8778 transparent
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8778 transparent
+  mode http
+  http-request set-header X-Forwarded-Proto https if { ssl_fc }
+  http-request set-header X-Forwarded-Proto http if !{ ssl_fc }
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8778 check fall 5 inter 2000 rise 2
+  {% endfor %}
+{% endif %}
