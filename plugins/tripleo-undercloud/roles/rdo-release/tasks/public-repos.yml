@@ -1,13 +1,13 @@
 - name: Enable the OpenStack repository on CentOS
   package:
       state: present
-      name: "centos-release-openstack-{{ install.version }}"
+      name: "centos-release-openstack-{{ install.version|default(undercloud_version) }}"
   when: ansible_distribution == 'CentOS'
   become: true
 
 - name: Enable the OpenStack repository on RHEL
   package:
       state: present
-      name:  "https://rdoproject.org/repos/openstack-{{ install.version }}/rdo-release-{{ install.version }}.rpm"
+      name:  "https://rdoproject.org/repos/openstack-{{ install.version|default(undercloud_version) }}/rdo-release-{{ install.version|default(undercloud_version) }}.rpm"
   when: ansible_distribution == 'RedHat'
   become: true
