@@ -56,6 +56,8 @@ overcloud images from web::
 
   infrared tripleo-undercloud --images-task import --images-url http://buildlogs.centos.org/centos/7/cloud/x86_64/tripleo_images/mitaka/delorean
 
+.. note:: The RDO overcloud images can be also found here: https://images.rdoproject.org
+
 If pre-packaged images are unavailable, tripleo can build the images locally on top of a regular cloud guest image::
 
   infrared tripleo-undercloud --images-task build
