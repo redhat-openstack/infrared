@@ -15,20 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 
-import ipaddress
+ANSIBLE_METADATA = {'metadata_version': '1.0',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
-try:
-    import shade
-    from shade import meta
-
-    HAS_SHADE = True
-except ImportError:
-    HAS_SHADE = False
 
 DOCUMENTATION = '''
 ---
 module: os_floating_ip
 version_added: "2.0"
+author: "Davide Guerri <davide.guerri@hp.com>"
 short_description: Add/Remove floating IP from an instance
 extends_documentation_fragment: openstack
 description:
@@ -42,10 +38,6 @@ options:
    network:
      description:
         - The name or ID of a neutron external network or a nova pool name.
-     required: false
-   internal_network:
-     description:
-        - The name or ID of a neutron internal network of the port.
      required: false
    floating_ip_address:
      description:
@@ -65,6 +57,14 @@ options:
         - To which fixed IP of server the floating IP address should be
           attached to.
      required: false
+   nat_destination:
+     description:
+        - The name or id of a neutron private network that the fixed IP to
+          attach floating IP is on
+     required: false
+     default: None
+     aliases: ["fixed_network", "internal_network"]
+     version_added: "2.3"
    wait:
      description:
         - When attaching a floating IP address, specify whether we should
@@ -121,6 +121,16 @@ EXAMPLES = '''
      server: cattle001
 '''
 
+try:
+    import shade
+    from shade import meta
+
+    HAS_SHADE = True
+except ImportError:
+    HAS_SHADE = False
+
+from distutils.version import StrictVersion
+
 
 def _get_floating_ip(cloud, floating_ip_address):
     f_ips = cloud.search_floating_ips(
@@ -139,10 +149,11 @@ def main():
         floating_ip_address=dict(required=False, default=None),
         reuse=dict(required=False, type='bool', default=False),
         fixed_address=dict(required=False, default=None),
+        nat_destination=dict(required=False, default=None,
+                             aliases=['fixed_network', 'internal_network']),
         wait=dict(required=False, type='bool', default=False),
         timeout=dict(required=False, type='int', default=60),
         purge=dict(required=False, type='bool', default=False),
-        internal_network=dict(required=False, default=None),
     )
 
     module_kwargs = openstack_module_kwargs()
@@ -151,16 +162,21 @@ def main():
     if not HAS_SHADE:
         module.fail_json(msg='shade is required for this module')
 
+    if (module.params['nat_destination'] and
+            StrictVersion(shade.__version__) < StrictVersion('1.8.0')):
+        module.fail_json(msg="To utilize nat_destination, the installed version of"
+                             "the shade library MUST be >= 1.8.0")
+
     server_name_or_id = module.params['server']
     state = module.params['state']
     network = module.params['network']
     floating_ip_address = module.params['floating_ip_address']
     reuse = module.params['reuse']
     fixed_address = module.params['fixed_address']
+    nat_destination = module.params['nat_destination']
     wait = module.params['wait']
     timeout = module.params['timeout']
     purge = module.params['purge']
-    internal_network = module.params['internal_network']
 
     cloud = shade.openstack_cloud(**module.params)
 
@@ -171,42 +187,23 @@ def main():
                 msg="server {0} not found".format(server_name_or_id))
 
         if state == 'present':
-            # This part was added to support 'internal_network_name'
-            # as in Ansible 1.9.x. This entire file should be removed
-            # after this option added to Ansible 2.x
-            if internal_network:
-                internal_net_info = cloud.list_networks({'name':
-                                                         internal_network})
-                internal_network_id = internal_net_info[0]['id']
-                port_filter = {'device_id': server['id']}
-                port_filter['network_id'] = internal_network_id
-                ports = cloud.search_ports(filters=port_filter)
-                port = ports[0]
-                for address in port.get('fixed_ips', list()):
-                    try:
-                        ip = ipaddress.ip_address(address['ip_address'])
-                    except Exception:
-                        continue
-                    if ip.version == 4:
-                        fixed_address = address['ip_address']
-                        break
-
             # If f_ip already assigned to server, check that it matches
             # requirements.
-            f_ip = cloud.get_server_public_ip(server)
-            f_ip = _get_floating_ip(cloud, f_ip) if f_ip else f_ip
+            public_ip = cloud.get_server_public_ip(server)
+            f_ip = _get_floating_ip(cloud, public_ip) if public_ip else public_ip
             if f_ip:
                 if network:
                     network_id = cloud.get_network(name_or_id=network)["id"]
                 else:
                     network_id = None
-                if all([fixed_address, f_ip.fixed_ip_address == fixed_address,
+                if all([(fixed_address and f_ip.fixed_ip_address == fixed_address) or
+                        (nat_destination and f_ip.internal_network == fixed_address),
                         network, f_ip.network != network_id]):
                     # Current state definitely conflicts with requirements
                     module.fail_json(msg="server {server} already has a "
                                          "floating-ip on requested "
                                          "interface but it doesn't match "
-                                         "requested network {network}: {fip}"
+                                         "requested network {network: {fip}"
                                      .format(server=server_name_or_id,
                                              network=network,
                                              fip=remove_values(f_ip,
@@ -215,13 +212,13 @@ def main():
                     # Requirements are met
                     module.exit_json(changed=False, floating_ip=f_ip)
 
-                # Requirments are vague enough to ignore exisitng f_ip and try
+                # Requirements are vague enough to ignore existing f_ip and try
                 # to create a new f_ip to the server.
 
             server = cloud.add_ips_to_server(
                 server=server, ips=floating_ip_address, ip_pool=network,
                 reuse=reuse, fixed_address=fixed_address, wait=wait,
-                timeout=timeout)
+                timeout=timeout, nat_destination=nat_destination)
             fip_address = cloud.get_server_public_ip(server)
             # Update the floating IP status
             f_ip = _get_floating_ip(cloud, fip_address)
