@@ -13,23 +13,23 @@
   fail:
       msg:
           error: "Not enough disk space for swap"
-          node: "{{ node_dict.name}}"
-          swap: "{{ node_dict.swap }}"
-          disk_size: "{{ node_dict.disks.disk1.size }}"
-  when: "{{ (node_dict.disks.disk1.size|filesize('M')|int - node_dict.swap|default(0)|int) < (disk1_min|filesize('M')|int) }}"
+          node: "{{ topology_node.name}}"
+          swap: "{{ topology_node.swap }}"
+          disk_size: "{{ topology_node.disks.disk1.size }}"
+  when: "{{ (topology_node.disks.disk1.size|filesize('M')|int - topology_node.swap|default(0)|int) < (disk1_min|filesize('M')|int) }}"
 
 # For disks usually it will be only 1 disk so the async will run on nodes rather than disks creation
 - name: create disk(s) from vm base image
   vars:
       amount: "{{ node.value }}"
-      image_name: "{{ (node_dict.disks.disk1.import_url|default('') or url) | basename}}"
+      image_name: "{{ (topology_node.disks.disk1.import_url|default('') or url) | basename}}"
       net_scripts: /etc/sysconfig/network-scripts
   shell: |
       set -ex
       export LIBGUESTFS_BACKEND=direct
       {% for num in range(0, amount|int, 1) %}
-      {% for disk_name, disk_values in node_dict.disks.iteritems() %}
-      {% set node_image = '{0}-{1}-{2}.qcow2'.format(node_dict.name, num, disk_name) %}
+      {% for disk_name, disk_values in topology_node.disks.iteritems() %}
+      {% set node_image = '{0}-{1}-{2}.qcow2'.format(topology_node.name, num, disk_name) %}
       {% if not disk_values.import_url %}
 
       # create empty disk
@@ -41,13 +41,13 @@
       virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ image_name }} {{ disk_values.path }}/{{ node_image }}
       # incjet DEFROUT to file and set it on for external network only
       virt-customize -a {{ disk_values.path }}/{{ node_image }} \
-      {% for interface in node_dict.interfaces %}
+      {% for interface in topology_node.interfaces %}
           {% if loop.index0 == 0 %}--run-command 'grep DEFROUTE {{ net_scripts }}/ifcfg-eth{{ loop.index0 }} || echo "DEFROUTE=yes" >> {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}'
           {%- else -%}--run-command 'cp {{ net_scripts }}/ifcfg-eth{0,{{ loop.index0 }}} && sed -i s/DEVICE=.*/DEVICE=eth{{ loop.index0 }}/g {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' {% endif %} \
-          --run-command 'sed -i s/DEFROUTE=.*/DEFROUTE={{ 'yes' if (node_dict.external_network.network == interface.network) else 'no' }}/g {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' \
+          --run-command 'sed -i s/DEFROUTE=.*/DEFROUTE={{ 'yes' if (topology_node.external_network.network == interface.network) else 'no' }}/g {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' \
       {% endfor %}
-      {%- if node_dict.swap|default('0')|int > 0 -%}
-          --run-command 'dd if=/dev/zero of=/swapfile bs=1M count={{ node_dict.swap }}' \
+      {%- if topology_node.swap|default('0')|int > 0 -%}
+          --run-command 'dd if=/dev/zero of=/swapfile bs=1M count={{ topology_node.swap }}' \
           --run-command 'chmod 600 /swapfile' \
           --run-command 'mkswap /swapfile' \
           --run-command 'echo /swapfile none swap defaults 0 0 >> /etc/fstab'

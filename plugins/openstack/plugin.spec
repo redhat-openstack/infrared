@@ -46,6 +46,9 @@ subparsers:
                           Provision topology.
                           List of of nodes types and their amount, in a "key:value" format.
                           Example: "--topology-nodes undercloud:1,controller:3,compute:2"
+
+                          To override node parameters the extra args can be provided in the format:
+                          -e override.controller.memory=30720
                           __LISTYAMLS__
                       default: "aio:1"
                   image:

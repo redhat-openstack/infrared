@@ -9,7 +9,7 @@
 
 - name: get MAC list
   shell: >
-      virsh domiflist {{ node_dict.name }}-{{ item }} | awk '/{{ node_dict.external_network.network }}/ {print $5}'
+      virsh domiflist {{ topology_node.name }}-{{ item }} | awk '/{{ topology_node.external_network.network }}/ {print $5}'
   with_sequence: start=0 end={{ node.value|int - 1 }}
   register: external_mac
 
@@ -19,13 +19,13 @@
   add_host:
       name: "{{ item.cmd.split()[2] }}"
       mac_ext: "{{ item.stdout | trim }}"
-      groups: "{{ node_dict.groups | join(',') }}"
+      groups: "{{ topology_node.groups | join(',') }}"
       ansible_ssh_user: "root"
       ansible_ssh_private_key_file: "{{ inventory_dir }}/id_rsa"
   with_items: "{{ external_mac.results }}"
 
 - name: get natted MACs list
-  shell: "virsh domiflist {{ node_dict.name }}-{{ item }} | awk '/network/ {print $3,$5}'"
+  shell: "virsh domiflist {{ topology_node.name }}-{{ item }} | awk '/network/ {print $3,$5}'"
   with_sequence: start=0 end={{ node.value|int - 1 }}
   register: natted_mac_list
 
@@ -46,7 +46,7 @@
 
 - name: wait until one of the VMs gets an IP
   vars:
-      node_name: "{{ node_dict.name }}-{{ item }}"
+      node_name: "{{ topology_node.name }}-{{ item }}"
       node_facts: "{{ hostvars[node_name] }}"
   shell: >
       virsh net-dhcp-leases {{ node_facts.mac_natted.network_name }} |
@@ -75,7 +75,7 @@
   # Use vars instead of "delegate_to" because vars are evaluated inside the loop
   # while "delegate_to" is evaluated outside
   vars:
-      node_name: "{{ node_dict.name }}-{{ item.item }}"
+      node_name: "{{ topology_node.name }}-{{ item.item }}"
       node_facts: "{{ hostvars[node_name] }}"
       ansible_ssh_user: "{{ node_facts.ansible_ssh_user }}"
       ansible_ssh_private_key_file: "{{ node_facts.ansible_ssh_private_key_file }}"
@@ -97,7 +97,7 @@
 
 - name: add nic to host
   add_host:
-      name: "{{ node_dict.name }}-{{ item.item.item }}"
+      name: "{{ topology_node.name }}-{{ item.item.item }}"
       ansible_ssh_host: "{{ item.ansible_facts.ansible_default_ipv4.address }}"
   with_items: "{{ external_address.results }}"
 

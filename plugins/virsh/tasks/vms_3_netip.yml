@@ -7,7 +7,7 @@
       partial_path: topology/nodes
 
 - include: tasks/netip_natted.yml
-  when: "not node_dict.external_network.bridged|default(False)"
+  when: "not topology_node.external_network.bridged|default(False)"
 
 - include: tasks/netip_bridged.yml
-  when: "node_dict.external_network.bridged|default(False)"
+  when: "topology_node.external_network.bridged|default(False)"
