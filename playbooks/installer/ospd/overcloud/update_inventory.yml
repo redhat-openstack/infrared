@@ -125,3 +125,12 @@
           dest: "{{ lookup('env', 'PWD') }}/hosts"
           state: link
           src: "{{ lookup('env', 'PWD') }}/hosts-installer"
+
+- name: Fail the overcloud deployment
+  hosts: undercloud
+  tags: inventory_update
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - fail: msg="Overcloud deployment failed... :("
+        when: overcloud_deploy is defined and overcloud_deploy.rc != 0
