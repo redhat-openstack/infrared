@@ -32,7 +32,7 @@ parameters:
 {% endif %}
 
 parameter_defaults:
-{% if installer.product.version|openstack_release > 8 %}
+{% if installer.product.version|openstack_release > 8 and installer.product.version|openstack_release < 11 %}
   ServiceNetMap:
     NeutronTenantNetwork: tenant
     CeilometerApiNetwork: internal_api
@@ -66,9 +66,14 @@ parameter_defaults:
     GnocchiApiNetwork: internal_api
     SaharaApiNetwork: internal_api
 {% endif %}
+{% if installer.product.version|openstack_release > 10 %}
+  ServiceNetMap:
+    KeystoneAdminApiNetwork: internal_api # allows undercloud to config endpoints
+{% endif %}
 {% if installer.product.version|openstack_release > 7 %}
   RedisPassword: 'examplepassword'
 {% endif %}
+{% if installer.product.version|openstack_release < 11 %}
   ControlPlaneIP: {{ installer.loadbalancer.network.plain.ip | ipaddr('address') }}
   ExternalNetworkVip: {{ installer.loadbalancer.network.external.vip | ipaddr('address') }}
   InternalApiNetworkVip: {{ installer.loadbalancer.network.internal_api.vip | ipaddr('address') }}
@@ -76,6 +81,15 @@ parameter_defaults:
   StorageMgmtNetworkVip: {{ installer.loadbalancer.network.storage_mgmnt.vip | ipaddr('address') }}
   ServiceVips:
     redis: {{ installer.loadbalancer.network.redis.vip | ipaddr('address') }}
+{% endif %}
+{% if installer.product.version|openstack_release > 10 %}
+  ControlFixedIPs: [{'ip_address':'{{ installer.loadbalancer.network.plain.ip | ipaddr('address') }}'}]
+  PublicVirtualFixedIPs: [{'ip_address':'{{ installer.loadbalancer.network.external.vip | ipaddr('address') }}'}]
+  InternalApiVirtualFixedIPs: [{'ip_address':'{{ installer.loadbalancer.network.internal_api.vip | ipaddr('address') }}'}]
+  StorageVirtualFixedIPs: [{'ip_address':'{{ installer.loadbalancer.network.storage.vip | ipaddr('address') }}'}]
+  StorageMgmtVirtualFixedIPs: [{'ip_address':'{{ installer.loadbalancer.network.storage_mgmnt.vip | ipaddr('address') }}'}]
+  RedisVirtualFixedIPs: [{'ip_address':'{{ installer.loadbalancer.network.redis.vip | ipaddr('address') }}'}]
+{% endif %}
   ControllerIPs:
     external_cidr: "{{ installer.loadbalancer.network.external.vip | ipaddr('prefix') }}"
     internal_api_cidr: "{{ installer.loadbalancer.network.internal_api.vip | ipaddr('prefix') }}"
