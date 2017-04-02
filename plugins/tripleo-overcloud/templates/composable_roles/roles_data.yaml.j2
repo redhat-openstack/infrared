@@ -1,8 +1,12 @@
 {% set saved_roles = [] %}
+{# make sure controller goes first as a primary role #}
+{# to do that just go 2 times over the same list. 1 loop will add primary roles. Another loop will add everythng else #}
+{% for _ in groups.overcloud_nodes %}
 {% for host_name in groups.overcloud_nodes %}
 {% set node_name = host_name.rstrip('1234567890-').split('-')[-1] %}
 {%- if node_name not in saved_roles %}
 {% set role = hostvars[ansible_play_hosts[0]].get(node_name + '_role') %}
+{%- if role.primary_role|default(false) or saved_roles|length > 0 or (loop.last and saved_roles|length == 0) %}
 - name: {{ role.name }}
   CountDefault: 1
   ServicesDefault:
@@ -15,6 +19,8 @@
   HostnameFormatDefault: {{ role.host_name_format   }}
 {% endif %}
 {%- if saved_roles.append(node_name) %}{% endif -%}
+{% endif -%} {# end of primary_roles check #}
 {% endif -%} {# end of if node_name not in saved_roles #}
+{% endfor %}
 {% endfor %}
 

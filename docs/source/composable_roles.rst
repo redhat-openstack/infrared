@@ -133,6 +133,9 @@ Below is an example of the controller default role::
     controller_role:
         name: Controller
 
+        # the primary role will be listed first in the roles_data.yaml template file.
+        primary_role: yes
+
         # include resources
         # the following vars can be used here:
         #  - ${ipv6_postfix}: will be replaced with _v6 when the ipv6 protocol is used for installation, otherwise is empty
