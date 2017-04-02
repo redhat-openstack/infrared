@@ -17,7 +17,7 @@
 
 - name: Preparing the images
   hosts: undercloud
-  gather_facts: no
+  gather_facts: yes
   any_errors_fatal: true
   tags: images
   vars:
@@ -41,7 +41,7 @@
       - name: modify images - update to core build and install packages
         include: tasks/images/repos.yml
         # update is a func name (dict.update) so it must be used as str explicitly
-        when: "{{ install.images.repos or install.images.packages|default('') }}"
+        when: "{{ install.images.repos or install.images.packages|default('') or install.images['update'] }}"
 
       - name: upload the overcloud images to glance
         shell: |
