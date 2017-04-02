@@ -13,3 +13,10 @@
   delegate_to: localhost
 
 - include_vars: "{{ var_file_find.files[0].path }}"
+
+- name: merge overriden settings to the separate var
+  set_fact:
+      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(var_file, {})) }}"
+
+- debug:
+    var: topology_node
