@@ -82,6 +82,3 @@
       - name: Execute the deployment summary script
         become: yes
         shell: "mkdir -p /var/log/extra/; source /home/{{ installer.user.name }}/stackrc; /home/{{ installer.user.name }}/deploy_info.sh 2>&1 | tee -a /var/log/extra/deploy_resources.log"
-
-      - fail: msg="Overcloud deployment failed... :("
-        when: overcloud_deploy.rc != 0
