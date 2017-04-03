@@ -30,9 +30,9 @@
             force: yes
 
       - name: inject debug.yaml so it will be auto discovered with user templates
-        copy:
-            src: files/debug.yaml
-            dest: "{{ template_base }}"
+        template:
+            src: templates/debug.yaml.j2
+            dest: "{{ template_base }}/debug.yaml"
         when: install.overcloud.debug
 
       - name: check if custom overcloud_deploy.sh exists
