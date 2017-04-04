@@ -17,26 +17,52 @@
       regexp: \.\.
   with_items: "{{ copy_templates.results }}"
 
+- name: discover undercloud ssl
+  command: "grep -Fq OS_AUTH_URL=https {{ openstackrc }}"
+  vars:
+      openstackrc: ~/stackrc
+  register: undercloud_ssl
+  ignore_errors: true
+
 - name: create the self signed SSL
   command: "openssl genrsa -out {{ template_base }}/overcloud-privkey.pem 2048"
+  when: not undercloud_ssl|succeeded
 
 - name: extract our external allocation pools start value
   command: "cat {{ template_base }}/network/{{ network_environment_file }}"
   register: network_env
 
-- name: generate openssl command
+- name: create CA certificate
   vars:
       external_allocation_pool_start: "{{ (network_env.stdout | from_yaml).parameter_defaults.ExternalAllocationPools[0].start }}"
-  set_fact:
-      shell_command: >
-          openssl req -new -x509
+      self_signed: >
+          -new -x509
           -key {{ template_base }}/overcloud-privkey.pem
-          -out {{ template_base }}/overcloud-cacert.pem -days 365
-          -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ external_allocation_pool_start }}'
+      uc_signed: >
+          -newkey rsa:2048 -nodes
+          -keyout {{ template_base }}/overcloud-privkey.pem
+  command: >
+      openssl req
+      {{ uc_signed if undercloud_ssl|succeeded else self_signed }}
+      -out {{ template_base }}/overcloud-cacert.pem -days 365
+      -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ external_allocation_pool_start }}'
 
-# Ansible had trouble templating the above command straight to the shell module hence the above "set_fact"
-- name: create the self signed CA certificate
-  command: "{{ shell_command }}"
+- name: process server RSA keys
+  command: "openssl rsa -in {{ template_base }}/overcloud-privkey.pem  -out {{ template_base }}/overcloud-privkey.pem"
+  when: undercloud_ssl|succeeded
+
+- name: sign request with undercloud CA
+  vars:
+      undercloud_pkey: ~/undercloud-privkey.pem
+      underdloud_cacert: /etc/pki/ca-trust/source/anchors/undercloud-cacert.pem
+  command: >
+      openssl -req x509
+      -in {{ template_base }}/overcloud-cacert.pem -days 365
+      -CA {{ underdloud_cacert }}
+      -CAkey {{ undercloud_pkey }}
+      -set_serial 01
+      -out {{ template_base }}/overcloud-cacert.pem
+  when: undercloud_ssl|succeeded
 
 - name: update the tls template
   replace:
@@ -57,13 +83,20 @@
 
 - name: register the CA certificate
   command: "cat {{ template_base }}/overcloud-cacert.pem"
-  register: cacert
+  register: oc_cacert
+
+- name: register the CA certificate
+  command: cat /etc/pki/ca-trust/source/anchors/undercloud-cacert.pem
+  register: uc_cacert
+  when: undercloud_ssl|succeeded
 
 - name: register the private key
   command: "cat {{ template_base }}/overcloud-privkey.pem"
   register: private_key
 
 - name: insert the content of the CA certificate and private key respectfully
+  vars:
+      root_cert: "{{ uc_cacert if undercloud_ssl|succeeded else oc_cacert}}"
   replace:
       dest: "{{ item.dest }}"
       regexp: "{{ item.regex }}"
@@ -71,21 +104,19 @@
   with_items:
       - dest: "{{ template_base }}/enable-tls.yaml"
         regex: "The contents of your certificate.*$"
-        replace_with: "{{ cacert.stdout | indent(4) | string }}"
+        replace_with: "{{ oc_cacert.stdout | indent(4) | string }}"
       - dest: "{{ template_base }}/enable-tls.yaml"
         regex: "The contents of the private key.*$"
         replace_with: "{{ private_key.stdout | indent(4) | string }}"
       - dest: "{{ template_base }}/inject-trust-anchor.yaml"
         regex: "The contents of your root CA.*$"
-        replace_with: "{{ cacert.stdout | indent(4) | string }}"
+        replace_with: "{{ root_cert.stdout | indent(4) | string }}"
 
 - name: append the invocation lines to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ item.dest }} \'
   with_items: "{{ copy_templates.results }}"
-
-- fail:
 
 - block:
     - name: create public VIP environment file
