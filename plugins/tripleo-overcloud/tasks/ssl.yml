@@ -10,8 +10,36 @@
 - name: adjust the reference of ca-inject.yaml
   command: "sed -i 's#\\.\\.#/usr/share/openstack-tripleo-heat-templates#' {{ template_base }}/inject-trust-anchor.yaml"
 
+# Some useful vars
+- name: ssl defaults
+  include_vars: vars/ssl/defaults.yml
+
+- name: assert UC private key {{ ssl.privkey|default('UNDEFINED') }} exists
+  stat:
+    path: "{{ ssl.privkey }}"
+  register: uc_privkey_exists
+
+- name: assert UC CA cert {{ ssl.cacert|default('UNDEFINED') }} exists
+  stat:
+    path: "{{ ssl.cacert }}"
+  register: uc_cacert_exists
+
+- name: don't create self-signed CA
+  set_fact:
+    selfsigned: false
+  when:
+    - uc_cacert_exists.stat.exists == true
+    - uc_privkey_exists.stat.exists == true
+
+- name: use self-signed SSL cert
+  set_fact:
+    selfsigned: true
+  when: "(uc_cacert_exists.stat.exists != true) or (uc_privkey_exists.stat.exists != true)"
+
 - name: create the self signed SSL
   command: "openssl genrsa -out {{ template_base }}/overcloud-privkey.pem 2048"
+  when:
+    - selfsigned == true
 
 - name: extract our external allocation pools start value
   command: "cat {{ template_base }}/network/{{ network_environment_file }}"
@@ -20,12 +48,32 @@
 - set_fact:
       external_allocation_pool_start: "{{ (result.stdout | from_yaml).parameter_defaults.ExternalAllocationPools[0].start }}"
 
-- set_fact:
+- name: define openssl command for self-signed cert
+  set_fact:
       shell_command: "openssl req -new -x509 -key {{ template_base }}/overcloud-privkey.pem -out {{ template_base }}/overcloud-cacert.pem -days 365 -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ external_allocation_pool_start }}'"
+  when: selfsigned == true
+
+- name: define openssl command for cert-signing request
+  set_fact:
+      shell_command: "openssl req -newkey rsa:2048 -days 365 -nodes -keyout {{ template_base }}/overcloud-privkey.pem -out {{ template_base }}/overcloud-req.pem -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ external_allocation_pool_start }}'"
+  when:
+    - selfsigned != true
 
 # Ansible had trouble templating the above command straight to the shell module hence the above "set_fact"
-- name: create the self signed CA certificate
+- name: create the SSL certificate
   command: "{{ shell_command }}"
+
+- name: process server RSA keys
+  shell: |
+    openssl rsa -in {{ template_base }}/overcloud-privkey.pem  -out {{ template_base }}/overcloud-privkey.pem
+  when:
+    - selfsigned != true
+
+- name: sign request with {{ ssl.cacert }} CA
+  shell: |
+    openssl x509 -req -in {{ template_base }}/overcloud-req.pem -days 365 -CA {{ ssl.cacert }} -CAkey {{ ssl.privkey }} -set_serial 01 -out {{ template_base }}/overcloud-cacert.pem
+  when:
+    - selfsigned != true
 
 - name: update the tls template
   command: "sed -i 's/CLOUDNAME/IP_ADDRESS/' {{ template_base }}/enable-tls.yaml"
@@ -37,9 +85,15 @@
   command: "update-ca-trust extract"
   become: yes
 
-- name: register the CA certificate
+- name: register the self-signed CA certificate
   command: "cat {{ template_base }}/overcloud-cacert.pem"
   register: cacert
+
+- name: register the undercloud CA certificate
+  command: "cat {{ ssl.cacert }}"
+  register: uc_cacert
+  when:
+    - selfsigned != true
 
 - name: register the private key
   command: "cat {{ template_base }}/overcloud-privkey.pem"
@@ -53,7 +107,26 @@
   with_items:
       - {dest: "{{ template_base }}/enable-tls.yaml", regex: "(SSLCertificate:.*\\s+)The contents of your certificate.*$", replace_with: "\\1{{ cacert.stdout | indent(4) | string }}"}
       - {dest: "{{ template_base }}/enable-tls.yaml", regex: "(SSLKey:.*\\s+)The contents of the private key.*$", replace_with: "\\1{{ private_key.stdout | indent(4) | string }}"}
+
+- name: inject self-signed CA
+  replace:
+      dest: "{{ item.dest }}"
+      regexp: "{{ item.regex }}"
+      replace: "{{ item.replace_with }}"
+  with_items:
       - {dest: "{{ template_base }}/inject-trust-anchor.yaml", regex: "(SSLRootCertificate:.*\\s+)The contents of your root CA.*$", replace_with: "\\1{{ cacert.stdout | indent(4) | string }}"}
+  when:
+      - selfsigned == true
+
+- name: inject undercloud CA
+  replace:
+      dest: "{{ item.dest }}"
+      regexp: "{{ item.regex }}"
+      replace: "{{ item.replace_with }}"
+  with_items:
+      - {dest: "{{ template_base }}/inject-trust-anchor.yaml", regex: "(SSLRootCertificate:.*\\s+)The contents of your root CA.*$", replace_with: "\\1{{ uc_cacert.stdout | indent(4) | string }}"}
+  when:
+      - selfsigned != true
 
 - name: append the invocation line to the base overcloud deploy script
   lineinfile:
