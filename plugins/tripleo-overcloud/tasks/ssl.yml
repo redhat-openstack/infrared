@@ -1,37 +1,55 @@
 - name: copy the enable-tls.yaml file locally
-  command: "cp /usr/share/openstack-tripleo-heat-templates/environments/enable-tls.yaml {{ template_base }}/enable-tls.yaml"
+  vars:
+      template_dir: /usr/share/openstack-tripleo-heat-templates/environments
+  copy:
+      src: "{{ template_dir}}/{{ item }}"
+      dest: "{{ template_base }}/{{ item }}"
+      remote_src: yes
+  with_items:
+        - enable-tls.yaml
+        - inject-trust-anchor.yaml
+  register: copy_templates
 
-- name: adjust the reference of tls-cert-inject.yaml
-  command: "sed -i 's#\\.\\.#/usr/share/openstack-tripleo-heat-templates#' {{ template_base }}/enable-tls.yaml"
-
-- name: copy the inject-trust-anchor.yaml file locally
-  command: "cp /usr/share/openstack-tripleo-heat-templates/environments/inject-trust-anchor.yaml {{ template_base }}/inject-trust-anchor.yaml"
-
-- name: adjust the reference of ca-inject.yaml
-  command: "sed -i 's#\\.\\.#/usr/share/openstack-tripleo-heat-templates#' {{ template_base }}/inject-trust-anchor.yaml"
+- name: adjust the reference of template dir
+  replace:
+      dest: "{{ item.dest }}"
+      replace: "{{ item.src | dirname | dirname }}"
+      regexp: \.\.
+  with_items: "{{ copy_templates.results }}"
 
 - name: create the self signed SSL
   command: "openssl genrsa -out {{ template_base }}/overcloud-privkey.pem 2048"
 
 - name: extract our external allocation pools start value
   command: "cat {{ template_base }}/network/{{ network_environment_file }}"
-  register: result
+  register: network_env
 
-- set_fact:
-      external_allocation_pool_start: "{{ (result.stdout | from_yaml).parameter_defaults.ExternalAllocationPools[0].start }}"
-
-- set_fact:
-      shell_command: "openssl req -new -x509 -key {{ template_base }}/overcloud-privkey.pem -out {{ template_base }}/overcloud-cacert.pem -days 365 -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ external_allocation_pool_start }}'"
+- name: generate openssl command
+  vars:
+      external_allocation_pool_start: "{{ (network_env.stdout | from_yaml).parameter_defaults.ExternalAllocationPools[0].start }}"
+  set_fact:
+      shell_command: >
+          openssl req -new -x509
+          -key {{ template_base }}/overcloud-privkey.pem
+          -out {{ template_base }}/overcloud-cacert.pem -days 365
+          -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ external_allocation_pool_start }}'
 
 # Ansible had trouble templating the above command straight to the shell module hence the above "set_fact"
 - name: create the self signed CA certificate
   command: "{{ shell_command }}"
 
 - name: update the tls template
-  command: "sed -i 's/CLOUDNAME/IP_ADDRESS/' {{ template_base }}/enable-tls.yaml"
+  replace:
+      dest: "{{ template_base }}/enable-tls.yaml"
+      replace: IP_ADDRESS
+      regexp: CLOUDNAME
 
 - name: copy the self signed CA certification to our trusted store
-  command: "sudo cp {{ template_base }}/overcloud-cacert.pem /etc/pki/ca-trust/source/anchors/"
+  copy:
+      src: "{{ template_base }}/overcloud-cacert.pem"
+      dest: "/etc/pki/ca-trust/source/anchors/"
+      remote_src: yes
+  become: yes
 
 - name: update our CA store to reflect our addition
   command: "update-ca-trust extract"
@@ -51,18 +69,23 @@
       regexp: "{{ item.regex }}"
       replace: "{{ item.replace_with }}"
   with_items:
-      - {dest: "{{ template_base }}/enable-tls.yaml", regex: "(SSLCertificate:.*\\s+)The contents of your certificate.*$", replace_with: "\\1{{ cacert.stdout | indent(4) | string }}"}
-      - {dest: "{{ template_base }}/enable-tls.yaml", regex: "(SSLKey:.*\\s+)The contents of the private key.*$", replace_with: "\\1{{ private_key.stdout | indent(4) | string }}"}
-      - {dest: "{{ template_base }}/inject-trust-anchor.yaml", regex: "(SSLRootCertificate:.*\\s+)The contents of your root CA.*$", replace_with: "\\1{{ cacert.stdout | indent(4) | string }}"}
+      - dest: "{{ template_base }}/enable-tls.yaml"
+        regex: "The contents of your certificate.*$"
+        replace_with: "{{ cacert.stdout | indent(4) | string }}"
+      - dest: "{{ template_base }}/enable-tls.yaml"
+        regex: "The contents of the private key.*$"
+        replace_with: "{{ private_key.stdout | indent(4) | string }}"
+      - dest: "{{ template_base }}/inject-trust-anchor.yaml"
+        regex: "The contents of your root CA.*$"
+        replace_with: "{{ cacert.stdout | indent(4) | string }}"
 
-- name: append the invocation line to the base overcloud deploy script
+- name: append the invocation lines to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e {{ template_base }}/enable-tls.yaml \'
-- name: append the invocation line to the base overcloud deploy script
-  lineinfile:
-      dest: "~/overcloud_deploy.sh"
-      line: '-e {{ template_base }}/inject-trust-anchor.yaml \'
+      line: '-e {{ item.dest }} \'
+  with_items: "{{ copy_templates.results }}"
+
+- fail:
 
 - block:
     - name: create public VIP environment file
