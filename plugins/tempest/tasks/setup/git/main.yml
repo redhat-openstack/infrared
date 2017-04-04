@@ -17,7 +17,15 @@
       version: "{{ test.revision | default(omit) }}"
       dest: "~/{{ test.dir }}"
   register: tempest_repo
-  when: setup.local_dir is not defined
+  when: setup.local_dir is not defined and test.openstack.version|int > 7
+
+- name: Clone tempest for RHOS 7
+  git:
+      repo: "{{ setup.repo }}"
+      version: "{{ test.revision | newton }}"
+      dest: "~/{{ test.dir }}"
+  register: tempest_repo
+  when: setup.local_dir is not defined and test.openstack.version|int == 7
 
 - name: Fetch tempest from change
   synchronize: dest={{ test.dir }} src={{ test.local_dir }}/
