@@ -161,4 +161,13 @@ subparsers:
                       type: Bool
                       help: |
                           Undercloud Upgrade.
-                          Note: Currently, there is upgrade possibility from version 9 to version 10 only.
+                          Note: Currently, there is upgrade possibility only for versions 9 and 10.
+
+                  undercloud-version:
+                      type: Value
+                      help: |
+                          Current Undercloud version
+                          Note: Use it when installed rhos repos are not for the current Undercloud version.
+                      choices:
+                          - "9"
+                          - "10"

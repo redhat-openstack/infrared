@@ -20,6 +20,10 @@
       - set_fact:
             undercloud_version: "{{ result.files[0]['path'] | basename | regex_replace('^rhos-release-([0-9]+).*$', '\\1') }}"
 
+      - set_fact:
+            undercloud_version: "{{ install.undercloud.version }}"
+        when: install.undercloud.version is defined
+
       - name: Validation
         include: "tasks/upgrade/validation.yml"
         tags: validation
@@ -28,7 +32,7 @@
         release: "{{ (undercloud_version|int) + 1 }}"
         build: "{{ install.build }}"
         mirror: "{{ install.mirror | default(omit) }}"
-        tags: upgrade
+        tags: upgrade_repos
   tasks:
       - name: "Upgrade from version {{ undercloud_version }} to {{ (undercloud_version|int) + 1 }}"
         include: "tasks/upgrade/upgrade_{{ (undercloud_version|int) + 1 }}.yml"

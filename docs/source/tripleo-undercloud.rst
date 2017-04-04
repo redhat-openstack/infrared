@@ -156,7 +156,7 @@ Or optionally, provide the file name of the image to restore from (defaults to "
 
 Undercloud Upgrade
 ---------------------
-Upgrade is discovering current Undercloud version and upgrade it to the next major one.
+Upgrade is discovering current Undercloud version from installed rhos repos and upgrade it to the next major one.
 To upgrade Undercloud run the following command::
 
     infrared tripleo-undercloud -v --upgrade yes
@@ -166,4 +166,7 @@ To upgrade Undercloud run the following command::
 
         infrared tripleo-undercloud -v --upgrade yes --images-task rpm
 
-.. warning:: Currently, there is upgrade possibility from version 9 to version 10 only.
+``--undercloud-version`` will overwrite the value which was discovered from rhos repos. It is useful when installed
+rhos repos, are not for the current Undercloud version
+
+.. warning:: Currently, there is upgrade possibility only versions 9 and 10.
