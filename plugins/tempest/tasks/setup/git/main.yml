@@ -13,7 +13,7 @@
 
 - name: Clone tempest
   git:
-      repo: "{{ setup.repo }}"
+      repo: "{{ setup.repo[test.openstack.version | default(omit) ] }}"
       version: "{{ test.revision | default(omit) }}"
       dest: "~/{{ test.dir }}"
   register: tempest_repo

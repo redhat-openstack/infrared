@@ -26,7 +26,7 @@ Optional arguments
 The following useful arguments can be provided to tune tempest tester. Complete list of arguments can be found by running ``ir tempest --help``.
 
 * ``--setup``: The setup type for the tempest.
-   Can be ``git`` (default), ``rpm`` or pip. Default tempest git repository is `<https://github.com/redhat-openstack/tempest.git>`_. This value can be overridden with the ``--extra-vars`` cli option::
+   Can be ``git`` (default), ``rpm`` or pip. Default tempest git repository is `<https://github.com/openstack/tempest.git>`_. This value can be overridden with the ``--extra-vars`` cli option::
 
      ir tempest -e setup.repo=my.custom.repo [...]
 
