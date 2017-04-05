@@ -32,9 +32,12 @@
   command: "cat {{ template_base }}/network/{{ network_environment_file }}"
   register: network_env
 
+- name: get IP address of VIP
+  set_fact:
+      external_allocation_pool_start: "{{ (network_env.stdout | from_yaml).parameter_defaults.ExternalAllocationPools[0].start }}"
+
 - name: create CA certificate
   vars:
-      external_allocation_pool_start: "{{ (network_env.stdout | from_yaml).parameter_defaults.ExternalAllocationPools[0].start }}"
       self_signed: >
           -new -x509
           -key {{ template_base }}/overcloud-privkey.pem
