@@ -13,11 +13,12 @@
 
 - name: Clone tempest
   git:
-      repo: "{{ setup.repo }}"
+      repo: "{{ item }}"
       version: "{{ test.revision | default(omit) }}"
       dest: "~/{{ test.dir }}"
   register: tempest_repo
   when: setup.local_dir is not defined
+  with_items: "{{ setup.repo[test.openstack.version] }}"
 
 - name: Fetch tempest from change
   synchronize: dest={{ test.dir }} src={{ test.local_dir }}/
