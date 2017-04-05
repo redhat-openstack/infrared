@@ -13,8 +13,8 @@
 
 - name: Clone tempest
   git:
-      repo: "{{ setup.repo }}"
-      version: "{{ test.revision | default(omit) }}"
+      repo: "{{ setup.repo.test.openstack.version.repo|default(setup.repo.defaults.repo) }}"
+      version: "{{ setup.repo.test.openstack.version.branch|default(setup.repo.defaults.branch) }}"
       dest: "~/{{ test.dir }}"
   register: tempest_repo
   when: setup.local_dir is not defined
