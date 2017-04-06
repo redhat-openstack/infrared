@@ -23,19 +23,59 @@ DEFAULT_PLUGIN_INI = dict(
 )
 
 PLUGINS_REGISTRY = {
-    'beaker': 'plugins/beaker',
-    'collect-logs': 'plugins/collect-logs',
-    'foreman': 'plugins/foreman',
-    'openstack': 'plugins/openstack',
-    'packstack': 'plugins/packstack',
-    'rally': 'plugins/rally',
-    'tempest': 'plugins/tempest',
-    'tripleo-overcloud': 'plugins/tripleo-overcloud',
-    'tripleo-undercloud': 'plugins/tripleo-undercloud',
-    'virsh': 'plugins/virsh',
-    'ospdui': 'plugins/ospdui',
-    'octario': 'https://github.com/redhat-openstack/octario.git',
-    'gabbi': 'https://github.com/rhos-infra/gabbi.git'
+    'beaker': {
+        'src': 'plugins/beaker',
+        'desc': 'Provision systems using Beaker'
+    },
+    'collect-logs': {
+        'src': 'plugins/collect-logs',
+        'desc': 'Collect log from all nodes in the active workspace'
+    },
+    'foreman': {
+        'src': 'plugins/foreman',
+        'desc': 'Provision systems using Foreman'
+    },
+    'gabbi': {
+        'src': 'https://github.com/rhos-infra/gabbi.git',
+        'desc': 'The gabbi test runner'
+    },
+    'octario': {
+        'src': 'https://github.com/redhat-openstack/octario.git',
+        'desc': ''
+    },
+    'openstack': {
+        'src': 'plugins/openstack',
+        'desc': 'Provision systems using Ansible OpenStack modules'
+    },
+    'ospdui': {
+        'src': 'plugins/ospdui',
+        'desc': 'The ospdui test runner'
+    },
+    'packstack': {
+        'src': 'plugins/packstack',
+        'desc': 'OpenStack installation using Packstack'
+    },
+    'rally': {
+        'src': 'plugins/rally',
+        'desc': 'Rally tests runner'
+    },
+    'tempest': {
+        'src': 'plugins/tempest',
+        'desc': 'The tempest test runner'
+    },
+    'tripleo-overcloud': {
+        'src': 'plugins/tripleo-overcloud',
+        'desc': 'Install Tripleo overcloud using a designated undercloud node'
+    },
+    'tripleo-undercloud': {
+        'src': 'plugins/tripleo-undercloud',
+        'desc': 'Install Tripleo on a designated undercloud node'
+    },
+    'virsh': {
+        'src': 'plugins/virsh',
+        'desc':
+            'Provisioner virtual machines on a single Hypervisor using libvirt'
+    },
 }
 
 MAIN_PLAYBOOK = "main.yml"
@@ -212,7 +252,7 @@ class InfraredPluginManager(object):
         """
         # Check if a plugin is in the registry
         if plugin_source in PLUGINS_REGISTRY:
-            plugin_source = PLUGINS_REGISTRY[plugin_source]
+            plugin_source = PLUGINS_REGISTRY[plugin_source]['src']
 
         # Local dir plugin
         if os.path.exists(plugin_source):
