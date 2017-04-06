@@ -1,7 +1,8 @@
 node_dict:
     name: odl
+    prefix: null
     cpu: "1"
-    memory: "2048"
+    memory: "4096"
     swap: "0"
     flavor_id: m1.small
     os:
@@ -9,13 +10,17 @@ node_dict:
         variant: "rhel7"
     disks:
         disk1:
+            import_url: null
             path: "/var/lib/libvirt/images"
             dev: "/dev/vda"
-            size: "20G"
+            size: "8G"
             cache: "unsafe"
+            preallocation: "metadata"
     interfaces:
+        - network: "data"
         - &external
           network: management
     external_network: *external
     groups:
-        - odl_controller
+        - odl
+        - overcloud_nodes
