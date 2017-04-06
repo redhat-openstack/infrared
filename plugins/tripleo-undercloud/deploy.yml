@@ -18,6 +18,15 @@
             msg: "Undercloud deployment failed... :("
         when: undercloud_deployment.rc != 0
 
+      - name: install rhosp-release
+        become: true
+        package:
+            state: latest
+            name: rhosp-release
+        when:
+            - install.version|openstack_distribution == 'OSP'
+            - install.version|int >= 10
+
       - name: fetch the stackrc file
         tags:
             - fetch_rc_file
