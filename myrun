@@ -1,0 +1,111 @@
+#!/bin/bash
+
+
+source $HOME/.bash_aliases
+
+# touched 1
+
+LASTTIME=""
+LASTSECTION=""
+TIMELOG=""
+timeit() {
+    local newtime=$(date '+%s')
+    if [[ ! -z "$LASTTIME" ]]; then
+        local difftime=$(( $newtime - $LASTTIME ))
+        TIMELOG="$TIMELOG\n$LASTSECTION\t\t$difftime seconds"
+    fi
+    LASTTIME=$newtime
+    LASTSECTION="$1"
+}
+
+trap 'timeit exiting; echo -e "$TIMELOG"' EXIT
+
+TGT="seal53.qa.lab.tlv.redhat.com"
+SSHKEY="$HOME/.ssh/rhos-jenkins"
+VENV="$HOME/all/src/.venv-ir"
+
+VERSION="10"
+# TOPOLOGY="undercloud:1,controller:1,compute:1,ceph:1"
+TOPOLOGY="undercloud:1,controller:3,compute:1"
+PUDDLE="latest"
+TESTS="minimal"
+#TESTS="sanity"
+
+QEMIRROR="tlv"
+[[ "$TGT" =~ .*rdu2.redhat.* ]] && QEMIRROR="qeos"
+
+IMG_RHEL="http://rhos-qe-mirror-${QEMIRROR}.usersys.redhat.com/rel-eng/RHEL-7.3-RC-2.0/compose/Server/x86_64/images/rhel-guest-image-7.3-32.x86_64.qcow2"
+IMG_CIRROS="http://rhos-qe-mirror-${QEMIRROR}.usersys.redhat.com/images/cirros-0.3.4-x86_64-uec.tar.gz"
+
+
+
+if ! source $VENV/bin/activate; then
+    echo "failed to source venv $VENV/bin/activate"
+    exit 1
+fi
+
+set -ex
+
+sed -r 's/^( *cpu: ).*/\1"8"/;s/^( *memory: ).*/\1"20480"/' plugins/virsh/defaults/topology/nodes/controller.yml > plugins/virsh/vars/topology/nodes/controller.yml
+
+infrared workspace checkout 11
+
+steps="${1:-cpuot}"
+if [[ "$steps" =~ .*help.* ]]; then
+    echo "Args: [c][p][u][o][t]"
+    echo ""
+    echo " e.g.:  $0 cvuo"
+    echo " c = clean, p = provision,  u = UCloud, o = OC, t = tempest"
+    exit
+fi
+
+if [[ "$steps" =~ c ]]; then
+    timeit "virsh-cleanup"
+    infrared virsh -v -o cleanup.yml --host-address $TGT --host-key $SSHKEY --image-url $IMG_RHEL --cleanup yes
+fi
+if [[ "$steps" =~ p ]]; then
+    timeit "virsh-prov"
+    infrared virsh -v -o provision --host-address $TGT \
+        --host-key $HOME/.ssh/rhos-jenkins \
+        --topology-nodes $TOPOLOGY \
+        --image-url $IMG_RHEL
+fi
+
+if [[ "$steps" =~ u ]]; then
+    timeit "tripleo-uc"
+    infrared tripleo-undercloud -v -o uc.yml --mirror $QEMIRROR \
+        --version $VERSION \
+        --build "$PUDDLE" \
+        --images-task rpm \
+        --ssl no
+fi
+
+if [[ "$steps" =~ o ]]; then
+    timeit "tripleo-oc"
+    infrared tripleo-overcloud -v -o oc.yml \
+        --deployment-files virt \
+        --version $VERSION \
+        --introspect yes \
+        --tagging yes \
+        --overcloud-debug yes \
+        --deploy yes \
+        --post yes \
+        --network-backend vlan \
+        --network-protocol ipv6 \
+        --storage-backend lvm \
+        --storage-external no \
+        --overcloud-ssl no
+
+        # --network-backend vxlan \
+        # --network-protocol ipv4 \
+        # --storage-backend ceph \
+fi
+
+if [[ "$steps" =~ t ]]; then
+    timeit "tempest"
+
+    infrared tempest -v -o test.yml -i oc.yml --setup rpm --openstack-installer tripleo --openstack-version $VERSION \
+        --config-options images.http_image=$IMG_CIRROS \
+        --tests $TESTS
+fi
+
