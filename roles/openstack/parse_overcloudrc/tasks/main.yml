@@ -2,7 +2,7 @@
 # this role is supposed to be execuded on undercloud
 # TODO(yfried): find a better method to load stackrc file
 - block:
-    - shell: "cat {{ undercloud_rc }} | grep AUTH | cut -d '=' -f 2"
+    - shell: "cat {{ undercloud_rc }} | grep AUTH_URL | cut -d '=' -f 2"
       register: oc_auth
 
     - shell: "echo {{ oc_auth.stdout }} | grep -P -o '(\\d+\\.\\d+\\.\\d+\\.\\d+)'"
