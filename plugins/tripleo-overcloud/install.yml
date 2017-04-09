@@ -41,7 +41,7 @@
   include: "{{ composable_roles | default('composable_roles.yml') }}"
   when:
       - install.deploy|default('')
-      - install.role is defined
+      - install.role is defined and install.role != 'default'
 
 - name: Perform post install tasks
   include: "{{ overcloud_post | default('post.yml') }}"
