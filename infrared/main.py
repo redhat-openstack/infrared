@@ -2,6 +2,7 @@ import sys
 
 from infrared import api
 from infrared.core.services import CoreServices
+from infrared.core.utils import exceptions
 from infrared.core.utils import logger
 from infrared.core.utils import interactive_ssh
 from infrared.core.utils.print_formats import fancy_table
@@ -34,6 +35,13 @@ class WorkspaceManagerSpec(api.SpecObject):
             help='Creates a workspace if it is not presents and '
                  'switches to it')
         checkout_parser.add_argument("name", help="Workspace name")
+
+        # inventory
+        inventory_parser = workspace_subparsers.add_parser(
+            'inventory',
+            help="prints workspace's inventory file")
+        inventory_parser.add_argument("name", help="Workspace name",
+                                      nargs="?")
 
         # list
         workspace_subparsers.add_parser(
@@ -87,6 +95,8 @@ class WorkspaceManagerSpec(api.SpecObject):
             self._create_workspace(pargs.name)
         elif subcommand == 'checkout':
             self._checkout_workspace(pargs.name)
+        elif subcommand == 'inventory':
+            self._fetch_inventory(pargs.name)
         elif subcommand == 'list':
             workspaces = self.workspace_manager.list()
             headers = ("Name", "Active")
@@ -124,6 +134,19 @@ class WorkspaceManagerSpec(api.SpecObject):
             self._create_workspace(name)
         self.workspace_manager.activate(name)
         print("Now using workspace: '{}'".format(name))
+
+    def _fetch_inventory(self, name):
+        """fetch inventory file for workspace.
+
+        if no active workspace found - create a new workspace
+        """
+        if name:
+            wkspc = self.workspace_manager.get(name)
+        else:
+            wkspc = self.workspace_manager.get_active_workspace()
+        if not wkspc:
+            raise exceptions.IRNoActiveWorkspaceFound()
+        print wkspc.inventory
 
 
 class PluginManagerSpec(api.SpecObject):
