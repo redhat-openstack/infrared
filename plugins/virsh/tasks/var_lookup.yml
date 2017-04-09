@@ -15,7 +15,7 @@
 
 - name: merge overriden settings to the separate var
   set_fact:
-      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(var_file, {})) }}"
+      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(var_file, {}), recursive=True) }}"
 
 - debug:
     var: topology_node
