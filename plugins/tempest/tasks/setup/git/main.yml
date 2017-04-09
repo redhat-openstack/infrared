@@ -12,9 +12,15 @@
       state: latest
 
 - name: Clone tempest
+  vars:
+      # Use RDO tempest for old versions
+      use_rdo: "{{ (test.openstack.version|openstack_release < 11) }}"
+      # Use designated branch for RDO tempset
+      branch_name: "{{ test.openstack.version|openstack_release_name|lower if use_rdo else omit }}"
   git:
-      repo: "{{ setup.repo }}"
-      version: "{{ test.revision | default(omit) }}"
+      # Use RDO tempest for old versions
+      repo: "{{ use_rdo | ternary (setup.repo.rdo, setup.repo.openstack) }}"
+      version: "{{ test.revision | default(branch_name) }}"
       dest: "~/{{ test.dir }}"
   register: tempest_repo
   when: setup.local_dir is not defined
