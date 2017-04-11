@@ -27,7 +27,7 @@
 
 - name: Check for any DOWN haproxy backend services;
   become: true
-  shell: "echo show stat | nc -U /var/run/haproxy.sock | grep -v redis"
+  shell: "echo show stat | nc -U /var/lib/haproxy/stats | grep -v redis"
   register: haproxy_stats
   until: haproxy_stats.stdout.find("DOWN") == -1
   retries: 30
@@ -36,7 +36,7 @@
 
 - name: Check for redis slaves in haproxy backend services;
   become: true
-  shell: "echo show stat | nc -U /var/run/haproxy.sock | grep redis | grep UP | grep -v BACKEND | wc -l"
+  shell: "echo show stat | nc -U /var/lib/haproxy/stats | grep redis | grep UP | grep -v BACKEND | wc -l"
   register: haproxy_stats
   until: haproxy_stats.stdout.find("1") > -1
   retries: 30
