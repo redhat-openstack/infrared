@@ -42,6 +42,7 @@
       name: "{{ item }}"
       state: present
   with_items: "{{ tester.setup.dependencies }}"
+  when: openstack_version|int >= 10
 
 - name: Create the tempest directory
   file:
