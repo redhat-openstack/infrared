@@ -19,6 +19,13 @@
 - name: Print upgrade command
   command: "cat {{ composable_upgrade_script }}"
 
+# todo(abregman): remove once the fix is merged and backported
+- name: Apply workaround for rhbz 1439121
+  lineinfile:
+      dest: "/usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-composable-steps.yaml"
+      line: "curl -4 'https://review.openstack.org/gitweb?p=openstack/heat-agents.git;a=blob_plain;f=heat-config-hiera/install.d/hook-hiera.py;h=db69f69c517e2693222080862db52abfaa3fb    dc5;hb=769d0de4d9acb07563202a2ef3d3a0aa1b9542d1' -o /usr/libexec/heat-config/hooks/hiera"
+      insertafter: EOF
+
 - name: Running composable upgrade step
   shell: |
       source {{ undercloud_rc }}
