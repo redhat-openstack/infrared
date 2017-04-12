@@ -1,4 +1,5 @@
 # Holds the default variables
+import os
 
 SHARED_GROUPS = [
     {
@@ -16,7 +17,7 @@ SHARED_GROUPS = [
         'options': {
             'verbose': {
                 'action': 'count',
-                'default': 0,
+                'default': int(os.getenv('ANSIBLE_VERBOSITY', 0)),
                 'help': 'Control Ansible verbosity level',
                 'short': 'v'
             },
