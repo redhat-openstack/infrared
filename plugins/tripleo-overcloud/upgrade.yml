@@ -55,6 +55,22 @@
         build: "latest"
         mirror: "{{ install.mirror | default(omit) }}"
 
+# todo(abregman): remove once rhbz#1434344 is resolved
+- name: Apply workaround for rhbz 1434344
+  hosts: controller
+  gather_facts: yes
+  any_errors_fatal: true
+  tags:
+      - upgrade
+  tasks:
+      - name: Start openstack-gnocchi-statsd
+        become: true
+        service:
+            name: openstack-gnocchi-statsd
+            state: started
+            enabled: yes
+        ignore_errors: true
+
 - name: Overcloud Upgrade
   hosts: undercloud
   gather_facts: yes
