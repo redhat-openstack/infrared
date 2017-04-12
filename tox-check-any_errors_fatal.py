@@ -81,14 +81,25 @@ def clr(color, text, force=True):
         return '\033[%sm%s\033[0m' % (color, text)
     else:
         return text
-red = lambda text: clr('1;31', text)
-green = lambda text: clr('0;32', text)
-yellow = lambda text: clr('1;33', text)
+
+
+def red(text):
+    return clr('1;31', text)
+
+
+def green(text):
+    return clr('0;32', text)
+
+
+def yellow(text):
+    return clr('1;33', text)
 
 
 def test_playbook(file_path):
+
     results = []
     with open(file_path) as yaml_file:
+
         content = yaml.safe_load(yaml_file)
         if not isinstance(content, list):
             return results

@@ -79,8 +79,8 @@ class IRWorkspaceMissing(IRException):
 
 class IRWorkspaceUndefined(IRConfigurationException):
     def __init__(self):
-        message = "'workspaces' path undefined in 'infrared.cfg'. If you wish " \
-                  "to use 'workspaces' feature, please define it. Use " \
+        message = "'workspaces' path undefined in 'infrared.cfg'. If you " \
+                  "wish to use 'workspaces' feature, please define it. Use " \
                   "'infrared.cfg.example as template."
         super(IRWorkspaceUndefined, self).__init__(message)
 
