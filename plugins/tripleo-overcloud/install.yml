@@ -30,7 +30,7 @@
   include: "{{ overcloud_deploy | default('deploy.yml') }}"
   when:
       - install.deploy|default('')
-      - not install.role|default('')
+      - not install.role|default('') or (install.role is defined and install.role.files == 'default')
 
 - name: Deploy the Overcloud with composable roles
   vars:
