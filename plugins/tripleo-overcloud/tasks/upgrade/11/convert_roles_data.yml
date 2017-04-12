@@ -83,10 +83,10 @@
       line: '    - OS::TripleO::Services::PankoApi'
 
 - name: Add the rest of the new services introduced in Ocata to Controller role
-  lineinfile:
-      dest: "{{ roles.stdout }}"
-      insertafter: '^(- name: Controller\n.*\n.*ServicesDefault.*)'
-      line: "{{ item }}"
+  replace:
+      dest: '{{ roles.stdout }}'
+      regexp: '^(- name: Controller\n(\s+CountDefault:\s+\d+\n)?\s+ServicesDefault:$)'
+      replace: "\\1\\n{{ item }}"
   with_items:
       - '    - OS::TripleO::Services::Congress'
       - '    - OS::TripleO::Services::BarbicanApi'
