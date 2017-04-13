@@ -51,6 +51,12 @@ subparsers:
                        help: |
                            Forces additional Tempest configuration (tempest.conf) options.
                            Format: --config-options section.option:value1 --config-options section.option:value
+                  remove-options:
+                       type: IniType
+                       action: append
+                       help: |
+                           Remove additional Tempest configuration (tempest.conf) options.
+                           Format: --remove-options section.option:value1 --remove-options section.option:value
                   revision:
                       type: Value
                       help: The setup (git) revision if applicable
