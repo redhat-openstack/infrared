@@ -1,4 +1,23 @@
+import os
+from pbr import version
+import pkg_resources as pkg
 import sys
+
+
+def inject_role_path():
+    """Discover the path to the roleslib/ directory provided
+       by infared core.
+    """
+    version_info = version.VersionInfo('infrared')
+
+    rolelib_path = pkg.resource_filename(version_info.package,
+                                         'roleslib')
+    infrared_roles_path = os.environ.get('ANSIBLE_ROLES_PATH', '')
+    os.environ['ANSIBLE_ROLES_PATH'] = ':'.join([rolelib_path,
+                                                 infrared_roles_path])
+
+inject_role_path()
+
 
 from infrared import api
 from infrared.core.services import CoreServices
