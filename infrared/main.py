@@ -1,12 +1,47 @@
+import os
+from pbr import version
+import pkg_resources as pkg
 import sys
 
-from infrared import api
-from infrared.core.services import CoreServices
-from infrared.core.services.plugins import PLUGINS_REGISTRY
-from infrared.core.utils import exceptions
-from infrared.core.utils import logger
-from infrared.core.utils import interactive_ssh
-from infrared.core.utils.print_formats import fancy_table
+
+def inject_common_paths():
+    """Discover the path to the common/ directory provided
+       by infrared core.
+    """
+    def override_conf_path(common_path, envvar, specific_dir):
+        conf_path = os.environ.get(envvar, '')
+        additional_conf_path = os.path.join(common_path, specific_dir)
+        if conf_path:
+            full_conf_path = ':'.join(additional_conf_path, conf_path)
+        else:
+            full_conf_path = additional_conf_path
+        os.environ[envvar] = full_conf_path
+
+    version_info = version.VersionInfo('infrared')
+
+    common_path = pkg.resource_filename(version_info.package,
+                                        'common')
+    override_conf_path(common_path, 'ANSIBLE_ROLES_PATH', 'roles')
+    override_conf_path(common_path, 'ANSIBLE_FILTER_PLUGINS', 'filter_plugins')
+    override_conf_path(common_path, 'ANSIBLE_CALLBACK_PLUGINS',
+                       'callback_plugins')
+
+
+# This needs to be called here because as soon as an ansible class is loaded
+# the code in constants.py is triggered. That code reads the configuration
+# settings from all sources (ansible.cfg, environment variables, etc).
+# If the first include to ansible modules is moved deeper in the InfraRed
+# code (or on demand), then this call can be moved as well in that place.
+inject_common_paths()
+
+
+from infrared import api  # noqa
+from infrared.core.services import CoreServices  # noqa
+from infrared.core.services.plugins import PLUGINS_REGISTRY  # noqa
+from infrared.core.utils import exceptions  # noqa
+from infrared.core.utils import logger  # noqa
+from infrared.core.utils import interactive_ssh  # noqa
+from infrared.core.utils.print_formats import fancy_table  # noqa
 
 LOG = logger.LOG
 
