@@ -40,6 +40,18 @@
               {{section_name}}.{{option_name}} {{value}} \
               {% endfor %}
               {% endfor %}
+              {# remove options #}
+              {% if test.openstack.version|int >= 11 and test.get('remove', {}).get('options', {})|length > 0 %}
+                {% for section_name,options in test.get('remove', {}).get('options', {}).iteritems() %}
+                    {% for option_name,value in options.iteritems() %}
+                        --remove {{section_name}}.{{option_name}}={{value}} \
+                    {% endfor %}
+                {% endfor %}
+                {% set remove_action = 'it worked' %}
+              {% else %}
+                {% set remove_action = false %}
+              {% endif %}
+
               --out ~/{{ test.dir }}/etc/tempest.conf
   args:
       chdir: "{{ config_dir | default('~/' + test.dir) }}"
