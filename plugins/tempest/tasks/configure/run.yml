@@ -41,6 +41,19 @@
               {% endfor %}
               {% endfor %}
               --out ~/{{ test.dir }}/etc/tempest.conf
+              {# remove options #}
+              {% if test.openstack.version|int >= 11 %}
+              {% for section_name,options in test.get('remove', {}).get('options', {}).iteritems() %}
+              {% for option_name,value in options.iteritems() %}
+                --remove {{section_name}}.{{option_name}}={{value}} \
+              {% endfor %}
+              {% endfor %}
+              {% set status = true %}
+              {% elif not status %}
+              {% set status = '--remove-options is available for RHOSP11 onwards.' %}
+                {{ status }}
+              {% endif %}
+
   args:
       chdir: "{{ config_dir | default('~/' + test.dir) }}"
   register: config_result
