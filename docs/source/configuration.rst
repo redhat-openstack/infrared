@@ -18,3 +18,24 @@ Configuration directory holds ``infrared.cfg`` which controls the location of:
 By default, both are placed inside ``.infrared/``. To change that replace the default file with your own and edit it::
 
     cp infrared.cfg.example ./.infrared/infrared.cfg
+
+
+Ansible configuration and limitations
+-------------------------------------
+Usually `infrared` does not touch the settings specified in the ansible configuration
+file (``ansible.cfg``), with few exceptions.
+
+Internally `infrared` use few Ansible environment variable to set the directories
+for common resources (callback plugins, filter plugins, roles, etc); this means
+that the following keys from the Ansible configuration files are ignored:
+
+* ``callback_plugins``
+* ``filter_plugins``
+* ``roles_path``
+
+It is still possible to defined custom paths for those items setting the corresponding
+environment variables:
+
+* ``ANSIBLE_CALLBACK_PLUGINS``
+* ``ANSIBLE_FILTER_PLUGINS``
+* ``ANSIBLE_ROLES_PATH``
