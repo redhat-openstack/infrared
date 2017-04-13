@@ -41,6 +41,15 @@
               {% endfor %}
               {% endfor %}
               --out ~/{{ test.dir }}/etc/tempest.conf
+              {# remove options #}
+              {% if test.openstack.version|int in [11] %}
+              {% for section_name,options in remove_options.iteritems() %}
+              {% for option_name,value in options.iteritems() %}
+                --remove {{section_name}}.{{option_name}}={{value}} \
+              {% endfor %}
+              {% endfor %}
+              {% endif %}
+
   args:
       chdir: "{{ config_dir | default('~/' + test.dir) }}"
   register: config_result
