@@ -75,3 +75,9 @@ subparsers:
                       help: |
                           Use tempest cleanup to clean the leftover from the tests (usually when tests fail)
                       default: no
+                  remove-options:
+                       type: IniType
+                       action: append
+                       help: |
+                           Remove additional Tempest configuration (tempest.conf) options.
+                           Format: --remove-options section.option:value1 --remove-options section.option:value

@@ -15,6 +15,7 @@
 
       openstack_config_options: "{{ installer_options.get(test.openstack.installer, {}) }}"
       config_options: "{{ openstack_config_options | combine(test.get('config', {}).get('options', {})) }}"
+      remove_options: "{{ openstack_config_options | combine(test.get('remove', {}).get('options', {})) }}"
 
   shell: |
       test -e .venv/bin/activate && source .venv/bin/activate
@@ -41,6 +42,15 @@
               {% endfor %}
               {% endfor %}
               --out ~/{{ test.dir }}/etc/tempest.conf
+              {# remove options #}
+              {% if test.openstack.version|int >= 11 %}
+              {% for section_name,options in remove_options.iteritems() %}
+              {% for option_name,value in options.iteritems() %}
+                --remove {{section_name}}.{{option_name}}={{value}} \
+              {% endfor %}
+              {% endfor %}
+              {% endif %}
+
   args:
       chdir: "{{ config_dir | default('~/' + test.dir) }}"
   register: config_result
