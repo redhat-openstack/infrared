@@ -9,23 +9,23 @@
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
 - name: create vm's
   shell: |
-      virt-install --name {{ node_dict.name }}-{{ item }} \
-          {% for disk_name, disk_values in node_dict.disks.iteritems() %}
+      virt-install --name {{ topology_node.name }}-{{ item }} \
+          {% for disk_name, disk_values in topology_node.disks.iteritems() %}
           {% if disk_values.import_url is defined and disk_values.import_url %}
-           --disk path={{ base_image_path }}/{{ node_dict.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
+           --disk path={{ base_image_path }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
           {% else %}
-           --disk path={{ disk_values.path }}/{{ node_dict.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
+           --disk path={{ disk_values.path }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }} \
           {% endif -%}
           {% endfor %}
           --boot {{ provision.bootmode }} \
-          {% for interface in node_dict.interfaces %}
+          {% for interface in topology_node.interfaces %}
            --network {{ 'bridge' if (interface.bridged|default(False)) else 'network' }}:{{ interface.network }} \
           {% endfor -%}
            --virt-type kvm \
            --cpu host-model \
-           --ram {{ node_dict.memory }} \
-           --vcpus {{ node_dict.cpu }} \
-           --os-variant {{ node_dict.os.variant }} \
+           --ram {{ topology_node.memory }} \
+           --vcpus {{ topology_node.cpu }} \
+           --os-variant {{ topology_node.os.variant }} \
            --import \
            --noautoconsole \
            --autostart \

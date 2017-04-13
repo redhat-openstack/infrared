@@ -480,7 +480,7 @@ def validate_plugins_presence_in_conf(
         plugins_cfg.readfp(config_file)
 
         for plugin_path in plugins_dict.values():
-            plugin = InfraredPlugin(plugin_path)
+            plugin = InfraredPlugin(plugin_path['src'])
 
             if present:
                 assert plugins_cfg.has_option(plugin.type, plugin.name), \
@@ -506,7 +506,7 @@ def test_plugin_add_all(plugin_manager_fixture):
     tests_plugins_dir = 'tests/example/plugins/add_remove_all_plugins/'
 
     infrared.core.services.plugins.PLUGINS_REGISTRY = {
-        plugin_name: os.path.join(tests_plugins_dir, plugin_name)
+        plugin_name: {'src': os.path.join(tests_plugins_dir, plugin_name)}
         for plugin_name in tests_plugins
         }
 

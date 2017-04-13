@@ -14,7 +14,7 @@
 
 - name: Copy Task file from vars
   template:
-      src: "vars/tests/{{ test.tests }}.yml"
+      src: "vars/tests/{{ test.tests | default('none') }}.yml"
       dest: "{{ rally.dir }}/{{ test.taskfile }}"
       force: yes
 

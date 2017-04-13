@@ -2,6 +2,8 @@ import sys
 
 from infrared import api
 from infrared.core.services import CoreServices
+from infrared.core.services.plugins import PLUGINS_REGISTRY
+from infrared.core.utils import exceptions
 from infrared.core.utils import logger
 from infrared.core.utils import interactive_ssh
 from infrared.core.utils.print_formats import fancy_table
@@ -34,6 +36,13 @@ class WorkspaceManagerSpec(api.SpecObject):
             help='Creates a workspace if it is not presents and '
                  'switches to it')
         checkout_parser.add_argument("name", help="Workspace name")
+
+        # inventory
+        inventory_parser = workspace_subparsers.add_parser(
+            'inventory',
+            help="prints workspace's inventory file")
+        inventory_parser.add_argument("name", help="Workspace name",
+                                      nargs="?")
 
         # list
         workspace_subparsers.add_parser(
@@ -87,6 +96,8 @@ class WorkspaceManagerSpec(api.SpecObject):
             self._create_workspace(pargs.name)
         elif subcommand == 'checkout':
             self._checkout_workspace(pargs.name)
+        elif subcommand == 'inventory':
+            self._fetch_inventory(pargs.name)
         elif subcommand == 'list':
             workspaces = self.workspace_manager.list()
             headers = ("Name", "Active")
@@ -124,6 +135,19 @@ class WorkspaceManagerSpec(api.SpecObject):
             self._create_workspace(name)
         self.workspace_manager.activate(name)
         print("Now using workspace: '{}'".format(name))
+
+    def _fetch_inventory(self, name):
+        """fetch inventory file for workspace.
+
+        if no active workspace found - create a new workspace
+        """
+        if name:
+            wkspc = self.workspace_manager.get(name)
+        else:
+            wkspc = self.workspace_manager.get_active_workspace()
+        if not wkspc:
+            raise exceptions.IRNoActiveWorkspaceFound()
+        print wkspc.inventory
 
 
 class PluginManagerSpec(api.SpecObject):
@@ -209,10 +233,16 @@ class PluginManagerSpec(api.SpecObject):
                 installed_plugins_mark_list = \
                     [installed_mark if plugin_name in installed_plugins_list
                      else '' for plugin_name in all_plugins_list]
+
+                plugins_descs = \
+                    [PLUGINS_REGISTRY.get(plugin, {}).get('desc', '')
+                     for plugin in all_plugins_list]
+
                 table_rows.append([
                     plugins_type,
                     '\n'.join(all_plugins_list),
-                    '\n'.join(installed_plugins_mark_list)])
+                    '\n'.join(installed_plugins_mark_list),
+                    '\n'.join(plugins_descs)])
             else:
                 table_rows.append([
                     plugins_type,
@@ -220,6 +250,7 @@ class PluginManagerSpec(api.SpecObject):
 
         if print_available:
             table_headers.append("Installed")
+            table_headers.append("Description")
 
         print fancy_table(table_headers, *table_rows)
 

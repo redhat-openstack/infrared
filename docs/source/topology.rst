@@ -61,6 +61,11 @@ For more topology file examples, please check out the default `available nodes <
 .. _`virsh`: https://github.com/rehdat-openstack/infrared/tree/master/plugins/virsh/defaults/topology/nodes
 .. _`openstack`: https://github.com/rehdat-openstack/infrared/tree/master/plugins/openstack/defaults/topology/nodes
 
+To ovverride default values in the topology node_dict the extra vars can be provided through the CLI. For example,
+to add more memory to the controller node, the ``override.controller.memory`` value should be set::
+
+    infrared virsh --topology-nodes controller:1,compute:1 -e override.controller.memeory=30720
+
 Network topology
 ----------------
 Before creating our environment, we need to decide how many and what type

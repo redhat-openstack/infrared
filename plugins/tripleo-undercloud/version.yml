@@ -1,0 +1,42 @@
+- name: Get the undercloud version
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tags: images
+  tasks:
+    # todo(obaranov) rework that and use openstack-nova rpm verions to determine undercloud version
+    # pike version currently has the 15 version which is eqaul to the ocata's version.
+    - name: get undercloud version
+      find:
+          use_regex: yes
+          patterns: 'rhos-release-[0-9]+.*'
+          paths:
+            - '/etc/yum.repos.d/'
+      register: result
+
+    - name: get undercloud rdo version
+      find:
+          use_regex: yes
+          patterns: '(?:rhos-release-rdotrunk|delorean|CentOS-OpenStack|rdo-release)-\w+\.repo$'
+          paths:
+              - '/etc/yum.repos.d/'
+      register: rdotrunk_result
+
+    - set_fact:
+          undercloud_version: "{{ result.files[0]['path'] | basename | regex_replace('^rhos-release-([0-9]+).*$', '\\1') }}"
+      when: result.matched > 0
+
+    - set_fact:
+          undercloud_version: "{{ rdotrunk_result.files[0]['path'] | basename | regex_replace('^(?:rhos-release-rdotrunk|delorean|CentOS-OpenStack|rdo-release)-(\\w+)\\.repo$', '\\1') }}"
+      when: result.matched ==0 and rdotrunk_result.matched > 0
+
+    - fail:
+          msg: "Unable to determine the undercloud version"
+      when: result.matched == 0 and rdotrunk_result.matched == 0
+
+    - name: print the undercloud_version
+      debug:
+          var: undercloud_version
+          verbosity: 2
+
+

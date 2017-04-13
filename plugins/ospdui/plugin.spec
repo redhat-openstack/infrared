@@ -11,7 +11,7 @@ subparsers:
                       type: Value
                       help: |
                           The Openstack under test version.
-                      choices: ['10', '11']
+                      choices: ['10', '11', '12']
                       required: yes
                   undercloudrc:
                       type: Value

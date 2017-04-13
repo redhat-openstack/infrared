@@ -1,6 +1,5 @@
 # Lookup {{ var_file }}.yml in priority order
 # under {{ partial_path }}
-
 - name: lookup var file in priority order
   find:
       patterns: "{{ var_file }}.yml"
@@ -13,3 +12,10 @@
   delegate_to: localhost
 
 - include_vars: "{{ var_file_find.files[0].path }}"
+
+- name: merge overriden settings to the separate var
+  set_fact:
+      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(var_file, {}), recursive=True) }}"
+
+- debug:
+    var: topology_node

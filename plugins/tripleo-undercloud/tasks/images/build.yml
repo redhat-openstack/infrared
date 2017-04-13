@@ -15,13 +15,30 @@
   # Image source is mandatory for OSP so we should fail if it's missing
   when: images_source or install.version|default(undercloud_version)|openstack_distribution == 'OSP'
 
+- name: Get repo files
+  vars:
+      rdo_patterns:
+          - ".*{{ install.version|default(undercloud_version) }}.*repo$"
+          - "CentOS-Ceph.*repo$"
+      rhos_patterns:
+          - "rhos-release-{{ install.version | default(undercloud_version) }}-director.repo"
+          - "rhos-release-{{ install.version | default(undercloud_version) }}.repo"
+          - "rhos-release-{{ ansible_product_version.split() | first | lower }}-{{ ansible_distribution_version }}.repo"
+  find:
+      file_type: file
+      use_regex: yes
+      patterns: "{{ (install.version|default(undercloud_version)|openstack_distribution == 'OSP') | ternary(rhos_patterns, rdo_patterns) }}"
+      paths:
+          - /etc/yum.repos.d/
+  register: repo_find
+
 # TODO: Move environment to a file / template so a user can make customize it
 - name: Build OC images (RHOS)
   tags: backup
   shell: "source ~/stackrc; openstack overcloud image build --all > openstack-build-images.log"
   environment:
       DIB_LOCAL_IMAGE: "{{ images_dest }}"
-      DIB_YUM_REPO_CONF: "/etc/yum.repos.d/rhos-release-{{ install.version | default(undercloud_version) }}-director.repo /etc/yum.repos.d/rhos-release-{{ (install.version | default(undercloud_version) }}.repo /etc/yum.repos.d/rhos-release-{{ ansible_product_version.split() | first | lower }}-{{ ansible_distribution_version }}.repo"
+      DIB_YUM_REPO_CONF: "{{ dib_yum_repos | default(repo_find.files | map(attribute='path') | join(' ')) }}"
       NODE_DIST: "rhel7"
       RHOS: 1
       RUN_RHOS_RELEASE: 1
@@ -31,15 +48,21 @@
 
 # TODO: Move environment to a file / template so a user can make customize it
 # TODO(yfried): add delorean env vars http://docs.openstack.org/developer/tripleo-docs/basic_deployment/basic_deployment_cli.html#get-images
+# Currently supports only centos images.
 - name: Build OC images (RDO)
   tags: backup
-  shell: "source ~/stackrc; openstack overcloud image build --all --builder-extra-args rdo-release > openstack-build-images.log"
+  shell: |
+      source ~/stackrc
+      openstack overcloud image build --builder-extra-args rdo-release > openstack-build-images.log
   environment:
+      DIB_YUM_REPO_CONF: "{{ dib_yum_repos | default(repo_find.files | map(attribute='path') | join(' ')) }}"
       RDO_RELEASE: "{{ install.version | default(undercloud_version) }}"
-      DIB_LOCAL_IMAGE: "{{ (images_source|default('')) | ternary(images_dest, omit) }}"
+      DIB_LOCAL_IMAGE: "{{ (images_source|default('')) | ternary(images_dest, '') }}"
   when: install.version|default(undercloud_version)|openstack_distribution == 'RDO'
 
-- name: tar our images
-  tags: backup
-  command: "tar -cf {{ item }} {{ item | splitext | first }}.*"
+- name: Tar our images
+  tags:
+      - backup
+      - skip_ansible_lint
+  shell: "tar -cf {{ item }} {{ item | splitext | first }}.*"
   with_items: "{{ tar_images }}"

@@ -68,6 +68,23 @@
           - "{{ inventory_dir }}/id_rsa.pub"
       delegate_to: localhost
 
+    - name: Increase ssh session limits
+      lineinfile:
+          dest: "/etc/ssh/sshd_config"
+          regexp: "{{ item.regexp }}"
+          line: "{{ item.line }}"
+      with_items:
+        - regexp: 'MaxSessions'
+          line: 'MaxSessions 100'
+        - regexp: 'MaxStartups'
+          line: 'MaxStartups 100:30:100'
+
+    - name: Restart ssh server to apply parameters
+      service:
+          name: "sshd"
+          state: "restarted"
+          enabled: yes
+
     - name: Set up authorized_keys for the deploy user
       authorized_key:
           user: root

@@ -70,7 +70,9 @@ Overcloud Strorage
     If `no`, the overcloud will deploy and manage the storage nodes.
     |If `yes` the overcloud will connect to an external, per-existing storage service.
 * ``--storage-backend``:
-    The type of the storagte service used as backend.
+    The type of the storage service used as backend.
+* ``--storage-config``:
+    Storage configuration (YAML) file.
 
 .. _`tripleo-undercloud`: tripleo-undercloud.html
 .. _`virsh`: virsh.html

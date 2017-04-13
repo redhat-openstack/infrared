@@ -42,27 +42,34 @@
             ~{{ ansible_ssh_user }}/deploy_info.sh 2>&1 | tee -a /var/log/extra/deploy_resources.log
         tags: summary
 
-      - fail:
-            msg: "Overcloud deployment failed... :("
-        when: overcloud_deploy.rc != 0
-
-      - name: verify overcloudrc was created
-        wait_for:
-            path: "{{ overcloudrc_file }}"
-            state: present
-            timeout: 60
-
-      - name: fetch the overcloud rc file
-        tags:
-            - fetch_rc_file
-        fetch:
-            src: "{{ overcloudrc_file }}"
-            dest: "{{ inventory_dir }}/keystonerc"
-            flat: yes
-            fail_on_missing: yes
-
 - name: Update inventory with overcloud details
   include: update_inventory.yml
   tags:
       - inventory_update
       - deploy
+
+- name: Verify overcloud deployment
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/overcloudrc"
+  tasks:
+    - fail:
+          msg: "Overcloud deployment failed... :("
+      when: overcloud_deploy is defined and overcloud_deploy.rc != 0
+
+    - name: verify overcloudrc was created
+      wait_for:
+          path: "{{ overcloudrc_file }}"
+          state: present
+          timeout: 60
+
+    - name: fetch the overcloud rc file
+      tags:
+          - fetch_rc_file
+      fetch:
+          src: "{{ overcloudrc_file }}"
+          dest: "{{ inventory_dir }}/keystonerc"
+          flat: yes
+          fail_on_missing: yes

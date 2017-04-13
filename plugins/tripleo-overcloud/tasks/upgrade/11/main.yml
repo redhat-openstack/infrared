@@ -1,0 +1,149 @@
+---
+- name: Generate ~/deprecated_cli_options.yaml
+  include: convert_cli_options.yml
+  vars:
+      value_list:
+          - searched: neutron-flat-networks
+            parameter_name: NeutronFlatNetworks
+          - searched: neutron-physical-bridge
+            parameter_name: NeutronPhysicalBridge
+          - searched: neutron-bridge-mappings
+            parameter_name: NeutronBridgeMappings
+          - searched: neutron-public-interface
+            parameter_name: NeutronPublicInterface
+          - searched: neutron-network-type
+            parameter_name: NeutronNetworkType
+          - searched: neutron-tunnel-types
+            parameter_name: NeutronTunnelTypes
+          - searched: neutron-disable-tunneling
+            parameter_name: NeutronTunnelTypes
+          - searched: neutron-tunnel-id-ranges
+            parameter_name: NeutronTunnelIdRanges
+          - searched: neutron-vni-ranges
+            parameter_name: NeutronVniRanges
+          - searched: neutron-network-vlan-ranges
+            parameter_name: NeutronNetworkVLANRanges
+          - searched: neutron-mechanism-drivers
+            parameter_name: NeutronMechanismDrivers
+  with_items: "{{ value_list }}"
+  tags: convert_cli_options
+
+- name: Check for ~/deprecated_cli_options.yaml
+  stat:
+      path: ~/deprecated_cli_options.yaml
+  register: is_deprecated
+  tags: convert_cli_options
+
+- block:
+    - name: Store last deploy command line
+      command: "tail -1 {{ overcloud_upgrade_script }}"
+      register: deploy_lastline
+
+    - name: Add the environment to the deploy command
+      lineinfile:
+          dest: "{{ overcloud_upgrade_script }}"
+          insertbefore: "{{ deploy_lastline.stdout }}"
+          line: "-e ~/deprecated_cli_options.yaml \\"
+  when: is_deprecated.stat.exists
+  tags: convert_cli_options
+
+- name: Determine if a custom roles_data was used
+  shell: "grep '\\-r\\ \\|\\-\\-roles' {{ overcloud_upgrade_script }}"
+  ignore_errors: true
+  register: is_roles
+  tags: convert_roles_data
+
+- name: Convert roles_data.yaml
+  include: convert_roles_data.yml
+  when: is_roles.rc == 0
+  tags: convert_roles_data
+
+- name: Initiate composable upgrade process
+  include: composable_upgrade.yml
+  tags: composable_upgrade
+  vars:
+      composable_upgrade_script: "~/overcloud_upgrade_composable.sh"
+
+- pip:
+      name: "{{ item.key }}"
+      version: "{{ item.value }}"
+      virtualenv: "{{ path_venv }}"
+  with_dict:
+      setuptools: "17.0"
+      pytz: "2016.4"
+      shade: "1.7.0"
+      requests: "2.11.1"
+      pip: "8.1"
+
+- name: Grab auth data from {{ overcloud_rc }} file and publish it as YAML
+  shell: |
+      source {{ overcloud_rc }}
+      echo "
+      auth_url: $OS_AUTH_URL
+      username: $OS_USERNAME
+      password: $OS_PASSWORD
+      project_name: ${OS_PROJECT_NAME:-$OS_TENANT_NAME}
+      "
+      if [ -n "$OS_PROJECT_DOMAIN_NAME" ]; then
+          echo "project_domain_name: $OS_PROJECT_DOMAIN_NAME"
+      fi
+      if [ -n "$OS_USER_DOMAIN_NAME" ]; then
+          echo "user_domain_name: $OS_USER_DOMAIN_NAME"
+      fi
+  register: creds
+
+- name: Compute Upgrade
+  include: compute_upgrade.yml
+  with_items: "{{ groups.compute|default([]) }}"
+  loop_control:
+      loop_var: node_name
+  tags: computes_upgrade
+
+- name: Swift Upgrade
+  include: swift_upgrade.yml
+  with_items: "{{ groups.swift|default([]) }}"
+  loop_control:
+      loop_var: node_name
+  tags: swift_upgrade
+
+- name: Converge
+  include: converge_upgrade.yml
+  tags: converge_upgrade
+  vars:
+      converge_script: "~/overcloud_upgrade_converge.sh"
+
+- name: Ceph Upgrade
+  include: ceph_upgrade.yml
+  with_items: "{{ groups.ceph|default([]) }}"
+  loop_control:
+      loop_var: node_name
+  tags: upgrade_ceph
+
+- name: List custom roles nodes
+  shell: |
+      source {{ undercloud_rc }}
+      openstack server list -f json
+  register: custom_nodes
+  tags: custom_role_post
+
+- include: custom_roles_upgrade.yml
+  with_items: "{{ custom_nodes.stdout|default([]) }}"
+  when:
+      - "'objectstorage' not in '{{ item.Name }}'"
+      - "'swift-r' not in '{{ item.Name }}'"
+      - "'ceph' not in '{{ item.Name }}'"
+      - "'stor-r' not in '{{ item.Name }}'"
+      - "'controller' not in '{{ item.Name }}'"
+      - "'ctrl' not in '{{ item.Name }}'"
+      - "'compute' not in '{{ item.Name }}'"
+      - "'comp' not in '{{ item.Name }}'"
+  vars:
+      node_name: "{{ item.Name }}"
+  tags: custom_role_post
+
+- name: Post upgrade controller nodes
+  include: controller_postupgrade.yml
+  with_items: "{{ groups.controller|default([]) }}"
+  loop_control:
+      loop_var: node_name
+  tags: controller_post

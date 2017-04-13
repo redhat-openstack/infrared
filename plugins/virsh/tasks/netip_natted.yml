@@ -1,7 +1,7 @@
 # Set IP for natted VMs with ssh tunneling
 
 - name: get MAC list
-  shell: "virsh domiflist {{ node_dict.name }}-{{ item }} | awk '/{{ node_dict.external_network.network }}/ {print $5};'"
+  shell: "virsh domiflist {{ topology_node.name }}-{{ item }} | awk '/{{ topology_node.external_network.network }}/ {print $5};'"
   with_sequence: start=0 end={{ node.value|int - 1 }}
   register: mac_list
 
@@ -10,7 +10,7 @@
 
 - name: wait until one of the VMs gets an IP
   shell: |
-        virsh net-dhcp-leases {{ node_dict.external_network.network }} | awk '($4 == "ipv4")  && ($3 == "{{ item.1 }}") {print $5}'
+        virsh net-dhcp-leases {{ topology_node.external_network.network }} | awk '($4 == "ipv4")  && ($3 == "{{ item.1 }}") {print $5}'
   register: ip_list
   until: "ip_list.stdout != ''"
   retries: 40
@@ -24,7 +24,7 @@
       vm_ip_list: "{{ ip_list.results }}"
 
 - name: make IPs persistent
-  shell: "virsh net-update {{ node_dict.external_network.network }} add ip-dhcp-host \"<host mac='{{ item.item[1] }}' name='{{ item.item[0].cmd.split()[2] }}' ip='{{ item.stdout | ipaddr('address') }}' />\" --live --config"
+  shell: "virsh net-update {{ topology_node.external_network.network }} add ip-dhcp-host \"<host mac='{{ item.item[1] }}' name='{{ item.item[0].cmd.split()[2] }}' ip='{{ item.stdout | ipaddr('address') }}' />\" --live --config"
   with_items: "{{ vm_ip_list }}"
   register: vm_ips
   async: 7200
@@ -38,7 +38,7 @@
 - name: add hosts to host list
   add_host:
       name: "{{ item.item[0].cmd.split()[2] }}"
-      groups: "{{ node_dict.groups | join(',') }}"
+      groups: "{{ topology_node.groups | join(',') }}"
       ansible_ssh_user: "root"
       ansible_ssh_host: "{{ item.stdout | ipaddr('address') }}"
       ansible_ssh_private_key_file: "{{ inventory_dir }}/id_rsa"

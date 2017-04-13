@@ -247,7 +247,7 @@ class WorkspaceManager(object):
             return []
 
     def get(self, name):
-        """Gets an exisiting workspace."""
+        """Gets an existing workspace."""
 
         return next((workspace for workspace in self.list()
                      if workspace.name == name), None)

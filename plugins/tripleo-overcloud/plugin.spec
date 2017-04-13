@@ -39,11 +39,13 @@ subparsers:
                         - "9"
                         - "10"
                         - "11"
+                        - "12"
                         - kilo
                         - liberty
                         - mitaka
                         - newton
                         - ocata
+                        - pike
 
                   deployment-files:
                       type: Value
@@ -174,6 +176,12 @@ subparsers:
                         The 'lvm' value will be used when storage nodes were not found.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
 
+                  storage-config:
+                      type: Value
+                      help: |
+                          Storage configuration file (YAML file)
+                          __LISTYAMLS__
+                      default: internal
 
             - title: Composable roles
               options:

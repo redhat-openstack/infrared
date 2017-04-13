@@ -48,3 +48,7 @@
           dest: "{{ inventory_dir }}/hosts"
           state: link
           src: "hosts-prov"
+
+- name: Including post provision tasks
+  include: "{{ provision_post | default('post.yml') }}"
+  tags: post

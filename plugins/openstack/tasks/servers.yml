@@ -12,8 +12,8 @@
       partial_path: topology/nodes
 
 - name: Set the nic order
-  command: "echo net-name={{ provision.prefix }}{{ node_dict.interfaces[item].network }}"
-  with_items: "{{ node_dict.interfaces | sort }}"
+  command: "echo net-name={{ provision.prefix }}{{ topology_node.interfaces[item].network }}"
+  with_items: "{{ topology_node.interfaces | sort }}"
   register: nics
 
 - name: Create instances
@@ -21,16 +21,16 @@
       resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
   os_server:
       cloud: "{{ provision.cloud | default(omit) }}"
-      auto_ip: "{{ node_dict.auto_ip | default(auto_ip) }}"
-      config_drive: "{{ node_dict.config_drive | default(config_drive) }}"
-      flavor: "{{ node_dict.flavor | default(flavor_id) }}"
-      image: "{{ (node_dict.image|default({})).name | default(provision.image) }}"
-      name: "{{ prefix }}{{ node_dict.name }}-{{ item|int - 1 }}"
+      auto_ip: "{{ topology_node.auto_ip | default(auto_ip) }}"
+      config_drive: "{{ topology_node.config_drive | default(config_drive) }}"
+      flavor: "{{ topology_node.flavor | default(flavor_id) }}"
+      image: "{{ (topology_node.image|default({})).name | default(provision.image) }}"
+      name: "{{ prefix }}{{ topology_node.name }}-{{ item|int - 1 }}"
       nics: "{{ nics.results | map(attribute='stdout') | list }}"
       key_name: "{{ provision.key.name if provision.key.name else (prefix + provision.key.file | basename) }}"
-      security_groups: "{{ node_dict.security_groups | default(omit) }}"
+      security_groups: "{{ topology_node.security_groups | default(omit) }}"
       state: present
-      wait: "{{ node_dict.wait | default(wait) }}"
+      wait: "{{ topology_node.wait | default(wait) }}"
   register: servers
   with_sequence: "count={{ node.value }}"
 
@@ -45,7 +45,7 @@
   os_floating_ip:
       cloud: "{{ provision.cloud | default(omit) }}"
       network: "{{ external_network_id }}"
-      nat_destination: "{{ prefix }}{{ node_dict.external_network }}"
+      nat_destination: "{{ prefix }}{{ topology_node.external_network }}"
       server: "{{ item.id }}"
       state: present
       # always wait for floating ip
@@ -56,7 +56,7 @@
 - name: Get flavor facts
   os_flavor_facts:
       cloud: "{{ provision.cloud | default(omit) }}"
-      name: "{{ node_dict.flavor | default(flavor_id) }}"
+      name: "{{ topology_node.flavor | default(flavor_id) }}"
       limit: 1
 
 - name: Add created servers to inventory
@@ -66,9 +66,9 @@
       # item.item is the server object
       name: "{{ item.item.name }}"
       ansible_ssh_host: "{{ item.floating_ip.floating_ip_address }}"
-      groups: "{{ node_dict.groups | join(',') }}"
+      groups: "{{ topology_node.groups | join(',') }}"
       ansible_ssh_private_key_file: "{{ provision.key.file }}"
-      ansible_ssh_user: "{{ node_dict.get('image', {}).ssh_user | default(provision.username) }}"
+      ansible_ssh_user: "{{ topology_node.get('image', {}).ssh_user | default(provision.username) }}"
 #      eth1_interface_ip: "{{ item.item.addresses[data_network.name][0].addr }}"
       ram: "{{ instance_flavor.ram }}"
       disk: "{{ instance_flavor.disk }}"

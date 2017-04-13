@@ -18,6 +18,16 @@
             msg: "Undercloud deployment failed... :("
         when: undercloud_deployment.rc != 0
 
+      # rhosp-release provides /etc/rhosp-release, which is used in upgrade for version discovery.
+      - name: install rhosp-release
+        become: true
+        package:
+            state: latest
+            name: rhosp-release
+        when:
+            - install.version|openstack_distribution == 'OSP'
+            - install.version|int >= 10
+
       - name: fetch the stackrc file
         tags:
             - fetch_rc_file

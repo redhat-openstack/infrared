@@ -2,7 +2,6 @@ import tempfile
 
 import yaml
 from ansible.utils.display import Display
-from ansible.cli.playbook import PlaybookCLI
 
 from infrared.core.utils import logger
 
@@ -52,6 +51,15 @@ def _run_playbook(cli_args, vars_dict):
     """
 
     # TODO(yfried): use ansible vars object instead of tmpfile
+    # NOTE(oanufrii): !!!this import should be exactly here!!!
+    #                 Ansible uses 'display' singleton from '__main__' and
+    #                 gets it on module level. While we monkeypatching our
+    #                 '__main__' in 'ansible_playbook' function import of
+    #                 PlaybookCLI shoul be after that, to get patched
+    #                 '__main__'. Otherwise ansible gets unpatched '__main__'
+    #                 and creates new 'display' object with default (0)
+    #                 verbosity.
+    from ansible.cli.playbook import PlaybookCLI
     with tempfile.NamedTemporaryFile(
             prefix="ir-settings-", delete=True) as tmp:
         tmp.write(yaml.safe_dump(vars_dict, default_flow_style=False))
