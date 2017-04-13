@@ -41,6 +41,13 @@
               {% endfor %}
               {% endfor %}
               --out ~/{{ test.dir }}/etc/tempest.conf
+              {# remove options #}
+              {% for section_name,options in remove_options.iteritems() %}
+              {% for option_name,value in options.iteritems() %}
+                --remove {{section_name}}.{{option_name}}={{value}} \
+              {% endfor %}
+              {% endfor %}
+
   args:
       chdir: "{{ config_dir | default('~/' + test.dir) }}"
   register: config_result
