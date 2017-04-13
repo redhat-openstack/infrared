@@ -1,7 +1,8 @@
 Plugins
 =======
 
-In `infrared` 2.0, `plugins` are fully self contained Ansible projects.
+In `infrared` 2.0, `plugins` are self contained Ansible projects. They can still
+also depend on common items provided by the core project.
 Any ansible project can become an`infrared` plugin by adhering to the following
 structure (see `tests/example`_ for an example plugin)::
 
@@ -13,7 +14,8 @@ structure (see `tests/example`_ for an example plugin)::
     │       └── tasks
     │           └── main.yml
 
-.. note:: This structure will work without any ``ansible.cfg`` file provided, as Ansible will search for references in the
+.. note:: This structure will work without any ``ansible.cfg`` file provided (unless common resources are used),
+        as Ansible will search for references in the
         relative paths described above. To use an ``ansible.cfg`` config file, use absolute paths to the plugin directory.
 .. _tests/example: https://github.com/redhat-openstack/infrared/tree/master/tests/example
 
@@ -26,7 +28,9 @@ Main entry
 
 Plugins are regular Ansible projects, and as such, they might include or reference any item
 (files, roles, var files, ansible plugins, modules, templates, etc...) using relative paths
-to current playbook
+to current playbook.
+They can also use roles, callback and filter plugins defined in the common/ directory
+provided by `infrared` core.
 
 An example of ``plugin_dir/main.yml``:
 
