@@ -4,6 +4,13 @@
   include: reboot_node.yml
   tags: controller_reboot
 
+- name: Check if pcsd is enabled
+  become: true
+  command: systemctl is-enabled pcsd
+  register: pcsd
+  ignore_errors: true
+  delegate_to: "{{ node_name }}"
+
 - name: Wait for {{ node_name }} to come back online and check it's part of the cluster
   become: true
   shell: "pcs status | grep Online"
@@ -12,6 +19,7 @@
   retries: 30
   delay: 5
   delegate_to: "{{ node_name }}"
+  when: pcsd.stdout.find("disabled") == -1
 
 - name: Check for any stopped/failed pcs resources
   become: true
@@ -24,6 +32,7 @@
       - 'Stopped'
       - 'unmanaged'
   delegate_to: "{{ node_name }}"
+  when: pcsd.stdout.find("disabled") == -1
 
 - name: Check for any DOWN haproxy backend services;
   become: true
@@ -33,6 +42,7 @@
   retries: 30
   delay: 5
   delegate_to: "{{ node_name }}"
+  when: pcsd.stdout.find("disabled") == -1
 
 - name: Check for redis slaves in haproxy backend services;
   become: true
@@ -42,6 +52,7 @@
   retries: 30
   delay: 5
   delegate_to: "{{ node_name }}"
+  when: pcsd.stdout.find("disabled") == -1
 
 - name: Packages Check
   include: packages_check.yml
