@@ -2,7 +2,7 @@
 {%- macro count(node_name) -%}
 {% set counter = [] %}
 {% for host_name in groups.overcloud_nodes %}
-{% if node_name in host_name %}
+{% if node_name == host_name.rstrip('1234567890-').split('-')[-1] %}
 {%- if counter.append(node_name) %}{% endif -%}
 {% endif %}
 {% endfor %}
