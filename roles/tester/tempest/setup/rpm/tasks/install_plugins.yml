@@ -7,6 +7,7 @@
   with_dict: "{{ test_suite.value.plugins | default({}) }}"
 
 - name: install extra system requirements for tests
+  become: yes
   yum:
     name: "{{ item.value.dependencies }}"
     state: present
