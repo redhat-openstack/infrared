@@ -19,20 +19,10 @@
       state: latest
   become: yes
 
-- name: create yum repo to download Chrome
-  yum_repository:
-      name: google-chrome
-      description: Google chrome official repo
-      baseurl: http://dl.google.com/linux/chrome/rpm/stable/$basearch
-      gpgcheck: yes
-      gpgkey: https://dl-ssl.google.com/linux/linux_signing_key.pub
-
-  become: yes
-
-- name: install google chrome browser
-  yum:
-      name: google-chrome-stable
-      state: installed
+- name: install chrome browser
+  package:
+      name: https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+      state: present
   become: yes
 
 - name: create user bin directory
