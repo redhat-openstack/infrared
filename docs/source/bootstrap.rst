@@ -144,7 +144,7 @@ This will deploy OSP 10 (``Newton``) on the node ``undercloud-0`` provisioned pr
 Overcloud
 ^^^^^^^^^
 
-Let's depoly a `Tripleo Overcloud`_::
+Let's deploy a `Tripleo Overcloud`_::
 
   infrared tripleo-overcloud --deployment-files virt --version 10 --introspect yes --tagging yes --deploy yes --post yes
 
