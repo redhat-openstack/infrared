@@ -1,0 +1,23 @@
+---
+ironic_role:
+    name: Ironic
+
+    resource_registry:
+        "OS::TripleO::Ironic::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/ironic.yml"
+
+    flavor: ironic
+    host_name_format: 'ironic-%index%'
+
+    services:
+    - OS::TripleO::Services::IronicConductor
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::Ntp
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::SensuClient
+    - OS::TripleO::Services::FluentdClient
+    - "{% if install.version |int < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+    - "{% if install.version |int > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
