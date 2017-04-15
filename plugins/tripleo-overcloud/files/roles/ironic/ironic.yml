@@ -1,0 +1,31 @@
+---
+ironic_role:
+    name: Ironic
+
+    resource_registry:
+        OS::TripleO::Ironic::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/ironic.yaml"
+        OS::TripleO::Ironic::Ports::ExternalPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+        OS::TripleO::Ironic::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
+        OS::TripleO::Ironic::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
+        OS::TripleO::Ironic::Ports::StorageMgmtPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+        OS::TripleO::Ironic::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+
+        OS::TripleO::Services::IronicApi: "{{ install.heat.templates.basedir }}/puppet/services/ironic-api.yaml"
+        OS::TripleO::Services::IronicConductor: "{{ install.heat.templates.basedir }}/puppet/services/ironic-conductor.yaml"
+        OS::TripleO::Services::NovaIronic: "{{ install.heat.templates.basedir }}/puppet/services/nova-ironic.yaml"
+
+    flavor: ironic
+    host_name_format: 'ironic-%index%'
+
+    services:
+    - OS::TripleO::Services::IronicConductor
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::Ntp
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::SensuClient
+    - OS::TripleO::Services::FluentdClient
+    - "{% if install.version |int < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
