@@ -74,7 +74,7 @@ PLUGINS_REGISTRY = {
     'virsh': {
         'src': 'plugins/virsh',
         'desc':
-            'Provisioner virtual machines on a single Hypervisor using libvirt'
+            'Provision virtual machines on a single Hypervisor using libvirt'
     },
 }
 
