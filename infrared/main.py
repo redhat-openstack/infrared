@@ -76,6 +76,10 @@ class WorkspaceManagerSpec(api.SpecObject):
                                           "workspace will be used.")
         exporter_parser.add_argument("-f", "--filename", dest="filename",
                                      help="Archive file name.")
+        exporter_parser.add_argument("-y", "--copy-keys", dest="copykeys",
+                                     action="store_true",
+                                     help="Silently copy ssh keys "
+                                     "to workspace.")
 
         # node list
         nodelist_parser = workspace_subparsers.add_parser(
@@ -113,7 +117,7 @@ class WorkspaceManagerSpec(api.SpecObject):
             self.workspace_manager.cleanup(pargs.name)
         elif subcommand == 'export':
             self.workspace_manager.export_workspace(
-                pargs.workspacename, pargs.filename)
+                pargs.workspacename, pargs.copykeys, pargs.filename)
         elif subcommand == 'import':
             self.workspace_manager.import_workspace(
                 pargs.filename, pargs.workspacename)
