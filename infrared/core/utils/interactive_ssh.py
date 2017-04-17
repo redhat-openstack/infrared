@@ -78,6 +78,11 @@ def ssh_to_host(hostname, remote_command=None):
         compiled_cmd = " ".join(
             [compiled_cmd, '"{}"'.format(remote_command)])
 
-    os.system(compiled_cmd)
+    curpath = os.getcwd()
+    try:
+        os.chdir(workspace.path)
+        os.system(compiled_cmd)
+    finally:
+        os.chdir(curpath)
 
     LOG.debug("Connection to {} closed".format(cmd_fields["host"]))
