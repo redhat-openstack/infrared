@@ -3,6 +3,7 @@ import os
 import shutil
 import tarfile
 import time
+import tempfile
 
 from ansible.parsing.dataloader import DataLoader
 from ansible import inventory
@@ -163,6 +164,15 @@ class Workspace(object):
             raise IOError("File not found: {}".format(file_path))
         return target_path
 
+    def _get_inventory_files(self):
+        inventories = []
+        for name in os.listdir(self.path):
+            if name.startswith("hosts") and os.path.isfile(
+                    os.path.join(self.path, name)):
+                inventories.append(os.path.join(self.path, name))
+
+        return inventories
+
 
 class WorkspaceManager(object):
     """Manages all the workspaces.
@@ -267,7 +277,61 @@ class WorkspaceManager(object):
 
         return self.get(active_name)
 
-    def export_workspace(self, workspace_name, file_name=None):
+    def _place_keys_in_workspace(self, workspace, copykeys):
+        wsp = self.get(workspace)
+
+        inventories = wsp._get_inventory_files()
+        keys = {}
+
+        for inv_file in inventories:
+            new_lines = []
+            with open(inv_file, "r") as inv:
+                for line in inv.readlines():
+                    tokens = line.strip().split()
+                    for ind, token in enumerate(tokens):
+                        token = token.split("=")[-1]
+                        if os.path.isfile(token):
+                            keys.setdefault(token, None)
+                            if keys[token] is None:
+                                if token.startswith(wsp.path):
+                                    new_token = token.replace(wsp.path,
+                                                              "WORKSPACE")
+                                else:
+                                    copy_current = False
+                                    if not copykeys:
+                                        while True:
+                                            useransw = raw_input(
+                                                "Copy {} to workspace "
+                                                "[y|n]: ".format(token))
+                                            if useransw not in ["y", "n"]:
+                                                print("Anexpected answer {}. "
+                                                      "Expected 'y' or 'n'")
+                                                continue
+                                            if useransw == "y":
+                                                copy_current = True
+
+                                            break
+                                    else:
+                                        copy_current = True
+
+                                    if copy_current:
+                                        fname = tempfile.mktemp(
+                                            prefix="id_rsa-", dir="")
+                                        shutil.copy2(token, os.path.join(
+                                            wsp.path, fname))
+                                        new_token = os.path.join(
+                                            "WORKSPACE", fname)
+                            else:
+                                new_token = keys[token]
+
+                            keys[token] = new_token
+                            line = line.replace(token, new_token)
+                    new_lines.append(line)
+
+            with open(inv_file, "w") as inv:
+                inv.writelines(new_lines)
+
+    def export_workspace(self, workspace_name, copykeys, file_name=None):
         """Export content of workspace folder as gzipped tar file
 
            Replaces existing .tgz file
@@ -283,6 +347,8 @@ class WorkspaceManager(object):
                 raise exceptions.IRNoActiveWorkspaceFound()
 
         fname = file_name or workspace.name
+
+        self._place_keys_in_workspace(fname, copykeys)
 
         with tarfile.open(fname + '.tgz', "w:gz") as tar:
             tar.add(workspace.path, arcname="./")
@@ -308,6 +374,17 @@ class WorkspaceManager(object):
             file_name, new_workspace.path))
         with tarfile.open(file_name) as tar:
             tar.extractall(path=new_workspace.path)
+
+        inventories = new_workspace._get_inventory_files()
+        for inv in inventories:
+            new_lines = []
+            with open(inv, "r") as invr:
+                for line in invr.readlines():
+                    new_lines.append(line.replace("WORKSPACE",
+                                                  new_workspace.path))
+
+            with open(inv, "w") as infw:
+                infw.writelines(new_lines)
 
     def is_active(self, name):
         """Checks if workspace is active."""
