@@ -78,6 +78,17 @@ def ssh_to_host(hostname, remote_command=None):
         compiled_cmd = " ".join(
             [compiled_cmd, '"{}"'.format(remote_command)])
 
-    os.system(compiled_cmd)
+    curpath = os.getcwd()
+
+    # NOTE(oanufrii):
+    # ssh client needs key to be in the directory you're running one from
+    # ('ssg -i id_rsa ...') or to be provided by absolute path.
+    # Keys paths become relative to workspace. Thus ssh can't find them.
+    # So, we just cd to  workspace for run ssh and cd back after.
+    try:
+        os.chdir(workspace.path)
+        os.system(compiled_cmd)
+    finally:
+        os.chdir(curpath)
 
     LOG.debug("Connection to {} closed".format(cmd_fields["host"]))

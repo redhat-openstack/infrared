@@ -193,7 +193,8 @@ def test_workspace_import(workspace_manager_fixture, test_workspace,
 
     cwd = os.getcwd()
     os.chdir(tmpdir.strpath)
-    workspace_manager_fixture.export_workspace(test_workspace.name, "test_boo")
+    workspace_manager_fixture.export_workspace(test_workspace.name,
+                                               file_name="test_boo")
 
     workspace_manager_fixture.import_workspace("test_boo.tgz", workspace_name)
 
@@ -223,15 +224,23 @@ def test_workspace_import_workspace_exists(workspace_manager_fixture, mocker):
     workspace_manager_fixture.get = back_get
 
 
-def test_workspace_export(workspace_manager_fixture, test_workspace, tmpdir):
+def test_workspace_export(workspace_manager_fixture, test_workspace, tmpdir,
+                          mocker):
     cwd = os.getcwd()
 
     os.chdir(tmpdir.strpath)
 
+    back_pkiw = workspace_manager_fixture._place_keys_in_workspace
+    workspace_manager_fixture._place_keys_in_workspace = mocker.MagicMock()
+
     back_get = workspace_manager_fixture.get
+
     workspace_manager_fixture.get = lambda x: test_workspace
     workspace_manager_fixture.export_workspace(test_workspace.name,
-                                               "some_file")
+                                               file_name="some_file")
+
+    workspace_manager_fixture._place_keys_in_workspace.assert_called_with(
+        test_workspace.name, False)
     workspace_manager_fixture.get = back_get
 
     assert os.path.exists("some_file.tgz")
@@ -239,7 +248,11 @@ def test_workspace_export(workspace_manager_fixture, test_workspace, tmpdir):
 
     back_get = workspace_manager_fixture.get
     workspace_manager_fixture.get = lambda x: test_workspace
-    workspace_manager_fixture.export_workspace(test_workspace.name)
+    workspace_manager_fixture.export_workspace(test_workspace.name,
+                                               copykeys=True)
+    workspace_manager_fixture._place_keys_in_workspace.assert_called_with(
+        test_workspace.name, True)
+    setattr(workspace_manager_fixture, "_place_keys_in_workspace", back_pkiw)
     workspace_manager_fixture.get = back_get
     assert os.path.exists("{}.tgz".format(test_workspace.name))
     os.remove("{}.tgz".format(test_workspace.name))
@@ -285,3 +298,73 @@ def test_workspace_node_list_errors(workspace_manager_fixture):
 
     with pytest.raises(exceptions.IRWorkspaceMissing):
         workspace_manager_fixture.node_list("strange_workspace")
+
+
+def test__process_inventory_line(workspace_manager_fixture, test_workspace):
+
+    wsp_path = test_workspace.path
+    with open(os.path.join(wsp_path, "id_rsa"), "w") as tkey:
+        tkey.write("test")
+
+    test_line = "ansible_ssh_key={tk} {tk}".format(
+        tk=os.path.join(wsp_path, "id_rsa"))
+
+    keys = {}
+    res_line = workspace_manager_fixture._process_inventory_line(
+        test_line, keys, False, wsp_path)
+    assert os.path.join(wsp_path, "id_rsa") in keys
+    assert res_line == "ansible_ssh_key=id_rsa id_rsa"
+
+    ext_key = os.path.join("/tmp", "id_rsa_test_extern")
+    with open(ext_key, "w") as tkey:
+        tkey.write("test")
+    test_line = "ansible_ssh_key={tk} {tk}".format(
+        tk=os.path.join("/tmp", "id_rsa_test_extern"))
+    keys = {}
+    res_line = workspace_manager_fixture._process_inventory_line(
+        test_line, keys, True, wsp_path)
+    assert ext_key in keys
+    assert res_line == "ansible_ssh_key={tk} {tk}".format(tk=keys[ext_key])
+    assert keys[ext_key] in os.listdir(wsp_path)
+
+    keys = {}
+    back_input = __builtins__["raw_input"]
+    __builtins__["raw_input"] = lambda _: 'y'
+    res_line = workspace_manager_fixture._process_inventory_line(
+        test_line, keys, False, wsp_path)
+    __builtins__["raw_input"] = back_input
+    assert ext_key in keys
+    assert res_line == "ansible_ssh_key={tk} {tk}".format(tk=keys[ext_key])
+    assert keys[ext_key] in os.listdir(wsp_path)
+
+    keys = {}
+    back_input = __builtins__["raw_input"]
+    __builtins__["raw_input"] = lambda _: 'n'
+    res_line = workspace_manager_fixture._process_inventory_line(
+        test_line, keys, False, wsp_path)
+    __builtins__["raw_input"] = back_input
+    assert ext_key in keys
+    assert res_line == "ansible_ssh_key={tk} {tk}".format(tk=keys[ext_key])
+    assert ext_key not in os.listdir(wsp_path)
+
+
+def test__place_keys_in_workspace(workspace_manager_fixture, test_workspace,
+                                  mocker):
+    twsp_path = test_workspace.path
+    with open(os.path.join(twsp_path, "hosts-test"), "w") as tinv:
+        tinv.write("host-0 ansible_ssh_user=user\n")
+
+    back_pil = workspace_manager_fixture._process_inventory_line
+    workspace_manager_fixture._process_inventory_line = mocker.MagicMock(
+        return_value="result line\n")
+
+    workspace_manager_fixture._place_keys_in_workspace(test_workspace.name,
+                                                       copykeys=False)
+
+    workspace_manager_fixture._process_inventory_line.assert_any_call(
+        "host-0 ansible_ssh_user=user\n", {}, False, twsp_path)
+
+    workspace_manager_fixture._process_inventory_line = back_pil
+
+    with open(os.path.join(twsp_path, "hosts-test"), "r") as tinv:
+        assert tinv.readlines() == ["result line\n"]
