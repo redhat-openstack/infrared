@@ -3,6 +3,7 @@ import os
 import shutil
 import tarfile
 import time
+import tempfile
 
 from ansible.parsing.dataloader import DataLoader
 from ansible import inventory
@@ -163,6 +164,15 @@ class Workspace(object):
             raise IOError("File not found: {}".format(file_path))
         return target_path
 
+    def _get_all_inventory_files(self):
+        inventories = []
+        for name in os.listdir(self.path):
+            if name.startswith("hosts") and os.path.isfile(
+                    os.path.join(self.path, name)):
+                inventories.append(os.path.join(self.path, name))
+
+        return inventories
+
 
 class WorkspaceManager(object):
     """Manages all the workspaces.
@@ -267,7 +277,75 @@ class WorkspaceManager(object):
 
         return self.get(active_name)
 
-    def export_workspace(self, workspace_name, file_name=None):
+    def _process_inventory_line(self, line, keys, copykeys, wsp_path):
+        tokens = line.strip().split()
+        for token in tokens:
+            # NOTE(oanufrii): this way we catch construction
+            # "ansible_ssh_key=..." as well as proxy command key
+            token = token.split("=")[-1]
+            if os.path.isfile(token):
+                keys.setdefault(token, None)
+                if keys[token] is None:
+                    if token.startswith(wsp_path):
+                        new_token = os.path.relpath(
+                            token, start=wsp_path)
+                    else:
+                        copy_current = False
+                        if not copykeys:
+                            while True:
+                                useransw = raw_input(
+                                    "Copy {} to workspace "
+                                    "[y|n]: ".format(token))
+                                if useransw not in ["y", "n"]:
+                                    print("Unexpected answer {}. "
+                                          "Expected 'y' or 'n'")
+                                    continue
+                                if useransw == "y":
+                                    copy_current = True
+
+                                break
+                        else:
+                            copy_current = True
+
+                        if copy_current:
+                            keyfilename = os.path.split(token)[-1]
+                            fname = tempfile.mktemp(
+                                prefix="{}-".format(keyfilename), dir="")
+                            shutil.copy2(token, os.path.join(
+                                wsp_path, fname))
+                            new_token = fname
+                        else:
+                            new_token = token
+
+                else:
+                    new_token = keys[token]
+
+                keys[token] = new_token
+                line = line.replace(token, new_token)
+        return line
+
+    def _place_keys_in_workspace(self, workspace, copykeys):
+        wsp = self.get(workspace)
+
+        if wsp is None:
+            inventories = []
+        else:
+            inventories = wsp._get_all_inventory_files()
+        keys = {}
+        for inv_file in inventories:
+            new_lines = []
+            with open(inv_file, "r") as inv:
+                if inventories == ["inv_1", "inv_2"]:
+                    raise ValueError(inv)
+                for line in inv.readlines():
+                    new_lines.append(
+                        self._process_inventory_line(line, keys, copykeys,
+                                                     wsp.path))
+            if new_lines:
+                with open(inv_file, "w") as inv:
+                    inv.writelines(new_lines)
+
+    def export_workspace(self, workspace_name, copykeys=False, file_name=None):
         """Export content of workspace folder as gzipped tar file
 
            Replaces existing .tgz file
@@ -283,6 +361,8 @@ class WorkspaceManager(object):
                 raise exceptions.IRNoActiveWorkspaceFound()
 
         fname = file_name or workspace.name
+
+        self._place_keys_in_workspace(workspace_name, copykeys)
 
         with tarfile.open(fname + '.tgz', "w:gz") as tar:
             tar.add(workspace.path, arcname="./")
