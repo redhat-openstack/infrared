@@ -33,6 +33,7 @@ Welcome to infrared's documentation!
    contacts
    contribute
    ovb
+   rdo
    troubleshoot.rst
 
 .. toctree::
