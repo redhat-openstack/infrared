@@ -36,6 +36,10 @@
       name: "subunit-filters"
       state: present
 
+- name: Enable extra repo
+  shell: yum-config-manager --enable rhelosp-{{ test.openstack.version|int }}.0-unittest
+  when: test.openstack.version|int in [8, 9]
+
 - name: Install test dependency
   become: yes
   package:
