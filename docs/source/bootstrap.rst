@@ -146,7 +146,7 @@ Overcloud
 
 Let's depoly a `Tripleo Overcloud`_::
 
-  infrared tripleo-overcloud --deployment-files virt --version 10 --introspect yes --tagging yes --deploy --post yes
+  infrared tripleo-overcloud --deployment-files virt --version 10 --introspect yes --tagging yes --deploy yes --post yes
 
 This will deploy OSP 10 (``Newton``) overcloud from the undercloud defined previously previously.
 Given the topology defined by the `Answers File`_ earlier, the overcloud should contain:
