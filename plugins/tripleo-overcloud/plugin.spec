@@ -28,7 +28,9 @@ subparsers:
               options:
                   version:
                       type: Value
-                      required_when: "deploy == yes"
+                      required_when:
+                          - "introspect == yes"
+                          - "deploy == yes"
                       help: |
                           The product version (product == director)
                           Numbers are for OSP releases
@@ -215,3 +217,16 @@ subparsers:
                       help: |
                           Enable usage of specified mirror (for rpm, pip etc) [brq,qeos,tlv - or hostname].
                           (Specified mirror needs to proxy multiple rpm source hosts and pypi packages.)
+
+            - title: Ironic Configuration
+              options:
+                  vbmc-username:
+                      type: Value
+                      default: admin
+                      help: |
+                        VBMC username (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+                  vbmc-password:
+                      type: Value
+                      default: password
+                      help: |
+                        VBMC password (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
