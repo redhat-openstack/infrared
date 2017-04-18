@@ -69,6 +69,8 @@ To use a different image specify ``--images-url``::
 
 .. note:: building the images takes a long time and it's usually quicker to download them.
 
+See the `RDO deployment <rdo.html>`_ page for more details on how to setup RDO product.
+
 Undercloud Configuration
 ------------------------
 
