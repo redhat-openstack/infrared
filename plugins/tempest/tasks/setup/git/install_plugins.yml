@@ -26,6 +26,7 @@
     state: present
   with_dict: "{{ plugins }}"
   when: item.value.dependencies is defined
+  become: yes
 
 - block:
   # some repos have "test-requirements" files and some don't.
