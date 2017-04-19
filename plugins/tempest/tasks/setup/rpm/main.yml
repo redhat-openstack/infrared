@@ -37,10 +37,8 @@
       state: present
 
 - name: Enable extra repo
-  yum:
-    name: rhelosp-{{ test.openstack.version|int }}.0-unittest.repo
-    enablerepo: rhelosp-{{ test.openstack.version|int }}.0-unittest
-    state: present
+  become: yes
+  shell: yum-config-manager --enable rhelosp-{{ test.openstack.version|int }}.0-unittest
   when: test.openstack.version|int in [8, 9]
 
 - name: Install test dependency
