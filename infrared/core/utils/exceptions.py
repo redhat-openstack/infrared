@@ -124,6 +124,12 @@ class IRFailedToRemovePlugin(IRException):
         super(self.__class__, self).__init__(reason_str)
 
 
+class IRUnsupportedPluginType(IRException):
+    def __init__(self, plugin_type):
+        super(self.__class__, self).__init__(
+            "'{}' plugin type isn't supported".format(plugin_type))
+
+
 class IRSshException(IRException):
     def __init__(self, msg):
         message = msg

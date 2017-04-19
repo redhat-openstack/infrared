@@ -1,10 +1,11 @@
 from ConfigParser import ConfigParser
 from collections import OrderedDict
-import glob
 import os
 import shutil
 import subprocess
 import tempfile
+import urllib
+import yaml
 
 # TODO(aopincar): Add pip to the project's requirements
 import pip
@@ -12,6 +13,7 @@ import pip
 from infrared.core.utils import logger
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
+from infrared.core.utils.exceptions import IRUnsupportedPluginType
 
 DEFAULT_PLUGIN_INI = dict(
     supported_types=OrderedDict([
@@ -105,17 +107,29 @@ class InfraredPluginManager(object):
                     plugin = InfraredPlugin(plugin_path)
                     self.__class__.PLUGINS_DICT[plugin_name] = plugin
 
-    @staticmethod
-    def get_installed_plugins():
+    def get_installed_plugins(self, plugins_type=None):
         """Returns a dict with project's plugins categorized by type"""
-        plugins_dict = {}
+        plugins_dict = OrderedDict()
 
-        for plugin_dir in glob.glob(PLUGINS_DIR + '/*/'):
-            plugin = InfraredPlugin(plugin_dir)
-            if plugin.type not in plugins_dict:
-                plugins_dict[plugin.type] = [plugin.name]
+        for supported_type in self.supported_plugin_types:
+            if plugins_type:
+                if plugins_type != supported_type:
+                    continue
+                elif plugins_type not in self.supported_plugin_types:
+                    raise IRUnsupportedPluginType(plugins_type)
+
+            if not self.config.has_section(supported_type):
+                continue
             else:
-                plugins_dict[plugin.type].append(plugin.name)
+                plugins_dict[supported_type] = {}
+
+            for plugin_name in self.config.options(supported_type):
+                plugin_desc = self.PLUGINS_DICT[plugin_name].description
+
+                plugins_dict[supported_type][plugin_name] = plugin_desc
+
+        if plugins_type:
+            return plugins_dict.get(plugins_type, {})
 
         return plugins_dict
 
@@ -125,26 +139,36 @@ class InfraredPluginManager(object):
         The plugins categorized by type and each plugin name contains a boolean
         value which tells if the plugin installed or not
         """
-        all_plugins_dict = OrderedDict((plugin_type, {}) for plugin_type
-                                       in self.supported_plugin_types)
-        for installed_plugin_name in self.PLUGINS_DICT:
-            plugin = self.get_plugin(installed_plugin_name)
-            if plugin.type not in all_plugins_dict:
-                all_plugins_dict[plugin.type] = {plugin.name: True}
-            else:
-                all_plugins_dict[plugin.type][plugin.name] = True
+        type_based_plugins_dict = self.get_installed_plugins()
 
-        for plugins_type, plugins in self.get_installed_plugins().iteritems():
-            for plugin_name in plugins:
-                if plugin_name in self.PLUGINS_DICT:
-                    continue
+        for plugin_name in PLUGINS_REGISTRY.keys():
+            plugin_exists = False
+            for specific_type_plugins in type_based_plugins_dict:
+                if plugin_name in specific_type_plugins:
+                    plugin_exists = True
+                    break
 
-                if plugins_type not in all_plugins_dict:
-                    all_plugins_dict[plugins_type] = {plugin_name: False}
-                else:
-                    all_plugins_dict[plugins_type][plugin_name] = False
+            if plugin_exists:
+                continue
 
-        return all_plugins_dict
+            plugin_src = PLUGINS_REGISTRY[plugin_name]['src']
+            plugin_desc = PLUGINS_REGISTRY[plugin_name]['desc']
+
+            if plugin_src.endswith('.git'):
+                plugin_spec_url = plugin_src.replace(
+                    'https://github.com/',
+                    'https://raw.githubusercontent.com/')
+                plugin_spec_url = plugin_spec_url.replace(
+                    plugin_name + '.git',
+                    plugin_name + '/master/plugin.spec'
+                )
+
+                plugin_spec = yaml.load(urllib.urlopen(plugin_spec_url).read())
+                plugin_type = plugin_spec['plugin_type']
+
+                type_based_plugins_dict[plugin_type][plugin_name] = plugin_desc
+
+        return type_based_plugins_dict
 
     @property
     def config_file(self):
