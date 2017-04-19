@@ -1,6 +1,5 @@
 from ConfigParser import ConfigParser
 from collections import OrderedDict
-import glob
 import os
 import shutil
 import subprocess
@@ -12,6 +11,7 @@ import pip
 from infrared.core.utils import logger
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
+from infrared.core.utils.exceptions import IRUnsupportedPluginType
 
 DEFAULT_PLUGIN_INI = dict(
     supported_types=OrderedDict([
@@ -25,56 +25,69 @@ DEFAULT_PLUGIN_INI = dict(
 PLUGINS_REGISTRY = {
     'beaker': {
         'src': 'plugins/beaker',
-        'desc': 'Provision systems using Beaker'
+        'desc': 'Provision systems using Beaker',
+        'type': 'provision'
     },
     'collect-logs': {
         'src': 'plugins/collect-logs',
-        'desc': 'Collect log from all nodes in the active workspace'
+        'desc': 'Collect log from all nodes in the active workspace',
+        'type': 'other'
     },
     'foreman': {
         'src': 'plugins/foreman',
-        'desc': 'Provision systems using Foreman'
+        'desc': 'Provision systems using Foreman',
+        'type': 'provision'
     },
     'gabbi': {
         'src': 'https://github.com/rhos-infra/gabbi.git',
-        'desc': 'The gabbi test runner'
+        'desc': 'The gabbi test runner',
+        'type': 'test'
     },
     'octario': {
         'src': 'https://github.com/redhat-openstack/octario.git',
-        'desc': 'Octario test runner'
+        'desc': 'Octario test runner',
+        'type': 'test'
     },
     'openstack': {
         'src': 'plugins/openstack',
-        'desc': 'Provision systems using Ansible OpenStack modules'
+        'desc': 'Provision systems using Ansible OpenStack modules',
+        'type': 'provision'
     },
     'ospdui': {
         'src': 'plugins/ospdui',
-        'desc': 'The ospdui test runner'
+        'desc': 'The ospdui test runner',
+        'type': 'test'
     },
     'packstack': {
         'src': 'plugins/packstack',
-        'desc': 'OpenStack installation using Packstack'
+        'desc': 'OpenStack installation using Packstack',
+        'type': 'install'
     },
     'rally': {
         'src': 'plugins/rally',
-        'desc': 'Rally tests runner'
+        'desc': 'Rally tests runner',
+        'type': 'test'
     },
     'tempest': {
         'src': 'plugins/tempest',
-        'desc': 'The tempest test runner'
+        'desc': 'The tempest test runner',
+        'type': 'test'
     },
     'tripleo-overcloud': {
         'src': 'plugins/tripleo-overcloud',
-        'desc': 'Install Tripleo overcloud using a designated undercloud node'
+        'desc': 'Install Tripleo overcloud using a designated undercloud node',
+        'type': 'install'
     },
     'tripleo-undercloud': {
         'src': 'plugins/tripleo-undercloud',
-        'desc': 'Install Tripleo on a designated undercloud node'
+        'desc': 'Install Tripleo on a designated undercloud node',
+        'type': 'install'
     },
     'virsh': {
         'src': 'plugins/virsh',
         'desc':
-            'Provision virtual machines on a single Hypervisor using libvirt'
+            'Provision virtual machines on a single Hypervisor using libvirt',
+        'type': 'provision'
     },
 }
 
@@ -84,7 +97,6 @@ LOG = logger.LOG
 
 
 class InfraredPluginManager(object):
-
     PLUGINS_DICT = OrderedDict()
     SUPPORTED_TYPES_SECTION = 'supported_types'
 
@@ -105,46 +117,59 @@ class InfraredPluginManager(object):
                     plugin = InfraredPlugin(plugin_path)
                     self.__class__.PLUGINS_DICT[plugin_name] = plugin
 
-    @staticmethod
-    def get_installed_plugins():
-        """Returns a dict with project's plugins categorized by type"""
-        plugins_dict = {}
+    def get_installed_plugins(self, plugins_type=None):
+        """Returns a dict with all installed plugins
 
-        for plugin_dir in glob.glob(PLUGINS_DIR + '/*/'):
-            plugin = InfraredPlugin(plugin_dir)
-            if plugin.type not in plugins_dict:
-                plugins_dict[plugin.type] = [plugin.name]
+        The return dictionary contains all installed plugins with their
+        descriptions & categorized by plugin type.
+
+        :param plugins_type: A specific type of plugins to return
+        """
+        plugins_dict = OrderedDict()
+
+        for supported_type in self.supported_plugin_types:
+            if plugins_type:
+                if plugins_type != supported_type:
+                    continue
+                elif plugins_type not in self.supported_plugin_types:
+                    raise IRUnsupportedPluginType(plugins_type)
+
+            if not self.config.has_section(supported_type):
+                continue
             else:
-                plugins_dict[plugin.type].append(plugin.name)
+                plugins_dict[supported_type] = {}
+
+            for plugin_name in self.config.options(supported_type):
+                plugin_desc = self.PLUGINS_DICT[plugin_name].description
+
+                plugins_dict[supported_type][plugin_name] = plugin_desc
+
+        if plugins_type:
+            return plugins_dict.get(plugins_type, {})
 
         return plugins_dict
 
     def get_all_plugins(self):
-        """Returns a dict with all plugins (installed & available)
+        """Returns a dict with all available plugins
 
-        The plugins categorized by type and each plugin name contains a boolean
-        value which tells if the plugin installed or not
+        The return dictionary contains all available plugins (installed & not
+        installed) with their descriptions & categorized by plugin type.
         """
-        all_plugins_dict = OrderedDict((plugin_type, {}) for plugin_type
-                                       in self.supported_plugin_types)
-        for installed_plugin_name in self.PLUGINS_DICT:
-            plugin = self.get_plugin(installed_plugin_name)
-            if plugin.type not in all_plugins_dict:
-                all_plugins_dict[plugin.type] = {plugin.name: True}
-            else:
-                all_plugins_dict[plugin.type][plugin.name] = True
+        type_based_plugins_dict = self.get_installed_plugins()
+        installed_plugins_set = \
+            set([plugin_name for plugins_of_type in
+                 type_based_plugins_dict.values() for plugin_name in
+                 plugins_of_type])
 
-        for plugins_type, plugins in self.get_installed_plugins().iteritems():
-            for plugin_name in plugins:
-                if plugin_name in self.PLUGINS_DICT:
-                    continue
+        for plugin_name in PLUGINS_REGISTRY.keys():
+            if plugin_name not in installed_plugins_set:
+                plugin_type = PLUGINS_REGISTRY[plugin_name]['type']
+                plugin_desc = PLUGINS_REGISTRY[plugin_name]['desc']
+                if plugin_type not in type_based_plugins_dict:
+                    type_based_plugins_dict[plugin_type] = {}
+                type_based_plugins_dict[plugin_type][plugin_name] = plugin_desc
 
-                if plugins_type not in all_plugins_dict:
-                    all_plugins_dict[plugins_type] = {plugin_name: False}
-                else:
-                    all_plugins_dict[plugins_type][plugin_name] = False
-
-        return all_plugins_dict
+        return type_based_plugins_dict
 
     @property
     def config_file(self):
