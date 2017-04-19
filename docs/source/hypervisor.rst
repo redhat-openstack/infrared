@@ -50,7 +50,6 @@ What **infrared takes care of**:
     - other basic packages installed
 
       + ``libvirt``, ``libguestfs{-tools,-xfs}``, ``qemu-kvm``, ``wget``, ``virt-install``
-      + ``virt-manager``, ``xorg-x11-apps``, ``xauth``, ``virt-viewer`` possibly for debugging (or multiple ssh tunnels can be used)
 
     - **virtualization support** (VT-x/AMD-V)
 
