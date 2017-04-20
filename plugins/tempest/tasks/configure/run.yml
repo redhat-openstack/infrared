@@ -21,14 +21,14 @@
       source ~/keystonerc
       {{ config_command | default("tools/config_tempest.py") }} \
               {% if deployer_input_stat.stat.exists %}
-              --deployer-input {{ deployer_input }} \
+              --deployer-input {{ deployer_input | quote }} \
               {% endif %}
               --debug \
               -v \
               --create \
-              identity.uri $OS_AUTH_URL \
-              identity.admin_password $OS_PASSWORD \
-              scenario.img_dir ~/{{ test.dir }}/etc \
+              identity.uri "$OS_AUTH_URL" \
+              identity.admin_password "$OS_PASSWORD" \
+              scenario.img_dir {{ '~/' + test.dir + '/etc' | quote }} \
               {# https://bugzilla.redhat.com/show_bug.cgi?id=1382048 #}
               {# https://github.com/openstack/tripleo-heat-templates/commit/9b739012b71e2833e59e94cbe423cda77405c6cb#diff-2df80226aa5ac8fe81e6159bda8d4d2f #}
               {% if test.openstack.version|int < 10 %}
@@ -37,10 +37,10 @@
               {# config options #}
               {% for section_name,options in config_options.iteritems() %}
               {% for option_name,value in options.iteritems() %}
-              {{section_name}}.{{option_name}} {{value}} \
+              {{ section_name + '.' + option_name | quote }} {{ value | quote }} \
               {% endfor %}
               {% endfor %}
-              --out ~/{{ test.dir }}/etc/tempest.conf
+              --out {{ '~/' + test.dir + '/etc/tempest.conf' | quote }}
   args:
       chdir: "{{ config_dir | default('~/' + test.dir) }}"
   register: config_result
