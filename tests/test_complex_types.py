@@ -70,12 +70,36 @@ def file_root_dir(tmpdir_factory):
     return root_dir
 
 
+@pytest.fixture(scope="module")
+def dir_root_dir(tmpdir_factory):
+    """Prepares the testing dirs for dir tests"""
+    root_dir = tmpdir_factory.mktemp('complex_dir')
+
+    for dir_path in ['dir0/1.file',
+                     'arg/name/dir1/1.file',
+                     'vars/arg/name/dir2/1.file',
+                     'defaults/arg/name/dir3/1.file']:
+        # creating a file will create a dir
+        root_dir.join(dir_path).ensure()
+
+    return root_dir
+
+
+def create_file_type(root_dir, type_class):
+    return type_class("arg-name",
+                      (root_dir.join('vars').strpath,
+                       root_dir.join('defaults').strpath),
+                      None)
+
+
 @pytest.fixture
 def file_type(file_root_dir, request):
-    return request.param("arg-name",
-                         (file_root_dir.join('vars').strpath,
-                          file_root_dir.join('defaults').strpath),
-                         None)
+    return create_file_type(file_root_dir, request.param)
+
+
+@pytest.fixture
+def dir_type(dir_root_dir, request):
+    return create_file_type(dir_root_dir, request.param)
 
 
 @pytest.mark.parametrize('file_type', [cli.FileType], indirect=True)
@@ -128,3 +152,21 @@ def test_list_of_var_files(file_root_dir, file_type, monkeypatch):
     assert file_type.resolve('file3.yml,vars/arg/name/file3') == [
         file_root_dir.join('vars/arg/name/file3.yml').strpath,
         file_root_dir.join('vars/arg/name/file3.yml').strpath]
+
+
+@pytest.mark.parametrize('dir_type', [cli.VarDirType], indirect=True)
+def test_dir_type_resolve(dir_root_dir, dir_type, monkeypatch):
+    """Verifies the file complex type"""
+    # change cwd to the temp dir
+    monkeypatch.setattr("os.getcwd", lambda: dir_root_dir.strpath)
+
+    assert dir_type.resolve('dir0') == dir_root_dir.join(
+        'dir0/').strpath
+    assert dir_type.resolve('dir1') == dir_root_dir.join(
+        'arg/name/dir1/').strpath
+    assert dir_type.resolve('dir2') == dir_root_dir.join(
+        'vars/arg/name/dir2/').strpath
+    assert dir_type.resolve('dir3') == dir_root_dir.join(
+        'defaults/arg/name/dir3/').strpath
+    with pytest.raises(exceptions.IRFileNotFoundException):
+        dir_type.resolve('dir4')
