@@ -50,7 +50,7 @@ subparsers:
                         - pike
 
                   deployment-files:
-                      type: Value
+                      type: VarDir
                       help: |
                           The absolute path to the folder containing the templates of the overcloud deployment.
                           Please see `settings/installer/ospd/deployment/example` as reference.
