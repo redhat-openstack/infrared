@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e537f4c3_37ae6e0f",
+        "filename": "plugins/tempest/tasks/configure/run.yml",
+        "patchSetId": 11
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2017-04-21T13:53:42Z",
+      "side": 1,
+      "message": "if you are here in this else branch:\n- either it\u0027s \u003c10 OR there were no remove.options\n\n- yet warning to user should be when it is \u003c10 AND there are remove.options\n\nso i guess you move that length \u003e 0 condition from first if,\nunder here like:\n\n{% if 11 %}\n  {% append arguments %}\n{% elseif test.get\u0027remove\u0027..|length \u003e 0 %}\n  {# else means it\u0027s not 11, if length means user provided remove opts #}\n  {% set remove_action \u003d \u0027warn\u0027 %}\n{% endif %}\n\n\nthough you cannot produce outer ansible warning here from inside template i guess,\n\nso maybe it would be better placed above this shell step/task\n\n  - debug: msg\u003d\u0027warning - test.remove.options unsupported in OSP \u003c11\u0027\n    when: 11 \u0026\u0026 |length \u003e 0\n\n\nand leaving here just this\n\n  if 11:\n    for\n      for\n         --remove ...\n      endfor\n    endfor",
+      "revId": "89ebd64978386ae2b5e342463947ef02e02581f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
