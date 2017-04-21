@@ -464,6 +464,9 @@ class ListValue(ComplexType):
 class FileType(ComplexType):
     """Transforms a value to the absolute path"""
 
+    # specifies whather the yaml files should be searched
+    SEARCH_YAML = True
+
     def get_check_locations(self, value):
         """
         Get the file names of possible location of the file.
@@ -473,14 +476,18 @@ class FileType(ComplexType):
         return [value,
                 os.path.join(os.path.join(*self.arg_name.split('-')), value)]
 
+    def validate(self, file_path):
+        """Validate path"""
+        return os.path.isfile(os.path.abspath(file_path))
+
     def resolve(self, value):
         pathes = self.get_check_locations(value)
         # check also for files with yml extension
-        pathes.extend([path + '.yml' for path in pathes])
+        if self.SEARCH_YAML:
+            pathes.extend([path + '.yml' for path in pathes])
 
         target_file = next(
-            (file_path for file_path in pathes if os.path.isfile(
-                os.path.abspath(file_path))),
+            (file_path for file_path in pathes if self.validate(file_path)),
             None)
 
         if target_file is None:
@@ -523,6 +530,22 @@ class VarFileType(FileType):
         return result
 
 
+class VarDirType(VarFileType):
+    """Represents the directory on a disk.
+
+    Looks for a file in the following locations:
+        * in the given file_name location. Can be absolute or relative
+        * arg/name/<value>/
+        * plugin_dir/vars/arg/name/<value>/
+        * plugin_dir/defaults/arg/name/<value>/
+    """
+    SEARCH_YAML = False
+
+    def validate(self, file_path):
+        """Validate path"""
+        return os.path.isdir(os.path.abspath(file_path))
+
+
 class ListFileType(VarFileType):
     """
     The list of var files. Files names should be separated
@@ -555,5 +578,6 @@ COMPLEX_TYPES = {
     'IniType': IniType,
     'FileValue': FileType,
     'VarFile': VarFileType,
+    'VarDir': VarDirType,
     'ListOfVarFiles': ListFileType
 }
