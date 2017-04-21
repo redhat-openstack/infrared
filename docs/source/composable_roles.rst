@@ -148,7 +148,7 @@ Below is an example of the controller default role::
         host_name_format: 'controller-%index%'
 
         # condition can be used to include or disable services. For example:
-        #  - "{% if install.version |int < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+        #  - "{% if install.version |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
         services:
             - OS::TripleO::Services::CACerts
             - OS::TripleO::Services::CephClient

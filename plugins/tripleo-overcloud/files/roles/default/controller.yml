@@ -16,23 +16,23 @@ controller_role:
     host_name_format: 'controller-%index%'
 
     # condition can be used to include or disable services. For example:
-    #  - "{% if install.version |int < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+    #  - "{% if install.version |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
     services:
         - OS::TripleO::Services::CACerts
-        - "{% if install.version |int > 10 %}OS::TripleO::Services::CephMds{% endif %}"
+        - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::CephMds{% endif %}"
         - OS::TripleO::Services::CephMon
         - OS::TripleO::Services::CephExternal
-        - "{% if install.version |int > 10 %}OS::TripleO::Services::CephRbdMirror{% endif %}"
+        - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::CephRbdMirror{% endif %}"
         - OS::TripleO::Services::CephRgw
         - OS::TripleO::Services::CinderApi
         - OS::TripleO::Services::CinderBackup
         - OS::TripleO::Services::CinderScheduler
         - OS::TripleO::Services::CinderVolume
-        - "{% if install.version |int < 11 %}OS::TripleO::Services::Core{% endif %}"
+        - "{% if install.version |openstack_release < 11 %}OS::TripleO::Services::Core{% endif %}"
         - OS::TripleO::Services::Kernel
         - OS::TripleO::Services::Keystone
         - OS::TripleO::Services::GlanceApi
-        - "{% if install.version |int < 11 %}OS::TripleO::Services::GlanceRegistry{% endif %}"
+        - "{% if install.version |openstack_release < 11 %}OS::TripleO::Services::GlanceRegistry{% endif %}"
         - OS::TripleO::Services::HeatApi
         - OS::TripleO::Services::HeatApiCfn
         - OS::TripleO::Services::HeatApiCloudwatch
@@ -57,8 +57,8 @@ controller_role:
         - OS::TripleO::Services::NovaScheduler
         - OS::TripleO::Services::NovaConsoleauth
         - OS::TripleO::Services::NovaVncProxy
-        - "{% if install.version |int > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
-        - "{% if install.version |int > 10 %}OS::TripleO::Services::PankoApi{% endif %}"
+        - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
+        - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::PankoApi{% endif %}"
         - OS::TripleO::Services::Ntp
         - OS::TripleO::Services::SwiftProxy
         - OS::TripleO::Services::SwiftStorage
@@ -95,5 +95,5 @@ controller_role:
         - OS::TripleO::Services::OpenDaylightOvs
         - OS::TripleO::Services::SensuClient
         - OS::TripleO::Services::FluentdClient
-        - "{% if install.version |int < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
-        - "{% if install.version |int > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
+        - "{% if install.version |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+        - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
