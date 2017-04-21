@@ -534,6 +534,22 @@ class VarFileType(FileType):
         return result
 
 
+class VarDirType(VarFileType):
+    """Represents the directory on a disk.
+
+    Looks for a file in the following locations:
+        * in the given file_name location. Can be absolute or relative
+        * arg/name/<value>/
+        * plugin_dir/vars/arg/name/<value>/
+        * plugin_dir/defaults/arg/name/<value>/
+    """
+    SEARCH_YAML = False
+
+    def validate(self, file_path):
+        """Validate path"""
+        return os.path.isdir(os.path.abspath(file_path))
+
+
 class ListFileType(VarFileType):
     """
     The list of var files. Files names should be separated
@@ -566,5 +582,6 @@ COMPLEX_TYPES = {
     'IniType': IniType,
     'FileValue': FileType,
     'VarFile': VarFileType,
+    'VarDir': VarDirType,
     'ListOfVarFiles': ListFileType
 }
