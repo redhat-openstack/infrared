@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85a66b03_7f4bb5d1",
+        "filename": "plugins/tempest/tasks/configure/run.yml",
+        "patchSetId": 10
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2017-04-21T10:00:21Z",
+      "side": 1,
+      "message": "please move this whole section you add above this ^ line,\notherwise \u0027--remove\u0027 opts will not be appended to config command, but considered as commands on their own\n(see there is no backslash \\ at the end of prev. line - it\u0027s expected to be LAST line of the whole command, so just put your block above it, after the last endfor)",
+      "revId": "f263bf1d42c6874e3ed8b43431b05fcfb9ef284d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eebfd214_1f5590b7",
+        "filename": "plugins/tempest/tasks/configure/run.yml",
+        "patchSetId": 10
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2017-04-21T10:00:21Z",
+      "side": 1,
+      "message": "sorry for confusing tip on irc, i missed that for this warning, the condition needs to be \u0027\u003c11 \u0026\u0026 remove-opts-specified\u0027     (test.get(\u0027remove\u0027, {})|length \u003e 0\u0027)\n\njust else is not enough here,\n\nthough previous patchset version would still not work as expected,\nas either it would be \u0027\u003e\u003d11\u0027 (and so never go into elif),\nor status would never be set, and so \u0027elif not status\u0027 would always evaluate to true when \u003c11 anyway",
+      "revId": "f263bf1d42c6874e3ed8b43431b05fcfb9ef284d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
