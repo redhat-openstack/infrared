@@ -76,7 +76,7 @@ Overcloud Strorage
 
 .. _`tripleo-undercloud`: tripleo-undercloud.html
 .. _`virsh`: virsh.html
-.. _`ovb`: missing
+.. _`ovb`: ovb.html
 
 Composable Roles
 ----------------
