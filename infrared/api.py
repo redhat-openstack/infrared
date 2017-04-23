@@ -6,7 +6,7 @@ import logging
 import yaml
 
 from infrared import SHARED_GROUPS
-from infrared.core import execute
+from infrared.core import execute, version
 from infrared.core.inspector.inspector import SpecParser
 from infrared.core.services import CoreServices
 from infrared.core.settings import VarsDictManager
@@ -158,6 +158,8 @@ class SpecManager(object):
         # create entry point
         self.parser = argparse.ArgumentParser(
             description='infrared entry point')
+        self.parser.add_argument("--version", action='version',
+                                 version=version.version_string())
         self.root_subparsers = self.parser.add_subparsers(dest="subcommand")
         self.spec_objects = {}
 
