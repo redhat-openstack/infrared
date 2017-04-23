@@ -15,11 +15,10 @@
             - pytest
 
       - name: switch ui widgets for 11
-        shell: ./osp_switcher.sh
+        shell: "./osp_switcher.sh {{ test.openstack.version|int }}"
         args:
             chdir: "{{ setup.ospdui.dir }}/webui/ospdui/widget_containers/"
             executable: /bin/bash
-        when: test.openstack.version|int == 11
         tags: skip_ansible_lint
 
       - name: run ospdui tests

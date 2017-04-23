@@ -1,9 +1,9 @@
 plugin_type: provision
-description: Provisioner virtual machines on a single Hypervisor using libvirt
+description: Provision virtual machines on a single Hypervisor using libvirt
 subparsers:
     virsh:
         # FIXME(yfried): duplicates "description"
-        help: Provisioner virtual machines on a single Hypervisor using libvirt
+        help: Provision virtual machines on a single Hypervisor using libvirt
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Hypervisor

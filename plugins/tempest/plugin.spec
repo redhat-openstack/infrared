@@ -34,7 +34,7 @@ subparsers:
                       help: |
                           The setup type for tests and for the tempestconf tool.
                           __LISTYAMLS__
-                      default: git
+                      default: rpm
                   deployer-input-file:
                       type: Value
                       help: |

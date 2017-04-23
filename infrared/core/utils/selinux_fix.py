@@ -53,6 +53,7 @@ def copy_system_selinux(force=True):
             raise new_error
         import selinux  # noqa
 
+
 if __name__ == '__main__':
     copy_system_selinux()
     # import selinux  # noqa

@@ -79,8 +79,8 @@ class IRWorkspaceMissing(IRException):
 
 class IRWorkspaceUndefined(IRConfigurationException):
     def __init__(self):
-        message = "'workspaces' path undefined in 'infrared.cfg'. If you wish " \
-                  "to use 'workspaces' feature, please define it. Use " \
+        message = "'workspaces' path undefined in 'infrared.cfg'. If you " \
+                  "wish to use 'workspaces' feature, please define it. Use " \
                   "'infrared.cfg.example as template."
         super(IRWorkspaceUndefined, self).__init__(message)
 
@@ -122,6 +122,12 @@ class IRFailedToAddPlugin(IRException):
 class IRFailedToRemovePlugin(IRException):
     def __init__(self, reason_str):
         super(self.__class__, self).__init__(reason_str)
+
+
+class IRUnsupportedPluginType(IRException):
+    def __init__(self, plugin_type):
+        super(self.__class__, self).__init__(
+            "'{}' plugin type isn't supported".format(plugin_type))
 
 
 class IRSshException(IRException):

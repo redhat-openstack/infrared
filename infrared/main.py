@@ -217,19 +217,21 @@ class PluginManagerSpec(api.SpecObject):
         table_headers = ["Type", "Name"]
         installed_mark = ' ' * (len('Installed') / 2) + '*'
 
-        all_plugins_dict = self.plugin_manager.get_all_plugins()
+        plugins_dict = \
+            self.plugin_manager.get_all_plugins() \
+            if print_available \
+            else self.plugin_manager.get_installed_plugins()
 
-        for plugins_type, plugins in all_plugins_dict.iteritems():
-            all_plugins_list = []
-            installed_plugins_list = []
+        for plugins_type, plugins in plugins_dict.iteritems():
+            installed_plugins_list = \
+                self.plugin_manager.get_installed_plugins(plugins_type).keys()
             plugins_names = plugins.keys()
             plugins_names.sort()
-            for plugin_name in plugins_names:
-                all_plugins_list.append(plugin_name)
-                if plugins[plugin_name]:
-                    installed_plugins_list.append(plugin_name)
 
             if print_available:
+                all_plugins_list = []
+                for plugin_name in plugins_names:
+                    all_plugins_list.append(plugin_name)
                 installed_plugins_mark_list = \
                     [installed_mark if plugin_name in installed_plugins_list
                      else '' for plugin_name in all_plugins_list]
