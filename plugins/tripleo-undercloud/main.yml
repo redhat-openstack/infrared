@@ -8,6 +8,9 @@
   include: "{{ install_undercloud | default('undercloud.yml') }}"
   when: install.version|default('')
 
+- name: Including post provision tasks
+  include: "{{ undercloud_post | default('post.yml') }}"
+
 - name: Create an undercloud backup image (for quickstart)
   include: "{{ install_backup | default('backup.yml') }}"
   when: install.quickstart.backup|default('')
