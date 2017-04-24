@@ -19,7 +19,21 @@ subparsers:
                        type: Value
                        help: |
                            The Openstack under test version.
-                       choices: ['5', '6', '7', '8', '9', '10', '11', '12']
+                       Numbers are for OSP releases
+                          Names are for RDO releases
+                       choices:
+                           - "7"
+                           - "8"
+                           - "9"
+                           - "10"
+                           - "11"
+                           - "12"
+                           - kilo
+                           - liberty
+                           - mitaka
+                           - newton
+                           - ocata
+                           - pike
                        required: yes
                   openstack-installer:
                        type: Value
