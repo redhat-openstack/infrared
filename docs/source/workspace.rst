@@ -94,9 +94,10 @@ Export:
         Workspace example1 exported to /tmp/look/at/my/workspace
 
 Import:
-    Load a previously exported workspace::
+    Load a previously exported workspace (local or remote)::
 
-        infrared workspace import /tmp/look/at/my/newworkspace
+        infrared workspace import /tmp/look/at/my/newworkspace.tgz
+        infrared workspace import http://free.ir/workspaces/newworkspace.tgz
 
         Workspace newworkspace was imported
 

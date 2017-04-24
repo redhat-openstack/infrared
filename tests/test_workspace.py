@@ -220,8 +220,8 @@ def test_workspace_import(workspace_manager_fixture, test_workspace,
 
 
 def test_workspace_import_no_file(workspace_manager_fixture):
-    with pytest.raises(IOError):
-        workspace_manager_fixture.import_workspace("zooooo.tgz", None)
+    with pytest.raises(exceptions.IRFailedToImportWorkspace):
+        workspace_manager_fixture.import_workspace("zoooo.tgz", None)
 
 
 def test_workspace_import_workspace_exists(workspace_manager_fixture, mocker):
@@ -231,10 +231,12 @@ def test_workspace_import_workspace_exists(workspace_manager_fixture, mocker):
     mock_os.path.exists.return_value = True
     back_get = workspace_manager_fixture.get
     workspace_manager_fixture.get = lambda x: test_workspace
-    with pytest.raises(exceptions.IRWorkspaceExists):
-        workspace_manager_fixture.import_workspace("zooooo.tgz", twspc.name)
 
-    workspace_manager_fixture.get = back_get
+    try:
+        with pytest.raises(exceptions.IRWorkspaceExists):
+            workspace_manager_fixture.import_workspace("zoooo.tgz", twspc.name)
+    finally:
+        workspace_manager_fixture.get = back_get
 
 
 def test_workspace_export(workspace_manager_fixture, test_workspace, tmpdir,
