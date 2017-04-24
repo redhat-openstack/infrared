@@ -162,3 +162,12 @@ subparsers:
                       help: |
                           Undercloud Upgrade.
                           Note: Currently, there is upgrade possibility from version 9 to version 10 only.
+
+            - title: Undercloud Update
+              options:
+                  minor-updates:
+                      type: Bool
+                      help: |
+                          Minor update of Undercloud
+                          Note: Currently, update with InfraRed is supported just for version 11.
+                      default: no
