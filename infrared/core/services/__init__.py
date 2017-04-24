@@ -3,6 +3,7 @@
 Stores and resolves all the dependencies for the services.
 """
 import os
+import shutil
 
 try:  # py2
     import ConfigParser
@@ -61,6 +62,7 @@ class CoreServices(object):
 
         if not os.path.isdir(INFRARED_CONF_DIR):
             os.mkdir(INFRARED_CONF_DIR)
+            cls._migrate_old_confs()
 
         # if file not found no exception will be raised
         config.read(file_path)
@@ -69,6 +71,25 @@ class CoreServices(object):
             os.path.abspath(config.get(section, 'plugins_conf_file')),
             config.get(section, "plugins_dir")
         )
+
+    # TODO(yfried): remove this when stop supporting old conf
+    @staticmethod
+    def _migrate_old_confs():
+        """Move old conf_obj to new conf dir and set symlink in old place. """
+
+        # TODO(yfried): remove this block when stop supporting old conf
+        old_conf_objs = [("infrared.cfg", "infrared.cfg"),
+                         (".workspaces", "workspaces"),
+                         (".plugins.ini", "plugins.ini")]
+
+        for conf_obj in old_conf_objs:
+            if not os.path.exists(conf_obj[0]):
+                continue
+            LOG.warn("conf object {} found. Migrating to {}".
+                     format(conf_obj[0], INFRARED_CONF_DIR))
+            dest = os.path.join(INFRARED_CONF_DIR, conf_obj[1])
+            shutil.move(conf_obj[0], dest)
+            os.symlink(dest, conf_obj[0])
 
     @classmethod
     def _configure(cls, workspace_dir, plugins_conf, plugins_dir):
