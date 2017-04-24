@@ -10,7 +10,7 @@ Run is broken into the following stages. Omitting any of the flags (or setting i
 
 * ``--introspect`` the overcloud nodes
 * ``--tag`` overcloud nodes with proper flavors
-* ``--deploy`` overcloud of given ``--version``(see below)
+* ``--deploy`` overcloud of given ``--version`` (see below)
 * Execute ``--post`` installation steps (like creating a public network - see below)
 
 Deployment Description
@@ -47,7 +47,7 @@ Overcloud Options
            - /usr/share/openstack-tripleo-heat-templates/environments/services/sahara.yaml
 
 * ``--overcloud-script``: Customize the script that will deploy the overcloud.
-    A path to a *.sh file containing ``openstack overcloud deploy`` command.
+    A path to a ``*.sh`` file containing ``openstack overcloud deploy`` command.
     This is for advance users.
 
 
@@ -57,7 +57,7 @@ Overcloud Public Network
 * ``--public-subnet``:
     Path to file containing different values for the subnet of the network above.
 * ``--public-vlan``:
-    Set this to "yes" if overcloud's external network is on a VLAN that's unreachable from the
+    Set this to ``yes`` if overcloud's external network is on a VLAN that's unreachable from the
     undercloud. This will configure network access from UnderCloud to overcloud's API/External(floating ips)
     network, creating a new VLAN interface connected to ovs's ``br-ctlplane`` bridge.
     |NOTE: If your UnderCloud's network is already configured properly, this could disrupt it, making overcloud API unreachable
@@ -67,8 +67,8 @@ Overcloud Public Network
 Overcloud Strorage
 ------------------
 * ``--storage-external``: Bool
-    If `no`, the overcloud will deploy and manage the storage nodes.
-    |If `yes` the overcloud will connect to an external, per-existing storage service.
+    If ``no``, the overcloud will deploy and manage the storage nodes.
+    If ``yes`` the overcloud will connect to an external, per-existing storage service.
 * ``--storage-backend``:
     The type of the storage service used as backend.
 * ``--storage-config``:

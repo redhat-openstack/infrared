@@ -56,9 +56,9 @@ Lets examine the structure of topology file (located: var/topology/nodes/control
             - overcloud_nodes
             - network
 
-For more topology file examples, please check out the default `available nodes <virsh>`_
+For more topology file examples, please check out the default `available nodes <virsh_nodes>`_
 
-.. _`virsh`: https://github.com/rehdat-openstack/infrared/tree/master/plugins/virsh/defaults/topology/nodes
+.. _`virsh_nodes`: https://github.com/rehdat-openstack/infrared/tree/master/plugins/virsh/defaults/topology/nodes
 .. _`openstack`: https://github.com/rehdat-openstack/infrared/tree/master/plugins/openstack/defaults/topology/nodes
 
 To ovverride default values in the topology node_dict the extra vars can be provided through the CLI. For example,

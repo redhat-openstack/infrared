@@ -118,10 +118,11 @@ To deploy non-supported roles, a new folder should be created in the ``<plugin_d
 Any roles files that differ (e.g. service list) from the defaults should be put there. That folder is then can be referenced with the ``--role-files=<folder name>`` argument.
 
 Role Description
-=================
+================
 
 All the custom and defaults role descriptions are stored in the ``<plugin_dir>/files/roles`` folder.
 Every role file holds the following information:
+
   - ``name`` - name of the role
   - ``resource_registry`` - all the resources required for a role.
   - ``flavor`` - the flavor to use for a role
