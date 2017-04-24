@@ -4,19 +4,32 @@
   any_errors_fatal: true
   tasks:
       - fail:
-            msg: "Please provide either --version OR --images-task OR --quickstart-{backup|restore} OR --upgrade"
+            msg: "Please provide either --version OR --images-task OR --quickstart-{backup|restore} OR --upgrade OR --update"
         when:
             - not install.version|default('')
             - not install.images.task|default('')
             - not install.quickstart.backup|default('')
             - not install.quickstart.restore|default('')
             - not install.upgrade|default('')
+            - not install.update|default('')
 
       - fail:
             msg: "Please provide either --version OR --upgrade, not both"
         when:
             - install.version|default('')
             - install.upgrade|default('')
+
+      - fail:
+            msg: "Please provide either --version OR --update, not both"
+        when:
+            - install.version|default('')
+            - install.update|default('')
+
+      - fail:
+            msg: "Please provide either --upgrade OR --update, not both"
+        when:
+            - install.version|default('')
+            - install.update|default('')
 
       - fail:
             msg: "Image task 'rpm' is not supported for product version '{{ install.version }}'. Use another image task."

@@ -1,0 +1,55 @@
+---
+- name: set temp_dir
+  set_fact:
+    TMP_IMAGE_DIR: "/tmp/TEMP_IMAGES"
+
+- name: create temp directory
+  file:
+    dest: "{{ TMP_IMAGE_DIR }}"
+    mode: 0755
+    owner: "{{ install.user.name }}"
+    group: "{{ install.user.name }}"
+    state: directory
+
+- name: untar images to {{ TMP_IMAGE_DIR }}
+  shell: |
+    tar xvf {{ item }}
+  args:
+    chdir: "{{ TMP_IMAGE_DIR }}"
+  register: new_images
+  with_items:
+    - "/usr/share/rhosp-director-images/ironic*latest-{{ undercloud_version }}*tar"
+    - "/usr/share/rhosp-director-images/overcloud*latest-{{ undercloud_version }}*tar"
+
+- name: debug updated images
+  debug:
+    msg: "{{ new_images }}"
+
+- name: update images in glance
+  register: image_upload
+  shell: |
+    source ~/stackrc && openstack overcloud image upload --update-existing
+  args:
+    chdir: "{{ TMP_IMAGE_DIR }}"
+
+- name: debug images upload
+  debug:
+    msg: "{{ image_upload }}"
+
+- name: update deployment kernel and ramdisk
+  shell: |
+    source ~/stackrc && openstack baremetal configure boot
+  args:
+    chdir: "{{ TMP_IMAGE_DIR }}"
+  register: kr_update
+
+- name: debug kernel/ramdisk update
+  debug:
+    msg: "{{ kr_update }}"
+
+- name: remove {{ TMP_IMAGE_DIR }}
+  become: True
+  file:
+    dest: "{{ TMP_IMAGE_DIR }}"
+    state: absent
+  ignore_errors: True
