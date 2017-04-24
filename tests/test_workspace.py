@@ -213,14 +213,16 @@ def test_workspace_import_no_file(workspace_manager_fixture):
 def test_workspace_import_workspace_exists(workspace_manager_fixture, mocker):
     twspc = workspace_manager_fixture.create("new_t_wspc")
     workspace_manager_fixture.activate(twspc.name)
-    mock_os = mocker.patch.object(workspaces, "os")
-    mock_os.path.exists.return_value = True
+    mock_urllib = mocker.patch.object(workspaces, "urllib")
+    mock_urllib.urlretrieve.return_value = ("zoooo.tgz",)
     back_get = workspace_manager_fixture.get
     workspace_manager_fixture.get = lambda x: test_workspace
-    with pytest.raises(exceptions.IRWorkspaceExists):
-        workspace_manager_fixture.import_workspace("zooooo.tgz", twspc.name)
 
-    workspace_manager_fixture.get = back_get
+    try:
+        with pytest.raises(exceptions.IRWorkspaceExists):
+            workspace_manager_fixture.import_workspace("zoooo.tgz", twspc.name)
+    finally:
+        workspace_manager_fixture.get = back_get
 
 
 def test_workspace_export(workspace_manager_fixture, test_workspace, tmpdir):

@@ -3,6 +3,7 @@ import os
 import shutil
 import tarfile
 import time
+import urllib
 
 from ansible.parsing.dataloader import DataLoader
 from ansible import inventory
@@ -290,24 +291,35 @@ class WorkspaceManager(object):
         print("Workspace {} is exported to file {}.tgz".format(workspace.name,
                                                                fname))
 
-    def import_workspace(self, file_name, workspace_name=None):
+    def import_workspace(self, workspace_tgz, workspace_name=None):
         """Import workspace from gzipped tar file
 
-           Workspace name should be unique
+        Workspace name should be unique
+        :param workspace_tgz: Path/URL to a workspace tgz
+        :param workspace_name: Workspace name (same as the tgz file basename
+        if not given)
         """
+        retrieved_workspace_tgz = urllib.urlretrieve(workspace_tgz)[0]
 
-        if not os.path.exists(file_name):
-            raise IOError("File {} not found.".format(file_name))
         if workspace_name is None:
-            basename = os.path.basename(file_name)
+            basename = os.path.basename(retrieved_workspace_tgz)
             workspace_name = ".".join(basename.split(".")[:-1])
 
         new_workspace = self.create(name=workspace_name)
 
         LOG.debug("Importing workspace from file {} to path {}".format(
-            file_name, new_workspace.path))
-        with tarfile.open(file_name) as tar:
-            tar.extractall(path=new_workspace.path)
+            retrieved_workspace_tgz, new_workspace.path))
+
+        try:
+            with tarfile.open(retrieved_workspace_tgz) as tar:
+                tar.extractall(path=new_workspace.path)
+        except tarfile.ReadError as e:
+            raise exceptions.IRFailedToImportPlugin(
+                "{} tar{}".format(retrieved_workspace_tgz, e.message))
+
+        # Remove temporary tgz file if created/downloaded
+        if workspace_tgz != retrieved_workspace_tgz:
+            os.remove(retrieved_workspace_tgz)
 
     def is_active(self, name):
         """Checks if workspace is active."""
