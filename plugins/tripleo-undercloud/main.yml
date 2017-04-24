@@ -23,6 +23,10 @@
   include: "{{ upgrade_undercloud | default('upgrade.yml') }}"
   when: install.upgrade|default('')
 
+- name: Undercloud Update
+  include: "{{ update_undercloud | default('update.yml') }}"
+  when: install.update|default('')
+
 - name: Setup Overcloud images on the undercloud
   include: "{{ install_images | default('images.yml') }}"
   when: install.images.task|default('')

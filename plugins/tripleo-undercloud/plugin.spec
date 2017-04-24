@@ -162,3 +162,11 @@ subparsers:
                       help: |
                           Undercloud Upgrade.
                           Note: Currently, there is upgrade possibility from version 9 to version 10 only.
+
+            - title: Undercloud Update
+              options:
+                  update:
+                      type: Bool
+                      help: |
+                          Minor update of Undercloud
+                          Note: Currently, there is upgrade possibility for version 11 only.

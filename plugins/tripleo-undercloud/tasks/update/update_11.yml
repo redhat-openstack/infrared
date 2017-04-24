@@ -1,0 +1,65 @@
+---
+- name: stop openstack service on undercloud
+  become: True
+  shell: |
+    sudo systemctl stop 'openstack-*'
+
+- name: stop neutron services on undercloud
+  become: True
+  shell: |
+    sudo systemctl stop 'neutron-*'
+
+- name: update python-tripleoclient package
+  become: True
+  yum:
+    name: "python-tripleoclient"
+    state: latest
+
+- name: Undercloud update
+  shell: "openstack undercloud upgrade &> undercloud_update.log"
+
+- name: check undercloud update status
+  shell: |
+    grep -E 'Undercloud install complete.|Undercloud upgrade complete.' undercloud_update.log
+  register: upd_success
+  ignore_errors: True
+
+- name: Failed to update undercloud
+  fail:
+    msg: Failed to update underclcoud. For more details check {{ UndercloudUpdateLog }}
+  when: "{{ upd_success|failed }}"
+
+- name: Successfull undercloud update
+  debug:
+    msg: Successfully updated undercloud RHOS-{{ undercloud_version }} to build '{{ install.build }}'
+
+- name: update images
+  include: tasks/update/update_images.yml
+
+- name: Reboot the Undercloud
+  become: true
+  shell: "sleep 2 && shutdown -r now"
+  async: 1
+  poll: 0
+  ignore_errors: true
+  tags: undercloud_reboot
+
+- block:
+      - name: waiting for the undercloud to be available
+        wait_for:
+            port: 22
+            host: "{{ ansible_ssh_host }}"
+            search_regex: OpenSSH
+            delay: 10
+        delegate_to: localhost
+        when: "'hypervisor' not in groups"
+
+      - name: waiting for the undercloud to be available
+        become: no
+        wait_for:
+            host: "{{ ansible_ssh_host }}"
+            search_regex: OpenSSH
+            delay: 10
+        delegate_to: hypervisor
+        when: "'hypervisor' in groups"
+  tags: undercloud_reboot
