@@ -21,14 +21,14 @@
     - name: create Test List - Whitelist for "{{ test_suite }}"
       lineinfile:
           create: yes
-          dest: "{{ test.dir }}/white_list"
+          dest: "{{ test.dir }}/white_list_{{ test_suite }}"
           line: "{{ item }}"
           regexp: "^{{ item }}$"
       with_items: "{{ test_dict.whitelist | default([]) }}"
 
     - name: add whitelist invocation
       set_fact:
-          whitelistfile: "--whitelist_file white_list"
+          whitelistfile: "--whitelist_file white_list_{{ test_suite }}"
 
   when: test_dict.whitelist is defined and test_dict.whitelist
 
@@ -36,14 +36,14 @@
     - name: create Test List - Blacklist for "{{ test_suite }}"
       lineinfile:
           create: yes
-          dest: "{{ test.dir }}/black_list"
+          dest: "{{ test.dir }}/black_list_{{ test_suite }}"
           line: "{{ item }}"
           regexp: "^{{ item }}$"
       with_items: "{{ test_dict.blacklist | default([]) }}"
 
     - name: add blacklist invocation
       set_fact:
-          blacklistfile: "--blacklist_file black_list"
+          blacklistfile: "--blacklist_file black_list_{{ test_suite }}"
   when: test_dict.blacklist is defined and test_dict.blacklist
 
 - name: add regex invoke for "{{ test_suite }}"
