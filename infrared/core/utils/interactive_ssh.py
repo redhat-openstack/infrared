@@ -66,6 +66,14 @@ def ssh_to_host(hostname, remote_command=None):
     cmd_fields["host"] = _get_magic_var(host, "remote_addr")
 
     priv_key = _get_magic_var(host, "private_key_file")
+    # NOTE(yfried):
+    # ssh client needs key to be in the directory you're running one from
+    # ('ssh -i id_rsa ...') or to be provided by absolute path.
+    # assume paths are relative to inventory file.
+    abspath = os.path.join(os.path.abspath(os.path.dirname(inventory_file)),
+                           priv_key)
+    priv_key = abspath if os.path.exists(abspath) else priv_key
+
     cmd_fields["priv_key"] = "-i {}".format(priv_key if priv_key else "")
 
     cmd_fields["comm_args"] = _get_magic_var(host, "ssh_common_args")
