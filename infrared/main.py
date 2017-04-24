@@ -64,7 +64,7 @@ class WorkspaceManagerSpec(api.SpecObject):
         importer_parser.add_argument("filename", help="Archive file name.")
         importer_parser.add_argument(
             "-n", "--name", dest="workspacename",
-            help="Workspace name to import with."
+            help="Workspace name to import with. "
             "If not specified - file name will be used.")
 
         # exort settings
