@@ -1,0 +1,37 @@
+- name: Undercloud Update
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tags: upgrade
+  vars:
+      rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+
+  pre_tasks:
+      - name: Check for /etc/rhosp-release
+        stat:
+            path: "/etc/rhosp-release"
+        register: rhosp_release_file
+
+      - name: Get /etc/rhosp-release content
+        command: cat /etc/rhosp-release
+        register: rhosp_release_content
+        when: rhosp_release_file.stat.exists
+
+      - name: Set undercloud_version from /etc/rhosp-release output
+        set_fact:
+            undercloud_version: "{{ rhosp_release_content.stdout | regex_replace('^Red Hat OpenStack Platform release ([0-9]+)\\.\\d+\\s.*$', '\\1') }}"
+        when: rhosp_release_file.stat.exists
+
+      - name: Validation
+        include: "tasks/update/validation.yml"
+        tags: validation
+
+  roles:
+      - role: rhos-release
+        release: "{{ undercloud_version|int }}"
+        build: "{{ install.build }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        tags: update
+  tasks:
+      - name: "Minor Update of RHOS {{ undercloud_version }} to build '{{ install.build }}'"
+        include: "tasks/update/update_{{ (undercloud_version|int) }}.yml"

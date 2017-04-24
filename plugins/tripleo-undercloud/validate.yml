@@ -11,12 +11,14 @@
             - not install.quickstart.backup|default('')
             - not install.quickstart.restore|default('')
             - not install.upgrade|default('')
+            - not install.update|default('')
 
       - fail:
             msg: "Please provide either --version OR --upgrade, not both"
         when:
             - install.version|default('')
             - install.upgrade|default('')
+            - install.update|default('')
 
       - fail:
             msg: "Image task 'rpm' is not supported for product version '{{ install.version }}'. Use another image task."
