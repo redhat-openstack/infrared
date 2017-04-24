@@ -68,7 +68,7 @@ Answers File:
 Common Options:
     * ``--dry-run``: Don't execute Ansible playbook. Only write generated vars dict to stdout
     * ``--output``: Redirect generated vars dict from stdout to an explicit file (YAML format).
-    * ``--extra-vars``: Inject custom input into the `vars-dict <Complex option types>`_
+    * ``--extra-vars``: Inject custom input into the `vars dict <Complex option types>`_
 
 Inventory:
     Load a new inventory to active `workspace <workspace.html>`_. The file is copied to
