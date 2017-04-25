@@ -184,6 +184,8 @@ inner-most level. Example::
 * ListOfVarFiles
     The list of files. Same as ``VarFile`` but represents the list of files delimited by comma (``,``).
 
+* VarDir
+    The absolute or relative path to a directory. Same as ``VarFile`` but points to the directory instead of file
 
 Placeholders
 ~~~~~~~~~~~~
