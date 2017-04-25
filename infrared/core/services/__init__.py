@@ -30,7 +30,9 @@ def set_conf_location():
     else:
         return confdir
 
+
 INFRARED_CONF_DIR = os.environ.get("INFRARED_CONF_DIR", set_conf_location())
+INFRARED_CFG = 'infrared.cfg'
 
 
 class ServiceName(object):
@@ -54,8 +56,8 @@ class CoreServices(object):
     def setup(cls, file_path=None, section='core'):
         """Creates configuration from file or from defaults. """
 
-        if file_path is None:
-            file_path = os.path.join(INFRARED_CONF_DIR, 'infrared.cfg')
+        if not file_path:
+            file_path = os.path.join(INFRARED_CONF_DIR, INFRARED_CFG)
 
         config = ConfigParser.SafeConfigParser(defaults=cls.DEFAULTS)
         config.add_section(section)
@@ -78,7 +80,7 @@ class CoreServices(object):
         """Move old conf_obj to new conf dir and set symlink in old place. """
 
         # TODO(yfried): remove this block when stop supporting old conf
-        old_conf_objs = [("infrared.cfg", "infrared.cfg"),
+        old_conf_objs = [(INFRARED_CFG, INFRARED_CFG),
                          (".workspaces", "workspaces"),
                          (".plugins.ini", "plugins.ini")]
 
