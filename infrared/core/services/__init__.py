@@ -17,14 +17,10 @@ LOG = logger.LOG
 
 
 def set_conf_location():
-    virtualenv_path = os.environ.get("VIRTUAL_ENV", None)
     config_paths_list = [
         os.getcwd(),
         os.path.expanduser("~"),
     ]
-
-    if virtualenv_path is not None:
-        config_paths_list.append(os.path.expanduser(virtualenv_path))
 
     for directory in config_paths_list:
         confdir = os.path.join(os.path.abspath(directory), ".infrared")
