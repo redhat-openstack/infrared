@@ -1,0 +1,26 @@
+---
+- name: Unsupported OS version on undercloud
+  fail:
+      msg: "InfraRed supports updates for OpenStack version 11"
+  when:
+      - not (undercloud_version == "11")
+
+- name: Checking overcloud_deploy_file
+  stat:
+      path: "~/overcloud_deploy.sh"
+  register: overcloud_deploy_file
+
+- name: Deployment script not found
+  fail:
+      msg: "Overcloud deployment script not found. Expected path: ~/overcloud_deploy.sh "
+  when: not overcloud_deploy_file.stat.exists or not overcloud_deploy_file.stat.executable
+
+- name: Checking file with overcloud credentials
+  stat:
+      path: "~/overcloudrc.v3"
+  register: oc_credentials_file
+
+- name: Overcloud RC not found
+  fail:
+      msg: "File with OC credentials not found. Expected path: ~/overcloudrc.v3"
+  when: not oc_credentials_file.stat.exists or not oc_credentials_file.stat.readable

@@ -1,7 +1,18 @@
+- name: Perform validations
+  include: "{{ validata_overcloud | default('validate.yml') }}"
+  tags:
+      - validation
+
 - name: Overcloud install
   include: "{{ overcloud_install | default('install.yml') }}"
-  when: not install.upgrade|default('')
+  when:
+      - not install.upgrade|default('')
+      - install.updateto|default('None') == 'None'
 
 - name: Overcloud Upgrade
   include: "{{ overcloud_upgrade | default('upgrade.yml') }}"
   when: install.upgrade|default('')
+
+- name: Overcloud Update
+  include: "{{ overcloud_update | default('update.yml') }}"
+  when: install.updateto|default('None') != 'None'
