@@ -1,0 +1,262 @@
+#!/bin/env bash
+
+EXIT_OK=0
+EXIT_CRIT=1
+
+openstack metric archive-policy create \
+    -b 0 -m min -m mean -m max -m count \
+    -d 'points:5,granularity:60' \
+    -d 'points:3,timespan:900' \
+    -d 'timespan:3600,granularity:900' \
+    -d 'points:24,granularity:3600' \
+    {{ MY_POLICY_LOW }}
+
+if [[ ${?} -ne 0 ]]
+then
+    echo "Failed to create archive-policy my-low"
+fi
+
+
+openstack metric archive-policy create \
+    -b 0 -m min -m mean -m max -m count \
+    -d 'points:12,granularity:300' \
+    -d 'timespan:3600,granularity:900' \
+    -d 'points:48,granularity:3600' \
+    {{ MY_POLICY_MEDIUM }}
+
+if [[ ${?} -ne 0 ]]
+then
+    echo "Failed to create archive-policy my-medium"
+fi
+
+openstack metric archive-policy-rule create -a {{ MY_POLICY_LOW }} -m 'fake.metric.[0-9]' '{{ MY_RULE_LOW }}' || echo "Failed to create archive-policy-rule {{ MY_RULE_LOW }}"
+
+openstack metric archive-policy-rule create -a {{ MY_POLICY_MEDIUM }} -m 'fake.*' '{{ MY_RULE_MEDIUM }}' || echo "Failed to create archive-policy-rule {{ MY_RULE_MEDIUM }}"
+
+openstack metric resource-type create {{ MY_RESOURCE_TYPE }}
+
+openstack metric resource create \
+    --type {{ MY_RESOURCE_TYPE }} \
+    -n 'radosgw.objects:my-low' \
+    -n 'radosgw.objects.size:my-low' \
+    -n 'radosgw.objects.containers:my-low' \
+    -n 'radosgw.api.request:my-low' \
+    -n 'radosgw.containers.objects:my-low' \
+    -n 'radosgw.containers.objects.size:my-low' \
+    {{ MY_RESOURCE_ONE }} || echo "Failed to create resource {{ MY_RESOURCE_ONE }}"
+
+openstack metric resource create \
+    --type {{ MY_RESOURCE_TYPE }} \
+    -n 'radosgw.objects:my-low' \
+    -n 'radosgw.objects.size:my-low' \
+    -n 'radosgw.objects.containers:my-low' \
+    -n 'radosgw.api.request:my-low' \
+    -n 'radosgw.containers.objects:my-low' \
+    -n 'radosgw.containers.objects.size:my-low' \
+    {{ MY_RESOURCE_TWO }} || echo "Failed to create resource {{ MY_RESOURCE_TWO }}"
+
+#
+# Resource creation might take some time
+#
+sleep 5
+
+#
+##
+## Gnocchi aggregation by resource threshold
+##
+#
+ aodh alarm create \
+    --type gnocchi_aggregation_by_resources_threshold \
+    --name GABRT-1 \
+    --description 'GnocchiAggregationByResourceThreshold' \
+    --severity critical \
+    --enabled True \
+    --alarm-action 'log://' \
+    --ok-action 'log://' \
+    --insufficient-data-action 'log://' \
+    --comparison-operator 'ge' \
+    --evaluation-periods 3 \
+    --threshold 6.0 \
+    --granularity 60 \
+    --aggregation-method mean \
+    --metric radosgw.containers.objects \
+    --query '{"or":[{"=":{"id":"alarm-resource-1"}},{"=":{"id":"alarm-resource-2"}}]}' \
+    --resource-type ceph_account
+
+ aodh alarm create \
+    --type gnocchi_aggregation_by_resources_threshold \
+    --name GABRT-2 \
+    --description 'GnocchiAggregationByResourceThreshold' \
+    --enabled True \
+    --severity critical \
+    --alarm-action 'log://' \
+    --ok-action 'log://' \
+    --insufficient-data-action 'log://' \
+    --comparison-operator 'ge' \
+    --evaluation-periods 3 \
+    --threshold 6.0 \
+    --granularity 60 \
+    --aggregation-method mean \
+    --metric radosgw.containers.objects.size \
+    --query '{"or":[{"=":{"id":"alarm-resource-1"}},{"=":{"id":"alarm-resource-2"}}]}' \
+    --resource-type ceph_account
+
+#
+# Create glance image
+
+IMAGE_NAME='{{ MY_IMAGE_NAME }}'
+IMAGE_PATH='{{ MY_IMAGE_PATH }}'
+
+glance image-create \
+    --name ${IMAGE_NAME} \
+    --file ${IMAGE_PATH} \
+    --disk-format qcow2 \
+    --container-format bare \
+    --progress
+
+
+#
+# Create nova flavor
+#
+
+FLAVOR_NAME='{{ MY_FLAVOR_NAME }}'
+
+nova flavor-create --ephemeral 0 --swap 0 ${FLAVOR_NAME} 'auto' 64 1 1
+
+#
+# Create overcloud network
+#
+
+ADMIN_NET='{{ MY_NET_NAME }}'
+
+neutron net-create ${ADMIN_NET}
+
+#
+# Create overcloud subnet
+#
+ADMIN_SUBNET='{{ MY_SUBNET_NAME }}'
+
+neutron subnet-create \
+    --name ${ADMIN_SUBNET} \
+    --allocation-pool start={{ MY_SUBNET_START }},end={{ MY_SUBNET_END }} \
+    --gateway {{ MY_SUBNET_GW }} \
+    ${ADMIN_NET} \
+    {{ MY_SUNGET_RANGE }}
+
+#
+# Create router
+#
+
+ADMIN_ROUTER='{{ MY_ROUTER_NAME }}'
+
+neutron router-create ${ADMIN_ROUTER}
+
+#
+# Attach network to router
+#
+
+SUBNET_ID=$( neutron subnet-show ${ADMIN_SUBNET} -f value -c id 2>/dev/null )
+ROUTER_ID=$( neutron router-show ${ADMIN_ROUTER} -f value -c id 2>/dev/null )
+NETWORK_ID=$( neutron net-show ${ADMIN_NET} -f value -c id 2>/dev/null )
+
+neutron router-interface-add  ${ROUTER_ID} subnet=${SUBNET_ID}
+
+#
+# Set gateway
+#
+
+PUBLIC_NET=$( neutron net-show public -f value -c id 2>/dev/null )
+
+neutron router-gateway-set ${ROUTER_ID} ${PUBLIC_NET}
+
+#
+# Create keypair
+#
+KEY_NAME='{{ MY_KEYPAIR_NAME }}'
+
+nova keypair-add --pub-key /home/stack/.ssh/id_rsa.pub ${KEY_NAME}
+
+#
+# Create security group
+#
+
+SEC_GROUP_NAME='{{ MY_SECGROUP_NAME }}'
+
+nova secgroup-create ${SEC_GROUP_NAME} 'Allow all traffic'
+
+#
+# Add rules to security group
+#
+
+nova secgroup-add-rule ${SEC_GROUP_NAME} icmp -1 -1 0.0.0.0/0
+nova secgroup-add-rule ${SEC_GROUP_NAME} tcp 22 22 0.0.0.0/0
+
+#
+# Boot VM
+#
+
+VM_NAME='{{ MY_VM_NAME }}'
+
+nova boot --poll \
+    --flavor ${FLAVOR_NAME} \
+    --image ${IMAGE_NAME} \
+    --key-name ${KEY_NAME} \
+    --security-groups ${SEC_GROUP_NAME} \
+    --nic net-id=${NETWORK_ID} \
+    ${VM_NAME}
+
+#
+# Get name of external net
+#
+
+EXTERNAL_NET_NAME=$( neutron net-list \
+                        --router:external True -f value -c name 2>/dev/null )
+
+if [[ -z ${EXTERNAL_NET_NAME} ]]
+then
+    #
+    # Create floating ip
+    #
+
+    nova floating-ip-create
+
+    FLOATING_IP=$( nova floating-ip-list 2>/dev/null | grep -w public | \
+                        tail -n1 | awk -F '|' '{ print $3}' )
+
+else
+    FLOATING_IP='{{ MY_FLOATING_IP }}'
+    neutron floatingip-create \
+        --description 'Test IP pre-defining' \
+        --floating-ip-address ${FLOATING_IP} ${EXTERNAL_NET_NAME}
+
+fi
+
+if [[ -n ${FLOATING_IP} ]]
+then
+    echo ${FLOATING_IP} > ~/{{ MY_IP_FILE }}
+fi
+
+VM_ID=$( nova list 2>/dev/null | \
+            grep ${VM_NAME} | awk -F '|' '{ print $2}' )
+
+if [[ -n ${FLOATING_IP} ]]
+then
+    nova floating-ip-associate ${VM_ID} ${FLOATING_IP}
+fi
+
+#
+# Create cinder volume
+#
+
+VOLUME_NAME='{{ MY_VOLUME_NAME }}'
+VOLUME_SIZE='{{ MY_VOLUME_SIZE }}'
+
+cinder create --name ${VOLUME_NAME} ${VOLUME_SIZE}
+
+VOLUME_ID=$( openstack volume show ${VOLUME_NAME} -f value -c id )
+
+#
+# Attach volume
+#
+
+nova volume-attach ${VM_ID} ${VOLUME_ID}
