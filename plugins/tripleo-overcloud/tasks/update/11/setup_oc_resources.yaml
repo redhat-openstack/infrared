@@ -1,0 +1,26 @@
+---
+- include_vars: vars/updates/update_11.yml
+
+- name: create {{ SETUP_RESOURCES_SCRIPT }}  at undercloud from template
+  template:
+      src: "templates/updates/{{ SETUP_RESOURCES_TEMPLATE }}"
+      dest: "~/{{ SETUP_RESOURCES_SCRIPT }}"
+      owner: "{{ ((install|default({})).user|default({})).name|default('stack') }}"
+      group: "{{ ((install|default({})).user|default({})).name|default('stack') }}"
+      mode: 0755
+
+- name: create {{ CONNECTIVITY_SCRIPT }} at undercloud from template
+  template:
+      src: templates/updates/Connectiviy2VmTest.sh.j2
+      dest: "~/{{ CONNECTIVITY_SCRIPT }}"
+      owner: "{{ ((install|default({})).user|default({})).name|default('stack') }}"
+      group: "{{ ((install|default({})).user|default({})).name|default('stack') }}"
+      mode: 0755
+
+- name: create {{ CONNECTIVITY_VERIFY_SCRIPT }} at undercloud from template
+  template:
+      src: "templates/updates/{{ CONNECTIVITY_VERIFY_TEMPLATE }}"
+      dest: "~/{{ CONNECTIVITY_VERIFY_SCRIPT }}"
+      owner: "{{ ((install|default({})).user|default({})).name|default('stack') }}"
+      group: "{{ ((install|default({})).user|default({})).name|default('stack') }}"
+      mode: 0755
