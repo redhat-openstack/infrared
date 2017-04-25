@@ -162,3 +162,12 @@ subparsers:
                       help: |
                           Undercloud Upgrade.
                           Note: Currently, there is upgrade possibility from version 9 to version 10 only.
+
+            - title: Undercloud Update
+              options:
+                  minor-updates:
+                      type: Bool
+                      help: |
+                          Undercloud Update.
+                          Note: Currently, IR supports update of version 11
+                      default: no

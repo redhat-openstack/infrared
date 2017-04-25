@@ -46,6 +46,14 @@
       - name: Validation
         include: "tasks/upgrade/validation.yml"
         tags: validation
+        when:
+            - install.minor.updates == False
+
+      - name: Updates Validation
+        include: "tasks/upgrade/update_validation.yml"
+        tags: validation
+        when:
+            - install.minor.updates != False
 
   roles:
       - role: rhos-release
@@ -53,6 +61,23 @@
         build: "{{ install.build }}"
         mirror: "{{ install.mirror | default(omit) }}"
         tags: upgrade
+        when:
+            - install.minor.updates == False
+
+      - role: rhos-release
+        release: "{{ undercloud_version }}"
+        build: "{{ install.build }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        tags: upgrade
+        when:
+            - install.minor.updates != False
   tasks:
       - name: "Upgrade from version {{ undercloud_version }} to {{ (undercloud_version|int) + 1 }}"
         include: "tasks/upgrade/upgrade_{{ (undercloud_version|int) + 1 }}.yml"
+        when:
+            - install.minor.updates == False
+
+      - name: "Minor update of version {{ undercloud_version }}"
+        include: "tasks/upgrade/upgrade_{{ undercloud_version }}.yml"
+        when:
+            - install.minor.updates != False

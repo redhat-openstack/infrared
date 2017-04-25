@@ -10,6 +10,16 @@
   service:
         name: httpd
         state: stopped
+  when:
+      - install.minor.updates == False
+
+- name: update python-tripleoclient prior upgrade
+  become: true
+  yum:
+      name: "{{ item }}"
+      state: latest
+  with_items:
+      - 'python-tripleoclient'
 
 - name: update packages prior upgrade
   become: true
@@ -20,10 +30,18 @@
       - 'instack-undercloud'
       - 'openstack-puppet-modules'
       - 'openstack-tripleo-common'
-      - 'python-tripleoclient'
+  when:
+      - install.minor.updates == False
 
 - name: Undercloud upgrade
   shell: "openstack undercloud upgrade &> undercloud_upgrade.log"
+  when:
+      - install.minor.updates == False
+
+- name: Undercloud update
+  shell: "openstack undercloud upgrade &> undercloud_update.log"
+  when:
+      - install.minor.updates != False
 
 - name: Reboot the Undercloud
   become: true
