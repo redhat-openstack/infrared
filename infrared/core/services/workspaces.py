@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 import tarfile
+import tempfile
 import time
 
 import fileinput
@@ -115,15 +116,56 @@ class Workspace(object):
                 os.unlink(first)
             first = self.registy.pop()
 
-    def _remove_key_paths(self):
+    def _copy_outside_key(self, keypath):
+        """Copy key from out of the workspace into one.
+
+           :param keypath: source key path to copy
+        """
+        new_key_path = keypath
+        if not keypath.startswith(self.path):
+            keyfilename = os.path.split(keypath)[-1]
+            fname = tempfile.mktemp(
+                prefix="{}-".format(keyfilename), dir="")
+            shutil.copy2(keypath, os.path.join(
+                self.path, fname))
+            new_key_path = fname
+
+        return new_key_path
+
+    def _remove_key_paths(self, copykeys=False):
+        """Make ssh keys paths relative to workspace
+
+           For workspace export it's important for ssh
+           keys to be exported to. This method converts
+           absolut key paths to relative.
+
+           :param copykeys: if True - call _copy_outside_key
+               to copy key from out of workspace into one
+        """
         inv = self.inventory
 
-        real_inv = os.path.join(os.path.dirname(inv), os.readlink(inv))
+        found_keys = {}
+        real_inv = os.path.join(self.path, os.readlink(inv))
+
+        for line in fileinput.input(real_inv):
+            res = re.findall(
+                r"ansible_ssh_private_key_file=\S+", line)
+            found_key = res[-1].split("=")[-1] if res else ""
+
+            if found_key and os.path.isabs(found_key):
+                localpath = re.sub("{}{}".format(self.path, os.path.sep),
+                                   '', found_key)
+                if localpath != found_key:
+                    found_keys[found_key] = localpath
+                else:
+                    found_keys[found_key] = self._copy_outside_key(
+                        found_key) if copykeys else found_key
 
         for line in fileinput.input(real_inv, inplace=True):
-            new_line = re.sub("{}{}".format(os.path.dirname(inv), os.path.sep),
-                              '', line.rstrip())
-            print new_line
+            processed_line = line.rstrip()
+            for key_patt, repl_key in found_keys.iteritems():
+                processed_line = re.sub(key_patt, repl_key, processed_line)
+            print(processed_line)
 
     def link_file(self, file_path,
                   dest_name=None, unlink=True, add_to_reg=True):
@@ -279,7 +321,7 @@ class WorkspaceManager(object):
 
         return self.get(active_name)
 
-    def export_workspace(self, workspace_name, file_name=None):
+    def export_workspace(self, workspace_name, file_name=None, copykeys=False):
         """Export content of workspace folder as gzipped tar file
 
            Replaces existing .tgz file
@@ -296,7 +338,7 @@ class WorkspaceManager(object):
 
         fname = file_name or workspace.name
 
-        workspace._remove_key_paths()
+        workspace._remove_key_paths(copykeys)
 
         with tarfile.open(fname + '.tgz', "w:gz") as tar:
             tar.add(workspace.path, arcname="./")

@@ -152,18 +152,42 @@ def test_workspace_fetch_inventory(workspace_manager_fixture, test_workspace):
     assert os.path.basename(inventory_path) == "hosts"
 
 
-def test__remove_key_paths(test_workspace):
+def test__remove_key_paths(test_workspace, mocker):
     path = test_workspace.path
     test_inv = os.path.join(path, "new_test_env")
     test_key = os.path.join(path, "id_rsa")
 
     with open(test_inv, "w") as new_inv:
-        new_inv.write("ansible_ssh_key={}".format(test_key))
+        new_inv.write("ansible_ssh_private_key_file={}".format(test_key))
 
     test_workspace.inventory = test_inv
     test_workspace._remove_key_paths()
     with open(test_inv, "r") as inv:
-        assert inv.read().strip() == "ansible_ssh_key=id_rsa"
+        assert inv.read().strip() == "ansible_ssh_private_key_file=id_rsa"
+
+    tkey_file = "/tmp/id_rsa_tkey"
+    with open(tkey_file, "w") as tkey:
+        tkey.write("test ssh key stub")
+    with open(test_inv, "w") as new_inv:
+        new_inv.write("hypervisor ansible_ssh_private_key_file={key}\n"
+                      "host-0 key={key}".format(key=tkey_file))
+
+    test_workspace._remove_key_paths()
+    with open(test_inv, "r") as inv:
+        assert inv.read().strip() == "".join(
+            ["hypervisor ",
+             "ansible_ssh_private_key_file={key}\n"
+             "host-0 key={key}"]).format(key=tkey_file)
+
+    mocker.patch('tempfile.mktemp', return_value="id_rsa-t1")
+    test_workspace._remove_key_paths(copykeys=True)
+    with open(test_inv, "r") as inv:
+        assert inv.read().strip() == "".join(
+            ["hypervisor ",
+             "ansible_ssh_private_key_file={key}\n"
+             "host-0 key={key}"]).format(key="id_rsa-t1")
+
+    assert "id_rsa-t1" in os.listdir(test_workspace.path)
 
 
 @pytest.mark.parametrize('inventory_content', ["fake content", ""])
