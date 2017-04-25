@@ -152,6 +152,33 @@ def test_workspace_fetch_inventory(workspace_manager_fixture, test_workspace):
     assert os.path.basename(inventory_path) == "hosts"
 
 
+def test__copy_outside_keys(test_workspace, mocker):
+    path = test_workspace.path
+    test_inv = os.path.join(path, "new_test_env")
+
+    tkey_file = "/tmp/id_rsa_tkey"
+    with open(tkey_file, "w") as tkey:
+        tkey.write("test ssh key stub")
+    with open(test_inv, "w") as new_inv:
+        new_inv.write("hypervisor ansible_ssh_private_key_file={key}\n"
+                      "host-0 {key}\n"
+                      "host-1 id_rsa".format(key=tkey_file))
+
+    mocker.patch('tempfile._get_candidate_names',
+                 return_value=["zzzzz"].__iter__())
+    test_workspace.inventory = test_inv
+    test_workspace._copy_outside_keys()
+    with open(test_inv, "r") as inv:
+        assert inv.read() == "".join(
+            ["hypervisor ",
+             "ansible_ssh_private_key_file={key}\n"
+             "host-0 {key}\n",
+             "host-1 id_rsa\n"]).format(key=os.path.join(
+                 test_workspace.path_placeholder, "id_rsa_tkey-zzzzz"))
+
+    assert "id_rsa_tkey-zzzzz" in os.listdir(test_workspace.path)
+
+
 @pytest.mark.parametrize('inventory_content', ["fake content", ""])
 def test_workspace_copy_file(workspace_manager_fixture, test_workspace,
                              tmpdir, inventory_content):
