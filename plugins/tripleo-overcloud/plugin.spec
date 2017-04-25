@@ -220,6 +220,12 @@ subparsers:
                       help: |
                           Enable usage of specified mirror (for rpm, pip etc) [brq,qeos,tlv - or hostname].
                           (Specified mirror needs to proxy multiple rpm source hosts and pypi packages.)
+                  updateto:
+                      type: Value
+                      help: |
+                          Perform minor update of overcloud to the 'build' specified. Default: 'None'
+                          NOTE: Currently, minor update is supported with IR just for verion 11.
+                      default: None
 
             - title: Ironic Configuration
               options:
