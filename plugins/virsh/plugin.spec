@@ -42,7 +42,7 @@ subparsers:
               options:
                   # fixme(yfried): add support for user files
                   topology-network:
-                      type: Value
+                      type: VarFile
                       help: |
                           Network configuration to be used
                           __LISTYAMLS__

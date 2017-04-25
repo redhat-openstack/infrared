@@ -12,8 +12,8 @@
 #  vars:
 #      first_controller: "{{ groups.controller | first }}"
   vars_files:
-      - "vars/network/service/{{ install.network.service }}.yml"
-      - "vars/public/subnet/{{ install.public.subnet }}.yml"
+      - "{{ install.network.service }}"
+      - "{{ install.public.subnet }}"
   tasks:
       - name: get the default floating ip pool name from the controller
 #        delegate_to: "{{ first_controller }}"
