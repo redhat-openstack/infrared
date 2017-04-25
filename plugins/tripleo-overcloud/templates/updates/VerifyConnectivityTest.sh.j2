@@ -1,0 +1,38 @@
+#!/bin/env bash
+#
+# SSH to VM during update
+#
+
+SSH_ARGS='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=25'
+
+REMOTE_HOME='{{ MY_REMOTE_HOME }}'
+REMOTE_FILE='{{ MY_REMOTE_FILE }}'
+REMOTE_PATH="${REMOTE_HOME}/${REMOTE_FILE}"
+
+LOCAL_FILE='{{ MY_LOCAL_FILE }}'
+LOCAL_PATH="{{ UC_Home }}/${LOCAL_FILE}"
+
+IP_FILE='{{ UC_Home }}/{{ MY_IP_FILE }}'
+
+if [[ -s ${IP_FILE} ]]
+then
+    REMOTE_IP=$( cat ${IP_FILE} )
+else
+    echo "ERROR. Floating IP of vm not specified"
+    exit 0
+fi
+
+RemoteWrites=$( command ssh ${SSH_ARGS} cirros@${REMOTE_IP} "cat ${REMOTE_PATH} 2>/dev/null | wc -l" )
+LocalWrites=$( cat ${LOCAL_PATH} 2>/dev/null | wc -l )
+
+if [[ ${LocalWrites} -le ${RemoteWrites} ]]
+then
+    echo 'Success. Connectivity not affected'
+    echo 'VM accessibility 100 %'
+else
+    RATIO=$( echo "(100 * ${RemoteWrites})/${LocalWrites}" | bc -l )
+    echo "Error. Connectivity affected"
+    echo "VM accessability ${RATIO}%"
+fi
+
+exit 0

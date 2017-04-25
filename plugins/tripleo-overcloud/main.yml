@@ -1,7 +1,13 @@
 - name: Overcloud install
   include: "{{ overcloud_install | default('install.yml') }}"
-  when: not install.upgrade|default('')
+  when:
+      - not install.upgrade|default('')
+      - not install.minor.updates|default('')
 
 - name: Overcloud Upgrade
   include: "{{ overcloud_upgrade | default('upgrade.yml') }}"
   when: install.upgrade|default('')
+
+- name: Overcloud Update
+  include: "{{ overcloud_update | default('update.yml') }}"
+  when: install.minor.updates|default('')

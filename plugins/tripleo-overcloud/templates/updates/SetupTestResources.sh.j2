@@ -1,0 +1,361 @@
+#!/bin/env bash
+
+EXIT_OK=0
+EXIT_CRIT=1
+
+command -v openstack
+
+if [[ ${?} -ne 0 ]]
+then
+    echo "ERROR. openstack cli not found"
+fi
+
+openstack metric archive-policy create \
+    -b 0 -m min -m mean -m max -m count \
+    -d 'points:5,granularity:60' \
+    -d 'points:3,timespan:900' \
+    -d 'timespan:3600,granularity:900' \
+    -d 'points:24,granularity:3600' \
+    {{ MY_POLICY_LOW }}
+
+if [[ ${?} -ne 0 ]]
+then
+    echo "Failed to create archive-policy my-low"
+fi
+
+
+openstack metric archive-policy create \
+    -b 0 -m min -m mean -m max -m count \
+    -d 'points:12,granularity:300' \
+    -d 'timespan:3600,granularity:900' \
+    -d 'points:48,granularity:3600' \
+    {{ MY_POLICY_MEDIUM }}
+
+if [[ ${?} -ne 0 ]]
+then
+    echo "Failed to create archive-policy my-medium"
+fi
+
+openstack metric archive-policy-rule create -a {{ MY_POLICY_LOW }} -m 'fake.metric.[0-9]' '{{ MY_RULE_LOW }}'
+if [[ ${?} -ne 0 ]]
+then
+    echo "Failed to create archive-policy-rule {{ MY_RULE_LOW }}"
+fi
+
+openstack metric archive-policy-rule create -a {{ MY_POLICY_MEDIUM }} -m 'fake.*' '{{ MY_RULE_MEDIUM }}'
+if [[ ${?} -ne 0 ]]
+then
+    echo "Failed to create archive-policy-rule {{ MY_RULE_MEDIUM }}"
+fi
+
+openstack metric resource-type create {{ MY_RESOURCE_TYPE }}
+
+
+openstack metric resource create \
+    --type {{ MY_RESOURCE_TYPE }} \
+    -n 'radosgw.objects:my-low' \
+    -n 'radosgw.objects.size:my-low' \
+    -n 'radosgw.objects.containers:my-low' \
+    -n 'radosgw.api.request:my-low' \
+    -n 'radosgw.containers.objects:my-low' \
+    -n 'radosgw.containers.objects.size:my-low' \
+    {{ MY_RESOURCE_ONE }}
+
+if [[ ${?} -ne 0 ]]
+then
+    echo "Failed to create resource {{ MY_RESOURCE_ONE }}"
+fi
+
+openstack metric resource create \
+    --type {{ MY_RESOURCE_TYPE }} \
+    -n 'radosgw.objects:my-low' \
+    -n 'radosgw.objects.size:my-low' \
+    -n 'radosgw.objects.containers:my-low' \
+    -n 'radosgw.api.request:my-low' \
+    -n 'radosgw.containers.objects:my-low' \
+    -n 'radosgw.containers.objects.size:my-low' \
+    {{ MY_RESOURCE_TWO }}
+
+if [[ ${?} -ne 0 ]]
+then
+    echo "Failed to create resource {{ MY_RESOURCE_TWO }}"
+else
+    sleep 20
+fi
+
+#
+##
+## Gnocchi aggregation by resource threshold
+##
+#
+ aodh alarm create \
+    --type gnocchi_aggregation_by_resources_threshold \
+    --name GABRT-1 \
+    --description 'GnocchiAggregationByResourceThreshold' \
+    --severity critical \
+    --enabled True \
+    --alarm-action 'log://' \
+    --ok-action 'log://' \
+    --insufficient-data-action 'log://' \
+    --comparison-operator 'ge' \
+    --evaluation-periods 3 \
+    --threshold 6.0 \
+    --granularity 60 \
+    --aggregation-method mean \
+    --metric radosgw.containers.objects \
+    --query '{"or":[{"=":{"id":"alarm-resource-1"}},{"=":{"id":"alarm-resource-2"}}]}' \
+    --resource-type ceph_account
+
+ aodh alarm create \
+    --type gnocchi_aggregation_by_resources_threshold \
+    --name GABRT-2 \
+    --description 'GnocchiAggregationByResourceThreshold' \
+    --enabled True \
+    --severity critical \
+    --alarm-action 'log://' \
+    --ok-action 'log://' \
+    --insufficient-data-action 'log://' \
+    --comparison-operator 'ge' \
+    --evaluation-periods 3 \
+    --threshold 6.0 \
+    --granularity 60 \
+    --aggregation-method mean \
+    --metric radosgw.containers.objects.size \
+    --query '{"or":[{"=":{"id":"alarm-resource-1"}},{"=":{"id":"alarm-resource-2"}}]}' \
+    --resource-type ceph_account
+#
+#GABRT1=$( aodh alarm show --alarm-name GABRT-1 -f value -c alarm_id )
+#GABRT2=$( aodh alarm show --alarm-name GABRT-2 -f value -c alarm_id )
+#
+##
+## Gnocchi aggregation by metrics threshold
+##
+#
+##radosgw.objects.size
+#METRIC1=$( openstack metric metric show --resource-id alarm-resource-1 radosgw.objects.size -f value -c id)
+#METRIC2=$( openstack metric metric show --resource-id alarm-resource-2 radosgw.objects.size -f value -c id)
+#
+#aodh alarm create \
+#    --type gnocchi_aggregation_by_metrics_threshold \
+#    --name 'GABM-1' \
+#    --description 'Gnocchi-Aggregation-By-Metrics-Threshold' \
+#    --severity moderate \
+#    --enabled True \
+#    --alarm-action 'log://' \
+#    --ok-action 'log://' \
+#    --insufficient-data-action 'log://' \
+#    --comparison-operator ge \
+#    --evaluation-periods 3 \
+#    --threshold 6.0 \
+#    --granularity 60 \
+#    --aggregation-method mean \
+#    --metrics ${METRIC1} \
+#    --metrics ${METRIC2}
+#
+##radosgw.objects
+#METRIC1=$( openstack metric metric show --resource-id alarm-resource-1 radosgw.objects -c id -f value )
+#METRIC2=$( openstack metric metric show --resource-id alarm-resource-2 radosgw.objects -c id -f value )
+#
+#aodh alarm create \
+#    --type gnocchi_aggregation_by_metrics_threshold \
+#    --name 'GABM-2' \
+#    --description 'Gnocchi-Aggregation-By-Metrics-Threshold' \
+#    --severity moderate \
+#    --enabled True \
+#    --alarm-action 'log://' \
+#    --ok-action 'log://' \
+#    --insufficient-data-action 'log://' \
+#    --comparison-operator ge \
+#    --evaluation-periods 3 \
+#    --threshold 6.0 \
+#    --granularity 60 \
+#    --aggregation-method mean \
+#    --metrics ${METRIC1} \
+#    --metrics ${METRIC2}
+#
+#GABM1=$( aodh alarm show --alarm-name GABM-1 -f value -c alarm_id )
+#GABM2=$( aodh alarm show --alarm-name GABM-2 -f value -c alarm_id )
+#
+##
+## Event alarms
+##
+#
+#    aodh alarm create \
+#        --type event \
+#        --name 'EVNT-1' \
+#        --description 'AClient Event Alarm' \
+#        --severity low \
+#        --enabled True \
+#        --alarm-action 'log://' \
+#        --ok-action 'log://' \
+#        --insufficient-data-action 'log://' \
+#        --event-type 'volume.create.*'
+#
+#    aodh alarm create \
+#        --type event \
+#        --name 'EVNT-2' \
+#        --description 'AClient Event Alarm' \
+#        --severity low \
+#        --enabled True \
+#        --alarm-action 'log://' \
+#        --ok-action 'log://' \
+#        --insufficient-data-action 'log://' \
+#        --event-type 'volume.delete.*'
+#
+#EVNT1=$( aodh alarm show --alarm-name EVNT-1 -f value -c alarm_id )
+#EVNT2=$( aodh alarm show --alarm-name EVNT-2 -f value -c alarm_id )
+
+#
+# Create glance image
+
+IMAGE_NAME='{{ MY_IMAGE_NAME }}'
+IMAGE_PATH='{{ MY_IMAGE_PATH }}'
+
+command glance image-create \
+    --name ${IMAGE_NAME} \
+    --file ${IMAGE_PATH} \
+    --disk-format qcow2 \
+    --container-format bare \
+    --progress
+
+
+#
+# Create nova flavor
+#
+
+FLAVOR_NAME='{{ MY_FLAVOR_NAME }}'
+
+command nova flavor-create --ephemeral 0 --swap 0 ${FLAVOR_NAME} 'auto' 64 1 1
+
+#
+# Create overcloud network
+#
+
+ADMIN_NET='{{ MY_NET_NAME }}'
+
+command neutron net-create ${ADMIN_NET}
+
+#
+# Create overcloud subnet
+#
+ADMIN_SUBNET='{{ MY_SUBNET_NAME }}'
+
+command neutron subnet-create \
+    --name ${ADMIN_SUBNET} \
+    --allocation-pool start={{ MY_SUBNET_START }},end={{ MY_SUBNET_END }} \
+    --gateway {{ MY_SUBNET_GW }} \
+    ${ADMIN_NET} \
+    {{ MY_SUNGET_RANGE }}
+
+#
+# Create router
+#
+
+ADMIN_ROUTER='{{ MY_ROUTER_NAME }}'
+
+command neutron router-create ${ADMIN_ROUTER}
+
+#
+# Attach network to router
+#
+
+SUBNET_ID=$( command neutron subnet-show ${ADMIN_SUBNET} -f value -c id 2>/dev/null )
+ROUTER_ID=$( command neutron router-show ${ADMIN_ROUTER} -f value -c id 2>/dev/null )
+NETWORK_ID=$( command neutron net-show ${ADMIN_NET} -f value -c id 2>/dev/null )
+
+command neutron router-interface-add  ${ROUTER_ID} subnet=${SUBNET_ID}
+
+#
+# Set gateway
+#
+
+PUBLIC_NET=$( command neutron net-show public -f value -c id 2>/dev/null )
+
+command neutron router-gateway-set ${ROUTER_ID} ${PUBLIC_NET}
+
+#
+# Create keypair
+#
+KEY_NAME='{{ MY_KEYPAIR_NAME }}'
+
+command nova keypair-add --pub-key /home/stack/.ssh/id_rsa.pub ${KEY_NAME}
+
+#
+# Create security group
+#
+
+SEC_GROUP_NAME='{{ MY_SECGROUP_NAME }}'
+
+command nova secgroup-create ${SEC_GROUP_NAME} 'Allow all traffic'
+
+#
+# Add rules to security group
+#
+
+command nova secgroup-add-rule ${SEC_GROUP_NAME} icmp -1 -1 0.0.0.0/0
+command nova secgroup-add-rule ${SEC_GROUP_NAME} tcp 22 22 0.0.0.0/0
+
+#
+# Boot VM
+#
+
+VM_NAME='{{ MY_VM_NAME }}'
+
+command nova boot --poll \
+    --flavor ${FLAVOR_NAME} \
+    --image ${IMAGE_NAME} \
+    --key-name ${KEY_NAME} \
+    --security-groups ${SEC_GROUP_NAME} \
+    --nic net-id=${NETWORK_ID} \
+    ${VM_NAME}
+
+#
+# Get name of external net
+#
+
+EXTERNAL_NET_NAME=$( command neutron net-list \
+                        --router:external True -f value -c name 2>/dev/null )
+
+if [[ -z ${EXTERNAL_NET_NAME} ]]
+then
+    #
+    # Create floating ip
+    #
+
+    command nova floating-ip-create
+
+    FLOATING_IP=$( command nova floating-ip-list 2>/dev/null | grep -w public | \
+                        tail -n1 | awk -F '|' '{ print $3}' )
+
+else
+    FLOATING_IP='{{ MY_FLOATING_IP }}'
+    command neutron floatingip-create \
+        --description 'Test IP pre-defining' \
+        --floating-ip-address ${FLOATING_IP} ${EXTERNAL_NET_NAME}
+
+fi
+
+echo ${FLOATING_IP} > {{ UC_Home }}/{{ MY_IP_FILE }}
+
+VM_ID=$( command nova list 2>/dev/null | \
+            grep ${VM_NAME} | awk -F '|' '{ print $2}' )
+
+command nova floating-ip-associate ${VM_ID} ${FLOATING_IP}
+
+
+#
+# Create cinder volume
+#
+
+VOLUME_NAME='{{ MY_VOLUME_NAME }}'
+VOLUME_SIZE='{{ MY_VOLUME_SIZE }}'
+
+command cinder create --name ${VOLUME_NAME} ${VOLUME_SIZE}
+
+VOLUME_ID=$( command openstack volume show ${VOLUME_NAME} -f value -c id )
+
+#
+# Attach volume
+#
+
+command nova volume-attach ${VM_ID} ${VOLUME_ID}
