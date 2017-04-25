@@ -1,0 +1,20 @@
+---
+- name: Checking overcloud_deploy_file
+  stat:
+      path: "~/overcloud_deploy.sh"
+  register: overcloud_deploy_file
+
+- name: Deployment script not found
+  fail:
+      msg: "Overcloud deployment script not found. Expected path: ~/overcloud_deploy.sh "
+  when: overcloud_deploy_file.stat.exists == False or overcloud_deploy_file.stat.executable == False
+
+- name: Checking file with overcloud credentials
+  stat:
+      path: "~/overcloudrc.v3"
+  register: oc_credentials_file
+
+- name: Overcloud RC not found
+  fail:
+      msg: "File with OC credentials not found. Expected path: ~/overcloudrc.v3"
+  when: oc_credentials_file.stat.exists == False or oc_credentials_file.stat.readable == False
