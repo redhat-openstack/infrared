@@ -1,0 +1,38 @@
+---
+- name: create {{ overcloud_update_plan }} script
+  copy:
+      src: "{{ overcloud_deploy_script }}"
+      dest: "{{ overcloud_update_plan }}"
+      mode: 0755
+      remote_src: True
+#
+# Just to be safe remove emtpy strings
+#
+- name: remove lines
+  lineinfile:
+      dest: "{{ overcloud_update_plan }}"
+      regexp: '^$'
+      state: absent
+
+- name: get last line of {{ overcloud_update_plan }}
+  command: |
+      tail -n1 {{ overcloud_update_plan }}
+  register: pre_update_line
+
+- name: update script. remove old line from {{ overcloud_update_plan }}
+  lineinfile:
+      dest: "{{ overcloud_update_plan }}"
+      line: "{{ pre_update_line.stdout }}"
+      state: absent
+
+- name: update {{ overcloud_update_plan }} script with '--update-plan-only'
+  lineinfile:
+      dest: "{{ overcloud_update_plan }}"
+      line: "{{ pre_update_line.stdout }} --update-plan-only "
+      state: present
+      insertafter: EOF
+
+- name: update overcloud plan
+  shell: |
+      source ~/stackrc ;
+      {{ overcloud_update_plan }}
