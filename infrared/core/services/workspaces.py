@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 import tarfile
+import tempfile
 import time
 
 import fileinput
@@ -115,15 +116,43 @@ class Workspace(object):
                 os.unlink(first)
             first = self.registy.pop()
 
-    def _remove_key_paths(self):
-        inv = self.inventory
-
-        real_inv = os.path.join(os.path.dirname(inv), os.readlink(inv))
+    def _copy_outside_keys(self):
+        """Copy key from out of the workspace into one"""
+        paths_map = {}
+        real_inv = os.path.join(self.path, os.readlink(self.inventory))
 
         for line in fileinput.input(real_inv, inplace=True):
-            new_line = re.sub("{}{}".format(os.path.dirname(inv), os.path.sep),
-                              '', line.rstrip())
-            print new_line
+            key_defs = re.findall(r"ansible_ssh_private_key_file=\/\S+", line)
+            for key_def in key_defs:
+                path = key_def.split("=")[-1]
+                paths_map.setdefault(path, path)
+
+            for mapped_orig, mapped_new in paths_map.iteritems():
+                if mapped_orig == mapped_new:
+                    keyfilename = os.path.split(mapped_orig)[-1]
+                    new_fname = tempfile.mktemp(
+                        prefix="{}-".format(keyfilename), dir="")
+                    shutil.copy2(mapped_orig, os.path.join(
+                                 self.path, new_fname))
+                    paths_map[mapped_orig] = new_fname
+                else:
+                    new_fname = mapped_new
+
+                print(re.sub(mapped_orig, new_fname, line.rstrip()))
+
+    def _remove_key_paths(self):
+        """Make ssh keys paths relative to workspace
+
+           For workspace export it's important for ssh
+           keys to be exported to. This method converts
+           absolut key paths to relative.
+        """
+
+        real_inv = os.path.join(self.path, os.readlink(self.inventory))
+
+        for line in fileinput.input(real_inv, inplace=True):
+            print(re.sub("{}{}".format(self.path, os.path.sep),
+                         '', line.rstrip()))
 
     def link_file(self, file_path,
                   dest_name=None, unlink=True, add_to_reg=True):
@@ -279,7 +308,7 @@ class WorkspaceManager(object):
 
         return self.get(active_name)
 
-    def export_workspace(self, workspace_name, file_name=None):
+    def export_workspace(self, workspace_name, file_name=None, copykeys=False):
         """Export content of workspace folder as gzipped tar file
 
            Replaces existing .tgz file
@@ -297,6 +326,8 @@ class WorkspaceManager(object):
         fname = file_name or workspace.name
 
         workspace._remove_key_paths()
+        if copykeys:
+            workspace._copy_outside_keys()
 
         with tarfile.open(fname + '.tgz', "w:gz") as tar:
             tar.add(workspace.path, arcname="./")
