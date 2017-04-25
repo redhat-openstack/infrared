@@ -1,0 +1,39 @@
+---
+- include_vars: vars/updates/update_11.yml
+
+- name: check background PIDs for {{ CONNECTIVITY_SCRIPT }}
+  shell: |
+    command ps auxw | grep {{ CONNECTIVITY_SCRIPT }} | grep -v grep | awk '{ print $2 }'
+  register: remote_pids
+
+- name: debug remote jobs PIDs
+  debug:
+    msg: "{{ remote_pids }}"
+  when: remote_pids is defined
+
+- name: terminate {{ CONNECTIVITY_SCRIPT }}
+  become: True
+  shell: |
+    command kill -9 {{ item }}
+  with_items:
+    - "{{ remote_pids.stdout_lines }}"
+
+- name: calculate connectivity ratio
+  shell: |
+    bash ~/{{ CONNECTIVITY_VERIFY_SCRIPT }}
+  ignore_errors: True
+  register: connectivity_ratio
+
+- name: connectivity to overcloud VMs affected
+  debug:
+    msg: "{{ connectivity_ratio.stdout_lines }}"
+  when:
+    - connectivity_ratio is defined
+    - "'Error. Connectivity affected' in connectivity_ratio.stdout_lines"
+
+- name: connectivity to overcloud VMs not affected
+  debug:
+    msg: "{{ connectivity_ratio.stdout_lines }}"
+  when:
+    - connectivity_ratio is defined
+    - "'Success. Connectivity not affected' in connectivity_ratio.stdout_lines"
