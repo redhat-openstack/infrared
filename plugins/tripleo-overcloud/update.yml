@@ -1,0 +1,75 @@
+- name: Collecting Info
+  hosts: undercloud,overcloud_nodes
+  gather_facts: yes
+  any_errors_fatal: true
+  tags: update_collect_info
+  tasks:
+      - name: Get Undercloud version
+        become: true
+        find:
+            use_regex: yes
+            patterns: 'rhos-release-[0-9]+.*'
+            paths:
+              - '/etc/yum.repos.d/'
+        register: result
+        when: "'undercloud' in group_names"
+
+      - name: Setting undercloud_version
+        set_fact:
+            undercloud_version: "{{ hostvars[groups['undercloud'][0]]['result'].files[0]['path'] | basename | regex_replace('^rhos-release-([0-9]+).*$', '\\1') }}"
+
+- name: Undercloud Validation
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tags:
+      - update_validation
+      - update_undercloud_validation
+  tasks:
+      - name: Validation
+        include: "tasks/update/undercloud_validation.yml"
+
+- name: Update Overcloud repos
+  hosts: overcloud_nodes
+  gather_facts: yes
+  any_errors_fatal: true
+  tags:
+      - update
+      - update_repos
+  vars:
+      rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+  roles:
+      - role: rhos-release
+        release: "{{ (undercloud_version|int) }}"
+        build: "{{ install.updateto }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+
+- name: Overcloud Minor Update
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      undercloud_rc: "~/stackrc"
+      overcloud_rc: "~/overcloudrc"
+      overcloud_deploy_script: "~/overcloud_deploy.sh"
+      overcloud_update_script: "~/overcloud_update.sh"
+      overcloud_update_plan: "~/overcloud_update_plan.sh"
+  tags:
+      - update
+  tasks:
+      - name: update deployment plan in Mistral
+        include: tasks/update/11/update_mistral_plan.yaml
+
+      - name: Scan nodes ssh keys
+        command: "ssh-keyscan -t rsa {{ hostvars[item].ansible_ssh_host }}"
+        with_items: "{{ groups.overcloud_nodes|default([]) }}"
+        register: pubkeys
+
+      - name: Add nodes to known_hosts
+        known_hosts:
+            name: "{{ hostvars[item.item].ansible_ssh_host  }}"
+            key: "{{ item.stdout }}"
+        with_items: "{{ pubkeys.results }}"
+
+      - name: Overcloud Update
+        include: "tasks/update/{{ undercloud_version }}/update_overcloud.yaml"

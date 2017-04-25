@@ -1,0 +1,34 @@
+---
+- name: create update script {{ overcloud_update_script }}
+  copy:
+    dest: "{{ overcloud_update_script }}"
+    mode: 0755
+    content: |
+        yes ""| tail -n +1 | openstack overcloud update stack -i overcloud
+
+- name: run overcloud-update script
+  shell: |
+    source ~/stackrc ;
+    {{ overcloud_update_script }}
+  register: overcloud_update
+  ignore_errors: True
+
+- name: print overcloud failures
+  shell: |
+    source ~/stackrc ;
+    openstack stack failures list overcloud
+  when: overcloud_update.rc != 0
+
+- name: failed to update overcloud
+  fail:
+    msg: Failed to update overcloud
+  when:
+    - overcloud_update.rc != 0
+
+- name: successfull overcloud update
+  debug:
+    msg: 'Successfully updated overcloud'
+  when:
+    - overcloud_update.rc == 0
+    - "'update finished with status COMPLETE' in overcloud_update.stdout_lines"
+  ignore_errors: True

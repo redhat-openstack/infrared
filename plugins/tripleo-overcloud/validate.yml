@@ -4,6 +4,14 @@
   any_errors_fatal: true
   tasks:
 
+      - name: "Install/Upgrade/Update are mutually exclusive"
+        fail:
+            msg: "Options '--deploy', '--upgrade' and '--updateto' are mutually exclusive"
+        when:
+            - ( install.deploy|default('') and install.upgrade|default('')) or
+              ( install.deploy|default('') and install.updateto|default('None') != 'None' ) or
+              ( install.upgrade|default('') and install.updateto|default('None') != 'None' )
+
       - name: validate storage nodes
         fail:
             msg: "To many storage nodes to discover storage backend. Provide --storage-backend cli option with the backend to use. "
