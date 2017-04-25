@@ -1,0 +1,25 @@
+---
+- include_vars: vars/updates/update_11.yml
+
+- name: create SetupTestResources.sh at undercloud from template
+  template:
+      src: "templates/updates/SetupTestResources.sh.j2"
+      dest: "~/SetupTestResources.sh"
+      mode: 0755
+
+- name: create Connectiviy2VmTest.sh at undercloud from template
+  template:
+      src: templates/updates/Connectiviy2VmTest.sh.j2
+      dest: "~/Connectiviy2VmTest.sh"
+      mode: 0755
+
+- name: create VerifyConnectivityTest.sh at undercloud from template
+  template:
+      src: "templates/updates/VerifyConnectivityTest.sh.j2"
+      dest: "~/VerifyConnectivityTest.sh"
+      mode: 0755
+
+- name: run SetupTestResources.sh
+  shell: |
+      source ~/overcloudrc.v3 ;
+      ~/SetupTestResources.sh
