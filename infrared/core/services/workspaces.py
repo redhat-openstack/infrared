@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 import tarfile
+import tempfile
 import time
 
 import fileinput
@@ -115,14 +116,40 @@ class Workspace(object):
                 os.unlink(first)
             first = self.registy.pop()
 
-    def _remove_key_paths(self):
+    def _copy_outside_key(self, keypath, copykey=False):
+        new_key_path = ""
+        copy_alowed = copykey
+        if not keypath.startswith(self.path) and copy_alowed:
+            keyfilename = os.path.split(keypath)[-1]
+            fname = tempfile.mktemp(
+                prefix="{}-".format(keyfilename), dir="")
+            shutil.copy2(keypath, os.path.join(
+                self.path, fname))
+            new_key_path = fname
+
+        return new_key_path
+
+    def _remove_key_paths(self, copykeys=False):
         inv = self.inventory
 
-        real_inv = os.path.join(os.path.dirname(inv), os.readlink(inv))
+        real_inv = os.path.join(self.path, os.readlink(inv))
+        hypervisor_orig_ssh_key = ""
+        hypervisor_new_ssh_key = ""
 
         for line in fileinput.input(real_inv, inplace=True):
-            new_line = re.sub("{}{}".format(os.path.dirname(inv), os.path.sep),
+            if line.startswith("hypervisor"):
+                for token in line.strip().split():
+                    if "ansible_ssh_private_key_file" in token:
+                        hypervisor_orig_ssh_key = token.split("=")[1]
+                        hypervisor_new_ssh_key = self._copy_outside_key(
+                            hypervisor_orig_ssh_key, copykeys)
+
+            new_line = re.sub("{}{}".format(self.path, os.path.sep),
                               '', line.rstrip())
+
+            if hypervisor_orig_ssh_key and hypervisor_new_ssh_key:
+                new_line = re.sub(hypervisor_orig_ssh_key,
+                                  hypervisor_new_ssh_key, new_line.rstrip())
             print new_line
 
     def link_file(self, file_path,
@@ -279,7 +306,7 @@ class WorkspaceManager(object):
 
         return self.get(active_name)
 
-    def export_workspace(self, workspace_name, file_name=None):
+    def export_workspace(self, workspace_name, file_name=None, copykeys=False):
         """Export content of workspace folder as gzipped tar file
 
            Replaces existing .tgz file
@@ -296,7 +323,7 @@ class WorkspaceManager(object):
 
         fname = file_name or workspace.name
 
-        workspace._remove_key_paths()
+        workspace._remove_key_paths(copykeys)
 
         with tarfile.open(fname + '.tgz', "w:gz") as tar:
             tar.add(workspace.path, arcname="./")
