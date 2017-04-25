@@ -3,11 +3,8 @@
 Stores and resolves all the dependencies for the services.
 """
 import os
+import configparser as ConfigParser
 
-try:  # py2
-    import ConfigParser
-except ImportError:  # py3
-    import configparser as ConfigParser
 
 from infrared.core.services import workspaces
 from infrared.core.services import plugins
