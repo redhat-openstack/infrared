@@ -45,6 +45,10 @@ The following useful arguments can be provided to tune tempest tester. Complete 
                    --openstack-installer=tripleo \
                    --deployer-input-file=deployer-input-$BRANCH.conf
 
+* ``--image``: Image to be uploaded to glance and used for testing. Path have to be a url.
+    If image is not provided, tempest config will use the default.
+
+.. note:: You can specify image ssh user with ``--config-options compute.image_ssh_user=``
 
 Tempest results
 ---------------
