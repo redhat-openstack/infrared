@@ -1,0 +1,579 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85e98f25_5b88f2b3",
+        "filename": "plugins/tripleo-overcloud/main.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "This is different implementation then for undercloud without msg why it\u0027s not allowed.\n\nhttps://review.gerrithub.io/#/c/358409/8/plugins/tripleo-undercloud/validate.yml",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d2392c8_2ddffe54",
+        "filename": "plugins/tripleo-overcloud/tasks/update/11/setup_oc_resources.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "Is owner/group not required here?\nAlso should there be cleanup stage where those helper scripts are not required?",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5890a0fb_26eb3776",
+        "filename": "plugins/tripleo-overcloud/tasks/update/11/update_mistral_plan.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "owner/group ?",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b15f77b4_546e1813",
+        "filename": "plugins/tripleo-overcloud/tasks/update/11/update_mistral_plan.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "I don\u0027t like this, what if --debug has some parameter in the plan, how about one line that consists of few commands and each command has --debug:\n\nI am --debug line \u0026\u0026 with other --debug one.\n\nIs this really safe to say that --debug is as specified here?\n\nAt least use something that will create backup file:\n\nsed -i.bkp -e",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7238645_f9117a6c",
+        "filename": "plugins/tripleo-overcloud/tasks/update/11/update_mistral_plan.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "Why bash before updating that plan? Isn\u0027t this per script which is being invoked? Can we have problem here with some env variables not being passed properly when the new shell is invoked after sourcing stackrc?",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "771f5110_768aff34",
+        "filename": "plugins/tripleo-overcloud/tasks/update/11/update_overcloud.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "why bash and then script? Isn\u0027t this simple shell invocation, possibly just ensure that overcloud_update_script has appropriate +x perms?",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2db27704_3ce95e5b",
+        "filename": "plugins/tripleo-overcloud/tasks/update/11/update_overcloud.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "Is this OR / AND ? when specified like that?",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f7fe6c7_f78fcc3b",
+        "filename": "plugins/tripleo-overcloud/tasks/update/11/update_overcloud.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "Same as above it\u0027s not clear what logic is here in place OR / AND one of those or will we see 2 messages when both are true?",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c297a30_e79b9282",
+        "filename": "plugins/tripleo-overcloud/tasks/update/overcloud_validation.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "This looks like potential of many issues. Should the check be done by checking some package versions installed ?\nWhat if repo is defined there but disabled?\n\nThis is really not way to check for rhos-release version.\n\nSee:\nhttps://access.redhat.com/articles/1250803\n\nOr even /etc/rhosp-release file:\nhttps://bugzilla.redhat.com/show_bug.cgi?id\u003d1317669",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35197f5d_f403c394",
+        "filename": "plugins/tripleo-overcloud/tasks/update/undercloud_validation.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "and it\u0027s executable, could be at the same time checked here.",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cefe3ff_58acccf1",
+        "filename": "plugins/tripleo-overcloud/templates/updates/Connectiviy2VmTest.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "user could be variable and use of:\ncommand\n\nseems like not necessary here, actually you are not optimizing here with using command everywhere if the shell contains built-in function.",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "157a1296_b2d9038b",
+        "filename": "plugins/tripleo-overcloud/templates/updates/Connectiviy2VmTest.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "Is there timeout on that or can we enter infinite loop?",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "036405cb_1935c1b7",
+        "filename": "plugins/tripleo-overcloud/templates/updates/SetupTestResources.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "command is not required, use type(1) instead.\nPlease do this across all scripts.",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79da5b89_9582ce42",
+        "filename": "plugins/tripleo-overcloud/templates/updates/SetupTestResources.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "For one liners like above it\u0027s nicer to use ||\n\nsome command || echo \"Failed to run some command\"",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 2
+      },
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0dc53797_960962c6",
+        "filename": "plugins/tripleo-overcloud/templates/updates/SetupTestResources.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "Same as above ||",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 2
+      },
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e89e0a1_948b410b",
+        "filename": "plugins/tripleo-overcloud/templates/updates/SetupTestResources.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "Same as above ||",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 2
+      },
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9634f3ee_274b04be",
+        "filename": "plugins/tripleo-overcloud/templates/updates/SetupTestResources.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "Only one time? What if sleep 20 isn\u0027t enough, does the script bails out?",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 2
+      },
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01b1dec9_782d22c7",
+        "filename": "plugins/tripleo-overcloud/templates/updates/SetupTestResources.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "Remove dead code.",
+      "range": {
+        "startLine": 126,
+        "startChar": 0,
+        "endLine": 206,
+        "endChar": 68
+      },
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8097c925_990a8d3f",
+        "filename": "plugins/tripleo-overcloud/templates/updates/SetupTestResources.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "Remove \"command\", you can check with type(1) if glance CLI exists.",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4fe1cda9_fdf88d8b",
+        "filename": "plugins/tripleo-overcloud/templates/updates/SetupTestResources.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "remove command\nadd what happens if command fails",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d141a553_af6676e0",
+        "filename": "plugins/tripleo-overcloud/templates/updates/SetupTestResources.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "remove command",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3e052ec_04dce5a6",
+        "filename": "plugins/tripleo-overcloud/templates/updates/SetupTestResources.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "remove command",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e9ba8f8_bd49fd66",
+        "filename": "plugins/tripleo-overcloud/templates/updates/SetupTestResources.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "remove command",
+      "range": {
+        "startLine": 243,
+        "startChar": 0,
+        "endLine": 256,
+        "endChar": 45
+      },
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "484eff74_f61b7ea9",
+        "filename": "plugins/tripleo-overcloud/templates/updates/SetupTestResources.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "and here command",
+      "range": {
+        "startLine": 262,
+        "startChar": 0,
+        "endLine": 266,
+        "endChar": 70
+      },
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5bc6b552_feec95a2",
+        "filename": "plugins/tripleo-overcloud/templates/updates/SetupTestResources.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "is the nova/neutron/glance usage recommended or unified openstack client should be used?\n\nWhat is the source of update script/ what documentation.",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6b2d298_d677e3fa",
+        "filename": "plugins/tripleo-overcloud/templates/updates/VerifyConnectivityTest.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "interesting test...",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "338a3957_1e5c9607",
+        "filename": "plugins/tripleo-overcloud/templates/updates/VerifyConnectivityTest.sh.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "remove command",
+      "range": {
+        "startLine": 25,
+        "startChar": 22,
+        "endLine": 25,
+        "endChar": 23
+      },
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5435a94a_16a45c05",
+        "filename": "plugins/tripleo-overcloud/update.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "Same comment as previous file - is this really reliable way of getting osp version?",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cee84875_5ca88043",
+        "filename": "plugins/tripleo-overcloud/update.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "this should be in different file with some internal variables?",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8976f70b_2a5299a3",
+        "filename": "plugins/tripleo-overcloud/update.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "Please create temp directory using ansible tempfile",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0d8de04_7a6c3265",
+        "filename": "plugins/tripleo-overcloud/update.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2017-04-25T15:16:36Z",
+      "side": 1,
+      "message": "Maybe I missed something, but where venv is created?\nIf it\u0027s created by those playbooks, please use ansible built-in way of creating venv (ansible pip module)",
+      "revId": "3ecc65dffe1e2a2f225813886764459d532bea8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
