@@ -217,6 +217,13 @@ subparsers:
                       help: |
                           Enable usage of specified mirror (for rpm, pip etc) [brq,qeos,tlv - or hostname].
                           (Specified mirror needs to proxy multiple rpm source hosts and pypi packages.)
+                  minor-updates:
+                      type: Bool
+                      help: |
+                          Update Overcloud.
+                          NOTE: Update require overcloud deployment script to be available in home directory of undercloud
+                          user at undercloud node
+                          Currently, minor update is supported just for verion 11.
 
             - title: Ironic Configuration
               options:
