@@ -148,6 +148,33 @@ class Workspace(object):
                               line.rstrip())
             print new_line
 
+    def _copy_outside_keys(self):
+        """Copy key from out of the workspace into one"""
+        paths_map = {}
+        real_inv = os.path.join(self.path, os.readlink(self.inventory))
+
+        for line in fileinput.input(real_inv, inplace=True):
+            key_defs = re.findall(r"ansible_ssh_private_key_file=\/\S+", line)
+            for key_def in key_defs:
+                path = key_def.split("=")[-1]
+                paths_map.setdefault(path, path)
+
+            for mapped_orig, mapped_new in paths_map.iteritems():
+                if mapped_orig == mapped_new:
+                    keyfilename = os.path.basename(mapped_orig)
+                    rand_part = next(tempfile._get_candidate_names())
+                    new_fname = "{}-{}".format(keyfilename, rand_part)
+
+                    shutil.copy2(mapped_orig, os.path.join(
+                                 self.path, new_fname))
+                    paths_map[mapped_orig] = os.path.join(
+                        self.path_placeholder, new_fname)
+                    new_fname = paths_map[mapped_orig]
+                else:
+                    new_fname = mapped_new
+
+                print(re.sub(mapped_orig, new_fname, line.rstrip()))
+
     def link_file(self, file_path,
                   dest_name=None, unlink=True, add_to_reg=True):
         """Creates a link to a file within the workspace folder.
@@ -302,7 +329,7 @@ class WorkspaceManager(object):
 
         return self.get(active_name)
 
-    def export_workspace(self, workspace_name, file_name=None):
+    def export_workspace(self, workspace_name, file_name=None, copykeys=False):
         """Export content of workspace folder as gzipped tar file
 
         Replaces existing .tgz file
@@ -330,6 +357,8 @@ class WorkspaceManager(object):
             tmp_workspace = Workspace(name=workspace.name,
                                       path=tmp_workspace_path)
             tmp_workspace._purge_paths(workspace.path)
+            if copykeys:
+                tmp_workspace._copy_outside_keys()
             with tarfile.open(fname + '.tgz', "w:gz") as tar:
                 tar.add(tmp_workspace.path, arcname="./")
         finally:
