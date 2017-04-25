@@ -1,0 +1,19 @@
+---
+- name: Unsupported version
+  fail:
+      msg: "IR supports update just for OS version 11"
+  when:
+      - not (overcloud_version == "11")
+
+- name: Get Overcloud version
+  become: true
+  find:
+      use_regex: yes
+      patterns: 'rhos-release-[0-9]+.*'
+      paths:
+        - '/etc/yum.repos.d/'
+  register: result
+
+- name: Setting overcloud_version
+  set_fact:
+      overcloud_version: "{{ result.files[0]['path'] | basename | regex_replace('^rhos-release-([0-9]+).*$', '\\1') }}"

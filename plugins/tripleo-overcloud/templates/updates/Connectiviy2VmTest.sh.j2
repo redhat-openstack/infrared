@@ -1,0 +1,35 @@
+#!/bin/env bash
+#
+# SSH to VM during update
+#
+
+SSH_ARGS='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=25'
+
+REMOTE_HOME='{{ MY_REMOTE_HOME }}'
+REMOTE_FILE='{{ MY_REMOTE_FILE }}'
+REMOTE_PATH="${REMOTE_HOME}/${REMOTE_FILE}"
+REMOTE_USER="{{ MY_REMOTE_USER }}"
+
+LOCAL_FILE='{{ MY_LOCAL_FILE }}'
+LOCAL_PATH="~/${LOCAL_FILE}"
+
+IP_FILE='~/{{ MY_IP_FILE }}'
+
+if [[ -s ${IP_FILE} ]]
+then
+    REMOTE_IP=$( cat ${IP_FILE} )
+else
+    echo "ERROR. Floating IP of vm not specified"
+    exit 0
+fi
+
+# some random iterator
+i=1
+
+while /bin/true
+do
+    ssh ${SSH_ARGS} ${MY_REMOTE_USER}@${REMOTE_IP} "echo ${i} >> ${REMOTE_PATH}"
+    echo ${i} >> ${LOCAL_PATH}
+    i=$(( ${i} + 1 ))
+    sleep 30
+done
