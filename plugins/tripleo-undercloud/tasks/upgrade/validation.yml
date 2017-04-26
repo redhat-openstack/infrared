@@ -2,5 +2,12 @@
 - fail:
       msg: "Upgrade is supported only for version 9 and 10"
   when:
+    - install.upgrade|default(false)
     - not (undercloud_version == "9")
     - not (undercloud_version == "10")
+
+- fail:
+      msg: "Infrared support update for RHOSP version 11 only."
+  when:
+    - install.get('update', {}).undercloud|default(false)
+    - not (undercloud_version == "11")
