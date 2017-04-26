@@ -1,7 +1,7 @@
 plugin_type: supported_type1
-description: A description for plugin with unsupported option in spec
 subparsers:
     unsupported_spec_option_type:
+        description: A description for plugin with unsupported option in spec
         include_groups: []
         groups:
             - title: AGroup

@@ -1,8 +1,7 @@
 plugin_type: test
-description: Rally tests runner
 subparsers:
     rally:
-        help: Rally tests runner
+        description: Rally tests runner
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Rally
