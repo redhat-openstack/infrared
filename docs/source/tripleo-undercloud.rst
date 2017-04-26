@@ -167,3 +167,16 @@ To upgrade Undercloud run the following command::
         infrared tripleo-undercloud -v --upgrade yes --images-task rpm
 
 .. warning:: Currently, there is upgrade possibility from version 9 to version 10 only.
+
+Undercloud Update
+---------------------
+Update is discovering current Undercloud version and perform minor version update.
+To update Undercloud run the following command::
+
+    infrared tripleo-undercloud -v --update-undercloud yes
+
+Example for update of Undercloud and Images::
+
+        infrared tripleo-undercloud -v --update-undercloud yes --images-task rpm
+
+.. warning:: Currently, there is update possibility for version 11 only.
