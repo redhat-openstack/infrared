@@ -162,3 +162,11 @@ subparsers:
                       help: |
                           Undercloud Upgrade.
                           Note: Currently, there is upgrade possibility from version 9 to version 10 only.
+
+            - title: Undercloud Update
+              options:
+                  update-undercloud:
+                      type: Bool
+                      help: |
+                          Undercloud Update.
+                          Note: Update supported for RHOSP 11+ releases.
