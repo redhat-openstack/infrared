@@ -1,10 +1,8 @@
 ---
 plugin_type: install
-description: Install a Tripleo overcloud using a designated undercloud node
 subparsers:
     tripleo-overcloud:
-        # FIXME(yfried): duplicates "description"
-        help: Install a Tripleo overcloud using a designated undercloud node
+        description: Install a Tripleo overcloud using a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Stages Control

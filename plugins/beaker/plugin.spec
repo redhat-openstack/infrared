@@ -1,9 +1,8 @@
 ---
 plugin_type: provision
-description: Provision systems using Beaker
 subparsers:
     beaker:
-        help: Provision systems using Beaker
+        description: Provision systems using Beaker
         include_groups: ['Ansible options', 'Inventory', 'Common options', 'Answers file']
         groups:
             - title: Beaker instance access details

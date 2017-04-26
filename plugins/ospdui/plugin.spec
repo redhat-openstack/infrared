@@ -1,8 +1,7 @@
 plugin_type: test
-description: The ospdui test runner
 subparsers:
     ospdui:
-        help: The ospdui test runner
+        description: The ospdui test runner
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Setup

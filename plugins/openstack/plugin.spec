@@ -1,9 +1,8 @@
 ---
 plugin_type: provision
-description: Provision systems using Ansible OpenStack modules
 subparsers:
     openstack:
-        help: Provision systems using Ansible OpenStack modules
+        description: Provision systems using Ansible OpenStack modules
         include_groups: ['Ansible options', 'Inventory', 'Common options', 'Answers file']
         groups:
             - title: OpenStack Cloud Details
