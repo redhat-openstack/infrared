@@ -428,7 +428,10 @@ class InfraredPlugin(object):
 
     @property
     def description(self):
-        return self.config['description']
+        try:
+            return self.config['subparsers'][self.name]['description']
+        except KeyError:
+            return self.config['description']
 
     @staticmethod
     def spec_validator(spec_file):
@@ -449,40 +452,46 @@ class InfraredPlugin(object):
             raise IRFailedToAddPlugin(
                 "Spec file is empty or corrupted: '{}'".format(spec_file))
 
-        for required_key in ('plugin_type', 'description'):
-            if required_key not in spec_dict:
-                raise IRFailedToAddPlugin(
-                    "Required key '{}' is missing in plugin spec "
-                    "file: {}".format(required_key, spec_file))
-            if not isinstance(spec_dict[required_key], str):
-                raise IRFailedToAddPlugin(
-                    "Value of 'str' is expected for key '{}' in spec "
-                    "file '{}'".format(required_key, spec_file))
-            if not len(spec_dict[required_key]):
-                raise IRFailedToAddPlugin(
-                    "String value of key '{}' in spec file '{}' can't "
-                    "be empty.".format(required_key, spec_file))
+        plugin_type_key = 'plugin_type'
+        if plugin_type_key not in spec_dict:
+            raise IRFailedToAddPlugin(
+                "Required key '{}' is missing in plugin spec "
+                "file: {}".format(plugin_type_key, spec_file))
+        if not isinstance(spec_dict[plugin_type_key], str):
+            raise IRFailedToAddPlugin(
+                "Value of 'str' is expected for key '{}' in spec "
+                "file '{}'".format(plugin_type_key, spec_file))
+        if not len(spec_dict[plugin_type_key]):
+            raise IRFailedToAddPlugin(
+                "String value of key '{}' in spec file '{}' can't "
+                "be empty.".format(plugin_type_key, spec_file))
 
-        key = 'subparsers'
-        if key not in spec_dict:
+        subparsers_key = 'subparsers'
+        if subparsers_key not in spec_dict:
             raise IRFailedToAddPlugin(
                 "'{}' key is missing in spec file: '{}'".format(
-                    key, spec_file))
-        if not isinstance(spec_dict[key], dict):
+                    subparsers_key, spec_file))
+        if not isinstance(spec_dict[subparsers_key], dict):
             raise IRFailedToAddPlugin(
                 "Value of '{}' in spec file '{}' should be "
-                "'dict' type".format(key, spec_file))
-        if len(spec_dict[key]) != 1:
+                "'dict' type".format(subparsers_key, spec_file))
+        if 'description' not in spec_dict \
+                and 'description' not in spec_dict[subparsers_key].values()[0]:
+            raise IRFailedToAddPlugin(
+                "Required key 'description' is missing for supbarser '{}' in "
+                "spec file '{}'".format(
+                    spec_dict[subparsers_key].keys()[0], spec_file))
+        if len(spec_dict[subparsers_key]) != 1:
             raise IRFailedToAddPlugin(
                 "One subparser should be defined under '{}' in "
-                "spec file '{}'".format(key, spec_file))
-        if not isinstance(spec_dict[key].values()[0], dict):
+                "spec file '{}'".format(subparsers_key, spec_file))
+        if not isinstance(spec_dict[subparsers_key].values()[0], dict):
             raise IRFailedToAddPlugin(
                 "Subparser '{}' should be 'dict' type and not '{}' type in "
                 "spec file '{}'".format(
-                    spec_dict[key].keys()[0],
-                    type(spec_dict[key].values()[0]), spec_file))
-        if spec_dict[key].keys()[0].lower() == 'all':
+                    spec_dict[subparsers_key].keys()[0],
+                    type(spec_dict[subparsers_key].values()[0]), spec_file))
+        if spec_dict[subparsers_key].keys()[0].lower() == 'all':
             raise IRFailedToAddPlugin(
                 "Adding a plugin named 'all' isn't allowed")
 
