@@ -16,22 +16,34 @@
             msg: "instackenv file is missing"
         when: not instack_file_path.stat.exists
 
-      - name: create the baremetal flavor for our machines
-        shell: |
-            source ~/stackrc
-            openstack flavor create --id auto --ram 4096 --disk 16 --vcpus 1 baremetal
-        tags: skip_ansible_lint
-        register: result
-        ignore_errors: yes
-        failed_when: "result.rc != 0 and result.stderr.find('Flavor with name baremetal already exists') != -1"
+      - block:
+          - name: create the baremetal flavor for our machines
+            shell: |
+                source ~/stackrc
+                openstack flavor create --id auto --ram 4096 --disk 16 --vcpus 1 baremetal
+            tags: skip_ansible_lint
+            register: bm_result
+            ignore_errors: yes
+            failed_when: "bm_result.rc != 0 and bm_result.stderr.find('Flavor with name baremetal already exists') != -1"
 
-      - name: set additional properties
-        shell: |
-            source ~/stackrc
-            openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' baremetal
-        tags: skip_ansible_lint
+          - name: set additional properties
+            shell: |
+                source ~/stackrc
+                openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' --property "capabilities:profile"="baremetal" baremetal
+            tags: skip_ansible_lint
 
-      - name: read instackenv file for bm deployment
+          # OSPd7 doesn't seem to have implicit profile matching and notifies to do this step manually
+          # in prior of OC deployment. Otherwise errors and warnings are produced in process when
+          # deployment starts.
+          - name: Set baremetal capability for OSPd7 nodes as it must be done explicitely
+            shell: |
+                source ~/stackrc
+                for node in `ironic node-list | awk '{print $2}' | grep -v "\(ID\|^$\)"`; do ironic node-update $node replace properties/capabilities=profile:baremetal,boot_option:local; done
+            tags: skip_ansible_lint
+            when: openstack.version|openstack_release == 7
+        when: "'baremetal' in groups"
+
+      - name: read instackenv file
         command: cat "{{ instack_file }}"
         register: overcloud_hosts_facts
 
@@ -84,7 +96,7 @@
                   --vcpus {{ [((hostvars[item.name] | default({})).vcpus | default(item.cpu) | int) - 1, flv_min_cpu] | max }}
                   {{ item.name.rstrip('1234567890-').split('-')[-1] }}
               register: flavor_result
-              failed_when: "result.rc != 0 and result.stderr.find('Flavor with name {{ item.name }} already exists') != -1"
+              failed_when: "flavor_result.rc != 0 and flavor_result.stderr.find('Flavor with name {{ item.name }} already exists') != -1"
               with_items: "{{ overcloud_facts.nodes | default([]) }}"
 
             - name: get the node UUID
