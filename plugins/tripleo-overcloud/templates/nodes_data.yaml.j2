@@ -1,0 +1,15 @@
+parameter_defaults:
+    ControllerCount: {{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or '1' }}
+    OvercloudControlFlavor: {{ (groups['controller'] is defined) | ternary('controller', 'baremetal') }}
+    ComputeCount: {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or '1' }}
+    OvercloudComputeFlavor: {{ (groups['compute'] is defined) | ternary('compute', 'baremetal') }}
+{% if not install.storage.external %}
+{%- if storage_backend == 'ceph' %}
+    CephStorageCount: {{ (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 }}
+    OvercloudCephStorageFlavor: {{ (groups['ceph'] is defined) | ternary('ceph', 'baremetal') }}
+{% endif -%}
+{%- if storage_backend == 'swift' %}
+    ObjectStorageCount: {{ (install.storage.nodes|default(0)) or (groups['swift']|default([])|length) or 1 }}
+    OvercloudSwiftStorageFlavor: {{ (groups['swift'] is defined) | ternary('swift', 'baremetal') }}
+{% endif -%}
+{% endif %}
