@@ -16,6 +16,7 @@
             rhos_version: '8'
           - nova_version: '2015'
             rhos_version: '7'
+      operation_type: "Upgrade"
 
   pre_tasks:
       - name: Check for /etc/rhosp-release
@@ -47,12 +48,27 @@
         include: "tasks/upgrade/validation.yml"
         tags: validation
 
+      - name: Set new_version for upgrade
+        set_fact:
+            new_version: "{{ undercloud_version|int + 1 }}"
+        when: install.upgrade|default('')
+
+      - name: Set new_version for update
+        set_fact:
+            new_version: "{{ undercloud_version }}"
+        when: install.get('update', {}).undercloud|default('')
+
+      - name: Set operation_type for update
+        set_fact:
+            operation_type: "Update"
+        when: install.get('update', {}).undercloud|default('')
+
   roles:
       - role: rhos-release
-        release: "{{ undercloud_version|int + 1 }}"
+        release: "{{ new_version }}"
         build: "{{ install.build }}"
         mirror: "{{ install.mirror | default(omit) }}"
         tags: upgrade
   tasks:
-      - name: "Upgrade from version {{ undercloud_version }} to {{ (undercloud_version|int) + 1 }}"
-        include: "tasks/upgrade/upgrade_{{ (undercloud_version|int) + 1 }}.yml"
+      - name: "{{ operation_type }} to version {{ new_version }} build {{ install.build }}"
+        include: "tasks/upgrade/upgrade_{{ new_version }}.yml"
