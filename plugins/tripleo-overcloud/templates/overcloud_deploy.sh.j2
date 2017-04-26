@@ -4,7 +4,9 @@ openstack overcloud deploy \
 --templates \
 --libvirt-type kvm \
 --ntp-server clock.redhat.com \
+{% if install.version|openstack_release < 11 %}
 --control-scale {{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or '1' }} \
 --control-flavor {{ (groups['controller'] is defined) | ternary('controller', 'baremetal') }} \
 --compute-scale {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or '1' }} \
 --compute-flavor {{ (groups['compute'] is defined) | ternary('compute', 'baremetal') }} \
+{% endif %}
