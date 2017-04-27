@@ -1,8 +1,9 @@
 ---
 - fail:
-      msg: "Upgrade is supported only for version 9 and 10"
+      msg: "Upgrade is supported only for version 7, 9 and 10"
   when:
     - install.upgrade|default(false)
+    - not (undercloud_version == "7")
     - not (undercloud_version == "9")
     - not (undercloud_version == "10")
 
