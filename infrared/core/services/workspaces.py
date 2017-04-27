@@ -1,14 +1,21 @@
 import datetime
+import tempfile
+
 import os
+import re
 import shutil
 import tarfile
 import time
 
+import fileinput
+
+import yaml
 from ansible.parsing.dataloader import DataLoader
 from ansible import inventory
 from ansible.vars import VariableManager
 
 from infrared.core.utils import exceptions, logger
+
 LOG = logger.LOG
 
 TIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
@@ -113,6 +120,18 @@ class Workspace(object):
                 os.unlink(first)
             first = self.registy.pop()
 
+    def _replace_paths(self, old_path):
+        """Update old inventory paths with current workspace directory. """
+        inv = self.inventory
+
+        real_inv = os.path.join(os.path.dirname(inv), os.readlink(inv))
+
+        for line in fileinput.input(real_inv, inplace=True):
+            new_line = re.sub(old_path,
+                              os.path.dirname(os.path.abspath(real_inv)),
+                              line.rstrip())
+            print new_line
+
     def link_file(self, file_path,
                   dest_name=None, unlink=True, add_to_reg=True):
         """Creates a link to a file within the workspace folder.
@@ -173,6 +192,7 @@ class WorkspaceManager(object):
 
     At least one workspace will be active.
     """
+    export_metadata = "metadata.yml"
 
     def __init__(self, workspaces_base_dir):
         self.workspace_dir = workspaces_base_dir
@@ -270,7 +290,7 @@ class WorkspaceManager(object):
     def export_workspace(self, workspace_name, file_name=None):
         """Export content of workspace folder as gzipped tar file
 
-           Replaces existing .tgz file
+        Replaces existing .tgz file
         """
 
         if workspace_name:
@@ -284,8 +304,18 @@ class WorkspaceManager(object):
 
         fname = file_name or workspace.name
 
-        with tarfile.open(fname + '.tgz', "w:gz") as tar:
-            tar.add(workspace.path, arcname="./")
+        # Metadata file will store extra data about the workspace,
+        # to be used during import
+        with tempfile.NamedTemporaryFile(
+                prefix="metadata-") as tmp_md:
+            meta_data = dict(
+                original_path=workspace.path
+            )
+            tmp_md.write(yaml.safe_dump(meta_data, default_flow_style=False))
+            tmp_md.flush()
+            with tarfile.open(fname + '.tgz', "w:gz") as tar:
+                tar.add(workspace.path, arcname="./")
+                tar.add(tmp_md.name, arcname=self.export_metadata)
 
         print("Workspace {} is exported to file {}.tgz".format(workspace.name,
                                                                fname))
@@ -293,7 +323,10 @@ class WorkspaceManager(object):
     def import_workspace(self, file_name, workspace_name=None):
         """Import workspace from gzipped tar file
 
-           Workspace name should be unique
+        Workspace name should be unique
+        Replaces original workspace dirnames with new ones in inventory 
+        (based on metadata.yml file) 
+
         """
 
         if not os.path.exists(file_name):
@@ -308,6 +341,15 @@ class WorkspaceManager(object):
             file_name, new_workspace.path))
         with tarfile.open(file_name) as tar:
             tar.extractall(path=new_workspace.path)
+
+        self.activate(new_workspace.name)
+
+        with open(os.path.join(new_workspace.path,
+                  self.export_metadata), "r") as md:
+            metadata = yaml.load(md)
+            new_workspace._replace_paths(metadata["original_path"])
+
+        os.remove(md.name)
 
     def is_active(self, name):
         """Checks if workspace is active."""
