@@ -1,11 +1,9 @@
 import datetime
 import os
-import re
 import shutil
 import tarfile
 import time
 
-import fileinput
 from ansible.parsing.dataloader import DataLoader
 from ansible import inventory
 from ansible.vars import VariableManager
@@ -114,16 +112,6 @@ class Workspace(object):
                 LOG.debug("Removing link: %s", first)
                 os.unlink(first)
             first = self.registy.pop()
-
-    def _remove_key_paths(self):
-        inv = self.inventory
-
-        real_inv = os.path.join(os.path.dirname(inv), os.readlink(inv))
-
-        for line in fileinput.input(real_inv, inplace=True):
-            new_line = re.sub("{}{}".format(os.path.dirname(inv), os.path.sep),
-                              '', line.rstrip())
-            print new_line
 
     def link_file(self, file_path,
                   dest_name=None, unlink=True, add_to_reg=True):
@@ -295,8 +283,6 @@ class WorkspaceManager(object):
                 raise exceptions.IRNoActiveWorkspaceFound()
 
         fname = file_name or workspace.name
-
-        workspace._remove_key_paths()
 
         with tarfile.open(fname + '.tgz', "w:gz") as tar:
             tar.add(workspace.path, arcname="./")
