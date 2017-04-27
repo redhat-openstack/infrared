@@ -24,9 +24,14 @@ test_dict:
     # https://bugzilla.redhat.com/show_bug.cgi?id=1450894, https://bugzilla.redhat.com/show_bug.cgi?id=1399140
     # https://bugzilla.redhat.com/show_bug.cgi?id=1414471, https://bugzilla.redhat.com/show_bug.cgi?id=1414478
     - tempest.scenario.test_network_v6
+    # these are not run in neutron https://github.com/redhat-openstack/infrared/blob/master/plugins/tempest/vars/tests/neutron.yml
+    - tempest.scenario.test_shelve_instance
+    # these fail in neutron
+    - tempest.api.network.admin.test_floating_ips_admin_actions.FloatingIPAdminTestJSON.test_associate_floating_ip_with_port_from_another_tenant
+    - neutron.tests.tempest.scenario.test_trunk.TrunkTest.test_subport_connectivity
   plugins:
     neutron:
         repo: "https://github.com/openstack/neutron.git"
-        version: "stable/ocata"
+        version: "master"
         package:
           default: "python-neutron-tests"
