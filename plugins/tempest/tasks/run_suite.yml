@@ -13,13 +13,13 @@
       seq_number: "{{ file_name | regex_replace('^(?P<basename>.+)\\.(?P<seq_num>\\d+)$', '\\g<seq_num>') }}"
   set_fact:
       max_seq_number: "{{ [seq_number|int, max_seq_number|int] | max }}"
-      test_output_file: "tempest-results-{{ test_suite }}.{{ max_seq_number | int + 1 }}.xml"
+      test_output_filename: "tempest-results-{{ test_suite }}.{{ max_seq_number | int + 1 }}"
   with_fileglob:
-      - "{{ inventory_dir }}/tempest_results/*.xml"
+      - "{{ inventory_dir }}/tempest_results/*.subunit"
 
 - name: set facts
   set_fact:
-      test_output_file: "tempest-results-{{ test_suite }}.{{ max_seq_number | int + 1 }}.xml"
+      test_output_filename: "tempest-results-{{ test_suite }}.{{ max_seq_number | int + 1 }}"
       blacklistfile: ''
       whitelistfile: ''
       regex: ''
@@ -34,7 +34,9 @@
   with_items:
       - "white_list_{{ test_suite }}"
       - "black_list_{{ test_suite }}"
-      - "{{ test_output_file }}"
+      - "{{ test_output_filename }}.subunit"
+      - "{{ test_output_filename }}.xml"
+      - "{{ test_output_filename }}.html"
 
 - block:
     - name: create Test List - Whitelist for "{{ test_suite }}"
@@ -74,8 +76,9 @@
       - name: run tempest "{{ test_suite }}" suite
         shell: >
             test -e .venv/bin/activate && source .venv/bin/activate;
-            ostestr -s --no-pretty --regex '{{ regex | default('') }}' {{ whitelistfile }} {{ blacklistfile }} {{ ('--concurrency ' + test.threads|string ) if test.threads|default('') else '' }} {{ ('--black-regex ' + test.blackre|string|quote ) if test.blackre|default('') else '' }}
-            | subunit2junitxml --output-to={{ test_output_file }} | subunit2pyunit
+            ostestr -s --no-pretty --regex '{{ regex | default('') }}' {{ whitelistfile }} {{ blacklistfile }} \
+            {{ ('--concurrency ' + test.threads|string ) if test.threads|default('') else '' }} \
+            > {{ test_output_filename }}.subunit;
         args:
             executable: /bin/bash
             chdir: "{{ test.dir }}"
@@ -93,24 +96,49 @@
             set -x
             echo "Warning: Test black listing is not implemented!" >&2
             test -e ".testrepository" || testr init
-            testr run {{ ('--parallel --concurrency=' + test.threads|string) if test.threads|default('') else '' }} --subunit '{{ '|'.join(parts) }}' | subunit2junitxml --output-to={{ test_output_file }} | subunit2pyunit
+            ostestr -s --no-pretty --regex '{{ regex | default('') }}' {{ whitelistfile }} {{ blacklistfile }} \
+            {{ ('--concurrency ' + test.threads|string ) if test.threads|default('') else '' }} \
+            > {{ test_output_filename }}.subunit;
         args:
             executable: /bin/bash
             chdir: "{{ test.dir }}"
         ignore_errors: true
         when: test.openstack.version|default(overcloud_version)|openstack_release == 7 and test.setup == 'rpm'
 
+      - name: generate results report in {{ item.name }} format
+        shell: |
+          "{{ item.command }}"
+        args:
+            chdir: "{{ test.dir }}"
+        with_items:
+          - { format: "JUnitXML", command: '/bin/bash -c "subunit2junitxml --output-to={{ test_output_filename }}.xml \
+                                           < {{ test_output_filename }}.subunit | subunit2pyunit"' }
+          - { format: "HTML", command: '/bin/bash -c "subunit2html {{ test_output_filename }}.subunit {{ test_output_filename }}.html"' }
+
       - name: inject the test suite name to the XML name atribute
-        command: "sed '/^<testsuite/s/name=\"\"/name=\"{{ test_suite }}\"/' -i {{ test_output_file }}"
+        command: "sed '/^<testsuite/s/name=\"\"/name=\"{{ test_suite }}\"/' -i {{ test_output_filename }}.xml"
         args:
             chdir: "{{ test.dir }}"
 
-      - name: Fetch resulting file
+      - name: add the test suite name in the HTML report title
+        command: "sed 's#<title>\\(.*Test Report\\)</title>#<title>\\1 - {{ test_suite }}</title>#' \
+                  -i {{ test_output_filename }}.html"
+        args:
+            chdir: "{{ test.dir }}"
+
+      - name: Fetch JUnit XML results file
         fetch:
-            src: "{{ test.dir }}/{{ test_output_file }}"
-            dest: "{{ inventory_dir }}/tempest_results/{{ test_output_file }}"
+            src: "{{ test.dir }}/{{ test_output_filename }}.xml"
+            dest: "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.xml"
             flat: yes
             fail_on_missing: yes
+
+      - name: Fetch HTML results file
+        fetch:
+            src: "{{ test.dir }}/{{ test_output_filename }}.html"
+            dest: "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.html"
+            flat: yes
+            fail_on_missing: no
 
       - name: cleanup the resources created by the test and not cleaned
         shell: >
