@@ -20,9 +20,25 @@
     - "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }}"
   when: patched_rpms.stat.exists
 
+- name: bz1448885 Enable Optional Repo
+  command: "virt-customize -a {{ overcloud_image_file }} --run-command 'yum-config-manager --enable rhelosp-rhel-7.4-server-opt' --selinux-relabel"
+
+- name: bz1448885 Apply https://review.openstack.org/#/c/483733/
+  shell: |
+    mkdir -p /tmp/odl_patch
+    wget https://review.openstack.org/changes/483733/revisions/63a00045929fb3483866df9eea0390ebee5f52c5/archive?format=tgz -O /tmp/odl_patch/review.tgz
+    tar zxvf /tmp/odl_patch/review.tgz -C /tmp/odl_patch/
+    export LIBGUESTFS_BACKEND=direct
+    virt-copy-in -a {{ overcloud_image_file }} /tmp/odl_patch/manifests/plugins/ovs/opendaylight.pp /usr/share/openstack-puppet/modules/neutron/manifests/plugins/ovs/
+    virt-copy-in -a {{ overcloud_image_file }} /tmp/odl_patch/lib/puppet/parser/functions/convert_to_json_string.rb /usr/share/openstack-puppet/modules/neutron/lib/puppet/parser/functions
+    exit 0
+
 - name: Install packages in overcloud image
   command: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel"
   when: install.images.packages|default(None) != None
+
+- name: Workaround for openstack-neutron-l2gw-agent problem
+  command: "virt-customize -a {{ overcloud_image_file }} --uninstall openstack-neutron-l2gw-agent"
 
 - name: update packages on repos
   command: "virt-customize -a {{ overcloud_image_file }} --update --memsize {{ requested_mem }} --smp {{ (ansible_processor_vcpus/2)|round|int }}  --selinux-relabel"
