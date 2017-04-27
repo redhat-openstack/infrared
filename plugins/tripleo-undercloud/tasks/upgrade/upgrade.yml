@@ -4,6 +4,40 @@
   yum:
       name: "*"
       state: latest
+  when: undercloud_version == "7"
+
+- block:
+      - name: Stopping services
+        become: true
+        shell: |
+             systemctl stop 'openstack-*'
+             systemctl stop 'neutron-*'
+      
+      - name: Update packages prior upgrade
+        become: true
+        yum:
+            name: "python-tripleoclient"
+            state: latest
+  when: undercloud_version|int > 7
+
+- block:
+      - name: Stop httpd
+        become: true
+        service:
+              name: httpd
+              state: stopped
+      
+      - name: update packages prior upgrade
+        become: true
+        yum:
+            name: "{{ item }}"
+            state: latest
+        with_items:
+            - 'instack-undercloud'
+            - 'openstack-puppet-modules'
+            - 'openstack-tripleo-common'
+            - 'python-tripleoclient'
+  when: undercloud_version == "10"
 
 - name: Undercloud upgrade
   shell: "openstack undercloud upgrade &> undercloud_upgrade.log"
