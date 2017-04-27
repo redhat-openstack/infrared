@@ -11,18 +11,19 @@ subparsers:
               options:
                   introspect:
                       type: Bool
-                      help: Specifies whether to run introspection
+                      help: When given, instructs on running introspection
 
                   tagging:
                       type: Bool
-                      help: Specifies whether to create flavors automatically and tag our hosts with them
+                      help: When given, instructs on automatically create flavors and tag our hosts with them
 
                   deploy:
                       type: Bool
+                      help: When given, instructs on running the overcloud deployment
 
                   post:
                       type: Bool
-                      help: Specifies whether we should run post install tasks
+                      help: When given, instructs on running post install tasks
 
             - title: Deployment Description
               options:
