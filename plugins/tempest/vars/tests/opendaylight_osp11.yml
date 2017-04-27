@@ -1,0 +1,24 @@
+---
+test_dict:
+  test_regex: ''
+  whitelist:
+    - tempest.api.network
+    - tempest.scenario..*network
+    - "^neutron.tests.tempest.*"
+  blacklist:
+    # disabling this test explicitly as it runs despite "remove-extension = dvr" in tempest.conf
+    - neutron.tests.tempest.scenario.test_dvr.NetworkDvrTest.test_vm_reachable_through_compute
+    # https://bugs.opendaylight.org/show_bug.cgi?id=6718
+    - tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_update_instance_port_admin_state
+    # https://bugs.opendaylight.org/show_bug.cgi?id=6713
+    - tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_update_router_admin_state
+    # skipped automatically till https://bugs.launchpad.net/tempest/+bug/1610994 is resolved
+    - tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_connectivity_between_vms_on_different_networks
+    # automatically skipped because network extension: l3_agent_scheduler is not enabled
+    - tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_router_rescheduling
+    # automatically skipped: L3 Agent Scheduler Extension not enabled.
+    - empest.api.network.admin.test_l3_agent_scheduler
+  plugins:
+    neutron:
+        repo: "https://github.com/openstack/neutron.git"
+        package: "python-neutron-tests"
