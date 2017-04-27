@@ -152,20 +152,6 @@ def test_workspace_fetch_inventory(workspace_manager_fixture, test_workspace):
     assert os.path.basename(inventory_path) == "hosts"
 
 
-def test__remove_key_paths(test_workspace):
-    path = test_workspace.path
-    test_inv = os.path.join(path, "new_test_env")
-    test_key = os.path.join(path, "id_rsa")
-
-    with open(test_inv, "w") as new_inv:
-        new_inv.write("ansible_ssh_key={}".format(test_key))
-
-    test_workspace.inventory = test_inv
-    test_workspace._remove_key_paths()
-    with open(test_inv, "r") as inv:
-        assert inv.read().strip() == "ansible_ssh_key=id_rsa"
-
-
 @pytest.mark.parametrize('inventory_content', ["fake content", ""])
 def test_workspace_copy_file(workspace_manager_fixture, test_workspace,
                              tmpdir, inventory_content):
@@ -237,24 +223,16 @@ def test_workspace_import_workspace_exists(workspace_manager_fixture, mocker):
     workspace_manager_fixture.get = back_get
 
 
-def test_workspace_export(workspace_manager_fixture, test_workspace, tmpdir,
-                          mocker):
+def test_workspace_export(workspace_manager_fixture, test_workspace, tmpdir):
     cwd = os.getcwd()
 
     os.chdir(tmpdir.strpath)
 
     back_get = workspace_manager_fixture.get
     workspace_manager_fixture.get = lambda x: test_workspace
-
-    back__remove_abs_path = test_workspace._remove_key_paths
-    test_workspace._remove_key_paths = mocker.MagicMock()
-
     workspace_manager_fixture.export_workspace(test_workspace.name,
                                                "some_file")
-    assert test_workspace._remove_key_paths.called_once_with()
-
     workspace_manager_fixture.get = back_get
-    test_workspace._remove_key_paths = back__remove_abs_path
 
     assert os.path.exists("some_file.tgz")
     os.remove("some_file.tgz")
