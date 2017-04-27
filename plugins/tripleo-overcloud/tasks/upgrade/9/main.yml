@@ -1,0 +1,65 @@
+---
+- name: SSL Config
+  include: "ssl.yml"
+  tags:
+      - upgrade
+      - upgrade_ssl
+
+- name: run upgrade steps
+  include: ../common/upgrade_step.yml
+  loop_control:
+    loop_var: ugstage
+  with_items:
+    - step: "AODH installation"
+      script: "~/aodh_installation.sh"
+      environment_file:
+        - /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-aodh.yaml
+    - step: "Keystone pre-upgrade"
+      script: "~/keystone_upgrade.sh"
+      environment_file:
+        - /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-keystone-liberty-mitaka.yaml
+    - step: "Upgrade init"
+      script: "~/upgrade_init.sh"
+      environment_file:
+        - /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker-init.yaml
+
+- name: Object Storage Upgrade
+  include: ../common/node_upgrade.yml
+  with_items: "{{ groups.swift|default([]) }}"
+  loop_control:
+      loop_var: node_name
+  tags: swift_upgrade
+
+- name: Controller upgrade
+  include: ../common/upgrade_step.yml
+  loop_control:
+    loop_var: ugstage
+  with_items:
+    - step: "Controller upgrade"
+      script: "~/controller_upgrade.sh"
+      environment_file:
+        - /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker.yaml
+
+- name: Ceph OSD nodes upgrade
+  include: ../common/node_upgrade.yml
+  with_items: "{{ groups.ceph|default([]) }}"
+  loop_control:
+      loop_var: node_name
+  tags: upgrade_ceph
+
+- name: Nova compute nodes upgrade
+  include: ../common/node_upgrade.yml
+  with_items: "{{ groups.compute|default([]) }}"
+  loop_control:
+      loop_var: node_name
+  tags: upgrade_compute
+
+- name: Upgrade convergence
+  include: ../common/upgrade_step.yml
+  loop_control:
+    loop_var: ugstage
+  with_items:
+    - step: "Upgrade convergence"
+      script: "~/convergence.sh"
+      environment_file:
+        - /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker-converge.yaml
