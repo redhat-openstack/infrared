@@ -1,0 +1,45 @@
+---
+- name: Create {{ item.step }} base script
+  copy:
+      src: "{{ overcloud_upgrade_script }}"
+      dest: "{{ item.script }}"
+      mode: 0755
+      remote_src: true
+
+- name: Store last deploy command line
+  command: "tail -1 {{ item.script }}"
+  register: deploy_lastline
+
+- name: Append params to {{ item.step }} script
+  lineinfile:
+      dest: "{{ item.script }}"
+      insertbefore: "{{ deploy_lastline.stdout }}"
+      line: '-e {{ item.environment_file }} \'
+
+- name: Change log file name of {{ item.step }} script
+  lineinfile:
+      dest: "{{ item.script }}"
+      regexp: '^--log-file.*'
+      state: absent
+
+- name: Print {{ item.step }} command
+  command: "cat {{ item.script }}"
+
+- name: Executing {{ item.step }} command
+  shell: |
+      source {{ undercloud_rc }}
+      bash {{ item.script }} &> {{ item.script }}.log
+  register: overcloud_upgrade_step
+  ignore_errors: yes
+
+- name: Print stack failures
+  shell: |
+      source {{ undercloud_rc }}
+      openstack stack failures list overcloud
+  when:
+      - overcloud_upgrade_step.rc != 0
+      - undercloud_version|openstack_release > 9
+
+- fail:
+      msg: "Overcloud upgrade {{ item.step }} step failed... :("
+  when: overcloud_upgrade_step.rc != 0
