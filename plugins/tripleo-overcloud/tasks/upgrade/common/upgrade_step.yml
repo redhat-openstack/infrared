@@ -1,0 +1,27 @@
+---
+- name: Create {{ item.step }} base script
+  copy:
+      src: "{{ overcloud_upgrade_script }}"
+      dest: "{{ item.script }}"
+      mode: 0755
+      remote_src: true
+
+- name: Append params to {{ item.step }} script
+  lineinfile:
+      dest: "{{ item.script }}"
+      insertbefore: '^--log-file.*'
+      line: '-e {{ item.environment_file }} \'
+
+- name: Change log file name of {{ item.step }} script
+  lineinfile:
+      dest: "{{ item.script }}"
+      regexp: '^--log-file.*'
+      state: absent
+
+- name: Print {{ item.step }} command
+  command: "cat {{ item.script }}"
+
+- name: Executing {{ item.step }} command
+  shell: |
+      source {{ undercloud_rc }}
+      bash {{ item.script }} &> {{ item.script }}.log
