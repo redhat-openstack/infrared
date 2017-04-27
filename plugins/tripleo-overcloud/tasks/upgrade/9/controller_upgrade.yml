@@ -1,0 +1,27 @@
+---
+- name: Create Controler upgrade base script
+  copy:
+      src: "{{ overcloud_upgrade_script }}"
+      dest: "{{ controller_upgrade_script }}"
+      mode: 0755
+      remote_src: true
+
+- name: Append params to Controler upgrade script
+  lineinfile:
+      dest: "{{ controller_upgrade_script }}"
+      insertbefore: '^--log-file.*'
+      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker.yaml \'
+
+- name: Change log file name of Controler upgrade script
+  lineinfile:
+      dest: "{{ controller_upgrade_script }}"
+      regexp: '^--log-file.*'
+      state: absent
+
+- name: Print Controller Upgrade command
+  command: "cat {{ controller_upgrade_script }}"
+
+- name: Executing Controller Upgrade command
+  shell: |
+      source {{ undercloud_rc }}
+      bash {{ controller_upgrade_script }} &> controller-upgrade.log
