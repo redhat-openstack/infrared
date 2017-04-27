@@ -11,6 +11,11 @@
       name: pip
       state: latest
 
+- name: Clean up previous tempest checkout
+  file:
+      path: "~/{{ test.dir }}"
+      state: absent
+
 - name: Clone tempest
   git:
       repo: "{{ setup.repo.get(test.openstack.version|openstack_release, setup.repo.defaults).url }}"
