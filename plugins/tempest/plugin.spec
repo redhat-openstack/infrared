@@ -98,3 +98,11 @@ subparsers:
                       help: |
                           Use tempest cleanup to clean the leftover from the tests (usually when tests fail)
                       default: no
+                  results-format:
+                      type: Value
+                      help: |
+                          Additional format of tempest results report. Junit XML is created always. This option
+                          specifies which report format to create additionally.
+                      choices:
+                          - html
+                      default: html
