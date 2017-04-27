@@ -56,6 +56,6 @@
         tags: upgrade
   tasks:
       - name: "{{ operation_type }} to version {{ new_version }} build {{ install.build }}"
-        include: "tasks/upgrade/upgrade_{{ new_version }}.yml"
+        include: "tasks/upgrade/upgrade.yml"
         vars:
             new_version: "{{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }}"
