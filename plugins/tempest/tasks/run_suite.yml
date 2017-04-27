@@ -124,7 +124,9 @@
             - ostestr_version.stdout_lines | version_compare('0.8.0', '<')
 
       - name: generate results report in HTML format
-        command: "subunit2html {{ test_output_filename }}.subunit {{ test_output_filename }}.html"
+        shell: |
+            test -e .venv/bin/activate && source .venv/bin/activate
+            subunit2html {{ test_output_filename }}.subunit {{ test_output_filename }}.html
         args:
             chdir: "{{ test.dir }}"
         when:
@@ -132,6 +134,7 @@
 
       - name: generate results report in JunitXML format
         shell: |
+            test -e .venv/bin/activate && source .venv/bin/activate
             subunit2junitxml --output-to={{ test_output_filename }}.xml \
                 < {{ test_output_filename }}.subunit | subunit2pyunit
         args:
