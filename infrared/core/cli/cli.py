@@ -170,9 +170,10 @@ class CliParser(object):
             opt_kwargs['help'] = ''
 
         # print default values to the help
-        if opt_kwargs.get('default', None):
-            opt_kwargs['help'] += "\nDefault value: '{}'.".format(
-                opt_kwargs['default'])
+        if opt_kwargs.get('default', None) is not None:
+            opt_kwargs['help'] = \
+                opt_kwargs['help'].rstrip() + \
+                "\nDefault value: '{}'.".format(opt_kwargs['default'])
 
         # print silent args to the help
         if option_data.get('silent', None):
