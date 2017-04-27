@@ -109,3 +109,11 @@ subparsers:
                           The full or relative path to the python-tempestconf destination.
                           Suitable when setup is 'git'. When the path is specified, python-tempestconf is not cloned
                           from the repository but the code in a location specified by the path is used instead.
+                  results-format:
+                      type: Value
+                      help: |
+                          Additional format of tempest results report. Junit XML is created always. This option
+                          specifies which report format to create additionally.
+                      choices:
+                          - html
+                      default: html
