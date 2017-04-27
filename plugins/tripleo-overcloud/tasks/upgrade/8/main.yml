@@ -1,0 +1,51 @@
+---
+- name: Overcloud Upgrade Init
+  include: "upgrade_init.yml"
+  tags:
+      - upgrade
+      - upgrade_init
+  vars:
+      upgrade_init_script: "~/upgrade_init.sh"
+
+- name: Object Storage Upgrade
+  shell : |
+      source {{ undercloud_rc }}
+      upgrade-non-controller.sh --upgrade {{ item }} &>> swift-upgrade.log
+  tags:
+    - upgrade
+    - upgrade_object_storage
+  with_items: "{{ groups.swift|default([]) }}"
+
+- name: Controller And Block Storage Upgrade
+  include: "controller_upgrade.yml"
+  tags:
+      - upgrade
+      - upgrade_controller
+  vars:
+      controller_upgrade_script: "~/controller_upgrade.sh"
+
+- name: Compute Upgrade
+  shell : |
+      source {{ undercloud_rc }}
+      upgrade-non-controller.sh --upgrade {{ item }} &>> compute-upgrade.log
+  tags:
+    - upgrade
+    - upgrade_compute
+  with_items: "{{ groups.compute|default([]) }}"
+
+- name: Ceph Upgrade
+  shell : |
+      source {{ undercloud_rc }}
+      upgrade-non-controller.sh --upgrade {{ item }} &>> ceph-upgrade.log
+  tags:
+    - upgrade
+    - upgrade_ceph
+  with_items: "{{ groups.ceph|default([]) }}"
+
+- name: Convergence
+  include: "convergence.yml"
+  tags:
+      - upgrade
+      - upgrade_convergence
+  vars:
+      convergence_script: "~/convergence.sh"
