@@ -1,16 +1,20 @@
 import datetime
 import os
+import fileinput
 import shutil
+import re
 import tarfile
 import tempfile
 import time
 import urllib2
+
 
 from ansible.parsing.dataloader import DataLoader
 from ansible import inventory
 from ansible.vars import VariableManager
 
 from infrared.core.utils import exceptions, logger
+
 LOG = logger.LOG
 
 TIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
@@ -59,6 +63,8 @@ class WorkspaceRegistry(object):
 
 class Workspace(object):
     """Holds the information about a workspace."""
+
+    path_placeholder = "%%workspace_dir%%"
 
     def __init__(self, name, path):
         self.name = name
@@ -114,6 +120,34 @@ class Workspace(object):
                 LOG.debug("Removing link: %s", first)
                 os.unlink(first)
             first = self.registy.pop()
+
+    def _populate_paths(self):
+        """Update inventory with new workspace directory path. """
+
+        inv = self.inventory
+
+        real_inv = os.path.join(os.path.dirname(inv), os.readlink(inv))
+
+        for line in fileinput.input(real_inv, inplace=True):
+            new_line = re.sub(self.path_placeholder, self.path,
+                              line.rstrip())
+            print new_line
+
+    def _purge_paths(self, path):
+        """replace path in inventory with placeholders.
+
+        This method is used on tmp workspace, so we can't use self.path,
+        we need original path.
+        """
+        inv = self.inventory
+
+        real_inv = os.path.join(os.path.dirname(inv), os.readlink(inv))
+
+        for line in fileinput.input(real_inv, inplace=True):
+            new_line = re.sub(path,
+                              self.path_placeholder,
+                              line.rstrip())
+            print new_line
 
     def link_file(self, file_path,
                   dest_name=None, unlink=True, add_to_reg=True):
@@ -272,7 +306,7 @@ class WorkspaceManager(object):
     def export_workspace(self, workspace_name, file_name=None):
         """Export content of workspace folder as gzipped tar file
 
-           Replaces existing .tgz file
+        Replaces existing .tgz file
         """
 
         if workspace_name:
@@ -286,8 +320,21 @@ class WorkspaceManager(object):
 
         fname = file_name or workspace.name
 
-        with tarfile.open(fname + '.tgz', "w:gz") as tar:
-            tar.add(workspace.path, arcname="./")
+        # Copy workspace to not damage original,
+        tmpdir = tempfile.mkdtemp()
+        tmp_workspace_path = os.path.join(tmpdir,
+                                          os.path.basename(workspace.path))
+
+        try:
+            shutil.copytree(workspace.path, tmp_workspace_path,
+                            symlinks=True)
+            tmp_workspace = Workspace(name=workspace.name,
+                                      path=tmp_workspace_path)
+            tmp_workspace._purge_paths(workspace.path)
+            with tarfile.open(fname + '.tgz', "w:gz") as tar:
+                tar.add(tmp_workspace.path, arcname="./")
+        finally:
+            shutil.rmtree(tmpdir)
 
         print("Workspace {} is exported to file {}.tgz".format(workspace.name,
                                                                fname))
@@ -296,6 +343,8 @@ class WorkspaceManager(object):
         """Import workspace from gzipped tar file
 
         Workspace name should be unique
+        Replaces workspace path placeholders with new ones in inventory
+
         :param workspace_src: Path/URL to a workspace tgz file
         :param workspace_name: Workspace name (same as the tgz file basename
         if not given)
@@ -344,6 +393,7 @@ class WorkspaceManager(object):
             if 'tmp_dir' in locals():
                 shutil.rmtree(tmp_dir)
 
+        new_workspace._populate_paths()
         self.activate(new_workspace.name)
 
     def is_active(self, name):
