@@ -1,0 +1,27 @@
+---
+- name: Create Upgrade Unit base script
+  copy:
+      src: "{{ overcloud_upgrade_script }}"
+      dest: "{{ upgrade_init_script }}"
+      mode: 0755
+      remote_src: true
+
+- name: Append params to Upgrade Unit script
+  lineinfile:
+      dest: "{{ upgrade_init_script }}"
+      insertbefore: '^--log-file.*'
+      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker-init.yaml \'
+
+- name: Change log file name of Upgrade Unit script
+  lineinfile:
+      dest: "{{ upgrade_init_script }}"
+      regexp: '^--log-file.*'
+      state: absent
+
+- name: Print Upgrade Init command
+  command: "cat {{ upgrade_init_script }}"
+
+- name: Executing Init Upgrade command
+  shell: |
+      source {{ undercloud_rc }}
+      bash {{ upgrade_init_script }} &> upgrade-init.log
