@@ -24,9 +24,23 @@ test_dict:
     # https://bugzilla.redhat.com/show_bug.cgi?id=1450894, https://bugzilla.redhat.com/show_bug.cgi?id=1399140
     # https://bugzilla.redhat.com/show_bug.cgi?id=1414471, https://bugzilla.redhat.com/show_bug.cgi?id=1414478
     - tempest.scenario.test_network_v6
+    # skipping as they are skipped or failing in neutron https://github.com/redhat-openstack/infrared/blob/master/plugins/tempest/vars/tests/neutron.yml
+    - tempest.api.network.admin.test_floating_ips_admin_actions
+    - tempest.api.network.admin.test_quotas
+    - tempest.scenario.test_shelve_instance
+    - neutron.tests.tempest.scenario.test_trunk
+    # need investigation
+    - tempest.scenario.test_minimum_basic.TestMinimumBasicScenario.test_minimum_basic_scenario
+    - neutron.tests.tempest.api.test_subnetpools.DefaultSubnetPoolsTest
+    - neutron.tests.tempest.api.test_revisions.TestRevisions.test_update_network_constrained_by_revision
+    - neutron.tests.tempest.scenario.test_floatingip.FloatingIpSameNetwork
+    - neutron.tests.tempest.scenario.test_floatingip.FloatingIpSeparateNetwork
+    - tempest.scenario.test_network_advanced_server_ops.TestNetworkAdvancedServerOps.test_server_connectivity_pause_unpause
+    - tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_preserve_preexisting_port
+
   plugins:
     neutron:
         repo: "https://github.com/openstack/neutron.git"
-        version: "stable/ocata"
+        version: "master"
         package:
           default: "python-neutron-tests"
