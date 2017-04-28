@@ -1,0 +1,26 @@
+---
+db_role:
+    name: DB
+
+    resource_registry:
+        OS::TripleO::DB::Net::SoftwareConfig: ${deployment_dir}/network/nic-configs/db.yaml
+        OS::TripleO::DB::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api${ipv6_postfix_underscore}.yaml
+
+    flavor: db
+    host_name_format: 'db-%index%'
+
+    services:
+        - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::FluentdClient
+        - OS::TripleO::Services::Kernel
+        - OS::TripleO::Services::MySQL
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::Snmp
+        - OS::TripleO::Services::Timezone
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::TripleoPackages
+        - OS::TripleO::Services::Pacemaker
+        - "{% if install.version |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+        - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
+        - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::Sshd{% endif %}"

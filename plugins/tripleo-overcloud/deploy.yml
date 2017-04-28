@@ -9,6 +9,18 @@
   vars:
       overcloudrc_file: "{{ ansible_user_dir }}/overcloudrc"
   tasks:
+      - name: adjust max number of concurrent builds to prevent undercloud overload
+        ini_file:
+            path: /etc/nova/nova.conf
+            section: DEFAULT
+            option: max_concurrent_builds
+            value: 5
+        become: yes
+
+      - name: restart nova services
+        command: "systemctl restart openstack-nova-*"
+        become: yes
+
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
