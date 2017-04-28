@@ -12,12 +12,14 @@ test_dict:
     - tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_update_instance_port_admin_state
     # https://bugs.opendaylight.org/show_bug.cgi?id=6713
     - tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_update_router_admin_state
-    # skipped automatically till https://bugs.launchpad.net/tempest/+bug/1610994 is resolved
+    # https://bugs.launchpad.net/tempest/+bug/1610994
     - tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_connectivity_between_vms_on_different_networks
-    # automatically skipped because network extension: l3_agent_scheduler is not enabled
+    # "Skipped because network extension: l3_agent_scheduler is not enabled"
     - tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_router_rescheduling
-    # automatically skipped: L3 Agent Scheduler Extension not enabled.
     - tempest.api.network.admin.test_l3_agent_scheduler
+    - neutron.tests.tempest.api.admin.test_l3_agent_schedule
+    # https://bugs.opendaylight.org/show_bug.cgi?id=6191
+    - neutron.tests.tempest.api.test_routers.RoutersTest.test_router_interface_status
   plugins:
     neutron:
         repo: "https://github.com/openstack/neutron.git"
