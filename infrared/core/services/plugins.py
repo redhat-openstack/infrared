@@ -83,6 +83,11 @@ PLUGINS_REGISTRY = {
         'desc': 'Install TripleO on a designated undercloud node',
         'type': 'install'
     },
+    'tripleo-fencing': {
+        'src': 'plugins/tripleo-fencing',
+        'desc': 'Configure fencing for overcloud nodes',
+        'type': 'install'
+    },
     'virsh': {
         'src': 'plugins/virsh',
         'desc':

@@ -1,0 +1,9 @@
+# Tripleo native support for fencing (supported from OSP 11)
+- name: Configure auto-fencing
+  include: native-fencing.yml
+  when: install.version|openstack_release >= 11
+
+# Configuration of fencing with using fence_xvm agent for older releases (<11)
+- name: Configure virt fencing
+  include: virt-fencing.yml
+  when: install.version|openstack_release < 11 and 'hypervisor' in groups
