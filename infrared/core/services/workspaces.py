@@ -2,7 +2,9 @@ import datetime
 import os
 import shutil
 import tarfile
+import tempfile
 import time
+import urllib2
 
 from ansible.parsing.dataloader import DataLoader
 from ansible import inventory
@@ -290,24 +292,57 @@ class WorkspaceManager(object):
         print("Workspace {} is exported to file {}.tgz".format(workspace.name,
                                                                fname))
 
-    def import_workspace(self, file_name, workspace_name=None):
+    def import_workspace(self, workspace_src, workspace_name=None):
         """Import workspace from gzipped tar file
 
-           Workspace name should be unique
+        Workspace name should be unique
+        :param workspace_src: Path/URL to a workspace tgz file
+        :param workspace_name: Workspace name (same as the tgz file basename
+        if not given)
         """
+        original_src = workspace_src
+        try:
+            if not os.path.exists(workspace_src):
+                urllib_ret = urllib2.urlopen(workspace_src)
+                if urllib_ret.code is not 200:
+                    raise exceptions.IRFailedToImportWorkspace(
+                        'Got unexpected returned code ({}) from workspace '
+                        'URL ({})'.format(urllib_ret.code, workspace_src))
+                tmp_dir = tempfile.mkdtemp()
+                workspace_src = \
+                    os.path.join(tmp_dir, workspace_src.split('/')[-1])
+                with open(workspace_src, 'w') as f:
+                    f.write(urllib_ret.read())
 
-        if not os.path.exists(file_name):
-            raise IOError("File {} not found.".format(file_name))
-        if workspace_name is None:
-            basename = os.path.basename(file_name)
-            workspace_name = ".".join(basename.split(".")[:-1])
+            if workspace_name is None:
+                basename = os.path.basename(workspace_src)
+                workspace_name = ".".join(basename.split(".")[:-1])
 
-        new_workspace = self.create(name=workspace_name)
+            new_workspace = self.create(name=workspace_name)
 
-        LOG.debug("Importing workspace from file {} to path {}".format(
-            file_name, new_workspace.path))
-        with tarfile.open(file_name) as tar:
-            tar.extractall(path=new_workspace.path)
+            LOG.debug("Importing workspace from '{}' to '{}'".format(
+                original_src, new_workspace.path))
+
+            with tarfile.open(workspace_src) as tar:
+                tar.extractall(path=new_workspace.path)
+
+        except urllib2.HTTPError:
+            raise exceptions.IRFailedToImportWorkspace(
+                'Workspace URL not found - ({}) '.format(workspace_src))
+        except tarfile.ReadError as e:
+            raise exceptions.IRFailedToImportWorkspace(
+                "{} tar{}".format(workspace_src, e.message))
+        except ValueError as e:
+            err_msg = "Workspace file not found"
+            if 'unknown url' in e.message:
+                err_msg += ' - If you entered a remote URL,' \
+                           ' please make sure to provide its type'
+            raise exceptions.IRFailedToImportWorkspace(err_msg)
+        finally:
+            if 'urllib_ret' in locals():
+                urllib_ret.close()
+            if 'tmp_dir' in locals():
+                shutil.rmtree(tmp_dir)
 
     def is_active(self, name):
         """Checks if workspace is active."""

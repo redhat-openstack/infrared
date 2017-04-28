@@ -114,6 +114,12 @@ class IRNoActiveWorkspaceFound(IRException):
         super(IRNoActiveWorkspaceFound, self).__init__(message)
 
 
+class IRFailedToImportWorkspace(IRException):
+    def __init__(self, reason):
+        message = "Failed to import workspace: {}".format(reason)
+        super(self.__class__, self).__init__(message)
+
+
 class IRFailedToAddPlugin(IRException):
     def __init__(self, reason_str):
         super(self.__class__, self).__init__(reason_str)
