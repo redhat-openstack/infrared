@@ -57,7 +57,8 @@
 
 - block:
       - name: run tempest "{{ test_suite }}" suite
-        shell: >
+        shell: |
+            set -ex
             test -e .venv/bin/activate && source .venv/bin/activate;
             ostestr -s --no-pretty --regex '{{ regex | default('') }}' {{ whitelistfile }} {{ blacklistfile }} {{ ('--concurrency ' + test.threads|string ) if test.threads|default('') else '' }}
             | subunit2junitxml --output-to={{ test_output_file }} | subunit2pyunit
@@ -75,7 +76,7 @@
             {% set  parts = parts + [regexp] -%}
             {%- endif -%}
             {% if not parts -%}{% set parts = [''] -%}{%- endif -%}
-            set -x
+            set -ex
             echo "Warning: Test black listing is not implemented!" >&2
             test -e ".testrepository" || testr init
             testr run {{ ('--parallel --concurrency=' + test.threads|string) if test.threads|default('') else '' }} --subunit '{{ '|'.join(parts) }}' | subunit2junitxml --output-to={{ test_output_file }} | subunit2pyunit
