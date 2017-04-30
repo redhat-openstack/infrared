@@ -1,0 +1,119 @@
+### This file is used by manila component jobs
+
+pep8:
+    rpm_deps: [ pyflakes, python-flake8 ]
+    remove_rpm: [ python-manila ]
+    run: >
+       tox --sitepackages -v -e pep8 2>&1 | tee ../logs/testrun.log;
+
+
+unittest:
+    rpm_deps: [ python-cliff, python-requests-mock, python-webtest ]
+    remove_rpm: [ python-manila ]
+    run: >
+       tox --sitepackages -v -e py27 2>&1 | tee ../logs/testrun.log;
+
+tempest:
+   rpm_deps: [
+        crudini,
+        openstack-manila,
+        openstack-manila-share,
+        python-manila,
+        python-manila-tests
+   ]
+   remove_rpm: []
+   run: >
+        crudini --set ~/tempest/etc/tempest.conf service_available manila True;
+        crudini --set ~/tempest/etc/tempest.conf auth use_dynamic_credentials True;
+        crudini --set ~/tempest/etc/tempest.conf compute max_microversion latest;
+        crudini --set ~/tempest/etc/tempest.conf compute fixed_network_name private;
+        crudini --set ~/tempest/etc/tempest.conf compute ssh_connect_method floating;
+        crudini --set ~/tempest/etc/tempest.conf identity uri_v3;
+        crudini --set ~/tempest/etc/tempest.conf network-feature-enabled api_extensions all;
+        crudini --set ~/tempest/etc/tempest.conf network public_router_id;
+        crudini --set ~/tempest/etc/tempest.conf network project_networks_reachable false;
+        crudini --set ~/tempest/etc/tempest.conf network api_version 2.0;
+        crudini --set ~/tempest/etc/tempest.conf identity-feature-enabled api_v3 False;
+        crudini --set ~/tempest/etc/tempest.conf share capability_storage_protocol CEPHFS;
+        crudini --set ~/tempest/etc/tempest.conf share run_consistency_group_tests False;
+        crudini --set ~/tempest/etc/tempest.conf share run_snapshot_tests False;
+        crudini --set ~/tempest/etc/tempest.conf share multitenancy_enabled False;
+        crudini --set ~/tempest/etc/tempest.conf share run_shrink_tests True;
+        crudini --set ~/tempest/etc/tempest.conf share run_extend_tests True;
+        crudini --set ~/tempest/etc/tempest.conf share multi_backend False;
+        crudini --set ~/tempest/etc/tempest.conf share suppress_errors_in_cleanup True;
+        crudini --set ~/tempest/etc/tempest.conf share share_creation_retry_number 2;
+        crudini --set ~/tempest/etc/tempest.conf share run_manage_unmanage_tests False;
+        crudini --set ~/tempest/etc/tempest.conf share backend_names ceph_native;
+        crudini --set ~/tempest/etc/tempest.conf share capability_snapshot_support True;
+        crudini --set ~/tempest/etc/tempest.conf share enable_cephx_rules_for_protocols cephfs;
+        crudini --set ~/tempest/etc/tempest.conf share enable_cert_rules_for_protocols;
+        crudini --set ~/tempest/etc/tempest.conf share enable_ip_rules_for_protocols;
+        crudini --set ~/tempest/etc/tempest.conf share storage_protocol CEPHFS;
+        crudini --set ~/tempest/etc/tempest.conf share enable_protocols cephfs;
+        crudini --set ~/tempest/etc/tempest.conf share image_with_share_tools manila-service-image-master;
+
+   blacklist: []
+
+
+# hostvars[inventory_hostname] is a special ansible variable to get all host's facts
+# tester.component.tox_target can be one of the following: [unittest, pep8, dsvm-functional, api]
+
+# Common rpm deps needed for all tester types
+rpm_deps: [
+  git,
+  openstack-manila,
+  python-tox,
+  gcc,
+  python-devel,
+  python-pip,
+  python-pbr,
+  python-mox3,
+  python-ddt,
+  python-oslo-policy,
+  python-oslo-vmware,
+  python-testresources,
+  python-testscenarios,
+  python-barbicanclient,
+
+  python-testtools,
+  python-babel,
+  python-coverage,
+  python-psycopg2,
+  MySQL-python,
+  python-testrepository,
+  python-mock,
+  python-mox,
+  python-oslotest,
+  python-tempest-lib,
+  python-oslo-sphinx,
+  python-fixtures,
+  python-subunit,
+  python-pep8,
+  python-bashate,
+
+  "{{ hostvars[inventory_hostname][tester.component.tox_target]['rpm_deps'] }}"
+]
+
+# The rpms that shouldn't be installed on system, when running tests
+remove_rpm: [ "{{ hostvars[inventory_hostname][tester.component.tox_target]['remove_rpm'] }}" ]
+
+# Common pre-run steps used by all tester types
+manila_virt_run_config:
+  run: >
+    set -o pipefail;
+    rpm -qa | sort > ../logs/installed-rpms.log;
+    truncate --size 0 requirements.txt;
+    truncate --size 0 test-requirements.txt;
+
+    {{ hostvars[inventory_hostname][tester.component.tox_target]['run'] }}
+
+
+# NOTE: This is the main section. It must exist.
+test_config:
+  virt:
+    RedHat-7:
+      setup:
+        install: "{{ rpm_deps }}"
+        remove: "{{ remove_rpm }}"
+      run: "{{ manila_virt_run_config.run }}"

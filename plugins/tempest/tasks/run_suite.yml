@@ -1,3 +1,20 @@
+- name: Include vars of component.yml
+  include_vars: 'component.yml'
+
+- name: Install per-component tempest test dependencies RPMs needed
+  become: yes
+  yum: pkg="{{ item }}" state=latest
+  with_items: "{{ tempest.rpm_deps | default([]) }}"
+  when: tempest | default(false) and tempest.rpm_deps | default(false)
+
+- name: run manila specific config
+  become: yes
+  command: "{{ item }}"
+  with_items: "{{ tempest.run | default([]) }}"
+  when: tempest | default(false) and tempest.run | default(false)
+
+
+
 - name: set facts for test suite
   set_fact:
       test_suite: "{{ test_suite_file | basename | splitext | first }}"
