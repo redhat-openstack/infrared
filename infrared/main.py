@@ -122,17 +122,18 @@ class WorkspaceManagerSpec(api.SpecObject):
             print fancy_table(
                 ("Name", "Address"), *[node_name for node_name in nodes])
 
+    # deprecated method
     def _create_workspace(self, name):
         """Creates a workspace """
 
-        self.workspace_manager.create(name)
-        print("Workspace '{}' added".format(name))
+        self._checkout_workspace(name)
 
     def _checkout_workspace(self, name):
         """Checkouts (create+activate) a workspace """
 
         if not self.workspace_manager.has_workspace(name):
-            self._create_workspace(name)
+            self.workspace_manager.create(name)
+            print("Workspace '{}' added".format(name))
         self.workspace_manager.activate(name)
         print("Now using workspace: '{}'".format(name))
 
