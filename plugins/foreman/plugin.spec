@@ -1,9 +1,8 @@
 ---
 plugin_type: provision
-description: Provision systems using Foreman
 subparsers:
     foreman:
-        help: Provision systems using Foreman
+        description: Provision systems using Foreman
         include_groups: ['Ansible options', 'Inventory', 'Common options', 'Answers file']
         groups:
             - title: Foreman server

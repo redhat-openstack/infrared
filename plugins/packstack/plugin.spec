@@ -1,9 +1,8 @@
 ---
 plugin_type: install
-description: OpenStack installation using Packstack
 subparsers:
     packstack:
-        help: OpenStack installation using Packstack
+        description: OpenStack installation using Packstack
         include_groups: ['Ansible options', 'Inventory', 'Common options', 'Answers file']
         groups:
             - title: Config
