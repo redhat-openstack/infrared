@@ -258,14 +258,17 @@
   hosts: compute
   any_errors_fatal: true
   tasks:
-      - wait_for:
-            port: 16509
-            delay: 20
+      - name: Wait for libvirtd service to be started
+        shell: "systemctl show libvirtd --property=ActiveState"
+        register: libvirt_status_result
+        until: libvirt_status_result.stdout.find('inactive') == -1 and libvirt_status_result.stdout.find('activating') == -1
+        retries: 100
+        delay: 3
       - name: Wait for nova-service service to be started
         shell: "systemctl show openstack-nova-compute --property=ActiveState"
         register: compute_status_result
         until: compute_status_result.stdout.find('inactive') == -1 and compute_status_result.stdout.find('activating') == -1
-        retries: 600
+        retries: 200
         delay: 3
 
 - name: Cleanup all pacemaker resource
