@@ -1,10 +1,12 @@
 # include environment template files from undercloud in overcloud_deploy script
-- include_vars: "{{ templates_list_file}}"
+- include_vars:
+      file: "{{ templates_list_file}}"
+      name: templates
 
 - name: look in undercloud's default templates
   stat:
       path: "{{ item }}"
-  with_items: "{{ tripleo_heat_templates | default([]) }}"
+  with_items: "{{ templates.tripleo_heat_templates | default([]) }}"
   register: default_templates
 
 - name: include templates from default location
@@ -22,3 +24,15 @@
           source_file: "{{ templates_list_file }}"
           missing_templates: "{{ missing_templates }}"
   when: missing_templates | default([])
+
+- name: create custom templates file
+  copy:
+      dest: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/{{ templates_list_file | basename }}"
+      content: "{{ templates.custom_templates|to_nice_yaml }}"
+  when: templates.custom_templates is defined
+
+- name: include custom templates file in deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: "--environment-file {{ ansible_user_dir }}/{{ install.deployment.files | basename }}/{{ templates_list_file | basename }} \\"
+  when: templates.custom_templates is defined
