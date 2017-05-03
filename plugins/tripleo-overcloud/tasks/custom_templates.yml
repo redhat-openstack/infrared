@@ -1,0 +1,14 @@
+# include custom templates files from undercloud in overcloud_deploy script
+- include_vars: "{{ templates_list_file}}"
+
+- name: create custom templates file
+  copy:
+      dest: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/{{ templates_list_file | basename }}"
+      content: "{{ custom_templates|to_nice_yaml }}"
+  when: custom_templates.empty is not defined
+
+- name: include custom templates file in deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: "--environment-file {{ ansible_user_dir }}/{{ install.deployment.files | basename }}/{{ templates_list_file | basename }} \\"
+  when: custom_templates.empty is not defined
