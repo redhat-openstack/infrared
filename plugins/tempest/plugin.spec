@@ -58,6 +58,10 @@ subparsers:
                       help: |
                           The full path or relative path to the openstackrc file.
                           When empty, infrared will search active workspace for the 'keystonerc' file and use it.
+                  image:
+                      type: Value
+                      help: |
+                          An image to be uploaded to glance and used for testing. Path have to be a url.
                   config-options:
                        type: IniType
                        action: append
