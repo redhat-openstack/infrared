@@ -49,6 +49,14 @@ Welcome to infrared's documentation!
    collect-logs
    gabbi_tester
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Cookbook
+
+   rdo
+   composable_roles
+
+
 Indices and tables
 ==================
 
