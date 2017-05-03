@@ -1,6 +1,5 @@
 plugin_type: provision
-description: provision plugin1
 subparsers:
     provision_plugin1:
-        help: Help for provision_plugin1
+        description: provision_plugin1 desc
         include_groups: []

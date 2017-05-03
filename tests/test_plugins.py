@@ -94,7 +94,7 @@ def get_plugin_spec_flatten_dict(plugin_dir):
     plugin_spec_dict = dict(
         name=spec_yaml['subparsers'].keys()[0],
         dir=plugin_dir,
-        description=spec_yaml['description'],
+        description=(spec_yaml['subparsers'].values()[0])['description'],
         type=spec_yaml['plugin_type']
     )
 

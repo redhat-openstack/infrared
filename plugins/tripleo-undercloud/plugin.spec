@@ -1,9 +1,7 @@
 plugin_type: install
-description: Install Tripleo on a designated undercloud node
 subparsers:
     tripleo-undercloud:
-        # FIXME(yfried): duplicates "description"
-        help: Install Tripleo on a designated undercloud node
+        description: Install Tripleo on a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Quickstart Menu

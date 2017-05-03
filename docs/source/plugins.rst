@@ -152,10 +152,9 @@ inner-most level. Example::
     and plugin specification can look like::
 
         plugin_type: provision
-        description: Description
         subparsers:
         my_plugin:
-            help: Provisioner virtual machines on a single Hypervisor using libvirt
+            description: Provisioner virtual machines on a single Hypervisor using libvirt
             groups:
                 - title: topology
                   options:

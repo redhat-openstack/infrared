@@ -1,9 +1,7 @@
 plugin_type: provision
-description: Example provisioner plugin
 subparsers:
     example:
-        # FIXME(yfried): duplicates "description"
-        help: Example provisioner plugin
+        description: Example provisioner plugin
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Group A

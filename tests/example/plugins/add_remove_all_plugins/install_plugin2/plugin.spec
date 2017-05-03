@@ -1,6 +1,5 @@
 plugin_type: install
-description: install plugin2
 subparsers:
     install_plugin2:
-        help: Help for install_plugin2
+        description: install_plugin2 desc
         include_groups: []

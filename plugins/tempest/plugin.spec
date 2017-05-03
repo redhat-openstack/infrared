@@ -1,8 +1,7 @@
 plugin_type: test
-description: The tempest test runner
 subparsers:
     tempest:
-        help: The tempest test runner
+        description: The tempest test runner
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Tempest
