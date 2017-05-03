@@ -1,0 +1,91 @@
+- name: Install InfraRed environment for RHEL
+  hosts: openstack_nodes
+  sudo: yes
+  tasks:
+    - name: Subscribe RHEL
+      shell: |
+          subscription-manager remove --all
+          cp /etc/rhsm/rhsm.conf /etc/rhsm/backup_rhsm.conf
+          sed -i -e 's/subscription.rhn.redhat.com/subscription.rhn.stage.redhat.com/g' -e 's/cdn.redhat.com/cdn.stage.redhat.com/g' /etc/rhsm/rhsm.conf
+          grep 'stage' '/etc/rhsm/rhsm.conf'
+          subscription-manager register --force --username=$RHN_LIVE_LOGIN --password=$RHN_LIVE_PASSWORD --auto-attach
+          subscription-manager repos --disable='*'  --enable=rhel-7-server-optional-fastrack-rpms  --enable=rhel-7-server-fastrack-rpms  --enable=rhel-7-server-optional-rpms --enable=rhel-7-server-rpms
+      environment:
+          RHN_LIVE_LOGIN: "{{ private.distro.rhel.subscription.username }}"
+          RHN_LIVE_PASSWORD: "{{ private.distro.rhel.subscription.password }}"
+
+    - name: upgrade all packages
+      yum: name=* state=latest
+
+    - name: Install prereqs
+      yum: name={{ item }} state=latest
+      with_items:
+          - openssl-devel
+          - gcc
+          - python-virtualenv
+          - libffi-devel
+          - git
+          - wget # not required by IR
+
+    - name: Install pip
+      shell: easy_install pip
+
+- name: Setup venv
+  sudo: no
+  hosts: openstack_nodes
+  tasks:
+    - name: Enable venv if required
+      shell: |
+          virtualenv venv
+
+- name: Install and setup InfraRed
+  hosts: openstack_nodes
+  sudo: no
+  vars:
+      VENV: "source venv/bin/activate && pushd infrared"
+  tasks:
+    - name: Check venv
+      shell: |
+          {{ VENV }}
+          which python
+      register: out
+
+    - debug: var=out.stdout_lines
+
+    - name: Clone master
+      git: repo=https://github.com/rhosqeauto/InfraRed.git dest=infrared clone=yes update=yes force=yes
+
+    - name: Setup IR
+      shell: |
+          {{ VENV }}
+          which python
+          python --version
+          cp infrared.cfg.example infrared.cfg
+          cp ansible.cfg.example ansible.cfg
+
+    - name: Setup IR workaround 1
+      ignore_errors: yes
+      shell: |
+          {{ VENV }}
+          sed -i 's/, session=False//g' setup.py # WORKAROUND
+          pip install -e .
+
+    - name: Setup IR workaround 2
+      ignore_errors: yes
+      shell: |
+          {{ VENV }}
+          pip install --upgrade setuptools # WORKAROUND
+          pip install -e .
+
+    - name: Setup IR workaround 3
+      shell: |
+          {{ VENV }}
+          pip install functools32 # WORKAROUND
+          pip install -e .
+
+    - name: Check IR sanity, finally
+      shell: |
+          {{ VENV }}
+          ir-provisioner --help
+          ir-installer --help
+          ir-tester --help
