@@ -1,4 +1,11 @@
 ---
+- block:
+  - name: Gather facts
+    setup:
+  rescue:
+  - name: Reactivate unreachable hosts
+    meta: clear_host_errors
+    
 - name: use rhos-release to fetch internal rdo repos
   include: rdo-release.yml
   # FIXME(yfried): When rhos-release supports CentOS, replace this test with "is rpm reachable?"
