@@ -8,17 +8,22 @@
       lineinfile:
           dest: "~/overcloud_deploy.sh"
           line: '--swift-storage-scale {{ storage_nodes }} \'
-      when: "templates.storage_add_scale|default(True)"
+      when:
+          - "templates.storage_add_scale|default(True)"
+          - install.version|openstack_release < 11
 
     - name: append the swift storage template line to the base overcloud deploy script
       lineinfile:
           dest: "~/overcloud_deploy.sh"
           line: '--swift-storage-flavor {% if groups["swift"] is defined %}swift{% else %}baremetal{% endif %} \'
-      when: "templates.storage_add_scale|default(True)"
+      when:
+          - "templates.storage_add_scale|default(True)"
+          - install.version|openstack_release < 11
 
-  when: not install.storage.external
+  when:
+      - not install.storage.external
   vars:
-      storage_nodes: "{{ (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 }}"
+      storage_nodes: "{{ (install.storage.nodes|default(0)) or (groups['swift']|default([])|length) or 1 }}"
 
 #- name: prepare swift storage template
 #  template:

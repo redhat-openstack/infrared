@@ -23,6 +23,14 @@
   include: hostname.yml
   when: templates.generate_host_name_template|default(True)
 
+- name: Create template with nodes count and flavors
+  template:
+      src: templates/nodes_data.yaml.j2
+      dest: "{{ template_base }}/nodes_data.yaml"
+  when:
+      - install.version|openstack_release >= 11
+      - not install.role|default('')
+
 - name: Setup loadbalancer
   include: tasks/loadbalancer_templates.yml
   when: "'loadbalancer' in groups"
