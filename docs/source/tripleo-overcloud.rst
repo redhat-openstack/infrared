@@ -36,8 +36,8 @@ Overcloud Options
 
 * ``--overcloud-debug``: Boolean. Enable debug mode for the overcloud services.
 
-* ``--overcloud-templates``: Add extra environment template files to "overcloud deploy" command
-    Format:
+* ``--overcloud-templates``: Add extra environment template files or custom templates
+    to "overcloud deploy" command. Format:
 
     .. code-block:: plain
        :caption: sahara.yml
@@ -45,6 +45,17 @@ Overcloud Options
        ---
        tripleo_heat_templates:
            - /usr/share/openstack-tripleo-heat-templates/environments/services/sahara.yaml
+
+    .. code-block:: plain
+       :caption: ovs-security-groups.yml
+
+       ---
+       tripleo_heat_templates:
+           []
+
+       custom_templates:
+           parameter_defaults:
+               NeutronOVSFirewallDriver: openvswitch
 
 * ``--overcloud-script``: Customize the script that will deploy the overcloud.
     A path to a ``*.sh`` file containing ``openstack overcloud deploy`` command.
