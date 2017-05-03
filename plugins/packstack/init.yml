@@ -75,5 +75,7 @@
   tasks:
       - name: exclude python-sqlalchemy from rhel-7.2 repo for rhos-5.0
         command: yum-config-manager --save --setopt=rhelosp-rhel-7-server.exclude=python-sqlalchemy
-        when: (workarounds['rhbz1265306']['enabled'] is defined and workarounds['rhbz1265306']['enabled'] | bool) and
+        when:
+            - workarounds is defined
+            - (workarounds['rhbz1265306']['enabled'] is defined and workarounds['rhbz1265306']['enabled'] | bool) and
               install.version == '5'

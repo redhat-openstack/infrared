@@ -20,7 +20,9 @@
             dest: ~/undercloud.conf
             force: yes
             mode: 0755
-        when: local_src
+        when:
+          - local_src is defined
+          - local_src != False
 
       - name: copy default undercloud config
         copy:
