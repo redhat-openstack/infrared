@@ -344,6 +344,8 @@ class WorkspaceManager(object):
             if 'tmp_dir' in locals():
                 shutil.rmtree(tmp_dir)
 
+        self.activate(new_workspace.name)
+
     def is_active(self, name):
         """Checks if workspace is active."""
 
