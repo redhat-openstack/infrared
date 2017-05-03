@@ -1,0 +1,143 @@
+---
+- name: Prepare the undercloud
+  hosts: undercloud
+  gather_facts: no
+  tasks:
+    - name: Setting up node
+      yum:
+        name: "{{ private.upgrade.base_url }}"
+        state: present
+
+    - name: register subscription manager
+      shell: 'subscription-manager register --org={{ private.upgrade.organisation }} --activationkey={{ private.upgrade.activation_key }}'
+
+    - name: set release
+      shell: 'rhos-release rhel-7.2'
+
+    - name: disable gpg check for rhel-7-server-rpms
+      ini_file:
+        dest: /etc/yum.repos.d/redhat.repo
+        section: "rhel-7-server-rpms"
+        option: "gpgcheck"
+        value: 0
+        backup: yes
+
+    - name: clean all caches
+      shell: 'yum clean all'
+
+    - name: Upgrade all packages
+      yum: name=* state=latest
+
+- name: Upgrading undercloud and overcloud
+  hosts: undercloud
+  become: yes
+  become_user: "{{ installer.user.name }}"
+  gather_facts: no
+  vars:
+    step_1: "major-upgrade-pacemaker-init"
+    step_2: "major-upgrade-pacemaker"
+    step_3: "major-upgrade-pacemaker-converge"
+  tasks:
+
+    - name: create an undercloud update script
+      template:
+        src: "templates/undercloud_upgrade.sh.j2"
+        dest: "~/undercloud_upgrade.sh"
+        mode: 0755
+
+    - name: append the log line to the undercloud update script
+      lineinfile:
+        dest: "~/undercloud_upgrade.sh"
+        line: "--log-file undercloud_upgrade_{{ 100 | random }}.log &> undercloud_upgrade.log"
+
+    - name: the undercloud update script
+      shell: "cat ~/undercloud_upgrade.sh"
+
+    - name: execute the undercloud update script
+      shell: "bash ~/undercloud_upgrade.sh"
+      register: undercloud_upgrade
+      ignore_errors: yes
+
+    - name: print the last few lines of the output to spot failures
+      shell: "tail -n30 undercloud_upgrade.log"
+
+    - fail: msg="Cloud upgrade failed... :("
+      when: undercloud_upgrade.rc != 0
+
+    - name: Setting up node
+      shell: "source ~/stackrc; for i in `nova list|awk '/ACTIVE/ {print $(NF-1)}'|awk -F\"=\" '{print $NF}'`;\
+                do ssh -o StrictHostKeyChecking=no heat-admin@${i} \
+                'sudo yum -y localinstall http://sat618-qe-rhel7.usersys.redhat.com/pub/katello-ca-consumer-latest.noarch.rpm; \
+                sudo subscription-manager register --org=\"Default_Organization\" --activationkey=\"ak-osp7\"; \
+                sudo rpm -ivh http://rhos-release.virt.bos.redhat.com/repos/rhos-release/rhos-release-latest.noarch.rpm; \
+                sudo rhos-release rhel-7.2; \
+                sudo crudini --set /etc/yum.repos.d/redhat.repo rhel-7-server-rpms gpgcheck 0'; done"
+
+    - name: get templates imported during deployment
+      shell: "cat ~/overcloud_deploy.sh | grep my_templates"
+      register: templates
+
+    - name: create script for initiating pacemaker upgrade
+      template:
+        src: overcloud_upgrade.sh.j2
+        dest: "~/overcloud_upgrade_1.sh"
+      with_items: step_1
+
+    - name: Initiating pacemaker upgrade
+      shell: "bash ~/overcloud_upgrade_1.sh"
+      register: overcloud_upgrade
+      ignore_errors: yes
+
+    - fail: msg="Pacemaker upgrade init failed .. :("
+      when: overcloud_upgrade.rc != 0
+
+    - name: upgrade swift nodes if any
+      shell: "source ~/stackrc; for i in `nova list|awk '/objectstorage/ {print $2}'`; do echo $i; upgrade-non-controller.sh --upgrade $i; done"
+      register: swift_upgrade
+
+    - fail: msg="Swift upgrade failed.. :("
+      when: swift_upgrade.rc != 0
+
+    - name: create script for pacemaker upgrade
+      template:
+        src: overcloud_upgrade.sh.j2
+        dest: "~/overcloud_upgrade_2.sh"
+      with_items: step_2
+
+    - name: run pacemaker upgrade
+      shell: "bash ~/overcloud_upgrade_2.sh"
+      register: overcloud_upgrade_2
+      ignore_errors: yes
+
+    - fail: msg="Pacemaker upgrade failed .. :("
+      when: overcloud_upgrade_2.rc != 0
+
+    - name: upgrade compute nodes
+      shell: "source ~/stackrc; for i in `nova list|awk '/compute/ {print $2}'`; do echo $i; upgrade-non-controller.sh --upgrade $i; done"
+      register: compute_upgrade
+
+    - fail: msg="Compute upgrade failed.. :("
+      when: compute_upgrade.rc != 0
+
+    - name: upgrace ceph nodes
+      shell: "source ~/stackrc; for i in `nova list|awk '/cephstorage/ {print $2}'`; do echo $i; upgrade-non-controller.sh --upgrade $i; done"
+      register: ceph_upgrade
+
+    - fail: msg="Ceph upgrade failed.. :("
+      when: ceph_upgrade.rc != 0
+
+    - name: create script for pacemaker converge
+      template:
+        src: overcloud_upgrade.sh.j2
+        dest: "~/overcloud_upgrade_3.sh"
+      with_items: step_3
+
+    - name: run pacemaker converge
+      shell: "bash ~/overcloud_upgrade_3.sh"
+      register: overcloud_upgrade_3
+      ignore_errors: yes
+
+    - fail: msg="Pacemaker converge failed .. :("
+      when: overcloud_upgrade_3.rc != 0
+
+
