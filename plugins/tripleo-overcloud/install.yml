@@ -12,7 +12,9 @@
   tags:
       - loadbalancer
       - loadbalancer_setup
-  when: "'loadbalancer' in groups"
+  when:
+      - "'loadbalancer' in groups"
+      - install.deploy|default('')
 
 - name: Introspect our machines
   include: "{{ overcloud_introspect | default('introspect.yml') }}"
