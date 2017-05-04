@@ -30,7 +30,6 @@
 - name: configure external gateway's IP for this interface
   become: yes
   command: "ip addr add {{ stat_ip_result.stdout | replace(\"'\",'') }} dev vlan{{ vlan_result.stdout | replace(\"'\",'') }}"
-  register: iface_ip_result
   failed_when: "result.rc != 0 and result.stderr.find('RTNETLINK answers: File exists') != -1"
 
 - name: switch on the newly added vlan interface
