@@ -275,7 +275,7 @@ def main():
             password=dict(required=True),
             auth_url=dict(required=True),
             host_id=dict(required=True),
-            rebuild=dict(default=True, choices=BOOLEANS),
+            rebuild=dict(default='yes', choices=BOOLEANS),
             mgmt_strategy=dict(default='foreman',
                                choices=MGMT_SUPPORTED_STRATEGIES),
             mgmt_action=dict(default='cycle', choices=['on', 'off', 'cycle',
