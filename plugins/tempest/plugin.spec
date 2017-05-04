@@ -98,3 +98,9 @@ subparsers:
                       help: |
                           Use tempest cleanup to clean the leftover from the tests (usually when tests fail)
                       default: no
+                  tempest_conf-local_dir:
+                      type: Value
+                      help: |
+                          The full or relative path to the python-tempestconf destination.
+                          Suitable when setup is 'git'. When the path is specified, python-tempestconf is not cloned
+                          from the repository but the code in a location specified by the path is used instead.
