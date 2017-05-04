@@ -189,7 +189,7 @@
             selinux_problems: 0
             segfault_problems: 0
             oom_killer_problems: 0
-            counted_hosts: "{{ groups['all'] | difference( groups['local'] + (groups['tester'] | default([]) | difference(groups['controller'])) ) }}"
+            counted_hosts: "{{ groups['all'] | difference( groups['local'] + (groups['tester'] | default([]) | difference(groups['controller']|default([]))) ) }}"
 
       - debug:
             msg: "counting issues from hosts: {{ counted_hosts }}"
