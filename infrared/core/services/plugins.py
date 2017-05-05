@@ -33,6 +33,11 @@ PLUGINS_REGISTRY = {
         'desc': 'Collect log from all nodes in the active workspace',
         'type': 'other'
     },
+    'cloud-conf': {
+        'src': 'plugins/cloud-conf',
+        'desc': 'Get information about available nova servers',
+        'type': 'other'
+    },
     'foreman': {
         'src': 'plugins/foreman',
         'desc': 'Provision systems using Foreman',

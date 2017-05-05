@@ -1,0 +1,52 @@
+---
+- name: Cloud conf
+  hosts: undercloud
+  gather_facts: yes
+  #become: yes
+  any_errors_fatal: true  
+  tasks:
+      - name: find a server with the nova control plane service running
+        shell: |
+            source ~/overcloudrc
+            nova service-list | grep nova-scheduler | awk '{print $6}' | head -1
+        register: nova_host
+
+      - name: server found
+        debug: msg="{{ nova_host.stdout.split('.') | first }}"
+
+      - name: get the default floating ip pool name from the server
+        command: "grep -oP \"(?<=default_floating_pool=)(.*$)\" /etc/nova/nova.conf"
+        register: pool_name
+        delegate_to: "{{ nova_host.stdout.split('.') | first }}"
+        become: yes
+
+      - name: print hosts
+        debug: var=nova_host
+
+      - name: add undercloud to host list
+        add_host:
+            name: "{{ nova_host.stdout.split('.') | first }}"
+            hostname: "{{ nova_host.stdout.split('.') | first }}"
+            node_label: "{{ nova_host.stdout.split('.') | first }}"
+            groups: "undercloud"
+            #ansible_ssh_user: "{{ undercloud_user }}"
+            ansible_ssh_private_key_file: "{{ hostvars[groups['overcloud_nodes'][0]].ansible_ssh_private_key_file }}"
+            ansible_ssh_host: "{{ nova_host.stdout | ipaddr('address') }}"
+            ansible_ssh_common_args: "
+                -o ForwardAgent=yes
+                -o ServerAliveInterval=30
+                -o ControlMaster=auto
+                -o ControlPersist=30m
+                -o StrictHostKeyChecking=no
+                -o UserKnownHostsFile=/dev/null
+                -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }}\""
+        # notify:
+        #     - update hosts
+        #     - Link to new Inventory file
+        #     - update /etc/hosts with undercloud's details
+
+    #   - name: print network details to console
+    #     shell: |
+    #         source ~/overcloudrc
+    #         neutron net-show {{ net_create.network.name }}
+    #     tags: skip_ansible_lint
