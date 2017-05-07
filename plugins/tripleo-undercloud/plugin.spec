@@ -95,6 +95,12 @@ subparsers:
 
             - title: Custom Repositories
               options:
+                  cdn:
+                      type: VarFile
+                      help: |
+                          YAML file
+                          Credentials for CDN registery.
+                          see documentation for more details
                   repos-config:
                       type: VarFile
                       help: |
