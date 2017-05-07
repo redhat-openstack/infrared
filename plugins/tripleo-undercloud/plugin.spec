@@ -96,6 +96,12 @@ subparsers:
 
             - title: Custom Repositories
               options:
+                  cdn:
+                      type: FileValue
+                      help: |
+                          YAML file
+                          Register the undercloud with a Red Hat Subscription Management platform.
+                          see documentation for more details
                   repos-config:
                       type: VarFile
                       help: |
@@ -128,12 +134,6 @@ subparsers:
                           For 'import' - points to pre-build overcloud images. Required.
                           For 'build' - points to an image that will be used as the base for building the overcloud, instead of the default cloud guest image.
                       required_when: "images-task == import"
-
-                  images-repos:
-                      type: Bool
-                      help: |
-                          Update OverCloud image with repo details.
-                      default: yes
 
                   images-update:
                       type: Bool
