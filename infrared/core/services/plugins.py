@@ -33,6 +33,11 @@ PLUGINS_REGISTRY = {
         'desc': 'Collect log from all nodes in the active workspace',
         'type': 'other'
     },
+    'cloud-config': {
+        'src': 'plugins/cloud-config',
+        'desc': 'Collection of overcloud configuration tasks',
+        'type': 'install'
+    },
     'foreman': {
         'src': 'plugins/foreman',
         'desc': 'Provision systems using Foreman',
