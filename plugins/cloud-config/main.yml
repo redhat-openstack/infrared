@@ -1,0 +1,34 @@
+---
+- name: Temporary main playbook for 'cloud-config' plugin
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: find a server with the nova control plane service running
+        shell: |
+            source ~/overcloudrc
+            nova service-list | grep nova-scheduler | awk '{print $6}' | head -1
+        register: nova_host
+
+      - name: server found
+        debug: msg="{{ nova_host.stdout.split('.') | first }}"
+
+      - name: get the default floating ip pool name from the server
+        command: "grep -oP \"(?<=default_floating_pool=)(.*$)\" /etc/nova/nova.conf"
+        register: pool_name
+        delegate_to: "{{ nova_host.stdout.split('.') | first }}"
+        become: yes
+
+      - name: add undercloud to hosts list
+        add_host:
+            name: "{{ nova_host.stdout.split('.') | first }}"
+            groups: "nova-server"
+        notify:
+            - update hosts
+
+  handlers:
+      - name: update hosts
+        template:
+            dest: "{{ inventory_dir }}/hosts-installer_new"
+            src: inventory.j2
+        delegate_to: localhost
