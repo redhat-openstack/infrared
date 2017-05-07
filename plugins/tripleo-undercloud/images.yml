@@ -23,6 +23,16 @@
       overcloud_image_file: overcloud-full.qcow2
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
   pre_tasks:
+      - block:
+          - name: check that rhos-release is available
+            uri:
+                url: "{{ rhos_release_rpm }}"
+            when:
+                - install.images.repos or install.images.packages|default('') or install.images['update']
+        rescue:
+          - fail:
+                msg: overcloud image customization not supported outside Red Hat internal network currently
+
       - name: tmp repos.d for overcloud
         file:
           name: "{{ tmp_oc_repos_dir }}"
