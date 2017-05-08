@@ -61,7 +61,7 @@ subparsers:
                       required: yes
 
                   instackenv-file:
-                      type: Value
+                      type: FileValue
                       help: The path to the instackenv.json configuration file used for introspection.
 
                   controller-nodes:
@@ -91,7 +91,7 @@ subparsers:
                       help: Specifies whether ths SSL should be used for overcloud
 
                   overcloud-script:
-                      type: Value
+                      type: FileValue
                       help: |
                             The absolute path to a custom overcloud deployment script.
                             If not set, it will auto generate a deployment according to the
@@ -182,7 +182,7 @@ subparsers:
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
 
                   storage-config:
-                      type: Value
+                      type: VarFile
                       help: |
                           Storage configuration file (YAML file)
                           __LISTYAMLS__
@@ -190,6 +190,7 @@ subparsers:
 
             - title: Composable roles
               options:
+                  # ???
                   role-files:
                       type: Value
                       help:
