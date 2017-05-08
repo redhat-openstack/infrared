@@ -5,6 +5,7 @@ subparsers:
         description: Collect log from all nodes in the active workspace.
         include_groups: ["Ansible options", "Common options"]
         options:
+          # should be file-type
           dest-dir:
               type: Value
               help: Path to a destination directory where the collected log will be stored
