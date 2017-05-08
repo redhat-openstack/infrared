@@ -1,23 +1,7 @@
 ---
-- name: find openstackrc file
-  find:
-      file_type: file
-      pattern: "{{ test.openstackrc | basename }}"
-      paths:
-          - "{{ lookup('env', 'PWD') }}/{{ test.openstackrc | dirname }}"
-          - "{{ test.openstackrc | expanduser | dirname }}"
-  register: openstackrc_find
-  delegate_to: localhost
-  when: test.openstackrc|default('')
-
-- name: fail when rc file was not found
-  fail:
-      msg: "Unable to find rc file: {{ test.openstackrc }}"
-  when: test.openstackrc|default('') and openstackrc_find.matched == 0
-
 - name: copy openstackrc file
   vars:
-      file_src: "{{ openstackrc_find.files[0].path if test.openstackrc is defined else inventory_dir + '/keystonerc' }}"
+      file_src: "{{ test.openstackrc|default(inventory_dir + '/keystonerc') }}"
   copy:
       src: "{{ file_src }}"
       dest: "~/keystonerc"
