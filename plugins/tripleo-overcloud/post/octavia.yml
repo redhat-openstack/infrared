@@ -1,0 +1,58 @@
+---
+# Part of the official Octavia deployment includes manual steps to run after deployment is done
+# Note: Octavia is tech-preview for OSP 11 as such it's not supported by infrared-core team.
+- name: Octavia post deployment tasks
+  hosts: undercloud
+  any_errors_fatal: true
+  gather_facts: no
+  tasks:
+    - name: Install libguestfs-tools and openstack-octavia-diskimage-create
+      become: yes
+      package:
+          name: "{{ item }}"
+          state: present
+      with_items:
+          - 'openstack-octavia-diskimage-create'
+          - 'libguestfs-tools'
+
+    - name: Download RHEL base image for building Octavia Amphora image
+      get_url:
+          url: "{{ install.octavia.image.url }}"
+          dest: "/tmp/rhel-7.qcow2"
+          force: yes
+          validate_certs: no
+
+    - name: Start libvirtd for editing the image
+      become: yes
+      service:
+          name: libvirtd
+          state: started
+
+    - name: Install & run rhos-release in RHEL base image
+      command: "{{ item }}"
+      with_items:
+        - "virt-customize -a /tmp/rhel-7.qcow2 --selinux-relabel --run-command 'yum localinstall -y http://download.lab.bos.redhat.com/rcm-guest/puddles/OpenStack/rhos-release/rhos-release-latest.noarch.rpm'"
+        - "virt-customize -a /tmp/rhel-7.qcow2 --selinux-relabel --run-command 'rhos-release {{ install.version }}'"
+
+    - name: Create Amphora image
+      environment:
+          DIB_LOCAL_IMAGE: '/tmp/rhel-7.qcow2'
+      command: octavia-diskimage-create.sh -i rhel -s 3 -o amphora-rhos
+
+    - name: Generate certificates
+      shell: "./.cache/image-create/source-repositories/amphora_agent_*/bin/create_certificates.sh . ./.cache/image-create/source-repositories/amphora_agent_*/etc/certificates/openssl.cnf"
+
+    - name: Upload Amphora image to glance
+      shell: |
+          source ~stack/overcloudrc
+          glance image-create --name octavia-amphora --disk-format qcow2 --container-format bare --tags amphora --file amphora-rhos.qcow2
+      tags: skip_ansible_lint
+
+    - name: Copy octavia-post-deploy script to the undercloud
+      copy:
+          src: "files/octavia-post-deploy.sh"
+          dest: ~stack/octavia-post-deploy.sh
+          mode: 0755
+
+    - name: Execute octavia-post-deploy script
+      shell: bash ~/octavia-post-deploy.sh &> octavia-post-deploy.log
