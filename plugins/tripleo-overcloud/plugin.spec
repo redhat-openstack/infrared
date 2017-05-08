@@ -134,6 +134,11 @@ subparsers:
                       default: no
                       help: Activate Neutron DVR extension on the overcloud.
 
+                  octavia:
+                      type: Bool
+                      default: no
+                      help: Deploy Overcloud with Octavia (Load Balancer).
+
             - title: Overcloud Public Network
               options:
                   public-network:
