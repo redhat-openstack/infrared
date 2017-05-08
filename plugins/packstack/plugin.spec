@@ -8,7 +8,7 @@ subparsers:
             - title: Config
               options:
                   answer-file:
-                      type: Value
+                      type: FileValue
                       help: Name for packstack answer file
                       default: 'packstack_config.txt'
 
