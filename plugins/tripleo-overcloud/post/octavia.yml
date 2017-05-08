@@ -1,0 +1,29 @@
+---
+# Part of the official Octavia deployment includes manual steps to run after deployment is done
+- name: Octavia post deployment tasks
+  hosts: undercloud
+  become: true
+  any_errors_fatal: true
+  gather_facts: no
+  tasks:
+    - name: Install openstack-octavia-diskimage-create
+      yum:
+          name: openstack-octavia-diskimage-create
+          state: present
+
+    - name: Create Amphora image based on RHEL
+      command: octavia-diskimage-create.sh -i rhel
+
+    - name: Upload Amphora image to glance
+      shell: |
+          source ~/overcloudrc
+          glance image-create --name octavia-amphora --disk-format qcow2 --container-format bare --tags amphora --file <image_file>
+
+    - name: Copy octavia-post-deploy script to the undercloud
+      copy:
+          src: "files/octavia-post-deploy.sh"
+          dest: ~/octavia-post-deploy.sh
+          mode: 0755
+
+    - name: Execute octavia-post-deploy script
+      shell: bash ~/octavia-post-deploy.sh &> octavia-post-deploy.log
