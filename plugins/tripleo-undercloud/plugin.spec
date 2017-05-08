@@ -24,7 +24,7 @@ subparsers:
             - title: Undercloud Configuration
               options:
                   config-file:
-                      type: Value
+                      type: FileValue
                       help: |
                           Path to a custom undercloud.conf file to use for deployment.
                           If not set, it will look under `templates` path for a file named `undercloud.conf`.
