@@ -64,12 +64,12 @@ subparsers:
                           __LISTYAMLS__
                       default: rpm
                   deployer-input-file:
-                      type: Value
+                      type: FileValue
                       help: |
                           The deployer input file absolute or relative path.
                           By default will try to use the 'deployer-input-file.conf' file from active workspace folder.
                   openstackrc:
-                      type: Value
+                      type: FileValue
                       help: |
                           The full path or relative path to the openstackrc file.
                           When empty, infrared will search active workspace for the 'keystonerc' file and use it.
