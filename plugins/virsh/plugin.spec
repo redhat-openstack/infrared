@@ -15,7 +15,7 @@ subparsers:
                       help: 'User to SSH to the host with'
                       default: root
                   host-key:
-                      type: Value
+                      type: FileValue
                       help: "User's SSH key"
                       required: yes
                   host-validate:
