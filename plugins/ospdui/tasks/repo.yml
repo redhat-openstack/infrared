@@ -77,27 +77,12 @@
       dest: "{{ setup.ospdui.dir }}/conf/ospduiTests.conf.json"
   when: test.config is not defined
 
-- name: find config file
-  find:
-      file_type: file
-      pattern: "{{ test.config | basename }}"
-      paths:
-          - "{{ lookup('env', 'PWD') }}/{{ test.config | dirname }}"
-          - "{{ test.config | expanduser | dirname }}"
-  register: config_find
-  delegate_to: localhost
-  when: test.config|default('')
-
-- name: fail when config file was not found
-  fail:
-      msg: "Unable to find config file: {{ test.config }}"
-  when: test.config|default('') and openstackrc_find.matched == 0
-
 - name: copy config file
   vars:
-      file_src: "{{ config_find.files[0].path if test.openstackrc is defined else inventory_dir + '/keystonerc' }}"
+      # ????
+      file_src: "{{ test.config if test.openstackrc is defined else inventory_dir + '/keystonerc' }}"
   copy:
-      src: "{{ config_find.files[0].path }}"
+      src: "{{ test.config }}"
       dest: "{{ setup.ospdui.dir }}/conf/ospduiTests.conf.json"
       force: yes
   when: test.config|default('')

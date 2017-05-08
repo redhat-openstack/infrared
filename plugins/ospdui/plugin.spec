@@ -51,6 +51,6 @@ subparsers:
                       help: The test plan file name to use for tests.
                       default: plan.tgz
                   config:
-                      type: Value
+                      type: FileValue
                       help: |
                           The test framework configuration file to use instead of the default.
