@@ -12,7 +12,7 @@ subparsers:
                       help: "The cloud which the OpenStack modules will operate against. Cloud setup instructions: http://docs.openstack.org/developer/os-client-config/#config-files"
                       required: yes
                   key-file:
-                      type: Value
+                      type: FileValue
                       help: The key file that would be uploaded to nova and injected into VMs upon creation.
                       default: ~/.ssh/id_rsa
                   key-name:
