@@ -1,7 +1,7 @@
 name: odl
-cpu: "1"
+cpu: "2"
 cpumodel: "host-model"
-memory: "2048"
+memory: "4096"
 swap: "0"
 flavor_id: m1.small
 os:
@@ -11,11 +11,14 @@ disks:
     disk1:
         path: "/var/lib/libvirt/images"
         dev: "/dev/vda"
-        size: "20G"
+        size: "8G"
         cache: "unsafe"
 interfaces:
+    - network: "data"
     - &external
-        network: management
+    - network: management
 external_network: *external
 groups:
     - odl_controller
+    - odl
+    - overcloud_nodes
