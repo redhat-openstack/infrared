@@ -23,6 +23,25 @@
             path: "{{ template_base }}/roles"
             state: directory
 
+      - block:
+          - name: register tht packages
+            yum:
+              list: openstack-tripleo-heat-templates
+            register: tht
+
+          - name: register tht version and release
+            set_fact:
+              tht_version="{{ item.version | regex_replace('\\.', '') }}"
+              tht_release="{{ item.release | splitext | first }}"
+            with_items: "{{ tht.results}}"
+            when: "item.yumstate == 'installed'"
+
+          - set_fact:
+              roles_sshd=true
+            when: "tht_version|int > 520 or (tht_version|int == 520 and tht_release|int >= 15)"
+
+        when: "install.version|openstack_release == 10"
+
       - name: create the roles_data file
         template:
             src: composable_roles/roles_data.yaml.j2
