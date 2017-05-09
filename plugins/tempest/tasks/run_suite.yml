@@ -9,6 +9,28 @@
       whitelistfile: ''
       regex: ''
 
+- name: get next value of test_output_file to avoid overwrites
+  shell: |
+      path=$(dirname "{{ test_output_file }}")
+      filename=$(basename "{{ test_output_file }}")
+      extension="${filename##*.}"
+      filename="${filename%.*}"
+      if [[ -e $path/$filename.$extension ]] ; then
+          i=2
+          while [[ -e $path/$filename-$i.$extension ]] ; do
+              let i++
+          done
+          filename=$filename-$i
+      fi
+      echo $path/$filename.$extension
+  register: result
+  changed: false
+
+- name: increments test_output_file if needed
+  set_fact:
+      test_output_file: "{{ result.stdout_lines[0] }}"
+  when: test_output_file != result.stdout_lines[0]
+
 - name: Include test suite vars
   include_vars: "{{ test_suite_file }}"
 
