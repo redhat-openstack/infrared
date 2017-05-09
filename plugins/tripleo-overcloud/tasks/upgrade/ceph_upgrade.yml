@@ -1,4 +1,10 @@
 ---
+- name: Upgrade {{ node_name }} 
+  shell: |
+      source {{ undercloud_rc }}
+      upgrade-non-controller.sh --upgrade {{ node_name }} &>> {{ node_name }}-upgrade.log
+  when: undercloud_version|int < 11
+
 - name: Ceph osd set noout on {{ node_name }}
   become: true
   command: ceph osd set noout

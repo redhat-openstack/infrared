@@ -93,14 +93,14 @@
   register: creds
 
 - name: Compute Upgrade
-  include: compute_upgrade.yml
+  include: ../compute_upgrade.yml
   with_items: "{{ groups.compute|default([]) }}"
   loop_control:
       loop_var: node_name
   tags: computes_upgrade
 
 - name: Swift Upgrade
-  include: swift_upgrade.yml
+  include: ../swift_upgrade.yml
   with_items: "{{ groups.swift|default([]) }}"
   loop_control:
       loop_var: node_name
@@ -113,7 +113,7 @@
       converge_script: "~/overcloud_upgrade_converge.sh"
 
 - name: Ceph Upgrade
-  include: ceph_upgrade.yml
+  include: ../ceph_upgrade.yml
   with_items: "{{ groups.ceph|default([]) }}"
   loop_control:
       loop_var: node_name
@@ -142,7 +142,7 @@
   tags: custom_role_post
 
 - name: Post upgrade controller nodes
-  include: controller_postupgrade.yml
+  include: ../controller_postupgrade.yml
   with_items: "{{ groups.controller|default([]) }}"
   loop_control:
       loop_var: node_name
