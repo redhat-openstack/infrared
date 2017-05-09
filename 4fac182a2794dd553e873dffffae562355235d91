@@ -2,6 +2,74 @@
   "comments": [
     {
       "key": {
+        "uuid": "76d54ca4_1b913f2a",
+        "filename": "plugins/tempest/tasks/run_suite.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-09T12:16:28Z",
+      "side": 1,
+      "message": "easier to remove \".xml\" here than split it later",
+      "revId": "4fac182a2794dd553e873dffffae562355235d91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11f5ff6e_27f2f5c0",
+        "filename": "plugins/tempest/tasks/run_suite.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-09T12:16:28Z",
+      "side": 1,
+      "message": "calculate the file number before tempest execution\n\n    - name: set next file number\n      vars:\n          split_file: \"{{ item | basename | splitext }}\"\n          file_name: \"{{ split_file[0] }}\"\n          file_ext: \"{{ split_file[1] }}\"\n          # fix this regex\n          number: \"{{ file_name | regex_replace(\u0027^(?P\u003cbasename\u003e.+)\\\\.(?P\u003cseq_num\u003e\\\\d+)(?P\u003cext\u003e(\\\\.)(x)(m)(l))$\u0027, \u0027\\\\g\u003cseq_num\u003e\u0027) }}\"\n      set_fact:\n          next_number: \"{{ number|int + 1}}\"\n      with_fileglobs:\n          - \"{{ inventory_dir }}/tempest_results/{{ test_output_file }}*.xml\"\n      register: helper_num\n      # no reason to print this helper to console\n      no_log: true\n\n    # need to initialize when there are no files\n    - set_fact:\n          next_number: 0\n      when: helper_num|skipped",
+      "revId": "4fac182a2794dd553e873dffffae562355235d91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14165772_b15f953a",
+        "filename": "plugins/tempest/tasks/run_suite.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-09T12:16:28Z",
+      "side": 1,
+      "message": "delete only the next iteration, if exists",
+      "revId": "4fac182a2794dd553e873dffffae562355235d91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03c6521e_812dc383",
+        "filename": "plugins/tempest/tasks/run_suite.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-09T12:16:28Z",
+      "side": 1,
+      "message": "add \"xml\" suffix",
+      "revId": "4fac182a2794dd553e873dffffae562355235d91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "90294066_36015caf",
         "filename": "plugins/tempest/tasks/run_suite.yml",
         "patchSetId": 4
@@ -109,6 +177,30 @@
       "side": 1,
       "message": "I see no way how 93-116 can be  combined using with_fileglobs.\n\nExample is welcomed.",
       "parentUuid": "60913d38_3b5047da",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 0
+      },
+      "revId": "4fac182a2794dd553e873dffffae562355235d91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8795506f_a2105220",
+        "filename": "plugins/tempest/tasks/run_suite.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-09T12:16:28Z",
+      "side": 1,
+      "message": "move this to before we call tempest, so we set the file name on server and not only on workspace",
+      "parentUuid": "3b38ab21_d7e5c8af",
       "range": {
         "startLine": 93,
         "startChar": 0,
