@@ -66,13 +66,13 @@ subparsers:
             - title: Post-deploy options
               options:
                   host-privkey:
-                      type: Value
+                      type: FileValue
                       help: "Specify path to private SSH key to be added to 'hosts' file used later to connect to host where 'host-pubkey' will be inserted"
                       required: True
 
                   host-pubkey:
-                      type: Value
-                      help: "Spefify file with user's public SSH key which will be inserted to authorized_keys of host-user as post-deployment step"
+                      type: FileValue
+                      help: "Specify file with user's public SSH key which will be inserted to authorized_keys of host-user as post-deployment step"
                       required: True
 
             - title: Host groups
