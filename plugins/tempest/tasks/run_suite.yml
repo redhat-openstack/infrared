@@ -90,10 +90,35 @@
         args:
             chdir: "{{ test.dir }}"
 
+      - name: Extract filename and extension from the test_output_file
+        set_fact:
+             test_output_file_name: "{{ [0] | map('extract',  test_output_file | splitext) | join(',') }}"
+             test_output_file_ext: "{{ [1] | map('extract',  test_output_file | splitext) | join(',') }}"
+
+      - name: Find all versions of tempest results file that were copied to {{ inventory_dir }}/tempest_results
+        shell: "ls  {{ test_output_file_name }}.*.{{ test_output_file_ext }}"
+        register: found_files
+        args:
+            chdir: "{{ inventory_dir }}/tempest_results/"
+
+      - debug: var=found_files
+
+      - name: Set number to be the biggest sequence number found
+        set_fact:
+          number: "{{ item | regex_replace('^(?P<basename>.+)\\.(?P<seq_num>\\d+)(?P<ext>(\\.)(x)(m)(l))$', '\\g<seq_num>') }}"
+        with_items:
+           - "{{ found_files.stdout_lines }}"
+
+      - debug: var="{{ number }}"
+
+      - name: Increment the sequence number
+        set_fact:
+             number= "{{ number | int + 1 }}"
+
       - name: Fetch resulting file
         fetch:
             src: "{{ test.dir }}/{{ test_output_file }}"
-            dest: "{{ inventory_dir }}/tempest_results/{{ test_output_file }}"
+            dest: "{{ inventory_dir }}/tempest_results/{{ test_output_file_name }}.{{ number }}.{{test_output_file_ext}}"
             flat: yes
             fail_on_missing: yes
 
