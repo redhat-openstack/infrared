@@ -25,5 +25,9 @@
             dest: "~/backup_server_auth_key"
             mode: "0400"
 
+      - name: Power on the undercloud VM
+        virt:
+            name: "{{ undercloud }}"
+            state: running
 # TODO(yfried): accept a destination to push image to, and cleanup. Use ansible modules instead
 # of hard-coded scp
