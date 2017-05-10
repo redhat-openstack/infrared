@@ -16,6 +16,23 @@
       "revId": "3547c243de833f906aed5120e656f215f47aaf6c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "292f7ccb_19ac6a5e",
+        "filename": "plugins/tripleo-overcloud/composable_roles.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-10T11:13:05Z",
+      "side": 1,
+      "message": "It\u0027s better to avoid set_fact unless absolutely necessary.\nwe only need the sshd boolean once so add here:\n\n   vars:\n       foo: \"{{ tht.results|selectattr(\u0027yumstate\u0027, \u0027equalto\u0027, \u0027installed\u0027)|first }}\"\n       tht_version: foo.version\n       tht_release: foo.release\n       roles_sshd: \"{{ install.version|openstack_release \u003e\u003d 11 or (tht.results.version ... and tht.re)   }}\"\n\nPlease also look at versio_compare fileter for this https://docs.ansible.com/ansible/playbooks_tests.html#version-comparison",
+      "revId": "3547c243de833f906aed5120e656f215f47aaf6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
