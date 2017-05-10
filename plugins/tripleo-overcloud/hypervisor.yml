@@ -1,6 +1,14 @@
 - name: Gather facts from hosts
   hosts: all:!localhost:!ovb
   any_errors_fatal: true
+  gather_facts: no
+  tasks:
+      - block:
+        - name: Gather facts
+          setup:
+        rescue:
+        - name: Reactivate unreachable hosts
+          meta: clear_host_errors
 
 - include: tasks/ironic_pxe_ipmitool.yml
   when: install.version | openstack_release >= 11

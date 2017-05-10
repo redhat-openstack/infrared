@@ -1,7 +1,8 @@
 Plugins
 =======
 
-In `infrared` 2.0, `plugins` are fully self contained Ansible projects.
+In `infrared` 2.0, `plugins` are self contained Ansible projects. They can still
+also depend on common items provided by the core project.
 Any ansible project can become an`infrared` plugin by adhering to the following
 structure (see `tests/example`_ for an example plugin)::
 
@@ -13,7 +14,8 @@ structure (see `tests/example`_ for an example plugin)::
     │       └── tasks
     │           └── main.yml
 
-.. note:: This structure will work without any ``ansible.cfg`` file provided, as Ansible will search for references in the
+.. note:: This structure will work without any ``ansible.cfg`` file provided (unless common resources are used),
+        as Ansible will search for references in the
         relative paths described above. To use an ``ansible.cfg`` config file, use absolute paths to the plugin directory.
 .. _tests/example: https://github.com/redhat-openstack/infrared/tree/master/tests/example
 
@@ -26,7 +28,9 @@ Main entry
 
 Plugins are regular Ansible projects, and as such, they might include or reference any item
 (files, roles, var files, ansible plugins, modules, templates, etc...) using relative paths
-to current playbook
+to current playbook.
+They can also use roles, callback and filter plugins defined in the common/ directory
+provided by `infrared` core.
 
 An example of ``plugin_dir/main.yml``:
 
@@ -68,7 +72,7 @@ Answers File:
 Common Options:
     * ``--dry-run``: Don't execute Ansible playbook. Only write generated vars dict to stdout
     * ``--output``: Redirect generated vars dict from stdout to an explicit file (YAML format).
-    * ``--extra-vars``: Inject custom input into the `vars-dict <Complex option types>`_
+    * ``--extra-vars``: Inject custom input into the `vars dict <Complex option types>`_
 
 Inventory:
     Load a new inventory to active `workspace <workspace.html>`_. The file is copied to
@@ -133,6 +137,58 @@ inner-most level. Example::
            "also_foo": "value3"
        }
    }
+
+* FileValue
+    The absolute or relative path to a file. Infrared validates whether file exists and transform the path
+    to the absolute.
+
+* VarFile
+    Same as the ``FileValue`` type but additionally Infrared will check the following locations for a file:
+        - ``argument/name/option_value``
+        - ``<spec_root>/defaults/argument/name/option_value``
+        - ``<spec_root>/var/argument/name/option_value``
+
+    In the example above the CLI option name is ``--argument-name``.
+    The VarFile suites very well to describe options which point to the file with variables.
+
+    For example, user can describe network topologies parameters in separate files.
+    In that case, all these files can be put to the ``<spec_root>/defaults/network`` folder,
+    and plugin specification can look like::
+
+        plugin_type: provision
+        subparsers:
+        my_plugin:
+            description: Provisioner virtual machines on a single Hypervisor using libvirt
+            groups:
+                - title: topology
+                  options:
+                      network:
+                          type: VarFile
+                          help: |
+                              Network configuration to be used
+                              __LISTYAMLS__
+                          default: defautl_3_nets
+
+    Then, the cli call can looks simply like::
+
+        infrared my_pluign --network=my_file
+
+    Here, the 'my_file' file should be present in the ``/{defaults|var}/network`` folder, otherwise an
+    error will be displayed by the Infrared.
+    Infared will transform that option to the absolute path and will put it to the provision.network variable::
+
+        provision.network: /home/user/..../my_plugin/defaults/my_file
+
+    That variable is later can be used in Ansible playbooks to load the appropriate network parameters.
+
+    .. Note:: Infared automatically checks for files with .yml extension. So the ``my_file`` and
+              ``my_file.yml`` will be validated.
+
+* ListOfVarFiles
+    The list of files. Same as ``VarFile`` but represents the list of files delimited by comma (``,``).
+
+* VarDir
+    The absolute or relative path to a directory. Same as ``VarFile`` but points to the directory instead of file
 
 Placeholders
 ~~~~~~~~~~~~

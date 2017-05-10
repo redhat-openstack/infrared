@@ -8,13 +8,17 @@
         lineinfile:
             dest: "~/overcloud_deploy.sh"
             line: '--ceph-storage-scale {{ storage_nodes }} \'
-        when: "templates.storage_add_scale | default(True)"
+        when:
+            - "templates.storage_add_scale | default(True)"
+            - install.version|openstack_release < 11
 
       - name: append the ceph storage template line to the base overcloud deploy script
         lineinfile:
             dest: "~/overcloud_deploy.sh"
             line: '--ceph-storage-flavor {% if groups["ceph"] is defined %}ceph{% else %}baremetal{% endif %} \'
-        when: "templates.storage_add_scale | default(True)"
+        when:
+            - "templates.storage_add_scale | default(True)"
+            - install.version|openstack_release < 11
 
   when: "not install.storage.external"
   vars:

@@ -1,9 +1,8 @@
 ---
 plugin_type: install
-description: OpenStack installation using Packstack
 subparsers:
     packstack:
-        help: OpenStack installation using Packstack
+        description: OpenStack installation using Packstack
         include_groups: ['Ansible options', 'Inventory', 'Common options', 'Answers file']
         groups:
             - title: Config
@@ -24,15 +23,13 @@ subparsers:
             - title: Network
               options:
                   network-service:
-                      type: Value
+                      type: VarFile
                       help: |
                           OpenStack network service
+                          __LISTYAMLS__
                       default: neutron
-                      choices:
-                          - neutron
-                          - nova
                   network-variant:
-                      type: Value
+                      type: VarFile
                       help: |
                           Default network backend used for tenant networks
                           __LISTYAMLS__
@@ -42,7 +39,7 @@ subparsers:
                       help: Deploy "public" external network on the Cloud as post-install.
                       default: yes
                   public-subnet:
-                      type: Value
+                      type: VarFile
                       help: |
                           Subnet detail for "public" external network on the OverCloud as post-install.
                           CIDR

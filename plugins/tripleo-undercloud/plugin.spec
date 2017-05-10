@@ -1,9 +1,7 @@
 plugin_type: install
-description: Install Tripleo on a designated undercloud node
 subparsers:
     tripleo-undercloud:
-        # FIXME(yfried): duplicates "description"
-        help: Install Tripleo on a designated undercloud node
+        description: Install Tripleo on a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Quickstart Menu
@@ -26,7 +24,7 @@ subparsers:
             - title: Undercloud Configuration
               options:
                   config-file:
-                      type: Value
+                      type: FileValue
                       help: |
                           Path to a custom undercloud.conf file to use for deployment.
                           If not set, it will look under `templates` path for a file named `undercloud.conf`.
@@ -98,11 +96,11 @@ subparsers:
             - title: Custom Repositories
               options:
                   repos-config:
-                      type: Value
+                      type: VarFile
                       help: |
                           YAML file
-                          define new repositories or update exsiting according to file.
-                          see documentaion for more details
+                          define new repositories or update existing according to file.
+                          see documentation for more details
                   repos-urls:
                       type: Value
                       help: |
@@ -162,3 +160,11 @@ subparsers:
                       help: |
                           Undercloud Upgrade.
                           Note: Currently, there is upgrade possibility from version 9 to version 10 only.
+
+            - title: Undercloud Update
+              options:
+                  update-undercloud:
+                      type: Bool
+                      help: |
+                          Undercloud Update.
+                          Note: Infrared support update for RHOSP version 11 only.

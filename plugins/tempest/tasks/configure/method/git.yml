@@ -7,6 +7,17 @@
       version: "{{ tempest_conf.revision | default(omit) }}"
       dest: "{{ tempest_conf.dir }}"
   register: tempest_conf_repo
+  when: test.python_tempest_conf_dir is not defined
+
+- name: Fetch tempest_conf from change
+  synchronize:
+      dest: "{{ tempest_conf.dir }}"
+      src: "{{ test.python_tempest_conf_dir }}"
+      archive: no
+      recursive: yes
+      perms: yes
+      links: yes
+  when: test.python_tempest_conf_dir is defined
 
 - name: Create tempest conf venv with latest pip, setuptools and pbr
   pip:

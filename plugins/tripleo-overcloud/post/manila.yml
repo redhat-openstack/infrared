@@ -1,0 +1,29 @@
+- name: Setup default share for manila
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - name: get server with manila service
+        shell: |
+            source ~/overcloudrc
+            manila service-list | grep manila-scheduler | awk '{print $6}' | head -1
+        register: manila_host
+        ignore_errors: yes
+
+      - name: get the manila conf
+        command: "awk -F \"=\" '/^default_share_type/ {print $2}' /etc/manila/manila.conf"
+        delegate_to: "{{ manila_host.stdout.split('.') | first }}"
+        register: share_type
+        become: yes
+        when:
+            - manila_host.rc == 0
+            - manila_host.stdout
+
+      - name: create manila default share
+        shell: |
+            source ~/overcloudrc
+            manila type-create {{ (share_type.stdout=='')|ternary('default', share_type.stdout) }} False
+        when:
+          - manila_host.rc == 0
+          - manila_host.stdout
+        tags: skip_ansible_lint

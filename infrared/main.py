@@ -1,12 +1,47 @@
+import os
+from pbr import version
+import pkg_resources as pkg
 import sys
 
-from infrared import api
-from infrared.core.services import CoreServices
-from infrared.core.services.plugins import PLUGINS_REGISTRY
-from infrared.core.utils import exceptions
-from infrared.core.utils import logger
-from infrared.core.utils import interactive_ssh
-from infrared.core.utils.print_formats import fancy_table
+
+def inject_common_paths():
+    """Discover the path to the common/ directory provided
+       by infrared core.
+    """
+    def override_conf_path(common_path, envvar, specific_dir):
+        conf_path = os.environ.get(envvar, '')
+        additional_conf_path = os.path.join(common_path, specific_dir)
+        if conf_path:
+            full_conf_path = ':'.join(additional_conf_path, conf_path)
+        else:
+            full_conf_path = additional_conf_path
+        os.environ[envvar] = full_conf_path
+
+    version_info = version.VersionInfo('infrared')
+
+    common_path = pkg.resource_filename(version_info.package,
+                                        'common')
+    override_conf_path(common_path, 'ANSIBLE_ROLES_PATH', 'roles')
+    override_conf_path(common_path, 'ANSIBLE_FILTER_PLUGINS', 'filter_plugins')
+    override_conf_path(common_path, 'ANSIBLE_CALLBACK_PLUGINS',
+                       'callback_plugins')
+
+
+# This needs to be called here because as soon as an ansible class is loaded
+# the code in constants.py is triggered. That code reads the configuration
+# settings from all sources (ansible.cfg, environment variables, etc).
+# If the first include to ansible modules is moved deeper in the InfraRed
+# code (or on demand), then this call can be moved as well in that place.
+inject_common_paths()
+
+
+from infrared import api  # noqa
+from infrared.core.services import CoreServices  # noqa
+from infrared.core.services.plugins import PLUGINS_REGISTRY  # noqa
+from infrared.core.utils import exceptions  # noqa
+from infrared.core.utils import logger  # noqa
+from infrared.core.utils import interactive_ssh  # noqa
+from infrared.core.utils.print_formats import fancy_table  # noqa
 
 LOG = logger.LOG
 
@@ -64,7 +99,7 @@ class WorkspaceManagerSpec(api.SpecObject):
         importer_parser.add_argument("filename", help="Archive file name.")
         importer_parser.add_argument(
             "-n", "--name", dest="workspacename",
-            help="Workspace name to import with."
+            help="Workspace name to import with. "
             "If not specified - file name will be used.")
 
         # exort settings
@@ -77,6 +112,10 @@ class WorkspaceManagerSpec(api.SpecObject):
         exporter_parser.add_argument("-f", "--filename", dest="filename",
                                      help="Archive file name.")
 
+        exporter_parser.add_argument("-K", "--copy-keys", dest="copykeys",
+                                     action="store_true",
+                                     help="Silently copy ssh keys "
+                                     "to workspace.")
         # node list
         nodelist_parser = workspace_subparsers.add_parser(
             'node-list',
@@ -113,7 +152,7 @@ class WorkspaceManagerSpec(api.SpecObject):
             self.workspace_manager.cleanup(pargs.name)
         elif subcommand == 'export':
             self.workspace_manager.export_workspace(
-                pargs.workspacename, pargs.filename)
+                pargs.workspacename, pargs.filename, pargs.copykeys)
         elif subcommand == 'import':
             self.workspace_manager.import_workspace(
                 pargs.filename, pargs.workspacename)
@@ -122,17 +161,18 @@ class WorkspaceManagerSpec(api.SpecObject):
             print fancy_table(
                 ("Name", "Address"), *[node_name for node_name in nodes])
 
+    # deprecated method
     def _create_workspace(self, name):
         """Creates a workspace """
 
-        self.workspace_manager.create(name)
-        print("Workspace '{}' added".format(name))
+        self._checkout_workspace(name)
 
     def _checkout_workspace(self, name):
         """Checkouts (create+activate) a workspace """
 
         if not self.workspace_manager.has_workspace(name):
-            self._create_workspace(name)
+            self.workspace_manager.create(name)
+            print("Workspace '{}' added".format(name))
         self.workspace_manager.activate(name)
         print("Now using workspace: '{}'".format(name))
 

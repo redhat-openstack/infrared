@@ -30,8 +30,8 @@ def test_workspace(workspace_manager_fixture):
 
 
 def test_parse_inventory(workspace_manager_fixture, test_workspace, mocker):
-
-    mock_os = mocker.patch.object(issh, "os")
+    import os
+    mocker.patch("os.system")
 
     ssh_cmd_str = " ".join([
         "ssh -i /some_key_path",
@@ -50,7 +50,8 @@ def test_parse_inventory(workspace_manager_fixture, test_workspace, mocker):
 
     issh.ssh_to_host("test_host")
 
-    mock_os.system.assert_called_with(ssh_cmd_str)
+    # make sure we aren't calling ssh more than once
+    os.system.assert_called_once_with(ssh_cmd_str)
 
     ssh_cmd_str = " ".join([
         "ssh -i /some_key_path",
@@ -69,7 +70,7 @@ def test_parse_inventory(workspace_manager_fixture, test_workspace, mocker):
 
     issh.ssh_to_host("test_host", "some cmd line")
 
-    mock_os.system.assert_called_with(ssh_cmd_str)
+    os.system.assert_called_with(ssh_cmd_str)
 
 
 def test_wrong_host_exception(workspace_manager_fixture, test_workspace):

@@ -1,10 +1,8 @@
 ---
 plugin_type: install
-description: Install a Tripleo overcloud using a designated undercloud node
 subparsers:
     tripleo-overcloud:
-        # FIXME(yfried): duplicates "description"
-        help: Install a Tripleo overcloud using a designated undercloud node
+        description: Install a Tripleo overcloud using a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Stages Control
@@ -12,17 +10,22 @@ subparsers:
                   introspect:
                       type: Bool
                       help: Specifies whether to run introspection
+                      default: False
 
                   tagging:
                       type: Bool
                       help: Specifies whether to create flavors automatically and tag our hosts with them
+                      default: False
 
                   deploy:
                       type: Bool
+                      help: Specifies whether to deploy the overcloud
+                      default: False
 
                   post:
                       type: Bool
                       help: Specifies whether we should run post install tasks
+                      default: False
 
             - title: Deployment Description
               options:
@@ -50,7 +53,7 @@ subparsers:
                         - pike
 
                   deployment-files:
-                      type: Value
+                      type: VarDir
                       help: |
                           The absolute path to the folder containing the templates of the overcloud deployment.
                           Please see `settings/installer/ospd/deployment/example` as reference.
@@ -95,7 +98,7 @@ subparsers:
                             provided templates / options.
 
                   overcloud-templates:
-                      type: Value
+                      type: ListOfVarFiles
                       help: |
                             Add extra environment template files to "overcloud deploy" command
                             File (in YAML format) containing a list of paths to template files on the UnderCloud.
@@ -139,7 +142,7 @@ subparsers:
                       help: Deploy "public" external network on the overcloud as post-install.
 
                   public-subnet:
-                      type: Value
+                      type: VarFile
                       help: |
                           Subnet detail for "public" external network on the overcloud as post-install.
                           (CIDR, Allocation Pool, Gateway)

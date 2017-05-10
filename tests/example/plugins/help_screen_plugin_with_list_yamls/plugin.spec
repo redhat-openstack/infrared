@@ -1,7 +1,7 @@
 plugin_type: supported_type1
-description: Description for list_yamls_plugin
 subparsers:
     list_yamls_plugin:
+        description: Description for list_yamls_plugin
         groups:
             - title: AGroup
               options:

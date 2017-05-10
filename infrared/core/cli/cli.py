@@ -170,9 +170,10 @@ class CliParser(object):
             opt_kwargs['help'] = ''
 
         # print default values to the help
-        if opt_kwargs.get('default', None):
-            opt_kwargs['help'] += "\nDefault value: '{}'.".format(
-                opt_kwargs['default'])
+        if opt_kwargs.get('default', None) is not None:
+            opt_kwargs['help'] = \
+                opt_kwargs['help'].rstrip() + \
+                "\nDefault value: '{}'.".format(opt_kwargs['default'])
 
         # print silent args to the help
         if option_data.get('silent', None):
@@ -461,6 +462,107 @@ class ListValue(ComplexType):
         return value.split(self.ARG_SEPARATOR)
 
 
+class FileType(ComplexType):
+    """Transforms a value to the absolute path"""
+
+    # specifies whather the yaml files should be searched
+    SEARCH_YAML = True
+
+    def get_check_locations(self, value):
+        """Get the file names of possible location of the file"""
+        return [value,
+                os.path.join(os.path.join(*self.arg_name.split('-')), value)]
+
+    @staticmethod
+    def validate(file_path):
+        """Validate path"""
+        return os.path.isfile(os.path.abspath(file_path))
+
+    def resolve(self, value):
+        pathes = self.get_check_locations(value)
+        # check also for files with yml extension
+        if self.SEARCH_YAML:
+            pathes.extend(
+                [path + '.yml' for path in pathes
+                 if not path.endswith('.yml')])
+
+        target_file = next(
+            (file_path for file_path in pathes
+             if self.__class__.validate(file_path)),
+            None)
+
+        if target_file is None:
+            raise exceptions.IRFileNotFoundException(pathes)
+
+        return os.path.abspath(target_file)
+
+
+class VarFileType(FileType):
+    """Represents the file on a disk.
+
+    Looks for a file in the following locations:
+        * in the given file_name location. Can be absolute or relative
+        * arg/name/file_name
+        * plugin_dir/defaults/arg/name/file_name
+        * plugin_dir/vars/arg/name/file_name
+    """
+
+    @property
+    def vars_dir(self):
+        return self.settings_dirs[0]
+
+    @property
+    def defaults_dir(self):
+        return self.settings_dirs[1]
+
+    def get_check_locations(self, value):
+        pathes = [
+            os.path.join(
+                os.path.join(self.vars_dir, *self.arg_name.split('-')),
+                value),
+            os.path.join(
+                os.path.join(self.defaults_dir, *self.arg_name.split('-')),
+                value)
+        ]
+
+        # check also for files with yml extension
+        result = super(VarFileType, self).get_check_locations(value)
+        result.extend(pathes)
+        return result
+
+
+class VarDirType(VarFileType):
+    """Represents the directory on a disk.
+
+    Looks for a file in the following locations:
+        * in the given file_name location. Can be absolute or relative
+        * arg/name/<value>/
+        * plugin_dir/vars/arg/name/<value>/
+        * plugin_dir/defaults/arg/name/<value>/
+    """
+    SEARCH_YAML = False
+
+    @staticmethod
+    def validate(file_path):
+        """Validate path"""
+        return os.path.isdir(os.path.abspath(file_path))
+
+
+class ListFileType(VarFileType):
+    """
+    The list of var files. Files names should be separated
+    by the comma:
+
+        fil1,file2,dir/file3
+    """
+
+    ARG_SEPARATOR = ','
+
+    def resolve(self, value):
+        return [super(ListFileType, self).resolve(file_name.strip())
+                for file_name in value.split(self.ARG_SEPARATOR)]
+
+
 # register custom actions
 ACTIONS = {
     'read-answers': ReadAnswersAction,
@@ -475,5 +577,9 @@ COMPLEX_TYPES = {
     'KeyValueList': KeyValueList,
     'AdditionalArgs': AdditionalOptionsType,
     'ListValue': ListValue,
-    'IniType': IniType
+    'IniType': IniType,
+    'FileValue': FileType,
+    'VarFile': VarFileType,
+    'VarDir': VarDirType,
+    'ListOfVarFiles': ListFileType
 }

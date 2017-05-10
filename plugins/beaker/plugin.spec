@@ -1,9 +1,8 @@
 ---
 plugin_type: provision
-description: Provision systems using Beaker
 subparsers:
     beaker:
-        help: Provision systems using Beaker
+        description: Provision systems using Beaker
         include_groups: ['Ansible options', 'Inventory', 'Common options', 'Answers file']
         groups:
             - title: Beaker instance access details
@@ -56,7 +55,7 @@ subparsers:
             - title: Base Beaker image to be used for provisioning
               options:
                   image:
-                      type: Value
+                      type: VarFile
                       help: |
                           The image to use for nodes provisioning. Check the "sample.yml.example" for example.
                           Should default to latest RHEL released.
@@ -67,13 +66,13 @@ subparsers:
             - title: Post-deploy options
               options:
                   host-privkey:
-                      type: Value
+                      type: FileValue
                       help: "Specify path to private SSH key to be added to 'hosts' file used later to connect to host where 'host-pubkey' will be inserted"
                       required: True
 
                   host-pubkey:
-                      type: Value
-                      help: "Spefify file with user's public SSH key which will be inserted to authorized_keys of host-user as post-deployment step"
+                      type: FileValue
+                      help: "Specify file with user's public SSH key which will be inserted to authorized_keys of host-user as post-deployment step"
                       required: True
 
             - title: Host groups

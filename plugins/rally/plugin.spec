@@ -1,8 +1,7 @@
 plugin_type: test
-description: Rally tests runner
 subparsers:
     rally:
-        help: Rally tests runner
+        description: Rally tests runner
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Rally
@@ -29,13 +28,13 @@ subparsers:
                       help: Revision of Rally plugins git repository
                       default: HEAD
                   tests:
-                      type: Value
+                      type: VarFile
                       help: |
                           The set of tests to execute
                           __LISTYAMLS__
-                      required: no
+                      default: none.yml
                   image:
-                      type: Value
+                      type: VarFile
                       help: |
                           The guest image to upload.
                           __LISTYAMLS__

@@ -1,9 +1,7 @@
 plugin_type: provision
-description: Provision virtual machines on a single Hypervisor using libvirt
 subparsers:
     virsh:
-        # FIXME(yfried): duplicates "description"
-        help: Provision virtual machines on a single Hypervisor using libvirt
+        description: Provision virtual machines on a single Hypervisor using libvirt
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Hypervisor
@@ -42,7 +40,7 @@ subparsers:
               options:
                   # fixme(yfried): add support for user files
                   topology-network:
-                      type: Value
+                      type: VarFile
                       help: |
                           Network configuration to be used
                           __LISTYAMLS__

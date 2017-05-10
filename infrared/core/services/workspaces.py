@@ -1,14 +1,19 @@
 import datetime
 import os
+import fileinput
 import shutil
+import re
 import tarfile
+import tempfile
 import time
+import urllib2
 
 from ansible.parsing.dataloader import DataLoader
 from ansible import inventory
 from ansible.vars import VariableManager
 
 from infrared.core.utils import exceptions, logger
+
 LOG = logger.LOG
 
 TIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
@@ -57,6 +62,8 @@ class WorkspaceRegistry(object):
 
 class Workspace(object):
     """Holds the information about a workspace."""
+
+    path_placeholder = "%%workspace_dir%%"
 
     def __init__(self, name, path):
         self.name = name
@@ -112,6 +119,61 @@ class Workspace(object):
                 LOG.debug("Removing link: %s", first)
                 os.unlink(first)
             first = self.registy.pop()
+
+    def _populate_paths(self):
+        """Update inventory with new workspace directory path. """
+
+        inv = self.inventory
+
+        real_inv = os.path.join(os.path.dirname(inv), os.readlink(inv))
+
+        for line in fileinput.input(real_inv, inplace=True):
+            new_line = re.sub(self.path_placeholder, self.path,
+                              line.rstrip())
+            print new_line
+
+    def _purge_paths(self, path):
+        """replace path in inventory with placeholders.
+
+        This method is used on tmp workspace, so we can't use self.path,
+        we need original path.
+        """
+        inv = self.inventory
+
+        real_inv = os.path.join(os.path.dirname(inv), os.readlink(inv))
+
+        for line in fileinput.input(real_inv, inplace=True):
+            new_line = re.sub(path,
+                              self.path_placeholder,
+                              line.rstrip())
+            print new_line
+
+    def _copy_outside_keys(self):
+        """Copy key from out of the workspace into one"""
+        paths_map = {}
+        real_inv = os.path.join(self.path, os.readlink(self.inventory))
+
+        for line in fileinput.input(real_inv, inplace=True):
+            key_defs = re.findall(r"ansible_ssh_private_key_file=\/\S+", line)
+            for key_def in key_defs:
+                path = key_def.split("=")[-1]
+                paths_map.setdefault(path, path)
+
+            for mapped_orig, mapped_new in paths_map.iteritems():
+                if mapped_orig == mapped_new:
+                    keyfilename = os.path.basename(mapped_orig)
+                    rand_part = next(tempfile._get_candidate_names())
+                    new_fname = "{}-{}".format(keyfilename, rand_part)
+
+                    shutil.copy2(mapped_orig, os.path.join(
+                                 self.path, new_fname))
+                    paths_map[mapped_orig] = os.path.join(
+                        self.path_placeholder, new_fname)
+                    new_fname = paths_map[mapped_orig]
+                else:
+                    new_fname = mapped_new
+
+                print(re.sub(mapped_orig, new_fname, line.rstrip()))
 
     def link_file(self, file_path,
                   dest_name=None, unlink=True, add_to_reg=True):
@@ -267,10 +329,10 @@ class WorkspaceManager(object):
 
         return self.get(active_name)
 
-    def export_workspace(self, workspace_name, file_name=None):
+    def export_workspace(self, workspace_name, file_name=None, copykeys=False):
         """Export content of workspace folder as gzipped tar file
 
-           Replaces existing .tgz file
+        Replaces existing .tgz file
         """
 
         if workspace_name:
@@ -284,30 +346,83 @@ class WorkspaceManager(object):
 
         fname = file_name or workspace.name
 
-        with tarfile.open(fname + '.tgz', "w:gz") as tar:
-            tar.add(workspace.path, arcname="./")
+        # Copy workspace to not damage original,
+        tmpdir = tempfile.mkdtemp()
+        tmp_workspace_path = os.path.join(tmpdir,
+                                          os.path.basename(workspace.path))
+
+        try:
+            shutil.copytree(workspace.path, tmp_workspace_path,
+                            symlinks=True)
+            tmp_workspace = Workspace(name=workspace.name,
+                                      path=tmp_workspace_path)
+            tmp_workspace._purge_paths(workspace.path)
+            if copykeys:
+                tmp_workspace._copy_outside_keys()
+            with tarfile.open(fname + '.tgz', "w:gz") as tar:
+                tar.add(tmp_workspace.path, arcname="./")
+        finally:
+            shutil.rmtree(tmpdir)
 
         print("Workspace {} is exported to file {}.tgz".format(workspace.name,
                                                                fname))
 
-    def import_workspace(self, file_name, workspace_name=None):
+    def import_workspace(self, workspace_src, workspace_name=None):
         """Import workspace from gzipped tar file
 
-           Workspace name should be unique
+        Workspace name should be unique
+        Replaces workspace path placeholders with new ones in inventory
+
+        :param workspace_src: Path/URL to a workspace tgz file
+        :param workspace_name: Workspace name (same as the tgz file basename
+        if not given)
         """
+        original_src = workspace_src
+        try:
+            if not os.path.exists(workspace_src):
+                urllib_ret = urllib2.urlopen(workspace_src)
+                if urllib_ret.code is not 200:
+                    raise exceptions.IRFailedToImportWorkspace(
+                        'Got unexpected returned code ({}) from workspace '
+                        'URL ({})'.format(urllib_ret.code, workspace_src))
+                tmp_dir = tempfile.mkdtemp()
+                workspace_src = \
+                    os.path.join(tmp_dir, workspace_src.split('/')[-1])
+                with open(workspace_src, 'w') as f:
+                    f.write(urllib_ret.read())
 
-        if not os.path.exists(file_name):
-            raise IOError("File {} not found.".format(file_name))
-        if workspace_name is None:
-            basename = os.path.basename(file_name)
-            workspace_name = ".".join(basename.split(".")[:-1])
+            if workspace_name is None:
+                basename = os.path.basename(workspace_src)
+                workspace_name = ".".join(basename.split(".")[:-1])
 
-        new_workspace = self.create(name=workspace_name)
+            new_workspace = self.create(name=workspace_name)
 
-        LOG.debug("Importing workspace from file {} to path {}".format(
-            file_name, new_workspace.path))
-        with tarfile.open(file_name) as tar:
-            tar.extractall(path=new_workspace.path)
+            LOG.debug("Importing workspace from '{}' to '{}'".format(
+                original_src, new_workspace.path))
+
+            with tarfile.open(workspace_src) as tar:
+                tar.extractall(path=new_workspace.path)
+
+        except urllib2.HTTPError:
+            raise exceptions.IRFailedToImportWorkspace(
+                'Workspace URL not found - ({}) '.format(workspace_src))
+        except tarfile.ReadError as e:
+            raise exceptions.IRFailedToImportWorkspace(
+                "{} tar{}".format(workspace_src, e.message))
+        except ValueError as e:
+            err_msg = "Workspace file not found"
+            if 'unknown url' in e.message:
+                err_msg += ' - If you entered a remote URL,' \
+                           ' please make sure to provide its type'
+            raise exceptions.IRFailedToImportWorkspace(err_msg)
+        finally:
+            if 'urllib_ret' in locals():
+                urllib_ret.close()
+            if 'tmp_dir' in locals():
+                shutil.rmtree(tmp_dir)
+
+        new_workspace._populate_paths()
+        self.activate(new_workspace.name)
 
     def is_active(self, name):
         """Checks if workspace is active."""

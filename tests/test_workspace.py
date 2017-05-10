@@ -152,6 +152,32 @@ def test_workspace_fetch_inventory(workspace_manager_fixture, test_workspace):
     assert os.path.basename(inventory_path) == "hosts"
 
 
+def test__copy_outside_keys(test_workspace, mocker):
+    path = test_workspace.path
+    test_inv = os.path.join(path, "new_test_env")
+
+    tkey_file = "/tmp/id_rsa_tkey"
+    with open(tkey_file, "w") as tkey:
+        tkey.write("test ssh key stub")
+    with open(test_inv, "w") as new_inv:
+        new_inv.write("hypervisor ansible_ssh_private_key_file={key}\n"
+                      "host-0 {key}\n"
+                      "host-1 id_rsa".format(key=tkey_file))
+
+    mocker.patch('tempfile._get_candidate_names',
+                 return_value=iter(["zzzzz"]))
+    test_workspace.inventory = test_inv
+    test_workspace._copy_outside_keys()
+    with open(test_inv, "r") as inv:
+        assert inv.read() == (
+            "hypervisor ansible_ssh_private_key_file={key}\n"
+            "host-0 {key}\n"
+            "host-1 id_rsa\n").format(key=os.path.join(
+                test_workspace.path_placeholder, "id_rsa_tkey-zzzzz"))
+
+    assert "id_rsa_tkey-zzzzz" in os.listdir(test_workspace.path)
+
+
 @pytest.mark.parametrize('inventory_content', ["fake content", ""])
 def test_workspace_copy_file(workspace_manager_fixture, test_workspace,
                              tmpdir, inventory_content):
@@ -190,24 +216,49 @@ def test_workspace_link_file(workspace_manager_fixture, test_workspace,
 @pytest.mark.parametrize('workspace_name', ["new_test_workspace", None])
 def test_workspace_import(workspace_manager_fixture, test_workspace,
                           workspace_name, tmpdir):
+    """Test export/import
+
+    1. tests control over imported name
+    2. tests original workspace paths are removed from new workspace
+    3. tests original workspace inventory isn't changed
+    4. tests metadata file not in new workspace
+    """
 
     cwd = os.getcwd()
     os.chdir(tmpdir.strpath)
-    workspace_manager_fixture.export_workspace(test_workspace.name, "test_boo")
 
+    myfile = tmpdir.mkdir("ir_dir").join("fake_hosts_file")
+    myfile.write(test_workspace.path)
+    test_workspace.inventory = str(myfile)
+
+    workspace_manager_fixture.export_workspace(test_workspace.name, "test_boo")
     workspace_manager_fixture.import_workspace("test_boo.tgz", workspace_name)
 
-    if workspace_name is None:
-        assert workspace_manager_fixture.get("test_boo")
-    else:
-        assert workspace_manager_fixture.get(workspace_name)
+    assert workspace_manager_fixture.get(workspace_name or "test_boo")
+
+    active_workspace = workspace_manager_fixture.get_active_workspace()
+    assert active_workspace.name == workspace_name or "test_boo"
+
+    old_inv_file = os.path.join(os.path.dirname(test_workspace.inventory),
+                                os.readlink(test_workspace.inventory))
+    with open(old_inv_file, "r") as old_inv:
+        old_inv_text = old_inv.read()
+        assert test_workspace.path in old_inv_text
+        assert active_workspace.path not in old_inv_text
+
+    new_inv_file = os.path.join(os.path.dirname(active_workspace.inventory),
+                                os.readlink(active_workspace.inventory))
+    with open(new_inv_file, "r") as new_inv:
+        new_inv_text = new_inv.read()
+        assert test_workspace.path not in new_inv_text
+        assert active_workspace.path in new_inv_text
 
     os.chdir(cwd)
 
 
 def test_workspace_import_no_file(workspace_manager_fixture):
-    with pytest.raises(IOError):
-        workspace_manager_fixture.import_workspace("zooooo.tgz", None)
+    with pytest.raises(exceptions.IRFailedToImportWorkspace):
+        workspace_manager_fixture.import_workspace("zoooo.tgz", None)
 
 
 def test_workspace_import_workspace_exists(workspace_manager_fixture, mocker):
@@ -217,10 +268,12 @@ def test_workspace_import_workspace_exists(workspace_manager_fixture, mocker):
     mock_os.path.exists.return_value = True
     back_get = workspace_manager_fixture.get
     workspace_manager_fixture.get = lambda x: test_workspace
-    with pytest.raises(exceptions.IRWorkspaceExists):
-        workspace_manager_fixture.import_workspace("zooooo.tgz", twspc.name)
 
-    workspace_manager_fixture.get = back_get
+    try:
+        with pytest.raises(exceptions.IRWorkspaceExists):
+            workspace_manager_fixture.import_workspace("zoooo.tgz", twspc.name)
+    finally:
+        workspace_manager_fixture.get = back_get
 
 
 def test_workspace_export(workspace_manager_fixture, test_workspace, tmpdir):

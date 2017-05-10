@@ -69,6 +69,8 @@ To use a different image specify ``--images-url``::
 
 .. note:: building the images takes a long time and it's usually quicker to download them.
 
+See the `RDO deployment <rdo.html>`_ page for more details on how to setup RDO product.
+
 Undercloud Configuration
 ------------------------
 
@@ -167,3 +169,16 @@ To upgrade Undercloud run the following command::
         infrared tripleo-undercloud -v --upgrade yes --images-task rpm
 
 .. warning:: Currently, there is upgrade possibility from version 9 to version 10 only.
+
+Undercloud Update
+---------------------
+Update is discovering current Undercloud version and perform minor version update.
+To update Undercloud run the following command::
+
+    infrared tripleo-undercloud -v --update-undercloud yes
+
+Example for update of Undercloud and Images::
+
+        infrared tripleo-undercloud -v --update-undercloud yes --images-task rpm
+
+.. warning:: Infrared support update for RHOSP version 11 only.

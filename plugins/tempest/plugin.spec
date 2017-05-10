@@ -1,14 +1,13 @@
 plugin_type: test
-description: The tempest test runner
 subparsers:
     tempest:
-        help: The tempest test runner
+        description: The tempest test runner
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Tempest
               options:
                   tests:
-                      type: ListValue
+                      type: ListOfVarFiles
                       help: |
                         The set of tests to execute. Should be specified as list
                         constructed from the allowed values.
@@ -19,7 +18,21 @@ subparsers:
                        type: Value
                        help: |
                            The Openstack under test version.
-                       choices: ['5', '6', '7', '8', '9', '10', '11', '12']
+                           Numbers are for OSP releases
+                           Names are for RDO releases
+                       choices:
+                           - "7"
+                           - "8"
+                           - "9"
+                           - "10"
+                           - "11"
+                           - "12"
+                           - kilo
+                           - liberty
+                           - mitaka
+                           - newton
+                           - ocata
+                           - pike
                        required: yes
                   openstack-installer:
                        type: Value
@@ -45,12 +58,22 @@ subparsers:
                       help: |
                           The full path or relative path to the openstackrc file.
                           When empty, infrared will search active workspace for the 'keystonerc' file and use it.
+                  image:
+                      type: Value
+                      help: |
+                          An image to be uploaded to glance and used for testing. Path have to be a url.
                   config-options:
                        type: IniType
                        action: append
                        help: |
                            Forces additional Tempest configuration (tempest.conf) options.
                            Format: --config-options section.option:value1 --config-options section.option:value
+                  remove-options:
+                       type: IniType
+                       action: append
+                       help: |
+                           Remove additional Tempest configuration (tempest.conf) options.
+                           Format: --remove-options section.option:value1 --remove-options section.option:value
                   revision:
                       type: Value
                       help: The setup (git) revision if applicable
@@ -75,3 +98,9 @@ subparsers:
                       help: |
                           Use tempest cleanup to clean the leftover from the tests (usually when tests fail)
                       default: no
+                  python_tempest_conf_dir:
+                      type: Value
+                      help: |
+                          The full or relative path to the python-tempestconf destination.
+                          Suitable when setup is 'git'. When the path is specified, python-tempestconf is not cloned
+                          from the repository but the code in a location specified by the path is used instead.

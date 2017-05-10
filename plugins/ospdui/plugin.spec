@@ -1,8 +1,7 @@
 plugin_type: test
-description: The ospdui test runner
 subparsers:
     ospdui:
-        help: The ospdui test runner
+        description: The ospdui test runner
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Setup
@@ -19,7 +18,7 @@ subparsers:
                           The full path or relative path to the undercloud rc file.
                           When empty, infrared will search active workspace for the 'stackrc' file and use it.
                   tests:
-                      type: Value
+                      type: VarFile
                       help:
                            The test suite to run. This value will be passed to the test runner.
                            __LISTYAMLS__
@@ -29,7 +28,7 @@ subparsers:
                       help: specifies whether the ui should be accessed by https for http protocol.
                       default: no
                   setup:
-                      type: Value
+                      type: VarFile
                       help: |
                           The ospdui setup parameters
                           __LISTYAMLS__

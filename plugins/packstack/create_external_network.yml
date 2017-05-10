@@ -12,8 +12,8 @@
 #  vars:
 #      first_controller: "{{ groups.controller | first }}"
   vars_files:
-      - "vars/network/service/{{ install.network.service }}.yml"
-      - "vars/public/subnet/{{ install.public.subnet }}.yml"
+      - "{{ install.network.service }}"
+      - "{{ install.public.subnet }}"
   tasks:
       - name: get the default floating ip pool name from the controller
 #        delegate_to: "{{ first_controller }}"
@@ -43,7 +43,7 @@
             with_dict:
                 setuptools: "17.0"
                 pytz: "2016.4"
-                shade: "1.7.0"
+                shade: "1.19.0"
                 pip: "8.1"
         vars:
             path_venv: "/var/tmp/venv_shade"

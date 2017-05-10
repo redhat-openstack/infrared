@@ -118,10 +118,11 @@ To deploy non-supported roles, a new folder should be created in the ``<plugin_d
 Any roles files that differ (e.g. service list) from the defaults should be put there. That folder is then can be referenced with the ``--role-files=<folder name>`` argument.
 
 Role Description
-=================
+================
 
 All the custom and defaults role descriptions are stored in the ``<plugin_dir>/files/roles`` folder.
 Every role file holds the following information:
+
   - ``name`` - name of the role
   - ``resource_registry`` - all the resources required for a role.
   - ``flavor`` - the flavor to use for a role
@@ -148,7 +149,7 @@ Below is an example of the controller default role::
         host_name_format: 'controller-%index%'
 
         # condition can be used to include or disable services. For example:
-        #  - "{% if install.version |int < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+        #  - "{% if install.version |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
         services:
             - OS::TripleO::Services::CACerts
             - OS::TripleO::Services::CephClient

@@ -1,9 +1,8 @@
 ---
 plugin_type: provision
-description: Provision systems using Foreman
 subparsers:
     foreman:
-        help: Provision systems using Foreman
+        description: Provision systems using Foreman
         include_groups: ['Ansible options', 'Inventory', 'Common options', 'Answers file']
         groups:
             - title: Foreman server
@@ -48,7 +47,7 @@ subparsers:
                       type: Value
                       help: "User's SSH password"
                   host-key:
-                      type: Value
+                      type: FileValue
                       help: "User's SSH key"
                   host-ipmi-username:
                       type: Value
