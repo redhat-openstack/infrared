@@ -275,12 +275,12 @@ def main():
             password=dict(required=True),
             auth_url=dict(required=True),
             host_id=dict(required=True),
-            rebuild=dict(default=True, choices=BOOLEANS),
+            rebuild=dict(default=True, type='bool', choices=BOOLEANS),
             mgmt_strategy=dict(default='foreman',
                                choices=MGMT_SUPPORTED_STRATEGIES),
             mgmt_action=dict(default='cycle', choices=['on', 'off', 'cycle',
                                                        'reset', 'soft']),
-            wait_for_host=dict(default=True, choices=BOOLEANS),
+            wait_for_host=dict(default=True, type='bool', choices=BOOLEANS),
             ipmi_username=dict(default='ADMIN'),
             ipmi_password=dict(default='ADMIN')))
 
