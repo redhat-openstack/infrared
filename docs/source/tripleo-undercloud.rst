@@ -10,7 +10,8 @@ Setup an Undercloud
     Accepts either an integer for RHEL-OSP release, or a community release
     name (``Liberty``, ``Mitaka``, ``Newton``, etc...) for RDO release
 * ``--build``: Specify a build date or a label for the repositories.
-    Examples: ``passed_phase1``, ``2016-08-11.1``
+    Supports any rhos-release labels.
+    Examples: ``passed_phase1``, ``2016-08-11.1``, ``Y1``, ``Z3``, ``GA``
     Not used in case of RDO.
 
 To deploy a working undercloud::
