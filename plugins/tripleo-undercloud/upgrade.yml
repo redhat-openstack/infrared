@@ -1,6 +1,6 @@
 - name: Undercloud Upgrade
   hosts: undercloud
-  gather_facts: yes
+  gather_facts: no
   any_errors_fatal: true
   tags: upgrade
   vars:
@@ -19,6 +19,13 @@
       operation_type: "{{ 'Update' if install.get('update', {}).undercloud|default(False) else 'Upgrade' }}"
 
   pre_tasks:
+      - block:
+          - name: Gather facts
+            setup:
+        rescue:
+          - name: Reactivate unreachable hosts
+            meta: clear_host_errors
+
       - name: Check for /etc/rhosp-release
         stat:
             path: "/etc/rhosp-release"

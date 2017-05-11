@@ -3,7 +3,7 @@
 # This could be validation of the hosts, package installation that is assumed as per the guide, etc..
 - name: Prepare our undercloud
   hosts: hypervisor
-  gather_facts: yes
+  gather_facts: no
   any_errors_fatal: true
   vars_files:
       - vars/topology/undercloud.yml
@@ -13,6 +13,13 @@
       undercloud_user: "{{ install.user.name | default('stack') }}"
       # todo(yfried): add external refs so users can override these values and customize the Undercloud
   tasks:
+      - block:
+          - name: Gather facts
+            setup:
+        rescue:
+          - name: Reactivate unreachable hosts
+            meta: clear_host_errors
+
       # todo(atalmor): add support to download image
       - name: copy the image into libvirt images folder
         copy:

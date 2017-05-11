@@ -1,11 +1,18 @@
 - name: Backup the Undercloud image
   hosts: hypervisor
-  gather_facts: yes
+  gather_facts: no
   any_errors_fatal: true
   vars:
       undercloud: "{{ hostvars[(groups.undercloud|first)].inventory_hostname }}"
       undercloud_image_file: "{{ install.quickstart.filename.rstrip('.qcow2') }}.qcow2"
   tasks:
+      - block:
+          - name: Gather facts
+            setup:
+        rescue:
+          - name: Reactivate unreachable hosts
+            meta: clear_host_errors
+            
       - name: install package with virt-sparsify
         package:
             name: libguestfs-tools-c
