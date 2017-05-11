@@ -66,27 +66,25 @@
       # Ansible bug around delegate+vars+wait
       # https://github.com/ansible/ansible/issues/11705
       # http://www.elmund.io/configuration%20management/2015/07/23/ansible-delegate_to-and-variables/
-      - block:
-            - name: waiting for the undercloud to be available
-              become: no
-              wait_for:
-                  port: 22
-                  host: "{{ ansible_ssh_host }}"
-                  search_regex: OpenSSH
-                  delay: 10
-              delegate_to: localhost
-              when: "'hypervisor' not in groups"
+      - name: waiting for the undercloud to be available
+        become: no
+        wait_for:
+            port: 22
+            host: "{{ ansible_ssh_host }}"
+            search_regex: OpenSSH
+            delay: 10
+        delegate_to: localhost
+        when: "'hypervisor' not in groups"
 
-            - name: waiting for the undercloud to be available
-              become: no
-              wait_for:
-                  port: 22
-                  host: "{{ ansible_ssh_host }}"
-                  search_regex: OpenSSH
-                  delay: 10
-              delegate_to: hypervisor
-              when: "'hypervisor' in groups"
-        when: update|changed
+      - name: waiting for the undercloud to be available
+        become: no
+        wait_for:
+            port: 22
+            host: "{{ ansible_ssh_host }}"
+            search_regex: OpenSSH
+            delay: 10
+        delegate_to: hypervisor
+        when: "'hypervisor' in groups"
 
       - name: install the oscplugin/tripleO client
         package:
