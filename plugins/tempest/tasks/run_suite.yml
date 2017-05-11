@@ -2,9 +2,20 @@
   set_fact:
       test_suite: "{{ test_suite_file | basename | splitext | first }}"
 
+# Find the test_output_file.N.xml with maximal N (if exists)
+# and set tempst output file to include seq number in file name
+- name: find max file seq
+  vars:
+      file_name: "{{ item | basename | splitext | first }}"
+      seq_number: "{{ file_name | splitext | last }}"
+      max_seq_number: "{{ [seq_number|int, max_seq_number|default(0)] | max }}"
+  set_fact:
+      test_output_file: "tempest-results-{{ test_suite }}.{{ max_seq_number | int + 1 }}.xml"
+  with_fileglob:
+      - "{{ inventory_dir }}/tempest_results/*.xml"
+
 - name: set facts
   set_fact:
-      test_output_file: "tempest-results-{{ test_suite }}.xml"
       blacklistfile: ''
       whitelistfile: ''
       regex: ''
