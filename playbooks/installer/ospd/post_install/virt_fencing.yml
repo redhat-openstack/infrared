@@ -54,6 +54,7 @@
           mode: 0644
       - name: Ease iptables rules
         shell: "iptables -I INPUT -p igmp -j ACCEPT"
+      - shell: "iptables -I INPUT -p udp --dport 1229 -j ACCEPT"
       - name: Restart fence_virtd deamon
         service:
           name: fence_virtd
