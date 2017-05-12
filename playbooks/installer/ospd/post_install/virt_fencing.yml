@@ -53,10 +53,7 @@
           dest: /etc/fence_virt.conf
           mode: 0644
       - name: Ease iptables rules
-        iptables:
-          chain: INPUT
-          protocol: igmp
-          jump: ACCEPT
+        shell: "iptables -I INPUT -p igmp -j ACCEPT"
       - name: Restart fence_virtd deamon
         service:
           name: fence_virtd
