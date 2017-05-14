@@ -15,6 +15,7 @@
       - role: rhos-release
         release: "{{ install.version }}"
         build: "{{ install.build }}"
+        director_build: "{{ install.get('director', {}).build|default(omit) }}"
         mirror: "{{ install.mirror | default(omit) }}"
         when: install.version|openstack_distribution == 'OSP'
         tags: rhos-release
