@@ -219,6 +219,7 @@ def main():
             release=dict(),
             build_date=dict(),
             director=dict(type='bool', default=True),
+            director_build_date=dict(),
             pin_puddle=dict(default=True),
             enable_poodle_repos=dict(default=False),
             poodle_type=dict(choices=POODLE_TYPES.keys()),
@@ -236,6 +237,7 @@ def main():
     release = module.params['release']
     puddle = module.params['build_date']
     director = module.params['director']
+    director_puddle = module.params['director_build_date']
     distro_version = module.params['distro_version']
     pin_puddle = module.params['pin_puddle']
     enable_poodle_repos = module.params['enable_poodle_repos']
@@ -246,8 +248,9 @@ def main():
 
     repo_args = ['-t', str(repo_directory)] if repo_directory else[]
     puddle = ['-p', str(puddle)] if puddle else []
-    # pin_puddle = ['-P'] if module.boolean(pin_puddle) else []
+    pin_puddle = ['-P'] if module.boolean(pin_puddle) else []
     enable_poodle_repos = ['-d'] if module.boolean(enable_poodle_repos) else []
+    director_puddle = ['-p', str(director_puddle)] if director_puddle else puddle
     distro_version = ['-r', distro_version] if distro_version else []
     poodle_type = POODLE_TYPES.get(module.params['poodle_type'], [])
     source_hostname = ['-H', source_hostname] if source_hostname else []
@@ -273,7 +276,7 @@ def main():
         releases = [(str(release), puddle)]
         try:
             if int(release) < 10 and director:
-                releases = [(str(release) + '-director', puddle)] + releases
+                releases = [(str(release) + '-director', director_puddle)] + releases
         except ValueError:
             # RDO versions shouldn't try to get director repos
             pass

@@ -20,3 +20,14 @@
             - not (install.storage|default({})).backend|default(False)
             - "'swift' in groups"
             - "'ceph' in groups"
+
+      - name: validate director build
+        vars:
+            director_build: "{{ install.get('director', {}).build|default(False) }}"
+        debug:
+            msg: "No director puddle for release {{ install.version }}"
+        when:
+            - "install.version|openstack_release > 9"
+            - director_build
+
+
