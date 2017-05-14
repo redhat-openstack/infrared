@@ -82,6 +82,16 @@ subparsers:
                       type: Value
                       default: latest
 
+                  director-build:
+                      help: |
+                          String represents a timestamp of the OSPd puddle
+                          (for the given product core version).
+                          Supports any rhos-release labels.
+                          Examples: "passed_phase1", "2016-08-11.1", "Y1", "Z3", "GA"
+                          Only applies for versions 7-9
+                          If missing, will match "build".
+                      type: Value
+
                   buildmods:
                       type: Value
                       help: |
