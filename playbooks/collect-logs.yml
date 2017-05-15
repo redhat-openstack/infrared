@@ -221,12 +221,12 @@
             selinux_problems: 0
             segfault_problems: 0
             oom_killer_problems: 0
-            counted_hosts: "{{ groups['all'] | difference( groups['local'] + (groups['tester'] | default([]) | difference(groups['controller'])) ) }}"
+            counted_hosts: "{{ groups['all'] | difference( groups['local'] | default([]) )  }}"
 
       - debug:
             msg: "counting issues from hosts: {{ counted_hosts }}"
 
-      - name: "add together all issue counts from all hosts except localhost and tester"
+      - name: "add together all issue counts from all hosts except localhost"
         set_fact:
             selinux_problems: "{{ selinux_problems | int + ( hostvars[item]['selinux_problems_found'] | default([]) | length ) }}"
             segfault_problems: "{{ segfault_problems | int + ( hostvars[item]['segfault_problems_found'] | default([]) | length ) }}"
