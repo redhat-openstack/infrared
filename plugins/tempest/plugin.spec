@@ -74,6 +74,11 @@ subparsers:
                        help: |
                            Remove additional Tempest configuration (tempest.conf) options.
                            Format: --remove-options section.option:value1 --remove-options section.option:value
+                  blackre:
+                      type: Value
+                      action: append
+                      help: |
+                          Adds an axtra black (skip) regex to the ostestr/tempest invocation.
                   revision:
                       type: Value
                       help: The setup (git) revision if applicable
