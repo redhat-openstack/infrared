@@ -1,0 +1,226 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c364938_65ed4970",
+        "filename": "plugins/tripleo-overcloud/introspect.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-15T06:05:00Z",
+      "side": 1,
+      "message": "Please make this in to a var of the next task",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 93,
+        "endChar": 82
+      },
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97f6f8cc_311ddfc2",
+        "filename": "plugins/tripleo-overcloud/introspect.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-15T06:05:00Z",
+      "side": 1,
+      "message": "how about:\n\n    when: \n        - introspection_sleeper.rc is defined \n        - introspection_sleeper.rc \u003d\u003d 0",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b2cb4b6_31321ea7",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-15T06:05:00Z",
+      "side": 1,
+      "message": "please use\n\n    wait_for:\n        timeout: 20\n\n\nconsider \"{{ ironic_recovery_timeout | default (20) }}\" to allow feature flexibility via extra-vars",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f26f379_2dcc65f5",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-15T06:05:00Z",
+      "side": 1,
+      "message": "isn\u0027t this always true if this play is included?",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28a0150f_e2ddd87f",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-15T06:05:00Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0a1ad72_39371fb9",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-15T06:05:00Z",
+      "side": 1,
+      "message": "nit: conisder using \"--json\" or \"-f json\" for ironic commands to replace awk with \"from_json\" and allow ansible dict ops later",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7078f9dd_c8c8f490",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-15T06:05:00Z",
+      "side": 1,
+      "message": "no need to skip lint here. this is the correct usage of \"shell\" (using pipes and re-directions)",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc45efd8_42515f0c",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-15T06:05:00Z",
+      "side": 1,
+      "message": "Maybe you need \"recursive\u003dTrue\" here?\nhttp://docs.ansible.com/ansible/playbooks_filters.html#combining-hashes-dictionaries\n\nI\u0027m very unclear about the result dict here, and how it\u0027s used in L73",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4cd04f19_545d7d98",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-15T06:05:00Z",
+      "side": 1,
+      "message": "not sure what \"failed_nodes\" looks like, given L49, but this seems wrong",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afa69ffd_7ba13490",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-15T06:05:00Z",
+      "side": 1,
+      "message": "no need to skip lint here. this is the correct usage of \"shell\"",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c75a2b0f_0be90e48",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-15T06:05:00Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 83,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 30
+      },
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "033f0211_7a49920a",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-05-15T06:05:00Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 97,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 30
+      },
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
