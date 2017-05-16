@@ -110,3 +110,26 @@ Example::
 .. note:: Upgrade is assuming that Overcloud Deployment script and files/templates, which were used during the initial
   deployment are available at Undercloud node in home directory of Undercloud user. Deployment script location is
   assumed to be "~/overcloud_deploy.sh"
+
+
+Overcloud Update
+----------------
+
+.. warning:: Before Overcloud update it's recommended to update  `Undercloud <tripleo-undercloud.html>`_
+
+.. note:: InfraRed supports minor updates from OpenStack 11
+
+Minor update detects Undercloud's version and updates packages within same version to latest available.
+
+* ``--updateto latest``: Value
+  When specified rhos-release repos with label 'latest' would be setup and used for minor updates.
+  Supports any rhos-release labels.
+
+Example::
+
+    infrared tripleo-overcloud -v --updateto latest --deployment-files virt
+
+.. note:: Minor update expects that Overcloud Deployment script and files/templates,
+  used during the initial deployment, are available at Undercloud node in home directory of Undercloud user.
+  Deployment script location is assumed to be "~/overcloud_deploy.sh"
+  Overcloud credentials file's location assumed to be "~/overcloudrc.v3"
