@@ -1,10 +1,11 @@
 ---
 # save current node to "{{ node_dict }}"
-- name: get node_dict
-  include: var_lookup.yml
-  vars:
-      var_file: "{{ node.key }}"
-      partial_path: topology/nodes
+- include_vars:
+    file: "{{ node.value.path }}"
+
+- name: merge overriden settings to the separate var
+  set_fact:
+      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key, {})) }}"
 
 #todo(yfried): move this to verification section (before execution)
 - name: verify swap is within disk1 size
@@ -21,7 +22,7 @@
 # For disks usually it will be only 1 disk so the async will run on nodes rather than disks creation
 - name: create disk(s) from vm base image
   vars:
-      amount: "{{ node.value }}"
+      amount: "{{ node.value.amount }}"
       image_name: "{{ (topology_node.disks.disk1.import_url|default('') or url) | basename}}"
       net_scripts: /etc/sysconfig/network-scripts
   shell: |
