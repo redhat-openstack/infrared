@@ -176,7 +176,7 @@ listen swift_proxy_server
 server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.storage.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8080 check fall 5 inter 2000 rise 2
   {% endfor %}
 
-{% if install.version|openstack_release > 8 %}
+{% if install.version|default(undercloud_version)|openstack_release > 8 %}
 listen aodh
   bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8042 transparent
   bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8042 transparent
@@ -199,7 +199,7 @@ server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.i
   {% endfor %}
 {% endif %}
 
-{% if install.version|openstack_release > 10 %}
+{% if install.version|default(undercloud_version)|openstack_release > 10 %}
 listen nova_placement
   bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8778 transparent
   bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8778 transparent

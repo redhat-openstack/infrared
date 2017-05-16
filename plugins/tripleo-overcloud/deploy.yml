@@ -36,7 +36,7 @@
         shell: |
             source ~/stackrc
             openstack stack failures list overcloud
-        when: overcloud_deploy.rc != 0 and install.version|openstack_release >= 10
+        when: overcloud_deploy.rc != 0 and install.version|default(undercloud_version)|openstack_release >= 10
         tags: skip_ansible_lint
 
       - name: copy summary script

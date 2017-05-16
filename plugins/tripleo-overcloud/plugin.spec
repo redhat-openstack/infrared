@@ -31,13 +31,11 @@ subparsers:
               options:
                   version:
                       type: Value
-                      required_when:
-                          - "introspect == yes"
-                          - "deploy == yes"
                       help: |
-                          The product version (product == director)
+                          The product version
                           Numbers are for OSP releases
                           Names are for RDO releases
+                          If not given, same version of the undercloud will be used
                       choices:
                         - "7"
                         - "8"
