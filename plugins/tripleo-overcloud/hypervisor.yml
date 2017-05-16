@@ -11,7 +11,7 @@
           meta: clear_host_errors
 
 - include: tasks/ironic_pxe_ipmitool.yml
-  when: install.version | openstack_release >= 11
+  when: install.version|default(undercloud_version) | openstack_release >= 11
 
 - name: Generate the instackenv.json
   hosts: undercloud

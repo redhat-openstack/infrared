@@ -10,7 +10,7 @@
             line: '--ceph-storage-scale {{ storage_nodes }} \'
         when:
             - "templates.storage_add_scale | default(True)"
-            - install.version|openstack_release < 11
+            - install.version|default(undercloud_version)|openstack_release < 11
 
       - name: append the ceph storage template line to the base overcloud deploy script
         lineinfile:
@@ -18,7 +18,7 @@
             line: '--ceph-storage-flavor {% if groups["ceph"] is defined %}ceph{% else %}baremetal{% endif %} \'
         when:
             - "templates.storage_add_scale | default(True)"
-            - install.version|openstack_release < 11
+            - install.version|default(undercloud_version)|openstack_release < 11
 
   when: "not install.storage.external"
   vars:
@@ -37,9 +37,9 @@
 #  vars:
 #      # we have different keyrings mapped to each ospd version capabilities
 #      ceph_compt_version: "
-#          {%- if install.version|openstack_release < 8 -%}8
-#          {%- elif install.version|openstack_release >= 10 -%}10
-#          {%- else -%}{{ install.version|openstack_release }}{%- endif -%}"
+#          {%- if install.version|default(undercloud_version)|openstack_release < 8 -%}8
+#          {%- elif install.version|default(undercloud_version)|openstack_release >= 10 -%}10
+#          {%- else -%}{{ install.version|default(undercloud_version)|openstack_release }}{%- endif -%}"
 #  template:
 #      src: "storage/ceph.yml.j2"
 #      dest: "{{ template_base }}/ceph.yaml"
@@ -55,9 +55,9 @@
         vars:
             # we have different keyrings mapped to each ospd version capabilities
             ceph_compt_version: "
-                {%- if install.version|openstack_release < 8 -%}8
-                {%- elif install.version|openstack_release >= 10 -%}10
-                {%- else -%}{{ install.version|openstack_release }}{%- endif -%}"
+                {%- if install.version|default(undercloud_version)|openstack_release < 8 -%}8
+                {%- elif install.version|default(undercloud_version)|openstack_release >= 10 -%}10
+                {%- else -%}{{ install.version|default(undercloud_version)|openstack_release }}{%- endif -%}"
         template:
             src: "storage/{{ install.storage.config }}.yml.j2"
             dest: "{{ template_base }}/{{ install.storage.config }}.yaml"
