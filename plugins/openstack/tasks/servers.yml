@@ -32,7 +32,7 @@
       state: present
       wait: "{{ topology_node.wait | default(wait) }}"
   register: servers
-  with_sequence: "count={{ node.value }}"
+  with_sequence: "count={{ node.value.amount }}"
 
 # need to write all servers to file at once
 - name: save servers for registration
