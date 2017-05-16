@@ -40,7 +40,7 @@ subparsers:
                           __LISTYAMLS__
                       default: 3_nets
                   topology-nodes:
-                      type: KeyValueList
+                      type: ListOfTopologyFiles
                       help: |
                           Provision topology.
                           List of of nodes types and their amount, in a "key:value" format.
