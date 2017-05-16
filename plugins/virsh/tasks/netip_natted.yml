@@ -2,7 +2,7 @@
 
 - name: get MAC list
   shell: "virsh domiflist {{ topology_node.name }}-{{ item }} | awk '/{{ topology_node.external_network.network }}/ {print $5};'"
-  with_sequence: start=0 end={{ node.value|int - 1 }}
+  with_sequence: start=0 end={{ node.value.amount|int - 1 }}
   register: mac_list
 
 - set_fact:
