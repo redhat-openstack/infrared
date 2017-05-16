@@ -1,10 +1,12 @@
 ---
 # save current node to "{{ node_dict }}"
-- name: get node_dict
-  include: var_lookup.yml
-  vars:
-      var_file: "{{ node.key }}"
-      partial_path: topology/nodes
+- include_vars:
+    file: "{{ node.key }}"
+    name: node_dict
+
+- name: merge overriden settings to the separate var
+  set_fact:
+      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
 
 #todo(yfried): move this to verification section (before execution)
 - name: verify swap is within disk1 size
