@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1d877be_9d7f347e",
+        "filename": "plugins/tempest/tasks/run_suite.yml",
+        "patchSetId": 14
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1006664
+      },
+      "writtenOn": "2017-05-16T12:40:42Z",
+      "side": 1,
+      "message": "@yfried, back to the previous version since the lasted change was not working.\n\n1. setting seq_number to {{file_name|splitext|last}} results in .number and having regular extression here adds more visibility. One can see what is parced\n\n2. max_seq_number: \"{{ [seq_number|int, max_seq_number|int] | max }}\" is working under set_fact but not under vars.\n\n3. removing initialization in line 5 and using  max_seq_number | default(0) results in \"\u0027max_seq_number\u0027 is undefined\" error. \n\nSo nice try but ansible modules are still not supporting this kind of staff everywhere. \n\nBut nice try!\n\nBTW, if revirers want to play with the code it can be found here: http://pastebin.test.redhat.com/484631",
+      "revId": "dadec31d7d647df9bbc73d4491df19152d663933",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
