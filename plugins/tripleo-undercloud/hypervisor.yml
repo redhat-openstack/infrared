@@ -4,12 +4,29 @@
   any_errors_fatal: true
   vars:
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+  pre_tasks:
+      - name: check for subscription
+        command: subscription-manager identity
+        ignore_errors: yes
+        register: cdn_status
+        changed_when: false
+        when: not install.cdn|default(False)
   roles:
+      - role: cdn_registery
+        cdn_args_file: "{{ install.cdn|default('') }}"
+        when:
+            - "install.cdn|default(False) or cdn_status.rc == 0"
+            - "install.version|openstack_distribution == 'OSP'"
+        become: yes
+
       - role: rhos-release
         release: "{{ install.version }}"
         build: "{{ install.build }}"
         mirror: "{{ install.mirror | default(omit) }}"
-        when: "install.version|openstack_distribution == 'OSP'"
+        when:
+            - "install.version|openstack_distribution == 'OSP'"
+            - "not install.cdn|default(False)"
+            - "cdn_status.rc != 0"
         become: yes
 
       - role: rdo-release
