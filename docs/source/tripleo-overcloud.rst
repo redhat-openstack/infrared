@@ -121,9 +121,10 @@ Overcloud Update
 
 Minor update detects Undercloud's version and updates packages within same version to latest available.
 
-* ``--updateto latest``: Value
-  When specified rhos-release repos with label 'latest' would be setup and used for minor updates.
-  Supports any rhos-release labels.
+* ``--updateto``: target build to update to
+  defaults to ``None``, in which case, update is disabled.
+  possible values: build-date, ``latest``, ``passed_phase1``, ``z3`` and all other labels supported by ``rhos-release``
+  When specified, rhos-release repos would be setup and used for minor updates.
 
 Example::
 
