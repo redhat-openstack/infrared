@@ -75,9 +75,10 @@ subparsers:
 
                   build:
                       help: |
-                          "String represents a timestamp of the OSP puddle
+                          String represents a timestamp of the OSP puddle
                           (for the given product core version).
-                          Examples: 'latest', '2016-08-11.1'"
+                          Supports any rhos-release labels.
+                          Examples: "passed_phase1", "2016-08-11.1", "Y1", "Z3", "GA"
                       type: Value
                       default: latest
 
