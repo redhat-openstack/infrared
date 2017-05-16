@@ -35,6 +35,19 @@
     - upgrade_object_storage
   with_items: "{{ groups.swift|default([]) }}"
 
+- name: Check if there are any stopped pacemaker resources
+  become: true
+  command: pcs status
+  register: pcs_status
+  delegate_to: "{{ groups.controller | first }}"
+
+- name: Cleanup resources if any stopped resource
+  become: true
+  command: pcs resource cleanup --force
+  when: pcs_status.stdout.find("Stopped") > -1
+  register: pcs_stopped
+  delegate_to: "{{ groups.controller | first }}"
+
 - name: Controller And Block Storage Upgrade
   include: "controller_upgrade.yml"
   tags:
