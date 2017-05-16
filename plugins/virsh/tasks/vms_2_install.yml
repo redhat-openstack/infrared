@@ -1,10 +1,11 @@
 ---
 # save current node to "{{ node_dict }}"
-- name: get node_dict
-  include: var_lookup.yml
-  vars:
-      var_file: "{{ node.key }}"
-      partial_path: topology/nodes
+- include_vars:
+    file: "{{ node.value.path }}"
+
+- name: merge overriden settings to the separate var
+  set_fact:
+      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key, {})) }}"
 
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
 - name: create vm's
@@ -30,7 +31,7 @@
            --noautoconsole \
            --autostart \
            --vnc
-  with_sequence: start=0 end={{ node.value|int - 1 }}
+  with_sequence: start=0 end={{ node.value.amount|int - 1 }}
   register: vm_install
   async: 7200
   poll: 0

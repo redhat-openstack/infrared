@@ -5,11 +5,12 @@
 # save current node to "{{ node_dict }}"
 - debug: var=node.key
 
-- name: get node_dict
-  include: var_lookup.yml
-  vars:
-      var_file: "{{ node.key }}"
-      partial_path: topology/nodes
+- include_vars:
+    file: "{{ node.value.path }}"
+
+- name: merge overriden settings to the separate var
+  set_fact:
+      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key, {})) }}"
 
 - name: Set the nic order
   command: "echo net-name={{ provision.prefix }}{{ topology_node.interfaces[item].network }}"
@@ -32,7 +33,7 @@
       state: present
       wait: "{{ topology_node.wait | default(wait) }}"
   register: servers
-  with_sequence: "count={{ node.value }}"
+  with_sequence: "count={{ node.value.amount }}"
 
 # need to write all servers to file at once
 - name: save servers for registration
