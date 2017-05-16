@@ -4,11 +4,14 @@
   become: yes
   any_errors_fatal: true
   pre_tasks:
-      - name: get the bmc node_dict
-        include: tasks/var_lookup.yml
-        vars:
-            var_file: 'bmc'
-            partial_path: topology/nodes
+      - include_vars:
+          file: "{{ node.value.path }}"
+          name: node_dict
+        become: no
+
+      - name: merge overriden settings to the separate var
+        set_fact:
+          topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key, {})) }}"
         become: no
   roles:
       - bmc
