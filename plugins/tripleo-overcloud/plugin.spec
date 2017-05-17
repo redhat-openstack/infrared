@@ -239,3 +239,11 @@ subparsers:
                       default: password
                       help: |
                         VBMC password (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+
+            - title: Custom Repositories
+              options:
+                  flea-repos:
+                      type: Bool
+                      default: false
+                      help: |
+                          Whether to enable flea repos during rhos-release execution

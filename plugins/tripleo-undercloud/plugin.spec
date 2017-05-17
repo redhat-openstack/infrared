@@ -112,6 +112,12 @@ subparsers:
                       type: Value
                       help: |
                           comma separated list of URLs to download repo files to ``/etc/yum.repos.d``
+                  flea-repos:
+                      type: Bool
+                      default: false
+                      help: |
+                          Whether to enable flea repos during rhos-release execution
+
 
             - title: Overcloud images
               options:
