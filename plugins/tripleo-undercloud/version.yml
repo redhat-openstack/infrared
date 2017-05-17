@@ -15,7 +15,7 @@
     - set_fact:
           undercloud_version: "{{ version_regex|int or beta }}"
       vars:
-          version_regex: "{{ item.repo | regex_replace('^rhel-7-server-openstack-(beta|[.0-9]+)-rpms$', '\\1')}}"
+          version_regex: "{{ item.repo | regex_replace('^rhelosp-(beta|[.0-9]+)-(director-)?puddle$', '\\1')}}"
           # TODO(yfried): change that when beta version changes
           beta: 11
       with_items: "{{ tripleo_source.results|selectattr('yumstate', 'equalto', 'available')|list }}"
