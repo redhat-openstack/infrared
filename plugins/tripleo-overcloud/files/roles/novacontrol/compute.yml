@@ -1,0 +1,35 @@
+---
+compute_role:
+    name: Compute
+
+    resource_registry:
+        "OS::TripleO::Compute::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/compute.yaml"
+
+    flavor: compute
+    host_name_format: 'compute-%index%'
+
+    services:
+        - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::CephClient
+        - OS::TripleO::Services::CephExternal
+        - OS::TripleO::Services::Timezone
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::Snmp
+        - OS::TripleO::Services::NovaCompute
+        - OS::TripleO::Services::NovaLibvirt
+        - OS::TripleO::Services::Kernel
+        - OS::TripleO::Services::ComputeNeutronCorePlugin
+        - OS::TripleO::Services::ComputeNeutronOvsAgent
+        - OS::TripleO::Services::ComputeCeilometerAgent
+        - OS::TripleO::Services::ComputeNeutronL3Agent
+        - OS::TripleO::Services::ComputeNeutronMetadataAgent
+        - OS::TripleO::Services::TripleoPackages
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::NeutronSriovAgent
+        - OS::TripleO::Services::OpenDaylightOvs
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::FluentdClient
+        - "{% if install.version |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+        - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
+        - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::Sshd{% endif %}"
+
