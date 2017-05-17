@@ -8,14 +8,14 @@
 
 - name: run overcloud-update script
   shell: |
-    source ~/stackrc ;
+    source {{ undercloud_rc }} ;
     {{ overcloud_update_script }}
   register: overcloud_update
   ignore_errors: True
 
 - name: print overcloud failures
   shell: |
-    source ~/stackrc ;
+    source {{ undercloud_rc }} ;
     openstack stack failures list overcloud
   when: overcloud_update.rc != 0
 
