@@ -73,6 +73,13 @@ subparsers:
                         - ocata
                         - pike
 
+                  flea:
+                      type: Bool
+                      help: |
+                          Enable flea (experimental) repos.
+                          Passing -f to rhos-release.
+                      default: no
+
                   build:
                       help: |
                           String represents a timestamp of the OSP puddle

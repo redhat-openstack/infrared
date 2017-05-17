@@ -62,6 +62,12 @@ subparsers:
                       help: The product version
                       required: yes
                       choices: ["6", "7", "8", "9", "10", "11", "12", "juno", "kilo", "liberty", "mitaka", "newton", "ocata", "pike"]
+                  flea:
+                      type: Bool
+                      help: |
+                          Enable flea (experimental) repos.
+                          Passing -f to rhos-release.
+	              default: no
                   build:
                       type: Value
                       help: The product build

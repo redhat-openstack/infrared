@@ -79,6 +79,7 @@
       target_directory: "{{ rr_target_directory }}"
       distro_version: "{{ rr_distro_version }}"
       source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
+      enable_flea_repos: "{{ enable_flea_repos|default('no') }}"
   register: command_result
   until: command_result.stderr.find('Connection reset by peer') == -1
   retries: 40

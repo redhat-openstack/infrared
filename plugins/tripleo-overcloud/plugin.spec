@@ -52,6 +52,13 @@ subparsers:
                         - ocata
                         - pike
 
+		  flea:
+                      type: Bool
+                      help: |
+                          Enable flea (experimental) repos.
+                          Passing -f to rhos-release.
+                      default: no
+
                   deployment-files:
                       type: VarDir
                       help: |

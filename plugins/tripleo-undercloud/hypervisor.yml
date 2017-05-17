@@ -23,6 +23,7 @@
         release: "{{ install.version }}"
         build: "{{ install.build }}"
         mirror: "{{ install.mirror | default(omit) }}"
+        enable_flea_repos: "{{ install.flea }}"
         when:
             - "install.version|openstack_distribution == 'OSP'"
             - "not install.cdn|default(False)"
