@@ -118,10 +118,9 @@ subparsers:
                           List of flags for rhos-release module.
                           Currently works with
                           pin - pin puddle (dereference 'latest' links to prevent content from changing)
-                          flea  enable flea repos
-                          unstable  This will enable brew repos or poodles (in old releases)
-                                      If you do this, and file a packaging bug, your keyboard
-                                      will catch on fire and Brown Hat Jellyfish will hunt you down.
+                          flea - enable flea repos
+                          unstable - this will enable brew repos or poodles (in old releases)
+                          none - use none of those flags
                       default: pin
 
             - title: Overcloud images
