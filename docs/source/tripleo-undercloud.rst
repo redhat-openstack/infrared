@@ -13,7 +13,18 @@ Setup an Undercloud
     Supports any rhos-release labels.
     Examples: ``passed_phase1``, ``2016-08-11.1``, ``Y1``, ``Z3``, ``GA``
     Not used in case of RDO.
+
     .. note:: ``--build`` flag is internal Red Hat users only.
+
+* ``--buildmods``: Let you the option to add flags to rhos-release:
+
+    | ``pin`` - Pin puddle (dereference 'latest' links to prevent content from changing). This flad is selected by default
+    | ``flea`` - Enable flea repos.
+    | ``unstable`` - This will enable brew repos or poodles (in old releases).
+    | ``none`` - Use none of those flags.
+
+ .. note:: ``--buildmods`` flag is internal Red Hat users only.
+
 * ``--cdn`` Register the undercloud with a Red Hat Subscription Management platform.
     Accepts a file with subscription details.
 
