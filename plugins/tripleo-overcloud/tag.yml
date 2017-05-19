@@ -3,16 +3,19 @@
   gather_facts: no
   any_errors_fatal: true
   tasks:
-      - name: Check for the instackenv file
+      - name: Use instackenv provided
+        vars:
+            instack_input: "{{ (install.instackenv|default({})).file | default('') }}"
         stat:
-            path: "~/instackenv.json"
+            path: "{{ instack_input or '~/instackenv.json'}}"
         register: instack_file_path
 
       - set_fact:
             instack_file: "{{ instack_file_path.stat.path }}"
         when: instack_file_path.stat.exists
 
-      - fail:
+      - name: fail if instackenv file is missing
+        fail:
             msg: "instackenv file is missing"
         when: not instack_file_path.stat.exists
 
