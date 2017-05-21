@@ -226,6 +226,16 @@ subparsers:
                           Perform minor update of overcloud to the 'build' specified. Default: 'None'
                           NOTE: Currently, minor update is supported with IR just for verions 10 and 11.
                       default: None
+                  buildmods:
+                      type: Value
+                      help: |
+                          List of flags for rhos-release module.
+                          Currently works with
+                          pin - pin puddle (dereference 'latest' links to prevent content from changing)
+                          flea - enable flea repos
+                          unstable - this will enable brew repos or poodles (in old releases)
+                          none - use none of those flags
+                      default: pin
 
             - title: Ironic Configuration
               options:
@@ -239,17 +249,3 @@ subparsers:
                       default: password
                       help: |
                         VBMC password (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
-
-            - title: Custom Repositories
-              options:
-                  buildmods:
-                      type: Value
-                      help: |
-                          List of flags for rhos-release module.
-                          Currently works with
-                          pin - pin puddle (dereference 'latest' links to prevent content from changing)
-                          flea  enable flea repos
-                          unstable  This will enable brew repos or poodles (in old releases)
-                                      If you do this, and file a packaging bug, your keyboard
-                                      will catch on fire and Brown Hat Jellyfish will hunt you down.
-                      default: pin
