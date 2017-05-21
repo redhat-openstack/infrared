@@ -134,3 +134,12 @@ Example::
   used during the initial deployment, are available at Undercloud node in home directory of Undercloud user.
   Deployment script location is assumed to be "~/overcloud_deploy.sh"
   Overcloud credentials file's location assumed to be "~/overcloudrc.v3"
+
+* ``--buildmods``: Let you the option to add flags to rhos-release:
+
+    | ``pin`` - Pin puddle (dereference 'latest' links to prevent content from changing). This flad is selected by default
+    | ``flea`` - Enable flea repos.
+    | ``unstable`` - This will enable brew repos or poodles (in old releases).
+    | ``none`` - Use none of those flags.
+
+ .. note:: ``--buildmods`` flag is internal Red Hat users only.
