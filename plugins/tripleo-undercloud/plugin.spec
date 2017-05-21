@@ -82,6 +82,17 @@ subparsers:
                       type: Value
                       default: latest
 
+                  buildmods:
+                      type: Value
+                      help: |
+                          List of flags for rhos-release module.
+                          Currently works with
+                          pin - pin puddle (dereference 'latest' links to prevent content from changing)
+                          flea - enable flea repos
+                          unstable - this will enable brew repos or poodles (in old releases)
+                          none - use none of those flags
+                      default: pin
+
             - title: Tripleo User
               options:
                   user-name:
@@ -112,16 +123,6 @@ subparsers:
                       type: Value
                       help: |
                           comma separated list of URLs to download repo files to ``/etc/yum.repos.d``
-                  buildmods:
-                      type: Value
-                      help: |
-                          List of flags for rhos-release module.
-                          Currently works with
-                          pin - pin puddle (dereference 'latest' links to prevent content from changing)
-                          flea - enable flea repos
-                          unstable - this will enable brew repos or poodles (in old releases)
-                          none - use none of those flags
-                      default: pin
 
             - title: Overcloud images
               options:
