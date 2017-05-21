@@ -24,5 +24,12 @@
   command: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel"
   when: install.images.packages|default(None) != None
 
-- command: "virt-customize -a {{ overcloud_image_file }} --update -m {{ (ansible_memtotal_mb/2)|round|int }} --smp {{ (ansible_processor_vcpus/2)|round|int }}  --selinux-relabel"
+- name: update packages on repos
+  command: "virt-customize -a {{ overcloud_image_file }} --update --memsize {{ requested_mem }} --smp {{ (ansible_processor_vcpus/2)|round|int }}  --selinux-relabel"
+  vars:
+      available_mem: "{{ [ansible_memory_mb.nocache.free, (ansible_memtotal_mb/2)|round|int] | min }}"
+      # don't overreach
+      safe_mem: "{{ (available_mem|int * 0.75)|round|int }}"
+      # don't ask lower than virt-customize default:
+      requested_mem: "{{ [safe_mem, 500] | max}}"
   when: install.images['update'] or patched_rpms.stat.exists
