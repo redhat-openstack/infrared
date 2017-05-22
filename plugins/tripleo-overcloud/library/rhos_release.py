@@ -74,6 +74,9 @@ options:
             - One-shot mode.  Only install a specific repository;
              do not install dependent repositories.
         default: 'no'
+    buildmods:
+        description:
+            - List of flags that will be enabled. only works with pin puddle, flea-repos and unstable
 notes:
     - requires rhos-release version 1.0.23
 requirements: [ rhos-release ]
@@ -224,6 +227,7 @@ def main():
             source_hostname=dict(),
             enable_flea_repos=dict(default=False),
             one_shot_mode=dict(default=False),
+            buildmods=dict(type='list')
         )
     )
     base_cmd = 'rhos-release'
@@ -238,16 +242,24 @@ def main():
     source_hostname = module.params['source_hostname']
     enable_flea_repos = module.params['enable_flea_repos']
     one_shot_mode = module.params['one_shot_mode']
+    buildmods = module.params['buildmods']
 
     repo_args = ['-t', str(repo_directory)] if repo_directory else[]
     puddle = ['-p', str(puddle)] if puddle else []
-    pin_puddle = ['-P'] if module.boolean(pin_puddle) else []
+    # pin_puddle = ['-P'] if module.boolean(pin_puddle) else []
     enable_poodle_repos = ['-d'] if module.boolean(enable_poodle_repos) else []
     distro_version = ['-r', distro_version] if distro_version else []
     poodle_type = POODLE_TYPES.get(module.params['poodle_type'], [])
     source_hostname = ['-H', source_hostname] if source_hostname else []
     enable_flea_repos = ['-f'] if module.boolean(enable_flea_repos) else []
     one_shot_mode = ['-O'] if module.boolean(one_shot_mode) else []
+
+    mods = {
+        'pin': '-P',
+        'flea': '-f',
+        'unstable': '--unstable'
+
+    }
 
     cmd = []
     if state == 'uninstall':
@@ -272,10 +284,14 @@ def main():
             else:
                 cmd.extend([base_cmd, release])
 
+            if not(len(buildmods) == 1 and 'none' in buildmods):
+                for buildmod in buildmods:
+                    cmd.append(mods[buildmod.lower()])
+
             cmd.extend(enable_poodle_repos)
-            cmd.extend(enable_flea_repos)
+            # cmd.extend(enable_flea_repos)
             cmd.extend(poodle_type)
-            cmd.extend(pin_puddle)
+            # cmd.extend(pin_puddle)
             cmd.extend(build)
             cmd.extend(distro_version)
             cmd.extend(source_hostname)
