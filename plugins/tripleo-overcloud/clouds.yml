@@ -1,0 +1,25 @@
+---
+- name: create clouds.yml file
+  hosts: undercloud
+  gather_facts: no
+  tasks:
+    - name: get overcloud cloud variables
+      shell: |
+          for key in $( set | awk '{FS="="}  /^OS_/ {print $1}' ); do unset $key ; done
+          source /home/stack/overcloudrc
+          echo "
+          auth-url: $OS_AUTH_URL
+          username: $OS_USERNAME
+          password: $OS_PASSWORD              
+          project-name: ${OS_PROJECT_NAME:-$OS_TENANT_NAME}"
+      register: cloud_details_oc
+
+    - name: updater clouds.yaml file
+      blockinfile:
+          content: "{{ cloud_auth | to_nice_yaml}}"
+          dest: "~/clouds.yaml"
+          marker: "# {mark} ANSIBLE MANAGED BLOCK {{ cloud_auth.keys() }}"
+          backup: yes
+          create: yes
+      vars:
+          cloud_auth: "{{ cloud_auth_oc|default({}) | combine({'clouds':{'overcloud':{'auth': cloud_details_oc.stdout|from_yaml }}}, recursive=True) }}"

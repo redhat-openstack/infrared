@@ -79,12 +79,8 @@
         when: "{{ install.images.packages|default('') or install.images['update'] }}"
 
       - name: upload the overcloud images to glance
-        shell: |
-            source ~/stackrc
-            openstack overcloud image upload --update-existing
-        # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command, or os_images
-        tags: skip_ansible_lint
-
+        command: openstack --os-cloud stack overcloud image upload --update-existing
+        
       - name: remove downloaded images
         file:
             path: "/home/{{ install.user.name }}/{{ item[1] }}"
