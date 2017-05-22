@@ -43,23 +43,15 @@
         tags: ironic
 
       - name: register hosts to instack
-        shell: |
-            source ~/stackrc
-            openstack baremetal import --json {{ instack_file_path.stat.path }}
+        command: openstack --os-cloud undercloud baremetal import --json {{ instack_file_path.stat.path }}
         tags:
             - ironic
-            # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
-            - skip_ansible_lint
 
       # FIXME(yfried): unify in above shell?
       - name: assign the kernel and ramdisk before introspection begins
-        shell: |
-            source ~/stackrc
-            openstack baremetal configure boot
+        command: openstack --os-cloud undercloud baremetal configure boot
         tags:
             - ironic
-            # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
-            - skip_ansible_lint
 
       - name: set the root device for baremetal nodes (with size hint)
         shell: |
@@ -69,11 +61,6 @@
         when: "'bmc' in groups"
 
       - name: start node introspection
-        shell: |
-            source ~/stackrc
-            openstack baremetal introspection bulk start
+        command: openstack --os-cloud undercloud baremetal introspection bulk start
         register: introspection_result
         failed_when: introspection_result.rc != 0
-        tags:
-            # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
-            - skip_ansible_lint
