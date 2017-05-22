@@ -1,0 +1,61 @@
+---
+- name: create clouds.yml file
+  hosts: undercloud
+  gather_facts: no
+  tasks:
+    - name: check if we have stackrc
+      stat:
+        path: /home/stack/stackrc
+      register: stackrc
+
+    - block:
+      - name: get undercloud clouds variables
+        shell: |
+          for key in $( set | awk '{FS="="}  /^OS_/ {print $1}' ); do unset $key ; done
+          source /home/stack/stackrc
+          echo "auth_url=$OS_AUTH_URL
+          auth_type=$OS_AUTH_TYPE
+          username=$OS_USERNAME
+          password=$OS_PASSWORD
+          cloudname=$OS_CLOUDNAME
+          project_name=${OS_PROJECT_NAME:-$OS_TENANT_NAME}"
+        register: cloud_details_raw_uc
+    
+      - set_fact:
+          cloud_details_uc: "{{ cloud_details_uc | default({}) | combine({ item.split('=')|first : item.split('=')|last} )}}"
+        with_items: "{{ cloud_details_raw_uc.stdout_lines|replace(' ','') }}"
+    
+      - set_fact:
+          cloud_auth: "{{ cloud_auth|default({}) | combine({stackrc.stat.path|basename: cloud_details_uc}, recursive=True) }}"
+      when: stackrc.stat.exists
+
+    - name: check if we have overcloudrc
+      stat:
+        path: /home/stack/overcloudrc
+      register: overcloudrc
+
+    - block:
+      - name: get overcloud cloud variables
+        shell: |
+          for key in $( set | awk '{FS="="}  /^OS_/ {print $1}' ); do unset $key ; done
+          source /home/stack/overcloudrc
+          echo "auth_url=$OS_AUTH_URL
+          auth_type=$OS_AUTH_TYPE
+          username=$OS_USERNAME
+          password=$OS_PASSWORD
+          cloudname=$OS_CLOUDNAME
+          project_name=${OS_PROJECT_NAME:-$OS_TENANT_NAME}"
+        register: cloud_details_raw_oc
+    
+      - set_fact:
+          cloud_details_oc: "{{ cloud_details_oc | default({}) | combine({ item.split('=')|first : item.split('=')|last} )}}"
+        with_items: "{{ cloud_details_raw_oc.stdout_lines|replace(' ','') }}"
+    
+      - set_fact:
+          cloud_auth: "{{ cloud_auth|default({}) | combine({overcloudrc.stat.path|basename: cloud_details_oc}, recursive=True) }}"
+      when: overcloudrc.stat.exists
+      
+    - name: Create clouds.yml file
+      template:
+        src: templates/clouds.yml.j2
+        dest: ~/clouds.yml
