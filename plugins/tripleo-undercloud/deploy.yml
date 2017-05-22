@@ -37,5 +37,21 @@
             flat: yes
             fail_on_missing: yes
 
+      - name: get the undercloud cloud auth variables
+        shell: |
+            for key in $( set | awk '{FS="="}  /^OS_/ {print $1}' ); do unset $key ; done
+            source /home/stack/stackrc
+            echo "
+            auth_url: $OS_AUTH_URL
+            username: $OS_USERNAME
+            password: $OS_PASSWORD
+            project_name: ${OS_PROJECT_NAME:-$OS_TENANT_NAME}"
+        register: cloud_details_uc
+
+      - name: update clouds.yaml file
+        include: clouds.yml
+        vars:
+            auth_file_path: "/home/stack/stackrc"
+        
       - name: gathering new facts about the undercloud
         setup:
