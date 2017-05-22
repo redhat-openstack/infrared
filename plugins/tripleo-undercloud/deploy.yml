@@ -37,5 +37,27 @@
             flat: yes
             fail_on_missing: yes
 
+      - name: get the undercloud cloud auth variables
+        shell: |
+            for key in $( set | awk '{FS="="}  /^OS_/ {print $1}' ); do unset $key ; done
+            source /home/stack/stackrc
+            echo "
+            auth_url: $OS_AUTH_URL
+            username: $OS_USERNAME
+            password: $OS_PASSWORD
+            project_name: ${OS_PROJECT_NAME:-$OS_TENANT_NAME}"
+        register: cloud_details_uc
+
+      - set_fact:
+            cloud_auth: "{{ cloud_auth|default({}) | combine({'clouds':{'undercloud':{'auth': cloud_details_uc.stdout|from_yaml }}} , recursive=True) }}"
+
+      - name: update clouds.yaml file
+        blockinfile:
+            content: "{{ cloud_auth | to_nice_yaml}}"
+            dest: "~/clouds.yaml"
+            marker: "# {mark} ANSIBLE MANAGED BLOCK {{ cloud_auth.keys() }}"
+            backup: yes
+            create: yes
+
       - name: gathering new facts about the undercloud
         setup:

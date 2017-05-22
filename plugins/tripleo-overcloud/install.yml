@@ -16,6 +16,9 @@
       - "'loadbalancer' in groups"
       - install.deploy|default('')
 
+- name: Generate clouds.yaml
+  include: clouds.yml   
+
 - name: Introspect our machines
   include: "{{ overcloud_introspect | default('introspect.yml') }}"
   when: install.introspect|default('')
