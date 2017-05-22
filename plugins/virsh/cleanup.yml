@@ -33,6 +33,13 @@
     - include: tasks/cleanup.yml
       when: not install_libvirt|changed
 
+    - include: tasks/cleanup_knowhosts.yml
+      with_inventory_hostnames:
+          - openstack_nodes
+      loop_control:
+          loop_var: hostname
+      when: hostname not in ignore_virsh_nodes
+
 - name: Clean old inventory file
   hosts: localhost
   gather_facts: no

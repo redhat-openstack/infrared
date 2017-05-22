@@ -1,0 +1,9 @@
+- name: cleanup known-hosts by name
+  known_hosts:
+      state: absent
+      name: "{{ hostname }}"
+
+- name: cleanup known-hosts by ip
+  known_hosts:
+      state: absent
+      name: "{{ hostvars[hostname].ansible_ssh_host }}"
