@@ -211,4 +211,4 @@ Example for update of Undercloud and Images::
 
         infrared tripleo-undercloud -v --update-undercloud yes --images-task rpm
 
-.. warning:: Infrared support update for RHOSP version 11 only.
+.. warning:: Infrared support update for RHOSP from version 8.
