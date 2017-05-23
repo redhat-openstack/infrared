@@ -55,7 +55,5 @@
         mirror: "{{ install.mirror | default(omit) }}"
         tags: upgrade
   tasks:
-      - name: "{{ operation_type }} to version {{ new_version }} build {{ install.build }}"
-        include: "tasks/upgrade/upgrade_{{ new_version }}.yml"
-        vars:
-            new_version: "{{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }}"
+      - name: "{{ operation_type }} to version {{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }} build {{ install.build }}"
+        include: "tasks/upgrade/upgrade.yml"
