@@ -1,0 +1,80 @@
+---
+- name: Update packages prior upgrade
+  become: true
+  yum:
+      name: "*"
+      state: latest
+  when: undercloud_version|openstack_release == 7
+
+- block:
+      - name: Stopping services
+        become: true
+        shell: |
+             systemctl stop 'openstack-*'
+             systemctl stop 'neutron-*'
+        tags: skip_ansible_lint
+
+      - name: Update packages prior upgrade
+        become: true
+        yum:
+            name: "python-tripleoclient"
+            state: latest
+
+      - name: Stop openvswitch
+        become: true
+        service:
+            name: openvswitch
+            state: stopped
+        when:
+            - undercloud_version|openstack_release < 10
+            - install.get('update', {}).undercloud|default(False)
+  when: undercloud_version|openstack_release > 7
+
+- block:
+      - name: Stop httpd
+        become: true
+        service:
+              name: httpd
+              state: stopped
+
+      - name: update packages prior upgrade
+        become: true
+        yum:
+            name: "{{ item }}"
+            state: latest
+        with_items:
+            - 'instack-undercloud'
+            - 'openstack-puppet-modules'
+            - 'openstack-tripleo-common'
+  when: undercloud_version|openstack_release == 10
+
+- name: Undercloud {{ operation_type }}
+  shell: "openstack undercloud upgrade &> undercloud_{{ operation_type }}.log"
+
+- name: Reboot the Undercloud
+  become: true
+  shell: "sleep 2 && shutdown -r now"
+  async: 1
+  poll: 0
+  ignore_errors: true
+  tags: undercloud_reboot
+
+- block:
+      - name: waiting for the undercloud to be available
+        wait_for:
+            port: 22
+            host: "{{ ansible_ssh_host }}"
+            search_regex: OpenSSH
+            delay: 10
+        delegate_to: localhost
+        when: "'hypervisor' not in groups"
+
+      - name: waiting for the undercloud to be available
+        become: no
+        wait_for:
+            host: "{{ ansible_ssh_host }}"
+            search_regex: OpenSSH
+            delay: 10
+        delegate_to: hypervisor
+        when: "'hypervisor' in groups"
+  tags: undercloud_reboot
