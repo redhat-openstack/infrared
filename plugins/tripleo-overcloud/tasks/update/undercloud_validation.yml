@@ -1,10 +1,10 @@
 ---
 - name: Unsupported OS version on undercloud
   fail:
-      msg: "InfraRed supports updates for OpenStack versions 10 and 11"
+      msg: "InfraRed supports updates for OpenStack versions 9+"
   when:
-      - undercloud_version|openstack_release != 10
-      - undercloud_version|openstack_release != 11
+      - undercloud_version|openstack_release < 9
+      - not undercloud_version|openstack_release in [9, 10, 11]
 
 - name: Checking overcloud_deploy_file
   stat:
