@@ -117,7 +117,7 @@ Overcloud Update
 
 .. warning:: Before Overcloud update it's recommended to update  `Undercloud <tripleo-undercloud.html>`_
 
-.. note:: InfraRed supports minor updates from OpenStack 11
+.. note:: InfraRed supports minor updates from OpenStack 9
 
 Minor update detects Undercloud's version and updates packages within same version to latest available.
 
@@ -133,7 +133,6 @@ Example::
 .. note:: Minor update expects that Overcloud Deployment script and files/templates,
   used during the initial deployment, are available at Undercloud node in home directory of Undercloud user.
   Deployment script location is assumed to be "~/overcloud_deploy.sh"
-  Overcloud credentials file's location assumed to be "~/overcloudrc.v3"
 
 * ``--buildmods``: Let you the option to add flags to rhos-release:
 
