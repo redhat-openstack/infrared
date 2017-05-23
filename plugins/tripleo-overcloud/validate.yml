@@ -27,7 +27,8 @@
         debug:
             msg: "No director puddle for release {{ install.version }}"
         when:
-            - "install.version|openstack_release > 9"
             - director_build
+            - install.updateto|default('None') == 'None'
+            - "install.version|openstack_release > 9"
 
 
