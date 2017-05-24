@@ -26,3 +26,12 @@
             - install.version|default('')
             - install.version|openstack_release < 8
             - install.images.task|default('')  == 'rpm'
+
+      - name: validate director build
+        vars:
+            director_build: "{{ install.get('director', {}).build|default(False) }}"
+        debug:
+            msg: "No director puddle for release {{ install.version }}"
+        when:
+            - director_build
+            - "install.version|openstack_release > 9"
