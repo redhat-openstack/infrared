@@ -23,8 +23,8 @@ novacontrol_role:
         - OS::TripleO::Services::NovaMetadata
         - OS::TripleO::Services::NovaScheduler
         - OS::TripleO::Services::NovaConsoleauth
-        - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
-        - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::Ec2Api{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}OS::TripleO::Services::Ec2Api{% endif %}"
         - OS::TripleO::Services::NovaVncProxy
         - OS::TripleO::Services::Snmp
         - OS::TripleO::Services::Timezone
@@ -32,8 +32,8 @@ novacontrol_role:
         - OS::TripleO::Services::TripleoFirewall
         - OS::TripleO::Services::SensuClient
         - OS::TripleO::Services::FluentdClient
-        - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
-        - "{% if install.version |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
-        - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::AuditD{% endif %}"
-        - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::Collectd{% endif %}"
-        - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::Sshd{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}OS::TripleO::Services::AuditD{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}OS::TripleO::Services::Collectd{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}OS::TripleO::Services::Sshd{% endif %}"
