@@ -85,6 +85,29 @@
         # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command, or os_images
         tags: skip_ansible_lint
 
+      - name: configure nodes to use updated kernel and ramdisk ( OS < 11 )
+        shell: |
+            source ~/stackrc
+            openstack baremetal configure boot
+        tags:
+            - skip_ansible_lint
+        when:
+            - install.upgrade|default('') or install.get('update', {}).undercloud|default('')
+            - install.images.task == 'rpm'
+            - undercloud_version|openstack_release < 11
+
+      # https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/11/html/upgrading_red_hat_openstack_platform/chap-director-minor-update#sect-Updating_Overcloud_and_Introspection_Images
+      - name: configure nodes to use updated kernel and ramdisk ( OS > 10 )
+        shell: |
+            source ~/stackrc
+            openstack overcloud node configure $(openstack baremetal node list -c UUID -f csv --quote none | sed "1d" | paste -s -d " ")
+        tags:
+            - skip_ansible_lint
+        when:
+            - install.upgrade|default('') or install.get('update', {}).undercloud|default('')
+            - install.images.task == 'rpm'
+            - undercloud_version|openstack_release > 10
+
       - name: remove downloaded images
         file:
             path: "/home/{{ install.user.name }}/{{ item[1] }}"
