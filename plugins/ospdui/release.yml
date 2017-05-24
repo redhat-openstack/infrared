@@ -19,5 +19,17 @@
         become: yes
 
       - name: run rhos release
-        command: rhos-release "{{ test.openstack.version  }}"
+        command: "rhos-release {{ test.openstack.version }} -P -p passed_phase1"
+        become: yes
+
+      - name: install deltarpm
+        package:
+            name: "deltarpm"
+            state: latest
+        become: yes
+
+      - name: update all the packages
+        package:
+            name: "*"
+            state: latest
         become: yes
