@@ -33,5 +33,5 @@
         debug:
             msg: "No director puddle for release {{ install.version }}"
         when:
-            - director_build
+            - director_build is defined and director_build
             - "install.version|openstack_release > 9"
