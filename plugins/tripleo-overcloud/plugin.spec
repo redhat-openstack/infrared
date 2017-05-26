@@ -27,6 +27,14 @@ subparsers:
                       help: Specifies whether we should run post install tasks
                       default: False
 
+                  containers:
+                      type: VarFile
+                      help: |
+                          Specifies a file with the containers settings to be used for deployment.
+                          This will trigger overcloud deployment in containers.
+                          See vars/containers/example.yml for details.
+
+
             - title: Deployment Description
               options:
                   version:

@@ -1,0 +1,7 @@
+FROM 192.168.24.1:8787/rhosp12/openstack-mariadb-docker:{{ puddle_number }}
+
+USER root
+RUN curl -L -o rhos-release-latest.noarch.rpm https://url.corp.redhat.com/rhos-release-latest-rpm --insecure && rpm -ivh rhos-release-latest.noarch.rpm && rhos-release 12-director -d
+RUN yum -y remove mariadb-server && yum -y install mariadb-galera-server
+RUN rm /etc/my.cnf.d/server.cnf
+USER mysql
