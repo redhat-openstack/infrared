@@ -40,8 +40,8 @@
         tags: skip_ansible_lint
 
       - name: copy summary script
-        copy:
-            src: files/deploy_info.sh
+        template:
+            src: deploy_info.sh.j2
             dest: ~/deploy_info.sh
             mode: 0755
         tags: summary
