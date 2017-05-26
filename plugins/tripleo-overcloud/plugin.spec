@@ -26,6 +26,10 @@ subparsers:
                       type: Bool
                       help: Specifies whether we should run post install tasks
                       default: False
+                  containers:
+                      type: Bool
+                      help: Specifies whether containers should be used during deployment
+                      default: False
 
             - title: Deployment Description
               options:
