@@ -1,0 +1,53 @@
+---
+
+ - name: Create {{ template_base }} directory
+   file: path={{ template_base }} state=directory mode=0755 owner=stack group=stack
+
+ - name: Downloading overcloud container images
+   get_url:
+       url: http://download-node-02.eng.bos.redhat.com/rcm-guest/puddles/OpenStack/12.0-RHEL-7/latest_containers/container_images.yaml
+       dest: "~/container_images.yaml"
+       owner: stack
+       group: stack
+
+ - name: replace IP with hostname in /etc/sysconfig/docker
+   replace:
+      dest: /etc/sysconfig/docker
+      regexp: '^(INSECURE_REGISTRY=".*)"'
+      replace: '\1 --insecure-registry docker-registry.engineering.redhat.com"'
+      backup: no
+   become: true
+
+ - name: restart docker service
+   service:
+       name: docker
+       state: restarted
+   become: true
+
+ - name: Pause for a few seconds
+   pause: seconds=5
+
+ - name: openstack overcloud container image upload
+   shell: |
+      source /home/stack/stackrc
+      openstack overcloud container image upload --verbose --config-file ~/container_images.yaml
+   ignore_errors: true
+   register: image_upload
+   tags:
+       - skip_ansible_lint
+
+ - name: openstack overcloud container image upload - second attempt #bz1455683
+   shell: |
+      source /home/stack/stackrc
+      openstack overcloud container image upload --verbose --config-file ~/container_images.yaml
+   register: image_upload2
+   when: image_upload.rc != 0
+   tags:
+       - skip_ansible_lint
+
+ - name: Output from uploading images
+   debug: var=image_upload
+
+ - name: Output from uploading images - second attempt
+   debug: var=image_upload2
+   when: image_upload.rc != 0
