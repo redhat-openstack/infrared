@@ -51,6 +51,16 @@
   with_items: "{{ vm_names.list_vms }}"
   when: item not in ignore_virsh_nodes
 
+- name: cleanup known-hosts by ip
+  known_hosts:
+      state: absent
+      name: "{{ item.1.ipaddr }}"
+  with_subelements:
+      - "{{ vm_nets.networks }}"
+      - dhcp_leases
+      - skip_missing: yes
+  when: item.0.bridge|default('') not in ignore_virsh_nets
+
 - name: remove the networks we created
   virt_net:
       name: "{{ item.key }}"
