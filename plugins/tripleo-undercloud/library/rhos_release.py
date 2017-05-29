@@ -101,6 +101,9 @@ POODLE_TYPES = {
     'smoke': ['-C']
 }
 
+LATEST_INSTALLED_FILE = "/etc/yum.repos.d/latest-installed"
+
+
 def _parse_output(module, cmd, stdout):
     """Parse rhos-release stdout.
 
@@ -173,6 +176,23 @@ def _parse_output(module, cmd, stdout):
     )
 
 
+def do_build_discover():
+    """
+    Discovers currently installed build by reading
+    "/etc/yum.repos.d/latest-installed"
+    """
+
+    import os.path
+    result = ""
+    if os.path.isfile(LATEST_INSTALLED_FILE):
+        with open(LATEST_INSTALLED_FILE) as fd:
+            regex = re.search('.* -p (.*)', fd.read())
+            if regex and regex.group(1):
+                result = regex.group(1)
+
+    return result
+
+
 def wrap_results(res_dict, cmd, rc, out, err):
     """
     Wraps ansible response with addtional information usefull for debug.
@@ -228,7 +248,8 @@ def main():
             source_hostname=dict(),
             enable_flea_repos=dict(default=False),
             one_shot_mode=dict(default=False),
-            buildmods=dict(type='list')
+            buildmods=dict(type='list'),
+            discover_build=dict(type='bool', default=False)
         )
     )
     base_cmd = 'rhos-release'
@@ -245,12 +266,17 @@ def main():
     enable_flea_repos = module.params['enable_flea_repos']
     one_shot_mode = module.params['one_shot_mode']
     buildmods = module.params['buildmods']
+    discover_build = module.params['discover_build']
 
     repo_args = ['-t', str(repo_directory)] if repo_directory else[]
+
+    if discover_build and not puddle:
+        puddle = do_build_discover()
+
     puddle = ['-p', str(puddle)] if puddle else []
     pin_puddle = ['-P'] if module.boolean(pin_puddle) else []
     enable_poodle_repos = ['-d'] if module.boolean(enable_poodle_repos) else []
-    director_puddle = ['-p', str(director_puddle)] if director_puddle else puddle
+    director_puddle = ['-p', str(director_puddle)] if director_puddle else []
     distro_version = ['-r', distro_version] if distro_version else []
     poodle_type = POODLE_TYPES.get(module.params['poodle_type'], [])
     source_hostname = ['-H', source_hostname] if source_hostname else []

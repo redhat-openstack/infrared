@@ -21,7 +21,7 @@
 
       - role: rhos-release
         release: "{{ install.version }}"
-        build: "{{ install.build }}"
+        build: "{{ install.build | default(omit) }}"
         director: no
         mirror: "{{ install.mirror | default(omit) }}"
         when:
