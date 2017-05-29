@@ -53,9 +53,11 @@
         # modify images - update to core build and install packages
       - role: rhos-release
         release: "{{ undercloud_version }}"
-        build: "{{ install.build }}"
+        build: "{{ install.build | default(omit) }}"
+        director_build: "{{ install.get('director', {}).build|default(omit) }}"
         mirror: "{{ install.mirror | default(omit) }}"
         rr_target_directory: "{{ tmp_oc_repos_dir }}"
+        rr_discover_build: yes
         when:
             - install.images.packages|default('') or install.images['update']
             - install.version|default(undercloud_version)|openstack_distribution == 'OSP'
@@ -63,7 +65,7 @@
 
       - role: rdo-release
         release: "{{ undercloud_version }}"
-        build: "{{ install.build }}"
+        build: "{{ install.build | default(omit)}}"
         mirror: "{{ install.mirror | default(omit) }}"
         rr_target_directory: "{{ tmp_oc_repos_dir }}"
         when:
