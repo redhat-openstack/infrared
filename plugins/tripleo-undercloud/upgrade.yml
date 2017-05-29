@@ -51,9 +51,9 @@
   roles:
       - role: rhos-release
         release: "{{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }}"
-        build: "{{ install.build }}"
+        build: "{{ install.build | default(omit) }}"
         mirror: "{{ install.mirror | default(omit) }}"
         tags: upgrade
   tasks:
-      - name: "{{ operation_type }} to version {{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }} build {{ install.build }}"
+      - name: "{{ operation_type }} to version {{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }} build {{ install.build | default('latest') }}"
         include: "tasks/upgrade/upgrade.yml"
