@@ -3,12 +3,12 @@ galera_role:
     name: Galera
 
     resource_registry:
-        OS::TripleO::Galera::Net::SoftwareConfig: ${deployment_dir}/network/nic-configs/galera.yaml
-        OS::TripleO::Galera::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/external.yaml
-        OS::TripleO::Galera::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api${ipv6_postfix_underscore}.yaml
-        OS::TripleO::Galera::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage.yaml
-        OS::TripleO::Galera::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_mgmt.yaml
-        OS::TripleO::Galera::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/tenant.yaml
+        OS::TripleO::Galera::Net::SoftwareConfig: ${deployment_dir}/network/nic-configs/galera.yaml"
+        OS::TripleO::Galera::Ports::ExternalPort: "{{ install.heat.templates.basedir }}/network/ports/external.yaml"
+        OS::TripleO::Galera::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api${ipv6_postfix_underscore}.yaml"
+        OS::TripleO::Galera::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
+        OS::TripleO::Galera::Ports::StorageMgmtPort: "{{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
+        OS::TripleO::Galera::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
 
     flavor: galera
     host_name_format: 'galera-%index%'

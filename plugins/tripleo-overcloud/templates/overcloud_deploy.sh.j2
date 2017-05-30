@@ -1,7 +1,7 @@
 #!/bin/bash
 
 openstack overcloud deploy \
---templates \
+--templates {{ install.heat.templates.basedir }} \
 --libvirt-type kvm \
 --ntp-server clock.redhat.com \
 {% if install.version|default(undercloud_version)|openstack_release < 11 %}

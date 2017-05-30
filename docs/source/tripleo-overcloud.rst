@@ -61,6 +61,9 @@ Overcloud Options
     A path to a ``*.sh`` file containing ``openstack overcloud deploy`` command.
     This is for advance users.
 
+* ``--heat-templates-basedir``: Allows to override the templates base dir
+    to be used for deployment. Default value: "/usr/share/openstack-tripleo-heat-templates"
+
 
 Overcloud Public Network
 ------------------------

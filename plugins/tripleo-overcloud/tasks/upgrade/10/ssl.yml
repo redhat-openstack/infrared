@@ -56,7 +56,7 @@
   lineinfile:
       dest: "{{ item }}"
       insertbefore: '^--log-file.*'
-      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/tls-endpoints-public-ip.yaml \'
+      line: '-e {{ install.heat.templates.basedir }}/environments/tls-endpoints-public-ip.yaml \'
   with_items:
     - "{{ overcloud_upgrade_script }}"
     - "{{ overcloud_deploy_script }}"
