@@ -30,6 +30,7 @@ echo "Server info"
 openstack server list |  awk 'BEGIN {a=0}; /\|/{ if (a>2) print $2} {a=a+1}' | xargs -n 1 openstack server show
 
 echo "Deployments"
+{% if (install.version|default(undercloud_version)|openstack_release) >= 9 %}
 DEPLOYMENTS=`openstack software deployment list --long`
 echo "$DEPLOYMENTS"
 
@@ -43,3 +44,16 @@ for a in `echo "$DEPLOYMENTS" | grep -v 'COMPLETE' | awk 'BEGIN {a=0}; /\|/{ if 
 	echo openstack software config show "$config"
 	openstack software config show "$config"
 done
+{% else %}
+DEPLOYMENTS=`heat resource-list --n 5 overcloud | grep -wE "OS::Heat::SoftwareDeployment|OS::Heat::StructuredDeployment"`
+echo "$DEPLOYMENTS"
+
+for deployment in `echo "$DEPLOYMENTS" | grep -v 'COMPLETE' | awk '{print $4}'`; do
+	echo heat deployment-output-show "$deployment" --all
+	heat deployment-output-show "$deployment" --all
+	echo heat deployment-show "$deployment"
+	heat deployment-show "$deployment"
+	echo heat config-show
+	heat config-show `heat deployment-show "$deployment" | jq '.config_id' | tr -d '"'`
+done
+{% endif %}
