@@ -1,6 +1,6 @@
 - name: copy the enable-tls.yaml file locally
   vars:
-      template_dir: /usr/share/openstack-tripleo-heat-templates/environments
+      template_dir: "{{ install.heat.templates.basedir }}/environments"
   copy:
       src: "{{ template_dir}}/{{ item }}"
       dest: "{{ template_base }}/{{ item }}"
@@ -136,5 +136,5 @@
 - name: append the invocation line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/tls-endpoints-public-ip.yaml \'
+      line: '-e {{ install.heat.templates.basedir }}/environments/tls-endpoints-public-ip.yaml \'
   when: install.version|default(undercloud_version)|openstack_release > 9
