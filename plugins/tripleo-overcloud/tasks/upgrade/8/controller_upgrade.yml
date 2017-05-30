@@ -10,7 +10,7 @@
   lineinfile:
       dest: "{{ controller_upgrade_script }}"
       insertbefore: '^--log-file.*'
-      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker.yaml \'
+      line: '-e {{ install.heat.templates.basedir }}/environments/major-upgrade-pacemaker.yaml \'
 
 - name: Change log file name of Controler upgrade script
   lineinfile:

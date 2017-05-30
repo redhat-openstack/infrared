@@ -103,6 +103,11 @@ subparsers:
                             NOTE: Omit this to not include any extra files, or use "none"
                             __LISTYAMLS__
 
+                  heat-templates-basedir:
+                      type: Value
+                      help: Overrides the templates base dir for the overcloud deploy script.
+                      default: "/usr/share/openstack-tripleo-heat-templates"
+
             - title: Network Configuration
               options:
                   network-backend:
