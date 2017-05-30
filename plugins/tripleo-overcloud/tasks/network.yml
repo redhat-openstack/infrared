@@ -29,7 +29,7 @@
 - name: append the network isolation template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/{{ isolation_file }} \'
+      line: '-e {{ install.heat.templates.basedir }}/environments/{{ isolation_file }} \'
 
 - name: find the controller network template file in deployment files
   vars:
@@ -61,13 +61,13 @@
 - name: append the dvr template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/neutron-ovs-dvr.yaml \'
+      line: '-e {{ install.heat.templates.basedir }}/environments/neutron-ovs-dvr.yaml \'
   when: install.network.dvr
 
 - name: append the octavia template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml \'
+      line: '-e {{ install.heat.templates.basedir }}/environments/services/octavia.yaml \'
   when: install.network.octavia
 
 - name: append the network dvr overrides

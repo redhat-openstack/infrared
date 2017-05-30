@@ -10,7 +10,7 @@
   lineinfile:
       dest: "{{ ceilometer_migration_script }}"
       insertbefore: '^--log-file.*'
-      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-ceilometer-wsgi-mitaka-newton.yaml \'
+      line: '-e {{ install.heat.templates.basedir }}/environments/major-upgrade-ceilometer-wsgi-mitaka-newton.yaml \'
 
 - name: Change log file name of Ceilometer migration script
   lineinfile:
