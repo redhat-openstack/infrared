@@ -4,12 +4,20 @@
   tags: init
   any_errors_fatal: true
   tasks:
-      - name: Dumping all facts
-        setup:
-        register: initial_facts
-
-      - name: Writing facts into files
-        copy:
-            content: "{{ initial_facts.ansible_facts }}"
-            dest: "{{ inventory_dir }}/{{ inventory_hostname }}"
+      - name: Check if we already have dumped facts
+        stat:
+            path: "{{ inventory_dir }}/{{ inventory_hostname }}"
+        register: fact_file
         delegate_to: localhost
+
+      - block:
+          - name: Dumping all facts
+            setup:
+            register: initial_facts
+
+          - name: Writing facts into files
+            copy:
+                content: "{{ initial_facts.ansible_facts }}"
+                dest: "{{ inventory_dir }}/{{ inventory_hostname }}"
+            delegate_to: localhost
+        when: not fact_file.stat.exists
