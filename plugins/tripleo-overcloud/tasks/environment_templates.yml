@@ -3,6 +3,12 @@
       file: "{{ templates_list_file}}"
       name: current_file
 
+- name: resize lvm
+  shell: sed -i 's/default: 10280/default: 20560/g' /usr/share/openstack-tripleo-heat-templates/puppet/services/cinder-volume.yaml
+
+- name: verify the value was changed
+  shell: cat /usr/share/openstack-tripleo-heat-templates/puppet/services/cinder-volume.yaml
+ 
 - name: look in undercloud's default templates
   stat:
       path: "{{ item }}"
