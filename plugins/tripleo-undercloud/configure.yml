@@ -53,3 +53,13 @@
       - name: the undercloud deploy script
         command: "cat undercloud_deploy.sh"
         tags: deploy
+
+      - replace:
+          path: /usr/share/openstack-tripleo-heat-templates/puppet/services/cinder-volume.yaml
+          regexp: 'default: 10280'
+          replace: 'default: 20560'
+          backup: yes
+
+      - name: verify the value was changed
+        shell: cat /usr/share/openstack-tripleo-heat-templates/puppet/services/cinder-volume.yaml
+
