@@ -1,4 +1,3 @@
----
 plugin_type: install
 subparsers:
     packstack:
