@@ -1,11 +1,11 @@
 from ConfigParser import ConfigParser
-from collections import OrderedDict
+from collections import Iterable, OrderedDict
 import os
 import shutil
 import subprocess
 import tempfile
 
-# TODO(aopincar): Add pip to the project's requirements
+import six
 import pip
 
 from infrared.core.utils import logger
@@ -22,6 +22,9 @@ DEFAULT_PLUGIN_INI = dict(
     ])
 )
 
+# src attribute can be a string or a list of strings of lookup locations.
+# git URL location should be the last one in the list. First valid one will be
+# used.
 PLUGINS_REGISTRY = {
     'beaker': {
         'src': 'plugins/beaker',
@@ -44,7 +47,7 @@ PLUGINS_REGISTRY = {
         'type': 'test'
     },
     'octario': {
-        'src': 'https://github.com/redhat-openstack/octario.git',
+        'src': ['$WORKSPACE/octario', 'plugins/octario', 'https://github.com/redhat-openstack/octario.git'],
         'desc': 'Octario test runner',
         'type': 'test'
     },
@@ -94,6 +97,10 @@ PLUGINS_REGISTRY = {
 MAIN_PLAYBOOK = "main.yml"
 PLUGINS_DIR = os.path.abspath("./plugins")
 LOG = logger.LOG
+
+
+def is_list(arg):
+    return isinstance(arg, Iterable) and not isinstance(arg, six.string_types)
 
 
 class InfraredPluginManager(object):
@@ -272,6 +279,7 @@ class InfraredPluginManager(object):
             1. Plugin name (from available in registry)
             2. Path to a local directory
             3. Git URL
+            4. a list of above, first valid one being picked
         :param dest: destination where to clone a plugin into (if 'source' is
           a Git URL)
         """
@@ -279,11 +287,16 @@ class InfraredPluginManager(object):
         if plugin_source in PLUGINS_REGISTRY:
             plugin_source = PLUGINS_REGISTRY[plugin_source]['src']
 
-        # Local dir plugin
-        if os.path.exists(plugin_source):
-            pass
-        # Git Plugin
-        else:
+            # if is a list we will use first existing path, fallback to last
+            if is_list(plugin_source):
+                for s in plugin_source:
+                    s = os.path.expandvars(s)
+                    if os.path.isdir(s):
+                        plugin_source = s
+                        break
+
+        # If not local dir plugin assuming git
+        if not os.path.exists(plugin_source):
             plugin_source = self._clone_git_plugin(plugin_source, dest)
 
         plugin = InfraredPlugin(plugin_source)
