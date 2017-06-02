@@ -66,6 +66,13 @@ SHARED_GROUPS = [
                         'settings into (default: stdout)',
                 'short': 'o',
                 'type': 'str'
+            },
+            'plugins': {
+                'help': 'Try to load plugins from this directory before looking '
+                        'in $WORKSPACE/ and $INFRARED/plugins/. You may use '
+                        'environment variables.',
+                'short': 'p',
+                'type': 'str'
             }
         },
     },

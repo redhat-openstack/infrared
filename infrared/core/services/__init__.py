@@ -16,6 +16,17 @@ from infrared.core.utils import logger
 LOG = logger.LOG
 
 
+class ConfigParserEx(ConfigParser.SafeConfigParser):
+    """Extends ConfigParser so it can load multi-value items"""
+
+    def getlist(self, section, option):
+        value = self.get(section, option)
+        return list(filter(None, (x.strip() for x in value.splitlines())))
+
+    def getlistint(self, section, option):
+        return [int(x) for x in self.getlist(section, option)]
+
+
 class ServiceName(object):
     """Holds the supported services names. """
     WORKSPACE_MANAGER = "workspace_manager"
@@ -28,25 +39,27 @@ class CoreServices(object):
     _SERVICES = {}
     DEFAULTS = {
         'workspaces_base_folder': '.workspaces',
-        'plugins_conf_file': '.plugins.ini'
+        'plugins_conf_file': '.plugins.ini',
+        'plugins_dirs': '\n$WORKSPACE\nplugins'
     }
 
     @classmethod
     def setup(cls, file_path='infrared.cfg', section='core'):
         """Creates configuration from file or from defaults. """
 
-        config = ConfigParser.SafeConfigParser(defaults=cls.DEFAULTS)
+        config = ConfigParserEx(defaults=cls.DEFAULTS)
         config.add_section(section)
 
         # if file not found no exception will be raised
         config.read(file_path)
         cls._configure(
             os.path.abspath(config.get(section, 'workspaces_base_folder')),
-            os.path.abspath(config.get(section, 'plugins_conf_file'))
+            os.path.abspath(config.get(section, 'plugins_conf_file')),
+            config.getlist(section, 'plugins_dirs')
         )
 
     @classmethod
-    def _configure(cls, workspace_dir, plugins_conf):
+    def _configure(cls, workspace_dir, plugins_conf, plugins_dirs):
         """Register services to manager. """
 
         # create workspace manager
@@ -56,7 +69,7 @@ class CoreServices(object):
         # create plugins manager
         if ServiceName.PLUGINS_MANAGER not in CoreServices._SERVICES:
             cls.register_service(ServiceName.PLUGINS_MANAGER,
-                                 plugins.InfraredPluginManager(plugins_conf))
+                                 plugins.InfraredPluginManager(plugins_conf, plugins_dirs))
 
     @classmethod
     def register_service(cls, service_name, service):
