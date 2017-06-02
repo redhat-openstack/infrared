@@ -23,7 +23,7 @@
 
       {% if 'package' in repo_data %}
       yum -y install --enablerepo=extras {{ repo_data.package }}
-      sed -i -e 's%gpgcheck=.*%gpgcheck=0%' /etc/yum.repos.d/{{ repo_data.file_name }}
+      [ -f /etc/yum.repos.d/{{ repo_data.file_name }} ] && sed -i -e 's%gpgcheck=.*%gpgcheck=0%' /etc/yum.repos.d/{{ repo_data.file_name }} || echo "skiping repo modification"
       {% if rr_target_directory != '/etc/yum.repos.d' %}
       cp /etc/yum.repos.d/{{ repo_data.file_name }} {{ rr_target_directory }}/{{ repo_data.file_name }}
       {% endif %}
