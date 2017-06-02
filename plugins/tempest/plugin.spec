@@ -1,3 +1,4 @@
+---
 plugin_type: test
 subparsers:
     tempest:
