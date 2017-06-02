@@ -28,6 +28,12 @@
       regexp: openstack overcloud deploy
       line: yes ""| openstack overcloud update stack overcloud -i \
 
+- name: explicitly include overcloud-resource-registry-puppet.yaml file
+  lineinfile:
+      dest: "{{ overcloud_update_script }}"
+      insertafter: --templates
+      line: -e /usr/share/openstack-tripleo-heat-templates/overcloud-resource-registry-puppet.yaml \
+
 - name: remove trailing symbol from last line
   shell:
       tail -n1 {{ overcloud_update_script }} | tr -d \\
