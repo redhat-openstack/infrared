@@ -1,7 +1,7 @@
 plugin_type: install
 subparsers:
     tripleo-undercloud:
-        description: Install Tripleo on a designated undercloud node
+        description: Install TripleO on a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Quickstart Menu
@@ -103,7 +103,7 @@ subparsers:
                           none - use none of those flags
                       default: pin
 
-            - title: Tripleo User
+            - title: TripleO User
               options:
                   user-name:
                       type: Value

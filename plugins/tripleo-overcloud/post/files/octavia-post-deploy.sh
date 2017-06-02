@@ -73,11 +73,11 @@ parameters:
     default: '192.168.199.200'
   OctaviaFlavorId:
     type: number
-    description: Openstack Flavor id for the LB appliances
+    description: OpenStack Flavor id for the LB appliances
     default: 65
   OctaviaFlavorName:
     type: string
-    description: Name for Openstack flavor for LB appliances
+    description: Name for OpenStack flavor for LB appliances
     default: m1.amphora
   OctaviaFlavorDisk:
     type: number

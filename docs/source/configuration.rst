@@ -22,7 +22,7 @@ Ansible configuration and limitations
 Usually `infrared` does not touch the settings specified in the ansible configuration
 file (``ansible.cfg``), with few exceptions.
 
-Internally `infrared` use few Ansible environment variable to set the directories
+Internally `infrared` use Ansible environment variables to set the directories
 for common resources (callback plugins, filter plugins, roles, etc); this means
 that the following keys from the Ansible configuration files are ignored:
 
@@ -30,7 +30,7 @@ that the following keys from the Ansible configuration files are ignored:
 * ``filter_plugins``
 * ``roles_path``
 
-It is still possible to defined custom paths for those items setting the corresponding
+It is possible to define custom paths for those items setting the corresponding
 environment variables:
 
 * ``ANSIBLE_CALLBACK_PLUGINS``

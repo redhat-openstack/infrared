@@ -1,7 +1,7 @@
 TripleO Overcloud
 =================
 
-Deploys a Tripleo overcloud from an existing undercloud
+Deploys a TripleO overcloud from an existing undercloud
 
 Stages Control
 --------------
@@ -22,7 +22,7 @@ Deployment Description
 * ``--instackenv-file``:
     Path to the instackenv.json configuration file used for introspection.
     For `virsh`_ and `ovb`_ deployment, `infrared` can generate this file automatically.
-* ``--version``: Tripleo release to install.
+* ``--version``: TripleO release to install.
     Accepts either an integer for RHEL-OSP release, or a community release
     name (``Liberty``, ``Mitaka``, ``Newton``, etc...) for RDO release
 * The following options define the number of nodes in the overcloud:
@@ -69,19 +69,19 @@ Overcloud Public Network
     Path to file containing different values for the subnet of the network above.
 * ``--public-vlan``:
     Set this to ``yes`` if overcloud's external network is on a VLAN that's unreachable from the
-    undercloud. This will configure network access from UnderCloud to overcloud's API/External(floating ips)
+    undercloud. This will configure network access from UnderCloud to overcloud's API/External(floating IPs)
     network, creating a new VLAN interface connected to ovs's ``br-ctlplane`` bridge.
     |NOTE: If your UnderCloud's network is already configured properly, this could disrupt it, making overcloud API unreachable
     For more details, see:
     `VALIDATING THE OVERCLOUD <https://access.redhat.com/documentation/en/red-hat-openstack-platform/10-beta/paged/director-installation-and-usage/chapter-6-performing-tasks-after-overcloud-creation>`_
 
-Overcloud Strorage
+Overcloud Storage
 ------------------
 * ``--storage-external``: Bool
     If ``no``, the overcloud will deploy and manage the storage nodes.
     If ``yes`` the overcloud will connect to an external, per-existing storage service.
 * ``--storage-backend``:
-    The type of the storage service used as backend.
+    The type of storage service used as backend.
 * ``--storage-config``:
     Storage configuration (YAML) file.
 
@@ -136,9 +136,9 @@ Example::
 
 * ``--buildmods``: Let you the option to add flags to rhos-release:
 
-    | ``pin`` - Pin puddle (dereference 'latest' links to prevent content from changing). This flad is selected by default
+    | ``pin`` - Pin puddle (dereference 'latest' links to prevent content from changing). This flag is selected by default
     | ``flea`` - Enable flea repos.
     | ``unstable`` - This will enable brew repos or poodles (in old releases).
     | ``none`` - Use none of those flags.
 
- .. note:: ``--buildmods`` flag is internal Red Hat users only.
+ .. note:: ``--buildmods`` flag is for internal Red Hat usage.

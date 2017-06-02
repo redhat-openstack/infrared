@@ -1,7 +1,7 @@
 Composable Roles
 ----------------
 
-InfraRed allows to define `Composable Roles <https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/10/html-single/advanced_overcloud_customization/#Roles>`_ while installing Openstack with tripleo.
+InfraRed allows to define `Composable Roles <https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/10/html-single/advanced_overcloud_customization/#Roles>`_ while installing OpenStack with tripleo.
 
 
 Overview
@@ -76,18 +76,16 @@ InfraRed allows to simplify the process of templates generation and auto-populat
 Defining topology and roles
 ===========================
 
-In order to deploy custom roles, InfraRed should know what nodes should be used for what roles.
+To deploy custom roles, InfraRed should know what nodes should be used for what roles. This involves a 2-step procedure.
 
-There is a 2-step procedure to achieve that.
-
-**Step #1** Setup availables nodes and store them in the InfraRed inventory. Those nodes can be configured by the ``provision`` plugin such as `virsh <virsh.html>`_::
+**Step #1** Setup available nodes and store them in the InfraRed inventory. Those nodes can be configured by the ``provision`` plugin such as `virsh <virsh.html>`_::
 
     ir virsh -vvvv
         --topology-nodes=undercloud:1,controller:2,compute:1,networker:1,swift:1 \
         --host-address=seal52.qa.lab.tlv.redhat.com \
         --host-key ~/.ssh/my-prov-key
 
-In that example we defined a ``networker`` nodes which holds all the neutorn services.
+In that example we defined a ``networker`` nodes which holds all the neutron services.
 
 **Step #2** Provides a path to the roles definition while `installing the overcloud <tripleo-overcloud.html>`_ using the ``--role-files`` option::
 
@@ -233,7 +231,7 @@ For example, for ``user-prefix-controller-0`` the name of the role should be ``c
 Deployment example
 ==================
 
-To deploy Openstack with composable roles on virtual environment the following steps can be performed.
+To deploy OpenStack with composable roles on virtual environment the following steps can be performed.
 
 1) Provision all the required virtual machines on a hypervizor with the virsh plugin::
 
@@ -263,5 +261,3 @@ To deploy Openstack with composable roles on virtual environment the following s
          --tagging yes \
          --deploy yes \
          --post yes
-
-

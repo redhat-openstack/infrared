@@ -45,14 +45,14 @@ Virsh cannot create a VM and displays the following message::
 
     ERROR    Unable to add bridge management port XXX: Device or resource busy
     Domain installation does not appear to have been successful.
-    If it was, you can restart your domain by running:
+    Otherwise, you can restart your domain by running:
       virsh --connect qemu:///system start compute-0
     otherwise, please restart your installation.
 
 Solution:
 `````````
 This often can be caused by the misconfiguration of the hypervisor.
-Check that all the ovs bridges are properly configured on the hypervisor::
+Check that all the ``ovs`` bridges are properly configured on the hypervisor::
 
     $ ovs-vsctl show
 

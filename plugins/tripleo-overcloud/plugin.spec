@@ -2,7 +2,7 @@
 plugin_type: install
 subparsers:
     tripleo-overcloud:
-        description: Install a Tripleo overcloud using a designated undercloud node
+        description: Install a TripleO overcloud using a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Stages Control
