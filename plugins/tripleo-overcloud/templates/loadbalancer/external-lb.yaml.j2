@@ -1,4 +1,4 @@
-{% if install.version|openstack_release > 10 %}
+{% if install.version|default(undercloud_version)|openstack_release > 10 %}
 resource_registry:
 
   OS::TripleO::Controller::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/external_from_pool{{ (install.network.protocol == 'ipv6') | ternary('_v6','') }}.yaml
@@ -15,7 +15,7 @@ resource_registry:
   OS::TripleO::ServiceApi::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/tenant_from_pool{{ (install.network.protocol == 'ipv6') | ternary('_v6','') }}.yaml
   OS::TripleO::ServiceApi::Ports::ManagementPort: /usr/share/openstack-tripleo-heat-templates/network/ports/management_from_pool{{ (install.network.protocol == 'ipv6') | ternary('_v6','') }}.yaml
 {% endif %}
-{% if install.version|openstack_release < 9 %}
+{% if install.version|default(undercloud_version)|openstack_release < 9 %}
 parameters:
   ServiceNetMap:
     NeutronTenantNetwork: tenant
@@ -49,7 +49,7 @@ parameters:
 {% endif %}
 
 parameter_defaults:
-{% if install.version|openstack_release > 8 and install.version|openstack_release < 11 %}
+{% if install.version|default(undercloud_version)|openstack_release > 8 and install.version|default(undercloud_version)|openstack_release < 11 %}
   ServiceNetMap:
     NeutronTenantNetwork: tenant
     CeilometerApiNetwork: internal_api
@@ -83,14 +83,14 @@ parameter_defaults:
     GnocchiApiNetwork: internal_api
     SaharaApiNetwork: internal_api
 {% endif %}
-{% if install.version|openstack_release > 10 %}
+{% if install.version|default(undercloud_version)|openstack_release > 10 %}
   ServiceNetMap:
     KeystoneAdminApiNetwork: internal_api # allows undercloud to config endpoints
 {% endif %}
-{% if install.version|openstack_release > 7 %}
+{% if install.version|default(undercloud_version)|openstack_release > 7 %}
   RedisPassword: 'examplepassword'
 {% endif %}
-{% if install.version|openstack_release < 11 %}
+{% if install.version|default(undercloud_version)|openstack_release < 11 %}
   ControlPlaneIP: {{ loadbalancer.network.plain.ip | ipaddr('address') }}
   ExternalNetworkVip: {{ loadbalancer.network.external.vip | ipaddr('address') }}
   InternalApiNetworkVip: {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}
@@ -99,7 +99,7 @@ parameter_defaults:
   ServiceVips:
     redis: {{ loadbalancer.network.redis.vip | ipaddr('address') }}
 {% endif %}
-{% if install.version|openstack_release > 10 %}
+{% if install.version|default(undercloud_version)|openstack_release > 10 %}
   ControlFixedIPs: [{'ip_address':'{{ loadbalancer.network.plain.ip | ipaddr('address') }}'}]
   PublicVirtualFixedIPs: [{'ip_address':'{{ loadbalancer.network.external.vip | ipaddr('address') }}'}]
   InternalApiVirtualFixedIPs: [{'ip_address':'{{ loadbalancer.network.internal_api.vip | ipaddr('address') }}'}]

@@ -144,7 +144,7 @@ class WorkspaceManagerSpec(api.SpecObject):
                 headers,
                 *[(workspace.name, ' ' * (len(headers[-1]) / 2) + "*" if
                     self.workspace_manager.is_active(workspace.name) else "")
-                  for workspace in workspaces])
+                  for workspace in sorted(workspaces)])
         elif subcommand == 'delete':
             self.workspace_manager.delete(pargs.name)
             print("Workspace '{}' deleted".format(pargs.name))
@@ -321,8 +321,8 @@ class SSHSpec(api.SpecObject):
         :param args: the list of arguments received from cli.
         """
         pargs = parser.parse_args(args)
-        interactive_ssh.ssh_to_host(pargs.node_name,
-                                    remote_command=pargs.remote_command)
+        return interactive_ssh.ssh_to_host(
+            pargs.node_name, remote_command=pargs.remote_command)
 
 
 def main(args=None):

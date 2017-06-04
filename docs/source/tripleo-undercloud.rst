@@ -10,8 +10,38 @@ Setup an Undercloud
     Accepts either an integer for RHEL-OSP release, or a community release
     name (``Liberty``, ``Mitaka``, ``Newton``, etc...) for RDO release
 * ``--build``: Specify a build date or a label for the repositories.
-    Examples: ``passed_phase1``, ``2016-08-11.1``
+    Supports any rhos-release labels.
+    Examples: ``passed_phase1``, ``2016-08-11.1``, ``Y1``, ``Z3``, ``GA``
     Not used in case of RDO.
+
+* ``--buildmods``: Let you the option to add flags to rhos-release:
+
+    | ``pin`` - Pin puddle (dereference 'latest' links to prevent content from changing). This flad is selected by default
+    | ``flea`` - Enable flea repos.
+    | ``unstable`` - This will enable brew repos or poodles (in old releases).
+    | ``none`` - Use none of those flags.
+
+ .. note:: ``--buildmods`` and ``--build`` flags are internal Red Hat users only.
+
+* ``--cdn`` Register the undercloud with a Red Hat Subscription Management platform.
+    Accepts a file with subscription details.
+
+      .. code-block:: plain
+         :caption: cdn_creds.yml
+
+          server_hostname: example.redhat.com
+          username: user
+          password: HIDDEN_PASS
+          autosubscribe: yes
+          server_insecure: yes
+
+    For the full list of supported input, see the `module documentation`_.
+
+    .. note:: Pre-registered undercloud are also supported if ``--cdn`` flag is missing.
+    .. warning:: The contents of the file are hidden from the logged output, to protect private account credentials.
+
+.. _module documentation: http://docs.ansible.com/ansible/redhat_subscription_module.html
+
 
 To deploy a working undercloud::
 
@@ -37,7 +67,7 @@ will be later created.
                 Starting from OSP 8, Tripleo is packages with pre-built images avialable via RPM.
                 .. note:: This option is invalid for `RDO` installation.
 
-* Use ``--images-repos`` to instruct `infrared` wither to inject the repositories defined in
+* Use ``--images-repos`` to instruct infrared whether to inject the repositories defined in
   the `setup <Setup Undercloud Packages>`_ stage to the image (Allowing later update of the OverCloud)
 * Use ``--images-packages`` to define a list of additional packages to install on the OverCloud image
 * ``--images-cleanup`` tells `infrared` do remove the images files original after they are uploaded
@@ -181,4 +211,4 @@ Example for update of Undercloud and Images::
 
         infrared tripleo-undercloud -v --update-undercloud yes --images-task rpm
 
-.. warning:: Infrared support update for RHOSP version 11 only.
+.. warning:: Infrared support update for RHOSP from version 8.

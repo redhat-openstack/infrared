@@ -47,7 +47,7 @@ subparsers:
                       default: 3_nets
 
                   topology-nodes:
-                      type: KeyValueList
+                      type: ListOfTopologyFiles
                       help: |
                           Provision topology.
                           List of of nodes types and they amount, in a "key:value" format.

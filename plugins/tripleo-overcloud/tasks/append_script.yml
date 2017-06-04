@@ -28,7 +28,7 @@
       src: templates/nodes_data.yaml.j2
       dest: "{{ template_base }}/nodes_data.yaml"
   when:
-      - install.version|openstack_release >= 11
+      - install.version|default(undercloud_version)|openstack_release >= 11
       - not install.role|default('')
 
 - name: Setup loadbalancer

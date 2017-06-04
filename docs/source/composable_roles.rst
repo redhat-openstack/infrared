@@ -93,6 +93,7 @@ In that example we defined a ``networker`` nodes which holds all the neutorn ser
 
     ir tripleo-overcloud -vvvv
         --version=10 \
+        --deploy=yes \
         --role-files=networker \
         --deployment-files=composable_roles \
         --introspect=yes \
@@ -228,3 +229,39 @@ Below is an example of the controller default role::
 
 The name of the role files should correspond to the node inventory name without prefix and index.
 For example, for ``user-prefix-controller-0`` the name of the role should be ``controller.yml``.
+
+Deployment example
+==================
+
+To deploy Openstack with composable roles on virtual environment the following steps can be performed.
+
+1) Provision all the required virtual machines on a hypervizor with the virsh plugin::
+
+    infrared virsh -vv \
+        -o provision.yml \
+        --topology-nodes undercloud:1,controller:3,db:3,messaging:3,networker:2,compute:1,ceph:1  \
+        --host-address my.host.redhat.com \
+        --host-key /path/to/host/key \
+        -e override.controller.cpu=8 \
+        -e override.controller.memory=32768
+
+2) Install undercloud and overcloud images::
+
+    infrared tripleo-undercloud -vv -o install.yml \
+        -o undercloud-install.yml \
+        --version 11 \
+        --images-task rpm
+
+3) Install overcloud::
+
+     infrared tripleo-overcloud -vv \
+         -o overcloud-install.yml \
+         --version 11 \
+         --role-files=composition \
+         --deployment-files composable_roles \
+         --introspect yes \
+         --tagging yes \
+         --deploy yes \
+         --post yes
+
+

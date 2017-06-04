@@ -27,6 +27,7 @@ import argparse
 import sys
 import time
 
+import novaclient as nc
 from novaclient import client as novaclient
 from novaclient import exceptions
 import pyghmi.ipmi.bmc as bmc
@@ -34,11 +35,25 @@ import pyghmi.ipmi.bmc as bmc
 
 class OpenStackBmc(bmc.Bmc):
     def __init__(self, authdata, port, address, instance, user, password, tenant,
-                 auth_url):
+                 auth_url, project, user_domain, project_domain, cache_status):
         super(OpenStackBmc, self).__init__(authdata, port=port, address=address)
-        self.novaclient = novaclient.Client(2, user, password,
-                                            tenant, auth_url)
+        if not '/v3' in auth_url:
+            # novaclient 7+ is backwards-incompatible :-(
+            if int(nc.__version__[0]) <= 6:
+                self.novaclient = novaclient.Client(2, user, password,
+                                                    tenant, auth_url)
+            else:
+                self.novaclient = novaclient.Client(2, user, password,
+                                                    auth_url=auth_url,
+                                                    project_name=tenant)
+        else:
+            self.novaclient = novaclient.Client(2, user, password,
+                                                auth_url=auth_url,
+                                                project_name=project,
+                                                user_domain_name=user_domain,
+                                                project_domain_name=project_domain)
         self.instance = None
+        self.cache_status = cache_status
         self.cached_status = None
         self.target_status = None
         # At times the bmc service is started before important things like
@@ -74,12 +89,18 @@ class OpenStackBmc(bmc.Bmc):
                 sys.exit(1)
 
     def get_boot_device(self):
+        """Return the currently configured boot device"""
         server = self.novaclient.servers.get(self.instance)
         retval = 'network' if server.metadata.get('libvirt:pxe-first') else 'hd'
         self.log('Reporting boot device', retval)
         return retval
 
     def set_boot_device(self, bootdevice):
+        """Set the boot device for the managed instance
+
+        :param bootdevice: One of ['network', 'hd] to set the boot device to
+                           network or hard disk respectively.
+        """
         server = self.novaclient.servers.get(self.instance)
         if bootdevice == 'network':
             self.novaclient.servers.set_meta_item(server, 'libvirt:pxe-first', '1')
@@ -93,15 +114,19 @@ class OpenStackBmc(bmc.Bmc):
         sys.exit(0)
 
     def _instance_active(self):
-        if self.cached_status is None or self.cached_status != self.target_status:
+        if (self.cached_status is None or
+                self.cached_status != self.target_status or
+                not self.cache_status):
             self.cached_status = self.novaclient.servers.get(self.instance).status
         return self.cached_status == 'ACTIVE'
 
     def get_power_state(self):
+        """Returns the current power state of the managed instance"""
         self.log('Getting power state for %s' % self.instance)
         return self._instance_active()
 
     def power_off(self):
+        """Stop the managed instance"""
         # this should be power down without waiting for clean shutdown
         self.target_status = 'SHUTOFF'
         if self._instance_active():
@@ -115,9 +140,9 @@ class OpenStackBmc(bmc.Bmc):
                 self.log('Ignoring exception: "%s"' % e)
         else:
             self.log('%s is already off.' % self.instance)
-            return 0xd5
 
     def power_on(self):
+        """Start the managed instance"""
         self.target_status = 'ACTIVE'
         if not self._instance_active():
             try:
@@ -130,18 +155,20 @@ class OpenStackBmc(bmc.Bmc):
                 self.log('Ignoring exception: "%s"' % e)
         else:
             self.log('%s is already on.' % self.instance)
-            return 0xd5
 
     def power_reset(self):
+        """Not implemented"""
         pass
 
     def power_shutdown(self):
+        """Stop the managed instance"""
         # should attempt a clean shutdown
         self.target_status = 'ACTIVE'
         self.novaclient.servers.stop(self.instance)
         self.log('Politely shut down %s' % self.instance)
 
     def log(self, *msg):
+        """Helper function that prints msg and flushes stdout"""
         print(' '.join(msg))
         sys.stdout.flush()
 
@@ -174,12 +201,36 @@ def main():
                         help='The password for connecting to OpenStack')
     parser.add_argument('--os-tenant',
                         dest='tenant',
-                        required=True,
+                        required=False,
+                        default='',
                         help='The tenant for connecting to OpenStack')
     parser.add_argument('--os-auth-url',
                         dest='auth_url',
                         required=True,
                         help='The OpenStack Keystone auth url')
+    parser.add_argument('--os-project',
+                        dest='project',
+                        required=False,
+                        default='',
+                        help='The project for connecting to OpenStack')
+    parser.add_argument('--os-user-domain',
+                        dest='user_domain',
+                        required=False,
+                        default='',
+                        help='The user domain for connecting to OpenStack')
+    parser.add_argument('--os-project-domain',
+                        dest='project_domain',
+                        required=False,
+                        default='',
+                        help='The project domain for connecting to OpenStack')
+    parser.add_argument('--cache-status',
+                        dest='cache_status',
+                        default=False,
+                        action='store_true',
+                        help='Cache the status of the managed instance.  This '
+                             'can reduce load on the host cloud, but if the '
+                             'instance status is changed outside the BMC then '
+                             'it may become out of sync.')
     args = parser.parse_args()
     # Default to ipv6 format, but if we get an ipv4 address passed in use the
     # appropriate format for pyghmi to listen on it.
@@ -192,7 +243,11 @@ def main():
                          user=args.user,
                          password=args.password,
                          tenant=args.tenant,
-                         auth_url=args.auth_url)
+                         auth_url=args.auth_url,
+                         project=args.project,
+                         user_domain=args.user_domain,
+                         project_domain=args.project_domain,
+                         cache_status=args.cache_status)
     mybmc.listen()
 
 

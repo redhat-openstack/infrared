@@ -1,0 +1,61 @@
+- name: Get the undercloud version
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tags: images
+  tasks:
+    # todo(obaranov) rework that and use openstack-nova rpm verions to determine undercloud version
+    # pike version currently has the 15 version which is eqaul to the ocata's version.
+    - name: check repos
+      yum:
+          list: openstack-tripleo
+      register: tripleo_source
+      failed_when: tripleo_source.results|selectattr('yumstate', 'equalto', 'available')|list|length > 1
+
+    - set_fact:
+          undercloud_version: "{{ version_regex|int or beta }}"
+      vars:
+          version_regex: "{{ item.repo | regex_replace('^rhel-7-server-openstack-(beta|[.0-9]+)-rpms$', '\\1')}}"
+          # TODO(yfried): change that when beta version changes
+          beta: 11
+      with_items: "{{ tripleo_source.results|selectattr('yumstate', 'equalto', 'available')|list }}"
+
+    # TODO(yfried): convert these to use "yum list" as well.
+    - name: get undercloud version from rhos-release
+      find:
+          use_regex: yes
+          patterns: 'rhos-release-[0-9]+.*'
+          paths:
+            - '/etc/yum.repos.d/'
+      register: rhos_release_result
+      when: undercloud_version is not defined
+
+    - set_fact:
+          undercloud_version: "{{ rhos_release_result.files[0]['path'] | basename | regex_replace('^rhos-release-([0-9]+).*$', '\\1') }}"
+      when:
+          - undercloud_version is not defined
+          - rhos_release_result.matched > 0
+
+    - name: get undercloud rdo version
+      find:
+          use_regex: yes
+          patterns: '(?:rhos-release-rdotrunk|delorean|CentOS-OpenStack|rdo-release)-\w+\.repo$'
+          paths:
+              - '/etc/yum.repos.d/'
+      register: rdotrunk_result
+      when: undercloud_version is not defined
+
+    - set_fact:
+          undercloud_version: "{{ rdotrunk_result.files[0]['path'] | basename | regex_replace('^(?:rhos-release-rdotrunk|delorean|CentOS-OpenStack|rdo-release)-(\\w+)\\.repo$', '\\1') }}"
+      when:
+          - undercloud_version is not defined
+          - rdotrunk_result.matched > 0
+
+    - fail:
+          msg: "Unable to determine the undercloud version"
+      when: undercloud_version is not defined
+
+    - name: print the undercloud_version
+      debug:
+          var: undercloud_version
+          verbosity: 2

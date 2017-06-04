@@ -86,6 +86,6 @@ def ssh_to_host(hostname, remote_command=None):
         compiled_cmd = " ".join(
             [compiled_cmd, '"{}"'.format(remote_command)])
 
-    os.system(compiled_cmd)
-
+    result = os.WEXITSTATUS(os.system(compiled_cmd))
     LOG.debug("Connection to {} closed".format(cmd_fields["host"]))
+    return result

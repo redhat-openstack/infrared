@@ -14,7 +14,7 @@
       "memory": "{{ hostvars[host_name]['ansible_memtotal_mb'] }}",
       "disk": "{{ hostvars[host_name].ansible_devices.vda.size.split()[0] | int }}",
       "arch": "{{ hostvars[host_name]['ansible_architecture'] }}",
-      {% if install.version | openstack_release >= 11 %}
+      {% if install.version|default(undercloud_version) | openstack_release >= 11 %}
         "pm_type": "pxe_ipmitool",
         "pm_user": "{{ install.vbmc.username }}",
         "pm_password": "{{ install.vbmc.password }}",

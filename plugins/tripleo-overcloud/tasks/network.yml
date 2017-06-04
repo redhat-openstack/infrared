@@ -19,7 +19,7 @@
       line: "    {{ item }}"
   with_items:
     - 'NeutronTunnelTypes: {{ (install.network.backend == "vlan") | ternary("''''", install.network.backend) }}'
-  when: install.version|openstack_release >= 8
+  when: install.version|default(undercloud_version)|openstack_release >= 8
 
 - name: append the network environment template line to the base overcloud deploy script
   lineinfile:
@@ -63,6 +63,12 @@
       dest: "~/overcloud_deploy.sh"
       line: '-e /usr/share/openstack-tripleo-heat-templates/environments/neutron-ovs-dvr.yaml \'
   when: install.network.dvr
+
+- name: append the octavia template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml \'
+  when: install.network.octavia
 
 - name: append the network dvr overrides
   lineinfile:

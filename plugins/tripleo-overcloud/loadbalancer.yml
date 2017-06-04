@@ -22,6 +22,6 @@
             state: present
 
       - name: Run rhos release
-        command: rhos-release "{{ install.version  }}"
+        command: rhos-release "{{ install.version|default(undercloud_version)  }}"
   roles:
       - role: loadbalancer

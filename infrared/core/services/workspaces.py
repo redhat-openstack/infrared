@@ -159,6 +159,7 @@ class Workspace(object):
                 path = key_def.split("=")[-1]
                 paths_map.setdefault(path, path)
 
+            new_line = line.strip()
             for mapped_orig, mapped_new in paths_map.iteritems():
                 if mapped_orig == mapped_new:
                     keyfilename = os.path.basename(mapped_orig)
@@ -173,7 +174,9 @@ class Workspace(object):
                 else:
                     new_fname = mapped_new
 
-                print(re.sub(mapped_orig, new_fname, line.rstrip()))
+                new_line = re.sub(mapped_orig, new_fname, new_line)
+
+            print(new_line)
 
     def link_file(self, file_path,
                   dest_name=None, unlink=True, add_to_reg=True):

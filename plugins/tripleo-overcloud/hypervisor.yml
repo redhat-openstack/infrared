@@ -10,8 +10,9 @@
         - name: Reactivate unreachable hosts
           meta: clear_host_errors
 
+# 'undercloud_version' has been setted as host's fact for undercloud nodes.
 - include: tasks/ironic_pxe_ipmitool.yml
-  when: install.version | openstack_release >= 11
+  when: "install.version|default(hostvars[groups['undercloud'][0]]['undercloud_version']) | openstack_release >= 11"
 
 - name: Generate the instackenv.json
   hosts: undercloud

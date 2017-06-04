@@ -1,0 +1,26 @@
+- name: fetch cdn creds from file
+  include_vars:
+      file: "{{ cdn_args_file }}"
+      name: cdn_creds
+  # file may contain passwords. Don't print its content to console
+  no_log: yes
+
+- name: register machines to CDN
+  redhat_subscription:
+      # the ability to load dict directly as task params will be depractaed
+      # Instead, expose all availbale params explicitly and omit unprovided
+      activationkey: "{{ cdn_creds.activationkey|default(omit) }}"
+      autosubscribe: "{{ cdn_creds.autosubscribe|default(omit) }}"
+      consumer_id: "{{ cdn_creds.consumer_id|default(omit) }}"
+      consumer_name: "{{ cdn_creds.consumer_name|default(omit) }}"
+      consumer_type: "{{ cdn_creds.consumer_type|default(omit) }}"
+      environment: "{{ cdn_creds.environment|default(omit) }}"
+      force_register: "{{ cdn_creds.force_register|default(omit) }}"
+      org_id: "{{ cdn_creds.org_id|default(omit) }}"
+      password: "{{ cdn_creds.password|default(omit) }}"
+      pool: "{{ cdn_creds.pool|default(omit) }}"
+      rhsm_baseurl: "{{ cdn_creds.rhsm_baseurl|default(omit) }}"
+      server_hostname: "{{ cdn_creds.server_hostname|default(omit) }}"
+      server_insecure: "{{ cdn_creds.server_insecure|default(omit) }}"
+      state: "{{ cdn_creds.state|default(omit) }}"
+      username: "{{ cdn_creds.username|default(omit) }}"

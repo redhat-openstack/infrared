@@ -8,7 +8,7 @@
   gather_facts: no
   vars:
       # command switch deprecated on Mitaka
-      project_switch: "--{{ (install.version|openstack_release < 9) | ternary('service ', 'subproject neutron-') }}lbaas"
+      project_switch: "--{{ (install.version|default(undercloud_version)|openstack_release < 9) | ternary('service ', 'subproject neutron-') }}lbaas"
   tasks:
     - name: Update neutron mariaDB with lbaas tables
       command: >

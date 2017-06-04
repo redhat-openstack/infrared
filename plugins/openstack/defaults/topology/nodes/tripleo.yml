@@ -1,16 +1,13 @@
-# This is an undercloud without "tester" role for testing the undercloud
+name: undercloud
+interfaces:
+    nic1:
+        network: "management"
+    nic2:
+        network: "data"
+    nic3:
+        network: "external"
+external_network: management
 
-node_dict:
-    name: undercloud
-    interfaces:
-        nic1:
-            network: "management"
-        nic2:
-            network: "data"
-        nic3:
-            network: "external"
-    external_network: management
-
-    groups:
-      - undercloud
-      - openstack_nodes
+groups:
+    - undercloud
+    - openstack_nodes

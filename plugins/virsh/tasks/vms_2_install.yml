@@ -1,10 +1,12 @@
 ---
 # save current node to "{{ node_dict }}"
-- name: get node_dict
-  include: var_lookup.yml
-  vars:
-      var_file: "{{ node.key }}"
-      partial_path: topology/nodes
+- include_vars:
+    file: "{{ node.key }}"
+    name: node_dict
+
+- name: merge overriden settings to the separate var
+  set_fact:
+      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
 
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
 - name: create vm's
@@ -22,7 +24,7 @@
            --network {{ 'bridge' if (interface.bridged|default(False)) else 'network' }}:{{ interface.network }} \
           {% endfor -%}
            --virt-type kvm \
-           --cpu host-model \
+           --cpu {{ topology_node.cpumodel|default('host-model') }} \
            --ram {{ topology_node.memory }} \
            --vcpus {{ topology_node.cpu }} \
            --os-variant {{ topology_node.os.variant }} \

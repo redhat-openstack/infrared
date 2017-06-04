@@ -36,8 +36,8 @@ Overcloud Options
 
 * ``--overcloud-debug``: Boolean. Enable debug mode for the overcloud services.
 
-* ``--overcloud-templates``: Add extra environment template files to "overcloud deploy" command
-    Format:
+* ``--overcloud-templates``: Add extra environment template files or custom templates
+    to "overcloud deploy" command. Format:
 
     .. code-block:: plain
        :caption: sahara.yml
@@ -45,6 +45,17 @@ Overcloud Options
        ---
        tripleo_heat_templates:
            - /usr/share/openstack-tripleo-heat-templates/environments/services/sahara.yaml
+
+    .. code-block:: plain
+       :caption: ovs-security-groups.yml
+
+       ---
+       tripleo_heat_templates:
+           []
+
+       custom_templates:
+           parameter_defaults:
+               NeutronOVSFirewallDriver: openvswitch
 
 * ``--overcloud-script``: Customize the script that will deploy the overcloud.
     A path to a ``*.sh`` file containing ``openstack overcloud deploy`` command.
@@ -99,3 +110,35 @@ Example::
 .. note:: Upgrade is assuming that Overcloud Deployment script and files/templates, which were used during the initial
   deployment are available at Undercloud node in home directory of Undercloud user. Deployment script location is
   assumed to be "~/overcloud_deploy.sh"
+
+
+Overcloud Update
+----------------
+
+.. warning:: Before Overcloud update it's recommended to update  `Undercloud <tripleo-undercloud.html>`_
+
+.. note:: InfraRed supports minor updates from OpenStack 9
+
+Minor update detects Undercloud's version and updates packages within same version to latest available.
+
+* ``--updateto``: target build to update to
+  defaults to ``None``, in which case, update is disabled.
+  possible values: build-date, ``latest``, ``passed_phase1``, ``z3`` and all other labels supported by ``rhos-release``
+  When specified, rhos-release repos would be setup and used for minor updates.
+
+Example::
+
+    infrared tripleo-overcloud -v --updateto latest --deployment-files virt
+
+.. note:: Minor update expects that Overcloud Deployment script and files/templates,
+  used during the initial deployment, are available at Undercloud node in home directory of Undercloud user.
+  Deployment script location is assumed to be "~/overcloud_deploy.sh"
+
+* ``--buildmods``: Let you the option to add flags to rhos-release:
+
+    | ``pin`` - Pin puddle (dereference 'latest' links to prevent content from changing). This flad is selected by default
+    | ``flea`` - Enable flea repos.
+    | ``unstable`` - This will enable brew repos or poodles (in old releases).
+    | ``none`` - Use none of those flags.
+
+ .. note:: ``--buildmods`` flag is internal Red Hat users only.

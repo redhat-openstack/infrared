@@ -31,13 +31,11 @@ subparsers:
               options:
                   version:
                       type: Value
-                      required_when:
-                          - "introspect == yes"
-                          - "deploy == yes"
                       help: |
-                          The product version (product == director)
+                          The product version
                           Numbers are for OSP releases
                           Names are for RDO releases
+                          If not given, same version of the undercloud will be used
                       choices:
                         - "7"
                         - "8"
@@ -134,6 +132,18 @@ subparsers:
                       default: no
                       help: Activate Neutron DVR extension on the overcloud.
 
+                  network-octavia:
+                      type: Bool
+                      default: no
+                      help: Deploy Overcloud with Octavia (Load Balancer).
+
+                  octavia-image-url:
+                      type: Value
+                      help: |
+                        URL to the image used for creating the Octavia Amphora node.
+                        Default is internal path for RHEL guest image
+                      default: https://url.corp.redhat.com/rhel-guest-image-7-3-35-x86-64-qcow2
+
             - title: Overcloud Public Network
               options:
                   public-network:
@@ -224,8 +234,18 @@ subparsers:
                       type: Value
                       help: |
                           Perform minor update of overcloud to the 'build' specified. Default: 'None'
-                          NOTE: Currently, minor update is supported with IR just for verion 11.
+                          NOTE: Currently, minor update is supported with IR just for verions 10 and 11.
                       default: None
+                  buildmods:
+                      type: Value
+                      help: |
+                          List of flags for rhos-release module.
+                          Currently works with
+                          pin - pin puddle (dereference 'latest' links to prevent content from changing)
+                          flea - enable flea repos
+                          unstable - this will enable brew repos or poodles (in old releases)
+                          none - use none of those flags
+                      default: pin
 
             - title: Ironic Configuration
               options:

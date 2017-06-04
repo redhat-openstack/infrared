@@ -5,11 +5,13 @@
 # save current node to "{{ node_dict }}"
 - debug: var=node.key
 
-- name: get node_dict
-  include: var_lookup.yml
-  vars:
-      var_file: "{{ node.key }}"
-      partial_path: topology/nodes
+- include_vars:
+    file: "{{ node.key }}"
+    name: node_dict
+
+- name: merge overriden settings to the separate var
+  set_fact:
+      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
 
 - name: Set the nic order
   command: "echo net-name={{ provision.prefix }}{{ topology_node.interfaces[item].network }}"

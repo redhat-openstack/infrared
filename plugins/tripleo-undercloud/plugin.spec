@@ -75,11 +75,33 @@ subparsers:
 
                   build:
                       help: |
-                          "String represents a timestamp of the OSP puddle
+                          String represents a timestamp of the OSP puddle
                           (for the given product core version).
-                          Examples: 'latest', '2016-08-11.1'"
+                          Supports any rhos-release labels.
+                          Examples: "passed_phase1", "2016-08-11.1", "Y1", "Z3", "GA"
                       type: Value
                       default: latest
+
+                  director-build:
+                      help: |
+                          String represents a timestamp of the OSPd puddle
+                          (for the given product core version).
+                          Supports any rhos-release labels.
+                          Examples: "passed_phase1", "2016-08-11.1", "Y1", "Z3", "GA"
+                          Only applies for versions 7-9
+                          If missing, will match "build".
+                      type: Value
+
+                  buildmods:
+                      type: Value
+                      help: |
+                          List of flags for rhos-release module.
+                          Currently works with
+                          pin - pin puddle (dereference 'latest' links to prevent content from changing)
+                          flea - enable flea repos
+                          unstable - this will enable brew repos or poodles (in old releases)
+                          none - use none of those flags
+                      default: pin
 
             - title: Tripleo User
               options:
@@ -95,6 +117,12 @@ subparsers:
 
             - title: Custom Repositories
               options:
+                  cdn:
+                      type: FileValue
+                      help: |
+                          YAML file
+                          Register the undercloud with a Red Hat Subscription Management platform.
+                          see documentation for more details
                   repos-config:
                       type: VarFile
                       help: |
@@ -127,12 +155,6 @@ subparsers:
                           For 'import' - points to pre-build overcloud images. Required.
                           For 'build' - points to an image that will be used as the base for building the overcloud, instead of the default cloud guest image.
                       required_when: "images-task == import"
-
-                  images-repos:
-                      type: Bool
-                      help: |
-                          Update OverCloud image with repo details.
-                      default: yes
 
                   images-update:
                       type: Bool

@@ -1,0 +1,56 @@
+---
+- name: create update script {{ overcloud_update_script }}
+  copy:
+      src: "{{ overcloud_deploy_script }}"
+      dest: "{{ overcloud_update_script }}"
+      mode: 0755
+      remote_src: True
+
+- name: filter unused options
+  lineinfile:
+      dest: "{{ overcloud_update_script }}"
+      regexp: "{{ item }}"
+      state: absent
+  with_items:
+      - '-r '
+      - '--roles-file'
+      - '--log-file'
+      - '--libvirt-type'
+      - '--ntp-server'
+      - '--control'
+      - '--compute'
+      - '--ceph'
+      - '--storage'
+
+- name: change 'deploy' to 'update'
+  lineinfile:
+      dest: "{{ overcloud_update_script }}"
+      regexp: openstack overcloud deploy
+      line: yes ""| openstack overcloud update stack overcloud -i \
+
+- name: assert overcloud-resource-registry-puppet.yaml already present
+  command: |
+      grep overcloud-resource-registry-puppet.yaml {{ overcloud_update_script }}
+  ignore_errors: True
+  register: env_present
+
+- name: explicitly include overcloud-resource-registry-puppet.yaml file
+  lineinfile:
+      dest: "{{ overcloud_update_script }}"
+      insertafter: --templates
+      line: -e /usr/share/openstack-tripleo-heat-templates/overcloud-resource-registry-puppet.yaml \
+  when: env_present|failed
+
+- name: remove trailing symbol from last line
+  shell:
+      tail -n1 {{ overcloud_update_script }} | tr -d \\
+  register: last_line
+
+- name: change last line in {{ overcloud_update_script }} script
+  lineinfile:
+      dest: "{{ overcloud_update_script }}"
+      regexp: "{{ last_line.stdout }}"
+      line: "{{ last_line.stdout }}"
+
+- name: print update script {{ overcloud_update_script }}
+  command: "cat {{ overcloud_update_script }}"

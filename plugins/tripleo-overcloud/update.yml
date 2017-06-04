@@ -58,7 +58,8 @@
       - update
   tasks:
       - name: update deployment plan in Mistral
-        include: tasks/update/11/update_mistral_plan.yaml
+        include: tasks/update/common/update_mistral_plan.yaml
+        when: undercloud_version|openstack_release in [10, 11]
 
       - name: Scan nodes ssh keys
         command: "ssh-keyscan -t rsa {{ hostvars[item].ansible_ssh_host }}"
@@ -72,4 +73,4 @@
         with_items: "{{ pubkeys.results }}"
 
       - name: Overcloud Update
-        include: "tasks/update/{{ undercloud_version }}/update_overcloud.yaml"
+        include: tasks/update/common/update_overcloud.yaml

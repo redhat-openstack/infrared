@@ -2,9 +2,24 @@
   set_fact:
       test_suite: "{{ test_suite_file | basename | splitext | first }}"
 
+- name: initialize max_seq_number to 0
+  set_fact:
+      max_seq_number: 0
+
+# Find the test_output_file.N.xml with maximal N (if exists)
+- name: find max file seq
+  vars:
+      file_name: "{{ item | basename | splitext | first }}"
+      seq_number: "{{ file_name | regex_replace('^(?P<basename>.+)\\.(?P<seq_num>\\d+)$', '\\g<seq_num>') }}"
+  set_fact:
+      max_seq_number: "{{ [seq_number|int, max_seq_number|int] | max }}"
+      test_output_file: "tempest-results-{{ test_suite }}.{{ max_seq_number | int + 1 }}.xml"
+  with_fileglob:
+      - "{{ inventory_dir }}/tempest_results/*.xml"
+
 - name: set facts
   set_fact:
-      test_output_file: "tempest-results-{{ test_suite }}.xml"
+      test_output_file: "tempest-results-{{ test_suite }}.{{ max_seq_number | int + 1 }}.xml"
       blacklistfile: ''
       whitelistfile: ''
       regex: ''
@@ -59,7 +74,7 @@
       - name: run tempest "{{ test_suite }}" suite
         shell: >
             test -e .venv/bin/activate && source .venv/bin/activate;
-            ostestr -s --no-pretty --regex '{{ regex | default('') }}' {{ whitelistfile }} {{ blacklistfile }} {{ ('--concurrency ' + test.threads|string ) if test.threads|default('') else '' }}
+            ostestr -s --no-pretty --regex '{{ regex | default('') }}' {{ whitelistfile }} {{ blacklistfile }} {{ ('--concurrency ' + test.threads|string ) if test.threads|default('') else '' }} {{ ('--black-regex ' + test.blackre|string|quote ) if test.blackre|default('') else '' }}
             | subunit2junitxml --output-to={{ test_output_file }} | subunit2pyunit
         args:
             executable: /bin/bash

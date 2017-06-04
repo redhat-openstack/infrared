@@ -62,19 +62,38 @@
       target_directory: "{{ rr_target_directory }}"
   become: true
 
-- name: create necessary repos for director using rhos-release
-  rhos_release:
-      state: install
-      release: "{{ release }}"
-      build_date: "{{ build }}"
-      target_directory: "{{ rr_target_directory }}"
-      distro_version: "{{ rr_distro_version }}"
-      source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
-  register: command_result
-  until: command_result.stderr.find('Connection reset by peer') == -1
-  retries: 40
-  delay: 5
-  become: true
+- block:
+      - name: create necessary repos for director using rhos-release
+        rhos_release:
+            state: install
+            release: "{{ release }}"
+            build_date: "{{ build }}"
+            buildmods: "{{ install.buildmods.split(',') }}"
+            target_directory: "{{ rr_target_directory }}"
+            distro_version: "{{ rr_distro_version }}"
+            source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
+        register: command_result
+        until: command_result.stderr.find('Connection reset by peer') == -1
+        retries: 40
+        delay: 5
+        become: true
+  rescue:
+      - name: run rhos-release without retries
+        rhos_release:
+            state: install
+            release: "{{ release }}"
+            build_date: "{{ build }}"
+            buildmods: "{{ install.buildmods.split(',') }}"
+            target_directory: "{{ rr_target_directory }}"
+            distro_version: "{{ rr_distro_version }}"
+            source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
+        register: command_result
+        ignore_errors: yes
+
+      - fail:
+            msg:
+                error: "rhos-release failed unexpectedly"
+                rhos_release_output: "{{ command_result }}"
 
 - block:
     - name: parse specific number of director puddle used from rhos-release output

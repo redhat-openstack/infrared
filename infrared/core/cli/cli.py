@@ -553,7 +553,7 @@ class ListFileType(VarFileType):
     The list of var files. Files names should be separated
     by the comma:
 
-        fil1,file2,dir/file3
+        file1,file2,dir/file3
     """
 
     ARG_SEPARATOR = ','
@@ -562,6 +562,24 @@ class ListFileType(VarFileType):
         return [super(ListFileType, self).resolve(file_name.strip())
                 for file_name in value.split(self.ARG_SEPARATOR)]
 
+
+class TopologyFileType(VarFileType):
+    """
+    Looks for a topology file in following locations:
+        * relative path (./path)
+        * abs path ($PWD/path)
+        * <plugin_root>/vars
+        * <plugin_root>/defaults
+    """
+    ARG_SEPARATOR = ','
+    TOPOLOGY_SEPARATOR = ':'
+
+    def resolve(self, value):
+
+        return {super(TopologyFileType, self).resolve(
+            file_name.split(self.TOPOLOGY_SEPARATOR)[0]):
+            int(file_name.split(self.TOPOLOGY_SEPARATOR)[1])
+            for file_name in value.split(self.ARG_SEPARATOR)}
 
 # register custom actions
 ACTIONS = {
@@ -581,5 +599,6 @@ COMPLEX_TYPES = {
     'FileValue': FileType,
     'VarFile': VarFileType,
     'VarDir': VarDirType,
-    'ListOfVarFiles': ListFileType
+    'ListOfVarFiles': ListFileType,
+    'ListOfTopologyFiles': TopologyFileType
 }
