@@ -53,6 +53,7 @@
         release: "{{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }}"
         build: "{{ install.build }}"
         mirror: "{{ install.mirror | default(omit) }}"
+        distro_version: "{{ install.osrelease|default(ansible_distribution_version) }}"
         tags: upgrade
   tasks:
       - name: "{{ operation_type }} to version {{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }} build {{ install.build }}"
