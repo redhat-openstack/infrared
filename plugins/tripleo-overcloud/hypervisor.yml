@@ -4,11 +4,12 @@
   gather_facts: no
   tasks:
       - block:
-        - name: Gather facts
-          setup:
+          - name: Gather facts
+            include_vars:
+                file: "{{ inventory_dir }}/{{ inventory_hostname }}"
         rescue:
-        - name: Reactivate unreachable hosts
-          meta: clear_host_errors
+            - name: Reactivate unreachable hosts
+              meta: clear_host_errors
 
 # 'undercloud_version' has been setted as host's fact for undercloud nodes.
 - include: tasks/ironic_pxe_ipmitool.yml

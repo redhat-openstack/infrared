@@ -19,6 +19,7 @@
         shell: |
             for node in `vbmc list | awk '/[0-9]{2}/ {print $2}'`
             do
+                vbmc stop ${node}
                 vbmc delete ${node}
             done
 
@@ -52,6 +53,10 @@
 
       - name: Start nodes using vbmc
         command: "vbmc start {{ inventory_hostname }}"
+        delegate_to: hypervisor
+
+      - name: Setting nodes power status using ipmitool
+        command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H 127.0.0.1 -p {{ vbmc_port }} chassis power on"
         delegate_to: hypervisor
 
       - name: Get vbmc VMs power status using ipmitool
