@@ -62,7 +62,7 @@
             director_build_date: "{{ director_build | default(omit) }}"
             buildmods: "{{ install.buildmods.split(',') }}"
             target_directory: "{{ rr_target_directory }}"
-            distro_version: "{{ rr_distro_version }}"
+            distro_version: "{{ install.osrelease|default(rr_distro_version) }}"
             source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
         register: command_result
         until: command_result.stderr.find('Connection reset by peer') == -1
@@ -78,7 +78,7 @@
             director_build_date: "{{ director_build | default(omit) }}"
             buildmods: "{{ install.buildmods.split(',') }}"
             target_directory: "{{ rr_target_directory }}"
-            distro_version: "{{ rr_distro_version }}"
+            distro_version: "{{ install.osrelease|default(rr_distro_version) }}"
             source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
         register: command_result
         ignore_errors: yes
