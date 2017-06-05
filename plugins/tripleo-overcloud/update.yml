@@ -43,6 +43,7 @@
         release: "{{ (undercloud_version|int) }}"
         build: "{{ install.updateto }}"
         mirror: "{{ install.mirror | default(omit) }}"
+        distro_version: "{{ install.osrelease|default(ansible_distribution_version) }}"
 
 - name: Overcloud Minor Update
   hosts: undercloud

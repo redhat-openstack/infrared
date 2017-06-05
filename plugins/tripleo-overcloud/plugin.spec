@@ -241,6 +241,10 @@ subparsers:
                           Perform minor update of overcloud to the 'build' specified. Default: 'None'
                           NOTE: Currently, minor update is supported with IR just for verions 10 and 11.
                       default: None
+                  osrelease:
+                      type: Value
+                      help: |
+                          Override the default RHEL version. Default 'ansible_distribution_version'
                   buildmods:
                       type: Value
                       help: |
