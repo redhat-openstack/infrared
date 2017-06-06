@@ -190,3 +190,7 @@ subparsers:
                       help: |
                           Undercloud Update.
                           Note: Infrared support update for RHOSP version 11 only.
+                  osrelease:
+                      type: Value
+                      help: |
+                          Override the default RHEL version. Default 'ansible_distribution_version'
