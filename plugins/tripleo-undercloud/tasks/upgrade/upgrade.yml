@@ -63,7 +63,7 @@
 
 - name: Undercloud {{ operation_type }}
   shell: "openstack undercloud upgrade &> undercloud_{{ operation_type }}.log"
-  when: undercloud_version|openstack_release > 7
+  when: undercloud_version|openstack_release > 7 or (not install.get('update', {}).undercloud|default(False))
 
 - name: Reboot the Undercloud
   become: true
