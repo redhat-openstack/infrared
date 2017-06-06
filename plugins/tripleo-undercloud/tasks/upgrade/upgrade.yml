@@ -15,7 +15,9 @@
       - "openstack-ironic-api.service"
       - "openstack-ironic-discoverd.service"
       - "openstack-heat-engine.service"
-  when: undercloud_version|openstack_release == 7
+  when:
+      - undercloud_version|openstack_release == 7
+      - install.get('update', {}).undercloud|default(False)
 
 - block:
       - name: Stopping services
