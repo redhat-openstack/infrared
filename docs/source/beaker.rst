@@ -44,6 +44,6 @@ Provision::
 
   ir beaker --url=beaker.server.url --user=beaker.user --password=beaker.password --host-address=host.to.be.provisioned
 
-Cleanup (Used only to return a loaned machine)::
+Cleanup (Used for returning a loaned machine)::
 
   ir beaker --url=beaker.server.url --user=beaker.user --password=beaker.password --host-address=host.to.be.provisioned --cleanup=yes

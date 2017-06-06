@@ -39,7 +39,7 @@ OpenStack Cloud Details
     `keypair` should hold the public key that matches the provided private ``--key-file``.
     Use ``openstack --os-cloud cloud_name keypair list`` to list available keypairs.
 * ``--dns``: A Local DNS server used for the provisioned networks and VMs.
-    If not provided, openstack will use default DNS settings, which, in most cases,
+    If not provided, OpenStack will use default DNS settings, which, in most cases,
     will not resolve internal URLs.
 
 Topology

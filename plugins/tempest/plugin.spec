@@ -1,3 +1,4 @@
+---
 plugin_type: test
 subparsers:
     tempest:
@@ -17,7 +18,7 @@ subparsers:
                   openstack-version:
                        type: Value
                        help: |
-                           The Openstack under test version.
+                           The OpenStack under test version.
                            Numbers are for OSP releases
                            Names are for RDO releases
                        choices:
@@ -37,7 +38,7 @@ subparsers:
                   openstack-installer:
                        type: Value
                        help: |
-                           The Openstack installation type.
+                           The OpenStack installation type.
                        choices:
                            - packstack
                            - tripleo

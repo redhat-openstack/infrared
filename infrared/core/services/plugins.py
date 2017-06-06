@@ -75,12 +75,12 @@ PLUGINS_REGISTRY = {
     },
     'tripleo-overcloud': {
         'src': 'plugins/tripleo-overcloud',
-        'desc': 'Install Tripleo overcloud using a designated undercloud node',
+        'desc': 'Install TripleO overcloud using a designated undercloud node',
         'type': 'install'
     },
     'tripleo-undercloud': {
         'src': 'plugins/tripleo-undercloud',
-        'desc': 'Install Tripleo on a designated undercloud node',
+        'desc': 'Install TripleO on a designated undercloud node',
         'type': 'install'
     },
     'virsh': {

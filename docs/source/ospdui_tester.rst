@@ -1,7 +1,7 @@
 OSPD UI tester
 ==============
 
-Runs UI tests against the `undercloud <tripleo-undercloud.html>`_ UI. Supports only RHOS10+.
+OSPD UI tests against the `undercloud <tripleo-undercloud.html>`_ UI and works with RHOS10+.
 
 
 Environment
@@ -104,16 +104,16 @@ Debugging
 
 The OSPD UI tester starts VNC server on the tester machine (by default on display ``:1``). This allows to remotely debug and observe what is happening on the tester.
 
-If you have direct netwrok access to the tester, you can use any vnc client and connect.
+If you have direct network access to the tester, you can use any VNC client and connect.
 If you are using virtual deployment the tunneling through the hypervisor to the tester instance should be created::
 
    client $> ssh -f root@myvirthost.redhat.com -L 5901:<tester ip address>:5901 -N
 
-Then you can use vnc viewer and connect to the ``localhost:5901``.
+Then you can use VNC viewer and connect to the ``localhost:5901``.
 
 
 Known Issues
 ------------
 
-* Automated UI tests cannot be run on the firefox browser when SSL is enabled on undercloud.
+* Automated UI tests cannot be run on the Firefox browser when SSL is enabled on undercloud.
   Follow the following guide to fix that problem: `<https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/10/html/director_installation_and_usage/appe-server_exceptions>`_

@@ -1,8 +1,8 @@
 Interactive SSH
 ^^^^^^^^^^^^^^^
 
-There are situation, when user needs to establish interactive ssh session to host, managed  by `infrared`.
-One provides simpliest way to do this. Just call:
+This plugin allows users to establish interactive ssh session to a host managed
+by `infrared`. To do this use:
 
 .. code-block:: console
 

@@ -1,9 +1,9 @@
 OVB deployment
 ==============
 
-Deploy Tripleo OpenStack on virtual nodes provisioned from an `OpenStack cloud`_
+Deploy TripleO OpenStack on virtual nodes provisioned from an `OpenStack cloud`_
 
-In a Tripleo OpenStack deployment, the undercloud need to control the overcloud power management,
+In a TripleO OpenStack deployment, the undercloud need to control the overcloud power management,
 as well as serve its nodes with an operating system. Trying to do that inside an OpenStack cloud
 requires some modification from the client side as well as from the OpenStack cloud
 
@@ -99,7 +99,7 @@ For example, the ovb_compute settings can hold the following properties::
 The ``--topology-network`` should specify the topology with at 3 networks:
 ``data``, ``management`` and ``external``:
 
-  - data network is used by the Tripleo to provision the overcloud nodes
+  - data network is used by the TripleO to provision the overcloud nodes
   - management is used by the BMC to control IPMI operations
   - external holds floating ip's and used by `infrared` to access the nodes
 
@@ -112,7 +112,7 @@ default single NIC in common cloud images). The NICs' order should correspond to
 described in the ovb node settings files.
 
 
-Install OpenStack with Tripleo
+Install OpenStack with TripleO
 ------------------------------
 
 To install OpenStack on ovb nodes the process is almost standard with small deviation.

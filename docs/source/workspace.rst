@@ -3,7 +3,7 @@
 Workspaces
 ^^^^^^^^^^
 
-With `workspaces`, user can manage several environments created by `infrared` and alternate between them.
+With `workspaces`, user can manage multiple environments created by `infrared` and alternate between them.
 All runtime files (Inventory, hosts, ssh configuration, ansible.cfg, etc...) will be loaded from a workspace directory and all output files
 (Inventory, ssh keys, environment settings, facts caches, etc...) will be generated into that directory.
 
@@ -21,7 +21,7 @@ Inventory:
 
         /home/USER/.infrared/workspaces/example/hosts
 Checkout
-    Creates new workspace if it is not present and switches to it::
+    Creates new workspace if needed and switches to it::
 
         infrared workspace checkout example3
 
@@ -29,7 +29,7 @@ Checkout
         Now using workspace: 'example3'
 
     .. note:: Checked out workspace is tracked via a status file in workspaces_dir, which means checked out workspace is persistent across shell sessions.
-              You can pass checked out workspace by envitonment variable ``IR_WORKSPACE``, which is non persistent
+              You can pass checked out workspace by environment variable ``IR_WORKSPACE``, which is non persistent
               ::
 
                     ir workspace list
@@ -96,14 +96,14 @@ Export:
 Import:
     Load a previously exported workspace (local or remote)::
 
-        infrared workspace import /tmp/look/at/my/newworkspace.tgz
+        infrared workspace import /tmp/look/at/my/new-workspace.tgz
         infrared workspace import http://free.ir/workspaces/newworkspace.tgz
 
-        Workspace newworkspace was imported
+        Workspace new-workspace was imported
 
     Control the workspace name::
 
-        infrared workspace import /tmp/look/at/my/newworkspace --name example3
+        infrared workspace import /tmp/look/at/my/new-workspace --name example3
 
         Workspace example3 was imported
 
@@ -120,7 +120,3 @@ Node list:
 
 .. note:: To change the directory where Workspaces are managed, edit the ``workspaces_base_folder`` option.
    Check the  `Infrared Configuration <configuration.html>`_ for details.
-
-
-
-

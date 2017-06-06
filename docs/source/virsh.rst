@@ -20,13 +20,13 @@ Topology
 --------
 The first thing you need to decide before you deploy your environment is the ``Topology``.
 This refers to the number and type of VMs in your desired deployment environment.
-If we use Openstack as an example, a topology may look something like:
+If we use OpenStack as an example, a topology may look something like:
 
     * 1 VM called undercloud
     * 1 VM called controller
     * 1 VM called compute
 
-In order to control how each VM is created, we have creates a YAML file that describes the
+To control how each VM is created, we have creates a YAML file that describes the
 specification of each VM.
 For more information about the structure of the topology files and how to create your own,
 please refer to `Topology <topology.html>`_.
@@ -65,7 +65,7 @@ External network is used for SSH forwarding so client (or Ansible) can access dy
 NAT Forwarding
 ^^^^^^^^^^^^^^
 
-By default, all networks above are `NATed <NAT network>`_, meaninng that they
+By default, all networks above are `NATed <NAT network>`_, meaning that they
 private networks only reachable via the `hypervisor` node.
 `infrared` configures the nodes SSH connection to use the `hypervisor` host as
 proxy.
@@ -73,7 +73,7 @@ proxy.
 Bridged Network
 ^^^^^^^^^^^^^^^
 
-However, some use-cases call for `direct access <bridged network>`_ to some of the nodes.
+Some use-cases call for `direct access <bridged network>`_ to some of the nodes.
 This is achieved by adding a network with ``forward: bridge`` in its attributes to the
 network-topology file, and marking this network as external network on the relevant node
 files.
@@ -112,7 +112,7 @@ Workflow
 
 Environments prepared such in way are usually used as basic virtual infrastructure for `tripleo-undercloud`_.
 
-.. note:: Virsh provisioner has currently idempotency issues, therefore ``infrared virsh ... --cleanup`` must be run before reprovisioning every time.
+.. note:: Virsh provisioner has idempotency issues, so ``infrared virsh ... --cleanup`` must be run before reprovisioning every time.
 
 
 

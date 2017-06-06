@@ -18,7 +18,7 @@ Required arguments
 Optional arguments
 ------------------
 
-* ``--strategy``: Whether to use Foreman or system ipmi command. (default: foreman)
+* ``--strategy``: Whether to use Foreman or system ``ipmi`` command. (default: foreman)
 
 * ``--action``: Which command to send with the power-management selected by mgmt_strategy. (default: cycle)
 
