@@ -6,6 +6,17 @@
       state: latest
   when: undercloud_version|openstack_release == 7
 
+- name: restart RHOS-7 updated services
+  become: true
+  service:
+      name: "{{ item }}"
+      state: restarted
+  with_items:
+      - "openstack-ironic-api.service"
+      - "openstack-ironic-discoverd.service"
+      - "openstack-heat-engine.service"
+  when: undercloud_version|openstack_release == 7
+
 - block:
       - name: Stopping services
         become: true
@@ -50,6 +61,7 @@
 
 - name: Undercloud {{ operation_type }}
   shell: "openstack undercloud upgrade &> undercloud_{{ operation_type }}.log"
+  when: undercloud_version|openstack_release > 7
 
 - name: Reboot the Undercloud
   become: true
