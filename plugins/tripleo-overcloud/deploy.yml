@@ -23,7 +23,6 @@
 
       - name: Execute the overcloud deploy script
         shell: |
-            source ~/stackrc
             bash {{ overcloud_deploy_script }} &> overcloud_install.log
         register: overcloud_deploy
         ignore_errors: yes
@@ -33,9 +32,8 @@
 
       # List of failures is supported since RHOS10
       - name: Print stack failures
-        shell: |
-            source ~/stackrc
-            openstack stack failures list overcloud
+        shell:
+            openstack --os-cloud undercloud stack failures list overcloud
         when: overcloud_deploy.rc != 0 and install.version|default(undercloud_version)|openstack_release >= 10
         tags: skip_ansible_lint
 
@@ -77,6 +75,12 @@
           path: "{{ overcloudrc_file }}"
           state: present
           timeout: 60
+
+    - name: update clouds.yaml file
+      include: clouds.yml
+      vars:
+            auth_file_path: "{{ overcloudrc_file }}"
+            cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"
 
     - name: fetch the overcloud rc file
       tags:
