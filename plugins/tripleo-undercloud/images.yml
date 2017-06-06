@@ -79,10 +79,14 @@
         when: install.images.packages|default('') or install.images['update']
 
       - name: upload the overcloud images to glance
+        command: openstack --os-cloud undercloud overcloud image upload --update-existing
+        when: install.version|default(undercloud_version)|openstack_release > 10
+
+      - name: upload the overcloud images to glance
         shell: |
             source ~/stackrc
             openstack overcloud image upload --update-existing
-        # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command, or os_images
+        when: install.version|default(undercloud_version)|openstack_release <= 10
         tags: skip_ansible_lint
 
       - name: remove downloaded images

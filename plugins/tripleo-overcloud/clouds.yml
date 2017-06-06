@@ -1,0 +1,22 @@
+---
+- name: get cloud variables
+  shell: |
+      for key in $( set | awk '{FS="="}  /^OS_/ {print $1}' ); do unset $key ; done
+      source {{ auth_file_path }}
+      echo -n "{{cloudname}}: {'auth': { 'auth-url': '$OS_AUTH_URL', 'username': '$OS_USERNAME', 'password': '$OS_PASSWORD', 'project-name': '${OS_PROJECT_NAME:-$OS_TENANT_NAME}' }}"
+  register: cloud_details
+
+- name: create clouds.yaml if doesn't exist
+  blockinfile:
+      content: 'clouds:'
+      dest: "~/clouds.yaml"
+      marker: "#{mark} HEADER"
+      create: yes
+
+- name: insert cloud parameters
+  blockinfile:
+      dest: "~/clouds.yaml"
+      block: |5
+            {{ cloud_details.stdout|from_yaml|to_nice_yaml(indent=4) }}
+      insertbefore: "#END {{ cloudname }} SECTION"
+      marker: "#{mark} {{ cloudname }} PARAMETERS"
