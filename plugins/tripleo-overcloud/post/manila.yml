@@ -10,6 +10,27 @@
         register: manila_host
         ignore_errors: yes
 
+      - name: Edit /etc/manila/manila.conf - ceph section
+        ini_file:
+           dest: "/etc/manila/manila.conf"
+           section: "ceph_native"
+           option: "share_backend_name"
+           value: "CEPHFSNATIVE1"
+        delegate_to: "{{ manila_host.stdout.split('.') | first }}"
+        become: yes
+        when:
+            - manila_host.rc == 0
+            - manila_host.stdout
+
+
+      - name: Restart manila services
+        shell: systemctl restart openstack-manila\*
+        become: yes
+        when:
+            - manila_host.rc == 0
+            - manila_host.stdout
+
+
       - name: get the manila conf
         command: "awk -F \"=\" '/^default_share_type/ {print $2}' /etc/manila/manila.conf"
         delegate_to: "{{ manila_host.stdout.split('.') | first }}"
@@ -23,7 +44,9 @@
         shell: |
             source ~/overcloudrc
             manila type-create {{ (share_type.stdout=='')|ternary('default', share_type.stdout) }} False
+            manila type-key {{ (share_type.stdout=='')|ternary('default', share_type.stdout) }} set share_backend_name='CEPHFSNATIVE1'
         when:
           - manila_host.rc == 0
           - manila_host.stdout
         tags: skip_ansible_lint
+
