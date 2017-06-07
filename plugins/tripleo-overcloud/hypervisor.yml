@@ -24,6 +24,20 @@
         command: "cat ~/.ssh/id_rsa"
         register: uc_pkey_result
 
+      - name: get information about vm's from hypervisor'
+        delegate_to: hypervisor
+        shell: |
+            NODE_XML=`virsh dumpxml {{ item }}`
+            echo "{
+                'name': '{{ item }}',
+                'arch': '`echo "$NODE_XML" | grep arch | cut -d\' -f2`',
+                'memory_kibs': '`echo "$NODE_XML" | grep currentMemory | cut -d\< -f2 | cut -d\> -f2`',
+                'mac': '`echo "$NODE_XML" | grep data -B 1 | grep mac | cut -d\' -f2`',
+                'cpu': '`echo "$NODE_XML" | grep vcpu | cut -d\< -f2 | cut -d\> -f2`',
+                'disk_bytes': '`virsh domblkinfo {{ item }} vda | grep -e Capacity | cut -d\: -f2 | xargs`',
+            }"
+        with_items: "{{ groups['overcloud_nodes'] }}"
+
       - name: prepare instack.json if one doesn't exist
         vars:
             instack_input: "{{ (install.instackenv|default({})).file|default('') }}"
