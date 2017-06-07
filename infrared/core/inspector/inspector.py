@@ -169,7 +169,13 @@ class SpecParser(object):
 
                 for option in options_to_save:
                     opt_name = option['name']
-                    if opt_name in spec_defaults[parser_name]:
+                    if opt_name in parser_dict:
+                        put_option(
+                            out_answers,
+                            parser_name,
+                            opt_name,
+                            parser_dict[opt_name])
+                    elif opt_name in spec_defaults[parser_name]:
                         put_option(
                             out_answers,
                             parser_name,
