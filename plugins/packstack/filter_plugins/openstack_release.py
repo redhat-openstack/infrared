@@ -35,9 +35,31 @@ def openstack_release(value):
     return _discover_version(value)[0]
 
 
+def openstack_distribution(value):
+    """Discover distribution from release name/number
+
+    {{ 7 | openstack_distribution }}
+    -> OSP
+    {{ "8" | openstack_distribution }}
+    -> OSP
+    {{ "Liberty" | openstack_distribution }}
+    -> RDO
+
+    >>> openstack_distribution(7)
+    'OSP'
+    >>> openstack_distribution("7")
+    'OSP'
+    >>> openstack_distribution("Liberty")
+    'RDO'
+    """
+
+    return _discover_version(value)[1]
+
+
 class FilterModule(object):
 
     def filters(self):
         return {
+            'openstack_distribution': openstack_distribution,
             'openstack_release': openstack_release,
         }
