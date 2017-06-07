@@ -10,6 +10,17 @@
         register: manila_host
         ignore_errors: yes
 
+      - name: Edit /etc/manila/manila.conf - ceph section
+        ini_file:
+           dest: "/etc/manila/manila.conf"
+           section: "ceph_native"
+           option: "share_backend_name"
+           value: "CEPHFSNATIVE1"
+        delegate_to: "{{ manila_host.stdout.split('.') | first }}"
+
+      - name: Restart manila services
+        shell: systemctl restart openstack-manila\*
+
       - name: get the manila conf
         command: "awk -F \"=\" '/^default_share_type/ {print $2}' /etc/manila/manila.conf"
         delegate_to: "{{ manila_host.stdout.split('.') | first }}"
@@ -27,3 +38,4 @@
           - manila_host.rc == 0
           - manila_host.stdout
         tags: skip_ansible_lint
+
