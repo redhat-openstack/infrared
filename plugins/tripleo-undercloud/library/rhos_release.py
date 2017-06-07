@@ -76,7 +76,7 @@ options:
         default: 'no'
     buildmods:
         description:
-            - List of flags that will be enabled. only works with pin puddle, flea-repos and unstable
+            - List of flags that will be enabled. only works with pin puddle, flea-repos, unstable and cdn
 notes:
     - requires rhos-release version 1.0.23
 requirements: [ rhos-release ]
@@ -156,7 +156,8 @@ def _parse_output(module, cmd, stdout):
                              )
         match = pattern.search(line)
         if not match:
-            _fail(module, "Failed to parse release line %s" % line, cmd, out=stdout)
+            _fail(module, "Failed to parse release line %s" % line,
+                  cmd, out=stdout)
         return dict(
             release=match.group("release"),
             version=match.group("version") or 'undetermined!',
@@ -165,12 +166,23 @@ def _parse_output(module, cmd, stdout):
         )
 
     installed_releases = map(released, release_lines)
-    return dict(
+    ret_dict = dict(
         repodir=repodir,
-        files=list(filenames),
-        releases={release['channel']: release for release in
-                  installed_releases},
+        files=list(filenames)
     )
+    if module.params['buildmods'] is not None \
+            and 'cdn' in module.params['buildmods']:
+        ret_dict['releases'] = {"core": dict(
+                release=module.params['release'],
+                version='cdn',
+                repo_type='cdn',
+                channel='core'
+            )}
+    else:
+        ret_dict['releases'] = {release['channel']: release for release in
+                                installed_releases}
+
+    return ret_dict
 
 
 def wrap_results(res_dict, cmd, rc, out, err):
@@ -260,8 +272,8 @@ def main():
     mods = {
         'pin': '-P',
         'flea': '-f',
-        'unstable': '--unstable'
-
+        'unstable': '--unstable',
+        'cdn': ''
     }
 
     cmd = []
@@ -273,12 +285,15 @@ def main():
         if not release:
             _fail(module, "'release' option should be specified.", cmd)
 
+        if "cdn" in buildmods:
+            release = str(release) + "-cdn"
+
         releases = [(str(release), puddle)]
         try:
             if int(release) < 10 and director:
                 releases = [(str(release) + '-director', director_puddle)] + releases
         except ValueError:
-            # RDO versions shouldn't try to get director repos
+            # RDO versions & CDN shouldn't try to get director repos
             pass
 
         for release, build in releases:
