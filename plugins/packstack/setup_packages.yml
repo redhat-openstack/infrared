@@ -8,11 +8,19 @@
       - role: rhos-release
         rhos_release_rpm: https://url.corp.redhat.com/rhos-release-latest-rpm
         release: "{{ install.version }}"
-        build: "{{ install.build }}"
+        build: "{{ install.build | default(omit) }}"
         mirror: "{{ install.mirror | default(omit) }}"
         enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
         rr_buildmods:
             - pin
+        when: install.version|openstack_distribution == 'OSP'
+
+      - role: rdo-release
+        release: "{{ install.version }}"
+        build: "{{ install.build | default(omit) }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        when: install.version|openstack_distribution == 'RDO'
+
   tasks:
       - name: Enable current dev working repo
         shell: |
