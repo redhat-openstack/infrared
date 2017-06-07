@@ -1,16 +1,3 @@
-- name: Gather facts from hosts
-  hosts: all:!localhost:!ovb
-  any_errors_fatal: true
-  gather_facts: no
-  tasks:
-      - block:
-          - name: Gather facts
-            include_vars:
-                file: "{{ inventory_dir }}/{{ inventory_hostname }}"
-        rescue:
-            - name: Reactivate unreachable hosts
-              meta: clear_host_errors
-
 # 'undercloud_version' has been setted as host's fact for undercloud nodes.
 - include: tasks/ironic_pxe_ipmitool.yml
   when: "install.version|default(hostvars[groups['undercloud'][0]]['undercloud_version']) | openstack_release >= 11"
@@ -23,6 +10,23 @@
       - name: grab undercloud private key
         command: "cat ~/.ssh/id_rsa"
         register: uc_pkey_result
+
+      - name: get information about vm's from hypervisor
+        delegate_to: hypervisor
+        shell: |
+            NODE_XML=`virsh dumpxml {{ item }}`
+            echo "{
+                'name': '{{ item }}',
+                'arch': '`echo "$NODE_XML" | grep arch | cut -d\' -f2`',
+                'memory_kibs': '`echo "$NODE_XML" | grep currentMemory | cut -d\< -f2 | cut -d\> -f2`',
+                'mac': '`echo "$NODE_XML" | grep data -B 1 | grep mac | cut -d\' -f2`',
+                'cpu': '`echo "$NODE_XML" | grep vcpu | cut -d\< -f2 | cut -d\> -f2`',
+                'disk_bytes': '`virsh domblkinfo {{ item }} vda | grep -e Capacity | cut -d\: -f2 | xargs`',
+            }"
+        with_items: "{{ groups['overcloud_nodes'] }}"
+        register: nodes_info
+        tags:
+            - skip_ansible_lint
 
       - name: prepare instack.json if one doesn't exist
         vars:
