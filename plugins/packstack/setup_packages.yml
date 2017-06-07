@@ -10,6 +10,14 @@
         release: "{{ install.version }}"
         build: "{{ install.build }}"
         mirror: "{{ install.mirror | default(omit) }}"
+        when: install.version|openstack_distribution == 'OSP'
+
+      - role: rdo-release
+        release: "{{ install.version }}"
+        build: "{{ install.build }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        when: install.version|openstack_distribution == 'RDO'
+
   tasks:
       - name: Update all packages
         package:
