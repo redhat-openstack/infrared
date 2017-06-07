@@ -5,20 +5,22 @@
   "host-ip": "{{ hostvars['hypervisor'].ansible_management.ipv4.address }}",
   "arch": "x86_64",
   "nodes": [
-{% for host_name in groups['overcloud_nodes'] %}
+{% for host_string in nodes_info.results|map(attribute='stdout')|list %}
+{% set host_data = host_string|from_yaml %}
     {
-      "name": "{{ hostvars[host_name].inventory_hostname }}",
+      "name": "{{ host_data.name }}",
       "pm_addr": "{{ hostvars['hypervisor'].ansible_management.ipv4.address }}",
-      "mac": ["{{ hostvars[host_name]['ansible_eth0']['macaddress'] }}"],
-      "cpu": "{{ hostvars[host_name]['ansible_processor_cores'] }}",
-      "memory": "{{ hostvars[host_name]['ansible_memtotal_mb'] }}",
-      "disk": "{{ hostvars[host_name].ansible_devices.vda.size.split()[0] | int }}",
-      "arch": "{{ hostvars[host_name]['ansible_architecture'] }}",
+      "mac": ["{{ host_data.mac }}"],
+
+      "cpu": "{{ host_data.cpu }}",
+      "memory": "{{ (host_data.memory_kibs|int / 1024)|round|int }}",
+      "disk": "{{ (host_data.disk_bytes|int / 1073741824)|round|int }}",
+      "arch": "{{ host_data.arch }}",
       {% if install.version|default(undercloud_version) | openstack_release >= 11 %}
         "pm_type": "pxe_ipmitool",
         "pm_user": "{{ install.vbmc.username }}",
         "pm_password": "{{ install.vbmc.password }}",
-        "pm_port": "{{ hostvars[host_name]['vbmc_port'] }}"
+        "pm_port": "{{ hostvars['hypervisor']['vbmc_ports'][host_data.name] }}"
       {% else %}
         "pm_type": "pxe_ssh",
         "pm_user": "{{ ansible_ssh_user }}",
