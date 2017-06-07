@@ -1,3 +1,28 @@
+- name: Edit /etc/manila/manila.conf
+  hosts: controller
+  become: true
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: Set cephfs_enable_snapshots to False
+        ini_file:
+           dest: "/etc/manila/manila.conf"
+           section: "cephfsnative"
+           option: "cephfs_enable_snapshots"
+           value: "False"
+
+      - name: Remove cephfs_cluster_name line
+        ini_file:
+           dest: "/etc/manila/manila.conf"
+           section: "cephfsnative"
+           option: "cephfs_cluster_name"
+           value: "ceph"
+           state: "absent"
+
+      - name: Restart manila services
+        shell: systemctl restart openstack-manila\*
+
+
 - name: Setup default share for manila
   hosts: undercloud
   gather_facts: yes
@@ -27,3 +52,4 @@
           - manila_host.rc == 0
           - manila_host.stdout
         tags: skip_ansible_lint
+
