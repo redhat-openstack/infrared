@@ -3,27 +3,41 @@
   gather_facts: yes
   any_errors_fatal: true
   tasks:
-      - name: get server with manila service
-        shell: |
-            source ~/overcloudrc
-            manila service-list | grep manila-scheduler | awk '{print $6}' | head -1
-        register: manila_host
-        ignore_errors: yes
+      - name: Edit /etc/manila/manila.conf - ceph section
+        ini_file:
+           dest: "/etc/manila/manila.conf"
+           section: "cephfsnative"
+           option: "cephfs_enable_snapshots"
+           value: "False"
+        delegate_to: "{{ groups.controller }}" 
+        become: yes
+
+      - name: Edit /etc/manila/manila.conf - ceph section
+        ini_file:
+           dest: "/etc/manila/manila.conf"
+           section: "cephfsnative"
+           option: "cephfs_cluster_name"
+           value: "ceph"
+           state: "absent"
+        delegate_to: "{{ manila_host.stdout.split('.') | first }}"
+        become: yes
+
+      - name: Restart manila services
+        shell: systemctl restart openstack-manila\*
+        delegate_to: "{{ groups.controller }}"
+        become: yes
+
 
       - name: get the manila conf
         command: "awk -F \"=\" '/^default_share_type/ {print $2}' /etc/manila/manila.conf"
-        delegate_to: "{{ manila_host.stdout.split('.') | first }}"
+        delegate_to: "{{ groups.controller }}"
         register: share_type
         become: yes
-        when:
-            - manila_host.rc == 0
-            - manila_host.stdout
 
       - name: create manila default share
         shell: |
             source ~/overcloudrc
             manila type-create {{ (share_type.stdout=='')|ternary('default', share_type.stdout) }} False
-        when:
-          - manila_host.rc == 0
-          - manila_host.stdout
+            manila type-key {{ (share_type.stdout=='')|ternary('default', share_type.stdout) }} set share_backend_name='cephfsnative'
         tags: skip_ansible_lint
+
