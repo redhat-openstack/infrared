@@ -30,7 +30,6 @@ parameters:
     ObjectStorageHostnameResolveNetwork: internal_api
     CephStorageHostnameResolveNetwork: storage
 {% endif %}
-
 parameter_defaults:
 {% if installer.product.version|openstack_release > 8 and installer.product.version|openstack_release < 11 %}
   ServiceNetMap:
@@ -45,9 +44,11 @@ parameter_defaults:
     KeystonePublicApiNetwork: internal_api
     NeutronApiNetwork: internal_api
     HeatApiNetwork: internal_api
+    NovaColdMigrationNetwork: ctlplane
     NovaApiNetwork: internal_api
     NovaMetadataNetwork: internal_api
     NovaVncProxyNetwork: internal_api
+    NovaLibvirtNetwork: internal_api
     SwiftMgmtNetwork: storage_mgmt
     SwiftProxyNetwork: storage
     HorizonNetwork: internal_api
