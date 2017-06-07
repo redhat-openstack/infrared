@@ -127,6 +127,11 @@ subparsers:
                           - ipv4
                           - ipv6
 
+                  network-mtu:
+                      type: Value
+                      help: Sets the MTU of the underlying physical network.
+                      default: 1500
+
                   network-lbaas:
                       type: Bool
                       default: no

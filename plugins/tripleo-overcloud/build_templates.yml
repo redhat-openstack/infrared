@@ -22,6 +22,14 @@
             dest: "{{ template_base }}/debug.yaml"
         when: install.overcloud.debug
 
+      - name: Inject mtu.yaml if user specified custom MTU
+        template:
+            src: templates/mtu.yaml.j2
+            dest: "{{ template_base }}/mtu.yaml"
+        when:
+            - install.network.mtu != 1500
+            - install.version is defined and install.version|openstack_release > 7
+
       - name: check if custom overcloud_deploy.sh exists
         stat:
             path: "{{ template_base }}/overcloud_deploy.sh"
