@@ -31,6 +31,16 @@
           - version_regex|int
           - version_regex > 0
 
+    - set_fact:
+          undercloud_version: "{{ version_regex|int }}"
+      vars:
+          version_regex: "{{ item.repo | regex_replace('^rhelosp-([0-9]+\\.[0-9]+)-cdn$', '\\1')}}"
+      with_items: "{{ tripleo_source.results|selectattr('yumstate', 'equalto', 'available')|list }}"
+      when:
+          - undercloud_version is not defined
+          - version_regex|int
+          - version_regex > 0
+
     - name: get undercloud rdo version
       find:
           use_regex: yes

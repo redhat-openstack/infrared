@@ -100,6 +100,7 @@ subparsers:
                           pin - pin puddle (dereference 'latest' links to prevent content from changing)
                           flea - enable flea repos
                           unstable - this will enable brew repos or poodles (in old releases)
+                          cdn - use internal mirrors of the CDN repos. (internal use)
                           none - use none of those flags
                       default: pin
 
