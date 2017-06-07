@@ -8,7 +8,7 @@ networker_role:
     #  - ${ipv6_postfix_underscore}: same as 'ipv6_postfix' but will be replaced with _v6
     #  - ${deployment_dir} - will be replaced by the deployment folder location on the undercloud. Deployment folder can be specified with the ospd --deployment flag
     resource_registry:
-        OS::TripleO::Networker::Net::SoftwareConfig: ${deployment_dir}/network/nic-configs/networker.yaml
+        OS::TripleO::Networker::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/networker.yaml"
         OS::TripleO::Networker::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
         OS::TripleO::Networker::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api${ipv6_postfix_underscore}.yaml"
 
