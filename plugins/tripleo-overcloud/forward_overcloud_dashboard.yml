@@ -1,0 +1,40 @@
+- name: Forward Overcloud Dashboard from Hypervisor
+  hosts: hypervisor
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: get dashboard endpoint
+        # TODO(yfried): find a way to get dashboard explicit details instead of keystone auth
+        command: >
+            awk -F'[=/:]' '/^export OS_AUTH_URL=/ {print $2 " " $5}' overcloudrc
+        register: ui_endpoint
+        delegate_to: "{{ groups.undercloud | first }}"
+        failed_when: "{{ (ui_endpoint.stdout|trim).split(' ') | length != 2 }}"
+
+      - name: set DNAT rules
+        vars:
+            endpoint_tupple: "{{ (ui_endpoint.stdout|trim).split(' ') }}"
+            dashboard_address: "{{ endpoint_tupple[1] }}"
+            dashboard_port: "{{ 443 if endpoint_tupple[0] == 'https' else 80 }}"
+        iptables:
+            action: insert
+            comment: forward overcloud dashboard
+            table: "{{ item.table }}"
+            chain: "{{ item.chain }}"
+            protocol: tcp
+            destination: "{{ item.destination }}"
+            destination_port: "{{ item.destination_port|default(omit) }}"
+            jump: "{{ item.jump }}"
+            to_destination: "{{ item.to_destination|default(omit) }}"
+        with_items:
+            - chain: PREROUTING
+              table: nat
+              to_destination: "{{ dashboard_address}}:{{ dashboard_port }}"
+              # port 8080
+              destination_port: "{{ install.overcloud.dashboard_dport|default('webcache') }}"
+              jump: DNAT
+              destination: "{{ ansible_ssh_host }}"
+            - chain: FORWARD
+              table: filter
+              jump: ACCEPT
+              destination: "{{ dashboard_address }}"

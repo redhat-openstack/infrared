@@ -10,6 +10,14 @@
       - post
   when: install.public.network
 
+- include: forward_overcloud_dashboard.yml
+  tags:
+      - dashboard
+      - post
+  when:
+      - install.overcloud.dashboard_forward|default(True)
+      - "'hypervisor' in groups"
+
 - include: post/lbaas_v2.yml
   tags: lbaas
   when: install.network.lbaas|default(False)
