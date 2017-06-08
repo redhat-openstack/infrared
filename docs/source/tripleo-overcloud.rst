@@ -108,7 +108,13 @@ Upgrade will detect Undercloud version and will upgrade Overcloud to the same ve
 
 Example::
 
-  infrared tripleo-overcloud -v --upgrade yes  --deployment-files virt
+  infrared tripleo-overcloud -v --upgrade yes --deployment-files virt
+
+* ``--updateto``: target build to upgrade to
+
+Example::
+
+  infrared tripleo-overcloud -v --upgrade yes --updateto 2017-05-30.1 --deployment-files virt
 
 .. note:: Upgrade is assuming that Overcloud Deployment script and files/templates, which were used during the initial
   deployment are available at Undercloud node in home directory of Undercloud user. Deployment script location is
