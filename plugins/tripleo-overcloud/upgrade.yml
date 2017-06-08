@@ -57,7 +57,7 @@
   roles:
       - role: rhos-release
         release: "{{ (undercloud_version|int) }}"
-        build: "latest"
+        build: "{{ install.updateto|default('None') if install.updateto != 'None' else 'latest' }}"
         director: no
         mirror: "{{ install.mirror | default(omit) }}"
 
