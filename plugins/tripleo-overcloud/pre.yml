@@ -10,6 +10,13 @@
         register: fact_file
         delegate_to: localhost
 
+      - name: Get timestamp of hosts-prov file
+        # to re-gather facts when hosts were reprovisioned since last fact gathering
+        stat:
+            path: "{{ inventory_dir }}/hosts-prov"
+        register: host_file
+        delegate_to: localhost
+
       - block:
           - name: Dumping all facts
             setup:
@@ -20,4 +27,4 @@
                 content: "{{ initial_facts.ansible_facts }}"
                 dest: "{{ inventory_dir }}/{{ inventory_hostname }}"
             delegate_to: localhost
-        when: not fact_file.stat.exists
+        when: not fact_file.stat.exists or ( fact_file.stat.mtime|int < host_file.stat.mtime|default(0)|int )
