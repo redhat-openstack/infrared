@@ -48,7 +48,7 @@
         delegate_to: hypervisor
 
       - name: Add nodes to vbmc
-        command: "vbmc add {{ inventory_hostname }} --port {{ vbmc_port }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }}"
+        command: "vbmc add {{ inventory_hostname }} --port {{ vbmc_port }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ hostvars['hypervisor'].ansible_management.ipv4.address }}"
         delegate_to: hypervisor
 
       - name: Start nodes using vbmc
@@ -56,11 +56,11 @@
         delegate_to: hypervisor
 
       - name: Setting nodes power status using ipmitool
-        command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H 127.0.0.1 -p {{ vbmc_port }} chassis power on"
+        command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H {{ hostvars['hypervisor'].ansible_management.ipv4.address }} -p {{ vbmc_port }} chassis power on"
         delegate_to: hypervisor
 
       - name: Get vbmc VMs power status using ipmitool
-        command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H 127.0.0.1 -p {{ vbmc_port }} power status"
+        command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H {{ hostvars['hypervisor'].ansible_management.ipv4.address }} -p {{ vbmc_port }} power status"
         register: ipmitool_result
         delegate_to: hypervisor
 
