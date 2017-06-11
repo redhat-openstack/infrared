@@ -6,16 +6,19 @@
       - name: get dashboard endpoint
         # TODO(yfried): find a way to get dashboard explicit details instead of keystone auth
         command: >
-            awk -F'[=/:]' '/^export OS_AUTH_URL=/ {print $2 " " $5}' overcloudrc
+            awk -F'[=/]' '/^export OS_AUTH_URL=/ {print $2 " " $4}' overcloudrc
         register: ui_endpoint
         delegate_to: "{{ groups.undercloud | first }}"
-        failed_when: "{{ (ui_endpoint.stdout|trim).split(' ') | length != 2 }}"
+        # Fail if address isn't a valid IP address
+        # IPv6 address can be wrapped in "[]"
+        failed_when: "{{ not (ui_endpoint.stdout|trim).split(' ')[-1].rsplit(':', 1)[0].strip('[').rstrip(']')|ipaddr }}"
 
       - name: set DNAT rules
         vars:
             endpoint_tupple: "{{ (ui_endpoint.stdout|trim).split(' ') }}"
-            dashboard_address: "{{ endpoint_tupple[1] }}"
-            dashboard_port: "{{ 443 if endpoint_tupple[0] == 'https' else 80 }}"
+            # IPv6 address can be wrapped in "[]"
+            dashboard_address: "{{ endpoint_tupple[1].rsplit(':', 1)[0].strip('[').rstrip(']') }}"
+            dashboard_port: "{{ 443 if endpoint_tupple[0].rstrip(':') == 'https' else 80 }}"
         iptables:
             action: insert
             comment: forward overcloud dashboard
