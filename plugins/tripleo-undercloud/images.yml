@@ -76,7 +76,7 @@
       - name: modify images - update to core build and install packages
         include: tasks/images/repos.yml
         # update is a func name (dict.update) so it must be used as str explicitly
-        when: "{{ install.images.packages|default('') or install.images['update'] }}"
+        when: install.images.packages|default('') or install.images['update']
 
       - name: upload the overcloud images to glance
         shell: |
