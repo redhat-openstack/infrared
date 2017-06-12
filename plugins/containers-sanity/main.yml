@@ -1,0 +1,20 @@
+---
+- name: add hosts to host list
+  hosts: localhost
+  gather_facts: no
+  tasks:
+     - add_host:
+          name: "overcloud-node"
+          groups: "overcloud_nodes"
+          ansible_ssh_user: "{{ install.host.username }}"
+          ansible_ssh_host: "{{ install.host.ip }}"
+          ansible_ssh_private_key_file: "{{ install.host.key_file }}"
+       when: (install.host is defined) and (install.host.ip is defined) and (install.host.username is defined) and (install.host.key_file is defined)
+
+
+- name: Patch and repackage components RPM
+  hosts: overcloud_nodes
+  become: yes 
+  roles:
+    - { role: overclould_containers_sanity }
+
