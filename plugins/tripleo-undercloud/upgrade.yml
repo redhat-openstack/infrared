@@ -55,5 +55,13 @@
         mirror: "{{ install.mirror | default(omit) }}"
         tags: upgrade
   tasks:
+      - name: get new core puddle version
+        slurp:
+            src: ~/core_puddle_version
+        register: core_puddle_version
+
+      - debug:
+            msg: "Build mark: new_build={{ core_puddle_version['content'] | b64decode }}"
+
       - name: "{{ operation_type }} to version {{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }} build {{ install.build }}"
         include: "tasks/upgrade/upgrade.yml"
