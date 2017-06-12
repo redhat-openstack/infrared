@@ -55,5 +55,9 @@
         mirror: "{{ install.mirror | default(omit) }}"
         tags: upgrade
   tasks:
+      - name: "print out upgrade build marks"
+        debug:
+            msg: "Build mark: new_build={{ install.build }}"
+
       - name: "{{ operation_type }} to version {{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }} build {{ install.build }}"
         include: "tasks/upgrade/upgrade.yml"
