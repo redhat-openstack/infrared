@@ -1,0 +1,35 @@
+---
+networker_role:
+    name: Networker
+
+    # include resources
+    # the following vars can be used here:
+    #  - ${ipv6_postfix}: will be replaced with -v6 when the ipv6 protocol is used for installation, otherwise is empty
+    #  - ${ipv6_postfix_underscore}: same as 'ipv6_postfix' but will be replaced with _v6
+    #  - ${deployment_dir} - will be replaced by the deployment folder location on the undercloud. Deployment folder can be specified with the ospd --deployment flag
+    resource_registry:
+        OS::TripleO::Networker::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/networker.yaml"
+        OS::TripleO::Networker::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
+        OS::TripleO::Networker::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api${ipv6_postfix_underscore}.yaml"
+
+    flavor: networker
+    host_name_format: 'networker-%index%'
+
+    services:
+        - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::Kernel
+        - OS::TripleO::Services::NeutronDhcpAgent
+        - OS::TripleO::Services::NeutronL3Agent
+        - OS::TripleO::Services::NeutronMetadataAgent
+        - OS::TripleO::Services::NeutronOvsAgent
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::OpenDaylightOvs
+        - OS::TripleO::Services::Snmp
+        - OS::TripleO::Services::Timezone
+        - OS::TripleO::Services::TripleoPackages
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::FluentdClient
+        - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::Sshd{% endif %}"
