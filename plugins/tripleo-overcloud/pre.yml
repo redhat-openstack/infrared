@@ -1,7 +1,34 @@
-- name: Dump all facts before the installation begins
+- name: Placeholder for the undercloud pre-tasks
   hosts: undercloud
   gather_facts: yes
   tags: init
   any_errors_fatal: true
   tasks:
        - setup:
+
+  # todo(obaranov) do not collect facts for storage nodes
+  # currently we still need storage facts to build storage templates
+  # storage templates are built after introspection so we wont be able get facts there
+- name: Dump all facts before the installation begins
+  hosts: ceph:swift:!localhost:!ovb
+  gather_facts: no
+  tags: init
+  any_errors_fatal: true
+  tasks:
+      - name: Check if we already have dumped facts
+        stat:
+            path: "{{ inventory_dir }}/{{ inventory_hostname }}"
+        register: fact_file
+        delegate_to: localhost
+
+      - block:
+          - name: Dumping all facts
+            setup:
+            register: initial_facts
+
+          - name: Writing facts into files
+            copy:
+                content: "{{ initial_facts.ansible_facts }}"
+                dest: "{{ inventory_dir }}/{{ inventory_hostname }}"
+            delegate_to: localhost
+        when: not fact_file.stat.exists
