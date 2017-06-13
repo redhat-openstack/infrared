@@ -24,8 +24,9 @@
             done
 
 - name: Configure vbmc (ironic's 'pxe_ipmitool' driver)
-  hosts: overcloud_nodes
+  hosts: hypervisor
   vars:
+      vbmc_ports: {}
       vbmc_start_port: 6230
   gather_facts: False
   any_errors_fatal: True
@@ -33,38 +34,41 @@
   tasks:
       - name: Define vbmc_port for each VM
         set_fact:
-            vbmc_port: "{{vbmc_start_port + groups.overcloud_nodes.index(inventory_hostname) }}"
+            vbmc_ports: "{{ vbmc_ports|combine({ item.1: vbmc_start_port + item.0 }) }}"
+        with_indexed_items: "{{ groups.get('overcloud_nodes', []) }}"
 
       - name: vbmc ports
         debug:
-            msg: "{{inventory_hostname}}: {{vbmc_port}}"
+            var: vbmc_ports
 
-      - name: allow access to port {{ vbmc_port }} from undercloud
+      - name: allow access to port vbmc ports from undercloud
         become: True
-        command: iptables -I INPUT 1 -w 3 -s {{ hostvars['undercloud-0'].ansible_default_ipv4.address }} -p {{ item }} --dport {{ vbmc_port }} -j ACCEPT
-        with_items:
-          - 'udp'
-          - 'tcp'
-        delegate_to: hypervisor
+        shell: |
+            iptables -I INPUT 1 -w 3 -s {{ hostvars['undercloud-0'].ansible_default_ipv4.address }} -p udp --dport {{ item.value }} -j ACCEPT
+            iptables -I INPUT 1 -w 3 -s {{ hostvars['undercloud-0'].ansible_default_ipv4.address }} -p tcp --dport {{ item.value }} -j ACCEPT
+        with_dict: "{{ vbmc_ports }}"
+        tags:
+            - skip_ansible_lint
 
       - name: Add nodes to vbmc
-        command: "vbmc add {{ inventory_hostname }} --port {{ vbmc_port }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ hostvars['hypervisor'].ansible_management.ipv4.address }}"
-        delegate_to: hypervisor
+        command: "vbmc add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ ansible_management.ipv4.address }}"
+        with_dict: "{{ vbmc_ports }}"
 
       - name: Start nodes using vbmc
-        command: "vbmc start {{ inventory_hostname }}"
-        delegate_to: hypervisor
+        command: "vbmc start {{ item.key }}"
+        with_dict: "{{ vbmc_ports }}"
 
       - name: Setting nodes power status using ipmitool
-        command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H {{ hostvars['hypervisor'].ansible_management.ipv4.address }} -p {{ vbmc_port }} chassis power on"
-        delegate_to: hypervisor
+        command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H {{ ansible_management.ipv4.address }} -p {{ item.value }} chassis power on"
+        with_dict: "{{ vbmc_ports }}"
 
       - name: Get vbmc VMs power status using ipmitool
-        command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H {{ hostvars['hypervisor'].ansible_management.ipv4.address }} -p {{ vbmc_port }} power status"
-        register: ipmitool_result
-        delegate_to: hypervisor
+        command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H {{ ansible_management.ipv4.address }} -p {{ item.value }} power status"
+        register: ipmitool_results
+        with_dict: "{{ vbmc_ports }}"
 
       - name: Validate that all VMs are powered on
         fail:
-            msg: "'{{ inventory_hostname }}' is not powered on! (ipmitool stdout: '{{ ipmitool_result.stdout }}'"
-        when: "ipmitool_result.stdout != 'Chassis Power is on'"
+            msg: "Node is not powered on! (ipmitool stdout: '{{ item.stdout }}')"
+        when: "item.stdout != 'Chassis Power is on'"
+        with_items: "{{ ipmitool_results.results }}"
