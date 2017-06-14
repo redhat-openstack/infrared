@@ -80,7 +80,7 @@
             executable: /bin/bash
             chdir: "{{ test.dir }}"
         ignore_errors: true
-        when: test.openstack.version|openstack_release != 7 or test.setup != 'rpm'
+        when: test.openstack.version|default(overcloud_version)|openstack_release != 7 or test.setup != 'rpm'
 
       - name: run tempest "{{ test_suite }}" suite 7
         shell: |
@@ -98,7 +98,7 @@
             executable: /bin/bash
             chdir: "{{ test.dir }}"
         ignore_errors: true
-        when: test.openstack.version|openstack_release == 7 and test.setup == 'rpm'
+        when: test.openstack.version|default(overcloud_version)|openstack_release == 7 and test.setup == 'rpm'
 
       - name: inject the test suite name to the XML name atribute
         command: "sed '/^<testsuite/s/name=\"\"/name=\"{{ test_suite }}\"/' -i {{ test_output_file }}"
