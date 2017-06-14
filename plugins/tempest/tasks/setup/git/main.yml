@@ -13,8 +13,8 @@
 
 - name: Clone tempest
   git:
-      repo: "{{ setup.repo.get(test.openstack.version|openstack_release, setup.repo.defaults).url }}"
-      version: "{{ setup.repo.get(test.openstack.version|openstack_release, setup.repo.defaults).branch }}"
+      repo: "{{ setup.repo.get(test.openstack.version|default(overcloud_version)|openstack_release, setup.repo.defaults).url }}"
+      version: "{{ setup.repo.get(test.openstack.version|default(overcloud_version)|openstack_release, setup.repo.defaults).branch }}"
       dest: "~/{{ test.dir }}"
   register: tempest_repo
   when: setup.local_dir is not defined
@@ -78,9 +78,9 @@
   with_items: "{{ test.tests }}"
   loop_control:
       loop_var: test_suite
-  when: test.openstack.version|openstack_release >= 7
+  when: test.openstack.version|default(overcloud_version)|openstack_release >= 7
 
 - name: Warning message
   debug:
       msg: WARNING! Plugins are not available for RHOS version < 7
-  when: test.openstack.version|openstack_release < 7
+  when: test.openstack.version|default(overcloud_version)|openstack_release < 7

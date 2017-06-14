@@ -36,7 +36,6 @@ subparsers:
                            - newton
                            - ocata
                            - pike
-                       required: yes
                   openstack-installer:
                        type: Value
                        help: |
