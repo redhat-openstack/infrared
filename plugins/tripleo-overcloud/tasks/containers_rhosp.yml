@@ -1,0 +1,67 @@
+---
+- name: reboot the undercloud
+  shell: "sleep 2 && shutdown -r now"
+  become: yes
+  async: 1
+  poll: 0
+  ignore_errors: true
+
+# Ansible bug around delegate+vars+wait
+# https://github.com/ansible/ansible/issues/11705
+# http://www.elmund.io/configuration%20management/2015/07/23/ansible-delegate_to-and-variables/
+- name: waiting for the undercloud to be available
+  become: no
+  wait_for:
+      port: 22
+      host: "{{ ansible_ssh_host }}"
+      search_regex: OpenSSH
+      delay: 10
+  delegate_to: localhost
+  when: "'hypervisor' not in groups"
+
+- name: waiting for the undercloud to be available
+  become: no
+  wait_for:
+      port: 22
+      host: "{{ ansible_ssh_host }}"
+      search_regex: OpenSSH
+      delay: 10
+  delegate_to: hypervisor
+  when: "'hypervisor' in groups"
+
+- name: Pause for a few seconds after reboot
+  pause:
+      seconds: 10
+  delegate_to: localhost
+  when: "'hypervisor' not in groups"
+
+- name: Pause for a few seconds after reboot
+  pause:
+      seconds: 10
+  delegate_to: hypervisor
+  when: "'hypervisor' in groups"
+
+- name: get puddle url from the repos
+  vars:
+      repod_file: "/etc/yum.repos.d/rhos-release-{{ install.version }}.repo"
+  shell: |
+      cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '.*(?=\/.*\/\$basearch)'
+  register: containers_puddle_base_url
+
+- name: get puddle number
+  command: "/usr/bin/puddle-version {{ containers_puddle_base_url.stdout }}"
+  register: containers_puddle_number
+
+- name: puddle to be used
+  debug:
+      msg: "{{ containers_puddle_number.stdout }}"
+
+- include: containers/build_images.yml
+- include: containers/workarounds.yml
+  tags: wa
+- include: containers/templates.yml
+
+- name: append extra containers templates for the build scripts
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/docker.yaml \'
