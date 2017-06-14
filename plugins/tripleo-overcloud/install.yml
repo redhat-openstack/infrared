@@ -33,7 +33,6 @@
   when:
       - install.deploy|default('')
       - not install.role|default('') or (install.role is defined and install.role.files == 'default')
-      - not install.containers|default('')
 
 - name: Deploy the Overcloud with composable roles
   vars:
@@ -45,18 +44,6 @@
   when:
       - install.deploy|default('')
       - install.role is defined and install.role.files != 'default'
-
-- name: Deploy the Overcloud with containers
-  vars:
-      deploy_script_template: templates/containers/overcloud_deploy.sh.j2
-      templates:
-          generate_host_name_template: yes
-          storage_add_scale: yes
-  include: "{{ osp_containers | default('containers.yml') }}"
-  when:
-      - install.deploy|default('')
-      - not install.role|default('')
-      - install.containers|default('')
 
 - name: Perform post install tasks
   include: "{{ overcloud_post | default('post.yml') }}"
