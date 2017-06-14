@@ -2,7 +2,7 @@
 
  - name: "Download {{ template_base }}/docker-osp12.yaml"
    get_url:
-       url: "{{ containers.puddle_base_url}}/{{ puddle_number }}/{{ containers.docker_template_file_name }}"
+       url: "{{ containers_puddle_base_url.stdout }}/.yaml"
        dest: "{{ template_base }}/docker-osp12.yaml"
        owner: stack
        group: stack
@@ -12,5 +12,3 @@
 
  - name: w/a for BZ 1456986
    replace: dest="{{ template_base }}/docker-osp12.yaml" regexp='(DockerNamespace{{ ":" }}).*' replace='\1 192.168.24.1{{ ":" }}8787/rhosp12'
-
-
