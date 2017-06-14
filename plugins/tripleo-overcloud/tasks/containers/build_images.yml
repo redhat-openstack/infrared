@@ -1,55 +1,71 @@
 ---
- - name: Create {{ template_base }} directory
-   file: path={{ template_base }} state=directory mode=0755 owner=stack group=stack
+- name: Downloading overcloud container images template
+  get_url:
+      url: "{{ containers_puddle_base_url.stdout }}/container_images.yaml"
+      dest: "~/container_images.yaml"
+      owner: stack
+      group: stack
 
- - name: Downloading overcloud container images
-   get_url:
-       url: "{{ containers.puddle_base_url}}/{{ puddle_number }}/{{ containers.container_images_file_name }}"
-       dest: "~/container_images.yaml"
-       owner: stack
-       group: stack
+- name: replace docker registry with mirror
+  replace:
+      dest: "~/container_images.yaml"
+      regexp: '^([ ]*pull_source: ).*'
+      replace: '\1{{ install.registry.mirror }}'
+      backup: no
+  when: install.get('registry', {}).mirror|default(false)
 
- - name: replace IP with hostname in /etc/sysconfig/docker
-   replace:
+- name: replace docker namespace
+  replace:
+      dest: "~/container_images.yaml"
+      regexp: '^(- imagename: ).*(\/.*)'
+      replace: '\1{{ install.registry.namespace }}\2'
+      backup: no
+  when: install.get('registry', {}).namespace|default(false)
+
+- name: get docker registry name
+  shell: |
+      cat container_images.yaml | awk -F ":" '/pull_source/ {print $2}' | head -n1 | tr -d ' '
+  register: docker_insecure_registry
+
+- name: replace IP with hostname in /etc/sysconfig/docker
+  replace:
       dest: /etc/sysconfig/docker
       regexp: '^(INSECURE_REGISTRY=".*)"'
-      replace: '\1 --insecure-registry {{ containers.docker_insecure_registry }}"'
+      replace: '\1 --insecure-registry {{ docker_insecure_registry.stdout }}"'
       backup: no
-   become: true
-   when: containers.docker_insecure_registry|default(False)
+  become: true
 
- - name: restart docker service
-   service:
-       name: docker
-       state: restarted
-   become: true
+- name: restart docker service
+  service:
+      name: docker
+      state: restarted
+  become: true
 
- - name: Check if docker is running
-   command: systemctl status docker
-   ignore_errors: yes
-   changed_when: false
-   register: service_docker_status
+- name: Check if docker is running
+  command: systemctl status docker
+  ignore_errors: yes
+  changed_when: false
+  register: service_docker_status
 
- - name: Report status of docker
-   fail:
-     msg: |
-       Service docker is not running.
-       Output of `systemctl status docker`:
-       {{ service_docker_status.stdout }}
-       {{ service_docker_status.stderr }}
-   when: service_docker_status | failed
+- name: Report status of docker
+  fail:
+      msg: |
+         Service docker is not running.
+         Output of `systemctl status docker`:
+         {{ service_docker_status.stdout }}
+         {{ service_docker_status.stderr }}
+  when: service_docker_status | failed
 
 # using the loop below due to #bz1455683
- - name: openstack overcloud container image upload
-   shell: |
+- name: openstack overcloud container image upload
+  shell: |
       source /home/stack/stackrc
       openstack overcloud container image upload --verbose --config-file ~/container_images.yaml
-   register: image_upload
-   until: image_upload.rc == 0
-   retries: 5
-   tags:
-       - skip_ansible_lint
+  register: image_upload
+  until: image_upload.rc == 0
+  retries: 5
+  tags:
+      - skip_ansible_lint
 
- - name: Output from uploading images
-   debug: var=image_upload
-
+- name: Output from uploading images
+  debug: var=image_upload

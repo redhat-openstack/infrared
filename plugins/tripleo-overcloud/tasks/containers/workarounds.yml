@@ -1,17 +1,17 @@
 ---
-  - name: w/a for bz#1448482
-    replace: dest="{{ item.dest }}" regexp="{{ item.regexp }}" replace="{{ item.replace }}" backup=no
-    become: true
-    with_items:
-        - {dest: "/usr/share/openstack-tripleo-heat-templates/environments/docker.yaml", regexp: "OS::TripleO::Compute::NodeUserData: ../docker/firstboot/setup_docker_host.yaml", replace: "OS::TripleO::NodeUserData: ../docker/firstboot/setup_docker_host.yaml" }
-        - {dest: "/usr/share/openstack-tripleo-heat-templates/docker/firstboot/setup_docker_host.sh", regexp: "(^/usr/bin/systemctl stop libvirtd.service$)", replace: "\\1\nsetenforce permissive" }
+- name: w/a for bz#1448482
+  replace: dest="{{ item.dest }}" regexp="{{ item.regexp }}" replace="{{ item.replace }}" backup=no
+  become: true
+  with_items:
+      - {dest: "/usr/share/openstack-tripleo-heat-templates/environments/docker.yaml", regexp: "OS::TripleO::Compute::NodeUserData: ../docker/firstboot/setup_docker_host.yaml", replace: "OS::TripleO::NodeUserData: ../docker/firstboot/setup_docker_host.yaml" }
+      - {dest: "/usr/share/openstack-tripleo-heat-templates/docker/firstboot/setup_docker_host.sh", regexp: "(^/usr/bin/systemctl stop libvirtd.service$)", replace: "\\1\nsetenforce permissive" }
 
-  - name: w/a for bz#1452082
-    replace: dest=/usr/share/openstack-tripleo-heat-templates/puppet/services/pacemaker/haproxy.yaml regexp="(tripleo.*haproxy.*mysql_clustercheck.*\s)true" replace="\1false"
-    become: true
+- name: w/a for bz#1452082
+  replace: dest=/usr/share/openstack-tripleo-heat-templates/puppet/services/pacemaker/haproxy.yaml regexp="(tripleo.*haproxy.*mysql_clustercheck.*\s)true" replace="\1false"
+  become: true
 
-  - name: w/a for bz#1455348
-    shell: sed -i '/nf_conntrack_proto_sctp/d' /usr/share/openstack-tripleo-heat-templates/puppet/services/kernel.yaml
-    become: true
-    tags:
-       - skip_ansible_lint
+- name: w/a for bz#1455348
+  shell: sed -i '/nf_conntrack_proto_sctp/d' /usr/share/openstack-tripleo-heat-templates/puppet/services/kernel.yaml
+  become: true
+  tags:
+     - skip_ansible_lint
