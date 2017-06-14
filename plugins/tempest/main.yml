@@ -4,7 +4,28 @@
   any_errors_fatal: true
   vars:
       deployer_input: "~/ir-tempest-deployer-input.conf"
+      version_map:
+        - nova_version: '15'
+          rhos_version: '11'
+        - nova_version: '14'
+          rhos_version: '10'
+        - nova_version: '13'
+          rhos_version: '9'
+        - nova_version: '12'
+          rhos_version: '8'
+        - nova_version: '2015'
+          rhos_version: '7'
   tasks:
+      - name: Prepare tempest files
+        include: "tasks/discover_overcloud_version.yml"
+        tags:
+            - discover_overcloud
+        when: test.openstack.version is not defined
+
+      - debug:
+            msg: "Overcloud's OpenStack version that has been auto discovered is {{ overcloud_version }}"
+        when: overcloud_version is defined
+
       - name: Prepare tempest files
         include: tasks/pre/main.yml
         tags:
