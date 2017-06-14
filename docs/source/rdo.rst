@@ -47,3 +47,25 @@ To deploy RDO on virtual environment the following steps can be performed.
          --tagging yes \
          --deploy yes \
          --post yes
+
+Known issues
+============
+
+#. Overcloud deployment fails with the following message::
+
+      Error: /Stage[main]/Gnocchi::Db::Sync/Exec[gnocchi-db-sync]: Failed to call refresh: Command exceeded timeout
+      Error: /Stage[main]/Gnocchi::Db::Sync/Exec[gnocchi-db-sync]: Command exceeded timeout
+
+
+  This error might be caused by the https://bugs.launchpad.net/tripleo/+bug/1695760.
+  To workaround that issue the ``--overcloud-templates disable-telemetry`` flag should be added to the tripleo-overcloud command::
+
+      infrared tripleo-overcloud -v \
+          -o overcloud-install.yml \
+          --version ocata \
+          --deployment-files virt \
+          --introspect yes \
+          --tagging yes \
+          --deploy yes \
+          --post yes \
+          --overcloud-templates disable-telemetry
