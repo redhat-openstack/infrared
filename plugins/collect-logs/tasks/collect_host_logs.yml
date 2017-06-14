@@ -143,7 +143,7 @@
 - name: collect logs
   shell: |
       mkdir -p /tmp/{{ inventory_hostname }};
-      find /var/log/rpm.list /var/log/extra {{ archives_list|join(' ') }} -maxdepth 3 -type f -size -1024M -not -path '/var/log/journal/*' -not -path '*/\.*' -not -path '/root/*.tar*' -not -path '/root/*.qcow*' -not -path '/root/*.initrd*' -not -path '/root/*.vmlinuz*' -exec cp -rL --parents {} /tmp/{{ inventory_hostname }} \;
+      find /var/log/rpm.list /var/log/extra {{ archives_list|join(' ') }} -maxdepth 3 -type f -size -1024M -not -path '/var/log/journal/*' -not -path '*/\.*' -not -path '/root/*.tar*' -not -path '/root/*.qcow*' -not -path '/root/*.initrd*' -not -path '/root/*.vmlinuz*' -not -path '*/udev/hwdb.bin' -exec cp -rL --parents {} /tmp/{{ inventory_hostname }} \;
       find /tmp/{{ inventory_hostname }} -type d -print0 | xargs -0 chmod 755;
       find /tmp/{{ inventory_hostname }} -type f -print0 | xargs -0 chmod 644;
   ignore_errors: true
