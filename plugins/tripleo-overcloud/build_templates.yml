@@ -30,6 +30,15 @@
             - install.network.mtu != 1500
             - install.version is defined and install.version|openstack_release > 7
 
+      - name: Inject lvm.yaml if user specified custom lvm loopdevice size
+        template:
+            src: templates/lvm.yaml.j2
+            dest: "{{ template_base }}/lvm.yaml"
+        when:
+            - install.storage.lvm_size != 20560
+            - install.version is defined and install.version|openstack_release > 7
+
+
       - name: check if custom overcloud_deploy.sh exists
         stat:
             path: "{{ template_base }}/overcloud_deploy.sh"
