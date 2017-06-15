@@ -24,11 +24,14 @@
   vars:
       hypervisor: "{{ provision.host }}"
       hypervisor_name: hypervisor
+      hypervisor_groups:
+          - hypervisor
+          - shade
   tasks:
     - name: add hosts to host list
       add_host:
           name: "{{ hypervisor.name | default(hypervisor_name) }}"
-          groups: "{{ hypervisor.groups|default([hypervisor_name]) | join(',') }}"
+          groups: "{{ hypervisor.groups|default([hypervisor_groups]) | join(',') }}"
           ansible_ssh_user: "{{ hypervisor.user }}"
           ansible_ssh_host: "{{ hypervisor.address }}"
           ansible_ssh_private_key_file: "{{ hypervisor.key }}"

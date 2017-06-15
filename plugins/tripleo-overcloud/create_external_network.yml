@@ -105,6 +105,7 @@
             provider_network_type: "{{ physnet_type }}"
             provider_segmentation_id: "{{ ('vlan' == physnet_type) | ternary(vlan_id, omit) }}"
         register: net_create
+        delegate_to: "{{ groups.shade | first }}"
 
       - name: print network details to console
         shell: |
@@ -134,6 +135,7 @@
             allocation_pool_start: "{{ pool.start | default(omit) }}"
             allocation_pool_end: "{{ pool.end | default(omit) }}"
         register: subnet_create
+        delegate_to: "{{ groups.shade | first }}"
 
       - name: print subnet details to console
         shell: |
