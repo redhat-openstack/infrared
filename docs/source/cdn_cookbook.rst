@@ -33,6 +33,8 @@ Deploy your undercloud. It's recommended to use ``--images-task rpm`` to fetch p
 
     infrared tripleo-undercloud --version 11 --cdn undercloud_cdn.yml --images-task rpm
 
+.. warning:: ``--images-update`` doesn't supported with cdn.
+
 Overcloud
 ---------
 Once the undercloud is registered, the overcloud can be deployed. However, the overcloud nodes will not be
@@ -55,28 +57,30 @@ and their defaults overridden, using a `custom templates file <oc>`_.
 
    custom_templates:
        parameter_defaults:
-           rhel_reg_activation_key: "My_Key"
-           rhel_reg_org: "MyOrg"
+           rhel_reg_activation_key: ""
+           rhel_reg_org: ""
            rhel_reg_pool_id: ""
-           rhel_reg_method: "satellite"
-           rhel_reg_sat_url: "http://my-satellite-server.redhat.com"
-           rhel_reg_sat_repo: "rhel-7-server-satellite-tools-6.2-rpms "
+           rhel_reg_method: "portal"
+           rhel_reg_sat_url: ""
+           rhel_reg_sat_repo: "rhel-7-server-rpms rhel-7-server-extras-rpms rhel-7-server-rh-common-rpms rhel-ha-for-rhel-7-server-rpms rhel-7-server-openstack-10-rpms"
            rhel_reg_repos: ""
            rhel_reg_auto_attach: ""
-           rhel_reg_base_url: ""
+           rhel_reg_base_url: "https://cdn.redhat.com"
            rhel_reg_environment: ""
-           rhel_reg_force: ""
+           rhel_reg_force: "true"
            rhel_reg_machine_name: ""
-           rhel_reg_password: ""
+           rhel_reg_password: "123456"
            rhel_reg_release: ""
-           rhel_reg_server_url: ""
+           rhel_reg_server_url: "subscription.rhsm.redhat.com"
            rhel_reg_service_level: ""
-           rhel_reg_user: ""
+           rhel_reg_user: "infrared.user@example.com"
            rhel_reg_type: ""
            rhel_reg_http_proxy_host: ""
            rhel_reg_http_proxy_port: ""
            rhel_reg_http_proxy_username: ""
            rhel_reg_http_proxy_password: ""
+
+.. note:: Please notice that the repos in the file above are for RHOP 10
 
 Deploy the overcloud with the custom templates file::
 
