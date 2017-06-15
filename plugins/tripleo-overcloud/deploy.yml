@@ -83,6 +83,7 @@
       vars:
             auth_file_path: "{{ overcloudrc_file }}"
             cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"
+      delegate_to: "{{ groups.shade | first }}"
 
     - name: fetch the overcloud rc file
       tags:
