@@ -42,6 +42,7 @@
         vars:
             auth_file_path: "/home/stack/stackrc"
             cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"
+        delegate_to: "{{ groups.shade | first }}"
 
       - name: gathering new facts about the undercloud
         setup:
