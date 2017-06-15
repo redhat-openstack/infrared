@@ -1,3 +1,17 @@
+- name: Check if we have shade node in groups
+  hosts: undercloud
+  tags: init
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - name: Adding host to 'shade' group
+        vars:
+          uc_hostname: "{{ ansible_hostname }}"
+          shade_host: "{{ ( 'hypervisor' in groups.all ) | ternary('hypervisor', uc_hostname) }}"
+        add_host:
+          name: "{{ shade_host }}"
+          groups: "shade"
+
 - name: Pre Run Adjustments
   hosts: undercloud
   tags: init
