@@ -148,7 +148,6 @@ class SpecParser(object):
                 value)
 
         file_generated = False
-        exit_after_answers = False
 
         # load generate answers file for all the parsers
         for (parser_name, parser_dict, arg_name, arg_value,
@@ -190,10 +189,8 @@ class SpecParser(object):
                 with open(arg_value, 'w') as answers_file:
                     out_answers.write(answers_file)
                 file_generated = True
-                if len(parser_dict) == 1:
-                    exit_after_answers = True
 
-        return file_generated, exit_after_answers
+        return file_generated
 
     def resolve_custom_types(self, args):
         """
@@ -252,12 +249,9 @@ class SpecParser(object):
         file_args = self.get_answers_file_args(cli_args)
 
         # generate answers file and exit
-        generated, exit_after_answers = \
-            self.generate_answers_file(cli_args, spec_defaults)
+        generated = self.generate_answers_file(cli_args, spec_defaults)
         if generated:
             LOG.warning("Answers file generated. Exiting.")
-            if exit_after_answers:
-                return None
 
         # print warnings when something was overridden from non-cli source.
         self.validate_arg_sources(cli_args, file_args,
