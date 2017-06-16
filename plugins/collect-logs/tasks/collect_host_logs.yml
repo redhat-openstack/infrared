@@ -90,6 +90,11 @@
 - shell: "(vgs; pvs; lvs) &> /var/log/extra/lvm"
   ignore_errors: true
 
+- shell: |
+      docker ps &> /var/log/extra/docker-ps ;
+      docker inspect  $(docker ps -aq) &> /var/log/extra/docker-inspect
+  ignore_errors: true
+
 - name: generate human-readable SAR logs
   shell: "[[ -f /usr/lib64/sa/sa2 ]] && /usr/lib64/sa/sa2 -A"
   ignore_errors: true
