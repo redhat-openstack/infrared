@@ -190,7 +190,7 @@ class SpecParser(object):
                 with open(arg_value, 'w') as answers_file:
                     out_answers.write(answers_file)
                 file_generated = True
-                if len(parser_dict) == 1:
+                if 'dry-run' in parser_dict:
                     exit_after_answers = True
 
         return file_generated, exit_after_answers
