@@ -9,12 +9,13 @@ To solve (partially) this need, we structured our playbooks in a way that breaks
 Furthermore, each logical play can be overriden by the user at the invocation level.
 
 Lets look at an example to make this point more clear.
-Looking at our virsh main playbook, you will see::
+Looking at our ``virsh`` main playbook, you will see::
 
     - include: "{{ provision_cleanup | default('cleanup.yml') }}"
       when: provision.cleanup|default(False)
 
-Notice that the ``include:`` first tried to evaluate the variable ``provision_cleanup`` and only afterwards defaults to our own cleanup playbook.
+Notice that the ``include:`` first tried to evaluate the variable ``provision_cleanup`` and afterwards defaults to our own cleanup playbook.
+
 This condition allows users to inject their own custom cleanup process while still reuse all of our other playbooks.
 
 Override playbooks
@@ -50,4 +51,4 @@ Now lets run see the results::
 
     msg: Hello!
 
-If you have a place you would like to have an injection point and one is not currently provided, please `contact us <contacts.html>`_.
+If you have a place you would like to have an injection point and one is not provided, please `contact us <contacts.html>`_.

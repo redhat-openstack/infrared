@@ -6,11 +6,9 @@
 
       - name: "Install/Upgrade/Update are mutually exclusive"
         fail:
-            msg: "Options '--deploy', '--upgrade' and '--updateto' are mutually exclusive"
+            msg: "Options '--deploy' and '--upgrade' are mutually exclusive"
         when:
-            - ( install.deploy|default('') and install.upgrade|default('')) or
-              ( install.deploy|default('') and install.updateto|default('None') != 'None' ) or
-              ( install.upgrade|default('') and install.updateto|default('None') != 'None' )
+            - ( install.deploy|default('') and install.upgrade|default(''))
 
       - name: validate storage nodes
         fail:

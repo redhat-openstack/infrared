@@ -6,7 +6,7 @@ Runs telemetry tests against the OpenStack cloud.
 Required arguments
 ------------------
 
-* ``--openstack-version``: The version of the openstack installed.
+* ``--openstack-version``: The version of the OpenStack installed.
     That option also defines the list of tests to run against the OpenStack.
 * ``--openstackrc``: The `OpenStack RC <http://docs.openstack.org/user-guide/common/cli-set-environment-variables-using-openstack-rc.html>`_ file.
     The absolute and relative paths to the file are supported.  When this option is not provided, `infrared` will try to use the `keystonerc` file from the active workspace.

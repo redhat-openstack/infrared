@@ -11,8 +11,8 @@ InfraRed is a plugin based system that aims to provide an easy-to-use CLI for An
 It aims to leverage the power of Ansible in managing / deploying systems, while providing an alternative, fully customized,
 CLI experience that can be used by anyone, without prior Ansible knowledge.
 
-The project originated from Red Hat Openstack infrastructure team that looked for a solution to provide an "easier" method
-for installing Openstack from CLI but has since grown and can be used for *any* Ansible based projects.
+The project originated from Red Hat OpenStack infrastructure team that looked for a solution to provide an "easier" method
+for installing OpenStack from CLI but has since grown and can be used for *any* Ansible based projects.
 
 Welcome to infrared's documentation!
 ====================================
@@ -55,6 +55,7 @@ Welcome to infrared's documentation!
 
    rdo
    composable_roles
+   cdn_cookbook.rst
 
 
 Indices and tables

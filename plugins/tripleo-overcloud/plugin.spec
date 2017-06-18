@@ -2,7 +2,7 @@
 plugin_type: install
 subparsers:
     tripleo-overcloud:
-        description: Install a Tripleo overcloud using a designated undercloud node
+        description: Install a TripleO overcloud using a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Stages Control
@@ -26,6 +26,14 @@ subparsers:
                       type: Bool
                       help: Specifies whether we should run post install tasks
                       default: False
+
+                  containers:
+                      type: VarFile
+                      help: |
+                          Specifies a file with the containers settings to be used for deployment.
+                          This will trigger overcloud deployment in containers.
+                          See vars/containers/example.yml for details.
+
 
             - title: Deployment Description
               options:
@@ -103,6 +111,11 @@ subparsers:
                             NOTE: Omit this to not include any extra files, or use "none"
                             __LISTYAMLS__
 
+                  heat-templates-basedir:
+                      type: Value
+                      help: Overrides the templates base dir for the overcloud deploy script.
+                      default: "/usr/share/openstack-tripleo-heat-templates"
+
             - title: Network Configuration
               options:
                   network-backend:
@@ -121,6 +134,11 @@ subparsers:
                       choices:
                           - ipv4
                           - ipv6
+
+                  network-mtu:
+                      type: Value
+                      help: Sets the MTU of the underlying physical network.
+                      default: 1500
 
                   network-lbaas:
                       type: Bool
@@ -234,8 +252,13 @@ subparsers:
                       type: Value
                       help: |
                           Perform minor update of overcloud to the 'build' specified. Default: 'None'
+                          It can be used with --upgrade, when you want to upgrade to specific 'build'
                           NOTE: Currently, minor update is supported with IR just for verions 10 and 11.
                       default: None
+                  osrelease:
+                      type: Value
+                      help: |
+                          Override the default RHEL version. Default 'ansible_distribution_version'
                   buildmods:
                       type: Value
                       help: |

@@ -23,6 +23,7 @@
     - name: create the networks for the topology
       virt_net:
           command: "define"
+          autostart: yes
           name: "{{ item.value.name }}"
           xml: "{{ lookup('template', 'templates/network.xml.j2') }}"
       when: "item.value.name not in network_list.list_nets"

@@ -68,6 +68,11 @@
             dest: /etc/yum.repos.d/
         with_items: "{{ custom_repos.urls|default([]) }}"
 
+      - name: install deltarpm
+        package:
+            state: present
+            name: deltarpm
+
       - name: update system packages
         package:
             state: latest

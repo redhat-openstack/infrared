@@ -22,11 +22,11 @@ Highlights
     ``ir-provisioner``, ``ir-installer``, ``ir-tester``
     commands are deprecated in favor of a single ``infrared`` entry point (``ir`` also works).
     Type ``infrared --help`` to get the full usage manual.
-#. Tripleo:
+#. TripleO:
     ``ir-installer ospd`` was broken into two new plugins:
-      * `Tripleo Undercloud <tripleo-undercloud.html>`_:
+      * `TripleO Undercloud <tripleo-undercloud.html>`_:
         Install undercloud up-to and including overcloud image creation
-      * `Tripleo Overcloud <tripleo-overcloud.html>`_:
+      * `TripleO Overcloud <tripleo-overcloud.html>`_:
         Install overcloud using an exsiting undercloud.
 #. Answers file:
     The switch ``--generate-conf-file`` is renamed ``--generate-answers-file`` to avoid confusion

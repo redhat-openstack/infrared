@@ -14,7 +14,7 @@
   lineinfile:
       dest: "{{ converge_script }}"
       insertbefore: "{{ deploy_lastline.stdout }}"
-      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-converge.yaml \'
+      line: '-e {{ install.heat.templates.basedir }}/environments/major-upgrade-converge.yaml \'
 
 - name: Print upgrade converge command
   command: "cat {{ converge_script }}"

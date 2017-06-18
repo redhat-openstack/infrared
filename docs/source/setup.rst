@@ -8,7 +8,7 @@ Supported distros
 Currently supported distros are:
 
 * Fedora 22, 23, 24, 25
-* RHEL 7.2 (best effort only, deprecated)
+* RHEL 7.2 (best effort, deprecated)
 * RHEL 7.3
 
 .. warning:: Python 2.7 and virtualenv are required.
@@ -47,20 +47,20 @@ otherwise it won't be able to run modules with copy/file/template functions!
 Virtualenv
 ----------
 
-``infrared`` shares many dependencies with other OpenStack products and projects.
+``infrared`` shares dependencies with other OpenStack products and projects.
 Therefore there's a high probability of conflicts with python dependencies,
 which would result either with ``infrared`` failure, or worse, with breaking dependencies
 for other OpenStack products.
-When working from source, it is recommended to use python
-`virtualenv <http://docs.python-guide.org/en/latest/dev/virtualenvs/>`_
-to avoid corrupting the system packages::
+When working from source,
+`virtualenv <http://docs.python-guide.org/en/latest/dev/virtualenvs/>`_ usage
+is recommended for avoiding corrupting of system packages::
 
   virtualenv .venv
   source .venv/bin/activate
   pip install --upgrade pip
   pip install --upgrade setuptools
 
-.. warning:: **It is mandatory that latest ``pip`` is used (especially in when working with RHEL)!**
+.. warning:: **Use of latest ``pip`` is mandatory, especially on RHEL platform!**
 
 .. note:: On Fedora 23 with EPEL repository enabled,
     `RHBZ#1103566 <https://bugzilla.redhat.com/show_bug.cgi?id=1103566>`_ also requires
@@ -83,4 +83,3 @@ Install ``infrared`` from source::
     mode and work with master branch::
 
       pip install -e .
-

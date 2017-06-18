@@ -140,11 +140,14 @@ class WorkspaceManagerSpec(api.SpecObject):
         elif subcommand == 'list':
             workspaces = self.workspace_manager.list()
             headers = ("Name", "Active")
+            workspaces = sorted([
+                workspace.name for workspace in self.workspace_manager.list()])
+
             print fancy_table(
                 headers,
-                *[(workspace.name, ' ' * (len(headers[-1]) / 2) + "*" if
-                    self.workspace_manager.is_active(workspace.name) else "")
-                  for workspace in sorted(workspaces)])
+                *[(workspace, ' ' * (len(headers[-1]) / 2) + "*" if
+                    self.workspace_manager.is_active(workspace) else "")
+                  for workspace in workspaces])
         elif subcommand == 'delete':
             self.workspace_manager.delete(pargs.name)
             print("Workspace '{}' deleted".format(pargs.name))

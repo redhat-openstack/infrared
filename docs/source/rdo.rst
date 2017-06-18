@@ -5,7 +5,7 @@ Infrared allows to perform RDO based deployments.
 
 To deploy RDO on virtual environment the following steps can be performed.
 
-1) Provision virtual machines on a hypervizor with the virsh plugin. Use CentOS image::
+1) Provision virtual machines on a hypervisor with the virsh plugin. Use CentOS image::
 
     infrared virsh -vv \
         -o provision.yml \
@@ -35,7 +35,7 @@ To deploy RDO on virtual environment the following steps can be performed.
         -o undercloud-images.yml \
         --images-task=build \
 
-.. note:: Overcloud image build process usually takes more time than import.
+.. note:: Overcloud image build process often takes more time than import.
 
 4) Install RDO::
 

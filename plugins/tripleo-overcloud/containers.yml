@@ -1,0 +1,82 @@
+---
+- name: Create roles templates
+  hosts: undercloud
+  any_errors_fatal: true
+  gather_facts: yes
+  vars:
+      template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
+  tasks:
+      - name: include containers settings
+        include_vars: "{{ install.containers }}"
+
+      - name: reboot the undercloud
+        shell: "sleep 2 && shutdown -r now"
+        become: yes
+        async: 1
+        poll: 0
+        ignore_errors: true
+
+      # Ansible bug around delegate+vars+wait
+      # https://github.com/ansible/ansible/issues/11705
+      # http://www.elmund.io/configuration%20management/2015/07/23/ansible-delegate_to-and-variables/
+      - name: waiting for the undercloud to be available
+        become: no
+        wait_for:
+            port: 22
+            host: "{{ ansible_ssh_host }}"
+            search_regex: OpenSSH
+            delay: 10
+        delegate_to: localhost
+        when: "'hypervisor' not in groups"
+
+      - name: waiting for the undercloud to be available
+        become: no
+        wait_for:
+            port: 22
+            host: "{{ ansible_ssh_host }}"
+            search_regex: OpenSSH
+            delay: 10
+        delegate_to: hypervisor
+        when: "'hypervisor' in groups"
+
+      - name: Pause for a few seconds after reboot
+        pause:
+            seconds: 10
+        delegate_to: localhost
+        when: "'hypervisor' not in groups"
+
+      - name: Pause for a few seconds after reboot
+        pause:
+            seconds: 10
+        delegate_to: hypervisor
+        when: "'hypervisor' in groups"
+
+      - name: get currentlly installed puddle number
+        shell:
+            cat /etc/yum.repos.d/latest-installed | grep -oP  '\-p \K(.*)'
+        register: current_puddle
+        when: containers.override_puddle|default(True)
+
+      - name: get the user provided puddle
+        command: "/usr/bin/puddle-version {{ containers.puddle_base_url}}/{{ containers.override_puddle }}"
+        register: user_puddle
+        when: containers.override_puddle|default(False)
+
+      - name: register puddle fact
+        set_fact:
+            puddle_number: "{{ current_puddle.stdout if user_puddle|skipped else user_puddle.stdout }}"
+
+      - name: puddle to be used
+        debug:
+            var: puddle_number
+
+      - include: tasks/containers/build_images.yml
+      - include: tasks/containers/workarounds.yml
+        tags: wa
+      - include: tasks/containers/templates.yml
+
+# run infrared-like deployment
+- name: Deploy the Overcloud with containers
+  include: "{{ overcloud_deploy | default('deploy.yml') }}"
+  tags:
+      - containers_deploy

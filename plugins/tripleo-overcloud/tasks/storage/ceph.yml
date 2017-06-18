@@ -27,7 +27,7 @@
 - name: append the storage template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/storage-environment.yaml \'
+      line: '-e {{ install.heat.templates.basedir }}/environments/storage-environment.yaml \'
 
 #- name: include cpeh external storage data
 #  include_vars: "vars/storage/external/{{ install.storage.external }}.yml"

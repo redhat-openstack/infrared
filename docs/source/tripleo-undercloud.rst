@@ -1,12 +1,12 @@
 TripleO Undercloud
 ==================
 
-Deploys a Tripleo undercloud
+Deploys a TripleO undercloud
 
 Setup an Undercloud
 -------------------
 
-* ``--version``: Tripleo release to install.
+* ``--version``: TripleO release to install.
     Accepts either an integer for RHEL-OSP release, or a community release
     name (``Liberty``, ``Mitaka``, ``Newton``, etc...) for RDO release
 * ``--build``: Specify a build date or a label for the repositories.
@@ -64,7 +64,7 @@ will be later created.
         * ``import`` images from url:
                 Download pre-built images from a given ``--images-url``.
         * Download images via ``rpm``:
-                Starting from OSP 8, Tripleo is packages with pre-built images avialable via RPM.
+                Starting from OSP 8, TripleO is packages with pre-built images avialable via RPM.
                 .. note:: This option is invalid for `RDO` installation.
 
 * Use ``--images-repos`` to instruct infrared whether to inject the repositories defined in
@@ -115,7 +115,7 @@ Use the ``--ssl=yes`` option to install enable SSL on the undercloud. If used, a
 Custom Repositories
 -------------------
 
-Add custom repositories to the undercloud, after `installing the Tripleo repositories <Setup Undercloud Packages>`_.
+Add custom repositories to the undercloud, after `installing the TripleO repositories <Setup Undercloud Packages>`_.
 
 * ``--repos-config`` setup repos using the ansible yum_repository module.
     Using this option enables you to set specific options for each repository:
@@ -150,10 +150,10 @@ Both options can be used togather::
   infrared tripleo-undercloud [...] --repos-config repos_config.yml --repos-urls "http://yoururl.com/repofile1.repo,http://yoururl.com/repofile2.repo"
 
 
-Tripleo Undercloud User
+TripleO Undercloud User
 -----------------------
 ``--user-name`` and ``--user-password`` define a user, with password,
-for the undercloud. Acorrding to Tripleo guidelines, the default username is ``stack``.
+for the undercloud. Acorrding to TripleO guidelines, the default username is ``stack``.
 User will be created if necessary.
 
 Backup

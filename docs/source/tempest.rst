@@ -9,7 +9,7 @@ Required arguments
 * ``--openstack-installer``: The installer used to deploy OpenStack.
     Enables extra configuration steps for certain installers. Supported installers are: ``tripleo`` and ``packstack``.
 
-* ``--openstack-version``: The version of the openstack installed.
+* ``--openstack-version``: The version of the OpenStack installed.
     Enables additional configuration steps when version <= 7.
 
 * ``--tests``: The list of test suites to execute. For example: ``network,compute``.
@@ -59,4 +59,3 @@ Tempest results
 
     -rw-rw-r--. tempest-results-minimal.xml
     -rw-rw-r--. tempest-results-neutron.xml
-

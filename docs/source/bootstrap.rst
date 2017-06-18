@@ -133,7 +133,7 @@ Undercloud
 
 Just like in the provisioning stage, here also the user should take care of the mandatory parameters
 (by CLI or INI file) in order to be able to start the installation process.
-Let's deploy a `Tripleo Undercloud`_::
+Let's deploy a `TripleO Undercloud`_::
 
   infrared tripleo-undercloud --version 10 --images-task rpm
 
@@ -144,7 +144,7 @@ This will deploy OSP 10 (``Newton``) on the node ``undercloud-0`` provisioned pr
 Overcloud
 ^^^^^^^^^
 
-Let's deploy a `Tripleo Overcloud`_::
+Let's deploy a `TripleO Overcloud`_::
 
   infrared tripleo-overcloud --deployment-files virt --version 10 --introspect yes --tagging yes --deploy yes --post yes
 

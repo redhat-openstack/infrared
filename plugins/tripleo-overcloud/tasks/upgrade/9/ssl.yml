@@ -1,0 +1,29 @@
+---
+- name: Check for ssl in overcloudrc
+  command: "grep -Fq OS_AUTH_URL=https {{ overcloud_rc }}"
+  register: check_for_ssl
+  ignore_errors: true
+
+- name: Make a copy of the old enable-tls template
+  copy:
+    src: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/enable-tls.yaml"
+    dest: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/enable-tls-8.yaml"
+    remote_src: true
+  when: check_for_ssl|succeeded
+
+- name: Append the services introduced in OSP9 to the enable-tls template
+  lineinfile:
+    dest: '{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/enable-tls.yaml'
+    insertafter: '(SwiftPublic.*)'
+    line: "{{ item }}"
+  with_items:
+    - "    AodhAdmin: {protocol: 'http', port: '8042', host: 'IP_ADDRESS'}"
+    - "    AodhInternal: {protocol: 'http', port: '8042', host: 'IP_ADDRESS'}"
+    - "    AodhPublic: {protocol: 'https', port: '13042', host: 'IP_ADDRESS'}"
+    - "    GnocchiAdmin: {protocol: 'http', port: '8041', host: 'IP_ADDRESS'}"
+    - "    GnocchiInternal: {protocol: 'http', port: '8041', host: 'IP_ADDRESS'}"
+    - "    GnocchiPublic: {protocol: 'https', port: '13041', host: 'IP_ADDRESS'}"
+    - "    SaharaAdmin: {protocol: 'http', port: '8386', host: 'IP_ADDRESS'}"
+    - "    SaharaInternal: {protocol: 'http', port: '8386', host: 'IP_ADDRESS'}"
+    - "    SaharaPublic: {protocol: 'https', port: '13386', host: 'IP_ADDRESS'}"
+  when: check_for_ssl|succeeded

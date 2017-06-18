@@ -79,7 +79,7 @@ Inventory:
     workspace directory so all ``{{ inventory_dir }}`` references in playbooks still point to
     workspace directory (and not to the input file's directory).
 
-    .. note:: This file permenantly becomes the workspace's inventory. To revert to original workspace
+    .. note:: This file permanently becomes the workspace's inventory. To revert to original workspace
         the workspace must be cleaned.
 
 Ansible options:
@@ -117,7 +117,7 @@ These options are nested into the vars dict that is later passed to Ansible as e
                          "option2": "value2"}}
 
 
-The nesting is done in the following manner: option name is splited by ``-`` delimiter and each part is
+The nesting is done in the following manner: option name is split by ``-`` delimiter and each part is
 a key of a dict nested in side the previous one, starting with "plugin_type". Then value is nested at the
 inner-most level. Example::
 
@@ -171,17 +171,17 @@ inner-most level. Example::
 
     Then, the cli call can looks simply like::
 
-        infrared my_pluign --network=my_file
+        infrared my_plugin --network=my_file
 
     Here, the 'my_file' file should be present in the ``/{defaults|var}/network`` folder, otherwise an
     error will be displayed by the Infrared.
-    Infared will transform that option to the absolute path and will put it to the provision.network variable::
+    Infrared will transform that option to the absolute path and will put it to the provision.network variable::
 
         provision.network: /home/user/..../my_plugin/defaults/my_file
 
     That variable is later can be used in Ansible playbooks to load the appropriate network parameters.
 
-    .. Note:: Infared automatically checks for files with .yml extension. So the ``my_file`` and
+    .. Note:: Infrared automatically checks for files with .yml extension. So the ``my_file`` and
               ``my_file.yml`` will be validated.
 
 * ListOfVarFiles
@@ -325,4 +325,3 @@ Execute:
     the ``main.yml`` `playbook <playbooks>`_::
 
         infrared example
-

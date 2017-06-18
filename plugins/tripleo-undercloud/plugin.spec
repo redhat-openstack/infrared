@@ -1,7 +1,7 @@
 plugin_type: install
 subparsers:
     tripleo-undercloud:
-        description: Install Tripleo on a designated undercloud node
+        description: Install TripleO on a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
             - title: Quickstart Menu
@@ -100,10 +100,11 @@ subparsers:
                           pin - pin puddle (dereference 'latest' links to prevent content from changing)
                           flea - enable flea repos
                           unstable - this will enable brew repos or poodles (in old releases)
+                          cdn - use internal mirrors of the CDN repos. (internal use)
                           none - use none of those flags
                       default: pin
 
-            - title: Tripleo User
+            - title: TripleO User
               options:
                   user-name:
                       type: Value
@@ -190,3 +191,7 @@ subparsers:
                       help: |
                           Undercloud Update.
                           Note: Infrared support update for RHOSP version 11 only.
+                  osrelease:
+                      type: Value
+                      help: |
+                          Override the default RHEL version. Default 'ansible_distribution_version'
