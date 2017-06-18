@@ -15,10 +15,10 @@ def list_value_type():
 
 
 @pytest.fixture
-def ini_type():
+def nested_dict():
     """Create a new IniType complex type
     """
-    return cli.IniType("TestIniType", None, None)
+    return cli.NestedDict("TestNestedDict", None, None)
 
 
 @pytest.mark.parametrize(
@@ -34,23 +34,23 @@ def test_list_value_resolve(list_value_type, test_value, expected):
 
 
 @pytest.mark.parametrize("input_value, expected_return", [
-    (['k1=v1'], {'defaults': {'k1': 'v1'}}),
-    (['s1.k1=v1'], {'s1': {'k1': 'v1'}}),
+    (['k1=v1'], {'k1': 'v1'}),
+    (['l1.s1.k1=v1'], {'l1': {'s1': {'k1': 'v1'}}}),
     ([' s1.k1=v1 '], {'s1': {'k1': 'v1'}}),
     (['s1.k1=v1', 's1.k2=v2', 's2.k3=v3'],
      {'s1': {'k1': 'v1', 'k2': 'v2'}, 's2': {'k3': 'v3'}}),
-    ('k1=v1', {'defaults': {'k1': 'v1'}}),
+    ('k1=v1', {'k1': 'v1'}),
     ('s1.k1=v1', {'s1': {'k1': 'v1'}}),
     (' s1.k1=v1 ', {'s1': {'k1': 'v1'}}),
     ('s1.k1=v1,s1.k2=v2,s2.k3=v3',
      {'s1': {'k1': 'v1', 'k2': 'v2'}, 's2': {'k3': 'v3'}}),
-    ('s1.k1=v1, s1.k2=v2, s2.k3=v3',
-     {'s1': {'k1': 'v1', 'k2': 'v2'}, 's2': {'k3': 'v3'}}),
+    ('s1.k1=v1, s1.l2.k2=v2, s2.k3=v3',
+     {'s1': {'k1': 'v1', 'l2': {'k2': 'v2'}}, 's2': {'k3': 'v3'}}),
 ])
-def test_ini_type_resolve(input_value, expected_return, ini_type):
+def test_nested_dict_resolve(input_value, expected_return, nested_dict):
     """Verifies the return value of 'resolve' method in 'IniType' Complex type
     """
-    assert ini_type.resolve(input_value) == expected_return
+    assert nested_dict.resolve(input_value) == expected_return
 
 
 @pytest.fixture(scope="module")
