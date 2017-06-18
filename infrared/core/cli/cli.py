@@ -15,7 +15,7 @@ from copy import deepcopy
 import yaml
 
 from infrared.core.services import CoreServices
-from infrared.core.utils import logger, exceptions
+from infrared.core.utils import logger, exceptions, dict_utils
 
 LOG = logger.LOG
 
@@ -408,7 +408,7 @@ class KeyValueList(ComplexType):
         return result_dict
 
 
-class IniType(ComplexType):
+class NestedDict(ComplexType):
     """Returns a dict from a dict-like string / list of strings
 
     For example:
@@ -423,26 +423,17 @@ class IniType(ComplexType):
     """
 
     def resolve(self, value):
-        results_dict = {}
-
         if isinstance(value, str):
             value = value.split(',')
 
+        results_dict = {}
         for item in value:
             item = item.strip()
             key, _value = item.split('=')
-            if '.' in key:
-                section, option = key.split('.')
-            else:
-                section = 'defaults'
-                option = key
-
-            if section not in results_dict:
-                results_dict[section] = {}
-
-            results_dict[section][option] = _value
-
+            dict_utils.dict_insert(results_dict, _value, *key.split("."))
         return results_dict
+
+IniType = NestedDict
 
 
 class ListValue(ComplexType):
@@ -596,6 +587,7 @@ COMPLEX_TYPES = {
     'AdditionalArgs': AdditionalOptionsType,
     'ListValue': ListValue,
     'IniType': IniType,
+    'NestedDict': NestedDict,
     'FileValue': FileType,
     'VarFile': VarFileType,
     'VarDir': VarDirType,
