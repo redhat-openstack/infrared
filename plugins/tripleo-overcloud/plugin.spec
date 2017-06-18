@@ -111,6 +111,23 @@ subparsers:
                             NOTE: Omit this to not include any extra files, or use "none"
                             __LISTYAMLS__
 
+                  config-heat:
+                      type: NestedDict
+                      action: append
+                      help: |
+                          Inject additional Tripleo Heat Templates configuration options under "paramater_defaults"
+                          entry point.
+                          Example:
+                              --config-heat ComputeExtraConfig.nova::allow_resize_to_same_host=true
+                              --config-heat NeutronOVSFirewallDriver=openvswitch
+                          should inject the following yaml to "overcloud deploy" command:
+
+                              ---
+                              parameter_defaults:
+                                  ComputeExtraConfig:
+                                      nova::allow_resize_to_same_host: true
+                                  NeutronOVSFirewallDriver: openvswitch
+
                   heat-templates-basedir:
                       type: Value
                       help: Overrides the templates base dir for the overcloud deploy script.
