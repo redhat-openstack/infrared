@@ -492,7 +492,8 @@ def test_generate_answers_file(spec_fixture, workspace_manager_fixture,  # noqa
     """Verify answers-file is generated to destination. """
 
     answers_file = tmpdir.mkdir("tmp").join("answers_file")
-    input_string = ['example', '--generate-answers-file', str(answers_file)]
+    input_string = \
+        ['example', '--generate-answers-file', str(answers_file), '--dry-run']
 
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
