@@ -4,15 +4,26 @@
   gather_facts: True
   any_errors_fatal: True
   tags: pre
+  vars:
+      pxe_ipmitool_req_packs:
+          - python-setuptools
+          - python-virtualbmc
+          - ipmitool
   tasks:
-      - name: Install packages required for 'pxe_ipmitool' ironic's driver
+      - name: Install packages required for 'pxe_ipmitool' ironic's driver on RedHat based distros
         package:
             name: "{{ item }}"
             state: latest
-        with_items:
-            - python-setuptools
-            - python-virtualbmc
-            - ipmitool
+            disable_gpg_check: yes
+        with_items: "{{ pxe_ipmitool_req_packs }}"
+        when: ansible_os_family == "RedHat"
+
+      - name: Install packages required for 'pxe_ipmitool' ironic's driver on Non-RedHat based distros
+        package:
+            name: "{{ item }}"
+            state: latest
+        with_items: "{{ pxe_ipmitool_req_packs }}"
+        when: ansible_os_family != "RedHat"
 
       - name: Remove existing Virtual BMCs
         # grab only lines with port number (more than 2 digits)
