@@ -36,9 +36,12 @@
       name: "subunit-filters"
       state: present
 
-- name: Enable extra repo
+- name: yum update python-os-testr from unittest repo
   become: yes
-  shell: yum-config-manager --enable rhelosp-{{ test.openstack.version|openstack_release }}.0-unittest
+  yum:
+    name: "python-os-testr"
+    state: latest
+    enablerepo: rhelosp-{{ test.openstack.version|openstack_release }}.0-unittest
   when: test.openstack.version|openstack_release in [8, 9]
 
 - name: Install test dependency
