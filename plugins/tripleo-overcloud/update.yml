@@ -38,11 +38,19 @@
       - update_repos
   vars:
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+      overcloud_deploy_script: "~/overcloud_deploy.sh"
+      reg_file: "environment-rhel-registration.yaml"
+  pre_tasks:
+      - name: check for cdn registration env file
+        command: grep "{{ reg_file }}" {{ overcloud_deploy_script }}
+        ignore_errors: yes
+        register: cdn_status
   roles:
       - role: rhos-release
         release: "{{ (undercloud_version|int) }}"
         build: "{{ install.updateto }}"
         mirror: "{{ install.mirror | default(omit) }}"
+        when: cdn_status|failed
 
 - name: Overcloud Minor Update
   hosts: undercloud
