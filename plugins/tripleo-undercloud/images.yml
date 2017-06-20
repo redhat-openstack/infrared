@@ -78,11 +78,12 @@
         # update is a func name (dict.update) so it must be used as str explicitly
         when: install.images.packages|default('') or install.images['update']
 
+       #Need to fix  BZ1462703 to apply --os-cloud
       - name: upload the overcloud images to glance
         shell: |
             source ~/stackrc
             openstack overcloud image upload --update-existing
-        # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command, or os_images
+        when: install.version|default(undercloud_version)|openstack_release <= 10
         tags: skip_ansible_lint
 
       - name: remove downloaded images
