@@ -66,6 +66,10 @@ subparsers:
                       type: Value
                       help: The product build
                       default: latest
+                  rhos-release:
+                      type: Value
+                      help: package url for the rhos-release utility
+                      default: "https://url.corp.redhat.com/rhos-release-latest-rpm"
 
             - title: Extra components
               options:

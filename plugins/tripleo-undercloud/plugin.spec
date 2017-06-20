@@ -118,6 +118,10 @@ subparsers:
 
             - title: Custom Repositories
               options:
+                  rhos-release:
+                      type: Value
+                      help: package url for the rhos-release utility
+                      default: "https://url.corp.redhat.com/rhos-release-latest-rpm"
                   cdn:
                       type: FileValue
                       help: |
