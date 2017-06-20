@@ -6,6 +6,17 @@
       deployer_input: "~/ir-tempest-deployer-input.conf"
   tasks:
       - name: Prepare tempest files
+        include: "tasks/discover_overcloud_version.yml"
+        tags:
+            - discover_overcloud
+        when: test.openstack.version is not defined
+        delegate_to: "{{ groups.controller[0] }}"
+
+      - debug:
+            msg: "Overcloud's OpenStack version that has been auto discovered is {{ overcloud_version }}"
+        when: overcloud_version is defined
+
+      - name: Prepare tempest files
         include: tasks/pre/main.yml
         tags:
             - pre
