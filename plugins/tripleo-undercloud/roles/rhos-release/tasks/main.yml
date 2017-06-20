@@ -64,6 +64,7 @@
             target_directory: "{{ rr_target_directory }}"
             distro_version: "{{ install.osrelease|default(rr_distro_version) }}"
             source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
+            discover_build: "{{ rr_discover_build }}"
         register: command_result
         until: command_result.stderr.find('Connection reset by peer') == -1
         retries: 40
@@ -80,6 +81,7 @@
             target_directory: "{{ rr_target_directory }}"
             distro_version: "{{ install.osrelease|default(rr_distro_version) }}"
             source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
+            discover_build: "{{ rr_discover_build }}"
         register: command_result
         ignore_errors: yes
 
