@@ -68,3 +68,8 @@ subparsers:
                       help: Clean given system instead of running playbooks on a new one.
                       silent:
                           - image
+            - title: sources
+                  rhos-release:
+                      type: Value
+                      help: package url for the rhos-release utility
+                      default: "https://url.corp.redhat.com/rhos-release-latest-rpm"
