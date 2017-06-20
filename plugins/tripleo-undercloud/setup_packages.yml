@@ -5,7 +5,7 @@
   become: yes
   vars:
       custom_repos: "{{ install.repos|default({}) }}"
-      rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+      rhos_release_rpm: "{{ install.rhos.release }}"
   tags: install
   pre_tasks:
       # FIXME(yfried): figure why this is required in gate only
