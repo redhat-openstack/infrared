@@ -7,13 +7,13 @@ rr_use_public_repos: false
 rr_rdo_repos:
     default:
         delorean:
-            url: "https://trunk.rdoproject.org/centos7-{{ install.version|default(undercloud_version)  }}/{{ (install.build == 'latest')|ternary('current', install.build) }}/delorean.repo"
+            url: "https://trunk.rdoproject.org/centos7-{{ install.version|default(undercloud_version)  }}/{{ install.build|default('current') }}/delorean.repo"
         delorean_deps:
             url: "https://trunk.rdoproject.org/centos7-{{ install.version|default(undercloud_version)  }}/delorean-deps.repo"
         ceph:
             package: "centos-release-ceph-{{ (install.version|default(undercloud_version)|openstack_release < 10)|ternary('hammer', 'jewel') }}"
             file_name: "CentOS-Ceph-{{ (install.version|default(undercloud_version)|openstack_release < 10)|ternary('Hammer', 'Jewel') }}.repo"
-    pike_latest:
+    pike_current:
         delorean:
             url: https://trunk.rdoproject.org/centos7-master/current-tripleo/delorean.repo
         delorean_current:
