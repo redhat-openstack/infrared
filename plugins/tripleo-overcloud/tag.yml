@@ -17,7 +17,10 @@
         when: not instack_file_path.stat.exists
 
       - name: create the baremetal flavor for our machines
-        command: openstack --os-cloud undercloud flavor create --id auto --ram 4096 --disk 16 --vcpus 1 baremetal
+        shell: |
+            source ~/stackrc
+            openstack flavor create --id auto --ram 4096 --disk 16 --vcpus 1 baremetal
+        tags: skip_ansible_lint
         register: bm_result
         ignore_errors: yes
         failed_when: "bm_result.rc != 0 and bm_result.stderr.find('Flavor with name baremetal already exists') != -1"
@@ -26,11 +29,14 @@
       # in prior of OC deployment. Otherwise errors and warnings are produced in process when
       # overcloud deployment starts.
       - name: set additional properties
-        command: openstack --os-cloud undercloud flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' --property "capabilities:profile"="baremetal" baremetal
+        shell: |
+            source ~/stackrc
+            openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' --property "capabilities:profile"="baremetal" baremetal
         when:
             - install.version|default(undercloud_version)|openstack_release == 7
             - "'hypervisor' not in groups"
             - "'bmc' not in groups"
+        tags: skip_ansible_lint
 
       - name: Set baremetal capability for OSPd7 nodes as it must be done explicitely
         shell: |
@@ -52,13 +58,17 @@
       - block:
             - name: check for original flavors
               shell: >
-                  openstack --os-cloud undercloud flavor list | awk '/{{ item.name.rstrip('1234567890-').split('-')[-1] }}/ {print $4}'
+                  source ~/stackrc;
+                  openstack flavor list | awk '/{{ item.name.rstrip('1234567890-').split('-')[-1] }}/ {print $4}'
               with_items: "{{ overcloud_facts.nodes | default([]) }}"
               register: original_flavors
 
             - name: delete original flavors
-              command: openstack --os-cloud undercloud flavor delete {{ item[0].name.rstrip('1234567890-').split('-')[-1] }}
+              shell: |
+                  source ~/stackrc
+                  openstack flavor delete {{ item[0].name.rstrip('1234567890-').split('-')[-1] }}
               when: "item[0].name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
+              tags: skip_ansible_lint
               with_together:
                   - "{{ overcloud_facts.nodes | default([]) }}"
                   - "{{ original_flavors.results }}"
@@ -66,7 +76,10 @@
               register: flavor_delete
 
             - name: Workarond for BZ #1317312
-              command: openstack --os-cloud undercloud flavor delete {{ item[0].name.rstrip('1234567890-').split('-')[-1] }}
+              shell: |
+                 source ~/stackrc
+                 nova flavor-delete {{ item[0].name.rstrip('1234567890-').split('-')[-1] }}
+              tags: skip_ansible_lint
               when: "item[0].name.rstrip('1234567890-').split('-')[-1] in item[1].cmd and item[2].stderr == 'public endpoint for messaging service not found'"
               with_together:
                   - "{{ overcloud_facts.nodes | default([]) }}"
@@ -80,7 +93,8 @@
                   flv_min_disk_size: 6
                   flv_min_cpu: 1
               shell: >
-                  openstack --os-cloud undercloud flavor create
+                  source ~/stackrc;
+                  openstack flavor create
                   --id auto
                   --ram {{ (hostvars[item.name] | default({})).ram | default(item.memory) }}
                   --disk {{ [((hostvars[item.name] | default({})).disk | default(item.disk) | int) - 3, flv_min_disk_size] | max }}
@@ -103,7 +117,8 @@
 
       - name: set additional properties
         shell: |
-            openstack --os-cloud undercloud flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' --property 'capabilities:profile'='{{ item.cmd.split() | last }}' {{ item.cmd.split() | last }}
+            source ~/stackrc
+            openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' --property 'capabilities:profile'='{{ item.cmd.split() | last }}' {{ item.cmd.split() | last }}
         tags: skip_ansible_lint
         when: item.cmd is defined
         with_items: "{{ tagged_flavors | default([]) }}"

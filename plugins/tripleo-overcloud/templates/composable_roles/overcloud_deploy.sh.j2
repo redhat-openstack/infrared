@@ -1,7 +1,6 @@
 #!/bin/bash
 
-openstack --os-cloud undercloud overcloud deploy \
-  --templates {{ install.heat.templates.basedir }} \
+openstack overcloud deploy --templates {{ install.heat.templates.basedir }} \
   -r {{ template_base }}/roles/roles_data.yaml \
   -e {{ template_base }}/roles/nodes.yaml \
   -e {{ template_base }}/roles/network-config.yaml \
