@@ -6,6 +6,12 @@
       path: "{{ template_base }}/storage"
   register: storage
 
+- name: get ceph_disks
+  vars:
+      storage_group: "{{ groups[storage_backend] | list }}"
+  include: disksfrombm.yml
+  when: storage_backend == "swift" or storage_backend == "ceph"
+
 # If user provided storage templates, nothing to do here :)
 - include: "{{ storage_backend }}.yml"
   when: not storage.stat.exists

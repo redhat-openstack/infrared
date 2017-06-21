@@ -1,8 +1,4 @@
 - block:
-      - name: import ceph facts
-        set_fact:
-            ceph_facts: "{{ lookup('file', '{{ inventory_dir }}/{{ hostvars[(groups.ceph|first)].inventory_hostname }}') }}"
-
       # If you reached this stage, it means a user explicitely entered the storage flag therefore he wants at least 1 node
       - name: append the ceph storage template line to the base overcloud deploy script
         lineinfile:

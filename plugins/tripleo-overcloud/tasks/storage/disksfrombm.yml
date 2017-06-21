@@ -1,0 +1,53 @@
+- name: load instackenv
+  shell: cat ~/instackenv.json
+  register: instackenv_js
+
+- name:
+  set_fact:
+      instackenv_data: "{{ instackenv_js.stdout | from_json }}"
+
+- name: Get BareMetal introspection data
+  shell: |
+      source ~/stackrc
+      # Get list of baremetal introspection UUIDs
+      for UUID in $(openstack baremetal introspection list | tail -n +4 | head -n -1 | awk {'print $2'});
+      do
+          # For every UUID get introspection data and search for mac address, defined in 'instackenv.json'
+          MATCH=$(openstack baremetal introspection data save ${UUID} | jq ''|grep "{{ item.mac[0] }}" | wc -l)
+          # If mac address if found
+          if [ ${MATCH} != 0 ];
+          then
+              # get corresponding sections from baremetal introspection
+              DISKS=$(openstack baremetal introspection data save ${UUID} | jq -c -M '.inventory.disks')
+              ROOT=$(openstack baremetal introspection data save ${UUID} | jq -c -M '.root_disk.name')
+              # print them as JSON
+              echo "{\"root_disk\": ${ROOT}, \"disks\": ${DISKS}}"
+          fi
+      done
+  # All hosts 'from instackenv.json' which name is in storage group (swift or ceph) of inventory
+  with_items: "{{ instackenv_data.nodes }}"
+  when: item["name"] in storage_group
+  register: inventory_disks
+
+- name:
+  set_fact: 
+      # Parse JSON output of 'Get BareMetal introspection data' shell module
+      # We need only one of resault, assuming storage nodes configuretions are identical
+      disks_info: "{{ (inventory_disks.results | first).stdout | from_json }}"
+
+- name: get nonroot disks list
+  set_fact:
+      disk_path: "{{ item.name }}"
+  with_items: "{{ disks_info.disks }}"
+  when: item["name"] != disks_info["root_disk"]
+  register: disk_paths_results
+
+# Reprocess disk_paths_results from list of results to list of strings
+- name:
+  set_fact:
+      ceph_disks_list: "{{ disk_paths_results.results | selectattr('ansible_facts', 'defined') | map(attribute='ansible_facts.disk_path') | list }}"
+
+- name:
+  debug:
+      msg: "Storage disks:  {{ ceph_disks_list }}"
+      verbosity: 2
