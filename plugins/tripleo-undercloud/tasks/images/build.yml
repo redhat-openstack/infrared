@@ -35,7 +35,7 @@
 # TODO: Move environment to a file / template so a user can make customize it
 - name: Build OC images (RHOS)
   tags: backup
-  shell: "openstack --os-cloud undercloud overcloud image build --all > openstack-build-images.log"
+  shell: "source ~/stackrc; openstack overcloud image build --all > openstack-build-images.log"
   environment:
       DIB_LOCAL_IMAGE: "{{ images_dest }}"
       DIB_YUM_REPO_CONF: "{{ dib_yum_repos | default(repo_find.files | map(attribute='path') | join(' ')) }}"
