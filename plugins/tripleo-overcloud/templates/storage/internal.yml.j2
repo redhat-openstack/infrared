@@ -9,7 +9,7 @@ parameter_defaults:
     GlanceRbdPoolName: "images"
     ExtraConfig:
       ceph::profile::params::osds:
-{% for disk in ceph_facts.ansible_devices.keys()[1:] %}
+{% for disk in (storage_disks.results | first).stdout_lines[1:] %}
        '/dev/{{ disk }}':
            journal: ''
 {% endfor %}
