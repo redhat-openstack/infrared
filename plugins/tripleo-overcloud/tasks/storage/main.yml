@@ -1,6 +1,14 @@
 - name: try to discover storage storage
   include: discover_backend.yml
 
+- name: Get storage disks
+  shell: |
+      virsh domblklist {{ item }} | tail -n +3 | awk '{print $1}'
+  with_items: "{{ groups[storage_backend] | list | first }}"
+  register: storage_disks
+  when: storage_backend == "swift" or storage_backend == "ceph"
+  delegate_to: hypervisor
+
 - name: check if user provided storage templates
   stat:
       path: "{{ template_base }}/storage"
