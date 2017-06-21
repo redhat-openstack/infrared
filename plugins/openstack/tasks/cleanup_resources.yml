@@ -44,7 +44,12 @@
   with_items: "{{ networks|default([]) }}"
   register: networks_cleanup
 
-#TODO(aopincar): Add 'security groups' cleanup task
+- name: Cleanup security groups
+  os_security_group:
+     cloud: "{{ provision.cloud | default(omit) }}"
+     state: absent
+     name: bmc
+  register: sg_cleanup
 
 - name: Fail run if one of neutron cleanups tasks failed/skipped
   fail:
@@ -54,6 +59,7 @@
            subnets_cleanup|succeeded and
            networks_cleanup|succeeded and
            keypairs_cleanup|succeeded and
-           servers_cleanup|succeeded)
+           servers_cleanup|succeeded and
+           sg_cleanup|succeeded)
 
 
