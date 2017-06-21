@@ -2,7 +2,7 @@
   vars:
       - release: "{{ install.version|default(undercloud_version) }}"
   shell: |
-      {% for repo_name, repo_data in rr_rdo_repos.get(release + '_' + install.build, rr_rdo_repos['default']).iteritems()  %}
+      {% for repo_name, repo_data in rr_rdo_repos.get(release + '_' + install.build|default('current'), rr_rdo_repos['default']).iteritems()  %}
       {% if 'url' in repo_data %}
       curl -L -o {{ repo_name }}-{{ release }}.repo {{ repo_data.url }}
 
