@@ -4,7 +4,7 @@
       - meta: refresh_inventory
 
 - name: Collecting Info
-  hosts: undercloud,overcloud_nodes
+  hosts: undercloud:overcloud_nodes:!unused
   gather_facts: yes
   any_errors_fatal: true
   tags: upgrade_collect_info
@@ -35,7 +35,7 @@
         include: "tasks/upgrade/undercloud_validation.yml"
 
 - name: Overcloud Validation
-  hosts: overcloud_nodes
+  hosts: overcloud_nodes:!unused
   gather_facts: yes
   any_errors_fatal: true
   tags:
@@ -46,7 +46,7 @@
         include: "tasks/upgrade/overcloud_validation.yml"
 
 - name: Update Overcloud repos
-  hosts: overcloud_nodes
+  hosts: overcloud_nodes:!unused
   gather_facts: yes
   any_errors_fatal: true
   tags:
@@ -63,7 +63,7 @@
 
 # todo(abregman): remove once rhbz#1434344 is resolved
 - name: Apply workaround for rhbz 1434344
-  hosts: controller
+  hosts: controller:!unused
   gather_facts: yes
   any_errors_fatal: true
   tags:
@@ -100,7 +100,7 @@
 
       - name: Scan nodes ssh keys
         command: "ssh-keyscan -t rsa {{ hostvars[item].ansible_ssh_host }}"
-        with_items: "{{ groups.overcloud_nodes|default([]) }}"
+        with_items: "{{ groups.overcloud_nodes|default([])|difference(groups.unused|default([])) }}"
         register: pubkeys
 
       - name: Add nodes to known_hosts
