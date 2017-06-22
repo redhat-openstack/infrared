@@ -55,7 +55,7 @@
         release: "{{ (undercloud_version|int) }}"
         build: "{{ install.updateto }}"
         mirror: "{{ install.mirror | default(omit) }}"
-        when: oc_cdn_register|int == 1
+        when: hostvars[groups['undercloud'][0]]['oc_cdn_register']|int == 1
 
 - name: Overcloud Minor Update
   hosts: undercloud
