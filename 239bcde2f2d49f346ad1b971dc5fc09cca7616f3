@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "cb74c2ca_3031ea1e",
+        "filename": "plugins/tripleo-overcloud/introspect.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2017-06-22T17:52:32Z",
+      "side": 1,
+      "message": "Reasons why I used this alias using \"set_fact\" is for clear code clarity with combination of explanation below.\n\nI would like to keep it that way for various reasons:\n* I can process output of async tasks and mask its poor behaviour (explained below)\n* In log I can see what value of fast was set right away, so it is immidiately clear if introspection failed or passed at first look (kinda debugging output):\n01:04:14 TASK [set_fact] ****************************************************************\n01:04:14                    [[ previous task time: 0:05:02.535824 \u003d 302.54s / 366.46s ]]\n01:04:14 ok: [rhos-qe-06.lab.eng.brq.redhat.com] \u003d\u003e {\"ansible_facts\": {\"bulk_intro_ok\": true}, \"changed\": false}\n* Also I want to have this fact exposed as buildmark in future (to monitor introsp. failures in BM jobs (7 especially)) so this way it is as simplified and as prepared to easy handling as I can imagine.",
+      "parentUuid": "7c364938_65ed4970",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 93,
+        "endChar": 82
+      },
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "97f6f8cc_311ddfc2",
         "filename": "plugins/tripleo-overcloud/introspect.yml",
         "patchSetId": 26
@@ -36,6 +60,24 @@
       "writtenOn": "2017-05-15T06:05:00Z",
       "side": 1,
       "message": "how about:\n\n    when: \n        - introspection_sleeper.rc is defined \n        - introspection_sleeper.rc \u003d\u003d 0",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3a50d96_adf19dee",
+        "filename": "plugins/tripleo-overcloud/introspect.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2017-06-22T17:52:32Z",
+      "side": 1,
+      "message": "Can not do positive condition here, see async task with shell returns different dict for positive and negative results (for some reason far from clear to me):\n\nWhen task failed returns dict:\n\u0027msg\u0027: u\u0027async task did not complete within the requested time\u0027, \u0027failed\u0027: True, \u0027changed\u0027: False}\n\nWhen passed:\nstderr_lines\u0027: [], u\u0027changed\u0027: True, u\u0027end\u0027: u\u00272017-06-22 17:50:32.450897\u0027, u\u0027ansible_job_id\u0027: u\u0027489289134623.31749\u0027, u\u0027stdout\u0027: u\u0027\u0027, u\u0027cmd\u0027: u\u0027source ~/stackrc\\\\n #openstack baremetal introspection bulk start\u0027, u\u0027rc\u0027: 0, u\u0027start\u0027: u\u00272017-06-22 17:50:32.400956\u0027, u\u0027finished\u0027: 1, u\u0027stderr\u0027: u\u0027\u0027, u\u0027delta\u0027: u\u00270:00:00.049941\u0027, \u0027stdout_lines\u0027: []\n\nso testing \"introspection_sleeper.rc \u003d\u003d 0\" (or any number) will always fail in negative case.\n\nOn the othew way I can use conditional:\n\n- name: Recover from errors during bulk introspection if bulk did not pass without error\n  include: tasks/introspection_recovery.yml\n  when:\n     - introspection_result.rc is not defined\n\nWhis is basically not-right-away-clear alias for:\n  when: \"async task doing introspection failed\"\n\nBut that doesn\u0027t give much clarity to anyone reading this code, rather than using \"set_fact\" step as described above with variable/fact with reasonable name. I will add more comments why set_fact is used to code.\n\nLike I said, I dunno why Ansible works that way that rc is defined only if script passes - it\u0027s weird but this seems to  me as cleanest solution so far.",
+      "parentUuid": "97f6f8cc_311ddfc2",
       "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "784b3ee8_8c171417",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2017-06-22T17:52:32Z",
+      "side": 1,
+      "message": "I don\u0027t think it is wise to expose this parameter as this whole playbook is \"just-to-be-sure-hack\" for OSPd7 (and flaky baremetals of our), where these errors happen. This value shouldn\u0027t we tweaked and it is based on my experience it can help during introspection_recovery phase to increase probability of successfull pass of this playbook (reason are explained in top level - introspect.yml#71).",
+      "parentUuid": "9b2cb4b6_31321ea7",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2f26f379_2dcc65f5",
         "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
         "patchSetId": 26
@@ -70,6 +130,24 @@
       "writtenOn": "2017-05-15T06:05:00Z",
       "side": 1,
       "message": "isn\u0027t this always true if this play is included?",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "881a1877_0dcb9a90",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2017-06-22T17:52:32Z",
+      "side": 1,
+      "message": "\u003d\u003d false were specified for all tasks here as I had suspicion of current Ansible version poorly handling \"when\" statements in included playbooks - this is precaution which I removed in following patchsets and Ansible matured and now it looks like it works correctly with current version.",
+      "parentUuid": "2f26f379_2dcc65f5",
       "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -110,6 +188,24 @@
     },
     {
       "key": {
+        "uuid": "e9b4d160_76b79e48",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2017-06-22T17:52:32Z",
+      "side": 1,
+      "message": "I\u0027ll try to test it.",
+      "parentUuid": "a0a1ad72_39371fb9",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7078f9dd_c8c8f490",
         "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
         "patchSetId": 26
@@ -121,6 +217,24 @@
       "writtenOn": "2017-05-15T06:05:00Z",
       "side": 1,
       "message": "no need to skip lint here. this is the correct usage of \"shell\" (using pipes and re-directions)",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e67b238_86d0c8ad",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2017-06-22T17:52:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7078f9dd_c8c8f490",
       "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -144,6 +258,24 @@
     },
     {
       "key": {
+        "uuid": "a5442f93_0d4ad5d6",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2017-06-22T17:52:32Z",
+      "side": 1,
+      "message": "As \"failed_node_details.results\" gives extensive output of each failed_node_details processed (cmd:, stderr:, start:, end:, ...) in cycle - I need to disect only stdout from these and create dict only for stdouts which serve as info about all of the nodes (ironic node-show ...).\n\nSuch otput is prettyfied and printed one step below, without useless info from Ansible and gives clear message to user which nodes failed and their details in log.\n\nPoint of this was to transform failed_nodes from:\n        \"msg\": long msg...\n        \"changed\": true, \n        \"cmd\": ...\n        \"stdout_lines\": [\n            \"70e5f7de-031e-483f-a415-0659d5562f86\", \n            \"dd94dbd0-5253-4ba5-8741-b577cfd540a4\"\n        ]\n\nInto:\n        \"msg\": [\n            \"70e5f7de-031e-483f-a415-0659d5562f86\", \n            \"dd94dbd0-5253-4ba5-8741-b577cfd540a4\"\n        ]\n\nwhat has been done, but I get it is confusing so I try to work more clear solution.",
+      "parentUuid": "cc45efd8_42515f0c",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4cd04f19_545d7d98",
         "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
         "patchSetId": 26
@@ -161,6 +293,24 @@
     },
     {
       "key": {
+        "uuid": "12408638_96206dec",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2017-06-22T17:52:32Z",
+      "side": 1,
+      "message": "failed_nodes looks like:\nok: [rhos-qe-13.lab.eng.brq.redhat.com] \u003d\u003e {\n    \"msg\": [\n        \"70e5f7de-031e-483f-a415-0659d5562f86\", \n        \"dd94dbd0-5253-4ba5-8741-b577cfd540a4\"\n    ]\n}\n\nBut I get mixing this variables msg: and stdout_lines: fields is confusing. I gonna to introduce new variable in next patchsets to make it more clear.",
+      "parentUuid": "4cd04f19_545d7d98",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "afa69ffd_7ba13490",
         "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
         "patchSetId": 26
@@ -172,6 +322,24 @@
       "writtenOn": "2017-05-15T06:05:00Z",
       "side": 1,
       "message": "no need to skip lint here. this is the correct usage of \"shell\"",
+      "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c11463de_d3c254cb",
+        "filename": "plugins/tripleo-overcloud/tasks/introspection_recovery.yml",
+        "patchSetId": 26
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2017-06-22T17:52:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "afa69ffd_7ba13490",
       "revId": "239bcde2f2d49f346ad1b971dc5fc09cca7616f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
