@@ -538,7 +538,7 @@ def test_ansible_args(spec_fixture, workspace_manager_fixture,          # noqa
     # Tests CLI (no section)
     ("--iniopt opt1=val1",
      None,
-     {'defaults': {'opt1': 'val1'}}),
+     {'opt1': 'val1'}),
 
     # Tests CLI
     ("--iniopt sec1.opt1=val1",
