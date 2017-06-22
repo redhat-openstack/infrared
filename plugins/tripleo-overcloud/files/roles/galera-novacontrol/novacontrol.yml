@@ -1,0 +1,39 @@
+---
+novacontrol_role:
+    name: Novacontrol
+
+    # include resources
+    # the following vars can be used here:
+    #  - ${ipv6_postfix}: will be replaced with _v6 when the ipv6 protocol is used for installation, otherwise is empty
+    #  - ${deployment_dir} - will be replaced by the deployment folder location on the undercloud. Deployment folder can be specified with the ospd --deployment flag
+    resource_registry:
+        OS::TripleO::Novacontrol::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/novacontrol.yaml"
+        OS::TripleO::Novacontrol::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api${ipv6_postfix_underscore}.yaml"
+        OS::TripleO::Novacontrol::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage${ipv6_postfix_underscore}.yaml"
+
+    flavor: novacontrol
+    host_name_format: 'novacontrol-%index%'
+
+    services:
+        - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::Kernel
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::NovaConductor
+        - OS::TripleO::Services::NovaApi
+        - OS::TripleO::Services::NovaMetadata
+        - OS::TripleO::Services::NovaScheduler
+        - OS::TripleO::Services::NovaConsoleauth
+        - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}OS::TripleO::Services::Ec2Api{% endif %}"
+        - OS::TripleO::Services::NovaVncProxy
+        - OS::TripleO::Services::Snmp
+        - OS::TripleO::Services::Timezone
+        - OS::TripleO::Services::TripleoPackages
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::FluentdClient
+        - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}OS::TripleO::Services::AuditD{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}OS::TripleO::Services::Collectd{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}OS::TripleO::Services::Sshd{% endif %}"

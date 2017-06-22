@@ -78,6 +78,12 @@
           state: present
           timeout: 60
 
+    - name: update clouds.yaml file
+      include: clouds.yml
+      vars:
+            auth_file_path: "{{ overcloudrc_file }}"
+            cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"
+
     - name: fetch the overcloud rc file
       tags:
           - fetch_rc_file

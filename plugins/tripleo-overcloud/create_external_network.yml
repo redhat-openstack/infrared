@@ -58,10 +58,9 @@
         register: network_template_out
         when: network_environment_file_path.matched > 0
 
-
       - name: load deployment network configuration as YAML
         set_fact:
-            network_template:  "{{ network_template_out.stdout | from_yaml }}"
+            network_template: "{{ network_template_out.stdout | from_yaml }}"
         when: network_environment_file_path.matched > 0
 
       # for openstack v11 the OS_TENANT_NAME is replaced with OS_PROJECT_NAME
@@ -125,7 +124,7 @@
         os_subnet:
             # Required for SSL
             validate_certs: no
-            auth: "{{ auth }}"
+            auth: "{{ creds.stdout | from_yaml }}"
             name: external_subnet
             network_name: "{{ net_create.network.name }}"
             enable_dhcp: no

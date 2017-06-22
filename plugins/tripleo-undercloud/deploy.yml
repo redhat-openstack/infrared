@@ -37,5 +37,11 @@
             flat: yes
             fail_on_missing: yes
 
+      - name: update clouds.yaml file
+        include: clouds.yml
+        vars:
+            auth_file_path: "/home/stack/stackrc"
+            cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"
+
       - name: gathering new facts about the undercloud
         setup:

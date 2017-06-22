@@ -1,9 +1,8 @@
 - name: Get free repos for CentOS
   vars:
       - release: "{{ install.version|default(undercloud_version) }}"
-      - repo_type: "{{ (release|openstack_release <= 11)|ternary('stable', 'master') }}"
   shell: |
-      {% for repo_name, repo_data in rr_rdo_repos[repo_type].iteritems()  %}
+      {% for repo_name, repo_data in rr_rdo_repos.get(release + '_' + install.build|default('current'), rr_rdo_repos['default']).iteritems()  %}
       {% if 'url' in repo_data %}
       curl -L -o {{ repo_name }}-{{ release }}.repo {{ repo_data.url }}
 
