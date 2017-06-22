@@ -25,7 +25,7 @@
 
 - name: Object Storage Upgrade
   include: ../common/node_upgrade.yml
-  with_items: "{{ groups.swift|default([]) }}"
+  with_items: "{{ groups.swift|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: swift_upgrade
@@ -42,14 +42,14 @@
 
 - name: Ceph OSD nodes upgrade
   include: ../common/node_upgrade.yml
-  with_items: "{{ groups.ceph|default([]) }}"
+  with_items: "{{ groups.ceph|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: upgrade_ceph
 
 - name: Nova compute nodes upgrade
   include: ../common/node_upgrade.yml
-  with_items: "{{ groups.compute|default([]) }}"
+  with_items: "{{ groups.compute|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: upgrade_compute
