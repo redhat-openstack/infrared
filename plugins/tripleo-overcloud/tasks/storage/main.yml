@@ -8,4 +8,6 @@
 
 # If user provided storage templates, nothing to do here :)
 - include: "{{ storage_backend }}.yml"
-  when: not storage.stat.exists
+  when:
+    - storage_backend|default('')
+    - not storage.stat.exists
