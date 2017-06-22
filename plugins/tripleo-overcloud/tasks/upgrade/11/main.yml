@@ -94,14 +94,14 @@
 
 - name: Compute Upgrade
   include: compute_upgrade.yml
-  with_items: "{{ groups.compute|default([]) }}"
+  with_items: "{{ groups.compute|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: computes_upgrade
 
 - name: Swift Upgrade
   include: swift_upgrade.yml
-  with_items: "{{ groups.swift|default([]) }}"
+  with_items: "{{ groups.swift|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: swift_upgrade
@@ -114,7 +114,7 @@
 
 - name: Ceph Upgrade
   include: ceph_upgrade.yml
-  with_items: "{{ groups.ceph|default([]) }}"
+  with_items: "{{ groups.ceph|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: upgrade_ceph
@@ -143,7 +143,7 @@
 
 - name: Post upgrade controller nodes
   include: controller_postupgrade.yml
-  with_items: "{{ groups.controller|default([]) }}"
+  with_items: "{{ groups.controller|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: controller_post
