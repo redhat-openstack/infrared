@@ -48,12 +48,30 @@
         include: "tasks/upgrade/validation.yml"
         tags: validation
 
+      - name: check for subscription
+        command: subscription-manager identity
+        ignore_errors: yes
+        register: cdn_status
+        changed_when: false
+        when: not install.cdn|default(False)
+
   roles:
       - role: rhos-release
         release: "{{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }}"
         build: "{{ install.build | default(omit) }}"
         mirror: "{{ install.mirror | default(omit) }}"
         tags: upgrade
+        when:
+           - not install.cdn|default(False)
+           - cdn_status.rc != 0
+
+      - role: cdn_registery
+        cdn_args_file: "{{ install.cdn|default('') }}"
+        become: True
+        when:
+            - "install.cdn|default(False) or cdn_status.rc == 0"
+            - "install.version|openstack_distribution == 'OSP'"
+
   tasks:
       - name: "{{ operation_type }} to version {{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }} build {{ install.build | default('latest') }}"
         include: "tasks/upgrade/upgrade.yml"
