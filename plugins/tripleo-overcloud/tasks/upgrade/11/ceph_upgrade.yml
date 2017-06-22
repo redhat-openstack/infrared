@@ -3,13 +3,13 @@
   become: true
   command: ceph osd set noout
   delegate_to: "{{ node_name }}"
-  when: groups.ceph|length > 2
+  when: groups.ceph|difference(groups.unused|default([]))|length > 2
 
 - name: Ceph osd set norebalance {{ node_name }}
   become: true
   command: ceph osd set norebalance
   delegate_to: "{{ node_name }}"
-  when: groups.ceph|length > 2
+  when: groups.ceph|difference(groups.unused|default([]))|length > 2
 
 - name: Reboot Node
   include: reboot_node.yml
@@ -23,19 +23,19 @@
   retries: 30
   delay: 5
   delegate_to: "{{ node_name }}"
-  when: groups.ceph|length > 2
+  when: groups.ceph|difference(groups.unused|default([]))|length > 2
 
 - name: Ceph osd unset noout {{ node_name }}
   become: true
   command: ceph osd unset noout
   delegate_to: "{{ node_name }}"
-  when: groups.ceph|length > 2
+  when: groups.ceph|difference(groups.unused|default([]))|length > 2
 
 - name: Ceph osd unset norebalance {{ node_name }}
   become: true
   command: ceph osd unset norebalance
   delegate_to: "{{ node_name }}"
-  when: groups.ceph|length > 2
+  when: groups.ceph|difference(groups.unused|default([]))|length > 2
 
 - name: Make sure that cluster is in healthy state
   become: true
@@ -45,7 +45,7 @@
   retries: 30
   delay: 5
   delegate_to: "{{ node_name }}"
-  when: groups.ceph|length > 2
+  when: groups.ceph|difference(groups.unused|default([]))|length > 2
 
 - name: Packages Check
   include: packages_check.yml
