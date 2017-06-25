@@ -64,6 +64,23 @@ Overcloud Options
 * ``--heat-templates-basedir``: Allows to override the templates base dir
     to be used for deployment. Default value: "/usr/share/openstack-tripleo-heat-templates"
 
+Tripleo Heat Templates configuration options
+--------------------------------------------
+* ``--config-heat``: Inject additional Tripleo Heat Templates configuration options under "paramater_defaults"
+    entry point. Example:
+
+    .. code-block:: plain
+       --config-heat ComputeExtraConfig.nova::allow_resize_to_same_host=true
+       --config-heat NeutronOVSFirewallDriver=openvswitch
+
+    should inject the following yaml to "overcloud deploy" command:
+
+    .. code-block:: plain
+       ---
+       parameter_defaults:
+          ComputeExtraConfig:
+              nova::allow_resize_to_same_host: true
+          NeutronOVSFirewallDriver: openvswitch
 
 Overcloud Public Network
 ------------------------
