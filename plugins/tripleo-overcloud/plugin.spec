@@ -182,6 +182,11 @@ subparsers:
                       default: no
                       help: Deploy Overcloud with Octavia (Load Balancer).
 
+                  network-ovn:
+                      type: Bool
+                      default: no
+                      help: Use OVN instead of ML2 and OVS.
+
                   octavia-image-url:
                       type: Value
                       help: |
