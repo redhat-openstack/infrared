@@ -22,12 +22,12 @@ fi
 # patch yum.repos
 
 sed -i "s/download.*\.lab.*\.redhat\.com/${mirror}/" *.repo
-sed -i "s/download\.eng.*\.redhat\.com/${mirror}/" *.repo
+sed -i "s/download\(-node.*\)\?\.eng.*\.redhat\.com/${mirror}/" *.repo
 sed -i "s/rhos-release.*\.redhat\.com/${mirror}\/rhos-release/" *.repo
 sed -r -i "s/ayanami.*\.redhat.com/${mirror}\/ayanami/" *.repo
 sed -i "s/pulp.*\.redhat\.com/${mirror}\/pulp/" *.repo
 sed -i "s|cdn\.stage\.redhat\.com|${mirror}/cdn-stage|" *.repo
-sed -i "s|https://copr-be\.cloud\.fedoraproject\.org|http://${mirror}/copr-be|" *.repo
+sed -i "s|https\?://copr-be\.cloud\.fedoraproject\.org|http://${mirror}/copr-be|" *.repo
 
 # patch hosts to enforce communication only with mirror
 
