@@ -36,11 +36,6 @@
       name: "subunit-filters"
       state: present
 
-- name: Enable extra repo
-  become: yes
-  shell: yum-config-manager --enable rhelosp-{{ test.openstack.version|default(overcloud_version)|openstack_release }}.0-unittest
-  when: test.openstack.version|default(overcloud_version)|openstack_release in [8, 9]
-
 - name: Install test dependency
   become: yes
   package:
@@ -48,6 +43,14 @@
       state: present
   with_items: "{{ setup.dependencies[test.openstack.version|default(overcloud_version)|openstack_release|string]|default(setup.dependencies.defaults) }}"
   when: test.openstack.version|default(overcloud_version)|openstack_release >= 7
+
+- name: Update test dependencys
+  become: yes
+  yum:
+      name: "{{ item }}"
+      state: latest
+      enablerepo: rhelosp-{{ test.openstack.version|default(overcloud_version)|openstack_release }}.0-unittest
+  with_items: "{{ setup.dependencies[test.openstack.version|default(overcloud_version)|openstack_release|string]|default(setup.dependencies.defaults) }}"
 
 - name: Warning message
   debug:
