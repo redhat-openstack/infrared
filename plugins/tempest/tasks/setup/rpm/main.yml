@@ -49,6 +49,15 @@
   with_items: "{{ setup.dependencies[test.openstack.version|default(overcloud_version)|openstack_release|string]|default(setup.dependencies.defaults) }}"
   when: test.openstack.version|default(overcloud_version)|openstack_release >= 7
 
+- name: Update test dependencys
+  become: yes
+  yum:
+      name: "{{ item }}"
+      state: latest
+      enablerepo: rhelosp-{{ test.openstack.version|default(overcloud_version)|openstack_release }}.0-unittest
+  with_items: "{{ setup.dependencies[test.openstack.version|default(overcloud_version)|openstack_release|string]|default(setup.dependencies.defaults) }}"
+  when: test.openstack.version|default(overcloud_version)|openstack_release in [7, 8, 9]
+
 - name: Warning message
   debug:
       msg: WARNING! Plugins are not available for RHOS version < 7
