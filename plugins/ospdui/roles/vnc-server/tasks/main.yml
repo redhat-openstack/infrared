@@ -34,8 +34,14 @@
       enabled: yes
   become: yes
 
-# todo(obaranov) use iptables module in ansible 2.2
 - name: configure firewall
-  command: iptables -I INPUT -m state --state NEW -p tcp --destination-port 5901 -j ACCEPT
   become: yes
+  iptables:
+      comment: "Infrared: ospdui"
+      chain: INPUT
+      jump: ACCEPT
+      protocol: tcp
+      ctstate: NEW
+      destination_port: 5901
+
 
