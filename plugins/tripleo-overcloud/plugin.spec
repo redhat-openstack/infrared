@@ -27,13 +27,23 @@ subparsers:
                       help: Specifies whether we should run post install tasks
                       default: False
 
+            - title: Containers
+              options:
                   containers:
-                      type: VarFile
+                      type: Bool
                       help: |
-                          Specifies a file with the containers settings to be used for deployment.
-                          This will trigger overcloud deployment in containers.
-                          See vars/containers/example.yml for details.
+                          Specifies whether the containers should be used for deployment.
+                          Infrared will use containers only when install version >= 12
+                      # todo(obaranov) Change it to yes once containers become more stable
+                      default: no
 
+                  registry-mirror:
+                      type: Value
+                      help: The alternative docker registry to use for deployment.
+
+                  registry-namespace:
+                      type: Value
+                      help: The alternative docker registry namespace to use for deployment.
 
             - title: Deployment Description
               options:

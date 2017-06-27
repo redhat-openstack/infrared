@@ -22,12 +22,24 @@
   hosts: undercloud
   gather_facts: yes
   any_errors_fatal: true
+  vars:
+      overcloud_deploy_script: "~/overcloud_deploy.sh"
+      reg_file: "environment-rhel-registration.yaml"
   tags:
       - update_validation
       - update_undercloud_validation
   tasks:
       - name: Validation
         include: "tasks/update/undercloud_validation.yml"
+
+      - name: check for cdn registration env file
+        command: grep "{{ reg_file }}" {{ overcloud_deploy_script }}
+        ignore_errors: yes
+        register: cdn_status
+
+      - name: set fact oc registered
+        set_fact:
+            oc_cdn_register: "{{ cdn_status.rc }}"
 
 - name: Update Overcloud repos
   hosts: overcloud_nodes
@@ -38,19 +50,12 @@
       - update_repos
   vars:
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
-      overcloud_deploy_script: "~/overcloud_deploy.sh"
-      reg_file: "environment-rhel-registration.yaml"
-  pre_tasks:
-      - name: check for cdn registration env file
-        command: grep "{{ reg_file }}" {{ overcloud_deploy_script }}
-        ignore_errors: yes
-        register: cdn_status
   roles:
       - role: rhos-release
         release: "{{ (undercloud_version|int) }}"
         build: "{{ install.updateto }}"
         mirror: "{{ install.mirror | default(omit) }}"
-        when: cdn_status|failed
+        when: hostvars[groups['undercloud'][0]]['oc_cdn_register']|int == 1
 
 - name: Overcloud Minor Update
   hosts: undercloud
