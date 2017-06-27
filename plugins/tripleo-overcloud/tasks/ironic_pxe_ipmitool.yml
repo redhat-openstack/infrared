@@ -37,29 +37,34 @@
 - name: Configure vbmc (ironic's 'pxe_ipmitool' driver)
   hosts: hypervisor
   vars:
-      vbmc_ports: {}
       vbmc_start_port: 6230
+      undercloud_node: "{{ groups.undercloud | first }}"
   gather_facts: False
   any_errors_fatal: True
   tags: pre
   tasks:
       - name: Define vbmc_port for each VM
         set_fact:
-            vbmc_ports: "{{ vbmc_ports|combine({ item.1: vbmc_start_port + item.0 }) }}"
+            vbmc_ports: "{{ vbmc_ports|default({})|combine({ item.1: vbmc_start_port + item.0 }) }}"
         with_indexed_items: "{{ groups.get('overcloud_nodes', []) }}"
-
-      - name: vbmc ports
-        debug:
-            var: vbmc_ports
 
       - name: allow access to port vbmc ports from undercloud
         become: True
-        shell: |
-            iptables -I INPUT 1 -w 3 -s {{ hostvars['undercloud-0'].ansible_default_ipv4.address }} -p udp --dport {{ item.value }} -j ACCEPT
-            iptables -I INPUT 1 -w 3 -s {{ hostvars['undercloud-0'].ansible_default_ipv4.address }} -p tcp --dport {{ item.value }} -j ACCEPT
-        with_dict: "{{ vbmc_ports }}"
-        tags:
-            - skip_ansible_lint
+        iptables:
+            action: insert
+            comment: "Infrared: vbmc ports"
+            table: filter
+            chain: INPUT
+            jump: ACCEPT
+            protocol: "{{ item.2 }}"
+            source: "{{ hostvars[undercloud_node].ansible_default_ipv4.address }}"
+            destination_port: "{{ item.1 }}"
+        with_nested:
+            - "{{ vbmc_ports.items() }}"
+            # That's a nested list:
+            -
+                - udp
+                - tcp
 
       - name: Add nodes to vbmc
         command: "vbmc add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ ansible_management.ipv4.address }}"
