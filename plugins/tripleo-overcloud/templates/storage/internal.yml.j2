@@ -7,6 +7,9 @@ parameter_defaults:
     CinderRbdPoolName: "volumes"
     NovaRbdPoolName: "vms"
     GlanceRbdPoolName: "images"
+{% if 'ceph' in groups and ( 0 < groups['ceph'] | length < 3 ) %}
+    CephPoolDefaultSize: {{ groups['ceph'] | length }}
+{% endif %}
     ExtraConfig:
       ceph::profile::params::osds:
 {% for disk in ceph_facts.ansible_devices.keys()[1:] %}
