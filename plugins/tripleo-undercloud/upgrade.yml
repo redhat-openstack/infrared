@@ -23,30 +23,37 @@
         stat:
             path: "/etc/rhosp-release"
         register: rhosp_release_file
+        tags: upgrade_repos
 
       - name: Get /etc/rhosp-release content
         command: cat /etc/rhosp-release
         register: rhosp_release_content
         when: rhosp_release_file.stat.exists
+        tags: upgrade_repos
 
       - name: Set undercloud_version from /etc/rhosp-release output
         set_fact:
             undercloud_version: "{{ rhosp_release_content.stdout | regex_replace('^Red Hat OpenStack Platform release ([0-9]+)\\.\\d+\\s.*$', '\\1') }}"
         when: rhosp_release_file.stat.exists
+        tags: upgrade_repos
 
       - name: Get nova version
         shell: nova-manage --version 2>&1 | awk -F . '{print $1}'
         register: nova_version
         when: rhosp_release_file.stat.exists == False
+        tags: upgrade_repos
 
       - name: Set undercloud_version from nova-manage output
         set_fact:
             undercloud_version: "{{ (version_map|selectattr('nova_version', 'equalto', nova_version.stdout)|first)['rhos_version'] }}"
         when: rhosp_release_file.stat.exists == False
+        tags: upgrade_repos
 
       - name: Validation
         include: "tasks/upgrade/validation.yml"
-        tags: validation
+        tags:
+            - validation
+            - upgrade_repos
 
       - name: check for subscription
         command: subscription-manager identity
@@ -60,7 +67,9 @@
         release: "{{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }}"
         build: "{{ install.build | default(omit) }}"
         mirror: "{{ install.mirror | default(omit) }}"
-        tags: upgrade
+        tags:
+            - upgrade
+            - upgrade_repos
         when:
            - not install.cdn|default(False)
            - cdn_status.rc != 0
