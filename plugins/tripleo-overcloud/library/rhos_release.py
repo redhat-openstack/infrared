@@ -76,7 +76,7 @@ options:
         default: 'no'
     buildmods:
         description:
-            - List of flags that will be enabled. only works with pin puddle, flea-repos and unstable
+            - List of flags that will be enabled. only works with pin puddle, flea-repos, unstable and cdn
 notes:
     - requires rhos-release version 1.0.23
 requirements: [ rhos-release ]
@@ -100,6 +100,9 @@ POODLE_TYPES = {
     'daily-stable': ['-D'],
     'smoke': ['-C']
 }
+
+LATEST_INSTALLED_FILE = "/etc/yum.repos.d/latest-installed"
+
 
 def _parse_output(module, cmd, stdout):
     """Parse rhos-release stdout.
@@ -156,7 +159,8 @@ def _parse_output(module, cmd, stdout):
                              )
         match = pattern.search(line)
         if not match:
-            _fail(module, "Failed to parse release line %s" % line, cmd, out=stdout)
+            _fail(module, "Failed to parse release line %s" % line,
+                  cmd, out=stdout)
         return dict(
             release=match.group("release"),
             version=match.group("version") or 'undetermined!',
@@ -165,12 +169,40 @@ def _parse_output(module, cmd, stdout):
         )
 
     installed_releases = map(released, release_lines)
-    return dict(
+    ret_dict = dict(
         repodir=repodir,
-        files=list(filenames),
-        releases={release['channel']: release for release in
-                  installed_releases},
+        files=list(filenames)
     )
+    if module.params['buildmods'] is not None \
+            and 'cdn' in module.params['buildmods']:
+        ret_dict['releases'] = {"core": dict(
+                release=module.params['release'],
+                version='cdn',
+                repo_type='cdn',
+                channel='core'
+            )}
+    else:
+        ret_dict['releases'] = {release['channel']: release for release in
+                                installed_releases}
+
+    return ret_dict
+
+
+def do_build_discover():
+    """
+    Discovers currently installed build by reading
+    "/etc/yum.repos.d/latest-installed"
+    """
+
+    import os.path
+    result = ""
+    if os.path.isfile(LATEST_INSTALLED_FILE):
+        with open(LATEST_INSTALLED_FILE) as fd:
+            regex = re.search('.* -p (.*)', fd.read())
+            if regex and regex.group(1):
+                result = regex.group(1)
+
+    return result
 
 
 def wrap_results(res_dict, cmd, rc, out, err):
@@ -228,7 +260,8 @@ def main():
             source_hostname=dict(),
             enable_flea_repos=dict(default=False),
             one_shot_mode=dict(default=False),
-            buildmods=dict(type='list')
+            buildmods=dict(type='list'),
+            discover_build=dict(type='bool', default=False)
         )
     )
     base_cmd = 'rhos-release'
@@ -245,12 +278,17 @@ def main():
     enable_flea_repos = module.params['enable_flea_repos']
     one_shot_mode = module.params['one_shot_mode']
     buildmods = module.params['buildmods']
+    discover_build = module.params['discover_build']
 
     repo_args = ['-t', str(repo_directory)] if repo_directory else[]
+
+    if discover_build and not puddle:
+        puddle = do_build_discover()
+
     puddle = ['-p', str(puddle)] if puddle else []
     pin_puddle = ['-P'] if module.boolean(pin_puddle) else []
     enable_poodle_repos = ['-d'] if module.boolean(enable_poodle_repos) else []
-    director_puddle = ['-p', str(director_puddle)] if director_puddle else puddle
+    director_puddle = ['-p', str(director_puddle)] if director_puddle else []
     distro_version = ['-r', distro_version] if distro_version else []
     poodle_type = POODLE_TYPES.get(module.params['poodle_type'], [])
     source_hostname = ['-H', source_hostname] if source_hostname else []
@@ -260,8 +298,8 @@ def main():
     mods = {
         'pin': '-P',
         'flea': '-f',
-        'unstable': '--unstable'
-
+        'unstable': '--unstable',
+        'cdn': ''
     }
 
     cmd = []
@@ -273,12 +311,15 @@ def main():
         if not release:
             _fail(module, "'release' option should be specified.", cmd)
 
+        if "cdn" in buildmods:
+            release = str(release) + "-cdn"
+
         releases = [(str(release), puddle)]
         try:
             if int(release) < 10 and director:
                 releases = [(str(release) + '-director', director_puddle)] + releases
         except ValueError:
-            # RDO versions shouldn't try to get director repos
+            # RDO versions & CDN shouldn't try to get director repos
             pass
 
         for release, build in releases:
