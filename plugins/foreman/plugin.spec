@@ -29,9 +29,10 @@ subparsers:
                       help: 'Which command to send with the power-management selected by mgmt_strategy. For example - reset, reboot, cycle'
                       default: cycle
                   wait:
-                      type: Bool
-                      default: True
-                      help: 'Wait for host to return from rebuild'
+                      type: Value
+                      default: 10
+                      help: 'Number of seconds to wait before checking connectivity to the host after rebuild'
+
 
             - title: Host details
               options:
