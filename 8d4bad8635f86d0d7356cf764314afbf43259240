@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "faf74394_3e6b9196",
+        "filename": "plugins/tempest/tasks/run_suite.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2017-06-29T13:18:53Z",
+      "side": 1,
+      "message": "Lemme analyze this step by step for all possible variables:\n\nversion|setup|ostestr # first_conditional second_conditional\n7|GIT|\u003e\u003d0.8 # false false\n\u003e\u003d7|GIT|\u003e\u003d0.8 # true false \u003c---\n7|GIT|\u003c0.8 # false false\n\u003e\u003d7|GIT|\u003c0.8 # false false\n\n7|RPM|\u003e\u003d0.8 # false false\n\u003e\u003d7|RPM|\u003e\u003d0.8 # false false\n7|RPM|\u003c0.8 # false true    \u003c---\n\u003e\u003d7|RPM|\u003c0.8 # false false\n\nSo if I get it right, first task will be run only for\n\u003e\u003d7|GIT|\u003e\u003d0.8 (1 - why GIT only if we just received updated ostestr 0.8 in repos? I thought this is how Tempest with latest ostestr we want to run nowadays everywhere?)\nand second for\n7|RPM|\u003c0.8 ? (2 - is this really true?)\n\nThat doesn\u0027t make sense for me, please explain.\n\nad 2) suite 7 will be run inly for RPM setups still having not os-testr updated? How is that possible as IR ensures we have ostestr updated to latest version?\n\n3) I thought we want to run RPM everywhere from now.\n\n4) I would like to remove whole task \"run tempest \"{{ test_suite }}\" suite 7\" as it is not needed anymore to unify  once and for all how Tempest is deployed for all RHOS releases, with exception:\n * that we want to maintain backward compatibility for a while (I am not against, just questions above needs to be answered, we can remove it as part of RHOSINFRA-1183 later.",
+      "revId": "8d4bad8635f86d0d7356cf764314afbf43259240",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
