@@ -1,0 +1,133 @@
+---
+# Assuming ironic's introspection was killed when stuck we need to give it time to recover
+# and respond to API calls (especially in clumsy OSPd7).
+- name: give ironic time to recover after async introspection was killed
+  wait_for: timeout=20
+
+- name: get overall bulk status during failure
+  shell: |
+      source ~/stackrc
+      ironic node-list
+      openstack baremetal introspection bulk status
+      systemctl list-units | grep ironic
+  ignore_errors: yes
+  tags:
+      - skip_ansible_lint
+
+- name: Get output of bulk introspection status and store as yaml
+  shell: |
+       source ~/stackrc
+       openstack baremetal introspection bulk status -f yaml
+  register: bulk_status
+  ignore_errors: yes
+  when: install.version|default(undercloud_version)|openstack_release > 7
+  tags:
+      - skip_ansible_lint
+
+# Extract introspected nodes to yaml
+- set_fact:
+      introspected_nodes: '{{ bulk_status.stdout | from_yaml }}'
+  when: install.version|default(undercloud_version)|openstack_release > 7
+
+# Construct list of UUID's of nodes failing introspection
+- set_fact:
+      failed_nodes_uuids: "{{ (failed_nodes_uuids | default([]) ) + [ item['Node UUID'] ] }}"
+  with_items: "{{ introspected_nodes | default([]) }}"
+  when: install.version|default(undercloud_version)|openstack_release > 7 and item['Finished'] == false
+
+# Ironic in OSPd7 doesn't support yaml/json output format, it must be done "bash" way
+- name: get and store full list of UUIDs of nodes that failed introspection (OSPd7)
+  shell: |
+       source ~/stackrc
+       openstack baremetal introspection bulk status | grep -Ei '(False|Timeout)' |  awk '{print $2}'
+  register: failed_nodes_uuids_7
+  ignore_errors: yes
+  when: install.version|default(undercloud_version)|openstack_release == 7
+
+# Merge both possible variables into one
+- set_fact:
+      failed_nodes_uuids: "{{ (failed_nodes_uuids | default([])) + (failed_nodes_uuids_7.stdout_lines | default([])) }}"
+
+- name: print UUID's of nodes that failed introspection
+  debug:
+      msg: "Introspection failed on these nodes: {{ failed_nodes_uuids }}"
+  when: install.version|default(undercloud_version)|openstack_release > 7 and failed_nodes_uuids is defined
+
+- name: get details about failed nodes
+  shell: |
+      source ~/stackrc
+      ironic node-show {{ item }}
+  register: failed_nodes_details
+  ignore_errors: yes
+  # Merge both lists failed_nodes_uuids and failed_nodes_uuids_7 here as only one of them is defined
+  with_items: "{{ failed_nodes_uuids }}"
+  tags:
+      - skip_ansible_lint
+
+# As detailed info about failed nodes contains a lot of useless output (stderr, ansible variables, ...)
+# and only makes harder to read reasonable information from ansible log, we need to create simple variable
+# from stdout's created in previous step using concatenation (combination) of stdouts's (dicts)
+# created in loop only.
+- name: create prettified info nodes failed bulk introspection
+  set_fact:
+    failed_nodes_prettified: "{{ failed_nodes_prettified|default({}) | combine( {item.stdout: ''} ) }}"
+  with_items: "{{ failed_nodes_details.results | default([]) }}"
+  when: failed_nodes_details.results is defined
+
+- name: print prettified info about nodes failed bulk introspection
+  debug:
+      msg: "{{ failed_nodes_prettified }}"
+  when: failed_nodes_prettified is defined
+
+# TBD(fhubik): We need to track failed nodes in future and export them as build marks
+#- name: add build mark with names of nodes failing bulk introspection gathered from ironic
+#  debug:
+#      msg: "Build mark: nodes_failing_introspection={{ failed_nodes_uuids }}"
+
+- name: introspect and retry sequentially node by node the khaleesi way
+  shell: >
+      source ~/stackrc;
+      openstack baremetal introspection start {{ item }};
+      export STATUS=$(openstack baremetal introspection status {{ item }} | grep 'finished');
+      while [[ $STATUS != *"True"* ]]; do
+          echo "Waiting for instrospection of {{ item }} to complete.";
+          sleep 10;
+          export STATUS=$(openstack baremetal introspection status {{ item }} | grep 'finished');
+      done;
+      openstack baremetal introspection status {{ item }} | grep 'error'
+  register: introspect_status
+  retries: 3
+  delay: 5
+  until: introspect_status.stdout.find("None") != -1
+  with_items: "{{ failed_nodes_uuids | default([]) }}"
+  when: failed_nodes_uuids is defined
+
+- name: store uuid's of all nodes in ironic db
+  shell: |
+       source ~/stackrc
+       openstack baremetal introspection bulk status | grep -Ei '(True|False)' |  awk '{print $2}'
+  register: total_nodes
+  tags:
+      - skip_ansible_lint
+
+# If bulk introspection was not completed, nodes are not set to available which
+# makes them invisible to overcloud deploy stage.
+- name: set provision state of all nodes to available if bulk introspection failed to do so
+  shell: |
+      source ~/stackrc;
+      export PROV_STATE=$(ironic node-show {{ item }} | grep ' provision_state ');
+      if [[ $PROV_STATE != *"available"* ]]; then
+          ironic node-set-provision-state {{ item }} provide;
+      fi
+  with_items: "{{ total_nodes.stdout_lines | default([]) }}"
+  tags:
+      - skip_ansible_lint
+
+- name: see overall status after node-by-node introspection was done
+  shell: |
+      source ~/stackrc
+      ironic node-list
+      openstack baremetal introspection bulk status
+  tags:
+      - skip_ansible_lint
+

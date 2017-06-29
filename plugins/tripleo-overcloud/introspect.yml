@@ -68,12 +68,37 @@
         with_items: "{{ groups['overcloud_nodes'] | default([])}}"
         when: "'bmc' in groups"
 
+      # Because introspection is faulty and tricky especially on baremetals
+      # we need to check multiple times if any failure occured. Reasonable time
+      # for this process to take is < 10 minutes no matter how many nodes for baremetals.
+      # Virtual setups don't suffer from long timeouts caused by delays in boot
+      # process, BIOS timeouts and errors in firmware so they are covered by such timeout
+      # seamlessly. This must be async task because we need to enforce explicit timeout
+      # for this process, otherwise timeout is controlled by ironic and seriously long
+      # (usually one must wait for 1 hour if any failure on any node occurs).
       - name: start node introspection
         shell: |
             source ~/stackrc
             openstack baremetal introspection bulk start
-        register: introspection_result
-        failed_when: introspection_result.rc != 0
         tags:
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
             - skip_ansible_lint
+        register: bulk_intro_result
+        poll: 50
+        async: 600
+        retries: 10
+        delay: 90
+        ignore_errors: yes
+
+      # Async tasks in Ansible don't have rc defined if they failed (for some reason) which makes registered
+      # variable different for various outcomes and just using "result" key is not possible here.
+      # Following fact will construct properly introspection result properly from possibly
+      # different statutes presented by output of async task.
+      - set_fact:
+            bulk_intro_ok: "{{ true if bulk_intro_result.rc is defined and bulk_intro_result.rc == 0 else false }}"
+
+      # If bulk introspection failed, play introspection_recovery playbook which runs node-by-node introspection
+      # and also helps with debugging and recovery.
+      - name: Recover from errors during bulk introspection
+        include: tasks/introspection_recovery.yml
+        when: not bulk_intro_ok
