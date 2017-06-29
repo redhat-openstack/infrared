@@ -65,6 +65,15 @@
           blacklistfile: "--blacklist_file black_list_{{ test_suite }}"
   when: test_dict.blacklist is defined and test_dict.blacklist
 
+- name: Get ostestr version
+  shell: ostestr --version | sed 's/ostestr\ version\ //g'
+  register: ostestr_version
+  when: test.openstack.version|default(overcloud_version)|openstack_release >= 7
+
+- name: set ostestr_version fact
+  set_fact: ostestr_version=ostestr_version_output.stdout_lines
+  when: test.openstack.version|default(overcloud_version)|openstack_release >= 7
+
 - name: add regex invoke for "{{ test_suite }}"
   set_fact:
       regex: "{{ test_dict.test_regex }}"
@@ -80,7 +89,7 @@
             executable: /bin/bash
             chdir: "{{ test.dir }}"
         ignore_errors: true
-        when: test.openstack.version|default(overcloud_version)|openstack_release != 7 or test.setup != 'rpm'
+        when: test.openstack.version|default(overcloud_version)|openstack_release >= 7 or test.setup != 'rpm' and ostestr_version >= 0.8.0
 
       - name: run tempest "{{ test_suite }}" suite 7
         shell: |
@@ -98,7 +107,7 @@
             executable: /bin/bash
             chdir: "{{ test.dir }}"
         ignore_errors: true
-        when: test.openstack.version|default(overcloud_version)|openstack_release == 7 and test.setup == 'rpm'
+        when: test.openstack.version|default(overcloud_version)|openstack_release == 7 and test.setup == 'rpm' and ostestr_version < 0.8.0
 
       - name: inject the test suite name to the XML name atribute
         command: "sed '/^<testsuite/s/name=\"\"/name=\"{{ test_suite }}\"/' -i {{ test_output_file }}"
