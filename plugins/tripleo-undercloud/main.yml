@@ -6,10 +6,7 @@
 
 - name: Deploy the Undercloud
   include: "{{ install_undercloud | default('undercloud.yml') }}"
-  when:
-      - install.version|default('')
-      - not install.upgrade|default('')
-      - not install.get('update', {}).undercloud|default('')
+  when: install.version|default('')
 
 - name: Including post provision tasks
   include: "{{ undercloud_post | default('post.yml') }}"
