@@ -68,4 +68,9 @@
                 routers: "{{ routers.results | map(attribute='router') | list }}"
         include: tasks/register_resources_file.yml
 
-#      TODO(aopincar): Add 'security groups' dynamic creation
+      - name: create security groups
+        include: tasks/create_network_resources.yml
+        with_dict: "{{ security_groups|default({}) }}"
+        loop_control:
+            loop_var: sg
+        when: security_groups is defined

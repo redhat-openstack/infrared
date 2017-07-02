@@ -182,6 +182,11 @@ subparsers:
                       default: no
                       help: Deploy Overcloud with Octavia (Load Balancer).
 
+                  network-ovn:
+                      type: Bool
+                      default: no
+                      help: Use OVN instead of ML2 and OVS.
+
                   octavia-image-url:
                       type: Value
                       help: |
@@ -294,6 +299,7 @@ subparsers:
                           pin - pin puddle (dereference 'latest' links to prevent content from changing)
                           flea - enable flea repos
                           unstable - this will enable brew repos or poodles (in old releases)
+                          cdn - use internal mirrors of the CDN repos. (internal use)
                           none - use none of those flags
                       default: pin
 

@@ -1,0 +1,31 @@
+- name: Create security group
+  vars:
+      resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
+  os_security_group:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      state: present
+      name: "{{ sg.key }}"
+      description: Security group created by Infrared
+  register: security_group
+
+- name: Add rules to the security group
+  vars:
+      resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
+  os_security_group_rule:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      security_group: "{{ sg.key }}"
+      direction: "{{ item.direction }}"
+      ethertype: "{{ item.ethertype }}"
+      remote_ip_prefix: "{{ item.remote_ip_prefix }}"
+      protocol: "{{ item.protocol|default(omit) }}"
+      port_range_min: "{{ item.port_range_min|default(omit) }}"
+      port_range_max: "{{ item.port_range_max|default(omit) }}"
+  with_items: "{{ sg.value.rules }}"
+
+- name: register security group
+  vars:
+      input:
+          security_group_list:
+              # use default to avoid warnings on skip
+              - "{{ security_group.secgroup|default('') }}"
+  include: register_resources_file.yml

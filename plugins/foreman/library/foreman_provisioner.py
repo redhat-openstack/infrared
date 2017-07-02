@@ -73,16 +73,14 @@ options:
      required: false
    wait_for_host:
      description:
-         - Whether we should wait for the host given the 'rebuild' state was set.
-     default: true
+         - Number of seconds we should wait for the host given the 'rebuild' state was set.
+     default: 10
      required: false
 '''
 
 
 MIN_SUPPORTED_VERSION = 2
 MGMT_SUPPORTED_STRATEGIES = ['foreman', 'ipmi']
-WAIT_TO_FINISH_BUILDING = 10
-WAIT_TO_FINISH_BOOTING = 10
 
 
 class ForemanManager(object):
@@ -230,7 +228,7 @@ class ForemanManager(object):
         return missing_bmc
 
     def provision(self, host_id, mgmt_strategy, mgmt_action,
-                  ipmi_username, ipmi_password, wait_for_host=True):
+                  ipmi_username, ipmi_password, wait_for_host=10):
         """
         This method rebuilds a machine, doing so by running get_host and bmc.
         :param host_id: the name or ID of the host we wish to rebuild
@@ -238,14 +236,15 @@ class ForemanManager(object):
         (i.e: foreman, ipmi, etc)
         :param mgmt_action: the action we wish to use with the strategy
         (e.g: cycle, reset, etc)
-        :param wait_for_host: whether the function will wait until host has
-        finished rebuilding before exiting.
+        :param wait_for_host: number of seconds the function waits after host
+        finished rebuilding before checking connectivity
         :param ipmi_username: remote server username (IPMI)
         :param ipmi_password: remote server password (IPMI)
         :raises: KeyError if BMC hasn't been found on the given host
                  Exception in case of machine could not be reached after
                  rebuild
         """
+        wait_for_host = int(wait_for_host)
         if self._validate_bmc(host_id):
             raise KeyError("BMC not found on {}".format(host_id))
         building_host = self.get_host(host_id)
@@ -260,7 +259,7 @@ class ForemanManager(object):
                             "management strategy".format(mgmt_strategy))
         if wait_for_host:
             while self.get_host(host_id).get('build'):
-                time.sleep(WAIT_TO_FINISH_BUILDING)
+                time.sleep(wait_for_host)
 
             command = "ping -q -c 30 -w 300 {0}".format(building_host.get('name'))
             return_code = subprocess.call(command, shell=True)
@@ -280,7 +279,7 @@ def main():
                                choices=MGMT_SUPPORTED_STRATEGIES),
             mgmt_action=dict(default='cycle', choices=['on', 'off', 'cycle',
                                                        'reset', 'soft']),
-            wait_for_host=dict(default=True, type='bool', choices=BOOLEANS),
+            wait_for_host=dict(default=10),
             ipmi_username=dict(default='ADMIN'),
             ipmi_password=dict(default='ADMIN')))
 
@@ -297,8 +296,7 @@ def main():
                                      module.params['mgmt_action'],
                                      module.params['ipmi_username'],
                                      module.params['ipmi_password'],
-                                     module.boolean(
-                                         module.params['wait_for_host']))
+                                     module.params['wait_for_host'])
         except KeyError as e:
             module.fail_json(msg=e.message)
         else:
