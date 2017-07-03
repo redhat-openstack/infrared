@@ -43,11 +43,6 @@ PLUGINS_REGISTRY = {
         'desc': 'The gabbi test runner',
         'type': 'test'
     },
-    'octario': {
-        'src': 'https://github.com/redhat-openstack/octario.git',
-        'desc': 'Octario test runner',
-        'type': 'test'
-    },
     'openstack': {
         'src': 'plugins/openstack',
         'desc': 'Provision systems using Ansible OpenStack modules',
