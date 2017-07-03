@@ -70,6 +70,7 @@
 
 - name: Perform post install tasks
   include: "{{ overcloud_post | default('post.yml') }}"
-  when: install.post|default('')
+  when:
+      - install.post|default('')
   tags:
       - post
