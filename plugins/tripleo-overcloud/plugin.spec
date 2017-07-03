@@ -315,3 +315,15 @@ subparsers:
                       default: password
                       help: |
                         VBMC password (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+            - title: Fencing and instance high-availability
+              options:
+                  fencing:
+                      type: Bool
+                      default: no
+                      help: |
+                        Configure fencing of nodes
+                  instance-ha:
+                      type: Bool
+                      default: no
+                      help: |
+                        Enable high-availability of instances
