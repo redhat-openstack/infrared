@@ -32,3 +32,17 @@
 
 - include: post/manila.yml
   tags: manila
+
+# Tripleo native support for fencing (supported from OSP 11)
+- name: Configure auto-fencing
+  include: post/native-fencing.yml
+  when: install.version|openstack_release >= 11 and (install.fencing|default(False) or install.instance.ha|default(False))
+
+# Configuration of fencing with using fence_xvm agent for older releases (<11)
+- name: Configure virt fencing
+  include: post/virt-fencing.yml
+  when: install.version|openstack_release < 11 and 'hypervisor' in groups and (install.fencing|default(False) or install.instance.ha|default(False))
+
+- name: Configure instance high-availability
+  include: post/instance-ha.yml
+  when: install.instance.ha|default(False)
