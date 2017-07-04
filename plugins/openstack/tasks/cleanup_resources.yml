@@ -10,6 +10,7 @@
       state: absent
   with_items: "{{ keypairs|default([]) }}"
   register: keypairs_cleanup
+  ignore_errors: yes
 
 - name: Cleanup servers
   os_server:
@@ -19,6 +20,7 @@
       delete_fip: yes
   with_items: "{{ servers|default([]) }}"
   register: servers_cleanup
+  ignore_errors: yes
 
 - name: Cleanup routers
   os_router:
@@ -27,6 +29,7 @@
       state: absent
   with_items: "{{ routers|default([]) }}"
   register: routers_cleanup
+  ignore_errors: yes
 
 - name: Cleanup subnets
   os_subnet:
@@ -35,6 +38,7 @@
       state: absent
   with_items: "{{ subnets|default([]) }}"
   register: subnets_cleanup
+  ignore_errors: yes
 
 - name: Cleanup networks
   os_network:
@@ -43,6 +47,7 @@
       state: absent
   with_items: "{{ networks|default([]) }}"
   register: networks_cleanup
+  ignore_errors: yes
 
 - name: Cleanup security groups
   os_security_group:
