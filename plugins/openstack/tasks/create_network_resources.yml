@@ -21,6 +21,7 @@
       port_range_min: "{{ item.port_range_min|default(omit) }}"
       port_range_max: "{{ item.port_range_max|default(omit) }}"
   with_items: "{{ sg.value.rules }}"
+  when: security_group|changed
 
 - name: register security group
   vars:
@@ -29,3 +30,4 @@
               # use default to avoid warnings on skip
               - "{{ security_group.secgroup|default('') }}"
   include: register_resources_file.yml
+  when: security_group|changed
