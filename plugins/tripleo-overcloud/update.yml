@@ -1,5 +1,5 @@
 - name: Collecting Info
-  hosts: undercloud,overcloud_nodes
+  hosts: undercloud:overcloud_nodes:!unused
   gather_facts: yes
   any_errors_fatal: true
   tags: update_collect_info
@@ -42,7 +42,7 @@
             oc_cdn_register: "{{ cdn_status.rc }}"
 
 - name: Update Overcloud repos
-  hosts: overcloud_nodes
+  hosts: overcloud_nodes:!unused
   gather_facts: yes
   any_errors_fatal: true
   tags:
@@ -76,7 +76,7 @@
 
       - name: Scan nodes ssh keys
         command: "ssh-keyscan -t rsa {{ hostvars[item].ansible_ssh_host }}"
-        with_items: "{{ groups.overcloud_nodes|default([]) }}"
+        with_items: "{{ groups.overcloud_nodes|default([])|difference(groups.unused|default([])) }}"
         register: pubkeys
 
       - name: Add nodes to known_hosts
