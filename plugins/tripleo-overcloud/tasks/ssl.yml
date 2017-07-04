@@ -33,18 +33,14 @@
   register: network_env
   when: "not 'bmc' in groups"
 
-- name: get IP address of VIP
-  set_fact:
-      external_allocation_pool_start: "{{ (network_env.stdout | from_yaml).parameter_defaults.ExternalAllocationPools[0].start }}"
-  when: "not 'bmc' in groups"
-
 # NOTE(oanufrii): OVB deployment does not use network isolation
 #                 we don't copy any network related files to undercloud,
 #                 including 'network-environmetn.yml'
-- name: generate SSL subject when ovb
+- name: Determine certificate subject
+  vars:
+      rand: "ir-{{ 9999 | random }}"
   set_fact:
-      external_allocation_pool_start: "ir-{{ 9999 | random }}"
-  when: "'bmc' in groups"
+      certificate_subject: "{{  rand if 'bmc' in groups else (network_env.stdout | from_yaml).parameter_defaults.ExternalAllocationPools[0].start  }}"
 
 - name: create CA certificate
   vars:
@@ -58,7 +54,7 @@
       openssl req
       {{ uc_signed if undercloud_ssl|succeeded else self_signed }}
       -out {{ template_base }}/overcloud-cacert.pem -days 365
-      -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ external_allocation_pool_start }}'
+      -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ certificate_subject }}'
 
 - name: process server RSA keys
   command: "openssl rsa -in {{ template_base }}/overcloud-privkey.pem  -out {{ template_base }}/overcloud-privkey.pem"
