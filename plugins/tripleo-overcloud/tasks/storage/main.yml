@@ -5,7 +5,7 @@
   vars:
       storage_group: "{{ groups[storage_backend] | list }}"
   include: disksfominstackenv.yml
-  when: storage_backend == "swift" or storage_backend == "ceph"
+  when: storage_backend in ['swift', 'ceph']
 
 - name: check if user provided storage templates
   stat:
