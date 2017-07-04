@@ -11,6 +11,11 @@
         command: "cat ~/.ssh/id_rsa"
         register: uc_pkey_result
 
+      - name: discover provsion network name
+        include: tasks/discover_provision_net.yml
+        vars:
+            uc_provision_net: "ctlplane"
+
       - name: get information about vm's from hypervisor
         delegate_to: hypervisor
         shell: |
@@ -19,7 +24,7 @@
                 'name': '{{ item }}',
                 'arch': '`echo "$NODE_XML" | grep arch | cut -d\' -f2`',
                 'memory_kibs': '`echo "$NODE_XML" | grep currentMemory | cut -d\< -f2 | cut -d\> -f2`',
-                'mac': '`echo "$NODE_XML" | grep data -B 1 | grep mac | cut -d\' -f2`',
+                'mac': '`echo "$NODE_XML" | grep {{ provison_virsh_network_name }} -B 1 | grep mac | cut -d\' -f2`',
                 'cpu': '`echo "$NODE_XML" | grep vcpu | cut -d\< -f2 | cut -d\> -f2`',
                 'disk_bytes': '`virsh domblkinfo {{ item }} vda | grep -e Capacity | cut -d\: -f2 | xargs`',
             }"
