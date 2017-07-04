@@ -56,6 +56,7 @@
      name: "{{ item.id }}"
   with_items: "{{ security_group_list | default([]) }}"
   register: sg_cleanup
+  ignore_errors: yes
 
 - name: Check if SG cleanup failed because SG is still in use
   set_fact:
