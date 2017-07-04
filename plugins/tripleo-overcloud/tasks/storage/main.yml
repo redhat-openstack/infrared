@@ -1,6 +1,12 @@
 - name: try to discover storage storage
   include: discover_backend.yml
 
+- name: get ceph_disks
+  vars:
+      storage_group: "{{ groups[storage_backend] | list }}"
+  include: disksfominstackenv.yml
+  when: storage_backend == "swift" or storage_backend == "ceph"
+
 - name: check if user provided storage templates
   stat:
       path: "{{ template_base }}/storage"

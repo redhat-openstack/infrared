@@ -1,0 +1,25 @@
+- name: load instackenv
+  command: cat ~/instackenv.json
+  register: instackenv_js
+
+- name:
+  set_fact:
+      instackenv_data: "{{ instackenv_js.stdout | from_json }}"
+
+- name: Get storage nodes disks from instackenv
+  set_fact:
+      node_disks: "{{ item['disks'] | default(['vda']) }}"
+
+  # All hosts 'from instackenv.json' which name is in storage group (swift or ceph) of inventory
+  with_items: "{{ instackenv_data.nodes }}"
+  when: item["name"] in storage_group
+  register: storage_nodes_disks
+
+- name:
+  set_fact:
+      storage_node_disks: "{{ (storage_nodes_disks.results | first).ansible_facts['node_disks'] }}"
+
+- name:
+  debug:
+      msg: "Storage_node_disks: {{ storage_node_disks }}"
+      verbosity: 2
