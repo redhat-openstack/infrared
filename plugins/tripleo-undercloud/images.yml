@@ -87,13 +87,25 @@
             openstack overcloud image upload --update-existing
         tags: skip_ansible_lint
 
-      - name: check for existing nodes
+      - name: check for existing nodes ( OS <= 10 )
+        shell: |
+            source ~/stackrc
+            ironic node-list 2>/dev/null | wc -l
+        tags:
+            - skip_ansible_lint
+        register: oc_nodes_prev
+        when:
+            - undercloud_version|openstack_release <= 10
+
+      - name: check for existing nodes ( OS >= 11 )
         shell: |
             source ~/stackrc
             openstack baremetal node list -c UUID -f json
         tags:
             - skip_ansible_lint
         register: oc_nodes
+        when:
+            - undercloud_version|openstack_release >= 11
 
       - name: configure nodes to use updated kernel and ramdisk ( OS <= 10 )
         shell: |
@@ -102,8 +114,8 @@
         tags:
             - skip_ansible_lint
         when:
-            - oc_nodes.stdout|from_json
             - undercloud_version|openstack_release <= 10
+            - oc_nodes_prev.stdout|int > 4
 
       # https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/11/html/upgrading_red_hat_openstack_platform/chap-director-minor-update#sect-Updating_Overcloud_and_Introspection_Images
       - name: configure nodes to use updated kernel and ramdisk ( OS >= 11 )
@@ -113,8 +125,8 @@
         tags:
             - skip_ansible_lint
         when:
-            - oc_nodes.stdout|from_json
             - undercloud_version|openstack_release >= 11
+            - oc_nodes.stdout|from_json
 
       - name: remove downloaded images
         file:
