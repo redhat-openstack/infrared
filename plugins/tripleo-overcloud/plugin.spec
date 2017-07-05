@@ -177,6 +177,11 @@ subparsers:
                       default: no
                       help: Activate Neutron DVR extension on the overcloud.
 
+                  network-l2gw:
+                      type: Bool
+                      default: no
+                      help: Activate APIs and implementations to support L2 Gateways in Neutron
+
                   network-octavia:
                       type: Bool
                       default: no
