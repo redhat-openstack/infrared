@@ -1,8 +1,15 @@
 # This is needed for os_keypair as it uses public key
+# By loading the .pub file we allow use of crypted private keys.
 - name: Retrieve public key from private key
-  command: "ssh-keygen -y -f {{ provision.key.file }}"
+  shell: |
+    if [[ -f {{ provision.key.file }}.pub ]]; then
+       cat {{ provision.key.file }}.pub
+    else
+       ssh-keygen -y -f {{ provision.key.file }}
+    fi
   register: public_key_content
   when: not provision.key.name
+  changed_when: false
 
 - name: Add keypair
   os_keypair:
