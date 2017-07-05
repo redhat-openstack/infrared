@@ -293,7 +293,7 @@ class WorkspaceManager(object):
         if not self.has_workspace(name):
             raise exceptions.IRWorkspaceMissing(workspace=name)
         else:
-            if self.is_active(name):
+            if self.is_active(name) and os.path.exists(self.active_file):
                 os.remove(self.active_file)
             shutil.rmtree(os.path.join(self.workspace_dir, name))
 
@@ -436,10 +436,11 @@ class WorkspaceManager(object):
     def cleanup(self, name):
         """Removes all the files from the workspace folder"""
 
-        was_active = self.is_active(name)
+        checked_out = self.is_active(name) and os.environ.get(
+            ACTIVE_WORKSPACE_ENV_NAME) != name
         self.delete(name)
         self.create(name)
-        if was_active:
+        if checked_out:
             self.activate(name)
 
     def node_list(self, workspace_name=None):
