@@ -64,6 +64,12 @@
       line: '-e {{ install.heat.templates.basedir }}/environments/neutron-ovs-dvr.yaml \'
   when: install.network.dvr
 
+- name: append the l2gw template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/neutron-l2gw.yaml \'
+  when: install.network.l2gw
+
 - name: append the octavia template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
