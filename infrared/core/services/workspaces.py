@@ -270,7 +270,10 @@ class WorkspaceManager(object):
         return workspace
 
     def activate(self, name):
-        """Activates the workspace."""
+        """Activates the workspace.
+
+        :param name: Name of the workspace to activate
+        """
 
         if os.environ.get(ACTIVE_WORKSPACE_ENV_NAME):
             raise exceptions.IRException(
@@ -287,15 +290,24 @@ class WorkspaceManager(object):
         else:
             raise exceptions.IRWorkspaceMissing(workspace=name)
 
-    def delete(self, name):
-        """Deactivate and removes the workspace."""
+    def delete(self, name, keep_active_workspace_file=False):
+        """Deactivates and removes the workspace.
+
+        :param name: Name of the workspace to delete
+        :param keep_active_workspace_file: Whether to keep the active
+        workspace file or not (used in workspace cleanup)
+        """
 
         if not self.has_workspace(name):
             raise exceptions.IRWorkspaceMissing(workspace=name)
-        else:
-            if self.is_active(name):
+
+        if os.path.isfile(self.active_file) and not keep_active_workspace_file:
+            with open(self.active_file) as fp:
+                f_active_workspace = fp.read().strip()
+            if f_active_workspace == name:
                 os.remove(self.active_file)
-            shutil.rmtree(os.path.join(self.workspace_dir, name))
+
+        shutil.rmtree(os.path.join(self.workspace_dir, name))
 
     def list(self):
         """Lists all the existing workspaces.
@@ -436,11 +448,8 @@ class WorkspaceManager(object):
     def cleanup(self, name):
         """Removes all the files from the workspace folder"""
 
-        was_active = self.is_active(name)
-        self.delete(name)
+        self.delete(name, keep_active_workspace_file=True)
         self.create(name)
-        if was_active:
-            self.activate(name)
 
     def node_list(self, workspace_name=None):
         """Lists nodes and connection types from workspace's inventory
