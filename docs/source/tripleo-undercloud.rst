@@ -67,9 +67,8 @@ will be later created.
                 Starting from OSP 8, TripleO is packages with pre-built images avialable via RPM.
                 .. note:: This option is invalid for `RDO` installation.
 
-* Use ``--images-repos`` to instruct infrared whether to inject the repositories defined in
-  the `setup <Setup Undercloud Packages>`_ stage to the image (Allowing later update of the OverCloud)
-* Use ``--images-packages`` to define a list of additional packages to install on the OverCloud image
+* Use ``--images-packages`` to define a list of additional packages to install on the OverCloud image.
+  Packages can be specified by name or by providing direct url to the rpm file.
 * ``--images-cleanup`` tells `infrared` do remove the images files original after they are uploaded
   to the undercloud's Glance service.
 
