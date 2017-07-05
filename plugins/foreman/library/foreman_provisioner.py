@@ -222,7 +222,7 @@ class ForemanManager(object):
         body = response.json()
         missing_bmc = True
         for interface in body['results']:
-            if "BMC" in interface['type']:
+            if "BMC" in interface['type'].upper():
                 missing_bmc = False
                 break
         return missing_bmc
