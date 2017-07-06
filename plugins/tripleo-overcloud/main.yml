@@ -14,6 +14,7 @@
   when:
       - not install.upgrade|default('')
       - install.updateto|default('None') == 'None'
+      - install.build|default('None') != 'None'
 
 - name: Overcloud Upgrade
   include: "{{ overcloud_upgrade | default('upgrade.yml') }}"
@@ -22,5 +23,5 @@
 - name: Overcloud Update
   include: "{{ overcloud_update | default('update.yml') }}"
   when:
-      - install.updateto|default('None') != 'None'
+      - install.updateto|default('None') != 'None' or install.build|default('None') != 'None'
       - install.upgrade|default('None') == 'None'

@@ -101,6 +101,14 @@ class SpecParser(object):
 
         return self._get_defaults(spec_default_getter)
 
+    def get_deprecated_args(self):
+        result = collections.defaultdict(dict)
+        for parser, option in self.spec_helper.iterate_option_specs():
+            if option.get('deprecates', None) is not None:
+                result[option.get('deprecates')] = option.get('name')
+
+        return result
+
     def get_answers_file_args(self, cli_args):
         """Resolve arguments' values from answers INI file. """
 
@@ -256,6 +264,9 @@ class SpecParser(object):
         self.validate_arg_sources(cli_args, file_args,
                                   spec_defaults)
 
+        # print warnings for deprecated
+        self.validate_arg_deprecation(cli_args, file_args)
+
         # now filter defaults to have only parser defined in cli
         defaults = {key: spec_defaults[key] for key in cli_args.keys() if
                     key in spec_defaults}
@@ -272,6 +283,31 @@ class SpecParser(object):
         self.resolve_custom_types(defaults)
         nested, control = self.get_nested_and_control_args(defaults)
         return nested, control
+
+    def validate_arg_deprecation(self, cli_args, answer_file_args):
+        """Validates and prints the deprecated arguments.
+
+        :param cli_args: the dict of arguments from cli
+        :param answer_file_args:  the dict of arguments from files
+        """
+
+        def warn_deprecated(command_name, deprecated, deprecated_by):
+            LOG.warning(
+                "[{}] Argument '{}' was deprecated,"
+                " please use '{}'.".format(
+                    command_name, deprecated, deprecated_by))
+
+        deprecated_args = self.get_deprecated_args()
+
+        for command, command_dict in answer_file_args.items():
+            for key in command_dict.keys():
+                if key in deprecated_args:
+                    warn_deprecated(command, key, deprecated_args.get(key))
+
+        for command, command_dict in cli_args.items():
+            for key in command_dict.keys():
+                if key in deprecated_args:
+                    warn_deprecated(command, key, deprecated_args.get(key))
 
     @staticmethod
     def validate_arg_sources(cli_args, answer_file_args, spec_defaults):
