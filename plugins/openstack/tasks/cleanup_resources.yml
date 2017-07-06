@@ -49,6 +49,21 @@
   register: networks_cleanup
   ignore_errors: yes
 
+- name: Cleanup security groups rules
+  os_security_group_rule:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      security_group: "{{ item.security_group_id }}"
+      direction: "{{ item.direction }}"
+      ethertype: "{{ item.ethertype }}"
+      remote_ip_prefix: "{{ item.remote_ip_prefix }}"
+      protocol: "{{(item.protocol == '')|ternary(item.protocol, omit)}}"
+      port_range_min: "{{ item.port_range_min|int|default(omit) }}"
+      port_range_max: "{{ item.port_range_max|int|default(omit) }}"
+      state: absent
+  with_items: "{{ security_group_rule_list|default([]) }}"
+  register: sg_rules_cleanup
+  ignore_errors: yes
+
 - name: Cleanup security groups
   os_security_group:
      cloud: "{{ provision.cloud | default(omit) }}"
@@ -66,4 +81,5 @@
            networks_cleanup|succeeded and
            keypairs_cleanup|succeeded and
            servers_cleanup|succeeded and
+           sg_rules_cleanup|succeeded and
            sg_cleanup|succeeded)

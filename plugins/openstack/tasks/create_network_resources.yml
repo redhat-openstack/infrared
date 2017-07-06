@@ -8,6 +8,15 @@
       description: Security group created by Infrared
   register: security_group
 
+- name: register security group
+  vars:
+      input:
+          security_group_list:
+              # use default to avoid warnings on skip
+              - "{{ security_group.secgroup|default('') }}"
+  include: register_resources_file.yml
+  when: security_group|changed
+
 - name: Add rules to the security group
   vars:
       resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
@@ -21,13 +30,17 @@
       port_range_min: "{{ item.port_range_min|default(omit) }}"
       port_range_max: "{{ item.port_range_max|default(omit) }}"
   with_items: "{{ sg.value.rules }}"
-  when: security_group|changed
+  register: sg_rule
 
-- name: register security group
+- name: save servers for registration
+  set_fact:
+      secudity_group_rule_list: "{{ secudity_group_rule_list|default([]) + (sg_rule.results | map(attribute='rule')|list) }}"
+  when: sg_rule|changed
+
+- name: Register security group list
   vars:
       input:
-          security_group_list:
-              # use default to avoid warnings on skip
-              - "{{ security_group.secgroup|default('') }}"
+          security_group_rule_list: "{{ secudity_group_rule_list}}"
   include: register_resources_file.yml
-  when: security_group|changed
+  when: sg_rule|changed
+
