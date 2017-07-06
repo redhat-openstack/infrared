@@ -147,14 +147,15 @@ Overcloud Update
 
 Minor update detects Undercloud's version and updates packages within same version to latest available.
 
-* ``--updateto``: target build to update to
+* ``--build``: target build to update to
+  deprecates: --updateto
   defaults to ``None``, in which case, update is disabled.
   possible values: build-date, ``latest``, ``passed_phase1``, ``z3`` and all other labels supported by ``rhos-release``
   When specified, rhos-release repos would be setup and used for minor updates.
 
 Example::
 
-    infrared tripleo-overcloud -v --updateto latest --deployment-files virt
+    infrared tripleo-overcloud -v --build latest --deployment-files virt
 
 .. note:: Minor update expects that Overcloud Deployment script and files/templates,
   used during the initial deployment, are available at Undercloud node in home directory of Undercloud user.
