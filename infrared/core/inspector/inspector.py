@@ -101,6 +101,16 @@ class SpecParser(object):
 
         return self._get_defaults(spec_default_getter)
 
+    def get_deprecated_args(self):
+        """Returning dict with options which deprecate others. """
+
+        result = collections.defaultdict(dict)
+        for parser, option in self.spec_helper.iterate_option_specs():
+            if option.get('deprecates') is not None:
+                result[option.get('deprecates')] = option.get('name')
+
+        return result
+
     def get_answers_file_args(self, cli_args):
         """Resolve arguments' values from answers INI file. """
 
@@ -256,6 +266,9 @@ class SpecParser(object):
         self.validate_arg_sources(cli_args, file_args,
                                   spec_defaults)
 
+        # print warnings for deprecated
+        self.validate_arg_deprecation(cli_args, file_args)
+
         # now filter defaults to have only parser defined in cli
         defaults = {key: spec_defaults[key] for key in cli_args.keys() if
                     key in spec_defaults}
@@ -272,6 +285,28 @@ class SpecParser(object):
         self.resolve_custom_types(defaults)
         nested, control = self.get_nested_and_control_args(defaults)
         return nested, control
+
+    def validate_arg_deprecation(self, cli_args, answer_file_args):
+        """Validates and prints the deprecated arguments.
+
+        :param cli_args: the dict of arguments from cli
+        :param answer_file_args:  the dict of arguments from files
+        """
+
+        for deprecated, deprecates in self.get_deprecated_args().iteritems():
+            for input_args in (answer_file_args.items(), cli_args.items()):
+                for command, command_dict in input_args:
+                    if deprecated in command_dict:
+                        if deprecates in command_dict:
+                            raise exceptions.IRDeprecationException(
+                                "[{}] Argument '{}' deprecates '{}',"
+                                " please use only the new one.".format(
+                                    command, deprecated, deprecates))
+
+                        LOG.warning(
+                            "[{}] Argument '{}' was deprecated,"
+                            " please use '{}'.".format(
+                                command, deprecated, deprecates))
 
     @staticmethod
     def validate_arg_sources(cli_args, answer_file_args, spec_defaults):
