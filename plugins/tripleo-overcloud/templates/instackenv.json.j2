@@ -15,7 +15,9 @@
       "cpu": "{{ host_data.cpu }}",
       "memory": "{{ (host_data.memory_kibs|int / 1024)|round|int }}",
       "disk": "{{ (host_data.disk_bytes|int / 1073741824)|round|int }}",
-      "disks": {{ host_data.disks }},
+      {% if install.version|default(undercloud_version)|openstack_release < 11 %}
+        "disks": {{ host_data.disks }},
+      {% endif %}
       "arch": "{{ host_data.arch }}",
       {% if install.version|default(undercloud_version) | openstack_release >= 11 %}
         "pm_type": "pxe_ipmitool",
