@@ -4,7 +4,7 @@
   os_security_group:
       cloud: "{{ provision.cloud | default(omit) }}"
       state: present
-      name: "{{ sg.key }}"
+      name: "{{ provision.prefix }}{{ sg.key }}"
       description: Security group created by Infrared
   register: security_group
 
@@ -13,7 +13,7 @@
       resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
   os_security_group_rule:
       cloud: "{{ provision.cloud | default(omit) }}"
-      security_group: "{{ sg.key }}"
+      security_group: "{{ provision.prefix }}{{ sg.key }}"
       direction: "{{ item.direction }}"
       ethertype: "{{ item.ethertype }}"
       remote_ip_prefix: "{{ item.remote_ip_prefix }}"
