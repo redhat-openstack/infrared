@@ -43,3 +43,13 @@ subparsers:
                   req-arg-b:
                       type: Bool
                       help: "Help for --req-arg-b"
+
+            - title: Group D
+              options:
+                    deprecated-way:
+                        type: Value
+                        help: "Deprecated way to do it"
+                    new-way:
+                        deprecates: deprecated-way
+                        type: Value
+                        help: "New way to do it"
