@@ -4,11 +4,18 @@
   any_errors_fatal: true
   tasks:
 
-      - name: "Install/Upgrade/Update are mutually exclusive"
+      - name: "Install/Upgrade are mutually exclusive"
         fail:
             msg: "Options '--deploy' and '--upgrade' are mutually exclusive"
         when:
             - ( install.deploy|default('') and install.upgrade|default(''))
+
+      - name: "--build deprecates --updateto"
+        fail:
+            msg: "Option '--build' deprecates '--updateto'. Please use only '--build'"
+        when:
+            - install.build|default('None') != 'None'
+            - install.updateto|default('None') != 'None'
 
       - name: validate storage nodes
         fail:
