@@ -590,3 +590,39 @@ def test_output_with_IniType(spec_fixture, tmpdir,
     with open(dry_output.strpath) as fp:
         loaded_yml = yaml.safe_load(fp)
         assert loaded_yml['provision']['iniopt'] == expected_output
+
+
+def test_deprecation(spec_fixture, workspace_manager_fixture,  # noqa
+                               test_workspace, tmpdir):
+    """Verify execution runs with deprecated option """
+
+    my_temp_dir = tmpdir.mkdir("tmp")
+    deprecated_output = my_temp_dir.join("deprecated_output.yml")
+
+    deprecated_input_string = \
+        ['example', '--deprecated-way', 'TestingValue', '--dry-run',
+         '-o', str(deprecated_output)]
+
+    output = my_temp_dir.join("output.yml")
+
+    input_string = \
+        ['example', '--new-way', 'TestingValue', '--dry-run',
+         '-o', str(output)]
+
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
+
+    workspace_manager_fixture.activate(test_workspace.name)
+    spec_manager.run_specs(args=deprecated_input_string)
+    spec_manager.run_specs(args=input_string)
+
+    with open(deprecated_output.strpath) as fp:
+        deprecated_yml = yaml.safe_load(fp)["provision"]
+
+    with open(output.strpath) as fp:
+        new_yml = yaml.safe_load(fp)["provision"]
+
+    assert deprecated_yml.get('new', None).get('way', None) is None
+    assert new_yml.get('new', None).get('way', None) is None
+
+    assert new_yml["new"]["way"] != deprecated_yml["new"]["way"]
