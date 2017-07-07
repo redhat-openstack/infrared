@@ -5,26 +5,26 @@
   ignore_errors: true
 
 - name: Check for IPV6 network environment file
-  stat:
-      path: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/network/network-environment-v6.yaml"
+  command: "grep -Fq network-isolation-v6.yaml {{ overcloud_deploy_script }}"
   register: net_env_ipv6
+  ignore_errors: true
   when: check_for_ssl|succeeded
 
 - name: Set network_environment_file to IPV6 file
   set_fact:
       network_environment_file: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/network/network-environment-v6.yaml"
-  when: check_for_ssl|succeeded and net_env_ipv6.stat.exists
+  when: check_for_ssl|succeeded and net_env_ipv6|succeeded
 
 - name: Check for IPV4 network environment file
-  stat:
-      path: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/network/network-environment.yaml"
+  command: "grep -Fq network-isolation.yaml {{ overcloud_deploy_script }}"
   register: net_env_ipv4
+  ignore_errors: true
   when: check_for_ssl|succeeded
 
 - name: Set network_environment_file to IPV4 file
   set_fact:
       network_environment_file: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/network/network-environment.yaml"
-  when: check_for_ssl|succeeded and net_env_ipv4.stat.exists
+  when: check_for_ssl|succeeded and net_env_ipv4|succeeded
 
 - name: Extract our external allocation pools start value
   command: "cat {{ network_environment_file }}"
