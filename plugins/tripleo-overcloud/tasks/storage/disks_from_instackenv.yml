@@ -17,13 +17,15 @@
 
   # NOTE(oanufrii): Works only for OSPd > 10
 - name: Get BareMetal introspection data
+  vars:
+      storage_node: "{{ instackenv_data.nodes | selectattr('name', 'match', storage_group|join('|')) | list | first}}"
   shell: |
       source ~/stackrc
       # Get list of baremetal introspection UUIDs
       for UUID in $(openstack baremetal introspection list | tail -n +4 | head -n -1 | awk {'print $2'});
       do
           # For every UUID get introspection data and search for mac address, defined in 'instackenv.json'
-          MATCH=$(openstack baremetal introspection data save ${UUID} | jq ''|grep "{{ item.mac[0] }}" | wc -l)
+          MATCH=$(openstack baremetal introspection data save ${UUID} | jq ''|grep "{{ storage_node.mac[0] }}" | wc -l)
           # If mac address if found
           if [ ${MATCH} != 0 ];
           then
@@ -32,19 +34,14 @@
           fi
       done
   # All hosts 'from instackenv.json' which name is in storage group (swift or ceph) of inventory
-  with_items: "{{ instackenv_data.nodes }}"
-  when:
-      - item["name"] in storage_group
-      - install.version |openstack_release > 10
+  when: install.version |openstack_release > 10
   register: inventory_disks
 
 - name:
   set_fact:
       # Parse JSON output of 'Get BareMetal introspection data' shell module
-      # We need only one of resault, assuming storage nodes configuretions are identical
-      storage_node_disks: "{{ (inventory_disks.results | first).stdout | from_json }}"
+      storage_node_disks: "{{ inventory_disks.stdout | from_json }}"
   when: install.version |openstack_release > 10
-
 
 - name:
   debug:
