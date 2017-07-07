@@ -60,7 +60,9 @@
         release: "{{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }}"
         build: "{{ install.build | default(omit) }}"
         mirror: "{{ install.mirror | default(omit) }}"
-        tags: upgrade
+        tags:
+            - upgrade
+            - upgrade_repos
   tasks:
       - name: "{{ operation_type }} to version {{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }} build {{ install.build | default('latest') }}"
         include: "tasks/upgrade/upgrade.yml"
