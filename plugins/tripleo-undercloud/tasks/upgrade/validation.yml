@@ -1,9 +1,9 @@
 ---
 - fail:
-      msg: "Upgrade is supported only for version 7, 8, 9 and 10"
+      msg: "Upgrade is supported starting with RHOSP version 7"
   when:
     - install.upgrade|default(false)
-    - undercloud_version|openstack_release not in [7, 8, 9, 10]
+    - undercloud_version|openstack_release < 7
 
 - fail:
       msg: "Infrared support update for RHOSP from version 7."
