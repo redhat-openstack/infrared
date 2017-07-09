@@ -45,25 +45,6 @@
 
           - name: grab auth data from openstackrc file and publish it as YAML
             vars:
-                undercloud_rc: ~/stackrc
-            shell: |
-                source {{ undercloud_rc }}
-                echo "
-                auth_url: $OS_AUTH_URL
-                username: $OS_USERNAME
-                password: $OS_PASSWORD
-                project_name: ${OS_PROJECT_NAME:-$OS_TENANT_NAME}
-                "
-                if [ -n "$OS_PROJECT_DOMAIN_NAME" ]; then
-                    echo "project_domain_name: $OS_PROJECT_DOMAIN_NAME"
-                fi
-                if [ -n "$OS_USER_DOMAIN_NAME" ]; then
-                    echo "user_domain_name: $OS_USER_DOMAIN_NAME"
-                fi
-            register: creds
-
-          - name: update IP of overcloud nodes
-            vars:
                 # Here can't be used {{ path_venv }}, because it's not a Jinja template
                 ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
             os_server_facts:
@@ -75,22 +56,35 @@
             add_host:
                 name: "{{ item.name }}"
                 # only add groups for new nodes. don't touch existing nodes' groups
-                groups: "{{ ( item.name in groups.all ) | ternary(hostvars[(hostvars|select('match', '.*' + item.name + '$')|first)].group_names|difference(['unused']),
+                groups: "{{ ( item.name in groups.all ) | ternary(omit,
                     ['overcloud_nodes', 'openstack_nodes', item.name.split('-')[0]] | join(',')
                    ) }}"
                 ansible_ssh_user: "{{ user }}"
                 ansible_ssh_pass: ""
                 ansible_ssh_host: "{{ item.accessIPv4 }}"
                 ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
-
             with_items: "{{ openstack_servers }}"
 
+          - name: list ironic nodes
+            # Use CSV format as JSON not supported in old versions
+            shell: |
+                source ~/stackrc
+                openstack baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} list -f csv
+            register: ironic_node_list
+            tags: skip_ansible_lint
+
           - name: try to find unused nodes and add them into a new unused group
+            with_items: "{{ ironic_node_list.get('stdout', '[]')|from_csv }}"
+            vars:
+                # take ironic UUID if name is missing
+                host_id: "{{ item.Name or item.UUID }}"
+            when:
+                - host_id not in openstack_servers|map(attribute='name')|list
+                - host_id in groups.all
             add_host:
-                name: "{{ item }}"
-                groups: "{{ hostvars[item].group_names }} + ['unused']"
-            when: item not in openstack_servers|map(attribute='name')|list
-            with_inventory_hostnames: overcloud_nodes
+                name: "{{ host_id }}"
+                # groups can only be added
+                groups: unused
 
         vars:
             path_venv: "/var/tmp/venv_shade"
