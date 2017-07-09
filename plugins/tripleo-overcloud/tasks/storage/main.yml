@@ -4,8 +4,10 @@
 - name: get ceph_disks
   vars:
       storage_group: "{{ groups[storage_backend] | list }}"
-  include: disksfominstackenv.yml
-  when: storage_backend in ['swift', 'ceph']
+  include: disks_from_instackenv.yml
+  when:
+      - storage_backend in ['swift', 'ceph']
+      - "not install.storage.external"
 
 - name: check if user provided storage templates
   stat:
