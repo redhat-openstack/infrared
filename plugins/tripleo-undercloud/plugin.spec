@@ -165,8 +165,7 @@ subparsers:
                   images-packages:
                       type: Value
                       help: |
-                          List of packages to install seperated by commas.
-                          Requires ``--images-repos=yes``
+                          List of packages to install separated by commas.
                           Example: vim,git
 
                   images-cleanup:
