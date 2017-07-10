@@ -171,6 +171,11 @@ subparsers:
                       default: no
                       help: Activate Neutron LBaaS(v2) extension on the overcloud.
 
+                  network-bgpvpn:
+                      type: Bool
+                      default: no
+                      help: APIs and framework to attach BGP VPNs to Neutron networks
+
                   network-dvr:
                       type: Bool
                       default: no
