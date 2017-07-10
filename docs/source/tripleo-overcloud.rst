@@ -29,6 +29,44 @@ Deployment Description
     ``--controller-nodes``, ``--compute-nodes``, ``--storage-nodes``.
     If not provided, will try to evaluate the exiting nodes and default to ``1``
     for ``compute``/``controller`` or ``0`` for ``storage``.
+* ``--hybrid``: Specifies whether deploying a hybrid environment.
+    When this flag it set, the user should pass to the ``--instackenv-file`` parameter a link to a JSON file.
+    The file contains information about the bare-metals servers that will be added to the instackenv.json file during introspection.
+
+    Below is an example of a JSON file in a valid format:
+
+    .. code-block:: plain
+       :caption: hybrid_bms.yml
+
+       [
+          {
+            "name": "compute-0",
+            "pm_addr": "172.16.0.1",
+            "mac": ["00:11:22:33:44:55"],
+            "cpu": "8",
+            "memory": "32768",
+            "disk": "40",
+            "arch": "x86_64",
+            "pm_type": "pxe_ipmitool",
+            "pm_user": "pm_user",
+            "pm_password": "pm_password",
+            "pm_port": "6230"
+          },
+          {
+            "name": "compute-1",
+            "pm_addr": "172.16.0.1",
+            "mac": ["00:11:22:33:44:56"],
+            "cpu": "8",
+            "memory": "32768",
+            "disk": "40",
+            "arch": "x86_64",
+            "pm_type": "pxe_ipmitool",
+            "pm_user": "pm_user",
+            "pm_password": "pm_password",
+            "pm_port": "6231"
+          }
+       ]
+
 
 Overcloud Options
 -----------------
