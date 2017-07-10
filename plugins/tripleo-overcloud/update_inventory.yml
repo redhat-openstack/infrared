@@ -3,45 +3,46 @@
   hosts: undercloud
   gather_facts: yes
   any_errors_fatal: true
+  strategy: debug
   vars:
       user: heat-admin
       # The var "private_key" is used outside this scope and cannot be overridden
       overcloud_pkey: "{{ inventory_dir }}/id_rsa_overcloud"
   tasks:
-      - name: fetch the private key file from the undercloud
-        fetch:
-            src: "~/.ssh/id_rsa"
-            dest: "{{ overcloud_pkey }}"
-            flat: yes
-
-      - name: update file permissions
-        delegate_to: localhost
-        become: no
-        file:
-            path: "{{ overcloud_pkey }}"
-            mode: 0600
-
-      - name: Install python-virtualenv, gcc, python-devel for the pip tasks
-        become: yes
-        package:
-            name: "{{ item }}"
-            state: present
-        with_items:
-           - python-virtualenv
-           - gcc
-           - python-devel
+#      - name: fetch the private key file from the undercloud
+#        fetch:
+#            src: "~/.ssh/id_rsa"
+#            dest: "{{ overcloud_pkey }}"
+#            flat: yes
+#
+#      - name: update file permissions
+#        delegate_to: localhost
+#        become: no
+#        file:
+#            path: "{{ overcloud_pkey }}"
+#            mode: 0600
+#
+#      - name: Install python-virtualenv, gcc, python-devel for the pip tasks
+#        become: yes
+#        package:
+#            name: "{{ item }}"
+#            state: present
+#        with_items:
+#           - python-virtualenv
+#           - gcc
+#           - python-devel
 
       - block:
-          - pip:
-                name: "{{ item.key }}"
-                version: "{{ item.value }}"
-                virtualenv: "{{ path_venv }}"
-            with_dict:
-                setuptools: "17.0"
-                pytz: "2016.4"
-                shade: "1.19.0"
-                requests: "2.11.1"
-                pip: "8.1"
+#          - pip:
+#                name: "{{ item.key }}"
+#                version: "{{ item.value }}"
+#                virtualenv: "{{ path_venv }}"
+#            with_dict:
+#                setuptools: "17.0"
+#                pytz: "2016.4"
+#                shade: "1.19.0"
+#                requests: "2.11.1"
+#                pip: "8.1"
 
           - name: grab auth data from openstackrc file and publish it as YAML
             vars:
@@ -71,11 +72,13 @@
                 # Required for SSL
                 validate_certs: no
 
+          # todo(obaranov) Remove hosts from the 'unused' group
+          # Currently ansible does not allow to remove existing host from a group
           - name: add hosts to host list
             add_host:
                 name: "{{ item.name }}"
                 # only add groups for new nodes. don't touch existing nodes' groups
-                groups: "{{ ( item.name in groups.all ) | ternary(hostvars[(hostvars|select('match', '.*' + item.name + '$')|first)].group_names|difference(['unused']),
+                groups: "{{ ( item.name in groups.all ) | ternary(omit,
                     ['overcloud_nodes', 'openstack_nodes', item.name.split('-')[0]] | join(',')
                    ) }}"
                 ansible_ssh_user: "{{ user }}"
@@ -116,7 +119,7 @@
   hosts: localhost
   gather_facts: no
   tasks:
-      - name: generate inventory file
+      - name: generate inventory file`
         template:
             dest: "{{ inventory_dir }}/hosts-install"
             src: inventory.j2
