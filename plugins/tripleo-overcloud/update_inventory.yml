@@ -71,11 +71,13 @@
                 # Required for SSL
                 validate_certs: no
 
+          # todo(obaranov) Remove hosts from the 'unused' group
+          # Currently ansible does not allow to remove existing host from a group
           - name: add hosts to host list
             add_host:
                 name: "{{ item.name }}"
                 # only add groups for new nodes. don't touch existing nodes' groups
-                groups: "{{ ( item.name in groups.all ) | ternary(hostvars[(hostvars|select('match', '.*' + item.name + '$')|first)].group_names|difference(['unused']),
+                groups: "{{ ( item.name in groups.all ) | ternary(omit,
                     ['overcloud_nodes', 'openstack_nodes', item.name.split('-')[0]] | join(',')
                    ) }}"
                 ansible_ssh_user: "{{ user }}"
