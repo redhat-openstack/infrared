@@ -1,0 +1,14 @@
+---
+- name: Containers post deployment tasks
+  hosts: undercloud
+  any_errors_fatal: true
+  gather_facts: no
+  tasks:
+    - name: Copy containers_wrnd.sh script to the undercloud
+      copy:
+          src: "files/containers_wrnd.sh"
+          dest: ~stack/containers_wrnd.sh
+          mode: 0755
+
+    - name: Execute containers_wrnd.sh script
+      shell: bash ~/containers_wrnd.sh
