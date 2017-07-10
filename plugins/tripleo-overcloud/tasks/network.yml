@@ -50,6 +50,12 @@
       - install.network.dvr
       - "{{ controller_path.matched != 1 }}"
 
+- name: append the bgpvpn template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/neutron-bgpvpn.yaml \'
+  when: install.network.bgpvpn
+
 - name: inject dvr override template
   vars:
       controller_abspath: "{{ controller_path.files[0].path }}"
