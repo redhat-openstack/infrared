@@ -78,6 +78,7 @@ subparsers:
                   instackenv-file:
                       type: Value
                       help: The path to the instackenv.json configuration file used for introspection.
+                      required_when: "hybrid == yes"
 
                   controller-nodes:
                       type: Value
@@ -92,6 +93,14 @@ subparsers:
                       help: |
                             The amount of storage nodes to deploy. If --storage-backend is set, this
                             value will default to '1', otherwise no storage nodes will be used.
+
+                  hybrid:
+                      type: Bool
+                      help: |
+                            Specifies whether deploying a hybrid environment.
+                            When this flag it set, the user should pass to the ``--instackenv-file`` parameter a link to a JSON file.
+                            The file contains information about the bare-metals servers that will be added to the instackenv.json file during introspection.
+                      default: False
 
             - title: Overcloud Options
               options:
