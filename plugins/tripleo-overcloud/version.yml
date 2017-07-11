@@ -19,22 +19,27 @@
           # TODO(yfried): change that when beta version changes
           beta: 11
       with_items: "{{ tripleo_source.results|selectattr('yumstate', 'equalto', 'available')|list }}"
-
-    # TODO(yfried): convert these to use "yum list" as well.
-    - name: get undercloud version from rhos-release
-      find:
-          use_regex: yes
-          patterns: 'rhos-release-[0-9]+.*'
-          paths:
-            - '/etc/yum.repos.d/'
-      register: rhos_release_result
-      when: undercloud_version is not defined
+      when: version_regex|int or version_regex == 'beta'
 
     - set_fact:
-          undercloud_version: "{{ rhos_release_result.files[0]['path'] | basename | regex_replace('^rhos-release-([0-9]+).*$', '\\1') }}"
+          undercloud_version: "{{ version_regex|int }}"
+      vars:
+          version_regex: "{{ item.repo | regex_replace('^rhelosp-([0-9]+\\.[0-9]+)(-director)?-puddle$', '\\1')}}"
+      with_items: "{{ tripleo_source.results|selectattr('yumstate', 'equalto', 'available')|list }}"
       when:
           - undercloud_version is not defined
-          - rhos_release_result.matched > 0
+          - version_regex|int
+          - version_regex > 0
+
+    - set_fact:
+          undercloud_version: "{{ version_regex|int }}"
+      vars:
+          version_regex: "{{ item.repo | regex_replace('^rhelosp-([0-9]+\\.[0-9]+)-cdn$', '\\1')}}"
+      with_items: "{{ tripleo_source.results|selectattr('yumstate', 'equalto', 'available')|list }}"
+      when:
+          - undercloud_version is not defined
+          - version_regex|int
+          - version_regex > 0
 
     - name: get undercloud rdo version
       find:
