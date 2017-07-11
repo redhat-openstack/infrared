@@ -10,9 +10,11 @@
     - name: create bridged network
       include: tasks/bridged_network.yml
       vars:
-          nic: "{{ ansible_default_ipv4 }}"
           bridges: "{{ networks.values() | selectattr('forward', 'defined') | selectattr('forward', 'equalto', 'bridge') | list }}"
           bridge_name: "{{ bridges[0].name if bridges else '' }}"
+          nic_name: "{{ bridges[0].nic|default('') if bridges else '' }}"
+          nic_data: "{{ (nic_name == '') | ternary(hostvars[inventory_hostname]['ansible_' + ansible_default_ipv4.interface],
+              hostvars[inventory_hostname]['ansible_' + nic_name]|default('')) }}"
       when: bridges|length
 
     - name: check for existing networks
