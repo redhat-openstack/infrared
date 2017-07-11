@@ -30,6 +30,7 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/{{ isolation_file }} \'
+  when: not install.role|default('') or (install.role is defined and install.role.files == 'default')
 
 - name: find the controller network template file in deployment files
   vars:

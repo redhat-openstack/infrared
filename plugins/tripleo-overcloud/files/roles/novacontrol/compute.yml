@@ -3,7 +3,13 @@ compute_role:
     name: Compute
 
     resource_registry:
-        "OS::TripleO::Compute::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/compute.yaml"
+        OS::TripleO::Compute::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/compute.yaml"
+        OS::TripleO::Compute::Ports::ExternalPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+        OS::TripleO::Compute::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
+        OS::TripleO::Compute::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
+        OS::TripleO::Compute::Ports::StorageMgmtPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+        OS::TripleO::Compute::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
+        #OS::TripleO::Compute::Ports::ManagementPort: "{{ install.heat.templates.basedir }}/network/ports/management.yaml"
 
     flavor: compute
     host_name_format: 'compute-%index%'

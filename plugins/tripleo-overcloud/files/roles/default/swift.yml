@@ -2,7 +2,13 @@ swift_role:
     name: ObjectStorage
 
     resource_registry:
-        "OS::TripleO::ObjectStorage::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/swift-storage.yaml"
+        OS::TripleO::ObjectStorage::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/swift-storage.yaml"
+        OS::TripleO::SwiftStorage::Ports::ExternalPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+        OS::TripleO::SwiftStorage::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
+        OS::TripleO::SwiftStorage::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
+        OS::TripleO::SwiftStorage::Ports::StorageMgmtPort: "{{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
+        OS::TripleO::SwiftStorage::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+        #OS::TripleO::SwiftStorage::Ports::ManagementPort: "{{ install.heat.templates.basedir }}/network/ports/management.yaml"
 
     flavor: swift
     host_name_format: 'swift-%index%'

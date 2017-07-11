@@ -3,7 +3,13 @@ ceph_role:
     name: CephStorage
 
     resource_registry:
-        "OS::TripleO::CephStorage::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/ceph-storage.yaml"
+        OS::TripleO::CephStorage::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/ceph-storage.yaml"
+        OS::TripleO::CephStorage::Ports::ExternalPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+        OS::TripleO::CephStorage::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+        OS::TripleO::CephStorage::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
+        OS::TripleO::CephStorage::Ports::StorageMgmtPort: "{{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
+        OS::TripleO::CephStorage::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+        #OS::TripleO::CephStorage::Ports::ManagementPort: "{{ install.heat.templates.basedir }}/network/ports/management.yaml"
 
     flavor: ceph
     host_name_format: 'ceph-%index%'

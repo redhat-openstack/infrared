@@ -1,15 +1,42 @@
 {% macro eval(value) -%}
 {{ value | replace('${ipv6_postfix}', ipv6_postfix) | replace('${ipv6_postfix_underscore}', ipv6_postfix_underscore) | replace('${deployment_dir}', deployment_folder_path ) }}
 {%- endmacro %}
+---
+
 resource_registry:
+  OS::TripleO::Network::External: {{ install.heat.templates.basedir }}/network/external.yaml
+  OS::TripleO::Network::InternalApi: {{ install.heat.templates.basedir }}/network/internal_api.yaml
+  OS::TripleO::Network::StorageMgmt: {{ install.heat.templates.basedir }}/network/storage_mgmt.yaml
+  OS::TripleO::Network::Storage: {{ install.heat.templates.basedir }}/network/storage.yaml
+  OS::TripleO::Network::Tenant: {{ install.heat.templates.basedir }}/network/tenant.yaml
+  # Management network is optional and disabled by default.
+  # To enable it, include environments/network-management.yaml
+  #OS::TripleO::Network::Management: {{ install.heat.templates.basedir }}/network/management.yaml
+
+  # Port assignments for the VIPs
+  OS::TripleO::Network::Ports::ExternalVipPort: {{ install.heat.templates.basedir }}/network/ports/external.yaml
+  OS::TripleO::Network::Ports::InternalApiVipPort: {{ install.heat.templates.basedir }}/network/ports/internal_api.yaml
+  OS::TripleO::Network::Ports::StorageVipPort: {{ install.heat.templates.basedir }}/network/ports/storage.yaml
+  OS::TripleO::Network::Ports::StorageMgmtVipPort: {{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml
+  OS::TripleO::Network::Ports::RedisVipPort: {{ install.heat.templates.basedir }}/network/ports/vip.yaml
+
+  # Port assignments for the block storage role
+  OS::TripleO::BlockStorage::Ports::ExternalPort: {{ install.heat.templates.basedir }}/network/ports/noop.yaml
+  OS::TripleO::BlockStorage::Ports::InternalApiPort: {{ install.heat.templates.basedir }}/network/ports/internal_api.yaml
+  OS::TripleO::BlockStorage::Ports::StoragePort: {{ install.heat.templates.basedir }}/network/ports/storage.yaml
+  OS::TripleO::BlockStorage::Ports::StorageMgmtPort: {{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml
+  OS::TripleO::BlockStorage::Ports::TenantPort: {{ install.heat.templates.basedir }}/network/ports/noop.yaml
+  #OS::TripleO::BlockStorage::Ports::ManagementPort: {{ install.heat.templates.basedir }}/network/ports/management.yaml
+
 {% set saved_roles = [] %}
 {% for host_name in groups.overcloud_nodes %}
 {% set node_name = host_name.rstrip('1234567890-').split('-')[-1] %}
 {%- if node_name not in saved_roles -%}
 {% set role = hostvars[ansible_play_hosts[0]].get(node_name + '_role') %}
 {% for option, value in role.get("resource_registry", {}).iteritems() %}
-    {{ option }}: {{ eval(value) }}
+  {{ option }}: {{ eval(value) }}
 {% endfor %}
+
 {% if saved_roles.append(node_name) %}{% endif %}
 {%- endif -%}
 {% endfor %}
