@@ -23,7 +23,7 @@
 - name: save network name
   vars:
       - network_dict: "{{ item.get_xml | from_xml }}"
-      - network_cidr: "{{ (network_dict.ip.address|default('') + '/' + network_dict.ip.netmask|default(''))|ipaddr('subnet') }}"
+      - network_cidr: "{{ (network_dict.get('ip', {}).address|default('') + '/' + network_dict.get('ip', {}).netmask|default(''))|ipaddr('subnet') }}"
   set_fact:
       provison_virsh_network_name: "{{ item.item }}"
   with_items: "{{ virsh_networks_details.results }}"

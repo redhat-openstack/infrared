@@ -56,7 +56,7 @@ Welcome to infrared's documentation!
    rdo
    composable_roles
    cdn_cookbook.rst
-
+   hybrid_deployment
 
 Indices and tables
 ==================

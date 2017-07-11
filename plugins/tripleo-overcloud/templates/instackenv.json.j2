@@ -6,7 +6,7 @@
   "arch": "x86_64",
   "nodes": [
 {% for bm_host in (bm_nodes|default({}))['nodes']|default([]) %}
-    {{ bm_host }},
+    {{ bm_host | to_nice_json }},
 {% endfor %}
 {% for host_string in nodes_info.results|map(attribute='stdout')|list %}
 {% set host_data = host_string|from_yaml %}
