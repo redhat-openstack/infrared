@@ -15,6 +15,11 @@
         include: tasks/discover_provision_net.yml
         vars:
             uc_provision_net: "ctlplane"
+        when: provison_virsh_network_name is not defined
+
+      - fail:
+            msg: "The provision network cannot be discovered. Please rerun infrared command with -e provison_virsh_network_name=<net_name>"
+        when: provison_virsh_network_name is not defined
 
       - name: get information about vm's from hypervisor
         delegate_to: hypervisor
