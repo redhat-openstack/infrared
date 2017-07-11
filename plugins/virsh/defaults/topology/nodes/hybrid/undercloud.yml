@@ -1,0 +1,32 @@
+name: undercloud
+prefix: null
+cpu: "4"
+cpumodel: "host-model"
+memory: "16384"
+swap: "0"
+os:
+    type: "linux"
+    variant: "rhel7"
+disks:
+    disk1:
+        import_url: null
+        path: "/var/lib/libvirt/images"
+        dev: "/dev/vda"
+        size: "40G"
+        cache: "unsafe"
+        preallocation: "metadata"
+interfaces:
+    - network: "br-ctlplane"
+      bridged: yes
+    - network: "br-vlan"
+      bridged: yes
+    - network: "br-link"
+      bridged: yes
+    - &external
+      network: management
+external_network: *external
+
+groups:
+    - undercloud
+    - tester
+    - openstack_nodes
