@@ -81,6 +81,8 @@ class CliParser(object):
         # todo(obaranov) Pass all the unknown arguments to the ansible
         # For now just raise exception
         if unknown_args:
+            LOG.warning("The following options are not recognized: {}. \
+Ignoring...".format(unknown_args))
             raise exceptions.IRUnrecognizedOptionsException(unknown_args)
 
         parse_args = parse_args.__dict__
@@ -433,6 +435,7 @@ class NestedDict(ComplexType):
             dict_utils.dict_insert(results_dict, _value, *key.split("."))
         return results_dict
 
+
 IniType = NestedDict
 
 
@@ -577,6 +580,7 @@ ACTIONS = {
     'read-answers': ReadAnswersAction,
     'generate-answers': GenerateAnswersAction
 }
+
 
 # register complex Types. See ComplexType to implement new types
 COMPLEX_TYPES = {

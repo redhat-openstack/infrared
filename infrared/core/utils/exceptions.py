@@ -35,15 +35,6 @@ class IRInfiniteLookupException(IRException):
         super(IRInfiniteLookupException, self).__init__(message)
 
 
-class IRUnrecognizedOptionsException(IRException):
-    def __init__(self, wrong_options):
-        self.wrong_options = wrong_options
-        message = \
-            "The following options are not recognized:  '{}'".format(
-                wrong_options)
-        super(self.__class__, self).__init__(message)
-
-
 class IRRequiredArgsMissingException(IRException):
     def __init__(self, missing_args):
         self.missing_args = missing_args
