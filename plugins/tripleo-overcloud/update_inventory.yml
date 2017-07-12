@@ -93,9 +93,12 @@
                 openstack baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} list -f csv
             register: ironic_node_list
             tags: skip_ansible_lint
+            # Bug in Liberty version: No "node list" in openstack client, and no formatter in ironic client.
+            when: install.version|default(undercloud_version)|openstack_release != 8
 
           - name: try to find unused nodes and add them into a new unused group
-            with_items: "{{ ironic_node_list.stdout|from_csv }}"
+            # Set empty list for Liberty version
+            with_items: "{{ ironic_node_list.stdout|default('')|from_csv }}"
             vars:
                 # take ironic UUID if name is missing
                 host_id: "{{ item.Name or item.UUID }}"
