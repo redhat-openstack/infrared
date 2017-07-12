@@ -45,6 +45,13 @@
       - install.deploy|default('')
       - install.role is defined and install.role.files != 'default'
 
+- name: "After overcloud container workarounds (remove it ASAP)"
+  include: "docker_after_workaround.yml"
+  when:
+      - install.deploy|default('')
+      - install.version|default(undercloud_version) | openstack_release > 11
+      - install.containers|bool
+
 - name: Perform post install tasks
   include: "{{ overcloud_post | default('post.yml') }}"
   when: install.post|default('')
