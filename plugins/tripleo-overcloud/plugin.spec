@@ -34,7 +34,8 @@ subparsers:
                       help: |
                           Specifies whether the containers should be used for deployment.
                           Infrared will use containers only when install version >= 12
-                      default: yes
+                      # todo(obaranov) Change it to yes once containers become more stable
+                      default: no
 
                   registry-mirror:
                       type: Value
