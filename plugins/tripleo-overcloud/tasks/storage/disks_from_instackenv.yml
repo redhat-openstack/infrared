@@ -12,7 +12,7 @@
   # All hosts 'from instackenv.json' which name is in storage group (swift or ceph) of inventory
   with_items: "{{ instackenv_data.nodes }}"
   when:
-      - install.version |openstack_release < 11
+      - install.version|default(undercloud_version) |openstack_release < 11
       - item["name"] in storage_group
 
   # NOTE(oanufrii): Works only for OSPd > 10
@@ -34,14 +34,14 @@
           fi
       done
   # All hosts 'from instackenv.json' which name is in storage group (swift or ceph) of inventory
-  when: install.version |openstack_release > 10
+  when: install.version|default(undercloud_version) |openstack_release > 10
   register: inventory_disks
 
-- name:
+- name: set storage node disks
   set_fact:
       # Parse JSON output of 'Get BareMetal introspection data' shell module
       storage_node_disks: "{{ inventory_disks.stdout | from_json }}"
-  when: install.version |openstack_release > 10
+  when: install.version|default(undercloud_version) |openstack_release > 10
 
 - name:
   debug:
