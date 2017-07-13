@@ -5,14 +5,3 @@
   any_errors_fatal: true
   tasks:
        - setup:
-
-       - name: re-enable docker-distribution for OS < 11
-         lineinfile:
-             dest: "/etc/yum.conf"
-             line: "exclude=docker-distribution"
-             state: "absent"
-         ignore_errors: yes
-         when:
-             - install.version|openstack_distribution == 'OSP'
-             - install.version|openstack_release < 11
-             - install.get('director', {}).build|default('latest') != 'latest' or install.build != 'latest'
