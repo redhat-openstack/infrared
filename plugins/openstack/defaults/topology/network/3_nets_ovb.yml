@@ -41,27 +41,29 @@ networks_data:
                 - "{{ networks_vars.networks.external.name }}-subnet"
 
 security_groups:
-    "{{ provision.prefix }}bmc":
+    general_access:
         rules:
-        - direction: 'egress'
-          ethertype: 'IPv4'
-          remote_ip_prefix: '0.0.0.0/0'
-        - direction: 'egress'
-          ethertype: 'IPv6'
-          remote_ip_prefix: '::/0'
-        - direction: 'ingress'
-          ethertype: 'IPv4'
-          remote_ip_prefix: '0.0.0.0/0'
-          protocol: icmp
-        - direction: 'ingress'
-          ethertype: 'IPv4'
-          remote_ip_prefix: '0.0.0.0/0'
-          protocol: tcp
-          port_range_min: '22'
-          port_range_max: '22'
-        - direction: 'ingress'
-          ethertype: 'IPv4'
-          remote_ip_prefix: '0.0.0.0/0'
-          protocol: udp
-          port_range_min: '623'
-          port_range_max: '623'
+            - direction: 'egress'
+              ethertype: 'IPv4'
+              remote_ip_prefix: '0.0.0.0/0'
+            - direction: 'egress'
+              ethertype: 'IPv6'
+              remote_ip_prefix: '::/0'
+            - direction: 'ingress'
+              ethertype: 'IPv4'
+              remote_ip_prefix: '0.0.0.0/0'
+              protocol: icmp
+            - direction: 'ingress'
+              ethertype: 'IPv4'
+              remote_ip_prefix: '0.0.0.0/0'
+              protocol: tcp
+              port_range_min: '22'
+              port_range_max: '22'
+    bmc:
+        rules:
+            - direction: 'ingress'
+              ethertype: 'IPv4'
+              remote_ip_prefix: '0.0.0.0/0'
+              protocol: udp
+              port_range_min: '623'
+              port_range_max: '623'
