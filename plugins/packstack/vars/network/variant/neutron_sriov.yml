@@ -15,7 +15,27 @@ network_variant_config:
     CONFIG_NEUTRON_ML2_TYPE_DRIVERS: 'local,flat,vlan'
     CONFIG_NEUTRON_OVS_TENANT_NETWORK_TYPE: vlan
     CONFIG_NEUTRON_OVS_TUNNEL_IF: ""
-    CONFIG_NEUTRON_OVS_VLAN_RANGES: "{{ network_variant_internal_label }}:{{ network_variant_internal_vlan.range.start }}:{{ network_variant_internal_vlan.range.end }}, {{ network_label }}:{{ network_service_common.external.vlan.tag }}:{{ network_service_common.external.vlan.tag  }}"
-    CONFIG_NEUTRON_ML2_VLAN_RANGES: "{{ network_variant_internal_label }}:{{ network_variant_internal_vlan.range.start }}:{{ network_variant_internal_vlan.range.end }}, {{ network_label }}:{{ network_service_common.external.vlan.tag }}:{{ network_service_common.external.vlan.tag  }}"
-    CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS: "{{ network_variant_internal_label }}:{{ network_variant_internal_vlan.bridge }},{{ network_label }}:{{ network_service_common.external.vlan.bridge }}"
-    CONFIG_NEUTRON_OVS_BRIDGE_IFACES: "{{ network_variant_internal_vlan.bridge }}:{{ network_common.interfaces.data.label }},{{ network_service_common.external.vlan.bridge }}:{{ network_common.interfaces.external.label }}"
+    CONFIG_NEUTRON_OVS_VLAN_RANGES: >
+      {{ network_variant_internal_label }}:
+      {{ network_variant_internal_vlan.range.start }}:
+      {{ network_variant_internal_vlan.range.end }},
+      {{ network_label }}:
+      {{ network_service_common.external.vlan.tag }}:
+      {{ network_service_common.external.vlan.tag  }}
+    CONFIG_NEUTRON_ML2_VLAN_RANGES: >
+      {{ network_variant_internal_label }}:
+      {{ network_variant_internal_vlan.range.start }}:
+      {{ network_variant_internal_vlan.range.end }},
+      {{ network_label }}:
+      {{ network_service_common.external.vlan.tag }}:
+      {{ network_service_common.external.vlan.tag }}
+    CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS: >
+      {{ network_variant_internal_label }}:
+      {{ network_variant_internal_vlan.bridge }},
+      {{ network_label }}:
+      {{ network_service_common.external.vlan.bridge }}
+    CONFIG_NEUTRON_OVS_BRIDGE_IFACES: >
+      {{ network_variant_internal_vlan.bridge }}:
+      {{ network_common.interfaces.data.label }},
+      {{ network_service_common.external.vlan.bridge }}:
+      {{ network_common.interfaces.external.label }}
