@@ -552,13 +552,13 @@ def test_ansible_args(spec_fixture, workspace_manager_fixture,          # noqa
 
     # Tests from-file
     (None,
-     'tests/example/files/answers_file.yml',
+     'tests/example/files/answers_file.ini',
      {'sec1': {'opt1': 'f_val1', 'opt2': 'f_val2'},
       'sec2': {'opt1': 'f_val3'}}),
 
     # Tests CLI with from-file
     ("--iniopt secx.optx=valx",
-     'tests/example/files/answers_file.yml',
+     'tests/example/files/answers_file.ini',
      {'secx': {'optx': 'valx'}}),
 ])
 def test_output_with_IniType(spec_fixture, tmpdir,
