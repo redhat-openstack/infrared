@@ -195,7 +195,7 @@ subparsers:
                   network-ovn:
                       type: Bool
                       default: no
-                      help: Use OVN instead of ML2 and OVS.
+                      help: Use OVN (HA) instead of ML2 and OVS.
 
                   octavia-image-url:
                       type: Value
