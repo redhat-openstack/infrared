@@ -65,3 +65,12 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/docker.yaml \'
+
+- name: append extra containers templates for the build scripts in case of HA
+  vars:
+      controllers_number: "{{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or 1 }}"
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/docker-ha.yaml \'
+  when:
+      controllers_number|int > 1
