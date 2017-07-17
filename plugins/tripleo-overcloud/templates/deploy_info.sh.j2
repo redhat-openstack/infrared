@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if ! options=$(getopt -o h -l help -- "$@"); then
+if ! options=$(getopt -o "h,l" -l "help,long" -- "$@"); then
 	# parse error
 	display_help
 	exit 1
@@ -14,11 +14,14 @@ function display_help()
 	echo "This command supposed to help to debug openstack overcloud deployment issues."
 	echo "The undercloud credentials has to be available as an environment variable, and will be used by the openstack command."
 	echo "-h|--help Display help"
+	echo "-l|--long To show long, uncut, logs"
 }
 
+LONG=""
 while [ $# -gt 0 ]; do
 	case "$1" in
 		-h|--help) display_help; exit 0 ;;
+		-l|--long) LONG="--long"; ;;
 		(--) shift; break ;;
 		(-*) echo "$0: error - unrecognized option $1" >&2; display_help; exit 1 ;;
 		(*)  echo "$0: error - unexpected argument $1" >&2; display_help; exit 1 ;;
@@ -37,8 +40,8 @@ echo "$DEPLOYMENTS"
 for a in `echo "$DEPLOYMENTS" | grep -v 'COMPLETE' | awk 'BEGIN {a=0}; /\|/{ if (a>2) print $2 "@" $4} {a=a+1}'`; do
 	deployment=${a%@*}
 	config=${a#*@}
-	echo openstack software deployment output show "$deployment" --all
-	openstack software deployment output show "$deployment" --all
+	echo openstack software deployment output show "$deployment" --all "$LONG"
+	openstack software deployment output show "$deployment" --all "$LONG"
 	echo openstack software deployment show "$deployment"
 	openstack software deployment show "$deployment"
 	echo openstack software config show "$config"
