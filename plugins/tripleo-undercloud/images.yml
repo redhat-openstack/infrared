@@ -83,12 +83,14 @@
        #Need to fix  BZ1462703 to apply --os-cloud
       - name: upload the overcloud images to glance
         shell: |
+            set -exuo pipefail
             source ~/stackrc
             openstack overcloud image upload --update-existing
         tags: skip_ansible_lint
 
       - name: check for existing nodes ( OS <= 10 )
         shell: |
+            set -exuo pipefail
             source ~/stackrc
             ironic node-list 2>/dev/null | wc -l
         tags:
