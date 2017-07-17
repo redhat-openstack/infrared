@@ -199,7 +199,7 @@ outputs:
     value: {get_resource: OctaviaSecurityGroup}
 EOF
 
-openstack stack create --template octavia-post.yaml octavia-post
+openstack stack create --template octavia-post.yaml octavia-post --wait
 
 # Once the stack is created, we can obtain the private and public key and other
 # info from the stack outputs.
@@ -268,19 +268,16 @@ do
 
     # Create a neutron port on the load balancer management network on each
     # controller node for the health managers.
-    port_id_and_mac=$(openstack port create --network lb-mgmt-net \
-        --binding-profile host_id=$node_hostname --security-group lb-mgmt-sec-grp \
-        --device-owner Octavia:health-mgr \
-        octavia-health-manager-$node_hostname-listen-port \
-        | awk '/ id | mac_address / {print $4}')
+    MGMT_PORT_ID=$(neutron port-create lb-mgmt-net \
+                    --binding:host_id=$node_hostname \
+                    --security-group lb-mgmt-sec-grp \
+                    --device-owner Octavia:health-mgr \
+                    --name octavia-health-manager-$node_hostname-listen-port -f value -c id)
 
     # Query and parse required data for creating the OVS port on the
     # integration bridge.
-    id_and_mac=($port_id_and_mac)
-    MGMT_PORT_ID=${id_and_mac[0]}
-    MGMT_PORT_MAC=${id_and_mac[1]}
-    MGMT_PORT_IP=$(openstack port show $MGMT_PORT_ID | awk '/ "ip_address": / {print $7; exit}' | \
-         sed -e 's/"//g' -e 's/,//g' -e 's/}//g')
+    MGMT_PORT_MAC=$(openstack port show $MGMT_PORT_ID -f value -c mac_address)
+    MGMT_PORT_IP=$(openstack port show $MGMT_PORT_ID -f value -c fixed_ips | cut -f1 -d, | cut -f2 -d= | tr "'" "\0")
 
     CONTROLLER_IP_LIST+="$MGMT_PORT_IP:5555, "
 
@@ -359,6 +356,7 @@ auth_type = $OS_AUTH_TYPE
 admin_user = $OS_USERNAME
 admin_password = $OS_PASSWORD
 admin_tenant_name = $OS_PROJECT_NAME
+auth_version = 2
 
 [octavia]
 request_poll_timeout = 3000
