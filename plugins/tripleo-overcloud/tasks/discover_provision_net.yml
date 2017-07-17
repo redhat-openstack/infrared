@@ -1,0 +1,30 @@
+# this shell supports OSP7 and above.
+- name: get ctlplane subnet
+  shell: |
+      source ~/stackrc
+      subnet_id=$(openstack network show {{ uc_provision_net|default('ctlplane')  }} | grep -owP 'subnets.*\|\s\K.*[^\|]+')
+      neutron subnet-show $subnet_id | grep -owP 'cidr.*\|\s\K.*[^\|]+' | tr -d ' '
+  register: ctlplane_subnet_cidr
+
+- name: get network list from hypervisor
+  delegate_to: hypervisor
+  virt_net:
+      command: list_nets
+  register: virsh_networks
+
+- name: get detailed information about all networks on hypervisor
+  delegate_to: hypervisor
+  virt_net:
+      command: get_xml
+      name: "{{ item }}"
+  register: virsh_networks_details
+  with_items: "{{ virsh_networks.list_nets }}"
+
+- name: save network name
+  vars:
+      - network_dict: "{{ item.get_xml | from_xml }}"
+      - network_cidr: "{{ (network_dict.ip.address|default('') + '/' + network_dict.ip.netmask|default(''))|ipaddr('subnet') }}"
+  set_fact:
+      provison_virsh_network_name: "{{ item.item }}"
+  with_items: "{{ virsh_networks_details.results }}"
+  when: network_cidr == ctlplane_subnet_cidr.stdout

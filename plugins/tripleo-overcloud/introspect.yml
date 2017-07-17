@@ -64,7 +64,8 @@
       - name: set the root device for baremetal nodes (with size hint)
         shell: |
             source ~/stackrc
-            ironic node-update {{ item }} add properties/root_device='{"size": {{ hostvars[item].disk  }} }'
+            NODE_UUID=$(ironic node-list | grep {{ item }} | awk '{print $2}' )
+            ironic node-update ${NODE_UUID} add properties/root_device='{"size": {{ hostvars[item].disk  }} }'
         with_items: "{{ groups['overcloud_nodes'] | default([])}}"
         when: "'bmc' in groups"
 

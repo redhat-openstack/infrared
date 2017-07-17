@@ -123,9 +123,12 @@
             enabled: yes
 
       - name: Open firewall for objectstore api
-        shell: |
-            ( iptables -C INPUT -p tcp -m multiport --dports 3333 -m comment --comment "bz1138740 - nova objectstore api incoming" -j ACCEPT && echo "Already open" ) || \
-            ( iptables -A INPUT -p tcp -m multiport --dports 3333 -m comment --comment "bz1138740 - nova objectstore api incoming" -j ACCEPT && echo "Opened" )
+        iptables:
+            comment: "Infrared: bz1138740 - nova objectstore api incoming"
+            chain: INPUT
+            jump: ACCEPT
+            protocol: tcp
+            destination_port: 3333
 
 - name: Check if BZ1210411 packstack/floating_ip_pool is enabled
   hosts: controller

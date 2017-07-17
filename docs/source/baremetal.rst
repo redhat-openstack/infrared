@@ -27,6 +27,23 @@ Infrared allows to perform baremetal deployments.
 
 3) Deploy Overcloud.
 
+   For deployment of OSPd by InfraRed, modification of ``instackenv.json`` is
+   necessary (`only for OSPd < 11. OSPd 12 fails with this injection`):
+   add ``disks`` key to storage (``ceph`` or ``swift``) nodes with list of disks names.
+   
+
+
+   .. code:: none
+
+     ...
+     "cpu": "2",
+     "memory": "4096",
+     "disk": "0",
+     "disks": ["vda", "vdb"],
+     "arch": "x86_64",
+     ...
+
+
     infrared tripleo-overcloud -vv \
         -o overcloud-install.yml \
         --version 11 \

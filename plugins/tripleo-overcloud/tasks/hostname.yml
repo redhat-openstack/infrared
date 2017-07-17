@@ -16,7 +16,8 @@
 - name: update node capabilities with node name for scheduler hints
   shell: >
       source ~/stackrc;
-      ironic node-update {{ (item | from_json)['name'] }} replace
+      NODE_UUID=$(ironic node-list | grep {{ (item | from_json)['name'] }} | awk '{print $2}')
+      ironic node-update ${NODE_UUID} replace
       properties/capabilities='node:{{ (item | from_json)['name'] }},{{ (item | from_json)['properties']['capabilities'] }}'
   with_items: "{{ ironic_nodes.results | default([]) | map(attribute='stdout') | list }}"
   tags: skip_ansible_lint

@@ -71,6 +71,8 @@
                 # Required for SSL
                 validate_certs: no
 
+          # todo(obaranov) Remove hosts from the 'unused' group
+          # Currently ansible does not allow to remove existing host from a group
           - name: add hosts to host list
             add_host:
                 name: "{{ item.name }}"
@@ -82,8 +84,32 @@
                 ansible_ssh_pass: ""
                 ansible_ssh_host: "{{ item.accessIPv4 }}"
                 ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
-
             with_items: "{{ openstack_servers }}"
+
+          - name: list ironic nodes
+            # Use CSV format as JSON not supported in old versions
+            shell: |
+                source ~/stackrc
+                openstack baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} list -f csv
+            register: ironic_node_list
+            tags: skip_ansible_lint
+            # Bug in Liberty version: No "node list" in openstack client, and no formatter in ironic client.
+            when: install.version|default(undercloud_version)|openstack_release != 8
+
+          - name: try to find unused nodes and add them into a new unused group
+            # Set empty list for Liberty version
+            with_items: "{{ ironic_node_list.stdout|default('')|from_csv }}"
+            vars:
+                # take ironic UUID if name is missing
+                host_id: "{{ item.Name or item.UUID }}"
+            when:
+                - host_id not in openstack_servers|map(attribute='name')|list
+                - host_id in groups.all
+            add_host:
+                name: "{{ host_id }}"
+                # groups can only be added
+                groups: unused
+
         vars:
             path_venv: "/var/tmp/venv_shade"
 

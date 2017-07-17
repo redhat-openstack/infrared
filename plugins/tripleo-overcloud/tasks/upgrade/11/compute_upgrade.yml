@@ -6,21 +6,21 @@
   os_server_facts:
       auth: "{{ creds.stdout | from_yaml }}"
       validate_certs: no
-  when: groups.compute|length > 1
+  when: groups.compute|difference(groups.unused|default([]))|length > 1
   tags: compute_migrate
 
 - name: List compute nodes
   shell: |
       source {{ overcloud_rc }}
       openstack hypervisor list -f json
-  when: groups.compute|length > 1
+  when: groups.compute|difference(groups.unused|default([]))|length > 1
   register: hypervisors_result
   tags: compute_migrate
 
 - name: Migrate instance from {{ node_name }}
   include: evacute_compute.yml
   when:
-      - groups.compute|length > 1
+      - groups.compute|difference(groups.unused|default([]))|length > 1
       - "'{{ hostvars[node_name].ansible_fqdn }}' in '{{ item['OS-EXT-SRV-ATTR:host'] }}'"
   with_items: "{{ openstack_servers }}"
   vars:
@@ -59,7 +59,7 @@
 - name: Migrate instance back to {{ node_name }}
   include: evacute_compute.yml
   when:
-      - groups.compute|length > 1
+      - groups.compute|difference(groups.unused|default([]))|length > 1
       - "'{{ hostvars[node_name].ansible_fqdn }}' in '{{ item['OS-EXT-SRV-ATTR:host'] }}'"
   with_items: "{{ openstack_servers }}"
   vars:

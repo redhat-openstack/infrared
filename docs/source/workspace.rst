@@ -85,13 +85,15 @@ Export:
 
         infrared workspace export
 
-        Workspace example2 exported to example2.tar
+        The active workspace example1 exported to example1.tar
 
     To export non-active workspaces, or control the output file::
 
-        infrared workspace export example1 --dest /tmp/look/at/my/workspace
+        infrared workspace export -n example2 -f /tmp/look/at/my/workspace
 
-        Workspace example1 exported to /tmp/look/at/my/workspace
+        Workspace example2 exported to /tmp/look/at/my/workspace.tgz
+
+  .. note:: If the ``-K/--copy-keys`` flag is given, SSH keys from outside the workspace directory, will be copied to the workspace directory and the inventory file will be changed accordingly.
 
 Import:
     Load a previously exported workspace (local or remote)::

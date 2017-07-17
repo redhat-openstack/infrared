@@ -12,7 +12,7 @@ parameter_defaults:
 {% endif %}
     ExtraConfig:
       ceph::profile::params::osds:
-{% for disk in ceph_facts.ansible_devices.keys()[1:] %}
+{% for disk in storage_node_disks[1:] %}
        '/dev/{{ disk }}':
            journal: ''
 {% endfor %}

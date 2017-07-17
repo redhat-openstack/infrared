@@ -74,10 +74,11 @@
       # Workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1404763
       - name: "workaround for rhbz #1404763"
         become: yes
-        command: iptables -I INPUT -j ACCEPT -p tcp
-        args:
-            warn: no
-        changed_when: true
+        iptables:
+            comment: "Infrared: bz1404763"
+            chain: INPUT
+            jump: ACCEPT
+            protocol: tcp
 
       # TODO(yfried): Use localhost where shade is mandatory
       - name: create the external network

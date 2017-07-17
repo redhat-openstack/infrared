@@ -31,10 +31,20 @@
 - name: extract our external allocation pools start value
   command: "cat {{ template_base }}/network/{{ network_environment_file }}"
   register: network_env
+  when: "not 'bmc' in groups"
 
 - name: get IP address of VIP
   set_fact:
       external_allocation_pool_start: "{{ (network_env.stdout | from_yaml).parameter_defaults.ExternalAllocationPools[0].start }}"
+  when: "not 'bmc' in groups"
+
+# NOTE(oanufrii): OVB deployment does not use network isolation
+#                 we don't copy any network related files to undercloud,
+#                 including 'network-environmetn.yml'
+- name: generate SSL subject when ovb
+  set_fact:
+      external_allocation_pool_start: "ir-{{ 9999 | random }}"
+  when: "'bmc' in groups"
 
 - name: create CA certificate
   vars:

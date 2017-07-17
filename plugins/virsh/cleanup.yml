@@ -33,6 +33,17 @@
     - include: tasks/cleanup.yml
       when: not install_libvirt|changed
 
+    - name: remove iptables rules created by infrared, by comment
+      # Can't use iptables module, because it can't delete by generic comment
+      vars:
+          iptables_comment_search: "Infrared"
+      shell: |
+          set -euo pipefail
+          for table in "-t nat" ""
+          do
+              iptables ${table} -S | awk '/{{ iptables_comment_search }}/ {$1="-D"; print $0}' | xargs -r -L1 iptables ${table}
+          done
+
 - name: Clean old inventory file
   hosts: localhost
   gather_facts: no

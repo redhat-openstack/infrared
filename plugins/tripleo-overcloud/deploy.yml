@@ -92,3 +92,12 @@
           dest: "{{ inventory_dir }}/keystonerc"
           flat: yes
           fail_on_missing: yes
+
+    - name: fetch overcloud v3 file if present
+      tags:
+          - fetch_rc_file
+      fetch:
+          src: "{{ ansible_user_dir }}/overcloudrc.v3"
+          dest: "{{ inventory_dir }}/overcloudrc.v3"
+          flat: yes
+          fail_on_missing: no
