@@ -293,10 +293,16 @@ subparsers:
                   updateto:
                       type: Value
                       help: |
+                          Deprecated argument. Please use 'build' argument
+                      default: None
+                  build:
+                     deprecates: updateto
+                     type: Value
+                     help: |
                           Perform minor update of overcloud to the 'build' specified. Default: 'None'
                           It can be used with --upgrade, when you want to upgrade to specific 'build'
-                          NOTE: Currently, minor update is supported with IR just for verions 10 and 11.
-                      default: None
+                          NOTE: Currently, minor update is supported with IR just for versions 10 and 11.
+                     default: None
                   osrelease:
                       type: Value
                       help: |
