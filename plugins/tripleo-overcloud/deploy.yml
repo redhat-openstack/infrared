@@ -52,7 +52,9 @@
         shell: |
             mkdir -p /var/log/extra/
             source ~/stackrc
-            ~{{ ansible_ssh_user }}/deploy_info.sh 2>&1 | tee -a /var/log/extra/deploy_resources.log
+            ~{{ ansible_ssh_user }}/deploy_info.sh --long > /var/log/extra/deploy_resources.log 2>&1 &
+            ~{{ ansible_ssh_user }}/deploy_info.sh 2>&1 &
+            wait
         tags: summary
 
 - name: Update inventory with overcloud details
