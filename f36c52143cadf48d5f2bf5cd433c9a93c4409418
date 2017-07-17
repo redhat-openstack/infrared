@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46b76c2f_87b7747b",
+        "filename": "plugins/tripleo-undercloud/init.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010420
+      },
+      "writtenOn": "2017-07-17T15:07:19Z",
+      "side": 1,
+      "message": "Hypervisor might not be called \"hypervisor\" so:\n1. Need to check for group \"hypervisor\" and not for host\n2. Need to get the hostname from the group\n\nso how about:\n\ngroups.hypervisor|first if hypervisor in groups else uc_hostname\n\n      - name: Adding host to \u0027shade\u0027 group\n        vars:\n          shade_group: \"{{ groups.hypervisor|default(groups.undercloud) }}\"\n        add_host:\n          name: \"{{ shade_group|first }}\"\n          groups: \"shade\"",
+      "range": {
+        "startLine": 10,
+        "startChar": 28,
+        "endLine": 10,
+        "endChar": 54
+      },
+      "revId": "f36c52143cadf48d5f2bf5cd433c9a93c4409418",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
