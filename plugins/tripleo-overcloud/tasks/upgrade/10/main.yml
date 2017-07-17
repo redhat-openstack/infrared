@@ -27,7 +27,7 @@
       upgrade_init_script: "~/upgrade_init.sh"
 
 - name: Object Storage Upgrade
-  shell : |
+  shell: |
       source {{ undercloud_rc }}
       upgrade-non-controller.sh --upgrade {{ item }} &>> swift-upgrade.log
   tags:
@@ -44,7 +44,7 @@
       controller_upgrade_script: "~/controller_upgrade.sh"
 
 - name: Compute Upgrade
-  shell : |
+  shell: |
       source {{ undercloud_rc }}
       upgrade-non-controller.sh --upgrade {{ item }} &>> compute-upgrade.log
   tags:
@@ -53,7 +53,7 @@
   with_items: "{{ groups.compute|difference(groups.unused|default([]))|default([]) }}"
 
 - name: Ceph Upgrade
-  shell : |
+  shell: |
       source {{ undercloud_rc }}
       upgrade-non-controller.sh --upgrade {{ item }} &>> ceph-upgrade.log
   tags:
