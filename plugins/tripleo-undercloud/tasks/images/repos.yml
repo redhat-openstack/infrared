@@ -20,6 +20,9 @@
     - "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }}"
   when: patched_rpms.stat.exists
 
+- name: Enable Optional Repo
+  command: "virt-customize -a {{ overcloud_image_file }} --run-command 'yum-config-manager --enable rhelosp-rhel-7.4-server-opt' --selinux-relabel"
+
 - name: Install packages in overcloud image
   command: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel"
   when: install.images.packages|default(None) != None
