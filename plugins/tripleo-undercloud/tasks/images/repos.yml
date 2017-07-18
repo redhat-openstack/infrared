@@ -24,6 +24,9 @@
   command: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel"
   when: install.images.packages|default(None) != None
 
+- name: Enable Optional Repo
+  command: "virt-customize -a {{ overcloud_image_file }} --run-command 'yum-config-manager --enable rhelosp-rhel-7.4-server-opt' --selinux-relabel" 
+
 - name: update packages on repos
   command: "virt-customize -a {{ overcloud_image_file }} --update --memsize {{ requested_mem }} --smp {{ (ansible_processor_vcpus/2)|round|int }}  --selinux-relabel"
   vars:
