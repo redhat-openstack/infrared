@@ -53,8 +53,8 @@
             instack_output: "~/instackenv.json"
             # json file shouldn't hold newlines
             undercloud_private_key: "{{ uc_pkey_result.stdout_lines | join('\\n')}}"
-        template:
-            src: templates/instackenv.json.j2
+        copy:
+            content: "{{ lookup('template' , 'templates/instackenv.json.j2') | to_nice_json }}"
             dest: "{{ instack_output }}"
         when: not instack_input or install.hybrid|default('')
 
