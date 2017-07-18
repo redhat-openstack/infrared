@@ -8,8 +8,8 @@
   set_fact:
       topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
 
-- include: tasks/netip_natted.yml
+- include: netip_natted.yml
   when: "not topology_node.external_network.bridged|default(False)"
 
-- include: tasks/netip_bridged.yml
+- include: netip_bridged.yml
   when: "topology_node.external_network.bridged|default(False)"
