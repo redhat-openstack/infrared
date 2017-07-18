@@ -13,3 +13,11 @@
 - name: w/a for bz#1452082
   replace: dest=/usr/share/openstack-tripleo-heat-templates/puppet/services/pacemaker/haproxy.yaml regexp="(tripleo.*haproxy.*mysql_clustercheck.*\s)true" replace="\1false"
   become: true
+
+- name: w/a for bz#1471622
+  vars:
+     template_base: "{{ ansible_user_dir }}/{{ source_dir | basename }}"
+  copy:
+      src: "workaround_params.yaml"
+      dest: "{{ template_base }}/workaround_params.yaml"
+      force: yes
