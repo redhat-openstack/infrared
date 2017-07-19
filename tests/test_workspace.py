@@ -329,7 +329,7 @@ def test_workspace_node_list(workspace_manager_fixture, test_workspace):
     # not active workspace
     node_lst_boo = workspace_manager_fixture.node_list(
         workspace_name="test_list_wspc")
-    assert node_lst_boo == [("test_host", "0.0.0.0")]
+    assert node_lst_boo == [("test_host", "0.0.0.0", "test_group")]
 
 
 def test_workspace_node_list_errors(workspace_manager_fixture):
@@ -338,3 +338,20 @@ def test_workspace_node_list_errors(workspace_manager_fixture):
 
     with pytest.raises(exceptions.IRWorkspaceMissing):
         workspace_manager_fixture.node_list("strange_workspace")
+
+
+def test_workspace_group_list(workspace_manager_fixture, test_workspace):
+    workspace_manager_fixture.activate(test_workspace.name)
+    test_boo = workspace_manager_fixture.create("test_group_wspc")
+    test_boo.inventory = "tests/example/test_ssh_inventory"
+
+    # active workspace
+    group_lst = workspace_manager_fixture.group_list()
+    assert group_lst == [('ungrouped', ''), ('local', 'localhost')]
+
+    # not active workspace
+    group_lst_boo = workspace_manager_fixture.group_list(
+        workspace_name="test_group_wspc")
+    test_groups = [('ungrouped', 'localhost, test_host'),
+                   ('test_group', 'test_host')]
+    assert group_lst_boo == test_groups
