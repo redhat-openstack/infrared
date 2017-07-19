@@ -121,6 +121,14 @@ class WorkspaceManagerSpec(api.SpecObject):
             'node-list',
             help='List nodes, managed by workspace')
         nodelist_parser.add_argument("-n", "--name", help="Workspace name")
+        nodelist_parser.add_argument("-g", "--group", help="List nodes in specific group")
+
+        # group list
+        grouplist_parser = workspace_subparsers.add_parser(
+            'group-list',
+            help='List groups, managed by workspace')
+        grouplist_parser.add_argument("-n", "--name", help="Workspace name")
+
 
     def spec_handler(self, parser, args):
         """
@@ -160,9 +168,14 @@ class WorkspaceManagerSpec(api.SpecObject):
             self.workspace_manager.import_workspace(
                 pargs.filename, pargs.workspacename)
         elif subcommand == 'node-list':
-            nodes = self.workspace_manager.node_list(pargs.name)
+            nodes = self.workspace_manager.node_list(pargs.name, pargs.group)
             print fancy_table(
-                ("Name", "Address"), *[node_name for node_name in nodes])
+                ("Name", "Address", "Groups"),
+                *[node_name for node_name in nodes])
+        elif subcommand == "group-list":
+            groups = self.workspace_manager.group_list(pargs.name)
+            print fancy_table(
+                ("Name", "Hosts"), *[group_name for group_name in groups])
 
     # deprecated method
     def _create_workspace(self, name):
