@@ -65,6 +65,10 @@ will be later created.
                 Download pre-built images from a given ``--images-url``.
         * Download images via ``rpm``:
                 Starting from OSP 8, TripleO is packages with pre-built images avialable via RPM.
+
+                To use different RPM, use ``--images-url`` to define the location of the RPM. You need
+                to provide all dependencies of the remote RPM. Locations have to be separated with comma
+
                 .. note:: This option is invalid for `RDO` installation.
 
 * Use ``--images-packages`` to define a list of additional packages to install on the OverCloud image.
