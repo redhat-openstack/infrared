@@ -451,10 +451,47 @@ class WorkspaceManager(object):
         self.delete(name, keep_active_workspace_file=True)
         self.create(name)
 
-    def node_list(self, workspace_name=None):
-        """Lists nodes and connection types from workspace's inventory
+    def node_list(self, workspace_name=None, group_name=None):
+        """Lists nodes, connection types and groups from workspace's inventory
 
            nodes with connection type 'local' are skipped
+           group 'all' is excluded from groups list
+           :param workspace_name: workspace name to list nodes from.
+                                Use active workspace as default
+           :param group_name: filter nodes only on specific group
+        """
+        pattern = 'all'
+
+        workspace = self.get(
+            workspace_name) if workspace_name else self.get_active_workspace()
+
+        if workspace is None:
+            if workspace_name is None:
+                raise exceptions.IRNoActiveWorkspaceFound()
+            else:
+                raise exceptions.IRWorkspaceMissing(workspace=workspace_name)
+
+        invent = inventory.Inventory(DataLoader(), VariableManager(),
+                                     host_list=workspace.inventory)
+
+        if group_name:
+            if group_name not in invent.get_groups():
+                raise exceptions.IRGroupNotFoundException(group_name)
+            pattern = group_name
+
+        hosts = invent.get_hosts(pattern)
+
+        return [(host.name,
+                 host.address,
+                 ', '.join(str(group) for group in host.groups
+                           if str(group) != 'all'))
+                for host in hosts
+                if host.vars.get("ansible_connection") != "local"]
+
+    def group_list(self, workspace_name=None):
+        """Lists groups and nodes in them from workspace's inventory
+
+           group 'all' is skipped
            :param workspace_name: workspace name to list nodes from.
                                 Use active workspace as default
         """
@@ -470,6 +507,9 @@ class WorkspaceManager(object):
 
         invent = inventory.Inventory(DataLoader(), VariableManager(),
                                      host_list=workspace.inventory)
-        hosts = invent.get_hosts()
-        return [(host.name, host.address) for host in hosts if host.vars.get(
-            "ansible_connection") != "local"]
+
+        groups = invent.get_groups()
+
+        return [(group,', '.join(str(host)
+                                 for host in invent.get_group(group).hosts))
+                for group in groups if group != 'all']
