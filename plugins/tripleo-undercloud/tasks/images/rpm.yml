@@ -1,9 +1,18 @@
 ---
+- name: install the provided RPM with the pre-built overcloud images
+  become: yes
+  yum:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ install.images.url.split(',') }}"
+  when: install.images.url|default('')
+
 - name: install the RPM with the pre-built overcloud images
   become: yes
   package:
       name: "rhosp-director-images"
       state: present
+  when: not install.images.url|default('')
 
 # todo(yfried): investigate gtar error "Warning: Cannot stat: No such file or directory")'
 - name: untar the images
