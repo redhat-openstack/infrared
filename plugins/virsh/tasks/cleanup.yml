@@ -69,7 +69,7 @@
   when: item.key not in ignore_virsh_nets
 
 - name: restore bridge
-  include: tasks/restore_bridged_interface.yml
+  include: restore_bridged_interface.yml
   with_dict: "{{ vm_nets.networks }}"
   vars:
       bridge_name: "{{ item.key }}"
