@@ -23,6 +23,7 @@ INVENTORY_LINK = "hosts"
 LOCAL_HOSTS = """[local]
 localhost ansible_connection=local ansible_python_interpreter=python
 """
+EXCLUDED_GROUPS = ['all', 'local', 'ungrouped']
 
 
 class WorkspaceRegistry(object):
@@ -451,14 +452,51 @@ class WorkspaceManager(object):
         self.delete(name, keep_active_workspace_file=True)
         self.create(name)
 
-    def node_list(self, workspace_name=None):
-        """Lists nodes and connection types from workspace's inventory
+    def node_list(self, workspace_name=None, group_name=None):
+        """Lists nodes, connection types and groups from workspace's inventory
 
            nodes with connection type 'local' are skipped
            :param workspace_name: workspace name to list nodes from.
-                                Use active workspace as default
+           :param group_name: filter nodes only on specific group
+        """
+        pattern = 'all'
+
+        invent = self._get_inventory(workspace_name)
+
+        if group_name:
+            if group_name not in invent.get_groups():
+                raise exceptions.IRGroupNotFoundException(group_name)
+            pattern = group_name
+
+        hosts = invent.get_hosts(pattern)
+
+        return [(host.name,
+                 host.address,
+                 ', '.join(str(group) for group in host.groups
+                           if str(group) not in EXCLUDED_GROUPS))
+                for host in hosts
+                if host.vars.get("ansible_connection") != "local"]
+
+    def group_list(self, workspace_name=None):
+        """Lists groups and nodes in them from workspace's inventory
+
+           :param workspace_name: workspace name to list nodes from.
         """
 
+        invent = self._get_inventory(workspace_name)
+
+        groups = invent.get_groups()
+
+        return [(group, ', '.join(str(host) for host in
+                                  invent.get_group(group).hosts))
+                for group in groups if group not in EXCLUDED_GROUPS]
+
+    def _get_inventory(self, workspace_name=None):
+        """Returns Inventory object for the provided workspace.
+           Use active workspace as default
+
+           :param workspace_name: workspace name to list nodes from.
+        """
         workspace = self.get(
             workspace_name) if workspace_name else self.get_active_workspace()
 
@@ -468,8 +506,5 @@ class WorkspaceManager(object):
             else:
                 raise exceptions.IRWorkspaceMissing(workspace=workspace_name)
 
-        invent = inventory.Inventory(DataLoader(), VariableManager(),
-                                     host_list=workspace.inventory)
-        hosts = invent.get_hosts()
-        return [(host.name, host.address) for host in hosts if host.vars.get(
-            "ansible_connection") != "local"]
+        return inventory.Inventory(DataLoader(), VariableManager(),
+                                   host_list=workspace.inventory)

@@ -120,5 +120,15 @@ Node list:
 
         infrared workspace node-list --name some_workspace_name
 
+    ``--group`` - list nodes that are member of specific group.
+Group list:
+    List groups and nodes in them, managed by a specific workspace::
+
+        infrared workspace group-list
+        | Name            | Nodes                              |
+        |-----------------+------------------------------------|
+        | overcloud_nodes | controller-0, compute-0, compute-1 |
+        | undercloud      | undercloud-0                       |
+
 .. note:: To change the directory where Workspaces are managed, edit the ``workspaces_base_folder`` option.
    Check the  `Infrared Configuration <configuration.html>`_ for details.
