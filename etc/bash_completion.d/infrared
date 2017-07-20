@@ -1,0 +1,36 @@
+_ir(){
+
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  CMD=${COMP_WORDS[@]::${#COMP_WORDS[@]}-1}
+
+  opts="$(${CMD} -h 2>/dev/null | grep -e '^[ \t]\+{' | head -n 1 | sed 's/^[ \t]*{//;s/}$//;s/,/ /g') $(${CMD} -h 2>/dev/null | grep -e "^[ \t]\+-\+[a-zA-Z]" | sed 's/,/ /'| awk '{for (i=1;i<=NF;i++)  if ($i ~/^-+[a-z]/) print $i}')"
+
+  case ${CMD} in
+    "infrared ssh")
+      COMPREPLY=( $(compgen -W "$(ir workspace node-list 2>/dev/null| tail -n +3 | awk {'print $2'} | grep -v -e '^$')" -- ${cur}) )
+      return 0
+      ;;
+    "infrared workspace checkout"|"infrared workspace delete"|"infrared workspace cleanup")
+      COMPREPLY=( $(compgen -W "$(ir workspace list 2>/dev/null| tail -n +3 | awk {'print $2'} | grep -v -e '^$')" --  ${cur})  )
+      return 0
+      ;;
+    "infrared workspace node-list -n")
+      COMPREPLY=( $(compgen -W "$(ir workspace list 2>/dev/null| tail -n +3 | awk {'print $2'} | grep -v -e '^$')" --  ${cur})  )
+      return 0
+      ;;
+    'infrared workspace export'*)
+      CMDARR=( ${CMD} )
+      TAIL="${CMDARR[@]:${#CMDARR[@]}-1:${#CMDARR[@]}}"
+      if [ "${TAIL}" == "-n" ]; then
+        COMPREPLY=( $(compgen -W "$(ir workspace list 2>/dev/null| tail -n +3 | awk {'print $2'} | grep -v -e '^$')" --  ${cur})  )
+      fi
+      return 0
+      ;;
+    *)
+      COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+      return 0
+      ;;
+  esac
+}
+complete -F _ir infrared
