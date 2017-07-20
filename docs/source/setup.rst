@@ -83,3 +83,19 @@ Install ``infrared`` from source::
     mode and work with master branch::
 
       pip install -e .
+
+Bash completion
+---------------
+Bash completion script is in etc/bash_completion.d directory of git repository.
+To enable global completion copy this script to proper path in the system (/etc/bash_completion.d).
+
+  cp etc/bash_completion.d/infrared /etc/bash_completion.d/
+
+Alternatively, you cat just source it to enable completion temporarily::
+
+  . etc/bash_completion.d/infrared
+
+When working in virtualenv, might be a good idea to add import of this script to the
+virtualenv activation one::
+
+  echo ". $(pwd)/etc/bash_completion/infrared" >> ${VIRTUAL_ENV}/bin/activate

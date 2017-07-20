@@ -2,6 +2,8 @@ import os
 from pbr import version
 import pkg_resources as pkg
 import sys
+import argcomplete
+import bash_completers as completers
 
 
 def inject_common_paths():
@@ -70,14 +72,17 @@ class WorkspaceManagerSpec(api.SpecObject):
             'checkout',
             help='Creates a workspace if it is not presents and '
                  'switches to it')
-        checkout_parser.add_argument("name", help="Workspace name")
+        checkout_parser.add_argument(
+            "name",
+            help="Workspace name").completer = completers.workspace_list
 
         # inventory
         inventory_parser = workspace_subparsers.add_parser(
             'inventory',
             help="prints workspace's inventory file")
-        inventory_parser.add_argument("name", help="Workspace name",
-                                      nargs="?")
+        inventory_parser.add_argument(
+            "name", help="Workspace name",
+            nargs="?").completer = completers.workspace_list
 
         # list
         workspace_subparsers.add_parser(
@@ -86,12 +91,16 @@ class WorkspaceManagerSpec(api.SpecObject):
         # delete
         delete_parser = workspace_subparsers.add_parser(
             'delete', help='Deletes a workspace')
-        delete_parser.add_argument("name", help="Workspace name")
+        delete_parser.add_argument(
+            "name",
+            help="Workspace name").completer = completers.workspace_list
 
         # cleanup
         cleanup_parser = workspace_subparsers.add_parser(
             'cleanup', help='Removes all the files from workspace')
-        cleanup_parser.add_argument("name", help="Workspace name")
+        cleanup_parser.add_argument(
+            "name",
+            help="Workspace name").completer = completers.workspace_list
 
         # import settings
         importer_parser = workspace_subparsers.add_parser(
@@ -105,10 +114,10 @@ class WorkspaceManagerSpec(api.SpecObject):
         # exort settings
         exporter_parser = workspace_subparsers.add_parser(
             'export', help='Export deployment configurations.')
-        exporter_parser.add_argument("-n", "--name", dest="workspacename",
-                                     help="Workspace name. "
-                                          "If not sepecified - active "
-                                          "workspace will be used.")
+        exporter_parser.add_argument(
+            "-n", "--name", dest="workspacename",
+            help="Workspace name. If not sepecified - active "
+            "workspace will be used.").completer = completers.workspace_list
         exporter_parser.add_argument("-f", "--filename", dest="filename",
                                      help="Archive file name.")
 
@@ -120,15 +129,21 @@ class WorkspaceManagerSpec(api.SpecObject):
         nodelist_parser = workspace_subparsers.add_parser(
             'node-list',
             help='List nodes, managed by workspace')
-        nodelist_parser.add_argument("-n", "--name", help="Workspace name")
-        nodelist_parser.add_argument("-g", "--group",
-                                     help="List nodes in specific group")
+        nodelist_parser.add_argument(
+            "-n", "--name",
+            help="Workspace name").completer = completers.workspace_list
+        nodelist_parser.add_argument(
+            "-g", "--group",
+            help="List nodes in specific group"
+            ).completer = completers.group_list
 
         # group list
         grouplist_parser = workspace_subparsers.add_parser(
             'group-list',
             help='List groups, managed by workspace')
-        grouplist_parser.add_argument("-n", "--name", help="Workspace name")
+        grouplist_parser.add_argument(
+            "-n", "--name",
+            help="Workspace name").completer = completers.workspace_list
 
     def spec_handler(self, parser, args):
         """
@@ -233,7 +248,9 @@ class PluginManagerSpec(api.SpecObject):
         remove_parser = plugin_subparsers.add_parser(
             "remove",
             help="Remove a plugin, 'all' will remove all installed plugins")
-        remove_parser.add_argument("name", help="Plugin name")
+        remove_parser.add_argument(
+            "name",
+            help="Plugin name").completer = completers.plugin_list
 
         # List command
         list_parser = plugin_subparsers.add_parser(
@@ -325,7 +342,8 @@ class SSHSpec(api.SpecObject):
             **self.kwargs)
 
         issh_parser.add_argument("node_name", help="Node name. "
-                                 "Ex.: controller-0")
+                                 "Ex.: controller-0"
+                                 ).completer = completers.node_list
         issh_parser.add_argument("remote_command", nargs="?", help="Run "
                                  "provided command line on remote host and "
                                  "return its output.")
@@ -370,6 +388,7 @@ def main(args=None):
     for plugin in plugin_manager.PLUGINS_DICT.values():
         specs_manager.register_spec(api.InfraredPluginsSpec(plugin))
 
+    argcomplete.autocomplete(specs_manager.parser)
     return specs_manager.run_specs(args) or 0
 
 
