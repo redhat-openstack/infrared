@@ -5,6 +5,9 @@
   "host-ip": "{{ hostvars['hypervisor'].ansible_management.ipv4.address }}",
   "arch": "x86_64",
   "nodes": [
+{% for bm_host in (bm_nodes|default({}))['nodes']|default([]) %}
+    {{ bm_host }},
+{% endfor %}
 {% for host_string in nodes_info.results|map(attribute='stdout')|list %}
 {% set host_data = host_string|from_yaml %}
     {
