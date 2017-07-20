@@ -4,6 +4,15 @@
   tags:
       - validation
 
+- name: Perform OVB configuration
+  include: ovb.yml
+  tags:
+      - ovb
+      - bmc_setup
+  when: 
+      - "'bmc' in groups"
+      - install.version|default('')
+
 - name: Deploy the Undercloud
   include: "{{ install_undercloud | default('undercloud.yml') }}"
   when: install.version|default('')

@@ -89,8 +89,10 @@
         state: link
         src: hosts-prov
 
-- name: Perform OVB configuration
-  include: ovb.yml
-  tags:
-      - ovb
-      - bmc_setup
+- name: Save overcloud nodes host vars
+  hosts: localhost
+  any_errors_fatal: true
+  roles:
+      - role: hostvars
+        action: save
+        host_names: "{{ groups.get('overcloud_nodes', []) }}"
