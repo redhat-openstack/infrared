@@ -5,7 +5,7 @@
       cloud: "{{ provision.cloud | default(omit) }}"
       state: present
       name: "{{ provision.prefix }}{{ sg.key }}"
-      description: Security group created by Infrared
+      description: "ir: {{ lookup('env','BUILD_URL') or lookup('env', 'USER') + '@' + lookup('pipe','hostname') }} at  {{ansible_date_time.iso8601 }}"
   register: security_group
 
 - name: Add rules to the security group
