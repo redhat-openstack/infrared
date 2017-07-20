@@ -1,0 +1,40 @@
+# performs bmc node cofiguration
+- name: Provision Baremetal controller (BMC)
+  hosts: bmc
+  become: yes
+  any_errors_fatal: true
+  vars:
+      bmc_node_name: bmc
+  pre_tasks:
+      - name: check for subscription
+        command: subscription-manager identity
+        ignore_errors: yes
+        register: cdn_status
+        changed_when: false
+        when: not install.cdn|default(False)
+  roles:
+      - role: bmc
+      - role: cdn_registery
+        cdn_args_file: "{{ install.cdn|default('') }}"
+        when:
+            - "install.cdn|default(False) or cdn_status.rc == 0"
+            - "install.version|openstack_distribution == 'OSP'"
+        become: yes
+
+      - role: rhos-release
+        release: "{{ install.version }}"
+        build: "{{ install.build | default(omit) }}"
+        director_build: "{{ install.get('director', {}).build|default(omit) }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        when:
+            - "install.version|openstack_distribution == 'OSP'"
+            - not install.cdn|default(False)
+            - cdn_status.rc != 0
+        tags: rhos-release
+
+      - role: rdo-release
+        release: "{{ install.version }}"
+        build: "{{ install.build | default(omit) }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        when: install.version|openstack_distribution == 'RDO'
+        tags: rhos-release

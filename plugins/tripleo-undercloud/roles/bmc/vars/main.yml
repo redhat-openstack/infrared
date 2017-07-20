@@ -11,13 +11,11 @@ bmc_pip:
     - pyghmi
 rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
 
+bmc_management_net_name: "management"
 # helper varaibles to read from the provision settings
 bmc_name_prefix: "{{ (provision|default({})).prefix|default('') }}"
 bmc_node_name: "bmc"
 
-# the full network name to use for IMPI commands
-bmc_ipmi_network_name: "{{ bmc_name_prefix }}{{ topology_node.ipmi_network|default('undefined') }}"
-bmc_ipmi_network_subnet: "{{ bmc_ipmi_network_name }}-subnet"
 
 # the filter for the nodes to be controllable by the bmc
 bmc_nodes_filter:  "{{ bmc_name_prefix }}*"

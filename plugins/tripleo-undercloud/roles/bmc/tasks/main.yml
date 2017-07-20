@@ -1,8 +1,8 @@
 ---
-- name: Validate network name is defined
-  fail:
-      msg: "The 'bmc_ipmi_network_name' variable if not  defined "
-  when: "not bmc_ipmi_network_name or bmc_ipmi_network_name=='undefined'"
+# - name: Validate network name is defined
+#   fail:
+#       msg: "The 'bmc_ipmi_network_name' variable if not  defined "
+#   when: "not bmc_ipmi_network_name or bmc_ipmi_network_name=='undefined'"
 
 - name: Get the rhos-release RPM
   get_url:
@@ -45,9 +45,24 @@
       dest: "/usr/local/bin/openstackbmc"
       mode: "u=rwx,g=rwx,o=rwx"
 
+- name: Getting BMC node facts
+  os_server_facts:
+      cloud: qeos7-stage
+      server: "{{ groups.bmc|first}}"
+  become: no
+  delegate_to: localhost
+
+- set_fact:
+      bmc_ipmi_network_name: "{{item}}"
+      bmc_ipmi_network_subnet: "{{item}}-subnet"
+  with_items: "{{openstack_servers[0].addresses}}"
+  when: 
+    - "bmc_management_net_name in item"
+
 - name: Register internal subnet details
   os_subnets_facts:
-      cloud: "{{ bmc_provision_cloud  | default(omit) }}"
+      #cloud: "{{ bmc_provision_cloud  | default(omit) }}"
+      cloud: qeos7-stage
       filters:
           name: "{{ bmc_ipmi_network_subnet }}"
   delegate_to: localhost
@@ -61,7 +76,8 @@
 
 - name: Register external subnet details
   os_server_facts:
-      cloud: "{{ bmc_provision_cloud | default(omit) }}"
+      #cloud: "{{ bmc_provision_cloud | default(omit) }}"
+      cloud: qeos7-stage
       server: "{{ bmc_nodes_filter }}*"
   delegate_to: localhost
   become: no
@@ -70,7 +86,8 @@
 - name: Get cloud auth info
   os_client_config:
       clouds:
-          - "{{ bmc_provision_cloud | default(omit) }}"
+          #- "{{ bmc_provision_cloud | default(omit) }}"
+          - qeos7-stage
   delegate_to: localhost
   become: no
 
