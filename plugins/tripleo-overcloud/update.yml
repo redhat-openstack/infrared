@@ -87,3 +87,49 @@
 
       - name: Overcloud Update
         include: tasks/update/common/update_overcloud.yaml
+
+- name: Overcloud Reboot
+  hosts: overcloud_nodes:!unused
+  gather_facts: yes
+  any_errors_fatal: true
+  serial: 1
+  tasks:
+      # TODO(yprokule): figure out if we should migrate instances from computes ?
+      - name: put node to standby mode
+        command: |
+            sudo pcs node standby
+        ignore_errors: True
+        register: standby_node
+
+      - name: Reboot the node
+        become: true
+        shell: "sleep 5 && shutdown -r now"
+        async: 1
+        poll: 0
+        ignore_errors: true
+
+      - block:
+            - name: waiting for the node to be available
+              wait_for:
+                  port: 22
+                  host: "{{ ansible_ssh_host }}"
+                  search_regex: OpenSSH
+                  delay: 10
+                  timeout: 360
+              delegate_to: localhost
+              when: "'hypervisor' not in groups"
+
+            - name: waiting for the node to be available
+              become: no
+              wait_for:
+                  host: "{{ ansible_ssh_host }}"
+                  search_regex: OpenSSH
+                  delay: 10
+                  timeout: 360
+              delegate_to: hypervisor
+              when: "'hypervisor' in groups"
+
+      - name: unstandby node
+        command: |
+            sudo pcs node unstandby
+        when: standby_node|succeeded
