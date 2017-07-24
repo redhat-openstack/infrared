@@ -4,21 +4,42 @@
       msg: "The 'bmc_ipmi_network_name' variable if not  defined "
   when: "not bmc_ipmi_network_name or bmc_ipmi_network_name=='undefined'"
 
-- name: Get the rhos-release RPM
-  get_url:
-      url: "{{ rhos_release_rpm }}"
-      dest: "/tmp/rhos-release-latest.rpm"
-      force: yes
-      validate_certs: no
+- name: check for subscription
+  command: subscription-manager identity
+  ignore_errors: yes
+  register: cdn_status
+  changed_when: false
+  when: not bmc_subscribtion == 'cdn'|default(False)
 
-- name: Install the rhos-release RPM
-  package:
-      name: /tmp/rhos-release-latest.rpm
-      state: present
+- include_role: 
+      name: cdn_registery
+  vars:
+      cdn_args_file: "{{ bmc_subscribtion == 'cdn'|default('') }}"
+  when:
+      - "bmc_subscribtion == 'cdn'|default(False) or cdn_status.rc == 0"
+      - "bmc_rhos_release|openstack_distribution == 'OSP'"
+  become: yes
 
-# todo(obaranov) avoid "latest". either use the same rhos-release as ospd uses, or use "passed_phase1" for a verified puddle
-- name: Run rhos release
-  command: rhos-release "{{ bmc_rhos_release  }}"
+- include_role:
+      name: rhos-release
+  vars:
+      release: "{{ bmc_rhos_release }}"
+      build: "latest"
+      rr_buildmods: "pin"
+      mirror: "{{ bmc_repos | default(omit) }}"
+  when:
+      - "bmc_rhos_release|openstack_distribution == 'OSP'"
+      - not bmc_subscribtion == 'cdn'|default(False)
+      - cdn_status.rc != 0
+
+- include_role:
+      name: rdo-release
+  vars:
+      release: "{{ bmc_rhos_release }}"
+      build: "latest"
+  when: bmc_rhos_release|openstack_distribution == 'RDO'
+
+
 
 # Install the necessary packages to setup the bmc node
 - name: Install repos
