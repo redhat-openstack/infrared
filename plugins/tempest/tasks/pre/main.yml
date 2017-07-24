@@ -58,11 +58,11 @@
 
 - name: set facts for results formats - define dictionary
   set_fact:
-      results_formats: {}
+      output_formats: {}
 
 - name: set facts for results formats
   set_fact:
-      results_formats: "{{ results_formats | combine({item: ''}) }}"
+      output_formats: "{{ output_formats | combine({item: ''}) }}"
   with_items:
       "{{ test.get('results', {}).get('formats', {}).split(',') }}"
 
