@@ -1,26 +1,6 @@
 ---
-- name: "Download {{ template_base }}/docker-osp12.yaml"
-  get_url:
-      url: "{{ containers_puddle_base_url.stdout }}/docker-osp12.yaml"
-      dest: "{{ template_base }}/docker-osp12.yaml"
-      owner: stack
-      group: stack
-
-- name: replace docker registry with mirror
-  replace:
-      dest: "{{ template_base }}/docker-osp12.yaml"
-      regexp: '^([ ]*DockerNamespace: ).*(\/.*)'
-      replace: '\1{{ install.registry.mirror }}\2'
-      backup: no
-  when: install.get('registry', {}).mirror|default(false)
-
-- name: replace docker registry namespace
-  replace:
-      dest: "{{ template_base }}/docker-osp12.yaml"
-      regexp: '^([ ]*DockerNamespace: .*\/)(.*)'
-      replace: '\1{{ install.registry.namespace }}'
-      backup: no
-  when: install.get('registry', {}).namespace|default(false)
-
-- name: w/a for BZ 1456986
-  replace: dest="{{ template_base }}/docker-osp12.yaml" regexp='(DockerNamespace{{ ":" }}).*' replace='\1 192.168.24.1{{ ":" }}8787/rhosp12'
+# NOTE: BZ 1456986 was about local registiry usage
+# http://lists.openstack.org/pipermail/openstack-dev/2017-July/119880.html?
+# TODO: not hardcode the 192.168.24.1
+- name: generate docker images file, using the undercloud registry
+  cmd: "openstack overcloud container image prepare --namespace=192.168.24.1:8787/rhosp12 --env-file={{ template_base }}/docker-images.yaml --prefix=openstack- --suffix=-docker --tag={{ core_puddle_version }}"
