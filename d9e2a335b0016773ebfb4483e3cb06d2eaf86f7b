@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "055c32db_a27bb866",
+        "filename": "Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1008329
+      },
+      "writtenOn": "2017-07-24T15:13:32Z",
+      "side": 1,
+      "message": "This is by design and this logic seems to apply for other openstack projects as well. A make install command is not supposed to target a virtualenv. If one is active, it would use it. Few weeks back I tried to add venv to Makefile on another project and got rejected.\n\nI think that the logic is: tox for venv, Makefile for non venv. Ok to call tox from Makefile but probably not the other way around. Makefile is more of a multi-purpose tool. \n\nHere is one example: https://github.com/softwarefactory-project/rdopkg/blob/master/Makefile\n\nBy not specifying target we allow enough flexibility to make it work for all cases: it would for as root, it would work for non root (including MacOS), if user wants to specific targets they can change behaviour using pip config or PIP environment variables.\n\n--user by default would break on many platforms due to multiple causes: wither python would fail to load the user packages or even more common, package would install but the CLI script will not be in path.",
+      "parentUuid": "a197a618_510b6f3c",
+      "revId": "d9e2a335b0016773ebfb4483e3cb06d2eaf86f7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bfcd132a_2fae8fef",
         "filename": "plugins/packstack/vars/network/variant/neutron_ml2-vlan.yml",
         "patchSetId": 2
@@ -53,6 +71,24 @@
       "writtenOn": "2017-07-24T14:55:04Z",
       "side": 1,
       "message": "could you please split ansible-lint and yamllint (and install just minimum required for yamllint env)",
+      "revId": "d9e2a335b0016773ebfb4483e3cb06d2eaf86f7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94b7f6f3_989bef16",
+        "filename": "tox.ini",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1008329
+      },
+      "writtenOn": "2017-07-24T15:13:32Z",
+      "side": 1,
+      "message": "This would introduce serious performance and diskspace problems because would increase the number of venvs. More space, more time to install them, especially because they have lots of common requirements. \n\nThis approach does not scale well: imagine that tomorrow we may want to add bashate linting, do we create another environment? Probably we dont want that.",
+      "parentUuid": "fc4c36d5_13fe2a7a",
       "revId": "d9e2a335b0016773ebfb4483e3cb06d2eaf86f7b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
