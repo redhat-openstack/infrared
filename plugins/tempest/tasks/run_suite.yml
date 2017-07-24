@@ -127,8 +127,7 @@
         command: "subunit2html {{ test_output_filename }}.subunit {{ test_output_filename }}.html"
         args:
             chdir: "{{ test.dir }}"
-        when:
-            results_formats.html is defined
+        when: "'html' in output_formats"
 
       - name: generate results report in JunitXML format
         shell: |
@@ -136,23 +135,20 @@
                 < {{ test_output_filename }}.subunit | subunit2pyunit
         args:
             chdir: "{{ test.dir }}"
-        when:
-            results_formats.junitxml is defined
+        when: "'junitxml' in output_formats"
 
       - name: inject the test suite name to the XML name atribute
         command: "sed '/^<testsuite/s/name=\"\"/name=\"{{ test_suite }}\"/' -i {{ test_output_filename }}.xml"
         args:
             chdir: "{{ test.dir }}"
-        when:
-            results_formats.junitxml is defined
+        when: "'junitxml' in output_formats"
 
       - name: add the test suite name in the HTML report title
         command: "sed 's#<title>\\(.*Test Report\\)</title>#<title>\\1 - {{ test_suite }}</title>#' \
                   -i {{ test_output_filename }}.html"
         args:
             chdir: "{{ test.dir }}"
-        when:
-            results_formats.html is defined
+        when: "'html' in output_formats"
 
       - name: Fetch subunit results file
         fetch:
@@ -167,8 +163,7 @@
             dest: "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.xml"
             flat: yes
             fail_on_missing: yes
-        when:
-            results_formats.junitxml is defined
+        when: "'junitxml' in output_formats"
 
       - name: Fetch HTML results file
         fetch:
@@ -176,8 +171,7 @@
             dest: "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.html"
             flat: yes
             fail_on_missing: no
-        when:
-            results_formats.html is defined
+        when: "'html' in output_formats"
 
       - name: cleanup the resources created by the test and not cleaned
         shell: >
