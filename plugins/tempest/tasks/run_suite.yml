@@ -128,7 +128,7 @@
         args:
             chdir: "{{ test.dir }}"
         when:
-            results_formats.html is defined
+            output_formats.html is defined
 
       - name: generate results report in JunitXML format
         shell: |
@@ -137,14 +137,14 @@
         args:
             chdir: "{{ test.dir }}"
         when:
-            results_formats.junitxml is defined
+            output_formats.junitxml is defined
 
       - name: inject the test suite name to the XML name atribute
         command: "sed '/^<testsuite/s/name=\"\"/name=\"{{ test_suite }}\"/' -i {{ test_output_filename }}.xml"
         args:
             chdir: "{{ test.dir }}"
         when:
-            results_formats.junitxml is defined
+            output_formats.junitxml is defined
 
       - name: add the test suite name in the HTML report title
         command: "sed 's#<title>\\(.*Test Report\\)</title>#<title>\\1 - {{ test_suite }}</title>#' \
@@ -152,7 +152,7 @@
         args:
             chdir: "{{ test.dir }}"
         when:
-            results_formats.html is defined
+            output_formats.html is defined
 
       - name: Fetch subunit results file
         fetch:
@@ -168,7 +168,7 @@
             flat: yes
             fail_on_missing: yes
         when:
-            results_formats.junitxml is defined
+            output_formats.junitxml is defined
 
       - name: Fetch HTML results file
         fetch:
@@ -177,7 +177,7 @@
             flat: yes
             fail_on_missing: no
         when:
-            results_formats.html is defined
+            output_formats.html is defined
 
       - name: cleanup the resources created by the test and not cleaned
         shell: >
