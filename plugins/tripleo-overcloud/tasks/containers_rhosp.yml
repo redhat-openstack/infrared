@@ -61,7 +61,13 @@
 - include: containers/build_images.yml
 - include: containers/workarounds.yml
   tags: wa
-- include: containers/templates.yml
+
+# http://lists.openstack.org/pipermail/openstack-dev/2017-July/119880.html?
+- name: generate docker images file, using the undercloud registry
+  shell: "openstack overcloud container image prepare --namespace={{ ansible_br_ctlplane['ipv4']['address'] }}:8787/rhosp12 --env-file={{ template_base }}/docker-images.yaml --prefix=openstack- --suffix=-docker --tag=`cat /home/stack/core_puddle_version`"
+  tags:
+      - skip_ansible_lint
+
 
 - name: append extra containers templates for the build scripts
   lineinfile:
