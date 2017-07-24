@@ -1,26 +1,36 @@
 ---
-- name: "Download {{ template_base }}/docker-osp12.yaml"
-  get_url:
-      url: "{{ containers_puddle_base_url.stdout }}/docker-osp12.yaml"
-      dest: "{{ template_base }}/docker-osp12.yaml"
-      owner: stack
-      group: stack
 
-- name: replace docker registry with mirror
-  replace:
-      dest: "{{ template_base }}/docker-osp12.yaml"
-      regexp: '^([ ]*DockerNamespace: ).*(\/.*)'
-      replace: '\1{{ install.registry.mirror }}\2'
-      backup: no
-  when: install.get('registry', {}).mirror|default(false)
+# http://lists.openstack.org/pipermail/openstack-dev/2017-July/119880.html?
+# /home/stack/core_puddle_version is not always matching with the docker tag
+- name: generate docker images file, using the undercloud registry
+  vars:
+      env_file: "{{ template_base }}/docker-images.yaml"
+      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/rhosp12"
+  shell: |
+      tag=`awk '/- imagename:.*openstack-glance-api-docker:.*/ {print $3}' </home/stack/container_images.yaml  | cut -f 2 -d:`
+      openstack overcloud container image prepare --namespace={{ undercloud_reg_base }} --env-file={{ env_file }} --prefix=openstack- --suffix=-docker --tag=$tag
+  tags:
+      - skip_ansible_lint
 
-- name: replace docker registry namespace
-  replace:
-      dest: "{{ template_base }}/docker-osp12.yaml"
-      regexp: '^([ ]*DockerNamespace: .*\/)(.*)'
-      replace: '\1{{ install.registry.namespace }}'
-      backup: no
-  when: install.get('registry', {}).namespace|default(false)
+- name: add insecure registry line
+  vars:
+      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/rhosp12"
+  lineinfile:
+      path: "{{ template_base }}/docker-images.yaml"
+      state: present
+      line: "  DockerInsecureRegistryAddress: {{ undercloud_reg_base }}"
 
-- name: w/a for BZ 1456986
-  replace: dest="{{ template_base }}/docker-osp12.yaml" regexp='(DockerNamespace{{ ":" }}).*' replace='\1 192.168.24.1{{ ":" }}8787/rhosp12'
+# TODO(del these in 2 weeks)
+- name: Add depreacted option line 1
+  vars:
+      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/rhosp12"
+  lineinfile:
+      path: "{{ template_base }}/docker-images.yaml"
+      state: present
+      line: "  DockerNamespace: {{ undercloud_reg_base }}"
+
+- name: Add depreacted option line 2
+  lineinfile:
+      path: "{{ template_base }}/docker-images.yaml"
+      state: present
+      line: "  DockerNamespaceIsRegistry: true"
