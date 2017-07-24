@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "127a1c83_0e33dec1",
+        "filename": "Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2017-07-24T15:42:11Z",
+      "side": 1,
+      "message": "Ok i see similar stuff is done in other places,\nthough never with impact like systemwide install attempt (at most i found building pkgs or docs).\n\nBut this can be changed later after it upsets users (when failing on writing to usr lib python) :]\nOr maybe docs and this code could be updated too to print some info/notice if there is no venv active.",
+      "parentUuid": "055c32db_a27bb866",
+      "revId": "d9e2a335b0016773ebfb4483e3cb06d2eaf86f7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bfcd132a_2fae8fef",
         "filename": "plugins/packstack/vars/network/variant/neutron_ml2-vlan.yml",
         "patchSetId": 2
@@ -89,6 +107,41 @@
       "side": 1,
       "message": "This would introduce serious performance and diskspace problems because would increase the number of venvs. More space, more time to install them, especially because they have lots of common requirements. \n\nThis approach does not scale well: imagine that tomorrow we may want to add bashate linting, do we create another environment? Probably we dont want that.",
       "parentUuid": "fc4c36d5_13fe2a7a",
+      "revId": "d9e2a335b0016773ebfb4483e3cb06d2eaf86f7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3e7fb11_08a0fb8c",
+        "filename": "tox.ini",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2017-07-24T15:42:11Z",
+      "side": 1,
+      "message": "Right, ansible-lint is the beefy beast here :(\n\nSome space gets saved why loosing small bit of speed (due to parallel runs possible for separate tox env),\nso let\u0027s then rename ansible-lint to just \u0027lint\u0027?\n\n  tox -e lint  126.45s user 8.59s system 291% cpu 46.363 total\n  72M\t.tox/lint\n  \n  -- 72MB vs 80MB  |  46s vs 35s [can run in parallel] --\n  \n  tox -e clean-ansible-lint  115.00s user 8.44s system 348% cpu 35.383 total\n  67M\t.tox/clean-ansible-lint\n  \n  tox -e yamllint  11.40s user 0.28s system 99% cpu 11.726 total\n  13M\t.tox/yamllint\n  \n  (both at same time, given if the cpu power is available)\n  bash -c \u0027tox -e clean-ansible-lint \u0026 tox -e yamllint \u0026 wait\u0027  133.46s user 8.58s system 430% cpu 32.995 total",
+      "parentUuid": "94b7f6f3_989bef16",
+      "revId": "d9e2a335b0016773ebfb4483e3cb06d2eaf86f7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "425146df_44dd5ac3",
+        "filename": "tox.ini",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2017-07-24T15:42:11Z",
+      "side": 1,
+      "message": "also i\u0027ve noticed that:\n- this does not exclude plugins/gabbi (or any other plugin installed automatically by infrared) and those are not always required to stay lint valid or anything (that\u0027s also why they are not in repo i guess)",
       "revId": "d9e2a335b0016773ebfb4483e3cb06d2eaf86f7b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
