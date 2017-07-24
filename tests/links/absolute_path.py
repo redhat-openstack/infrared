@@ -1,1 +1,1 @@
-../../plugins/collect-logs/filter_plugins/absolute_path.py
+../../infrared/common/filter_plugins/absolute_path.py
