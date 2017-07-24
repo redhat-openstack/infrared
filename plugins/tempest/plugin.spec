@@ -110,9 +110,9 @@ subparsers:
                           The full or relative path to the python-tempestconf destination.
                           Suitable when setup is 'git'. When the path is specified, python-tempestconf is not cloned
                           from the repository but the code in a location specified by the path is used instead.
-                  results-formats:
+                  output-formats:
                       type: Value
                       help: |
-                          Output format of tempest results report to generate. Currently supported: junitxml, html.
-                          Format: --results-formats junitxml,html
+                          Comma separated list of tempest results output format(s). Valid values: junitxml, html.
+                          Format: --output-formats junitxml,html
                       default: junitxml
