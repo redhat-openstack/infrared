@@ -24,3 +24,10 @@
 
 - name: w/a for BZ 1456986
   replace: dest="{{ template_base }}/docker-osp12.yaml" regexp='(DockerNamespace{{ ":" }}).*' replace='\1 192.168.24.1{{ ":" }}8787/rhosp12'
+
+# http://lists.openstack.org/pipermail/openstack-dev/2017-July/119880.html?
+- name: update_image_refs
+  replace:
+    dest: "{{ template_base }}/docker-osp12.yaml"
+    regexp: '^(\s*\S*)Image: ([^/\n]*)'
+    replace: '\1Image: 192.168.24.1:8787/rhosp12/\2'
