@@ -1,7 +1,4 @@
 ---
-- name:
-  setup:
-
 - name: ensure previous repo mirror config is removed
   become: true
   lineinfile:
@@ -32,6 +29,18 @@
   when: "mirror|default('')"
   become: true
 
+- name: gather repo file names to remove
+  find:
+      path: "{{ rr_target_directory }}"
+  register: files_to_remove
+
+- name: remove all repo files
+  file:
+      state: absent
+      path: "{{ item.path }}"
+  with_items: "{{ files_to_remove.files|default([]) }}"
+  become: true
+
 - name: get the rhos-release RPM
   get_url:
       url: "{{ rhos_release_rpm }}"
@@ -39,6 +48,10 @@
       force: yes
       validate_certs: no
   become: true
+  register: download_result
+  until: '"Request failed" not in download_result.msg'
+  retries: 5
+  delay: 5
 
 - name: install the rhos-release RPM
   package:
@@ -59,12 +72,10 @@
             state: install
             release: "{{ release }}"
             build_date: "{{ build }}"
-            director_build_date: "{{ director_build | default(omit) }}"
-            buildmods: "{{ install.buildmods.split(',') }}"
+            buildmods: "{{ rr_buildmods.split(',')|default(omit) }}"
             target_directory: "{{ rr_target_directory }}"
-            distro_version: "{{ install.osrelease|default(rr_distro_version) }}"
+            distro_version: "{{ rr_distro_version }}"
             source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
-            discover_build: "{{ rr_discover_build }}"
         register: command_result
         until: command_result.stderr.find('Connection reset by peer') == -1
         retries: 40
@@ -76,12 +87,10 @@
             state: install
             release: "{{ release }}"
             build_date: "{{ build }}"
-            director_build_date: "{{ director_build | default(omit) }}"
-            buildmods: "{{ install.buildmods.split(',') }}"
+            buildmods: "{{ rr_buildmods.split(',')|default(omit) }}"
             target_directory: "{{ rr_target_directory }}"
-            distro_version: "{{ install.osrelease|default(rr_distro_version) }}"
+            distro_version: "{{ rr_distro_version }}"
             source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
-            discover_build: "{{ rr_discover_build }}"
         register: command_result
         ignore_errors: yes
 
