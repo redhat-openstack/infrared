@@ -1,26 +1,28 @@
-- name: Perform validations
-  include: "{{ validata_overcloud | default('validate.yml') }}"
-  tags:
-      - validation
+- name: Include tripleo composable
+  include: tripleo_composable_roles.yml
+# - name: Perform validations
+#   include: "{{ validata_overcloud | default('validate.yml') }}"
+#   tags:
+#       - validation
 
-- name: Auto discover undercloud version
-  include: "{{ auto_discover_undercloud_version | default('version.yml') }}"
-  when: install.version is not defined
-  tags:
-      - always
+# - name: Auto discover undercloud version
+#   include: "{{ auto_discover_undercloud_version | default('version.yml') }}"
+#   when: install.version is not defined
+#   tags:
+#       - always
 
-- name: Overcloud install
-  include: "{{ overcloud_install | default('install.yml') }}"
-  when:
-      - not install.upgrade|default('')
-      - install.build|default('None') == 'None'
+# - name: Overcloud install
+#   include: "{{ overcloud_install | default('install.yml') }}"
+#   when:
+#       - not install.upgrade|default('')
+#       - install.build|default('None') == 'None'
 
-- name: Overcloud Upgrade
-  include: "{{ overcloud_upgrade | default('upgrade.yml') }}"
-  when: install.upgrade|default('')
+# - name: Overcloud Upgrade
+#   include: "{{ overcloud_upgrade | default('upgrade.yml') }}"
+#   when: install.upgrade|default('')
 
-- name: Overcloud Update
-  include: "{{ overcloud_update | default('update.yml') }}"
-  when:
-      - install.build|default('None') != 'None'
-      - install.upgrade|default('None') == 'None'
+# - name: Overcloud Update
+#   include: "{{ overcloud_update | default('update.yml') }}"
+#   when:
+#       - install.build|default('None') != 'None'
+#       - install.upgrade|default('None') == 'None'

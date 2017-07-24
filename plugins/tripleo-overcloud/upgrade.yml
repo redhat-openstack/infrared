@@ -57,6 +57,7 @@
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
   roles:
       - role: rhos-release
+        rr_buildmods: "{{ install.buildmods }}"
         release: "{{ (undercloud_version|int) }}"
         build: "{{ install.build|default('None') if install.build != 'None' else 'latest' }}"
         director: no

@@ -53,6 +53,7 @@
   roles:
       - role: rhos-release
         release: "{{ (undercloud_version|int) }}"
+        rr_buildmods: "{{ install.buildmods }}"
         build: "{{ install.build }}"
         mirror: "{{ install.mirror | default(omit) }}"
         when: hostvars[groups['undercloud'][0]]['oc_cdn_register']|int == 1

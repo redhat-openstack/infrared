@@ -21,6 +21,7 @@
 
       - role: rhos-release
         release: "{{ install.version }}"
+        rr_buildmods: "{{ install.buildmods }}"
         build: "{{ install.build | default(omit) }}"
         director_build: "{{ install.get('director', {}).build|default(omit) }}"
         mirror: "{{ install.mirror | default(omit) }}"
@@ -31,6 +32,7 @@
         become: yes
 
       - role: rdo-release
+        rr_buildmods: "{{ install.buildmods }}"
         release: "{{ install.version }}"
         when: "install.version|openstack_distribution == 'RDO'"
         become: yes
