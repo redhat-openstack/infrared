@@ -90,14 +90,14 @@
 
 - name: Overcloud Reboot
   hosts: overcloud_nodes:!unused
-  gather_facts: yes
+  gather_facts: false
   any_errors_fatal: true
   serial: 1
   tasks:
       # TODO(yprokule): figure out if we should migrate instances from computes ?
       - name: put node to standby mode
         command: |
-            sudo pcs node standby
+            sudo pcs node standby --wait=300
         ignore_errors: True
         register: standby_node
 
