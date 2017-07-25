@@ -85,7 +85,7 @@ Generate Answers file for `virsh` provisioner::
 
 Review the config file and edit as required:
 
-.. code-block:: plain
+.. code-block:: ini
    :emphasize-lines: 6,7
    :caption: virsh_prov.ini
 
