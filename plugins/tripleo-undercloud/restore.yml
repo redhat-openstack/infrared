@@ -14,6 +14,31 @@
       # todo(yfried): add external refs so users can override these values and customize the Undercloud
   tasks:
       # todo(atalmor): add support to download image
+      - name: add the undercloud image server
+        add_host:
+            name: "{{ install.dest.address }}"
+            groups: user_group
+            ansible_ssh_host: "{{ install.dest.address }}"
+            ansible_ssh_user: "{{ install.dest.user }}"
+            ansible_ssh_private_key_file: "{{ install.dest.key | default(omit) }}"
+            ansible_ssh_pass: "{{ install.dest.pass | default(omit) }}"
+        when: install.dest|default({})
+
+      - name: print out the public key
+        command: "ssh-keygen -y -f ~/.ssh/id_rsa"
+        register: pubkey
+        when: install.dest|default({})
+
+      - name: add key to remote
+        authorized_key:
+            user: "{{ install.dest.user }}"
+            key: "{{ pubkey.stdout }}"
+        delegate_to: "{{ install.dest.address }}"
+
+      - name: copy the image to temporary server
+        command: scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i {{ install.dest.key }} {{ install.dest.user }}@{{ install.dest.address }}:/{{install.dest.path}} ./{{ undercloud_image_file }}
+        when: install.dest|default({})
+
       - name: copy the image into libvirt images folder
         copy:
             remote_src: yes
