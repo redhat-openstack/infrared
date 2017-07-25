@@ -43,7 +43,7 @@
           DEVICE={{ nic_data.device }}
           NAME={{ nic_data.device }}
           HWADDR={{ nic_data.macaddress }}
-          BRIDGE={{ bridge_name }}
+          BRIDGE={{ nic_settings.name }}
           # Change to 'no' to disable NetworkManager for this interface.
           NM_CONTROLLED=no
           ONBOOT=yes
@@ -52,13 +52,19 @@
 - name: bridge network configuration
   become: yes
   copy:
-      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ bridge_name }}"
+      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ nic_settings.name }}"
       content: |
-          DEVICE={{ bridge_name }}
-          NAME={{ bridge_name }}
+          DEVICE={{ nic_settings.name }}
+          NAME={{ nic_settings.name }}
           TYPE=Bridge
 
-          BOOTPROTO={{ nic_bootproto }}
+          BOOTPROTO={{ nic_settings.bootproto|default('none') }}
+          {% if nic_settings.ip_address|default(false) %}
+          IPADDR={{ nic_settings.ip_address }}
+          {% endif %}
+          {% if nic_settings.netmask|default(false) %}
+          NETMASK={{ nic_settings.netmask }}
+          {% endif %}
           NM_CONTROLLED=no
           ONBOOT=yes
           # If you want to turn on Spanning Tree Protocol, ask your hosting
@@ -69,6 +75,6 @@
 
 - name: restart interface
   become: yes
-  shell: "ifdown {{ nic_data.device }} && ifup {{ bridge_name }} && ifup {{ nic_data.device }}"
+  shell: "ifdown {{ nic_data.device }} && ifup {{ nic_settings.name }} && ifup {{ nic_data.device }}"
 # TODO(yfried): why doesn't this work?
 #  shell: "nmcli connection reload && nmcli connection down {{ nic_data.device }} && nmcli connection up {{ nic_data.device }}"

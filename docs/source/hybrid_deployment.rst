@@ -17,6 +17,8 @@ provisioning the following configuration can be used::
             name: br-ctlplane
             forward: bridge
             nic: eno2
+            ip_address: 192.0.70.200
+            netmask: 255.255.255.0
         net2:
             name: br-vlan
             forward: bridge
@@ -45,6 +47,7 @@ provisioning the following configuration can be used::
 
 .. note:: Change nic names for the bridget networks to match hypervisor interfaces.
 
+.. note:: Make sure you have ``ip_address`` or ``bootproto=dhcp`` defined for the br-ctlplane bridge. This is need to setup ssh access to the nodes after deployment is completed.
 
 Create configurations files for the virtual nodes
 -------------------------------------------------

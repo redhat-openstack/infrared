@@ -130,6 +130,21 @@
         vars:
             path_venv: "/tmp/venv_shade"
 
+      - name: Enable SSH forwarding using hypervisor node for hybrid OC nodes
+        add_host:
+            name: "{{ item.name }}"
+            ansible_ssh_common_args: " -o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                                       -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                                       -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
+                                          {{ hostvars['hypervisor'].ansible_ssh_user }}@{{ hostvars['hypervisor'].ansible_ssh_host }}\""
+        when:
+          - "'hypervisor' in groups"
+          - install.hybrid|default(false)
+
+        with_items: "{{ openstack_servers }}"
+        vars:
+            path_venv: "/tmp/venv_shade"
+
 - name: Update the inventory file
   hosts: localhost
   gather_facts: no
