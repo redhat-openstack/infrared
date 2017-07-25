@@ -16,6 +16,22 @@
             msg: "instackenv file is missing"
         when: not instack_file_path.stat.exists
 
+      # replace with os_ modules once shade group will be available
+      - name: read all flavors
+        shell: |
+            source ~/stackrc
+            openstack flavor list | awk  'FNR>3 {print $4}' | sed '/^\s*$/d'
+        register: existing_flavors
+        tags: skip_ansible_lint
+
+      - name: remove all the flavors
+        shell: |
+            source ~/stackrc
+            openstack flavor delete {{ item }}
+        with_items: "{{ existing_flavors.stdout_lines }}"
+        ignore_errors: yes
+        tags: skip_ansible_lint
+
       - name: create the baremetal flavor for our machines
         shell: |
             source ~/stackrc
@@ -63,28 +79,15 @@
               with_items: "{{ overcloud_facts.nodes | default([]) }}"
               register: original_flavors
 
-            - name: delete original flavors
-              shell: |
-                  source ~/stackrc
-                  openstack flavor delete {{ item[0].name.rstrip('1234567890-').split('-')[-1] }}
-              when: "item[0].name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
-              tags: skip_ansible_lint
-              with_together:
-                  - "{{ overcloud_facts.nodes | default([]) }}"
-                  - "{{ original_flavors.results }}"
-              ignore_errors: yes
-              register: flavor_delete
-
             - name: Workarond for BZ #1317312
               shell: |
                  source ~/stackrc
                  nova flavor-delete {{ item[0].name.rstrip('1234567890-').split('-')[-1] }}
               tags: skip_ansible_lint
-              when: "item[0].name.rstrip('1234567890-').split('-')[-1] in item[1].cmd and item[2].stderr == 'public endpoint for messaging service not found'"
+              when: "item[0].name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
               with_together:
                   - "{{ overcloud_facts.nodes | default([]) }}"
                   - "{{ original_flavors.results }}"
-                  - "{{ flavor_delete.results }}"
               ignore_errors: yes
 
             # Remember, hostvars are special: https://github.com/ansible/ansible/issues/13838, https://github.com/ansible/ansible/issues/21084
