@@ -48,6 +48,10 @@
       force: yes
       validate_certs: no
   become: true
+  register: download_result
+  until: download_result.msg.find('Request failed') == -1
+  retries: 3
+  delay: 5
 
 - name: install the rhos-release RPM
   package:
