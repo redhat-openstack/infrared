@@ -75,6 +75,14 @@ Delete:
 
         Workspace 'example' deleted
 
+    Delete multiple workspaces at once::
+
+        infrared workspace delete example1 example2 example3
+
+        Workspace 'example1' deleted
+        Workspace 'example2' deleted
+        Workspace 'example3' deleted
+
 Cleanup:
     Removes all the files from workspace. Unlike delete, this will keep the workspace namespace and keep it active if it was active before.::
 
