@@ -4,6 +4,10 @@
       msg: "The 'bmc_ipmi_network_name' variable if not  defined "
   when: "not bmc_ipmi_network_name or bmc_ipmi_network_name=='undefined'"
 
+- fail:
+      msg: "OVB not supported for non Red Hat operating systems"
+  when: ansible_os_family != "RedHat"
+
 - name: Get the rhos-release RPM
   get_url:
       url: "{{ rhos_release_rpm }}"
