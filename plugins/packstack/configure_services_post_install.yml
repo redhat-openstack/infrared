@@ -26,10 +26,30 @@
             value: "{{ randkey.stdout }}"
         when: "install.version|openstack_release >= 9"
 
-      - name: Restart openstack-nova-compute
+      - name: Setup fixed key class for encrypted volumes for nova
+        ini_file:
+            dest: /etc/nova/nova.conf
+            section: key_manager
+            option: api_class
+            value: "nova.keymgr.conf_key_mgr.ConfKeyManager"
+        when: "install.version|openstack_release >= 12"
+
+      - name: Setup fixed key class for encrypted volumes for cinder
+        ini_file:
+            dest: /etc/cinder/cinder.conf
+            section: key_manager
+            option: api_class
+            value: "cinder.keymgr.conf_key_mgr.ConfKeyManager"
+        when: "install.version|openstack_release >= 12"
+
+      - name: Restart openstack-nova-compute and cinder-volume
         service:
-            name: openstack-nova-compute
+            name: "{{ item }}"
             state: restarted
+        with_items:
+            - openstack-nova-compute
+            - openstack-cinder-volume
+
 
 - name: Check if BZ1300662 is enabled
   hosts: controller
