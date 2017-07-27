@@ -16,8 +16,10 @@
   any_errors_fatal: yes
   gather_facts: no
   tasks:
+        # if the ovs agent is not containerised restart is not required
+        # TODO: reconsider droping this step
       - name: "w/a for bz 1457358  (simple)"
-        shell: "ovs-vsctl --may-exist add-br br-ex ; docker restart neutron_ovs_agent"
+        shell: "ovs-vsctl --may-exist add-br br-ex ; docker restart neutron_ovs_agent || true"
 
       - name: "w/a for bz 1464212"
         shell: "true; mkdir -p /var/lib/config-data/nova_libvirt/etc/libvirt/secrets"
