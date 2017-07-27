@@ -74,3 +74,9 @@
         loop_control:
             loop_var: sg
         when: security_groups is defined
+
+      - name: register security groups
+        vars:
+            input:
+                security_group_list: "{{ security_group_list }}"
+        include: tasks/register_resources_file.yml
