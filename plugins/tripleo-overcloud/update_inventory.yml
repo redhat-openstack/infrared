@@ -21,55 +21,17 @@
             path: "{{ overcloud_pkey }}"
             mode: 0600
 
-      - name: Install python-virtualenv, gcc, python-devel for the pip tasks
-        become: yes
-        package:
-            name: "{{ item }}"
-            state: present
-        with_items:
-           - python-virtualenv
-           - gcc
-           - python-devel
-
       - block:
-          - pip:
-                name: "{{ item.key }}"
-                version: "{{ item.value }}"
-                virtualenv: "{{ path_venv }}"
-            with_dict:
-                setuptools: "17.0"
-                pytz: "2016.4"
-                shade: "1.19.0"
-                requests: "2.11.1"
-                pip: "8.1"
-
-          - name: grab auth data from openstackrc file and publish it as YAML
-            vars:
-                undercloud_rc: ~/stackrc
-            shell: |
-                source {{ undercloud_rc }}
-                echo "
-                auth_url: $OS_AUTH_URL
-                username: $OS_USERNAME
-                password: $OS_PASSWORD
-                project_name: ${OS_PROJECT_NAME:-$OS_TENANT_NAME}
-                "
-                if [ -n "$OS_PROJECT_DOMAIN_NAME" ]; then
-                    echo "project_domain_name: $OS_PROJECT_DOMAIN_NAME"
-                fi
-                if [ -n "$OS_USER_DOMAIN_NAME" ]; then
-                    echo "user_domain_name: $OS_USER_DOMAIN_NAME"
-                fi
-            register: creds
 
           - name: update IP of overcloud nodes
             vars:
                 # Here can't be used {{ path_venv }}, because it's not a Jinja template
                 ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
             os_server_facts:
-                auth: "{{ creds.stdout | from_yaml }}"
+                cloud: undercloud
                 # Required for SSL
                 validate_certs: no
+            delegate_to: "{{ groups.shade | first }}"
 
           # todo(obaranov) Remove hosts from the 'unused' group
           # Currently ansible does not allow to remove existing host from a group
