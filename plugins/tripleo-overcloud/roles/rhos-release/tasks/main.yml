@@ -48,6 +48,10 @@
       force: yes
       validate_certs: no
   become: true
+  register: download_result
+  until: '"Request failed" not in download_result.msg'
+  retries: 5
+  delay: 5
 
 - name: install the rhos-release RPM
   package:
