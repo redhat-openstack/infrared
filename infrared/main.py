@@ -90,10 +90,10 @@ class WorkspaceManagerSpec(api.SpecObject):
 
         # delete
         delete_parser = workspace_subparsers.add_parser(
-            'delete', help='Deletes a workspace')
+            'delete', help='Deletes workspaces')
         delete_parser.add_argument(
-            "name",
-            help="Workspace name").completer = completers.workspace_list
+            'name', nargs='+',
+            help="Workspace names").completer = completers.workspace_list
 
         # cleanup
         cleanup_parser = workspace_subparsers.add_parser(
@@ -172,8 +172,9 @@ class WorkspaceManagerSpec(api.SpecObject):
                     self.workspace_manager.is_active(workspace) else "")
                   for workspace in workspaces])
         elif subcommand == 'delete':
-            self.workspace_manager.delete(pargs.name)
-            print("Workspace '{}' deleted".format(pargs.name))
+            for workspace_name in pargs.name:
+                self.workspace_manager.delete(workspace_name)
+                print("Workspace '{}' deleted".format(workspace_name))
         elif subcommand == 'cleanup':
             self.workspace_manager.cleanup(pargs.name)
         elif subcommand == 'export':
