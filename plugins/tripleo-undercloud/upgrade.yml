@@ -38,7 +38,7 @@
         tags: upgrade_repos
 
       - name: Get nova version
-        shell: nova-manage --version 2>&1 | awk -F . '{print $1}'
+        shell: nova-manage --version 2>&1 | awk -F . '{print $1}' | tail -1
         register: nova_version
         when: rhosp_release_file.stat.exists == False
         tags: upgrade_repos
