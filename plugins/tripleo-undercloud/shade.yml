@@ -33,6 +33,16 @@
                - gcc
                - python-devel
 
+          - name: install pip
+            easy_install:
+                name: pip
+                state: latest
+
+          - name: install virtualenv pip module
+            pip:
+                name: virtualenv
+                version: 15.0.3
+
           - name: create shade virtualenv
             pip:
                 name: "{{ item.key }}"
