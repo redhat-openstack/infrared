@@ -19,7 +19,7 @@
 - name: Prepare shade node
   hosts: shade
   tags: shade
-  gather_facts: no
+  gather_facts: yes
   become: yes
   any_errors_fatal: true
   tasks:
@@ -32,6 +32,16 @@
             with_items:
                - gcc
                - python-devel
+
+          - name: install pip
+            easy_install:
+                name: pip
+                state: latest
+
+          - name: install virtualenv pip module
+            pip:
+                name: virtualenv
+                version: 15.0.3
 
           - name: create shade virtualenv
             pip:
