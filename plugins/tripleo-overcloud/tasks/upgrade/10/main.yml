@@ -33,7 +33,7 @@
   tags:
     - upgrade
     - upgrade_object_storage
-  with_items: "{{ groups.swift|difference(groups.unused|default([]))|default([]) }}"
+  with_items: "{{ groups.swift|default([])|difference(groups.unused|default([]))|default([]) }}"
 
 - name: Controller And Block Storage Upgrade
   include: "controller_upgrade.yml"
@@ -50,7 +50,7 @@
   tags:
     - upgrade
     - upgrade_compute
-  with_items: "{{ groups.compute|difference(groups.unused|default([]))|default([]) }}"
+  with_items: "{{ groups.compute|default([])|difference(groups.unused|default([]))|default([]) }}"
 
 - name: Ceph Upgrade
   shell: |
@@ -59,7 +59,7 @@
   tags:
     - upgrade
     - upgrade_ceph
-  with_items: "{{ groups.ceph|difference(groups.unused|default([]))|default([]) }}"
+  with_items: "{{ groups.ceph|default([])|difference(groups.unused|default([]))|default([]) }}"
 
 - name: Convergence
   include: "convergence.yml"
