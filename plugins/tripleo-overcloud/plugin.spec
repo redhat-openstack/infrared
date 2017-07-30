@@ -221,12 +221,14 @@ subparsers:
                           __LISTYAMLS__
                       default: default_subnet
 
-                  public-vlan:
-                      type: Bool
+                  public-vlan-ip:
+                      type: Value
                       default: no
                       help: |
-                          Set this to "yes" if overcloud's external network is on a VLAN that's unreachable from the
-                          undercloud.
+                          Provide IP address from the external network range for the Undercloud host.
+                          NOTE: The address should be excluded from the external_api pool within the network-envornment.yaml file.
+                          Provide the IP address if overcloud's external ("public") network is on a VLAN that's unreachable from the
+                          Undercloud.
                           This will configure network access from UnderCloud to overcloud's API/External(floating ips)
                           network, creating a new VLAN interface connected to ovs's "br-ctlplane" bridge.
                           NOTE: If your UnderCloud's network is already configured properly, this could disrupt it, making overcloud API unreachable
