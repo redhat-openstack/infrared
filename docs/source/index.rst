@@ -32,6 +32,7 @@ Welcome to infrared's documentation!
    advance_features
    contacts
    contribute
+   review
    ovb
    troubleshoot.rst
 
