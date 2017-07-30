@@ -73,7 +73,7 @@
 
       - name: Enable external network access through newly created vlan interface on undercloud
         include: tasks/undercloud-ext-vlan.yml
-        when: "'hypervisor' not in groups and install.public.vlan"
+        when: "'hypervisor' not in groups and install.public.vlan.ip"
 
       - include: tasks/append_script.yml
         when: not overcloud_deploy_script|default('')
