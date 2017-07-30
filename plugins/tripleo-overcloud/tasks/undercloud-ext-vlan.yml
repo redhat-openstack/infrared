@@ -23,13 +23,9 @@
   register: result
   failed_when: "result.stderr != '' and 'port named vlan{{ vlan_result.stdout | replace(\"'\",'') }} already exists' not in result.stderr"
 
-- name: get the IP address for the external network interface
-  shell: "cat {{ network_environment_file_path.files[0].path }} | grep ExternalInterfaceDefaultRoute | awk -F' ' '{print $2}'"
-  register: stat_ip_result
-
 - name: configure external gateway's IP for this interface
   become: yes
-  command: "ip addr add {{ stat_ip_result.stdout | replace(\"'\",'') }} dev vlan{{ vlan_result.stdout | replace(\"'\",'') }}"
+  command: "ip addr add {{ undercloud_public_ip }} dev vlan{{ vlan_result.stdout | replace(\"'\",'') }}"
   register: iface_ip_result
   failed_when: "result.rc != 0 and result.stderr.find('RTNETLINK answers: File exists') != -1"
 
