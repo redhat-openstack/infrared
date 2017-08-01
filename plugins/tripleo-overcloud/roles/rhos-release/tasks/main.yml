@@ -42,12 +42,13 @@
   become: true
 
 - name: get the rhos-release RPM
+  become: true
   get_url:
       url: "{{ rhos_release_rpm }}"
       dest: "/tmp/rhos-release-latest.rpm"
       force: yes
       validate_certs: no
-  become: true
+  when: not rr_skip_install_if_present
   register: download_result
   until: '"Request failed" not in download_result.msg'
   retries: 5
@@ -59,6 +60,7 @@
       state: present
       use: yum
   become: true
+  when: not rr_skip_install_if_present
 
 - name: remove rhos-release repos if needed
   rhos_release:
