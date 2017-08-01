@@ -189,7 +189,7 @@ class SpecParser(object):
                         put_option(
                             out_answers,
                             parser_name,
-                            opt_name,
+                            '# ' + opt_name,
                             "Required argument. "
                             "Edit with one of the allowed values OR "
                             "override with "
