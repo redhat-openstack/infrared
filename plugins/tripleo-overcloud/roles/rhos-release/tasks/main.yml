@@ -41,13 +41,20 @@
   with_items: "{{ files_to_remove.files|default([]) }}"
   become: true
 
+- name: check rehos-release already available
+  become: true
+  shell: |
+      rpm -qa | grep rhos-release || echo "rhos-release not_installed"
+  register: rr_pre_installed
+
 - name: get the rhos-release RPM
+  become: true
   get_url:
       url: "{{ rhos_release_rpm }}"
       dest: "/tmp/rhos-release-latest.rpm"
       force: yes
       validate_certs: no
-  become: true
+  when: 'not rr_skip_install_if_present or "rhos-release not_installed" in rr_pre_installed'
   register: download_result
   until: '"Request failed" not in download_result.msg'
   retries: 5
@@ -59,6 +66,7 @@
       state: present
       use: yum
   become: true
+  when: 'not rr_skip_install_if_present or "rhos-release not_installed" in rr_pre_installed'
 
 - name: remove rhos-release repos if needed
   rhos_release:
