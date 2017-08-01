@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d1aab31_19bfebf0",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2017-08-01T09:23:47Z",
+      "side": 1,
+      "message": "I don\u0027t see why this patch needs to redesign the whole way how we create external flow thru undercloud to have customizable IP. Shouldn\u0027t the IP be ExternalInterfaceDefaultRoute, which is the only IP that should be assigned along with external VLAN on undercloud? Why we need to specify different one?\n\nIf the mask is the problem, I still don\u0027t see any reason to redesign - why not parse proper mask from ExternalNetCidr variable already present in YAML the same way we extract ExternalInterfaceDefaultRoute?",
+      "revId": "939eb0a57f30af039856d65ae88ceb2b9ff582f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3812fce9_dd2a6a25",
+        "filename": "plugins/tripleo-overcloud/build_templates.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2017-08-01T09:23:47Z",
+      "side": 1,
+      "message": "Why new variable is needed and also such complicated way to extract it from params? Can\u0027t we just use \"install.public.vlan.ip\"?",
+      "revId": "939eb0a57f30af039856d65ae88ceb2b9ff582f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19e031cc_900c414d",
+        "filename": "plugins/tripleo-overcloud/plugin.spec",
+        "patchSetId": 2
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2017-08-01T09:23:47Z",
+      "side": 1,
+      "message": "But this is already done, no? Since UC is basically ExternalInterfaceDefaultRoute, and ExternalAllocationPools are properly defined, e.g. https://code.engineering.redhat.com/gerrit/gitweb?p\u003drhos-infrared.git;a\u003dblob;f\u003dsettings/installer/ospd/deployment/rhos-qe-13-20/network/network-environment.yaml;h\u003d1497c7d0f7f1f8ff547e2b9b2b78f2696daa284a;hb\u003dHEAD .",
+      "revId": "939eb0a57f30af039856d65ae88ceb2b9ff582f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
