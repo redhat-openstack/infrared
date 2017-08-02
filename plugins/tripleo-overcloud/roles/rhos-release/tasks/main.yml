@@ -137,6 +137,10 @@
   when: "mirror_fqdn|default('')"
   become: true
 
+- name: Clean yum cache on RedHat based distros
+  command: yum clean all
+  when: ansible_os_family == "RedHat"
+
 - name: refresh yum cache
   package:
       name: kernel
