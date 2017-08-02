@@ -10,6 +10,10 @@
           - python-virtualbmc
           - ipmitool
   tasks:
+      - name: Clean yum cache on RedHat based distros
+        command: yum clean all
+        when: ansible_os_family == "RedHat"
+
       - name: Install packages required for 'pxe_ipmitool' ironic's driver on RedHat based distros
         package:
             name: "{{ item }}"
