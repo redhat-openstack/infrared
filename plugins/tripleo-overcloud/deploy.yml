@@ -26,6 +26,8 @@
             source ~/stackrc
             bash {{ overcloud_deploy_script }} &> overcloud_install.log
         register: overcloud_deploy
+        poll: 300
+        async: 6000
         ignore_errors: yes
 
       - name: Print the last few lines of the output to spot failures

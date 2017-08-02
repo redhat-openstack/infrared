@@ -7,6 +7,8 @@
 
 - name: push repos to overcloud image
   command: "virt-copy-in -a {{ overcloud_image_file }} {{ tmp_oc_repos_dir }} /etc/"
+  poll: 300
+  async: 6000
 
 - stat:
       path: /etc/yum.repos.d/patched_rpms.repo
