@@ -1,8 +1,11 @@
 [DEFAULT]
 # Network interface on the Undercloud that will be handling the PXE
 # boots and DHCP for Overcloud instances. (string value)
+{% if 'bmc' in groups %}
+local_interface = eth1
+{% else %}
 local_interface = eth0
-
+{% endif %}
 # 192.168.24.0 subnet is by default used since RHOS11
 local_ip = 192.168.24.1/24
 network_gateway = 192.168.24.1
