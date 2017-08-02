@@ -61,7 +61,7 @@ In order to provision ovb nodes, the `openstack provisioner <openstack_provision
         --topology-network=3_nets_ovb  \
         --key-file ~/.ssh/example-key.pem \
         --key-name=example-jenkins \
-        --image=rhel-guest-image-7.3-35_3nics
+        --image=rhel-guest-image-7.4-191
 
 
 The ``--topology-nodes``  options should include the ``bmc`` instance. Also instead of
@@ -107,9 +107,8 @@ DHCP should be enabled only for the external network.
 
 `infrared` provides the default ``3_nets_ovb`` network topology that allows to deploy the OVB setup.
 
-The ``--image`` option should point to an image with 3 NICs configured on boot (as opposed the the
-default single NIC in common cloud images). The NICs' order should correspond to the network topology
-described in the ovb node settings files.
+The ``--image`` option should point to existing in OpenStack Glance image
+This value affects nodes, except configured to boot an ``ipxe-boot`` image
 
 
 Install OpenStack with TripleO

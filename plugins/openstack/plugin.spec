@@ -55,7 +55,6 @@ subparsers:
                       help: |
                           An image id or name, on OpenStack cloud to provision the instance with. To see full list of images available on the cloud, use 'glance image-list'.
                           Note: the specific image for a node can be assigned using extra var argument: '-e provisioner.nodes.tester.image=custom_image_name
-                      required: yes
                   username:
                       type: Value
                       help: default username for nodes

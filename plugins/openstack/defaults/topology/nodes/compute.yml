@@ -1,4 +1,7 @@
 name: compute
+image:
+    name: "{{ provision.image | default('rhel-guest-image-7.4-191') }}"
+    ssh_user: "{{ provision.username | default('cloud-user') }}"
 interfaces:
     nic1:
         network: "management"
