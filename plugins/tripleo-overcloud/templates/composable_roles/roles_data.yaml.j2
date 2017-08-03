@@ -9,6 +9,9 @@
 {%- if role.primary_role|default(false) or saved_roles|length > 0 or (loop.last and saved_roles|length == 0) %}
 - name: {{ role.name }}
   CountDefault: 1
+{% if role.disable_upgrade_deployment|default(False) %}
+  disable_upgrade_deployment: True
+{% endif %}
   ServicesDefault:
 {% for service in role.services %}
 {%- if service %}
