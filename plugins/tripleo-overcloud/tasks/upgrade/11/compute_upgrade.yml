@@ -8,6 +8,7 @@
       validate_certs: no
   when: groups.compute|difference(groups.unused|default([]))|length > 1
   tags: compute_migrate
+  delegate_to: "{{ groups.shade | first }}"
 
 - name: List compute nodes
   shell: |
