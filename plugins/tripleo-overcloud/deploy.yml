@@ -1,6 +1,8 @@
 - name: Populate the overcloud deploy script
   include: build_templates.yml
-  tags: templates
+  tags:
+      - deploy_preparation
+      - templates
 
 - name: Deploy the Overcloud
   hosts: undercloud
@@ -8,6 +10,8 @@
   any_errors_fatal: true
   vars:
       overcloudrc_file: "{{ ansible_user_dir }}/overcloudrc"
+  tags:
+      - deploy
   tasks:
       - name: adjust max number of concurrent builds to prevent undercloud overload
         ini_file:
@@ -69,6 +73,8 @@
   any_errors_fatal: true
   vars:
       overcloudrc_file: "{{ ansible_user_dir }}/overcloudrc"
+  tags:
+      - deploy
   tasks:
     - fail:
           msg: "Overcloud deployment failed... :("
