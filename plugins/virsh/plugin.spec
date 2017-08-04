@@ -33,8 +33,8 @@ subparsers:
                       type: Value
                       help: |
                         URL to the image used for node provisioning.
-                        Default is internal path for RHEL guest image
-                      default: https://url.corp.redhat.com/rhel-guest-image-7-3-35-x86-64-qcow2
+                      default: ''
+                      required: yes
 
             - title: topology
               options:
