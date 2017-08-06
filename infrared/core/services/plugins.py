@@ -23,11 +23,6 @@ DEFAULT_PLUGIN_INI = dict(
 )
 
 PLUGINS_REGISTRY = {
-    'beaker': {
-        'src': 'plugins/beaker',
-        'desc': 'Provision systems using Beaker',
-        'type': 'provision'
-    },
     'collect-logs': {
         'src': 'plugins/collect-logs',
         'desc': 'Collect log from all nodes in the active workspace',
@@ -41,11 +36,6 @@ PLUGINS_REGISTRY = {
     'gabbi': {
         'src': 'https://github.com/rhos-infra/gabbi.git',
         'desc': 'The gabbi test runner',
-        'type': 'test'
-    },
-    'octario': {
-        'src': 'https://github.com/redhat-openstack/octario.git',
-        'desc': 'Octario test runner',
         'type': 'test'
     },
     'openstack': {
