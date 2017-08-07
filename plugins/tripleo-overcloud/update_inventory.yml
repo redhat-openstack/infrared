@@ -14,13 +14,6 @@
             dest: "{{ overcloud_pkey }}"
             flat: yes
 
-      - name: update file permissions
-        delegate_to: localhost
-        become: no
-        file:
-            path: "{{ overcloud_pkey }}"
-            mode: 0600
-
       - name: update IP of overcloud nodes
         vars:
             # Here can't be used {{ path_venv }}, because it's not a Jinja template
@@ -30,6 +23,13 @@
             # Required for SSL
             validate_certs: no
         delegate_to: "{{ groups.shade | first }}"
+
+      - name: update file permissions
+        become: no
+        local_action:
+            module: file:
+            path: "{{ overcloud_pkey }}"
+            mode: 0600
 
       # todo(obaranov) Remove hosts from the 'unused' group
       # Currently ansible does not allow to remove existing host from a group
