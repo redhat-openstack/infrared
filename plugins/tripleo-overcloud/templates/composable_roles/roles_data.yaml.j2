@@ -9,6 +9,13 @@
 {%- if role.primary_role|default(false) or saved_roles|length > 0 or (loop.last and saved_roles|length == 0) %}
 - name: {{ role.name }}
   CountDefault: 1
+{% if role.options|default({}) %}
+{% for option in role.options %}
+{%- if option %}
+  {{ option }}
+{% endif -%}
+{% endfor %}
+{% endif %}
   ServicesDefault:
 {% for service in role.services %}
 {%- if service %}
