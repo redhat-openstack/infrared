@@ -60,6 +60,7 @@
         release: "{{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }}"
         build: "{{ install.build | default(omit) }}"
         mirror: "{{ install.mirror | default(omit) }}"
+        rr_distro_version: "{{ install.osrelease|default(omit) }}"
         tags:
             - upgrade
             - upgrade_repos

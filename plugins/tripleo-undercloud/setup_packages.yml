@@ -32,6 +32,7 @@
         build: "{{ install.build | default(omit) }}"
         director_build: "{{ install.get('director', {}).build|default(omit) }}"
         mirror: "{{ install.mirror | default(omit) }}"
+        rr_distro_version: "{{ install.osrelease|default(omit) }}"
         when:
             - "install.version|openstack_distribution == 'OSP'"
             - not install.cdn|default(False)
