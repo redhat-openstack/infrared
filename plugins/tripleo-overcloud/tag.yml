@@ -31,6 +31,18 @@
         with_items: "{{ existing_flavors.stdout_lines }}"
         ignore_errors: yes
         tags: skip_ansible_lint
+        register: flavor_delete
+
+      - name: Workarond for BZ #1317312
+        shell: |
+            source ~/stackrc
+            nova flavor-delete {{ item[0] }}
+        tags: skip_ansible_lint
+        when: "'public endpoint for messaging service not found' in item[1].stderr "
+        with_together:
+            - "{{ existing_flavors.stdout_lines }}"
+            - "{{ flavor_delete.results }}"
+        ignore_errors: yes
 
       - name: create the baremetal flavor for our machines
         shell: |
@@ -78,17 +90,6 @@
                   openstack flavor list | awk '/{{ item.name.rstrip('1234567890-').split('-')[-1] }}/ {print $4}'
               with_items: "{{ overcloud_facts.nodes | default([]) }}"
               register: original_flavors
-
-            - name: Workarond for BZ #1317312
-              shell: |
-                 source ~/stackrc
-                 nova flavor-delete {{ item[0].name.rstrip('1234567890-').split('-')[-1] }}
-              tags: skip_ansible_lint
-              when: "item[0].name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
-              with_together:
-                  - "{{ overcloud_facts.nodes | default([]) }}"
-                  - "{{ original_flavors.results }}"
-              ignore_errors: yes
 
             # Remember, hostvars are special: https://github.com/ansible/ansible/issues/13838, https://github.com/ansible/ansible/issues/21084
             - name: create the flavors for our machines
