@@ -3,7 +3,6 @@ from pbr import version
 import pkg_resources as pkg
 import sys
 import argcomplete
-import bash_completers as completers
 
 
 def inject_common_paths():
@@ -14,7 +13,7 @@ def inject_common_paths():
         conf_path = os.environ.get(envvar, '')
         additional_conf_path = os.path.join(common_path, specific_dir)
         if conf_path:
-            full_conf_path = ':'.join(additional_conf_path, conf_path)
+            full_conf_path = ':'.join([additional_conf_path, conf_path])
         else:
             full_conf_path = additional_conf_path
         os.environ[envvar] = full_conf_path
@@ -27,6 +26,7 @@ def inject_common_paths():
     override_conf_path(common_path, 'ANSIBLE_FILTER_PLUGINS', 'filter_plugins')
     override_conf_path(common_path, 'ANSIBLE_CALLBACK_PLUGINS',
                        'callback_plugins')
+    override_conf_path(common_path, 'ANSIBLE_LIBRARY', 'library')
 
 
 # This needs to be called here because as soon as an ansible class is loaded
@@ -44,6 +44,7 @@ from infrared.core.utils import exceptions  # noqa
 from infrared.core.utils import logger  # noqa
 from infrared.core.utils import interactive_ssh  # noqa
 from infrared.core.utils.print_formats import fancy_table  # noqa
+import bash_completers as completers
 
 LOG = logger.LOG
 
