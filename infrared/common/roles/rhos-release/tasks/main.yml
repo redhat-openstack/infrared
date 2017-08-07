@@ -54,7 +54,7 @@
       dest: "/tmp/rhos-release-latest.rpm"
       force: yes
       validate_certs: no
-  when: 'not rr_skip_install_if_present or "rhos-release not_installed" in rr_pre_installed'
+  when: 'not rr_skip_install_if_present or "rhos-release not_installed" in rr_pre_installed.stdout'
   register: download_result
   until: '"Request failed" not in download_result.msg'
   retries: 5
@@ -66,7 +66,7 @@
       state: present
       use: yum
   become: true
-  when: 'not rr_skip_install_if_present or "rhos-release not_installed" in rr_pre_installed'
+  when: 'not rr_skip_install_if_present or "rhos-release not_installed" in rr_pre_installed.stdout'
 
 - name: remove rhos-release repos if needed
   rhos_release:
