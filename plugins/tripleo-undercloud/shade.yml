@@ -44,6 +44,13 @@
                 name: virtualenv
                 version: 15.0.3
 
+          # required to avoid any conflicts in venv with
+          # different packages versions (especially shade)
+          - name: cleanup shade venv if present
+            file:
+                state: absent
+                path: "/var/tmp/venv_shade"
+
           - name: create shade virtualenv
             pip:
                 name: "{{ item.key }}"

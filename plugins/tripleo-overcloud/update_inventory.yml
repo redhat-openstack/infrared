@@ -84,8 +84,6 @@
             when: "'hypervisor' not in groups"
 
             with_items: "{{ openstack_servers }}"
-        vars:
-            path_venv: "/tmp/venv_shade"
 
       - name: Enable SSH forwarding using hypervisor node for hybrid OC nodes
         add_host:
@@ -99,8 +97,6 @@
           - install.hybrid|default(false)
 
         with_items: "{{ openstack_servers }}"
-        vars:
-            path_venv: "/tmp/venv_shade"
 
 - name: Update the inventory file
   hosts: localhost
