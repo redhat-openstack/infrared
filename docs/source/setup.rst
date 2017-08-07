@@ -84,6 +84,11 @@ Install ``infrared`` from source::
 
       pip install -e .
 
+.. note:: For enabling common aritfacts need to copy
+    ansible.cfg.example::
+
+    cp -pv ansible.cfg.example ansible.cfg
+
 Bash completion
 ---------------
 Bash completion script is in etc/bash_completion.d directory of git repository.

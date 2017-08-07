@@ -16,8 +16,10 @@ Setup virtualenv and `install <setup.html#Installation>`_ from source using pip:
     pip install --upgrade pip
     pip install --upgrade setuptools
     pip install .
+    cp -pv ansible.cfg.example ansible.cfg
 
 .. warning:: It's important to upgrade ``pip`` first, as default ``pip`` version in RHEL (1.4) might fail on dependencies
+.. warning:: Default ansible's config file will not work for infrared since we are using common artifacts and path to them is required in ansible.cfg.
 .. note:: `infrared` will create a default `workspace <workspace.html#workspace>`_ for you. This workspace will manage your environment details.
 
 
