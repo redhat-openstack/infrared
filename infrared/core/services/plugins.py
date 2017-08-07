@@ -40,11 +40,13 @@ PLUGINS_REGISTRY = {
     },
     'gabbi': {
         'src': 'https://github.com/rhos-infra/gabbi.git',
+        'src_path': '',
         'desc': 'The gabbi test runner',
         'type': 'test'
     },
     'octario': {
         'src': 'https://github.com/redhat-openstack/octario.git',
+        'src_path': '',
         'desc': 'Octario test runner',
         'type': 'test'
     },
@@ -81,6 +83,12 @@ PLUGINS_REGISTRY = {
     'tripleo-undercloud': {
         'src': 'plugins/tripleo-undercloud',
         'desc': 'Install TripleO on a designated undercloud node',
+        'type': 'install'
+    },
+    'tripleo-upgrade': {
+        'src': 'https://github.com/redhat-openstack/tripleo-upgrade.git',
+        'src_path': 'infrared_plugin',
+        'desc': 'Upgrade or update TripleO deployment',
         'type': 'install'
     },
     'virsh': {
@@ -234,12 +242,13 @@ class InfraredPluginManager(object):
             raise StopIteration
 
     @staticmethod
-    def _clone_git_plugin(git_url, dest_dir=None):
+    def _clone_git_plugin(git_url, plugin_path, dest_dir=None):
         """Clone a plugin into a given destination directory
 
         :param git_url: Plugin's Git URL
         :param dest_dir: destination where to clone a plugin into (if 'source'
           is a Git URL)
+        :param plugin_path: path in the Git repo where the infrared plugin is defined
         :return: Path to plugin cloned directory (str)
         """
         dest_dir = os.path.abspath(dest_dir or "plugins")
@@ -259,6 +268,7 @@ class InfraredPluginManager(object):
         plugin_source = os.path.join(dest_dir, plugin_dir_name)
         shutil.copytree(os.path.join(tmpdir, plugin_dir_name),
                         plugin_source)
+        plugin_source = plugin_source + '/' + plugin_path
         os.chdir(cwd)
         shutil.rmtree(tmpdir)
 
@@ -277,6 +287,7 @@ class InfraredPluginManager(object):
         """
         # Check if a plugin is in the registry
         if plugin_source in PLUGINS_REGISTRY:
+            plugin_data = PLUGINS_REGISTRY[plugin_source]
             plugin_source = PLUGINS_REGISTRY[plugin_source]['src']
 
         # Local dir plugin
@@ -284,7 +295,7 @@ class InfraredPluginManager(object):
             pass
         # Git Plugin
         else:
-            plugin_source = self._clone_git_plugin(plugin_source, dest)
+            plugin_source = self._clone_git_plugin(plugin_source, plugin_data['src_path'], dest)
 
         plugin = InfraredPlugin(plugin_source)
         plugin_type = plugin.config['plugin_type']
