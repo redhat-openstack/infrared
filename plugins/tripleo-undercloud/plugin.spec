@@ -151,9 +151,10 @@ subparsers:
                   images-url:
                       type: Value
                       help: |
-                          Images source for 'import' and 'build' tasks.
+                          Images source for 'import' and 'build' tasks, and RPM source for 'rpm' task
                           For 'import' - points to pre-build overcloud images. Required.
                           For 'build' - points to an image that will be used as the base for building the overcloud, instead of the default cloud guest image.
+                          For 'rpm' - points to RPM that will be used. If RPM has dependencies, you have to provide them also. Locations have to be separated with comma.
                       required_when: "images-task == import"
 
                   images-update:

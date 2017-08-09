@@ -21,97 +21,54 @@
             path: "{{ overcloud_pkey }}"
             mode: 0600
 
-      - name: Install python-virtualenv, gcc, python-devel for the pip tasks
-        become: yes
-        package:
-            name: "{{ item }}"
-            state: present
-        with_items:
-           - python-virtualenv
-           - gcc
-           - python-devel
-
-      - block:
-          - pip:
-                name: "{{ item.key }}"
-                version: "{{ item.value }}"
-                virtualenv: "{{ path_venv }}"
-            with_dict:
-                setuptools: "17.0"
-                pytz: "2016.4"
-                shade: "1.19.0"
-                requests: "2.11.1"
-                pip: "8.1"
-
-          - name: grab auth data from openstackrc file and publish it as YAML
-            vars:
-                undercloud_rc: ~/stackrc
-            shell: |
-                source {{ undercloud_rc }}
-                echo "
-                auth_url: $OS_AUTH_URL
-                username: $OS_USERNAME
-                password: $OS_PASSWORD
-                project_name: ${OS_PROJECT_NAME:-$OS_TENANT_NAME}
-                "
-                if [ -n "$OS_PROJECT_DOMAIN_NAME" ]; then
-                    echo "project_domain_name: $OS_PROJECT_DOMAIN_NAME"
-                fi
-                if [ -n "$OS_USER_DOMAIN_NAME" ]; then
-                    echo "user_domain_name: $OS_USER_DOMAIN_NAME"
-                fi
-            register: creds
-
-          - name: update IP of overcloud nodes
-            vars:
-                # Here can't be used {{ path_venv }}, because it's not a Jinja template
-                ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
-            os_server_facts:
-                auth: "{{ creds.stdout | from_yaml }}"
-                # Required for SSL
-                validate_certs: no
-
-          # todo(obaranov) Remove hosts from the 'unused' group
-          # Currently ansible does not allow to remove existing host from a group
-          - name: add hosts to host list
-            add_host:
-                name: "{{ item.name }}"
-                # only add groups for new nodes. don't touch existing nodes' groups
-                groups: "{{ ( item.name in groups.all ) | ternary(omit,
-                    ['overcloud_nodes', 'openstack_nodes', item.name.split('-')[0]] | join(',')
-                   ) }}"
-                ansible_ssh_user: "{{ user }}"
-                ansible_ssh_pass: ""
-                ansible_ssh_host: "{{ item.accessIPv4 }}"
-                ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
-            with_items: "{{ openstack_servers }}"
-
-          - name: list ironic nodes
-            # Use CSV format as JSON not supported in old versions
-            shell: |
-                source ~/stackrc
-                openstack baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} list -f csv
-            register: ironic_node_list
-            tags: skip_ansible_lint
-            # Bug in Liberty version: No "node list" in openstack client, and no formatter in ironic client.
-            when: install.version|default(undercloud_version)|openstack_release != 8
-
-          - name: try to find unused nodes and add them into a new unused group
-            # Set empty list for Liberty version
-            with_items: "{{ ironic_node_list.stdout|default('')|from_csv }}"
-            vars:
-                # take ironic UUID if name is missing
-                host_id: "{{ item.Name or item.UUID }}"
-            when:
-                - host_id not in openstack_servers|map(attribute='name')|list
-                - host_id in groups.all
-            add_host:
-                name: "{{ host_id }}"
-                # groups can only be added
-                groups: unused
-
+      - name: update IP of overcloud nodes
         vars:
-            path_venv: "/var/tmp/venv_shade"
+            # Here can't be used {{ path_venv }}, because it's not a Jinja template
+            ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
+        os_server_facts:
+            cloud: undercloud
+            # Required for SSL
+            validate_certs: no
+        delegate_to: "{{ groups.shade | first }}"
+
+      # todo(obaranov) Remove hosts from the 'unused' group
+      # Currently ansible does not allow to remove existing host from a group
+      - name: add hosts to host list
+        add_host:
+            name: "{{ item.name }}"
+            # only add groups for new nodes. don't touch existing nodes' groups
+            groups: "{{ ( item.name in groups.all ) | ternary(omit,
+                ['overcloud_nodes', 'openstack_nodes', item.name.split('-')[0]] | join(',')
+                ) }}"
+            ansible_ssh_user: "{{ user }}"
+            ansible_ssh_pass: ""
+            ansible_ssh_host: "{{ item.accessIPv4 }}"
+            ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
+        with_items: "{{ openstack_servers }}"
+
+      - name: list ironic nodes
+        # Use CSV format as JSON not supported in old versions
+        shell: |
+            source ~/stackrc
+            openstack baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} list -f csv
+        register: ironic_node_list
+        tags: skip_ansible_lint
+        # Bug in Liberty version: No "node list" in openstack client, and no formatter in ironic client.
+        when: install.version|default(undercloud_version)|openstack_release != 8
+
+      - name: try to find unused nodes and add them into a new unused group
+        # Set empty list for Liberty version
+        with_items: "{{ ironic_node_list.stdout|default('')|from_csv }}"
+        vars:
+            # take ironic UUID if name is missing
+            host_id: "{{ item.Name or item.UUID }}"
+        when:
+            - host_id not in openstack_servers|map(attribute='name')|list
+            - host_id in groups.all
+        add_host:
+            name: "{{ host_id }}"
+            # groups can only be added
+            groups: unused
 
       # Connection for baremetals must be forwarded through UC as OC nodes
       # lie on ctplane not accessible from anywhere else.
@@ -127,8 +84,19 @@
             when: "'hypervisor' not in groups"
 
             with_items: "{{ openstack_servers }}"
-        vars:
-            path_venv: "/tmp/venv_shade"
+
+      - name: Enable SSH forwarding using hypervisor node for hybrid OC nodes
+        add_host:
+            name: "{{ item.name }}"
+            ansible_ssh_common_args: " -o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                                       -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                                       -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
+                                          {{ hostvars['hypervisor'].ansible_ssh_user }}@{{ hostvars['hypervisor'].ansible_ssh_host }}\""
+        when:
+          - "'hypervisor' in groups"
+          - install.hybrid|default(false)
+
+        with_items: "{{ openstack_servers }}"
 
 - name: Update the inventory file
   hosts: localhost

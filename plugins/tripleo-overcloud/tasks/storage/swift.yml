@@ -11,7 +11,7 @@
     - name: append the swift storage template line to the base overcloud deploy script
       lineinfile:
           dest: "~/overcloud_deploy.sh"
-          line: '--swift-storage-flavor {% if groups["swift"] is defined %}swift{% else %}baremetal{% endif %} \'
+          line: '--swift-storage-flavor {{ ("swift" in existing_flavors.stdout_lines) | ternary("swift", "baremetal") }} \'
       when:
           - "templates.storage_add_scale|default(True)"
           - install.version|default(undercloud_version)|openstack_release < 11

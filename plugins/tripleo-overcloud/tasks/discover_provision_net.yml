@@ -12,19 +12,16 @@
       command: list_nets
   register: virsh_networks
 
-- name: get detailed information about all networks on hypervisor
+- name: get assigned ip addresses for the networks
   delegate_to: hypervisor
-  virt_net:
-      command: get_xml
-      name: "{{ item }}"
-  register: virsh_networks_details
+  shell: |
+      echo $(/sbin/ip -o addr list {{ item }} | awk '{print $4}')
+  register: virsh_networks_ips
   with_items: "{{ virsh_networks.list_nets }}"
+  tags: skip_ansible_lint
 
 - name: save network name
-  vars:
-      - network_dict: "{{ item.get_xml | from_xml }}"
-      - network_cidr: "{{ (network_dict.ip.address|default('') + '/' + network_dict.ip.netmask|default(''))|ipaddr('subnet') }}"
   set_fact:
       provison_virsh_network_name: "{{ item.item }}"
-  with_items: "{{ virsh_networks_details.results }}"
-  when: network_cidr == ctlplane_subnet_cidr.stdout
+  with_items: "{{ virsh_networks_ips.results }}"
+  when: item.stdout |ipaddr('subnet') == ctlplane_subnet_cidr.stdout

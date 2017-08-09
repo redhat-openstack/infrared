@@ -11,7 +11,7 @@
       - name: append the ceph storage template line to the base overcloud deploy script
         lineinfile:
             dest: "~/overcloud_deploy.sh"
-            line: '--ceph-storage-flavor {% if groups["ceph"] is defined %}ceph{% else %}baremetal{% endif %} \'
+            line: '--ceph-storage-flavor {{ ("ceph" in existing_flavors.stdout_lines) | ternary("ceph", "baremetal") }} \'
         when:
             - "templates.storage_add_scale | default(True)"
             - install.version|default(undercloud_version)|openstack_release < 11

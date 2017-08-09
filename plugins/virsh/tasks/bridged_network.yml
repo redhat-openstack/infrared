@@ -1,8 +1,8 @@
 # https://jamielinux.com/docs/libvirt-networking-handbook/bridged-network.html#bridged-network
-
-- fail:
-      msg: can't have multiple bridged networks
-  when: bridges|length > 1
+- name: validate required nic is present
+  fail:
+      msg: "Cannot find bridge nic: {{ nic_name }}"
+  when: nic_data == ''
 
 - name: disable netfilter for bridges
   become: yes
@@ -27,8 +27,8 @@
 - name: backup interface network configuration
   become: yes
   copy:
-      dest: "/etc/sysconfig/network-scripts/ir_bkp_ifcfg-{{ nic.interface }}"
-      src: "/etc/sysconfig/network-scripts/ifcfg-{{ nic.interface }}"
+      dest: "/etc/sysconfig/network-scripts/ir_bkp_ifcfg-{{ nic_data.device }}"
+      src: "/etc/sysconfig/network-scripts/ifcfg-{{ nic_data.device }}"
       remote_src: yes
       force: no
 
@@ -38,29 +38,34 @@
   copy:
       force: yes
 #      backup: yes
-      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ nic.interface }}"
+      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ nic_data.device }}"
       content: |
-          DEVICE={{ nic.interface }}
-          NAME={{ nic.interface }}
-          HWADDR={{ nic.macaddress }}
-          BRIDGE={{ bridge_name }}
+          DEVICE={{ nic_data.device }}
+          NAME={{ nic_data.device }}
+          HWADDR={{ nic_data.macaddress }}
+          BRIDGE={{ nic_settings.name }}
           # Change to 'no' to disable NetworkManager for this interface.
-          NM_CONTROLLED=yes
+          NM_CONTROLLED=no
           ONBOOT=yes
           TYPE=Ethernet
 
 - name: bridge network configuration
   become: yes
   copy:
-      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ bridge_name }}"
+      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ nic_settings.name }}"
       content: |
-          DEVICE={{ bridge_name }}
-          NAME={{ bridge_name }}
+          DEVICE={{ nic_settings.name }}
+          NAME={{ nic_settings.name }}
           TYPE=Bridge
 
-          # Change to 'no' to disable NetworkManager for this interface.
-          BOOTPROTO=dhcp
-          NM_CONTROLLED=yes
+          BOOTPROTO={{ nic_settings.bootproto|default('none') }}
+          {% if nic_settings.ip_address|default(false) %}
+          IPADDR={{ nic_settings.ip_address }}
+          {% endif %}
+          {% if nic_settings.netmask|default(false) %}
+          NETMASK={{ nic_settings.netmask }}
+          {% endif %}
+          NM_CONTROLLED=no
           ONBOOT=yes
           # If you want to turn on Spanning Tree Protocol, ask your hosting
           # provider first as it may conflict with their network.
@@ -70,6 +75,6 @@
 
 - name: restart interface
   become: yes
-  shell: "ifdown {{ nic.interface }} && ifup {{ bridge_name }} && ifup {{ nic.interface }}"
+  shell: "ifdown {{ nic_data.device }} && ifup {{ nic_settings.name }} && ifup {{ nic_data.device }}"
 # TODO(yfried): why doesn't this work?
-#  shell: "nmcli connection reload && nmcli connection down {{ nic.interface }} && nmcli connection up {{ nic.interface }}"
+#  shell: "nmcli connection reload && nmcli connection down {{ nic_data.device }} && nmcli connection up {{ nic_data.device }}"

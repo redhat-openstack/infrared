@@ -2,6 +2,7 @@ import os
 from pbr import version
 import pkg_resources as pkg
 import sys
+import argcomplete
 
 
 def inject_common_paths():
@@ -12,7 +13,7 @@ def inject_common_paths():
         conf_path = os.environ.get(envvar, '')
         additional_conf_path = os.path.join(common_path, specific_dir)
         if conf_path:
-            full_conf_path = ':'.join(additional_conf_path, conf_path)
+            full_conf_path = ':'.join([additional_conf_path, conf_path])
         else:
             full_conf_path = additional_conf_path
         os.environ[envvar] = full_conf_path
@@ -25,6 +26,7 @@ def inject_common_paths():
     override_conf_path(common_path, 'ANSIBLE_FILTER_PLUGINS', 'filter_plugins')
     override_conf_path(common_path, 'ANSIBLE_CALLBACK_PLUGINS',
                        'callback_plugins')
+    override_conf_path(common_path, 'ANSIBLE_LIBRARY', 'library')
 
 
 # This needs to be called here because as soon as an ansible class is loaded
@@ -42,6 +44,7 @@ from infrared.core.utils import exceptions  # noqa
 from infrared.core.utils import logger  # noqa
 from infrared.core.utils import interactive_ssh  # noqa
 from infrared.core.utils.print_formats import fancy_table  # noqa
+import bash_completers as completers
 
 LOG = logger.LOG
 
@@ -70,14 +73,17 @@ class WorkspaceManagerSpec(api.SpecObject):
             'checkout',
             help='Creates a workspace if it is not presents and '
                  'switches to it')
-        checkout_parser.add_argument("name", help="Workspace name")
+        checkout_parser.add_argument(
+            "name",
+            help="Workspace name").completer = completers.workspace_list
 
         # inventory
         inventory_parser = workspace_subparsers.add_parser(
             'inventory',
             help="prints workspace's inventory file")
-        inventory_parser.add_argument("name", help="Workspace name",
-                                      nargs="?")
+        inventory_parser.add_argument(
+            "name", help="Workspace name",
+            nargs="?").completer = completers.workspace_list
 
         # list
         workspace_subparsers.add_parser(
@@ -85,13 +91,17 @@ class WorkspaceManagerSpec(api.SpecObject):
 
         # delete
         delete_parser = workspace_subparsers.add_parser(
-            'delete', help='Deletes a workspace')
-        delete_parser.add_argument("name", help="Workspace name")
+            'delete', help='Deletes workspaces')
+        delete_parser.add_argument(
+            'name', nargs='+',
+            help="Workspace names").completer = completers.workspace_list
 
         # cleanup
         cleanup_parser = workspace_subparsers.add_parser(
             'cleanup', help='Removes all the files from workspace')
-        cleanup_parser.add_argument("name", help="Workspace name")
+        cleanup_parser.add_argument(
+            "name",
+            help="Workspace name").completer = completers.workspace_list
 
         # import settings
         importer_parser = workspace_subparsers.add_parser(
@@ -105,10 +115,10 @@ class WorkspaceManagerSpec(api.SpecObject):
         # exort settings
         exporter_parser = workspace_subparsers.add_parser(
             'export', help='Export deployment configurations.')
-        exporter_parser.add_argument("-n", "--name", dest="workspacename",
-                                     help="Workspace name. "
-                                          "If not sepecified - active "
-                                          "workspace will be used.")
+        exporter_parser.add_argument(
+            "-n", "--name", dest="workspacename",
+            help="Workspace name. If not sepecified - active "
+            "workspace will be used.").completer = completers.workspace_list
         exporter_parser.add_argument("-f", "--filename", dest="filename",
                                      help="Archive file name.")
 
@@ -120,7 +130,21 @@ class WorkspaceManagerSpec(api.SpecObject):
         nodelist_parser = workspace_subparsers.add_parser(
             'node-list',
             help='List nodes, managed by workspace')
-        nodelist_parser.add_argument("-n", "--name", help="Workspace name")
+        nodelist_parser.add_argument(
+            "-n", "--name",
+            help="Workspace name").completer = completers.workspace_list
+        nodelist_parser.add_argument(
+            "-g", "--group",
+            help="List nodes in specific group"
+            ).completer = completers.group_list
+
+        # group list
+        grouplist_parser = workspace_subparsers.add_parser(
+            'group-list',
+            help='List groups, managed by workspace')
+        grouplist_parser.add_argument(
+            "-n", "--name",
+            help="Workspace name").completer = completers.workspace_list
 
     def spec_handler(self, parser, args):
         """
@@ -149,8 +173,9 @@ class WorkspaceManagerSpec(api.SpecObject):
                     self.workspace_manager.is_active(workspace) else "")
                   for workspace in workspaces])
         elif subcommand == 'delete':
-            self.workspace_manager.delete(pargs.name)
-            print("Workspace '{}' deleted".format(pargs.name))
+            for workspace_name in pargs.name:
+                self.workspace_manager.delete(workspace_name)
+                print("Workspace '{}' deleted".format(workspace_name))
         elif subcommand == 'cleanup':
             self.workspace_manager.cleanup(pargs.name)
         elif subcommand == 'export':
@@ -160,9 +185,14 @@ class WorkspaceManagerSpec(api.SpecObject):
             self.workspace_manager.import_workspace(
                 pargs.filename, pargs.workspacename)
         elif subcommand == 'node-list':
-            nodes = self.workspace_manager.node_list(pargs.name)
+            nodes = self.workspace_manager.node_list(pargs.name, pargs.group)
             print fancy_table(
-                ("Name", "Address"), *[node_name for node_name in nodes])
+                ("Name", "Address", "Groups"),
+                *[node_name for node_name in nodes])
+        elif subcommand == "group-list":
+            groups = self.workspace_manager.group_list(pargs.name)
+            print fancy_table(
+                ("Name", "Nodes"), *[group_name for group_name in groups])
 
     # deprecated method
     def _create_workspace(self, name):
@@ -220,7 +250,9 @@ class PluginManagerSpec(api.SpecObject):
         remove_parser = plugin_subparsers.add_parser(
             "remove",
             help="Remove a plugin, 'all' will remove all installed plugins")
-        remove_parser.add_argument("name", help="Plugin name")
+        remove_parser.add_argument(
+            "name",
+            help="Plugin name").completer = completers.plugin_list
 
         # List command
         list_parser = plugin_subparsers.add_parser(
@@ -312,7 +344,8 @@ class SSHSpec(api.SpecObject):
             **self.kwargs)
 
         issh_parser.add_argument("node_name", help="Node name. "
-                                 "Ex.: controller-0")
+                                 "Ex.: controller-0"
+                                 ).completer = completers.node_list
         issh_parser.add_argument("remote_command", nargs="?", help="Run "
                                  "provided command line on remote host and "
                                  "return its output.")
@@ -357,6 +390,7 @@ def main(args=None):
     for plugin in plugin_manager.PLUGINS_DICT.values():
         specs_manager.register_spec(api.InfraredPluginsSpec(plugin))
 
+    argcomplete.autocomplete(specs_manager.parser)
     return specs_manager.run_specs(args) or 0
 
 

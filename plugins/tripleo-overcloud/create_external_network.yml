@@ -65,23 +65,6 @@
 
       # for openstack v11 the OS_TENANT_NAME is replaced with OS_PROJECT_NAME
       # Trying to resolve OS_PROJECT_NAME and then OS_TENANT_NAME
-      - name: grab auth data from openstackrc file and publish it as YAML
-        vars:
-        shell: |
-            source ~/overcloudrc
-            echo "
-            auth_url: $OS_AUTH_URL
-            username: $OS_USERNAME
-            password: $OS_PASSWORD
-            project_name: ${OS_PROJECT_NAME:-$OS_TENANT_NAME}
-            "
-            if [ -n "$OS_PROJECT_DOMAIN_NAME" ]; then
-                echo "project_domain_name: $OS_PROJECT_DOMAIN_NAME"
-            fi
-            if [ -n "$OS_USER_DOMAIN_NAME" ]; then
-                echo "user_domain_name: $OS_USER_DOMAIN_NAME"
-            fi
-        register: creds
 
       - name: create the external network
         vars:
@@ -92,11 +75,10 @@
             vlan_id: "{{ ((network_template|default({})).parameter_defaults|default({})).ExternalNetworkVlanID|default('') }}"
             # Here can't be used {{ path_venv }}, because it's not a Jinja template
             ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
-            auth: "{{ creds.stdout | from_yaml }}"
         os_network:
             # Required for SSL
             validate_certs: no
-            auth: "{{ auth }}"
+            cloud: overcloud
             name: "{{ pool_name.stdout_lines|last }}"
             external: yes
             shared: no
@@ -104,6 +86,7 @@
             provider_network_type: "{{ physnet_type }}"
             provider_segmentation_id: "{{ ('vlan' == physnet_type) | ternary(vlan_id, omit) }}"
         register: net_create
+        delegate_to: "{{ groups.shade | first }}"
 
       - name: print network details to console
         shell: |
@@ -118,13 +101,12 @@
         vars:
             # Here can't be used {{ path_venv }}, because it's not a Jinja template
             ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
-            auth: "{{ creds.stdout | from_yaml }}"
             # It's cleaner to define top defaults first
             pool: "{{ subnet.allocation_pool|default({}) }}"
         os_subnet:
             # Required for SSL
             validate_certs: no
-            auth: "{{ creds.stdout | from_yaml }}"
+            cloud: overcloud
             name: external_subnet
             network_name: "{{ net_create.network.name }}"
             enable_dhcp: no
@@ -133,6 +115,7 @@
             allocation_pool_start: "{{ pool.start | default(omit) }}"
             allocation_pool_end: "{{ pool.end | default(omit) }}"
         register: subnet_create
+        delegate_to: "{{ groups.shade | first }}"
 
       - name: print subnet details to console
         shell: |

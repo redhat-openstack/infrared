@@ -7,6 +7,9 @@ swift_role:
     flavor: swift
     host_name_format: 'swift-%index%'
 
+    options:
+        - "{% if install.version|default(undercloud_version)|openstack_release == 11 %}disable_upgrade_deployment: True{% endif %}"
+
     services:
         - OS::TripleO::Services::CACerts
         - OS::TripleO::Services::Kernel

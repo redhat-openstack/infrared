@@ -64,17 +64,6 @@
   vars:
       composable_upgrade_script: "~/overcloud_upgrade_composable.sh"
 
-- pip:
-      name: "{{ item.key }}"
-      version: "{{ item.value }}"
-      virtualenv: "{{ path_venv }}"
-  with_dict:
-      setuptools: "17.0"
-      pytz: "2016.4"
-      shade: "1.19.0"
-      requests: "2.11.1"
-      pip: "8.1"
-
 - name: Grab auth data from {{ overcloud_rc }} file and publish it as YAML
   shell: |
       source {{ overcloud_rc }}

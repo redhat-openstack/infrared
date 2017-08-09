@@ -261,6 +261,15 @@ InfraRed provides the ability to mark an argument in a specification file as 're
 
 For example, take a look on the ``plugin.spec`` ('Group C') in `Plugin Specification`_
 
+Argument Deprecation
+~~~~~~~~~~~~~~~~~~~~
+To deprecate an argument in InfraRed, you need to add flag 'deprecates' in newer argument
+
+When we use a deprecated argument, InfraRed will warn you about that and it will add the
+new argument in Ansible parameters with the value of the deprecated
+
+For example, take a look on the ``plugin.spec`` ('Group D') in `Plugin Specification`_
+
 Plugin Manager
 ^^^^^^^^^^^^^^
 

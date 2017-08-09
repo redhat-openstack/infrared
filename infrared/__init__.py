@@ -54,13 +54,6 @@ SHARED_GROUPS = [
                 'short': 'e',
                 'type': 'str'
             },
-            'input': {
-                'action': 'append',
-                'help': 'Input settings file to be loaded '
-                        'before the merging of user args',
-                'short': 'i',
-                'type': 'str'
-            },
             'output': {
                 'help': 'File to dump the generated '
                         'settings into (default: stdout)',

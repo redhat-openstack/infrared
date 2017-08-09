@@ -78,8 +78,17 @@ This is achieved by adding a network with ``forward: bridge`` in its attributes 
 network-topology file, and marking this network as external network on the relevant node
 files.
 
-The result will create a virtual bridge on the `hypervisor` connected to the main NIC.
+The result will create a virtual bridge on the `hypervisor` connected to the main NIC by default.
 VMs attached to this bridge will be served by the same LAN as the `hypervisor`.
+
+To specify any secondary NIC for the bridge, the ``nic`` property should be added to the network
+file under the bridge network::
+
+    net4:
+        name: br1
+        forward: bridge
+        nic: eth1
+
 
 .. warning:: Be careful when using this feature. For example, an ``undercloud`` connected
     in this manner can disrupt the LAN by serving as an unauthorized DHCP server.

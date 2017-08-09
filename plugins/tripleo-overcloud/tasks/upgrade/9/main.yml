@@ -63,3 +63,25 @@
       script: "~/convergence.sh"
       environment_file:
         - /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker-converge.yaml
+
+- name: Check if there are any stopped openstack-heat-engine resources
+  become: true
+  shell: "pcs status | grep -A2 openstack-heat-engine"
+  register: pcs_status
+  delegate_to: "{{ groups.controller | first }}"
+
+- name: Cleanup openstack-heat-engine resource if any stopped resource
+  become: true
+  command: pcs resource cleanup openstack-heat-engine
+  when: pcs_status.stdout.find("Stopped") > -1
+  register: pcs_stopped
+  delegate_to: "{{ groups.controller | first }}"
+
+- name: Wait for openstack-heat-engine resources to be up on all nodes
+  become: true
+  shell: "pcs status | grep -A2 openstack-heat-engine"
+  register: pcs_status
+  until: pcs_status.stdout.find("Stopped") == -1
+  delegate_to: "{{ groups.controller | first }}"
+  retries: 60
+  delay: 5

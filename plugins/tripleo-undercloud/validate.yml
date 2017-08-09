@@ -35,3 +35,12 @@
         when:
             - director_build is defined and director_build
             - "install.version|openstack_release > 9"
+
+- name: Validate Undercloud
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - fail:
+            msg: "Tripleo not supported for non Red Hat operating systems"
+        when: ansible_os_family != "RedHat"

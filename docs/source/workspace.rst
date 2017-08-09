@@ -75,6 +75,14 @@ Delete:
 
         Workspace 'example' deleted
 
+    Delete multiple workspaces at once::
+
+        infrared workspace delete example1 example2 example3
+
+        Workspace 'example1' deleted
+        Workspace 'example2' deleted
+        Workspace 'example3' deleted
+
 Cleanup:
     Removes all the files from workspace. Unlike delete, this will keep the workspace namespace and keep it active if it was active before.::
 
@@ -113,12 +121,22 @@ Node list:
     List nodes, managed by a specific workspace::
 
         infrared workspace node-list
-        | Name         | Address     |
-        |--------------+-------------|
-        | controller-0 | 172.16.0.94 |
-        | controller-1 | 172.16.0.97 |
+        | Name         | Address     | Groups                                                |
+        |--------------+-------------+-------------------------------------------------------|
+        | controller-0 | 172.16.0.94 | overcloud_nodes, network, controller, openstack_nodes |
+        | controller-1 | 172.16.0.97 | overcloud_nodes, network, controller, openstack_nodes |
 
         infrared workspace node-list --name some_workspace_name
+
+    ``--group`` - list nodes that are member of specific group.
+Group list:
+    List groups and nodes in them, managed by a specific workspace::
+
+        infrared workspace group-list
+        | Name            | Nodes                              |
+        |-----------------+------------------------------------|
+        | overcloud_nodes | controller-0, compute-0, compute-1 |
+        | undercloud      | undercloud-0                       |
 
 .. note:: To change the directory where Workspaces are managed, edit the ``workspaces_base_folder`` option.
    Check the  `Infrared Configuration <configuration.html>`_ for details.

@@ -199,7 +199,7 @@ outputs:
     value: {get_resource: OctaviaSecurityGroup}
 EOF
 
-openstack stack create --template octavia-post.yaml octavia-post --wait
+openstack stack create --template octavia-post.yaml --wait octavia-post
 
 # Once the stack is created, we can obtain the private and public key and other
 # info from the stack outputs.
@@ -252,19 +252,19 @@ do
     node=${rec_array[1]}
 
     # Distribute SSH keys and certs to each controller node.
-    ssh $SSH_ARGS -q heat-admin@$node 'sudo mkdir -p /etc/octavia/.ssh'
-    ssh $SSH_ARGS heat-admin@$node 'sudo mkdir -p /etc/octavia/certs/private'
+    ssh $SSH_ARGS -q heat-admin@$node 'sudo mkdir -p /var/lib/config-data/octavia/etc/octavia/.ssh'
+    ssh $SSH_ARGS heat-admin@$node 'sudo mkdir -p /var/lib/config-data/octavia/etc/octavia/certs/private'
 
-    cat octavia_ssh_key | ssh $SSH_ARGS heat-admin@$node 'sudo bash -c "cat > /etc/octavia/.ssh/octavia_ssh_key"'
-    cat octavia_ssh_key.pub | ssh $SSH_ARGS heat-admin@$node 'sudo bash -c "cat > /etc/octavia/.ssh/octavia_ssh_key.pub"'
+    cat octavia_ssh_key | ssh $SSH_ARGS heat-admin@$node 'sudo bash -c "cat > /var/lib/config-data/octavia/etc/octavia/.ssh/octavia_ssh_key"'
+    cat octavia_ssh_key.pub | ssh $SSH_ARGS heat-admin@$node 'sudo bash -c "cat > /var/lib/config-data/octavia/etc/octavia/.ssh/octavia_ssh_key.pub"'
 
-    cat client.pem | ssh $SSH_ARGS heat-admin@$node 'sudo bash -c "cat > /etc/octavia/certs/client.pem"'
-    cat ca_01.pem | ssh $SSH_ARGS heat-admin@$node 'sudo bash -c "cat > /etc/octavia/certs/ca_01.pem"'
-    cat private/cakey.pem | ssh $SSH_ARGS heat-admin@$node 'sudo bash -c "cat > /etc/octavia/certs/private/cakey.pem"'
+    cat client.pem | ssh $SSH_ARGS heat-admin@$node 'sudo bash -c "cat > /var/lib/config-data/octavia/etc/octavia/certs/client.pem"'
+    cat ca_01.pem | ssh $SSH_ARGS heat-admin@$node 'sudo bash -c "cat > /var/lib/config-data/octavia/etc/octavia/certs/ca_01.pem"'
+    cat private/cakey.pem | ssh $SSH_ARGS heat-admin@$node 'sudo bash -c "cat > /var/lib/config-data/octavia/etc/octavia/certs/private/cakey.pem"'
 
     # Make sure permissions are correct!
-    ssh $SSH_ARGS heat-admin@$node 'sudo chown -R octavia:octavia /etc/octavia/.ssh/*'
-    ssh $SSH_ARGS heat-admin@$node 'sudo chown -R octavia:octavia /etc/octavia/certs/*'
+    ssh $SSH_ARGS heat-admin@$node 'sudo chown -R octavia:octavia /var/lib/config-data/octavia/etc/octavia/.ssh/*'
+    ssh $SSH_ARGS heat-admin@$node 'sudo chown -R octavia:octavia /var/lib/config-data/octavia/etc/octavia/certs/*'
 
     # Create a neutron port on the load balancer management network on each
     # controller node for the health managers.
@@ -280,6 +280,15 @@ do
     MGMT_PORT_IP=$(openstack port show $MGMT_PORT_ID -f value -c fixed_ips | cut -f1 -d, | cut -f2 -d= | tr "'" "\0")
 
     CONTROLLER_IP_LIST+="$MGMT_PORT_IP:5555, "
+
+    if [[ $OS_IDENTITY_API_VERSION -eq 3 ]]; then
+	OS_KEYSTONE_VER=3
+        PROJ_FIELD_NAME="project_name"
+    else
+	OS_KEYSTONE_VER=2
+        PROJ_FIELD_NAME="tenant_name"
+    fi
+
 
     cat << EOF_BR_INT | \
         ssh $SSH_ARGS heat-admin@$node "sudo bash -c \"cat > /etc/sysconfig/network-scripts/ifcfg-br-int\""
@@ -329,7 +338,7 @@ EOF_PORT_CFG
    # do not have to modify the main configuration file for the service and risk the
    # values being overwritten or removed on a stack update.
    cat << ENDOFWORKER | \
-       ssh $SSH_ARGS heat-admin@$node "sudo bash -c \"cat > /etc/octavia/conf.d/octavia-worker/worker-post-deploy.conf\""
+       ssh $SSH_ARGS heat-admin@$node "sudo bash -c \"cat > /var/lib/config-data/octavia/etc/octavia/conf.d/octavia-worker/worker-post-deploy.conf\""
 [controller_worker]
 amp_image_tag = amphora
 amp_boot_network_list = $LB_NETWORK_ID
@@ -344,19 +353,23 @@ client_cert = /etc/octavia/certs/client.pem
 server_ca = /etc/octavia/certs/ca_01.pem
 ENDOFWORKER
    cat << HLTHMGR | \
-       ssh $SSH_ARGS heat-admin@$node "sudo bash -c \"cat > /etc/octavia/conf.d/octavia-health-manager/manager-post-deploy.conf\""
+       ssh $SSH_ARGS heat-admin@$node "sudo bash -c \"cat > /var/lib/config-data/octavia/etc/octavia/conf.d/octavia-health-manager/manager-post-deploy.conf\""
 [health_manager]
 bind_ip = $MGMT_PORT_IP
 HLTHMGR
    cat << NEUTRON_XTRA | \
-       ssh $SSH_ARGS heat-admin@$node "sudo bash -c \"cat > /etc/neutron/conf.d/neutron-server/octavia-post-deploy.conf\""
+       ssh $SSH_ARGS heat-admin@$node "sudo bash -c \"cat > /var/lib/config-data/neutron/etc/neutron/conf.d/neutron-server/octavia-post-deploy.conf\""
 [service_auth]
 auth_url =  $OS_AUTH_URL
 auth_type = $OS_AUTH_TYPE
 admin_user = $OS_USERNAME
 admin_password = $OS_PASSWORD
 admin_tenant_name = $OS_PROJECT_NAME
-auth_version = 2
+auth_version = $OS_KEYSTONE_VER
+#region = RegionOne
+#service_name = lbaas
+#admin_user_domain = admin
+#admin_project_domain = admin
 
 [octavia]
 request_poll_timeout = 3000
@@ -364,14 +377,14 @@ request_poll_timeout = 3000
 base_url = http://$node:9876
 NEUTRON_XTRA
    cat << OCTAVIA_XTRA | \
-       ssh $SSH_ARGS heat-admin@$node "sudo bash -c \"cat > /etc/octavia/conf.d/common/octavia-post-deploy.conf\""
-
+       ssh $SSH_ARGS heat-admin@$node "sudo bash -c \"cat > /var/lib/config-data/octavia/etc/octavia/conf.d/common/octavia-post-deploy.conf\""
 [service_auth]
-auth_url =  $OS_AUTH_URL
+auth_url =  ${OS_AUTH_URL%/*}
 auth_type = $OS_AUTH_TYPE
 username = $OS_USERNAME
 password = $OS_PASSWORD
 project_name = $OS_PROJECT_NAME
+
 
 [DEFAULT]
 bind_host = $node
@@ -384,6 +397,18 @@ ca_private_key_passphrase = foobar
 OCTAVIA_XTRA
 done
 
+#in /etc/neutron/neutron.conf : service_plugins = [existing service plugins],neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2
+#in /etc/neutron/neutron_lbaas.conf:
+ssh $SSH_ARGS heat-admin@$node "sudo bash -c \"sed -i 's/^\(service_plugins\)\(.*\)\(,neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2\)\?/\1\2,neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2/' /var/lib/config-data/neutron/etc/neutron/neutron.conf\""
+echo $node > controller.inv
+#ansible all -i controller.inv -u heat-admin --become -m ini_file -a "dest=/var/lib/config-data/neutron/etc/neutron/neutron_lbaas.conf section=service_providers option=service_provider value=LOADBALANCERV2:Octavia:neutron_lbaas.drivers.octavia.driver.OctaviaDriver:default backup=yes"
+#[service_providers]
+#service_provider = LOADBALANCERV2:Octavia:neutron_lbaas.drivers.octavia.driver.OctaviaDriver:default
+
+#also add this one to neutron.conf
+#device_driver = neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2
+
+
 # Now we have to go back and set all of the health managers to have the controller IPs on the
 # load balancer network. We also need to restart the services so the new configurations will
 # take effect.
@@ -394,9 +419,9 @@ do
     rec_array=(${rec//=/ })
     node=${rec_array[1]}
     echo "controller_ip_port_list = $CONTROLLER_IP_LIST" | \
-       ssh $SSH_ARGS heat-admin@$node "sudo bash -c \"cat >> /etc/octavia/conf.d/octavia-health-manager/manager-post-deploy.conf\""
-    ssh $SSH_ARGS heat-admin@$node "sudo systemctl restart octavia-*"
-    ssh $SSH_ARGS heat-admin@$node "sudo systemctl restart neutron-*"
+       ssh $SSH_ARGS heat-admin@$node "sudo bash -c \"cat >> /var/lib/config-data/octavia/etc/octavia/conf.d/octavia-health-manager/manager-post-deploy.conf\""
+    ssh $SSH_ARGS heat-admin@$node 'sudo docker restart $(sudo docker ps -f name=octavia -q)'
+    ssh $SSH_ARGS heat-admin@$node 'sudo docker restart $(sudo docker ps -f name=neutron -q)'
 done
 
 # NOTE: In future releases, many or all of these post deployment steps will be

@@ -24,7 +24,7 @@
 - name: create disk(s) from vm base image
   vars:
       amount: "{{ node.value }}"
-      image_name: "{{ (topology_node.disks.disk1.import_url|default('') or url) | basename}}"
+      image_name: "{{ (topology_node.disks.disk1.import_url|default('') or node_dict.import_url|default('') or url) | basename}}"
       net_scripts: /etc/sysconfig/network-scripts
   shell: |
       set -ex

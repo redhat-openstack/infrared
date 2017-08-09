@@ -40,8 +40,8 @@ echo "$DEPLOYMENTS"
 for a in `echo "$DEPLOYMENTS" | grep -v 'COMPLETE' | awk 'BEGIN {a=0}; /\|/{ if (a>2) print $2 "@" $4} {a=a+1}'`; do
 	deployment=${a%@*}
 	config=${a#*@}
-	echo openstack software deployment output show "$deployment" --all "$LONG"
-	openstack software deployment output show "$deployment" --all "$LONG"
+	echo openstack software deployment output show "$deployment" --all $LONG
+	openstack software deployment output show "$deployment" --all $LONG
 	echo openstack software deployment show "$deployment"
 	openstack software deployment show "$deployment"
 	echo openstack software config show "$config"

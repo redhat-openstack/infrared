@@ -98,8 +98,8 @@ subparsers:
                       type: FileValue
                       help: |
                             Specifies whether deploying a hybrid environment.
-                            When this flag it set, the user should pass to the ``--instackenv-file`` parameter a link to a JSON file.
-                            The file contains information about the bare-metals servers that will be added to the instackenv.json file during introspection.
+                            The target file should contains information about the bare-metals servers
+                            that will be added to the instackenv.json file during introspection.
 
             - title: Overcloud Options
               options:
@@ -168,11 +168,6 @@ subparsers:
                       choices:
                           - ipv4
                           - ipv6
-
-                  network-mtu:
-                      type: Value
-                      help: Sets the MTU of the underlying physical network.
-                      default: 1500
 
                   network-lbaas:
                       type: Bool

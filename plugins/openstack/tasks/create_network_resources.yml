@@ -1,16 +1,18 @@
 - name: Create security group
-  vars:
-      resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
   os_security_group:
       cloud: "{{ provision.cloud | default(omit) }}"
       state: present
       name: "{{ provision.prefix }}{{ sg.key }}"
-      description: Security group created by Infrared
+      description: "ir: {{ lookup('env','BUILD_URL') or lookup('env', 'USER') + '@' + lookup('pipe','hostname') }} at  {{ansible_date_time.iso8601 }}"
   register: security_group
 
+# need to write all secgroups to file at once
+- name: save secgroup for registration
+  set_fact:
+      security_group_list: "{{ security_group_list|default([]) + [security_group.secgroup] }}"
+  when: security_group|changed
+
 - name: Add rules to the security group
-  vars:
-      resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
   os_security_group_rule:
       cloud: "{{ provision.cloud | default(omit) }}"
       security_group: "{{ provision.prefix }}{{ sg.key }}"
@@ -21,13 +23,3 @@
       port_range_min: "{{ item.port_range_min|default(omit) }}"
       port_range_max: "{{ item.port_range_max|default(omit) }}"
   with_items: "{{ sg.value.rules }}"
-  when: security_group|changed
-
-- name: register security group
-  vars:
-      input:
-          security_group_list:
-              # use default to avoid warnings on skip
-              - "{{ security_group.secgroup|default('') }}"
-  include: register_resources_file.yml
-  when: security_group|changed

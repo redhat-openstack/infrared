@@ -33,7 +33,20 @@
   tags:
     - upgrade
     - upgrade_object_storage
-  with_items: "{{ groups.swift|difference(groups.unused|default([]))|default([]) }}"
+  with_items: "{{ groups.swift|default([])|difference(groups.unused|default([]))|default([]) }}"
+
+- name: Check if there are any stopped pacemaker resources
+  become: true
+  command: pcs status
+  register: pcs_status
+  delegate_to: "{{ groups.controller | first }}"
+
+- name: Cleanup resources if any stopped resource
+  become: true
+  command: pcs resource cleanup --force
+  when: pcs_status.stdout.find("Stopped") > -1
+  register: pcs_stopped
+  delegate_to: "{{ groups.controller | first }}"
 
 - name: Controller And Block Storage Upgrade
   include: "controller_upgrade.yml"
@@ -50,7 +63,7 @@
   tags:
     - upgrade
     - upgrade_compute
-  with_items: "{{ groups.compute|difference(groups.unused|default([]))|default([]) }}"
+  with_items: "{{ groups.compute|default([])|difference(groups.unused|default([]))|default([]) }}"
 
 - name: Ceph Upgrade
   shell: |
@@ -59,7 +72,7 @@
   tags:
     - upgrade
     - upgrade_ceph
-  with_items: "{{ groups.ceph|difference(groups.unused|default([]))|default([]) }}"
+  with_items: "{{ groups.ceph|default([])|difference(groups.unused|default([]))|default([]) }}"
 
 - name: Convergence
   include: "convergence.yml"
