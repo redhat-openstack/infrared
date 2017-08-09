@@ -6,9 +6,11 @@
 
       - name: "Install/Upgrade are mutually exclusive"
         fail:
-            msg: "Options '--deploy' and '--upgrade' are mutually exclusive"
+            msg: "Options '--deploy' and '--upgrade' and '--ocupdate' are mutually exclusive"
         when:
-            - ( install.deploy|default('') and install.upgrade|default(''))
+            - ( install.deploy|default('') and install.upgrade|default('')) or
+              ( install.deploy|default('') and install.ocupdate|default(False)) or
+              ( install.upgrade|default('') and install.ocupdate|default(False))
 
       - name: validate storage nodes
         fail:
