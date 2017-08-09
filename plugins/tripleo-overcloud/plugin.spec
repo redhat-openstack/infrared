@@ -297,12 +297,16 @@ subparsers:
                       help: |
                           Deprecated argument. Please use 'build' argument
                       default: None
+                  ocupdate:
+                      type: Bool
+                      help: |
+                          Run minor update on overcloud.
+                      default: False
                   build:
-                     deprecates: updateto
                      type: Value
                      help: |
-                          Perform minor update of overcloud to the 'build' specified. Default: 'None'
-                          It can be used with --upgrade, when you want to upgrade to specific 'build'
+                          In conjunction with '--ocupdate' or '--upgrade' specifies the build to which to use.
+                          When omitted with update/upgrade - uses 'latest'.
                           NOTE: Currently, minor update is supported with IR just for versions > 6.
                      default: None
                   osrelease:
@@ -320,6 +324,10 @@ subparsers:
                           cdn - use internal mirrors of the CDN repos. (internal use)
                           none - use none of those flags
                       default: pin
+                  postreboot:
+                      type: Bool
+                      help: Reboot overcloud nodes one-by-one
+                      default: False
 
             - title: Ironic Configuration
               options:
