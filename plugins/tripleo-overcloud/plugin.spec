@@ -297,6 +297,11 @@ subparsers:
                       help: |
                           Deprecated argument. Please use 'build' argument
                       default: None
+                  ocupdate:
+                      type: Bool
+                      help: |
+                          Run minor update on overcloud.
+                      default: False
                   build:
                      deprecates: updateto
                      type: Value
@@ -320,6 +325,10 @@ subparsers:
                           cdn - use internal mirrors of the CDN repos. (internal use)
                           none - use none of those flags
                       default: pin
+                  postreboot:
+                      type: Bool
+                      help: Reboot overcloud nodes one-by-one
+                      default: False
 
             - title: Ironic Configuration
               options:
