@@ -295,15 +295,20 @@ subparsers:
                   updateto:
                       type: Value
                       help: |
-                          Deprecated argument. Please use 'build' argument
+                          Deprecated argument. Please use 'ocupdate' argument
                       default: None
+                  ocupdate:
+                      deprecates: updateto
+                      type: Bool
+                      help: |
+                          Perform minor update of overcloud.
+                          NOTE: Currently, minor update is supported with IR just for versions > 6.
+                      default: False
                   build:
-                     deprecates: updateto
                      type: Value
                      help: |
-                          Perform minor update of overcloud to the 'build' specified. Default: 'None'
-                          It can be used with --upgrade, when you want to upgrade to specific 'build'
-                          NOTE: Currently, minor update is supported with IR just for versions > 6.
+                          In conjunction with '--ocupdate' or '--upgrade' specifies the build which to use.
+                          When omitted with update/upgrade - uses 'latest'.
                      default: None
                   osrelease:
                       type: Value
@@ -320,6 +325,13 @@ subparsers:
                           cdn - use internal mirrors of the CDN repos. (internal use)
                           none - use none of those flags
                       default: pin
+                  postreboot:
+                      type: Bool
+                      help: |
+                          Reboot overcloud nodes one-by-one. By default don't reboot.
+                          Useful with '--ocupdate' to reboot nodes after minor update,
+                          or with '--deploy' to reboot after oc is deployed.
+                      default: False
 
             - title: Ironic Configuration
               options:
