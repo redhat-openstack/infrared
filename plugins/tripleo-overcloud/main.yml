@@ -13,14 +13,19 @@
   include: "{{ overcloud_install | default('install.yml') }}"
   when:
       - not install.upgrade|default('')
-      - install.build|default('None') == 'None'
+      - not install.ocupdate|default(False)
 
 - name: Overcloud Upgrade
   include: "{{ overcloud_upgrade | default('upgrade.yml') }}"
-  when: install.upgrade|default('')
+  when:
+      - install.upgrade|default('')
 
 - name: Overcloud Update
   include: "{{ overcloud_update | default('update.yml') }}"
   when:
-      - install.build|default('None') != 'None'
-      - install.upgrade|default('None') == 'None'
+      - install.ocupdate|default(False)
+
+- name: Overcloud Reboot
+  include: "{{ overcloud_reboot | default('overcloud_reboot.yml') }}"
+  when:
+      - install.postreboot|default(False)
