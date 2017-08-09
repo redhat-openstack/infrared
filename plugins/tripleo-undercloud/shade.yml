@@ -53,13 +53,19 @@
 
           - name: create shade virtualenv
             pip:
-                name: "{{ item.key }}"
-                version: "{{ item.value }}"
+                name: "{{ item.name }}"
+                version: "{{ item.version }}"
                 virtualenv: "{{ path_venv }}"
-            with_dict:
-                setuptools: "17.0"
-                pytz: "2016.4"
-                shade: "1.19.0"
-                pip: "8.1"
+                state: forceinstall
+            with_items:
+                - name: pip
+                  version: "9.0.1"
+                - name: setuptools
+                  version: "17.0"
+                - name: pytz
+                  version: "2016.4"
+                - name: shade
+                  version: "1.19.0"
+
         vars:
             path_venv: "/var/tmp/venv_shade"
