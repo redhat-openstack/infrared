@@ -1,0 +1,150 @@
+#
+# Reboot overcloud nodes one-by-one.
+#
+- name: Overcloud Reboot
+  hosts: overcloud_nodes:!unused
+  gather_facts: false
+  any_errors_fatal: true
+  serial: 1
+  tasks:
+      # Temporerily disable ceph rebalance
+      - name: temporerily disable ceph rebalance
+        become: true
+        command: "{{ item }}"
+        when: "'ceph' in group_names"
+        delegate_to: "{{ groups['controller']|first }}"
+        with_items:
+            - 'ceph osd set noout'
+            - 'ceph osd set norebalance'
+
+      # TODO(yprokule): figure out if we should migrate instances from computes ?
+      - name: put node to standby mode
+        command: |
+            sudo pcs node standby --wait=300
+        ignore_errors: True
+        register: standby_node
+
+      - name: reboot the node
+        become: true
+        shell: "sleep 5 && shutdown -r now"
+        async: 1
+        poll: 0
+        ignore_errors: true
+
+      - name: wait for node to go down
+        command: ping -c1 {{ ansible_ssh_host }}
+        register: node_down
+        until: node_down.rc != 0
+        retries: 60
+        delay: 3
+        ignore_errors: true
+        delegate_to: hypervisor
+
+      - block:
+            - name: waiting for the node to be available
+              wait_for:
+                  port: 22
+                  host: "{{ ansible_ssh_host }}"
+                  search_regex: OpenSSH
+                  delay: 60
+                  timeout: 360
+              delegate_to: localhost
+              when: "'hypervisor' not in groups"
+
+            - name: waiting for the node to be available
+              become: no
+              wait_for:
+                  host: "{{ ansible_ssh_host }}"
+                  port: 22
+                  search_regex: OpenSSH
+                  delay: 30
+                  sleep: 15
+                  timeout: 360
+              delegate_to: hypervisor
+              when: "'hypervisor' in groups"
+
+      - name: check node is ssh-able
+        shell: id || echo "NOT_READY"
+        register: id_ssh
+        until: "'{{ ansible_ssh_user }}' in id_ssh.stdout"
+        retries: 20
+        delay: 15
+
+      # pacemaker managed services
+      - name: unstandby pacemaker node
+        become: true
+        command: pcs node unstandby
+        when: standby_node|succeeded
+
+      - name: wait for pacemaker node to recover
+        become: true
+        shell: pcs status | grep 'Online:'
+        register: pcs_status
+        until: "'{{ inventory_hostname }}' in pcs_status.stdout"
+        retries: 6
+        delay: 5
+        when: standby_node|succeeded
+
+      - name: Check for any stopped/failed pcs resources
+        become: true
+        shell: |
+            pcs status | grep {{ item }} || /bin/true
+        register: srv_status
+        until: srv_status.stdout.find("{{ item }}") == -1
+        retries: 36
+        delay: 5
+        with_items:
+            - 'Stopped'
+            - 'unmanaged'
+        when: standby_node|succeeded
+
+      # Re-enable ceph rebalance
+      - name: reenable ceph rebalance
+        become: true
+        command: "{{ item }}"
+        when: "'ceph' in group_names"
+        delegate_to: "{{ groups['controller']|first }}"
+        with_items:
+            - 'ceph osd unset noout'
+            - 'ceph osd unset norebalance'
+
+      - name: wait for OSDs to come back
+        become: true
+        command: ceph pg stat
+        register: active_osd
+        until: active_osd.stdout.find("active+clean") > -1
+        retries: 36
+        delay: 5
+        when: "'ceph' in group_names"
+
+      - name: check clock_skew on ceph cluster
+        become: true
+        shell: |
+            ceph status | grep 'Monitor clock skew detected' || echo 'ALL_GOOD'
+        register: clock_skew
+        when: "'ceph' in group_names"
+
+      - name: check ceph cluster status
+        become: true
+        command: ceph status
+        register: ceph_health
+        until: ceph_health.stdout.find("HEALTH_OK") > -1
+        retries: 30
+        delay: 5
+        delegate_to: "{{ groups['controller']|first }}"
+        when:
+            - "'ceph' in group_names"
+            - "groups['ceph']|difference(groups['unused']|default([]))|length >= 3"
+            - "'ALL_GOOD' in clock_skew"
+
+      - name: check ceph cluster status with clock skew
+        become: true
+        command: ceph status
+        register: ceph_health
+        until: ceph_health.stdout.find("HEALTH_WARN") > -1 or ceph_health.stdout.find("HEALTH_OK") > -1
+        retries: 30
+        delay: 5
+        delegate_to: "{{ groups['controller']|first }}"
+        when:
+            - "'ceph' in group_names"
+            - "groups['ceph']|difference(groups['unused']|default([]))|length >= 3"
