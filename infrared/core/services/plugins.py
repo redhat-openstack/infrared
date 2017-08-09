@@ -257,6 +257,8 @@ class InfraredPluginManager(object):
         plugin_dir_name = cloned[0]
 
         plugin_source = os.path.join(dest_dir, plugin_dir_name)
+        if os.path.exists(plugin_source):
+            shutil.rmtree(plugin_source)
         shutil.copytree(os.path.join(tmpdir, plugin_dir_name),
                         plugin_source)
         os.chdir(cwd)
