@@ -16,13 +16,21 @@
   any_errors_fatal: yes
   gather_facts: no
   tasks:
-        # if the ovs agent is not containerised restart is not required
-        # TODO: reconsider droping this step
-      - name: "w/a for bz 1457358  (simple)"
-        shell: "ovs-vsctl --may-exist add-br br-ex ; docker restart neutron_ovs_agent || true"
+      - name: "w/a for 1477720"
+        shell: |
+           setenforce 0
+        tags: skip_ansible_lint
 
-      - name: "w/a for bz 1464212"
-        shell: "true; mkdir -p /var/lib/config-data/nova_libvirt/etc/libvirt/secrets"
+      - name: w/a for https://bugs.launchpad.net/tripleo/+bug/1708279 - retrieve subnet
+        shell: |
+           docker network inspect bridge|jq ".[].IPAM.Config[].Subnet"
+        register: docker_subnet
+        tags: skip_ansible_lint
+
+      - name: w/a for https://bugs.launchpad.net/tripleo/+bug/1708279 - add iptables rule
+        shell: |
+           iptables -t nat -I POSTROUTING -s "{{ docker_subnet.stdout }}" -j MASQUERADE
+        tags: skip_ansible_lint
 
       - name: "w/a for bz 1459592 and 1469825"
         script: docker_libvirt_rebuild.sh
