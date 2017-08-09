@@ -19,18 +19,3 @@
       path: "{{ template_base }}/docker-images.yaml"
       state: present
       line: "  DockerInsecureRegistryAddress: {{ undercloud_reg_base }}"
-
-# TODO(del these in 2 weeks)
-- name: Add depreacted option line 1
-  vars:
-      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/rhosp12"
-  lineinfile:
-      path: "{{ template_base }}/docker-images.yaml"
-      state: present
-      line: "  DockerNamespace: {{ undercloud_reg_base }}"
-
-- name: Add depreacted option line 2
-  lineinfile:
-      path: "{{ template_base }}/docker-images.yaml"
-      state: present
-      line: "  DockerNamespaceIsRegistry: true"
