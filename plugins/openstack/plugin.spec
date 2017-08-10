@@ -68,3 +68,32 @@ subparsers:
                       help: Clean given system instead of running playbooks on a new one.
                       silent:
                           - image
+
+            - title: Custom Repositories
+              options:
+                  bmc_cdn:
+                      type: FileValue
+                      help: |
+                          YAML file
+                          Register the undercloud with a Red Hat Subscription Management platform.
+                          see documentation for more details
+
+                  bmc_os_version:
+                      type: Value
+                      help: |
+                          The product version (product == director)
+                          Numbers are for OSP releases
+                          Names are for RDO releases
+                      choices:
+                        - "7"
+                        - "8"
+                        - "9"
+                        - "10"
+                        - "11"
+                        - "12"
+                        - kilo
+                        - liberty
+                        - mitaka
+                        - newton
+                        - ocata
+                        - pike
