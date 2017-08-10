@@ -68,3 +68,80 @@ subparsers:
                       help: Clean given system instead of running playbooks on a new one.
                       silent:
                           - image
+
+            - title: Custom Repositories
+              options:
+                  cdn:
+                      type: FileValue
+                      help: |
+                          YAML file
+                          Register the undercloud with a Red Hat Subscription Management platform.
+                          see documentation for more details
+                  repos-config:
+                      type: VarFile
+                      help: |
+                          YAML file
+                          define new repositories or update existing according to file.
+                          see documentation for more details
+                  repos-urls:
+                      type: Value
+                      help: |
+                          comma separated list of URLs to download repo files to ``/etc/yum.repos.d``
+
+            - title: Setup BMC Packages
+              options:
+                  mirror:
+                      type: Value
+                      help: |
+                          Enable usage of specified mirror (for rpm, pip etc) [brq,qeos,tlv - or hostname].
+                          (Specified mirror needs to proxy multiple rpm source hosts and pypi packages.)
+
+                  version:
+                      type: Value
+                      help: |
+                          The product version (product == director)
+                          Numbers are for OSP releases
+                          Names are for RDO releases
+                      choices:
+                        - "7"
+                        - "8"
+                        - "9"
+                        - "10"
+                        - "11"
+                        - "12"
+                        - kilo
+                        - liberty
+                        - mitaka
+                        - newton
+                        - ocata
+                        - pike
+
+                  build:
+                      help: |
+                          String represents a timestamp of the OSP puddle
+                          (for the given product core version).
+                          Supports any rhos-release labels.
+                          Examples: "passed_phase1", "2016-08-11.1", "Y1", "Z3", "GA"
+                      type: Value
+
+                  director-build:
+                      help: |
+                          String represents a timestamp of the OSPd puddle
+                          (for the given product core version).
+                          Supports any rhos-release labels.
+                          Examples: "passed_phase1", "2016-08-11.1", "Y1", "Z3", "GA"
+                          Only applies for versions 7-9
+                          If missing, will equal to "latest".
+                      type: Value
+
+                  buildmods:
+                      type: Value
+                      help: |
+                          List of flags for rhos-release module.
+                          Currently works with
+                          pin - pin puddle (dereference 'latest' links to prevent content from changing)
+                          flea - enable flea repos
+                          unstable - this will enable brew repos or poodles (in old releases)
+                          cdn - use internal mirrors of the CDN repos. (internal use)
+                          none - use none of those flags
+                      default: pin
