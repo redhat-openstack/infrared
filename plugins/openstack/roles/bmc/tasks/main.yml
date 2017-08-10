@@ -18,9 +18,11 @@
 - include_role:
       name: cdn_registery
   vars:
-      cdn_args_file: "{{ bmc_subscribtion == 'cdn'|default('') }}"
+      cdn_args_file: "{{ provision.bmc.cdn }}"
+      install_version: "{{ provision.bmc.version|default(bmc_rhos_release) }}"
   when:
-      - "bmc_subscribtion|default('') == 'cdn'"
+      - "provision.bmc is defined"
+      - "provision.bmc.cdn is defined"
       - "bmc_rhos_release|openstack_distribution == 'OSP'"
   become: yes
 

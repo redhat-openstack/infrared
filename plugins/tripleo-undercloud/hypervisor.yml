@@ -14,6 +14,7 @@
   roles:
       - role: cdn_registery
         cdn_args_file: "{{ install.cdn|default('') }}"
+        install_version: "{{ install.version }}"
         when:
             - "install.cdn|default(False) or cdn_status.rc == 0"
             - "install.version|openstack_distribution == 'OSP'"
