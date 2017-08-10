@@ -69,9 +69,10 @@
         with_items: "{{ groups['overcloud_nodes'] | default([])}}"
         when: "'bmc' in groups"
 
-      # Because introspection is faulty and tricky especially on baremetals
-      # we need to check multiple times if any failure occured. Reasonable time
-      # for this process to take is < 10 minutes no matter how many nodes for baremetals.
+      # Because introspection is faulty and tricky especially on baremetals we try once
+      # then fallback to more robust handling, 99th percentile for inspection success
+      # on BM is 15 minutes, the timeout here is 20 minutes. Rerunning this command isn't
+      # the best way to handle it's failures due to the way the workflow actually runs.
       # Virtual setups don't suffer from long timeouts caused by delays in boot
       # process, BIOS timeouts and errors in firmware so they are covered by such timeout
       # seamlessly. This must be async task because we need to enforce explicit timeout
@@ -86,9 +87,7 @@
             - skip_ansible_lint
         register: bulk_intro_result
         poll: 50
-        async: 600
-        retries: 10
-        delay: 90
+        async: 1200
         ignore_errors: yes
 
       # Async tasks in Ansible don't have rc defined if they failed (for some reason) which makes registered
