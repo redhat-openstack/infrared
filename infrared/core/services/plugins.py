@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import yaml
 
 # TODO(aopincar): Add pip to the project's requirements
 import pip
@@ -22,84 +23,13 @@ DEFAULT_PLUGIN_INI = dict(
     ])
 )
 
-PLUGINS_REGISTRY = {
-    'beaker': {
-        'src': 'plugins/beaker',
-        'desc': 'Provision systems using Beaker',
-        'type': 'provision'
-    },
-    'collect-logs': {
-        'src': 'plugins/collect-logs',
-        'desc': 'Collect log from all nodes in the active workspace',
-        'type': 'other'
-    },
-    'foreman': {
-        'src': 'plugins/foreman',
-        'desc': 'Provision systems using Foreman',
-        'type': 'provision'
-    },
-    'gabbi': {
-        'src': 'https://github.com/rhos-infra/gabbi.git',
-        'desc': 'The gabbi test runner',
-        'type': 'test'
-    },
-    'octario': {
-        'src': 'https://github.com/redhat-openstack/octario.git',
-        'desc': 'Octario test runner',
-        'type': 'test'
-    },
-    'openstack': {
-        'src': 'plugins/openstack',
-        'desc': 'Provision systems using Ansible OpenStack modules',
-        'type': 'provision'
-    },
-    'ospdui': {
-        'src': 'plugins/ospdui',
-        'desc': 'The ospdui test runner',
-        'type': 'test'
-    },
-    'packstack': {
-        'src': 'plugins/packstack',
-        'desc': 'OpenStack installation using Packstack',
-        'type': 'install'
-    },
-    'rally': {
-        'src': 'plugins/rally',
-        'desc': 'Rally tests runner',
-        'type': 'test'
-    },
-    'tempest': {
-        'src': 'plugins/tempest',
-        'desc': 'The tempest test runner',
-        'type': 'test'
-    },
-    'tripleo-overcloud': {
-        'src': 'plugins/tripleo-overcloud',
-        'desc': 'Install TripleO overcloud using a designated undercloud node',
-        'type': 'install'
-    },
-    'tripleo-undercloud': {
-        'src': 'plugins/tripleo-undercloud',
-        'desc': 'Install TripleO on a designated undercloud node',
-        'type': 'install'
-    },
-    'tripleo-upgrade': {
-        'src': 'https://github.com/redhat-openstack/tripleo-upgrade.git',
-        'src_path': 'infrared_plugin',
-        'desc': 'Upgrade or update TripleO deployment',
-        'type': 'install'
-    },
-    'virsh': {
-        'src': 'plugins/virsh',
-        'desc':
-            'Provision virtual machines on a single Hypervisor using libvirt',
-        'type': 'provision'
-    },
-}
 
 MAIN_PLAYBOOK = "main.yml"
 PLUGINS_DIR = os.path.abspath("./plugins")
 LOG = logger.LOG
+
+with open(os.path.join(PLUGINS_DIR, "registry.yaml"), "r") as fo:
+    PLUGINS_REGISTRY = yaml.load(fo)
 
 
 class InfraredPluginManager(object):
