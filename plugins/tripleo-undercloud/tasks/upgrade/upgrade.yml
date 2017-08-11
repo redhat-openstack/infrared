@@ -94,3 +94,13 @@
         delegate_to: hypervisor
         when: "'hypervisor' in groups"
   tags: undercloud_reboot
+
+# todo(dtodorov): remove once rhbz#1460116 is resolved. Shell is used for more debug
+- name: Restart iptables.service
+  become: true
+  shell: |
+       systemctl status iptables.service
+       systemctl restart iptables.service
+       systemctl status iptables.service
+  when: undercloud_version|openstack_release >= 10
+  tags: skip_ansible_lint
