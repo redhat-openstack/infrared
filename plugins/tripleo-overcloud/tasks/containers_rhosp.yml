@@ -63,6 +63,21 @@
   tags: wa
 - include: containers/templates.yml
 
+- block:
+    - name: install ceph-ansible
+      package:
+          name: ceph-ansible
+          state: present
+      become: true
+
+    - name: append ceph-ansible template
+      lineinfile:
+          dest: "~/overcloud_deploy.sh"
+          line: '-e {{ install.heat.templates.basedir }}/environments/ceph-ansible/ceph-ansible.yaml \'
+  when:
+      - not install.storage.external
+      - storage_backend|default('') == 'ceph'
+
 - name: append extra containers templates for the build scripts
   lineinfile:
       dest: "~/overcloud_deploy.sh"
