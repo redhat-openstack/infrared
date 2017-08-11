@@ -32,9 +32,6 @@
            iptables -t nat -I POSTROUTING -s "{{ docker_subnet.stdout }}" -j MASQUERADE
         tags: skip_ansible_lint
 
-      - name: "w/a for bz 1459592 and 1469825"
-        script: docker_libvirt_rebuild.sh
-
       - name: "w/a for bz 1464182"
         shell: |
           docker exec -u root -i nova_compute bash -c "echo $(hexdump -n 16 -v -e '/1 "%02x"' /dev/urandom) |tee /etc/machine-id"
