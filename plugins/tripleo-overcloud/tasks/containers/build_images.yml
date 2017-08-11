@@ -24,7 +24,7 @@
 
 - name: get docker registry name
   shell: |
-      cat container_images.yaml | awk -F ":" '/pull_source/ {print $2}' | head -n1 | tr -d ' '
+      cat container_images.yaml | awk '/pull_source:/ {print $2}' | head -n1 | tr -d ' '
   register: docker_insecure_registry
 
 - name: replace IP with hostname in /etc/sysconfig/docker
