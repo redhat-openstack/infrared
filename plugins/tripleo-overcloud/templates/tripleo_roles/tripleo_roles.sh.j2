@@ -1,0 +1,7 @@
+#!/bin/bash
+
+openstack overcloud roles generate -o {{ template_base }}/roles/roles_data.yaml \
+{% for host_name in groups.overcloud_nodes %}
+{% set role_name = host_name.rstrip('1234567890-').split('-')[-1]|title %}
+    {{ role_name }} \
+{% endfor %}
