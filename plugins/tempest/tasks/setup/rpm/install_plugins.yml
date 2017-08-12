@@ -13,7 +13,7 @@
 - name: Clone plugin repository for "{{ test_suite }}" suite
   become: yes
   git:
-      repo: "{{ item.value.repo[test.openstack.version |default(overcloud_version) | int]|default(item.value.repo.default) }}"
+      repo: "{{ item.value.repo | default(item.value.default) }}"
       dest: "{{ ansible_user_dir }}/"
       accept_hostkey: true
   retries: 3
