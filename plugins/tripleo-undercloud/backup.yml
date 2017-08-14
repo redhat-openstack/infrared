@@ -30,8 +30,11 @@
         when: install.dest|default({})
 
       - name: copy the image to temporary server
-        command: scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i {{ install.dest.key }} {{ undercloud_image_file }} {{ install.dest.user }}@{{ install.dest.address }}:/{{install.dest.path}}
+        shell: |
+            scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
+            {{ install.dest.key }} {{ undercloud_image_file }} {{ install.dest.user }}@{{ install.dest.address }}:/{{install.dest.path}}
         when: install.dest|default({})
+        tags: skip_ansible_lint
 
       - name: cleanup the undercdloud image file
         file:
