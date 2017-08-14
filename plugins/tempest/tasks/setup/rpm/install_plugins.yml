@@ -14,7 +14,7 @@
   become: yes
   git:
       repo: "{{ item.value.repo | default(item.value.default) }}"
-      dest: "{{ ansible_user_dir }}/"
+      dest: "{{ ansible_user_dir }}/{{ item.value.repo | basename }}"
       accept_hostkey: true
   retries: 3
   delay: 60
