@@ -36,8 +36,11 @@
         delegate_to: "{{ install.dest.address }}"
 
       - name: copy the image to temporary server
-        command: scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i {{ install.dest.key }} {{ install.dest.user }}@{{ install.dest.address }}:/{{install.dest.path}} ./{{ undercloud_image_file }}
+        shell: |
+            scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
+            {{ install.dest.key }} {{ install.dest.user }}@{{ install.dest.address }}:/{{install.dest.path}} ./{{ undercloud_image_file }}
         when: install.dest|default({})
+        tags: skip_ansible_lint
 
       - name: copy the image into libvirt images folder
         copy:
