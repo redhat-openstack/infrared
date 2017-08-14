@@ -109,3 +109,8 @@
           dest: "{{ inventory_dir }}/overcloudrc.v3"
           flat: yes
           fail_on_missing: no
+
+    - name: confirm Overcloud is accessible
+      shell: |
+          source {{ overcloudrc_file }}
+          openstack hypervisor list
