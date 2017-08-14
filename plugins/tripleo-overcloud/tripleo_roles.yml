@@ -1,0 +1,41 @@
+---
+- name: Create roles templates
+  hosts: undercloud
+  any_errors_fatal: true
+  gather_facts: yes
+  vars:
+      template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
+      roles_base: "/usr/share/openstack-tripleo-heat-templates/roles"
+      flavor_name_mapping:
+         Controller: Control
+         ObjectStorage: SwiftStorage
+  tasks:
+
+      - name: create roles folder
+        file:
+            path: "{{ template_base }}/roles"
+            state: directory
+
+      - name: template for generating roles_data.yml
+        template:
+            src: tripleo_roles/tripleo_roles.sh.j2
+            dest: "{{ template_base }}/roles/tripleo_roles.sh"
+            force: yes
+
+      - name: generate roles_data.yaml
+        shell: |
+            source ~/stackrc
+            bash "{{ template_base }}/roles/tripleo_roles.sh" &> roles_data.log
+        register: roles_data
+        ignore_errors: yes
+
+      - name: create the nodes file
+        template:
+            src: tripleo_roles/nodes.yaml.j2
+            dest: "{{ template_base }}/roles/nodes.yaml"
+            force: yes
+
+- name: Deploy the Overcloud with composable roles
+  include: "{{ overcloud_deploy | default('deploy.yml') }}"
+  tags:
+      - tripleo_roles_deploy
