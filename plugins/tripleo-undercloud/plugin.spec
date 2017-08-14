@@ -10,6 +10,26 @@ subparsers:
                       type: Bool
                       help: |
                           This will create an undercloud snapshot for use with the `--quickstart-restore` flag
+                  dest-address:
+                      type: Value
+                      help: |
+                          This will be the remote server where the UC backup image will be stored
+                  dest-path:
+                      type: Value
+                      help: |
+                          Path on destination server that contains the image
+                  dest-key:
+                      type: Value
+                      help: |
+                          Key file to send to the remote server in order to transfer the UC backup image
+                  dest-user:
+                      type: Value
+                      help: |
+                          Username for destination server (in case key was not provided)
+                  dest-pass:
+                      type: Value
+                      help: |
+                          Password for destination server (in case key was not provided)
                   quickstart-restore:
                       type: Bool
                       help: |
