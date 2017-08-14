@@ -19,10 +19,14 @@
 - name: Introspect our machines
   include: "{{ overcloud_introspect | default('introspect.yml') }}"
   when: install.introspect|default('')
+  tags:
+      - introspect
 
 - name: Tag our machines with proper flavors
   include: "{{ overcloud_flavors | default('tag.yml') }}"
   when: install.tagging|default('')
+  tags:
+      - tag
 
 - name: Deploy the Overcloud
   vars:
@@ -69,3 +73,5 @@
 - name: Perform post install tasks
   include: "{{ overcloud_post | default('post.yml') }}"
   when: install.post|default('')
+  tags:
+      - post
