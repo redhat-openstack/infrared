@@ -4,6 +4,21 @@
       - fetch_deploy_input
       - deploy
 
+- name: verify Overcloud is accessible
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tags: verify_overcloud_accessible
+  tasks:
+    - name: verify overcloud accessible
+      shell: |
+            source "{{ ansible_user_dir }}/overcloudrc"
+            openstack hypervisor list
+      register: overcloud_accessible
+      retries: 3
+      delay: 5
+      until: overcloud_accessible|success
+
 - include: create_external_network.yml
   tags:
       - public_network
