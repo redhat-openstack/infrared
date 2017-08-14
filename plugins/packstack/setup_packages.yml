@@ -11,6 +11,11 @@
         build: "{{ install.build }}"
         mirror: "{{ install.mirror | default(omit) }}"
   tasks:
+      - name: Install deltarpm
+        package:
+            name: "deltarpm"
+            state: latest
+
       - name: Update all packages
         package:
             name: "*"
