@@ -10,40 +10,37 @@
         package:
             name: libguestfs-tools-c
             state: present
+      - block:
+          - name: shutdown the undercloud VM
+            virt:
+                name: "{{ undercloud }}"
+                state: destroyed
 
-      - name: shutdown the undercloud VM
-        virt:
-            name: "{{ undercloud }}"
-            state: destroyed
+          - name: copy and shrink undercloud image
+            command: "virt-sparsify --compress /var/lib/libvirt/images/{{ undercloud }}-disk1.qcow2 {{ undercloud_image_file }}"
 
-      - name: copy and shrink undercloud image
-        command: "virt-sparsify --compress /var/lib/libvirt/images/{{ undercloud }}-disk1.qcow2 {{ undercloud_image_file }}"
+          - name: copy our auth key to the virthost
+            copy:
+                src: "{{ install.dest.key  | expanduser | realpath }}"
+                dest: "~/backup_server_auth_key"
+                mode: "0400"
 
-      - name: add destination server to copy the undercloud image to
-        add_host:
-            name: "{{ install.dest.address }}"
-            groups: user_group
-            ansible_ssh_host: "{{ install.dest.address }}"
-            ansible_ssh_user: "{{ install.dest.user }}"
-            ansible_ssh_private_key_file: "{{ install.dest.key | default(omit) }}"
-            ansible_ssh_pass: "{{ install.dest.pass | default(omit) }}"
-        when: install.dest|default({})
+          - name: copy the image to temporary server
+            shell: |
+                scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
+                ~/backup_server_auth_key {{ undercloud_image_file }} {{ install.dest.user }}@{{ install.dest.address }}:{{install.dest.path}}/{{ undercloud_image_file }}
+            when: install.dest|default({})
+            tags: skip_ansible_lint
 
-      - name: copy the image to temporary server
-        shell: |
-            scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
-            {{ install.dest.key }} {{ undercloud_image_file }} {{ install.dest.user }}@{{ install.dest.address }}:/{{install.dest.path}}
-        when: install.dest|default({})
-        tags: skip_ansible_lint
+        always:
+          - name: cleanup the undercloud image file
+            file:
+                path: "{{ undercloud_image_file }}"
+                state: absent
 
-      - name: cleanup the undercloud image file
-        file:
-            path: "{{ undercloud_image_file }}"
-            state: absent
-
-      - name: Power on the undercloud VM
-        virt:
-            name: "{{ undercloud }}"
-            state: running
+          - name: Power on the undercloud VM
+            virt:
+                name: "{{ undercloud }}"
+                state: running
 # TODO(yfried): accept a destination to push image to, and cleanup. Use ansible modules instead
 # of hard-coded scp
