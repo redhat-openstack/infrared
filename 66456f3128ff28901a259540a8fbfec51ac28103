@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c647e102_8a4aa9af",
+        "filename": "plugins/tripleo-overcloud/overcloud_reboot.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1005418
+      },
+      "writtenOn": "2017-08-15T09:02:14Z",
+      "side": 1,
+      "message": "To avoid running sudo with multiple commands in shell can we do something like this instead?\n\n- name: temporerily disable ceph rebalance\n  command: \"{{ item }}\"\n  become: true\n  when: \"\u0027ceph\u0027 in group_names\"\n  delegate_to: \"{{ groups[\u0027controller\u0027]|first }}\"\n  with_items:\n    - \u0027ceph osd set noout\u0027\n    - \u0027ceph osd set norebalance\u0027",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 55
+      },
+      "revId": "66456f3128ff28901a259540a8fbfec51ac28103",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05246c89_dce98e13",
+        "filename": "plugins/tripleo-overcloud/overcloud_reboot.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1005418
+      },
+      "writtenOn": "2017-08-15T09:02:14Z",
+      "side": 1,
+      "message": "Same here, something like:\n\n      - name: reenable ceph rebalance\n        become: true\n        command: \"{{ item }}\"\n        when: \"\u0027ceph\u0027 in group_names\"\n        delegate_to: \"{{ groups[\u0027controller\u0027]|first }}\"\n        with_items:\n          - \u0027ceph osd unset noout\u0027\n          - \u0027ceph osd unset norebalance\u0027",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 55
+      },
+      "revId": "66456f3128ff28901a259540a8fbfec51ac28103",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9ecfa95_e4dca24f",
+        "filename": "plugins/tripleo-overcloud/overcloud_reboot.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1005418
+      },
+      "writtenOn": "2017-08-15T09:02:14Z",
+      "side": 1,
+      "message": "Clock skews are usually an indicator of an issue going on. I know that it takes some time for ceph to report the clock in sync after a reboot but based on past experience they could reveal real issues(e.g. BZ#1429221). So I\u0027m wondering if instead of accepting the clock skew and considering it ok we should wait for ceph to get the clock in sync and report HEALTH_OK. Say that if it doesn\u0027t get the clock in sync for a certain period of time we consider the post reboot validation failed as we need to investigate what went wrong with the clock sync.",
+      "range": {
+        "startLine": 114,
+        "startChar": 0,
+        "endLine": 119,
+        "endChar": 37
+      },
+      "revId": "66456f3128ff28901a259540a8fbfec51ac28103",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4245389_223aa1cd",
+        "filename": "plugins/tripleo-overcloud/overcloud_reboot.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1005418
+      },
+      "writtenOn": "2017-08-15T09:02:14Z",
+      "side": 1,
+      "message": "We should expect health ok only for a minimum of 3 ceph nodes so I think we should add to the conditional something like groups.ceph|difference(groups.unused|default([]))|length \u003e 2\n\nThinking more about this I think all the ceph pre/post reboot validations should be done under the condition of having at least 3 ceph nodes.",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 131,
+        "endChar": 40
+      },
+      "revId": "66456f3128ff28901a259540a8fbfec51ac28103",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
