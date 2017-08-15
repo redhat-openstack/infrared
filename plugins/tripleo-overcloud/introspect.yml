@@ -82,9 +82,10 @@
       - name: veryfied ironic service is up
         become: true
         service:
-          name: openstack-ironic-inspector-dnsmasq
-          state: started
-          enabled: yes
+            name: openstack-ironic-inspector-dnsmasq
+            state: started
+            enabled: yes
+        when: (install.version|default(undercloud_version)|openstack_release) > 9
 
       - name: start node introspection
         shell: |
