@@ -187,6 +187,15 @@ class CliParser(object):
         # put allowed values to the help.
         allowed_values = opt_kwargs.get('choices', None)
 
+        if 'type' in option_data:
+            if option_data['type'] in COMPLEX_TYPES:
+                complex_action = COMPLEX_TYPES.get(option_data['type'], None)
+                if hasattr(complex_action, 'VALUES_AUTO_PROPAGATION') and \
+                        complex_action.VALUES_AUTO_PROPAGATION:
+                    complex_action = complex_action(option_name, [], subparser)
+                    allowed_values = \
+                        complex_action.get_allowed_values(spec, option_data)
+
         if allowed_values:
             opt_kwargs['help'] += "\nAllowed values: {}.".format(
                 allowed_values)
@@ -284,7 +293,7 @@ class ComplexType(object):
         :return: the resulting complex type value.
         """
 
-    def get_allowed_values(self):
+    def get_allowed_values(self, spec, option_data):
         """Gets the list of possible values for the complex type.
 
         Should be overridden in the subclasses.
@@ -488,6 +497,25 @@ class FileType(ComplexType):
         return os.path.abspath(target_file)
 
 
+class ListOfFileNames(ComplexType):
+    """ Represents List of file names for specific path
+
+        It support value auto propagation, based on
+        plugin_path and  option_data['lookup_dir'])
+    """
+
+    ARG_SEPARATOR = ','
+    VALUES_AUTO_PROPAGATION = True
+
+    def get_allowed_values(self, spec, option_data):
+        dir_path = os.path.join(spec.plugin_path, option_data['lookup_dir'])
+        return list(map((lambda name: os.path.splitext(name)[0]),
+                        os.listdir(dir_path)))
+
+    def resolve(self, value):
+        return value.split(self.ARG_SEPARATOR)
+
+
 class VarFileType(FileType):
     """Represents the file on a disk.
 
@@ -592,5 +620,6 @@ COMPLEX_TYPES = {
     'VarFile': VarFileType,
     'VarDir': VarDirType,
     'ListOfVarFiles': ListFileType,
-    'ListOfTopologyFiles': TopologyFileType
+    'ListOfTopologyFiles': TopologyFileType,
+    'ListOfFileNames': ListOfFileNames
 }

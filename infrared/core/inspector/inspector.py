@@ -38,12 +38,13 @@ class SpecParser(object):
         # includes an unsupported option type
         try:
             return SpecParser(subparser, spec_dict, plugin.vars_dir,
-                              plugin.defaults_dir)
+                              plugin.defaults_dir, plugin.path)
         except exceptions.IRUnsupportedSpecOptionType as ex:
             ex.message += ' in file: {}'.format(plugin.spec)
             raise ex
 
-    def __init__(self, subparser, spec_dict, vars_dir, defaults_dir):
+    def __init__(self, subparser, spec_dict, vars_dir, defaults_dir,
+                 plugin_path):
         """
 
         :param subparser: argparse.subparser to extend
@@ -53,6 +54,7 @@ class SpecParser(object):
         """
         self.vars = vars_dir
         self.defaults = defaults_dir
+        self.plugin_path = plugin_path
         self.spec_helper = helper.SpecDictHelper(spec_dict)
 
         # create parser
