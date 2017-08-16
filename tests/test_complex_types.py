@@ -11,14 +11,14 @@ def list_value_type():
     """
     Create a new list value complex type
     """
-    return cli.ListValue("test", [os.getcwd(), ], 'cmd')
+    return cli.ListValue("test", [os.getcwd(), ], 'cmd', None)
 
 
 @pytest.fixture
 def nested_dict():
     """Create a new IniType complex type
     """
-    return cli.NestedDict("TestNestedDict", None, None)
+    return cli.NestedDict("TestNestedDict", None, None, None)
 
 
 @pytest.mark.parametrize(
@@ -89,6 +89,7 @@ def create_file_type(root_dir, type_class):
     return type_class("arg-name",
                       (root_dir.join('vars').strpath,
                        root_dir.join('defaults').strpath),
+                      None,
                       None)
 
 
@@ -170,3 +171,35 @@ def test_dir_type_resolve(dir_root_dir, dir_type, monkeypatch):
         'defaults/arg/name/dir3/').strpath
     with pytest.raises(exceptions.IRFileNotFoundException):
         dir_type.resolve('dir4')
+
+
+@pytest.fixture
+def list_of_file_names(settings_dirs, spec_option):
+    """Create a new IniType complex type
+    """
+    return cli.ListOfFileNames("ListOfFileNames", settings_dirs, None,
+                               spec_option)
+
+
+def test_list_of_file_names_values_auto_propagation():
+    expected = ["task1", "task2", "task3"]
+    settings_dirs = ["", "", os.getcwd() + '/tests/example/']
+    spec_option = {'lookup_dir': 'post_tasks'}
+
+    complex_action = list_of_file_names(settings_dirs, spec_option)
+    allowed_values = complex_action.get_allowed_values()
+
+    assert expected.sort() == allowed_values.sort()
+
+
+def test_list_of_file_names_resolve():
+    expected = ["task2", "task3"]
+    settings_dirs = ["", "", os.getcwd() + '/tests/example/']
+    spec_option = {'lookup_dir': 'post_tasks'}
+    value = "task2,task3"
+
+    complex_action = list_of_file_names(settings_dirs, spec_option)
+    values = complex_action.resolve(value)
+    print(values)
+
+    assert expected.sort() == values.sort()
