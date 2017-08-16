@@ -44,12 +44,18 @@
   with_items: "{{ vm_names.list_vms }}"
   when: item not in ignore_virsh_nodes
 
+# ignoring errors in the known-hosts tasks
+# because this module validates known_hosts files
+# and we cannot ensure that this file is always
+# correct on the user machine.
+# So do whatever we can and continue with cleanup.
 - name: cleanup known-hosts by name
   known_hosts:
       state: absent
       name: "{{ item }}"
   with_items: "{{ vm_names.list_vms }}"
   when: item not in ignore_virsh_nodes
+  ignore_errors: yes
 
 - name: cleanup known-hosts by ip
   known_hosts:
@@ -60,6 +66,7 @@
       - dhcp_leases
       - skip_missing: yes
   when: item.0.bridge|default('') not in ignore_virsh_nets
+  ignore_errors: yes
 
 - name: remove the networks we created
   virt_net:
