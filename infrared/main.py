@@ -29,6 +29,17 @@ def inject_common_paths():
                        'callback_plugins')
     override_conf_path(common_path, 'ANSIBLE_LIBRARY', 'library')
 
+    # ara module is activated only when is installed
+    try:
+        import ara
+        ara_plugins = os.path.join(os.path.dirname(ara.__file__), 'plugins')
+        override_conf_path(ara_plugins, 'ANSIBLE_CALLBACK_PLUGINS',
+                           'callbacks')
+        override_conf_path(ara_plugins, 'ANSIBLE_LIBRARY', 'modules')
+        override_conf_path(ara_plugins, 'ANSIBLE_ACTION_PLUGINS', 'actions')
+    except ImportError:
+        pass
+
 
 # This needs to be called here because as soon as an ansible class is loaded
 # the code in constants.py is triggered. That code reads the configuration
