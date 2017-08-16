@@ -11,14 +11,14 @@ def list_value_type():
     """
     Create a new list value complex type
     """
-    return cli.ListValue("test", [os.getcwd(), ], 'cmd')
+    return cli.ListValue("test", [os.getcwd(), ], 'cmd', None)
 
 
 @pytest.fixture
 def nested_dict():
     """Create a new IniType complex type
     """
-    return cli.NestedDict("TestNestedDict", None, None)
+    return cli.NestedDict("TestNestedDict", None, None, None)
 
 
 @pytest.mark.parametrize(
@@ -89,6 +89,7 @@ def create_file_type(root_dir, type_class):
     return type_class("arg-name",
                       (root_dir.join('vars').strpath,
                        root_dir.join('defaults').strpath),
+                      None,
                       None)
 
 

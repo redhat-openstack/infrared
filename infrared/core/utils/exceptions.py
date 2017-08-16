@@ -159,6 +159,13 @@ class IRFileNotFoundException(IRException):
         super(self.__class__, self).__init__(message)
 
 
+class IRFileNameNotFoundException(IRException):
+    def __init__(self, file_name, location):
+        message = "Unable to find file with name `{}` in the following " \
+                  "locations: {}".format(file_name, location)
+        super(self.__class__, self).__init__(message)
+
+
 class IRDeprecationException(IRException):
     def __init__(self, message):
         super(self.__class__, self).__init__(message)
