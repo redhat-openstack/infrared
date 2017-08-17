@@ -2,9 +2,9 @@ from ConfigParser import ConfigParser
 from collections import OrderedDict
 import os
 import shutil
-import subprocess
 import tempfile
 import yaml
+import git
 
 # TODO(aopincar): Add pip to the project's requirements
 import pip
@@ -181,18 +181,18 @@ class InfraredPluginManager(object):
         :return: Path to plugin cloned directory (str)
         """
         dest_dir = os.path.abspath(dest_dir or "plugins")
+        plugin_dir_name = os.path.split(git_url)[-1].split('.')[0]
 
         tmpdir = tempfile.mkdtemp(prefix="ir-")
         cwd = os.getcwdu()
         os.chdir(tmpdir)
         try:
-            subprocess.check_output(["git", "clone", git_url])
-        except subprocess.CalledProcessError:
+            git.Repo.clone_from(url=git_url,
+                                to_path=os.path.join(tmpdir, plugin_dir_name))
+        except (git.exc.GitCommandError):
             shutil.rmtree(tmpdir)
             raise IRFailedToAddPlugin(
                 "Cloning git repo {} is failed".format(git_url))
-        cloned = os.listdir(tmpdir)
-        plugin_dir_name = cloned[0]
 
         plugin_source = os.path.join(dest_dir, plugin_dir_name)
         if os.path.exists(plugin_source):

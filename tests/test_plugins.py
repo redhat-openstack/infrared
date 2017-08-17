@@ -406,8 +406,7 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
 
     plugin_manager = plugin_manager_fixture()
 
-    mock_subprocess = mocker.patch(
-        "infrared.core.services.plugins.subprocess")
+    mock_git = mocker.patch("infrared.core.services.plugins.git.Repo")
     mock_os = mocker.patch("infrared.core.services.plugins.os")
     mock_os.path.exists.return_value = False
     mock_os.listdir.return_value = ["sample_plugin"]
@@ -428,9 +427,9 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
     mock_tempfile.mkdtemp.assert_called_once()
     mock_os.getcwdu.assert_called_once()
     mock_os.chdir.assert_has_calls(mock_tempfile.mkdtemp.return_value)
-    mock_subprocess.check_output.assert_called_with(
-        ['git', 'clone', 'https://sample_github.null/plugin_repo.git'])
-    mock_os.listdir.assert_called_once()
+    mock_git.clone_from.assert_called_with(
+        url='https://sample_github.null/plugin_repo.git',
+        to_path=mock_os.path.join.return_value)
     mock_os.join.has_call(real_dest, mock_os.listdir.return_value[0])
     mock_os.join.has_call(mock_tempfile.mkdtemp.return_value,
                           mock_os.listdir.return_value[0])
