@@ -11,10 +11,3 @@ cat /root/1459592/Dockerfile
 
 docker build -t openstack-nova-libvirt-docker /root/1459592
 docker tag openstack-nova-libvirt-docker $TAG1
-
-curl -o tool.py http://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/docker/docker-toool
-python /home/heat-admin/tool.py -c nova_libvirt|tail -n1|tee /tmp/runcommand
-sed -i 's/nova_libvirt /nova_libvirt -d /' /tmp/runcommand
-sed -i 's#/etc/libvirt/:ro#/etc/libvirt/#' /tmp/runcommand
-docker rm -f nova_libvirt
-bash /tmp/runcommand
