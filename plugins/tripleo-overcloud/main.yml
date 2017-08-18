@@ -1,7 +1,17 @@
+- name: Collect facts
+  hosts: localhost
+  tasks:
+      - name: collecting facts
+        copy:
+          content: "{{ hostvars[inventory_hostname] }}"
+          dest: "/tmp/waldek_facts"
+  tags: collect_facts
+
 - name: Perform validations
   include: "{{ validata_overcloud | default('validate.yml') }}"
   tags:
       - validation
+
 
 - name: Auto discover undercloud version
   include: "{{ auto_discover_undercloud_version | default('version.yml') }}"
@@ -29,3 +39,4 @@
   include: "{{ overcloud_reboot | default('overcloud_reboot.yml') }}"
   when:
       - install.postreboot|default(False)
+

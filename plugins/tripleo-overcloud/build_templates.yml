@@ -69,6 +69,8 @@
             loop_var: templates_list_file
         # avoid empty strings
         when: "templates_list_file != ''"
+        tags:
+            - image_prepare_custom
 
       - name: Enable external network access through newly created vlan interface on undercloud
         include: tasks/undercloud-ext-vlan.yml
