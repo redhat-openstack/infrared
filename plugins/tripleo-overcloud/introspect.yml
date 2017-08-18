@@ -77,6 +77,16 @@
       # seamlessly. This must be async task because we need to enforce explicit timeout
       # for this process, otherwise timeout is controlled by ironic and seriously long
       # (usually one must wait for 1 hour if any failure on any node occurs).
+
+      # FIXME (atalmor) this task is a workaround for bugzilla 1452610, should be removed when bug is fixed
+      - name: veryfied ironic service is up
+        become: true
+        service:
+            name: openstack-ironic-inspector-dnsmasq
+            state: started
+            enabled: yes
+        when: (install.version|default(undercloud_version)|openstack_release) > 9
+
       - name: start node introspection
         shell: |
             source ~/stackrc

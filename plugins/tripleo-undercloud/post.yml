@@ -1,8 +1,19 @@
 ---
-#This is an empty file meant to be overridden by custom post
-#configuration playbook
 - hosts: localhost
   gather_facts: no
   tasks:
     - name: clear hosts cache
       meta: refresh_inventory
+
+- name: Post Undercloud Run Tasks
+  hosts: undercloud
+  tags: post
+  gather_facts: no
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: Set selinux state
+      selinux:
+          policy: "targeted"
+          state: "{{ install.selinux|default('enforcing') }}"
+      when: install.selinux is defined
