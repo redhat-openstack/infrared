@@ -41,6 +41,13 @@ subparsers:
                       type: Value
                       help: The alternative docker registry to use for deployment.
 
+                  skip-undercloud-registry:
+                      type: Bool
+                      help: Avoid using and mass populating the undercloud registry.
+                            The registry or the registry-mirror will be used directly when possible,
+                            recommended to use this option when you have very good bandwith to your registry.
+                      default: False
+
                   registry-namespace:
                       type: Value
                       help: The alternative docker registry namespace to use for deployment.
