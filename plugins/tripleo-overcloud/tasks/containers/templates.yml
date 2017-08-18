@@ -1,5 +1,4 @@
 ---
-
 # http://lists.openstack.org/pipermail/openstack-dev/2017-July/119880.html?
 # /home/stack/core_puddle_version is not always matching with the docker tag
 - name: generate docker images file, using the undercloud registry
@@ -11,7 +10,6 @@
       openstack overcloud container image prepare --namespace={{ undercloud_reg_base }} --env-file={{ env_file }} --prefix=openstack- --suffix=-docker --tag=$tag
   tags:
       - skip_ansible_lint
-
 - name: add insecure registry line
   vars:
       undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
@@ -19,3 +17,14 @@
       path: "{{ template_base }}/docker-images.yaml"
       state: present
       line: "  DockerInsecureRegistryAddress: {{ undercloud_reg_base }}"
+# The following task should be removed once this BZ is verified: https://bugzilla.redhat.com/show_bug.cgi?id=1482271
+- name: Add the location of docker ceph daemon image
+  vars:
+      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
+  lineinfile:
+      path: "{{ template_base }}/docker-images.yaml"
+      state: present
+      line: "  DockerCephDaemonImage: {{ undercloud_reg_base }}/ceph/rhceph-2-rhel7:latest"
+  when:
+      - not install.storage.external
+      - storage_backend|default('') == 'ceph'
