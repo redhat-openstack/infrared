@@ -64,6 +64,7 @@
   register: image_upload
   until: image_upload.rc == 0
   retries: 5
+  when: not install.registry.undercloud.skip
   tags:
       - skip_ansible_lint
 

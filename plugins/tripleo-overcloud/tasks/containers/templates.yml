@@ -2,20 +2,30 @@
 
 # http://lists.openstack.org/pipermail/openstack-dev/2017-July/119880.html?
 # /home/stack/core_puddle_version is not always matching with the docker tag
+
+- name: get origin(not mirrored) docker registry name
+  shell: |
+      cat container_images.yaml | awk '/pull_source:/ {print $2}' | head -n1 | tr -d ' '
+  register: docker_origin_registry
+
 - name: generate docker images file, using the undercloud registry
   vars:
       env_file: "{{ template_base }}/docker-images.yaml"
       undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/rhosp12"
+      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry) }}/rhosp12"
+      reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base)  }}"
   shell: |
       tag=`awk '/- imagename:.*openstack-glance-api-docker:.*/ {print $3}' </home/stack/container_images.yaml  | cut -f 2 -d:`
-      openstack overcloud container image prepare --namespace={{ undercloud_reg_base }} --env-file={{ env_file }} --prefix=openstack- --suffix=-docker --tag=$tag
+      openstack overcloud container image prepare --namespace={{ reg_base }} --env-file={{ env_file }} --prefix=openstack- --suffix=-docker --tag=$tag
   tags:
       - skip_ansible_lint
 
 - name: add insecure registry line
   vars:
       undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
+      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry) }}"
+      reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base) }}"
   lineinfile:
       path: "{{ template_base }}/docker-images.yaml"
       state: present
-      line: "  DockerInsecureRegistryAddress: {{ undercloud_reg_base }}"
+      line: "  DockerInsecureRegistryAddress: {{ reg_base }}"
