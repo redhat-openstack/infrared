@@ -1,0 +1,22 @@
+- hosts: localhost
+  tasks:
+      - name: Call list builds
+        list_builds:
+            base_url: "{{ other.base.url }}"
+            version: "{{ other.version }}"
+            rhel_version: "{{ other.rhel.major.version }}"
+            subtype: "{{ other.subtype | default(omit) }}"
+        register: builds
+
+      # saving to the infrared root folder
+      - name: Save to file
+        template:
+            src: "output.j2"
+            dest: "../../{{ other.file.output }}"
+        when:
+          - other.file|default(false)
+          - other.file.output|default(false)
+
+      - name: Print builds
+        debug:
+            var: builds.builds
