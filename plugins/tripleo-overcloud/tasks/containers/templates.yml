@@ -19,3 +19,15 @@
       path: "{{ template_base }}/docker-images.yaml"
       state: present
       line: "  DockerInsecureRegistryAddress: {{ undercloud_reg_base }}"
+
+- name: Add the location of docker ceph daemon image
+  vars:
+      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
+  lineinfile: 
+      path: "{{ template_base }}/docker-images.yaml"
+      state: present
+      line: "  DockerCephDaemonImage: {{ undercloud_reg_base }}/ceph/rhceph-2-rhel7:latest"
+  when:
+      - not install.storage.external
+      - storage_backend|default('') == 'ceph'
+
