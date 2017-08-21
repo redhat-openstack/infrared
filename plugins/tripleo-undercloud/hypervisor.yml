@@ -45,6 +45,7 @@
             regexp: ".*{{ item }}$"
             state: present
         with_items: "{{ groups.all | difference(['localhost']) | difference(['hypervisor']) }}"
+        when: "{{ hostvars[item].ansible_ssh_host is defined }}"
 
       - name: get Ironic requirement
         package:
