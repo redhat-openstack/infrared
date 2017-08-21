@@ -10,6 +10,10 @@
   with_dict: "{{ test_dict.plugins | default({}) }}"
   when: item.value.package is defined
 
+- name: Disable SSL verification by git
+  become: yes
+  shell: "git config --global http.sslVerify false"
+
 - name: Clone plugin repository for "{{ test_suite }}" suite
   become: yes
   git:
