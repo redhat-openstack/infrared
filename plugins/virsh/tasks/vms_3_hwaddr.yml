@@ -1,0 +1,21 @@
+---
+# save current node to "{{ node_dict }}"
+- include_vars:
+    file: "{{ node.key }}"
+    name: node_dict
+
+- name: merge overriden settings to the separate var
+  set_fact:
+      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
+
+- block:
+  - name: get MAC list
+    shell: "virsh domiflist {{ topology_node.name }}-{{ item }} | awk '/{{ topology_node.external_network.network }}/ {print $5};'"
+    with_sequence: start=0 end={{ node.value|int - 1 }}
+    register: mac_list
+
+  - set_fact:
+        vm_inv_info: "{{ vm_inv_info | default([]) + [{'name': item.cmd.split()[2], 'mac': item.stdout, 'groups': topology_node.groups, 'net': topology_node.external_network.network}] }}"
+    with_items: "{{ mac_list.results }}"
+
+  when: "not topology_node.external_network.bridged|default(False)"
