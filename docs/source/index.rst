@@ -57,6 +57,7 @@ Welcome to infrared's documentation!
    composable_roles
    cdn_cookbook.rst
    hybrid_deployment
+   plugins_guide
 
 Indices and tables
 ==================
