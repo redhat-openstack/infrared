@@ -243,3 +243,18 @@ Example::
     | ``none`` - Use none of those flags.
 
  .. note:: ``--buildmods`` flag is for internal Red Hat usage.
+
+
+Overcloud Deployment Failure
+----------------------------
+
+If your overcloud deployment fails, you can find the overcloud deployment in /home/stack/overcloud_deployment.log
+on the undercloud.
+
+Usually the overcloud deployment log doesn't provide you with all the details. So finding out what went
+wrong from just reading this file, may not be very helpfull. For this you might want to take a look on
+/home/stack/overcloud_deployment_long.log
+
+You can also run the commands by yourself::
+
+    openstack stack failures list overcloud --long
