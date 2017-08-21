@@ -14,17 +14,20 @@
           search_regex: OpenSSH
       delegate_to: hypervisor
       tags: vms
+      when: "{{ ansible_ssh_host is defined }}"
 
     - name: create non root user
       user:
           name: "{{ provision.topology.username }}"
           state: present
           password: "{{ non_root_pw | password_hash('sha512') }}"
+      when: "{{ ansible_ssh_host is defined }}"
 
     - name: add user to sudoers
       lineinfile:
           dest: "/etc/sudoers"
           line: "{{ provision.topology.username }} ALL=(ALL) NOPASSWD:ALL"
+      when: "{{ ansible_ssh_host is defined }}"
 
     - name: Set up authorized_keys for non root user
       authorized_key:
@@ -32,9 +35,11 @@
           key: "{{ item }}"
       with_file:
           - "{{ inventory_dir }}/id_rsa.pub"
+      when: "{{ ansible_ssh_host is defined }}"
 
     - name: Update hosts user
       add_host:
           name: "{{ item }}"
           ansible_ssh_user: "{{ provision.topology.username }}"
       with_items: "{{ ansible_play_hosts }}"
+      when: "{{ ansible_ssh_host is defined }}"
