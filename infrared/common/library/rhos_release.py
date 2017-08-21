@@ -141,7 +141,7 @@ def _parse_output(module, cmd, stdout):
     filenames = map(installed, file_lines)
     dirs = set(f["repodir"] for f in filenames)
     if len(dirs) > 1:
-        _fail(module,"Found repo files in multiple directories %s" % dirs,
+        _fail(module, "Found repo files in multiple directories %s" % dirs,
               cmd, out=stdout)
     repodir = dirs.pop() if len(dirs) > 0 else ''
 
@@ -176,14 +176,14 @@ def _parse_output(module, cmd, stdout):
     if module.params['buildmods'] is not None \
             and 'cdn' in module.params['buildmods']:
         ret_dict['releases'] = {"core": dict(
-                release=module.params['release'],
-                version='cdn',
-                repo_type='cdn',
-                channel='core'
+            release=module.params['release'],
+            version='cdn',
+            repo_type='cdn',
+            channel='core'
             )}
     else:
-        ret_dict['releases'] = {release['channel']: release for release in
-                                installed_releases}
+        ret_dict['releases'] = dict((release['channel'], release)
+                                    for release in installed_releases)
 
     return ret_dict
 
@@ -233,6 +233,7 @@ def _run_command(module, cmd):
     summary = _parse_output(module, cmd, out)
     module.exit_json(changed=True, **wrap_results(
         summary, cmd, return_code, out, err))
+
 
 def _fail(module, msg, cmd, return_code=-1, out='', err=''):
     """
@@ -347,7 +348,7 @@ def main():
 
 
 # import module snippets
-from ansible.module_utils.basic import *
+from ansible.module_utils.basic import *  # noqa
 
 
 main()
