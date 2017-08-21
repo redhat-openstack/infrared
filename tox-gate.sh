@@ -1,6 +1,6 @@
 #!/bin/bash
 set -x
-RUN_ENVS="pep8 py27 cli ansible-lint any-errors-fatal conflicts"
+RUN_ENVS="pep8 py27 py26 cli ansible-lint any-errors-fatal conflicts"
 
 
 FAILED=""

@@ -21,8 +21,10 @@ LOG = logger.LOG
 
 # TODO(aopincar): Replace TYPES with supported types only (str, int, bool...)
 BUILTINS = sys.modules[
-    'builtins' if sys.version_info.major == 3 else '__builtin__']
-TYPES = {builtin: getattr(BUILTINS, builtin) for builtin in vars(BUILTINS)}
+    'builtins' if sys.version_info[0] == 3 else '__builtin__']
+
+TYPES = dict((k, getattr(BUILTINS, k)) for k in vars(BUILTINS))
+
 TYPES['suppress'] = argparse.SUPPRESS
 
 OPTION_ARGPARSE_ATTRIBUTES = ['action', 'nargs', 'const', 'default', 'choices',
@@ -567,10 +569,11 @@ class TopologyFileType(VarFileType):
 
     def resolve(self, value):
 
-        return {super(TopologyFileType, self).resolve(
-            file_name.split(self.TOPOLOGY_SEPARATOR)[0]):
-            int(file_name.split(self.TOPOLOGY_SEPARATOR)[1])
-            for file_name in value.split(self.ARG_SEPARATOR)}
+        return dict((super(TopologyFileType, self).resolve(
+            file_name.split(self.TOPOLOGY_SEPARATOR)[0]),
+            int(file_name.split(self.TOPOLOGY_SEPARATOR)[1]))
+            for file_name in value.split(self.ARG_SEPARATOR))
+
 
 # register custom actions
 ACTIONS = {
