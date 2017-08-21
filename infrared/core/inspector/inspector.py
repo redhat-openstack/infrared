@@ -270,8 +270,9 @@ class SpecParser(object):
         self.validate_arg_deprecation(cli_args, file_args)
 
         # now filter defaults to have only parser defined in cli
-        defaults = {key: spec_defaults[key] for key in cli_args.keys() if
-                    key in spec_defaults}
+        defaults = dict((key, spec_defaults[key])
+                        for key in cli_args.keys() if
+                        key in spec_defaults)
 
         # copy cli args with the same name to all parser groups
         self._merge_duplicated_cli_args(cli_args)
@@ -411,8 +412,8 @@ class SpecParser(object):
                         self.spec_helper.get_parser_option_specs(cmd_name),
                         args[cmd_name]))
 
-        missing_args = {cmd_name: args
-                        for cmd_name, args in res.items() if len(args) > 0}
+        missing_args = dict((cmd_name, args)
+                            for cmd_name, args in res.items() if len(args) > 0)
         if missing_args:
             raise exceptions.IRRequiredArgsMissingException(missing_args)
 
