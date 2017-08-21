@@ -23,19 +23,23 @@ ANSIBLE_METADATA = {'metadata_version': '1.0',
 DOCUMENTATION = '''
 ---
 module: redhat_subscription
-short_description: Manage registration and subscriptions to RHSM using the C(subscription-manager) command
+short_description: Manage registration and subscriptions to RHSM using the
+C(subscription-manager) command
 description:
-    - Manage registration and subscription to the Red Hat Subscription Management entitlement platform using the C(subscription-manager) command
+    - Manage registration and subscription to the Red Hat Subscription
+      Management entitlement platform using the C(subscription-manager) command
 version_added: "1.2"
 author: "Barnaby Court (@barnabycourt)"
 notes:
-    - In order to register a system, subscription-manager requires either a username and password, or an activationkey and an Organization ID.
+    - In order to register a system, subscription-manager requires either a
+      username and password, or an activationkey and an Organization ID.
 requirements:
     - subscription-manager
 options:
     state:
         description:
-          - whether to register and subscribe (C(present)), or unregister (C(absent)) a system
+          - whether to register and subscribe (C(present)), or unregister
+            (C(absent)) a system
         required: false
         choices: [ "present", "absent" ]
         default: "present"
@@ -51,12 +55,14 @@ options:
         default: null
     server_hostname:
         description:
-            - Specify an alternative Red Hat Subscription Management or Sat6 server
+            - Specify an alternative Red Hat Subscription Management or Sat6
+              server
         required: False
         default: Current value from C(/etc/rhsm/rhsm.conf) is the default
     server_insecure:
         description:
-            - Enable or disable https server certificate verification when connecting to C(server_hostname)
+            - Enable or disable https server certificate verification when
+              connecting to C(server_hostname)
         required: False
         default: Current value from C(/etc/rhsm/rhsm.conf) is the default
     rhsm_baseurl:
