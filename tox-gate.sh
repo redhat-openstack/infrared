@@ -1,7 +1,9 @@
 #!/bin/bash
 set -x
 RUN_ENVS="pep8 py27 cli ansible-lint any-errors-fatal conflicts"
-
+# TODO(ssbarnea): Add py26 once we have it installed
+# probably pyenv + tox-pyenv would do the trick and they don't even need
+# to be installed as root.
 
 FAILED=""
 run_tox() {
