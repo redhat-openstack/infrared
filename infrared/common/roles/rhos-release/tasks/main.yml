@@ -119,7 +119,9 @@
 
     - debug:
           msg: "Build mark: director_puddle={{ director_puddle_version }}"
-  when: release|int < 10
+  when:
+      - release|int < 10
+      - release|int > 6
 
 - name: parse specific number of puddle used from rhos-release output
   set_fact:

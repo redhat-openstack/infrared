@@ -316,7 +316,7 @@ def main():
 
         releases = [(str(release), puddle)]
         try:
-            if int(release) < 10 and director:
+            if 10 > int(release) > 6 and director:
                 releases = [(str(release) + '-director', director_puddle)] + releases
         except ValueError:
             # RDO versions & CDN shouldn't try to get director repos
