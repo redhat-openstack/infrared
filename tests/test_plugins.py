@@ -503,10 +503,9 @@ def test_plugin_add_all(plugin_manager_fixture):
     )
     tests_plugins_dir = 'tests/example/plugins/add_remove_all_plugins/'
 
-    infrared.core.services.plugins.PLUGINS_REGISTRY = {
-        plugin_name: {'src': os.path.join(tests_plugins_dir, plugin_name)}
-        for plugin_name in tests_plugins
-        }
+    infrared.core.services.plugins.PLUGINS_REGISTRY = \
+        dict((pname, {'src': os.path.join(tests_plugins_dir, pname)})
+             for pname in tests_plugins)
 
     plugins_registry = infrared.core.services.plugins.PLUGINS_REGISTRY
     plugin_manager = plugin_manager_fixture()
