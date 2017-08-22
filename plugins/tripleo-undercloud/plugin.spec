@@ -95,7 +95,9 @@ subparsers:
 
                   build:
                       help: |
-                          String represents a timestamp of the OSP puddle
+                          String represents a timestamp of the OSP puddle.
+                          Note: for versions 6 < OSPd < 10 to specify director
+                          version use '--director-build' flag.
                           (for the given product core version).
                           Supports any rhos-release labels.
                           Examples: "passed_phase1", "2016-08-11.1", "Y1", "Z3", "GA"
@@ -103,11 +105,13 @@ subparsers:
 
                   director-build:
                       help: |
-                          String represents a timestamp of the OSPd puddle
-                          (for the given product core version).
+                          String represents a timestamp of the OSP director puddle
+                          (for the given product core version). Only applies for
+                          6 < OSPd < 10, and could be used with '--build' flag.
+                          Note: for versions >= 10 only the --build flag should be used to
+                          specify a puddle.
                           Supports any rhos-release labels.
                           Examples: "passed_phase1", "2016-08-11.1", "Y1", "Z3", "GA"
-                          Only applies for versions 7-9
                           If missing, will equal to "latest".
                       type: Value
 
