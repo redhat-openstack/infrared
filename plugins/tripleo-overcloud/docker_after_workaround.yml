@@ -1,15 +1,4 @@
 ---
-- name: fix masquerade
-  hosts: undercloud
-  become: yes
-  any_errors_fatal: yes
-  gather_facts: no
-  tasks:
-      - name: "w/a for bz#1460116"
-        service:
-            name: iptables
-            state: restarted
-
 - name: compute related workarounds
   hosts: compute
   become: yes
