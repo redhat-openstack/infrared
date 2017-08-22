@@ -1,1 +1,14 @@
 ---
+ - name: Apply patch for bz#1480658
+   shell: |
+      source /home/stack/stackrc
+      mkdir /home/stack/images
+      pushd /home/stack/images
+      tar xf /usr/share/rhosp-director-images/ironic-python-agent.tar &&  tar xf /usr/share/rhosp-director-images/overcloud-full.tar
+      sudo yum install -y libguestfs-tools-c
+      virt-customize -a overcloud-full.qcow2 --run-command 'yum-config-manager --add-repo http://pulp.dist.prod.ext.phx2.redhat.com/content/dist/rhel/server/7/7Server/x86_64/os/ && yum install -y curl patch && curl https://patch-diff.githubusercontent.com/raw/ceph/ceph/pull/14329.diff|patch -d /usr/lib/python2.7/site-packages/ceph_disk/' --selinux-relabel
+      openstack overcloud image upload --update-existing
+      popd
+      openstack baremetal configure boot
+   ignore_errors: yes
+
