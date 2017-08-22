@@ -17,3 +17,28 @@ subparsers:
                           directory. Task run in the same order as they are provided.
                       lookup_dir: 'post_tasks'
                       required: yes
+
+            - title: External Network
+              options:
+                  deployment-files:
+                      type: Value
+                      help: |
+                          Name of folder in cloud's user on undercloud, which containing the templates of
+                          the overcloud deployment.
+                      required: yes
+
+                  network-protocol:
+                      type: Value
+                      help: The overcloud network backend.
+                      default: ipv4
+                      choices:
+                          - ipv4
+                          - ipv6
+
+                  public-subnet:
+                      type: VarFile
+                      help: |
+                          Subnet detail for "public" external network on the overcloud as post-install.
+                          (CIDR, Allocation Pool, Gateway)
+                          __LISTYAMLS__
+                      default: default_subnet
