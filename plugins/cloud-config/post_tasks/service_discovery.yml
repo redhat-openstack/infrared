@@ -1,0 +1,16 @@
+- name: Service discovery
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      default_services: ['nova-scheduler']
+      service_map:
+          nova-scheduler:
+              group: nova_scheduler
+              command: "nova service-list | grep nova-scheduler | awk '{print $6}' | awk -F '.' '{print $1}' | head -1"
+  tasks:
+      - name:
+        include: ../tasks/service_discovery.yml
+        with_items: "{{ services|default(default_services) }}"
+
+- include: ../inventory_update.yml

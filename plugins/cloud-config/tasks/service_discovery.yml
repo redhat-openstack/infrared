@@ -1,0 +1,13 @@
+---
+- name: Get service node
+  shell: |
+      source ~/overcloudrc
+      {{ service_map[item].command }}
+  register: service_info
+
+- name: Add hosts to inventory
+  add_host:
+      name: "{{ host }}"
+      groups: "{{ hostvars[host].group_names + [ service_map[item].group ] }}"
+  vars:
+      host: "{{ service_info.stdout }}"
