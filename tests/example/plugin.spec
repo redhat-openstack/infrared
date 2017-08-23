@@ -53,3 +53,14 @@ subparsers:
                         deprecates: deprecated-way
                         type: Value
                         help: "New way to do it"
+
+            - title: Group E
+              options:
+                    tasks:
+                        type: ListOfFileNames
+                        help: |
+                            This is example for option which is with type "ListOfFileNames" and has
+                            auto propagation of "Allowed Values" in help. When we ask for --help it
+                            will look in plugin folder for directory name as 'lookup_dir' value, and
+                            will add all file names to "Allowed Values"
+                        lookup_dir: 'post_tasks'
