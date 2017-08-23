@@ -280,7 +280,7 @@ Add:
     register the plugin under the given plugin-type (when source is 'all', all available plugins will be installed)::
 
         infrared plugin add tests/example
-        infrared plugin add <git_url>
+        infrared plugin add <git_url> [--revision <branch/tag>]
         infrared plugin add all
 
 

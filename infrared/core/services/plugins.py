@@ -170,7 +170,8 @@ class InfraredPluginManager(object):
             raise StopIteration
 
     @staticmethod
-    def _clone_git_plugin(git_url, repo_plugin_path=None, dest_dir=None):
+    def _clone_git_plugin(git_url, repo_plugin_path=None, rev="master",
+                          dest_dir=None):
         """Clone a plugin into a given destination directory
 
         :param git_url: Plugin's Git URL
@@ -188,11 +189,12 @@ class InfraredPluginManager(object):
         os.chdir(tmpdir)
         try:
             git.Repo.clone_from(url=git_url,
-                                to_path=os.path.join(tmpdir, plugin_dir_name))
-        except (git.exc.GitCommandError):
+                                to_path=os.path.join(tmpdir, plugin_dir_name),
+                                branch=rev)
+        except (git.exc.GitCommandError) as e:
             shutil.rmtree(tmpdir)
             raise IRFailedToAddPlugin(
-                "Cloning git repo {} is failed".format(git_url))
+                "Cloning git repo {} is failed: {}".format(git_url, e))
 
         plugin_source = os.path.join(dest_dir, plugin_dir_name)
         if os.path.exists(plugin_source):
@@ -208,7 +210,7 @@ class InfraredPluginManager(object):
 
         return plugin_source
 
-    def add_plugin(self, plugin_source, dest=None):
+    def add_plugin(self, plugin_source, rev="master", dest=None):
         """Adds (install) a plugin
 
         :param plugin_source: Plugin source.
@@ -232,7 +234,7 @@ class InfraredPluginManager(object):
         else:
             plugin_src_path = plugin_data.get('src_path', '')
             plugin_source = self._clone_git_plugin(
-                plugin_source, plugin_src_path,
+                plugin_source, plugin_src_path, rev,
                 dest)
 
         plugin = InfraredPlugin(plugin_source)
