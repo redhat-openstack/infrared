@@ -48,6 +48,7 @@ Welcome to infrared's documentation!
    tempest
    collect-logs
    gabbi_tester
+   list_builds
 
 .. toctree::
    :maxdepth: 2
