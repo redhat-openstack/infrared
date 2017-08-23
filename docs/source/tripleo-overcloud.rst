@@ -217,19 +217,24 @@ Overcloud Update
 
 .. warning:: Before Overcloud update it's recommended to update  `Undercloud <tripleo-undercloud.html>`_
 
-.. note:: InfraRed supports minor updates from OpenStack 9
+.. warning:: Overcloud Install, Overcloud Update and Overcloud Upgrade are mutually exclusive
+
+.. note:: InfraRed supports minor updates from OpenStack 7
 
 Minor update detects Undercloud's version and updates packages within same version to latest available.
 
-* ``--build``: target build to update to
+* ``--ocupdate``: Bool
   deprecates: --updateto
+  If `yes`, the overcloud will be updated
+
+* ``--build``: target build to update to
   defaults to ``None``, in which case, update is disabled.
   possible values: build-date, ``latest``, ``passed_phase1``, ``z3`` and all other labels supported by ``rhos-release``
   When specified, rhos-release repos would be setup and used for minor updates.
 
 Example::
 
-    infrared tripleo-overcloud -v --build latest --deployment-files virt
+    infrared tripleo-overcloud -v --ocupdate yes --build latest --deployment-files virt
 
 .. note:: Minor update expects that Overcloud Deployment script and files/templates,
   used during the initial deployment, are available at Undercloud node in home directory of Undercloud user.
@@ -243,3 +248,16 @@ Example::
     | ``none`` - Use none of those flags.
 
  .. note:: ``--buildmods`` flag is for internal Red Hat usage.
+
+Overcloud Reboot
+----------------
+
+It is possible to reboot overcloud nodes. This is needed if kernel got updated
+
+* ``--postreboot``: Bool
+  If `yes`, reboot overcloud nodes one by one.
+
+Example::
+
+  infrared tripleo-overcloud --deployment-files virt --postreboot yes
+  infrared tripleo-overcloud --deployment-files virt --ocupdate yes --build latest --postreboot yes
