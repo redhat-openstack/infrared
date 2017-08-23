@@ -242,6 +242,9 @@ class PluginManagerSpec(api.SpecObject):
         add_parser.add_argument("src",
                                 help="Plugin Source (name/path/git URL)\n'all'"
                                      " will install all available plugins")
+        add_parser.add_argument("--revision", help="git branch/tag/revision"
+                                " sourced plugins. Defaults to 'master'. "
+                                "Ingnored for 'plugin add all' command.")
         add_parser.add_argument("--dest", help="Destination directory to "
                                 "clone plugin under, in case of Git URL is "
                                 "provided as path")
@@ -278,7 +281,8 @@ class PluginManagerSpec(api.SpecObject):
                 self.plugin_manager.add_all_available()
                 self._list_plugins(print_available=False)
             else:
-                self.plugin_manager.add_plugin(pargs.src, pargs.dest)
+                self.plugin_manager.add_plugin(pargs.src, rev=pargs.revision,
+                                               dest=pargs.dest)
         elif subcommand == 'remove':
             if pargs.name == 'all':
                 self.plugin_manager.remove_all()
