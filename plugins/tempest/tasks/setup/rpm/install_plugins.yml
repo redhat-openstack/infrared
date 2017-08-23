@@ -10,9 +10,17 @@
   with_dict: "{{ test_dict.plugins | default({}) }}"
   when: item.value.package is defined
 
+- name: Install git
+  become: yes
+  yum:
+      name: "git"
+      state: present
+  when: test_dict.plugins is defined and test_dict.plugins != {}
+
 - name: Disable SSL verification by git
   become: yes
   shell: "git config --global http.sslVerify false"
+  when: test_dict.plugins is defined and test_dict.plugins != {}
 
 - name: Clone plugin repository for "{{ test_suite }}" suite
   become: yes
