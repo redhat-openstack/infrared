@@ -187,8 +187,11 @@ class InfraredPluginManager(object):
         cwd = os.getcwdu()
         os.chdir(tmpdir)
         try:
-            git.Repo.clone_from(url=git_url,
+            repo = git.Repo.clone_from(url=git_url,
                                 to_path=os.path.join(tmpdir, plugin_dir_name))
+            # Updating submodules
+            for submodule in repo.submodules:
+                submodule.update(init=True)
         except (git.exc.GitCommandError):
             shutil.rmtree(tmpdir)
             raise IRFailedToAddPlugin(
