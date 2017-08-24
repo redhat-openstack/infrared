@@ -49,6 +49,11 @@
                   option: vendor_name
                   value: NetApp
                   condition: "{{ storage_backend.startswith('netapp') }}"
+                # Workaround RHBZ#1484419 cinder-backup permission to swift
+                - section: auth
+                  option: tempest_roles
+                  value: swiftoperator
+                  condition: true
         ini_file:
             dest: "{{ inventory_dir }}/{{ deployer_input | basename }}"
             section: "{{ item.section }}"
