@@ -94,7 +94,7 @@
         retries: 36
         delay: 5
         with_items:
-            - 'Stopped'
+            - 'Stopped: \[ *{{ inventory_hostname }}*'
             - 'unmanaged'
         when: standby_node|succeeded
 
@@ -113,8 +113,8 @@
         command: ceph pg stat
         register: active_osd
         until: active_osd.stdout.find("active+clean") > -1
-        retries: 36
-        delay: 5
+        retries: 24
+        delay: 15
         when: "'ceph' in group_names"
 
       - name: check clock_skew on ceph cluster
