@@ -331,6 +331,12 @@ Remove:
         infrared plugin remove example
         infrared plugin remove all
 
+Freezing plugins:
+    When you need to be able to install somewhere else the exact same versions
+    of plugins use ``freeze`` command. This will run through installed plugins
+    and save revision to ``plugins/registry.yaml`` for every git sorced one::
+
+        infrared plugin freeze
 
 Execute:
     Plugins are added as subparsers under ``plugin type`` and will execute
