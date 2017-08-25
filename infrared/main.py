@@ -262,6 +262,10 @@ class PluginManagerSpec(api.SpecObject):
             help="Prints all available plugins in addition "
                  "to installed plugins")
 
+        plugin_subparsers.add_parser(
+            "freeze", help="Run through installed plugins. For git sourced "
+            "one writes its current revision to plugins registry.")
+
     def spec_handler(self, parser, args):
         """Handles all the plugin manager commands
 
@@ -285,6 +289,8 @@ class PluginManagerSpec(api.SpecObject):
                 self._list_plugins(print_available=False)
             else:
                 self.plugin_manager.remove_plugin(pargs.name)
+        elif subcommand == 'freeze':
+            self.plugin_manager.freeze()
 
     def _list_plugins(self, print_available=False):
         """Print a list of installed & available plugins"""
