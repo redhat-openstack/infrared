@@ -58,6 +58,7 @@
   ignore_errors: yes
 
 - name: cleanup known-hosts by ip
+  tags: networks
   known_hosts:
       state: absent
       name: "{{ item.1.ipaddr }}"
@@ -69,6 +70,7 @@
   ignore_errors: yes
 
 - name: remove the networks we created
+  tags: networks
   virt_net:
       name: "{{ item.key }}"
       state: absent
@@ -76,6 +78,7 @@
   when: item.key not in ignore_virsh_nets
 
 - name: restore bridge
+  tags: networks
   include: restore_bridged_interface.yml
   with_dict: "{{ vm_nets.networks }}"
   vars:
