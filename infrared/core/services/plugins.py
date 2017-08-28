@@ -12,7 +12,9 @@ import pip
 from infrared.core.utils import logger
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
+from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRUnsupportedPluginType
+
 
 DEFAULT_PLUGIN_INI = dict(
     supported_types=OrderedDict([
@@ -212,6 +214,42 @@ class InfraredPluginManager(object):
         shutil.rmtree(tmpdir)
 
         return plugin_source
+
+    def update_plugin(self, plugin_name, revision=None, skip_reqs=False):
+        """Updates a Git-based plugin
+
+        Pulls changes from the remote, and checkout a specific revision.
+        (will point to the tip of the branch if revision isn't given)
+        :param plugin_name: Name of plugin to update.
+        :param revision: Revision to checkout.
+        :param skip_reqs: If True, will skip plugin requirements installation.
+        """
+        installed_plugins = \
+            [a_plugin for type_plugins in self.get_installed_plugins().values()
+             for a_plugin in type_plugins.keys()]
+
+        if plugin_name not in installed_plugins:
+            raise IRFailedToUpdatePlugin(
+                "Plugin '{}' isn't installed".format(plugin_name))
+
+        try:
+            plugin = self.get_plugin(plugin_name)
+            repo = git.Repo(plugin.path)
+            repo.remote().pull()
+            if revision not in (None, 'latest'):
+                repo.head.set_commit(revision)
+            if not skip_reqs:
+                reqs_file = os.path.join(plugin.path, 'requirements.txt')
+                if os.path.isfile(reqs_file):
+                    print "installing requirements"
+                    pip.main(['install', '-r', reqs_file])
+        except git.InvalidGitRepositoryError:
+            raise IRFailedToUpdatePlugin(
+                "Plugin '{}' isn't a Git-based plugin".format(plugin_name))
+        except ValueError:
+            raise IRFailedToUpdatePlugin(
+                "Failed to update '{}' plugin to point to '{}'".format(
+                    plugin_name, revision))
 
     def add_plugin(self, plugin_source, rev=None, dest=None):
         """Adds (install) a plugin

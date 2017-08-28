@@ -265,6 +265,21 @@ class PluginManagerSpec(api.SpecObject):
             help="Prints all available plugins in addition "
                  "to installed plugins")
 
+        # Update plugin
+        update_parser = plugin_subparsers.add_parser(
+            "update",
+            help="Update a Git-based plugin")
+        update_parser.add_argument(
+            "name",
+            help="Name of the plugin to update")
+        update_parser.add_argument(
+            "revision", nargs='?', default='latest',
+            help="Revision number to checkout (if not given, will only pull "
+                 "changes from the remote)")
+        update_parser.add_argument(
+            '--skip_reqs', '-s', action='store_true',
+            help="Skips plugin's requirements installation")
+
         plugin_subparsers.add_parser(
             "freeze", help="Run through installed plugins. For git sourced "
             "one writes its current revision to plugins registry.")
@@ -295,6 +310,9 @@ class PluginManagerSpec(api.SpecObject):
                 self.plugin_manager.remove_plugin(pargs.name)
         elif subcommand == 'freeze':
             self.plugin_manager.freeze()
+        elif subcommand == 'update':
+            self.plugin_manager.update_plugin(
+                pargs.name, pargs.revision, pargs.skip_reqs)
 
     def _list_plugins(self, print_available=False):
         """Print a list of installed & available plugins"""
