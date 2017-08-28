@@ -27,8 +27,9 @@ DEFAULT_PLUGIN_INI = dict(
 MAIN_PLAYBOOK = "main.yml"
 PLUGINS_DIR = os.path.abspath("./plugins")
 LOG = logger.LOG
+PLUGINS_REGISTRY_FILE = os.path.join(PLUGINS_DIR, "registry.yaml")
 
-with open(os.path.join(PLUGINS_DIR, "registry.yaml"), "r") as fo:
+with open(PLUGINS_REGISTRY_FILE, "r") as fo:
     PLUGINS_REGISTRY = yaml.load(fo)
 
 
@@ -310,6 +311,32 @@ class InfraredPluginManager(object):
                 "Installing requirements from: {}".format(requirement_file))
             pip_args = ['install', '-r', requirement_file]
             pip.main(args=pip_args)
+
+    def freeze(self):
+        for section in self.config.sections():
+            if section == "supported_types":
+                continue
+            for name, path in self.config.items(section):
+                if name not in PLUGINS_REGISTRY:
+                    with open(os.path.join(path, "plugin.spec"), "r") as pls:
+                        plugin_spec = yaml.load(pls)
+                    PLUGINS_REGISTRY[name] = dict(
+                        type=plugin_spec["plugin_type"],
+                        desc=plugin_spec[
+                            "subparsers"].items()[0][1]["description"])
+                try:
+                    repo = git.Repo(path)
+                    PLUGINS_REGISTRY[name]["src"] = list(
+                        repo.remote().urls)[-1].encode("ascii")
+                    PLUGINS_REGISTRY[name]["rev"] = repo.head.commit.hexsha.encode("ascii")
+                except git.InvalidGitRepositoryError:
+                    PLUGINS_REGISTRY[name]["src"] = path.replace(
+                        "".join([os.path.split(PLUGINS_DIR)[0],
+                                 os.path.sep]), "")
+
+        with open(PLUGINS_REGISTRY_FILE, "w") as fd:
+            yaml.dump(PLUGINS_REGISTRY, fd, default_flow_style=False,
+                      explicit_start=True, allow_unicode=True)
 
 
 class InfraredPlugin(object):
