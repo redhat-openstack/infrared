@@ -1,8 +1,10 @@
 from ConfigParser import ConfigParser
 from collections import OrderedDict
+import datetime
 import os
 import shutil
 import tempfile
+import time
 import yaml
 import git
 
@@ -12,7 +14,9 @@ import pip
 from infrared.core.utils import logger
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
+from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRUnsupportedPluginType
+
 
 DEFAULT_PLUGIN_INI = dict(
     supported_types=OrderedDict([
@@ -212,6 +216,65 @@ class InfraredPluginManager(object):
         shutil.rmtree(tmpdir)
 
         return plugin_source
+
+    def update_plugin(self, plugin_name, revision=None, skip_reqs=False):
+        """Updates a Git-based plugin
+
+        Pulls changes from the remote, and checkout a specific revision.
+        (will point to the tip of the branch if revision isn't given)
+        :param plugin_name: Name of plugin to update.
+        :param revision: Revision to checkout.
+        :param skip_reqs: If True, will skip plugin requirements installation.
+        """
+        if plugin_name not in self.PLUGINS_DICT:
+            raise IRFailedToUpdatePlugin(
+                "Plugin '{}' isn't installed".format(plugin_name))
+
+        changes = repo = plugin = None
+        try:
+            plugin = self.get_plugin(plugin_name)
+            repo = git.Repo(plugin.path)
+
+            # Stash uncommitted changes
+            LOG.debug("Checking for changes in {}".format(plugin.path))
+            changes = repo.git.status('--porcelain')
+            if changes:
+                timestamp = datetime.datetime.fromtimestamp(
+                    time.time()).strftime('%B-%d-%Y %H:%M:%S')
+                stash_msg = \
+                    'IR: Plugin update {plugin_name} {timestamp}'.format(
+                        plugin_name=plugin_name, timestamp=timestamp
+                    )
+                repo.git.stash('save', '--include-untracked', stash_msg)
+                LOG.debug("Changes have been found and stashed "
+                          "with message: {}".format(stash_msg))
+
+            LOG.debug("Fetching & rebasing changes...")
+            repo.git.pull('--rebase')
+            if revision not in (None, 'latest'):
+                repo.head.set_commit(revision)
+            if not skip_reqs:
+                reqs_file = os.path.join(plugin.path, 'requirements.txt')
+                if os.path.isfile(reqs_file):
+                    pip.main(['install', '-r', reqs_file])
+
+        except git.InvalidGitRepositoryError:
+            raise IRFailedToUpdatePlugin(
+                "Plugin '{}' isn't a Git-based plugin".format(plugin_name))
+        except ValueError:
+            raise IRFailedToUpdatePlugin(
+                "Failed to update '{}' plugin to point to '{}'".format(
+                    plugin_name, revision))
+        except git.exc.GitCommandError:
+            repo.git.rebase('--abort')
+            raise IRFailedToUpdatePlugin(
+                "Failed to update plugin"
+                "Failed to update plugin!\nPlease go to plugin dir ({})"
+                " and manually resolve Git issues.".format(plugin.path))
+        finally:
+            if changes:
+                LOG.debug("Applying the stashed changes...")
+                repo.git.stash('apply')
 
     def add_plugin(self, plugin_source, rev=None, dest=None):
         """Adds (install) a plugin
