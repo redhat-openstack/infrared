@@ -165,6 +165,7 @@ subparsers:
                           - gre
                           - vxlan
                           - vlan
+                          - geneve
                       default: vxlan
 
                   network-protocol:
