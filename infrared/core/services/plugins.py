@@ -170,7 +170,8 @@ class InfraredPluginManager(object):
             raise StopIteration
 
     @staticmethod
-    def _clone_git_plugin(git_url, repo_plugin_path=None, dest_dir=None):
+    def _clone_git_plugin(git_url, repo_plugin_path=None, rev=None,
+                          dest_dir=None):
         """Clone a plugin into a given destination directory
 
         :param git_url: Plugin's Git URL
@@ -178,6 +179,7 @@ class InfraredPluginManager(object):
           is a Git URL)
         :param repo_plugin_path: path in the Git repo where the infrared plugin
           is defined
+        :param rev: git branch/tag/revision
         :return: Path to plugin cloned directory (str)
         """
         dest_dir = os.path.abspath(dest_dir or "plugins")
@@ -186,13 +188,17 @@ class InfraredPluginManager(object):
         tmpdir = tempfile.mkdtemp(prefix="ir-")
         cwd = os.getcwdu()
         os.chdir(tmpdir)
+        gclone_args = {"url": git_url,
+                       "to_path": os.path.join(tmpdir, plugin_dir_name)}
+        if rev is not None:
+            gclone_args["branch"] = rev
         try:
-            git.Repo.clone_from(url=git_url,
-                                to_path=os.path.join(tmpdir, plugin_dir_name))
-        except (git.exc.GitCommandError):
+
+            git.Repo.clone_from(**gclone_args)
+        except (git.exc.GitCommandError) as e:
             shutil.rmtree(tmpdir)
             raise IRFailedToAddPlugin(
-                "Cloning git repo {} is failed".format(git_url))
+                "Cloning git repo {} is failed: {}".format(git_url, e))
 
         plugin_source = os.path.join(dest_dir, plugin_dir_name)
         if os.path.exists(plugin_source):
@@ -208,7 +214,7 @@ class InfraredPluginManager(object):
 
         return plugin_source
 
-    def add_plugin(self, plugin_source, dest=None):
+    def add_plugin(self, plugin_source, rev=None, dest=None):
         """Adds (install) a plugin
 
         :param plugin_source: Plugin source.
@@ -218,6 +224,7 @@ class InfraredPluginManager(object):
             3. Git URL
         :param dest: destination where to clone a plugin into (if 'source' is
           a Git URL)
+        :param rev: git branch/tag/revision
         """
         plugin_data = {}
         # Check if a plugin is in the registry
@@ -232,7 +239,7 @@ class InfraredPluginManager(object):
         else:
             plugin_src_path = plugin_data.get('src_path', '')
             plugin_source = self._clone_git_plugin(
-                plugin_source, plugin_src_path,
+                plugin_source, plugin_src_path, rev,
                 dest)
 
         plugin = InfraredPlugin(plugin_source)

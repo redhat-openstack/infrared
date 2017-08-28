@@ -420,7 +420,7 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
 
     # add_plugin call
     plugin_manager.add_plugin(
-        "https://sample_github.null/plugin_repo.git", dest)
+        "https://sample_github.null/plugin_repo.git", dest=dest, rev="test")
 
     mock_os.path.abspath.assert_has_calls([mocker.call(real_dest)])
 
@@ -429,7 +429,7 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
     mock_os.chdir.assert_has_calls(mock_tempfile.mkdtemp.return_value)
     mock_git.clone_from.assert_called_with(
         url='https://sample_github.null/plugin_repo.git',
-        to_path=mock_os.path.join.return_value)
+        to_path=mock_os.path.join.return_value, branch="test")
     mock_os.join.has_call(real_dest, mock_os.listdir.return_value[0])
     mock_os.join.has_call(mock_tempfile.mkdtemp.return_value,
                           mock_os.listdir.return_value[0])
