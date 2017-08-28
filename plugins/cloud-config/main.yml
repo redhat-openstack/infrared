@@ -1,9 +1,3 @@
----
-- name: Temporary main playbook for 'cloud-config' plugin
-  hosts: localhost
-  gather_facts: no
-  any_errors_fatal: true
-  tasks:
-      - name: validate storage nodes
-        debug:
-            msg: "Dummy plugin task"
+- name: Include task "External network creation"
+  include: post_tasks/create_external_network.yml
+  when: '"create_external_network" in install.tasks'
