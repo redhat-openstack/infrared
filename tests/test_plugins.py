@@ -3,18 +3,21 @@ import os
 import git
 import yaml
 import shutil
+import tarfile
 import tempfile
 
 import pytest
 
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
+from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRUnsupportedSpecOptionType
 from infrared.core.utils.dict_utils import dict_insert
 import infrared.core.services.plugins
 from infrared.core.services.plugins import InfraredPluginManager
 from infrared.core.services.plugins import InfraredPlugin
 from infrared.core.services import CoreServices, ServiceName
+
 
 PLUGIN_SPEC = 'plugin.spec'
 SAMPLE_PLUGINS_DIR = 'tests/example/plugins'
@@ -82,6 +85,48 @@ def plugin_manager_fixture(plugins_conf_fixture):
         return CoreServices.plugins_manager()
 
     yield plugin_manager_helper
+
+
+@pytest.fixture()
+def git_plugin_manager_fixture(tmpdir, plugin_manager_fixture):
+    """Yields an IRPluginManager obj configured with git plugin
+
+    Just like plugin_manager_fixture but also create two temporary directories
+    that will be used to mimic local and remote git repos of an InfraRed's
+    plugin. The IRPluginManager that will be returned, will be configured with
+    this InfraRed git plugin.
+    :param tmpdir: builtin pytest fixtures to create temporary files & dirs
+    :param plugin_manager_fixture: Fixture object which yields
+    InfraredPluginManger object
+    """
+    plugin_tar_gz = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        'example/plugins/git_plugin/git_plugin_repo.tar.gz')
+
+    plugin_repo_dir = tmpdir.mkdir('plugin_repo_dir')
+    plugin_install_dir = tmpdir.mkdir('plugin_install_dir')
+
+    t_file = tarfile.open(plugin_tar_gz)
+    t_file.extractall(path=str(plugin_repo_dir))
+
+    repo = git.Repo.clone_from(
+        url=str(plugin_repo_dir),
+        to_path=str(plugin_install_dir))
+
+    repo.git.config('user.name', 'dummy-user')
+    repo.git.config('user.email', 'dummy@email.com')
+
+    plugin_spec_dict = get_plugin_spec_flatten_dict(str(plugin_install_dir))
+
+    try:
+        plugin_manager = plugin_manager_fixture({
+            plugin_spec_dict['type']: {
+                plugin_spec_dict['name']: str(plugin_install_dir)}
+        })
+        yield plugin_manager
+    finally:
+        plugin_repo_dir.remove()
+        plugin_install_dir.remove()
 
 
 def get_plugin_spec_flatten_dict(plugin_dir):
@@ -574,3 +619,40 @@ def test_plugin_add_all(plugin_manager_fixture):
     plugin_manager.remove_all()
     validate_plugins_presence_in_conf(
         plugin_manager, plugins_registry, present=False)
+
+
+def test_git_plugin_update(git_plugin_manager_fixture):
+    """Tests the git plugin update functionality
+
+    Tests the following:
+      1. Plugin update without new changes
+      2. Plugin update to an older commit
+      3. No update when there are local changes
+      4. Update discarding local changes ('--hard-rest')
+    :param git_plugin_manager_fixture: Fixture object which yields
+    InfraredPluginManger object with git plugin installed
+    """
+    gpm = git_plugin_manager_fixture
+
+    repo = git.Repo(gpm.get_plugin('git_plugin').path)
+    commits_list = repo.git.rev_list('HEAD').splitlines()
+
+    assert len(commits_list) > 1, \
+        "Can perform the test without at least two commits"
+
+    assert gpm.update_plugin('git_plugin') is None, \
+        "Failed to pull changes from remote with up-to-date local branch"
+
+    gpm.update_plugin(plugin_name='git_plugin', revision=commits_list[-1])
+    assert commits_list[-1] == repo.git.rev_parse('HEAD'), \
+        "Failed to Update plugin to: {}".format(commits_list[-1])
+
+    with pytest.raises(IRFailedToUpdatePlugin):
+        gpm.update_plugin(plugin_name='git_plugin')
+    assert commits_list[-1] == repo.git.rev_parse('HEAD'), \
+        "Plugin wasn't suppose to be changed when update failed..."
+
+    gpm.update_plugin(plugin_name='git_plugin', hard_reset=True)
+    assert commits_list[0] == repo.git.rev_parse('HEAD'), \
+        "Plugin haven't been updated from '{}' to '{}'".format(
+            commits_list[-1], commits_list[0])
