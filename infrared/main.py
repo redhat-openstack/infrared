@@ -262,6 +262,18 @@ class PluginManagerSpec(api.SpecObject):
             help="Prints all available plugins in addition "
                  "to installed plugins")
 
+        # Update plugin
+        update_parser = plugin_subparsers.add_parser(
+            "update",
+            help="Update a Git-based plugin")
+        update_parser.add_argument(
+            "name",
+            help="Name of the plugin to update")
+        update_parser.add_argument(
+            "revision", nargs='?', default='latest',
+            help="Revision number to checkout (if not given, will only pull "
+                 "changes from the remote)")
+
     def spec_handler(self, parser, args):
         """Handles all the plugin manager commands
 
@@ -285,6 +297,8 @@ class PluginManagerSpec(api.SpecObject):
                 self._list_plugins(print_available=False)
             else:
                 self.plugin_manager.remove_plugin(pargs.name)
+        elif subcommand == 'update':
+            self.plugin_manager.update_plugin(pargs.name, pargs.revision)
 
     def _list_plugins(self, print_available=False):
         """Print a list of installed & available plugins"""

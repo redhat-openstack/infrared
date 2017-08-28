@@ -332,6 +332,16 @@ Remove:
         infrared plugin remove all
 
 
+Update:
+    Update a given Git-based plugin to a specific revision.
+    The update process pulls the latest changes from the remote and checkouts a specific
+    revision if given, otherwise, it will point to the tip of the updated branch::
+
+        infrared plugin update git-plugin
+        infrared plugin update git-plugin latest (same as the command above)
+        infrared plugin update git-plugin d77c1bh (will pull changes and checkout 'd77c1bh')
+
+
 Execute:
     Plugins are added as subparsers under ``plugin type`` and will execute
     the ``main.yml`` `playbook <playbooks>`_::

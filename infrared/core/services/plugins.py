@@ -12,7 +12,9 @@ import pip
 from infrared.core.utils import logger
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
+from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRUnsupportedPluginType
+
 
 DEFAULT_PLUGIN_INI = dict(
     supported_types=OrderedDict([
@@ -207,6 +209,31 @@ class InfraredPluginManager(object):
         shutil.rmtree(tmpdir)
 
         return plugin_source
+
+    def update_plugin(self, plugin_name, revision=None):
+        """Updates a Git-based plugin
+
+        Pulls changes from the remote, and checkout a specific revision.
+        (will point to the tip of the branch if revision isn't given)
+        :param plugin_name: Name of plugin to update.
+        :param revision: Revision to checkout.
+        """
+        if plugin_name not in PLUGINS_REGISTRY:
+            raise IRFailedToUpdatePlugin(
+                "Plugin '{}' isn't installed".format(plugin_name))
+
+        try:
+            repo = git.Repo(self.get_plugin(plugin_name).path)
+            repo.remote().pull()
+            if revision not in (None, 'latest'):
+                repo.head.set_commit(revision)
+        except git.InvalidGitRepositoryError:
+            raise IRFailedToUpdatePlugin(
+                "Plugin '{}' isn't a Git-based plugin".format(plugin_name))
+        except ValueError:
+            raise IRFailedToUpdatePlugin(
+                "Failed to update '{}' plugin to point to '{}'".format(
+                    plugin_name, revision))
 
     def add_plugin(self, plugin_source, dest=None):
         """Adds (install) a plugin
