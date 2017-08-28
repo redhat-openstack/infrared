@@ -175,3 +175,42 @@
         vars:
             auth_file_path: "/home/stack/stackrc"
             cloudname: "undercloud"
+
+- name: print core/director puddle version
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: false
+  tags: restore_puddle_version
+  tasks:
+      - stat:
+            path: ~/core_puddle_version
+        register: puddle_file
+
+      - name: get core puddle version from ~/core_puddle_version
+        command:  cat ~/core_puddle_version
+        register: core_puddle_file
+        when: puddle_file.stat.exists
+
+      - name: get core puddle version from repos
+        shell: cat /etc/yum.repos.d/rhos-release-[0-9]*.repo | grep ^baseurl.*/OpenStack/ | grep -v latest | awk -F / '{print $8 }' | tail -n 1
+        register: core_puddle_repos
+        when: puddle_file.stat.exists == False
+
+      - debug:
+            msg: "Build mark: core_puddle={{ puddle_file.stat.exists|ternary (core_puddle_file.stdout, core_puddle_repos.stdout) }}"
+
+      - find:
+            use_regex: yes
+            patterns: '^rhos-release-\d+-director.repo$'
+            paths:
+                - '/etc/yum.repos.d/'
+        register: director_repo_result
+
+      - name: get director puddle version
+        shell: "cat {{ director_repo_result.files[0].path }} | grep ^baseurl.*/OpenStack/ | grep -v latest | awk -F / '{print $8 }' | tail -n 1"
+        register: director_puddle
+        when: director_repo_result.matched > 0
+
+      - debug:
+            msg: "Build mark: director_puddle={{ director_puddle.stdout }}"
+        when: director_repo_result.matched > 0
