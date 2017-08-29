@@ -5,3 +5,23 @@
   any_errors_fatal: true
   tasks:
        - setup:
+
+- name: Pre Overcloud Run Tasks
+  hosts: undercloud
+  tags: pre
+  gather_facts: no
+  become: yes
+  any_errors_fatal: true
+  tasks:
+      - block:
+          - name: install libguestfs-tools to get virt-customize
+            become: yes
+            package:
+                name: libguestfs-tools
+                state: present
+
+          - name: Set selinux state
+            command: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --run-command 'sed -i s/SELINUX=.*/SELINUX={{ install.selinux }}/g /etc/selinux/config'"
+        when:
+            - install.selinux is defined
+            - install.selinux == 'permissive' or install.selinux =='disabled'
