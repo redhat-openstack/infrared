@@ -42,7 +42,6 @@
         stat:
             path: "{{ template_base }}/overcloud_deploy.sh"
         register: deploy_script
-        tags: deploy
 
       - name: copy our overcloud deployment script if provided by the user
         tags: overcloud_deploy
@@ -73,7 +72,9 @@
 
       - name: Enable external network access through newly created vlan interface on undercloud
         include: tasks/undercloud-ext-vlan.yml
-        when: "'hypervisor' not in groups and install.public.vlan"
+        vars:
+            undercloud_public_ip: "{{ install.public.get('vlan', {}).get('ip', '') }}"
+        when: "'hypervisor' not in groups and undercloud_public_ip"
 
       - include: tasks/append_script.yml
         when: not overcloud_deploy_script|default('')

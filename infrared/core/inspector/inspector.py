@@ -38,12 +38,13 @@ class SpecParser(object):
         # includes an unsupported option type
         try:
             return SpecParser(subparser, spec_dict, plugin.vars_dir,
-                              plugin.defaults_dir)
+                              plugin.defaults_dir, plugin.path)
         except exceptions.IRUnsupportedSpecOptionType as ex:
             ex.message += ' in file: {}'.format(plugin.spec)
             raise ex
 
-    def __init__(self, subparser, spec_dict, vars_dir, defaults_dir):
+    def __init__(self, subparser, spec_dict, vars_dir, defaults_dir,
+                 plugin_path):
         """
 
         :param subparser: argparse.subparser to extend
@@ -53,6 +54,7 @@ class SpecParser(object):
         """
         self.vars = vars_dir
         self.defaults = defaults_dir
+        self.plugin_path = plugin_path
         self.spec_helper = helper.SpecDictHelper(spec_dict)
 
         # create parser
@@ -221,17 +223,20 @@ class SpecParser(object):
                     action = self.create_complex_argumet_type(
                         parser_name,
                         type_name,
-                        option_name)
+                        option_name,
+                        spec_option)
 
                     # resolving value
                     parser_dict[option_name] = action.resolve(option_value)
 
-    def create_complex_argumet_type(self, subcommand, type_name, option_name):
+    def create_complex_argumet_type(self, subcommand, type_name, option_name,
+                                    spec_option):
         """Build the complex argument type
 
         :param subcommand: the command name
         :param type_name: the complex type name
         :param option_name: the option name
+        :param spec_option: option's specifications
         :return: the complex type instance
         """
         complex_action = COMPLEX_TYPES.get(
@@ -241,8 +246,9 @@ class SpecParser(object):
                 "Unknown complex type: {}".format(type_name))
         return complex_action(
             option_name,
-            (self.vars, self.defaults),
-            subcommand)
+            (self.vars, self.defaults, self.plugin_path),
+            subcommand,
+            spec_option)
 
     def parse_args(self, arg_parser, args=None):
         """Parses all the arguments (cli, answers file)
@@ -270,8 +276,9 @@ class SpecParser(object):
         self.validate_arg_deprecation(cli_args, file_args)
 
         # now filter defaults to have only parser defined in cli
-        defaults = {key: spec_defaults[key] for key in cli_args.keys() if
-                    key in spec_defaults}
+        defaults = dict((key, spec_defaults[key])
+                        for key in cli_args.keys() if
+                        key in spec_defaults)
 
         # copy cli args with the same name to all parser groups
         self._merge_duplicated_cli_args(cli_args)
@@ -411,8 +418,8 @@ class SpecParser(object):
                         self.spec_helper.get_parser_option_specs(cmd_name),
                         args[cmd_name]))
 
-        missing_args = {cmd_name: args
-                        for cmd_name, args in res.items() if len(args) > 0}
+        missing_args = dict((cmd_name, args)
+                            for cmd_name, args in res.items() if len(args) > 0)
         if missing_args:
             raise exceptions.IRRequiredArgsMissingException(missing_args)
 

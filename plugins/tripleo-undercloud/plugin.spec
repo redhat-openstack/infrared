@@ -17,28 +17,29 @@ subparsers:
                   dest-path:
                       type: Value
                       help: |
-                          Path on destination server that contains the image
+                          Path on destination server where the UC backup image will be stored
                   dest-key:
-                      type: Value
+                      type: FileValue
                       help: |
                           Key file to send to the remote server in order to transfer the UC backup image
                   dest-user:
                       type: Value
                       help: |
                           Username for destination server (in case key was not provided)
-                  dest-pass:
-                      type: Value
-                      help: |
-                          Password for destination server (in case key was not provided)
                   quickstart-restore:
                       type: Bool
                       help: |
                           This will restore an undercloud from a pre-made snapshot created by the `--quickstart-backup` flag
+                          Use --quickstart-image to specify image to use for restore.
+                  quickstart-image:
+                       type: Value
+                       help: |
+                          The url to the image to restore the undercloud from.
                   quickstart-filename:
                       type: Value
                       help: |
                           When used with `quickstart-backup`, it will create this file
-                          When used with `quickstart-restore`, it will use this file as source
+                          When used with `quickstart-restore`, it will use this file as the disk name for the domain
                       default: "undercloud-quickstart.qcow2"
 
             - title: Undercloud Configuration
@@ -95,7 +96,9 @@ subparsers:
 
                   build:
                       help: |
-                          String represents a timestamp of the OSP puddle
+                          String represents a timestamp of the OSP puddle.
+                          Note: for versions 6 < OSPd < 10 to specify director
+                          version use '--director-build' flag.
                           (for the given product core version).
                           Supports any rhos-release labels.
                           Examples: "passed_phase1", "2016-08-11.1", "Y1", "Z3", "GA"
@@ -103,11 +106,13 @@ subparsers:
 
                   director-build:
                       help: |
-                          String represents a timestamp of the OSPd puddle
-                          (for the given product core version).
+                          String represents a timestamp of the OSP director puddle
+                          (for the given product core version). Only applies for
+                          6 < OSPd < 10, and could be used with '--build' flag.
+                          Note: for versions >= 10 only the --build flag should be used to
+                          specify a puddle.
                           Supports any rhos-release labels.
                           Examples: "passed_phase1", "2016-08-11.1", "Y1", "Z3", "GA"
-                          Only applies for versions 7-9
                           If missing, will equal to "latest".
                       type: Value
 

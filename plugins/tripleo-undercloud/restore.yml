@@ -8,48 +8,18 @@
   vars_files:
       - vars/topology/undercloud.yml
   vars:
-      undercloud_image_file: "{{ install.quickstart.filename }}"
+      undercloud_image_file: "{{ install.quickstart.image | basename }}"
       undercloud_disk_path: "/var/lib/libvirt/images/{{ install.quickstart.filename.rstrip('.qcow2') | basename }}-disk1.qcow2"
       undercloud_user: "{{ install.user.name | default('stack') }}"
       # todo(yfried): add external refs so users can override these values and customize the Undercloud
   tasks:
-      # todo(atalmor): add support to download image
-      - name: add the undercloud image server
-        add_host:
-            name: "{{ install.dest.address }}"
-            groups: user_group
-            ansible_ssh_host: "{{ install.dest.address }}"
-            ansible_ssh_user: "{{ install.dest.user }}"
-            ansible_ssh_private_key_file: "{{ install.dest.key | default(omit) }}"
-            ansible_ssh_pass: "{{ install.dest.pass | default(omit) }}"
-        when: install.dest|default({})
-
-      - name: print out the public key
-        command: "ssh-keygen -y -f ~/.ssh/id_rsa"
-        register: pubkey
-        when: install.dest|default({})
-
-      - name: add key to remote
-        authorized_key:
-            user: "{{ install.dest.user }}"
-            key: "{{ pubkey.stdout }}"
-        delegate_to: "{{ install.dest.address }}"
-
-      - name: copy the image to temporary server
-        shell: |
-            scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
-            {{ install.dest.key }} {{ install.dest.user }}@{{ install.dest.address }}:/{{install.dest.path}} ./{{ undercloud_image_file }}
-        when: install.dest|default({})
-        tags: skip_ansible_lint
-
-      - name: copy the image into libvirt images folder
-        copy:
-            remote_src: yes
-            force: yes
-            src: "{{ undercloud_image_file }}"
+      - name: download image
+        get_url:
+            url: "{{ install.quickstart.image }}"
             dest: "{{ undercloud_disk_path }}"
             owner: qemu
             group: qemu
+            force: yes
 
       - name: install libguestfs-tool / virt-customize
         package:
@@ -188,3 +158,59 @@
             path: /httpboot
             setype: httpd_sys_content_t
             recurse: yes
+
+# need to setup shade node after restore
+- include: shade.yml
+  tags: restore_shade
+
+# update clouds.yml basing on the starckrc file from the restored undercloud
+- name: update clouds.yml
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags: restore_clouds_yml
+  tasks:
+      - name: update clouds.yaml file
+        include: clouds.yml
+        vars:
+            auth_file_path: "/home/stack/stackrc"
+            cloudname: "undercloud"
+
+- name: print core/director puddle version
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: false
+  tags: restore_puddle_version
+  tasks:
+      - stat:
+            path: ~/core_puddle_version
+        register: puddle_file
+
+      - name: get core puddle version from ~/core_puddle_version
+        command:  cat ~/core_puddle_version
+        register: core_puddle_file
+        when: puddle_file.stat.exists
+
+      - name: get core puddle version from repos
+        shell: cat /etc/yum.repos.d/rhos-release-[0-9]*.repo | grep ^baseurl.*/OpenStack/ | grep -v latest | awk -F / '{print $8 }' | tail -n 1
+        register: core_puddle_repos
+        when: puddle_file.stat.exists == False
+
+      - debug:
+            msg: "Build mark: core_puddle={{ puddle_file.stat.exists|ternary (core_puddle_file.stdout, core_puddle_repos.stdout) }}"
+
+      - find:
+            use_regex: yes
+            patterns: '^rhos-release-\d+-director.repo$'
+            paths:
+                - '/etc/yum.repos.d/'
+        register: director_repo_result
+
+      - name: get director puddle version
+        shell: "cat {{ director_repo_result.files[0].path }} | grep ^baseurl.*/OpenStack/ | grep -v latest | awk -F / '{print $8 }' | tail -n 1"
+        register: director_puddle
+        when: director_repo_result.matched > 0
+
+      - debug:
+            msg: "Build mark: director_puddle={{ director_puddle.stdout }}"
+        when: director_repo_result.matched > 0

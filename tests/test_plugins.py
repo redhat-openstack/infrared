@@ -1,6 +1,6 @@
 import ConfigParser
 import os
-import subprocess
+import git
 import yaml
 
 import pytest
@@ -406,8 +406,7 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
 
     plugin_manager = plugin_manager_fixture()
 
-    mock_subprocess = mocker.patch(
-        "infrared.core.services.plugins.subprocess")
+    mock_git = mocker.patch("infrared.core.services.plugins.git.Repo")
     mock_os = mocker.patch("infrared.core.services.plugins.os")
     mock_os.path.exists.return_value = False
     mock_os.listdir.return_value = ["sample_plugin"]
@@ -421,16 +420,16 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
 
     # add_plugin call
     plugin_manager.add_plugin(
-        "https://sample_github.null/plugin_repo.git", dest)
+        "https://sample_github.null/plugin_repo.git", dest=dest, rev="test")
 
     mock_os.path.abspath.assert_has_calls([mocker.call(real_dest)])
 
     mock_tempfile.mkdtemp.assert_called_once()
     mock_os.getcwdu.assert_called_once()
     mock_os.chdir.assert_has_calls(mock_tempfile.mkdtemp.return_value)
-    mock_subprocess.check_output.assert_called_with(
-        ['git', 'clone', 'https://sample_github.null/plugin_repo.git'])
-    mock_os.listdir.assert_called_once()
+    mock_git.clone_from.assert_called_with(
+        url='https://sample_github.null/plugin_repo.git',
+        to_path=mock_os.path.join.return_value, branch="test")
     mock_os.join.has_call(real_dest, mock_os.listdir.return_value[0])
     mock_os.join.has_call(mock_tempfile.mkdtemp.return_value,
                           mock_os.listdir.return_value[0])
@@ -444,11 +443,10 @@ def test_add_plugin_from_git_exception(plugin_manager_fixture, mocker):
 
     plugin_manager = plugin_manager_fixture()
 
-    mock_subprocess = mocker.patch(
-        "infrared.core.services.plugins.subprocess")
-    mock_subprocess.check_output.side_effect = subprocess.CalledProcessError(
-        1, "some_git_cmd")
-    mock_subprocess.CalledProcessError = subprocess.CalledProcessError
+    mock_git = mocker.patch("infrared.core.services.plugins.git")
+    mock_git.Repo.clone_from.side_effect = git.exc.GitCommandError(
+        "some_git_cmd", 1)
+    mock_git.exc.GitCommandError = git.exc.GitCommandError
     mock_tempfile = mocker.patch("infrared.core.services.plugins.tempfile")
     mock_shutil = mocker.patch("infrared.core.services.plugins.shutil")
     mock_os = mocker.patch("infrared.core.services.plugins.os")
@@ -505,10 +503,9 @@ def test_plugin_add_all(plugin_manager_fixture):
     )
     tests_plugins_dir = 'tests/example/plugins/add_remove_all_plugins/'
 
-    infrared.core.services.plugins.PLUGINS_REGISTRY = {
-        plugin_name: {'src': os.path.join(tests_plugins_dir, plugin_name)}
-        for plugin_name in tests_plugins
-        }
+    infrared.core.services.plugins.PLUGINS_REGISTRY = \
+        dict((pname, {'src': os.path.join(tests_plugins_dir, pname)})
+             for pname in tests_plugins)
 
     plugins_registry = infrared.core.services.plugins.PLUGINS_REGISTRY
     plugin_manager = plugin_manager_fixture()

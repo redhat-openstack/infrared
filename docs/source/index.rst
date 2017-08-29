@@ -48,6 +48,7 @@ Welcome to infrared's documentation!
    tempest
    collect-logs
    gabbi_tester
+   list_builds
 
 .. toctree::
    :maxdepth: 2
@@ -57,6 +58,7 @@ Welcome to infrared's documentation!
    composable_roles
    cdn_cookbook.rst
    hybrid_deployment
+   plugins_guide
 
 Indices and tables
 ==================

@@ -21,8 +21,10 @@ LOG = logger.LOG
 
 # TODO(aopincar): Replace TYPES with supported types only (str, int, bool...)
 BUILTINS = sys.modules[
-    'builtins' if sys.version_info.major == 3 else '__builtin__']
-TYPES = {builtin: getattr(BUILTINS, builtin) for builtin in vars(BUILTINS)}
+    'builtins' if sys.version_info[0] == 3 else '__builtin__']
+
+TYPES = dict((k, getattr(BUILTINS, k)) for k in vars(BUILTINS))
+
 TYPES['suppress'] = argparse.SUPPRESS
 
 OPTION_ARGPARSE_ATTRIBUTES = ['action', 'nargs', 'const', 'default', 'choices',
@@ -187,6 +189,19 @@ class CliParser(object):
         # put allowed values to the help.
         allowed_values = opt_kwargs.get('choices', None)
 
+        if 'type' in option_data:
+            if option_data['type'] in COMPLEX_TYPES:
+                complex_action = COMPLEX_TYPES.get(option_data['type'], None)
+                if hasattr(complex_action, 'VALUES_AUTO_PROPAGATION') and \
+                        complex_action.VALUES_AUTO_PROPAGATION:
+                    complex_action = complex_action(
+                        option_name,
+                        (spec.vars, spec.defaults, spec.plugin_path),
+                        subparser,
+                        option_data)
+                    allowed_values = \
+                        complex_action.get_allowed_values()
+
         if allowed_values:
             opt_kwargs['help'] += "\nAllowed values: {}.".format(
                 allowed_values)
@@ -271,11 +286,14 @@ class ComplexType(object):
 
     def __init__(self, arg_name,
                  settings_dirs,
-                 sub_command_name):
+                 sub_command_name,
+                 spec_option):
+
         # FIXME(yfried): this should take plugin as input
         self.arg_name = arg_name
         self.sub_command_name = sub_command_name
         self.settings_dirs = settings_dirs
+        self.spec_option = spec_option
 
     @abc.abstractmethod
     def resolve(self, value):
@@ -284,7 +302,6 @@ class ComplexType(object):
         :return: the resulting complex type value.
         """
 
-    def get_allowed_values(self):
         """Gets the list of possible values for the complex type.
 
         Should be overridden in the subclasses.
@@ -488,6 +505,48 @@ class FileType(ComplexType):
         return os.path.abspath(target_file)
 
 
+class ListOfFileNames(ComplexType):
+    """ Represents List of file names for specific path
+
+        It support value auto propagation, based on
+        plugin_path and spec_option['lookup_dir'])
+    """
+
+    ARG_SEPARATOR = ','
+    VALUES_AUTO_PROPAGATION = True
+
+    @property
+    def plugin_path(self):
+        return self.settings_dirs[2]
+
+    @property
+    def lookup_dir(self):
+        return self.spec_option['lookup_dir']
+
+    @property
+    def files_path(self):
+        return os.path.join(self.plugin_path, self.lookup_dir)
+
+    def get_allowed_values(self):
+        """ Generate list of file names in specific path"""
+        result = list(map((lambda name: os.path.splitext(name)[0]),
+                          os.listdir(self.files_path)))
+        result.sort()
+        return result
+
+    def validate(self, value):
+        """Validate if value is allowed"""
+        allowed_values = self.get_allowed_values()
+        if value not in allowed_values:
+            raise exceptions.IRFileNotFoundException(self.files_path)
+
+    def resolve(self, value):
+        result = value.split(self.ARG_SEPARATOR)
+        for arg in result:
+            self.validate(arg)
+        return result
+
+
 class VarFileType(FileType):
     """Represents the file on a disk.
 
@@ -567,10 +626,11 @@ class TopologyFileType(VarFileType):
 
     def resolve(self, value):
 
-        return {super(TopologyFileType, self).resolve(
-            file_name.split(self.TOPOLOGY_SEPARATOR)[0]):
-            int(file_name.split(self.TOPOLOGY_SEPARATOR)[1])
-            for file_name in value.split(self.ARG_SEPARATOR)}
+        return dict((super(TopologyFileType, self).resolve(
+            file_name.split(self.TOPOLOGY_SEPARATOR)[0]),
+            int(file_name.split(self.TOPOLOGY_SEPARATOR)[1]))
+            for file_name in value.split(self.ARG_SEPARATOR))
+
 
 # register custom actions
 ACTIONS = {
@@ -592,5 +652,6 @@ COMPLEX_TYPES = {
     'VarFile': VarFileType,
     'VarDir': VarDirType,
     'ListOfVarFiles': ListFileType,
-    'ListOfTopologyFiles': TopologyFileType
+    'ListOfTopologyFiles': TopologyFileType,
+    'ListOfFileNames': ListOfFileNames
 }

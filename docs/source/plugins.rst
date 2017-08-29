@@ -1,6 +1,8 @@
 Plugins
 =======
 
+.. note:: Check `HOWTO`_ for the quick guide on how to create a plugin.
+
 In `infrared` 2.0, `plugins` are self contained Ansible projects. They can still
 also depend on common items provided by the core project.
 Any ansible project can become an`infrared` plugin by adhering to the following
@@ -18,6 +20,7 @@ structure (see `tests/example`_ for an example plugin)::
         as Ansible will search for references in the
         relative paths described above. To use an ``ansible.cfg`` config file, use absolute paths to the plugin directory.
 .. _tests/example: https://github.com/redhat-openstack/infrared/tree/master/tests/example
+.. _HOWTO: plugins_guide.html
 
 Plugin structure
 ^^^^^^^^^^^^^^^^
@@ -280,7 +283,7 @@ Add:
     register the plugin under the given plugin-type (when source is 'all', all available plugins will be installed)::
 
         infrared plugin add tests/example
-        infrared plugin add <git_url>
+        infrared plugin add <git_url> [--revision <branch/tag/revision>]
         infrared plugin add all
 
 
@@ -328,6 +331,12 @@ Remove:
         infrared plugin remove example
         infrared plugin remove all
 
+Freeze:
+    When you need to be able to install somewhere else the exact same versions
+    of plugins use ``freeze`` command. This will run through installed plugins
+    and save revision to ``plugins/registry.yaml`` for every git sorced one::
+
+        infrared plugin freeze
 
 Execute:
     Plugins are added as subparsers under ``plugin type`` and will execute

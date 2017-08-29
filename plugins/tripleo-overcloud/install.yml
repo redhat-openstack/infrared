@@ -1,8 +1,3 @@
-- name: Perform validations
-  include: "{{ overcloud_validate | default('validate.yml') }}"
-  tags:
-      - validation
-
 - name: Perform pre install tasks
   include: "{{ overcloud_pre | default('pre.yml') }}"
   when: install.introspect|default('')
@@ -69,6 +64,7 @@
       - install.deploy|default('')
       - install.version|default(undercloud_version) | openstack_release > 11
       - install.containers|bool
+  tags: deploy
 
 - name: Perform post install tasks
   include: "{{ overcloud_post | default('post.yml') }}"

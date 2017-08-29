@@ -16,6 +16,12 @@
             dest: "{{ inventory_dir }}/hosts-install"
             src: inventory.j2
 
+      - name: update inventory file symlink
+        file:
+            src: "hosts-install"
+            dest: "{{ inventory_dir }}/hosts"
+            state: link
+
 - name: Prepare shade node
   hosts: shade
   tags: shade
@@ -37,7 +43,6 @@
           - name: install pip
             easy_install:
                 name: pip
-                state: latest
 
           - name: install virtualenv pip module
             pip:
