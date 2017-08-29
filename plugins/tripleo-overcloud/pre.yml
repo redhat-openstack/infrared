@@ -5,3 +5,14 @@
   any_errors_fatal: true
   tasks:
        - setup:
+
+- name: Pre Overcloud Run Tasks
+  hosts: undercloud
+  tags: pre
+  gather_facts: no
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: Set selinux state
+      command: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --run-command 'sed -i s/SELINUX=.*/SELINUX={{ install.selinux }}/g /etc/selinux/config'"
+      when: install.selinux is defined and (install.selinux == 'permissive' or install.selinux =='disabled')
