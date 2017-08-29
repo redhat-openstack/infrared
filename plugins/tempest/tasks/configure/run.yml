@@ -18,7 +18,7 @@
 
   shell: |
       test -e .venv/bin/activate && source .venv/bin/activate
-      source ~/keystonerc
+      source ~/keystonerc || source ~/stackrc
       {{ config_command | default("tools/config_tempest.py") }} \
               {% if deployer_input_stat.stat.exists %}
               --deployer-input {{ deployer_input }} \
