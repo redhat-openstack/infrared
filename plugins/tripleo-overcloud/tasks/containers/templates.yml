@@ -29,3 +29,12 @@
       path: "{{ template_base }}/docker-images.yaml"
       state: present
       line: "  DockerInsecureRegistryAddress: {{ reg_base }}"
+
+- name: specfy the ceph image source
+  vars:
+      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
+      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry) }}"
+      reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base) }}"
+  shell: |
+      echo "parameter_defaults:">"{{ template_base }}/docker-images-ceph.yaml"
+      echo "  DockerCephDaemonImage: {{ reg_base }}/{{ install.registry.ceph.namespace }}:{{ install.registry.ceph.tag }}">>"{{ template_base }}/docker-images-ceph.yaml"
