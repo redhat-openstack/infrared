@@ -189,13 +189,13 @@ class InfraredPluginManager(object):
         tmpdir = tempfile.mkdtemp(prefix="ir-")
         cwd = os.getcwdu()
         os.chdir(tmpdir)
-        gclone_args = {"url": git_url,
-                       "to_path": os.path.join(tmpdir, plugin_dir_name)}
-        if rev is not None:
-            gclone_args["branch"] = rev
         try:
 
-            git.Repo.clone_from(**gclone_args)
+            tmp_plugin_dir = os.path.join(tmpdir, plugin_dir_name)
+            git.Repo.clone_from(url=git_url,
+                                to_path=tmp_plugin_dir)
+            if rev is not None:
+                git.Git(tmp_plugin_dir).checkout(rev)
         except (git.exc.GitCommandError) as e:
             shutil.rmtree(tmpdir)
             raise IRFailedToAddPlugin(
