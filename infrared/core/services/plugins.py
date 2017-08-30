@@ -236,6 +236,8 @@ class InfraredPluginManager(object):
             pass
         # Git Plugin
         else:
+            if rev is None:
+                rev = plugin_data.get('rev')
             plugin_src_path = plugin_data.get('src_path', '')
             plugin_source = self._clone_git_plugin(
                 plugin_source, plugin_src_path, rev,
