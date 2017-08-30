@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d39ad499_e93255fb",
+        "filename": "plugins/tempest/tasks/pre/main.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1006589
+      },
+      "writtenOn": "2017-08-30T15:40:40Z",
+      "side": 1,
+      "message": "This contradicts with the initial design of infrared/plugins. A plugin (in this case the tempest plugin) shouldn\u0027t not be dependent on the installation process and details of the environment under test. Ideally you should be able to run tempest against any environment, and you should provide to a plugin all the required information about environment.\n\nSo as for me correct workflow is to fetch rc file from the environment and provide it to the tempest plugin. \n\nI understand that probably we will only use tempest plugin for tripleo deployments... but anyway I\u0027d prefer to follow the initial design. \n\nI also don\u0027t like that the --overcloudrc points to some \u0027magic\u0027 keystonerc file in the workspace directory. But it\u0027s better than tight our plugin to the tripleo structure.",
+      "range": {
+        "startLine": 25,
+        "startChar": 2,
+        "endLine": 25,
+        "endChar": 21
+      },
+      "revId": "4464f5863c5e03b19bd8ab25a52b656827baaa22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
