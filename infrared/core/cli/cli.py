@@ -54,7 +54,8 @@ class CliParser(object):
                     'subparsers', {}).items():
                 cmd_parser = subparser.add_parser(
                     subparser_name,
-                    help=subparser_dict.get('help', ''),
+                    help=subparser_dict.get(
+                        'help', subparser_dict.get('description', '')),
                     description=subparser_dict.get(
                         'description', subparser_dict.get('help', '')),
                     formatter_class=parser_dict.get(
