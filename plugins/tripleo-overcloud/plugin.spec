@@ -51,6 +51,16 @@ subparsers:
                       type: Value
                       help: The alternative docker registry namespace to use for deployment.
 
+                  registry-ceph-namespace:
+                      type: Value
+                      help: namesapce for the ceph container
+                      default: ceph/rhceph-2-rhel7
+
+                  registry-ceph-tag:
+                      type: Value
+                      help: tag used with the ceph container
+                      default: latest
+
             - title: Deployment Description
               options:
                   version:
