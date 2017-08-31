@@ -7,6 +7,9 @@
           nova-scheduler:
               group: nova_scheduler
               command: "nova service-list | grep nova-scheduler | awk '{print $6}' | awk -F '.' '{print $1}' | head -1"
+          nova-compute:
+              group: nova-compute
+              command: "nova service-list | grep nova-compute | awk '{print $6}' | awk -F '.' '{print $1}'"
   tasks:
       - fail:
             msg: "'sevices' is undefine"
@@ -14,5 +17,7 @@
 
       - include: tasks/service_discovery.yml
         with_items: "{{ services }}"
+        loop_control:
+            loop_var: service
 
 - include: inventory_update.yml
