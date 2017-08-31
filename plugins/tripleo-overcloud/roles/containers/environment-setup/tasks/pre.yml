@@ -1,4 +1,3 @@
----
 - name: reboot the undercloud
   shell: "sleep 2 && shutdown -r now"
   become: yes
@@ -57,31 +56,3 @@
 - name: puddle to be used
   debug:
       msg: "{{ containers_puddle_number.stdout }}"
-
-- include: containers/build_images.yml
-- include: containers/workarounds.yml
-  tags: wa
-- include: containers/templates.yml
-
-- block:
-    - name: install ceph-ansible
-      package:
-          name: ceph-ansible
-          state: present
-      become: true
-
-    - name: append ceph-ansible template
-      lineinfile:
-          dest: "~/overcloud_deploy.sh"
-          line: '-e {{ install.heat.templates.basedir }}/environments/ceph-ansible/ceph-ansible.yaml \'
-  when:
-      - not install.storage.external
-      - storage_backend|default('') == 'ceph'
-
-- name: append extra containers templates for the build scripts
-  lineinfile:
-      dest: "~/overcloud_deploy.sh"
-      line: "{{ item }}"
-  with_items:
-  - '-e {{ install.heat.templates.basedir }}/environments/docker.yaml \'
-  - '-e {{ install.heat.templates.basedir }}/environments/docker-ha.yaml \'

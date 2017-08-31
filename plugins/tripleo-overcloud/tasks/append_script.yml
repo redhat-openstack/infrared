@@ -38,15 +38,13 @@
       - loadbalancer
       - loadbalancer_templates
 
-  # todo(obaranov)add rdo and cdn support for containers
-- name: setup containers
-  include: containers_rhosp.yml
+- include_role: name="containers/prepare-templates"
+  tags:
+      - containers
   when:
       - install.containers|default('')
       - install.version|openstack_release >= 12
       - (install.version|openstack_distribution) == 'OSP'
-  tags:
-      - containers
 
 - name: check for list of user defined templates
   find:
