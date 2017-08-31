@@ -1,14 +1,14 @@
 ---
 - name: Downloading overcloud container images template
   get_url:
-      url: "{{ containers_puddle_base_url.stdout }}/container_images.yaml"
-      dest: "~/container_images.yaml"
+      url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_template_download_basename }}"
+      dest: "{{ containers_images_template_dest_file }}"
       owner: stack
       group: stack
 
 - name: replace docker registry with mirror
   replace:
-      dest: "~/container_images.yaml"
+      dest: "{{ containers_images_template_dest_file }}"
       regexp: '^([ ]*pull_source: ).*'
       replace: '\1{{ install.registry.mirror }}'
       backup: no
@@ -16,7 +16,7 @@
 
 - name: replace docker namespace
   replace:
-      dest: "~/container_images.yaml"
+      dest: "{{ containers_images_template_dest_file }}"
       regexp: '^(- imagename: ).*(\/.*)'
       replace: '\1{{ install.registry.namespace }}\2'
       backup: no
@@ -24,7 +24,7 @@
 
 - name: get docker registry name
   shell: |
-      cat container_images.yaml | awk '/pull_source:/ {print $2}' | head -n1 | tr -d ' '
+      cat {{ containers_images_template_dest_file }} | awk '/pull_source:/ {print $2}' | head -n1 | tr -d ' '
   register: docker_insecure_registry
 
 - name: replace IP with hostname in /etc/sysconfig/docker
@@ -60,7 +60,7 @@
 - name: openstack overcloud container image upload
   shell: |
       source /home/stack/stackrc
-      openstack overcloud container image upload --verbose --config-file ~/container_images.yaml
+      openstack overcloud container image upload --verbose --config-file {{ containers_images_template_dest_file }}
   register: image_upload
   until: image_upload.rc == 0
   retries: 5
