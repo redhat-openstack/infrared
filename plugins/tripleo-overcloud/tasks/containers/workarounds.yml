@@ -1,1 +1,12 @@
 ---
+
+#https://review.openstack.org/#/c/499242/
+#https://bugzilla.redhat.com/show_bug.cgi?id=1486037
+- name: Apply patch for bz#1486420 #mysql_bootstrap
+  shell: curl -4 https://review.openstack.org/changes/499242/revisions/c19968ca852ab608513fe692aab958af25276220/patch?download|base64 -d|sudo patch -d /usr/share/openstack-tripleo-heat-templates/ -p1
+  ignore_errors: yes
+
+#https://bugzilla.redhat.com/show_bug.cgi?id=1486329
+- name: Apply patch for bz#1486329 #disable need for new "cron" logrotate container
+  shell: curl -4 https://review.openstack.org/changes/499408/revisions/b62f542d586353a6d81ee8c16595d5b679a8e641/patch?download|base64 -d|sudo patch -d /usr/share/openstack-tripleo-heat-templates/ -p1
+  ignore_errors: yes
