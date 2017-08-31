@@ -14,5 +14,6 @@
 
       - include: tasks/service_discovery.yml
         with_items: "{{ services }}"
+        when: service_map[item].group not in group_names
 
 - include: inventory_update.yml
