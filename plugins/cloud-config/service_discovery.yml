@@ -12,10 +12,16 @@
               command: "nova service-list | grep nova-compute | awk '{print $6}' | awk -F '.' '{print $1}'"
   tasks:
       - fail:
-            msg: "'sevices' is undefine"
+            msg: "'sevices' is not defined"
         when: services is not defined
 
+      - fail:
+            msg: "{{ item }} not found in service map"
+        when: service_map[item] is not defined
+        with_items: "{{ services }}"
+
       - include: tasks/service_discovery.yml
+        when: service_map[service].group not in group_names or resync|default(false)
         with_items: "{{ services }}"
         loop_control:
             loop_var: service
