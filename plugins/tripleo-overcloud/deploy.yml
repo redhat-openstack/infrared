@@ -1,3 +1,20 @@
+- name: Environment setup
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tags:
+      - deploy_preparation
+      - deploy_environment
+  pre_tasks:
+      - name: discover storage
+        include: tasks/storage/discover_backend.yml
+  roles:
+      - role: containers/environment-setup
+        when:
+          - install.containers|default('')
+          - install.version|openstack_release >= 12
+          - (install.version|openstack_distribution) == 'OSP'
+
 - name: Populate the overcloud deploy script
   include: build_templates.yml
   tags:
