@@ -25,7 +25,6 @@ subparsers:
                       help: |
                           Name of folder in cloud's user on undercloud, which containing the templates of
                           the overcloud deployment.
-                      required: yes
 
                   network-protocol:
                       type: Value

@@ -1,18 +1,20 @@
 ---
 - fail:
       msg: "{{ item }} not found in service map"
-  when: service_map[item] is not defined
+  when: service_map[service] is not defined
 
 - name: Get service node
   shell: |
       source ~/overcloudrc
-      {{ service_map[item].command }}
+      {{ service_map[service].command }}
   register: service_info
   tags: skip_ansible_lint
 
 - name: Add hosts to inventory
   add_host:
       name: "{{ host }}"
-      groups: "{{ hostvars[host].group_names + [ service_map[item].group ] }}"
+      groups: "{{ hostvars[host].group_names + [ service_map[service].group ] }}"
+  with_items: "{{ service_info.stdout.split('\n') }}"
   vars:
-      host: "{{ service_info.stdout }}"
+      host: "{{ item }}"
+  tags: skip_ansible_lint
