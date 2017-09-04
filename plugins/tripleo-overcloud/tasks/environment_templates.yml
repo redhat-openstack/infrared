@@ -8,6 +8,8 @@
       path: "{{ item }}"
   with_items: "{{ current_file.tripleo_heat_templates | default([]) }}"
   register: default_templates
+  tags:
+      - image_prepare_custom
 
 - name: include templates from default location
   lineinfile:
