@@ -336,6 +336,12 @@ class PluginManagerSpec(api.SpecObject):
         table_headers = ["Type", "Name"]
         installed_mark = ' ' * (len('Installed') / 2) + '*'
 
+        plug_info = {}
+        for plugin_type_section in self.plugin_manager.config.options(
+                self.plugin_manager.SUPPORTED_TYPES_SECTION):
+            for k, v in self.plugin_manager.config.items(plugin_type_section):
+                plug_info[k] = {'path': v}
+
         plugins_dict = \
             self.plugin_manager.get_all_plugins() \
             if print_available \
@@ -347,13 +353,14 @@ class PluginManagerSpec(api.SpecObject):
             plugins_names = plugins.keys()
             plugins_names.sort()
 
+            all_plugins_list = []
+            for plugin_name in plugins_names:
+                all_plugins_list.append(plugin_name)
+            installed_plugins_mark_list = \
+                [installed_mark if plugin_name in installed_plugins_list
+                 else '' for plugin_name in all_plugins_list]
+
             if print_available:
-                all_plugins_list = []
-                for plugin_name in plugins_names:
-                    all_plugins_list.append(plugin_name)
-                installed_plugins_mark_list = \
-                    [installed_mark if plugin_name in installed_plugins_list
-                     else '' for plugin_name in all_plugins_list]
 
                 plugins_descs = \
                     [PLUGINS_REGISTRY.get(plugin, {}).get('desc', '')
@@ -363,15 +370,20 @@ class PluginManagerSpec(api.SpecObject):
                     plugins_type,
                     '\n'.join(all_plugins_list),
                     '\n'.join(installed_plugins_mark_list),
-                    '\n'.join(plugins_descs)])
+                    '\n'.join(plugins_descs),
+                    '\n'.join([plug_info[p]['path'] if p in plug_info else '' for p in all_plugins_list])
+                    ])
             else:
                 table_rows.append([
                     plugins_type,
-                    '\n'.join(installed_plugins_list)])
+                    '\n'.join(installed_plugins_list),
+                    '\n'.join([plug_info[p]['path'] if p in plug_info else '' for p in all_plugins_list])
+                    ])
 
         if print_available:
             table_headers.append("Installed")
             table_headers.append("Description")
+        table_headers.append("Path")
 
         print fancy_table(table_headers, *table_rows)
 
