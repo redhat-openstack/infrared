@@ -7,13 +7,11 @@ import tempfile
 import time
 import yaml
 import git
-
-# TODO(aopincar): Add pip to the project's requirements
 import pip
 
+from infrared.core.settings import ir_dir
 from infrared.core.utils import logger
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
-from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRUnsupportedPluginType
 
@@ -29,7 +27,7 @@ DEFAULT_PLUGIN_INI = dict(
 
 
 MAIN_PLAYBOOK = "main.yml"
-PLUGINS_DIR = os.path.abspath("./plugins")
+PLUGINS_DIR = os.path.abspath(os.path.join(ir_dir, "plugins"))
 LOG = logger.LOG
 PLUGINS_REGISTRY_FILE = os.path.join(PLUGINS_DIR, "registry.yaml")
 
@@ -55,7 +53,13 @@ class InfraredPluginManager(object):
             if self.config.has_section(plugin_type_section):
                 for plugin_name, plugin_path in self.config.items(
                         plugin_type_section):
-                    plugin = InfraredPlugin(plugin_path)
+                    try:
+                        plugin = InfraredPlugin(plugin_path)
+                    except Exception as e:
+                        LOG.warning("Failed to load %s plugin from %s : %s",
+                                    plugin_name,
+                                    plugin_path,
+                                    e)
                     self.__class__.PLUGINS_DICT[plugin_name] = plugin
 
     def get_installed_plugins(self, plugins_type=None):
@@ -205,7 +209,8 @@ class InfraredPluginManager(object):
 
         plugin_tmp_source = os.path.join(tmpdir, plugin_git_name)
         if repo_plugin_path:
-            plugin_tmp_source = os.path.join(plugin_tmp_source, repo_plugin_path)
+            plugin_tmp_source = os.path.join(plugin_tmp_source,
+                                             repo_plugin_path)
 
         # validate & load spec data in order to pull the name of the plugin
         spec_data = InfraredPlugin.spec_validator(
@@ -213,11 +218,10 @@ class InfraredPluginManager(object):
         # get the real plugin name from spec
         plugin_dir_name = spec_data["subparsers"].keys()[0]
 
-        plugin_source = os.path.join(dest_dir, plugin_dir_name)
+        plugin_source = os.path.realpath(
+            os.path.join(dest_dir, plugin_dir_name))
+
         if os.path.islink(plugin_source):
-            LOG.debug("%s found as symlink pointing to %s, unlinking it, not touching the target.",
-                      plugin_source,
-                      os.path.realpath(plugin_source))
             os.unlink(plugin_source)
         elif os.path.exists(plugin_source):
             shutil.rmtree(plugin_source)
@@ -385,10 +389,9 @@ class InfraredPluginManager(object):
         :param plugin_name: Plugin name to be removed
         """
         if plugin_name not in self.PLUGINS_DICT:
-            raise IRFailedToRemovePlugin(
-                "Plugin '{}' isn't installed and can't be removed".format(
-                    plugin_name))
-
+            LOG.warn("Plugin '{}' isn't installed, nothing was done.".format(
+                     plugin_name))
+            return
         plugin = InfraredPluginManager.get_plugin(plugin_name)
 
         self.config.remove_option(plugin.type, plugin_name)
@@ -414,7 +417,8 @@ class InfraredPluginManager(object):
         if os.path.isfile(requirement_file):
             LOG.info(
                 "Installing requirements from: {}".format(requirement_file))
-            pip_args = ['install', '-r', requirement_file]
+            # keep console quiet, if we want we can use PIP_LOG for details
+            pip_args = ['install', '-q', '-r', requirement_file]
             pip.main(args=pip_args)
 
     def freeze(self):
@@ -459,7 +463,7 @@ class InfraredPlugin(object):
 
         :param plugin_dir: A path to the plugin's root dir
         """
-        self.path = plugin_dir
+        self.path = os.path.abspath(plugin_dir)
         self.config = os.path.join(self.path, self.PLUGIN_SPEC_FILE)
 
     @property

@@ -1,6 +1,12 @@
+import os
 import yaml
 
 from infrared.core.utils import exceptions, dict_utils
+
+# trick to allow infrared commmand to be called from any CWD
+import infrared
+ir_dir = os.path.abspath(os.path.join(os.path.dirname(infrared.__file__),
+                         '..'))
 
 
 class VarsDictManager(object):
