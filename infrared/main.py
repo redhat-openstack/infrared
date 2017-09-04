@@ -4,6 +4,16 @@ import pkg_resources as pkg
 import sys
 import argcomplete
 
+# trick to allow infrared commmand to be called from any CWD, works well
+# when infrared is installed in devel mode (pip install -e)
+# this canno be inside __main__ section because is too late by then
+import infrared
+ir_dir = os.path.abspath(
+           os.path.join(os.path.dirname(infrared.__file__), '..'))
+os.chdir(ir_dir)
+# TODO(ssbarnea: replace this by making infrared and plugins real wheels
+# infrared and plugins as a package would require lots of changes.
+
 
 def inject_common_paths():
     """Discover the path to the common/ directory provided
