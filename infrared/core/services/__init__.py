@@ -9,6 +9,7 @@ try:  # py2
 except ImportError:  # py3
     import configparser as ConfigParser
 
+from infrared.core.settings import IR_DIR
 from infrared.core.services import workspaces
 from infrared.core.services import plugins
 from infrared.core.utils import logger
@@ -39,10 +40,18 @@ class CoreServices(object):
         config.add_section(section)
 
         # if file not found no exception will be raised
+        ws_base_folder = os.path.expanduser(config.get(section, 'workspaces_base_folder'))
+        if not os.path.isabs(ws_base_folder):
+            ws_base_folder = os.path.abspath(os.path.join(IR_DIR, ws_base_folder))
+
+        plugins_conf_file = os.path.expanduser(config.get(section, 'plugins_conf_file'))
+        if not os.path.isabs(plugins_conf_file):
+            plugins_conf_file = os.path.abspath(os.path.join(IR_DIR, plugins_conf_file))
+
         config.read(file_path)
         cls._configure(
-            os.path.abspath(config.get(section, 'workspaces_base_folder')),
-            os.path.abspath(config.get(section, 'plugins_conf_file'))
+            ws_base_folder,
+            plugins_conf_file
         )
 
     @classmethod
