@@ -51,7 +51,11 @@ class InfraredPluginManager(object):
             if self.config.has_section(plugin_type_section):
                 for plugin_name, plugin_path in self.config.items(
                         plugin_type_section):
-                    plugin = InfraredPlugin(plugin_path)
+                    try:
+                        plugin = InfraredPlugin(plugin_path)
+                    except Exception as e:
+                        LOG.warning("Failed to load %s plugin from %s" %
+                                    (plugin_name, plugin_path))
                     self.__class__.PLUGINS_DICT[plugin_name] = plugin
 
     def get_installed_plugins(self, plugins_type=None):
@@ -280,10 +284,9 @@ class InfraredPluginManager(object):
         :param plugin_name: Plugin name to be removed
         """
         if plugin_name not in self.PLUGINS_DICT:
-            raise IRFailedToRemovePlugin(
-                "Plugin '{}' isn't installed and can't be removed".format(
-                    plugin_name))
-
+            LOG.warn("Plugin '{}' isn't installed, nothing was done.".format(
+                     plugin_name))
+            return
         plugin = InfraredPluginManager.get_plugin(plugin_name)
 
         self.config.remove_option(plugin.type, plugin_name)
