@@ -1,6 +1,7 @@
 # Holds the default variables
 import os
 
+
 SHARED_GROUPS = [
     {
         'title': 'Debug Options',
