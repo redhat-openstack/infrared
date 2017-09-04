@@ -277,6 +277,11 @@ class PluginManagerSpec(api.SpecObject):
             "remove",
             help="Remove a plugin, 'all' will remove all installed plugins")
         remove_parser.add_argument(
+            "--force",
+            action='store_true',
+            help="Force removal, behaves like `rm -f` avoiding returning error"
+                 " if the plugin is already removed.")
+        remove_parser.add_argument(
             "name", nargs='+',
             help="Plugin name").completer = completers.plugin_list
 
@@ -354,11 +359,11 @@ class PluginManagerSpec(api.SpecObject):
                         plugin_src_path=pargs.src_path)
         elif subcommand == 'remove':
             if 'all' in pargs.name:
-                self.plugin_manager.remove_all()
+                self.plugin_manager.remove_all(forced=pargs.force)
                 self._list_plugins(print_available=False, print_version=False)
             else:
                 for _plugin in pargs.name:
-                    self.plugin_manager.remove_plugin(_plugin)
+                    self.plugin_manager.remove_plugin(_plugin, forced=pargs.force)
         elif subcommand == 'freeze':
             self.plugin_manager.freeze()
         elif subcommand == 'update':

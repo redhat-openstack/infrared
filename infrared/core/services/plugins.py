@@ -491,15 +491,18 @@ class InfraredPluginManager(object):
             LOG.warning(
                 "Plugin '{}' has been successfully installed".format(plugin))
 
-    def remove_plugin(self, plugin_name):
+    def remove_plugin(self, plugin_name, forced=False):
         """Removes an installed plugin
 
         :param plugin_name: Plugin name to be removed
         """
         if plugin_name not in self.PLUGINS_DICT:
-            raise IRFailedToRemovePlugin(
-                "Plugin '{}' isn't installed and can't be removed".format(
-                    plugin_name))
+            if forced:
+                return
+            else:
+                raise IRFailedToRemovePlugin(
+                    "Plugin '{}' isn't installed and can't be removed".format(
+                        plugin_name))
 
         plugin = InfraredPluginManager.get_plugin(plugin_name)
 
@@ -510,9 +513,9 @@ class InfraredPluginManager(object):
             self.config.write(fp)
         self._load_plugins()
 
-    def remove_all(self):
+    def remove_all(self, forced=False):
         for plugin in self.PLUGINS_DICT:
-            self.remove_plugin(plugin)
+            self.remove_plugin(plugin, forced=forced)
             LOG.warning(
                 "Plugin '{}' has been successfully removed".format(plugin))
 

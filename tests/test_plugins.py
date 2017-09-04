@@ -573,7 +573,7 @@ def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
         os.path.abspath(os.path.join(SAMPLE_PLUGINS_DIR, 'type1_plugin1')))
 
     # add_plugin call
-    with pytest.raises(IRFailedToAddPlugin):
+    with pytest.raises(IRFailedToAddPlugin) as e:
         plugin_manager.add_plugin(
             "https://sample_github.null/plugin_repo.git")
 
