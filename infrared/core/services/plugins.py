@@ -5,10 +5,9 @@ import shutil
 import tempfile
 import yaml
 import git
-
-# TODO(aopincar): Add pip to the project's requirements
 import pip
 
+from infrared.core.settings import IR_DIR
 from infrared.core.utils import logger
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
@@ -25,7 +24,7 @@ DEFAULT_PLUGIN_INI = dict(
 
 
 MAIN_PLAYBOOK = "main.yml"
-PLUGINS_DIR = os.path.abspath("./plugins")
+PLUGINS_DIR = os.path.abspath(os.path.join(IR_DIR, "plugins"))
 LOG = logger.LOG
 PLUGINS_REGISTRY_FILE = os.path.join(PLUGINS_DIR, "registry.yaml")
 
@@ -200,8 +199,13 @@ class InfraredPluginManager(object):
                 "Cloning git repo {} is failed: {}".format(git_url, e))
 
         plugin_source = os.path.join(dest_dir, plugin_dir_name)
+        if os.path.islink(plugin_source):
+            LOG.warn("%s found as symlink, unlinkins it..." %
+                     plugin_source)
+            os.unlink(plugin_source)
         if os.path.exists(plugin_source):
             shutil.rmtree(plugin_source)
+
         shutil.copytree(os.path.join(tmpdir, plugin_dir_name),
                         plugin_source)
 
@@ -309,7 +313,8 @@ class InfraredPluginManager(object):
         if os.path.isfile(requirement_file):
             LOG.info(
                 "Installing requirements from: {}".format(requirement_file))
-            pip_args = ['install', '-r', requirement_file]
+            # keep console quiet, if we want we can use PIP_LOG for details
+            pip_args = ['install', '-q', '-r', requirement_file]
             pip.main(args=pip_args)
 
     def freeze(self):
@@ -354,7 +359,7 @@ class InfraredPlugin(object):
 
         :param plugin_dir: A path to the plugin's root dir
         """
-        self.path = plugin_dir
+        self.path = os.path.abspath(plugin_dir)
         self.config = os.path.join(self.path, self.PLUGIN_SPEC_FILE)
 
     @property
