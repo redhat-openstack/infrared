@@ -56,8 +56,12 @@ class InfraredPluginManager(object):
             if self.config.has_section(plugin_type_section):
                 for plugin_name, plugin_path in self.config.items(
                         plugin_type_section):
-                    plugin = InfraredPlugin(plugin_path)
-                    self.__class__.PLUGINS_DICT[plugin_name] = plugin
+                    try:
+                        plugin = InfraredPlugin(plugin_path)
+                        self.__class__.PLUGINS_DICT[plugin_name] = plugin
+                    except Exception as e:
+                        LOG.warning("Failed to load %s plugin from %s due to "
+                                    % (plugin_name, plugin_path, e))
 
     def get_installed_plugins(self, plugins_type=None):
         """Returns a dict with all installed plugins
@@ -430,15 +434,18 @@ class InfraredPluginManager(object):
             LOG.warning(
                 "Plugin '{}' has been successfully installed".format(plugin))
 
-    def remove_plugin(self, plugin_name):
+    def remove_plugin(self, plugin_name, forced=False):
         """Removes an installed plugin
 
         :param plugin_name: Plugin name to be removed
         """
         if plugin_name not in self.PLUGINS_DICT:
-            raise IRFailedToRemovePlugin(
-                "Plugin '{}' isn't installed and can't be removed".format(
-                    plugin_name))
+            if forced:
+                return
+            else:
+                raise IRFailedToRemovePlugin(
+                    "Plugin '{}' isn't installed and can't be removed".format(
+                        plugin_name))
 
         plugin = InfraredPluginManager.get_plugin(plugin_name)
 
@@ -449,9 +456,9 @@ class InfraredPluginManager(object):
             self.config.write(fp)
         self._load_plugins()
 
-    def remove_all(self):
+    def remove_all(self, forced=False):
         for plugin in self.PLUGINS_DICT:
-            self.remove_plugin(plugin)
+            self.remove_plugin(plugin, forced=forced)
             LOG.warning(
                 "Plugin '{}' has been successfully removed".format(plugin))
 
