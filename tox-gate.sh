@@ -34,3 +34,9 @@ if [[ ! -z "$FAILED" ]]; then
     echo -e "\033[01;31m==== Failed: $FAILED ====\033[0m" >&2
     exit 1
 fi
+
+if [[ ! -z $(git status -s) ]]; then
+    git status
+    echo -e "\033[01;31m====== ^^ Failed: Modified files on disk, avoid them or update .gitignore file. ^^ ======\033[0m"
+    exit 1
+fi
