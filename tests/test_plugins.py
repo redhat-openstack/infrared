@@ -282,8 +282,7 @@ def test_remove_unexisting_plugin(plugin_manager_fixture):
     plugins_cfg_mtime_before_add = os.path.getmtime(plugin_manager.config_file)
     plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
 
-    with pytest.raises(IRFailedToRemovePlugin):
-        plugin_manager.remove_plugin('unexisting_plugin')
+    plugin_manager.remove_plugin('unexisting_plugin')
 
     assert plugins_cnt_before_try == len(plugin_manager.PLUGINS_DICT)
     assert os.path.getmtime(
