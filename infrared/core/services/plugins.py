@@ -8,10 +8,9 @@ import time
 import yaml
 import git
 import github
-
-# TODO(aopincar): Add pip to the project's requirements
 import pip
 
+from infrared.core.settings import ir_dir
 from infrared.core.utils import logger
 from infrared.core.utils.exceptions import IRFailedToAddPlugin, IRException
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
@@ -30,7 +29,7 @@ DEFAULT_PLUGIN_INI = dict(
 
 
 MAIN_PLAYBOOK = "main.yml"
-PLUGINS_DIR = os.path.abspath("./plugins")
+PLUGINS_DIR = os.path.abspath(os.path.join(ir_dir, "plugins"))
 LOG = logger.LOG
 PLUGINS_REGISTRY_FILE = os.path.join(PLUGINS_DIR, "registry.yaml")
 
@@ -256,7 +255,8 @@ class InfraredPluginManager(object):
 
         plugin_tmp_source = os.path.join(tmpdir, plugin_git_name)
         if repo_plugin_path:
-            plugin_tmp_source = os.path.join(plugin_tmp_source, repo_plugin_path)
+            plugin_tmp_source = os.path.join(plugin_tmp_source,
+                                             repo_plugin_path)
 
         # validate & load spec data in order to pull the name of the plugin
         spec_data = InfraredPlugin.spec_validator(
@@ -264,7 +264,9 @@ class InfraredPluginManager(object):
         # get the real plugin name from spec
         plugin_dir_name = spec_data["subparsers"].keys()[0]
 
-        plugin_source = os.path.join(dest_dir, plugin_dir_name)
+        plugin_source = os.path.realpath(
+            os.path.join(dest_dir, plugin_dir_name))
+
         if os.path.islink(plugin_source):
             LOG.debug("%s found as symlink pointing to %s, unlinking it, not touching the target.",
                       plugin_source,
@@ -510,7 +512,7 @@ class InfraredPlugin(object):
 
         :param plugin_dir: A path to the plugin's root dir
         """
-        self.path = plugin_dir
+        self.path = os.path.abspath(plugin_dir)
         self.config = os.path.join(self.path, self.PLUGIN_SPEC_FILE)
 
     @property
