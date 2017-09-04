@@ -27,6 +27,11 @@ subparsers:
                       help: Specifies whether we should run post install tasks
                       default: False
 
+                  pre:
+                      type: Bool
+                      help: Specifies whether we should run pre install tasks
+                      default: False
+
             - title: Containers
               options:
                   containers:
