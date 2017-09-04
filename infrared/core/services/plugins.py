@@ -56,8 +56,13 @@ class InfraredPluginManager(object):
             if self.config.has_section(plugin_type_section):
                 for plugin_name, plugin_path in self.config.items(
                         plugin_type_section):
-                    plugin = InfraredPlugin(plugin_path)
-                    self.__class__.PLUGINS_DICT[plugin_name] = plugin
+                    try:
+                        plugin = InfraredPlugin(plugin_path)
+                        self.__class__.PLUGINS_DICT[plugin_name] = plugin
+                    except Exception as e:
+                        LOG.warning("Failed to load %s plugin from %s due to "
+                                    % (plugin_name, plugin_path, e))
+                        raise e
 
     def get_installed_plugins(self, plugins_type=None):
         """Returns a dict with all installed plugins
@@ -243,44 +248,47 @@ class InfraredPluginManager(object):
 
         tmpdir = tempfile.mkdtemp(prefix="ir-")
         cwd = os.getcwdu()
-        os.chdir(tmpdir)
         try:
-            repo = git.Repo.clone_from(
-                url=git_url, to_path=os.path.join(tmpdir, plugin_git_name))
-            if rev is not None:
-                repo.git.checkout(rev)
-        except (git.exc.GitCommandError) as e:
+            os.chdir(tmpdir)
+            try:
+                repo = git.Repo.clone_from(
+                    url=git_url, to_path=os.path.join(tmpdir, plugin_git_name))
+                if rev is not None:
+                    repo.git.checkout(rev)
+            except (git.exc.GitCommandError) as e:
+                shutil.rmtree(tmpdir)
+                raise IRFailedToAddPlugin(
+                    "Cloning git repo {} failed: {}".format(git_url, e))
+
+            plugin_tmp_source = os.path.join(tmpdir, plugin_git_name)
+            if repo_plugin_path:
+                plugin_tmp_source = os.path.join(plugin_tmp_source, repo_plugin_path)
+
+            # validate & load spec data in order to pull the name of the plugin
+            spec_data = InfraredPlugin.spec_validator(
+                os.path.join(plugin_tmp_source, InfraredPlugin.PLUGIN_SPEC_FILE))
+            # get the real plugin name from spec
+            plugin_dir_name = spec_data["subparsers"].keys()[0]
+
+            plugin_source = os.path.join(dest_dir, plugin_dir_name)
+            if os.path.islink(plugin_source):
+                LOG.debug("%s found as symlink pointing to %s, unlinking it, not touching the target.",
+                          plugin_source,
+                          os.path.realpath(plugin_source))
+                os.unlink(plugin_source)
+            elif os.path.exists(plugin_source):
+                shutil.rmtree(plugin_source)
+
+            shutil.copytree(os.path.join(tmpdir, plugin_git_name),
+                            plugin_source)
+
+            if repo_plugin_path:
+                plugin_source = plugin_source + '/' + repo_plugin_path
+        except Exception as e:
+            raise IRFailedToAddPlugin(e)
+        finally:
+            os.chdir(cwd)
             shutil.rmtree(tmpdir)
-            raise IRFailedToAddPlugin(
-                "Cloning git repo {} is failed: {}".format(git_url, e))
-
-        plugin_tmp_source = os.path.join(tmpdir, plugin_git_name)
-        if repo_plugin_path:
-            plugin_tmp_source = os.path.join(plugin_tmp_source, repo_plugin_path)
-
-        # validate & load spec data in order to pull the name of the plugin
-        spec_data = InfraredPlugin.spec_validator(
-            os.path.join(plugin_tmp_source, InfraredPlugin.PLUGIN_SPEC_FILE))
-        # get the real plugin name from spec
-        plugin_dir_name = spec_data["subparsers"].keys()[0]
-
-        plugin_source = os.path.join(dest_dir, plugin_dir_name)
-        if os.path.islink(plugin_source):
-            LOG.debug("%s found as symlink pointing to %s, unlinking it, not touching the target.",
-                      plugin_source,
-                      os.path.realpath(plugin_source))
-            os.unlink(plugin_source)
-        elif os.path.exists(plugin_source):
-            shutil.rmtree(plugin_source)
-
-        shutil.copytree(os.path.join(tmpdir, plugin_git_name),
-                        plugin_source)
-
-        if repo_plugin_path:
-            plugin_source = plugin_source + '/' + repo_plugin_path
-
-        os.chdir(cwd)
-        shutil.rmtree(tmpdir)
 
         return plugin_source
 
@@ -430,15 +438,18 @@ class InfraredPluginManager(object):
             LOG.warning(
                 "Plugin '{}' has been successfully installed".format(plugin))
 
-    def remove_plugin(self, plugin_name):
+    def remove_plugin(self, plugin_name, forced=False):
         """Removes an installed plugin
 
         :param plugin_name: Plugin name to be removed
         """
         if plugin_name not in self.PLUGINS_DICT:
-            raise IRFailedToRemovePlugin(
-                "Plugin '{}' isn't installed and can't be removed".format(
-                    plugin_name))
+            if forced:
+                return
+            else:
+                raise IRFailedToRemovePlugin(
+                    "Plugin '{}' isn't installed and can't be removed".format(
+                        plugin_name))
 
         plugin = InfraredPluginManager.get_plugin(plugin_name)
 
@@ -449,9 +460,9 @@ class InfraredPluginManager(object):
             self.config.write(fp)
         self._load_plugins()
 
-    def remove_all(self):
+    def remove_all(self, forced=False):
         for plugin in self.PLUGINS_DICT:
-            self.remove_plugin(plugin)
+            self.remove_plugin(plugin, forced=forced)
             LOG.warning(
                 "Plugin '{}' has been successfully removed".format(plugin))
 

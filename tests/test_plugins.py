@@ -517,7 +517,7 @@ def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
         os.path.abspath(os.path.join(SAMPLE_PLUGINS_DIR, 'type1_plugin1')))
 
     # add_plugin call
-    with pytest.raises(IRFailedToAddPlugin):
+    with pytest.raises(IRFailedToAddPlugin) as e:
         plugin_manager.add_plugin(
             "https://sample_github.null/plugin_repo.git")
 
@@ -531,8 +531,9 @@ def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
         to_path=os.path.join(mock_tempfile.mkdtemp.return_value, "plugin_repo"))
 
     # check that it was copied with the plugin name and not repo name
-    mock_shutil.copytree.assert_called_with(os.path.join(mock_tempfile.mkdtemp.return_value, "plugin_repo"),
-                                            os.path.join(os.path.abspath("plugins"), plugin_dict["name"]))
+    if e.type != IRFailedToAddPlugin:
+        mock_shutil.copytree.assert_called_with(os.path.join(mock_tempfile.mkdtemp.return_value, "plugin_repo"),
+                                                os.path.join(os.path.abspath("plugins"), plugin_dict["name"]))
 
 
 def test_add_plugin_from_git_exception(plugin_manager_fixture, mocker):
