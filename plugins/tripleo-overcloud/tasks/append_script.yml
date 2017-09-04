@@ -19,6 +19,10 @@
   tags: overcloud_ssl
   when: install.overcloud.ssl
 
+- name: Trust to undercloud cert
+  include: trust_uc.yml
+  when: not install.overcloud.ssl
+
 - name: Generate the hostnames template
   include: hostname.yml
   when: templates.generate_host_name_template|default(True)
