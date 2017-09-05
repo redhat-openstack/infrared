@@ -210,8 +210,13 @@ class InfraredPluginManager(object):
         plugin_dir_name = spec_data["subparsers"].keys()[0]
 
         plugin_source = os.path.join(dest_dir, plugin_dir_name)
+        if os.path.islink(plugin_source):
+            LOG.info("%s found as symlink, unlinking it..." %
+                     plugin_source)
+            os.unlink(plugin_source)
         if os.path.exists(plugin_source):
             shutil.rmtree(plugin_source)
+
         shutil.copytree(os.path.join(tmpdir, plugin_git_name),
                         plugin_source)
 
