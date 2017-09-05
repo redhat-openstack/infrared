@@ -9,16 +9,16 @@
 - name: replace docker registry with mirror
   replace:
       dest: "~/container_images.yaml"
-      regexp: '^([ ]*pull_source: ).*'
-      replace: '\1{{ install.registry.mirror }}'
+      regexp: '^([ ]*pull_source:).*'
+      replace: '\1 {{ install.registry.mirror }}'
       backup: no
   when: install.get('registry', {}).mirror|default(false)
 
 - name: replace docker namespace
   replace:
       dest: "~/container_images.yaml"
-      regexp: '^(- imagename: ).*(\/.*)'
-      replace: '\1{{ install.registry.namespace }}\2'
+      regexp: '^(- imagename:).*(\/.*)'
+      replace: '\1 {{ install.registry.namespace }}\2'
       backup: no
   when: install.get('registry', {}).namespace|default(false)
 
