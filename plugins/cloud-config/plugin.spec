@@ -18,6 +18,15 @@ subparsers:
                       lookup_dir: 'post_tasks'
                       required: yes
 
+            - title: Service Discovery
+              options:
+                  resync:
+                      type: Bool
+                      help: |
+                          Whether we need to resync services.
+                          Used with service discovery.
+                      default: False
+
             - title: External Network
               options:
                   deployment-files:
