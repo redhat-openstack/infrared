@@ -200,8 +200,13 @@ class InfraredPluginManager(object):
                 "Cloning git repo {} is failed: {}".format(git_url, e))
 
         plugin_source = os.path.join(dest_dir, plugin_dir_name)
+        if os.path.islink(plugin_source):
+            LOG.info("%s found as symlink, unlinking it..." %
+                     plugin_source)
+            os.unlink(plugin_source)
         if os.path.exists(plugin_source):
             shutil.rmtree(plugin_source)
+
         shutil.copytree(os.path.join(tmpdir, plugin_dir_name),
                         plugin_source)
 
