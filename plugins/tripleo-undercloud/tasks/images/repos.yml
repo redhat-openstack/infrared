@@ -33,3 +33,9 @@
       # don't ask lower than virt-customize default:
       requested_mem: "{{ [safe_mem, 500] | max}}"
   when: install.images['update'] or patched_rpms.stat.exists
+
+- name: Set selinux state
+  command: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --run-command 'sed -i s/SELINUX=.*/SELINUX={{ install.selinux }}/g /etc/selinux/config'"
+  when:
+      - install.selinux is defined
+      - install.selinux == 'permissive' or install.selinux =='disabled'
