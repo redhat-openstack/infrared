@@ -82,12 +82,14 @@ subparsers:
                         - "10"
                         - "11"
                         - "12"
+                        - "13"
                         - kilo
                         - liberty
                         - mitaka
                         - newton
                         - ocata
                         - pike
+                        - queens
 
                   deployment-files:
                       type: VarDir

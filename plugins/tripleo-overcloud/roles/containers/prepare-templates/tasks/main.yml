@@ -6,8 +6,9 @@
 - name: generate docker images file, using the undercloud registry
   vars:
       env_file: "{{ template_base }}/docker-images.yaml"
-      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/rhosp12"
-      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry) }}/rhosp12"
+      os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
+      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/rhosp{{ os_version }}"
+      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry) }}/rhosp{{ os_version }}"
       reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base)  }}"
   shell: |
       tag=`awk '/- imagename:.*openstack-glance-api-docker:.*/ {print $3}' <{{ containers_images_template_dest_file }}  | cut -f 2 -d:`
