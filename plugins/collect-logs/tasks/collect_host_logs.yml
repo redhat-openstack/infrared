@@ -90,9 +90,31 @@
 - shell: "(vgs; pvs; lvs) &> /var/log/extra/lvm"
   ignore_errors: true
 
-- shell: |
-      docker ps -a &> /var/log/extra/docker-ps ;
-      docker inspect  $(docker ps -aq) &> /var/log/extra/docker-inspect
+- name: Collect docker info and logs
+  shell: >
+      if command -v docker && systemctl is-active docker; then
+          BASE_DOCKER_EXTRA=/var/log/extra/docker;
+          mkdir -p "$BASE_DOCKER_EXTRA";
+          All_FILE="$BASE_DOCKER_EXTRA/docker_allinfo.log";
+          docker ps --all --size &> "$All_FILE";
+          docker images --all &>> "$All_FILE";
+          docker volume ls &>> "$All_FILE";
+          docker stats --all --no-stream &>> "$All_FILE";
+          docker info &>> "$All_FILE";
+          for cont in $(docker ps | awk {'print $NF'} | grep -v NAMES); do
+              INFO_DIR="$BASE_DOCKER_EXTRA/containers/${cont}";
+              mkdir -p "$INFO_DIR";
+              INFO_FILE="$INFO_DIR/docker_info.log";
+              echo "+ docker top $cont auxw" > "$INFO_FILE";
+              docker top "$cont" auxw &>> "$INFO_FILE";
+              echo "+ docker exec $cont top -bwn1" >> "$INFO_FILE";
+              docker exec "$cont" top -bwn1 &>> "$INFO_FILE";
+              echo "+ docker inspect $cont" >> "$INFO_FILE";
+              docker inspect "$cont" &>> "$INFO_FILE";
+              docker logs "$cont" &> "$INFO_DIR/stdout.log";
+              docker cp "$cont:/var/lib/kolla/config_files/config.json" "$INFO_DIR/config.json";
+          done;
+      fi
   ignore_errors: true
 
 - name: generate human-readable SAR logs
@@ -149,9 +171,11 @@
   shell: |
       mkdir -p /tmp/{{ inventory_hostname }};
       find /var/log/rpm.list /var/log/extra {{ archives_list|join(' ') }} \
-      -maxdepth {{ other.max.depth | default(3) }} -type f -size -1024M \
+      -maxdepth {{ other.max.depth | default(4) }} -type f -size -1024M \
       -not -path '/var/log/journal/*' \
       -not -path '*/\.*' \
+      -not -path '*/etc/pki/*' \
+      -not -path '*/etc/selinux/targeted/*' \
       -not -path '/root/*.tar*' \
       -not -path '/root/*.qcow*' \
       -not -path '/root/*.initrd*' \
