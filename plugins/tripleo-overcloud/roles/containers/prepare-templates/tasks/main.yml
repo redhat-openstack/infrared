@@ -1,11 +1,6 @@
----
-
-# http://lists.openstack.org/pipermail/openstack-dev/2017-July/119880.html?
-# /home/stack/core_puddle_version is not always matching with the docker tag
-
 - name: get origin(not mirrored) docker registry name
   shell: |
-      cat container_images.yaml | awk '/pull_source:/ {print $2}' | head -n1 | tr -d ' '
+      cat {{ containers_images_template_dest_file }} | awk '/pull_source:/ {print $2}' | head -n1 | tr -d ' '
   register: docker_origin_registry
 
 - name: generate docker images file, using the undercloud registry
@@ -15,7 +10,7 @@
       external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry) }}/rhosp12"
       reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base)  }}"
   shell: |
-      tag=`awk '/- imagename:.*openstack-glance-api-docker:.*/ {print $3}' </home/stack/container_images.yaml  | cut -f 2 -d:`
+      tag=`awk '/- imagename:.*openstack-glance-api-docker:.*/ {print $3}' <{{ containers_images_template_dest_file }}  | cut -f 2 -d:`
       openstack overcloud container image prepare --namespace={{ reg_base }} --env-file={{ env_file }} --prefix=openstack- --suffix=-docker --tag=$tag
   tags:
       - skip_ansible_lint
@@ -38,3 +33,19 @@
   shell: |
       echo "parameter_defaults:">"{{ template_base }}/docker-images-ceph.yaml"
       echo "  DockerCephDaemonImage: {{ reg_base }}/{{ install.registry.ceph.namespace }}:{{ install.registry.ceph.tag }}">>"{{ template_base }}/docker-images-ceph.yaml"
+
+- name: append ceph-ansible template
+  lineinfile:
+      dest: "{{ containers_ir_deploy_script }}"
+      line: '-e {{ install.heat.templates.basedir }}/environments/ceph-ansible/ceph-ansible.yaml \'
+  when:
+      - not install.storage.external
+      - storage_backend|default('') == 'ceph'
+
+- name: append extra containers templates for the build scripts
+  lineinfile:
+      dest: "{{ containers_ir_deploy_script }}"
+      line: "{{ item }}"
+  with_items:
+      - '-e {{ install.heat.templates.basedir }}/environments/docker.yaml \'
+      - '-e {{ install.heat.templates.basedir }}/environments/docker-ha.yaml \'
