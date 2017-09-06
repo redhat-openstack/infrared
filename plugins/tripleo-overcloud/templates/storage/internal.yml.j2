@@ -10,7 +10,7 @@ parameter_defaults:
 {% if 0 < ( (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 ) < 3  %}
     CephPoolDefaultSize: {{ (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 }}
 {% endif %}
-{% if install.containers|default(false) %}
+{% if install.containers|default(false) and install.version|openstack_release > 11 %}
 {# containers uses ceph-ansible #}
     CephAnsibleDisksConfig:
         devices:
