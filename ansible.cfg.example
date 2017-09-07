@@ -1,7 +1,9 @@
+# see https://raw.githubusercontent.com/ansible/ansible/devel/examples/ansible.cfg
+
 [defaults]
-host_key_checking = False
 forks = 500
-pipelining = True
+
+# SSH timeout
 timeout = 30
 
 # 'debug' (formerly human_readable) output prints multi-line stdout/stderr
@@ -9,5 +11,17 @@ timeout = 30
 # Users can still override this value by using ANSIBLE_STDOUT_CALLBACK
 stdout_callback = debug
 
+
+[paramiko_connection]
+record_host_keys = False
+
+
+[persistent_connection]
+
+
 [ssh_connection]
-ssh_args = -o UserKnownHostsFile=/dev/null
+host_key_checking = False
+pipelining = True
+ssh_args = -o ControlMaster=auto -o ControlPersist=60s
+
+# keep [ssh_connection] last to allow appending control_path to it
