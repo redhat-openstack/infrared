@@ -9,5 +9,8 @@ timeout = 30
 # Users can still override this value by using ANSIBLE_STDOUT_CALLBACK
 stdout_callback = debug
 
+[paramiko_connection]
+record_host_keys = False
+
 [ssh_connection]
-ssh_args = -o UserKnownHostsFile=/dev/null
+ssh_args = -o ControlMaster=auto -o ControlPersist=60s -o UserKnownHostsFile=/dev/null
