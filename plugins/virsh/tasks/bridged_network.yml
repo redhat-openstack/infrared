@@ -43,7 +43,7 @@
           DEVICE={{ nic_data.device }}
           NAME={{ nic_data.device }}
           HWADDR={{ nic_data.macaddress }}
-          BRIDGE={{ nic_settings.name }}
+          BRIDGE={{ provision.prefix }}{{ nic_settings.name }}
           # Change to 'no' to disable NetworkManager for this interface.
           NM_CONTROLLED=no
           ONBOOT=yes
@@ -54,8 +54,8 @@
   copy:
       dest: "/etc/sysconfig/network-scripts/ifcfg-{{ nic_settings.name }}"
       content: |
-          DEVICE={{ nic_settings.name }}
-          NAME={{ nic_settings.name }}
+          DEVICE={{ provision.prefix}}{{ nic_settings.name }}
+          NAME={{ provision.prefix}}{{ nic_settings.name }}
           TYPE=Bridge
 
           BOOTPROTO={{ nic_settings.bootproto|default('none') }}
