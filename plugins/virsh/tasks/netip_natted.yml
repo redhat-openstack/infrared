@@ -5,7 +5,7 @@
 
 - name: gether networks dhcp ranges
   set_fact:
-      dhcp_ranges: "{{ dhcp_ranges | default({})| combine({item.value.name: {'start': item.value.dhcp.range.start, 'end': item.value.dhcp.range.end }}) }}"
+      dhcp_ranges: "{{ dhcp_ranges | default({})| combine({'{0}{1}'.format(provision.prefix, item.value.name): {'start': item.value.dhcp.range.start, 'end': item.value.dhcp.range.end }}) }}"
   with_dict: "{{ networks }}"
   when: "{{ item.value.dhcp is defined }}"
 
@@ -22,16 +22,17 @@
 - name: update vms info with ip addresses
   set_fact:
       vms_info: "{{ vms_info | default({}) | combine({dhcp_ranges[item.net].ips | difference(vms_info | default({}) | list) | first | ipaddr('address'): item}) }}"
+  # NOTE: vm_inv_info is defined in tasks/vms_2_hwaddr.yaml
   with_items: "{{ vm_inv_info }}"
 
 - name: make IPs persistent
-  shell: "virsh net-update {{ item.value.net }} add ip-dhcp-host \"<host mac='{{ item.value.mac }}' name='{{ item.value.name }}' ip='{{ item.key }}' />\" --live --config"
+  shell: "virsh net-update {{ item.value.net }} add ip-dhcp-host \"<host mac='{{ item.value.mac }}' name='{{ item.value.name | regex_replace('^{0}'.format(provision.prefix), '') }}' ip='{{ item.key }}' />\" --live --config"
   with_dict: "{{ vms_info }}"
 
 # We can write nodes to inventory while we wait for ips
 - name: add hosts to host list
   add_host:
-      name: "{{ item.value.name }}"
+      name: "{{ item.value.name | regex_replace('^{0}'.format(provision.prefix), '') }}"
       groups: "{{ item.value.groups | join(',') }}"
       ansible_ssh_user: "root"
       ansible_ssh_host: "{{ item.key }}"
