@@ -2,38 +2,37 @@
 - name: get the list of VMs
   virt:
       command: list_vms
-  register: vm_names
+  register: list_vms
 
 - name: get the list of networks
   virt_net:
       command: info
-  register: vm_nets
+  register: list_nets
+
+- name:
+  set_fact:
+      vms_list: "{{ list_vms.list_vms | map('regex_search', '{0}.*'.format(provision.prefix)) | select('string') | list }}"
 
 #in case VM was created in UEFI mode libvirt requires undefine task first
 - name: undefine relevant VMs
   virt:
       name: "{{ item }}"
       command: undefine
-  with_items: "{{ vm_names.list_vms }}"
-  when:
-      - provision.bootmode == 'uefi'
-      - "item not in ignore_virsh_nodes"
+  with_items: "{{ vms_list }}"
+  when: provision.bootmode == 'uefi'
 
 - name: destroy undfined vms
   virt:
       name: "{{ item }}"
       state: destroyed
-  with_items: "{{ vm_names.list_vms }}"
-  when: "item not in ignore_virsh_nodes"
+  with_items: "{{ vms_list }}"
 
 - name: undefine relevant VMs
   virt:
       name: "{{ item }}"
       command: undefine
-  with_items: "{{ vm_names.list_vms }}"
-  when:
-      - provision.bootmode != 'uefi'
-      - "item not in ignore_virsh_nodes"
+  with_items: "{{ vms_list }}"
+  when: provision.bootmode != 'uefi'
 
 - name: Clean /etc/hostshosts file
   become: yes
@@ -41,8 +40,7 @@
       dest: /etc/hosts
       regexp: ".*{{ item }}.*"
       state: absent
-  with_items: "{{ vm_names.list_vms }}"
-  when: item not in ignore_virsh_nodes
+  with_items: "{{ vms_list }}"
 
 # ignoring errors in the known-hosts tasks
 # because this module validates known_hosts files
@@ -52,9 +50,8 @@
 - name: cleanup known-hosts by name
   known_hosts:
       state: absent
-      name: "{{ item }}"
-  with_items: "{{ vm_names.list_vms }}"
-  when: item not in ignore_virsh_nodes
+      name: "{{ item | regex_replace('{0}'.format(provision.prefix), '') }}"
+  with_items: "{{ vms_list }}"
   ignore_errors: yes
 
 - name: cleanup known-hosts by ip
@@ -63,10 +60,10 @@
       state: absent
       name: "{{ item.1.ipaddr }}"
   with_subelements:
-      - "{{ vm_nets.networks }}"
+      - "{{ nets_list }}"
       - dhcp_leases
       - skip_missing: yes
-  when: item.0.bridge|default('') not in ignore_virsh_nets
+  when: item.0.bridge|default('') | match('{0}.*'.format(provision.prefix))
   ignore_errors: yes
 
 - name: remove the networks we created
@@ -74,22 +71,21 @@
   virt_net:
       name: "{{ item.key }}"
       state: absent
-  with_dict: "{{ vm_nets.networks }}"
-  when: item.key not in ignore_virsh_nets
+  with_dict: "{{ list_nets.networks }}"
+  when: item.key | match('{0}.*'.format(provision.prefix))
 
 - name: restore bridge
   tags: networks
   include: restore_bridged_interface.yml
-  with_dict: "{{ vm_nets.networks }}"
+  with_dict: "{{ list_nets.networks }}"
   vars:
       bridge_name: "{{ item.key }}"
   when:
-      - item.key not in ignore_virsh_nets
       - item.value.forward_mode|default('') == 'bridge'
+      - item.key | match('{0}.*'.format(provision.prefix))
 
 - name: remove any existing VM disks that we created
   shell: "rm -f {{ item }}*disk*.qcow*"
   args:
       chdir: /var/lib/libvirt/images
-  with_items: "{{ vm_names.list_vms }}"
-  when: "item not in ignore_virsh_nodes"
+  with_items: "{{ vms_list }}"

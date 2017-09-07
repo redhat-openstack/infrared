@@ -31,7 +31,7 @@
       export LIBGUESTFS_BACKEND=direct
       {% for num in range(0, amount|int, 1) %}
       {% for disk_name, disk_values in topology_node.disks.iteritems() %}
-      {% set node_image = '{0}-{1}-{2}.qcow2'.format(topology_node.name, num, disk_name) %}
+      {% set node_image = '{0}{1}-{2}-{3}.qcow2'.format(provision.prefix, topology_node.name, num, disk_name) %}
       {% if not disk_values.import_url %}
 
       # create empty disk
