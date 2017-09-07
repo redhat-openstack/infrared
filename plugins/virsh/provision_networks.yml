@@ -25,19 +25,19 @@
     - name: create the networks for the topology
       virt_net:
           command: "define"
-          name: "{{ item.value.name }}"
+          name: "{{ provision.prefix }}{{ item.value.name }}"
           xml: "{{ lookup('template', 'templates/network.xml.j2') }}"
-      when: "item.value.name not in network_list.list_nets"
+      when: "'{0}{1}'.format( provision.prefix, item.value.name) not in network_list.list_nets"
       with_dict: "{{ networks }}"
 
     - name: set autostart to the created networks
       virt_net:
           autostart: "{{ item.value.autostart | default('yes') }}"
-          name: "{{ item.value.name }}"
+          name: "{{ provision.prefix }}{{ item.value.name }}"
       with_dict: "{{ networks }}"
 
     - name: check if network is active
       virt_net:
-          name: "{{ item.value.name }}"
+          name: "{{ provision.prefix }}{{ item.value.name }}"
           state: active
       with_dict: "{{ networks }}"

@@ -10,12 +10,12 @@
 
 - block:
   - name: get MAC list
-    shell: "virsh domiflist {{ topology_node.name }}-{{ item }} | awk '/{{ topology_node.external_network.network }}/ {print $5};'"
+    shell: "virsh domiflist {{ provision.prefix }}{{ topology_node.name }}-{{ item }} | awk '/{{ provision.prefix }}{{ topology_node.external_network.network }}/ {print $5};'"
     with_sequence: start=0 end={{ node.value|int - 1 }}
     register: mac_list
 
   - set_fact:
-        vm_inv_info: "{{ vm_inv_info | default([]) + [{'name': item.cmd.split()[2], 'mac': item.stdout, 'groups': topology_node.groups, 'net': topology_node.external_network.network}] }}"
+        vm_inv_info: "{{ vm_inv_info | default([]) + [{'name': item.cmd.split()[2], 'mac': item.stdout, 'groups': topology_node.groups, 'net': '{0}{1}'.format(provision.prefix, topology_node.external_network.network)}] }}"
     with_items: "{{ mac_list.results }}"
 
   when: "not topology_node.external_network.bridged|default(False)"
