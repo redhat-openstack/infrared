@@ -1,8 +1,11 @@
 import os
 from pbr import version
 import pkg_resources as pkg
+import re
+from subprocess import check_output
 import sys
 import argcomplete
+import ConfigParser
 
 
 def inject_common_paths():
@@ -371,7 +374,40 @@ class SSHSpec(api.SpecObject):
             pargs.node_name, remote_command=pargs.remote_command)
 
 
+def get_ansible_cfg():
+    # detects location of ansible.cfg and returns it, or None
+    version = check_output(["ansible", '--version'])
+    cfg = re.search("\\s*config file\\s*=\\s*(.*)\\s*",
+                    version)
+    return cfg.group(1) if cfg else None
+
+
 def main(args=None):
+
+    # Alter ssh control_path in order to avoid clashes betwen copies running
+    # under the same user (CI usage  being one such case)
+    # if control_path_dir or control_path are found inside ansible.cfg the
+    # override will not happen, respecting user configuration.
+    if 'VIRTUAL_ENV' in os.environ and \
+            'ANSIBLE_SSH_CONTROL_PATH' not in os.environ:
+        config = ConfigParser.ConfigParser()
+        config.read(get_ansible_cfg() or '/dev/null')
+
+        if not config.has_option('ssh_connection', 'control_path_dir') \
+           and not config.has_option('ssh_connection', 'control_path'):
+
+            if len(os.environ['VIRTUAL_ENV']) > 60:
+                # better not to anything if path is too long, but inform user
+                LOG.error("Avoided setting ANSIBLE_SSH_CONTROL_PATH to "
+                          "VIRTUAL_ENV because path lengh > 60 chars which "
+                          "may likely break linux socket limit of ~100 chars.")
+            else:
+
+                LOG.warn("ANSIBLE_SSH_CONTROL_PATH set to %s" %
+                         os.environ['VIRTUAL_ENV'])
+                os.environ['ANSIBLE_SSH_CONTROL_PATH'] = \
+                    os.environ['VIRTUAL_ENV']
+
     # configure core services
     CoreServices.setup('infrared.cfg')
 
