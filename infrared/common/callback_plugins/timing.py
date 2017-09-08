@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 try:
     from ansible.plugins.callback import CallbackBase
@@ -6,6 +6,9 @@ try:
 except ImportError:
     ANSIBLE2 = False
 
+# minumum number of second for which it will print something, avoids printing
+# too much noise.
+MIN_SECS_THRESHOLD = 30
 
 class CallbackModule(CallbackBase if ANSIBLE2 else object):
     __color = '\033[01;30m'
@@ -40,14 +43,15 @@ class CallbackModule(CallbackBase if ANSIBLE2 else object):
             diff = now - old
             diff_t = now - self.__debug_time['total']
 
-            if 'play' != 'total':
-                which = 'previous ' + which
-            msg = '[[ {0} time: {1} = {2:.2f}s / {3:.2f}s ]]'.format(
-                which, diff, diff.total_seconds(), diff_t.total_seconds())
+            if (diff > timedelta(seconds=MIN_SECS_THRESHOLD)):
+                if 'play' != 'total':
+                    which = 'previous ' + which
+                msg = '[[ {0} time: {1} = {2:.2f}s / {3:.2f}s ]]'.format(
+                    which, diff, diff.total_seconds(), diff_t.total_seconds())
 
-            print('%s%s%s' % (self.__color,
-                              msg.rjust(79, ' '),
-                              self.__endcolor))
+                print('%s%s%s' % (self.__color,
+                                  msg.rjust(79, ' '),
+                                  self.__endcolor))
 
     def playbook_on_start(self):
         self.__nexttime('playbook')
