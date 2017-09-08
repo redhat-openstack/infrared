@@ -372,6 +372,16 @@ class SSHSpec(api.SpecObject):
 
 
 def main(args=None):
+
+    # Alter ssh control_path in order to avoid clashes betwen copies running
+    # under the same user (CI usage  being one such case)
+    # This also avoid the need to define it in ansible.cfg
+    if 'VIRTUAL_ENV' in os.environ and \
+            'ANSIBLE_SSH_CONTROL_PATH' not in os.environ:
+        LOG.warn("ANSIBLE_SSH_CONTROL_PATH set to %s" %
+                 os.environ['VIRTUAL_ENV'])
+        os.environ['ANSIBLE_SSH_CONTROL_PATH'] = os.environ['VIRTUAL_ENV']
+
     # configure core services
     CoreServices.setup('infrared.cfg')
 
