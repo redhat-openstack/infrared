@@ -59,7 +59,7 @@
                 DEVICE={{ item }}
             dest: "/etc/sysconfig/network-scripts/ifcfg-{{ item }}"
         become: yes
-        when: "{{ not nic.ipv4|default(False) }}"
+        when: not nic.ipv4|default(False)
         with_items: "{{ ansible_interfaces | difference(['lo']) }}"
         register: nics
 
