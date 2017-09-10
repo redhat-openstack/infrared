@@ -3,21 +3,24 @@
       file: "{{ templates_list_file}}"
       name: current_file
 
-- name: look in undercloud's default templates
-  stat:
-      path: "{{ item }}"
+- name: find the template file or corresponding j2 template
+  find:
+      path: "{{ item| dirname }}"
+      pattern: "{{ item|basename|splitext|first }}\\.(?:yaml|j2\\.yaml)$"
+      use_regex: yes
   with_items: "{{ current_file.tripleo_heat_templates | default([]) }}"
   register: default_templates
 
 - name: include templates from default location
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: "--environment-file {{ item }} \\"
-  with_items: "{{ default_templates.results|selectattr('stat.exists')|map(attribute='stat.path')|list }}"
+      line: "--environment-file {{ item.item }} \\"
+  with_items: "{{ default_templates.results }}"
+  when: item.matched > 0
 
 - name: fail because file not found
   vars:
-      missing_templates: "{{ default_templates.results|rejectattr('stat.exists')|map(attribute='item')|list }}"
+      missing_templates: "{{ default_templates.results|rejectattr('matched')|map(attribute='item')|list }}"
   fail:
       msg:
           error: "Unable to locate templates from file '{{ templates_list_file }}'"
