@@ -26,16 +26,11 @@
 
 - name: Init tempest
   shell: |
-      source ~/.tempest_venv/bin/activate
+      source .venv/bin/activate
       tempest init ~/"{{ test.dir }}"
   args:
+      chdir: "{{ tempest_conf.dir }}"
       creates: "~/{{ test.dir }}/etc"
-
-- name: Link tempest virtualenv to "{{ test.dir }}"
-  file:
-      src: ~/.tempest_venv
-      dest: ~/{{ test.dir }}/.venv
-      state: link
 
 - name: Set facts for configuration run
   set_fact:
