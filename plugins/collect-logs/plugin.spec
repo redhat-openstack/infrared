@@ -2,12 +2,15 @@
 plugin_type: other
 subparsers:
     collect-logs:
-        description: Collect log from all nodes in the active workspace.
+        description: Collect log from all nodes of the active workspace.
         include_groups: ["Ansible options", "Common options"]
         options:
           dest-dir:
               type: Value
               help: Path to a destination directory where the collected log will be stored
+          archive-custom:
+              type: Value
+              help: Comma,separated list of additional path(s) to be archived.
           gzip:
               type: Bool
               help: |
