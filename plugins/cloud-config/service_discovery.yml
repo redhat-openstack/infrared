@@ -7,9 +7,15 @@
           nova-scheduler:
               group: nova_scheduler
               command: "nova service-list | grep nova-scheduler | awk '{print $6}' | awk -F '.' '{print $1}' | head -1"
+              command_execution: undercloud
           nova-compute:
               group: nova-compute
               command: "nova service-list | grep nova-compute | awk '{print $6}' | awk -F '.' '{print $1}'"
+              command_execution: undercloud
+          neutron-server:
+              group: neutron-server
+              command: "systemctl is-active neutron-server"
+              command_execution: overcloud_nodes
   tasks:
       - fail:
             msg: "'sevices' is not defined"
@@ -21,7 +27,7 @@
         with_items: "{{ services }}"
 
       - include: tasks/service_discovery.yml
-        when: service_map[service].group not in group_names or resync|default(false)
+        when: service_map[service].group not in groups or install.resync|default(false)
         with_items: "{{ services }}"
         loop_control:
             loop_var: service
