@@ -13,6 +13,8 @@
       replace: '\1{{ install.registry.mirror }}'
       backup: no
   when: install.get('registry', {}).mirror|default(false)
+  tags:
+      - container-images-yumupdate
 
 - name: replace docker namespace
   replace:
@@ -21,6 +23,15 @@
       replace: '\1{{ install.registry.namespace }}\2'
       backup: no
   when: install.get('registry', {}).namespace|default(false)
+  tags:
+      - container-images-yumupdate
+
+- name: get tag of container images
+  shell: |
+        cat {{ containers_images_template_dest_file }} | awk '/- imagename: / {print $3}' | head -n1 | cut -f 2 -d:
+  register: containers_images_tag
+  tags:
+      - container-images-yumupdate
 
 - name: get docker registry name
   shell: |
@@ -67,6 +78,62 @@
   when: not install.registry.undercloud.skip
   tags:
       - skip_ansible_lint
+
+- stat:
+      path: /etc/yum.repos.d/patched_rpms.repo
+  register: patched_rpms
+  when: install.container.images.yumupdate
+  tags:
+      - container-images-yumupdate
+
+- name: set fact for docker context dir for images yum update
+  set_fact:
+      registry_images_yumupdate_dir: "{{ containers_home_dir }}/images_yumupdate"
+  when: install.container.images.yumupdate
+  tags:
+      - container-images-yumupdate
+
+- name: remove docker context dir for images yum update - required to copy files into the image
+  file:
+    path: "{{ registry_images_yumupdate_dir }}"
+    state: absent
+  when: install.container.images.yumupdate
+  tags:
+      - container-images-yumupdate
+
+- name: create docker context dir for images yum update - required to copy files into the image
+  file:
+    path: "{{ registry_images_yumupdate_dir }}"
+    state: directory
+  when: install.container.images.yumupdate
+  tags:
+      - container-images-yumupdate
+
+- name: populate docker context dir for images yum update
+  shell: |
+    cp /etc/yum.repos.d/patched_rpms.repo {{ registry_images_yumupdate_dir }}/
+    cp -r /patched_rpms {{ registry_images_yumupdate_dir }}/
+  when:
+    - install.container.images.yumupdate
+    - patched_rpms.stat.exists
+  tags:
+      - container-images-yumupdate
+
+- name: tag with 'before_yumupdate' and update&replace container image(s)
+  shell: |
+    docker tag {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }} \
+    {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }}-before_yumupdate
+    echo "
+    FROM {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }}
+    COPY patched_rpms.repo /etc/yum.repos.d/patched_rpms.repo
+    ADD /patched_rpms /patched_rpms
+    RUN yum update -y -v
+    " > {{ registry_images_yumupdate_dir }}/Dockerfile
+    docker build -t {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }} {{ registry_images_yumupdate_dir }}/
+  with_items: "{{ install.container.images.yumupdate.split(',') }}"
+  when: install.container.images.yumupdate
+  tags:
+      - container-images-yumupdate
 
 - name: Output from uploading images
   debug: var=image_upload

@@ -41,6 +41,20 @@ subparsers:
                           Infrared will use containers only when install version >= 12
                       default: yes
 
+                  container-images-yumupdate:
+                      type: Value
+                      help: Comma,separated list of docker container images to run yum update in before overcloud
+                            deployment.
+
+                  container-images-packages:
+                      type: Value
+                      help: |
+                            'container=package1{,package2}' pairs to install package(s) in the container before overcloud
+                            deployment. Can be used multiple times.
+                            Example:
+                                --container-images-packages openstack-base-docker=vim
+                                --container-images-packages openstack-opendaylight-docker=vim,http://rhos-qe-mirror-tlv.usersys.redhat.com/rcm-guest/puddles/OpenStack/12.0-RHEL-7/latest/RH7-RHOS-12.0/x86_64/os/Packages/sshpass-1.06-2.el7.x86_64.rpm
+
                   registry-mirror:
                       type: Value
                       help: The alternative docker registry to use for deployment.

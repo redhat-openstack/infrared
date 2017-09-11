@@ -56,3 +56,16 @@
 - name: puddle to be used
   debug:
       msg: "{{ containers_puddle_number.stdout }}"
+
+- name: set os_version fact
+  set_fact:
+      os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
+  tags:
+      - container-images-yumupdate
+
+- name: set docker_registry_undercloud facts
+  set_fact:
+      docker_registry_undercloud: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
+      docker_registry_undercloud_namespace: "/rhosp{{ os_version }}"
+  tags:
+      - container-images-yumupdate
