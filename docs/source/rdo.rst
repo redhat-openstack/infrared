@@ -20,7 +20,7 @@ To deploy RDO on virtual environment the following steps can be performed.
 
     infrared tripleo-undercloud -vv -o install.yml \
         -o undercloud-install.yml \
-        --version ocata
+        --version pike
 
 3) Build or import overcloud images from `<https://images.rdoproject.org>`_::
 
@@ -28,7 +28,7 @@ To deploy RDO on virtual environment the following steps can be performed.
     infrared tripleo-undercloud -vv \
         -o undercloud-images.yml \
         --images-task=import \
-        --images-url=https://images.rdoproject.org/ocata/rdo_trunk/current-tripleo/stable/
+        --images-url=https://images.rdoproject.org/pike/rdo_trunk/current-tripleo/stable/
 
     # or build images
     infrared tripleo-undercloud -vv \
@@ -41,7 +41,7 @@ To deploy RDO on virtual environment the following steps can be performed.
 
      infrared tripleo-overcloud -v \
          -o overcloud-install.yml \
-         --version ocata \
+         --version pike \
          --deployment-files virt \
          --introspect yes \
          --tagging yes \
@@ -62,7 +62,7 @@ Known issues
 
       infrared tripleo-overcloud -v \
           -o overcloud-install.yml \
-          --version ocata \
+          --version pike \
           --deployment-files virt \
           --introspect yes \
           --tagging yes \
