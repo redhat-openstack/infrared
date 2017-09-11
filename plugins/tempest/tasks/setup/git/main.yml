@@ -35,7 +35,7 @@
 
 - name: Create venv with latest pip, setuptools and pbr
   pip:
-      virtualenv: "~/{{ test.dir }}/.venv"
+      virtualenv: "{{ virtualenvs.tempest }}"
       name: "{{ item }}"
       state: latest
   with_items:
@@ -47,11 +47,11 @@
   pip:
       name: "requests"
       version: "2.11.1"
-      virtualenv: "~/{{ test.dir }}/.venv"
+      virtualenv: "{{ virtualenvs.tempest }}"
 
 - name: Get repo requirements
   pip:
-      virtualenv: "~/{{ test.dir }}/.venv"
+      virtualenv: "{{ virtualenvs.tempest }}"
       chdir: "~/{{ test.dir }}"
       requirements: "{{ item }}"
   with_items:
@@ -61,7 +61,7 @@
 - name: Install extra requirements
   pip:
       chdir: "~/{{ test.dir }}"
-      virtualenv: "~/{{ test.dir }}/.venv"
+      virtualenv: "{{ virtualenvs.tempest }}"
       name: "{{ item }}"
       state: present
   with_items: "{{ setup.pip_packages }}"
@@ -69,7 +69,7 @@
 - name: Install Tempest package
   pip:
       chdir: "~/{{ test.dir }}"
-      virtualenv: "~/{{ test.dir }}/.venv"
+      virtualenv: "{{ virtualenvs.tempest }}"
       name: "."
       editable: true
 
