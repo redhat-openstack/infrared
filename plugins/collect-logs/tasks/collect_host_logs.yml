@@ -162,6 +162,16 @@
       find /tmp/{{ inventory_hostname }} -type f -print0 | xargs -0 chmod 644;
   ignore_errors: true
 
+- name: collect custom directories
+  shell: |
+      WORKDIR=/tmp/{{ inventory_hostname }}/custom
+      mkdir -p $WORKDIR
+      find {{ item }} -exec cp -rL --parents {} $WORKDIR \;
+      find $WORKDIR -type d -print0 | xargs -0 chmod 755
+      find $WORKDIR -type f -print0 | xargs -0 chmod 644
+  ignore_errors: true
+  with_items: "{{ other.archive.custom.split(',') }}"
+
 - name: compress logs in tar ball
   command: "tar cf{{ other.gzip|ternary ('z', '') }} {{ inventory_hostname }}.tar{{ other.gzip|ternary ('.gz', '') }} {{ inventory_hostname }}"
   args:
