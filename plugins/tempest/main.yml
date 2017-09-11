@@ -5,6 +5,9 @@
   vars:
       deployer_input: "~/ir-tempest-deployer-input.conf"
   tasks:
+      - name: Include virtual environment vars
+        include_vars: "vars/venv.yml"
+
       - name: Prepare tempest files
         include: "tasks/discover_overcloud_version.yml"
         tags:

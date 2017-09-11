@@ -17,7 +17,7 @@
       config_options: "{{ openstack_config_options | combine(test.get('config', {}).get('options', {})) }}"
 
   shell: |
-      test -e .venv/bin/activate && source .venv/bin/activate
+      test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate
       source ~/keystonerc
       {{ config_command | default("tools/config_tempest.py") }} \
               {% if deployer_input_stat.stat.exists %}
@@ -65,7 +65,7 @@
 
 - name: Save the current state for the later cleanup
   shell: >
-      test -e .venv/bin/activate && source .venv/bin/activate;
+      test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
       tempest cleanup --init-saved-state
   args:
       executable: /bin/bash
