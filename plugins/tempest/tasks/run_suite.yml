@@ -73,7 +73,7 @@
 # directly get the ostestr version.
 - name: Get ostestr version
   shell: >
-      test -e .venv/bin/activate && source .venv/bin/activate;
+      test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
       ostestr --version | sed 's/ostestr\ version\ //g'
   register: ostestr_version
   when: test.openstack.version|default(overcloud_version)|openstack_release >= 7
@@ -86,7 +86,7 @@
 - block:
       - name: run tempest "{{ test_suite }}" suite
         shell: >
-            test -e .venv/bin/activate && source .venv/bin/activate;
+            test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
             ostestr -s --no-pretty --regex '{{ regex | default('') }}'
             {{ whitelistfile }}
             {{ blacklistfile }}
@@ -125,7 +125,7 @@
 
       - name: generate results report in HTML format
         shell: |
-            test -e .venv/bin/activate && source .venv/bin/activate
+            test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate
             subunit2html {{ test_output_filename }}.subunit {{ test_output_filename }}.html
         args:
             chdir: "{{ test.dir }}"
@@ -134,7 +134,7 @@
 
       - name: generate results report in JunitXML format
         shell: |
-            test -e .venv/bin/activate && source .venv/bin/activate
+            test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate
             subunit2junitxml --output-to={{ test_output_filename }}.xml \
                 < {{ test_output_filename }}.subunit | subunit2pyunit
         args:
@@ -184,7 +184,7 @@
 
       - name: cleanup the resources created by the test and not cleaned
         shell: >
-            test -e .venv/bin/activate && source .venv/bin/activate;
+            test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
             tempest cleanup
         args:
             executable: /bin/bash
