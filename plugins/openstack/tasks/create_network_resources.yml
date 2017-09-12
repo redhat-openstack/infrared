@@ -23,3 +23,9 @@
       port_range_min: "{{ item.port_range_min|default(omit) }}"
       port_range_max: "{{ item.port_range_max|default(omit) }}"
   with_items: "{{ sg.value.rules }}"
+  register: sg_rules
+  # workaround for https://github.com/ansible/ansible/issues/19610 remove once fix is released
+  failed_when:
+    - sg_rules is not defined
+    - "'msg' not in sg_rules"
+    - not (sg_rules.msg | search('(All items completed|Security group rule already exists)'))
