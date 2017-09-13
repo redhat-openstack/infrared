@@ -14,3 +14,7 @@ subparsers:
                   Whether using gzip to archive or not
                   When used - output files will be suffixed with ".gz"
               default: False
+          max-depth:
+              type: Value
+              help: Number of levels to descend at most when collecting logs
+              default: 3
