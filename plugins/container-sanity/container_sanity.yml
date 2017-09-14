@@ -1,0 +1,30 @@
+- name: Run container sanity test
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      repo_folder: 'container-sanity/'
+  tasks:
+      - name: Install packages
+        become: true
+        package:
+            name: "{{ item }}"
+            state: latest
+        with_items:
+            - pytest
+            - git
+
+      - name: Clean repo dir
+        file:
+            path: "{{ repo_folder }}"
+            state: absent
+
+      - name: Cloning git repo
+        shell: |
+            export GIT_SSL_NO_VERIFY=true
+            git clone {{ test.repo }} {{ repo_folder }}
+        tags: skip_ansible_lint
+
+      - name: Execute test
+        shell: pytest -v {{ repo_folder }}{{ test.file }} 2>&1
+        when: test.run|default(False)
