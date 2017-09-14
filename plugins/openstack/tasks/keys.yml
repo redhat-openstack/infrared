@@ -19,6 +19,30 @@
       state: present
   register: key
   when: not public_key_content|skipped
+  ignore_errors: True
+
+# This block runs only if previous task failed, and forces the key update
+# Workaround for https://github.com/ansible/ansible/issues/30334
+- block:
+  - name: Remove old keypair
+    os_keypair:
+        cloud: "{{ provision.cloud | default(omit) }}"
+        name: "{{ prefix }}{{ provision.key.file | basename }}"
+        public_key: "{{ public_key_content.stdout }}"
+        state: absent
+
+  - name: Add updated keypair
+    os_keypair:
+        cloud: "{{ provision.cloud | default(omit) }}"
+        name: "{{ prefix }}{{ provision.key.file | basename }}"
+        public_key: "{{ public_key_content.stdout }}"
+        state: present
+    register: key
+
+  when:
+    - not public_key_content|skipped
+    - key.failed
+    - '"present but key hash not the same as offered. Delete key first." in key.msg'
 
 - name: register keypair
   vars:
