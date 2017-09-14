@@ -7,7 +7,7 @@
 
 - name: Create venv with latest pip, setuptools and pbr
   pip:
-      virtualenv: "~/.tempest_venv"
+      virtualenv: "{{ virtualenvs.tempest }}"
       virtualenv_site_packages: yes
       name: "{{ item }}"
       state: latest
@@ -20,18 +20,18 @@
   pip:
       name: "requests"
       version: "2.11.1"
-      virtualenv: "~/.tempest_venv"
+      virtualenv: "{{ virtualenvs.tempest }}"
 
 - name: Install tempest from pip
   pip:
-      virtualenv: "~/.tempest_venv"
+      virtualenv: "{{ virtualenvs.tempest }}"
       name: "Tempest"
       state: latest
   register: tempest_pip
 
 - name: Print pip tempest version
   shell: |
-      source ~/.tempest_venv/bin/activate
+      source {{ virtualenvs.tempest }}/bin/activate
       tempest --version 2>&1 | awk {'print $2'}
   register: tempest_pip_version
 
