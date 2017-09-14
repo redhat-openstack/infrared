@@ -1,6 +1,6 @@
 - name: copy the enable-tls.yaml file locally
   vars:
-      template_dir: "{{ install.heat.templates.basedir }}/environments"
+      template_dir: "{{ install.heat.templates.basedir }}/environments{{ ('/ssl' if install.version|default(undercloud_version)|openstack_release > 11 else '') }}"
   copy:
       src: "{{ template_dir}}/{{ item }}"
       dest: "{{ template_base }}/{{ item }}"
@@ -11,10 +11,13 @@
   register: copy_templates
 
 - name: adjust the reference of template dir
+  vars:
+      replace_with: "{{ ( (item.src|dirname|dirname|dirname) if install.version|default(undercloud_version)|openstack_release > 11 else (item.src|dirname|dirname) ) }}"
+      regex: "{{ ('\\.\\./\\.\\.' if install.version|default(undercloud_version)|openstack_release > 11 else '\\.\\.' ) }}"
   replace:
       dest: "{{ item.dest }}"
-      replace: "{{ item.src | dirname | dirname }}"
-      regexp: \.\.
+      replace: "{{ replace_with }}"
+      regexp: "{{ regex }}"
   with_items: "{{ copy_templates.results }}"
 
 - name: discover undercloud ssl
@@ -122,7 +125,7 @@
         regex: "The contents of the private key.*$"
         replace_with: "{{ private_key.stdout | indent(4) | string }}"
       - dest: "{{ template_base }}/inject-trust-anchor.yaml"
-        regex: "The contents of your root CA.*$"
+        regex: "The contents of your (root CA )?certificate go here.*$"
         replace_with: "{{ root_cert.stdout | indent(4) | string }}"
 
 - name: append the invocation lines to the base overcloud deploy script
@@ -144,7 +147,9 @@
   when: install.version|default(undercloud_version)|openstack_release > 9
 
 - name: append the invocation line to the base overcloud deploy script
+  vars:
+      sub_dir: "{{ ('ssl/' if install.version|default(undercloud_version)|openstack_release > 11 else '') }}"
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e {{ install.heat.templates.basedir }}/environments/tls-endpoints-public-ip.yaml \'
+      line: '-e {{ install.heat.templates.basedir }}/environments/{{ sub_dir }}tls-endpoints-public-ip.yaml \'
   when: install.version|default(undercloud_version)|openstack_release > 9
