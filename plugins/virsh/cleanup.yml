@@ -25,13 +25,16 @@
       ignore_virsh_nets:
           - default
   tasks:
-    - package:
-          name: libvirt-python
-      register: install_libvirt
+    - yum:
+          list: libvirt
+      register: libvirt_status
 
     # Don't cleanup if the libvirtd process is unavailable
-    - include: tasks/cleanup.yml
-      when: not install_libvirt|changed
+    - name: Cleanup libvirt artifacts
+      vars:
+          libvirt_state: "{{  libvirt_status.results|map(attribute='yumstate')|list }}"
+      include: tasks/cleanup.yml
+      when: "'installed' in libvirt_state"
 
     - name: remove iptables rules created by infrared, by comment
       # Can't use iptables module, because it can't delete by generic comment
