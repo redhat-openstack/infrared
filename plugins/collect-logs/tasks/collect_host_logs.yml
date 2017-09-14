@@ -149,7 +149,7 @@
   shell: |
       mkdir -p /tmp/{{ inventory_hostname }};
       find /var/log/rpm.list /var/log/extra {{ archives_list|join(' ') }} \
-      -maxdepth 3 -type f -size -1024M \
+      -maxdepth {{ other.max.depth | default(3) }} -type f -size -1024M \
       -not -path '/var/log/journal/*' \
       -not -path '*/\.*' \
       -not -path '/root/*.tar*' \
