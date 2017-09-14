@@ -1,4 +1,9 @@
 ---
+- name: make sure that libvirt service is running
+  service:
+      name: libvirtd
+      state: started
+
 - name: get the list of VMs
   virt:
       command: list_vms
