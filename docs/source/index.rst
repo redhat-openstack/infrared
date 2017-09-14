@@ -49,6 +49,7 @@ Welcome to infrared's documentation!
    collect-logs
    gabbi_tester
    list_builds
+   container-sanity
 
 .. toctree::
    :maxdepth: 2
