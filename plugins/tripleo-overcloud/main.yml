@@ -29,3 +29,19 @@
   include: "{{ overcloud_reboot | default('overcloud_reboot.yml') }}"
   when:
       - install.postreboot|default(False)
+
+- name: Collect Ansible facts
+  gather_facts: yes
+  hosts: all
+  tasks:
+    - name: collect ansible tasks
+      block:
+        - set_fact:
+            ansible_facts_filename: "infrared_tripleo-overcloud-install_{{ inventory_hostname }}"
+
+        - include_role:
+            name: collect-ansible-facts
+      when:
+          - not install.upgrade|default('')
+          - not install.ocupdate|default(False)
+  tags: collect-ansible-facts
