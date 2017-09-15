@@ -56,3 +56,30 @@
 - name: puddle to be used
   debug:
       msg: "{{ containers_puddle_number.stdout }}"
+
+- name: set os_version fact
+  set_fact:
+      os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
+  tags:
+    - container-images-patch
+    - container-images-packages
+
+- name: set docker_registry_undercloud facts
+  set_fact:
+      docker_registry_undercloud: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
+      docker_registry_undercloud_namespace: "/rhosp{{ os_version }}"
+  tags:
+    - container-images-patch
+    - container-images-packages
+
+- name: set facts for container images patching
+  set_fact:
+    install_container_images_patch: "{{ install.get('container', {}).get('images', {}).get('patch', {}) }}"
+  when: install.get('container', {}).get('images', {}).get('patch', {})
+  tags: container-images-patch
+
+- name: set facts for container images install packages
+  set_fact:
+    install_container_images_packages: "{{ install.get('container', {}).get('images', {}).get('packages', {}) }}"
+  when: install.get('container', {}).get('images', {}).get('packages', {})
+  tags: container-images-packages
