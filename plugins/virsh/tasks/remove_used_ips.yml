@@ -1,0 +1,9 @@
+---
+- name: get hosts ips from virsh
+  shell: "virsh net-dumpxml {{ network.value.name }} | grep '<host mac='"
+  ignore_errors: yes
+  register: nets_xml
+
+- set_fact:
+       dhcp_ranges: "{{ dhcp_ranges | combine({network.value.name: {'ips': dhcp_ranges[network.value.name].ips|difference([(item.strip()|from_xml).ip]) } }) }}"
+  with_items: "{{ nets_xml.stdout_lines }}"
