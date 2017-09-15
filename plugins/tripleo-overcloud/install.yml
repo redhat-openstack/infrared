@@ -68,6 +68,26 @@
       - install.containers|bool
   tags: deploy
 
+- name: "Workaround for #1491327"
+  hosts: controller
+  become: true
+  tags:
+      - odl
+  tasks:
+      - name: "Modify /etc/neutron/plugin.ini_file"
+        lineinfile:
+          path: /etc/neutron/plugin.ini
+          insertafter: '[ml2_odl]'
+          line: 'odl_features=any'
+        when:
+          - install.deploy|default('')
+      - name: "Restart neutron-server"
+        service:
+          name: neutron-server
+          state: restarted
+        when:
+          - install.deploy|default('')
+
 - name: Perform post install tasks
   include: "{{ overcloud_post | default('post.yml') }}"
   when: install.post|default('')
