@@ -41,3 +41,12 @@
             loop_var: test_suite_file
         tags:
             - run
+
+      - set_fact:
+          ansible_facts_filename: "infrared_tempest_{{ inventory_hostname }}"
+        tags: collect-ansible-facts
+
+      - name: Collect Ansible facts
+        include_role:
+            name: collect-ansible-facts
+        tags: collect-ansible-facts

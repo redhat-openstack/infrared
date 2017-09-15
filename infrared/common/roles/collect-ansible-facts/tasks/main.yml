@@ -1,0 +1,32 @@
+---
+- name: setup temporary facts directory on inventory hosts
+  file:
+      path: "{{ ansible_facts_dir_tmp }}"
+      state: "{{ item }}"
+  with_items:
+      - absent
+      - directory
+
+- name: save ansible facts to json file
+  copy:
+      content: "{{ hostvars[inventory_hostname] | to_nice_json }}"
+      dest: "{{ ansible_facts_dir_tmp }}/{{ansible_facts_filename}}.json"
+
+- name: setup facts directory on destination host
+  file:
+      path: "{{ ansible_facts_dir_dest }}"
+      state: directory
+  when: inventory_hostname == 'localhost'
+
+- name: fetch ansible facts file from inventory hosts
+  fetch:
+      src: "{{ ansible_facts_dir_tmp }}/{{ansible_facts_filename}}.json"
+      dest: "{{ ansible_facts_dir_dest }}/"
+      flat: yes
+  register: ansible_facts_fetched
+
+- name: remove temporary facts directory
+  file:
+      path: "{{ ansible_facts_dir_tmp }}"
+      state: absent
+  when: ansible_facts_fetched
