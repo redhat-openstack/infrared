@@ -29,3 +29,11 @@
   include: "{{ overcloud_reboot | default('overcloud_reboot.yml') }}"
   when:
       - install.postreboot|default(False)
+
+- name: Collect Ansible facts
+  include: 'collect-ansible-facts.yml'
+  when:
+      - not install.upgrade|default('')
+      - not install.ocupdate|default(False)
+      - not install.introspect|default('')
+  tags: collect-ansible-facts
