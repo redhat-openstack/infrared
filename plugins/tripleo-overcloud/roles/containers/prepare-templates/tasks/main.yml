@@ -17,7 +17,7 @@
       - skip_ansible_lint
 
 - name: create nondafault images for containers
-  include: nondefault_images.yml
+  include: roles/containers/prepare-templates/tasks/nondefault_images.yml
   with_items: "{{ install.overcloud.templates|default([]) }}"
   loop_control:
       loop_var: templates_list_file
