@@ -19,6 +19,13 @@
       dhcp_ranges: "{{ dhcp_ranges | combine({item.item.key: {'ips': item.stdout_lines}}) }}"
   with_items: "{{ ip_list.results }}"
 
+- name: remove already used ips from dhcp_ranges
+  include: remove_used_ips.yml
+  with_dict: "{{ networks }}"
+  loop_control:
+          loop_var: network
+  when: provision.topology.extend|default(False)
+
 - name: update vms info with ip addresses
   set_fact:
       vms_info: "{{ vms_info | default({}) | combine({dhcp_ranges[item.net].ips | difference(vms_info | default({}) | list) | first | ipaddr('address'): item}) }}"
@@ -32,7 +39,7 @@
 - name: add hosts to host list
   add_host:
       name: "{{ item.value.name }}"
-      groups: "{{ item.value.groups | join(',') }}"
+      groups: "{{ host_groups | join(',')  }}"
       ansible_ssh_user: "root"
       ansible_ssh_host: "{{ item.key }}"
       ansible_ssh_private_key_file: "{{ inventory_dir }}/id_rsa"
@@ -45,3 +52,5 @@
           -o UserKnownHostsFile=/dev/null
           -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }}\""
   with_dict: "{{ vms_info }}"
+  vars:
+      host_groups: "{{ item.value.groups + ['unused'] if provision.topology.extend else item.value.groups }}"
