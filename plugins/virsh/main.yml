@@ -4,3 +4,50 @@
 
 - include: "{{ provision_playbook | default('provision.yml') }}"
   when: not provision.cleanup|default(False)
+
+- name: collect ansible facts
+  hosts: all
+  tasks:
+    - set_fact:
+        ansible_facts_dir: "{{ ansible_user_dir }}/ansible_facts"
+
+    - name: remove facts directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - "{{ ansible_facts_dir }}"
+
+    - name: create facts directories
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ ansible_facts_dir }}"
+
+    - name: save ansible facts in file
+      copy:
+        content: "{{ hostvars[inventory_hostname] | to_nice_json }}"
+        dest: "{{ ansible_facts_dir }}/infrared_virsh_{{ inventory_hostname }}.json"
+
+    - set_fact:
+        ansible_facts_dir_host: "{{ inventory_dir }}/../../../ansible_facts"
+
+    - name: remove facts directory on localhost
+      file:
+        path: "{{ ansible_facts_dir_host }}"
+        state: absent
+      when: inventory_hostname == 'localhost'
+
+    - name: create facts directory on localhost
+      file:
+        path: "{{ ansible_facts_dir_host }}"
+        state: directory
+      when: inventory_hostname == 'localhost'
+
+    - name: fetch ansible facts file from inventory hosts
+      fetch:
+        src: "{{ ansible_facts_dir }}/infrared_virsh_{{ inventory_hostname }}.json"
+        dest: "{{ ansible_facts_dir_host }}/"
+        flat: yes
+  tags: collect_facts
