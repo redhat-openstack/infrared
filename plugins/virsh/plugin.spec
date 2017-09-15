@@ -69,7 +69,11 @@ subparsers:
                       help: |
                           Non-root username with sudo privileges that will be created on nodes.
                           Will be use as main ssh user subsequently.
-
+                  topology-extend:
+                      type: Bool
+                      default: False
+                      help: |
+                          Use it when you want to add new nodes to current topology
 
             - title: cleanup
               options:
