@@ -73,3 +73,18 @@
   when: install.post|default('')
   tags:
       - post
+
+- name: debug me
+  hosts: localhost
+  tasks:
+  - debug:
+      var: hostvars[inventory_hostname]
+      verbosity: 0
+  tags: collect-ansible-facts
+
+- hosts: all
+  tasks:
+  - include_role:
+      name: collect-ansible-facts
+    when: collect-ansible-facts == True
+  tags: collect-ansible-facts
