@@ -29,3 +29,39 @@
   include: "{{ overcloud_reboot | default('overcloud_reboot.yml') }}"
   when:
       - install.postreboot|default(False)
+
+- name: collect ansible facts
+  hosts: all
+  tasks:
+    - set_fact:
+        ansible_facts_dir: "{{ ansible_user_dir }}/ansible_facts"
+        ansible_facts_dir_host: "{{ inventory_dir }}/../../../ansible_facts"
+
+    - name: recreate facts directory on inventory hosts
+      file:
+        path: "{{ ansible_facts_dir }}"
+        state: "{{ item }}"
+      with_items:
+        - absent
+        - directory
+
+    - name: save ansible facts in json file
+      copy:
+        content: "{{ hostvars[inventory_hostname] | to_nice_json }}"
+        dest: "{{ ansible_facts_dir }}/infrared_tripleo-overcloud_{{ inventory_hostname }}.json"
+
+    - name: recreate facts directory on localhost
+      file:
+        path: "{{ ansible_facts_dir_host }}"
+        state: "{{ item }}"
+      when: inventory_hostname == 'localhost'
+      with_items:
+        - absent
+        - directory
+
+    - name: fetch ansible facts file from inventory hosts
+      fetch:
+        src: "{{ ansible_facts_dir }}/infrared_virsh_{{ inventory_hostname }}.json"
+        dest: "{{ ansible_facts_dir_host }}/"
+        flat: yes
+  tags: collect_facts
