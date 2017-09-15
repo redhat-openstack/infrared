@@ -1,0 +1,45 @@
+---
+- stat:
+      path: /etc/yum.repos.d/patched_rpms.repo
+  register: patched_rpms_repo
+
+- fail:
+      msg: /etc/yum.repos.d/patched_rpms.repo doesn't exist
+  when: patched_rpms_repo.stat.exists == False
+
+- stat:
+      path: /patched_rpms
+  register: patched_rpms
+
+- fail:
+      msg: /patched_rpms doesn't exist
+  when: patched_rpms.stat.exists == False
+
+- name: set fact for docker context dir for images patching
+  set_fact:
+      container_images_patch_dir: "{{ containers_home_dir }}/images_patch"
+
+- name: create docker context dir for images patching - required to copy files into the new image
+  file:
+      path: "{{ container_images_patch_dir }}"
+      state: directory
+
+- name: populate docker context dir with patched rpms and repo
+  command: |
+      cp /etc/yum.repos.d/patched_rpms.repo {{ container_images_patch_dir }}/;
+      cp -r /patched_rpms {{ container_images_patch_dir }}/
+
+- name: tag the original image(s) with 'before_patching' and patch&push container image(s)
+  shell: |
+      docker tag {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }} \
+      {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }}-before_patching
+      echo "
+      FROM {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }}
+      COPY patched_rpms.repo /etc/yum.repos.d/patched_rpms.repo
+      ADD /patched_rpms /patched_rpms
+      RUN yum update -y -v
+      " > {{ container_images_patch_dir }}/Dockerfile
+      docker build -t {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }} {{ container_images_patch_dir }}/
+      docker push {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }}
+  with_items: "{{ install_container_images_patch.split(',') }}"
+  become: true
