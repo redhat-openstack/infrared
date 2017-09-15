@@ -27,6 +27,8 @@
       replace: '\1{{ install.registry.mirror }}'
       backup: no
   when: install.get('registry', {}).mirror|default(false)
+  tags:
+      - container-images-patch
 
 - name: replace docker namespace
   replace:
@@ -35,6 +37,16 @@
       replace: '\1{{ install.registry.namespace }}\2'
       backup: no
   when: install.get('registry', {}).namespace|default(false)
+  tags:
+      - container-images-patch
+
+- name: get tag of container images
+  shell: |
+        cat {{ containers_images_template_dest_file }} | awk '/- imagename: / {print $3}' | head -n1 | cut -f 2 -d:
+  register: containers_images_tag
+  tags:
+      - container-images-patch
+      - container-images-packages
 
 - name: get docker registry name
   shell: |
@@ -81,6 +93,23 @@
   when: not install.registry.undercloud.skip
   tags:
       - skip_ansible_lint
+
+- name: patch and push container images
+  include: patch_images.yml
+  when: install_container_images_patch is defined
+  tags: container-images-patch
+
+- name: tag the original image(s) with 'before_packages_install' and install rpms&push new ones
+  shell: |
+      docker tag {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ containers_images_tag.stdout }} \
+      {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ containers_images_tag.stdout }}-before_packages_install
+      echo "FROM {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ containers_images_tag.stdout }}
+      RUN yum localinstall {{ item.value.split(",") | join(" ") }} -y -v" | docker build -t {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ containers_images_tag.stdout }} -
+      docker push {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ containers_images_tag.stdout }}
+  when: install_container_images_packages is defined
+  with_dict: "{{ install_container_images_packages }}"
+  become: true
+  tags: container-images-packages
 
 - name: Output from uploading images
   debug: var=image_upload
