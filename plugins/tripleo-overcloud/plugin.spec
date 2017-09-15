@@ -41,6 +41,23 @@ subparsers:
                           Infrared will use containers only when install version >= 12
                       default: yes
 
+                  container-images-patch:
+                      type: Value
+                      help: |
+                            Comma,separated list of docker container images to patch using '/patched_rpm' repository.
+                            NOTE: Patching involves 'yum update' inside the container.
+
+                  container-images-packages:
+                      type: IniType
+                      action: append
+                      help: |
+                            'imagename=package1{,package2}' pairs to install package(s) from URL(s) in the container
+                            before overcloud deployment. Can be used multiple times.
+                            NOTE: Only specified image(s) will get the packages installed. All images that depend on
+                            updated image have to be updated as well (using this option or otherwise).
+                            Example:
+                                --container-images-packages openstack-opendaylight-docker=https://kojipkgs.fedoraproject.org//packages/tmux/2.5/3.fc27/x86_64/tmux-2.5-3.fc27.x86_64.rpm,https://kojipkgs.fedoraproject.org//packages/vim/8.0.844/2.fc27/x86_64/vim-minimal-8.0.844-2.fc27.x86_64.rpm
+
                   registry-mirror:
                       type: Value
                       help: The alternative docker registry to use for deployment.
