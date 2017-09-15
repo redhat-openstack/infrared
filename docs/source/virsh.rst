@@ -33,6 +33,10 @@ please refer to `Topology <topology.html>`_.
 
 Please see `Bootstrap <bootstrap.html>`_ guide where usage is demonstrated.
 
+* ``--topology-extend``: Provide option to extend/add new nodes to Virsh topology.
+    If ``--topology-extend`` is True, all nodes from ``--topology-nodes`` will be
+    added as new additional nodes.
+
 Network layout
 ~~~~~~~~~~~~~~
 Baremetal machine used as host for such setup is called `hypervisor`. The whole deployment is designed to

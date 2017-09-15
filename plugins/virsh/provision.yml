@@ -1,14 +1,17 @@
 ---
 - name: Pre run configuration
   include: "{{ provision_pre | default('pre.yml') }}"
+  when: not provision.topology.extend|default(False)
   tags: pre
 
 - name: Prepare the hypervisor for provisioning
   include: "{{ prepare_hypervisor | default('prepare_hypervisor.yml') }}"
+  when: not provision.topology.extend|default(False)
   tags: hypervisor
 
 - name: Create Networks
   include: "{{ provision_networks | default('provision_networks.yml') }}"
+  when: not provision.topology.extend|default(False)
   tags: networks
 
 - name: Provision Vms

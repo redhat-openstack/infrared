@@ -17,12 +17,14 @@
         tags: vms
 
       - name: create non root user
+        become: true
         user:
             name: "{{ provision.topology.username }}"
             state: present
             password: "{{ non_root_pw | password_hash('sha512') }}"
 
       - name: add user to sudoers
+        become: true
         lineinfile:
             dest: "/etc/sudoers"
             line: "{{ provision.topology.username }} ALL=(ALL) NOPASSWD:ALL"
