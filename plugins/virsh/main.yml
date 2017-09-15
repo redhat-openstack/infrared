@@ -4,3 +4,18 @@
 
 - include: "{{ provision_playbook | default('provision.yml') }}"
   when: not provision.cleanup|default(False)
+
+- name: collect ansible facts
+  hosts: all
+  tasks:
+    - set_fact:
+        ansible_facts_dir: {{ inventory_dir }}/../../../ansible_facts
+    - name: create facts directory
+      file:
+        path: "{{ ansible_facts_dir }}"
+        state: directory
+    - name: collect ansible facts - here
+      copy:
+        content: "{{ hostvars[inventory_hostname] | to_nice_json }}"
+        dest: "{{ ansible_facts_dir }}/infrared_virsh_{{ inventory_hostname }}.json"
+  tags: collect_facts
