@@ -6,3 +6,18 @@
   when:
       - not provision.cleanup|default(False)
       - not provision.kill|default(False)
+
+- name: Collect Ansible facts
+  gather_facts: yes
+  hosts: localhost:hypervisor:undercloud
+  any_errors_fatal: true
+  tasks:
+    - name: collect ansible tasks
+      block:
+        - set_fact:
+            ansible_facts_filename: "infrared_virsh-provision_{{ inventory_hostname }}"
+
+        - include_role:
+            name: collect-ansible-facts
+      when: not provision.cleanup|default(False)
+  tags: collect-ansible-facts
