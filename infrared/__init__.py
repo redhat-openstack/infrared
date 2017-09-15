@@ -59,6 +59,12 @@ SHARED_GROUPS = [
                         'settings into (default: stdout)',
                 'short': 'o',
                 'type': 'str'
+            },
+            'collect-ansible-facts': {
+                'help': 'Collect ansible facts as json files.',
+                'short': 'c',
+                'default': False,
+                'type': 'Bool'
             }
         },
     },
