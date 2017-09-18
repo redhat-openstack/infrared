@@ -184,14 +184,14 @@ class InfraredPluginManager(object):
         :return: Path to plugin cloned directory (str)
         """
         dest_dir = os.path.abspath(dest_dir or "plugins")
-        plugin_dir_name = os.path.split(git_url)[-1].split('.')[0]
+        plugin_git_name = os.path.split(git_url)[-1].split('.')[0]
 
         tmpdir = tempfile.mkdtemp(prefix="ir-")
         cwd = os.getcwdu()
         os.chdir(tmpdir)
         try:
             repo = git.Repo.clone_from(
-                url=git_url, to_path=os.path.join(tmpdir, plugin_dir_name))
+                url=git_url, to_path=os.path.join(tmpdir, plugin_git_name))
             if rev is not None:
                 repo.git.checkout(rev)
         except (git.exc.GitCommandError) as e:
@@ -199,10 +199,20 @@ class InfraredPluginManager(object):
             raise IRFailedToAddPlugin(
                 "Cloning git repo {} is failed: {}".format(git_url, e))
 
+        plugin_tmp_source = os.path.join(tmpdir, plugin_git_name)
+        if repo_plugin_path:
+            plugin_tmp_source = os.path.join(plugin_tmp_source, repo_plugin_path)
+
+        # validate & load spec data in order to pull the name of the plugin
+        spec_data = InfraredPlugin.spec_validator(
+            os.path.join(plugin_tmp_source, InfraredPlugin.PLUGIN_SPEC_FILE))
+        # get the real plugin name from spec
+        plugin_dir_name = spec_data["subparsers"].keys()[0]
+
         plugin_source = os.path.join(dest_dir, plugin_dir_name)
         if os.path.exists(plugin_source):
             shutil.rmtree(plugin_source)
-        shutil.copytree(os.path.join(tmpdir, plugin_dir_name),
+        shutil.copytree(os.path.join(tmpdir, plugin_git_name),
                         plugin_source)
 
         if repo_plugin_path:
