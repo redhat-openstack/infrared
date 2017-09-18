@@ -50,3 +50,9 @@ subparsers:
                           (CIDR, Allocation Pool, Gateway)
                           __LISTYAMLS__
                       default: default_subnet
+            - title: Scale down nodes
+              options:
+                  node-name:
+                      type: Value
+                      help: |
+                        Name of the node to remove
