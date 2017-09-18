@@ -1,6 +1,16 @@
+- name: Auto discover undercloud version
+  include: "{{ auto_discover_undercloud_version | default('version.yml') }}"
+  when: install.version is not defined
+  tags:
+      - always
+
 - name: Include task "External network creation"
   include: post_tasks/create_external_network.yml
   when: '"create_external_network" in install.tasks'
+
+- name: Include task "LBaas v2"
+  include: post_tasks/lbaas_v2.yml
+  when: '"lbaas_v2" in install.tasks'
 
 - name: Include task "Compute SSH"
   include: post_tasks/compute_ssh.yml
