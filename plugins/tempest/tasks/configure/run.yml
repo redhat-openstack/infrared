@@ -17,7 +17,7 @@
       config_options: "{{ openstack_config_options | combine(test.get('config', {}).get('options', {})) }}"
 
   shell: |
-      test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate
+      test -e {{ virtualenvs.tempest_conf }}/bin/activate && source {{ virtualenvs.tempest_conf }}/bin/activate
       source ~/keystonerc
       {{ config_command | default("tools/config_tempest.py") }} \
               {% if deployer_input_stat.stat.exists %}
