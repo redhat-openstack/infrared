@@ -1,11 +1,24 @@
+- name: append extra containers templates for the build scripts
+  lineinfile:
+      dest: "{{ containers_ir_deploy_script }}"
+      line: "{{ item }}"
+  with_items:
+      - '-e {{ install.heat.templates.basedir }}/environments/docker.yaml \'
+      - '-e {{ install.heat.templates.basedir }}/environments/docker-ha.yaml \'
+
 - name: get origin(not mirrored) docker registry name
   shell: |
       cat {{ containers_images_template_dest_file }} | awk '/pull_source:/ {print $2}' | head -n1 | tr -d ' '
   register: docker_origin_registry
 
+- name: create subdir for docker templates
+  file:
+      dest: "{{ template_base }}/docker"
+      state: directory
+
 - name: generate docker images file, using the undercloud registry
   vars:
-      env_file: "{{ template_base }}/docker-images.yaml"
+      env_file: "{{ template_base }}/docker/docker-images.yaml"
       os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
       undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/rhosp{{ os_version }}"
       external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry.stdout) }}/rhosp{{ os_version }}"
@@ -16,13 +29,26 @@
   tags:
       - skip_ansible_lint
 
+- name: first append docker_images file to the build script
+  lineinfile:
+      dest: "{{ containers_ir_deploy_script }}"
+      line: '-e {{ template_base }}/docker/docker-images.yaml \'
+
+- name: create nondefault images for containers
+  include: "{{ role_path }}/tasks/nondefault_images.yml"
+  with_items: "{{ install.overcloud.templates|default([]) }}"
+  loop_control:
+      loop_var: templates_list_file
+  # avoid empty strings
+  when: "templates_list_file != ''"
+
 - name: add insecure registry line
   vars:
       undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
       external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry.stdout) }}"
       reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base) }}"
   lineinfile:
-      path: "{{ template_base }}/docker-images.yaml"
+      path: "{{ template_base }}/docker/docker-images.yaml"
       state: present
       line: "  DockerInsecureRegistryAddress: {{ reg_base }}"
 
@@ -32,5 +58,18 @@
       external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry.stdout) }}"
       reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base) }}"
   shell: |
-      echo "parameter_defaults:">"{{ template_base }}/docker-images-ceph.yaml"
-      echo "  DockerCephDaemonImage: {{ reg_base }}/{{ install.registry.ceph.namespace }}:{{ install.registry.ceph.tag }}">>"{{ template_base }}/docker-images-ceph.yaml"
+      echo "parameter_defaults:">"{{ template_base }}/docker/docker-images-ceph.yaml"
+      echo "  DockerCephDaemonImage: {{ reg_base }}/{{ install.registry.ceph.namespace }}:{{ install.registry.ceph.tag }}">>"{{ template_base }}/docker/docker-images-ceph.yaml"
+
+- name: append ceph image template to the build script
+  lineinfile:
+      dest: "{{ containers_ir_deploy_script }}"
+      line: '-e {{ template_base }}/docker/docker-images-ceph.yaml \'
+
+- name: append ceph-ansible template
+  lineinfile:
+      dest: "{{ containers_ir_deploy_script }}"
+      line: '-e {{ install.heat.templates.basedir }}/environments/ceph-ansible/ceph-ansible.yaml \'
+  when:
+      - not install.storage.external
+      - storage_backend|default('') == 'ceph'
