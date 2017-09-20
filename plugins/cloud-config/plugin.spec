@@ -56,3 +56,24 @@ subparsers:
                       type: Value
                       help: |
                         Name of the node to remove
+
+            - title: Scale up nodes
+              options:
+                 scale-nodes:
+                      type: ListValue
+                      help: |
+                            List of compute nodes to be added.
+                            Example: compute-3,compute-4,compute-5
+
+            - title: Ironic Configuration
+              options:
+                  vbmc-username:
+                      type: Value
+                      default: admin
+                      help: |
+                        VBMC username (Necessary when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+                  vbmc-password:
+                      type: Value
+                      default: password
+                      help: |
+                        VBMC password (Necessary when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
