@@ -19,32 +19,31 @@
       name: cdn_registery
   vars:
       cdn_args_file: "{{ provision.bmc.cdn }}"
-      install_version: "{{ provision.bmc.version|default(bmc_rhos_release) }}"
   when:
       - "provision.bmc is defined"
       - "provision.bmc.cdn is defined"
-      - "bmc_rhos_release|openstack_distribution == 'OSP'"
+      - "bmc_install_version|openstack_distribution == 'OSP'"
   become: yes
 
 - include_role:
       name: rhos-release
   vars:
-      release: "{{ bmc_rhos_release }}"
+      release: "{{ bmc_install_version }}"
       build: "latest"
       rr_buildmods: "pin"
       mirror: "{{ bmc_repos | default(omit) }}"
   when:
-      - "bmc_rhos_release|openstack_distribution == 'OSP'"
+      - "bmc_install_version|openstack_distribution == 'OSP'"
       - not bmc_subscribtion == 'cdn'
       - cdn_status.rc != 0
 
 - include_role:
       name: rdo-release
   vars:
-      release: "{{ bmc_rhos_release }}"
+      release: "{{ bmc_install_version }}"
       rr_buildmods: "{{ bmc_rr_buildmods }}"
-      build: "latest"
-  when: bmc_rhos_release|openstack_distribution == 'RDO'
+      build: "current"
+  when: bmc_install_version|openstack_distribution == 'RDO'
 
 # Install the necessary packages to setup the bmc node
 - name: Install repos

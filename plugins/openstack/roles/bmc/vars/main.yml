@@ -14,6 +14,7 @@ rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
 bmc_subscribtion: "rhos"
 bmc_rhos_release: 10
 bmc_rr_buildmods: "none"
+bmc_install_version: "{{ provision.get('bmc', {}).version|default(bmc_rhos_release) }}"
 
 # helper varaibles to read from the provision settings
 bmc_name_prefix: "{{ (provision|default({})).prefix|default('') }}"
