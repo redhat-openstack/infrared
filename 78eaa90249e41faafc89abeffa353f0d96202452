@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c77a0c0c_926007cf",
+        "filename": "plugins/tripleo-overcloud/roles/containers/environment-setup/tasks/build_images.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2017-09-20T21:09:49Z",
+      "side": 1,
+      "message": "is this generally needed? i guess, based on it\u0027s added in this commit, that also just when install.container.images.packages(patches?) is defined?\n\n\n// also if possible better to put all of these related steps into extra included patch_images.yml and not scatter around (as that may be completely skipped in plenty of cases)\n(maybe patch.yml could extend image.packages and so that there could be also one block for re-tagging used)",
+      "revId": "78eaa90249e41faafc89abeffa353f0d96202452",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69fa947e_5b8ce68d",
+        "filename": "plugins/tripleo-overcloud/roles/containers/environment-setup/tasks/build_images.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2017-09-20T21:09:49Z",
+      "side": 1,
+      "message": "if these are input from cli or such, i\u0027m think they will be accessible as install.container.images.patch (\u0027-\u0027 in spec is converted to nested, see usage of other .spec vars in tasks around)",
+      "revId": "78eaa90249e41faafc89abeffa353f0d96202452",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8330a374_c0c4612e",
+        "filename": "plugins/tripleo-overcloud/roles/containers/environment-setup/tasks/build_images.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2017-09-20T21:09:49Z",
+      "side": 1,
+      "message": "set -errexit\notherwise even if there is typo in first command others will run, and if for some reason last one would pass it would be very hard to figure out what happened (as job would happily continue further without showing anything is wrong)",
+      "revId": "78eaa90249e41faafc89abeffa353f0d96202452",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
