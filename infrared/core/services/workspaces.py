@@ -9,8 +9,8 @@ import time
 import urllib2
 
 from ansible.parsing.dataloader import DataLoader
-from ansible import inventory
-from ansible.vars import VariableManager
+from ansible.inventory.manager import InventoryManager
+from ansible.vars.manager import VariableManager
 
 from infrared.core.utils import exceptions, logger
 
@@ -506,5 +506,5 @@ class WorkspaceManager(object):
             else:
                 raise exceptions.IRWorkspaceMissing(workspace=workspace_name)
 
-        return inventory.Inventory(DataLoader(), VariableManager(),
-                                   host_list=workspace.inventory)
+        return InventoryManager(DataLoader(), VariableManager(),
+                                host_list=workspace.inventory)
