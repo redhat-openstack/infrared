@@ -170,6 +170,30 @@
   file: path=/tmp/{{ inventory_hostname }} state=absent
   ignore_errors: true
 
+- set_fact:
+      odl_containers_list: ['opendaylight_api', 'opendaylight_ovs']
+  tags: odl
+
+- name: do we have OpenDaylight on the host?
+  shell: rpm -q opendaylight &>/dev/null && echo "1" || echo "0"
+  register: odl_on_host
+  tags: odl
+
+- name: do we have OpenDaylight containers?
+  shell: |
+      for container_name in {{ odl_containers_list | join(' ') }}; do
+          if docker inspect $container_name &>/dev/null ; then
+              echo 1
+          fi
+      done
+  register: odl_containers_present
+  ignore_errors: true
+  tags: odl
+
+- include: opendaylight.yml
+  when: odl_containers_present.stdout == '1' or odl_on_host.stdout == '1'
+  tags: odl
+
 - name: collect logs
   shell: |
       mkdir -p /tmp/{{ inventory_hostname }};
