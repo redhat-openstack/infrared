@@ -20,4 +20,4 @@ subparsers:
           max-depth:
               type: Value
               help: Number of levels to descend at most when collecting logs
-              default: 3
+              default: 4
