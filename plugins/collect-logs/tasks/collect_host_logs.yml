@@ -145,6 +145,36 @@
   file: path=/tmp/{{ inventory_hostname }} state=absent
   ignore_errors: true
 
+- name: Collect odl info and logs
+  shell: >
+    if rpm -q opendaylight; then
+        BASE_ODL_EXTRA=/var/log/extra/odl;
+        mkdir -p $BASE_ODL_EXTRA;
+        ODL_INFO=$BASE_ODL_EXTRA/odl_info.txt;
+        cp /opt/opendaylight/data/log/* $BASE_ODL_EXTRA;
+        echo "+ ip -o link" > $ODL_INFO;
+        ip -o link &>> $ODL_INFO;
+        echo "+ ip -o addr" >> $ODL_INFO;
+        ip -o addr &>> $ODL_INFO;
+        echo "+ arp -an" >> $ODL_INFO;
+        arp -an &>> $ODL_INFO;
+        echo "+ ip netns list" >> $ODL_INFO;
+        ip netns list &>> $ODL_INFO;
+        echo "+ ovs-ofctl -OOpenFlow13 show br-int" >> $ODL_INFO;
+        ovs-ofctl -OOpenFlow13 show br-int &>> $ODL_INFO;
+        echo "+ ovs-ofctl -OOpenFlow13 dump-flows br-int" >> $ODL_INFO;
+        ovs-ofctl -OOpenFlow13 dump-flows br-int &>> $ODL_INFO;
+        echo "+ ovs-ofctl -OOpenFlow13 dump-groups br-int" >> $ODL_INFO;
+        ovs-ofctl -OOpenFlow13 dump-groups br-int &>> $ODL_INFO;
+        echo "+ ovs-ofctl -OOpenFlow13 dump-group-stats br-int" >> $ODL_INFO;
+        ovs-ofctl -OOpenFlow13 dump-group-stats br-int &>> $ODL_INFO;
+        echo "+ ovs-vsctl list Open_vSwitch" >> $ODL_INFO;
+        ovs-vsctl list Open_vSwitch &>> $ODL_INFO;
+        echo "+ ovs-vsctl show" >> $ODL_INFO;
+        ovs-vsctl show &>> $ODL_INFO;
+    fi
+  ignore_errors: true
+
 - name: collect logs
   shell: |
       mkdir -p /tmp/{{ inventory_hostname }};
@@ -171,7 +201,7 @@
   ignore_errors: true
   with_items: "{{ other.archive.custom.split(',') }}"
 
-- name: compress logs in tar ball
+  - name: compress logs in tar ball
   command: "tar cf{{ other.gzip|ternary ('z', '') }} {{ inventory_hostname }}.tar{{ other.gzip|ternary ('.gz', '') }} {{ inventory_hostname }}"
   args:
       chdir: /tmp
