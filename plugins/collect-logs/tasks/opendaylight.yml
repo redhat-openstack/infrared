@@ -1,0 +1,41 @@
+- set_fact:
+      odl_log_dir: /var/log/extra/odl
+      odl_collect_script_file: "{{ ansible_user_dir }}/collect-logs-odl.sh"
+      odl_collect_cmds: |
+          date
+          set -x
+          ip -o link
+          ip -o addr
+          arp -an
+          ip netns list
+          ovs-ofctl -OOpenFlow13 show br-int
+          ovs-ofctl -OOpenFlow13 dump-flows br-int
+          ovs-ofctl -OOpenFlow13 dump-groups br-int
+          ovs-ofctl -OOpenFlow13 dump-group-stats br-int
+          ovs-vsctl list Open_vSwitch
+          ovs-vsctl show
+
+- name: ensure odl log directory is empty
+  file:
+      path: "{{ odl_log_dir }}"
+      state: "{{ item }}"
+  with_items:
+      - absent
+      - directory
+
+- name: prepare info and log collection script
+  copy:
+    dest: "{{ odl_collect_script_file }}"
+    content: "{{ odl_collect_cmds }}"
+    mode: 0755
+
+- name: collect odl info on the host
+  shell: "{{ odl_collect_script_file }} &> {{ odl_log_dir }}/odl_info.txt"
+
+- name: copy odl logs on the host
+  shell: "cp -pr /opt/opendaylight/data/log/* {{ odl_log_dir }}/"
+  when: odl_on_host.stdout == '1'
+
+- name: copy odl logs on the host
+  shell: "cp -pr /var/log/containers/opendaylight/* {{ odl_log_dir }}/"
+  when: odl_containers_present.stdout == '1'
