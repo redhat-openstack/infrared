@@ -5,7 +5,7 @@ import os
 from ansible.parsing.dataloader import DataLoader
 from ansible import inventory
 from ansible.playbook.play_context import MAGIC_VARIABLE_MAPPING
-from ansible.vars import VariableManager
+from ansible.vars.manager import VariableManager
 
 from infrared.core.services import CoreServices
 from infrared.core.utils import exceptions

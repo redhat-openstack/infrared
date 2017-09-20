@@ -10,7 +10,7 @@ import urllib2
 
 from ansible.parsing.dataloader import DataLoader
 from ansible import inventory
-from ansible.vars import VariableManager
+from ansible.vars.manager import VariableManager
 
 from infrared.core.utils import exceptions, logger
 
