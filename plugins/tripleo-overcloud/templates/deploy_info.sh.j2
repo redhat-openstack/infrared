@@ -30,23 +30,23 @@ while [ $# -gt 0 ]; do
 done
 
 echo "Server info"
-openstack server list |  awk 'BEGIN {a=0}; /\|/{ if (a>2) print $2} {a=a+1}' | xargs -n 1 openstack server show
+openstack server list -f value -c ID | xargs -n 1 openstack server show
 
 echo "Deployments"
 {% if (install.version|default(undercloud_version)|openstack_release) >= 9 %}
-DEPLOYMENTS=`openstack software deployment list --long`
-echo "$DEPLOYMENTS"
+openstack software deployment list --long
+DEPLOYMENTS=`openstack software deployment list -f value -c id -c config_id -c status --quote none`
 
-for a in `echo "$DEPLOYMENTS" | grep -v 'COMPLETE' | awk 'BEGIN {a=0}; /\|/{ if (a>2) print $2 "@" $4} {a=a+1}'`; do
-	deployment=${a%@*}
-	config=${a#*@}
+while read deployment config status; do
+	[ "${status}" == "COMPLETE" ] && continue
+
 	echo openstack software deployment output show "$deployment" --all $LONG
 	openstack software deployment output show "$deployment" --all $LONG
 	echo openstack software deployment show "$deployment"
 	openstack software deployment show "$deployment"
 	echo openstack software config show "$config"
 	openstack software config show "$config"
-done
+done < <(echo "$DEPLOYMENTS")
 {% else %}
 DEPLOYMENTS=`heat resource-list --n 5 overcloud | grep -wE "OS::Heat::SoftwareDeployment|OS::Heat::StructuredDeployment"`
 echo "$DEPLOYMENTS"

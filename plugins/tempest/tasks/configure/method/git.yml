@@ -21,7 +21,7 @@
 
 - name: Create tempest conf venv with latest pip, setuptools and pbr
   pip:
-      virtualenv: "{{ tempest_conf.dir }}/.venv"
+      virtualenv: "{{ virtualenvs.tempest_conf }}"
       name: "{{ item }}"
       state: latest
   with_items:
@@ -32,13 +32,13 @@
 - name: Install tempest_conf
   pip:
       name: "."
-      virtualenv: "{{ tempest_conf.dir }}/.venv"
+      virtualenv: "{{ virtualenvs.tempest_conf }}"
       chdir: "{{ tempest_conf.dir }}"
 
 - name: Init tempest
   shell: |
-      source .venv/bin/activate
-      tempest init "~/{{ test.dir }}"
+      source {{ virtualenvs.tempest_conf }}/bin/activate
+      tempest init ~/"{{ test.dir }}"
   args:
       chdir: "{{ tempest_conf.dir }}"
       creates: "~/{{ test.dir }}/etc"

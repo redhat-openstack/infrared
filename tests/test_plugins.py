@@ -2,6 +2,8 @@ import ConfigParser
 import os
 import git
 import yaml
+import shutil
+import tempfile
 
 import pytest
 
@@ -429,7 +431,7 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
     mock_os.chdir.assert_has_calls(mock_tempfile.mkdtemp.return_value)
     mock_git.clone_from.assert_called_with(
         url='https://sample_github.null/plugin_repo.git',
-        to_path=mock_os.path.join.return_value, branch="test")
+        to_path=mock_os.path.join.return_value)
     mock_os.join.has_call(real_dest, mock_os.listdir.return_value[0])
     mock_os.join.has_call(mock_tempfile.mkdtemp.return_value,
                           mock_os.listdir.return_value[0])
@@ -437,6 +439,55 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
                                             mock_os.path.join.return_value)
     mock_os.chdir.assert_has_calls(mock_os.getcwdu.return_value)
     mock_shutil.rmtree.assert_called_with(mock_tempfile.mkdtemp.return_value)
+
+
+def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
+    """
+    Validate that we take the folder name from the spec plugin name
+    instead of the git repo name
+    :param plugin_manager_fixture: Fixture object which yields
+    InfraredPluginManger object
+    :param mocker: mocker fixture
+    """
+
+    def clone_from_side_effect(url, to_path, **kwargs):
+        """
+        Define a side effect function to override the original behaviour of clone_from
+        """
+        shutil.copytree(src=plugin_dict["dir"], dst=to_path)
+
+    plugin_manager = plugin_manager_fixture()
+
+    mock_git = mocker.patch("infrared.core.services.plugins.git.Repo")
+    # use side effect to use copytree instead of original clone
+    mock_git.clone_from.side_effect = clone_from_side_effect
+    mock_os_path_exists = mocker.patch("infrared.core.services.plugins.os.path.exists")
+    # set to false in order to enter the git section in if/else inside add_plugin func
+    mock_os_path_exists.return_value = False
+    mock_tempfile = mocker.patch("infrared.core.services.plugins.tempfile")
+    mock_tempfile.mkdtemp.return_value = tempfile.mkdtemp(prefix="ir-")
+    mock_shutil = mocker.patch("infrared.core.services.plugins.shutil")
+
+    plugin_dict = get_plugin_spec_flatten_dict(
+        os.path.abspath(os.path.join(SAMPLE_PLUGINS_DIR, 'type1_plugin1')))
+
+    # add_plugin call
+    with pytest.raises(IRFailedToAddPlugin):
+        plugin_manager.add_plugin(
+            "https://sample_github.null/plugin_repo.git")
+
+    mock_shutil.rmtree.assert_called_with(mock_tempfile.mkdtemp.return_value)
+    # clean tmp folder
+    shutil.rmtree(mock_tempfile.mkdtemp.return_value)
+
+    # check it was cloned with the temp name
+    mock_git.clone_from.assert_called_with(
+        url='https://sample_github.null/plugin_repo.git',
+        to_path=os.path.join(mock_tempfile.mkdtemp.return_value, "plugin_repo"))
+
+    # check that it was copied with the plugin name and not repo name
+    mock_shutil.copytree.assert_called_with(os.path.join(mock_tempfile.mkdtemp.return_value, "plugin_repo"),
+                                            os.path.join(os.path.abspath("plugins"), plugin_dict["name"]))
 
 
 def test_add_plugin_from_git_exception(plugin_manager_fixture, mocker):

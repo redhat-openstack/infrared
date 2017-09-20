@@ -19,6 +19,13 @@
   tags: overcloud_ssl
   when: install.overcloud.ssl
 
+- name: Trust to undercloud cert
+  include: trust_uc.yml
+  when:
+      - not install.overcloud.ssl
+      - install.version|openstack_release >= 12
+      - (install.version|openstack_distribution) == 'OSP'
+
 - name: Generate the hostnames template
   include: hostname.yml
   when: templates.generate_host_name_template|default(True)
@@ -38,15 +45,13 @@
       - loadbalancer
       - loadbalancer_templates
 
-  # todo(obaranov)add rdo and cdn support for containers
-- name: setup containers
-  include: containers_rhosp.yml
+- include_role: name="containers/prepare-templates"
+  tags:
+      - containers
   when:
       - install.containers|default('')
       - install.version|openstack_release >= 12
       - (install.version|openstack_distribution) == 'OSP'
-  tags:
-      - containers
 
 - name: check for list of user defined templates
   find:

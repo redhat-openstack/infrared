@@ -27,6 +27,11 @@ subparsers:
                       help: Specifies whether we should run post install tasks
                       default: False
 
+                  pre:
+                      type: Bool
+                      help: Specifies whether we should run pre install tasks
+                      default: False
+
             - title: Containers
               options:
                   containers:
@@ -51,6 +56,16 @@ subparsers:
                       type: Value
                       help: The alternative docker registry namespace to use for deployment.
 
+                  registry-ceph-namespace:
+                      type: Value
+                      help: namesapce for the ceph container
+                      default: ceph/rhceph-2-rhel7
+
+                  registry-ceph-tag:
+                      type: Value
+                      help: tag used with the ceph container
+                      default: latest
+
             - title: Deployment Description
               options:
                   version:
@@ -67,12 +82,14 @@ subparsers:
                         - "10"
                         - "11"
                         - "12"
+                        - "13"
                         - kilo
                         - liberty
                         - mitaka
                         - newton
                         - ocata
                         - pike
+                        - queens
 
                   deployment-files:
                       type: VarDir

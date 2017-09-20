@@ -1,0 +1,71 @@
+- name: discover undercloud ssl
+  command: "grep -Fq OS_AUTH_URL=https {{ openstackrc }}"
+  vars:
+      openstackrc: ~/stackrc
+  register: undercloud_ssl
+  ignore_errors: true
+
+- name: discover undercloud cert exists
+  vars:
+      uc_cert_path: /etc/pki/ca-trust/source/anchors/undercloud-cacert.pem
+  stat:
+      path: "{{ uc_cert_path }}"
+  register: uc_cert_exists
+
+- block:
+    - name: assert ssl/inject-trust-anchor.yaml exists
+      stat:
+          path: "{{ install.heat.templates.basedir }}/environments/ssl/inject-trust-anchor.yaml"
+      register: anchor_ssl
+
+    - name: copy the inject-trust-anchor.yaml file locally
+      vars:
+          template_dir: "{{ install.heat.templates.basedir }}/environments"
+      copy:
+          src: "{{ template_dir}}/{{ item }}"
+          dest: "{{ template_base }}/{{ item|replace('ssl/','') }}"
+          remote_src: yes
+      with_items:
+            - "{% if anchor_ssl.stat.exists %}ssl/{% endif %}inject-trust-anchor.yaml"
+      register: copy_templates
+
+    - name: adjust the reference of template dir
+      replace:
+          dest: "{{ item.dest }}"
+          replace: "{{ item.src | dirname | dirname }}"
+          regexp: \.\.
+      with_items: "{{ copy_templates.results }}"
+      when: not anchor_ssl.stat.exists
+
+    - name: adjust the reference of template dir
+      replace:
+          dest: "{{ item.dest }}"
+          replace: "{{ item.src | dirname | dirname | dirname }}"
+          regexp: \.\./\.\.
+      with_items: "{{ copy_templates.results }}"
+      when: anchor_ssl.stat.exists
+
+    - name: register undercloud CA certificate
+      command: cat /etc/pki/ca-trust/source/anchors/undercloud-cacert.pem
+      register: uc_cacert
+
+    - name: insert the content of undercloud CA certificate
+      vars:
+          root_cert: "{{ uc_cacert }}"
+      replace:
+          dest: "{{ item.dest }}"
+          regexp: "{{ item.regex }}"
+          replace: "{{ item.replace_with }}"
+      with_items:
+          - dest: "{{ template_base }}/inject-trust-anchor.yaml"
+            regex: "{% if anchor_ssl.stat.exists %}The contents of your certificate go here.*${% else %}The contents of your root CA.*${% endif %}"
+            replace_with: "{{ root_cert.stdout | indent(4) | string }}"
+
+    - name: append the env file to the base overcloud deploy script
+      lineinfile:
+          dest: "~/overcloud_deploy.sh"
+          line: '-e {{ item.dest }} \'
+      with_items: "{{ copy_templates.results }}"
+  when:
+      - undercloud_ssl|succeeded
+      - uc_cert_exists.stat.exists

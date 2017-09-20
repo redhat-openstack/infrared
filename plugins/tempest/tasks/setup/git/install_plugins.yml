@@ -38,14 +38,14 @@
 
     - name: Get repo requirements
       pip:
-          virtualenv: "~/{{ test.dir }}/.venv"
+          virtualenv: "{{ virtualenvs.tempest }}"
           chdir: "~/{{ test.dir }}"
           requirements: "{{ item }}"
       with_items: "{{ plugins_reqs.results|selectattr('stat.exists')|map(attribute='stat.path')|list }}"
 
 - name: Install plugin packages
   pip:
-      virtualenv: "~/{{ test.dir }}/.venv"
+      virtualenv: "{{ virtualenvs.tempest }}"
       name: "{{ plugins_dir }}/{{ item }}"
       state: present
       editable: true

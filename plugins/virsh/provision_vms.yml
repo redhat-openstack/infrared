@@ -50,20 +50,20 @@
 
     # Fetch IP addresses
     - block:
-        - name: wait for VMs to come up, fix their ip and add to inventory
-          include: tasks/vms_3_netip.yml
+        - name: Get VMs hardware adresses
+          include: tasks/vms_3_hwaddr.yml
           with_dict: "{{ provision.topology.nodes }}"
           loop_control:
               loop_var: node
 
-        - name: Wait for IPs to be updated
-          async_status:
-              jid: "{{ item }}"
-          register: ip_tasks
-          until: ip_tasks.finished
-          retries: 300
-          with_items: "{{ async_ips|default([]) }}"
+        - name: Set ip VMs ip addresses and add to inventory
+          include: tasks/netip_natted.yml
+          when: "not topology_node.external_network.bridged|default(False)"
       tags: ips
+
+    - name: restart VMs
+      command: "virsh reboot {{ item.value.name }}"
+      with_dict: "{{ vms_info }}"
 
     - name: update tunneling conf
       template:

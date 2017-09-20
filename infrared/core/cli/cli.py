@@ -54,7 +54,8 @@ class CliParser(object):
                     'subparsers', {}).items():
                 cmd_parser = subparser.add_parser(
                     subparser_name,
-                    help=subparser_dict.get('help', ''),
+                    help=subparser_dict.get(
+                        'help', subparser_dict.get('description', '')),
                     description=subparser_dict.get(
                         'description', subparser_dict.get('help', '')),
                     formatter_class=parser_dict.get(
@@ -388,7 +389,7 @@ class KeyValueList(ComplexType):
     new_format = 'NodeA:1,NodeB:2...'
 
     re_pattern = \
-        '([\w\-\.]+{assign}[\w\-\.]+\{separate})*([\w\-\.]+{assign}[\w\-\.]+)'
+        '([\w\-\.]+{assign}[\w\-\.\:/]+\{separate})*([\w\-\.]+{assign}[\w\-\.\:/]+)'
     regex_formats = dict(
         default_style=dict(assign=':', separate=','),
     )
@@ -412,7 +413,7 @@ class KeyValueList(ComplexType):
                             "Please enter values in the following "
                             "format: {}".format(self.new_format))
 
-            result_dict = dict(pair.split(data['assign'])
+            result_dict = dict(pair.split(data['assign'], 1)
                                for pair in value.split(data['separate']))
             break
 

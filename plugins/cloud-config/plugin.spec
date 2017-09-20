@@ -18,6 +18,15 @@ subparsers:
                       lookup_dir: 'post_tasks'
                       required: yes
 
+            - title: Service Discovery
+              options:
+                  resync:
+                      type: Bool
+                      help: |
+                          Whether we need to resync services.
+                          Used with service discovery.
+                      default: False
+
             - title: External Network
               options:
                   deployment-files:
@@ -25,7 +34,6 @@ subparsers:
                       help: |
                           Name of folder in cloud's user on undercloud, which containing the templates of
                           the overcloud deployment.
-                      required: yes
 
                   network-protocol:
                       type: Value
@@ -42,3 +50,9 @@ subparsers:
                           (CIDR, Allocation Pool, Gateway)
                           __LISTYAMLS__
                       default: default_subnet
+            - title: Scale down nodes
+              options:
+                  node-name:
+                      type: Value
+                      help: |
+                        Name of the node to remove

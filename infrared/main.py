@@ -243,8 +243,8 @@ class PluginManagerSpec(api.SpecObject):
                                 help="Plugin Source (name/path/git URL)\n'all'"
                                      " will install all available plugins")
         add_parser.add_argument("--revision", help="git branch/tag/revision"
-                                " sourced plugins. Defaults to 'master'. "
-                                "Ingnored for 'plugin add all' command.")
+                                " sourced plugins. Ingnored for"
+                                "'plugin add all' command.")
         add_parser.add_argument("--dest", help="Destination directory to "
                                 "clone plugin under, in case of Git URL is "
                                 "provided as path")

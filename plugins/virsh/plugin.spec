@@ -38,6 +38,15 @@ subparsers:
 
             - title: topology
               options:
+                  prefix:
+                      type: Value
+                      help: |
+                          Prefix VMs and networks names with this value.
+                          Designed for cleanup improvement (clean only prefixed resources) and not for
+                          several deployments on the same hypervisor.
+                          Emty prefix on cleanup stage will cause deletion of all resources.
+                      default: ir-
+
                   # fixme(yfried): add support for user files
                   topology-network:
                       type: VarFile

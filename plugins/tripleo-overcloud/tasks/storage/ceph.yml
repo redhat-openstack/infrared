@@ -24,6 +24,7 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/storage-environment.yaml \'
+  when: (not install.containers) or (install.version|openstack_release < "12")
 
 #- name: include cpeh external storage data
 #  include_vars: "vars/storage/external/{{ install.storage.external }}.yml"
