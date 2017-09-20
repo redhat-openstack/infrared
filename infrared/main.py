@@ -355,7 +355,7 @@ class SSHSpec(api.SpecObject):
 
         issh_parser.add_argument("node_name", help="Node name. "
                                  "Ex.: controller-0"
-                                 ).completer = completers.node_list
+                                 ).completer = completers.node_and_group_list
         issh_parser.add_argument("remote_command", nargs="?", help="Run "
                                  "provided command line on remote host and "
                                  "return its output.")

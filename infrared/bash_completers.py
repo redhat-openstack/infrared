@@ -27,10 +27,21 @@ def group_list(**kwargs):
     """Return node groups names list for workspace"""
 
     workspace_manager = CoreServices.workspace_manager()
-    ws_name = kwargs[
-        "parsed_args"].name or workspace_manager.get_active_workspace().name
+    parsed_args = kwargs.get("parsed_args")
+    # need to carefully check if we have name in parsed_args
+    # which is of argprase.Namespace type
+    if parsed_args and 'name' in parsed_args:
+        ws_name = parsed_args.name
+    else:
+        ws_name = workspace_manager.get_active_workspace().name
     return [group[0] for group in workspace_manager.group_list(
         workspace_name=ws_name)]
+
+
+def node_and_group_list(**kwargs):
+    """Returns the list of nodes and groups."""
+
+    return list(set(node_list(**kwargs) + group_list(**kwargs)))
 
 
 def workspace_list(**kwargs):

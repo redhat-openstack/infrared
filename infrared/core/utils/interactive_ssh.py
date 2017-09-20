@@ -51,8 +51,14 @@ def ssh_to_host(hostname, remote_command=None):
 
     host = invent.get_host(hostname)
     if host is None:
-        raise exceptions.IRSshException(
-            "Host {} is not in inventory {}".format(hostname, inventory_file))
+        # try to use group instead of hostname
+        grp = invent.get_group(hostname)
+        if grp and grp.get_hosts():
+            host = grp.get_hosts()[0]
+        if host is None:
+            raise exceptions.IRSshException(
+                "Host or group '{}' is not in inventory {} or empty.".format(
+                    hostname, inventory_file))
 
     if _get_magic_var(host, "connection") == "local":
         raise exceptions.IRSshException("Only ssh transport acceptable.")
