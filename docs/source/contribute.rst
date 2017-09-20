@@ -1,9 +1,9 @@
 Contribute
 ==========
 
-Sending patches
----------------
-Changes to project are accepted via `review.gerrithub.io`_.
+Red Hatters
+-----------
+RedHat Employees should submit their changes via `review.gerrithub.io`_.
 Only members of ``rhosqeauto-core`` on group on GerritHub or
 ``redhat-openstack`` (RDO) organization on GitHub can submit patches.
 ask any of the current members about it.
@@ -18,3 +18,9 @@ For some more info about git review usage, read `GerritHub Intro`_ and `OpenStac
 .. _`review.gerrithub.io`: https://review.gerrithub.io/#/q/project:redhat-openstack/infrared
 .. _`GerritHub Intro`: https://review.gerrithub.io/Documentation/intro-quick.html#_the_life_and_times_of_a_change
 .. _`OpenStack Infra Manual`: http://docs.openstack.org/infra/manual/developers.html
+
+Non Red Hatters
+---------------
+Non-RedHat Employees should file pull requests to the `InfraRed project`_ on GitHub.
+
+.. _`InfraRed project`: https://github.com/redhat-openstack/infrared
