@@ -12,16 +12,16 @@
 # environment files we should think about using it here to automatically
 # include network-isolation.yaml.
 resource_registry:
-  OS::TripleO::BlockStorage::Net::SoftwareConfig: three-nics-vlans/cinder-storage.yaml
-  OS::TripleO::Compute::Net::SoftwareConfig: three-nics-vlans/compute.yaml
-  OS::TripleO::Controller::Net::SoftwareConfig: three-nics-vlans/controller-v6.yaml
-  OS::TripleO::ObjectStorage::Net::SoftwareConfig: three-nics-vlans/swift-storage.yaml
-  OS::TripleO::CephStorage::Net::SoftwareConfig: three-nics-vlans/ceph-storage.yaml
+  OS::TripleO::BlockStorage::Net::SoftwareConfig: five-nics-vlans/cinder-storage.yaml
+  OS::TripleO::Compute::Net::SoftwareConfig: five-nics-vlans/compute.yaml
+  OS::TripleO::Controller::Net::SoftwareConfig: five-nics-vlans/controller-v6.yaml
+  OS::TripleO::ObjectStorage::Net::SoftwareConfig: five-nics-vlans/swift-storage.yaml
+  OS::TripleO::CephStorage::Net::SoftwareConfig: five-nics-vlans/ceph-storage.yaml
 
 parameter_defaults:
-    ExternalNetCidr: '2620:52:0:13b8::/64'
-    ExternalAllocationPools: [{'start': '2620:52:0:13b8:5054:ff:fe3e:1', 'end': '2620:52:0:13b8:5054:ff:fe3e:aa'}]
-    ExternalInterfaceDefaultRoute: 2620:52:0:13b8::fe
+    ExternalNetCidr: '2001:db8:ca2:4::/64'
+    ExternalAllocationPools: [{'start': '2001:db8:ca2:4::100', 'end': '2001:db8:ca2:4:ffff:ffff:ffff:fffe'}]
+    ExternalInterfaceDefaultRoute: 2001:db8:ca2:4::1
     ExternalNetworkVlanID: 10
     InternalApiNetCidr: 'fd00:fd00:fd00:2000::/64'
     InternalApiAllocationPools: [{'start': 'fd00:fd00:fd00:2000::10', 'end': 'fd00:fd00:fd00:2000:ffff:ffff:ffff:fffe'}]
@@ -30,9 +30,9 @@ parameter_defaults:
     StorageMgmtNetCidr: 'fd00:fd00:fd00:4000::/64'
     StorageMgmtAllocationPools: [{'start': 'fd00:fd00:fd00:4000::10', 'end': 'fd00:fd00:fd00:4000:ffff:ffff:ffff:fffe'}]
 #    DnsServers: ["2620:52:0:13b8::fe"]
-    DnsServers: ["10.35.28.1"]
+    DnsServers: ["192.168.24.254"]
     EC2MetadataIp: 192.168.24.1
-    ControlPlaneDefaultRoute: 192.168.24.1
+    ControlPlaneDefaultRoute: 192.168.24.254
     NeutronExternalNetworkBridge: ""
-    NeutronBridgeMappings: "datacentre:br-ex,tenant:br-isolated"
+    NeutronBridgeMappings: "datacentre:br-ex,tenant:br-tenant"
     NeutronNetworkVLANRanges: "tenant:1000:2000"

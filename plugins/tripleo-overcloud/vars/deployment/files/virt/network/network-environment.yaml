@@ -12,16 +12,16 @@
 # environment files we should think about using it here to automatically
 # include network-isolation.yaml.
 resource_registry:
-  OS::TripleO::BlockStorage::Net::SoftwareConfig: three-nics-vlans/cinder-storage.yaml
-  OS::TripleO::Compute::Net::SoftwareConfig: three-nics-vlans/compute.yaml
-  OS::TripleO::Controller::Net::SoftwareConfig: three-nics-vlans/controller.yaml
-  OS::TripleO::ObjectStorage::Net::SoftwareConfig: three-nics-vlans/swift-storage.yaml
-  OS::TripleO::CephStorage::Net::SoftwareConfig: three-nics-vlans/ceph-storage.yaml
+  OS::TripleO::BlockStorage::Net::SoftwareConfig: five-nics-vlans/cinder-storage.yaml
+  OS::TripleO::Compute::Net::SoftwareConfig: five-nics-vlans/compute.yaml
+  OS::TripleO::Controller::Net::SoftwareConfig: five-nics-vlans/controller.yaml
+  OS::TripleO::ObjectStorage::Net::SoftwareConfig: five-nics-vlans/swift-storage.yaml
+  OS::TripleO::CephStorage::Net::SoftwareConfig: five-nics-vlans/ceph-storage.yaml
 
 parameter_defaults:
-    ExternalNetCidr: '10.0.0.0/24'
-    ExternalAllocationPools: [{'start': '10.0.0.101', 'end': '10.0.0.149'}]
-    ExternalInterfaceDefaultRoute: '10.0.0.1'
+    ExternalNetCidr: '172.16.0.0/24'
+    ExternalAllocationPools: [{'start': '172.16.0.101', 'end': '172.16.0.149'}]
+    ExternalInterfaceDefaultRoute: '172.16.0.1'
     ExternalNetworkVlanID: 10
     InternalApiNetCidr: '172.17.1.0/24'
     InternalApiAllocationPools: [{'start': '172.17.1.10', 'end': '172.17.1.200'}]
@@ -35,10 +35,10 @@ parameter_defaults:
     TenantNetCidr: '172.17.2.0/24'
     TenantAllocationPools: [{'start': '172.17.2.10', 'end': '172.17.2.200'}]
     TenantNetworkVlanID: 50
-    DnsServers: ['10.0.0.1']
+    DnsServers: ['192.168.24.254']
     EC2MetadataIp: 192.168.24.1
-    ControlPlaneDefaultRoute: 192.168.24.1
+    ControlPlaneDefaultRoute: 192.168.24.254
     ControlPlaneSubnetCidr: "24"
     NeutronExternalNetworkBridge: ""
-    NeutronBridgeMappings: "datacentre:br-ex,tenant:br-isolated"
+    NeutronBridgeMappings: "datacentre:br-ex,tenant:br-tenant"
     NeutronNetworkVLANRanges: "tenant:1000:2000"
