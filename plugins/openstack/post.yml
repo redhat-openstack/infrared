@@ -20,6 +20,10 @@
             state: present
         register: sshd_dns_config
         become: yes
+        # ssh may fail if the services didn't fully start, even if port open
+        # avoids: Failed to connect to the host via ssh:...
+        retries: 10
+        delay: 10
 
       - name: restart sshd after config change
         service:
