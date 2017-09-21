@@ -34,6 +34,8 @@
       security_groups: "{{ secgroups | default([]) | map('regex_replace', '(.*)', prefix + '\\1') | list or omit }}"
       state: present
       wait: "{{ topology_node.wait | default(wait) }}"
+      # default timeout of 180s is *not* enough
+      timeout: 300
       meta:
         submitter_user: "{{ lookup('env', 'USER') }}"
         submitter_hostname: "{{ lookup('env', 'HOSTNAME') }}"
