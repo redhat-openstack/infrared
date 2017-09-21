@@ -5,44 +5,7 @@ test_dict:
     - tempest.api.network
     - tempest.scenario..*network
     - "^neutron.tests.tempest.*"
-  blacklist:
-    # disabling this test explicitly as it runs despite "remove-extension = dvr" in tempest.conf
-    - neutron.tests.tempest.scenario.test_dvr.NetworkDvrTest.test_vm_reachable_through_compute
-    # https://bugs.opendaylight.org/show_bug.cgi?id=6718
-    - tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_update_instance_port_admin_state
-    # https://bugs.opendaylight.org/show_bug.cgi?id=6713
-    - tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_update_router_admin_state
-    # https://bugs.launchpad.net/tempest/+bug/1610994
-    - tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_connectivity_between_vms_on_different_networks
-    # "Skipped because network extension: l3_agent_scheduler is not enabled"
-    - tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_router_rescheduling
-    - tempest.api.network.admin.test_l3_agent_scheduler
-    - neutron.tests.tempest.api.admin.test_l3_agent_schedule
-    # https://bugs.opendaylight.org/show_bug.cgi?id=6191
-    - neutron.tests.tempest.api.test_routers.RoutersTest.test_router_interface_status
-    - neutron.tests.tempest.api.test_routers.RoutersIpV6Test.test_router_interface_status
-    # https://bugzilla.redhat.com/show_bug.cgi?id=1450894, https://bugzilla.redhat.com/show_bug.cgi?id=1399140
-    # https://bugzilla.redhat.com/show_bug.cgi?id=1414471, https://bugzilla.redhat.com/show_bug.cgi?id=1414478
-    - tempest.scenario.test_network_v6
-    # these are not run in neutron https://github.com/redhat-openstack/infrared/blob/master/plugins/tempest/vars/tests/neutron.yml
-    - tempest.scenario.test_shelve_instance
-    # these fail in neutron
-    - neutron.tests.tempest.scenario.test_trunk.TrunkTest.test_subport_connectivity
-    # skipping as it's using volume of size we don't support in the job
-    - tempest.scenario.test_minimum_basic.TestMinimumBasicScenario.test_minimum_basic_scenario
-    # https://bugs.launchpad.net/networking-odl/+bug/1709913
-    - neutron.tests.tempest.api.admin.test_quotas.QuotasTest.test_detail_quotas
-    # https://bugzilla.redhat.com/show_bug.cgi?id=1480267
-    - neutron.tests.tempest.api.test_revisions.TestRevisions.test_update_network_constrained_by_revision
-    # TODO: remove when https://review.openstack.org/#/c/492522/ available downstream
-    - neutron.tests.tempest.api.test_subnetpools.DefaultSubnetPoolsTest.test_convert_default_subnetpool_to_non_default
-    # https://bugzilla.redhat.com/show_bug.cgi?id=1479785
-    - neutron.tests.tempest.scenario.test_floatingip.FloatingIpSameNetwork.test_east_west
-    - neutron.tests.tempest.scenario.test_floatingip.FloatingIpSeparateNetwork.test_east_west
-    # TODO: remove when https://review.openstack.org/#/c/489517 available downstream
-    - neutron.tests.tempest.scenario.test_trunk.TrunkTest.test_trunk_subport_lifecycle
-    # skip testing snapshots
-    - tempest.scenario.test_snapshot_pattern.TestSnapshotPattern.test_snapshot_pattern
+  blacklist: ''
   plugins:
     neutron:
         repo: "https://github.com/openstack/neutron.git"
