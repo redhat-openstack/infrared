@@ -53,7 +53,7 @@ subparsers:
                       help: |
                           Network configuration to be used
                           __LISTYAMLS__
-                      default: 3_nets
+                      default: 5_nets
 
                   topology-nodes:
                       type: ListOfTopologyFiles
