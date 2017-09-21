@@ -3,14 +3,16 @@
   gather_facts: no
   any_errors_fatal: true
   tasks:
-      - name: Waiting for OpenStack nodes to be SSH-able
-        wait_for:
-            host: "{{ ansible_ssh_host }}"
-            port: 22
-            search_regex: OpenSSH
-            delay: 10
-            timeout: 500
-        delegate_to: localhost
+      # wait_for approach is flawed as port is open before ssh is able to auth
+      # due to bad timing (partial service intialization)
+      # avoids: Failed to connect to the host via ssh, where ssh
+      - name: Wait for nodes to be accesible by ansible
+        shell: "true"
+        args:
+            warn: no
+        retries: 30
+        delay: 10
+        tags: skip_ansible_lint
 
       - name: sshd - disable reverse dns lookup
         lineinfile:
@@ -28,16 +30,18 @@
         when: sshd_dns_config | changed
         become: yes
 
-      - os_server_facts:
+      - name: read os_server_facts
+        os_server_facts:
             cloud: "{{ provision.cloud }}"
         delegate_to: localhost
 
-      - os_port_facts:
+      - name: read os_port_facts
+        os_port_facts:
             cloud: "{{ provision.cloud }}"
         delegate_to: localhost
 
-      # gather facts once ssh is properly configured
-      - setup:
+      - name: gather facts once ssh is properly configured
+        setup:
 
       - name: setup unbooted nics
         vars:
