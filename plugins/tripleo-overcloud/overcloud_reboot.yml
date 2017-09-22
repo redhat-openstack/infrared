@@ -85,6 +85,15 @@
         delay: 5
         when: standby_node|succeeded
 
+      - name: cleanup resource
+        command: pcs resource cleanup {{ item }} --node {{ inventory_hostname }}
+        ignore_errors: true
+        with_items:
+          - "{{ cleanup_services }}"
+        when:
+          - cleanup_services is defined
+          - cleanup_services|default({})|length > 0
+
       - name: Check for any stopped/failed pcs resources
         become: true
         shell: |
@@ -94,7 +103,7 @@
         retries: 36
         delay: 5
         with_items:
-            - 'Stopped: \[ *{{ inventory_hostname }}*'
+            - 'Stopped:'
             - 'unmanaged'
         when: standby_node|succeeded
 
