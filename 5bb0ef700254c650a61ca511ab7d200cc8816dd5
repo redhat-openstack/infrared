@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "a32b0f47_7d1f0fa4",
+        "filename": "plugins/openstack/post.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2017-09-22T10:48:23Z",
+      "side": 1,
+      "message": "adding arbitrary sleep() between two actions and hoping it will solve something is case of bad coding,\nif you are waiting for some event to happen, detect it actively not passively, use some loop very querying the status, with no delay (or minimal in case too many frequent checks may do harm [e.g. shared jenkins or openstack api or such])",
+      "parentUuid": "1952c31b_0451a57e",
+      "range": {
+        "startLine": 11,
+        "startChar": 3,
+        "endLine": 12,
+        "endChar": 24
+      },
+      "revId": "5bb0ef700254c650a61ca511ab7d200cc8816dd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "729da2fd_17f5651a",
         "filename": "plugins/openstack/post.yml",
         "patchSetId": 4
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "only if you insist, i could add a \"shell: true\" task that does this. The only benefit is that there it lowers the chance of regression if someone moves the current task to another place or removes it.",
       "parentUuid": "729da2fd_17f5651a",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 17
+      },
+      "revId": "5bb0ef700254c650a61ca511ab7d200cc8816dd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "555662d6_8abbf18a",
+        "filename": "plugins/openstack/post.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2017-09-22T10:48:23Z",
+      "side": 1,
+      "message": "waiting for ssh should be done explicitely, not as \u0027by mistake we can also wait here, or here or there ...\u0027\n\nretries and delays just make infrared slower, not fully reliable [just pushing the chance a bit while not removing it]",
+      "parentUuid": "e200bb23_95139e51",
       "range": {
         "startLine": 25,
         "startChar": 0,
@@ -178,6 +226,30 @@
       "writtenOn": "2017-09-22T10:45:20Z",
       "side": 1,
       "message": "Arie, check your email for more details. I faced it **MANY** times, including even while testing the version of this patch which didn\u0027t had 300 value yet, search for \"Timeout waiting for the server to come up.\" inside  https://rhos-qe-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/gate-infrared-openstack/129/artifact/.sh/ir-openstack-provision.log/*view*/\n\nIf you look at the end you will see timeout error and task execution ~221s, \n\nI hope this is enough to demonstrate that this really happens in real life.\n\nWe alre have a BFA rule for it added by Jon back in 2015 and updated by me later. So yes it happens regularly, probably affecting more those running more builds.",
+      "parentUuid": "e80dd21e_4d770861",
+      "range": {
+        "startLine": 36,
+        "startChar": 6,
+        "endLine": 36,
+        "endChar": 47
+      },
+      "revId": "5bb0ef700254c650a61ca511ab7d200cc8816dd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ddbf9bf_66a2058c",
+        "filename": "plugins/openstack/tasks/servers.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2017-09-22T10:48:23Z",
+      "side": 1,
+      "message": "5 minutes for booting instance?\nget different cloud provider :)\n... or at most make it configurable (part of provisioning topo or site config?)\n\nI do have different expectations for how long it can take,\nif it\u0027s that long i would file a ticket, get better image etc.",
       "parentUuid": "e80dd21e_4d770861",
       "range": {
         "startLine": 36,
