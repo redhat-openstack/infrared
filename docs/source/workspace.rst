@@ -20,6 +20,12 @@ Inventory:
         infrared workspace inventory
 
         /home/USER/.infrared/workspaces/example/hosts
+Dir:
+    Just like 'inventory' but print the path of the active/given workspace directory::
+
+        infrared workspace dir <workspace_name>
+
+        /home/USER/.infrared/.workspaces/active_workspace
 Checkout
     Creates new workspace if needed and switches to it::
 

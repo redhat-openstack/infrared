@@ -85,6 +85,14 @@ class WorkspaceManagerSpec(api.SpecObject):
             "name", help="Workspace name",
             nargs="?").completer = completers.workspace_list
 
+        # dir
+        wrkspc_dir_parser = \
+            workspace_subparsers.add_parser(
+                'dir', help="Prints workspace's directory path")
+        wrkspc_dir_parser.add_argument(
+            "name", help="Workspace name",
+            nargs="?").completer = completers.workspace_list
+
         # list
         workspace_subparsers.add_parser(
             'list', help='Lists all the workspaces')
@@ -160,7 +168,9 @@ class WorkspaceManagerSpec(api.SpecObject):
         elif subcommand == 'checkout':
             self._checkout_workspace(pargs.name)
         elif subcommand == 'inventory':
-            self._fetch_inventory(pargs.name)
+            print self._fetch_inventory(pargs.name)
+        elif subcommand == 'dir':
+            print os.path.dirname(self._fetch_inventory(pargs.name))
         elif subcommand == 'list':
             workspaces = self.workspace_manager.list()
             headers = ("Name", "Active")
@@ -210,9 +220,12 @@ class WorkspaceManagerSpec(api.SpecObject):
         print("Now using workspace: '{}'".format(name))
 
     def _fetch_inventory(self, name):
-        """fetch inventory file for workspace.
+        """Returns the full path of active/given workspace's inventory file
 
-        if no active workspace found - create a new workspace
+        :param name: The name of the workspace to return the inventory file
+        :raise: IRNoActiveWorkspaceFound exception
+        :return: A string represents the full path of active/given workspace's
+        inventory file
         """
         if name:
             wkspc = self.workspace_manager.get(name)
@@ -220,7 +233,7 @@ class WorkspaceManagerSpec(api.SpecObject):
             wkspc = self.workspace_manager.get_active_workspace()
         if not wkspc:
             raise exceptions.IRNoActiveWorkspaceFound()
-        print wkspc.inventory
+        return wkspc.inventory
 
 
 class PluginManagerSpec(api.SpecObject):
