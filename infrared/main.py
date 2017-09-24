@@ -86,8 +86,11 @@ class WorkspaceManagerSpec(api.SpecObject):
             nargs="?").completer = completers.workspace_list
 
         # list
-        workspace_subparsers.add_parser(
+        wrkspc_list_parser = workspace_subparsers.add_parser(
             'list', help='Lists all the workspaces')
+        wrkspc_list_parser.add_argument(
+            "--active", action='store_true', dest='print_active',
+            help="Prints the active workspace only")
 
         # delete
         delete_parser = workspace_subparsers.add_parser(
@@ -162,16 +165,18 @@ class WorkspaceManagerSpec(api.SpecObject):
         elif subcommand == 'inventory':
             self._fetch_inventory(pargs.name)
         elif subcommand == 'list':
-            workspaces = self.workspace_manager.list()
-            headers = ("Name", "Active")
-            workspaces = sorted([
-                workspace.name for workspace in self.workspace_manager.list()])
-
-            print fancy_table(
-                headers,
-                *[(workspace, ' ' * (len(headers[-1]) / 2) + "*" if
-                    self.workspace_manager.is_active(workspace) else "")
-                  for workspace in workspaces])
+            if pargs.print_active:
+                print self.workspace_manager.get_active_workspace().name
+            else:
+                workspaces = self.workspace_manager.list()
+                headers = ("Name", "Active")
+                workspaces = sorted([workspace.name for workspace in
+                                     self.workspace_manager.list()])
+                print fancy_table(
+                    headers,
+                    *[(workspace, ' ' * (len(headers[-1]) / 2) + "*" if
+                        self.workspace_manager.is_active(workspace) else "")
+                      for workspace in workspaces])
         elif subcommand == 'delete':
             for workspace_name in pargs.name:
                 self.workspace_manager.delete(workspace_name)

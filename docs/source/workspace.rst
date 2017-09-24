@@ -62,11 +62,15 @@ List:
 
         infrared workspace list
 
-        | Name        | Is Active   |
-        |-------------+-------------|
-        | example     |             |
-        | example2    | True        |
-        | rdo_testing |             |
+        +-------------+--------+
+        | Name        | Active |
+        +-------------+--------+
+        | example     |        |
+        | example2    |    *   |
+        | rdo_testing |        |
+        +-------------+--------+
+
+    .. note:: If the ``--active`` switch is given, only the active workspace will be printed
 
 Delete:
     Deletes a workspace::
