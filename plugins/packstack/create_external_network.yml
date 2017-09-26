@@ -117,3 +117,11 @@
             allocation_pool_start: "{{ pool.start|default(p_pool_start or omit) }}"
             allocation_pool_end: "{{ pool.end|default(p_pool_end or omit) }}"
         register: subnet_create
+      - name: gw ip hack
+        vars:
+            p_data: "{{ public_subnet }}"
+            p_gateway: "{{ p_data.subnet_gateway|default(False) }}"
+            gateway_ip: "{{ public_subnet.gateway|default(p_gateway or omit) }}"
+        become: yes
+        shell: "ip addr add {{ gateway_ip }} dev br-myphysnet || ( ip -o addr show dev br-myphysnet | grep {{ gateway_ip }}/ )"
+        when: install.network.gwhack
