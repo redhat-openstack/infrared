@@ -34,6 +34,11 @@ subparsers:
                           Default network backend used for tenant networks
                           __LISTYAMLS__
                       default: neutron_ml2-vxlan
+                  network-gwhack:
+                     type: Bool
+                     help: |
+                         Use the externa gw ip on controllers interface, this can help if your cloud provider
+                         has strick MAC filtering rules and you have just a simple setup
                   public-network:
                       type: Bool
                       help: Deploy "public" external network on the Cloud as post-install.
