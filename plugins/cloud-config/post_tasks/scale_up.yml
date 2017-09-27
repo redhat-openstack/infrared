@@ -1,0 +1,163 @@
+- name: Scale up validation
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: Checking overcloud_deploy_file
+        stat:
+            path: "~/overcloud_deploy.sh"
+        register: overcloud_deploy_file
+
+      - fail:
+            msg: "Overcloud deployment script not found. Expected path: ~/overcloud_deploy.sh "
+        when: overcloud_deploy_file.stat.exists == False
+
+      - fail:
+            msg: "--scale-nodes is required"
+        when: install.get('scale', {}).nodes is not defined
+
+- include: ../tasks/scale/ironic_pxe_ipmitool.yml
+  when: hostvars[groups['undercloud']|first].undercloud_version|openstack_release >= 11
+
+- name: Scale up
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+         overcloud_deploy_script: "~/overcloud_deploy.sh"
+         instackenv_file_name: "~/newnodes.json"
+  tasks:
+      - name: discover provsion network name
+        include: ../tasks/scale/discover_provision_net.yml
+        vars:
+            uc_provision_net: "ctlplane"
+
+      - name: generate instackenv file
+        include: ../tasks/scale/generate_instackenv.yml
+
+      - name: register nodes to instack
+        shell: |
+            source ~/stackrc
+            openstack baremetal import --json {{ instackenv_file_name }}
+        tags: skip_ansible_lint
+
+      - name: get nodes UUID
+        shell: |
+            source ~/stackrc
+            openstack baremetal node show  {{ item }} -c uuid | grep 'uuid' | awk '{print $4}'
+        with_items: "{{ install.scale.nodes }}"
+        register: nodes_uuid_info
+
+      - name: provision state of baremetal node to manage
+        shell: |
+            source ~/stackrc
+            openstack baremetal node manage {{ item.stdout }}
+        with_items: "{{ nodes_uuid_info.results }}"
+        tags: skip_ansible_lint
+
+      - name: start node introspection
+        shell: |
+            source ~/stackrc
+            openstack overcloud node introspect {{ item.stdout }} --provide
+        with_items: "{{ nodes_uuid_info.results }}"
+        tags: skip_ansible_lint
+
+      - name: set additional properties
+        shell: |
+            source ~/stackrc
+            openstack baremetal node set --property capabilities='profile:{{ item.item.rstrip('1234567890-').split('-')[-1] }},boot_option:local' {{ item.stdout }}
+        with_items: "{{ nodes_uuid_info.results }}"
+        tags: skip_ansible_lint
+
+      - name: get kernel image uuid
+        shell: |
+            source ~/stackrc
+            openstack image show bm-deploy-kernel -c id | grep 'id' | awk '{print $4}'
+        register: kernel_uuid
+
+      - name: get ramdisk image uuid
+        shell: |
+            source ~/stackrc
+            openstack image show bm-deploy-ramdisk -c id | grep 'id' | awk '{print $4}'
+        register: ramdisk_uuid
+
+      - name: set kernel image
+        shell: |
+            source ~/stackrc
+            openstack baremetal node set --driver-info deploy_kernel='{{ kernel_uuid.stdout }}' {{ item.stdout }}
+        with_items: "{{ nodes_uuid_info.results }}"
+        tags: skip_ansible_lint
+
+      - name: set ramdisk image
+        shell: |
+            source ~/stackrc
+            openstack baremetal node set --driver-info deploy_ramdisk='{{ ramdisk_uuid.stdout }}' {{ item.stdout }}
+        with_items: "{{ nodes_uuid_info.results }}"
+        tags: skip_ansible_lint
+
+      - name: calculate new nodes count
+        set_fact:
+            new_nodes_count: "{{ new_nodes_count|default({})|combine({ node_type: (new_nodes_count|default({})).get(node_type)|default(0)|int + 1 }) }}"
+        vars:
+            node_type: "{{ item.rstrip('1234567890-').split('-')[-1] }}"
+        with_items: "{{ install.scale.nodes }}"
+
+      - block:
+            - name: get current scale for nodes
+              shell: cat {{ overcloud_deploy_script }} | egrep '^\-\-{{ node_type }}(-.*)?-scale' | awk '{print $2}'
+              vars:
+                  node_type: "{{ item.key }}"
+              with_dict: "{{ new_nodes_count }}"
+              register: current_node_count
+
+            - name: Update scale count in overcloud deploy script
+              replace:
+                  path: "{{ overcloud_deploy_script }}"
+                  regexp: "^(--{{ item.item.key }}(-.*)?-scale) {{ item.stdout }}"
+                  replace: "\\1 {{ item.stdout|int + new_nodes_count[item.item.key]|int }}"
+                  backup: yes
+              with_items: "{{ current_node_count.results }}"
+
+        when: hostvars[groups['undercloud']|first].undercloud_version|openstack_release <= 10
+
+      - block:
+            - name: get location of nodes_data.yaml
+              shell: cat {{ overcloud_deploy_script }} | grep nodes_data.yaml | awk '{print $2}'
+              register: nodes_data_path
+
+            - name: get current scale for nodes
+              shell: cat {{ nodes_data_path.stdout }} | egrep -i '{{ node_type }}.*Count:' | awk '{print $2}'
+              vars:
+                  node_type: "{{ item.key }}"
+              with_dict: "{{ new_nodes_count }}"
+              register: current_node_count
+
+            - name: Update scale count in overcloud deploy script
+              replace:
+                  path: "{{ nodes_data_path.stdout }}"
+                  regexp: "(?i)^(\\s+{{ item.item.key }}.*Count:) {{ item.stdout }}"
+                  replace: "\\1 {{ item.stdout|int + new_nodes_count[item.item.key]|int }}"
+                  backup: yes
+              with_items: "{{ current_node_count.results }}"
+
+        when: hostvars[groups['undercloud']|first].undercloud_version|openstack_release >= 11
+
+      - name: Print deploy command
+        command: "cat {{ overcloud_deploy_script }}"
+
+      - name: Execute the overcloud deploy script
+        shell: |
+            source ~/stackrc
+            bash {{ overcloud_deploy_script }} &> overcloud_scale_up.log
+        register: overcloud_scale
+        ignore_errors: yes
+
+      - name: Print the last few lines of the output to spot failures
+        command: tail -n60 overcloud_scale_up.log
+
+      - name: Print stack failures
+        shell: |
+            source ~/stackrc
+            openstack stack failures list overcloud
+        when: overcloud_scale.rc != 0 and undercloud_version|openstack_release >= 10
+        tags: skip_ansible_lint
