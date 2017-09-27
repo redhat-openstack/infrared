@@ -37,6 +37,11 @@ Please see `Bootstrap <bootstrap.html>`_ guide where usage is demonstrated.
     If ``--topology-extend`` is True, all nodes from ``--topology-nodes`` will be
     added as new additional nodes.
 
+* ``--topology-memory-overcommit``
+    By default memory overcommitment is false and provision will fail if Hypervisor's free
+    memory is lower than required memory for all nodes. Use `--host-mem-overcommitment True`
+    to change default behaviour.
+
 Network layout
 ~~~~~~~~~~~~~~
 Baremetal machine used as host for such setup is called `hypervisor`. The whole deployment is designed to
