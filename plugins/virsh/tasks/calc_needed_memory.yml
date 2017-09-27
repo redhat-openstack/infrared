@@ -1,0 +1,13 @@
+---
+# save current node to "{{ node_dict }}"
+- include_vars:
+    file: "{{ node.key }}"
+    name: node_dict
+
+- name: merge overriden settings to the separate var
+  set_fact:
+      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
+
+- name: calculate needed memory
+  set_fact:
+      nodes_memory: "{{ nodes_memory|default(0)|int + (topology_node.memory|int * node.value)}}"

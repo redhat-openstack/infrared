@@ -1,0 +1,21 @@
+provision:
+  bootmode: hd
+  host:
+    address: seal44.qa.lab.tlv.redhat.com
+    key: /root/.ssh/rhos-jenkins/id_rsa
+    memory:
+      overcommit: false
+    user: root
+    validate: true
+  image:
+    url: http://rhos-qe-mirror-tlv.usersys.redhat.com/rel-eng/RHEL-7.4-RC-1.2/compose/Server/x86_64/images/rhel-guest-image-7.4-191.x86_64.qcow2
+  prefix: ir-
+  topology:
+    extend: false
+    network: /home/dtodorov/Tools/infrared/plugins/virsh/defaults/topology/network/3_nets.yml
+    nodes:
+      /home/dtodorov/Tools/infrared/plugins/virsh/defaults/topology/nodes/ceph.yml: 2
+      /home/dtodorov/Tools/infrared/plugins/virsh/defaults/topology/nodes/controller.yml: 1
+      /home/dtodorov/Tools/infrared/plugins/virsh/defaults/topology/nodes/networker.yml: 1
+      /home/dtodorov/Tools/infrared/plugins/virsh/defaults/topology/nodes/undercloud.yml: 1
+    username: cloud-user
