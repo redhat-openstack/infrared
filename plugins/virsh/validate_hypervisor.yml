@@ -1,0 +1,17 @@
+---
+- name: Validate hypervisor
+  hosts: hypervisor
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - name: calculate needed memory
+        include: tasks/calc_needed_memory.yml
+        with_dict: "{{ provision.topology.nodes }}"
+        loop_control:
+            loop_var: node
+
+      - fail:
+            msg: "Not enought memory on Hypervisor. Current free memory is {{ ansible_memfree_mb }}MB, required is {{ nodes_memory }}MB. Use `--host-memory-overcommit True` if you want to overcommit memory usage"
+        when:
+            - nodes_memory|int > ansible_memfree_mb|int
+            - not provision.host.memory.overcommit|default('False')

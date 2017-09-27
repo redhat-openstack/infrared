@@ -25,6 +25,13 @@ subparsers:
                           Disable this option if you already know your hypervisor support virtualization and that it
                           is enabled.
                       default: True
+                  host-memory-overcommit:
+                      type: Bool
+                      help: |
+                          By default memory overcommitment is false and provision will fail if Hypervisor's free
+                          memory is lower than required memory for all nodes. Use `--host-mem-overcommitment True`
+                          to change default behaviour.
+                      default: False
 
             - title: image
               options:
