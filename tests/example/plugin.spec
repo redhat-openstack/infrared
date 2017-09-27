@@ -24,10 +24,15 @@ subparsers:
 
             - title: Group C
               options:
-                  uni-dep:
+                  uni-dep-a:
                       type: Value
-                      help: "Help for --uni-dep"
+                      help: "Help for --uni-dep-a"
                       required_when: "req-arg-a == yes"
+
+                  uni-dep-b:
+                      type: Value
+                      help: "Help for --uni-dep-b"
+                      required_when: uni-dep-a is defined
 
                   multi-dep:
                       type: Value
