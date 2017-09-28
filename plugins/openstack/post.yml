@@ -84,10 +84,7 @@
         force: yes
 
     - name: update inventory file symlink
-      file:
-        dest: "{{ inventory_dir }}/hosts"
-        state: link
-        src: hosts-prov
+      shell:  "ln -sf {{ inventory_dir }}/hosts-prov {{ inventory_dir }}/hosts"
 
 - name: Perform OVB configuration
   include: ovb.yml
