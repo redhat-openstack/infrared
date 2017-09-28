@@ -53,13 +53,6 @@
         command: tail -n60 overcloud_install.log
 
       # List of failures is supported since RHOS10
-      - name: Print stack failures
-        shell: |
-            source ~/stackrc
-            openstack stack failures list overcloud
-        when: overcloud_deploy.rc != 0 and install.version|default(undercloud_version)|openstack_release >= 10
-        tags: skip_ansible_lint
-
       - name: Prepare stack failures long log
         shell: |
             source ~/stackrc
@@ -81,9 +74,22 @@
             mkdir -p /var/log/extra/
             source ~/stackrc
             ~{{ ansible_ssh_user }}/deploy_info.sh --long > /var/log/extra/deploy_resources.log 2>&1 &
-            ~{{ ansible_ssh_user }}/deploy_info.sh 2>&1 &
             wait
         tags: summary
+
+      - name: Print short deploy info if deployment succeeded
+        shell: ~{{ ansible_ssh_user }}/deploy_info.sh 2>&1 &
+        when: overcloud_deploy.rc == 0
+        tags:
+            - skip_ansible_lint
+            - summary
+
+      - name: Print long deploy info if deployment failed
+        command: cat /var/log/extra/deploy_resources.log
+        when: overcloud_deploy.rc != 0
+        tags:
+            - skip_ansible_lint
+            - summary
 
 - name: Update inventory with overcloud details
   include: update_inventory.yml
