@@ -114,7 +114,7 @@
             - name: get the node UUID
               shell: |
                   source ~/stackrc
-                  ironic node-list | grep {{ item.name | default(item) }} | awk '{print $2}'
+                  ironic node-list | grep -w {{ item.name | default(item) }} | awk '{print $2}'
               with_items: "{{ overcloud_facts.nodes | default([])}}"
               register: node_list
         when: "overcloud_facts.nodes[0].name is defined"
