@@ -9,13 +9,14 @@ os:
     variant: "rhel7"
 disks:
     disk1:
+        import_url: null
         path: "/var/lib/libvirt/images"
         dev: "/dev/vda"
         size: "20G"
         cache: "unsafe"
-interfaces:
-    - &external
-        network: management
-external_network: *external
+        preallocation: "metadata"
+# infraces and external_network dicts were moved to network file.
+interfaces: null
+
 groups:
     - odl_controller
