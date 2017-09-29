@@ -19,16 +19,8 @@
     "rcFile": "stackrc"
     },
   "environment": {
-    "environment_files": "{{ test.environment.url }}",
-    "plan_tgz": "{{ test.plan }}",
-    "topology": {
-      "controller": "3",
-      "compute": "2",
-      "ceph": "0",
-      "swift": "0",
-      "cinder": "0"
-      },
-      "use_network_isolation": "no"
+    "environment_files": "{{ (test.environment.url=='')|ternary(ospdui_environment_url, test.environment.url) }}",
+    "plan_tgz": "{{ test.plan }}"
     },
   "logger": {
     "level": "warning"
