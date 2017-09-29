@@ -1,4 +1,4 @@
-- name: find udnercloud file
+- name: find undercloud file
   find:
       file_type: file
       pattern: "{{ test.undercloudrc | basename }}"
@@ -14,7 +14,7 @@
       msg: "Unable to find rc file: {{ test.undercloudrc }}"
   when: test.undercloudrc|default('') and undercloudrc_find.matched == 0
 
-- name: copy udnercloud file
+- name: copy undercloud file
   vars:
       file_src: "{{ undercloudrc_find.files[0].path if test.undercloudrc is defined else inventory_dir + '/stackrc' }}"
   copy:
@@ -66,6 +66,11 @@
       src: "{{ setup.ospdui.dir }}/conf/sample_default.conf.json"
       dest: "{{ setup.ospdui.dir }}/conf/default.conf.json"
       remote_src: yes
+
+- name: prepare environment files
+  include: environment.yml
+  tags:
+      - setup_environment
 
 - name: create ospdui config
   vars:

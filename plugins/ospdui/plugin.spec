@@ -44,7 +44,7 @@ subparsers:
                   environment-url:
                       type: Value
                       help: |
-                          The link where the environment files for the sepcific baremetal environment (especially instackenv.json) can be found
+                          The link where the environment files for the specific baremetal environment (especially instackenv.json) can be found
                       default: ''
                   plan:
                       type: Value
@@ -54,3 +54,8 @@ subparsers:
                       type: Value
                       help: |
                           The test framework configuration file to use instead of the default.
+                  topology-config:
+                      type: VarFile
+                      help: |
+                          The topology configuration to be used.
+                      default: default.conf
