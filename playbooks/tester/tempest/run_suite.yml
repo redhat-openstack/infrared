@@ -50,6 +50,14 @@
   when: test_suite.value.test_regex is defined and test_suite.value.test_regex
 
 - block:
+      # os-testr's API not suitable anymore since changed significantly in newer versions
+      - name: Ensure we are running os-testr not higher that 0.8.0
+        pip:
+            state: present
+            virtualenv: "~/{{ tester.dir }}/.venv"
+            name: "os-testr"
+            version: "0.8.0"
+
       - name: run tempest "{{ test_suite.key }}" suite
         shell: >
             [ -e .venv/bin/activate ] && source .venv/bin/activate;
