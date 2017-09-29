@@ -1,0 +1,33 @@
+# this playbook prepares the environment files for the run
+# currently ospdui framework ssh to the undercloud and try
+# to fetch environment file from the undercloud.
+# So delegating most of the task to the undercloud
+- name: create env folder on the undercloud
+  file:
+      path: /home/stack/ospdui_env/
+      state: directory
+  delegate_to: "{{ groups.undercloud | first }}"
+
+- name: create toplogy config file
+  copy:
+      src: "{{ test.topology.config }}"
+      dest: /home/stack/ospdui_env/topology.conf.json
+  delegate_to: "{{ groups.undercloud | first }}"
+
+- name: copy environment files
+  command: "cp {{ item.src }} {{ item.dest }}"
+  delegate_to: "{{ groups.undercloud | first }}"
+  with_items:
+      - src: "/home/stack/instackenv.json"
+        dest: "/home/stack/ospdui_env/instackenv.json"
+
+# todo put any other required environment files to the ~/ospdui_env/
+- name: serve environment folder
+  shell: "(cd /home/stack/ospdui_env/; python -mSimpleHTTPServer 8082 >/dev/null 2>&1 &)"
+  async: 10
+  poll: 0
+  delegate_to: "{{ groups.undercloud | first }}"
+
+- name: set fact for the environment url
+  set_fact:
+      ospdui_environment_url: "http://localhost:8082"

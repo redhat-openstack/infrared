@@ -21,7 +21,7 @@
 
 - name: remove already used ips from dhcp_ranges
   include: remove_used_ips.yml
-  with_dict: "{{ networks }}"
+  with_dict: "{{ networks|default({}) }}"
   loop_control:
           loop_var: network
   when: provision.topology.extend|default(False)
