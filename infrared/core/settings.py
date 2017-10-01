@@ -67,4 +67,18 @@ class VarsDictManager(object):
                 if '=' not in extra_var:
                     raise exceptions.IRExtraVarsException(extra_var)
                 key, value = extra_var.split("=")
-                dict_utils.dict_insert(vars_dict, value, *key.split("."))
+                if value.startswith('@'):
+                    with open(value[1:]) as f_obj:
+                        loaded_yml = yaml.load(f_obj)
+
+                    tmp_dict = {}
+                    dict_utils.dict_insert(tmp_dict, loaded_yml, *key.split("."))
+
+                    dict_utils.dict_merge(
+                        vars_dict,
+                        tmp_dict,
+                        conflict_resolver=dict_utils.ConflictResolver.
+                        unique_append_list_resolver)
+
+                else:
+                    dict_utils.dict_insert(vars_dict, value, *key.split("."))
