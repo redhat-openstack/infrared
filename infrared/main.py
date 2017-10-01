@@ -20,8 +20,8 @@ def inject_common_paths():
 
     version_info = version.VersionInfo('infrared')
 
-    common_path = pkg.resource_filename(version_info.package,
-                                        'common')
+    common_path = pkg.resource_filename(version_info.package, 'common')
+
     override_conf_path(common_path, 'ANSIBLE_ROLES_PATH', 'roles')
     override_conf_path(common_path, 'ANSIBLE_FILTER_PLUGINS', 'filter_plugins')
     override_conf_path(common_path, 'ANSIBLE_CALLBACK_PLUGINS',

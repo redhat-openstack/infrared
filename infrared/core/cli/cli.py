@@ -15,6 +15,7 @@ from copy import deepcopy
 import yaml
 
 from infrared.core.services import CoreServices
+from infrared.core.services.plugins import InfraredPluginManager
 from infrared.core.utils import logger, exceptions, dict_utils
 
 LOG = logger.LOG
@@ -566,19 +567,34 @@ class VarFileType(FileType):
     def defaults_dir(self):
         return self.settings_dirs[1]
 
+    @property
+    def plugin_dir(self):
+        return self.settings_dirs[2]
+
     def get_check_locations(self, value):
-        pathes = [
-            os.path.join(
-                os.path.join(self.vars_dir, *self.arg_name.split('-')),
-                value),
-            os.path.join(
-                os.path.join(self.defaults_dir, *self.arg_name.split('-')),
-                value)
-        ]
+
+        arg_vars_dir = os.path.join(os.path.join(
+            self.vars_dir, *self.arg_name.split('-')), value)
+        arg_defaults_dir = os.path.join(os.path.join(
+            self.defaults_dir, *self.arg_name.split('-')), value)
+
+        paths = [arg_vars_dir, arg_defaults_dir]
+
+        ir_plugin = InfraredPluginManager.get_plugin(self.sub_command_name)
+        if ir_plugin is not None:
+            for a_remote in ir_plugin.remotes or []:
+                paths += [
+                    arg_vars_dir.replace(
+                        self.plugin_dir,
+                        os.path.join(self.plugin_dir, a_remote['name'])),
+                    arg_defaults_dir.replace(
+                        self.plugin_dir,
+                        os.path.join(self.plugin_dir, a_remote['name']))
+                ]
 
         # check also for files with yml extension
         result = super(VarFileType, self).get_check_locations(value)
-        result.extend(pathes)
+        result.extend(paths)
         return result
 
 

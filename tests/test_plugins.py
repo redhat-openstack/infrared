@@ -8,6 +8,7 @@ import tempfile
 
 import pytest
 
+from infrared.api import SpecManager, InfraredPluginsSpec
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
@@ -28,7 +29,8 @@ SUPPORTED_TYPES_DICT = dict(
         supported_type2='Tools of supported_type2',
         provision='Provisioning plugins',
         install='Installing plugins',
-        test='Testing plugins'
+        test='Testing plugins',
+        other='Other type plugins'
     )
 )
 
@@ -304,8 +306,8 @@ def test_remove_plugin(plugin_manager_fixture):
 
         plugin_manager.remove_plugin(plugin_dict['name'])
 
-        with pytest.raises(KeyError):
-            plugin_manager.get_plugin(plugin_name=plugin_dict['name'])
+        assert \
+            plugin_manager.get_plugin(plugin_name=plugin_dict['name']) is None
 
         assert not plugin_in_conf(
             plugins_conf=plugin_manager.config_file,
@@ -656,3 +658,36 @@ def test_git_plugin_update(git_plugin_manager_fixture):
     assert commits_list[0] == repo.git.rev_parse('HEAD'), \
         "Plugin haven't been updated from '{}' to '{}'".format(
             commits_list[-1], commits_list[0])
+
+
+def test_plugin_with_remotes(tmpdir, plugin_manager_fixture):
+    """
+    """
+
+    plugin_tar_gz = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        'example/plugins/git_plugin/plugin_with_remotes.tar.gz')
+
+    # Prepare the plugins test dir
+    test_plugins_dir = tmpdir.mkdir('test_plugins_dir')
+    t_file = tarfile.open(plugin_tar_gz)
+    t_file.extractall(path=str(test_plugins_dir))
+
+    base_plugin_dir = os.path.join(test_plugins_dir.strpath, 'base_plugin')
+    base_plugin_spec = os.path.join(base_plugin_dir, PLUGIN_SPEC)
+
+    # Update remotes URL in base plugin spec file
+    with open(base_plugin_spec) as r_fo:
+        updated_spec = \
+            r_fo.read().replace('TEST_PLUGINS_DIR', test_plugins_dir.strpath)
+    with open(base_plugin_spec, 'w') as w_fo:
+        w_fo.write(updated_spec)
+
+    plugin_manager = plugin_manager_fixture()
+    plugin_manager.add_plugin(base_plugin_dir)
+
+    spec_manager = SpecManager()
+    spec_manager.register_spec(
+        InfraredPluginsSpec(InfraredPlugin(base_plugin_dir)))
+
+    assert not spec_manager.run_specs(['plugin_with_remotes'])

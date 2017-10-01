@@ -141,3 +141,54 @@ You should see user defined option as well as the common options like --extra-ar
 Run ir command and check the playbook output::
 
     $ ir simple-plugin --options1 HW  --flag yes
+
+
+Using an exiting Ansible project/role as InfraRed plugin
+--------------------------------------------------------
+
+InfraRed allows work with an existing Ansible's project/role as an InfraRed plugin.
+This will save users from the need to create their own copy of the code and to fetch changes from one repo to the other in order to stay updated.
+It also eliminate intervention in project belonging to someone else by saving the need to add the 'plugin.spec' & 'main.yaml' file into them.
+
+Users will need to create those two files ('plugin.spec' & 'main.yml') in a local or remote location, and to point into the remote Ansible role/project in the spec file.
+The 'main.yml' will have to call the role/project entry playbook.
+
+An example of a 'plugin.spec' file with multiple remotes::
+
+    ---
+    plugin_type: other
+    remotes:
+        - name: ansible_project
+          url: https://my.git.com/user_account/ansible_project.git
+        - name: ansible_role
+          url: https://my.git.com/user_account/ansible_role.git
+          dest_dir: roles/my_role
+    subparsers:
+        plugin_with_remotes:
+            description: A plugin with remotes
+            include_groups: []
+
+In the example above, there is a use in two remotes, a project and a role.
+When one will add the path / git URL of the (base) plugin which holds this 'plugin.spec' file using the ``infrared plugin add <PLUGIN>`` command,
+InfraRed will also clone all of its remotes.
+All remotes should be mentioned in the root level of the 'plugin.spec' file like in the example above.
+The value of the 'remotes' key is a list of one or more remotes, while each element holds an information on its remote.
+The 'name' & 'url' are two mandatory keys for each element in the list, and they tell the name and the URL of each remote respectively.
+
+.. note:: The 'dest_dir' key points to the directory where to clone the remote. If not given, it'll be cloned into a directory with the same name as the remote, inside the base plugin directory.
+
+
+After creating the 'plugin.spec' file with its remotes, we can now create the 'main.yml' file that will make a use in the just cloned remotes.
+
+An example of a 'main.yml' with use in remotes::
+
+    ---
+    - name: Ansible project
+      include: ansible_project/playbook.yml
+
+    - name: Ansible role
+      hosts: localhost
+      roles:
+        - my_role
+
+In the first and second tasks of the playbook above, there is a call to the entry playbook in the Ansible project and role we just cloned.

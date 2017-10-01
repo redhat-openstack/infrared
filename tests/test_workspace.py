@@ -9,7 +9,7 @@ from infrared.core.utils import exceptions
 
 @pytest.fixture(scope="session")
 def workspace_manager_fixture(tmpdir_factory):
-    """Sets the default workspace direcotry to the temporary one. """
+    """Sets the default workspace directory to the temporary one. """
 
     temp_workspace_dir = tmpdir_factory.mktemp('pmtest')
     workspace_manager = workspaces.WorkspaceManager(str(temp_workspace_dir))

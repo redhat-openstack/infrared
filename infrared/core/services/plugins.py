@@ -217,7 +217,7 @@ class InfraredPluginManager(object):
         :param plugin_name: Plugin name
         :return: InfraredPlugin instance
         """
-        return cls.PLUGINS_DICT[plugin_name]
+        return cls.PLUGINS_DICT.get(plugin_name)
 
     def __iter__(self):
         for plugin in self.PLUGINS_DICT.iteritems():
@@ -227,7 +227,7 @@ class InfraredPluginManager(object):
 
     @staticmethod
     def _clone_git_plugin(git_url, repo_plugin_path=None, rev=None,
-                          dest_dir=None):
+                          dest_dir=None, remote_project=False):
         """Clone a plugin into a given destination directory
 
         :param git_url: Plugin's Git URL
@@ -256,33 +256,40 @@ class InfraredPluginManager(object):
 
         plugin_tmp_source = os.path.join(tmpdir, plugin_git_name)
         if repo_plugin_path:
-            plugin_tmp_source = os.path.join(plugin_tmp_source, repo_plugin_path)
+            plugin_tmp_source = \
+                os.path.join(plugin_tmp_source, repo_plugin_path)
 
-        # validate & load spec data in order to pull the name of the plugin
-        spec_data = InfraredPlugin.spec_validator(
-            os.path.join(plugin_tmp_source, InfraredPlugin.PLUGIN_SPEC_FILE))
-        # get the real plugin name from spec
-        plugin_dir_name = spec_data["subparsers"].keys()[0]
+        if remote_project:
+            shutil.copytree(os.path.join(tmpdir, plugin_git_name), dest_dir)
+            target_dir = dest_dir
+        else:
+            # validate & load spec data in order to pull the name of the plugin
+            spec_data = \
+                InfraredPlugin.spec_validator(os.path.join(
+                    plugin_tmp_source,
+                    InfraredPlugin.PLUGIN_SPEC_FILE))
+            # get the real plugin name from spec
+            plugin_dir_name = spec_data["subparsers"].keys()[0]
 
-        plugin_source = os.path.join(dest_dir, plugin_dir_name)
-        if os.path.islink(plugin_source):
-            LOG.debug("%s found as symlink pointing to %s, unlinking it, not touching the target.",
-                      plugin_source,
-                      os.path.realpath(plugin_source))
-            os.unlink(plugin_source)
-        elif os.path.exists(plugin_source):
-            shutil.rmtree(plugin_source)
+            target_dir = os.path.join(dest_dir, plugin_dir_name)
+            if os.path.islink(target_dir):
+                LOG.debug("%s found as symlink pointing to %s, unlinking it, "
+                          "not touching the target.",
+                          target_dir, os.path.realpath(target_dir))
+                os.unlink(target_dir)
+            elif os.path.exists(target_dir):
+                shutil.rmtree(target_dir)
 
-        shutil.copytree(os.path.join(tmpdir, plugin_git_name),
-                        plugin_source)
+            shutil.copytree(
+                os.path.join(tmpdir, plugin_git_name), target_dir)
 
-        if repo_plugin_path:
-            plugin_source = plugin_source + '/' + repo_plugin_path
+            if repo_plugin_path:
+                target_dir = target_dir + '/' + repo_plugin_path
 
         os.chdir(cwd)
         shutil.rmtree(tmpdir)
 
-        return plugin_source
+        return target_dir
 
     def update_plugin(self, plugin_name, revision=None,
                       skip_reqs=False, hard_reset=False):
@@ -419,6 +426,24 @@ class InfraredPluginManager(object):
         with open(self.config_file, 'w') as fp:
             self.config.write(fp)
 
+        # Install remotes
+        for a_remote in plugin.remotes or []:
+            dest_dir = os.path.join(
+                plugin.path, a_remote.get('dest_dir', a_remote['name']))
+            req_file = a_remote.get('requirements_file', 'requirements.txt')
+
+            # Non Git remote
+            remote_url = \
+                os.path.abspath(os.path.expanduser(a_remote.get('url')))
+            if os.path.exists(remote_url):
+                shutil.copytree(remote_url, dest_dir)
+            else:
+                self._clone_git_plugin(
+                    git_url=a_remote['url'],
+                    dest_dir=dest_dir,
+                    remote_project=True)
+            self._install_requirements(plugin_path=dest_dir, req_file=req_file)
+
         self._install_requirements(plugin_source)
         self._load_plugins()
 
@@ -460,12 +485,12 @@ class InfraredPluginManager(object):
         return self.config.options(self.SUPPORTED_TYPES_SECTION)
 
     @staticmethod
-    def _install_requirements(plugin_path):
-        requirement_file = os.path.join(plugin_path, "plugin_requirements.txt")
-        if os.path.isfile(requirement_file):
+    def _install_requirements(plugin_path, req_file="plugin_requirements.txt"):
+        req_file_path = os.path.join(plugin_path, req_file)
+        if os.path.isfile(req_file_path):
             LOG.info(
-                "Installing requirements from: {}".format(requirement_file))
-            pip_args = ['install', '-r', requirement_file]
+                "Installing requirements from: {}".format(req_file_path))
+            pip_args = ['install', '-r', req_file_path]
             pip.main(args=pip_args)
 
     def freeze(self):
@@ -571,6 +596,10 @@ class InfraredPlugin(object):
             return self.config['subparsers'][self.name]['description']
         except KeyError:
             return self.config['description']
+
+    @property
+    def remotes(self):
+        return self.config.get('remotes')
 
     @staticmethod
     def spec_validator(spec_file):
