@@ -1,4 +1,4 @@
-import pytest
+import pytest, yaml, os
 
 
 @pytest.mark.parametrize('tested, val, key, expected', [
@@ -44,4 +44,20 @@ def test_dict_merge_none_resolver(first, second, expected):
     from infrared.core.utils.dict_utils import dict_merge, ConflictResolver
 
     dict_merge(first, second, conflict_resolver=ConflictResolver.none_resolver)
+    assert not cmp(first, expected)
+
+def read_yaml(path):
+    with open(path, 'r') as f:
+        return yaml.safe_load(f)
+
+@pytest.mark.parametrize("first, second, expected", [
+    [os.path.join(os.getcwd(), 'tests/files/utils/dicts/input_dict1.yml'),
+     os.path.join(os.getcwd(), 'tests/files/utils/dicts/input_dict2.yml'),
+     os.path.join(os.getcwd(), 'tests/files/utils/dicts/resault_dicts.yml')]
+])
+def test_dict_merge_none_resolver(first, second, expected):
+    from infrared.core.utils.dict_utils import dict_merge, ConflictResolver
+    first, second, expected = read_yaml(first), read_yaml(second), read_yaml(expected)
+
+    dict_merge(first, second, conflict_resolver=ConflictResolver.greedy_resolver)
     assert not cmp(first, expected)
