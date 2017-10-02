@@ -338,6 +338,14 @@ Freeze:
 
         infrared plugin freeze
 
+Update:
+    Update a given Git-based plugin to a specific revision.
+    The update process pulls the latest changes from the remote and checks out a specific
+    revision if given, otherwise, it will point to the tip of the updated branch.
+    If the \"--skip_reqs\" switch is set, the requirements installation will be skipped::
+
+        ir plugin update [--skip_reqs] [--hard-reset] name [revision]
+
 Execute:
     Plugins are added as subparsers under ``plugin type`` and will execute
     the ``main.yml`` `playbook <playbooks>`_::
