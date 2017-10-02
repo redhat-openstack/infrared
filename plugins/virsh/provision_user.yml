@@ -48,4 +48,4 @@
         when: hostvars[item].create_user|changed
         with_items: "{{ ansible_play_hosts }}"
 
-      when: inventory_hostname not in groups.overcloud_nodes
+      when: inventory_hostname not in groups.overcloud_nodes|default([])
