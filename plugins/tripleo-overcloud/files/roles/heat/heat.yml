@@ -1,0 +1,34 @@
+---
+heat_role:
+    name: Heat
+    CountDefault: 1
+    resource_registry:
+    resource_registry:
+        OS::TripleO::Services::HeatApi:  "{{ install.heat.templates.basedir }}/puppet/services/heat-api.yaml"
+        OS::TripleO::Services::HeatApiCfn: "{{ install.heat.templates.basedir }}/puppet/services/heat-api-cfn.yaml"
+        OS::TripleO::Services::HeatApiCloudwatch: "{{ install.heat.templates.basedir }}/puppet/services/heat-api-cloudwatch.yaml"
+        OS::TripleO::Services::HeatEngine: "{{ install.heat.templates.basedir }}/puppet/services/heat-engine.yaml"
+
+    flavor: heat
+    host_name_format: 'heat-%index%'
+    host_name_format: 'heat-%index%'
+
+
+    services:
+        - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::Kernel
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::Snmp
+        - OS::TripleO::Services::Sshd
+        - OS::TripleO::Services::Timezone
+        - OS::TripleO::Services::TripleoPackages
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::FluentdClient
+        - OS::TripleO::Services::AuditD
+        - OS::TripleO::Services::Collectd
+        - OS::TripleO::Services::MySQLClient
+        - OS::TripleO::Services::HeatApi
+        - OS::TripleO::Services::HeatApiCfn
+        - OS::TripleO::Services::HeatApiCloudwatch
+        - OS::TripleO::Services::HeatEngine
