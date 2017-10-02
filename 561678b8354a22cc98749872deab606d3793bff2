@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "87c0b5b6_af04c610",
+        "filename": "plugins/tripleo-overcloud/tasks/append_script.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1006589
+      },
+      "writtenOn": "2017-10-02T07:46:24Z",
+      "side": 1,
+      "message": "Doesn\u0027t look good. \nI\u0027d suggest to have all containers related tasks in the containers role. If you need separation between coket_images.yamk generation and appending a deploy scripts with docker imnage, you can have two roles: \n - prepare-templates\n - append-deploy script \nwith the common defaults (using meta).\n\n----------------\nOr for simplicity, you can add the \u0027task\u0027 variable to the role, which can be \u0027append_script\u0027 and \u0027prepare_templates\u0027\n\nSo when you include role you can set that variable: \n\ninclude_role: name\u003d\"containers/prepare-templates\"\nvars: \n   task: prepare-templates\n\n\n[or]\n\ninclude_role: name\u003d\"containers/prepare-templates\"\nvars: \n   task: append_script. \n\nIn the taks itself, you can then include appropriate yml file.",
+      "range": {
+        "startLine": 49,
+        "startChar": 3,
+        "endLine": 49,
+        "endChar": 64
+      },
+      "revId": "561678b8354a22cc98749872deab606d3793bff2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
