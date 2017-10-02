@@ -93,8 +93,9 @@
         when:
           - cleanup_services is defined
           - cleanup_services|default({})|length > 0
+          - standby_node|succeeded
 
-      - name: Check for any stopped/failed pcs resources
+      - name: Check for any stopped pcs resources
         become: true
         shell: |
             pcs status | grep {{ item }} || /bin/true
@@ -104,6 +105,19 @@
         delay: 5
         with_items:
             - 'Stopped:'
+        when:
+            - standby_node|succeeded
+            - "'{{ install.deployment.files | basename }}' == 'virt'"
+
+      - name: Check for any unmanaged pcs resources
+        become: true
+        shell: |
+            pcs status | grep {{ item }} || /bin/true
+        register: srv_status
+        until: srv_status.stdout.find("{{ item }}") == -1
+        retries: 36
+        delay: 5
+        with_items:
             - 'unmanaged'
         when: standby_node|succeeded
 
