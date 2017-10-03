@@ -4,15 +4,36 @@
       name: libvirtd
       state: started
 
-- name: get the list of VMs
-  virt:
-      command: list_vms
-  register: vm_names
+- block:
+  - name: get the list of VMs
+    virt:
+        command: list_vms
+    register: vm_names
 
-- name: get the list of networks
-  virt_net:
-      command: info
-  register: vm_nets
+  - name: get the list of networks
+    virt_net:
+        command: info
+    register: vm_nets
+
+  when: provision.cleanup|default(False)
+
+- block:
+  - name: get the list of VMs and networks
+    virt_util:
+        hosts: "{{ groups['all'] }}"
+        command: domains_and_networks
+    register: doms_and_nets
+    tags: skip_ansible_lint
+
+  - name:
+    set_fact:
+        vm_names: "{{ doms_and_nets.domains }}"
+
+  - name:
+    set_fact:
+        vm_nets: "{{ doms_and_nets.networks }}"
+
+  when: provision.cleanup_workspace | default(False)
 
 #in case VM was created in UEFI mode libvirt requires undefine task first
 - name: undefine relevant VMs
@@ -20,25 +41,20 @@
       name: "{{ item }}"
       command: undefine
   with_items: "{{ vm_names.list_vms }}"
-  when:
-      - provision.bootmode == 'uefi'
-      - "item not in ignore_virsh_nodes"
+  when: provision.bootmode == 'uefi'
 
 - name: destroy undfined vms
   virt:
       name: "{{ item }}"
       state: destroyed
   with_items: "{{ vm_names.list_vms }}"
-  when: "item not in ignore_virsh_nodes"
 
 - name: undefine relevant VMs
   virt:
       name: "{{ item }}"
       command: undefine
   with_items: "{{ vm_names.list_vms }}"
-  when:
-      - provision.bootmode != 'uefi'
-      - "item not in ignore_virsh_nodes"
+  when: provision.bootmode != 'uefi'
 
 - name: Clean /etc/hostshosts file
   become: yes
@@ -47,7 +63,6 @@
       regexp: ".*{{ item }}.*"
       state: absent
   with_items: "{{ vm_names.list_vms }}"
-  when: item not in ignore_virsh_nodes
 
 # ignoring errors in the known-hosts tasks
 # because this module validates known_hosts files
@@ -59,7 +74,6 @@
       state: absent
       name: "{{ item }}"
   with_items: "{{ vm_names.list_vms }}"
-  when: item not in ignore_virsh_nodes
   ignore_errors: yes
 
 - name: cleanup known-hosts by ip
@@ -97,4 +111,3 @@
   args:
       chdir: /var/lib/libvirt/images
   with_items: "{{ vm_names.list_vms }}"
-  when: "item not in ignore_virsh_nodes"
