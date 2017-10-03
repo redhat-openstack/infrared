@@ -34,6 +34,8 @@
       state: present
       wait: "{{ topology_node.wait | default(wait) }}"
       meta:
+        submitter_user: "{{ lookup('env', 'USER') }}"
+        submitter_hostname: "{{ lookup('env', 'HOSTNAME') }}"
         BUILD_NUMBER: "{{ lookup('env', 'BUILD_NUMBER') }}"
         BUILD_TAG: "{{ lookup('env', 'BUILD_TAG') }}"
         BUILD_TIMESTAMP: "{{ lookup('env', 'BUILD_TIMESTAMP') }}"
