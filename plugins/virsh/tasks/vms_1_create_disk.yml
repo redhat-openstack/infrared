@@ -14,8 +14,9 @@
 
 - name: Calculate node_start_index
   set_fact:
-      node_start_index: "{{ node_start_index|int + 1 if (topology_node.name + '-' in item) else node_start_index|int }}"
+      node_start_index: "{{ node_start_index|int + 1 if (topology_node.name + '-' in item) and hostvars[item].get('ansible_connection') == 'ssh' else node_start_index|int }}"
   with_items: "{{ groups.all }}"
+  when: provision.topology.extend | default(False)
 
 #todo(yfried): move this to verification section (before execution)
 - name: verify swap is within disk1 size
