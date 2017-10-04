@@ -42,6 +42,12 @@
         command: "systemctl restart openstack-nova-*"
         become: yes
 
+      - name: Generate fencing.yml from instackenv.json
+        shell: |
+            source ~/stackrc
+            openstack overcloud generate fencing --ipmi-lanplus --ipmi-level administrator --output {{ ansible_user_dir }}/{{ install.deployment.files | basename }}/fencing.yaml ~/instackenv.json
+        when: install.fencing|default('')
+
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc

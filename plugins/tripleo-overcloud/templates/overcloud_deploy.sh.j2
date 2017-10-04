@@ -10,3 +10,6 @@ timeout 100m openstack overcloud deploy \
 --compute-scale {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or '1' }} \
 --compute-flavor {{ ('compute' in existing_flavors.stdout_lines) | ternary('compute', 'baremetal') }} \
 {% endif %}
+{% if install.fencing %}
+-e {{ ansible_user_dir }}/{{ install.deployment.files | basename }}/fencing.yaml \
+{% endif %}
