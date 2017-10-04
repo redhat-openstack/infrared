@@ -1,7 +1,16 @@
-- name: Scale up validation
-  hosts: undercloud
-  gather_facts: no
+- name: Gather facts for Hypervisor
+  hosts: hypervisor
+  gather_facts: yes
   any_errors_fatal: true
+
+- name: Scale up
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+         overcloud_deploy_script: "~/overcloud_deploy.sh"
+         instackenv_file_name: "~/newnodes.json"
+         vbmc_start_port: 6230
   tasks:
       - name: Checking overcloud_deploy_file
         stat:
@@ -16,17 +25,9 @@
             msg: "--scale-nodes is required"
         when: install.get('scale', {}).nodes is not defined
 
-- include: ../tasks/scale/ironic_pxe_ipmitool.yml
-  when: hostvars[groups['undercloud']|first].undercloud_version|openstack_release >= 11
+      - include: ../tasks/scale/ironic_pxe_ipmitool.yml
+        when: undercloud_version | openstack_release >= 11
 
-- name: Scale up
-  hosts: undercloud
-  gather_facts: yes
-  any_errors_fatal: true
-  vars:
-         overcloud_deploy_script: "~/overcloud_deploy.sh"
-         instackenv_file_name: "~/newnodes.json"
-  tasks:
       - name: discover provsion network name
         include: ../tasks/scale/discover_provision_net.yml
         vars:
