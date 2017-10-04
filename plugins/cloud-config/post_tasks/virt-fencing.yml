@@ -1,0 +1,106 @@
+---
+- name: Set a fence key file path as a fact
+  hosts: localhost:hypervisor:controller:compute
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - set_fact:
+          fence_key_file: "{{ lookup('env', 'PWD') }}/fence_xvm.key"
+
+- name: Preparatory work for fencing setup
+  hosts: localhost
+  tasks:
+      - name: Create fence key
+        args:
+          creates: "{{ fence_key_file }}"
+        command: "dd if=/dev/random of={{ fence_key_file }} bs=512 count=1"
+
+- name: Create remote /etc/cluster folder and copy key
+  hosts: hypervisor:controller:compute
+  gather_facts: no
+  become: yes
+  become_method: sudo
+  any_errors_fatal: true
+  tasks:
+      - name: Create remote /etc/cluster folder
+        file:
+          path: /etc/cluster
+          state: directory
+          mode: 0755
+      - name: Copy fence key
+        copy:
+          src: "{{ fence_key_file }}"
+          dest: /etc/cluster/
+          mode: 0644
+
+- name: Configure virt fencing prerequisites on virthost
+  hosts: hypervisor
+  become: yes
+  become_method: sudo
+  any_errors_fatal: true
+  tasks:
+      - name: Install virt fencing packages
+        yum:
+          name: "{{ item }}"
+          state: present
+        with_items:
+          - fence-virt
+          - fence-virtd
+          - fence-virtd-multicast
+          - fence-virtd-libvirt
+      - name: Deploy fence virtd configuration
+        template:
+          src: templates/fence_virtd.j2
+          dest: /etc/fence_virt.conf
+          mode: 0644
+      - name: Ease iptables rules
+        iptables:
+          chain: INPUT
+          protocol: igmp
+          jump: ACCEPT
+      - name: Restart fence_virtd deamon
+        service:
+          name: fence_virtd
+          enabled: yes
+          state: restarted
+
+- name: Run setup as root, to get all Ansible facts
+  hosts: controller:compute
+  gather_facts: no
+  become: yes
+  become_method: sudo
+  any_errors_fatal: true
+  tasks:
+      - setup:
+
+- name: Ease iptables rules on controllers for fence_xvm
+  hosts: controller:compute
+  gather_facts: no
+  become: yes
+  become_method: sudo
+  any_errors_fatal: true
+  tasks:
+      - command: "iptables -I INPUT -p tcp --dport 1229 -j ACCEPT"
+      - command: "/sbin/service iptables save"
+
+- name: Configure fencing on overcloud controllers
+  hosts: controller[0]
+  gather_facts: no
+  become: yes
+  become_method: sudo
+  any_errors_fatal: true
+  tasks:
+      - name: Make sure stonith property is set to false
+        command: pcs property set stonith-enabled=false
+
+      - name: Start create-stonith script which configures fencing
+        shell: |
+          pcs stonith delete my-stonith-xvm-$hostname || /bin/true
+          pcs stonith create my-stonith-xvm-$hostname fence_xvm port=$vm_uuid pcmk_host_list=$hostname use_uuid=1 op monitor interval=30s
+        environment:
+            hostname: "{{ hostvars[item]['ansible_hostname'] }}"
+            vm_uuid: "{{ hostvars[item]['ansible_product_uuid'] }}"
+        with_items: "{{ groups['controller'] | union(groups['compute']) }}"
+
+      - name: Make sure stonith property is set to true
+        command: pcs property set stonith-enabled=true
