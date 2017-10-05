@@ -8,6 +8,15 @@
   set_fact:
       topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
 
+- name: Set default node_start_index
+  set_fact:
+      node_start_index: 0
+
+- name: Calculate node_start_index
+  set_fact:
+      node_start_index: "{{ node_start_index|int + 1 if (topology_node.name + '-' in item) else node_start_index|int }}"
+  with_items: "{{ groups.all }}"
+
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
 - name: create vm's
   shell: |
@@ -33,7 +42,7 @@
            --autostart \
            --vnc \
            --rng /dev/urandom
-  with_sequence: start=0 end={{ node.value|int - 1 }}
+  with_sequence: start={{ node_start_index|int }} end={{ node.value|int + node_start_index|int - 1 }}
   register: vm_install
   async: 7200
   poll: 0

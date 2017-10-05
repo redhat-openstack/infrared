@@ -60,3 +60,12 @@ for deployment in `echo "$DEPLOYMENTS" | grep -v 'COMPLETE' | awk '{print $4}'`;
 	heat config-show `heat deployment-show "$deployment" | jq '.config_id' | tr -d '"'`
 done
 {% endif %}
+
+echo "WorkFlow/Actions"
+echo openstack action execution list
+openstack action execution list
+echo openstack workflow execution list
+openstack workflow execution list
+#TODO: detailed info about the failed actions (output)
+
+echo FIN

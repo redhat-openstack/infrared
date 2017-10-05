@@ -1,0 +1,15 @@
+- name: append ceph-ansible template
+  lineinfile:
+      dest: "{{ containers_ir_deploy_script }}"
+      line: '-e {{ install.heat.templates.basedir }}/environments/ceph-ansible/ceph-ansible.yaml \'
+  when:
+      - not install.storage.external
+      - storage_backend|default('') == 'ceph'
+
+- name: append extra containers templates for the build scripts
+  lineinfile:
+      dest: "{{ containers_ir_deploy_script }}"
+      line: "{{ item }}"
+  with_items:
+      - '-e {{ install.heat.templates.basedir }}/environments/docker.yaml \'
+      - '-e {{ install.heat.templates.basedir }}/environments/docker-ha.yaml \'

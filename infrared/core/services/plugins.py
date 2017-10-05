@@ -1,8 +1,10 @@
 from ConfigParser import ConfigParser
 from collections import OrderedDict
+import datetime
 import os
 import shutil
 import tempfile
+import time
 import yaml
 import git
 
@@ -12,7 +14,9 @@ import pip
 from infrared.core.utils import logger
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
+from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRUnsupportedPluginType
+
 
 DEFAULT_PLUGIN_INI = dict(
     supported_types=OrderedDict([
@@ -210,8 +214,14 @@ class InfraredPluginManager(object):
         plugin_dir_name = spec_data["subparsers"].keys()[0]
 
         plugin_source = os.path.join(dest_dir, plugin_dir_name)
-        if os.path.exists(plugin_source):
+        if os.path.islink(plugin_source):
+            LOG.debug("%s found as symlink pointing to %s, unlinking it, not touching the target.",
+                      plugin_source,
+                      os.path.realpath(plugin_source))
+            os.unlink(plugin_source)
+        elif os.path.exists(plugin_source):
             shutil.rmtree(plugin_source)
+
         shutil.copytree(os.path.join(tmpdir, plugin_git_name),
                         plugin_source)
 
@@ -222,6 +232,91 @@ class InfraredPluginManager(object):
         shutil.rmtree(tmpdir)
 
         return plugin_source
+
+    def update_plugin(self, plugin_name, revision=None,
+                      skip_reqs=False, hard_reset=False):
+        """Updates a Git-based plugin
+
+        Pulls changes from the remote, and checkout a specific revision.
+        (will point to the tip of the branch if revision isn't given)
+        :param plugin_name: Name of plugin to update.
+        :param revision: Revision to checkout.
+        :param skip_reqs: If True, will skip plugin requirements installation.
+        :param hard_reset: Whether to drop all changes using git hard reset
+        """
+        if plugin_name not in self.PLUGINS_DICT:
+            raise IRFailedToUpdatePlugin(
+                "Plugin '{}' isn't installed".format(plugin_name))
+
+        repo = plugin = None
+        try:
+            plugin = self.get_plugin(plugin_name)
+            repo = git.Repo(plugin.path)
+
+            # microseconds ('%f') required for unit testing
+            timestamp = \
+                datetime.datetime.fromtimestamp(
+                    time.time()).strftime('%B-%d-%Y_%H-%M-%S-%f')
+            update_string = \
+                'IR_Plugin_update_{plugin_name}_{timestamp}' \
+                ''.format(plugin_name=plugin_name, timestamp=timestamp)
+
+            LOG.debug("Checking for changes of tracked files "
+                      "in {}".format(plugin.path))
+            changed_tracked_files = \
+                repo.git.status('--porcelain', '--untracked-files=no')
+            all_changed_files = repo.git.status('--porcelain')
+
+            if changed_tracked_files and not hard_reset:
+                raise IRFailedToUpdatePlugin(
+                    "Failed to update plugin {}\n"
+                    "Found changes in tracked files, "
+                    "please go to {}, and manually save "
+                    "your changes!".format(plugin_name, plugin.path))
+
+            if hard_reset:
+                if all_changed_files:
+                    repo.git.stash('save', '-u', update_string)
+                    LOG.warning("All changes have been "
+                                "stashed - '{}'".format(update_string))
+                repo.git.reset('--hard', 'HEAD')
+
+            LOG.warning("Create a branch '{}' that will point "
+                        "to the current HEAD".format(update_string))
+            repo.git.branch(update_string)
+
+            LOG.debug("Fetching changes from the "
+                      "'{}' remote".format(repo.remote().name))
+            repo.git.fetch(repo.remote().name)
+
+            repo.git.pull('--rebase')
+            if revision not in (None, 'latest'):
+                repo.git.reset(revision)
+                if hard_reset:
+                    repo.git.reset('--hard', 'HEAD')
+
+            if repo.git.status('--porcelain', '--untracked-files=no'):
+                LOG.warning("Changes in tracked files have been found")
+
+            if not skip_reqs:
+                reqs_file = os.path.join(plugin.path, 'requirements.txt')
+                if os.path.isfile(reqs_file):
+                    pip.main(['install', '-r', reqs_file])
+
+        except git.InvalidGitRepositoryError:
+            raise IRFailedToUpdatePlugin(
+                "Plugin '{}' isn't a Git-based plugin".format(plugin_name))
+        except ValueError:
+            raise IRFailedToUpdatePlugin(
+                "Failed to update '{}' plugin to point to '{}'".format(
+                    plugin_name, revision))
+        except git.exc.GitCommandError as ex:
+            repo.git.rebase('--abort')
+            raise IRFailedToUpdatePlugin(
+                "Failed to update plugin"
+                "Failed to update plugin!\nPlease go to plugin dir ({})"
+                " and manually resolve Git issues.\n"
+                "{}\n{}".format(plugin.path, ex.stdout, ex.stderr))
 
     def add_plugin(self, plugin_source, rev=None, dest=None):
         """Adds (install) a plugin

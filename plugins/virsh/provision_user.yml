@@ -16,16 +16,22 @@
         delegate_to: hypervisor
         tags: vms
 
+      # When we extend topology, these tasks will run also on old nodes and we don't want that.
+      # If tasks run on old VM, ansible_ssh_user will be overwriten to cloud-user, that is why
+      # we need to check if ansible_ssh_user is root and to execute the tasks only in this case
       - name: create non root user
         user:
             name: "{{ provision.topology.username }}"
             state: present
             password: "{{ non_root_pw | password_hash('sha512') }}"
+        register: create_user
+        when: ansible_ssh_user == 'root'
 
       - name: add user to sudoers
         lineinfile:
             dest: "/etc/sudoers"
             line: "{{ provision.topology.username }} ALL=(ALL) NOPASSWD:ALL"
+        when: create_user|changed
 
       - name: Set up authorized_keys for non root user
         authorized_key:
@@ -33,11 +39,13 @@
             key: "{{ item }}"
         with_file:
             - "{{ inventory_dir }}/id_rsa.pub"
+        when: create_user|changed
 
       - name: Update hosts user
         add_host:
             name: "{{ item }}"
             ansible_ssh_user: "{{ provision.topology.username }}"
+        when: hostvars[item].create_user|changed
         with_items: "{{ ansible_play_hosts }}"
 
-      when: inventory_hostname not in groups.overcloud_nodes
+      when: inventory_hostname not in groups.overcloud_nodes|default([])

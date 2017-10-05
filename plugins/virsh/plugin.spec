@@ -25,6 +25,13 @@ subparsers:
                           Disable this option if you already know your hypervisor support virtualization and that it
                           is enabled.
                       default: True
+                  host-memory-overcommit:
+                      type: Bool
+                      help: |
+                          By default memory overcommitment is false and provision will fail if Hypervisor's free
+                          memory is lower than required memory for all nodes. Use `--host-mem-overcommitment True`
+                          to change default behaviour.
+                      default: False
 
             - title: image
               options:
@@ -69,7 +76,11 @@ subparsers:
                       help: |
                           Non-root username with sudo privileges that will be created on nodes.
                           Will be use as main ssh user subsequently.
-
+                  topology-extend:
+                      type: Bool
+                      default: False
+                      help: |
+                          Use it to extend existing deployment with nodes provided by topology.
 
             - title: cleanup
               options:

@@ -86,8 +86,11 @@ class WorkspaceManagerSpec(api.SpecObject):
             nargs="?").completer = completers.workspace_list
 
         # list
-        workspace_subparsers.add_parser(
+        wrkspc_list_parser = workspace_subparsers.add_parser(
             'list', help='Lists all the workspaces')
+        wrkspc_list_parser.add_argument(
+            "--active", action='store_true', dest='print_active',
+            help="Prints the active workspace only")
 
         # delete
         delete_parser = workspace_subparsers.add_parser(
@@ -162,16 +165,18 @@ class WorkspaceManagerSpec(api.SpecObject):
         elif subcommand == 'inventory':
             self._fetch_inventory(pargs.name)
         elif subcommand == 'list':
-            workspaces = self.workspace_manager.list()
-            headers = ("Name", "Active")
-            workspaces = sorted([
-                workspace.name for workspace in self.workspace_manager.list()])
-
-            print fancy_table(
-                headers,
-                *[(workspace, ' ' * (len(headers[-1]) / 2) + "*" if
-                    self.workspace_manager.is_active(workspace) else "")
-                  for workspace in workspaces])
+            if pargs.print_active:
+                print self.workspace_manager.get_active_workspace().name
+            else:
+                workspaces = self.workspace_manager.list()
+                headers = ("Name", "Active")
+                workspaces = sorted([workspace.name for workspace in
+                                     self.workspace_manager.list()])
+                print fancy_table(
+                    headers,
+                    *[(workspace, ' ' * (len(headers[-1]) / 2) + "*" if
+                        self.workspace_manager.is_active(workspace) else "")
+                      for workspace in workspaces])
         elif subcommand == 'delete':
             for workspace_name in pargs.name:
                 self.workspace_manager.delete(workspace_name)
@@ -265,6 +270,25 @@ class PluginManagerSpec(api.SpecObject):
             help="Prints all available plugins in addition "
                  "to installed plugins")
 
+        # Update plugin
+        update_parser = plugin_subparsers.add_parser(
+            "update",
+            help="Update a Git-based plugin")
+        update_parser.add_argument(
+            "name",
+            help="Name of the plugin to update")
+        update_parser.add_argument(
+            "revision", nargs='?', default='latest',
+            help="Revision number to checkout (if not given, will only pull "
+                 "changes from the remote)")
+        update_parser.add_argument(
+            '--skip_reqs', '-s', action='store_true',
+            help="Skips plugin's requirements installation")
+        update_parser.add_argument(
+            '--hard-reset', action='store_true',
+            help="Drop all local changes using hard "
+                 "reset (changes will be stashed")
+
         plugin_subparsers.add_parser(
             "freeze", help="Run through installed plugins. For git sourced "
             "one writes its current revision to plugins registry.")
@@ -295,6 +319,9 @@ class PluginManagerSpec(api.SpecObject):
                 self.plugin_manager.remove_plugin(pargs.name)
         elif subcommand == 'freeze':
             self.plugin_manager.freeze()
+        elif subcommand == 'update':
+            self.plugin_manager.update_plugin(
+                pargs.name, pargs.revision, pargs.skip_reqs, pargs.hard_reset)
 
     def _list_plugins(self, print_available=False):
         """Print a list of installed & available plugins"""

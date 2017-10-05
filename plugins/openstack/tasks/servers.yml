@@ -33,6 +33,20 @@
       security_groups: "{{ topology_node.security_groups | default([]) | map('regex_replace', '(.*)', prefix + '\\1') | list or omit }}"
       state: present
       wait: "{{ topology_node.wait | default(wait) }}"
+      meta:
+        submitter_user: "{{ lookup('env', 'USER') }}"
+        submitter_hostname: "{{ lookup('env', 'HOSTNAME') }}"
+        BUILD_NUMBER: "{{ lookup('env', 'BUILD_NUMBER') }}"
+        BUILD_TAG: "{{ lookup('env', 'BUILD_TAG') }}"
+        BUILD_TIMESTAMP: "{{ lookup('env', 'BUILD_TIMESTAMP') }}"
+        BUILD_URL: "{{ lookup('env', 'BUILD_URL') }}"
+        BUILD_USER_EMAIL: "{{ lookup('env', 'BUILD_USER_EMAIL') }}"
+        GERRIT_CHANGE_OWNER_EMAIL: "{{ lookup('env', 'GERRIT_CHANGE_OWNER_EMAIL') }}"
+        group: "{{ prefix }}"
+        hostname: "{{ prefix }}{{ topology_node.name }}-{{ item|int - 1 }}"
+        JOB_BASE_NAME: "{{ lookup('env', 'JOB_BASE_NAME') }}"
+        JOB_URL: "{{ lookup('env', 'JOB_URL') }}"
+        NODE_NAME: "{{ lookup('env', 'NODE_NAME') }}"
   register: servers
   with_sequence: "count={{ node.value }}"
 

@@ -19,6 +19,13 @@
       dhcp_ranges: "{{ dhcp_ranges | combine({item.item.key: {'ips': item.stdout_lines}}) }}"
   with_items: "{{ ip_list.results }}"
 
+- name: remove already used ips from dhcp_ranges
+  include: remove_used_ips.yml
+  with_dict: "{{ networks }}"
+  loop_control:
+          loop_var: network
+  when: provision.topology.extend|default(False)
+
 - name: update vms info with ip addresses
   set_fact:
       vms_info: "{{ vms_info | default({}) | combine({dhcp_ranges[item.net].ips | difference(vms_info | default({}) | list) | first | ipaddr('address'): item}) }}"

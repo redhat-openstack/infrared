@@ -1,0 +1,43 @@
+- name: Run Pytest
+  hosts: tester
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      repo_folder: 'pytest-repo/'
+      pytest_output_filename: 'pytest-results.xml'
+  tasks:
+      - name: Install packages
+        become: true
+        package:
+            name: "{{ item }}"
+            state: latest
+        with_items:
+            - pytest
+            - git
+
+      - name: Clean old files
+        file:
+            path: "{{ item }}"
+            state: absent
+        with_items:
+            - "{{ repo_folder }}"
+            - "{{ pytest_output_filename }}"
+
+      - name: Cloning git repo
+        shell: |
+            export GIT_SSL_NO_VERIFY=true
+            git clone {{ test.repo }} {{ repo_folder }}
+        tags: skip_ansible_lint
+
+      - name: Execute test
+        ignore_errors: true
+        shell: pytest -v {{ repo_folder }}{{ test.file }} --junitxml={{ pytest_output_filename }} 2>&1
+        when: test.run|default(False)
+        register: pytest_execution
+
+      - name: Fetch JUnit XML results file
+        fetch:
+            src: "{{ pytest_output_filename }}"
+            dest: "{{ inventory_dir }}/pytest_results/{{ pytest_output_filename }}"
+            flat: yes
+            fail_on_missing: yes

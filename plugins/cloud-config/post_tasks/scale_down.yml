@@ -84,10 +84,12 @@
         tags: skip_ansible_lint
         ignore_errors: yes
 
+      # (todo) OSPD 10 doesn't support --host paramater
       - name: get openvswitch-agent-id of the node "{{ node_name }}"
         shell: |
             source ~/overcloudrc
-            openstack network agent list -c ID -f value --host {{ node_name }}
+            #openstack network agent list -c ID -f value --host {{ node_name }}
+            neutron agent-list -f value | grep {{ node_name }} | awk '{print $1}'
         register: openwsitch_agent_id
         tags: skip_ansible_lint
 

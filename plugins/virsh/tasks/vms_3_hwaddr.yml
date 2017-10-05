@@ -8,10 +8,19 @@
   set_fact:
       topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
 
+- name: Set default node_start_index
+  set_fact:
+      node_start_index: 0
+
+- name: Calculate node_start_index
+  set_fact:
+      node_start_index: "{{ node_start_index|int + 1 if (topology_node.name + '-' in item) else node_start_index|int }}"
+  with_items: "{{ groups.all }}"
+
 - block:
   - name: get MAC list
     shell: "virsh domiflist {{ topology_node.name }}-{{ item }} | awk '/{{ topology_node.external_network.network }}/ {print $5};'"
-    with_sequence: start=0 end={{ node.value|int - 1 }}
+    with_sequence: start={{ node_start_index|int }} end={{ node.value|int + node_start_index|int - 1 }}
     register: mac_list
 
   - set_fact:

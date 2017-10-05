@@ -49,6 +49,7 @@ Welcome to infrared's documentation!
    collect-logs
    gabbi_tester
    list_builds
+   pytest_runner
 
 .. toctree::
    :maxdepth: 2
