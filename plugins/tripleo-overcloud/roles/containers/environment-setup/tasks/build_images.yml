@@ -5,6 +5,7 @@
       dest: "{{ containers_images_template_dest_file }}"
       owner: stack
       group: stack
+      force: true
 
 - name: replace docker registry with mirror
   replace:
@@ -27,6 +28,11 @@
       cat {{ containers_images_template_dest_file }} | awk '/pull_source:/ {print $2}' | head -n1 | tr -d ' '
   register: docker_insecure_registry
 
+- name: assert registry is not in /etc/sysconfig/docker
+  shell: >
+      grep '^INSECURE_REGISTRY' /etc/sysconfig/docker | grep '{{ docker_insecure_registry.stdout }}' || echo 'MISS'
+  register: registry_assert
+
 - name: replace IP with hostname in /etc/sysconfig/docker
   replace:
       dest: /etc/sysconfig/docker
@@ -34,6 +40,7 @@
       replace: '\1 --insecure-registry {{ docker_insecure_registry.stdout }}"'
       backup: no
   become: true
+  when: '"MISS" in registry_assert.stdout'
 
 - name: restart docker service
   service:

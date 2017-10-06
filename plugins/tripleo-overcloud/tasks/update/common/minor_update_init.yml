@@ -1,0 +1,15 @@
+- name: create init-minor-update script
+  copy:
+      dest: "{{ ansible_user_dir }}/init-minor-update.sh"
+      mode: 0755
+      content: |
+          #/bin/env bash
+          openstack stack update --init-minor-update --container-registry-file "{{ template_base }}/docker-images.yaml"
+  vars:
+      template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
+
+- name: run init-minor-update script
+  shell: |
+      source {{ undercloud_rc }} ;
+      {{ ansible_user_dir }}/init-minor-update.sh
+  register: init_update
