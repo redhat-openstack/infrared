@@ -9,8 +9,8 @@ import time
 import urllib2
 
 from ansible.parsing.dataloader import DataLoader
-from ansible import inventory
-from ansible.vars import VariableManager
+from ansible.inventory.manager import InventoryManager
+from ansible.vars.manager import VariableManager
 
 from infrared.core.utils import exceptions, logger
 
@@ -471,7 +471,7 @@ class WorkspaceManager(object):
         hosts = invent.get_hosts(pattern)
 
         return [(host.name,
-                 host.address,
+                 host.vars.get("ansible_ssh_host"),
                  ', '.join(str(group) for group in host.groups
                            if str(group) not in EXCLUDED_GROUPS))
                 for host in hosts
@@ -485,10 +485,10 @@ class WorkspaceManager(object):
 
         invent = self._get_inventory(workspace_name)
 
-        groups = invent.get_groups()
+        groups = invent.list_groups()
 
         return [(group, ', '.join(str(host) for host in
-                                  invent.get_group(group).hosts))
+                                  invent.get_groups_dict()[group]))
                 for group in groups if group not in EXCLUDED_GROUPS]
 
     def _get_inventory(self, workspace_name=None):
@@ -506,5 +506,4 @@ class WorkspaceManager(object):
             else:
                 raise exceptions.IRWorkspaceMissing(workspace=workspace_name)
 
-        return inventory.Inventory(DataLoader(), VariableManager(),
-                                   host_list=workspace.inventory)
+        return InventoryManager(DataLoader(), sources=workspace.inventory)
