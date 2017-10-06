@@ -3,24 +3,28 @@ database_role:
     name: Database
 
     resource_registry:
-        OS::TripleO::Database::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/database.yaml"
-        OS::TripleO::Database::Ports::ExternalPort: "{{ install.heat.templates.basedir }}/network/ports/external.yaml"
+        OS::TripleO::Database::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/database_internal.yaml"
         OS::TripleO::Database::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api${ipv6_postfix_underscore}.yaml"
-        OS::TripleO::Database::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
-        OS::TripleO::Database::Ports::StorageMgmtPort: "{{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
-        OS::TripleO::Database::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
 
     flavor: database
+    networks:
+        - InternalApi
     host_name_format: 'database-%index%'
 
     services:
         - OS::TripleO::Services::CACerts
         - OS::TripleO::Services::Timezone
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Tuned{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - OS::TripleO::Services::Ntp
         - OS::TripleO::Services::Snmp
         - OS::TripleO::Services::Kernel
         - OS::TripleO::Services::Pacemaker
         - OS::TripleO::Services::MySQL
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Clustercheck{% endif %}"
         - OS::TripleO::Services::TripleoPackages
         - OS::TripleO::Services::TripleoFirewall
         - OS::TripleO::Services::SensuClient
