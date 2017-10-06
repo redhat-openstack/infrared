@@ -1,0 +1,38 @@
+---
+- name: get container download url
+  include_role:
+      name: containers/environment-setup
+      tasks_from: "pre"
+
+- name: adjust puddle number
+  shell: >
+      echo '{{ containers_puddle_base_url.stdout }}' | sed 's/{{ containers_puddle_number.stdout }}/{{ install.build|default("latest") }}/'
+  register: containers_puddle_base_url
+
+- name: get container download url
+  include_role:
+      name: containers/environment-setup
+      tasks_from: "build_images"
+
+- name: prepare container registry files
+  include_role:
+      name: containers/prepare-templates
+  vars:
+      template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
+
+- name: get ceph registry url from docker-images-ceph.yaml
+  shell: >
+    grep {{ ceph_docker_image }} {{ template_base }}/docker-images-ceph.yaml | awk '{ print $2 }'
+  vars:
+    ceph_docker_image: DockerCephDaemonImage
+    template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
+  register: adjusted_ceph_registry
+
+- name: adjust ceph image in docker-images.yaml
+  replace:
+    dest: "{{ template_base }}/docker-images.yaml"
+    regexp: '^(\s+{{ceph_docker_image}}:).*'
+    replace: '\1 {{ adjusted_ceph_registry.stdout }}'
+  vars:
+    ceph_docker_image: DockerCephDaemonImage
+    template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"

@@ -76,6 +76,14 @@
         include: tasks/update/common/update_mistral_plan.yaml
         when: undercloud_version|openstack_release in [10, 11]
 
+      - name: prepare containers for minor updates
+        include: tasks/update/common/prepare_containers.yml
+        when: undercloud_version|openstack_release > 11
+
+      - name: setup heat output for minor update
+        include: tasks/update/common/minor_update_init.yml
+        when: undercloud_version|openstack_release > 11
+
       - name: Scan nodes ssh keys
         command: "ssh-keyscan -t rsa {{ hostvars[item].ansible_ssh_host }}"
         with_items: "{{ groups.overcloud_nodes|default([])|difference(groups.unused|default([])) }}"
