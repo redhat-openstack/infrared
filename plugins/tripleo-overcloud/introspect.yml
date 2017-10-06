@@ -27,7 +27,7 @@
         copy:
             src: "{{ instack_input }}"
             dest: "~/{{ instack_input | basename }}"
-        when: instack_input is defined
+        when: not instack_input == ''
         register: inject_instackenv
 
       - name: verify that instackenv json file exists
