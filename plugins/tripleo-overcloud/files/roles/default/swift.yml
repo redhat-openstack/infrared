@@ -5,6 +5,10 @@ swift_role:
         "OS::TripleO::ObjectStorage::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/swift-storage.yaml"
 
     flavor: swift
+    networks:
+        - InternalApi
+        - Storage
+        - StorageMgmt
     host_name_format: 'swift-%index%'
 
     options:
@@ -18,6 +22,11 @@ swift_role:
         - OS::TripleO::Services::SwiftRingBuilder
         - OS::TripleO::Services::Snmp
         - OS::TripleO::Services::Timezone
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Tuned{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - OS::TripleO::Services::TripleoPackages
         - OS::TripleO::Services::TripleoFirewall
         - OS::TripleO::Services::SensuClient

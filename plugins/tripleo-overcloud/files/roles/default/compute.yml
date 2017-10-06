@@ -6,6 +6,10 @@ compute_role:
         "OS::TripleO::Compute::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/compute.yaml"
 
     flavor: compute
+    networks:
+        - InternalApi
+        - Storage
+        - Tenant
     host_name_format: 'compute-%index%'
 
     options:
@@ -16,13 +20,23 @@ compute_role:
         - OS::TripleO::Services::CephClient
         - OS::TripleO::Services::CephExternal
         - OS::TripleO::Services::Timezone
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Tuned{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - OS::TripleO::Services::Ntp
         - OS::TripleO::Services::Snmp
         - OS::TripleO::Services::NovaCompute
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Iscsid{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NovaMigrationTarget{% endif %}"
         - OS::TripleO::Services::NovaLibvirt
         - OS::TripleO::Services::Kernel
         - OS::TripleO::Services::ComputeNeutronCorePlugin
         - OS::TripleO::Services::ComputeNeutronOvsAgent
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronVppAgent{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronLinuxbridgeAgent{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Vpp{% endif %}"
         - OS::TripleO::Services::ComputeCeilometerAgent
         - OS::TripleO::Services::ComputeNeutronL3Agent
         - OS::TripleO::Services::ComputeNeutronMetadataAgent
