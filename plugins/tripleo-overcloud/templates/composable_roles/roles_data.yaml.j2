@@ -16,6 +16,15 @@
 {% endif -%}
 {% endfor %}
 {% endif %}
+{# OSP12 specific #}
+{% if install.version|default(undercloud_version)|openstack_release > 11 and role.networks|default([])|length > 0 %}
+  networks:
+{% for network in role.networks %}
+{%- if network %}
+    - {{ network }}
+{% endif -%}
+{% endfor %}
+{% endif %}
   ServicesDefault:
 {% for service in role.services %}
 {%- if service %}
@@ -30,4 +39,3 @@
 {% endif -%} {# end of if node_name not in saved_roles #}
 {% endfor %}
 {% endfor %}
-
