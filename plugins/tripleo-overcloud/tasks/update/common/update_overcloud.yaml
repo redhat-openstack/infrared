@@ -1,5 +1,14 @@
 ---
-- name: create update script {{ overcloud_update_script }} OS 10+
+- name: create update script {{ overcloud_update_script }} RHOS 12+
+  copy:
+    dest: "{{ overcloud_update_script }}"
+    mode: 0755
+    content: |
+        echo "UPDATE_COMPLETED"
+  when:
+    - undercloud_version|openstack_release > 11
+
+- name: create update script {{ overcloud_update_script }} RHOS 10-11
   copy:
     dest: "{{ overcloud_update_script }}"
     mode: 0755
@@ -7,6 +16,7 @@
         yes ""| tail -n +1 | openstack overcloud update stack -i overcloud
   when:
     - undercloud_version|openstack_release > 9
+    - undercloud_version|openstack_release < 12
 
 - name: create update script {{ overcloud_update_script }} OS < 10
   include: create_update_script.yaml
