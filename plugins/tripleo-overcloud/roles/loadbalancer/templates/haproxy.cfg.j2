@@ -34,7 +34,12 @@ server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.i
 
 listen glance_api
   bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:9292
+{% if install.version|default(undercloud_version)|openstack_release < 11 %}
   bind {{ loadbalancer.network.storage.vip | ipaddr('address') }}:9292
+{% endif %}
+{% if install.version|default(undercloud_version)|openstack_release > 10 %}
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:9292
+{% endif %}
   {% for x in range(controllers_number|int) %}
 server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.storage.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:9292 check fall 5 inter 2000 rise 2
   {% endfor %}
@@ -203,6 +208,18 @@ server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.i
 listen nova_placement
   bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8778 transparent
   bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8778 transparent
+  mode http
+  http-request set-header X-Forwarded-Proto https if { ssl_fc }
+  http-request set-header X-Forwarded-Proto http if !{ ssl_fc }
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8778 check fall 5 inter 2000 rise 2
+  {% endfor %}
+{% endif %}
+
+{% if install.version|default(undercloud_version)|openstack_release > 11 %}
+listen panko
+  bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8977 transparent
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8977 transparent
   mode http
   http-request set-header X-Forwarded-Proto https if { ssl_fc }
   http-request set-header X-Forwarded-Proto http if !{ ssl_fc }
