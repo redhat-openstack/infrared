@@ -5,9 +5,18 @@
     # into playbooks, because ansible_python_interpreter variable doesn't
     # accept Jinja template, only fixed string.
 
-- yum:
-      name: python-virtualenv
+- name: Install python-virtualenv, gcc, python-devel for the pip tasks
+  become: yes
+  become_user: root
+  yum:
+      name: "{{ item }}"
       state: present
+  with_items:
+     - python-virtualenv
+     - gcc
+     - python-devel
+     - libffi-devel
+
 - pip:
     name: "{{ item.key }}"
     version: "{{ item.value }}"
