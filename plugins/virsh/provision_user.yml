@@ -52,6 +52,6 @@
           name: "{{ item }}"
           ansible_ssh_user: "{{ provision.topology.username }}"
       when:
-        - item not in groups.overcloud_nodes
+        - item not in groups.overcloud_nodes|default([])
         - hostvars[item].create_user|changed
       with_items: "{{ ansible_play_hosts }}"
