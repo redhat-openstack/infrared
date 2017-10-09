@@ -95,7 +95,11 @@ subparsers:
                         - ocata
                         - pike
                         - queens
-
+                  rdo-override:
+                      type: VarFile
+                      help: |
+                          The repos to use instead of default ones.
+                          Can be used to quickly tune rdo setup.
                   build:
                       help: |
                           String represents a timestamp of the OSP puddle.
