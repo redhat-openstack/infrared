@@ -29,6 +29,18 @@
             filters:
                 router:external: true
 
+      # Since CI-RHOS, where our packstack jobs are deployed, has strict security which can
+      # not be disabled using ansible, we need to use shell explicitely.
+      # With port-security enabled, arbitary IP and MAC can not work on these ports
+      # since ARP and MAC spoofing is therefore in place.
+      # See JIRA RHOSINFRA-1360 for details. Remove when RHOSINFRA-1369 resolved.
+      - name: Workaround - disable port security for all networks deployed
+        shell: "openstack --os-cloud {{ provision.cloud }} network set --disable-port-security {{ item.network.id }}"
+        with_items: "{{ networks.results }}"
+        tags:
+          - skip_ansible_lint
+        when: provision.anti.spoofing == false
+
       - name: Create subnets
         os_subnet:
             allocation_pool_start: "{{ item.value.allocation_pool_start }}"
@@ -73,10 +85,11 @@
         with_dict: "{{ security_groups|default({}) }}"
         loop_control:
             loop_var: sg
-        when: security_groups is defined
+        when: security_groups is defined and provision.anti.spoofing == true
 
       - name: register security groups
         vars:
             input:
                 security_group_list: "{{ security_group_list }}"
         include: tasks/register_resources_file.yml
+        when: provision.anti.spoofing == true

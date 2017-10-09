@@ -56,6 +56,7 @@
      name: "{{ item.id }}"
   with_items: "{{ security_group_list | default([]) }}"
   register: sg_cleanup
+  when: provision.anti.spoofing != false
 
 - name: Fail run if one of neutron cleanups tasks failed/skipped
   fail:

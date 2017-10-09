@@ -25,7 +25,14 @@ subparsers:
                           DNS servers the provisioned instances should use.
                           comma separated list.
                       default: 208.67.222.222
-
+                  anti-spoofing:
+                      type: Bool
+                      default: true
+                      help: |
+                          Controls whether security groups and port_security_enabled=True (anti-spoofing rules) are applied.
+                          Disable in case arbitary MAC and IP addresses need to reach outside assigned ports
+                          (e.g. useful for OpenStack in OpenStack deployments). Disabling this will also set security_groups
+                          to None.
             - title: Topology
               options:
                   prefix:
@@ -97,3 +104,4 @@ subparsers:
                         - newton
                         - ocata
                         - pike
+

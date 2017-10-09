@@ -18,9 +18,35 @@
   with_items: "{{ topology_node.interfaces | sort }}"
   register: nics
 
+#- name: Print secgroups
+#  vars:
+#      secgroups: "{% if provision.anti.spoofing == true %}{{ topology_node.security_groups }}{% endif %}"
+#  shell: "echo {{ secgroups }}"
+#
+#- name: Print secgroups + default
+#  vars:
+#      secgroups: "{% if provision.anti.spoofing == false %}{{ omit }}{% else %}{{ topology_node.security_groups }}{% endif %}"
+#  shell: "echo {{ secgroups | default([]) }}"
+#
+#- name: Print secgroups only
+#  vars:
+#      secgroups: "{{ omit }}"
+#  shell: "echo {{ secgroups }}"
+#
+#- name: Print defaults mapped
+#  vars:
+#      secgroups: "{{ topology_node.security_groups | default([]) | map('regex_replace', '(.*)', prefix + '\\1') | list or omit }}"
+#  shell: "echo {{ secgroups }}"
+#
+#- name: Print defaults mapped 2
+#  vars:
+#      secgroups: "{{ '' | default([]) | map('regex_replace', '(.*)', prefix + '\\1') | list or omit }}"
+#  shell: "echo {{ secgroups }}"
+
 - name: Create instances
   vars:
       resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
+      secgroups: "{% if provision.anti.spoofing == true %}{{ topology_node.security_groups }}{% endif %}"
   os_server:
       cloud: "{{ provision.cloud | default(omit) }}"
       auto_ip: "{{ topology_node.auto_ip | default(auto_ip) }}"
@@ -30,7 +56,7 @@
       name: "{{ prefix }}{{ topology_node.name }}-{{ item|int - 1 }}"
       nics: "{{ nics.results | map(attribute='stdout') | list }}"
       key_name: "{{ provision.key.name if provision.key.name else (prefix + provision.key.file | basename) }}"
-      security_groups: "{{ topology_node.security_groups | default([]) | map('regex_replace', '(.*)', prefix + '\\1') | list or omit }}"
+      security_groups: "{{ secgroups | default([]) | map('regex_replace', '(.*)', prefix + '\\1') | list or omit }}"
       state: present
       wait: "{{ topology_node.wait | default(wait) }}"
       meta:
