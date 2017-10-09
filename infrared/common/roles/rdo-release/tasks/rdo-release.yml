@@ -58,7 +58,7 @@
         # todo(yfried): verify input on pre.yml
         rhos_release:
             state: install
-            release: "rdotrunk-{{ release }}"
+            release: "rdotrunk-{{ (release==rr_master_release)|ternary('master', release) }}"
             build_date: "{{ build | default(omit) }}"
             buildmods: "{{ rr_buildmods.split(',') }}"
             target_directory: "{{ rr_target_directory }}"

@@ -12,6 +12,10 @@
       - name: gather undercloud facts since sometimes they are missing
         setup:
 
+      - name: load rdo overrides
+        include_vars: "{{ install.rdo.override }}"
+        when: install.get('rdo', {}).get('override', False)
+
       - name: check for subscription
         command: subscription-manager identity
         ignore_errors: yes
