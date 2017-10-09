@@ -49,13 +49,17 @@
   register: networks_cleanup
   ignore_errors: yes
 
-- name: Cleanup security groups
-  os_security_group:
-     cloud: "{{ provision.cloud | default(omit) }}"
-     state: absent
-     name: "{{ item.id }}"
-  with_items: "{{ security_group_list | default([]) }}"
-  register: sg_cleanup
+# Port-security must be disabled for OpenStack in Openstack
+# deployments to work properly (Newton).
+# Therefore also security groups must be enabled globally.
+# See JIRA RHOSINFRA-1360 for details, also RHOSINFRA-1369.
+#- name: Cleanup security groups
+#  os_security_group:
+#     cloud: "{{ provision.cloud | default(omit) }}"
+#     state: absent
+#     name: "{{ item.id }}"
+#  with_items: "{{ security_group_list | default([]) }}"
+#  register: sg_cleanup
 
 - name: Fail run if one of neutron cleanups tasks failed/skipped
   fail:
@@ -65,5 +69,6 @@
            subnets_cleanup|succeeded and
            networks_cleanup|succeeded and
            keypairs_cleanup|succeeded and
-           servers_cleanup|succeeded and
-           sg_cleanup|succeeded)
+           servers_cleanup|succeeded)
+#           servers_cleanup|succeeded and
+#           sg_cleanup|succeeded)
