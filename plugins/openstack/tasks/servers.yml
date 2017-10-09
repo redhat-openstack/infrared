@@ -30,7 +30,11 @@
       name: "{{ prefix }}{{ topology_node.name }}-{{ item|int - 1 }}"
       nics: "{{ nics.results | map(attribute='stdout') | list }}"
       key_name: "{{ provision.key.name if provision.key.name else (prefix + provision.key.file | basename) }}"
-      security_groups: "{{ topology_node.security_groups | default([]) | map('regex_replace', '(.*)', prefix + '\\1') | list or omit }}"
+      # Port-security must be disabled for OpenStack in Openstack deployments to work properly (Newton).
+      # Therefore also security groups must be enabled globally.
+      # See JIRA RHOSINFRA-1360 for details, also RHOSINFRA-1369.
+      # This will ensure no security groups will be assigned to VM initially.
+      #security_groups: "{{ topology_node.security_groups | default([]) | map('regex_replace', '(.*)', prefix + '\\1') | list or omit }}"
       state: present
       wait: "{{ topology_node.wait | default(wait) }}"
       meta:
