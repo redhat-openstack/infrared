@@ -13,18 +13,26 @@
   with_dict: "{{ provisioner.neutron.networks }}"
   when: provisioner.neutron.networks is defined
 
-- name: Register externally accessible networks
+- name: Register external network
   os_networks_facts:
       cloud: "{{ provisioner.cloud | default(omit) }}"
       filters:
           router:external: true
-  register: networks_details
-- debug: var=networks_details
+  register: external_network_details
+- debug: var=external_network_details
 
-- name: Set external network id
+- name: Set fact for external network's id
   set_fact:
       external_network_id: "{{ item.value[0].id }}"
-  with_dict: "{{ networks_details.ansible_facts }}"
+  with_dict: "{{ external_network_details.ansible_facts }}"
+
+# Since CI-RHOS, where our packstack jobs are deployed, has strict security which can
+# not be disabled using ansible, we need to use shell explicitely.
+# With port-security enabled, arbitary IP and MAC can not work on these ports
+# since ARP and MAC spoofing is therefore in place. See JIRA RHOSINFRA-1360 for details.
+- name: Workaround - disable port security in CI-RHOS for all networks (JIRA RHOSINFRA-1360)
+  shell: "openstack --os-cloud {{ provisioner.cloud }} network set --disable-port-security {{ item.network.id }}"
+  with_items: "{{ networks.results }}"
 
 - name: Create subnets
   os_subnet:
