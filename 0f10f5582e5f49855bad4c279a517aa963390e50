@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "565593bc_136e210f",
+        "filename": "plugins/virsh/plugin.spec",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1009826
+      },
+      "writtenOn": "2017-10-09T08:30:16Z",
+      "side": 1,
+      "message": "It was exactly \u0027cleanup-workspace\u0027 when i met issue with representation this name as dict \u0027cleanup[\u0027workspace\u0027]\u0027 and all that extra code inside condition to avoid getting \u0027workpsace\u0027 whent cleanup os None or False...\nI agree that this should be renamed and hope that you can suggest something...",
+      "parentUuid": "0d9183a4_846e6428",
+      "range": {
+        "startLine": 95,
+        "startChar": 18,
+        "endLine": 95,
+        "endChar": 35
+      },
+      "revId": "0f10f5582e5f49855bad4c279a517aa963390e50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5574e032_c29e165e",
         "filename": "plugins/virsh/tasks/netip_natted.yml",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "3b8583d5_a9ee39d0",
+        "filename": "plugins/virsh/tasks/netip_natted.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1009826
+      },
+      "writtenOn": "2017-10-09T08:30:16Z",
+      "side": 1,
+      "message": "That\u0027s not a new option, but it was implicitly set to default value: \u0027ssh\u0027\n\nI set it explicitly here, because in vms_2_install.yaml it was initially set to \u0027local\u0027.\n\nI\u0027m not sure that this should be in commit message, cause it\u0027s not e change eventually.",
+      "parentUuid": "5574e032_c29e165e",
+      "range": {
+        "startLine": 45,
+        "startChar": 6,
+        "endLine": 45,
+        "endChar": 31
+      },
+      "revId": "0f10f5582e5f49855bad4c279a517aa963390e50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b45c961_de571b35",
         "filename": "plugins/virsh/tasks/vms_2_install.yml",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2017-10-09T07:25:25Z",
       "side": 1,
       "message": "Why do we need that change? Can you please update the commit message?",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 101
+      },
+      "revId": "0f10f5582e5f49855bad4c279a517aa963390e50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "339bfad6_3f4d72b1",
+        "filename": "plugins/virsh/tasks/vms_2_install.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1009826
+      },
+      "writtenOn": "2017-10-09T08:30:16Z",
+      "side": 1,
+      "message": "This is an early inventory host registration.\nIt has \u0027local\u0027 connection type because has no configured network yet.\n\nThis is needed for cases when provisioning failed before we generated inventory file. In this cases we have orphan resources (vms and networks).\n\nEarly inventory generation adds host to inventory and generates new file right before virt-install.\n\nIf host in inventory but there is no corresponding  VM it will not cause a fail.\n\nSo... as this is a part of solution, i\u0027m not sure if i have to reflect it in commit message.",
+      "parentUuid": "3b45c961_de571b35",
       "range": {
         "startLine": 19,
         "startChar": 0,
