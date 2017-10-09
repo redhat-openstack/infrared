@@ -29,6 +29,17 @@
             filters:
                 router:external: true
 
+      # Since CI-RHOS, where our packstack jobs are deployed, has strict security which can
+      # not be disabled using ansible, we need to use shell explicitely.
+      # With port-security enabled, arbitary IP and MAC can not work on these ports
+      # since ARP and MAC spoofing is therefore in place.
+      # See JIRA RHOSINFRA-1360 for details. Remove when RHOSINFRA-1369 resolved.
+      - name: Workaround - disable port security in CI-RHOS for all networks (JIRA RHOSINFRA-1360)
+        shell: "openstack --os-cloud {{ provision.cloud }} network set --disable-port-security {{ item.network.id }}"
+        with_items: "{{ networks.results }}"
+        tags:
+          - skip_ansible_lint
+
       - name: Create subnets
         os_subnet:
             allocation_pool_start: "{{ item.value.allocation_pool_start }}"
@@ -68,15 +79,19 @@
                 routers: "{{ routers.results | map(attribute='router') | list }}"
         include: tasks/register_resources_file.yml
 
-      - name: create security groups
-        include: tasks/create_network_resources.yml
-        with_dict: "{{ security_groups|default({}) }}"
-        loop_control:
-            loop_var: sg
-        when: security_groups is defined
+      # Port-security must be disabled for OpenStack in Openstack
+      # deployments to work properly (Newton).
+      # Therefore also security groups must be enabled globally.
+      # See JIRA RHOSINFRA-1360 for details, also RHOSINFRA-1369.
+      #- name: create security groups
+      #  include: tasks/create_network_resources.yml
+      #  with_dict: "{{ security_groups|default({}) }}"
+      #  loop_control:
+      #      loop_var: sg
+      #  when: security_groups is defined
 
-      - name: register security groups
-        vars:
-            input:
-                security_group_list: "{{ security_group_list }}"
-        include: tasks/register_resources_file.yml
+      #- name: register security groups
+      #  vars:
+      #      input:
+      #          security_group_list: "{{ security_group_list }}"
+      #  include: tasks/register_resources_file.yml
