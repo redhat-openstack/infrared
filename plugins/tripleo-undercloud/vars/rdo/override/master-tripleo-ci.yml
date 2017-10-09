@@ -1,0 +1,26 @@
+# follows https://github.com/openstack/tripleo-quickstart/blob/master/config/release/tripleo-ci/master.yml
+
+rr_rdo_repos:
+    default:
+        delorean:
+            url: "https://trunk.rdoproject.org/centos7/current-tripleo/delorean.repo"
+        delorean_deps:
+            url: "https://trunk.rdoproject.org/centos7-master/delorean-deps.repo"
+        ceph:
+            package: "centos-release-ceph-{{ (install.version|default(undercloud_version)|openstack_release < 10)|ternary('hammer', 'jewel') }}"
+            file_name: "CentOS-Ceph-{{ (install.version|default(undercloud_version)|openstack_release < 10)|ternary('Hammer', 'Jewel') }}.repo"
+        delorean_current:
+             url: "https://trunk.rdoproject.org/centos7/current/delorean.repo"
+             type: current
+             packages:
+                 - diskimage-builder
+                 - instack
+                 - instack-undercloud
+                 - os-apply-config
+                 - os-collect-config
+                 - os-net-config
+                 - os-refresh-config
+                 - python-tripleoclient
+                 - openstack-tripleo-*
+                 - openstack-puppet-modules
+                 - puppet-*
