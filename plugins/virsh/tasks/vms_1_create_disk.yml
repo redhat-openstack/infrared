@@ -46,7 +46,7 @@
       # create empty disk
       qemu-img create -f qcow2 -o preallocation={{ disk_values.preallocation }} {{ disk_values.path  }}/{{ node_image }} {{ disk_values.size }}
 
-      {% if disk_name == 'disk1' and "overcloud_nodes" not in topology_node.groups -%}
+      {% if disk_name == 'disk1' and topology_node.deploy_os -%}
       # expand (copy-content) into new image in case of system disk
       # virt-resize needs target file with expected size to already exists
       virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ image_name }} {{ disk_values.path }}/{{ node_image }}
