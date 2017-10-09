@@ -1,9 +1,11 @@
 {
+  {% if install.version|default(undercloud_version) | openstack_release < 11 %}
   "ssh-user": "{{ ansible_ssh_user }}",
   "ssh-key": "{{ undercloud_private_key }}",
   "power_manager": "nova.virt.baremetal.virtual_power_driver.VirtualPowerManager",
   "host-ip": "{{ hostvars['hypervisor'].ansible_management.ipv4.address }}",
   "arch": "x86_64",
+  {% endif %}
   "nodes": [
 {% for bm_host in (bm_nodes|default({}))['nodes']|default([]) %}
     {{ bm_host | to_nice_json }},
@@ -12,9 +14,7 @@
 {% set host_data = host_string|from_yaml %}
     {
       "name": "{{ host_data.name }}",
-      "pm_addr": "{{ hostvars['hypervisor'].ansible_management.ipv4.address }}",
       "mac": ["{{ host_data.mac }}"],
-
       "cpu": "{{ host_data.cpu }}",
       "memory": "{{ (host_data.memory_kibs|int / 1024)|round|int }}",
       "disk": "{{ (host_data.disk_bytes|int / 1073741824)|round|int }}",
@@ -23,11 +23,13 @@
       {% endif %}
       "arch": "{{ host_data.arch }}",
       {% if install.version|default(undercloud_version) | openstack_release >= 11 %}
+        "pm_addr": "{{ ansible_default_ipv4.address }}",
         "pm_type": "pxe_ipmitool",
         "pm_user": "{{ install.vbmc.username }}",
         "pm_password": "{{ install.vbmc.password }}",
-        "pm_port": "{{ hostvars['hypervisor']['vbmc_ports'][host_data.name] }}"
+        "pm_port": "{{ vbmc_ports[host_data.name] }}"
       {% else %}
+        "pm_addr": "{{ hostvars['hypervisor'].ansible_management.ipv4.address }}",
         "pm_type": "pxe_ssh",
         "pm_user": "{{ ansible_ssh_user }}",
         "pm_password": "{{ undercloud_private_key }}"
