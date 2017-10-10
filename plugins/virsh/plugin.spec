@@ -92,6 +92,14 @@ subparsers:
                       silent:
                           - topology-nodes
 
+                  kill:
+                      type: Bool
+                      help: Destroy and undefine libvirt resources for the given workspace instead of running playbooks on a new one.
+                      # FIXME(yfried): setting default in spec sets silent=true always
+                      # default: False
+                      silent:
+                          - topology-nodes
+
             - title: Boot Mode
               options:
                   bootmode:

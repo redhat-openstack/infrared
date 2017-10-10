@@ -1,6 +1,8 @@
 ---
 - include: "{{ provision_cleanup | default('cleanup.yml') }}"
-  when: provision.cleanup|default(False)
+  when: (provision.cleanup|default(False)) or (provision.kill|default(False))
 
 - include: "{{ provision_playbook | default('provision.yml') }}"
-  when: not provision.cleanup|default(False)
+  when:
+      - not provision.cleanup|default(False)
+      - not provision.kill|default(False)

@@ -35,7 +35,6 @@
   shell: "virsh net-update {{ item.value.net }} add ip-dhcp-host \"<host mac='{{ item.value.mac }}' name='{{ item.value.name }}' ip='{{ item.key }}' />\" --live --config"
   with_dict: "{{ vms_info }}"
 
-# We can write nodes to inventory while we wait for ips
 - name: add hosts to host list
   add_host:
       name: "{{ item.value.name }}"
@@ -43,6 +42,8 @@
       ansible_ssh_user: "root"
       ansible_ssh_host: "{{ item.key }}"
       ansible_ssh_private_key_file: "{{ inventory_dir }}/id_rsa"
+      # Set 'ansible_connection' explicitly here, because in vms_2_install.yaml it was initially set to 'local'.
+      ansible_connection: "ssh"
       ansible_ssh_common_args: "
           -o ForwardAgent=yes
           -o ServerAliveInterval=30
@@ -52,3 +53,17 @@
           -o UserKnownHostsFile=/dev/null
           -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }}\""
   with_dict: "{{ vms_info }}"
+
+- name: generate inventory file
+  delegate_to: localhost
+  template:
+    dest: "{{ inventory_dir }}/hosts-prov"
+    src: templates/inventory.j2
+    force: yes
+
+- name: update inventory file symlink
+  delegate_to: localhost
+  file:
+    dest: "{{ inventory_dir }}/hosts"
+    state: link
+    src: "hosts-prov"
