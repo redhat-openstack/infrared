@@ -52,6 +52,7 @@
           -o StrictHostKeyChecking=no
           -o UserKnownHostsFile=/dev/null
           -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }}\""
+      inventory_dir: "{{ inventory_dir }}"
   with_dict: "{{ vms_info }}"
 
 - name: generate inventory file

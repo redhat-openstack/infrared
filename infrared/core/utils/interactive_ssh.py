@@ -3,9 +3,8 @@ from __future__ import print_function
 import os
 
 from ansible.parsing.dataloader import DataLoader
-from ansible import inventory
+from ansible.inventory.manager import InventoryManager
 from ansible.playbook.play_context import MAGIC_VARIABLE_MAPPING
-from ansible.vars import VariableManager
 
 from infrared.core.services import CoreServices
 from infrared.core.utils import exceptions
@@ -46,8 +45,7 @@ def ssh_to_host(hostname, remote_command=None):
         raise exceptions.IRNoActiveWorkspaceFound()
     inventory_file = workspace.inventory
 
-    invent = inventory.Inventory(DataLoader(), VariableManager(),
-                                 host_list=inventory_file)
+    invent = InventoryManager(DataLoader(), sources=inventory_file)
 
     host = invent.get_host(hostname)
     if host is None:
