@@ -1,10 +1,24 @@
 ---
+- name: modify puddle number url
+  shell: >
+      echo '{{ containers_puddle_base_url.stdout }}' | sed 's/{{ containers_puddle_number.stdout }}/{{ install.build|default("latest") }}/'
+  register: modified_url
+  when:
+      - install.ocupdate|default(False)
+      - install.build is defined and install.build != 'None'
+
+- name: adjust containers_puddle_base_url
+  set_fact:
+      containers_puddle_base_url: "{{ modified_url }}"
+  when: modified_url|changed
+
 - name: Downloading overcloud container images template
   get_url:
       url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_template_download_basename }}"
       dest: "{{ containers_images_template_dest_file }}"
       owner: stack
       group: stack
+      force: true
 
 - name: replace docker registry with mirror
   replace:
