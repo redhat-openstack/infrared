@@ -59,6 +59,21 @@
         rr_distro_version: "{{ install.osrelease|default(omit) }}"
         when: hostvars[groups['undercloud'][0]]['oc_cdn_register']|int == 1
 
+- name: Prepare Containerized Environment
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+      - update_prepare_containers
+  vars:
+      template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
+  roles:
+      - role: containers/environment-setup
+        when: undercloud_version|openstack_release > 11
+
+      - role: containers/prepare-templates
+        when: undercloud_version|openstack_release > 11
+
 - name: Overcloud Minor Update
   hosts: undercloud
   gather_facts: yes
