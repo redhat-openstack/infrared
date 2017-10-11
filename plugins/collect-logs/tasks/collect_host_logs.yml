@@ -93,6 +93,9 @@
 - shell: "(vgs; pvs; lvs) &> /var/log/extra/lvm"
   ignore_errors: true
 
+- shell: "cat /proc/cpuinfo &> /var/log/extra/cpuinfo"
+  ignore_errors: true
+
 - name: Collect docker info and logs
   shell: >
       if command -v docker && systemctl is-active docker; then
