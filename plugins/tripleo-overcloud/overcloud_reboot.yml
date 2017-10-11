@@ -87,6 +87,7 @@
 
       - name: cleanup resource
         command: pcs resource cleanup {{ item }} --node {{ inventory_hostname }}
+        become: true
         ignore_errors: true
         with_items:
           - "{{ cleanup_services }}"
