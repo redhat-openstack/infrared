@@ -5,6 +5,9 @@
   vars:
       # todo(obaranov) dynamically get/read from settings the ipmi interface name
       ipmi_interface: "eth1"
+
+      # depends on the host cloud. Should be 50 less than on host cloud
+      ovb_mtu_value: 1350
   tasks:
       - name: Get undercloud private key
         command: "cat ~/.ssh/id_rsa"
@@ -21,7 +24,7 @@
 
       - name: Set MTU values
         become: yes
-        command: "ip link set {{ ipmi_interface }} mtu 1450"
+        command: "ip link set {{ ipmi_interface }} mtu {{ ovb_mtu_value }}"
         with_items:
           - "{{ ipmi_interface }}"
 
@@ -29,14 +32,16 @@
         become: yes
         lineinfile:
             dest: "/etc/sysconfig/network-scripts/ifcfg-{{ item }}"
-            line: "MTU=1450"
+            line: "MTU={{ ovb_mtu_value }}"
             regexp: '^MTU='
         with_items:
           - "{{ ipmi_interface }}"
 
       - name: Ensure neutron will use needed MTU
         become: yes
-        lineinfile: dest="/etc/dnsmasq-ironic.conf" line="dhcp-option-force=26,1450"
+        lineinfile:
+            dest: "/etc/dnsmasq-ironic.conf"
+            line: "dhcp-option-force=26,{{ ovb_mtu_value }}"
 
       - name: Restart neutron and ironic services
         become: yes
