@@ -3,19 +3,21 @@ messaging_role:
     name: Messaging
 
     resource_registry:
-        OS::TripleO::Messaging::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/messaging.yaml"
-        OS::TripleO::Messaging::Ports::ExternalPort: "{{ install.heat.templates.basedir }}/network/ports/external.yaml"
+        OS::TripleO::Messaging::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/messaging_internal.yaml"
         OS::TripleO::Messaging::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
-        OS::TripleO::Messaging::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
-        OS::TripleO::Messaging::Ports::StorageMgmtPort: "{{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
-        OS::TripleO::Messaging::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
-
     flavor: messaging
+    networks:
+        - InternalApi
     host_name_format: 'messaging-%index%'
 
     services:
         - OS::TripleO::Services::CACerts
         - OS::TripleO::Services::Timezone
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Tuned{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - OS::TripleO::Services::Ntp
         - OS::TripleO::Services::Snmp
         - OS::TripleO::Services::Kernel

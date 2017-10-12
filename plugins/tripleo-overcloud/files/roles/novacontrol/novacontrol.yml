@@ -12,6 +12,10 @@ novacontrol_role:
         OS::TripleO::Novacontrol::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage${ipv6_postfix_underscore}.yaml"
 
     flavor: novacontrol
+    networks:
+        - InternalApi
+        - Storage
+
     host_name_format: 'novacontrol-%index%'
 
     services:
@@ -28,6 +32,11 @@ novacontrol_role:
         - OS::TripleO::Services::NovaVncProxy
         - OS::TripleO::Services::Snmp
         - OS::TripleO::Services::Timezone
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Tuned{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - OS::TripleO::Services::TripleoPackages
         - OS::TripleO::Services::TripleoFirewall
         - OS::TripleO::Services::SensuClient
