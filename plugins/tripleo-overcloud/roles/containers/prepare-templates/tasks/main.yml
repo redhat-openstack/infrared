@@ -36,3 +36,16 @@
       path: "{{ template_base }}/docker-images.yaml"
       state: present
       line: "  DockerInsecureRegistryAddress: {{ reg_base }}"
+
+# hardcoding for now vlan30. Remove ASAP
+- name: Workaround bz1493192 - add ceph monitor interface
+  copy:
+      content: |
+        parameter_defaults:
+            CephAnsibleExtraConfig:
+                 monitor_interface: vlan30
+      dest: "{{ template_base }}/workaround_bz1493192.yaml"
+  when:
+      - not install.storage.external
+      - storage_backend|default('') == 'ceph'
+      - "'hypervisor' in groups"
