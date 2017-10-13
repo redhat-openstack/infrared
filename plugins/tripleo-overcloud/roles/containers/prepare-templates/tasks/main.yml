@@ -8,29 +8,31 @@
       env_file: "{{ template_base }}/docker-images.yaml"
       os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
       undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/rhosp{{ os_version }}"
-      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry) }}/rhosp{{ os_version }}"
+      undercloud_reg_base_ceph: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
+      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry.stdout) }}/rhosp{{ os_version }}"
+      external_reg_base_ceph: "{{ install.get('registry', {}).mirror|default(docker_origin_registry.stdout) }}"
       reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base)  }}"
+      reg_base_ceph: "{{ install.registry.undercloud.skip|ternary(external_reg_base_ceph, undercloud_reg_base_ceph) }}"
   shell: |
       tag=`awk '/- imagename:.*openstack-glance-api-docker:.*/ {print $3}' <{{ containers_images_template_dest_file }}  | cut -f 2 -d:`
-      openstack overcloud container image prepare --namespace={{ reg_base }} --env-file={{ env_file }} --prefix=openstack- --suffix=-docker --tag=$tag
+      openstack overcloud container image prepare \
+        --namespace={{ reg_base }} \
+        --env-file={{ env_file }} \
+        --prefix=openstack- \
+        --suffix=-docker \
+        --tag=$tag \
+        --set ceph_namespace="{{ reg_base_ceph}}/{{ '/'.join(install.registry.ceph.namespace.split('/')[0:-1]) }}" \
+        --set ceph_image="{{ install.registry.ceph.namespace.split('/')[-1] }}" \
+        --set ceph_tag={{ install.registry.ceph.tag }}
   tags:
       - skip_ansible_lint
 
 - name: add insecure registry line
   vars:
       undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
-      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry) }}"
+      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry.stdout) }}"
       reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base) }}"
   lineinfile:
       path: "{{ template_base }}/docker-images.yaml"
       state: present
       line: "  DockerInsecureRegistryAddress: {{ reg_base }}"
-
-- name: specfy the ceph image source
-  vars:
-      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
-      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry) }}"
-      reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base) }}"
-  shell: |
-      echo "parameter_defaults:">"{{ template_base }}/docker-images-ceph.yaml"
-      echo "  DockerCephDaemonImage: {{ reg_base }}/{{ install.registry.ceph.namespace }}:{{ install.registry.ceph.tag }}">>"{{ template_base }}/docker-images-ceph.yaml"

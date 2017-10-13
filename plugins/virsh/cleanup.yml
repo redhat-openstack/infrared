@@ -20,7 +20,6 @@
   gather_facts: yes
   any_errors_fatal: true
   vars:
-      ignore_virsh_nodes: []
       # ignore virsh's default network
       ignore_virsh_nets:
           - default
@@ -46,15 +45,6 @@
           do
               iptables ${table} -S | awk '/{{ iptables_comment_search }}/ {$1="-D"; print $0}' | xargs -r -L1 iptables ${table}
           done
-
-    - name: check for any vbmc processes
-      command: pgrep vbmc
-      register: vbmc_proc
-      ignore_errors: true
-
-    - name: kill vbmc processes
-      command: killall vbmc
-      when: vbmc_proc.rc == 0
 
 - name: Clean old inventory file
   hosts: localhost

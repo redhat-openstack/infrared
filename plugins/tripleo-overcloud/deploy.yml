@@ -15,6 +15,28 @@
           - install.version|openstack_release >= 12
           - (install.version|openstack_distribution) == 'OSP'
 
+- name: non-container hacks
+  hosts: undercloud
+  any_errors_fatal: true
+  tags:
+      - deploy_preparation
+      - deploy_environment
+  tasks:
+      - shell: |
+          #MODIFY THT_ROOT to point to your tripleo-heat-templates
+          THT_ROOT=/usr/share/openstack-tripleo-heat-templates/
+          cd $THT_ROOT/environments
+          > docker.yaml
+          > docker-ha.yaml
+          find . -exec sed -i -e "s|docker/services/collectd.yaml|puppet/services/metrics/collectd.yaml|g" {} \;
+          find . -exec sed -e "s|docker/services/sensu-client.yaml|puppet/services/monitoring/sensu-client.yaml|g" -i {} \;
+          find . -exec sed -e "s|docker/services|puppet/services|g" -i {} \;
+        when:
+          - install.containers|bool == false
+          - install.version|openstack_release >= 12
+          - (install.version|openstack_distribution) == 'OSP'
+        become: yes
+
 - name: Populate the overcloud deploy script
   include: build_templates.yml
   tags:

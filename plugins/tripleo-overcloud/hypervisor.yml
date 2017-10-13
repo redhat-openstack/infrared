@@ -1,12 +1,32 @@
-# 'undercloud_version' has been setted as host's fact for undercloud nodes.
-- include: tasks/ironic_pxe_ipmitool.yml
-  when: "install.version|default(hostvars[groups['undercloud'][0]]['undercloud_version']) | openstack_release >= 11"
+- name: Gather facts for Hypervisor
+  hosts: hypervisor
+  gather_facts: yes
+  any_errors_fatal: true
 
 - name: Generate the instackenv.json
   hosts: undercloud
   gather_facts: no
   any_errors_fatal: true
   tasks:
+      - name: Retrieve public key from private key to localhost
+        command: "ssh-keygen -y -f ~/.ssh/id_rsa"
+        register: uc_pubkey_result
+
+      - name: insert the public key to the known hosts in hypervisor
+        authorized_key:
+            user: "{{ hostvars['hypervisor'].ansible_ssh_user }}"
+            key: "{{ uc_pubkey_result.stdout }}"
+        delegate_to: hypervisor
+
+      - include: tasks/ironic_pxe_ipmitool.yml
+        vars:
+            pxe_ipmitool_req_packs:
+                - python-setuptools
+                - python-virtualbmc
+                - ipmitool
+            vbmc_start_port: 6230
+        when: install.version|default(undercloud_version) | openstack_release >= 11
+
       - name: grab undercloud private key
         command: "cat ~/.ssh/id_rsa"
         register: uc_pkey_result
@@ -62,16 +82,6 @@
             src: templates/instackenv.json.j2
             dest: "{{ instack_output }}"
         when: not instack_input or install.hybrid|default('')
-
-      - name: Retrieve public key from private key to localhost
-        command: "ssh-keygen -y -f ~/.ssh/id_rsa"
-        register: uc_pubkey_result
-
-      - name: insert the public key to the known hosts in hypervisor
-        authorized_key:
-            user: "{{ ansible_ssh_user }}"
-            key: "{{ uc_pubkey_result.stdout }}"
-        delegate_to: hypervisor
 
       # Using delegete here because of
       # https://github.com/ansible/ansible/issues/16972

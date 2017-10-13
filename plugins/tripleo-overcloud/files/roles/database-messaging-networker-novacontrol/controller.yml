@@ -7,6 +7,12 @@ controller_role:
         "OS::TripleO::Controller::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/controller${ipv6_postfix}.yaml"
 
     flavor: controller
+    networks:
+        - External
+        - InternalApi
+        - Storage
+        - StorageMgmt
+        - Tenant
     host_name_format: 'controller-%index%'
 
     services:
@@ -20,6 +26,10 @@ controller_role:
         - OS::TripleO::Services::CinderBackup
         - OS::TripleO::Services::CinderScheduler
         - OS::TripleO::Services::CinderVolume
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Iscsid{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CinderBackendVRTSHyperScale{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CinderBackendDellEMCUnity{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CinderBackendDellEMCVMAXISCSI{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::Core{% endif %}"
         - OS::TripleO::Services::Kernel
         - OS::TripleO::Services::Keystone
@@ -27,9 +37,11 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::GlanceRegistry{% endif %}"
         - OS::TripleO::Services::HeatApi
         - OS::TripleO::Services::HeatApiCfn
-        - OS::TripleO::Services::HeatApiCloudwatch
+        - "{% if install.version|default(undercloud_version) |openstack_release < 12 %}OS::TripleO::Services::HeatApiCloudwatch{% endif %}"
         - OS::TripleO::Services::HeatEngine
         - OS::TripleO::Services::NeutronApi
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronBgpVpnApi{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronL2gwApi{% endif %}"
         - OS::TripleO::Services::NeutronCorePlugin
         - OS::TripleO::Services::HAproxy
         - OS::TripleO::Services::Keepalived
@@ -40,10 +52,16 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::PankoApi{% endif %}"
         - OS::TripleO::Services::Ntp
         - OS::TripleO::Services::SwiftProxy
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ExternalSwiftProxy{% endif %}"
         - OS::TripleO::Services::SwiftStorage
         - OS::TripleO::Services::SwiftRingBuilder
         - OS::TripleO::Services::Snmp
         - OS::TripleO::Services::Timezone
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Tuned{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - OS::TripleO::Services::CeilometerApi
         - OS::TripleO::Services::CeilometerCollector
         - OS::TripleO::Services::CeilometerExpirer
@@ -59,6 +77,10 @@ controller_role:
         - OS::TripleO::Services::ManilaBackendNetapp
         - OS::TripleO::Services::ManilaBackendCephFs
         - OS::TripleO::Services::ManilaShare
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ManilaBackendIsilon{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ManilaBackendUnity{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ManilaBackendVMAX{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ManilaBackendVNX{% endif %}"
         - OS::TripleO::Services::AodhApi
         - OS::TripleO::Services::AodhEvaluator
         - OS::TripleO::Services::AodhNotifier

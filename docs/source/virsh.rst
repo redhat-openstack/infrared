@@ -130,7 +130,9 @@ Workflow
 
 Environments prepared such in way are usually used as basic virtual infrastructure for `tripleo-undercloud`_.
 
-.. note:: Virsh provisioner has idempotency issues, so ``infrared virsh ... --cleanup`` must be run before reprovisioning every time.
+.. note:: Virsh provisioner has idempotency issues, so ``infrared virsh ... --kill`` must be run before reprovisioning every time
+          to remove libvirt resources related to active hosts form workspace inventory or ``infrared virsh ... --cleanup`` to remove ALL domains
+          and nettworks (except  'default') from hypervisor.
 
 
 

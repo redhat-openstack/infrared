@@ -60,7 +60,7 @@ def print_explanation():
               ...
 
         http://docs.ansible.com/ansible/playbooks_error_handling.html#aborting-the-play
-        """)))
+        """)), file=sys.stderr)
 
 
 def short_play_name(result):
@@ -76,7 +76,7 @@ def indented_play_yaml(result):
                 yaml.dump(result['dict']).split('\n')))
 
 
-def clr(color, text, force=True):
+def clr(color, text, force=False):
     if force or sys.stdout.isatty():
         return '\033[%sm%s\033[0m' % (color, text)
     else:
@@ -121,7 +121,8 @@ def print_out(results, verbose, quiet):
     for result in results:
         if not result['passed']:
             if not quiet:
-                print(red('FAIL: %s' % short_play_name(result)))
+                print(red('FAIL: %s' % short_play_name(result)),
+                      file=sys.stderr)
             if verbose:
                 print(indented_play_yaml(result), file=sys.stderr)
         elif verbose:
@@ -143,14 +144,15 @@ def run_tests(paths, verbose=False, quiet=False):
             any_failure |= had_failure
         except yaml.scanner.ScannerError:
             if not quiet:
-                print(red('ERROR: seems %s is not valid yaml file!' % path))
+                print(red('ERROR: seems %s is not valid yaml file!' % path),
+                      file=sys.stderr)
             any_failure = True
     if not quiet:
         print('')
         if not any_failure:
             print(green('All good, everything passed.'))
         else:
-            print(red('There were some failures, see above.'))
+            print(red('There were some failures, see above.'), file=sys.stderr)
             print_explanation()
 
     return any_failure

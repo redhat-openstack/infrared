@@ -14,8 +14,34 @@
 
 - name: Calculate node_start_index
   set_fact:
-      node_start_index: "{{ node_start_index|int + 1 if (topology_node.name + '-' in item) else node_start_index|int }}"
+      node_start_index: "{{ node_start_index|int + 1 if (topology_node.name + '-' in item) and hostvars[item].get('ansible_connection') == 'ssh' else node_start_index|int }}"
   with_items: "{{ groups.all }}"
+  when: provision.topology.extend | default(False)
+
+  # This is an early inventory host registration.
+  # It has 'local' connection type because has no configured network yet.
+  # This is needed for cases when provisioning failed before we generated inventory file. In this cases we have orphan resources (vms and networks).
+  # Early inventory generation adds host to inventory and generates new file right before virt-install.
+  # If host in inventory but there is no corresponding  VM it will not cause a fail.
+- name: add hosts to host list
+  add_host:
+      name: "{{ topology_node.name }}-{{ item }}"
+      ansible_connection: "local"
+  with_sequence: start={{ node_start_index|int }} end={{ node.value|int + node_start_index|int - 1 }}
+
+- name: generate inventory file
+  delegate_to: localhost
+  template:
+    dest: "{{ inventory_dir }}/hosts-prov"
+    src: templates/inventory.j2
+    force: yes
+
+- name: update inventory file symlink
+  delegate_to: localhost
+  file:
+    dest: "{{ inventory_dir }}/hosts"
+    state: link
+    src: "hosts-prov"
 
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
 - name: create vm's

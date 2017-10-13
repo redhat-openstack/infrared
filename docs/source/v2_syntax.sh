@@ -2,7 +2,7 @@
 infrared virsh -v -o cleanup.yml \
     --host-address example.redhat.com \
     --host-key ~/.ssh/id_rsa \
-    --cleanup yes
+    --kill yes
 
 ## PROVISION ##
 infrared virsh -v \

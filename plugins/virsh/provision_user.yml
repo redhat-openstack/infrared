@@ -41,11 +41,17 @@
             - "{{ inventory_dir }}/id_rsa.pub"
         when: create_user|changed
 
-      - name: Update hosts user
-        add_host:
-            name: "{{ item }}"
-            ansible_ssh_user: "{{ provision.topology.username }}"
-        when: hostvars[item].create_user|changed
-        with_items: "{{ ansible_play_hosts }}"
-
       when: inventory_hostname not in groups.overcloud_nodes|default([])
+
+    # this task should be out of block above
+    # otherwise it will be skipped due the block condition
+    # because add_host bypasses the play host loop and
+    # only runs once for all the hosts in the play,
+    - name: Update hosts user
+      add_host:
+          name: "{{ item }}"
+          ansible_ssh_user: "{{ provision.topology.username }}"
+      when:
+        - item not in groups.overcloud_nodes|default([])
+        - hostvars[item].create_user|changed
+      with_items: "{{ ansible_play_hosts }}"
