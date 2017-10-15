@@ -178,11 +178,6 @@ subparsers:
                   network-backend:
                       type: Value
                       help: The overcloud network backend.
-                      choices:
-                          - gre
-                          - vxlan
-                          - vlan
-                          - geneve
                       default: vxlan
 
                   network-protocol:
