@@ -1,0 +1,20 @@
+- name: Prepare Ops Tools templates
+  vars:
+      opstools_ip_addess: "{{ hostvars['opstools-0'].ansible_default_ipv4.address }}"
+  template:
+      src: "opstools/{{ item }}.yml.j2"
+      dest: "{{ template_base }}/{{ item }}.yaml"
+      mode: 0755
+  with_items:
+      - "collectd"
+      - "monitoring"
+      - "logging_no_ssl"
+
+- name: Append the Ops Tools templates lines to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/{{ item }} \'
+  with_items:
+      - "collectd-environment.yaml"
+      - "monitoring-environment.yaml"
+      - "logging-environment.yaml"
