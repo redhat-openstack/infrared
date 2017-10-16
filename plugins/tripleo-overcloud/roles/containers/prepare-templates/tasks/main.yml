@@ -27,6 +27,14 @@
   tags:
       - skip_ansible_lint
 
+- name: create nondefault images for containers
+  include: "{{ role_path }}/tasks/nondefault_images.yml"
+  with_items: "{{ install.overcloud.templates|default([]) }}"
+  loop_control:
+      loop_var: templates_list_file
+  # avoid empty strings
+  when: "templates_list_file != ''"
+
 - name: add insecure registry line
   vars:
       undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
