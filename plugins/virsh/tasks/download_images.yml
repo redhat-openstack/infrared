@@ -26,6 +26,7 @@
   retries: 5
   delay: 5
   with_dict: "{{ topology_node.disks }}"
+  when: topology_node.disks|count > 0
 
 - name: adjust base image for this run
   shell: |
