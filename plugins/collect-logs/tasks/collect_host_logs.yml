@@ -96,6 +96,10 @@
 - shell: "cat /proc/cpuinfo &> /var/log/extra/cpuinfo"
   ignore_errors: true
 
+- name: "Collect Prepared Plan for overcloud"
+  shell: "openstack overcloud plan export overcloud --output-file /var/log/extra/overcloud_plan_export.tgz"
+  ignore_errors: true
+
 - name: Collect docker info and logs
   shell: >
       if command -v docker && systemctl is-active docker; then
