@@ -7,43 +7,46 @@
   set_fact:
       topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
 
-- name: download base image for node
-  vars:
-      source: "{{ item.value.import_url|default('') or node_dict.import_url|default('') or url }}"
-  get_url:
-      # Use default url if unless disk has a different source
-      url: "{{ source }}"
-      # use original basename explicitly, otherwise, "force" doesn't work
-      dest: "{{ base_image_path }}/{{ source | basename }}"
-      # Download new images only.
-      force: no
-      validate_certs: "{{ url.startswith('https://url.corp.redhat.com/') | ternary(false, omit)}}"
-      owner: qemu
-      group: qemu
-      timeout: 30
-  register: download_image_result
-  until: download_image_result.msg.find("Request failed") == -1
-  retries: 5
-  delay: 5
-  with_dict: "{{ topology_node.disks }}"
+- block:
+      - name: download base image for node
+        vars:
+            source: "{{ item.value.import_url|default('') or node_dict.import_url|default('') or url }}"
+        get_url:
+            # Use default url if unless disk has a different source
+            url: "{{ source }}"
+            # use original basename explicitly, otherwise, "force" doesn't work
+            dest: "{{ base_image_path }}/{{ source | basename }}"
+            # Download new images only.
+            force: no
+            validate_certs: "{{ url.startswith('https://url.corp.redhat.com/') | ternary(false, omit)}}"
+            owner: qemu
+            group: qemu
+            timeout: 30
+        register: download_image_result
+        until: download_image_result.msg.find("Request failed") == -1
+        retries: 5
+        delay: 5
+        with_dict: "{{ topology_node.disks }}"
 
-- name: adjust base image for this run
-  shell: |
-      set -ex
-      export LIBGUESTFS_BACKEND=direct
-      virt-sysprep -a {{ item.dest }} \
-          --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
+      - name: adjust base image for this run
+        shell: |
+            set -ex
+            export LIBGUESTFS_BACKEND=direct
+            virt-sysprep -a {{ item.dest }} \
+                --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
 
-      virt-customize -a {{ item.dest }} \
-      {% if not item.item.value.image_url|default('') %}
-          --run-command 'yum remove -y cloud-init*' \
-      {% endif %}
-          --root-password password:redhat \
-          --run-command 'echo "UseDNS no" >> /etc/ssh/sshd_config' \
-          --mkdir /root/.ssh \
-          --chmod 0700:/root/.ssh \
-          --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys \
-          --delete /etc/dhcp/dhclient.conf \
-          --selinux-relabel
-  with_items: "{{ download_image_result.results }}"
-  when: item|changed
+            virt-customize -a {{ item.dest }} \
+            {% if not item.item.value.image_url|default('') %}
+                --run-command 'yum remove -y cloud-init*' \
+            {% endif %}
+                --root-password password:redhat \
+                --run-command 'echo "UseDNS no" >> /etc/ssh/sshd_config' \
+                --mkdir /root/.ssh \
+                --chmod 0700:/root/.ssh \
+                --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys \
+                --delete /etc/dhcp/dhclient.conf \
+                --selinux-relabel
+        with_items: "{{ download_image_result.results }}"
+        when: item|changed
+
+  when: topology_node.disks is defined
