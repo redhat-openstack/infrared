@@ -17,6 +17,8 @@ parameter_defaults:
 {% for disk in storage_node_disks[1:] %}
             - '/dev/{{ disk }}'
 {% endfor %}
+        journal_size: 512
+        osd_scenario: collocated
 {% else %}
     ExtraConfig:
       ceph::profile::params::osds:
