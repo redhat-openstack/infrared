@@ -4,9 +4,18 @@
     file: "{{ node.key }}"
     name: node_dict
 
+- include_vars:
+    file: "{{ provision.topology.network }}"
+    name: network_info
+
 - name: merge overriden settings to the separate var
   set_fact:
       topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
+
+- name: update node network info if needed
+  set_fact:
+      topology_node: "{{ topology_node | combine(network_info.nodes[topology_node.name]|default(network_info.nodes.default), recursive=True) }}"
+  when: not topology_node.interfaces
 
 - name: Set default node_start_index
   set_fact:

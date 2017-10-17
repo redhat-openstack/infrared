@@ -42,3 +42,23 @@ networks:
         floating_ip:
             start: "10.0.0.101"
             end: "10.0.0.150"
+
+nodes:
+    default:
+        interfaces:
+            - network: "data"
+            - network: "management"
+            - network: "external"
+        external_network:
+            network: "management"
+    novacontrol:
+        interfaces:
+            - network: "data"
+            - network: "management"
+        external_network:
+            network: "management"
+    odl:
+        interfaces:
+            - network: "management"
+        external_network:
+            network: "management"
