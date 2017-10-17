@@ -117,3 +117,10 @@ subparsers:
                           Output format of tempest results report to generate. Currently supported: junitxml, html.
                           Format: --results-formats junitxml,html
                       default: junitxml
+
+            - title: ansible facts
+              options:
+                  collect-ansible-facts:
+                      type: Bool
+                      help: Save ansible facts as json file(s)
+                      default: False
