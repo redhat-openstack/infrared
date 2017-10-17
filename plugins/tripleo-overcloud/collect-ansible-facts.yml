@@ -1,0 +1,11 @@
+- name: Collect Ansible facts
+  gather_facts: yes
+  hosts: all
+  any_errors_fatal: true
+  tasks:
+      - set_fact:
+            ansible_facts_filename: "infrared_tripleo-overcloud-install_{{ inventory_hostname }}"
+
+      - name: collect ansible facts
+        include_role:
+            name: collect-ansible-facts

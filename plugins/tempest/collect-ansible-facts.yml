@@ -1,0 +1,9 @@
+# TODO(wznoinsk): make it run only if certain plugin.spec param is True
+- set_fact:
+    ansible_facts_filename: "infrared_tempest_{{ inventory_hostname }}"
+  tags: collect-ansible-facts
+
+- name: Collect Ansible facts
+  include_role:
+      name: collect-ansible-facts
+  tags: collect-ansible-facts

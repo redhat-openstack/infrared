@@ -109,3 +109,10 @@ subparsers:
                         May require additional packages, please refer http://infrared.readthedocs.io/en/latest/advanced.html#uefi-mode-related-binaries
                       choices: ['hd', 'uefi']
                       default: hd
+
+            - title: ansible facts
+              options:
+                  collect-ansible-facts:
+                      type: Bool
+                      help: Save ansible facts as json file(s)
+                      default: False
