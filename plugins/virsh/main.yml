@@ -6,3 +6,11 @@
   when:
       - not provision.cleanup|default(False)
       - not provision.kill|default(False)
+
+- name: Collect Ansible facts
+  include: 'collect-ansible-facts.yml'
+  when:
+      - provision.collect.ansible.facts|default(False)
+      - not provision.cleanup|default(False)
+  tags: collect-ansible-facts
+  ignore_errors: True

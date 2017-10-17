@@ -41,3 +41,9 @@
             loop_var: test_suite_file
         tags:
             - run
+
+      - name: Collect Ansible facts
+        include: 'tasks/collect-ansible-facts.yml'
+        when: test.collect.ansible.facts|default(False)
+        tags: collect-ansible-facts
+        ignore_errors: True
