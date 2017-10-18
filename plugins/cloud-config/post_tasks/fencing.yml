@@ -1,0 +1,9 @@
+- name: Configure auto-fencing
+  include: post_tasks/native-fencing.yml
+  when: 'undercloud_version|openstack_release >= 11'
+
+- name: Configure virt fencing
+  include: post_tasks/virt-fencing.yml
+  when:
+      - "{{ hostvars[groups['undercloud']|first].undercloud_version }}|openstack_release < 11"
+      - ('hypervisor' in groups)
