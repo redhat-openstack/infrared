@@ -14,6 +14,8 @@
   vars_files:
       - "{{ install.network.service }}"
       - "{{ install.public.subnet }}"
+  roles:
+      - role: shade
   tasks:
       - name: get the default floating ip pool name from the controller
 #        delegate_to: "{{ first_controller }}"
@@ -21,33 +23,6 @@
         command: "grep -oP '(?<=default_floating_pool=)(.*$)' /etc/nova/nova.conf"
         register: pool_name
         changed_when: false
-
-      # create shade venv on target machine
-      # TODO(yfried): remove this if/when packstack uses floating ips and localhost can access cloud
-      - block:
-          - name: install virtualenv requirments for pip
-            become: yes
-            package:
-                name: "{{ item }}"
-                state: present
-            with_items:
-               - libffi-devel
-               - python-virtualenv
-               - gcc
-               - python-devel
-
-          - name: create shade virtualenv
-            pip:
-                name: "{{ item.key }}"
-                version: "{{ item.value }}"
-                virtualenv: "{{ path_venv }}"
-            with_dict:
-                setuptools: "17.0"
-                pytz: "2016.4"
-                shade: "1.19.0"
-                pip: "9.0.1"
-        vars:
-            path_venv: "/var/tmp/venv_shade"
 
       # TODO(yfried): if/when packstack uses floating ips and localhost can access cloud
       # Use inject floatingip to access controller from localhost
