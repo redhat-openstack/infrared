@@ -22,14 +22,16 @@
   register: servers_cleanup
   ignore_errors: yes
 
-- name: Cleanup routers
-  os_router:
-      cloud: "{{ provision.cloud | default(omit) }}"
-      name: "{{ item.id }}"
-      state: absent
-  with_items: "{{ routers|default([]) }}"
-  register: routers_cleanup
+- pause:
+      minutes: 5
+
+- name: Cleanup subnets
+  shell: openstack --os-cloud {{ provision.cloud }} subnet set --no-dhcp --no-allocation-pool {{ item.id }}
+  with_items: "{{ subnets|default([]) }}"
   ignore_errors: yes
+
+- pause:
+      minutes: 5
 
 - name: Cleanup subnets
   os_subnet:
@@ -38,6 +40,15 @@
       state: absent
   with_items: "{{ subnets|default([]) }}"
   register: subnets_cleanup
+  ignore_errors: yes
+
+- name: Cleanup routers
+  os_router:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      name: "{{ item.id }}"
+      state: absent
+  with_items: "{{ routers|default([]) }}"
+  register: routers_cleanup
   ignore_errors: yes
 
 - name: Cleanup networks
