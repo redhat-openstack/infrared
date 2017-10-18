@@ -28,18 +28,9 @@
   include: post_tasks/add_overcloud_hosts.yml
   when: '"add_overcloud_hosts" in install.tasks'
 
-- name: Configure auto-fencing
-  include: post_tasks/native-fencing.yml
-  when:
-      - 'undercloud_version|openstack_release >= 11'
-      - ('"fencing" in install.tasks' or '"instance-ha" in install.tasks')
-
-- name: Configure virt fencing
-  include: post_tasks/virt-fencing.yml
-  when:
-      - "{{ hostvars[groups['undercloud']|first].undercloud_version }}|openstack_release < 11"
-      - ('hypervisor' in groups)
-      - ('"fencing" in install.tasks' or '"instance-ha" in install.tasks')
+- name: Configure fencing
+  include: post_tasks/fencing.yml
+  when: ('"fencing" in install.tasks' or '"instance-ha" in install.tasks')
 
 - name: Configure instance high-availability
   include: post_tasks/instance-ha.yml
