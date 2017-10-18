@@ -22,6 +22,44 @@
   register: servers_cleanup
   ignore_errors: yes
 
+- name: Clean subnets dhcp and gateway settings
+  os_subnet:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      name: "{{ item.id }}"
+      network_name: "{{ item.name }}"
+      enable_dhcp: false
+      no_gateway_ip: yes
+      use_default_subnetpool: yes
+  where: "{{ item.enable_dhcp }}"
+  with_items: "{{ subnets|default([]) }}"
+  ignore_errors: yes
+
+- os_port_facts:
+      cloud: "{{ provision.cloud | default(omit) }}"
+
+- set_fact:
+      os_ports: "{{ os_ports|default([]) + subnet_ports }}"
+  vars:
+      subnet_ports: "{{ openstack_ports | selectattr('network_id', 'equalto', item.id) | list }}"
+  with_items: "{{ networks|default([]) }}"
+
+- name: Disable ports
+  os_port:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      name: "{{ item.id }}"
+      admin_state_up: false
+      fixed_ips: []
+  with_items: "{{ os_ports }}"
+  ignore_errors: yes
+
+- name: Delete ports
+  os_port:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      name: "{{ item.id }}"
+      state: absent
+  with_items: "{{ os_ports }}"
+  ignore_errors: yes
+
 - name: Cleanup routers
   os_router:
       cloud: "{{ provision.cloud | default(omit) }}"
