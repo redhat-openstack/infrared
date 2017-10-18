@@ -1,0 +1,40 @@
+---
+- name: install virtualenv requirments for pip
+  become: yes
+  package:
+      name: "{{ item }}"
+      state: present
+  with_items:
+     - gcc
+     - python-devel
+     - python-setuptools
+     - libffi-devel
+
+- name: install pip
+  become: yes
+  easy_install:
+      name: pip
+
+- name: install virtualenv pip module
+  become: yes
+  pip:
+      name: virtualenv
+      version: 15.0.3
+
+# required to avoid any conflicts in venv with
+# different packages versions (especially shade)
+- name: cleanup shade venv if present
+  file:
+      state: absent
+      path: "{{ path_venv }}"
+
+- name: create shade virtualenv
+  pip:
+      name: "{{ item.key }}"
+      version: "{{ item.value }}"
+      virtualenv: "{{ path_venv }}"
+  with_dict:
+      setuptools: "17.0"
+      pytz: "2016.4"
+      shade: "1.22.2"
+      pip: "9.0.1"
