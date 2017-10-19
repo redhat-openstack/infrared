@@ -103,6 +103,11 @@
             node_type: "{{ item.rstrip('1234567890-').split('-')[-1] }}"
         with_items: "{{ install.scale.nodes }}"
 
+      - name: check for nodes data
+        shell: grep -E 'nodes_data.yaml|nodes.yaml' {{ overcloud_deploy_script }}
+        ignore_errors: true
+        register: is_node_data
+
       - block:
             - name: get current scale for nodes
               shell: cat {{ overcloud_deploy_script }} | egrep '^\-\-{{ node_type }}(-.*)?-scale' | awk '{print $2}'
@@ -119,11 +124,12 @@
                   backup: yes
               with_items: "{{ current_node_count.results }}"
 
-        when: hostvars[groups['undercloud']|first].undercloud_version|openstack_release <= 10
+        when: is_node_data.rc != 0
 
       - block:
-            - name: get location of nodes_data.yaml
-              shell: cat {{ overcloud_deploy_script }} | grep nodes_data.yaml | awk '{print $2}'
+            - name: get nodes data file location
+              shell: cat {{ overcloud_deploy_script }} | grep -E 'nodes_data.yaml|nodes.yaml' | awk '{print $2}'
+              ignore_errors: true
               register: nodes_data_path
 
             - name: get current scale for nodes
@@ -141,7 +147,10 @@
                   backup: yes
               with_items: "{{ current_node_count.results }}"
 
-        when: hostvars[groups['undercloud']|first].undercloud_version|openstack_release >= 11
+            - name: Print nodes data yaml
+              command: "cat {{ nodes_data_path.stdout }}"
+
+        when: is_node_data.rc == 0
 
       - name: Print deploy command
         command: "cat {{ overcloud_deploy_script }}"
