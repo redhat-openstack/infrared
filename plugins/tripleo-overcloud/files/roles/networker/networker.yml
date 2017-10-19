@@ -9,8 +9,8 @@ networker_role:
     #  - ${deployment_dir} - will be replaced by the deployment folder location on the undercloud. Deployment folder can be specified with the ospd --deployment flag
     resource_registry:
         OS::TripleO::Networker::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/networker.yaml"
-        OS::TripleO::Networker::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
-        OS::TripleO::Networker::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api${ipv6_postfix_underscore}.yaml"
+        # OS::TripleO::Networker::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
+        # OS::TripleO::Networker::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api${ipv6_postfix_underscore}.yaml"
 
     flavor: networker
     networks:
@@ -19,6 +19,13 @@ networker_role:
     host_name_format: 'networker-%index%'
 
     services:
+        # THT extra services
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::AuditD{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Collectd{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronML2FujitsuCfab{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronML2FujitsuFossw{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::SkydiveAgent{% endif %}"
         - OS::TripleO::Services::CACerts
         - OS::TripleO::Services::Kernel
         - OS::TripleO::Services::NeutronDhcpAgent
