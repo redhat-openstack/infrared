@@ -45,23 +45,24 @@
   when:
       - install.deploy|default('')
       - install.role is defined and install.role.files != 'default'
-#      - install.version|default(undercloud_version) | openstack_release < 12
+      - (install.version|default(undercloud_version) | openstack_release < 12) or install.tht.roles == false
 
-# todo(obaranov) temporary disable tripleo roles cause they do not respect
-# netwrok settings and templates
+#  todo(obaranov) temporary disable tripleo roles cause they do not respect
+#  netwrok settings and templates
 
-#- name: Deploy the Overcloud with tripleo composable roles
-#  vars:
-#      deploy_script_template: templates/tripleo_roles/overcloud_deploy.sh.j2
-#      templates:
-#          generate_host_name_template: no
-#          storage_add_scale: no
-#  include: "{{ composable_roles | default('tripleo_roles.yml') }}"
-#  when:
-#      - install.deploy|default('')
-#      - install.role is defined
-#      - install.role.files is defined
-#      - install.version|default(undercloud_version) | openstack_release > 11
+- name: Deploy the Overcloud with tripleo composable roles
+  vars:
+      deploy_script_template: templates/tripleo_roles/overcloud_deploy.sh.j2
+      templates:
+          generate_host_name_template: no
+          storage_add_scale: no
+  include: "{{ composable_roles | default('tripleo_roles.yml') }}"
+  when:
+      - install.deploy|default('')
+      - install.role is defined
+      - install.role.files is defined
+      - install.version|default(undercloud_version) | openstack_release > 11
+      - install.tht.roles == true
 
 - name: "After overcloud container workarounds (remove it ASAP)"
   include: "docker_after_workaround.yml"

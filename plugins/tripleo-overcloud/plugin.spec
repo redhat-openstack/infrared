@@ -284,10 +284,24 @@ subparsers:
               options:
                   role-files:
                       type: Value
-                      help:
+                      help: |
+                        For the OSP11 and below:
                         Specifies a sub-folder under the files/roles/ folder where InfraRed should look for the roles files.
-                        InfraRed will use the composable roles appraoch when this flag is defined
+                        InfraRed will use the composable roles approach when this flag is defined
 
+                        For the OSP12 and above:
+                        Specifies the list of roles from https://github.com/openstack/tripleo-heat-templates/tree/master/roles
+                        to use. For example, for the controller,compute and ceph topology the following value can be used:
+                         --role-files=Controller,Compute,CephStorage.
+                         If that value is equal to 'auto' or is not a list of roles, then Infrared will try to
+                         automatically discover roles to use.
+                  tht-roles:
+                      type: Bool
+                      default: yes
+                      help: |
+                        Specifies whether the THT(https://github.com/openstack/tripleo-heat-templates/tree/master/roles)
+                        roles should be used for OSP12+ composable deployments. If value is 'no', then the OSP11 approach
+                        will be used.
 
             - title: Overcloud compute
               options:
