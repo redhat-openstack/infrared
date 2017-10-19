@@ -7,12 +7,13 @@ import tempfile
 import time
 import yaml
 import git
+import github
 
 # TODO(aopincar): Add pip to the project's requirements
 import pip
 
 from infrared.core.utils import logger
-from infrared.core.utils.exceptions import IRFailedToAddPlugin
+from infrared.core.utils.exceptions import IRFailedToAddPlugin, IRException
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRUnsupportedPluginType
@@ -111,6 +112,56 @@ class InfraredPluginManager(object):
                 type_based_plugins_dict[plugin_type][plugin_name] = plugin_desc
 
         return type_based_plugins_dict
+
+    def get_github_organization_plugins(self, organization, no_forks=False):
+        """
+        Returns a dict with all plugins from a GitHub organization
+        inspired from: https://gist.github.com/ralphbean/5733076
+        :param organization: GitHub organization name
+        :param no_forks: include / not include forks
+        """
+        plugins_dict = OrderedDict()
+
+        try:
+            gh = github.Github()
+            gh.get_organization(organization)
+            all_repos = gh.get_organization("rhos-infra").get_repos()
+        except github.RateLimitExceededException:
+            raise IRException("Github API rate limit exceeded")
+
+        for repo in all_repos:
+
+            try:
+                # Don't print the urls for repos that are forks.
+                if no_forks and repo.fork:
+                    continue
+
+                spec_file = repo.get_contents('plugin.spec').decoded_content
+
+                plugin = InfraredPlugin.spec_content_validator(spec_file)
+                plugin_name = plugin["subparsers"].keys()[0]
+                plugin_type = plugin["plugin_type"]
+                plugin_src = repo.clone_url
+                plugin_desc = plugin["description"] \
+                    if "description" in plugin \
+                       and plugin["description"] is not None \
+                    else "-"
+
+                if plugin_type not in plugins_dict:
+                    plugins_dict[plugin_type] = {}
+
+                plugins_dict[plugin_type][plugin_name] = {
+                    "src": plugin_src,
+                    "desc": plugin_desc,
+                }
+
+            except github.RateLimitExceededException:
+                raise IRException("Github API rate limit exceeded")
+            except Exception:
+                # skip repo failures
+                continue
+
+        return plugins_dict
 
     @property
     def config_file(self):
@@ -532,53 +583,65 @@ class InfraredPlugin(object):
         if not os.path.isfile(spec_file):
             raise IRFailedToAddPlugin(
                 "Plugin spec doesn't exist: {}".format(spec_file))
-        import yaml
+
         with open(spec_file) as fp:
-            spec_dict = yaml.load(fp)
+            spec_dict = InfraredPlugin.spec_content_validator(fp)
+
+        return spec_dict
+
+    @staticmethod
+    def spec_content_validator(spec_content):
+        """validates that spec (YAML) file has all required fields
+
+        :param spec_content: content of spec file
+        :raise IRFailedToAddPlugin: when mandatory data is missing in spec file
+        :return: Dictionary with data loaded from a spec (YAML) file
+        """
+        spec_dict = yaml.load(spec_content)
 
         if not isinstance(spec_dict, dict):
             raise IRFailedToAddPlugin(
-                "Spec file is empty or corrupted: '{}'".format(spec_file))
+                "Spec file is empty or corrupted: '{}'".format(spec_content))
 
         plugin_type_key = 'plugin_type'
         if plugin_type_key not in spec_dict:
             raise IRFailedToAddPlugin(
                 "Required key '{}' is missing in plugin spec "
-                "file: {}".format(plugin_type_key, spec_file))
+                "file: {}".format(plugin_type_key, spec_content))
         if not isinstance(spec_dict[plugin_type_key], str):
             raise IRFailedToAddPlugin(
                 "Value of 'str' is expected for key '{}' in spec "
-                "file '{}'".format(plugin_type_key, spec_file))
+                "file '{}'".format(plugin_type_key, spec_content))
         if not len(spec_dict[plugin_type_key]):
             raise IRFailedToAddPlugin(
                 "String value of key '{}' in spec file '{}' can't "
-                "be empty.".format(plugin_type_key, spec_file))
+                "be empty.".format(plugin_type_key, spec_content))
 
         subparsers_key = 'subparsers'
         if subparsers_key not in spec_dict:
             raise IRFailedToAddPlugin(
                 "'{}' key is missing in spec file: '{}'".format(
-                    subparsers_key, spec_file))
+                    subparsers_key, spec_content))
         if not isinstance(spec_dict[subparsers_key], dict):
             raise IRFailedToAddPlugin(
                 "Value of '{}' in spec file '{}' should be "
-                "'dict' type".format(subparsers_key, spec_file))
+                "'dict' type".format(subparsers_key, spec_content))
         if 'description' not in spec_dict \
                 and 'description' not in spec_dict[subparsers_key].values()[0]:
             raise IRFailedToAddPlugin(
                 "Required key 'description' is missing for supbarser '{}' in "
                 "spec file '{}'".format(
-                    spec_dict[subparsers_key].keys()[0], spec_file))
+                    spec_dict[subparsers_key].keys()[0], spec_content))
         if len(spec_dict[subparsers_key]) != 1:
             raise IRFailedToAddPlugin(
                 "One subparser should be defined under '{}' in "
-                "spec file '{}'".format(subparsers_key, spec_file))
+                "spec file '{}'".format(subparsers_key, spec_content))
         if not isinstance(spec_dict[subparsers_key].values()[0], dict):
             raise IRFailedToAddPlugin(
                 "Subparser '{}' should be 'dict' type and not '{}' type in "
                 "spec file '{}'".format(
                     spec_dict[subparsers_key].keys()[0],
-                    type(spec_dict[subparsers_key].values()[0]), spec_file))
+                    type(spec_dict[subparsers_key].values()[0]), spec_content))
         if spec_dict[subparsers_key].keys()[0].lower() == 'all':
             raise IRFailedToAddPlugin(
                 "Adding a plugin named 'all' isn't allowed")
