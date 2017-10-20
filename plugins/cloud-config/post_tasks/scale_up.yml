@@ -25,7 +25,10 @@
             msg: "--scale-nodes is required"
         when: install.get('scale', {}).nodes is not defined
 
-      - include: ../tasks/scale/ironic_pxe_ipmitool.yml
+      - include_role:
+            name: vbmc
+        vars:
+            vbmc_nodes: "{{ install.scale.nodes }}"
         when: undercloud_version | openstack_release >= 11
 
       - name: discover provsion network name
@@ -154,6 +157,8 @@
 
       - name: Print deploy command
         command: "cat {{ overcloud_deploy_script }}"
+
+      - fail:
 
       - name: Execute the overcloud deploy script
         shell: |
