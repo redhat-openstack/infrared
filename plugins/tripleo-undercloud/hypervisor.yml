@@ -11,32 +11,6 @@
         register: cdn_status
         changed_when: false
         when: not install.cdn|default(False)
-  roles:
-      - role: cdn_registery
-        cdn_args_file: "{{ install.cdn|default('') }}"
-        install_version: "{{ install.version }}"
-        when:
-            - "install.cdn|default(False) or cdn_status.rc == 0"
-            - "install.version|openstack_distribution == 'OSP'"
-        become: yes
-
-      - role: rhos-release
-        release: "{{ install.version }}"
-        rr_buildmods: "{{ install.buildmods }}"
-        build: "{{ install.build | default(omit) }}"
-        director_build: "{{ install.get('director', {}).build|default(omit) }}"
-        mirror: "{{ install.mirror | default(omit) }}"
-        when:
-            - "install.version|openstack_distribution == 'OSP'"
-            - "not install.cdn|default(False)"
-            - "cdn_status.rc != 0"
-        become: yes
-
-      - role: rdo-release
-        rr_buildmods: "{{ install.buildmods }}"
-        release: "{{ install.version }}"
-        when: "install.version|openstack_distribution == 'RDO'"
-        become: yes
   tasks:
       - name: update /etc/hosts with VMs details
         lineinfile:
