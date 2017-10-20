@@ -1,4 +1,5 @@
 import sys
+import tempfile
 import argcomplete
 
 from infrared import api  # noqa
@@ -438,8 +439,10 @@ def main(args=None):
         specs_manager.register_spec(api.InfraredPluginsSpec(plugin))
 
     argcomplete.autocomplete(specs_manager.parser)
-    return specs_manager.run_specs(args) or 0
+        return specs_manager.run_specs(args) or 0
 
+    if os.environ.get('IR_WORKSPACE')
+        os.environ['ANSIBLE_SSH_CONTROL_PATH_DIR']='~/.ansible' + os.environ.get('IR_WORKSPACE', '') + '/cp'
 
 if __name__ == '__main__':
     sys.exit(int(main() or 0))
