@@ -42,6 +42,8 @@ Setup an Undercloud
 
 .. _module documentation: http://docs.ansible.com/ansible/redhat_subscription_module.html
 
+.. note:: | In case of **virsh** deployment **ipxe-roms-qemu** will be installed on hypervisor node.
+          | This package should be in a **rhel-server** repo in case of RedHat and in **Base** repo in case of CentOS
 
 To deploy a working undercloud::
 
@@ -148,7 +150,7 @@ Add custom repositories to the undercloud, after `installing the TripleO reposit
 
 * ``repos-urls``: comma separated list of URLs to download repo files to ``/etc/yum.repos.d``
 
-Both options can be used togather::
+Both options can be used together::
 
   infrared tripleo-undercloud [...] --repos-config repos_config.yml --repos-urls "http://yoururl.com/repofile1.repo,http://yoururl.com/repofile2.repo"
 
