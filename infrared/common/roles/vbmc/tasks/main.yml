@@ -1,3 +1,59 @@
+- name: Install packages required for 'pxe_ipmitool' ironic's driver on RedHat based distros
+  become: true
+  package:
+      name: "{{ item }}"
+      state: latest
+      disable_gpg_check: yes
+  with_items:
+      - python-setuptools
+      - python-virtualbmc
+      - ipmitool
+  when: ansible_os_family == "RedHat"
+
+- name: Install packages required for 'pxe_ipmitool' ironic's driver on Non-RedHat based distros
+  become: true
+  package:
+      name: "{{ item }}"
+      state: latest
+  with_items:
+      - python-setuptools
+      - python-virtualbmc
+      - ipmitool
+  when: ansible_os_family != "RedHat"
+
+- name: Add VirtualBMC as systemd service
+  become: true
+  copy:
+    mode: 0664
+    dest: "/usr/lib/systemd/system/virtualbmc.service"
+    content: |
+      [Unit]
+      Description=VirtualBMC service
+      After=network.target
+      [Service]
+      User={{ ansible_user }}
+      Type=oneshot
+      ExecStart=/bin/bash -c 'for bmc in $(ls {{ ansible_user_dir }}/.vbmc/); do vbmc start $bmc; done'
+      ExecStop=/bin/bash -c 'for bmc in $(ls {{ ansible_user_dir }}/.vbmc/); do vbmc stop $bmc; done'
+      RemainAfterExit=yes
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Start the Virtual BMCs
+  become: true
+  service:
+    name: virtualbmc
+    state: started
+    enabled: true
+
+- name: Remove existing Virtual BMCs
+  # grab only lines with port number (more than 2 digits)
+  shell: |
+      vbmc stop {{ item }}
+      vbmc delete {{ item }}
+  ignore_errors: true
+  with_items: "{{ vbmc_nodes }}"
+
 - name: Get current count of used vbmc ports
   shell: vbmc list | grep 62 | wc -l
   register: vbmc_used_ports
@@ -5,7 +61,9 @@
 - name: Define vbmc_port for each VM
   set_fact:
       vbmc_ports: "{{ vbmc_ports|default({})|combine({ item.1: vbmc_start_port + vbmc_used_ports.stdout|int + item.0 }) }}"
-  with_indexed_items: "{{ install.scale.nodes }}"
+  with_indexed_items: "{{ vbmc_nodes }}"
+  vars:
+      vbmc_start_port: 6230
 
 - name: Ease iptables rules on hypervisor
   iptables:

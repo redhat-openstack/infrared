@@ -18,13 +18,10 @@
             key: "{{ uc_pubkey_result.stdout }}"
         delegate_to: hypervisor
 
-      - include: tasks/ironic_pxe_ipmitool.yml
+      - include_role:
+            name: vbmc
         vars:
-            pxe_ipmitool_req_packs:
-                - python-setuptools
-                - python-virtualbmc
-                - ipmitool
-            vbmc_start_port: 6230
+            vbmc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
         when: install.version|default(undercloud_version) | openstack_release >= 11
 
       - name: grab undercloud private key
