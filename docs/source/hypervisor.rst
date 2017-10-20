@@ -19,10 +19,10 @@ Especially, for Ironic (TripleO) to control them, those **libvirt VMs** need to 
 for **iPXE provisioning**.
 And also extra user has to exist, which can ssh in the hypervisor and control (restart...) libvirt VMs.
 
-.. note:: `infrared` is attempting to configure or validate all (most) of this but it's scattered across all provisiner/installer steps.
-          Due to nature of installers such as OSPd and current`infrared` structure it may not be 100% safe for rerunning
-          (failure in previous run may prevent following one from succeeding in these preparation steps).
-          We are working on a more idempotent approach which should resolve the above issues (if present).
+.. note:: `infrared` is attempting to configure or validate all (most) of this but it's may be
+          scattered across all provisiner/installer steps. Current infrared approach is stepped
+          toeard direction to be more idempotent, and failures on previous runs shouldn't prevent
+          succesfull executinon of following runs.
 
 What **user has to provide**:
 
