@@ -2,6 +2,7 @@ import os
 from pbr import version
 import pkg_resources as pkg
 import sys
+import tempfile
 import argcomplete
 
 
@@ -27,6 +28,9 @@ def inject_common_paths():
     override_conf_path(common_path, 'ANSIBLE_CALLBACK_PLUGINS',
                        'callback_plugins')
     override_conf_path(common_path, 'ANSIBLE_LIBRARY', 'library')
+
+    override_conf_path('', 'ANSIBLE_SSH_CONTROL_PATH_DIR', tempfile.mkdtemp(suffix='-ir-cp'))
+    os.environ['ANSIBLE_HOST_KEY_CHECKING'] = 'False'
 
 
 # This needs to be called here because as soon as an ansible class is loaded
@@ -467,7 +471,13 @@ def main(args=None):
         specs_manager.register_spec(api.InfraredPluginsSpec(plugin))
 
     argcomplete.autocomplete(specs_manager.parser)
-    return specs_manager.run_specs(args) or 0
+    try:
+        return specs_manager.run_specs(args) or 0
+    finally:
+        cp = os.environ.get('ANSIBLE_SSH_CONTROL_PATH_DIR', '')
+        if os.path.exists(cp):
+            import shutil
+            shutil.rmtree(cp)
 
 
 if __name__ == '__main__':
