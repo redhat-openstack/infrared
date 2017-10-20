@@ -77,6 +77,18 @@
   with_dict: "{{ vbmc_ports }}"
   delegate_to: hypervisor
 
+- name: Ease iptables rules on vbmc host
+  become: true
+  iptables:
+      action: insert
+      comment: "Infrared: vbmc ports"
+      table: filter
+      chain: INPUT
+      jump: ACCEPT
+      protocol: "udp"
+      destination_port: "{{ item.value }}"
+  with_dict: "{{ vbmc_ports }}"
+
 - name: Add nodes to vbmc
   command: "vbmc add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ ansible_default_ipv4.address }} \
             --libvirt-uri \"qemu+ssh://{{ hostvars['hypervisor'].ansible_user_id }}@{{ hostvars['hypervisor'].ansible_management.ipv4.address }}/system?no_verify=1&no_tty=1\""
