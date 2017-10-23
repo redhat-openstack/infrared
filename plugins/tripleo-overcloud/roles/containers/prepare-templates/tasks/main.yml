@@ -75,13 +75,3 @@
       loop_var: templates_list_file
   # avoid empty strings
   when: "templates_list_file != ''"
-
-- name: add insecure registry line
-  vars:
-      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
-      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry.stdout) }}"
-      reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base) }}"
-  lineinfile:
-      path: "{{ template_base }}/docker-images.yaml"
-      state: present
-      line: "  DockerInsecureRegistryAddress: {{ reg_base }}"
