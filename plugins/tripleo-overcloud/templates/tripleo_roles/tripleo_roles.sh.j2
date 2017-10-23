@@ -1,7 +1,17 @@
 #!/bin/bash
 
 openstack overcloud roles generate -o {{ template_base }}/roles/roles_data.yaml \
+{% set roles = install.role.files.split(',') %}
+{# automatically detect roles from the inventory #}
+{% if roles|length == 1 %}
 {% for host_name in groups.overcloud_nodes %}
-{% set role_name = host_name.rstrip('1234567890-').split('-')[-1]|title %}
+{% set host_short_name = host_name.rstrip('1234567890-').split('-')[-1] %}
+{% set role_name = role_names_mapping.get(host_short_name, host_short_name|title) %}
     {{ role_name }} \
 {% endfor %}
+{% else %}
+{# manual mode #}
+{% for role_name in roles %}
+    {{ role_name }} \
+{% endfor %}
+{% endif %}
