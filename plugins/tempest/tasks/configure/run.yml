@@ -44,24 +44,17 @@
               {% endfor %}
               {% endfor %}
               {# remove options #}
-              {% if test.openstack.version|default(overcloud_version)|openstack_release >= 9 and test.get('remove', {}).get('options', {}) %}
+              {% test.get('remove', {}).get('options', {}) %}
                 {% for section_name,options in test.get('remove', {}).get('options', {}).iteritems() %}
                     {% for option_name,value in options.iteritems() %}
                         --remove {{section_name}}.{{option_name}}={{value}} \
                     {% endfor %}
                 {% endfor %}
-              {% elif test.get('remove', {}).get('options', {})|length > 0 %}
-                {% set remove_action = 'warn' %}
               {% endif %}
               --out ~/{{ test.dir }}/etc/tempest.conf
   args:
       chdir: "{{ config_dir | default('~/' + test.dir) }}"
   register: config_result
-
-- name: Display remove options warning
-  debug:
-     msg: "Warning: --remove-options unsupported in RHOSP < 9."
-  when: test.openstack.version|default(overcloud_version)|openstack_release < 9 and test.get('remove', {}).get('options', {})
 
 - name: Save the current state for the later cleanup
   shell: >
