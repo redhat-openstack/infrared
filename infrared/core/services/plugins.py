@@ -41,6 +41,7 @@ with open(PLUGINS_REGISTRY_FILE, "r") as fo:
 class InfraredPluginManager(object):
     PLUGINS_DICT = OrderedDict()
     SUPPORTED_TYPES_SECTION = 'supported_types'
+    PLUGINS_GIT_ORG = "rhos-infra"
 
     def __init__(self, plugins_conf=None):
         """
@@ -113,7 +114,8 @@ class InfraredPluginManager(object):
 
         return type_based_plugins_dict
 
-    def get_github_organization_plugins(self, organization, no_forks=False):
+    def get_github_organization_plugins(self, organization=PLUGINS_GIT_ORG,
+                                        no_forks=False):
         """
         Returns a dict with all plugins from a GitHub organization
         inspired from: https://gist.github.com/ralphbean/5733076
@@ -124,8 +126,7 @@ class InfraredPluginManager(object):
 
         try:
             gh = github.Github()
-            gh.get_organization(organization)
-            all_repos = gh.get_organization("rhos-infra").get_repos()
+            all_repos = gh.get_organization(organization).get_repos()
         except github.RateLimitExceededException:
             raise IRException("Github API rate limit exceeded")
 

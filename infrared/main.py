@@ -383,7 +383,9 @@ class PluginManagerSpec(api.SpecObject):
         table_headers = ["Type", "Name", "Description", "Source"]
 
         plugins_dict = \
-            self.plugin_manager.get_github_organization_plugins("rhos-infra")
+            self.plugin_manager.get_github_organization_plugins(
+                organization=self.plugin_manager.PLUGINS_GIT_ORG,
+                no_forks=False)
 
         for plugins_type, plugins in plugins_dict.iteritems():
             # prepare empty lists
