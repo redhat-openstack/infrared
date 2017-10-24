@@ -41,9 +41,15 @@
 
       - name: replace '%stackname%- in host name formats
         replace:
-          path: "{{ template_base }}/roles/roles_data.yaml"
-          regexp: "HostnameFormatDefault: '%stackname%-(.*)'"
-          replace: 'HostnameFormatDefault: "\1"'
+            path: "{{ template_base }}/roles/roles_data.yaml"
+            regexp: "HostnameFormatDefault: '%stackname%-(.*)'"
+            replace: 'HostnameFormatDefault: "\1"'
+
+      - name: replace novacompute host name with compute
+        replace:
+            path: "{{ template_base }}/roles/roles_data.yaml"
+            regexp: 'HostnameFormatDefault: "novacompute-(.*)"'
+            replace: 'HostnameFormatDefault: "compute-\1"'
 
 - name: Deploy the Overcloud with composable roles
   include: "{{ overcloud_deploy | default('deploy.yml') }}"
