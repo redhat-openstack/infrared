@@ -59,10 +59,12 @@
               vbmc delete ${node}
           done
       when: vbmc_proc.rc == 0
+      ignore_errors: true
 
     - name: kill vbmc processes
       command: killall vbmc
       when: vbmc_proc.rc == 0
+      ignore_errors: true
 
 - name: Clean old inventory file
   hosts: localhost
