@@ -26,9 +26,9 @@
               --debug \
               -v \
               --create \
-              {% if test.image|default('') %}
               --image {{ test.image }} \
-              {% endif %}
+              image.http_image  {{ test.image }} \
+              scenario.img_file {{ test.image | basename }} \
               identity.uri $OS_AUTH_URL \
               identity.admin_password $OS_PASSWORD \
               scenario.img_dir ~/{{ test.dir }}/etc \

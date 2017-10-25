@@ -63,7 +63,9 @@ subparsers:
                   image:
                       type: Value
                       help: |
-                          An image to be uploaded to glance and used for testing. Path have to be a url.
+                          Unified image to be uploaded to glance and used for testing. Path has to be a url.
+                          This image is also used for compute and scenario tests.
+                      default: http://download.cirros-cloud.net/0.3.5/cirros-0.3.5-x86_64-disk.img
                   config-options:
                        type: IniType
                        action: append
