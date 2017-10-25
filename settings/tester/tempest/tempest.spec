@@ -62,3 +62,7 @@ subparsers:
                       type: Value
                       help: The number of concurrent threads to run tests
                       default: 8
+                  base-image:
+                      type: Value
+                      help: Image to be used for Tempest
+                      default: http://download.cirros-cloud.net/0.3.5/cirros-0.3.5-x86_64-disk.img
