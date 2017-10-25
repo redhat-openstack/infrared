@@ -50,6 +50,7 @@ Welcome to infrared's documentation!
    gabbi_tester
    list_builds
    pytest_runner
+   ospdui_tester
 
 .. toctree::
    :maxdepth: 2
