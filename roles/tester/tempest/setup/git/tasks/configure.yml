@@ -23,6 +23,9 @@
                   {% endif %}
                   --debug \
                   --create \
+                  --image {{ tester.base.image }} \
+                  image.http_image  {{ tester.base.image }} \
+                  scenario.img_file {{ tester.base.image | basename }} \
                   identity.uri $OS_AUTH_URL \
                   identity.admin_password $OS_PASSWORD \
                   scenario.img_dir ~/{{ tester.dir }}/etc \
