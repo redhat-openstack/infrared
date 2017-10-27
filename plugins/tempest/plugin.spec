@@ -36,6 +36,7 @@ subparsers:
                            - newton
                            - ocata
                            - pike
+                           - queens
                   openstack-installer:
                        type: Value
                        help: |
