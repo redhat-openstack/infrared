@@ -1,0 +1,57 @@
+---
+osdcompute_role:
+    name: OsdCompute
+
+    resource_registry:
+        OS::TripleO::OsdCompute::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/osdcompute.yaml"
+        OS::TripleO::OsdCompute::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api${ipv6_postfix_underscore}.yaml"
+        OS::TripleO::OsdCompute::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage${ipv6_postfix_underscore}.yaml"
+        OS::TripleO::OsdCompute::Ports::StorageMgmtPort: "{{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
+        OS::TripleO::OsdCompute::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
+
+    flavor: osdcompute
+    networks:
+        - InternalApi
+        - Storage
+        - StorageMgmt
+        - Tenant
+    host_name_format: 'osdcompute-%index%'
+
+    options:
+        - "{% if install.version|default(undercloud_version)|openstack_release == 11 %}disable_upgrade_deployment: True{% endif %}"
+
+    services:
+        - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::CephClient
+        - OS::TripleO::Services::CephExternal
+        - OS::TripleO::Services::Timezone
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Tuned{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::Snmp
+        - OS::TripleO::Services::NovaCompute
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Iscsid{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NovaMigrationTarget{% endif %}"
+        - OS::TripleO::Services::NovaLibvirt
+        - OS::TripleO::Services::Kernel
+        - OS::TripleO::Services::ComputeNeutronCorePlugin
+        - OS::TripleO::Services::ComputeNeutronOvsAgent
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronVppAgent{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronLinuxbridgeAgent{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Vpp{% endif %}"
+        - OS::TripleO::Services::ComputeCeilometerAgent
+        - OS::TripleO::Services::ComputeNeutronL3Agent
+        - OS::TripleO::Services::ComputeNeutronMetadataAgent
+        - OS::TripleO::Services::TripleoPackages
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::NeutronSriovAgent
+        - OS::TripleO::Services::OpenDaylightOvs
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::FluentdClient
+        - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
+        - "{% if roles_sshd %}OS::TripleO::Services::Sshd{% endif %}"
+        - OS::TripleO::Services::CephOSD
