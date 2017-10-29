@@ -145,6 +145,16 @@
                     ResultActive=yes
                 dest: "/etc/polkit-1/localauthority/50-local.d/50-libvirt-user-{{ install.user.name }}.pkla"
 
+      - name: test openstack environment
+        delegate_to: "{{ groups.undercloud | first }}"
+        become: true
+        become_user: stack
+        shell: |
+            source ~/stackrc
+            openstack server list
+        register: os_server_list_result
+        tags: skip_ansible_lint
+
   handlers:
       - name: update hosts
         template:
