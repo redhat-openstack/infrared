@@ -126,6 +126,13 @@
             - Link to new Inventory file
             - update /etc/hosts with undercloud's details
 
+      - name: test openstack environment
+        delegate_to: "{{ groups.undercloud | first }}"
+        shell: |
+            source ~/stackrc
+            openstack server list
+        register: os_server_list_result
+
   handlers:
       - name: update hosts
         template:
