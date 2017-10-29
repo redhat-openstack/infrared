@@ -126,6 +126,16 @@
             - Link to new Inventory file
             - update /etc/hosts with undercloud's details
 
+      - name: test openstack environment
+        shell: |
+            openstack server list
+        register: os_server_list_result
+
+      - name: fail when os_server_list_result is non zero
+        fail:
+            msg: "There is a problem with openstack"
+        when: os_server_list_result.rc != "0"
+
   handlers:
       - name: update hosts
         template:
