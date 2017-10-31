@@ -313,7 +313,7 @@ Below is an example of the controller default role::
 The name of the role files should correspond to the node inventory name without prefix and index.
 For example, for ``user-prefix-controller-0`` the name of the role should be ``controller.yml``.
 
-OSP111 Deployment example
+OSP11 Deployment example
 =========================
 
 To deploy OpenStack with composable roles on virtual environment the following steps can be performed.
