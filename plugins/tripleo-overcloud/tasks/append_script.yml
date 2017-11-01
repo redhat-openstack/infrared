@@ -23,8 +23,8 @@
   include: trust_uc.yml
   when:
       - not install.overcloud.ssl
-      - install.version|openstack_release >= 12
-      - (install.version|openstack_distribution) == 'OSP'
+      - install.version|default(undercloud_version)|openstack_release >= 12
+      - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
 - name: Generate the hostnames template
   include: hostname.yml
@@ -50,8 +50,8 @@
       - containers
   when:
       - install.containers|default('')
-      - install.version|openstack_release >= 12
-      - (install.version|openstack_distribution) == 'OSP'
+      - install.version|default(undercloud_version)|openstack_release >= 12
+      - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
 - name: check for list of user defined templates
   find:

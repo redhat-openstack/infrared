@@ -12,8 +12,8 @@
       - role: containers/environment-setup
         when:
           - install.containers|default('')
-          - install.version|openstack_release >= 12
-          - (install.version|openstack_distribution) == 'OSP'
+          - install.version|default(undercloud_version)|openstack_release >= 12
+          - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
 - name: non-container hacks
   hosts: undercloud
@@ -33,8 +33,8 @@
           find . -exec sed -e "s|docker/services|puppet/services|g" -i {} \;
         when:
           - install.containers|bool == false
-          - install.version|openstack_release >= 12
-          - (install.version|openstack_distribution) == 'OSP'
+          - install.version|default(undercloud_version)|openstack_release >= 12
+          - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
         become: yes
 
 - name: Populate the overcloud deploy script
