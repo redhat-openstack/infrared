@@ -122,9 +122,13 @@
                 -o UserKnownHostsFile=/dev/null
                 -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }}\""
         notify:
-            - update hosts
-            - Link to new Inventory file
             - update /etc/hosts with undercloud's details
+
+      - include_role:
+            name: inventory-update
+        delegate_to: localhost
+        vars:
+            inventory_file_name: 'hosts-installer'
 
       # create stack user on hypervisor, because on clean machine we can have it missing
       - block:
@@ -146,19 +150,6 @@
                 dest: "/etc/polkit-1/localauthority/50-local.d/50-libvirt-user-{{ install.user.name }}.pkla"
 
   handlers:
-      - name: update hosts
-        template:
-            dest: "{{ inventory_dir }}/hosts-installer"
-            src: inventory.j2
-        delegate_to: localhost
-
-      - name: Link to new Inventory file
-        file:
-            dest: "{{ inventory_dir }}/hosts"
-            state: link
-            src: hosts-installer
-        delegate_to: localhost
-
       - name: update /etc/hosts with undercloud's details
         lineinfile:
             dest: "/etc/hosts"

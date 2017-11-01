@@ -1,6 +1,5 @@
-{% for host in groups['all'] %}
+{% for host in groups['all'] if host not in (omit_groups_hosts|default([]) + omit_hosts) %}
 {% if hostvars[host].get('ansible_connection', '') == 'local' %}
-
 {{ host }} ansible_connection=local ansible_python_interpreter=python
 {%- else %}
 
@@ -13,11 +12,13 @@
 {% endfor %}
 
 {% for group in groups %}
-{% if group not in ['ungrouped', 'all'] %}
+{% if group not in ['ungrouped', 'all'] and group not in omit_groups %}
 
 [{{ group }}]
 {% for host in groups[group] %}
+{% if host not in (omit_groups_hosts|default([]) + omit_hosts) %}
 {{ host }}
+{% endif %}
 {% endfor %}
 {% endif %}
 {% endfor %}
