@@ -32,4 +32,9 @@
         loop_control:
             loop_var: service
 
-- include: inventory_update.yml
+- name: generate inventory file
+  hosts: localhost
+  gather_facts: no
+  tags: always
+  roles:
+      - inventory-update

@@ -98,4 +98,9 @@
 
         with_items: "{{ openstack_servers }}"
 
-- include: ../inventory_update.yml
+- name: generate inventory file
+  hosts: localhost
+  gather_facts: no
+  tags: always
+  roles:
+      - inventory-update
