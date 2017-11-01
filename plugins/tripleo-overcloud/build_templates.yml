@@ -81,8 +81,8 @@
             - containers
         when:
             - install.containers|default('')
-            - install.version|openstack_release >= 12
-            - (install.version|openstack_distribution) == 'OSP'
+            - install.version|default(undercloud_version)|openstack_release >= 12
+            - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
       - include: tasks/append_script.yml
         when: not overcloud_deploy_script|default('')
