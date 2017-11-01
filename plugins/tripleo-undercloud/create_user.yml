@@ -87,4 +87,10 @@
             name: "{{ inventory_hostname }}"
             ansible_ssh_user: "{{ install.user.name }}"
 
-- include: update_inventory.yml
+- name: update inventory file
+  hosts: localhost
+  gather_facts: no
+  tags: always
+  roles:
+      - role: inventory-update
+        inventory_file_name: 'hosts-install'

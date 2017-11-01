@@ -11,16 +11,10 @@
           name: "{{ shade_group|first }}"
           groups: "shade"
 
-      - name: update inventory
-        template:
-            dest: "{{ inventory_dir }}/hosts-install"
-            src: inventory.j2
-
-      - name: update inventory file symlink
-        file:
-            src: "hosts-install"
-            dest: "{{ inventory_dir }}/hosts"
-            state: link
+      - include_role:
+            name: inventory-update
+        vars:
+            inventory_file_name: 'hosts-install'
 
 - name: Prepare shade node
   hosts: shade
