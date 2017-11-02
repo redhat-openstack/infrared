@@ -126,6 +126,25 @@
             - Link to new Inventory file
             - update /etc/hosts with undercloud's details
 
+      # create stack user on hypervisor, because on clean machine we can have it missing
+      - block:
+          - name: create stack user on hypervisor
+            user:
+                name: "{{ install.user.name }}"
+                state: present
+                password: "{{ install.user.password | password_hash('sha512') }}"
+
+          - name: set permissions for the user to access the hypervisor
+            copy:
+                content: |
+                    [libvirt Management Access]
+                    Identity=unix-user:{{ install.user.name }}
+                    Action=org.libvirt.unix.manage
+                    ResultAny=yes
+                    ResultInactive=yes
+                    ResultActive=yes
+                dest: "/etc/polkit-1/localauthority/50-local.d/50-libvirt-user-{{ install.user.name }}.pkla"
+
   handlers:
       - name: update hosts
         template:
