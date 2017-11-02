@@ -72,6 +72,29 @@ To fix the problem remove the broken bridge::
     $ ovs-vsctl del-br brbm
 
 
+Cannot activate IPv6 Network
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Symptoms:
+`````````
+Virsh fails on task 'check if network is active' or on task 'Check if IPv6 enabled on host' with one of the following error messages::
+
+    Failed to add IP address 2620:52:0:13b8::fe/64 to external
+
+    Network 'external' requires IPv6, but modules aren't loaded...
+
+Solution:
+`````````
+Ipv6 is disabled on hypervisor. Please make sure to enable IPv6 on the hypervisor before creating network with IPv6,
+otherwise, IPv6 networks will be created but will remain in 'inactive' state.
+
+One possible solution on RH based OSes, is to enable IPv6 in kernel cmdline::
+
+    # sed -i s/ipv6.disable=1/ipv6.disable=0/ /etc/default/grub
+    # grub2-mkconfig -o /boot/grub2/grub.cfg
+    # reboot
+
+
 Frequently Asked Questions
 ==========================
 
