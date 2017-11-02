@@ -2,16 +2,6 @@
   hosts: hypervisor
   gather_facts: yes
   any_errors_fatal: true
-  tasks:
-      - name: Set up authorized_keys for the stack user for vm management
-        authorized_key:
-            user: stack
-            key: "{{ lookup('file', item) }}"
-        with_first_found:
-            - files:
-              - "{{ inventory_dir }}/id_rsa.pub"
-              skip: true
-        when: install.version|default(undercloud_version) | openstack_release < 11
 
 - name: Generate the instackenv.json
   hosts: undercloud
@@ -27,6 +17,13 @@
             user: "{{ hostvars['hypervisor'].ansible_ssh_user }}"
             key: "{{ uc_pubkey_result.stdout }}"
         delegate_to: hypervisor
+
+      - name: insert the public key to the known hosts in hypervisor for stack user
+        authorized_key:
+            user: stack
+            key: "{{ uc_pubkey_result.stdout }}"
+        delegate_to: hypervisor
+        when: install.version|default(undercloud_version) | openstack_release < 11
 
       - include_role:
             name: vbmc
