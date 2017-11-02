@@ -82,7 +82,7 @@ subparsers:
 
                   registry-ceph-tag:
                       type: Value
-                      help: tag used with the ceph container
+                      help: tag used with the ceph container, if 'latest' (defalt) then tag from container_images.yaml input file will be used
                       default: latest
 
             - title: Deployment Description

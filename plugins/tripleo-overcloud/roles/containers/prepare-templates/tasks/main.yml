@@ -14,7 +14,16 @@
       reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base)  }}"
       reg_base_ceph: "{{ install.registry.undercloud.skip|ternary(external_reg_base_ceph, undercloud_reg_base_ceph) }}"
   shell: |
+      set -exo pipefail
       tag=`awk '/- imagename:.*openstack-glance-api-docker:.*/ {print $3}' <{{ containers_images_template_dest_file }}  | cut -f 2 -d:`
+      ceph_tag="{{ install.registry.ceph.tag }}"
+      if [[ -z "${ceph_tag}" || "${ceph_tag}" == "latest" ]]; then
+        ceph_tag=`awk '/- imagename:.*ceph\/.*ceph.*:.*/ {print $3}' <{{ containers_images_template_dest_file }}  | cut -f 2 -d:`
+        if [[ -z "$ceph_tag" ]]; then
+            echo "Failed to detect ceph image version/tag."
+            exit 1
+        fi
+      fi
       openstack overcloud container image prepare \
         --namespace={{ reg_base }} \
         --env-file={{ env_file }} \
@@ -23,7 +32,7 @@
         --tag=$tag \
         --set ceph_namespace="{{ reg_base_ceph}}/{{ '/'.join(install.registry.ceph.namespace.split('/')[0:-1]) }}" \
         --set ceph_image="{{ install.registry.ceph.namespace.split('/')[-1] }}" \
-        --set ceph_tag={{ install.registry.ceph.tag }}
+        --set ceph_tag=$ceph_tag
   tags:
       - skip_ansible_lint
 
