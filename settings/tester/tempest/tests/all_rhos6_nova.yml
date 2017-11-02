@@ -1,0 +1,23 @@
+---
+test_regex: tempest
+whitelist: []
+blacklist: 
+  # These tests require working SSH access into VM and therefore in nova-network rhos6 deployment
+  # they can neven pass because of broken nova metadata server (WONTFIX RHBZ#1506225).
+  # SSH access can not be provided by default, since Tempest can not be tweaked to use
+  # any other access type then PKI and pubkey can not be provided by broken metadata server
+  # during boot. Any test executing part of code
+  # "self.create_timestamp("instance_ip, private_key=keypair['private_key'] can not succeed
+  # since temporary keypair generated for Tempest test by nova can not be insterted
+  # into deployed VM.
+  - tempest.scenario.test_shelve_instance.TestShelveInstance.test_shelve_instance
+  - tempest.scenario.test_snapshot_pattern.TestSnapshotPattern.test_snapshot_pattern
+  - tempest.scenario.test_shelve_instance.TestShelveInstance.test_shelve_instance
+  - tempest.scenario.test_shelve_instance.TestShelveInstance.test_shelve_volume_backed_instance
+  - tempest.scenario.test_volume_boot_pattern.TestVolumeBootPattern.test_volume_boot_pattern
+  - tempest.scenario.test_volume_boot_pattern.TestVolumeBootPatternV2.test_volume_boot_pattern
+  # test_minimum_basic_scenario test doesn't use create_timestamp() function, but it uses
+  # similar approach in get_remote_client - since validations are disable for nova
+  # deployments it doesn't make sense to run this test also (moreover with auth_method=keypair
+  # as only one supported option attempt to use SSH key is the only option).
+  - tempest.scenario.test_minimum_basic.TestMinimumBasicScenario.test_minimum_basic_scenario
