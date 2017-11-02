@@ -11,8 +11,27 @@
       undercloud_image_file: "{{ install.quickstart.image | basename }}"
       undercloud_disk_path: "/var/lib/libvirt/images/{{ install.quickstart.filename.rstrip('.qcow2') | basename }}-disk1.qcow2"
       undercloud_user: "{{ install.user.name | default('stack') }}"
+      default_privatekey: "~/.ssh/id_rsa"
       # todo(yfried): add external refs so users can override these values and customize the Undercloud
   tasks:
+      - name: create default user
+        user:
+            name: "{{ install.user.name }}"
+            state: present
+            password: "{{ install.user.password | password_hash('sha512') }}"
+
+      - name: add user to sudoers
+        lineinfile:
+            dest: "/etc/sudoers"
+            line: "{{ install.user.name }} ALL=(root) NOPASSWD:ALL"
+
+      - name: create .ssh direcotry for non-root user
+        file:
+            path: "{{ default_privatekey | dirname }}"
+            state: directory
+        become_user: "{{ install.user.name }}"
+        become: yes
+
       - name: download image
         get_url:
             url: "{{ install.quickstart.image }}"
@@ -125,6 +144,14 @@
             - update hosts
             - Link to new Inventory file
             - update /etc/hosts with undercloud's details
+
+      - name: update ssh keys on undercloud
+        authorized_key:
+            user: stack
+            key: "{{ item }}"
+        with_items:
+            - "{{ inventory_dir }}/id_rsa"
+            - "{{ inventory_dir }}/id_rsa.pub"
 
   handlers:
       - name: update hosts
