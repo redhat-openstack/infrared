@@ -96,7 +96,7 @@
         CEPH_CONTAINERS_IDS=$(docker ps -f name=ceph-mon- -q)
         for CID in $CEPH_CONTAINERS_IDS; do
             echo -e "\n===========================\n --- $CID\n" >> /var/log/extra/ceph
-            docker exec -ti $CID ceph status &>>/var/log/extra/ceph
+            docker exec $CID ceph status &>>/var/log/extra/ceph
         done
     fi
   ignore_errors: true
