@@ -12,6 +12,7 @@ parameter_defaults:
 {% endif %}
 {% if install.containers|default(false) and install.version|default(undercloud_version)|openstack_release > 11 %}
 {# containers uses ceph-ansible #}
+    CephPoolDefaultPgNum: 32
     CephAnsibleDisksConfig:
         devices:
 {% for disk in storage_node_disks[1:] %}
@@ -21,6 +22,8 @@ parameter_defaults:
         osd_scenario: collocated
 {% else %}
     ExtraConfig:
+      ceph::profile::params::osd_pool_default_pg_num: 32
+      ceph::profile::params::osd_pool_default_pgp_num: 32
       ceph::profile::params::osds:
 {% for disk in storage_node_disks[1:] %}
        '/dev/{{ disk }}': {}
