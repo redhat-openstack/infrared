@@ -32,11 +32,4 @@
 - name: create new image
   shell: |
       source ~/overcloudrc
-      glance image-create --name {{ guest_image.name }} --disk-format qcow2 --container-format bare | grep -b id | awk '{print $4}'
-  register: image_id
-
-- name: upload image
-  shell:
-      source ~/overcloudrc
-      glance image-upload --file /var/tmp/{{ guest_image.name }} {{ image_id.stdout }}
-  tags: skip_ansible_lint
+      glance image-create --name {{ guest_image.name }} --file /var/tmp/{{ guest_image.name }} --disk-format qcow2 --container-format bare --visibility public
