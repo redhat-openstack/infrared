@@ -87,7 +87,18 @@
 - shell: "(set -x; blkid; lsblk; df -T; df -i) &> /var/log/extra/disk"
   ignore_errors: true
 
-- shell: "ceph status &>/var/log/extra/ceph"
+- shell: |
+    if [[ -f "/etc/ceph/ceph.client.admin.keyring" || -f "/etc/ceph/ceph.keyring" || -f "/etc/ceph/keyring" || -f "/etc/ceph/keyring.bin" ]]; then
+        ceph status &>/var/log/extra/ceph
+    fi
+
+    if command -v docker && systemctl is-active docker; then
+        CEPH_CONTAINERS_IDS=$(docker ps -f name=ceph-mon- -q)
+        for CID in $CEPH_CONTAINERS_IDS; do
+            echo -e "\n===========================\n --- $CID\n" >> /var/log/extra/ceph
+            docker exec -ti $CID ceph status &>>/var/log/extra/ceph
+        done
+    fi
   ignore_errors: true
 
 - shell: "(vgs; pvs; lvs) &> /var/log/extra/lvm"
