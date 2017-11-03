@@ -102,6 +102,7 @@
             pcs status | grep {{ item }} || /bin/true
         register: srv_status
         until: srv_status.stdout.find("{{ item }}") == -1
+        ignore_errors: true
         retries: 36
         delay: 5
         with_items:
@@ -110,17 +111,45 @@
             - standby_node|succeeded
             - "'{{ install.deployment.files | basename }}' == 'virt'"
 
+      - name: Report pacemaker status for stopped resources
+        become: true
+        register: fail_stop
+        command: pcs status
+        when:
+            - srv_status|failed
+
+      - name: Stopped resources found
+        fail:
+            msg: Some pacemeker resource failed to come back online after reboot
+        when:
+            - fail_stop|changed
+
+
       - name: Check for any unmanaged pcs resources
         become: true
         shell: |
             pcs status | grep {{ item }} || /bin/true
         register: srv_status
         until: srv_status.stdout.find("{{ item }}") == -1
+        ignore_errors: true
         retries: 36
         delay: 5
         with_items:
             - 'unmanaged'
         when: standby_node|succeeded
+
+      - name: Report pacemaker status for unmanaged resources
+        become: true
+        register: fail_unmanaged
+        command: pcs status
+        when:
+            - srv_status|failed
+
+      - name: Unmanged resources found
+        fail:
+            msg: Some pacemeker resource(s) unmanged after reboot
+        when:
+            - fail_unmanaged|changed
 
       # Re-enable ceph rebalance
       - name: reenable ceph rebalance
