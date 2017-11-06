@@ -3,6 +3,28 @@
       cat {{ containers_images_template_dest_file }} | awk '/pull_source:/ {print $2}' | head -n1 | tr -d ' '
   register: docker_origin_registry
 
+- name: Get all environment files from the deploy script
+  shell: |
+     for file in `awk '/^-e / || /^--environment-file / {print $2}' ~/overcloud_deploy.sh`; do if [ -f $file ]; then echo $file; fi; done
+  register: ds_env_files
+
+- name: Create one variable with all the environment yamls
+  set_fact:
+      environment_yamls: "{{ environment_yamls| default('') }} -e {{ item }}"
+  with_items:
+      - "{{ ds_env_files.stdout_lines }}"
+
+- name: Get all environment files from the deploy script
+  shell: |
+     for file in `awk '/^-r / || /^--roles-file / {print $2}' ~/overcloud_deploy.sh`; do if [ -f $file ]; then echo $file; fi; done
+  register: ds_roles_files
+
+- name: Create one variable with all the roles yamls
+  set_fact:
+      roles_yamls: "{{ roles_yamls| default('') }} --roles-file {{ item }}"
+  with_items:
+      - "{{ ds_roles_files.stdout_lines }}"
+
 - name: generate docker images file, using the undercloud registry
   vars:
       env_file: "{{ template_base }}/docker-images.yaml"
@@ -17,7 +39,7 @@
       tag=`awk '/- imagename:.*openstack-glance-api-docker:.*/ {print $3}' <{{ containers_images_template_dest_file }}  | cut -f 2 -d:`
       openstack overcloud container image prepare \
         --namespace={{ reg_base }} \
-        --env-file={{ env_file }} \
+        --env-file={{ env_file }} {{ environment_yamls | default('') }} {{ roles_yamls | default('') }} \
         --prefix=openstack- \
         --suffix=-docker \
         --tag=$tag \
