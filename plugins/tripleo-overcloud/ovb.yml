@@ -5,9 +5,6 @@
   vars:
       # todo(obaranov) dynamically get/read from settings the ipmi interface name
       ipmi_interface: "eth1"
-
-      # depends on the host cloud. Should be 50 less than on host cloud
-      ovb_mtu_value: 1350
   tasks:
       - name: Get undercloud private key
         command: "cat ~/.ssh/id_rsa"
@@ -21,6 +18,11 @@
             src: templates/instackenv-bmc.json.j2
             dest: "{{ instack_output }}"
         when: not instack_input
+
+      # Should be 50 less than on host cloud
+      - name: Calcualte needed MTU value
+        set_fact:
+            ovb_mtu_value: "{{ hostvars[inventory_hostname]['ansible_' + ipmi_interface]['mtu']|int - 50 }}"
 
       - name: Set MTU values
         become: yes
