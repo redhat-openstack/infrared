@@ -25,6 +25,10 @@ DEFAULT_PLUGIN_INI = dict(
         ('install', 'Installing plugins'),
         ('test', 'Testing plugins'),
         ('other', 'Other type plugins'),
+    ]),
+    git_orgs=OrderedDict([
+        # Git provider and a comma separated list of organizations
+        ('github', 'rhos-infra')
     ])
 )
 
@@ -41,6 +45,7 @@ with open(PLUGINS_REGISTRY_FILE, "r") as fo:
 class InfraredPluginManager(object):
     PLUGINS_DICT = OrderedDict()
     SUPPORTED_TYPES_SECTION = 'supported_types'
+    GIT_PLUGINS_ORGS_SECTION = "git_orgs"
 
     def __init__(self, plugins_conf=None):
         """
@@ -113,6 +118,35 @@ class InfraredPluginManager(object):
 
         return type_based_plugins_dict
 
+    def get_all_git_plugins(self):
+        """
+        Returns a dict with all plugins from a all supported git providers
+        """
+        # mapping for supported fetcher functions
+        supported_plugins_fetchers = {
+            "github": self.get_github_organization_plugins
+        }
+
+        plugins_dict = OrderedDict()
+
+        # make sure the git section exists
+        if self.config.has_section(self.GIT_PLUGINS_ORGS_SECTION):
+            for git_provider_type, git_orgs in self.config.items(
+                    self.GIT_PLUGINS_ORGS_SECTION):
+                # make sure we support this git provider type
+                if git_provider_type not in supported_plugins_fetchers:
+                    continue
+                # get fetcher function
+                fetcher = supported_plugins_fetchers[git_provider_type]
+                # organizations can be a list separated by comma
+                git_orgs = git_orgs.split(",")
+
+                for git_org in git_orgs:
+                    # dynamically call function based on the git_provider_type
+                    plugins_dict.update(fetcher(git_org))
+
+        return plugins_dict
+
     def get_github_organization_plugins(self, organization, no_forks=False):
         """
         Returns a dict with all plugins from a GitHub organization
@@ -124,8 +158,7 @@ class InfraredPluginManager(object):
 
         try:
             gh = github.Github()
-            gh.get_organization(organization)
-            all_repos = gh.get_organization("rhos-infra").get_repos()
+            all_repos = gh.get_organization(organization).get_repos()
         except github.RateLimitExceededException:
             raise IRException("Github API rate limit exceeded")
 

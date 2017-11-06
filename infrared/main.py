@@ -377,13 +377,13 @@ class PluginManagerSpec(api.SpecObject):
 
     def _search_plugins(self):
         """
-        Search GitHub organization and print a list of available plugins
+        Search git organizations and print a list of available plugins
         """
         table_rows = []
         table_headers = ["Type", "Name", "Description", "Source"]
 
         plugins_dict = \
-            self.plugin_manager.get_github_organization_plugins("rhos-infra")
+            self.plugin_manager.get_all_git_plugins()
 
         for plugins_type, plugins in plugins_dict.iteritems():
             # prepare empty lists
