@@ -55,16 +55,8 @@
       inventory_dir: "{{ inventory_dir }}"
   with_dict: "{{ vms_info }}"
 
-- name: generate inventory file
+- include_role:
+      name: inventory-update
   delegate_to: localhost
-  template:
-    dest: "{{ inventory_dir }}/hosts-prov"
-    src: templates/inventory.j2
-    force: yes
-
-- name: update inventory file symlink
-  delegate_to: localhost
-  file:
-    dest: "{{ inventory_dir }}/hosts"
-    state: link
-    src: "hosts-prov"
+  vars:
+      inventory_file_name: 'hosts-prov'

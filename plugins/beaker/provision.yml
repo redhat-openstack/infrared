@@ -60,22 +60,13 @@
           ansible_ssh_pass: ''
           ansible_ssh_private_key_file: "{{ provision.host.privkey }}"
 
-- name: Generate inventory file with SSH PKI enabled
+- name: generate inventory file
   hosts: localhost
   gather_facts: no
   tags: always
-  tasks:
-    - name: Generate inventory file
-      template:
-        dest: "{{ inventory_dir }}/hosts-prov"
-        src: templates/inventory.j2
-        force: yes
-
-    - name: Update inventory file symlink
-      file:
-        dest: "{{ inventory_dir }}/hosts"
-        state: link
-        src: "hosts-prov"
+  roles:
+      - role: inventory-update
+        inventory_file_name: 'hosts-prov'
 
 - name: Check SSH sanity with PKI in place
   hosts: beaker-baremetal
