@@ -63,9 +63,11 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ item.path }} \'
+      insertbefore: "^--log-file.*"
   with_items: "{{ template_list.files }}"
 
 - name: Append the invocation line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
+      regexp: "^--log-file .*"
       line: "--log-file overcloud_deployment_{{ 100 | random }}.log"
