@@ -50,9 +50,9 @@
       # TODO(psedlak): remove following in future (few weeks/month) when there is no need for older builds
       # With previous builds -e _all_environment_yamls_or_roles_ was not used,
       # seems that when running with those it generates almost empty file
-      # (parameters_defaults as empty dict no single Image entry)
-      # so in that case lets try to call it as before.
-      if grep -q 'parameter_defaults: {}' {{ env_file }}; then
+      # (parameters_defaults as empty dict no single Image entry, or at most with CephDaemonImage)
+      # so in that case, when file is too short, lets try to call it as before.
+      if [[ "$(grep -v '^#' {{ env_file }}|wc -l)" -lt 5 ]]; then
         echo "Looks like older build - trying backward compatible image preparation method."
         openstack overcloud container image prepare \
             --namespace={{ reg_base }} \
