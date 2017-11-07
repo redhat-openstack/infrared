@@ -48,6 +48,11 @@
         JOB_BASE_NAME: "{{ lookup('env', 'JOB_BASE_NAME') }}"
         JOB_URL: "{{ lookup('env', 'JOB_URL') }}"
         NODE_NAME: "{{ lookup('env', 'NODE_NAME') }}"
+      userdata: |
+        {%- raw -%}
+        #!/bin/bash
+        for i in $(ip l | awk '$2 ~ /eth[1-9]/ {gsub(":", ""); print $2}'); do ip l set down dev $i; done
+        {% endraw %}
   register: servers
   with_sequence: "count={{ node.value }}"
 
