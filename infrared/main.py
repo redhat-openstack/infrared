@@ -230,9 +230,9 @@ class WorkspaceManagerSpec(api.SpecObject):
 
 class PluginManagerSpec(api.SpecObject):
 
-    def __init__(self, name, plugin_manager, *args, **kwargs):
-        self.plugin_manager = plugin_manager
+    def __init__(self, name, *args, **kwargs):
         super(PluginManagerSpec, self).__init__(name, *args, **kwargs)
+        self.plugin_manager = CoreServices.plugins_manager()
 
     def extend_cli(self, root_subparsers):
         plugin_parser = root_subparsers.add_parser(
@@ -354,7 +354,6 @@ class PluginManagerSpec(api.SpecObject):
                 installed_plugins_mark_list = \
                     [installed_mark if plugin_name in installed_plugins_list
                      else '' for plugin_name in all_plugins_list]
-
                 plugins_descs = \
                     [PLUGINS_REGISTRY.get(plugin, {}).get('desc', '')
                      for plugin in all_plugins_list]
@@ -438,14 +437,10 @@ class SSHSpec(api.SpecObject):
 
 
 def main(args=None):
-    # configure core services
-    CoreServices.setup('infrared.cfg')
-
-    # Init Managers
-    plugin_manager = CoreServices.plugins_manager()
-
+    CoreServices.setup()
     specs_manager = api.SpecManager()
 
+    # Init Managers
     specs_manager.register_spec(
         WorkspaceManagerSpec('workspace',
                              description="Workspace manager. "
@@ -454,7 +449,6 @@ def main(args=None):
                                          "execution."))
     specs_manager.register_spec(
         PluginManagerSpec('plugin',
-                          plugin_manager=plugin_manager,
                           description="Plugin management"))
 
     specs_manager.register_spec(
@@ -463,7 +457,7 @@ def main(args=None):
             description="Interactive ssh session to node from inventory."))
 
     # register all plugins
-    for plugin in plugin_manager.PLUGINS_DICT.values():
+    for plugin in CoreServices.plugins_manager().PLUGINS_DICT.values():
         specs_manager.register_spec(api.InfraredPluginsSpec(plugin))
 
     argcomplete.autocomplete(specs_manager.parser)
