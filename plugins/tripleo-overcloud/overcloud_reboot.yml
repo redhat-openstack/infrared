@@ -86,7 +86,9 @@
         when: standby_node|succeeded
 
       - name: cleanup resource
-        command: pcs resource cleanup {{ item }}
+        shell: |
+            pcs resource restart {{ item }} ;
+            pcs resource cleanup {{ item }}
         become: true
         ignore_errors: true
         with_items:
