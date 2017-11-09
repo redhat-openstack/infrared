@@ -4,7 +4,7 @@ from os import path
 import pytest
 import yaml
 
-from infrared import api
+from infrared.api import SpecManager
 from infrared.core.services import plugins
 import tests
 from tests.test_workspace import workspace_manager_fixture, test_workspace  # noqa
@@ -40,7 +40,7 @@ def spec_fixture():
 def test_execute_no_workspace(spec_fixture, workspace_manager_fixture):   # noqa
     """Verify new workspace was been created when there are no workspaces. """
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     input_string = ['example']
@@ -54,7 +54,7 @@ def test_execute_fail(spec_fixture, workspace_manager_fixture,          # noqa
 
     input_string = ['example', "--foo-bar", "fail"]
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -83,7 +83,7 @@ def test_execute_main(spec_fixture, workspace_manager_fixture,          # noqa
 
     input_string = ['example']
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -107,7 +107,7 @@ def test_fake_inventory(spec_fixture, workspace_manager_fixture,          # noqa
 
     input_string = ['example', '--inventory', 'fake']
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -134,7 +134,7 @@ def test_bad_user_inventory(spec_fixture, workspace_manager_fixture,   # noqa
 
     input_string = ['example', '--inventory', str(fake_inventory)]
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -167,7 +167,7 @@ def test_nested_value_CLI(spec_fixture,
     # if no input, check that default value is loaded
     expected_output_dict = {"foo": {"bar": input_value or "default string"}}
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -222,7 +222,7 @@ def test_extra_vars(spec_fixture,
     input_string = ['example'] + input_args + ["-o", str(dry_output),
                                                "--dry-run"]
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     workspace_manager_fixture.activate(test_workspace.name)
@@ -297,7 +297,7 @@ def test_extra_vars_with_file(spec_fixture,
     input_string = ['example'] + input_args + ["-o", str(dry_output),
                                                "--dry-run"]
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     workspace_manager_fixture.activate(test_workspace.name)
@@ -351,7 +351,7 @@ def test_nested_KeyValueList_CLI(spec_fixture,
 
     input_string.extend(["-o", str(dry_output)])
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -390,7 +390,7 @@ def test_nested_KeyValueList_negative(
     input_string = list(('example', "--dry-run", "--dictionary-val"))
     input_string.append(bad_input)
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -422,7 +422,7 @@ def test_nested_value_dry_run(spec_fixture,
     else:
         input_string = ['example']
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -466,7 +466,7 @@ def test_nested_value_CLI_with_answers_file(spec_fixture, tmpdir,
     # if no input, check that default value is loaded
     expected_output_dict = {"foo": {"bar": input_value or 'from_answers_file'}}
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -495,7 +495,7 @@ def test_generate_answers_file(spec_fixture, workspace_manager_fixture,  # noqa
     input_string = \
         ['example', '--generate-answers-file', str(answers_file), '--dry-run']
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     workspace_manager_fixture.activate(test_workspace.name)
@@ -519,7 +519,7 @@ def test_ansible_args(spec_fixture, workspace_manager_fixture,          # noqa
     input_string = ['example', '--ansible-args',
                     'start-at-task="Test output";tags=only_this']
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -577,7 +577,7 @@ def test_output_with_IniType(spec_fixture, tmpdir,
     if cli_args:
         input_string += cli_args.split()
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     workspace_manager_fixture.activate(test_workspace.name)
@@ -609,7 +609,7 @@ def test_deprecation(spec_fixture, workspace_manager_fixture,  # noqa
         ['example', '--new-way', 'TestingValue', '--dry-run',
          '-o', str(output)]
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     workspace_manager_fixture.activate(test_workspace.name)
