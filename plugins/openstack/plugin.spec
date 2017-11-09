@@ -1,5 +1,8 @@
 ---
-plugin_type: provision
+config:
+    plugin_type: provision
+    dependencies:
+        - source: ./.library/common
 subparsers:
     openstack:
         description: Provision systems using Ansible OpenStack modules

@@ -1,5 +1,8 @@
 ---
-plugin_type: install
+config:
+    plugin_type: install
+    dependencies:
+        - source: ./.library/common
 subparsers:
     packstack:
         description: OpenStack installation using Packstack

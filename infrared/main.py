@@ -1,51 +1,5 @@
-import os
 import sys
 import argcomplete
-
-
-def inject_common_paths():
-    """Discover the path to the common dependencies libraries provided
-       by infrared core.
-    """
-    def override_conf_path(dependency_path, envvar, specific_dir):
-        conf_path = os.environ.get(envvar, '')
-        additional_conf_path = os.path.join(dependency_path, specific_dir)
-
-        # return if the env path does not exists
-        if not os.path.exists(additional_conf_path):
-            return
-
-        if conf_path:
-            full_conf_path = ':'.join([additional_conf_path, conf_path])
-        else:
-            full_conf_path = additional_conf_path
-        os.environ[envvar] = full_conf_path
-
-    # TODO: use CoreSettings once merged
-    libs_folder = os.path.join(
-        os.environ.get("INFRARED_HOME", os.path.abspath(os.getcwd())),
-        ".library")
-
-    if not os.path.isdir(libs_folder):
-        return
-
-    for dependency_library in os.listdir(libs_folder):
-        dependency_library = os.path.join(libs_folder, dependency_library)
-        override_conf_path(dependency_library, 'ANSIBLE_ROLES_PATH', 'roles')
-        override_conf_path(dependency_library, 'ANSIBLE_FILTER_PLUGINS',
-                           'filter_plugins')
-        override_conf_path(dependency_library, 'ANSIBLE_CALLBACK_PLUGINS',
-                           'callback_plugins')
-        override_conf_path(dependency_library, 'ANSIBLE_LIBRARY', 'library')
-
-
-# This needs to be called here because as soon as an ansible class is loaded
-# the code in constants.py is triggered. That code reads the configuration
-# settings from all sources (ansible.cfg, environment variables, etc).
-# If the first include to ansible modules is moved deeper in the InfraRed
-# code (or on demand), then this call can be moved as well in that place.
-inject_common_paths()
-
 
 from infrared import api  # noqa
 from infrared.core.services import CoreServices  # noqa
@@ -240,9 +194,9 @@ class WorkspaceManagerSpec(api.SpecObject):
 
 class PluginManagerSpec(api.SpecObject):
 
-    def __init__(self, name, plugin_manager, *args, **kwargs):
-        self.plugin_manager = plugin_manager
+    def __init__(self, name, *args, **kwargs):
         super(PluginManagerSpec, self).__init__(name, *args, **kwargs)
+        self.plugin_manager = CoreServices.plugins_manager()
 
     def extend_cli(self, root_subparsers):
         plugin_parser = root_subparsers.add_parser(
@@ -364,7 +318,6 @@ class PluginManagerSpec(api.SpecObject):
                 installed_plugins_mark_list = \
                     [installed_mark if plugin_name in installed_plugins_list
                      else '' for plugin_name in all_plugins_list]
-
                 plugins_descs = \
                     [PLUGINS_REGISTRY.get(plugin, {}).get('desc', '')
                      for plugin in all_plugins_list]
@@ -448,14 +401,15 @@ class SSHSpec(api.SpecObject):
 
 
 def main(args=None):
-    # configure core services
-    CoreServices.setup('infrared.cfg')
+    CoreServices.setup()
 
-    # Init Managers
-    plugin_manager = CoreServices.plugins_manager()
+    # inject existing libraries.
+    # because of that all the ansible modules should be imported after that
+    CoreServices.dependency_manager().inject_libraries()
 
     specs_manager = api.SpecManager()
 
+    # Init Managers
     specs_manager.register_spec(
         WorkspaceManagerSpec('workspace',
                              description="Workspace manager. "
@@ -464,7 +418,6 @@ def main(args=None):
                                          "execution."))
     specs_manager.register_spec(
         PluginManagerSpec('plugin',
-                          plugin_manager=plugin_manager,
                           description="Plugin management"))
 
     specs_manager.register_spec(
@@ -473,7 +426,7 @@ def main(args=None):
             description="Interactive ssh session to node from inventory."))
 
     # register all plugins
-    for plugin in plugin_manager.PLUGINS_DICT.values():
+    for plugin in CoreServices.plugins_manager().PLUGINS_DICT.values():
         specs_manager.register_spec(api.InfraredPluginsSpec(plugin))
 
     argcomplete.autocomplete(specs_manager.parser)

@@ -8,6 +8,8 @@ import tempfile
 
 import pytest
 
+from infrared.core.services.dependency import PluginDependencyManager, \
+    PluginDependency
 from infrared.core.utils.exceptions import IRPluginExistsException, \
     IRUnsupportedPluginType, IRFailedToAddPluginDependency
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
@@ -84,8 +86,14 @@ def plugin_manager_fixture(plugins_conf_fixture):
             config.write(fp)
 
         # replace core service with or test service
-        CoreServices.register_service(ServiceName.PLUGINS_MANAGER,
-                                      InfraredPluginManager(lp_file.strpath))
+        # dependency manager will live in the temp folder
+        # so we can keep it unmocked.
+        CoreServices.register_service(
+            ServiceName.DEPENDENCY_MANAGER, PluginDependencyManager(
+                os.path.join(lp_file.dirname, ".library")))
+        CoreServices.register_service(
+            ServiceName.PLUGINS_MANAGER, InfraredPluginManager(
+                lp_file.strpath, CoreServices.dependency_manager()))
         return CoreServices.plugins_manager()
 
     yield plugin_manager_helper
@@ -723,24 +731,18 @@ def test_git_plugin_update(git_plugin_manager_fixture):
             commits_list[-1], commits_list[0])
 
 
-def test_install_dependencies(plugin_manager_fixture, mocker):
+def test_install_dependencies(plugin_manager_fixture):
     """
     Test installing plugin dependencies
     Validate that the plugin's dependencies were installed
     :param plugin_manager_fixture: Fixture object which yields
     InfraredPluginManger object
-    :param mocker: mocker fixture
     """
-    dependency_libs_dir = \
-        infrared.core.services.plugins.LIBRARY_DEPENDENCIES_DIR
     plugin_manager = plugin_manager_fixture()
     plugin_dir = "plugin_with_dependencies"
 
     plugin_dict = get_plugin_spec_flatten_dict(
         os.path.join(SAMPLE_PLUGINS_DIR, plugin_dir))
-
-    plugin_dependency_dir = plugin_dict["dependencies"][0]["source"]
-    dependency_lib_listdir = os.listdir(plugin_dependency_dir)
 
     # set the expected dictionary of installed plugins
     expected_installed_plugins = {
@@ -748,12 +750,6 @@ def test_install_dependencies(plugin_manager_fixture, mocker):
             "src": plugin_dict["dir"]
         }
     }
-
-    mock_shutil = mocker.patch("infrared.core.services.plugins.shutil")
-    mock_listdir = mocker.patch("infrared.core.services.plugins.os.listdir")
-    mock_listdir.return_value = dependency_lib_listdir
-    mock_isdir = mocker.patch("infrared.core.services.plugins.os.path.isdir")
-    mock_isdir.return_value = True
 
     # validates that the plugin is not in configuration file at the beginning
     validate_plugins_presence_in_conf(
@@ -767,25 +763,26 @@ def test_install_dependencies(plugin_manager_fixture, mocker):
         plugin_manager, expected_installed_plugins, present=True)
 
     # check that copytree tried to copy the dependency to the library folder
-    mock_shutil.copytree.assert_called_with(
-        plugin_dependency_dir,
-        os.path.join(dependency_libs_dir,
-                     os.path.basename(plugin_dependency_dir)))
+    expected_dependency_dir = os.path.join(
+        CoreServices.dependency_manager().library_root_dir,
+        os.path.basename(plugin_dict["dependencies"][0]["source"]))
+    assert os.path.isdir(expected_dependency_dir)
+    assert os.path.isdir(os.path.join(
+        expected_dependency_dir, 'callback_plugins'))
+    assert os.path.isdir(os.path.join(
+        expected_dependency_dir, 'filter_plugins'))
+    assert os.path.isdir(os.path.join(
+        expected_dependency_dir, 'library'))
+    assert os.path.isdir(os.path.join(
+        expected_dependency_dir, 'roles'))
 
 
-def test_install_dependencies_already_exist(plugin_manager_fixture, mocker):
+def test_install_dependencies_already_exist(plugin_manager_fixture):
     """
     Test that skipping existing plugins and not trying to install them again
     :param plugin_manager_fixture: Fixture object which yields
     InfraredPluginManger object
-    :param mocker: mocker fixture
     """
-    # patch os in order fake that dependency already installed
-    mock_os_path_exists = mocker.patch(
-        "infrared.core.services.plugins.os.path.exists")
-    mock_os_path_exists.return_value = True
-    # mock shutil to make sure that copytree was not called
-    mock_shutil = mocker.patch("infrared.core.services.plugins.shutil")
 
     plugin_manager = plugin_manager_fixture()
     plugin_dir = "plugin_with_dependencies"
@@ -806,13 +803,9 @@ def test_install_dependencies_already_exist(plugin_manager_fixture, mocker):
     # add the plugin with its dependencies
     plugin_manager.add_plugin(plugin_source=plugin_dict["dir"])
 
-    # validates that the plugin is in config file after adding plugin
-    validate_plugins_presence_in_conf(
-        plugin_manager, expected_installed_plugins, present=True)
-
-    # check that the copytree was not called at all
-    # this validates that dependency was not copied to library folder
-    mock_shutil.copytree.assert_not_called()
+    # add the same dependency one more time
+    assert CoreServices.dependency_manager()._install_local_dependency(
+        PluginDependency(plugin_dict['dependencies'][0])) is False
 
 
 def test_dependency_library_missing_folders(plugin_manager_fixture, mocker):
@@ -830,10 +823,10 @@ def test_dependency_library_missing_folders(plugin_manager_fixture, mocker):
         os.path.join(SAMPLE_PLUGINS_DIR, plugin_dir))
 
     # check that copytree tried to copy the dependency to the library folder
-    mock_shutil = mocker.patch("infrared.core.services.plugins.shutil")
-    mock_listdir = mocker.patch("infrared.core.services.plugins.os.listdir")
+    mock_shutil = mocker.patch("infrared.core.services.dependency.shutil")
+    mock_listdir = mocker.patch("infrared.core.services.dependency.os.listdir")
     mock_listdir.return_value = []
-    mock_isdir = mocker.patch("infrared.core.services.plugins.os.path.isdir")
+    mock_isdir = mocker.patch("infrared.core.services.dependency.os.path.isdir")
     mock_isdir.return_value = True
 
     with pytest.raises(IRFailedToAddPluginDependency):
@@ -879,7 +872,7 @@ def test_dependency_already_exist_different_revision(tmpdir,
     plugin_manager = plugin_manager_fixture()
     # mock git repo
     mock_git_clone_from = \
-        mocker.patch("infrared.core.services.plugins.git.Repo.clone_from")
+        mocker.patch("infrared.core.services.dependency.git.Repo.clone_from")
     # use side effect to use copytree instead of original clone
     mock_git_clone_from.side_effect = clone_from_side_effect
 
