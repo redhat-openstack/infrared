@@ -2,10 +2,6 @@ from __future__ import print_function
 
 import os
 
-from ansible.parsing.dataloader import DataLoader
-from ansible.inventory.manager import InventoryManager
-from ansible.playbook.play_context import MAGIC_VARIABLE_MAPPING
-
 from infrared.core.services import CoreServices
 from infrared.core.utils import exceptions
 from infrared.core.utils import logger
@@ -23,7 +19,7 @@ def _get_magic_var(hostobj, varname, default=""):
         :param default: value, that will be returned if 'varname' is
                         not set in inventory
     """
-
+    from ansible.playbook.play_context import MAGIC_VARIABLE_MAPPING
     for item in MAGIC_VARIABLE_MAPPING[varname]:
         result = hostobj.vars.get(item, "")
         if result:
@@ -45,6 +41,8 @@ def ssh_to_host(hostname, remote_command=None):
         raise exceptions.IRNoActiveWorkspaceFound()
     inventory_file = workspace.inventory
 
+    from ansible.parsing.dataloader import DataLoader
+    from ansible.inventory.manager import InventoryManager
     invent = InventoryManager(DataLoader(), sources=inventory_file)
 
     host = invent.get_host(hostname)
