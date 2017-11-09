@@ -1,5 +1,8 @@
 ---
-plugin_type: provision
+config:
+    plugin_type: provision
+    dependencies:
+        - source: ./.library/common
 subparsers:
     beaker:
         description: Provision systems using Beaker
