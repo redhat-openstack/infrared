@@ -4,7 +4,7 @@ from os import path
 import pytest
 import yaml
 
-from infrared import api
+from infrared.main import SpecManager
 from infrared.core.services import plugins
 import tests
 from tests.test_workspace import workspace_manager_fixture, test_workspace  # noqa
@@ -40,11 +40,11 @@ def spec_fixture():
 def test_execute_no_workspace(spec_fixture, workspace_manager_fixture):   # noqa
     """Verify new workspace was been created when there are no workspaces. """
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     input_string = ['example']
-    spec_manager.run_specs(args=input_string)
+    spec_manager.run(args=input_string)
     assert workspace_manager_fixture.get_active_workspace()
 
 
@@ -54,7 +54,7 @@ def test_execute_fail(spec_fixture, workspace_manager_fixture,          # noqa
 
     input_string = ['example', "--foo-bar", "fail"]
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -62,7 +62,7 @@ def test_execute_fail(spec_fixture, workspace_manager_fixture,          # noqa
     assert not path.exists(path.join(inventory_dir, output_file))
 
     workspace_manager_fixture.activate(test_workspace.name)
-    return_value = spec_manager.run_specs(args=input_string)
+    return_value = spec_manager.run(args=input_string)
 
     # Assert return code != 0
     assert return_value
@@ -83,7 +83,7 @@ def test_execute_main(spec_fixture, workspace_manager_fixture,          # noqa
 
     input_string = ['example']
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -92,7 +92,7 @@ def test_execute_main(spec_fixture, workspace_manager_fixture,          # noqa
     assert not path.exists(path.join(inventory_dir, "role_" + output_file))
 
     workspace_manager_fixture.activate(test_workspace.name)
-    return_value = spec_manager.run_specs(args=input_string)
+    return_value = spec_manager.run(args=input_string)
 
     assert return_value == 0
     assert path.exists(path.join(inventory_dir, output_file))
@@ -107,7 +107,7 @@ def test_fake_inventory(spec_fixture, workspace_manager_fixture,          # noqa
 
     input_string = ['example', '--inventory', 'fake']
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -116,7 +116,7 @@ def test_fake_inventory(spec_fixture, workspace_manager_fixture,          # noqa
 
     workspace_manager_fixture.activate(test_workspace.name)
     with pytest.raises(IOError) as exc:
-        spec_manager.run_specs(args=input_string)
+        spec_manager.run(args=input_string)
     assert exc.value.message == "File not found: fake"
 
 
@@ -134,7 +134,7 @@ def test_bad_user_inventory(spec_fixture, workspace_manager_fixture,   # noqa
 
     input_string = ['example', '--inventory', str(fake_inventory)]
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -142,7 +142,7 @@ def test_bad_user_inventory(spec_fixture, workspace_manager_fixture,   # noqa
     assert not path.exists(path.join(inventory_dir, output_file))
 
     workspace_manager_fixture.activate(test_workspace.name)
-    return_value = spec_manager.run_specs(args=input_string)
+    return_value = spec_manager.run(args=input_string)
     assert return_value
 
 
@@ -167,7 +167,7 @@ def test_nested_value_CLI(spec_fixture,
     # if no input, check that default value is loaded
     expected_output_dict = {"foo": {"bar": input_value or "default string"}}
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -175,7 +175,7 @@ def test_nested_value_CLI(spec_fixture,
     assert not path.exists(path.join(inventory_dir, output_file))
 
     workspace_manager_fixture.activate(test_workspace.name)
-    return_value = spec_manager.run_specs(args=input_string)
+    return_value = spec_manager.run(args=input_string)
 
     assert return_value == 0
     assert path.exists(path.join(inventory_dir, output_file))
@@ -222,11 +222,11 @@ def test_extra_vars(spec_fixture,
     input_string = ['example'] + input_args + ["-o", str(dry_output),
                                                "--dry-run"]
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     workspace_manager_fixture.activate(test_workspace.name)
-    return_value = spec_manager.run_specs(args=input_string)
+    return_value = spec_manager.run(args=input_string)
 
     # dry run returns None
     assert return_value is None
@@ -297,11 +297,11 @@ def test_extra_vars_with_file(spec_fixture,
     input_string = ['example'] + input_args + ["-o", str(dry_output),
                                                "--dry-run"]
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     workspace_manager_fixture.activate(test_workspace.name)
-    return_value = spec_manager.run_specs(args=input_string)
+    return_value = spec_manager.run(args=input_string)
 
     # dry run returns None
     assert return_value is None
@@ -351,7 +351,7 @@ def test_nested_KeyValueList_CLI(spec_fixture,
 
     input_string.extend(["-o", str(dry_output)])
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -359,7 +359,7 @@ def test_nested_KeyValueList_CLI(spec_fixture,
     assert not path.exists(path.join(inventory_dir, output_file))
 
     workspace_manager_fixture.activate(test_workspace.name)
-    return_value = spec_manager.run_specs(args=input_string)
+    return_value = spec_manager.run(args=input_string)
 
     assert return_value == 0
     assert path.exists(path.join(inventory_dir, output_file))
@@ -390,7 +390,7 @@ def test_nested_KeyValueList_negative(
     input_string = list(('example', "--dry-run", "--dictionary-val"))
     input_string.append(bad_input)
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -401,7 +401,7 @@ def test_nested_KeyValueList_negative(
 
     from infrared.core.utils import exceptions
     with pytest.raises(exceptions.IRKeyValueListException):
-        spec_manager.run_specs(args=input_string)
+        spec_manager.run(args=input_string)
 
 
 @pytest.mark.parametrize("input_value", [               # noqa
@@ -422,7 +422,7 @@ def test_nested_value_dry_run(spec_fixture,
     else:
         input_string = ['example']
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -430,7 +430,7 @@ def test_nested_value_dry_run(spec_fixture,
     assert not path.exists(path.join(inventory_dir, output_file))
 
     workspace_manager_fixture.activate(test_workspace.name)
-    return_value = spec_manager.run_specs(args=input_string)
+    return_value = spec_manager.run(args=input_string)
 
     assert return_value is None if dry else return_value == 0
     # assert that playbook didn't run if "--dry-run" requested
@@ -466,7 +466,7 @@ def test_nested_value_CLI_with_answers_file(spec_fixture, tmpdir,
     # if no input, check that default value is loaded
     expected_output_dict = {"foo": {"bar": input_value or 'from_answers_file'}}
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -474,7 +474,7 @@ def test_nested_value_CLI_with_answers_file(spec_fixture, tmpdir,
     assert not path.exists(path.join(inventory_dir, output_file))
 
     workspace_manager_fixture.activate(test_workspace.name)
-    return_value = spec_manager.run_specs(args=input_string)
+    return_value = spec_manager.run(args=input_string)
 
     assert return_value == 0
     assert path.exists(path.join(inventory_dir, output_file))
@@ -495,11 +495,11 @@ def test_generate_answers_file(spec_fixture, workspace_manager_fixture,  # noqa
     input_string = \
         ['example', '--generate-answers-file', str(answers_file), '--dry-run']
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     workspace_manager_fixture.activate(test_workspace.name)
-    return_value = spec_manager.run_specs(args=input_string)
+    return_value = spec_manager.run(args=input_string)
     assert return_value is None
 
     config = ConfigParser.ConfigParser()
@@ -519,7 +519,7 @@ def test_ansible_args(spec_fixture, workspace_manager_fixture,          # noqa
     input_string = ['example', '--ansible-args',
                     'start-at-task="Test output";tags=only_this']
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     inventory_dir = test_workspace.path
@@ -527,7 +527,7 @@ def test_ansible_args(spec_fixture, workspace_manager_fixture,          # noqa
     assert not path.exists(path.join(inventory_dir, output_file))
 
     workspace_manager_fixture.activate(test_workspace.name)
-    return_value = spec_manager.run_specs(args=input_string)
+    return_value = spec_manager.run(args=input_string)
     assert return_value == 0
 
     # Combination of tags and start-at-task should avoid the file creation
@@ -577,11 +577,11 @@ def test_output_with_IniType(spec_fixture, tmpdir,
     if cli_args:
         input_string += cli_args.split()
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     workspace_manager_fixture.activate(test_workspace.name)
-    return_value = spec_manager.run_specs(args=input_string)
+    return_value = spec_manager.run(args=input_string)
 
     assert return_value is None
     assert path.exists(dry_output.strpath),\
@@ -609,12 +609,12 @@ def test_deprecation(spec_fixture, workspace_manager_fixture,  # noqa
         ['example', '--new-way', 'TestingValue', '--dry-run',
          '-o', str(output)]
 
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     workspace_manager_fixture.activate(test_workspace.name)
-    spec_manager.run_specs(args=deprecated_input_string)
-    spec_manager.run_specs(args=input_string)
+    spec_manager.run(args=deprecated_input_string)
+    spec_manager.run(args=input_string)
 
     with open(deprecated_output.strpath) as fp:
         deprecated_yml = yaml.safe_load(fp)["provision"]

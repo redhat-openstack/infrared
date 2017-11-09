@@ -22,41 +22,53 @@ class ServiceName(object):
     PLUGINS_MANAGER = "plugins_manager"
 
 
+class CoreSettings(object):
+    """
+    Holds the main settings for the infrared.
+    """
+
+    def __init__(self, workspaces_base_folder=None,
+                 plugins_conf_file=None,
+                 install_plugin_at_start=True):
+
+        # for now by default use current folder
+        # todo(obaranov) replace with
+        # os.path.join(os.path.expanduser("~"), '.infrared') once we are ready for
+        # migration
+        infarared_home = os.environ.get(
+            "INFRARED_HOME",
+            os.path.join(os.path.abspath(os.getcwd())))
+
+        self.plugins_conf_file = plugins_conf_file or os.path.join(
+            infarared_home, '.plugins.ini')
+        self.workspaces_base_folder = workspaces_base_folder or os.environ.get(
+            "IR_WORKSPACES_HOME", os.path.join(infarared_home, '.workspaces'))
+        self.install_plugin_at_start = install_plugin_at_start
+
+
 class CoreServices(object):
     """Holds and configures all the required for core services. """
 
     _SERVICES = {}
-    DEFAULTS = {
-        'workspaces_base_folder': '.workspaces',
-        'plugins_conf_file': '.plugins.ini'
-    }
 
     @classmethod
-    def setup(cls, file_path='infrared.cfg', section='core'):
+    def setup(cls, core_settings=None):
         """Creates configuration from file or from defaults. """
 
-        config = ConfigParser.SafeConfigParser(defaults=cls.DEFAULTS)
-        config.add_section(section)
-
-        # if file not found no exception will be raised
-        config.read(file_path)
-        cls._configure(
-            os.path.abspath(config.get(section, 'workspaces_base_folder')),
-            os.path.abspath(config.get(section, 'plugins_conf_file'))
-        )
-
-    @classmethod
-    def _configure(cls, workspace_dir, plugins_conf):
-        """Register services to manager. """
+        if core_settings is None:
+            core_settings = CoreSettings()
 
         # create workspace manager
         if ServiceName.WORKSPACE_MANAGER not in CoreServices._SERVICES:
             cls.register_service(ServiceName.WORKSPACE_MANAGER,
-                                 workspaces.WorkspaceManager(workspace_dir))
+                                 workspaces.WorkspaceManager(
+                                     core_settings.workspaces_base_folder))
         # create plugins manager
         if ServiceName.PLUGINS_MANAGER not in CoreServices._SERVICES:
-            cls.register_service(ServiceName.PLUGINS_MANAGER,
-                                 plugins.InfraredPluginManager(plugins_conf))
+            cls.register_service(
+                ServiceName.PLUGINS_MANAGER, plugins.InfraredPluginManager(
+                    plugins_conf=core_settings.plugins_conf_file,
+                    install_plugins=core_settings.install_plugin_at_start))
 
     @classmethod
     def register_service(cls, service_name, service):
