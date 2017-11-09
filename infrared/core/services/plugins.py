@@ -47,11 +47,15 @@ class InfraredPluginManager(object):
     SUPPORTED_TYPES_SECTION = 'supported_types'
     GIT_PLUGINS_ORGS_SECTION = "git_orgs"
 
-    def __init__(self, plugins_conf=None):
+    def __init__(self, plugins_conf, install_plugins=True):
         """
         :param plugins_conf: A path to the main plugins configuration file
+        :param install_plugins: Specifies if core plugins should be installed
+            at start.
         """
-        self.config = plugins_conf
+        self._config_file = os.path.abspath(os.path.expanduser(plugins_conf))
+        self._install_plugins_required = install_plugins
+        self._configure()
         self._load_plugins()
 
     def _load_plugins(self):
@@ -204,17 +208,13 @@ class InfraredPluginManager(object):
     def config(self):
         return self._config
 
-    @config.setter
-    def config(self, plugins_conf):
-        plugins_conf_full_path = \
-            os.path.abspath(os.path.expanduser(plugins_conf))
-
+    def _configure(self):
         init_plugins_conf = False
-        if not os.path.isfile(plugins_conf_full_path):
+        if not os.path.isfile(self._config_file):
             LOG.warning("Plugin conf ('{}') not found, creating it with "
-                        "default data".format(plugins_conf_full_path))
+                        "default data".format(self._config_file))
             init_plugins_conf = True
-            with open(plugins_conf_full_path, 'w') as fp:
+            with open(self._config_file, 'w') as fp:
                 config = ConfigParser()
 
                 for section, section_data in DEFAULT_PLUGIN_INI.items():
@@ -225,14 +225,12 @@ class InfraredPluginManager(object):
 
                 config.write(fp)
 
-        self._config_file = plugins_conf_full_path
-
-        with open(plugins_conf_full_path) as fp:
+        with open(self._config_file) as fp:
             self._config = ConfigParser()
-            self.config.readfp(fp)
+            self._config.readfp(fp)
 
         # TODO(aopincar): Remove auto plugins installation when conf is missing
-        if init_plugins_conf:
+        if self._install_plugins_required and init_plugins_conf:
             self.add_all_available()
 
     def get_desc_of_type(self, s_type):
