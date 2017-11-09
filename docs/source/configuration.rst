@@ -1,21 +1,18 @@
 Configuration
 =============
 
-`infrared` allows to change default options such as:
+Infrared uses the INFRARED_HOME environment variable which point where infrared
+should keep all the internal configuration files and workspaces.
 
-* ``workspaces_base_folder``: the workspaces base folder
-* ``plugins_conf_file``: the plugins configuration file path
+Currently by default the INFRARED_HOME point the current working directory
+from which the infrared command is run.
 
-This can be done by creating a configuration file, ``./infrared.cfg``, and overriding default values in it::
+To chane that default location user can simple set INFRARED_HOME, for example::
 
-    cp infrared.cfg.example infrared.cfg
+    $ INFRARED_HOME=/tmp/newhome ir workspace list
 
 
-When ``infrared.cfg`` file is not found, default options defined in ``infrared.cfg.example`` file will be used:
-
-.. literalinclude:: ../../infrared.cfg.example
-   :language: ini
-
+This will generate default configurations files in the specified directory.
 
 Ansible configuration and limitations
 -------------------------------------
