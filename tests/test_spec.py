@@ -1,7 +1,7 @@
 import pytest
 
-from infrared import api
 from infrared.core.utils.exceptions import IRRequiredArgsMissingException
+from infrared.main import SpecManager
 from tests.test_execute import spec_fixture  # noqa
 from tests.test_workspace import workspace_manager_fixture, test_workspace  # noqa
 
@@ -28,14 +28,14 @@ def test_required_when(spec_fixture, workspace_manager_fixture, test_workspace,
     :param should_pass: Boolean value tells whether the test should pass or not
     :return:
     """
-    spec_manager = api.SpecManager()
+    spec_manager = SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     workspace_manager_fixture.activate(test_workspace.name)
 
     if should_pass:
-        rc = spec_manager.run_specs(args=['example'] + cli_args.split())
+        rc = spec_manager.run(args=['example'] + cli_args.split())
         assert rc == 0, "Execution failed, return code is: {}".format(rc)
     else:
         with pytest.raises(IRRequiredArgsMissingException):
-            spec_manager.run_specs(args=['example'] + cli_args.split())
+            spec_manager.run(args=['example'] + cli_args.split())
