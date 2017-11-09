@@ -1,4 +1,7 @@
-plugin_type: test
+config:
+    plugin_type: test
+    dependencies:
+        - source: ./.library/common
 subparsers:
     ospdui:
         description: The ospdui test runner

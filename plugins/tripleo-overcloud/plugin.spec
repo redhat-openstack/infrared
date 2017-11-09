@@ -1,5 +1,8 @@
 ---
-plugin_type: install
+config:
+    plugin_type: install
+    dependencies:
+        - source: ./.library/common
 subparsers:
     tripleo-overcloud:
         description: Install a TripleO overcloud using a designated undercloud node
