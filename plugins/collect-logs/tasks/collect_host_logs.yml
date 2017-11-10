@@ -134,6 +134,21 @@
       fi
   ignore_errors: true
 
+- name: clockdiff to each peer
+  shell: |
+      time_log=/var/log/extra/clockdiff
+      echo -n "date:" >"$time_log"
+      date &>>"$time_log"
+      {% for host in groups['all'] %}
+         # something that applies to all app servers.
+      {% if 'ansible_default_ipv4' in hostvars[host] %}
+      echo -n {{ host }} [{{ hostvars[host]['ansible_default_ipv4']['address'] }}] ": " &>>"$time_log"
+      clockdiff {{ hostvars[host]['ansible_default_ipv4']['address'] }} &>>"$time_log"
+      {% endif %}
+      {% endfor %}
+  ignore_errors: true
+  tags: skip_ansible_lint
+
 - shell: "virt-host-validate &> /var/log/extra/virt-host-validate"
   ignore_errors: true
 
