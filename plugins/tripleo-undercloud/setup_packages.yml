@@ -106,6 +106,8 @@
             delay: 10
         delegate_to: localhost
         when: "'hypervisor' not in groups"
+        retries: 6
+        delay: 30
 
       - name: waiting for the undercloud to be available
         become: no
@@ -116,6 +118,8 @@
             delay: 10
         delegate_to: hypervisor
         when: "'hypervisor' in groups"
+        retries: 6
+        delay: 30
 
       - name: install the oscplugin/tripleO client
         package:
