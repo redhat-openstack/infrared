@@ -3,7 +3,7 @@
 timeout 100m openstack overcloud deploy \
 --templates {{ install.heat.templates.basedir }} \
 --libvirt-type kvm \
---ntp-server clock.redhat.com \
+--ntp-server {{ install.ntp.server }} \
 {% if install.version|default(undercloud_version)|openstack_release < 11 %}
 --control-scale {{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or '1' }} \
 --control-flavor {{ ('controller' in existing_flavors.stdout_lines) | ternary('controller', 'baremetal') }} \
