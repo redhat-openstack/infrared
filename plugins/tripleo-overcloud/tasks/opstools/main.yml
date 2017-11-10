@@ -1,0 +1,24 @@
+- name: Get the external IP of the opstools host
+  shell: virsh net-dhcp-leases external | awk '/{{ groups["opstools"][0] }}/ {print $5};' | sed 's/\/[0-9]*//'
+  register: opstools_external_ip
+  delegate_to: hypervisor
+
+- name: Prepare Ops Tools templates
+  vars:
+      opstools_ip_addess: "{{ opstools_external_ip.stdout }}"
+  template:
+      src: "opstools/{{ item }}.yml.j2"
+      dest: "{{ template_base }}/{{ item }}.yaml"
+  with_items:
+      - "collectd"
+      - "monitoring"
+      - "logging_no_ssl"
+
+- name: Append the Ops Tools templates lines to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/services-docker/{{ item }}.yaml \'
+  with_items:
+      - "collectd"
+      - "sensu-client"
+      - "fluentd-client"
