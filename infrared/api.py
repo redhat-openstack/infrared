@@ -122,7 +122,7 @@ class InfraredPluginsSpec(SpecObject):
 
         vars_dict = VarsDictManager.generate_settings(
             # TODO(yfried): consider whether to use type (for legacy) or name
-            self.plugin.config["plugin_type"],
+            self.plugin.type,
             nested_args,
         )
 
