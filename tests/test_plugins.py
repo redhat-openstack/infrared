@@ -8,7 +8,10 @@ import tempfile
 
 import pytest
 
+from infrared.core.utils.exceptions import IRPluginExistsException, \
+    IRUnsupportedPluginType
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
+from infrared.core.utils.exceptions import IRSpecValidatorException
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRUnsupportedSpecOptionType
@@ -16,6 +19,7 @@ from infrared.core.utils.dict_utils import dict_insert
 import infrared.core.services.plugins
 from infrared.core.services.plugins import InfraredPluginManager
 from infrared.core.services.plugins import InfraredPlugin
+from infrared.core.services.plugins import SpecValidator
 from infrared.core.services import CoreServices, ServiceName
 
 
@@ -28,7 +32,8 @@ SUPPORTED_TYPES_DICT = dict(
         supported_type2='Tools of supported_type2',
         provision='Provisioning plugins',
         install='Installing plugins',
-        test='Testing plugins'
+        test='Testing plugins',
+        library='Library plugin'
     )
 )
 
@@ -138,11 +143,26 @@ def get_plugin_spec_flatten_dict(plugin_dir):
     with open(os.path.join(plugin_dir, PLUGIN_SPEC)) as fp:
         spec_yaml = yaml.load(fp)
 
+    plugin_name = spec_yaml['subparsers'].keys()[0]
+
+    plugin_description = spec_yaml['description'] \
+        if "description" in spec_yaml \
+        else spec_yaml['subparsers'][plugin_name]['description']
+
+    plugin_type = spec_yaml["config"]["plugin_type"] \
+        if "config" in spec_yaml \
+        else spec_yaml["plugin_type"]
+
+    plugin_dependencies = spec_yaml["config"]["dependencies"] \
+        if "config" in spec_yaml and "dependencies" in spec_yaml["config"] \
+        else ""
+
     plugin_spec_dict = dict(
-        name=spec_yaml['subparsers'].keys()[0],
+        name=plugin_name,
         dir=plugin_dir,
-        description=(spec_yaml['subparsers'].values()[0])['description'],
-        type=spec_yaml['plugin_type']
+        description=plugin_description,
+        dependencies=plugin_dependencies,
+        type=plugin_type
     )
 
     return plugin_spec_dict
@@ -236,7 +256,7 @@ def test_add_plugin_with_same_name(plugin_manager_fixture):
     plugins_cfg_mtime_before_add = os.path.getmtime(plugin_manager.config_file)
     plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
 
-    with pytest.raises(IRFailedToAddPlugin):
+    with pytest.raises(IRPluginExistsException):
         plugin_manager.add_plugin(plugin_dict['dir'])
 
     assert plugins_cnt_before_try == len(plugin_manager.PLUGINS_DICT)
@@ -260,7 +280,7 @@ def test_add_plugin_unsupported_type(plugin_manager_fixture):
     plugins_cfg_mtime_before_add = os.path.getmtime(plugin_manager.config_file)
     plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
 
-    with pytest.raises(IRFailedToAddPlugin):
+    with pytest.raises(IRUnsupportedPluginType):
         plugin_manager.add_plugin(plugin_dict['dir'])
 
     assert not plugin_in_conf(
@@ -376,7 +396,7 @@ def test_add_plugin_no_spec(plugin_manager_fixture):
     plugins_cfg_mtime_before_add = os.path.getmtime(plugin_manager.config_file)
     plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
 
-    with pytest.raises(IRFailedToAddPlugin):
+    with pytest.raises(IRSpecValidatorException):
         plugin_manager.add_plugin(plugin_dir)
 
     assert plugins_cnt_before_try == len(plugin_manager.PLUGINS_DICT)
@@ -405,6 +425,57 @@ def test_add_plugin_no_spec(plugin_manager_fixture):
         'plugin_type': 'supported_type',
         'description': 'some plugin description',
         'subparsers': ''}),
+    ('no_type_in_config', {
+        'config': {
+            "dependencies": [
+                {"plugin": "https://sample_github.null/plugin_repo.git"},
+            ],
+        },
+        'description': 'some plugin description',
+        'subparsers': {
+            'sample_plugin1:': {}}}),
+    ('no_revision_in_git_dependency', {
+        'config': {
+            'plugin_type': 'supported_type',
+            "dependencies": [
+                {"plugin": "https://sample_github.null/plugin_repo.git"},
+            ],
+        },
+        'description': 'some plugin description',
+        'subparsers': {
+            'sample_plugin1:': {}}}),
+    ('no_revision_value_in_git_dependency', {
+        'config': {
+            'plugin_type': 'supported_type',
+            "dependencies": [
+                {
+                    "plugin": "https://sample_github.null/plugin_repo.git",
+                    "revision": "",
+                 },
+            ],
+        },
+        'description': 'some plugin description',
+        'subparsers': {
+            'sample_plugin1:': {}}}),
+    ('dependency_not_list', {
+        'config': {
+            'plugin_type': 'supported_type',
+            "dependencies": {
+                "plugin": "https://sample_github.null/plugin_repo.git",
+                "revision": "master"
+            },
+        },
+        'description': 'some plugin description',
+        'subparsers': {
+            'sample_plugin1:': {}}}),
+    ('no_dependency_value', {
+        'config': {
+            'plugin_type': 'supported_type',
+            "dependencies": [],
+        },
+        'description': 'some plugin description',
+        'subparsers': {
+            'sample_plugin1:': {}}})
 ])
 def test_add_plugin_corrupted_spec(tmpdir_factory, description, plugin_spec):
     """Tests that it's not possible to add a plugin with invalid spec file
@@ -422,8 +493,9 @@ def test_add_plugin_corrupted_spec(tmpdir_factory, description, plugin_spec):
         yaml.dump(plugin_spec, fp, default_flow_style=True)
 
     try:
-        with pytest.raises(IRFailedToAddPlugin):
-            InfraredPlugin.spec_validator(lp_file.strpath)
+        with pytest.raises(IRSpecValidatorException):
+            spec_validator = SpecValidator()
+            spec_validator.validate_from_file(lp_file.strpath)
     finally:
         lp_dir.remove()
 
@@ -497,7 +569,8 @@ def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
 
     def clone_from_side_effect(url, to_path, **kwargs):
         """
-        Define a side effect function to override the original behaviour of clone_from
+        Define a side effect function to override the
+        original behaviour of clone_from
         """
         shutil.copytree(src=plugin_dict["dir"], dst=to_path)
 
@@ -506,8 +579,10 @@ def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
     mock_git = mocker.patch("infrared.core.services.plugins.git.Repo")
     # use side effect to use copytree instead of original clone
     mock_git.clone_from.side_effect = clone_from_side_effect
-    mock_os_path_exists = mocker.patch("infrared.core.services.plugins.os.path.exists")
-    # set to false in order to enter the git section in if/else inside add_plugin func
+    mock_os_path_exists = mocker.patch(
+        "infrared.core.services.plugins.os.path.exists")
+    # set to false in order to enter the git section
+    # in if/else inside add_plugin func
     mock_os_path_exists.return_value = False
     mock_tempfile = mocker.patch("infrared.core.services.plugins.tempfile")
     mock_tempfile.mkdtemp.return_value = tempfile.mkdtemp(prefix="ir-")
@@ -528,11 +603,13 @@ def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
     # check it was cloned with the temp name
     mock_git.clone_from.assert_called_with(
         url='https://sample_github.null/plugin_repo.git',
-        to_path=os.path.join(mock_tempfile.mkdtemp.return_value, "plugin_repo"))
+        to_path=os.path.join(
+            mock_tempfile.mkdtemp.return_value, "plugin_repo"))
 
     # check that it was copied with the plugin name and not repo name
-    mock_shutil.copytree.assert_called_with(os.path.join(mock_tempfile.mkdtemp.return_value, "plugin_repo"),
-                                            os.path.join(os.path.abspath("plugins"), plugin_dict["name"]))
+    mock_shutil.copytree.assert_called_with(
+        os.path.join(mock_tempfile.mkdtemp.return_value, "plugin_repo"),
+        os.path.join(os.path.abspath("plugins"), plugin_dict["name"]))
 
 
 def test_add_plugin_from_git_exception(plugin_manager_fixture, mocker):
@@ -656,3 +733,147 @@ def test_git_plugin_update(git_plugin_manager_fixture):
     assert commits_list[0] == repo.git.rev_parse('HEAD'), \
         "Plugin haven't been updated from '{}' to '{}'".format(
             commits_list[-1], commits_list[0])
+
+
+def test_install_dependencies(plugin_manager_fixture):
+    """
+    Test installing plugin dependencies
+    Validate that the plugin's dependencies were installed
+    :param plugin_manager_fixture: Fixture object which yields
+    InfraredPluginManger object
+    """
+    plugin_manager = plugin_manager_fixture()
+    plugin_dir = "plugin_with_dependencies"
+
+    plugin_dict = get_plugin_spec_flatten_dict(
+        os.path.join(SAMPLE_PLUGINS_DIR, plugin_dir))
+
+    plugin_dependency_name = plugin_dict["dependencies"][0]["plugin"]
+    plugin_dependency_dir = os.path.join(SAMPLE_PLUGINS_DIR,
+                                         plugin_dependency_name)
+
+    # override registry to include the dependency plugin
+    infrared.core.services.plugins.PLUGINS_REGISTRY = {
+        plugin_dependency_name: {
+            "src": plugin_dependency_dir
+        }
+    }
+
+    # set the expected dictionary of installed plugins
+    # expect to find the initial plugin with its dependencies
+    expected_installed_plugins = {
+        plugin_dependency_name: {
+            "src": plugin_dependency_dir
+        },
+        plugin_dict["name"]: {
+            "src": plugin_dict["dir"]
+        }
+    }
+
+    # Validates that plugins aren't in configuration file from the beginning
+    validate_plugins_presence_in_conf(
+        plugin_manager, expected_installed_plugins, present=False)
+
+    # Validates that the plugin and dependency are in the configuration file
+    plugin_manager.add_plugin(plugin_source=plugin_dict["dir"])
+    validate_plugins_presence_in_conf(
+        plugin_manager, expected_installed_plugins, present=True)
+
+
+def test_install_dependencies_already_exist(plugin_manager_fixture):
+    """
+    Test that skipping existing plugins and not trying to install them again
+    :param plugin_manager_fixture: Fixture object which yields
+    InfraredPluginManger object
+    """
+    plugin_dir = "plugin_with_dependencies"
+    plugin_dict = get_plugin_spec_flatten_dict(
+        os.path.join(SAMPLE_PLUGINS_DIR, plugin_dir))
+
+    plugin_dependency_name = plugin_dict["dependencies"][0]["plugin"]
+    plugin_dependency_dict = get_plugin_spec_flatten_dict(
+        os.path.join(SAMPLE_PLUGINS_DIR, plugin_dependency_name))
+
+    # load plugin manager with the dependency plugin so it will exist before
+    plugin_manager = plugin_manager_fixture({
+        plugin_dependency_dict["type"]: {
+            plugin_dependency_dict["name"]: plugin_dependency_dict["dir"]
+        }
+    })
+
+    # override registry to include the dependency plugin
+    infrared.core.services.plugins.PLUGINS_REGISTRY = {
+        plugin_dependency_dict["name"]: {
+            "src": plugin_dependency_dict["dir"]
+        }
+    }
+
+    # set the expected dictionary of installed plugins
+    # expect to find the initial plugin with its dependencies
+    expected_installed_plugins = {
+        plugin_dependency_dict["name"]: {
+            "src": plugin_dependency_dict["dir"]
+        },
+        plugin_dict["name"]: {
+            "src": plugin_dict["dir"]
+        }
+    }
+
+    # Validates only the dependency plugin is in configuration file
+    plugins_registry = infrared.core.services.plugins.PLUGINS_REGISTRY
+    validate_plugins_presence_in_conf(
+        plugin_manager, plugins_registry, present=True)
+
+    # Validates that the plugin and dependency are in the configuration file
+    plugin_manager.add_plugin(plugin_source=plugin_dict["dir"])
+    validate_plugins_presence_in_conf(
+        plugin_manager, expected_installed_plugins, present=True)
+
+
+def test_install_dependencies_library(plugin_manager_fixture):
+    """
+    Test installing plugin dependencies must be library type
+    :param plugin_manager_fixture: Fixture object which yields
+    InfraredPluginManger object
+    """
+    plugin_manager = plugin_manager_fixture()
+
+    plugin_dir = "plugin_with_none_library_dependencies"
+
+    plugin_dict = get_plugin_spec_flatten_dict(
+        os.path.join(SAMPLE_PLUGINS_DIR, plugin_dir))
+
+    plugin_dependency_name = plugin_dict["dependencies"][0]["plugin"]
+    plugin_dependency_dict = get_plugin_spec_flatten_dict(
+        os.path.join(SAMPLE_PLUGINS_DIR, plugin_dependency_name))
+
+    # override registry to include the dependency plugin
+    infrared.core.services.plugins.PLUGINS_REGISTRY = {
+        plugin_dependency_dict["name"]: {
+            "src": plugin_dependency_dict["dir"]
+        }
+    }
+
+    plugins_cfg_mtime_before_add = os.path.getmtime(plugin_manager.config_file)
+    plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
+
+    with pytest.raises(IRUnsupportedPluginType):
+        plugin_manager.add_plugin(plugin_dict['dir'])
+
+    # make sure that both plugin and the dependency were not installed
+    assert not plugin_in_conf(
+        plugins_conf=plugin_manager.config_file,
+        plugin_type=plugin_dict['type'],
+        plugin_name=plugin_dict['name']), \
+        "Plugin was added to conf file."
+
+    assert not plugin_in_conf(
+        plugins_conf=plugin_manager.config_file,
+        plugin_type=plugin_dependency_dict['type'],
+        plugin_name=plugin_dependency_dict['name']), \
+        "Plugin was added to conf file."
+
+    assert plugins_cnt_before_try == len(plugin_manager.PLUGINS_DICT)
+    assert os.path.getmtime(
+        plugin_manager.config_file) == plugins_cfg_mtime_before_add, \
+        "Plugins configuration file has been modified."
