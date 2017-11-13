@@ -1,3 +1,5 @@
 resource_registry:
     OS::TripleO::Compute::Net::SoftwareConfig: {{ controller_abspath }}
+{% if install.version|default(undercloud_version)|openstack_release < 12 %}
     OS::TripleO::Compute::Ports::ExternalPort: {{ install.heat.templates.basedir }}/network/ports/external.yaml
+{% endif %}
