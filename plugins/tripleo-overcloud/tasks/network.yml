@@ -60,6 +60,14 @@
       line: '-e {{ install.heat.templates.basedir }}/environments/neutron-bgpvpn.yaml \'
   when: install.network.bgpvpn
 
+#  TODO(abregman): figure out how to use rendered external port template directly from THT
+- name: Copy external port heat template
+  copy:
+      src: "files/ports/external.yaml"
+      dest: "{{ install.heat.templates.basedir }}/network/ports/external.yaml"
+  become: yes
+  when: install.version|default(undercloud_version)|openstack_release >= 12
+
 - name: inject dvr override template
   vars:
       controller_abspath: "{{ controller_path.files[0].path }}"
