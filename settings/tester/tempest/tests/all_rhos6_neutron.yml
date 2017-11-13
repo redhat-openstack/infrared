@@ -1,8 +1,9 @@
 ---
 test_regex: tempest
 whitelist: []
-blacklist: []
-  # Misalignments between how RHOS6(Juno) behaves and what Tempest Liberty expects - to be explained
-  # and to be blacklisted in following reviews.
-  #- tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_preserve_preexisting_port
-  #- tempest.api.compute.servers.test_virtual_interfaces.VirtualInterfacesTestJSON.test_list_virtual_interfaces
+blacklist:
+  # Misalignments between how RHOS6(Juno) behaves and what Tempest Liberty expects - explained in detail
+  # at https://docs.google.com/a/redhat.com/document/d/1n3YJpbL7hWueMOtI0ZzXkxXCFeqzKordciWPFKxjA0c
+  # https://projects.engineering.redhat.com/browse/RHOSINFRA-1370.
+  - tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_preserve_preexisting_port
+  - tempest.api.compute.servers.test_virtual_interfaces.VirtualInterfacesTestJSON.test_list_virtual_interfaces
