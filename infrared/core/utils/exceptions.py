@@ -174,3 +174,13 @@ class IRGroupNotFoundException(IRException):
         message = "Unable to find group: {}".format(
             group)
         super(self.__class__, self).__init__(message)
+
+
+class IRSpecValidatorException(IRException):
+    def __init__(self, reason_str):
+        super(self.__class__, self).__init__(reason_str)
+
+
+class IRPluginExistsException(IRException):
+    def __init__(self, reason_str):
+        super(self.__class__, self).__init__(reason_str)

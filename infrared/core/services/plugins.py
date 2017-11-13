@@ -5,6 +5,7 @@ import os
 import shutil
 import tempfile
 import time
+import re
 import yaml
 import git
 import github
@@ -13,7 +14,8 @@ import github
 import pip
 
 from infrared.core.utils import logger
-from infrared.core.utils.exceptions import IRFailedToAddPlugin, IRException
+from infrared.core.utils.exceptions import IRFailedToAddPlugin, IRException, \
+    IRSpecValidatorException, IRPluginExistsException
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRUnsupportedPluginType
@@ -25,6 +27,7 @@ DEFAULT_PLUGIN_INI = dict(
         ('install', 'Installing plugins'),
         ('test', 'Testing plugins'),
         ('other', 'Other type plugins'),
+        ('library', 'Library type plugins')
     ]),
     git_orgs=OrderedDict([
         # Git provider and a comma separated list of organizations
@@ -155,6 +158,7 @@ class InfraredPluginManager(object):
         :param no_forks: include / not include forks
         """
         plugins_dict = OrderedDict()
+        spec_validator = SpecValidator()
 
         try:
             gh = github.Github()
@@ -171,10 +175,12 @@ class InfraredPluginManager(object):
 
                 spec_file = repo.get_contents('plugin.spec').decoded_content
 
-                plugin = InfraredPlugin.spec_content_validator(spec_file)
+                plugin = spec_validator.validate_from_content(spec_file)
                 plugin_name = plugin["subparsers"].keys()[0]
-                plugin_type = plugin["plugin_type"]
                 plugin_src = repo.clone_url
+                plugin_type = plugin["config"]["plugin_type"] \
+                    if "config" in plugin \
+                    else plugin["plugin_type"]
                 plugin_desc = plugin["description"] \
                     if "description" in plugin \
                        and plugin["description"] is not None \
@@ -292,7 +298,8 @@ class InfraredPluginManager(object):
             plugin_tmp_source = os.path.join(plugin_tmp_source, repo_plugin_path)
 
         # validate & load spec data in order to pull the name of the plugin
-        spec_data = InfraredPlugin.spec_validator(
+        spec_validator = SpecValidator()
+        spec_data = spec_validator.validate_from_file(
             os.path.join(plugin_tmp_source, InfraredPlugin.PLUGIN_SPEC_FILE))
         # get the real plugin name from spec
         plugin_dir_name = spec_data["subparsers"].keys()[0]
@@ -402,7 +409,8 @@ class InfraredPluginManager(object):
                 " and manually resolve Git issues.\n"
                 "{}\n{}".format(plugin.path, ex.stdout, ex.stderr))
 
-    def add_plugin(self, plugin_source, rev=None, dest=None):
+    def add_plugin(self, plugin_source, rev=None, dest=None,
+                   is_dependency=False):
         """Adds (install) a plugin
 
         :param plugin_source: Plugin source.
@@ -413,6 +421,8 @@ class InfraredPluginManager(object):
         :param dest: destination where to clone a plugin into (if 'source' is
           a Git URL)
         :param rev: git branch/tag/revision
+        :param is_dependency: boolean to indicate if the plugin is a dependency
+          and will verify that it is a library type
         """
         plugin_data = {}
         # Check if a plugin is in the registry
@@ -433,19 +443,23 @@ class InfraredPluginManager(object):
                 dest)
 
         plugin = InfraredPlugin(plugin_source)
-        plugin_type = plugin.config['plugin_type']
+        plugin_type = plugin.type
         # FIXME(yfried) validate spec and throw exception on missing input
 
-        if plugin_type not in self.config.options(
-                self.SUPPORTED_TYPES_SECTION):
+        if plugin_type not in self.supported_plugin_types:
+            raise IRUnsupportedPluginType(plugin_type)
+
+        if is_dependency and plugin_type != "library":
             raise IRFailedToAddPlugin(
-                "Unsupported plugin type: '{}'".format(plugin_type))
+                "Plugin dependency must be a 'library' type")
 
         if not self.config.has_section(plugin_type):
             self.config.add_section(plugin_type)
         elif self.config.has_option(plugin_type, plugin.name):
-            raise IRFailedToAddPlugin(
+            raise IRPluginExistsException(
                 "Plugin with the same name & type already exists")
+
+        self._install_dependencies(plugin)
 
         self.config.set(plugin_type, plugin.name, plugin.path)
 
@@ -501,6 +515,30 @@ class InfraredPluginManager(object):
             pip_args = ['install', '-r', requirement_file]
             pip.main(args=pip_args)
 
+    def _install_dependencies(self, plugin):
+        """
+        Install plugin dependencies based on the dependencies specified in spec
+        :param plugin: InfraredPlugin object
+        """
+        if not plugin.dependencies:
+            return
+
+        # install all dependencies recursively
+        for dependency in plugin.dependencies:
+            plugin_source = dependency["plugin"]
+            plugin_rev = dependency["revision"] \
+                if "revision" in dependency else None
+
+            try:
+                # try to add the plugin
+                self.add_plugin(plugin_source=plugin_source,
+                                rev=plugin_rev,
+                                is_dependency=True)
+
+            except IRPluginExistsException:
+                # dependency plugin already exists so we can skip it
+                continue
+
     def freeze(self):
         for section in self.config.sections():
             if section == "supported_types":
@@ -509,8 +547,13 @@ class InfraredPluginManager(object):
                 if name not in PLUGINS_REGISTRY:
                     with open(os.path.join(path, "plugin.spec"), "r") as pls:
                         plugin_spec = yaml.load(pls)
+                    # support two types of possible plugin spec files
+                    plugin_type = plugin_spec["config"]["plugin_type"] \
+                        if "config" in plugin_spec \
+                        else plugin_spec["plugin_type"]
+
                     PLUGINS_REGISTRY[name] = dict(
-                        type=plugin_spec["plugin_type"],
+                        type=plugin_type,
                         desc=plugin_spec[
                             "subparsers"].items()[0][1]["description"])
                 try:
@@ -583,7 +626,8 @@ class InfraredPlugin(object):
 
     @config.setter
     def config(self, plugin_spec):
-        self._config = self.spec_validator(plugin_spec)
+        spec_validator = SpecValidator()
+        self._config = spec_validator.validate_from_file(plugin_spec)
 
     @property
     def name(self):
@@ -596,7 +640,10 @@ class InfraredPlugin(object):
 
     @property
     def type(self):
-        return self.config['plugin_type']
+        try:
+            return self.config['config']['plugin_type']
+        except KeyError:
+            return self.config['plugin_type']
 
     @property
     def description(self):
@@ -605,81 +652,181 @@ class InfraredPlugin(object):
         except KeyError:
             return self.config['description']
 
-    @staticmethod
-    def spec_validator(spec_file):
+    @property
+    def dependencies(self):
+        try:
+            return self.config['config']['dependencies']
+        except KeyError:
+            return ""
+
+    def __repr__(self):
+        return self.name
+
+
+class SpecValidator(object):
+    """
+    Class for validating that a plugin spec (YAML) has all required fields
+    """
+    GIT_URL_PATTERN = \
+        r'(?:git|ssh|https?|git@[-\w.]+)' \
+        r':(\/\/)?(.*?)(\.git)(\/?|\#[-\d\w._]+?)$'
+
+    def __init__(self, spec_file=None, spec_content=None):
+        self.spec_file = spec_file
+        self.spec_content = spec_content
+
+    def validate_from_file(self, spec_file=None):
         """Loads & validates that spec (YAML) file has all required fields
 
         :param spec_file: Path to plugin's spec file
-        :raise IRFailedToAddPlugin: when mandatory data is missing in spec file
+        :raise IRSpecValidatorException: when mandatory
+        data is missing in spec file
         :return: Dictionary with data loaded from a spec (YAML) file
         """
+        if spec_file is not None:
+            self.spec_file = spec_file
+
+        if self.spec_file is None:
+            raise IRSpecValidatorException(
+                "Plugin spec file is missing")
+
         if not os.path.isfile(spec_file):
-            raise IRFailedToAddPlugin(
-                "Plugin spec doesn't exist: {}".format(spec_file))
+            raise IRSpecValidatorException(
+                "Plugin spec doesn't exist: {}".format(self.spec_file))
 
         with open(spec_file) as fp:
-            spec_dict = InfraredPlugin.spec_content_validator(fp)
+            spec_dict = self.validate_from_content(fp)
 
         return spec_dict
 
-    @staticmethod
-    def spec_content_validator(spec_content):
-        """validates that spec (YAML) file has all required fields
+    def validate_from_content(self, spec_content=None):
+        """validates that spec (YAML) content has all required fields
 
         :param spec_content: content of spec file
-        :raise IRFailedToAddPlugin: when mandatory data is missing in spec file
+        :raise IRSpecValidatorException: when mandatory data is missing in spec file
         :return: Dictionary with data loaded from a spec (YAML) file
         """
-        spec_dict = yaml.load(spec_content)
+        if spec_content is not None:
+            self.spec_content = spec_content
+
+        if self.spec_content is None:
+            raise IRSpecValidatorException(
+                "Plugin spec content is missing")
+
+        spec_dict = yaml.load(self.spec_content)
 
         if not isinstance(spec_dict, dict):
-            raise IRFailedToAddPlugin(
-                "Spec file is empty or corrupted: '{}'".format(spec_content))
+            raise IRSpecValidatorException(
+                "Spec file is empty or corrupted: {}".format(
+                    self.spec_content))
 
-        plugin_type_key = 'plugin_type'
-        if plugin_type_key not in spec_dict:
-            raise IRFailedToAddPlugin(
-                "Required key '{}' is missing in plugin spec "
-                "file: {}".format(plugin_type_key, spec_content))
-        if not isinstance(spec_dict[plugin_type_key], str):
-            raise IRFailedToAddPlugin(
-                "Value of 'str' is expected for key '{}' in spec "
-                "file '{}'".format(plugin_type_key, spec_content))
-        if not len(spec_dict[plugin_type_key]):
-            raise IRFailedToAddPlugin(
-                "String value of key '{}' in spec file '{}' can't "
-                "be empty.".format(plugin_type_key, spec_content))
+        # check if new spec file structure
+        if "config" in spec_dict:
+            self._validate_config_section(spec_dict)
+        else:
+            self._validate_key(spec_dict=spec_dict,
+                               key="plugin_type",
+                               instance=str)
 
-        subparsers_key = 'subparsers'
+        subparsers_key = "subparsers"
         if subparsers_key not in spec_dict:
-            raise IRFailedToAddPlugin(
-                "'{}' key is missing in spec file: '{}'".format(
-                    subparsers_key, spec_content))
+            raise IRSpecValidatorException(
+                "'{}' key is missing in spec file: {}".format(
+                    subparsers_key, self.spec_content))
         if not isinstance(spec_dict[subparsers_key], dict):
-            raise IRFailedToAddPlugin(
-                "Value of '{}' in spec file '{}' should be "
-                "'dict' type".format(subparsers_key, spec_content))
-        if 'description' not in spec_dict \
-                and 'description' not in spec_dict[subparsers_key].values()[0]:
-            raise IRFailedToAddPlugin(
+            raise IRSpecValidatorException(
+                "Value of '{}' should be 'dict' type in spec "
+                "file: {}".format(subparsers_key, self.spec_content))
+
+        if "description" not in spec_dict \
+                and "description" not in spec_dict[subparsers_key].values()[0]:
+            raise IRSpecValidatorException(
                 "Required key 'description' is missing for supbarser '{}' in "
-                "spec file '{}'".format(
-                    spec_dict[subparsers_key].keys()[0], spec_content))
+                "spec file: {}".format(
+                    spec_dict[subparsers_key].keys()[0], self.spec_content))
         if len(spec_dict[subparsers_key]) != 1:
-            raise IRFailedToAddPlugin(
+            raise IRSpecValidatorException(
                 "One subparser should be defined under '{}' in "
-                "spec file '{}'".format(subparsers_key, spec_content))
+                "spec file: {}".format(subparsers_key, self.spec_content))
         if not isinstance(spec_dict[subparsers_key].values()[0], dict):
-            raise IRFailedToAddPlugin(
+            raise IRSpecValidatorException(
                 "Subparser '{}' should be 'dict' type and not '{}' type in "
-                "spec file '{}'".format(
+                "spec file: {}".format(
                     spec_dict[subparsers_key].keys()[0],
-                    type(spec_dict[subparsers_key].values()[0]), spec_content))
+                    type(spec_dict[subparsers_key].values()[0]),
+                    self.spec_content))
         if spec_dict[subparsers_key].keys()[0].lower() == 'all':
-            raise IRFailedToAddPlugin(
+            raise IRSpecValidatorException(
                 "Adding a plugin named 'all' isn't allowed")
 
         return spec_dict
 
-    def __repr__(self):
-        return self.name
+    def _validate_config_section(self, spec_dict):
+        config_key = "config"
+        if not isinstance(spec_dict[config_key], dict):
+            raise IRSpecValidatorException(
+                "Value of '{}' should be 'dict' type in spec "
+                "file: {}".format(config_key, self.spec_content))
+
+        # validate plugin type
+        self._validate_key(spec_dict=spec_dict[config_key],
+                           key="plugin_type",
+                           instance=str)
+        # validate dependencies section if exists
+        dependencies_key = "dependencies"
+        if dependencies_key in spec_dict[config_key]:
+            dependencies_list = spec_dict[config_key][dependencies_key]
+
+            if not isinstance(dependencies_list, list):
+                raise IRSpecValidatorException(
+                    "Value of 'list' is expected for key '{}' in spec "
+                    "file: {}".format(dependencies_key, self.spec_content))
+            if not len(dependencies_list):
+                raise IRSpecValidatorException(
+                    "Value of key '{}' can't be empty in plugin spec "
+                    "file: {}".format(dependencies_key, self.spec_content))
+
+            for dependency_dict in dependencies_list:
+                if not isinstance(spec_dict[config_key], dict):
+                    raise IRSpecValidatorException(
+                        "Value of '{}' should be 'dict' type in spec "
+                        "file: {}".format(config_key, self.spec_content))
+
+                # validate the plugin source
+                self._validate_key(spec_dict=dependency_dict,
+                                   key="plugin",
+                                   instance=str)
+
+                # if the plugin value is git url validate the revision key
+                git_dependency_match = re.match(self.GIT_URL_PATTERN,
+                                                dependency_dict["plugin"],
+                                                re.M | re.I)
+
+                if git_dependency_match and git_dependency_match.group():
+                    self._validate_key(spec_dict=dependency_dict,
+                                       key="revision",
+                                       instance=str)
+
+        return True
+
+    def _validate_key(self, spec_dict, key, instance):
+        """
+        Validate that a specific key exists, its instance and not empty
+        :param spec_dict: The dict content to validate
+        :param instance: The expected instance of the key
+        :raise IRSpecValidatorException: when mandatory data is missing in spec file
+        """
+        if key not in spec_dict:
+            raise IRSpecValidatorException(
+                "Required key '{}' is missing in plugin spec "
+                "file: {}".format(key, self.spec_content))
+        if not isinstance(spec_dict[key], instance):
+            raise IRSpecValidatorException(
+                "Value of {} is expected for key '{}' in spec "
+                "file: {}".format(instance, key, self.spec_content))
+        if not len(spec_dict[key]):
+            raise IRSpecValidatorException(
+                "Value of key '{}' can't be empty in plugin spec "
+                "file: {}".format(key, self.spec_content))
+
+        return True

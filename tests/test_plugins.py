@@ -8,7 +8,10 @@ import tempfile
 
 import pytest
 
+from infrared.core.utils.exceptions import IRPluginExistsException, \
+    IRUnsupportedPluginType
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
+from infrared.core.utils.exceptions import IRSpecValidatorException
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRUnsupportedSpecOptionType
@@ -16,6 +19,7 @@ from infrared.core.utils.dict_utils import dict_insert
 import infrared.core.services.plugins
 from infrared.core.services.plugins import InfraredPluginManager
 from infrared.core.services.plugins import InfraredPlugin
+from infrared.core.services.plugins import SpecValidator
 from infrared.core.services import CoreServices, ServiceName
 
 
@@ -236,7 +240,7 @@ def test_add_plugin_with_same_name(plugin_manager_fixture):
     plugins_cfg_mtime_before_add = os.path.getmtime(plugin_manager.config_file)
     plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
 
-    with pytest.raises(IRFailedToAddPlugin):
+    with pytest.raises(IRPluginExistsException):
         plugin_manager.add_plugin(plugin_dict['dir'])
 
     assert plugins_cnt_before_try == len(plugin_manager.PLUGINS_DICT)
@@ -260,7 +264,7 @@ def test_add_plugin_unsupported_type(plugin_manager_fixture):
     plugins_cfg_mtime_before_add = os.path.getmtime(plugin_manager.config_file)
     plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
 
-    with pytest.raises(IRFailedToAddPlugin):
+    with pytest.raises(IRUnsupportedPluginType):
         plugin_manager.add_plugin(plugin_dict['dir'])
 
     assert not plugin_in_conf(
@@ -376,7 +380,7 @@ def test_add_plugin_no_spec(plugin_manager_fixture):
     plugins_cfg_mtime_before_add = os.path.getmtime(plugin_manager.config_file)
     plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
 
-    with pytest.raises(IRFailedToAddPlugin):
+    with pytest.raises(IRSpecValidatorException):
         plugin_manager.add_plugin(plugin_dir)
 
     assert plugins_cnt_before_try == len(plugin_manager.PLUGINS_DICT)
@@ -422,8 +426,9 @@ def test_add_plugin_corrupted_spec(tmpdir_factory, description, plugin_spec):
         yaml.dump(plugin_spec, fp, default_flow_style=True)
 
     try:
-        with pytest.raises(IRFailedToAddPlugin):
-            InfraredPlugin.spec_validator(lp_file.strpath)
+        with pytest.raises(IRSpecValidatorException):
+            spec_validator = SpecValidator()
+            spec_validator.validate_from_file(lp_file.strpath)
     finally:
         lp_dir.remove()
 
@@ -497,7 +502,8 @@ def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
 
     def clone_from_side_effect(url, to_path, **kwargs):
         """
-        Define a side effect function to override the original behaviour of clone_from
+        Define a side effect function to override the
+        original behaviour of clone_from
         """
         shutil.copytree(src=plugin_dict["dir"], dst=to_path)
 
@@ -506,8 +512,10 @@ def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
     mock_git = mocker.patch("infrared.core.services.plugins.git.Repo")
     # use side effect to use copytree instead of original clone
     mock_git.clone_from.side_effect = clone_from_side_effect
-    mock_os_path_exists = mocker.patch("infrared.core.services.plugins.os.path.exists")
-    # set to false in order to enter the git section in if/else inside add_plugin func
+    mock_os_path_exists = mocker.patch(
+        "infrared.core.services.plugins.os.path.exists")
+    # set to false in order to enter the git section
+    # in if/else inside add_plugin func
     mock_os_path_exists.return_value = False
     mock_tempfile = mocker.patch("infrared.core.services.plugins.tempfile")
     mock_tempfile.mkdtemp.return_value = tempfile.mkdtemp(prefix="ir-")
@@ -528,11 +536,13 @@ def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
     # check it was cloned with the temp name
     mock_git.clone_from.assert_called_with(
         url='https://sample_github.null/plugin_repo.git',
-        to_path=os.path.join(mock_tempfile.mkdtemp.return_value, "plugin_repo"))
+        to_path=os.path.join(
+            mock_tempfile.mkdtemp.return_value, "plugin_repo"))
 
     # check that it was copied with the plugin name and not repo name
-    mock_shutil.copytree.assert_called_with(os.path.join(mock_tempfile.mkdtemp.return_value, "plugin_repo"),
-                                            os.path.join(os.path.abspath("plugins"), plugin_dict["name"]))
+    mock_shutil.copytree.assert_called_with(
+        os.path.join(mock_tempfile.mkdtemp.return_value, "plugin_repo"),
+        os.path.join(os.path.abspath("plugins"), plugin_dict["name"]))
 
 
 def test_add_plugin_from_git_exception(plugin_manager_fixture, mocker):
