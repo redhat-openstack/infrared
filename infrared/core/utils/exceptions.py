@@ -131,9 +131,13 @@ class IRFailedToRemovePlugin(IRException):
 
 
 class IRUnsupportedPluginType(IRException):
-    def __init__(self, plugin_type):
-        super(self.__class__, self).__init__(
-            "'{}' plugin type isn't supported".format(plugin_type))
+    def __init__(self, plugin_type, additional_reason_str=None):
+        reason_str = "'{}' plugin type isn't supported".format(plugin_type)
+
+        if additional_reason_str is not None:
+            reason_str += "\n" + additional_reason_str
+
+        super(self.__class__, self).__init__(reason_str)
 
 
 class IRFailedToUpdatePlugin(IRException):
@@ -174,3 +178,13 @@ class IRGroupNotFoundException(IRException):
         message = "Unable to find group: {}".format(
             group)
         super(self.__class__, self).__init__(message)
+
+
+class IRSpecValidatorException(IRException):
+    def __init__(self, reason_str):
+        super(self.__class__, self).__init__(reason_str)
+
+
+class IRPluginExistsException(IRException):
+    def __init__(self, reason_str):
+        super(self.__class__, self).__init__(reason_str)
