@@ -8,12 +8,14 @@ import time
 import yaml
 import git
 import github
+import jsonschema
 
 # TODO(aopincar): Add pip to the project's requirements
 import pip
 
 from infrared.core.utils import logger
-from infrared.core.utils.exceptions import IRFailedToAddPlugin, IRException
+from infrared.core.utils.exceptions import IRFailedToAddPlugin, IRException, \
+    IRSpecValidatorException, IRPluginExistsException
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRUnsupportedPluginType
@@ -37,6 +39,9 @@ MAIN_PLAYBOOK = "main.yml"
 PLUGINS_DIR = os.path.abspath("./plugins")
 LOG = logger.LOG
 PLUGINS_REGISTRY_FILE = os.path.join(PLUGINS_DIR, "registry.yaml")
+# TODO: use CoreSettings once merged
+LIBRARY_DEPENDENCIES_DIR = os.path.join(
+    "INFRARED_HOME", os.path.abspath(os.getcwd()), ".library")
 
 with open(PLUGINS_REGISTRY_FILE, "r") as fo:
     PLUGINS_REGISTRY = yaml.load(fo)
@@ -171,10 +176,12 @@ class InfraredPluginManager(object):
 
                 spec_file = repo.get_contents('plugin.spec').decoded_content
 
-                plugin = InfraredPlugin.spec_content_validator(spec_file)
+                plugin = SpecValidator.validate_from_content(spec_file)
                 plugin_name = plugin["subparsers"].keys()[0]
-                plugin_type = plugin["plugin_type"]
                 plugin_src = repo.clone_url
+                plugin_type = plugin["config"]["plugin_type"] \
+                    if "config" in plugin \
+                    else plugin["plugin_type"]
                 plugin_desc = plugin["description"] \
                     if "description" in plugin \
                        and plugin["description"] is not None \
@@ -292,7 +299,7 @@ class InfraredPluginManager(object):
             plugin_tmp_source = os.path.join(plugin_tmp_source, repo_plugin_path)
 
         # validate & load spec data in order to pull the name of the plugin
-        spec_data = InfraredPlugin.spec_validator(
+        spec_data = SpecValidator.validate_from_file(
             os.path.join(plugin_tmp_source, InfraredPlugin.PLUGIN_SPEC_FILE))
         # get the real plugin name from spec
         plugin_dir_name = spec_data["subparsers"].keys()[0]
@@ -433,19 +440,19 @@ class InfraredPluginManager(object):
                 dest)
 
         plugin = InfraredPlugin(plugin_source)
-        plugin_type = plugin.config['plugin_type']
+        plugin_type = plugin.type
         # FIXME(yfried) validate spec and throw exception on missing input
 
-        if plugin_type not in self.config.options(
-                self.SUPPORTED_TYPES_SECTION):
-            raise IRFailedToAddPlugin(
-                "Unsupported plugin type: '{}'".format(plugin_type))
+        if plugin_type not in self.supported_plugin_types:
+            raise IRUnsupportedPluginType(plugin_type)
 
         if not self.config.has_section(plugin_type):
             self.config.add_section(plugin_type)
         elif self.config.has_option(plugin_type, plugin.name):
-            raise IRFailedToAddPlugin(
+            raise IRPluginExistsException(
                 "Plugin with the same name & type already exists")
+
+        self._install_dependencies(plugin)
 
         self.config.set(plugin_type, plugin.name, plugin.path)
 
@@ -501,6 +508,85 @@ class InfraredPluginManager(object):
             pip_args = ['install', '-r', requirement_file]
             pip.main(args=pip_args)
 
+    def _install_dependencies(self, plugin):
+        """
+        Install plugin dependencies based on the dependencies specified in spec
+        :param plugin: InfraredPlugin object
+        """
+        required_dirs = {"callback", "filters", "library", "roles"}
+
+        if not plugin.dependencies:
+            return
+
+        # create library dependencies directory
+        if not os.path.exists(LIBRARY_DEPENDENCIES_DIR):
+            os.makedirs(LIBRARY_DEPENDENCIES_DIR)
+
+        # install all dependencies
+        for dependency in plugin.dependencies:
+            dependency_source = dependency["source"]
+            dependency_rev = dependency.get('revision')
+            dependency_name = \
+                os.path.split(dependency_source)[-1].split('.')[0]
+            dependency_dest = os.path.join(LIBRARY_DEPENDENCIES_DIR,
+                                           dependency_name)
+
+            LOG.debug(
+                "Installing plugin dependency: '{}".format(dependency_source))
+
+            # add the dependency
+            if os.path.exists(dependency_source):
+                # local dependency
+                if os.path.exists(dependency_dest):
+                    LOG.debug("Skipping an already exist dependency.")
+                    continue
+                # copy the library plugin
+                shutil.copytree(dependency_source, dependency_dest)
+            else:
+                # git repo dependency
+                try:
+                    tmpdir = tempfile.mkdtemp(prefix="ir-")
+                    cloned_repo = git.Repo.clone_from(
+                        url=dependency_source,
+                        to_path=tmpdir)
+                    if dependency_rev is not None:
+                        cloned_repo.git.checkout(dependency_rev)
+
+                    # check if the dependency already exists and compare rev
+                    if os.path.exists(dependency_dest):
+                        existed_repo = git.Repo(dependency_dest)
+                        dependency_rev = existed_repo.head.ref.commit.name_rev
+                        existed_rev = cloned_repo.head.ref.commit.name_rev
+
+                        if dependency_rev != existed_rev:
+                            raise IRFailedToAddPlugin(
+                                "Dependency '{}' already exists but with "
+                                "different revision. Revision is '{}'"
+                                "instead of '{}' ".format(dependency_source,
+                                                          dependency_rev,
+                                                          existed_rev))
+                        LOG.debug("Skipping an already exist dependency.")
+                        continue
+                    else:
+                        shutil.copytree(tmpdir, dependency_dest)
+
+                except git.exc.GitCommandError as e:
+                    raise IRFailedToAddPlugin(
+                        "Cloning git repo {} is failed: {}".format(
+                            dependency_source, e))
+
+            # check the dependency folder contains at least one of the req dirs
+            if not (set(os.listdir(dependency_dest)) & required_dirs):
+                shutil.rmtree(dependency_dest)
+                raise IRFailedToAddPlugin(
+                    "Dependency library '{}' must contain at least "
+                    "one of the following folders: {}".format(
+                        dependency_source, required_dirs))
+
+            reqs_file = os.path.join(dependency_dest, 'requirements.txt')
+            if os.path.isfile(reqs_file):
+                pip.main(['install', '-r', reqs_file])
+
     def freeze(self):
         for section in self.config.sections():
             if section == "supported_types":
@@ -509,8 +595,13 @@ class InfraredPluginManager(object):
                 if name not in PLUGINS_REGISTRY:
                     with open(os.path.join(path, "plugin.spec"), "r") as pls:
                         plugin_spec = yaml.load(pls)
+                    # support two types of possible plugin spec files
+                    plugin_type = plugin_spec["config"]["plugin_type"] \
+                        if "config" in plugin_spec \
+                        else plugin_spec["plugin_type"]
+
                     PLUGINS_REGISTRY[name] = dict(
-                        type=plugin_spec["plugin_type"],
+                        type=plugin_type,
                         desc=plugin_spec[
                             "subparsers"].items()[0][1]["description"])
                 try:
@@ -583,7 +674,7 @@ class InfraredPlugin(object):
 
     @config.setter
     def config(self, plugin_spec):
-        self._config = self.spec_validator(plugin_spec)
+        self._config = SpecValidator.validate_from_file(plugin_spec)
 
     @property
     def name(self):
@@ -596,7 +687,10 @@ class InfraredPlugin(object):
 
     @property
     def type(self):
-        return self.config['plugin_type']
+        try:
+            return self.config['config']['plugin_type']
+        except KeyError:
+            return self.config['plugin_type']
 
     @property
     def description(self):
@@ -605,81 +699,137 @@ class InfraredPlugin(object):
         except KeyError:
             return self.config['description']
 
-    @staticmethod
-    def spec_validator(spec_file):
-        """Loads & validates that spec (YAML) file has all required fields
-
-        :param spec_file: Path to plugin's spec file
-        :raise IRFailedToAddPlugin: when mandatory data is missing in spec file
-        :return: Dictionary with data loaded from a spec (YAML) file
-        """
-        if not os.path.isfile(spec_file):
-            raise IRFailedToAddPlugin(
-                "Plugin spec doesn't exist: {}".format(spec_file))
-
-        with open(spec_file) as fp:
-            spec_dict = InfraredPlugin.spec_content_validator(fp)
-
-        return spec_dict
-
-    @staticmethod
-    def spec_content_validator(spec_content):
-        """validates that spec (YAML) file has all required fields
-
-        :param spec_content: content of spec file
-        :raise IRFailedToAddPlugin: when mandatory data is missing in spec file
-        :return: Dictionary with data loaded from a spec (YAML) file
-        """
-        spec_dict = yaml.load(spec_content)
-
-        if not isinstance(spec_dict, dict):
-            raise IRFailedToAddPlugin(
-                "Spec file is empty or corrupted: '{}'".format(spec_content))
-
-        plugin_type_key = 'plugin_type'
-        if plugin_type_key not in spec_dict:
-            raise IRFailedToAddPlugin(
-                "Required key '{}' is missing in plugin spec "
-                "file: {}".format(plugin_type_key, spec_content))
-        if not isinstance(spec_dict[plugin_type_key], str):
-            raise IRFailedToAddPlugin(
-                "Value of 'str' is expected for key '{}' in spec "
-                "file '{}'".format(plugin_type_key, spec_content))
-        if not len(spec_dict[plugin_type_key]):
-            raise IRFailedToAddPlugin(
-                "String value of key '{}' in spec file '{}' can't "
-                "be empty.".format(plugin_type_key, spec_content))
-
-        subparsers_key = 'subparsers'
-        if subparsers_key not in spec_dict:
-            raise IRFailedToAddPlugin(
-                "'{}' key is missing in spec file: '{}'".format(
-                    subparsers_key, spec_content))
-        if not isinstance(spec_dict[subparsers_key], dict):
-            raise IRFailedToAddPlugin(
-                "Value of '{}' in spec file '{}' should be "
-                "'dict' type".format(subparsers_key, spec_content))
-        if 'description' not in spec_dict \
-                and 'description' not in spec_dict[subparsers_key].values()[0]:
-            raise IRFailedToAddPlugin(
-                "Required key 'description' is missing for supbarser '{}' in "
-                "spec file '{}'".format(
-                    spec_dict[subparsers_key].keys()[0], spec_content))
-        if len(spec_dict[subparsers_key]) != 1:
-            raise IRFailedToAddPlugin(
-                "One subparser should be defined under '{}' in "
-                "spec file '{}'".format(subparsers_key, spec_content))
-        if not isinstance(spec_dict[subparsers_key].values()[0], dict):
-            raise IRFailedToAddPlugin(
-                "Subparser '{}' should be 'dict' type and not '{}' type in "
-                "spec file '{}'".format(
-                    spec_dict[subparsers_key].keys()[0],
-                    type(spec_dict[subparsers_key].values()[0]), spec_content))
-        if spec_dict[subparsers_key].keys()[0].lower() == 'all':
-            raise IRFailedToAddPlugin(
-                "Adding a plugin named 'all' isn't allowed")
-
-        return spec_dict
+    @property
+    def dependencies(self):
+        try:
+            return self.config['config']['dependencies']
+        except KeyError:
+            return {}
 
     def __repr__(self):
         return self.name
+
+
+class SpecValidator(object):
+    """
+    Class for validating that a plugin spec (YAML) has all required fields
+    """
+    CONFIG_PART_SCHEMA = {
+        "type": "object",
+        "properties": {
+            "plugin_type": {"type": "string", "minLength": 1},
+            "dependencies": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "source": {"type": "string", "minLength": 1},
+                        "revision": {"type": "string", "minLength": 1}
+                    },
+                    "required": ["source"]
+                },
+                "minItems": 1,
+                "uniqueItems": True
+            }
+        },
+        "additionalProperties": False,
+        "required": ["plugin_type"]
+    }
+
+    SUBPARSER_PART_SCHEMA = {
+        "type": "object",
+        "minProperties": 1,
+        "maxProperties": 1,
+        "patternProperties": {
+            "^(?!(?:all)$).+$": {
+                "type": "object",
+            }
+        },
+        "additionalProperties": False
+    }
+
+    SCHEMA_WITH_CONFIG = {
+        "type": "object",
+        "properties": {
+            "description": {"type": "string", "minLength": 1},
+            "config": CONFIG_PART_SCHEMA,
+            "subparsers": SUBPARSER_PART_SCHEMA
+        },
+        "additionalProperties": False,
+        "required": ["config", "subparsers"]
+    }
+
+    SCHEMA_WITHOUT_CONFIG = {
+        "type": "object",
+        "properties": {
+            "plugin_type": {"type": "string", "minLength": 1},
+            "description": {"type": "string", "minLength": 1},
+            "subparsers": SUBPARSER_PART_SCHEMA
+        },
+        "additionalProperties": False,
+        "required": ["plugin_type", "subparsers"]
+    }
+
+    @staticmethod
+    def validate_from_file(spec_file=None):
+        """Loads & validates that spec (YAML) file has all required fields
+
+        :param spec_file: Path to plugin's spec file
+        :raise IRSpecValidatorException: when mandatory
+        data is missing in spec file
+        :return: Dictionary with data loaded from a spec (YAML) file
+        """
+        if spec_file is None:
+            raise IRSpecValidatorException(
+                "Plugin spec file is missing")
+
+        if not os.path.isfile(spec_file):
+            raise IRSpecValidatorException(
+                "Plugin spec doesn't exist: {}".format(spec_file))
+
+        with open(spec_file) as fp:
+            spec_dict = SpecValidator.validate_from_content(fp.read())
+
+        return spec_dict
+
+    @staticmethod
+    def validate_from_content(spec_content=None):
+        """validates that spec (YAML) content has all required fields
+
+        :param spec_content: content of spec file
+        :raise IRSpecValidatorException: when mandatory data
+        is missing in spec file
+        :return: Dictionary with data loaded from a spec (YAML) file
+        """
+        if spec_content is None:
+            raise IRSpecValidatorException(
+                "Plugin spec content is missing")
+
+        spec_dict = yaml.load(spec_content)
+
+        if not isinstance(spec_dict, dict):
+            raise IRSpecValidatorException(
+                "Spec file is empty or corrupted: {}".format(spec_content))
+
+        # check if new spec file structure
+        try:
+            if "config" in spec_dict:
+                jsonschema.validate(spec_dict,
+                                    SpecValidator.SCHEMA_WITH_CONFIG)
+            else:
+                jsonschema.validate(spec_dict,
+                                    SpecValidator.SCHEMA_WITHOUT_CONFIG)
+
+        except jsonschema.exceptions.ValidationError as error:
+            raise IRSpecValidatorException(
+                "{} in file: {}".format(error.message, spec_content))
+
+        subparsers_key = "subparsers"
+        if "description" not in spec_dict \
+                and "description" not in spec_dict[subparsers_key].values()[0]:
+            raise IRSpecValidatorException(
+                "Required key 'description' is missing for supbarser '{}' in "
+                "spec file: {}".format(
+                    spec_dict[subparsers_key].keys()[0], spec_content))
+
+        return spec_dict
