@@ -15,7 +15,7 @@ parameter_defaults:
 {% for host_name in groups.overcloud_nodes %}
 {% set node_name = host_name.rstrip('1234567890-').split('-')[-1] %}
 {%- if node_name not in saved_roles -%}
-{% set role_name = node_name|title %}
+{% set role_name = role_names_mapping.get(node_name, node_name|title) %}
    {{ role_name }}Count: {{ count(node_name) }}
    Overcloud{{ flavor_name_mapping.get(role_name, role_name) }}Flavor: {{ node_name | default(role_default_flavor) }}
 {% if saved_roles.append(node_name) %}{% endif %}
