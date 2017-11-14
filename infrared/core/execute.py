@@ -8,7 +8,7 @@ from infrared.core.utils import logger
 LOG = logger.LOG
 
 
-def ansible_playbook(inventory, playbook_path, verbose=2,
+def ansible_playbook(inventory, playbook_path, verbose=None,
                      extra_vars=None, ansible_args=None):
     """Wraps the 'ansible-playbook' CLI.
 
@@ -30,8 +30,12 @@ def ansible_playbook(inventory, playbook_path, verbose=2,
     # TODO(yfried): Use proper ansible API instead of emulating CLI
     cli_args = ['execute',
                 playbook_path,
-                "-v" if not verbose else '-' + 'v' * verbose,
                 '--inventory', inventory]
+
+    # infrared should not change ansible verbosity unless user specifies that
+    if verbose:
+        cli_args.append('-' + 'v' * int(verbose))
+
     cli_args.extend(ansible_args)
 
     results = _run_playbook(cli_args,
