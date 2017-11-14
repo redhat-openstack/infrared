@@ -1,0 +1,33 @@
+- name: Set libvirt debug log filters and log output file
+  #hosts: compute:!unused:all
+  hosts: all
+  become: yes
+  tags: enable_libvirt_log_filters
+  any_errors_fatal: false
+  gather_facts: no
+
+  vars:
+      log_owner: "root"
+      libvirtd_config: "/etc/libvirt/libvirtd.conf"
+      libvirtd_log_dir: "/var/log/libvirt"
+      libvirtd_log: "libvirtd.log"
+
+  tasks:
+    - name: Check for the presence of libvirt config file
+      stat:
+        path: "{{ libvirtd_config }}"
+      register: libvirtd_conf_stat
+
+    - name: Check for the presence of libvirt log directory
+      stat:
+        path: "{{ libvirtd_log_dir }}"
+      register: libvirtd_log_stat
+
+    - name: Set libvirt debug log filters and log output file
+      lineinfile:
+        path: "{{ libvirtd_config }}"
+        line: "{{ item }}"
+      with_items:
+        - 'log_filters="1:libvirt 1:qemu 1:conf 1:security 3:event 3:json 3:file 3:object 1:util 1:cpu"'
+        - 'log_outputs="1:file:{{ libvirtd_log_dir }}/{{ libvirtd_log }}"'
+      when: libvirtd_conf_stat.stat.isreg and libvirtd_log_stat.stat.isdir
