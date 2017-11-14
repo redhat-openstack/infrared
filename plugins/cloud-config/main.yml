@@ -35,3 +35,7 @@
 - name: Configure instance high-availability
   include: post_tasks/instance_ha.yml
   when: '"instance_ha" in install.tasks'
+
+- name: Setup libvirt debug log filters
+  include: post_tasks/libvirt-log-filters.yml
+  when: install.compute.enable_libvirt_log_filters|default(True)
