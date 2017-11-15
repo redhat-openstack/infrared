@@ -437,6 +437,7 @@ class WorkspaceManager(object):
                 shutil.rmtree(tmp_dir)
 
         new_workspace._populate_paths()
+        open(os.path.join(new_workspace.path, '.imported'), 'a').close()
         self.activate(new_workspace.name)
 
     def is_active(self, name):
