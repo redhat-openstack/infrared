@@ -44,8 +44,8 @@ def test_execute_no_workspace(spec_fixture, workspace_manager_fixture):   # noqa
     spec_manager.register_spec(spec_fixture)
 
     input_string = ['example']
-    spec_manager.run_specs(args=input_string)
-    assert workspace_manager_fixture.get_active_workspace()
+    with pytest.raises(Exception):
+        spec_manager.run_specs(args=input_string)
 
 
 def test_execute_fail(spec_fixture, workspace_manager_fixture,          # noqa
