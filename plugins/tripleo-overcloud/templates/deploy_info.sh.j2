@@ -30,7 +30,11 @@ while [ $# -gt 0 ]; do
 done
 
 echo "Server info"
+{% if (install.version|default(undercloud_version)|openstack_release) >= 9 %}
 openstack server list -f value -c ID | xargs -n 1 openstack server show
+{% else %}
+openstack server list |  awk 'BEGIN {a=0}; /\|/{ if (a>2) print $2} {a=a+1}' | xargs -n 1 openstack server show
+{% endif %}
 
 echo "Deployments"
 {% if (install.version|default(undercloud_version)|openstack_release) >= 9 %}
@@ -61,11 +65,13 @@ for deployment in `echo "$DEPLOYMENTS" | grep -v 'COMPLETE' | awk '{print $4}'`;
 done
 {% endif %}
 
+{% if (install.version|default(undercloud_version)|openstack_release) >= 10 %}
 echo "WorkFlow/Actions"
 echo openstack action execution list
 openstack action execution list
 echo openstack workflow execution list
 openstack workflow execution list
 #TODO: detailed info about the failed actions (output)
+{% endif %}
 
 echo FIN
