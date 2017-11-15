@@ -106,6 +106,6 @@ subparsers:
                       type: Value
                       help: |
                         Desired boot mode for VMs.
-                        May require additional packages, please refer http://infrared.readthedocs.io/en/latest/advanced.html#uefi-mode-related-binaries
+                        May require additional packages, please refer http://infrared.readthedocs.io/en/stable/advance_features.html#uefi-mode-related-binaries
                       choices: ['hd', 'uefi']
                       default: hd
