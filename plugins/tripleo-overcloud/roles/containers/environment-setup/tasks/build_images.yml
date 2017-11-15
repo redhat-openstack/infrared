@@ -82,14 +82,10 @@
          {{ service_docker_status.stderr }}
   when: service_docker_status | failed
 
-# using the loop below due to #bz1455683
 - name: openstack overcloud container image upload
   shell: |
       source /home/stack/stackrc
       openstack overcloud container image upload --verbose --config-file {{ containers_images_template_dest_file }}
-  register: image_upload
-  until: image_upload.rc == 0
-  retries: 5
   when: not install.registry.undercloud.skip
   tags:
       - skip_ansible_lint
