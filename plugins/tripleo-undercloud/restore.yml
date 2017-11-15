@@ -148,6 +148,18 @@
                     ResultInactive=yes
                     ResultActive=yes
                 dest: "/etc/polkit-1/localauthority/50-local.d/50-libvirt-user-{{ install.user.name }}.pkla"
+                
+      - name: Check CPU stats
+        delegate_to: localhost
+        become: true
+        become_user: stack
+        command: bash ~/server_cpu_check.sh
+
+      - name: Check ICMP stats
+        delegate_to: localhost
+        become: true
+        become_user: stack
+        command: bash ~/server_ping_check.sh
 
       - name: test openstack environment
         delegate_to: "{{ groups.undercloud | first }}"
