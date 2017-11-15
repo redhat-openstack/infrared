@@ -250,9 +250,6 @@ class PluginManagerSpec(api.SpecObject):
         add_parser.add_argument("--revision", help="git branch/tag/revision"
                                 " sourced plugins. Ingnored for"
                                 "'plugin add all' command.")
-        add_parser.add_argument("--dest", help="Destination directory to "
-                                "clone plugin under, in case of Git URL is "
-                                "provided as path")
 
         # Remove plugin
         remove_parser = plugin_subparsers.add_parser(
@@ -314,8 +311,7 @@ class PluginManagerSpec(api.SpecObject):
                 self.plugin_manager.add_all_available()
                 self._list_plugins(print_available=False)
             else:
-                self.plugin_manager.add_plugin(pargs.src, rev=pargs.revision,
-                                               dest=pargs.dest)
+                self.plugin_manager.add_plugin(pargs.src, rev=pargs.revision)
         elif subcommand == 'remove':
             if pargs.name == 'all':
                 self.plugin_manager.remove_all()

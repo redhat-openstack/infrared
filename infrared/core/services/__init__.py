@@ -42,17 +42,31 @@ class CoreServices(object):
         config.read(file_path)
         cls._configure(
             os.path.abspath(config.get(section, 'workspaces_base_folder')),
-            os.path.abspath(config.get(section, 'plugins_conf_file'))
         )
 
     @classmethod
-    def _configure(cls, workspace_dir, plugins_conf):
+    def _configure(cls, workspace_dir):
         """Register services to manager. """
 
         # create workspace manager
         if ServiceName.WORKSPACE_MANAGER not in CoreServices._SERVICES:
             cls.register_service(ServiceName.WORKSPACE_MANAGER,
                                  workspaces.WorkspaceManager(workspace_dir))
+        workspace_manager = cls._get_service(ServiceName.WORKSPACE_MANAGER)
+        active_workspace = workspace_manager.get_active_workspace()
+
+        if not active_workspace and not workspace_manager.list():
+            active_workspace = workspace_manager.create()
+            workspace_manager.activate(active_workspace.name)
+            LOG.warn("There are no workspaces. New workspace added: %s",
+                     active_workspace.name)
+
+        if active_workspace:
+            plugins_conf = os.path.join(active_workspace.path,
+                                        cls.DEFAULTS['plugins_conf_file'])
+        else:
+            plugins_conf = ""
+
         # create plugins manager
         if ServiceName.PLUGINS_MANAGER not in CoreServices._SERVICES:
             cls.register_service(ServiceName.PLUGINS_MANAGER,
