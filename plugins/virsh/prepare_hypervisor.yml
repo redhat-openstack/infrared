@@ -13,20 +13,40 @@
       with_items: "{{ packages }}"
       register: yum_result
 
-    # check if additional binaries for UEFI mode VM boot installed
-    - name: check if UEFI binaries are installed
-      command: "rpm -q edk2.git-ovmf-x64"
-      args:
-        warn: no
-      register: rpm_check
-      ignore_errors: True
-      when: provision.bootmode == 'uefi'
-      changed_when: False
+    - block:
+        - name: check for OVMF package
+          yum:
+              list: OVMF
+              enablerepo: "*"
+          register: ovmf_status
 
-    - name: "Fail if UEFI related binaries are missing"
-      fail:
-          msg: "UEFI related binaries are missing, please refer http://infrared.readthedocs.io/en/latest/advanced.html#uefi-mode-related-binaries"
-      when: provision.bootmode == 'uefi' and rpm_check.stdout.find('is not installed') != -1
+        - name: install OVMF package
+          yum:
+              name: OVMF
+              state: present
+              enablerepo: "*"
+          when: ovmf_status.results|list|length > 0
+
+        # check if additional binaries for UEFI mode VM boot installed
+        - name: check if UEFI binaries are installed
+          command: "rpm -q edk2.git-ovmf-x64"
+          args:
+              warn: no
+          register: rpm_check
+          ignore_errors: True
+          when: provision.bootmode == 'uefi'
+          changed_when: False
+          when: ovmf_status.results|list|length == 0
+
+        - name: "Fail if UEFI related binaries are missing"
+          fail:
+              msg: "UEFI related binaries are missing, please refer http://infrared.readthedocs.io/en/stable/advance_features.html#uefi-mode-related-binaries"
+          when:
+              - ovmf_status.results|list|length == 0
+              - provision.bootmode == 'uefi'
+              - rpm_check.stdout.find('is not installed') != -1
+
+      when: provision.bootmode == 'uefi'
 
     - name: stop libvirtd
       service:
