@@ -65,7 +65,7 @@
                 'disk_bytes': '`virsh domblkinfo {{ item }} vda | grep -e Capacity | cut -d\: -f2 | xargs`',
                 'disks': '${disks_list}',
             }"
-        with_items: "{{ groups['overcloud_nodes'] }}"
+        with_items: "{{ groups['overcloud_nodes']|sort }}"
         register: nodes_info
         tags:
             - skip_ansible_lint
