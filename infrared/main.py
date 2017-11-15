@@ -244,15 +244,17 @@ class PluginManagerSpec(api.SpecObject):
         # Add plugin
         add_parser = plugin_subparsers.add_parser(
             'add', help='Add a plugin')
-        add_parser.add_argument("src",
-                                help="Plugin Source (name/path/git URL)\n'all'"
-                                     " will install all available plugins")
+        add_parser.add_argument(
+            "src",
+            help="Plugin Source (name/path/git URL)\n'all'"
+                 " will install all available plugins.\n"
+                 "Providing the name of the YAML formatted file will "
+                 "make InfraRed all install plugins from that file. "
+                 "(To get an example of this file content run 'infrared "
+                 "plugin freeze')")
         add_parser.add_argument("--revision", help="git branch/tag/revision"
                                 " sourced plugins. Ingnored for"
                                 "'plugin add all' command.")
-        add_parser.add_argument("--dest", help="Destination directory to "
-                                "clone plugin under, in case of Git URL is "
-                                "provided as path")
 
         # Remove plugin
         remove_parser = plugin_subparsers.add_parser(
@@ -314,8 +316,7 @@ class PluginManagerSpec(api.SpecObject):
                 self.plugin_manager.add_all_available()
                 self._list_plugins(print_available=False)
             else:
-                self.plugin_manager.add_plugin(pargs.src, rev=pargs.revision,
-                                               dest=pargs.dest)
+                self.plugin_manager.add_plugin(pargs.src, rev=pargs.revision)
         elif subcommand == 'remove':
             if pargs.name == 'all':
                 self.plugin_manager.remove_all()

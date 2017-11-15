@@ -17,6 +17,7 @@ from infrared.core.utils.exceptions import IRFailedToAddPlugin, IRException
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRUnsupportedPluginType
+from infrared.core.utils.exceptions import IRNoActiveWorkspaceFound
 
 
 DEFAULT_PLUGIN_INI = dict(
@@ -34,9 +35,9 @@ DEFAULT_PLUGIN_INI = dict(
 
 
 MAIN_PLAYBOOK = "main.yml"
-PLUGINS_DIR = os.path.abspath("./plugins")
 LOG = logger.LOG
-PLUGINS_REGISTRY_FILE = os.path.join(PLUGINS_DIR, "registry.yaml")
+PLUGINS_REGISTRY_FILE = os.path.join(os.path.abspath('./plugins'),
+                                     "registry.yaml")
 
 with open(PLUGINS_REGISTRY_FILE, "r") as fo:
     PLUGINS_REGISTRY = yaml.load(fo)
@@ -51,18 +52,32 @@ class InfraredPluginManager(object):
         """
         :param plugins_conf: A path to the main plugins configuration file
         """
+        if plugins_conf:
+            self.plugins_dir = os.path.join(
+                os.path.dirname(plugins_conf), 'plugins')
         self.config = plugins_conf
         self._load_plugins()
 
     def _load_plugins(self):
         self.__class__.PLUGINS_DICT.clear()
+        if self.config_file is not None:
+            semaphore = os.path.join(os.path.dirname(self.config_file),
+                                     '.imported')
+            install_requirements = os.path.isfile(semaphore)
+        else:
+            install_requirements = False
+
         for plugin_type_section in self.config.options(
                 self.SUPPORTED_TYPES_SECTION):
             if self.config.has_section(plugin_type_section):
                 for plugin_name, plugin_path in self.config.items(
                         plugin_type_section):
+                    if install_requirements:
+                        self._install_requirements(plugin_path)
                     plugin = InfraredPlugin(plugin_path)
                     self.__class__.PLUGINS_DICT[plugin_name] = plugin
+        if install_requirements:
+            os.remove(semaphore)
 
     def get_installed_plugins(self, plugins_type=None):
         """Returns a dict with all installed plugins
@@ -210,38 +225,34 @@ class InfraredPluginManager(object):
             os.path.abspath(os.path.expanduser(plugins_conf))
 
         init_plugins_conf = False
+        config = ConfigParser()
         if not os.path.isfile(plugins_conf_full_path):
-            LOG.warning("Plugin conf ('{}') not found, creating it with "
-                        "default data".format(plugins_conf_full_path))
             init_plugins_conf = True
-            with open(plugins_conf_full_path, 'w') as fp:
-                config = ConfigParser()
 
-                for section, section_data in DEFAULT_PLUGIN_INI.items():
-                    if not config.has_section(section):
-                        config.add_section(section)
-                    for option, value in section_data.items():
-                        config.set(section, option, value)
+            for section, section_data in DEFAULT_PLUGIN_INI.items():
+                if not config.has_section(section):
+                    config.add_section(section)
+                for option, value in section_data.items():
+                    config.set(section, option, value)
 
-                config.write(fp)
+            if plugins_conf:
+                LOG.warning("Plugin conf ('{}') not found, creating it with "
+                            "default data".format(plugins_conf_full_path))
+                with open(plugins_conf_full_path, 'w') as fp:
+                    config.write(fp)
 
-        self._config_file = plugins_conf_full_path
+        if plugins_conf:
+            with open(plugins_conf_full_path) as fp:
+                self._config = ConfigParser()
+                self.config.readfp(fp)
+                self._config_file = plugins_conf_full_path
 
-        with open(plugins_conf_full_path) as fp:
-            self._config = ConfigParser()
-            self.config.readfp(fp)
-
-        # TODO(aopincar): Remove auto plugins installation when conf is missing
-        if init_plugins_conf:
-            self.add_all_available()
-
-    def get_desc_of_type(self, s_type):
-        """Returns the description of the given supported plugin type
-
-        :param s_type: The type of the plugin you want the description
-        :return: String of the supported plugin description
-        """
-        return self.config.get(self.SUPPORTED_TYPES_SECTION, s_type)
+            # TODO(aopincar): Remove auto plugins installation when conf is missing
+            if init_plugins_conf:
+                self.add_all_available()
+        else:
+            self._config = config
+            self._config_file = None
 
     @classmethod
     def get_plugin(cls, plugin_name):
@@ -258,20 +269,15 @@ class InfraredPluginManager(object):
         else:
             raise StopIteration
 
-    @staticmethod
-    def _clone_git_plugin(git_url, repo_plugin_path=None, rev=None,
-                          dest_dir=None):
+    def _clone_git_plugin(self, git_url, repo_plugin_path=None, rev=None):
         """Clone a plugin into a given destination directory
 
         :param git_url: Plugin's Git URL
-        :param dest_dir: destination where to clone a plugin into (if 'source'
-          is a Git URL)
         :param repo_plugin_path: path in the Git repo where the infrared plugin
           is defined
         :param rev: git branch/tag/revision
         :return: Path to plugin cloned directory (str)
         """
-        dest_dir = os.path.abspath(dest_dir or "plugins")
         plugin_git_name = os.path.split(git_url)[-1].split('.')[0]
 
         tmpdir = tempfile.mkdtemp(prefix="ir-")
@@ -289,33 +295,11 @@ class InfraredPluginManager(object):
 
         plugin_tmp_source = os.path.join(tmpdir, plugin_git_name)
         if repo_plugin_path:
-            plugin_tmp_source = os.path.join(plugin_tmp_source, repo_plugin_path)
-
-        # validate & load spec data in order to pull the name of the plugin
-        spec_data = InfraredPlugin.spec_validator(
-            os.path.join(plugin_tmp_source, InfraredPlugin.PLUGIN_SPEC_FILE))
-        # get the real plugin name from spec
-        plugin_dir_name = spec_data["subparsers"].keys()[0]
-
-        plugin_source = os.path.join(dest_dir, plugin_dir_name)
-        if os.path.islink(plugin_source):
-            LOG.debug("%s found as symlink pointing to %s, unlinking it, not touching the target.",
-                      plugin_source,
-                      os.path.realpath(plugin_source))
-            os.unlink(plugin_source)
-        elif os.path.exists(plugin_source):
-            shutil.rmtree(plugin_source)
-
-        shutil.copytree(os.path.join(tmpdir, plugin_git_name),
-                        plugin_source)
-
-        if repo_plugin_path:
-            plugin_source = plugin_source + '/' + repo_plugin_path
+            plugin_tmp_source = os.path.join(plugin_tmp_source,
+                                             repo_plugin_path)
 
         os.chdir(cwd)
-        shutil.rmtree(tmpdir)
-
-        return plugin_source
+        return plugin_tmp_source
 
     def update_plugin(self, plugin_name, revision=None,
                       skip_reqs=False, hard_reset=False):
@@ -402,7 +386,7 @@ class InfraredPluginManager(object):
                 " and manually resolve Git issues.\n"
                 "{}\n{}".format(plugin.path, ex.stdout, ex.stderr))
 
-    def add_plugin(self, plugin_source, rev=None, dest=None):
+    def add_plugin(self, plugin_source, rev=None, plugins_registry=None):
         """Adds (install) a plugin
 
         :param plugin_source: Plugin source.
@@ -410,58 +394,75 @@ class InfraredPluginManager(object):
             1. Plugin name (from available in registry)
             2. Path to a local directory
             3. Git URL
-        :param dest: destination where to clone a plugin into (if 'source' is
           a Git URL)
         :param rev: git branch/tag/revision
         """
+
+        if self.config_file is None:
+            raise IRNoActiveWorkspaceFound()
+
+        plgns_rgstr = plugins_registry or PLUGINS_REGISTRY
         plugin_data = {}
         # Check if a plugin is in the registry
-        if plugin_source in PLUGINS_REGISTRY:
-            plugin_data = PLUGINS_REGISTRY[plugin_source]
-            plugin_source = PLUGINS_REGISTRY[plugin_source]['src']
-
-        # Local dir plugin
-        if os.path.exists(plugin_source):
-            pass
-        # Git Plugin
+        if os.path.isfile(plugin_source):
+            with open(plugin_source) as fd:
+                plgns_rgstr = yaml.load(fd)
+                self.add_all_available(plugins_registry=plgns_rgstr)
         else:
-            if rev is None:
-                rev = plugin_data.get('rev')
-            plugin_src_path = plugin_data.get('src_path', '')
-            plugin_source = self._clone_git_plugin(
-                plugin_source, plugin_src_path, rev,
-                dest)
+            if plugin_source in plgns_rgstr:
+                plugin_data = plgns_rgstr[plugin_source]
+                plugin_source = plgns_rgstr[plugin_source]['src']
 
-        plugin = InfraredPlugin(plugin_source)
-        plugin_type = plugin.config['plugin_type']
-        # FIXME(yfried) validate spec and throw exception on missing input
+            #
+            # Local dir plugin
+            #
+            rm_source = False
+            if len(plugin_source.split(":")) > 1:
+                #
+                # Git Plugin
+                #
+                if rev is None:
+                    rev = plugin_data.get('rev')
+                plugin_src_path = plugin_data.get('src_path', '')
+                plugin_source = self._clone_git_plugin(
+                    plugin_source, plugin_src_path, rev)
+                rm_source = True
 
-        if plugin_type not in self.config.options(
-                self.SUPPORTED_TYPES_SECTION):
-            raise IRFailedToAddPlugin(
-                "Unsupported plugin type: '{}'".format(plugin_type))
+            plugin = InfraredPlugin(plugin_source)
+            plugin_type = plugin.config['plugin_type']
 
-        if not self.config.has_section(plugin_type):
-            self.config.add_section(plugin_type)
-        elif self.config.has_option(plugin_type, plugin.name):
-            raise IRFailedToAddPlugin(
-                "Plugin with the same name & type already exists")
+            if plugin_type not in self.config.options(
+                    self.SUPPORTED_TYPES_SECTION):
+                raise IRFailedToAddPlugin(
+                    "Unsupported plugin type: '{}'".format(plugin_type))
 
-        self.config.set(plugin_type, plugin.name, plugin.path)
+            if not self.config.has_section(plugin_type):
+                self.config.add_section(plugin_type)
+            elif self.config.has_option(plugin_type, plugin.name):
+                raise IRFailedToAddPlugin(
+                    "Plugin with the same name & type already exists")
 
-        with open(self.config_file, 'w') as fp:
-            self.config.write(fp)
+            dest = os.path.join(self.plugins_dir, plugin.name)
+            shutil.copytree(plugin_source, dest)
+            if rm_source:
+                shutil.rmtree(plugin_source)
+            self.config.set(plugin_type, plugin.name, dest)
 
-        self._install_requirements(plugin_source)
-        self._load_plugins()
+            with open(self.config_file, 'w') as fp:
+                self.config.write(fp)
 
-    def add_all_available(self):
+            self._install_requirements(plugin_source)
+            self._load_plugins()
+
+    def add_all_available(self, plugins_registry=None):
         """Add all available plugins which aren't already installed"""
-        for plugin in set(PLUGINS_REGISTRY) - \
+        plgns_rgstr = plugins_registry or PLUGINS_REGISTRY
+        for plugin in set(plgns_rgstr) - \
                 set(self.PLUGINS_DICT):
-            self.add_plugin(plugin)
+            self.add_plugin(plugin, plugins_registry=plgns_rgstr)
             LOG.warning(
-                "Plugin '{}' has been successfully installed".format(plugin))
+                "Plugin '{}' has been successfully installed".format(
+                    plugin))
 
     def remove_plugin(self, plugin_name):
         """Removes an installed plugin
@@ -475,6 +476,7 @@ class InfraredPluginManager(object):
 
         plugin = InfraredPluginManager.get_plugin(plugin_name)
 
+        shutil.rmtree(plugin.path)
         self.config.remove_option(plugin.type, plugin_name)
         if not self.config.options(plugin.type):
             self.config.remove_section(plugin.type)
@@ -502,30 +504,34 @@ class InfraredPluginManager(object):
             pip.main(args=pip_args)
 
     def freeze(self):
+        if self.config_file is None:
+            raise IRNoActiveWorkspaceFound()
+        registry = {}
         for section in self.config.sections():
-            if section == "supported_types":
+            if section in ["supported_types", "git_orgs"]:
                 continue
             for name, path in self.config.items(section):
-                if name not in PLUGINS_REGISTRY:
+                if name not in registry:
                     with open(os.path.join(path, "plugin.spec"), "r") as pls:
                         plugin_spec = yaml.load(pls)
-                    PLUGINS_REGISTRY[name] = dict(
+                    registry[name] = dict(
                         type=plugin_spec["plugin_type"],
                         desc=plugin_spec[
                             "subparsers"].items()[0][1]["description"])
                 try:
                     repo = git.Repo(path)
-                    PLUGINS_REGISTRY[name]["src"] = list(
+                    registry[name]["src"] = list(
                         repo.remote().urls)[-1].encode("ascii")
-                    PLUGINS_REGISTRY[name]["rev"] = repo.head.commit.hexsha.encode("ascii")
+                    registry[name]["rev"] = repo.head.commit.hexsha.encode("ascii")
                 except git.InvalidGitRepositoryError:
-                    PLUGINS_REGISTRY[name]["src"] = path.replace(
-                        "".join([os.path.split(PLUGINS_DIR)[0],
-                                 os.path.sep]), "")
+                    registry[name]["src"] = path.replace(
+                        "".join([os.path.split(
+                            os.path.dirname(
+                                PLUGINS_REGISTRY_FILE))[0], os.path.sep]), "")
 
-        with open(PLUGINS_REGISTRY_FILE, "w") as fd:
-            yaml.dump(PLUGINS_REGISTRY, fd, default_flow_style=False,
-                      explicit_start=True, allow_unicode=True)
+        for k, v in registry.iteritems():
+            print(yaml.dump({k: v}, default_flow_style=False,
+                            explicit_start=False, allow_unicode=True))
 
 
 class InfraredPlugin(object):

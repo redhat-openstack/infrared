@@ -437,6 +437,12 @@ class WorkspaceManager(object):
                 shutil.rmtree(tmp_dir)
 
         new_workspace._populate_paths()
+        # NOTE(oanufrii): Because of installed plugins are now in
+        #                 workspace, they export and import with workspace.
+        #                 '.imported' semaphore putted to fresh imported
+        #                 workspace to make PluginManager install plugins
+        #                 python dependensies on next run.
+        open(os.path.join(new_workspace.path, '.imported'), 'a').close()
         self.activate(new_workspace.name)
 
     def is_active(self, name):

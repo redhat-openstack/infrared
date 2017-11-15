@@ -274,13 +274,14 @@ def test_add_plugin_unsupported_type(plugin_manager_fixture):
         "Plugins configuration file has been modified."
 
 
-def test_remove_plugin(plugin_manager_fixture):
+def test_remove_plugin(plugin_manager_fixture, mocker):
     """ Tests the ability to remove a plugin
 
     :param plugin_manager_fixture: Fixture object which yields
     InfraredPluginManger object
     """
 
+    mocker.patch('infrared.core.services.plugins.shutil.rmtree')
     plugins_conf = {}
     for plugin_dir in ('type1_plugin1', 'type1_plugin2', 'type2_plugin1'):
         plugin_dict = get_plugin_spec_flatten_dict(
@@ -345,7 +346,7 @@ def test_remove_unexisting_plugin(plugin_manager_fixture):
         supported_type1=dict(
             type1_plugin1='tests/example/plugins/type1_plugin1'))),
 ])
-def test_plugin_cli(plugin_manager_fixture, input_args, plugins_conf):
+def test_plugin_cli(plugin_manager_fixture, mocker, input_args, plugins_conf):
     """Tests that plugin CLI works
 
     :param plugin_manager_fixture: Fixture object which yields
@@ -353,6 +354,7 @@ def test_plugin_cli(plugin_manager_fixture, input_args, plugins_conf):
     :param input_args: infrared's testing arguments
     :param plugins_conf: Plugins conf data as a dictionary
     """
+    mocker.patch("infrared.core.services.plugins.shutil.rmtree")
     plugin_manager_fixture(plugins_conf)
 
     from infrared.main import main as ir_main
@@ -446,16 +448,14 @@ def test_plugin_with_unsupporetd_option_type_in_spec(plugin_manager_fixture):
         ir_main([plugin_dict['name'], '--help'])
 
 
-@pytest.mark.parametrize("dest,real_dest", [(
-    SAMPLE_PLUGINS_DIR, SAMPLE_PLUGINS_DIR),
-    (None, "plugins")])
-def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
+def test_add_plugin_from_git(plugin_manager_fixture, mocker):
 
     plugin_manager = plugin_manager_fixture()
 
     mock_git = mocker.patch("infrared.core.services.plugins.git.Repo")
     mock_os = mocker.patch("infrared.core.services.plugins.os")
     mock_os.path.exists.return_value = False
+    mock_os.path.isfile = os.path.isfile
     mock_os.listdir.return_value = ["sample_plugin"]
     mock_tempfile = mocker.patch("infrared.core.services.plugins.tempfile")
     mock_shutil = mocker.patch("infrared.core.services.plugins.shutil")
@@ -467,9 +467,7 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
 
     # add_plugin call
     plugin_manager.add_plugin(
-        "https://sample_github.null/plugin_repo.git", dest=dest, rev="test")
-
-    mock_os.path.abspath.assert_has_calls([mocker.call(real_dest)])
+        "https://sample_github.null/plugin_repo.git", rev="test")
 
     mock_tempfile.mkdtemp.assert_called_once()
     mock_os.getcwdu.assert_called_once()
@@ -477,13 +475,12 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
     mock_git.clone_from.assert_called_with(
         url='https://sample_github.null/plugin_repo.git',
         to_path=mock_os.path.join.return_value)
-    mock_os.join.has_call(real_dest, mock_os.listdir.return_value[0])
     mock_os.join.has_call(mock_tempfile.mkdtemp.return_value,
                           mock_os.listdir.return_value[0])
     mock_shutil.copytree.assert_called_with(mock_os.path.join.return_value,
                                             mock_os.path.join.return_value)
     mock_os.chdir.assert_has_calls(mock_os.getcwdu.return_value)
-    mock_shutil.rmtree.assert_called_with(mock_tempfile.mkdtemp.return_value)
+    mock_shutil.rmtree.assert_called_with(mock_os.path.join.return_value)
 
 
 def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
@@ -521,7 +518,8 @@ def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
         plugin_manager.add_plugin(
             "https://sample_github.null/plugin_repo.git")
 
-    mock_shutil.rmtree.assert_called_with(mock_tempfile.mkdtemp.return_value)
+    mock_shutil.rmtree.assert_called_with(
+        os.path.join(mock_tempfile.mkdtemp.return_value, 'plugin_repo'))
     # clean tmp folder
     shutil.rmtree(mock_tempfile.mkdtemp.return_value)
 
@@ -531,8 +529,10 @@ def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
         to_path=os.path.join(mock_tempfile.mkdtemp.return_value, "plugin_repo"))
 
     # check that it was copied with the plugin name and not repo name
-    mock_shutil.copytree.assert_called_with(os.path.join(mock_tempfile.mkdtemp.return_value, "plugin_repo"),
-                                            os.path.join(os.path.abspath("plugins"), plugin_dict["name"]))
+    mock_shutil.copytree.assert_called_with(
+        os.path.join(mock_tempfile.mkdtemp.return_value, "plugin_repo"),
+        os.path.join(CoreServices.plugins_manager().plugins_dir,
+                     'type1_plugin1'))
 
 
 def test_add_plugin_from_git_exception(plugin_manager_fixture, mocker):
@@ -547,6 +547,7 @@ def test_add_plugin_from_git_exception(plugin_manager_fixture, mocker):
     mock_shutil = mocker.patch("infrared.core.services.plugins.shutil")
     mock_os = mocker.patch("infrared.core.services.plugins.os")
     mock_os.path.exists.return_value = False
+    mock_os.path.isfile = os.path.isfile
 
     # add_plugin call
     with pytest.raises(IRFailedToAddPlugin):
