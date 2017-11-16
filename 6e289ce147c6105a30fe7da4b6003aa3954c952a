@@ -1,0 +1,216 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "139315d4_a363d21d",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1009826
+      },
+      "writtenOn": "2017-11-16T14:46:48Z",
+      "side": 1,
+      "message": "i would prefer to leave plugin_type on the level it is (top level of yaml).\nIMO, dependencies list should be on the top level too\n\nplugin_type: \"...\"\ndependencies:\n  - dep1: ...\n  - dep2: ...\n  ...\n  - depN: ...\nsubparsers:\n  ...",
+      "range": {
+        "startLine": 181,
+        "startChar": 30,
+        "endLine": 181,
+        "endChar": 61
+      },
+      "revId": "6e289ce147c6105a30fe7da4b6003aa3954c952a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "016947ba_3122f87a",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1009826
+      },
+      "writtenOn": "2017-11-16T14:46:48Z",
+      "side": 1,
+      "message": "I would prefer to replace is with \u0027plugin_type\u003dNone\u0027\n\nand check\n\nif plugin_type and plugin.type in self.supported_plugin_types and plugin_type \u003d\u003d plugin.type:\n    ... install plugin ...\nelse:\n    raise SomeSpecialException()\n\nthis way you don\u0027t need _install_dependencies\n\njust add to add_plugin:\n\nfor dependency in plugin.dependencies:\n    plugin_source \u003d dependency[\"plugin\"]\n    plugin_rev \u003d dependency[\"revision\"] \\\n        if \"revision\" in dependency else None\n    try:\n        self.add_plugin(source, revision, type)...\n    except IR...pluginExcists...:\n        LOG.warn(...)",
+      "range": {
+        "startLine": 413,
+        "startChar": 19,
+        "endLine": 413,
+        "endChar": 38
+      },
+      "revId": "6e289ce147c6105a30fe7da4b6003aa3954c952a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68104751_e0cb27ef",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 661,
+      "author": {
+        "id": 1009826
+      },
+      "writtenOn": "2017-11-16T14:46:48Z",
+      "side": 1,
+      "message": "Should be {}",
+      "range": {
+        "startLine": 661,
+        "startChar": 19,
+        "endLine": 661,
+        "endChar": 21
+      },
+      "revId": "6e289ce147c6105a30fe7da4b6003aa3954c952a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66b46f0b_adc45901",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 675,
+      "author": {
+        "id": 1009826
+      },
+      "writtenOn": "2017-11-16T14:46:48Z",
+      "side": 1,
+      "message": "Please, remove this parameters from __init__ either remove them from validate_from_* methods.\n\nThis way you\u0027ll be able to unify usage of SpecValidator and avoid extra checks",
+      "range": {
+        "startLine": 675,
+        "startChar": 23,
+        "endLine": 675,
+        "endChar": 56
+      },
+      "revId": "6e289ce147c6105a30fe7da4b6003aa3954c952a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae21fa7e_b31bd7d1",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 699,
+      "author": {
+        "id": 1009826
+      },
+      "writtenOn": "2017-11-16T14:46:48Z",
+      "side": 1,
+      "message": "a bit confusing\nIMO content is a dict (result of yaml.load())\n\nCurrent implementation of validate_from_* differs by opened file (passed filename to one, and opened file object in other)",
+      "range": {
+        "startLine": 699,
+        "startChar": 51,
+        "endLine": 699,
+        "endChar": 53
+      },
+      "revId": "6e289ce147c6105a30fe7da4b6003aa3954c952a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "155b9f53_ac2dfcf7",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1009826
+      },
+      "writtenOn": "2017-11-16T14:46:48Z",
+      "side": 1,
+      "message": "i\u0027d prefer this method accept dict as spec_content, not file object",
+      "range": {
+        "startLine": 703,
+        "startChar": 36,
+        "endLine": 703,
+        "endChar": 48
+      },
+      "revId": "6e289ce147c6105a30fe7da4b6003aa3954c952a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6b49bf5_243fe463",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 762,
+      "author": {
+        "id": 1009826
+      },
+      "writtenOn": "2017-11-16T14:46:48Z",
+      "side": 1,
+      "message": "please take a look at\nhttps://github.com/Grokzen/pykwalify\nor even https://stackoverflow.com/a/22231372\n\nI have experience of json validation an found jsonschema package pretty stable and useful",
+      "range": {
+        "startLine": 720,
+        "startChar": 1,
+        "endLine": 762,
+        "endChar": 60
+      },
+      "revId": "6e289ce147c6105a30fe7da4b6003aa3954c952a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a3842c4_61b631b9",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 766,
+      "author": {
+        "id": 1009826
+      },
+      "writtenOn": "2017-11-16T14:46:48Z",
+      "side": 1,
+      "message": "same here (use schema validators)",
+      "revId": "6e289ce147c6105a30fe7da4b6003aa3954c952a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65f376d2_c1062873",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 815,
+      "author": {
+        "id": 1009826
+      },
+      "writtenOn": "2017-11-16T14:46:48Z",
+      "side": 1,
+      "message": "same here (use schema validators)",
+      "revId": "6e289ce147c6105a30fe7da4b6003aa3954c952a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ce74c7d_948eb83b",
+        "filename": "tests/example/plugins/plugin_with_none_library_dependencies/plugin.spec",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1009826
+      },
+      "writtenOn": "2017-11-16T14:46:48Z",
+      "side": 1,
+      "message": "plugin_with_nonlibrary_dependencies/plugin.spec",
+      "revId": "6e289ce147c6105a30fe7da4b6003aa3954c952a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
