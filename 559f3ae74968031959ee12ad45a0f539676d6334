@@ -16,6 +16,24 @@
       "revId": "559f3ae74968031959ee12ad45a0f539676d6334",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "455f098a_20a03c02",
+        "filename": "plugins/openstack/tasks/servers.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1009826
+      },
+      "writtenOn": "2017-11-16T15:10:33Z",
+      "side": 1,
+      "message": "\u003e\u003e or does it work that way - that it removes all eth1+ gw\u0027s and leaves just one at the end?\n\n+\n\n\n\u003e\u003e also maybe this whole could be conditional only if config_drive is set ... not sure what is better (to run this always - should be kind of safe (given commands exist in image) almost noop for case of metadata-svc (extra ifcs will be already down ... ?) ... or only for config-drive (but not having this code tested by gate/...)\n\nThis code affects only config-drive case.\nWith metadata server only eth0 configured by dhcp.\nRest interfaces just unconfigured. Thus, setting them down is safe. (InfraRed openstack plugin restart interfaces on configuration)\n\nBy the way, this patch passed gates successfuly",
+      "parentUuid": "702ad0f9_8ad6b878",
+      "revId": "559f3ae74968031959ee12ad45a0f539676d6334",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
