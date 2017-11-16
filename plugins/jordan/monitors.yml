@@ -1,0 +1,14 @@
+---
+- name: ceph monitor validation tests
+  hosts: "{{ test.monitor.nodes }}"
+  tasks:
+    - name: get monitors status
+      shell: 'ceph status --format json'
+      become: true
+      register: ceph_status
+      run_once: yes
+
+    - name: validate monitors health status
+      include: tasks/check_monitors_health.yml
+      with_items: "{{ (ceph_status.stdout|from_json).health.timechecks.mons }}"
+      run_once: yes

@@ -1,0 +1,7 @@
+---
+
+- name: check client permissions on pool
+  fail:
+    msg: 'the client {{ test.openstack.client.name }} does not have the right permissions on pool {{ item }}'
+  when: not (client_info.stdout|from_json)[0].caps.osd | search("allow rwx pool={{ item }}" )
+  run_once: yes

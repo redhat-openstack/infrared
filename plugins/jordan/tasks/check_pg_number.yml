@@ -1,0 +1,24 @@
+---
+- name: get pool's pg_num
+  shell: "ceph osd pool get {{ item }} pg_num --format json"
+  become: true
+  run_once: true
+  register: pg_num
+
+- name: is pg_num equal to value
+  fail:
+    msg: "the pg_num of {{ item }} is not equal to {{ test.pool.pg_num }}"
+  when: (pg_num.stdout|from_json).pg_num != {{ test.pool.pg_num }}
+  run_once: true
+
+- name: get pool's pgp_num
+  shell: "ceph osd pool get {{ item }} pgp_num --format json"
+  become: true
+  run_once: true
+  register: pgp_num
+
+- name: is pgp_num equal to value
+  fail:
+    msg: "the pgp_num of {{ item }} is not equal to {{ test.pool.pgp_num }}"
+  when: (pgp_num.stdout|from_json).pgp_num != {{ test.pool.pgp_num }}
+  run_once: true

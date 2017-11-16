@@ -1,0 +1,26 @@
+---
+- name: validate ceph osds status
+  hosts: "{{ test.monitor.nodes }}"
+  tasks:
+    - name: Get number of OSDs in cluster
+      shell: "ceph status --format json"
+      become: yes
+      register: cluster_status
+      run_once: yes
+
+    - name: check OSDs were created
+      fail:
+        msg: "number of OSDs is {{ (cluster_status.stdout|from_json).osdmap.osdmap.num_osds }}"
+      when: (cluster_status.stdout|from_json).osdmap.osdmap.num_osds != {{ test.osds.number }}
+      run_once: yes
+
+    - name: get osds list
+      shell: "ceph osd tree --format json"
+      become: true
+      register: osds_list
+      run_once: yes
+
+    - name: check osds status
+      include: tasks/check_osds_status.yml
+      with_items: '{{ (osds_list.stdout|from_json).nodes }}'
+      run_once: yes

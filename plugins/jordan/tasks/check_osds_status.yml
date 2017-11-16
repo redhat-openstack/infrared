@@ -1,0 +1,10 @@
+---
+- name: is osd up
+  fail:
+    msg: '{{ item.name }} status is {{ item.status }}'
+  when: item.type == "osd" and item.status != "up"
+
+- name: is osd in
+  fail:
+    msg: '{{ item.name }} status is not in'
+  when: item.type == "osd" and item.reweight != 1

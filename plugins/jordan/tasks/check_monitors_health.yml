@@ -1,0 +1,6 @@
+---
+- name: is monitor health ok
+  fail:
+    msg: 'the monitor {{ item.name }} status is: {{ item.health }}'
+  when: item.health != "HEALTH_OK"
+  run_once: yes

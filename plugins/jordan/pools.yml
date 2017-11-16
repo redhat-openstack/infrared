@@ -1,0 +1,11 @@
+---
+- name: validate pools parameters
+  hosts: "{{ test.monitor.nodes }}"
+  tasks:
+    - name: validate pg_num and pgp_num in a pool
+      include: tasks/check_pg_number.yml
+      with_items: "{{ test.ceph.pools.split(',') }}"
+
+    - name: validate size of a pool
+      include: tasks/check_size.yml
+      with_items: "{{ test.ceph.pools.split(',') }}"

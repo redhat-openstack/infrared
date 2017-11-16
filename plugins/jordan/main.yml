@@ -1,0 +1,15 @@
+---
+- include: "{{ cluster_check | default('cluster.yml') }}"
+  when: test.check.cluster|default(True)
+
+- include: "{{ monitor_check | default('monitors.yml') }}"
+  when: test.check.monitors|default(True)
+
+- include: "{{ osds_check | default('osds.yml') }}"
+  when: test.check.osds|default(True)
+
+- include: "{{ pools_check | default('pools.yml') }}"
+  when: test.check.pools|default(True)
+
+- include: "{{ client_check | default('clients.yml') }}"
+  when: test.check.clients|default(True)

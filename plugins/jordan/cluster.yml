@@ -1,0 +1,15 @@
+---
+- name: Check cluster status
+  hosts: "{{ test.monitor.nodes }}"
+  tasks:
+    - name: collect Ceph cluster status
+      shell: "ceph status --format json"
+      become: true
+      register: cluster_status
+      run_once: yes
+
+    - name: Check cluster's health
+      fail:
+        msg: "The cluster is not healthy, the cluster status is: {{ (cluster_status.stdout|from_json).health.overall_status }}"
+      when: ((cluster_status.stdout|from_json).health.overall_status == "HEALTH_ERR")
+      run_once: yes

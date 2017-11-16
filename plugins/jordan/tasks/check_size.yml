@@ -1,0 +1,24 @@
+  ---
+  - name: get pool's size
+    shell: "ceph osd pool get {{ item }} size --format json"
+    become: true
+    run_once: true
+    register: size
+
+  - name: is size equal to value
+    fail:
+      msg: "the size of {{ item }} is not equal to {{ test.pool.size }}"
+    when: (size.stdout|from_json).size != {{ test.pool.size }}
+    run_once: true
+
+  - name: get pool's min_size
+    shell: "ceph osd pool get {{ item }} min_size --format json"
+    become: true
+    run_once: true
+    register: min_size
+
+  - name: is min_size equal to value
+    fail:
+      msg: "the min_size of {{ item }} is not equal to {{ test.pool.min_size }}"
+    when: (min_size.stdout|from_json).min_size != {{ test.pool.min_size }}
+    run_once: true

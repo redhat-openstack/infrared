@@ -1,0 +1,18 @@
+---
+- name: ceph clients validation tests
+  hosts: "{{ test.monitor.nodes }}"
+  tasks:
+    - name: get openstack's services client details
+      shell: 'ceph auth get client.openstack --format json'
+      become: true
+      register: client_info
+      run_once: yes
+
+    - name: validate client read permissions on monitors
+      fail:
+        msg: 'WRONG PERMISSIONS BUTTHEAD'
+      when: not (client_info.stdout|from_json)[0].caps.mon | search("allow r")
+
+    - name: validate client permissions on pools
+      include: tasks/check_pool_permissions.yml variable='client_info'
+      with_items: "{{ test.ceph.pools.split(',') }}"
