@@ -23,7 +23,7 @@
           'disk_bytes': '`virsh domblkinfo {{ item }} vda | grep -e Capacity | cut -d\: -f2 | xargs`',
           'disks': '${disks_list}',
       }"
-  with_items: "{{ install.scale.nodes }}"
+  with_items: "{{ install.scale.nodes|sort }}"
   register: nodes_info
   tags:
       - skip_ansible_lint
