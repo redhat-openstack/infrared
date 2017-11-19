@@ -1,23 +1,48 @@
 ---
-- name: Reboot {{ node_name }}
-  become: true
-  shell: "sleep 2; shutdown -r now"
-  async: 1
-  poll: 0
-  ignore_errors: true
+- block:
+    - name: register latest installed kernel version
+      shell: |
+        rpm -qa | grep ^kernel-[0-9] | sort | tail -1 | awk -F 'kernel-' {'print $2'}
+      register: installed_kernel
+
+    - name: register loaded kernel
+      command: uname -r
+      register: loaded_kernel
+
+    - name: register installed openvswitch package version
+      shell: |
+        rpm --queryformat %{VERSION} -q openvswitch | awk -F "." '{print $1"."$2}'
+      register: installed_ovs
+
+    - name: register loaded openvswitch version
+      shell: |
+        ovs-vsctl show | grep ovs_version | awk -F \" {'print $2'} | awk -F "." '{print $1"."$2}'
+      become: true
+      become_user: root
+      register: loaded_ovs
   delegate_to: "{{ node_name }}"
 
-- name: Wait for {{ node_name }} to go down
-  command: "ping -c1 {{ hostvars[node_name].ansible_ssh_host }}"
-  ignore_errors: true
-  register: node_down
-  until: node_down.rc != 0
-  retries: 30
-  delay: 5
+- block:
+    - name: Reboot {{ node_name }}
+      become: true
+      shell: "sleep 2; shutdown -r now"
+      async: 1
+      poll: 0
+      ignore_errors: true
+      delegate_to: "{{ node_name }}"
 
-- name: waiting for the {{ node_name }} to be available
-  wait_for:
-      port: 22
-      host: "{{ hostvars[node_name].ansible_ssh_host }}"
-      search_regex: OpenSSH
+    - name: Wait for {{ node_name }} to go down
+      command: "ping -c1 {{ hostvars[node_name].ansible_ssh_host }}"
+      ignore_errors: true
+      register: node_down
+      until: node_down.rc != 0
+      retries: 30
       delay: 5
+
+    - name: waiting for the {{ node_name }} to be available
+      wait_for:
+          port: 22
+          host: "{{ hostvars[node_name].ansible_ssh_host }}"
+          search_regex: OpenSSH
+          delay: 5
+  when: (installed_kernel.stdout != loaded_kernel.stdout) or (installed_ovs.stdout != loaded_ovs.stdout)

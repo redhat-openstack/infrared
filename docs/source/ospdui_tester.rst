@@ -66,6 +66,29 @@ Optional arguments::
     * ``--browser``: the webdriver to use. Default browser is firefox
     * ``--setup``: specifies the config parameters for the tester. See `Advanced configuration`_ for details
     * ``--undercloudrc``: the absolute or relative path to the undercloud rc file. By default, the 'stackrc' file from the workspace dir will be used.
+    * ``--topology-config``: the absolute or relative path to the topology configuration in json format. By default the following file is used::
+
+        {
+          "topology": {
+            "Controller": "3",
+            "Compute": "1",
+            "Ceph Storage": "3",
+            "Object Storage": "0",
+            "Block Storage": "0"
+          },
+          "network": {
+            "vlan": "10",
+            "allocation_pool_start": "192.168.200.10",
+            "allocation_pool_end": "192.168.200.150",
+            "gateway": "192.168.200.254",
+            "subnet_cidr": "192.168.200.0/24",
+            "allocation_pool_start_ipv6": "2001:db8:ca2:4::0010",
+            "allocation_pool_end_ipv6": "2001:db8:ca2:4::00f0",
+            "gateway_ipv6": "2001:db8:ca2:4::00fe",
+            "subnet_cidr_ipv6": "2001:db8:ca2:4::/64"
+          }
+        }
+
 
 
 Advanced configuration

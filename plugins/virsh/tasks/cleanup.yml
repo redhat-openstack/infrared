@@ -43,7 +43,7 @@
   with_items: "{{ vm_names.list_vms }}"
   when: provision.bootmode == 'uefi'
 
-- name: destroy undfined vms
+- name: destroy undefined vms
   virt:
       name: "{{ item }}"
       state: destroyed
@@ -56,7 +56,7 @@
   with_items: "{{ vm_names.list_vms }}"
   when: provision.bootmode != 'uefi'
 
-- name: Clean /etc/hostshosts file
+- name: Clean /etc/hosts file
   become: yes
   lineinfile:
       dest: /etc/hosts

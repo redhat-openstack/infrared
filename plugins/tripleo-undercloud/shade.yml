@@ -11,16 +11,10 @@
           name: "{{ shade_group|first }}"
           groups: "shade"
 
-      - name: update inventory
-        template:
-            dest: "{{ inventory_dir }}/hosts-install"
-            src: inventory.j2
-
-      - name: update inventory file symlink
-        file:
-            src: "hosts-install"
-            dest: "{{ inventory_dir }}/hosts"
-            state: link
+      - include_role:
+            name: inventory-update
+        vars:
+            inventory_file_name: 'hosts-install'
 
 - name: Prepare shade node
   hosts: shade
@@ -28,44 +22,5 @@
   gather_facts: yes
   become: yes
   any_errors_fatal: true
-  tasks:
-      - block:
-          - name: install virtualenv requirments for pip
-            become: yes
-            package:
-                name: "{{ item }}"
-                state: present
-            with_items:
-               - gcc
-               - python-devel
-               - python-setuptools
-               - libffi-devel
-
-          - name: install pip
-            easy_install:
-                name: pip
-
-          - name: install virtualenv pip module
-            pip:
-                name: virtualenv
-                version: 15.0.3
-
-          # required to avoid any conflicts in venv with
-          # different packages versions (especially shade)
-          - name: cleanup shade venv if present
-            file:
-                state: absent
-                path: "/var/tmp/venv_shade"
-
-          - name: create shade virtualenv
-            pip:
-                name: "{{ item.key }}"
-                version: "{{ item.value }}"
-                virtualenv: "{{ path_venv }}"
-            with_dict:
-                setuptools: "17.0"
-                pytz: "2016.4"
-                shade: "1.22.2"
-                pip: "9.0.1"
-        vars:
-            path_venv: "/var/tmp/venv_shade"
+  roles:
+      - role: shade

@@ -7,10 +7,12 @@
       template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
       roles_base: "/usr/share/openstack-tripleo-heat-templates/roles"
       flavor_name_mapping:
-         Controller: Control
-         ObjectStorage: SwiftStorage
+          Controller: Control
+          ObjectStorage: SwiftStorage
+      role_names_mapping:
+          ceph: CephStorage
+          swift: ObjectStorage
   tasks:
-
       - name: create roles folder
         file:
             path: "{{ template_base }}/roles"
@@ -27,13 +29,30 @@
             source ~/stackrc
             bash "{{ template_base }}/roles/tripleo_roles.sh" &> roles_data.log
         register: roles_data
-        ignore_errors: yes
 
       - name: create the nodes file
+        vars:
+            ipv6_postfix: "{{  (install.network.protocol == 'ipv4') | ternary('', '-v6')}}"
+            ipv6_postfix_underscore: "{{  (install.network.protocol == 'ipv4') | ternary('', '_v6')}}"
         template:
             src: tripleo_roles/nodes.yaml.j2
             dest: "{{ template_base }}/roles/nodes.yaml"
             force: yes
+
+      - name: replace '%stackname%- in host name formats
+        replace:
+            path: "{{ template_base }}/roles/roles_data.yaml"
+            regexp: "HostnameFormatDefault: '%stackname%-(.*)'"
+            replace: 'HostnameFormatDefault: "\1"'
+
+      - name: replace host names for roles
+        replace:
+            path: "{{ template_base }}/roles/roles_data.yaml"
+            regexp: 'HostnameFormatDefault: "{{ item.old }}-(.*)"'
+            replace: 'HostnameFormatDefault: "{{ item.new }}-\1"'
+        with_items:
+            - old: novacompute
+              new: compute
 
 - name: Deploy the Overcloud with composable roles
   include: "{{ overcloud_deploy | default('deploy.yml') }}"

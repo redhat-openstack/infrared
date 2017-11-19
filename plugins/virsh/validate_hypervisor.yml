@@ -13,13 +13,13 @@
             loop_var: node
 
       - debug:
-            msg: "Current free memory is {{ ansible_memfree_mb }}MB. The required memory for the topology is {{ nodes_memory }}MB and it is more than free memory, but it is under the buffer of 20%."
+            msg: "Current free memory is {{ ansible_memory_mb.nocache.free }}MB. The required memory for the topology is {{ nodes_memory }}MB and it is more than free memory, but it is under the buffer of 20%."
         when:
-            - nodes_memory|int > ansible_memfree_mb|int
-            - nodes_memory|int <= ansible_memfree_mb|int * memory_buffer|float
+            - nodes_memory|int > ansible_memory_mb.nocache.free|int
+            - nodes_memory|int <= ansible_memory_mb.nocache.free|int * memory_buffer|float
 
       - fail:
-            msg: "Not enought memory on Hypervisor. Current free memory is {{ ansible_memfree_mb }}MB, required is {{ nodes_memory }}MB. Use `--host-memory-overcommit True` if you want to overcommit memory usage"
+            msg: "Not enought memory on Hypervisor. Current free memory is {{ ansible_memory_mb.nocache.free }}MB, required is {{ nodes_memory }}MB. Use `--host-memory-overcommit True` if you want to overcommit memory usage"
         when:
-            - nodes_memory|int > ansible_memfree_mb|int * memory_buffer|float
+            - nodes_memory|int > ansible_memory_mb.nocache.free|int * memory_buffer|float
             - not provision.host.memory.overcommit|default('False')

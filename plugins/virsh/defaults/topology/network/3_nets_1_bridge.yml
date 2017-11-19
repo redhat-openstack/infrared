@@ -49,3 +49,23 @@ networks:
         forward: bridge
         # optionally the nic name can be specified
         # nic: eth1
+
+nodes:
+    default:
+        interfaces:
+            - network: "data"
+            - network: "management"
+            - network: "external"
+        external_network:
+            network: "management"
+    novacontrol:
+        interfaces:
+            - network: "data"
+            - network: "management"
+        external_network:
+            network: "management"
+    odl:
+        interfaces:
+            - network: "management"
+        external_network:
+            network: "management"

@@ -1,6 +1,7 @@
 rr_distro_version: "{{ ansible_distribution_version }}"
 rr_target_directory: /etc/yum.repos.d
 rr_use_public_repos: false
+rr_master_release: queens
 
 # rdo repos
 # can bee overriden with the '-e' cli option.
@@ -13,7 +14,8 @@ rr_rdo_repos:
         ceph:
             package: "centos-release-ceph-{{ (install.version|default(undercloud_version)|openstack_release < 10)|ternary('hammer', 'jewel') }}"
             file_name: "CentOS-Ceph-{{ (install.version|default(undercloud_version)|openstack_release < 10)|ternary('Hammer', 'Jewel') }}.repo"
-    pike_current:
+
+    master_current:
         delorean:
             url: https://trunk.rdoproject.org/centos7-master/current-tripleo/delorean.repo
         delorean_current:
@@ -41,3 +43,27 @@ rr_rdo_repos:
         ceph:
             package: "centos-release-ceph-{{ (install.version|default(undercloud_version)|openstack_release < 10)|ternary('hammer', 'jewel') }}"
             file_name: "CentOS-Ceph-{{ (install.version|default(undercloud_version)|openstack_release < 10)|ternary('Hammer', 'Jewel') }}.repo"
+
+    master_master-tripleo-ci:
+        delorean:
+            url: "https://trunk.rdoproject.org/centos7/current-tripleo/delorean.repo"
+        delorean_deps:
+            url: "https://trunk.rdoproject.org/centos7-master/delorean-deps.repo"
+        ceph:
+            package: "centos-release-ceph-{{ (install.version|default(undercloud_version)|openstack_release < 10)|ternary('hammer', 'jewel') }}"
+            file_name: "CentOS-Ceph-{{ (install.version|default(undercloud_version)|openstack_release < 10)|ternary('Hammer', 'Jewel') }}.repo"
+        delorean_current:
+             url: "https://trunk.rdoproject.org/centos7/current/delorean.repo"
+             type: current
+             packages:
+                 - diskimage-builder
+                 - instack
+                 - instack-undercloud
+                 - os-apply-config
+                 - os-collect-config
+                 - os-net-config
+                 - os-refresh-config
+                 - python-tripleoclient
+                 - openstack-tripleo-*
+                 - openstack-puppet-modules
+                 - puppet-*

@@ -293,6 +293,11 @@ class PluginManagerSpec(api.SpecObject):
             "freeze", help="Run through installed plugins. For git sourced "
             "one writes its current revision to plugins registry.")
 
+        # search all plugins from github organization
+        plugin_subparsers.add_parser(
+            'search', help='Search and list all the available plugins from '
+            "rhos-infra organization on GitHub")
+
     def spec_handler(self, parser, args):
         """Handles all the plugin manager commands
 
@@ -322,6 +327,8 @@ class PluginManagerSpec(api.SpecObject):
         elif subcommand == 'update':
             self.plugin_manager.update_plugin(
                 pargs.name, pargs.revision, pargs.skip_reqs, pargs.hard_reset)
+        elif subcommand == 'search':
+            self._search_plugins()
 
     def _list_plugins(self, print_available=False):
         """Print a list of installed & available plugins"""
@@ -367,6 +374,38 @@ class PluginManagerSpec(api.SpecObject):
             table_headers.append("Description")
 
         print fancy_table(table_headers, *table_rows)
+
+    def _search_plugins(self):
+        """
+        Search git organizations and print a list of available plugins
+        """
+        table_rows = []
+        table_headers = ["Type", "Name", "Description", "Source"]
+
+        plugins_dict = \
+            self.plugin_manager.get_all_git_plugins()
+
+        for plugins_type, plugins in plugins_dict.iteritems():
+            # prepare empty lists
+            all_plugins_list = []
+            plugins_descs = []
+            plugins_sources = []
+
+            for plugin_name in sorted(plugins.iterkeys()):
+                # get all plugin names
+                all_plugins_list.append(plugin_name)
+                # get all plugin descriptions
+                plugins_descs.append(plugins[plugin_name]["desc"])
+                # get all plugins sources
+                plugins_sources.append(plugins[plugin_name]["src"])
+
+            table_rows.append([
+                plugins_type,
+                '\n'.join(all_plugins_list),
+                '\n'.join(plugins_descs),
+                '\n'.join(plugins_sources)])
+
+        print(fancy_table(table_headers, *table_rows))
 
 
 class SSHSpec(api.SpecObject):

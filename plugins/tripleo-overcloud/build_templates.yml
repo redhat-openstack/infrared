@@ -76,13 +76,21 @@
             undercloud_public_ip: "{{ install.public.get('vlan', {}).get('ip', '') }}"
         when: "'hypervisor' not in groups and undercloud_public_ip"
 
+      # ensure we have all envs/roles referenced in deploy script for container image preparation
+      - include: tasks/append_script.yml
+        when:
+            - not overcloud_deploy_script|default('')
+            - install.containers|default('')
+            - install.version|default(undercloud_version)|openstack_release >= 12
+            - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
+
       - include_role: name="containers/prepare-templates"
         tags:
             - containers
         when:
             - install.containers|default('')
-            - install.version|openstack_release >= 12
-            - (install.version|openstack_distribution) == 'OSP'
+            - install.version|default(undercloud_version)|openstack_release >= 12
+            - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
       - include: tasks/append_script.yml
         when: not overcloud_deploy_script|default('')

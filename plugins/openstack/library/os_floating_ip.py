@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 
-ANSIBLE_METADATA = {'metadata_version': '1.0',
+ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
 
@@ -89,6 +89,10 @@ options:
      required: false
      default: false
      version_added: "2.1"
+   availability_zone:
+     description:
+       - Ignored. Present for backwards compatibility
+     required: false
 requirements: ["shade"]
 '''
 
@@ -110,6 +114,17 @@ EXAMPLES = '''
      server: cattle001
      network: ext_net
      fixed_address: 192.0.2.3
+     wait: true
+     timeout: 180
+
+# Assign a new floating IP from the network `ext_net` to the instance fixed
+# ip in network `private_net` of `cattle001`.
+- os_floating_ip:
+     cloud: dguerri
+     state: present
+     server: cattle001
+     network: ext_net
+     nat_destination: private_net
      wait: true
      timeout: 180
 
@@ -196,14 +211,14 @@ def main():
                     network_id = cloud.get_network(name_or_id=network)["id"]
                 else:
                     network_id = None
-                # check if we have floting ip on the given nat_destination network
+                # check if we have floting ip on given nat_destination network
                 if nat_destination:
-                    nat_flaoting_addrs = [addr for addr in server.addresses.get(
+                    nat_floating_addrs = [addr for addr in server.addresses.get(
                         cloud.get_network(nat_destination)['name'], [])
-                                          if addr.addr == public_ip
-                                          and addr['OS-EXT-IPS:type'] == 'floating']
+                        if addr.addr == public_ip and
+                        addr['OS-EXT-IPS:type'] == 'floating']
 
-                    if len(nat_flaoting_addrs) == 0:
+                    if len(nat_floating_addrs) == 0:
                         module.fail_json(msg="server {server} already has a "
                                              "floating-ip on a different "
                                              "nat-destination than '{nat_destination}'"

@@ -76,6 +76,85 @@ InfraRed allows to simplify the process of templates generation and auto-populat
 Defining topology and roles
 ===========================
 
+Deployment approaches with composable roles differ for OSP11 and OSP12+ products.
+
+For OSP11 user should manually compose all the roles templates and provide them to the deploy script.
+For OSP12 and above the tripleo provides the ``openstack overcloud roles generate`` command to automatically generate roles templates.
+See `THT roles`_ for more information about tripleo roles.
+
+OSP12 Deployment
+^^^^^^^^^^^^^^^^
+
+The Infrared provides there options to deploy openstack with composable roles in OSP12+.
+
+**1) Automatically discover roles from the inventory.** In that case Inrared tries to determine what roles should be used basing
+on the list of the ``overcloud_nodes`` from the inventory file. To enable automatic roles discover the ``--role-files``
+option should be set to ``auto`` or any other non-list value (not separated with ','). For example::
+
+    # provision
+    ir virsh -vvvv
+        --topology-nodes=undercloud:1,controller:2,compute:1,networker:1,swift:1 \
+        --host-address=seal52.qa.lab.tlv.redhat.com \
+        --host-key ~/.ssh/my-prov-key
+
+    # do undercloud install [...]
+
+    # overcloud
+    ir tripleo-overcloud -vvvv
+        --version=12 \
+        --deploy=yes \
+        --role-files=auto \
+        --deployment-files=composable_roles \
+        [...]
+
+
+**2) Manually specify roles to use.** In that case user can specify the list roles to use by setting the ``--role-files`` otion
+to the list of roles from the `THT roles`_::
+
+    # provision
+    ir virsh -vvvv
+        --topology-nodes=undercloud:1,controller:2,compute:1,messaging:1,database:1,networker:1 \
+        --host-address=seal52.qa.lab.tlv.redhat.com \
+        --host-key ~/.ssh/my-prov-key
+
+    # do undercloud install [...]
+
+    # overcloud
+    ir tripleo-overcloud -vvvv
+        --version=12 \
+        --deploy=yes \
+        --role-files=ControllerOpenstack,Compute,Messaging,Database,Networker \
+        --deployment-files=composable_roles \
+        [...]
+
+
+**3) User legacy OSP11 approach to generate roles templates.** See detailed desciption below.
+To enable that approach the ``--tht-roles`` flag should be set to `no` and the ``--role-files`` should point
+to the IR folder with the roles. For example::
+
+    # provision
+    ir virsh -vvvv
+        --topology-nodes=undercloud:1,controller:2,compute:1,networker:1,swift:1 \
+        --host-address=seal52.qa.lab.tlv.redhat.com \
+        --host-key ~/.ssh/my-prov-key
+
+    # do undercloud install [...]
+
+    # overcloud
+    ir tripleo-overcloud -vvvv
+        --version=12 \
+        --deploy=yes \
+        --role-files=networker \
+        --tht-roles=no \
+        --deployment-files=composable_roles \
+        [...]
+
+
+.. _THT roles: https://github.com/openstack/tripleo-heat-templates/tree/master/roles
+
+OSP11 Deployment
+^^^^^^^^^^^^^^^^
+
 To deploy custom roles, InfraRed should know what nodes should be used for what roles. This involves a 2-step procedure.
 
 **Step #1** Setup available nodes and store them in the InfraRed inventory. Those nodes can be configured by the ``provision`` plugin such as `virsh <virsh.html>`_::
@@ -142,7 +221,13 @@ Below is an example of the controller default role::
         #  - ${deployment_dir} - will be replaced by the deployment folder location on the undercloud. Deployment folder can be specified with the ospd --deployment flag
         resource_registry:
             "OS::TripleO::Controller::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/controller${ipv6_postfix}.yaml"
-
+        # required to support OSP12 deployments
+        networks:
+            - External
+            - InternalApi
+            - Storage
+            - StorageMgmt
+            - Tenant
         # we can also set a specific flavor for a role.
         flavor: controller
         host_name_format: 'controller-%index%'
@@ -228,8 +313,8 @@ Below is an example of the controller default role::
 The name of the role files should correspond to the node inventory name without prefix and index.
 For example, for ``user-prefix-controller-0`` the name of the role should be ``controller.yml``.
 
-Deployment example
-==================
+OSP11 Deployment example
+=========================
 
 To deploy OpenStack with composable roles on virtual environment the following steps can be performed.
 

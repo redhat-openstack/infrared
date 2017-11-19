@@ -52,3 +52,92 @@ Now lets run see the results::
     msg: Hello!
 
 If you have a place you would like to have an injection point and one is not provided, please `contact us <contacts.html>`_.
+
+
+Infrared Ansible Tags
+^^^^^^^^^^^^^^^^^^^^^
+
+Stages and their corresponding Ansible tags
+-------------------------------------------
+
+Each stage can be executed using ansible plugin with set of ansible tags that are passed to the infrared plugin command:
+
+
++--------------------+-------------------+-----------------------------------------------------------------+
+| Plugin             | Stage             | Ansible Tags                                                    |
++====================+===================+=================================================================+
+| virsh              | Provision         | pre, hypervisor, networks, vms, user, post                      |
++--------------------+-------------------+-----------------------------------------------------------------+
+| tripleo-undercloud | Undercloud Deploy | validation, hypervisor, init, install, shade, configure, deploy |
++                    +-------------------+-----------------------------------------------------------------+
+|                    | Images            | images                                                          |
++--------------------+-------------------+-----------------------------------------------------------------+
+| tripleo-overcloud  | Introspection     | validation, init, introspect                                    |
++                    +-------------------+-----------------------------------------------------------------+
+|                    | Tagging           | tag                                                             |
++                    +-------------------+-----------------------------------------------------------------+
+|                    | Overcloud Deploy  | loadbalancer, deploy_preparation, deploy                        |
++                    +-------------------+-----------------------------------------------------------------+
+|                    | Post tasks        | post                                                            |
++--------------------+-------------------+-----------------------------------------------------------------+
+
+
+Usage examples:
+***************
+
+The ansible tags can be used by passing all subsequent input to Ansible as raw arguments.
+
+Provision (virsh plugin)::
+
+    infrared virsh \
+        -o provision_settings.yml \
+        --topology-nodes undercloud:1,controller:1,compute:1 \
+        --host-address <my.host.redhat.com> \
+        --host-key </path/to/host/key> \
+        --image-url <image-url> \
+        --ansible-args="tags=pre,hypervisor,networks,vms,user,post"
+
+Undercloud Deploy stage (tripleo-undercloud plugin)::
+
+    infrared tripleo-undercloud \
+        -o undercloud_settings.yml \
+        --mirror tlv \
+        --version 12 \
+        --build passed_phase1 \
+        --ansible-args="tags=validation,hypervisor,init,install,shade,configure,deploy"
+
+Tags explanation:
+-----------------
+
+- Provision
+    - pre - Pre run configuration
+    - Hypervisor - Prepare the hypervisor for provisioning
+    - Networks - Create Networks
+    - Vms - Provision Vms
+    - User - Create a sudoer user for non root SSH login
+    - Post - perform post provision tasks
+- Undercloud Deploy
+    - Validation - Perform validations
+    - Hypervisor - Patch hypervisor for undercloud deployment
+        - Add rhos-release repos and update ipxe-roms
+        - Create the stack user on the hypervisor and allow SSH to hypervisor
+    - Init - Pre Run Adjustments
+    - Install - Configure and Install Undercloud Repositories
+    - Shade - Prepare shade node
+    - Configure - Configure Undercloud
+    - Deploy - Installing the undercloud
+- Images
+    - Images - Get the undercloud version and prepare the images
+- Introspection
+    - Validation - Perform validations
+    - Init - pre-tasks
+    - Introspect - Introspect our machines
+- Tagging
+    - Tag - Tag our machines with proper flavors
+- Overcloud Deploy
+    - Loadbalancer - Provision loadbalancer node
+    - Deploy_preparation - Environment setup
+    - Deploy - Deploy the Overcloud
+- Post tasks
+    - Post - Perform post install tasks
+

@@ -22,7 +22,7 @@
       key: parameter_defaults
       value:
           NeutronTunnelTypes:
-              '{{ (install.network.backend == "vlan") | ternary("''''", install.network.backend) }}'
+              "{{ (install.network.backend) | regex_replace('vlan', '') | regex_replace(',,', ',') | regex_replace(',$', '') | regex_replace('^,', '') }}"
   when: install.version|default(undercloud_version)|openstack_release >= 8
 
 - name: append the network isolation template line to the base overcloud deploy script

@@ -18,13 +18,17 @@
             key: "{{ uc_pubkey_result.stdout }}"
         delegate_to: hypervisor
 
-      - include: tasks/ironic_pxe_ipmitool.yml
+      - name: insert the public key to the known hosts in hypervisor for stack user
+        authorized_key:
+            user: stack
+            key: "{{ uc_pubkey_result.stdout }}"
+        delegate_to: hypervisor
+        when: install.version|default(undercloud_version) | openstack_release < 11
+
+      - include_role:
+            name: vbmc
         vars:
-            pxe_ipmitool_req_packs:
-                - python-setuptools
-                - python-virtualbmc
-                - ipmitool
-            vbmc_start_port: 6230
+            vbmc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
         when: install.version|default(undercloud_version) | openstack_release >= 11
 
       - name: grab undercloud private key
@@ -61,7 +65,7 @@
                 'disk_bytes': '`virsh domblkinfo {{ item }} vda | grep -e Capacity | cut -d\: -f2 | xargs`',
                 'disks': '${disks_list}',
             }"
-        with_items: "{{ groups['overcloud_nodes'] }}"
+        with_items: "{{ groups['overcloud_nodes']|sort }}"
         register: nodes_info
         tags:
             - skip_ansible_lint

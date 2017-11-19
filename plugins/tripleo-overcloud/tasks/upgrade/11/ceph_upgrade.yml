@@ -41,7 +41,7 @@
   become: true
   command: ceph health
   register: ceph_health
-  until: ceph_health.stdout.find("HEALTH_OK") > -1
+  until: ceph_health.stdout.find("HEALTH_OK") > -1 or ceph_health.stdout.find("HEALTH_WARN clock skew") > -1
   retries: 30
   delay: 5
   delegate_to: "{{ node_name }}"

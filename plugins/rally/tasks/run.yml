@@ -1,7 +1,7 @@
 # TODO (tjamrisk): Need to somehow skip this if deployment exists
 - name: Create Rally deployment
   shell: |
-      source ~/keystonerc
+      source ~/overcloudrc
       {{ rally.path }}/bin/rally deployment create --fromenv --name {{ test.deployment }} | awk '/{{ test.deployment }}/ {print $2}'
   register: rally_deployment_uuid
   ignore_errors: true

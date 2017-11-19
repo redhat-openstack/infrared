@@ -23,8 +23,8 @@
   include: trust_uc.yml
   when:
       - not install.overcloud.ssl
-      - install.version|openstack_release >= 12
-      - (install.version|openstack_distribution) == 'OSP'
+      - install.version|default(undercloud_version)|openstack_release >= 12
+      - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
 - name: Generate the hostnames template
   include: hostname.yml
@@ -50,6 +50,14 @@
       - containers
   when:
       - install.containers|default('')
+      - install.version|default(undercloud_version)|openstack_release >= 12
+      - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
+
+- name: Append Ops Tools templates to the deploy script
+  include: opstools/main.yml
+  tags: opstools
+  when:
+      - "'opstools' in groups and groups['opstools']"
       - install.version|openstack_release >= 12
       - (install.version|openstack_distribution) == 'OSP'
 
@@ -63,9 +71,11 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ item.path }} \'
+      insertbefore: "^--log-file.*"
   with_items: "{{ template_list.files }}"
 
 - name: Append the invocation line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
+      regexp: "^--log-file .*"
       line: "--log-file overcloud_deployment_{{ 100 | random }}.log"

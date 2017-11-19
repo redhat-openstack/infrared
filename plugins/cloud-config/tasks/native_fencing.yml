@@ -1,0 +1,55 @@
+- name: Configure auto-fencing
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - name: Generate fencing.yml from instackenv.json
+        shell: |
+            source ~/stackrc;
+            openstack overcloud generate fencing --ipmi-lanplus --ipmi-level administrator --output fencing.yaml instackenv.json
+        args:
+            chdir: /home/stack
+
+      - name: copy overcloud deploy script
+        command: 'cp ~/overcloud_deploy.sh ~/overcloud_fencing_deploy.sh'
+
+      - name: Remove --log-file option from overcloud deploy command
+        lineinfile:
+            dest: ~/overcloud_fencing_deploy.sh
+            state: absent
+            regexp: '^--log-file.*'
+
+      - name: Append -e fencing.yaml to overcloud deploy script
+        lineinfile:
+            dest: ~/overcloud_fencing_deploy.sh
+            line: '-e fencing.yaml \'
+
+      - name: Append --log-file option to overcloud deploy script
+        lineinfile:
+            dest: ~/overcloud_fencing_deploy.sh
+            line: '--log-file overcloud_fencing_deployment_{{ 100 | random }}.log'
+
+      - name: Print fencing deploy command
+        command: "cat ~/overcloud_fencing_deploy.sh"
+
+      - name: Execute the overcloud deploy script
+        shell: |
+            source ~/stackrc
+            bash ~/overcloud_fencing_deploy.sh &> overcloud_fencing.log
+        register: overcloud_deploy
+        ignore_errors: yes
+
+      - name: Print the last few lines of the output to spot failures
+        command: tail -n60 overcloud_fencing.log
+
+      # List of failures is supported since RHOS10
+      - name: Print stack failures
+        shell: |
+            source ~/stackrc;
+            openstack stack failures list overcloud
+        when: overcloud_deploy.rc != 0 and install.version|openstack_release >= 10
+        ignore_errors: yes
+
+      - fail:
+            msg: "Overcloud deployment of fencing failed... :("
+        when: overcloud_deploy is defined and overcloud_deploy.rc != 0

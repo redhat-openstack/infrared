@@ -41,6 +41,25 @@ subparsers:
                           Infrared will use containers only when install version >= 12
                       default: yes
 
+                  container-images-patch:
+                      type: Value
+                      help: |
+                            Comma,separated list of docker container images to patch using '/patched_rpm' yum repository.
+                            NOTE: Patching involves 'yum update' inside the container.
+
+                  container-images-packages:
+                      type: IniType
+                      action: append
+                      help: |
+                            'imagename=package1{,package2}' pairs to install package(s) from URL(s) in the container
+                            before overcloud deployment. Container images don't have any yum repositories enabled by
+                            default hence specifying URL of an RPM to install is mandatory. This option can be used
+                            multiple times for different container images.
+                            NOTE: Only specified image(s) will get the packages installed. All images that depend on
+                            updated image have to be updated as well (using this option or otherwise).
+                            Example:
+                                --container-images-packages openstack-opendaylight-docker=https://kojipkgs.fedoraproject.org//packages/tmux/2.5/3.fc27/x86_64/tmux-2.5-3.fc27.x86_64.rpm,https://kojipkgs.fedoraproject.org//packages/vim/8.0.844/2.fc27/x86_64/vim-minimal-8.0.844-2.fc27.x86_64.rpm
+
                   registry-mirror:
                       type: Value
                       help: The alternative docker registry to use for deployment.
@@ -117,6 +136,12 @@ subparsers:
                             The amount of storage nodes to deploy. If --storage-backend is set, this
                             value will default to '1', otherwise no storage nodes will be used.
 
+                  ntp-server:
+                      type: Value
+                      help: |
+                            Ntp server name (or IP) to use.
+                      default: clock.redhat.com
+
                   hybrid:
                       type: FileValue
                       help: |
@@ -178,11 +203,6 @@ subparsers:
                   network-backend:
                       type: Value
                       help: The overcloud network backend.
-                      choices:
-                          - gre
-                          - vxlan
-                          - vlan
-                          - geneve
                       default: vxlan
 
                   network-protocol:
@@ -289,10 +309,24 @@ subparsers:
               options:
                   role-files:
                       type: Value
-                      help:
+                      help: |
+                        For the OSP11 and below:
                         Specifies a sub-folder under the files/roles/ folder where InfraRed should look for the roles files.
-                        InfraRed will use the composable roles appraoch when this flag is defined
+                        InfraRed will use the composable roles approach when this flag is defined
 
+                        For the OSP12 and above:
+                        Specifies the list of roles from https://github.com/openstack/tripleo-heat-templates/tree/master/roles
+                        to use. For example, for the controller,compute and ceph topology the following value can be used:
+                         --role-files=Controller,Compute,CephStorage.
+                         If that value is equal to 'auto' or is not a list of roles, then Infrared will try to
+                         automatically discover roles to use.
+                  tht-roles:
+                      type: Bool
+                      default: yes
+                      help: |
+                        Specifies whether the THT(https://github.com/openstack/tripleo-heat-templates/tree/master/roles)
+                        roles should be used for OSP12+ composable deployments. If value is 'no', then the OSP11 approach
+                        will be used.
 
             - title: Overcloud compute
               options:
