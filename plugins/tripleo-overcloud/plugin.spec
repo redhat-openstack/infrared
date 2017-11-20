@@ -363,6 +363,18 @@ subparsers:
                           Perform minor update of overcloud.
                           NOTE: Currently, minor update is supported with IR just for versions > 6.
                       default: False
+                  director-build:
+                      help: |
+                          String represents a timestamp of the OSP director puddle
+                          (for the given product core version). Only applies for
+                          6 < OSPd < 10, and could be used with '--build' flag.
+                          Note: for versions >= 10 only the --build flag should be used to
+                          specify a puddle.
+                          Supports any rhos-release labels.
+                          Examples: "passed_phase1", "2016-08-11.1", "Y1", "Z3", "GA"
+                          If missing, will equal to "latest".
+                      type: Value
+                      default: latest
                   build:
                      type: Value
                      help: |
