@@ -54,6 +54,7 @@
       - role: rhos-release
         release: "{{ (undercloud_version|int) }}"
         rr_buildmods: "{{ install.buildmods }}"
+        director_build: "{{ install.get('director', {}).build|default(omit) }}"
         build: "{{ install.build|default('latest') }}"
         mirror: "{{ install.mirror | default(omit) }}"
         rr_distro_version: "{{ install.osrelease|default(omit) }}"
