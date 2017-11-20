@@ -54,6 +54,11 @@
                   option: tempest_roles
                   value: swiftoperator
                   condition: true
+                # Set of Sahara plugins - required until https://bugs.launchpad.net/bugs/1560111 is fixed
+                - section: data-processing-feature-enabled
+                  option: plugins
+                  value: "ambari,cdh,mapr"
+                  condition: "{{ install.version|default(undercloud_version)|openstack_release >= 12 }}"
         ini_file:
             dest: "{{ inventory_dir }}/{{ deployer_input | basename }}"
             section: "{{ item.section }}"
