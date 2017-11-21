@@ -281,7 +281,8 @@ class InfraredPluginManager(object):
             repo = git.Repo.clone_from(
                 url=git_url, to_path=os.path.join(tmpdir, plugin_git_name))
             if rev is not None:
-                repo.git.checkout(rev)
+                repo.remotes.origin.pull(rev)
+
         except (git.exc.GitCommandError) as e:
             shutil.rmtree(tmpdir)
             raise IRFailedToAddPlugin(
