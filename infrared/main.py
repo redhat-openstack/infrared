@@ -273,14 +273,15 @@ class PluginManagerSpec(api.SpecObject):
         # Update plugin
         update_parser = plugin_subparsers.add_parser(
             "update",
-            help="Update a Git-based plugin")
+            description="Update a Git-based plugin to the specific "
+                        "revision from the plugin remote.")
         update_parser.add_argument(
             "name",
             help="Name of the plugin to update")
         update_parser.add_argument(
             "revision", nargs='?', default='latest',
-            help="Revision number to checkout (if not given, will only pull "
-                 "changes from the remote)")
+            help="Revision number to checkout (if not given, will only try to "
+                 "get new changes from the remote)")
         update_parser.add_argument(
             '--skip_reqs', '-s', action='store_true',
             help="Skips plugin's requirements installation")

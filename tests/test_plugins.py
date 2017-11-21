@@ -627,8 +627,6 @@ def test_git_plugin_update(git_plugin_manager_fixture):
     Tests the following:
       1. Plugin update without new changes
       2. Plugin update to an older commit
-      3. No update when there are local changes
-      4. Update discarding local changes ('--hard-rest')
     :param git_plugin_manager_fixture: Fixture object which yields
     InfraredPluginManger object with git plugin installed
     """
@@ -646,13 +644,3 @@ def test_git_plugin_update(git_plugin_manager_fixture):
     gpm.update_plugin(plugin_name='git_plugin', revision=commits_list[-1])
     assert commits_list[-1] == repo.git.rev_parse('HEAD'), \
         "Failed to Update plugin to: {}".format(commits_list[-1])
-
-    with pytest.raises(IRFailedToUpdatePlugin):
-        gpm.update_plugin(plugin_name='git_plugin')
-    assert commits_list[-1] == repo.git.rev_parse('HEAD'), \
-        "Plugin wasn't suppose to be changed when update failed..."
-
-    gpm.update_plugin(plugin_name='git_plugin', hard_reset=True)
-    assert commits_list[0] == repo.git.rev_parse('HEAD'), \
-        "Plugin haven't been updated from '{}' to '{}'".format(
-            commits_list[-1], commits_list[0])
