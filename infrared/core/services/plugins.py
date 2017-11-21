@@ -289,7 +289,8 @@ class InfraredPluginManager(object):
             repo = git.Repo.clone_from(
                 url=git_url, to_path=os.path.join(tmpdir, plugin_git_name))
             if rev is not None:
-                repo.git.checkout(rev)
+                InfraredPluginManager.get_revision(repo, rev)
+
         except (git.exc.GitCommandError) as e:
             shutil.rmtree(tmpdir)
             raise IRFailedToAddPlugin(
@@ -329,8 +330,7 @@ class InfraredPluginManager(object):
                       skip_reqs=False, hard_reset=False):
         """Updates a Git-based plugin
 
-        Pulls changes from the remote, and checkout a specific revision.
-        (will point to the tip of the branch if revision isn't given)
+        Tries to update revision of the plugin from the remote
         :param plugin_name: Name of plugin to update.
         :param revision: Revision to checkout.
         :param skip_reqs: If True, will skip plugin requirements installation.
@@ -340,12 +340,10 @@ class InfraredPluginManager(object):
             raise IRFailedToUpdatePlugin(
                 "Plugin '{}' isn't installed".format(plugin_name))
 
-        repo = plugin = None
         try:
             plugin = self.get_plugin(plugin_name)
             repo = git.Repo(plugin.path)
 
-            # microseconds ('%f') required for unit testing
             timestamp = \
                 datetime.datetime.fromtimestamp(
                     time.time()).strftime('%B-%d-%Y_%H-%M-%S-%f')
@@ -355,37 +353,22 @@ class InfraredPluginManager(object):
 
             LOG.debug("Checking for changes of tracked files "
                       "in {}".format(plugin.path))
-            changed_tracked_files = \
-                repo.git.status('--porcelain', '--untracked-files=no')
+            changed_tracked_files = repo.git.status(
+                '--porcelain', '--untracked-files=no')
             all_changed_files = repo.git.status('--porcelain')
-
             if changed_tracked_files and not hard_reset:
                 raise IRFailedToUpdatePlugin(
                     "Failed to update plugin {}\n"
                     "Found changes in tracked files, "
                     "please go to {}, and manually save "
                     "your changes!".format(plugin_name, plugin.path))
-
             if hard_reset:
                 if all_changed_files:
                     repo.git.stash('save', '-u', update_string)
                     LOG.warning("All changes have been "
                                 "stashed - '{}'".format(update_string))
-                repo.git.reset('--hard', 'HEAD')
 
-            LOG.warning("Create a branch '{}' that will point "
-                        "to the current HEAD".format(update_string))
-            repo.git.branch(update_string)
-
-            LOG.debug("Fetching changes from the "
-                      "'{}' remote".format(repo.remote().name))
-            repo.git.fetch(repo.remote().name)
-
-            repo.git.pull('--rebase')
-            if revision not in (None, 'latest'):
-                repo.git.reset(revision)
-                if hard_reset:
-                    repo.git.reset('--hard', 'HEAD')
+            InfraredPluginManager.get_revision(repo, revision)
 
             if repo.git.status('--porcelain', '--untracked-files=no'):
                 LOG.warning("Changes in tracked files have been found")
@@ -402,13 +385,37 @@ class InfraredPluginManager(object):
             raise IRFailedToUpdatePlugin(
                 "Failed to update '{}' plugin to point to '{}'".format(
                     plugin_name, revision))
+
+    @staticmethod
+    def get_revision(repo, revision):
+        """
+        Gets the specific revision from the repo
+        """
+        if revision in (None, 'latest'):
+            revision = (repo.head.commit
+                        if repo.head.is_detached
+                        else repo.active_branch.name)
+
+        try:
+            repo.git.fetch(repo.remote().name)
+            if revision in repo.remote().refs:
+                # Update branch from the remote
+                repo.git.checkout("-f", "-B",
+                                  revision, repo.remote().refs[revision].name)
+
+            elif str(revision) in repo.git.ls_remote():
+                # try to fetch refspec from remote,
+                # for example, gerrit change set
+                fetch_info = repo.remote().fetch(revision)
+                repo.git.checkout(fetch_info[0].commit)
+                repo.git.checkout("-B", revision)
+            else:
+                # try to checkout something
+                repo.git.checkout("-f", revision)
         except git.exc.GitCommandError as ex:
-            repo.git.rebase('--abort')
             raise IRFailedToUpdatePlugin(
-                "Failed to update plugin"
-                "Failed to update plugin!\nPlease go to plugin dir ({})"
-                " and manually resolve Git issues.\n"
-                "{}\n{}".format(plugin.path, ex.stdout, ex.stderr))
+                "Failed to update plugin to the '{}' revision."
+                "{}\n{}".format(revision, ex.stdout, ex.stderr))
 
     def add_plugin(self, plugin_source, rev=None, dest=None):
         """Adds (install) a plugin
