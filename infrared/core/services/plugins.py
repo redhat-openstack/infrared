@@ -281,7 +281,9 @@ class InfraredPluginManager(object):
             repo = git.Repo.clone_from(
                 url=git_url, to_path=os.path.join(tmpdir, plugin_git_name))
             if rev is not None:
-                repo.git.checkout(rev)
+                fetch_info = repo.remotes.origin.fetch(rev)
+                repo.git.checkout(fetch_info[0].commit)
+
         except (git.exc.GitCommandError) as e:
             shutil.rmtree(tmpdir)
             raise IRFailedToAddPlugin(
@@ -365,19 +367,10 @@ class InfraredPluginManager(object):
                                 "stashed - '{}'".format(update_string))
                 repo.git.reset('--hard', 'HEAD')
 
-            LOG.warning("Create a branch '{}' that will point "
-                        "to the current HEAD".format(update_string))
-            repo.git.branch(update_string)
-
             LOG.debug("Fetching changes from the "
                       "'{}' remote".format(repo.remote().name))
-            repo.git.fetch(repo.remote().name)
-
-            repo.git.pull('--rebase')
-            if revision not in (None, 'latest'):
-                repo.git.reset(revision)
-                if hard_reset:
-                    repo.git.reset('--hard', 'HEAD')
+            fetch_info = repo.remotes.origin.fetch(revision)
+            repo.git.checkout(fetch_info[0].commit)
 
             if repo.git.status('--porcelain', '--untracked-files=no'):
                 LOG.warning("Changes in tracked files have been found")
@@ -395,7 +388,6 @@ class InfraredPluginManager(object):
                 "Failed to update '{}' plugin to point to '{}'".format(
                     plugin_name, revision))
         except git.exc.GitCommandError as ex:
-            repo.git.rebase('--abort')
             raise IRFailedToUpdatePlugin(
                 "Failed to update plugin"
                 "Failed to update plugin!\nPlease go to plugin dir ({})"

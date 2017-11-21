@@ -648,7 +648,7 @@ def test_git_plugin_update(git_plugin_manager_fixture):
         "Failed to Update plugin to: {}".format(commits_list[-1])
 
     with pytest.raises(IRFailedToUpdatePlugin):
-        gpm.update_plugin(plugin_name='git_plugin')
+        gpm.update_plugin(plugin_name='git_plugin', revision="some_wrong_rev")
     assert commits_list[-1] == repo.git.rev_parse('HEAD'), \
         "Plugin wasn't suppose to be changed when update failed..."
 
