@@ -12,19 +12,34 @@
       containers_puddle_base_url: "{{ modified_url }}"
   when: modified_url|changed
 
-- name: Downloading overcloud container images template
+- name: Downloading overcloud container images environment file
   get_url:
-      url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_template_download_basename }}"
-      dest: "{{ containers_images_template_dest_file }}"
-      owner: stack
-      group: stack
+      url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_env_template_download_basename }}"
+      dest: "{{ containers_images_env_template_dest_file }}"
       force: true
+  delegate_to: localhost
+
+- name: Load variables from container environment file
+  include_vars:
+      file: "{{ containers_images_env_template_dest_file }}"
+      name: container_env
+
+- name: Create {{ containers_images_template_dest_file }} to upload to local registry
+  command: >
+    openstack overcloud container image prepare \
+        --namespace {{ container_env['container-image-prepare']['namespace'] }} \
+        --tag {{ container_env['container-image-prepare']['tag'] }} \
+        --prefix  {{ container_env['container-image-prepare']['prefix'] }} \
+        --set ceph_namespace={{ container_env['container-image-prepare']['ceph-namespace'] }} \
+        --set ceph_image={{ container_env['container-image-prepare']['ceph-image'] }} \
+        --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }} \
+        --output-images-file {{ containers_images_template_dest_file }}
 
 - name: replace docker registry with mirror
   replace:
       dest: "{{ containers_images_template_dest_file }}"
-      regexp: '^([ ]*pull_source: ).*'
-      replace: '\1{{ install.registry.mirror }}'
+      regexp: '^(- imagename: ).*?(\/.*)'
+      replace: '\1{{ install.registry.mirror }}\2'
       backup: no
   when: install.get('registry', {}).mirror|default(false)
   tags:
@@ -33,31 +48,22 @@
 - name: replace docker namespace
   replace:
       dest: "{{ containers_images_template_dest_file }}"
-      regexp: '^(- imagename: ).*(\/.*)'
-      replace: '\1{{ install.registry.namespace }}\2'
+      regexp: '^(- imagename:)(.*)?(\/.*).*?(\/.*)'
+      replace: '\1\2/\{{ install.registry.namespace }}\4'
       backup: no
   when: install.get('registry', {}).namespace|default(false)
   tags:
       - container-images-patch
 
-- name: get tag of container images
-  shell: |
-        cat {{ containers_images_template_dest_file }} | awk '/- imagename: / {print $3}' | head -n1 | cut -f 2 -d:
-  register: containers_images_tag
-  tags:
-      - container-images-patch
-      - container-images-packages
-
 - name: get docker registry name
-  shell: |
-      cat {{ containers_images_template_dest_file }} | awk '/pull_source:/ {print $2}' | head -n1 | tr -d ' '
-  register: docker_insecure_registry
+  set_fact:
+      docker_insecure_registry: "{{ container_env['container-image-prepare']['namespace'].split('/')[0] }}"
 
 - name: replace IP with hostname in /etc/sysconfig/docker
   replace:
       dest: /etc/sysconfig/docker
       regexp: '^(INSECURE_REGISTRY=".*)"'
-      replace: '\1 --insecure-registry {{ docker_insecure_registry.stdout }}"'
+      replace: '\1 --insecure-registry {{ docker_insecure_registry }}"'
       backup: no
   become: true
 
