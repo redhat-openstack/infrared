@@ -35,26 +35,19 @@
 
   when: provision.kill | default(False)
 
-#in case VM was created in UEFI mode libvirt requires undefine task first
-- name: undefine relevant VMs
-  virt:
-      name: "{{ item }}"
-      command: undefine
-  with_items: "{{ vm_names.list_vms }}"
-  when: provision.bootmode == 'uefi'
-
 - name: destroy undefined vms
   virt:
       name: "{{ item }}"
       state: destroyed
   with_items: "{{ vm_names.list_vms }}"
 
+#Since the virt module doesn't support extra args, doing it via shell
+#the --nvram arg is required in case VMs were provisioned with bootmode=uefi
+#The cleanup step isn't aware of original bootmode setting
 - name: undefine relevant VMs
-  virt:
-      name: "{{ item }}"
-      command: undefine
+  command: "sudo virsh undefine --nvram {{ item }}"
   with_items: "{{ vm_names.list_vms }}"
-  when: provision.bootmode != 'uefi'
+  tags: skip_ansible_lint
 
 - name: Clean /etc/hosts file
   become: yes
