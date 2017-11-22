@@ -1,0 +1,208 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4fa7a750_ab6e6ec8",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2017-11-22T10:24:23Z",
+      "side": 1,
+      "message": "1) if plugins_conf is None, the plugins_dir will never be set.\nI think an exception should be raised if the plugins_conf is None\n\n2) in case that plugins_conf is a relative path, you can have issues with the self.plugins_dir. you may want to get the full path before using the dirname on it.",
+      "revId": "b3cf274c9b46ecd55fa13a2a9c5023e156ce16ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4f7f4ed_3a61f8ff",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2017-11-22T10:24:23Z",
+      "side": 1,
+      "message": "This function is no longer plugin specific, please change the name of the function, docstring and variable names.\nThis will allow reuse in the future.",
+      "revId": "b3cf274c9b46ecd55fa13a2a9c5023e156ce16ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99233858_d977870b",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2017-11-22T10:24:23Z",
+      "side": 1,
+      "message": "Please add the \"plugins_registry\" param to docstring and remove this non-relevant line",
+      "revId": "b3cf274c9b46ecd55fa13a2a9c5023e156ce16ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5612bb31_5faf2ae8",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2017-11-22T10:24:23Z",
+      "side": 1,
+      "message": "1) the comment above does not match the if statement.\n2) the plugin_source in this case is a registry file. There is no mention in the docstring that the plugin_source can be a registry yaml file\n3) If we\u0027re allowing the user to import a registry.yml I think we should also validate its schema (similar to how we do it for plugin spec files)",
+      "revId": "b3cf274c9b46ecd55fa13a2a9c5023e156ce16ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1939848d_aca27779",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2017-11-22T10:24:23Z",
+      "side": 1,
+      "message": "I think that there are better ways to check if a url is git repo.\n\nFrom stackoverflow:\nhttps://superuser.com/questions/227509/git-ping-check-if-remote-repository-exists\n\nPython implementation:\ngit.cmd.Git().ls_remote(url)",
+      "revId": "b3cf274c9b46ecd55fa13a2a9c5023e156ce16ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14cc1c91_961286b9",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2017-11-22T10:24:23Z",
+      "side": 1,
+      "message": "Please use more understandable names.\n\u0027k\u0027 and \u0027v\u0027 are not so understandable.",
+      "revId": "b3cf274c9b46ecd55fa13a2a9c5023e156ce16ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a6f8ede_87b58184",
+        "filename": "tests/test_execute.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2017-11-22T10:24:23Z",
+      "side": 1,
+      "message": "1) You changed the behavior of the test, it is no longer checking if the workspace was created.\n2) You\u0027re catching a too general exception, can it be more specific? if the code raises any kind of exception this test will pass even though it shouldn\u0027t\n3) If \"workspace_manager_fixture\" is no longer needed it can be removed from the function parameters.",
+      "revId": "b3cf274c9b46ecd55fa13a2a9c5023e156ce16ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "612e4a74_63305887",
+        "filename": "tests/test_plugins.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2017-11-22T10:24:23Z",
+      "side": 1,
+      "message": "Add mocker param to docstring",
+      "revId": "b3cf274c9b46ecd55fa13a2a9c5023e156ce16ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6bfb061f_cebffe97",
+        "filename": "tests/test_plugins.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2017-11-22T10:24:23Z",
+      "side": 1,
+      "message": "If you mock the rmtree you can also check that it was indeed called on the correct location (the new plugin source from workspace)",
+      "revId": "b3cf274c9b46ecd55fa13a2a9c5023e156ce16ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3bbe1b80_36279f6b",
+        "filename": "tests/test_plugins.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2017-11-22T10:24:23Z",
+      "side": 1,
+      "message": "same here. add mocker to docstring",
+      "revId": "b3cf274c9b46ecd55fa13a2a9c5023e156ce16ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "261e4ce3_f6425518",
+        "filename": "tests/test_plugins.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2017-11-22T10:24:23Z",
+      "side": 1,
+      "message": "rmtree should be patched only when removing plugins. right now it is being patched for \"list\" and \"add\" too.",
+      "revId": "b3cf274c9b46ecd55fa13a2a9c5023e156ce16ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50ff0ca4_ae8b73b5",
+        "filename": "tests/test_plugins.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2017-11-22T10:24:23Z",
+      "side": 1,
+      "message": "Please add new unit tests to check the new features.\n\nFor example:\n- test import registry yaml\n- test export registry yaml\n- test that plugins are indeed installed in workspace\n- test add plugins from registry yml with corrupted registry yml\n- test that add plugins from registry yml will not add already exist plugins",
+      "revId": "b3cf274c9b46ecd55fa13a2a9c5023e156ce16ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
