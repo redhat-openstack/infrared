@@ -70,6 +70,23 @@
     },
     {
       "key": {
+        "uuid": "b4ec140d_e27e76e5",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2017-11-23T07:05:57Z",
+      "side": 1,
+      "message": "One more thing that I missed on my last comment. There is a possibility to get an endless recursive loop when using add plugin with registry file.\n\nEven though this is a rare usecase, I suggest that you move the import plugins feature to a different subparser (for example \"infrared plugin import \u003cregistry.yml\u003e\"). this will simplify the add_plugin function and will remove unneeded recursive calls.\n\nExample to endless recursive loop:\n- create a file on working dir called \"myplugin\"\n- edit the file with the following content:\n\n---\nmyplugin:\n    src: some/path/to/myplugin\n    desc: A plugin example \n    type: other\n\n\nResult when running \"infrared plugin add myplugin\":\nRuntimeError: maximum recursion depth exceeded",
+      "revId": "b3cf274c9b46ecd55fa13a2a9c5023e156ce16ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1939848d_aca27779",
         "filename": "infrared/core/services/plugins.py",
         "patchSetId": 6
