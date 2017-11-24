@@ -59,7 +59,11 @@
           {% else %}
           --disk none \
           {% endif %}
+          {% if provision.bootmode == 'uefi' %}
+          --boot {{ 'hd' if topology_node.deploy_os|default(True) else 'uefi' }} \
+          {% else %}
           --boot {{ provision.bootmode }} \
+          {% endif %}
           {% for interface in topology_node.interfaces %}
            --network {{ 'bridge' if (interface.bridged|default(False)) else 'network' }}:{{ interface.network }} \
           {% endfor -%}
