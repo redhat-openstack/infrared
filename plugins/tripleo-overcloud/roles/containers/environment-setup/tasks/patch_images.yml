@@ -1,16 +1,4 @@
 ---
-- stat:
-      path: /etc/yum.repos.d/patched_rpms.repo
-  register: patched_rpms_repo
-
-- fail:
-      msg: /etc/yum.repos.d/patched_rpms.repo doesn't exist
-  when: patched_rpms_repo.stat.exists == False
-
-- stat:
-      path: /patched_rpms
-  register: patched_rpms
-
 - fail:
       msg: /patched_rpms doesn't exist
   when: patched_rpms.stat.exists == False
@@ -25,9 +13,21 @@
       state: directory
 
 - name: populate docker context dir with patched rpms and repo
-  command: |
-      cp /etc/yum.repos.d/patched_rpms.repo {{ container_images_patch_dir }}/;
+  shell: |
+      cp /etc/yum.repos.d/patched_rpms.repo {{ container_images_patch_dir }}/
       cp -r /patched_rpms {{ container_images_patch_dir }}/
+
+- name: set container_images_patch_logdir fact
+  set_fact:
+      container_images_patch_logdir: /var/log/extra/container-images-patch/
+
+- name: create container_images_patch_logdir to keep the logs
+  file:
+      path: "{{ container_images_patch_logdir }}"
+      state: "{{ item }}"
+  with_items:
+      - absent
+      - directory
 
 - name: tag the original image(s) with 'before_patching' and patch&push container image(s)
   shell: |
@@ -37,9 +37,14 @@
       FROM {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }}
       COPY patched_rpms.repo /etc/yum.repos.d/patched_rpms.repo
       ADD /patched_rpms /patched_rpms
-      RUN yum update -y -v
+      RUN id
+      RUN sudo yum update -y -v || echo \"can't update\"
       " > {{ container_images_patch_dir }}/Dockerfile
-      docker build -t {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }} {{ container_images_patch_dir }}/
+      docker build -t {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }} {{ container_images_patch_dir }}/ > {{ container_images_patch_logdir }}/docker_build_{{ item }}.log 2>&1
+      if ! grep -q "Installed products updated" "{{ container_images_patch_logdir }}/docker_build_{{ item }}.log" ; then
+          echo -e "\n\nno packages updated!!!\n\n." >&2
+          exit 66
+      fi
       docker push {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }}
   with_items: "{{ install_container_images_patch.split(',') }}"
   become: true
