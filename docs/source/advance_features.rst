@@ -173,3 +173,17 @@ to automate mode switching on baremetal nodes.
 4. Restart libvirt service::
 
         systemctl restart libvirtd
+
+IPv6 related host adjustments, which will also be required by UEFI
+------------------------------------------------------------------
+
+When UEFI is in use, libvirt will require additional setup on the host, for IPv6 to be enabled:
+
+1. Configure accept_ra = 2 in sysctl::
+
+        echo "net.ipv6.conf.all.accept_ra = 2" > /etc/sysctl.d/55-acceptra.conf
+
+2. Enable the IPv6 related NAT modules::
+
+        modprobe nf_nat_ipv6
+
