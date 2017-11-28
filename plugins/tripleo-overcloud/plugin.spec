@@ -46,6 +46,8 @@ subparsers:
                       help: |
                             Comma,separated list of docker container images to patch using '/patched_rpm' yum repository.
                             NOTE: Patching involves 'yum update' inside the container.
+                            Example:
+                                --container-images-patch openstack-opendaylight-docker
 
                   container-images-packages:
                       type: IniType
