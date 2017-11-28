@@ -1,6 +1,6 @@
 ---
-- include: cleanup.yml
-  when: provision.cleanup|default(False)
+- import_playbook: cleanup.yml
 
-- include: provision.yml
-  when: not provision.cleanup|default(False)
+- name: provisioning tasks
+  import_playbook: provision.yml
+  #when: not provision.cleanup|default(False)

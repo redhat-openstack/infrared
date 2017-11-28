@@ -15,21 +15,25 @@
      - role: hostvars
        action: cleanup
        pattern: "{{ provision.prefix }}*"
+       when: not provision.cleanup|default(False)
   tasks:
-      # TODO(yfried): add dynamic falvor creation
-      - name: provision keys
-        include: tasks/keys.yml
-        tags: keys
+      - block:
+          # TODO(yfried): add dynamic falvor creation
+          - name: provision keys
+            include_tasks: tasks/keys.yml
+            tags: keys
 
-      - name: provision image for each node
-        include: tasks/servers.yml
-        with_dict: "{{ provision.topology.nodes }}"
-        loop_control:
-            loop_var: node
-        tags: vms
+          - name: provision image for each node
+            include_tasks: tasks/servers.yml
+            with_dict: "{{ provision.topology.nodes }}"
+            loop_control:
+                loop_var: node
+            tags: vms
 
-      - name: register servers
-        vars:
-            input:
-                servers: "{{ server_list }}"
-        include: tasks/register_resources_file.yml
+          - name: register servers
+            vars:
+                input:
+                    servers: "{{ server_list }}"
+            include_tasks: tasks/register_resources_file.yml
+
+        when: not provision.cleanup|default(False)
