@@ -1,5 +1,12 @@
 - include: pre.yml
 - include: build_images.yml
+
+- name: patch images
+  include: patch_images.yml
+  when:
+      - install_container_images_patch is defined or patched_rpms_repo.stat.exists == True
+  tags: container-images-patch
+
 - include: workarounds.yml
 - include: ceph-ansible.yml
   when:
