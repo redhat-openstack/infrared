@@ -1,0 +1,195 @@
+- name: Prepare and run Robot tests
+  hosts: tester
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+
+      - name: set workdir fact
+        set_fact:
+            workdir: "{{ ansible_user_dir }}/robot"
+
+      - name: set logdir, dockerdir, resultsdir facts
+        set_fact:
+            logdir: "{{ workdir }}/logs"
+            dockerdir: "{{ workdir }}/docker"
+            resultsdir: "{{ workdir }}/results"
+
+      - name: recreate workdir
+        file:
+            path: "{{ workdir }}"
+            state: "{{ item }}"
+        with_items:
+            - absent
+            - directory
+
+      - name: create logdir, dockerdir, resultsdir
+        file:
+            path: "{{ item }}"
+            state: directory
+        with_items:
+            - "{{ logdir }}"
+            - "{{ dockerdir }}"
+            - "{{ resultsdir }}"
+
+      - name: install or update required software
+        package:
+            name: docker
+            state: latest
+
+      - name: pull container image
+        docker_image:
+            name: "{{ test.container.image.name }}"
+            state: "{{ item }}"
+            force: yes
+        with_items:
+            - absent
+            - present
+        tags: container-image
+
+      - name: update odl_test repository in docker container image
+        shell: |
+            echo "
+            FROM {{ test.container.image.name }}
+            RUN cd /home/opnfv/repos/odl_test/ && git pull origin master
+            " > {{ dockerdir }}/Dockerfile
+            docker tag {{ test.container.image.name }} {{ test.container.image.name }}_before_git_pull
+            docker build -t {{ test.container.image.name }} {{ dockerdir }}
+
+      - name: set fact for overcloudrc
+        set_fact:
+            overcloudrc: "{{ workdir }}/overcloudrc"
+
+      - name: remove old overcloudrc
+        file:
+            path: "{{ overcloudrc }}"
+            state: absent
+
+      - name: make a copy of overcloudrc as we will have to tweak it
+        shell: |
+            cp -f ~stack/overcloudrc {{ overcloudrc }}
+
+      - name: find IPs of OpenDaylight and OpenStack nodes
+        shell: |
+            source ~stack/stackrc
+            OPENSTACK_SERVERS="$(openstack server list)"
+            set -a
+            ODL_IP=$(egrep no_proxy {{ overcloudrc }} | cut -d',' -f3)
+            OPENSTACK_CONTROL_NODE_1_IP=$(echo "$OPENSTACK_SERVERS" | egrep controller-0 | egrep -o '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
+            OPENSTACK_CONTROL_NODE_2_IP=$(echo "$OPENSTACK_SERVERS" | egrep controller-1 | egrep -o '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+') || true
+            OPENSTACK_CONTROL_NODE_3_IP=$(echo "$OPENSTACK_SERVERS" | egrep controller-2 | egrep -o '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+') || true
+            OPENSTACK_COMPUTE_NODE_1_IP=$(echo "$OPENSTACK_SERVERS" | egrep compute-0 | egrep -o '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
+            OPENSTACK_COMPUTE_NODE_2_IP=$(echo "$OPENSTACK_SERVERS" | egrep compute-1 | egrep -o '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+') || true
+            env | grep -E "ODL_IP|OPENSTACK_" >> {{ overcloudrc }}
+
+      - name: make sure cirros guest images are available for use by the tests
+        shell: |
+            source {{ overcloudrc }}
+            if ! openstack image list | grep cirros-0.3.4-x86_64-uec; then
+              curl -o /tmp/cirros3.4.img http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
+              glance image-create --name cirros-0.3.4-x86_64-uec --disk-format=qcow2 --container-format=bare --visibility=public --file=/tmp/cirros3.4.img
+            fi
+            if ! openstack image list | grep cirros-0.3.5-x86_64-disk; then
+              curl -o /tmp/cirros3.5.img http://download.cirros-cloud.net/0.3.5/cirros-0.3.5-x86_64-disk.img
+              glance image-create --name cirros-0.3.5-x86_64-disk --disk-format=qcow2 --container-format=bare --visibility=public --file=/tmp/cirros3.5.img
+            fi
+            if ! openstack flavor list | grep m1.nano; then
+              openstack flavor create --id 0 --vcpus 1 --ram 64 --disk 1 m1.nano
+            fi
+
+      - name: ODL Robot CSIT creates it's own external network, so delete it here beforehand
+        shell: |
+            source {{ overcloudrc }}
+            if openstack network show nova; then
+                openstack network delete nova
+            fi
+
+      - name: robot CSIT is complaining about using v3 for VOLUME_API, but v2 seems to be ok - fixing overcloudrc
+        replace:
+            path: "{{ overcloudrc }}"
+            regexp: "OS_VOLUME_API_VERSION=.*"
+            replace: "OS_VOLUME_API_VERSION=2"
+
+      - name: copy overcloudrc file to controller node and more tweaks
+        shell: |
+            source {{ overcloudrc }}
+
+            scp -i ~stack/.ssh/id_rsa -o StrictHostKeyChecking=no -o GlobalKnownHostsFile=/dev/null \
+                -o UserKnownHostsFile=/dev/null -o LogLevel=error \
+                {{ overcloudrc }} heat-admin@$OPENSTACK_CONTROL_NODE_1_IP:/tmp/openrc
+
+            # ODL Robot CSIT wants to use the ping command from the control node, so needs permissions
+            ssh -i ~stack/.ssh/id_rsa -o StrictHostKeyChecking=no -o GlobalKnownHostsFile=/dev/null \
+                -o UserKnownHostsFile=/dev/null -o LogLevel=error \
+                heat-admin@$OPENSTACK_CONTROL_NODE_1_IP "sudo chmod u+s `which ping`;"
+
+            # Simulate an external internet address on the control node
+            ssh -i ~stack/.ssh/id_rsa -o StrictHostKeyChecking=no -o GlobalKnownHostsFile=/dev/null \
+                -o UserKnownHostsFile=/dev/null -o LogLevel=error \
+                heat-admin@$OPENSTACK_CONTROL_NODE_1_IP "sudo ip tuntap add dev internet_tap mode tap; \
+                                                             sudo ifconfig internet_tap up 10.9.9.9/24;"
+
+            # ODL Robot CSIT runs tempest tests from the control node, so installing that there
+            ssh -i ~stack/.ssh/id_rsa -o StrictHostKeyChecking=no -o GlobalKnownHostsFile=/dev/null \
+                -o UserKnownHostsFile=/dev/null -o LogLevel=error \
+                heat-admin@$OPENSTACK_CONTROL_NODE_1_IP "sudo yum install -y openstack-tempest"
+
+      - name: run Robot
+        shell: |
+            set -x
+            source {{ overcloudrc }}
+            STACK_HOME=~stack
+            TEST_NAME={{ item.replace('/', '_') }}
+            robot_cmd="pybot \
+                          --removekeywords wuks \
+                          -c critical \
+                          -e exclude \
+                          -d {{ resultsdir }} \
+                          -l {{ logdir }}/$TEST_NAME.html \
+                          -o {{ resultsdir }}/$TEST_NAME.xml \
+                          -r {{ resultsdir }}/$TEST_NAME.html \
+                          -v BUNDLEFOLDER:/opt/opendaylight \
+                          -v CONTROLLER_USER:heat-admin \
+                          -v DEFAULT_LINUX_PROMPT:\$ \
+                          -v DEFAULT_LINUX_PROMPT_STRICT:]\$ \
+                          -v DEFAULT_USER:heat-admin \
+                          -v DEVSTACK_DEPLOY_PATH:/tmp \
+                          -v HA_PROXY_IP:$ODL_IP \
+                          -v HA_PROXY_1_IP:$ODL_IP \
+                          -v HA_PROXY_2_IP:$ODL_IP \
+                          -v HA_PROXY_3_IP:$ODL_IP \
+                          -v NUM_ODL_SYSTEM:1 \
+                          -v NUM_OS_SYSTEM:3 \
+                          -v NUM_TOOLS_SYSTEM:0 \
+                          -v ODL_SNAT_MODE:controller \
+                          -v ODL_STREAM:carbon \
+                          -v ODL_SYSTEM_IP:$ODL_IP \
+                          -v ODL_SYSTEM_1_IP:$ODL_IP \
+                          -v OS_CONTROL_NODE_IP:$ODL_IP \
+                          -v OS_CONTROL_NODE_1_IP:$OPENSTACK_CONTROL_NODE_1_IP \
+                          -v OS_CONTROL_NODE_2_IP:$OPENSTACK_CONTROL_NODE_2_IP \
+                          -v OS_CONTROL_NODE_3_IP:$OPENSTACK_CONTROL_NODE_3_IP \
+                          -v OPENSTACK_BRANCH:stable/pike \
+                          -v OS_COMPUTE_1_IP:$OPENSTACK_COMPUTE_NODE_1_IP \
+                          -v OS_COMPUTE_2_IP:$OPENSTACK_COMPUTE_NODE_2_IP \
+                          -v OS_USER:heat-admin \
+                          -v ODL_SYSTEM_USER:heat-admin \
+                          -v ODL_SYSTEM_PROMPT:\$ \
+                          -v PUBLIC_PHYSICAL_NETWORK:datacentre \
+                          -v RESTCONFPORT:8081 \
+                          -v SECURITY_GROUP_MODE:stateful \
+                          -v USER_HOME:/home/stack \
+                          -v WORKSPACE:{{ workdir }}/workspace  \
+                          -v USER:heat-admin \
+                          -v TOOLS_SYSTEM_IP:localhost \
+                          -v of_port:6653 "
+
+            docker run -i --net=host -v {{ workdir }}:{{ workdir }}:Z \
+                                     -v /home/stack/.ssh:/home/stack/.ssh:Z \
+                                     -v $STACK_HOME:$STACK_HOME \
+                                     -v {{ overcloudrc }}:{{ overcloudrc }} \
+                                     {{ test.container.image.name }} \
+                          /bin/bash -c "source {{ overcloudrc }}; \
+                                        $robot_cmd {{ item }};" \
+                          2>&1 | tee -a {{ logdir }}/docker_run_$TEST_NAME.log
+        with_items: "{{ test.tests.split(',') }}"
+        tags: run-tests
