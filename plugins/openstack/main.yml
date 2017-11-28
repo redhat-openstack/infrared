@@ -1,6 +1,11 @@
 ---
-- include: cleanup.yml
-  when: provision.cleanup|default(False)
+- import_playbook: cleanup.yml
 
-- include: provision.yml
-  when: not provision.cleanup|default(False)
+- name: plugins/openstack
+  hosts: localhost
+  gather_facts: no
+  tasks:
+
+    - name: provisioning tasks
+      include_tasks: provision.yml
+      when: not provision.cleanup|default(False)
