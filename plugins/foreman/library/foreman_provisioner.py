@@ -61,6 +61,11 @@ options:
          mgmt_strategy. For example: reset, reboot, cycle
      default: 'cycle'
      required: false
+   ipmi_address:
+     description:
+         - Host IPMI address
+     default: None
+     required: false
    ipmi_username:
      description:
          - Host IPMI username
@@ -227,7 +232,7 @@ class ForemanManager(object):
                 break
         return missing_bmc
 
-    def provision(self, host_id, mgmt_strategy, mgmt_action,
+    def provision(self, host_id, mgmt_strategy, mgmt_action, ipmi_address,
                   ipmi_username, ipmi_password, wait_for_host=10):
         """
         This method rebuilds a machine, doing so by running get_host and bmc.
@@ -238,6 +243,7 @@ class ForemanManager(object):
         (e.g: cycle, reset, etc)
         :param wait_for_host: number of seconds the function waits after host
         finished rebuilding before checking connectivity
+        :param ipmi_address: remote server address (IPMI)
         :param ipmi_username: remote server username (IPMI)
         :param ipmi_password: remote server password (IPMI)
         :raises: KeyError if BMC hasn't been found on the given host
@@ -245,14 +251,25 @@ class ForemanManager(object):
                  rebuild
         """
         wait_for_host = int(wait_for_host)
-        if self._validate_bmc(host_id):
-            raise KeyError("BMC not found on {}".format(host_id))
+
         building_host = self.get_host(host_id)
         self.set_build_on_host(host_id, True)
         if mgmt_strategy == 'foreman':
+            if self._validate_bmc(host_id):
+                raise KeyError("BMC not found on {}".format(host_id))
             self.bmc(host_id, mgmt_action)
         elif mgmt_strategy == 'ipmi':
-            host = "{0}.{1}".format(building_host.get('interfaces')[0].get('name'), building_host.get('domain_name'))
+            host = None
+            if 'interfaces' in building_host and len(building_host.get('interfaces')) > 0:
+                # host found in foreman entry
+                host = "{0}.{1}".format(building_host.get('interfaces')[0].get('name'), building_host.get('domain_name'))
+            else:
+                # host passed as CLI argument
+                host = ipmi_address
+            if not host:
+                # Host isn't specified nor found in foreman
+                raise Exception("Unknown IPMI address for foreman host: {0}. "
+                                "".format(host_id))
             self.ipmi(host, mgmt_action, ipmi_username, ipmi_password)
         else:
             raise Exception("{0} is not a supported "
@@ -280,6 +297,7 @@ def main():
             mgmt_action=dict(default='cycle', choices=['on', 'off', 'cycle',
                                                        'reset', 'soft']),
             wait_for_host=dict(default=10),
+            ipmi_address=dict(default=None),
             ipmi_username=dict(default='ADMIN'),
             ipmi_password=dict(default='ADMIN')))
 
@@ -294,6 +312,7 @@ def main():
             foreman_client.provision(module.params['host_id'],
                                      module.params['mgmt_strategy'],
                                      module.params['mgmt_action'],
+                                     module.params['ipmi_address'],
                                      module.params['ipmi_username'],
                                      module.params['ipmi_password'],
                                      module.params['wait_for_host'])
