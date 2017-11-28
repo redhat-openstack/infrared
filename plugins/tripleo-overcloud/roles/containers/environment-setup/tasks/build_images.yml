@@ -95,10 +95,8 @@
   tags:
       - skip_ansible_lint
 
-- name: patch and push container images
-  include: patch_images.yml
-  when: install_container_images_patch is defined
-  tags: container-images-patch
+- name: Output from uploading images
+  debug: var=image_upload
 
 - name: tag the original image(s) with 'before_packages_install' and install rpms&push new ones
   shell: |
@@ -111,6 +109,3 @@
   with_dict: "{{ install_container_images_packages }}"
   become: true
   tags: container-images-packages
-
-- name: Output from uploading images
-  debug: var=image_upload
