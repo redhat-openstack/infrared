@@ -59,3 +59,16 @@ Tempest results
 
     -rw-rw-r--. tempest-results-minimal.xml
     -rw-rw-r--. tempest-results-neutron.xml
+
+Downsteam tests
+---------------
+
+The tempest plugin provides the ``--plugin`` cli option which can be used to
+specify the plugin url to install. This option can be used, for example, to specify
+a downstream repo with tempest tests and run them::
+
+        ir tempest --tests=neutron_downstream \
+                   --openstack-version=12 \
+                   --openstack-installer=tripleo \
+                   --plugin=https://downstrem.repo/tempest_neutron_plugin \
+                   --setup rpm
