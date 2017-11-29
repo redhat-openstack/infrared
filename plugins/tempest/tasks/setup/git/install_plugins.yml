@@ -2,10 +2,15 @@
 - name: Include test vars
   include_vars: "{{ test_suite }}"
 
+- name: Get plugins from cli
+  set_fact:
+      cli_plugins: '{{ cli_plugins|default({}) | combine({ (item|basename): { "repo": item } } ) }}'
+  with_items: "{{ test.plugin|default([]) }}"
+
 - name: Set plugins list iterator for "{{ test_suite }}"
   set_fact:
-      plugins: "{{ test_dict.plugins | default({}) }}"
-      plugins_dir: "{{ ('~/' + test.dir) | dirname }}/plugins"
+      plugins: "{{ test_dict.plugins | default({}) | combine(cli_plugins|default({})) }}"
+      plugins_dir: "{{ ansible_user_dir }}/{{test.dir | dirname }}/plugins"
 
 - name: Create plugins directory
   file:
@@ -14,6 +19,8 @@
   when: "{{ plugins }}"
 
 - name: Clone tempest plugins
+  environment:
+      GIT_SSL_NO_VERIFY: 0
   git:
       repo: "{{ item.value.repo }}"
       dest: "{{ plugins_dir }}/{{ item.key }}"
