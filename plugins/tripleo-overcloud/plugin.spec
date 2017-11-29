@@ -276,6 +276,10 @@ subparsers:
                           network, creating a new VLAN interface connected to ovs's "br-ctlplane" bridge.
                           NOTE: If your UnderCloud's network is already configured properly, this could disrupt it, making overcloud API unreachable
                           For more details, see: "VALIDATING THE OVERCLOUD" on https://access.redhat.com/documentation/en/red-hat-openstack-platform/10-beta/paged/director-installation-and-usage/chapter-6-performing-tasks-after-overcloud-creation
+                  external-vlan:
+                      type: Value
+                      help: |
+                         An Optional external VLAN ID of the external network (Not to be confused with the Public API network)
 
             - title: Overcloud storage
               options:
