@@ -8,7 +8,7 @@
       include_vars: "{{ provision.topology.network }}"
 
     - name: Check if IPv6 enabled on host
-      shell: "lsmod | grep ipv6"
+      shell: "grep -q ^0$ /sys/module/ipv6/parameters/disable"
       ignore_errors: True
       register: ipv6_mod
 
