@@ -15,6 +15,14 @@ subparsers:
                         For example: smoke,network,volumes
                         __LISTYAMLS__
                       required: yes
+                  plugin:
+                      type: Value
+                      action: append
+                      help: |
+                        The list of additional plugins with tests to install.
+                        Should be specified in next format:
+                            --plugin=repo_url
+                        More that one --plugin option can be provided.
                   openstack-version:
                        type: Value
                        help: |

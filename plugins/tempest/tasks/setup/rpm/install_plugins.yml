@@ -2,33 +2,27 @@
 - name: Include test vars
   include_vars: "{{ test_suite }}"
 
+- name: Get plugins from cli
+  set_fact:
+      cli_plugins: "{{ cli_plugins|default({}) | combine({ (item|basename): { 'repo': item }}) }}"
+  with_items: "{{ test.plugin|default([]) }}"
+
+- name: Set plugins list iterator for "{{ test_suite }}"
+  set_fact:
+      plugins: "{{ test_dict.plugins | default({}) | combine(cli_plugins|default({})) }}"
+      plugins_dir: "{{ ansible_user_dir }}/{{test.dir | dirname }}/plugins"
+
 - name: Install plugin packages for "{{ test_suite }}" suite
   become: yes
   package:
       name: "{{ item.value.package[test.openstack.version |default(overcloud_version) | int]|default(item.value.package.default) }}"
       state: present
-  with_dict: "{{ test_dict.plugins | default({}) }}"
+  with_dict: "{{ plugins | default({}) }}"
   when: item.value.package is defined
 
-- name: Install git
-  become: yes
-  yum:
-      name: "git"
-      state: present
-  when: test_dict.plugins is defined and test_dict.plugins != {}
-
-- name: Disable SSL verification by git
-  become: yes
-  shell: "git config --global http.sslVerify false"
-  when: test_dict.plugins is defined and test_dict.plugins != {}
-
-- name: Clone plugin repository for "{{ test_suite }}" suite
-  become: yes
-  git:
-      repo: "{{ item.value.repo | default(item.value.default) }}"
-      dest: "{{ ansible_user_dir }}/{{ item.value.repo | basename }}"
-      accept_hostkey: true
-  retries: 3
-  delay: 60
-  with_dict: "{{ test_dict.plugins | default({}) }}"
+- name: Install plugin from source "{{ test_suite }}" suite
+  include_tasks: install_plugins_source.yml
+  loop_control:
+      loop_var: plugin_dict
   when: item.value.package is not defined
+  with_dict: "{{ plugins | default({}) }}"
