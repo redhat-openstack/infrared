@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9f1a818_08eda987",
+        "filename": "plugins/foreman/main.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1008672
+      },
+      "writtenOn": "2017-11-29T12:56:17Z",
+      "side": 1,
+      "message": "Please, modify the ipmi_address as the following:\nipmi_address: \"{{ (provision.host.ipmi|default({})).address | default(omit) }}\"\n\nOtherwise, I\u0027m getting the following error using foreman strategy:\n\n\nTASK [Rebuild nodes] ***************************************************************************************************************************************************************************************\nfatal: [localhost]: FAILED! \u003d\u003e {\"failed\": true, \"msg\": \"The task includes an option with an undefined variable. The error was: \u0027dict object\u0027 has no attribute \u0027ipmi\u0027\\n\\nThe error appears to have been in \u0027/home/max/Projects/RedHat/Automation/IR/plugins/foreman/main.yml\u0027: line 6, column 7, but may\\nbe elsewhere in the file depending on the exact syntax problem.\\n\\nThe offending line appears to be:\\n\\n  tasks:\\n    - name: Rebuild nodes\\n      ^ here\\n\\nexception type: \u003cclass \u0027ansible.errors.AnsibleUndefinedVariable\u0027\u003e\\nexception: \u0027dict object\u0027 has no attribute \u0027ipmi\u0027\"}",
+      "range": {
+        "startLine": 15,
+        "startChar": 11,
+        "endLine": 15,
+        "endChar": 76
+      },
+      "revId": "48bbc29a846d41b3436b379f1f5d6cd2c9e36d71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
