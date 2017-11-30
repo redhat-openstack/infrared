@@ -1,34 +1,34 @@
 ---
 - name: Pre run configuration
-  include: "{{ provision_pre | default('pre.yml') }}"
+  import_playbook: "{{ provision_pre | default('pre.yml') }}"
   when: not provision.topology.extend|default(False)
   tags: pre
 
 - name: Validate hypervisor
-  include: "{{ validate_hypervisor | default('validate_hypervisor.yml') }}"
+  import_playbook: "{{ validate_hypervisor | default('validate_hypervisor.yml') }}"
   tags: validations
   when: not provision.host.memory.overcommit|default('False')
 
 - name: Prepare the hypervisor for provisioning
-  include: "{{ prepare_hypervisor | default('prepare_hypervisor.yml') }}"
+  import_playbook: "{{ prepare_hypervisor | default('prepare_hypervisor.yml') }}"
   when: not provision.topology.extend|default(False)
   tags: hypervisor
 
 - name: Create Networks
-  include: "{{ provision_networks | default('provision_networks.yml') }}"
+  import_playbook: "{{ provision_networks | default('provision_networks.yml') }}"
   when: not provision.topology.extend|default(False)
   tags: networks
 
 - name: Provision Vms
-  include: "{{ provision_vms | default('provision_vms.yml') }}"
+  import_playbook: "{{ provision_vms | default('provision_vms.yml') }}"
   tags: vms
 
 - name: Create a sudoer user for non root SSH login
-  include: "{{ provision_user | default('provision_user.yml') }}"
+  import_playbook: "{{ provision_user | default('provision_user.yml') }}"
   tags: user
 
 - name: Including post provision tasks
-  include: "{{ provision_post | default('post.yml') }}"
+  import_playbook: "{{ provision_post | default('post.yml') }}"
   tags: post
 
 - name: generate inventory file

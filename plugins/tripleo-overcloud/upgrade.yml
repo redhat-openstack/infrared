@@ -33,7 +33,7 @@
       - upgrade_undercloud_validation
   tasks:
       - name: Validation
-        include: "tasks/upgrade/undercloud_validation.yml"
+        include_tasks: "tasks/upgrade/undercloud_validation.yml"
 
 - name: Overcloud Validation
   hosts: overcloud_nodes:!unused
@@ -44,7 +44,7 @@
       - upgrade_overcloud_validation
   tasks:
       - name: Validation
-        include: "tasks/upgrade/overcloud_validation.yml"
+        include_tasks: "tasks/upgrade/overcloud_validation.yml"
 
 - name: Update Overcloud repos
   hosts: overcloud_nodes:!unused
@@ -112,5 +112,5 @@
         with_items: "{{ pubkeys.results }}"
 
       - name: Overcloud Upgrade
-        include: "tasks/upgrade/{{ undercloud_version }}/main.yml"
+        include_tasks: "tasks/upgrade/{{ undercloud_version }}/main.yml"
         when: undercloud_version|openstack_release < 12

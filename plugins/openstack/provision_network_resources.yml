@@ -21,7 +21,7 @@
         vars:
             input:
                 networks: "{{ networks.results | map(attribute='network') | list }}"
-        include: tasks/register_resources_file.yml
+        include_tasks: tasks/register_resources_file.yml
 
       - name: Register externally accessible networks
         os_networks_facts:
@@ -59,7 +59,7 @@
         vars:
             input:
                 subnets: "{{ subnets.results | map(attribute='subnet') | list }}"
-        include: tasks/register_resources_file.yml
+        include_tasks: tasks/register_resources_file.yml
 
       - name: Create routers
         os_router:
@@ -77,10 +77,10 @@
         vars:
             input:
                 routers: "{{ routers.results | map(attribute='router') | list }}"
-        include: tasks/register_resources_file.yml
+        include_tasks: tasks/register_resources_file.yml
 
       - name: create security groups
-        include: tasks/create_network_resources.yml
+        include_tasks: tasks/create_network_resources.yml
         with_dict: "{{ security_groups|default({}) }}"
         loop_control:
             loop_var: sg
@@ -90,5 +90,5 @@
         vars:
             input:
                 security_group_list: "{{ security_group_list }}"
-        include: tasks/register_resources_file.yml
+        include_tasks: tasks/register_resources_file.yml
         when: provision.anti.spoofing == true

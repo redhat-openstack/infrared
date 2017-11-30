@@ -1,6 +1,6 @@
 ---
 - name: Generate ~/deprecated_cli_options.yaml
-  include: convert_cli_options.yml
+  include_tasks: convert_cli_options.yml
   vars:
       value_list:
           - searched: neutron-flat-networks
@@ -54,12 +54,12 @@
   tags: convert_roles_data
 
 - name: Convert roles_data.yaml
-  include: convert_roles_data.yml
+  include_tasks: convert_roles_data.yml
   when: is_roles.rc == 0
   tags: convert_roles_data
 
 - name: Initiate composable upgrade process
-  include: composable_upgrade.yml
+  include_tasks: composable_upgrade.yml
   tags: composable_upgrade
   vars:
       composable_upgrade_script: "~/overcloud_upgrade_composable.sh"
@@ -82,27 +82,27 @@
   register: creds
 
 - name: Compute Upgrade
-  include: compute_upgrade.yml
+  include_tasks: compute_upgrade.yml
   with_items: "{{ groups.compute|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: computes_upgrade
 
 - name: Swift Upgrade
-  include: swift_upgrade.yml
+  include_tasks: swift_upgrade.yml
   with_items: "{{ groups.swift|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: swift_upgrade
 
 - name: Converge
-  include: converge_upgrade.yml
+  include_tasks: converge_upgrade.yml
   tags: converge_upgrade
   vars:
       converge_script: "~/overcloud_upgrade_converge.sh"
 
 - name: Ceph Upgrade
-  include: ceph_upgrade.yml
+  include_tasks: ceph_upgrade.yml
   with_items: "{{ groups.ceph|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
@@ -115,7 +115,7 @@
   register: custom_nodes
   tags: custom_role_post
 
-- include: custom_roles_upgrade.yml
+- include_tasks: custom_roles_upgrade.yml
   with_items: "{{ custom_nodes.stdout|default([]) }}"
   when:
       - "'objectstorage' not in '{{ item.Name }}'"
@@ -131,7 +131,7 @@
   tags: custom_role_post
 
 - name: Post upgrade controller nodes
-  include: controller_postupgrade.yml
+  include_tasks: controller_postupgrade.yml
   with_items: "{{ groups.controller|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
