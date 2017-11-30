@@ -7,7 +7,7 @@
       - deploy_environment
   pre_tasks:
       - name: discover storage
-        include: tasks/storage/discover_backend.yml
+        include_tasks: tasks/storage/discover_backend.yml
   roles:
       - role: containers/environment-setup
         when:
@@ -38,7 +38,7 @@
         become: yes
 
 - name: Populate the overcloud deploy script
-  include: build_templates.yml
+  import_playbook: build_templates.yml
   tags:
       - deploy_preparation
       - templates
@@ -108,7 +108,7 @@
         tags: summary
 
 - name: Update inventory with overcloud details
-  include: update_inventory.yml
+  import_playbook: update_inventory.yml
   tags:
       - inventory_update
       - deploy
@@ -133,7 +133,7 @@
           timeout: 60
 
     - name: update clouds.yaml file
-      include: clouds.yml
+      include_tasks: clouds.yml
       vars:
             auth_file_path: "{{ overcloudrc_file }}"
             cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"
