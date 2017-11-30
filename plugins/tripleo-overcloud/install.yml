@@ -1,11 +1,11 @@
 - name: Perform pre install tasks
-  include: "{{ overcloud_pre | default('pre.yml') }}"
+  import_playbook: "{{ overcloud_pre | default('pre.yml') }}"
   when: install.pre|default('')
   tags:
       - pre
 
 - name: Provision loadbalancer node
-  include: loadbalancer.yml
+  import_playbook: loadbalancer.yml
   tags:
       - loadbalancer
       - loadbalancer_setup
@@ -14,13 +14,13 @@
       - install.deploy|default('')
 
 - name: Introspect our machines
-  include: "{{ overcloud_introspect | default('introspect.yml') }}"
+  import_playbook: "{{ overcloud_introspect | default('introspect.yml') }}"
   when: install.introspect|default('')
   tags:
       - introspect
 
 - name: Tag our machines with proper flavors
-  include: "{{ overcloud_flavors | default('tag.yml') }}"
+  import_playbook: "{{ overcloud_flavors | default('tag.yml') }}"
   when: install.tagging|default('')
   tags:
       - tag
@@ -30,7 +30,7 @@
       templates:
           generate_host_name_template: yes
           storage_add_scale: yes
-  include: "{{ overcloud_deploy | default('deploy.yml') }}"
+  import_playbook: "{{ overcloud_deploy | default('deploy.yml') }}"
   when:
       - install.deploy|default('')
       - not install.role|default('') or (install.role is defined and install.role.files == 'default')
@@ -41,7 +41,7 @@
       templates:
           generate_host_name_template: no
           storage_add_scale: no
-  include: "{{ composable_roles | default('composable_roles.yml') }}"
+  import_playbook: "{{ composable_roles | default('composable_roles.yml') }}"
   when:
       - install.deploy|default('')
       - install.role is defined and install.role.files != 'default'
@@ -56,7 +56,7 @@
       templates:
           generate_host_name_template: no
           storage_add_scale: no
-  include: "{{ composable_roles | default('tripleo_roles.yml') }}"
+  import_playbook: "{{ composable_roles | default('tripleo_roles.yml') }}"
   when:
       - install.deploy|default('')
       - install.role is defined
@@ -65,7 +65,7 @@
       - install.tht.roles == true
 
 - name: "After overcloud container workarounds (remove it ASAP)"
-  include: "docker_after_workaround.yml"
+  import_playbook: "docker_after_workaround.yml"
   when:
       - install.deploy|default('')
       - install.version|default(hostvars[groups['undercloud'][0]].undercloud_version) | openstack_release > 11
@@ -73,7 +73,7 @@
   tags: deploy
 
 - name: Perform post install tasks
-  include: "{{ overcloud_post | default('post.yml') }}"
+  import_playbook: "{{ overcloud_post | default('post.yml') }}"
   when: install.post|default('')
   tags:
       - post
