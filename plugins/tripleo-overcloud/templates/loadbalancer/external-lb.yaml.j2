@@ -1,20 +1,3 @@
-{% if install.version|default(undercloud_version)|openstack_release > 10 %}
-resource_registry:
-
-  OS::TripleO::Controller::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/external_from_pool{{ (install.network.protocol == 'ipv6') | ternary('_v6','') }}.yaml
-  OS::TripleO::Controller::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api_from_pool{{ (install.network.protocol == 'ipv6') | ternary('_v6','') }}.yaml
-  OS::TripleO::Controller::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_from_pool{{ (install.network.protocol == 'ipv6') | ternary('_v6','') }}.yaml
-  OS::TripleO::Controller::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/noop.yaml
-  OS::TripleO::Controller::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/noop.yaml
-  OS::TripleO::Controller::Ports::ManagementPort: /usr/share/openstack-tripleo-heat-templates/network/ports/management_from_pool{{ (install.network.protocol == 'ipv6') | ternary('_v6','') }}.yaml
-
-  OS::TripleO::ServiceApi::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/noop.yaml
-  OS::TripleO::ServiceApi::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api_from_pool{{ (install.network.protocol == 'ipv6') | ternary('_v6','') }}.yaml
-  OS::TripleO::ServiceApi::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_from_pool{{ (install.network.protocol == 'ipv6') | ternary('_v6','') }}.yaml
-  OS::TripleO::ServiceApi::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage_mgmt_from_pool{{ (install.network.protocol == 'ipv6') | ternary('_v6','') }}.yaml
-  OS::TripleO::ServiceApi::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/tenant_from_pool{{ (install.network.protocol == 'ipv6') | ternary('_v6','') }}.yaml
-  OS::TripleO::ServiceApi::Ports::ManagementPort: /usr/share/openstack-tripleo-heat-templates/network/ports/management_from_pool{{ (install.network.protocol == 'ipv6') | ternary('_v6','') }}.yaml
-{% endif %}
 {% if install.version|default(undercloud_version)|openstack_release < 9 %}
 parameters:
   ServiceNetMap:
