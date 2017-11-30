@@ -30,7 +30,7 @@
       - update_undercloud_validation
   tasks:
       - name: Validation
-        include: "tasks/update/undercloud_validation.yml"
+        include_tasks: "tasks/update/undercloud_validation.yml"
 
       - name: check for cdn registration env file
         command: grep "{{ reg_file }}" {{ overcloud_deploy_script }}
@@ -89,7 +89,7 @@
       - update
   tasks:
       - name: update deployment plan in Mistral
-        include: tasks/update/common/update_mistral_plan.yaml
+        include_tasks: tasks/update/common/update_mistral_plan.yaml
         when: undercloud_version|openstack_release in [10, 11]
 
       - name: Scan nodes ssh keys
@@ -104,4 +104,4 @@
         with_items: "{{ pubkeys.results }}"
 
       - name: Overcloud Update
-        include: tasks/update/common/update_overcloud.yaml
+        include_tasks: tasks/update/common/update_overcloud.yaml

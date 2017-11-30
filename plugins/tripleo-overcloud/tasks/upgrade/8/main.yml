@@ -1,6 +1,6 @@
 ---
 - name: Overcloud Upgrade Init
-  include: "upgrade_init.yml"
+  include_tasks: "upgrade_init.yml"
   tags:
       - upgrade
       - upgrade_init
@@ -17,7 +17,7 @@
   with_items: "{{ groups.swift|default([])|difference(groups.unused|default([]))|default([]) }}"
 
 - name: Controller And Block Storage Upgrade
-  include: "controller_upgrade.yml"
+  include_tasks: "controller_upgrade.yml"
   tags:
       - upgrade
       - upgrade_controller
@@ -43,7 +43,7 @@
   with_items: "{{ groups.ceph|default([])|difference(groups.unused|default([]))|default([]) }}"
 
 - name: Convergence
-  include: "convergence.yml"
+  include_tasks: "convergence.yml"
   tags:
       - upgrade
       - upgrade_convergence
