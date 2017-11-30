@@ -110,3 +110,10 @@ subparsers:
                         NOTE: 'uefi' bootmode is supported only for nodes without OS.
                       choices: ['hd', 'uefi']
                       default: hd
+
+            - title: ansible facts
+              options:
+                  collect-ansible-facts:
+                      type: Bool
+                      help: Save ansible facts as json file(s)
+                      default: False

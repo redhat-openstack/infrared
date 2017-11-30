@@ -71,15 +71,3 @@
   tags:
     - container-images-patch
     - container-images-packages
-
-- name: set facts for container images patching
-  set_fact:
-    install_container_images_patch: "{{ install.get('container', {}).get('images', {}).get('patch', {}) }}"
-  when: install.get('container', {}).get('images', {}).get('patch', {})
-  tags: container-images-patch
-
-- name: set facts for container images install packages
-  set_fact:
-    install_container_images_packages: "{{ install.get('container', {}).get('images', {}).get('packages', {}) }}"
-  when: install.get('container', {}).get('images', {}).get('packages', {})
-  tags: container-images-packages

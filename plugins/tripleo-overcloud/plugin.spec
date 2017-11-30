@@ -56,7 +56,9 @@ subparsers:
                             default hence specifying URL of an RPM to install is mandatory. This option can be used
                             multiple times for different container images.
                             NOTE: Only specified image(s) will get the packages installed. All images that depend on
-                            updated image have to be updated as well (using this option or otherwise).
+                            updated image have to be updated as well (using this option or otherwise). Also, this feature
+                            requires docker registry on undercloud hence will not work if registry-undercloud-skip
+                            is set to True.
                             Example:
                                 --container-images-packages openstack-opendaylight-docker=https://kojipkgs.fedoraproject.org//packages/tmux/2.5/3.fc27/x86_64/tmux-2.5-3.fc27.x86_64.rpm,https://kojipkgs.fedoraproject.org//packages/vim/8.0.844/2.fc27/x86_64/vim-minimal-8.0.844-2.fc27.x86_64.rpm
 
@@ -420,3 +422,10 @@ subparsers:
                       default: password
                       help: |
                         VBMC password (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+
+            - title: ansible facts
+              options:
+                  collect-ansible-facts:
+                      type: Bool
+                      help: Save ansible facts as json file(s)
+                      default: False
