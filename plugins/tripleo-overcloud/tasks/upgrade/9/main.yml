@@ -1,12 +1,12 @@
 ---
 - name: SSL Config
-  include: "ssl.yml"
+  include_tasks: "ssl.yml"
   tags:
       - upgrade
       - upgrade_ssl
 
 - name: run upgrade steps
-  include: ../common/upgrade_step.yml
+  include_tasks: ../common/upgrade_step.yml
   loop_control:
     loop_var: ugstage
   with_items:
@@ -24,14 +24,14 @@
         - /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker-init.yaml
 
 - name: Object Storage Upgrade
-  include: ../common/node_upgrade.yml
+  include_tasks: ../common/node_upgrade.yml
   with_items: "{{ groups.swift|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: swift_upgrade
 
 - name: Controller upgrade
-  include: ../common/upgrade_step.yml
+  include_tasks: ../common/upgrade_step.yml
   loop_control:
     loop_var: ugstage
   with_items:
@@ -41,21 +41,21 @@
         - /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker.yaml
 
 - name: Ceph OSD nodes upgrade
-  include: ../common/node_upgrade.yml
+  include_tasks: ../common/node_upgrade.yml
   with_items: "{{ groups.ceph|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: upgrade_ceph
 
 - name: Nova compute nodes upgrade
-  include: ../common/node_upgrade.yml
+  include_tasks: ../common/node_upgrade.yml
   with_items: "{{ groups.compute|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: upgrade_compute
 
 - name: Upgrade convergence
-  include: ../common/upgrade_step.yml
+  include_tasks: ../common/upgrade_step.yml
   loop_control:
     loop_var: ugstage
   with_items:

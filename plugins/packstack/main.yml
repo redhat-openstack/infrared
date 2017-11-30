@@ -1,8 +1,8 @@
 ---
-- include: init.yml
-- include: setup_packages.yml
-- include: install.yml
-- include: configure_services_post_install.yml
-- include: create_external_network.yml
+- import_playbook: init.yml
+- import_playbook: setup_packages.yml
+- import_playbook: install.yml
+- import_playbook: configure_services_post_install.yml
+- import_playbook: create_external_network.yml
   when: network_service_common.type == 'neutron' and install.public.network
   tags: public_network
