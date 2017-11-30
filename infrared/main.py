@@ -1,32 +1,42 @@
 import os
-from pbr import version
-import pkg_resources as pkg
 import sys
 import argcomplete
 
 
 def inject_common_paths():
-    """Discover the path to the common/ directory provided
+    """Discover the path to the common dependencies libraries provided
        by infrared core.
     """
-    def override_conf_path(common_path, envvar, specific_dir):
+    def override_conf_path(dependency_path, envvar, specific_dir):
         conf_path = os.environ.get(envvar, '')
-        additional_conf_path = os.path.join(common_path, specific_dir)
+        additional_conf_path = os.path.join(dependency_path, specific_dir)
+
+        # return if the env path does not exists
+        if not os.path.exists(additional_conf_path):
+            return
+
         if conf_path:
             full_conf_path = ':'.join([additional_conf_path, conf_path])
         else:
             full_conf_path = additional_conf_path
         os.environ[envvar] = full_conf_path
 
-    version_info = version.VersionInfo('infrared')
+    # TODO: use CoreSettings once merged
+    libs_folder = os.path.join(
+        os.environ.get("INFRARED_HOME", os.path.abspath(os.getcwd())),
+        ".library")
 
-    common_path = pkg.resource_filename(version_info.package,
-                                        'common')
-    override_conf_path(common_path, 'ANSIBLE_ROLES_PATH', 'roles')
-    override_conf_path(common_path, 'ANSIBLE_FILTER_PLUGINS', 'filter_plugins')
-    override_conf_path(common_path, 'ANSIBLE_CALLBACK_PLUGINS',
-                       'callback_plugins')
-    override_conf_path(common_path, 'ANSIBLE_LIBRARY', 'library')
+    if not os.path.isdir(libs_folder):
+        return
+
+    for dependency_library in os.listdir(libs_folder):
+        dependency_library = os.path.join(libs_folder, dependency_library)
+        override_conf_path(dependency_library, 'ANSIBLE_ROLES_PATH', 'roles')
+        override_conf_path(dependency_library, 'ANSIBLE_FILTER_PLUGINS',
+                           'filter_plugins')
+        override_conf_path(dependency_library, 'ANSIBLE_CALLBACK_PLUGINS',
+                           'callback_plugins')
+        override_conf_path(dependency_library, 'ANSIBLE_LIBRARY', 'library')
 
 
 # This needs to be called here because as soon as an ansible class is loaded
