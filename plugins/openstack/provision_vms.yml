@@ -18,11 +18,11 @@
   tasks:
       # TODO(yfried): add dynamic falvor creation
       - name: provision keys
-        include: tasks/keys.yml
+        include_tasks: tasks/keys.yml
         tags: keys
 
       - name: provision image for each node
-        include: tasks/servers.yml
+        include_tasks: tasks/servers.yml
         with_dict: "{{ provision.topology.nodes }}"
         loop_control:
             loop_var: node
@@ -32,4 +32,4 @@
         vars:
             input:
                 servers: "{{ server_list }}"
-        include: tasks/register_resources_file.yml
+        include_tasks: tasks/register_resources_file.yml

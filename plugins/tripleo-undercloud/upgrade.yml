@@ -50,7 +50,7 @@
         tags: upgrade_repos
 
       - name: Validation
-        include: "tasks/upgrade/validation.yml"
+        include_tasks: "tasks/upgrade/validation.yml"
         tags:
             - validation
             - upgrade_repos
@@ -67,4 +67,4 @@
             - upgrade_repos
   tasks:
       - name: "{{ operation_type }} to version {{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }} build {{ install.build | default('latest') }}"
-        include: "tasks/upgrade/upgrade.yml"
+        include_tasks: "tasks/upgrade/upgrade.yml"

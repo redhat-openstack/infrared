@@ -1,14 +1,14 @@
 ---
-- include: "{{ provision_cleanup | default('cleanup.yml') }}"
+- import_playbook: "{{ provision_cleanup | default('cleanup.yml') }}"
   when: (provision.cleanup|default(False)) or (provision.kill|default(False))
 
-- include: "{{ provision_playbook | default('provision.yml') }}"
+- import_playbook: "{{ provision_playbook | default('provision.yml') }}"
   when:
       - not provision.cleanup|default(False)
       - not provision.kill|default(False)
 
 - name: Collect Ansible facts
-  include: 'collect-ansible-facts.yml'
+  import_playbook: 'collect-ansible-facts.yml'
   when:
       - provision.collect.ansible.facts|default(False)
       - not provision.cleanup|default(False)

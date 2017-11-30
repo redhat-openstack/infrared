@@ -1,16 +1,16 @@
 - name: Fetch tempest deployer input file
-  include: tempest_deployer_input.yml
+  import_playbook: tempest_deployer_input.yml
   tags:
       - fetch_deploy_input
       - deploy
 
-- include: create_external_network.yml
+- import_playbook: create_external_network.yml
   tags:
       - public_network
       - post
   when: install.public.network
 
-- include: forward_overcloud_dashboard.yml
+- import_playbook: forward_overcloud_dashboard.yml
   tags:
       - dashboard
       - post
@@ -18,16 +18,16 @@
       - install.overcloud.dashboard_forward|default(True)
       - "'hypervisor' in groups"
 
-- include: post/lbaas_v2.yml
+- import_playbook: post/lbaas_v2.yml
   tags: lbaas
   when: install.network.lbaas|default(False)
 
-- include: post/ssh_between_compute.yml
+- import_playbook: post/ssh_between_compute.yml
   tags: enable_compute_ssh
   when: install.compute.ssh|default(False)
 
-- include: post/manila.yml
+- import_playbook: post/manila.yml
   tags: manila
 
-- include: post/network_time.yml
+- import_playbook: post/network_time.yml
   tags: time

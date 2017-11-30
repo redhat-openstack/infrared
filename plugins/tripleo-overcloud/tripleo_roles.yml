@@ -55,6 +55,6 @@
               new: compute
 
 - name: Deploy the Overcloud with composable roles
-  include: "{{ overcloud_deploy | default('deploy.yml') }}"
+  import_playbook: "{{ overcloud_deploy | default('deploy.yml') }}"
   tags:
       - tripleo_roles_deploy
