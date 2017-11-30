@@ -420,3 +420,10 @@ subparsers:
                       default: password
                       help: |
                         VBMC password (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+
+            - title: ansible facts
+              options:
+                  collect-ansible-facts:
+                      type: Bool
+                      help: Save ansible facts as json file(s)
+                      default: False
