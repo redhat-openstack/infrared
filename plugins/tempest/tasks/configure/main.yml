@@ -1,7 +1,7 @@
 - name: Prepare tempest configuration tool
   vars:
       method_name: "{{ test.setup }}{{ (test.legacy.config == true and test.setup == 'git') | ternary('_legacy','') }}"
-  include: "method/{{ method_name }}.yml"
+  include_tasks: "method/{{ method_name }}.yml"
 
 - name: Run tempest configuration
-  include: "run.yml"
+  include_tasks: "run.yml"

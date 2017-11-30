@@ -1,6 +1,6 @@
 ---
 - name: Append storage templates to the deploy script
-  include: storage/main.yml
+  include_tasks: storage/main.yml
   tags: storage
 
 - name: Check if user provided netwrok templates
@@ -10,24 +10,24 @@
   register: network
 
 - name: Append netwrok templates to the deploy script
-  include: network.yml
+  include_tasks: network.yml
   tags: network
   when: network.stat.exists
 
 - name: Setup the overcloud ssl
-  include: ssl.yml
+  include_tasks: ssl.yml
   tags: overcloud_ssl
   when: install.overcloud.ssl
 
 - name: Trust to undercloud cert
-  include: trust_uc.yml
+  include_tasks: trust_uc.yml
   when:
       - not install.overcloud.ssl
       - install.version|default(undercloud_version)|openstack_release >= 12
       - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
 - name: Generate the hostnames template
-  include: hostname.yml
+  include_tasks: hostname.yml
   when: templates.generate_host_name_template|default(True)
 
 - name: Create template with nodes count and flavors
@@ -39,7 +39,7 @@
       - not install.role|default('')
 
 - name: Setup loadbalancer
-  include: loadbalancer_templates.yml
+  include_tasks: loadbalancer_templates.yml
   when: "'loadbalancer' in groups"
   tags:
       - loadbalancer
@@ -54,7 +54,7 @@
       - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
 - name: Append Ops Tools templates to the deploy script
-  include: opstools/main.yml
+  include_tasks: opstools/main.yml
   tags: opstools
   when:
       - "'opstools' in groups and groups['opstools']"

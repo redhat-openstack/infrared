@@ -1,10 +1,10 @@
 - name: try to discover storage storage
-  include: discover_backend.yml
+  include_tasks: discover_backend.yml
 
 - name: get ceph_disks
   vars:
       storage_group: "{{ groups[storage_backend] | list }}"
-  include: disks_from_instackenv.yml
+  include_tasks: disks_from_instackenv.yml
   when:
       - storage_backend in ['swift', 'ceph']
       - "not install.storage.external"
@@ -15,7 +15,7 @@
   register: storage
 
 # If user provided storage templates, nothing to do here :)
-- include: "{{ storage_backend }}.yml"
+- include_tasks: "{{ storage_backend }}.yml"
   when:
     - storage_backend|default('')
     - not storage.stat.exists

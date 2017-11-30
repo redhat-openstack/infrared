@@ -1,7 +1,7 @@
 ---
 # todo(ansible 2.3): use builtin module https://docs.ansible.com/ansible/pacemaker_cluster_module.html
 - name: Reboot Node
-  include: reboot_node.yml
+  include_tasks: reboot_node.yml
   tags: controller_reboot
 
 - name: Check if pcsd is enabled
@@ -55,4 +55,4 @@
   when: pcsd.stdout.find("disabled") == -1
 
 - name: Packages Check
-  include: packages_check.yml
+  include_tasks: packages_check.yml

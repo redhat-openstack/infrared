@@ -179,7 +179,7 @@
             recurse: yes
 
 # need to setup shade node after restore
-- include: shade.yml
+- import_playbook: shade.yml
   tags: restore_shade
 
 # update clouds.yml basing on the starckrc file from the restored undercloud
@@ -190,7 +190,7 @@
   tags: restore_clouds_yml
   tasks:
       - name: update clouds.yaml file
-        include: clouds.yml
+        include_tasks: clouds.yml
         vars:
             auth_file_path: "/home/stack/stackrc"
             cloudname: "undercloud"

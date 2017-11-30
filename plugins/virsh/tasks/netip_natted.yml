@@ -20,7 +20,7 @@
   with_items: "{{ ip_list.results }}"
 
 - name: remove already used ips from dhcp_ranges
-  include: remove_used_ips.yml
+  include_tasks: remove_used_ips.yml
   with_dict: "{{ networks|default({}) }}"
   loop_control:
           loop_var: network
