@@ -19,7 +19,7 @@
   tags: compute_migrate
 
 - name: Migrate instance from {{ node_name }}
-  include: evacute_compute.yml
+  include_tasks: evacute_compute.yml
   when:
       - groups.compute|difference(groups.unused|default([]))|length > 1
       - "'{{ hostvars[node_name].ansible_fqdn }}' in '{{ item['OS-EXT-SRV-ATTR:host'] }}'"
@@ -34,7 +34,7 @@
       upgrade-non-controller.sh --upgrade {{ node_name }} &> {{ node_name }}-upgrade.log
 
 - name: Reboot Node
-  include: reboot_node.yml
+  include_tasks: reboot_node.yml
   tags: compute_reboot
 
 - name: Wait for nova-compute to be up on {{ node_name }}
@@ -46,7 +46,7 @@
   delegate_to: "{{ node_name }}"
 
 - name: Packages Check
-  include: packages_check.yml
+  include_tasks: packages_check.yml
 
 - name: Check that nova-compute binary for {{ node_name }} is up
   shell: |
@@ -58,7 +58,7 @@
   delay: 5
 
 - name: Migrate instance back to {{ node_name }}
-  include: evacute_compute.yml
+  include_tasks: evacute_compute.yml
   when:
       - groups.compute|difference(groups.unused|default([]))|length > 1
       - "'{{ hostvars[node_name].ansible_fqdn }}' in '{{ item['OS-EXT-SRV-ATTR:host'] }}'"

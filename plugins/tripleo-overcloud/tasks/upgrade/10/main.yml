@@ -5,13 +5,13 @@
       state: directory
 
 - name: SSL Config
-  include: "ssl.yml"
+  include_tasks: "ssl.yml"
   tags:
       - upgrade
       - upgrade_ssl
 
 - name: Pre-Upgrade Ceilometer migration
-  include: "ceilometer_migration.yml"
+  include_tasks: "ceilometer_migration.yml"
   tags:
       - upgrade
       - upgrade_ceilometer
@@ -19,7 +19,7 @@
       ceilometer_migration_script: "~/ceilometer_migration.sh"
 
 - name: Overcloud Upgrade Init
-  include: "upgrade_init.yml"
+  include_tasks: "upgrade_init.yml"
   tags:
       - upgrade
       - upgrade_init
@@ -49,7 +49,7 @@
   delegate_to: "{{ groups.controller | first }}"
 
 - name: Controller And Block Storage Upgrade
-  include: "controller_upgrade.yml"
+  include_tasks: "controller_upgrade.yml"
   tags:
       - upgrade
       - upgrade_controller
@@ -75,7 +75,7 @@
   with_items: "{{ groups.ceph|default([])|difference(groups.unused|default([]))|default([]) }}"
 
 - name: Convergence
-  include: "convergence.yml"
+  include_tasks: "convergence.yml"
   tags:
       - upgrade
       - upgrade_convergence
@@ -83,7 +83,7 @@
       convergence_script: "~/convergence.sh"
 
 - name: Overcloud Post-Upgrade Aodh migration
-  include: "aodh_migration.yml"
+  include_tasks: "aodh_migration.yml"
   tags:
       - upgrade
       - upgrade_aodh

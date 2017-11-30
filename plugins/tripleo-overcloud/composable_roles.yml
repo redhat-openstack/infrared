@@ -27,7 +27,7 @@
             tht_release: "{{ tht_pkg.release | splitext | first }}"
 
       - name: include roles according to the topology
-        include: tasks/composable_roles/add_role_vars.yml
+        include_tasks: tasks/composable_roles/add_role_vars.yml
         with_items: "{{ groups.overcloud_nodes }}"
         loop_control:
             loop_var: role
@@ -60,6 +60,6 @@
             force: yes
 
 - name: Deploy the Overcloud with composable roles
-  include: "{{ overcloud_deploy | default('deploy.yml') }}"
+  import_playbook: "{{ overcloud_deploy | default('deploy.yml') }}"
   tags:
       - composables_roles_deploy

@@ -1,5 +1,5 @@
 - name: Auto generate instackenv.json for virt
-  include: "{{ overcloud_virt | default('hypervisor.yml') }}"
+  import_playbook: "{{ overcloud_virt | default('hypervisor.yml') }}"
   tags:
       - hypervisor
       - ironic
@@ -7,7 +7,7 @@
   when: "'hypervisor' in groups"
 
 - name: Auto generate instackenv.json for ovb
-  include: "{{ overcloud_ovb | default('ovb.yml') }}"
+  import_playbook: "{{ overcloud_ovb | default('ovb.yml') }}"
   tags:
      - ironic
      - instack
@@ -102,5 +102,5 @@
       # If bulk introspection failed, play introspection_recovery playbook which runs node-by-node introspection
       # and also helps with debugging and recovery.
       - name: Recover from errors during bulk introspection
-        include: tasks/introspection_recovery.yml
+        include_tasks: tasks/introspection_recovery.yml
         when: not bulk_intro_ok

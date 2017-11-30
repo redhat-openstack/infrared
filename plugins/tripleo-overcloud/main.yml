@@ -1,37 +1,37 @@
 - name: Perform validations
-  include: "{{ validata_overcloud | default('validate.yml') }}"
+  import_playbook: "{{ validata_overcloud | default('validate.yml') }}"
   tags:
       - validation
 
 - name: Auto discover undercloud version
-  include: "{{ auto_discover_undercloud_version | default('version.yml') }}"
+  import_playbook: "{{ auto_discover_undercloud_version | default('version.yml') }}"
   when: install.version is not defined
   tags:
       - always
 
 - name: Overcloud install
-  include: "{{ overcloud_install | default('install.yml') }}"
+  import_playbook: "{{ overcloud_install | default('install.yml') }}"
   when:
       - not install.upgrade|default('')
       - not install.ocupdate|default(False)
 
 - name: Overcloud Upgrade
-  include: "{{ overcloud_upgrade | default('upgrade.yml') }}"
+  import_playbook: "{{ overcloud_upgrade | default('upgrade.yml') }}"
   when:
       - install.upgrade|default('')
 
 - name: Overcloud Update
-  include: "{{ overcloud_update | default('update.yml') }}"
+  import_playbook: "{{ overcloud_update | default('update.yml') }}"
   when:
       - install.ocupdate|default(False)
 
 - name: Overcloud Reboot
-  include: "{{ overcloud_reboot | default('overcloud_reboot.yml') }}"
+  import_playbook: "{{ overcloud_reboot | default('overcloud_reboot.yml') }}"
   when:
       - install.postreboot|default(False)
 
 - name: Collect Ansible facts
-  include: 'collect-ansible-facts.yml'
+  import_playbook: 'collect-ansible-facts.yml'
   when:
       - install.collect.ansible.facts|default(False)
       - not install.upgrade|default('')
