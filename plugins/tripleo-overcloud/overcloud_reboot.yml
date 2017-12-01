@@ -171,6 +171,7 @@
         retries: 24
         delay: 15
         when: "'ceph' in group_names"
+        delegate_to: "{{ groups['controller']|first }}"
 
       - name: check clock_skew on ceph cluster
         become: true
@@ -178,6 +179,7 @@
             ceph status | grep 'Monitor clock skew detected' || echo 'ALL_GOOD'
         register: clock_skew
         when: "'ceph' in group_names"
+        delegate_to: "{{ groups['controller']|first }}"
 
       - name: check ceph cluster status
         become: true
