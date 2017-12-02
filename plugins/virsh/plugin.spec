@@ -76,6 +76,11 @@ subparsers:
                       help: |
                           Non-root username with sudo privileges that will be created on nodes.
                           Will be use as main ssh user subsequently.
+                  topology-password:
+                      type: Value
+                      default: redhat
+                      help: |
+                          Password to be used for root and non-root username when creating images.
                   topology-extend:
                       type: Bool
                       default: False
