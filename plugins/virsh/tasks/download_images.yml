@@ -39,7 +39,7 @@
       {% if not item.item.value.image_url|default('') %}
           --run-command 'yum remove -y cloud-init*' \
       {% endif %}
-          --root-password password:redhat \
+          --root-password password:{{ provision.topology.password | default('redhat') }} \
           --run-command 'echo "UseDNS no" >> /etc/ssh/sshd_config' \
           --mkdir /root/.ssh \
           --chmod 0700:/root/.ssh \
