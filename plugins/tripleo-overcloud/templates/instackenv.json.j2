@@ -1,5 +1,5 @@
 {
-  {% if install.version|default(undercloud_version) | openstack_release < 11 %}
+  {% if install.version|default(undercloud_version) | openstack_release < 10 %}
   "ssh-user": "{{ ansible_ssh_user }}",
   "ssh-key": "{{ undercloud_private_key }}",
   "power_manager": "nova.virt.baremetal.virtual_power_driver.VirtualPowerManager",
@@ -18,11 +18,11 @@
       "cpu": "{{ host_data.cpu }}",
       "memory": "{{ (host_data.memory_kibs|int / 1024)|round|int }}",
       "disk": "{{ (host_data.disk_bytes|int / 1073741824)|round|int }}",
-      {% if install.version|default(undercloud_version)|openstack_release < 11 %}
+      {% if install.version|default(undercloud_version)|openstack_release < 10 %}
         "disks": {{ host_data.disks }},
       {% endif %}
       "arch": "{{ host_data.arch }}",
-      {% if install.version|default(undercloud_version) | openstack_release >= 11 %}
+      {% if install.version|default(undercloud_version) | openstack_release >= 10 %}
         "pm_addr": "{{ ansible_default_ipv4.address }}",
         "pm_type": "pxe_ipmitool",
         "pm_user": "{{ install.vbmc.username }}",
