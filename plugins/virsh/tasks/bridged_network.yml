@@ -75,6 +75,6 @@
 
 - name: restart interface
   become: yes
-  shell: "ifdown {{ nic_data.device }} && ifup {{ nic_settings.name }} && ifup {{ nic_data.device }}"
+  shell: "ifdown {{ nic_settings.name }} && ifdown {{ nic_data.device }} && ifup {{ nic_settings.name }} && ifup {{ nic_data.device }} {% if nic_settings.renew is defined and nic_settings.renew|bool %}&& dhclient -r {{ nic_settings.name }} && dhclient {{ nic_settings.name }}{% endif %}"
 # TODO(yfried): why doesn't this work?
 #  shell: "nmcli connection reload && nmcli connection down {{ nic_data.device }} && nmcli connection up {{ nic_data.device }}"
