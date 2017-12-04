@@ -1,7 +1,7 @@
 - name: Check and correct time diff after deployment on controllers
   hosts: controller
   become: true
-  gather_facts: no
+  gather_facts: yes
   any_errors_fatal: true
   tasks:
       - name: clockdiff to each peer before ntpdate
@@ -22,7 +22,15 @@
         tags: skip_ansible_lint
 
       - name: ntp date
-        shell: "ntpdate -bu -p 8 {{ install.ntp.server }} && hwclock -w"
+        shell: "ACTIVE=`systemctl is-active ntpd || true`
+                if [ "$ACTIVE" = 'active' ]; then
+                    systemctl stop ntpd
+                fi
+                ntpdate -bu -p 8 {{ install.ntp.server }} && hwclock -w
+                if [ "$ACTIVE" = 'active' ]; then
+                    systemctl start ntpd
+                fi
+                "
         register: ntpdate_out
         ignore_errors: true
 
