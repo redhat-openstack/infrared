@@ -16,15 +16,27 @@
             {% if 'ansible_default_ipv4' in hostvars[host] %}
             echo -n {{ host }} [{{ hostvars[host]['ansible_default_ipv4']['address'] }}] ": " &>>"$time_log"
             clockdiff {{ hostvars[host]['ansible_default_ipv4']['address'] }} &>>"$time_log"
+            {% else %}
+            echo {{ host }} does not have a known ipv4 address
             {% endif %}
             {% endfor %}
+            true
         ignore_errors: true
         tags: skip_ansible_lint
 
       - name: ntp date
-        shell: "ntpdate -bu -p 8 {{ install.ntp.server }} && hwclock -w"
+        shell: |
+            ACTIVE=`systemctl is-active ntpd || true`
+            if [ "$ACTIVE" = 'active' ]; then
+                systemctl stop ntpd
+            fi
+            ntpdate -bu -p 8 {{ install.ntp.server }} && hwclock -w
+            if [ "$ACTIVE" = 'active' ]; then
+                systemctl start ntpd
+            fi
         register: ntpdate_out
         ignore_errors: true
+        tags: skip_ansible_lint
 
       - debug:
            msg: "ntpdate: out:{{ntpdate_out.stdout}} err:{{ntpdate_out.stderr}}"
@@ -42,7 +54,10 @@
             {% if 'ansible_default_ipv4' in hostvars[host] %}
             echo -n {{ host }} [{{ hostvars[host]['ansible_default_ipv4']['address'] }}] ": " &>>"$time_log"
             clockdiff {{ hostvars[host]['ansible_default_ipv4']['address'] }} &>>"$time_log"
+            {% else %}
+            echo {{ host }} does not have a known ipv4 address
             {% endif %}
             {% endfor %}
+            true
         ignore_errors: true
         tags: skip_ansible_lint
