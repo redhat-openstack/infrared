@@ -13,10 +13,10 @@
       path: "files/roles/{{ install.role.files }}/{{ node_name }}.yml"
   register: user_role
   delegate_to: localhost
-  when: "{{ role_var_name}} is not defined"
+  when: hostvars[inventory_hostname][role_var_name] is not defined
 
 - name: include role vars for "{{ node_name }}"
   vars:
       folder: "{{ 'default' if not user_role.stat.exists else install.role.files }}"
   include_vars: "files/roles/{{ folder }}/{{ node_name }}.yml"
-  when: "{{ role_var_name}} is not defined"
+  when: hostvars[inventory_hostname][role_var_name] is not defined

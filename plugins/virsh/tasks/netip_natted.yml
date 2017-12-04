@@ -7,7 +7,7 @@
   set_fact:
       dhcp_ranges: "{{ dhcp_ranges | default({})| combine({item.value.name: {'start': item.value.dhcp.range.start, 'end': item.value.dhcp.range.end }}) }}"
   with_dict: "{{ networks }}"
-  when: "{{ item.value.dhcp is defined }}"
+  when: item.value.dhcp is defined
 
 - name: ip adresses list from subnet range
   local_action: 'shell python -c "import netaddr;print \"\\n\".join(map(lambda x: x.__str__(), netaddr.iter_iprange(\"{{ item.value.start }}\", \"{{ item.value.end }}\")))"'

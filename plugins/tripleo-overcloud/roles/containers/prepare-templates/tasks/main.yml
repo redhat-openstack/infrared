@@ -7,7 +7,9 @@
   set_fact:
       environment_yamls: "{{ environment_yamls| default('') }} -e {{ item }}"
   with_items: "{{ ds_env_files.stdout_lines }}"
-  when: "'{{ template_base }}/docker-images.yaml' != item"
+  vars:
+      exclude_item: "{{ template_base }}/docker-images.yaml"
+  when: exclude_item != item
 
 - name: Get all roles files from the deploy script
   shell: |
