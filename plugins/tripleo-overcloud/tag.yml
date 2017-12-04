@@ -99,6 +99,7 @@
               vars:
                   flv_min_disk_size: 6
                   flv_min_cpu: 1
+                  searched_string: "Flavor with name {{ item.name }} already exists"
               shell: >
                   source ~/stackrc;
                   openstack flavor create
@@ -108,7 +109,7 @@
                   --vcpus {{ [((hostvars[item.name] | default({})).vcpus | default(item.cpu) | int) - 1, flv_min_cpu] | max }}
                   {{ item.name.rstrip('1234567890-').split('-')[-1] }}
               register: flavor_result
-              failed_when: "flavor_result.rc != 0 and flavor_result.stderr.find('Flavor with name {{ item.name }} already exists') != -1"
+              failed_when: flavor_result.rc != 0 and flavor_result.stderr.find(searched_string) != -1
               with_items: "{{ overcloud_facts.nodes | default([]) }}"
 
             - name: get the node UUID
