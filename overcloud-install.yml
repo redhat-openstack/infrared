@@ -1,0 +1,64 @@
+install:
+  build: None
+  buildmods: pin
+  collect:
+    ansible:
+      facts: false
+  compute:
+    ssh: false
+  containers: false
+  deploy: true
+  deployment:
+    files: /home/dtodorov/Tools/infrared/plugins/tripleo-overcloud/vars/deployment/files/composable_roles
+  director:
+    build: latest
+  heat:
+    templates:
+      basedir: /usr/share/openstack-tripleo-heat-templates
+  introspect: false
+  network:
+    backend: vxlan
+    bgpvpn: false
+    dvr: false
+    l2gw: false
+    lbaas: false
+    octavia: false
+    ovn: false
+    protocol: ipv4
+  ntp:
+    server: clock.redhat.com
+  octavia:
+    image:
+      url: https://url.corp.redhat.com/rhel-guest-image-7-3-35-x86-64-qcow2
+  ocupdate: false
+  overcloud:
+    debug: true
+    ssl: false
+    templates:
+    - /home/dtodorov/Tools/infrared/plugins/tripleo-overcloud/vars/overcloud/templates/none.yml
+  post: false
+  postreboot: false
+  pre: false
+  public:
+    network: true
+    subnet: /home/dtodorov/Tools/infrared/plugins/tripleo-overcloud/vars/public/subnet/default_subnet.yml
+  registry:
+    ceph:
+      namespace: ceph/rhceph-2-rhel7
+      tag: latest
+    undercloud:
+      skip: false
+  role:
+    files: networker
+  storage:
+    backend: lvm
+    config: internal
+    external: false
+  tagging: false
+  tht:
+    roles: true
+  updateto: None
+  vbmc:
+    password: password
+    username: admin
+  version: '10'
