@@ -17,14 +17,24 @@
 {% endfor %}
 {% endif %}
 {# OSP12 specific #}
-{% if install.version|default(undercloud_version)|openstack_release > 11 and role.networks|default([])|length > 0 %}
+{% if install.version|default(undercloud_version)|openstack_release > 11 %}
+{% if role.tags|default([])|length > 0 %}
+  tags:
+{% for tag in role.tags %}
+{%- if tag %}
+    - {{ tag }}
+{% endif -%}
+{% endfor %}
+{% endif -%} {# end of role.tags #}
+{% if role.networks|default([])|length > 0 %}
   networks:
 {% for network in role.networks %}
 {%- if network %}
     - {{ network }}
 {% endif -%}
 {% endfor %}
-{% endif %}
+{% endif -%} {# end of role.networks #}
+{% endif -%} {# end of OSP12 specific #}
   ServicesDefault:
 {% for service in role.services %}
 {%- if service %}
