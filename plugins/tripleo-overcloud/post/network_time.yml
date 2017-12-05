@@ -22,9 +22,18 @@
         tags: skip_ansible_lint
 
       - name: ntp date
-        shell: "ntpdate -bu -p 8 {{ install.ntp.server }} && hwclock -w"
+        shell: |
+            ACTIVE=`systemctl is-active ntpd || true`
+            if [ "$ACTIVE" = 'active' ]; then
+                systemctl stop ntpd
+            fi
+            ntpdate -bu -p 8 {{ install.ntp.server }} && hwclock -w
+            if [ "$ACTIVE" = 'active' ]; then
+                systemctl start ntpd
+            fi
         register: ntpdate_out
         ignore_errors: true
+        tags: skip_ansible_lint
 
       - debug:
            msg: "ntpdate: out:{{ntpdate_out.stdout}} err:{{ntpdate_out.stderr}}"
@@ -46,3 +55,10 @@
             {% endfor %}
         ignore_errors: true
         tags: skip_ansible_lint
+
+      - block:
+        - name: Gather facts
+          setup:
+        rescue:
+        - name: Reactivate unreachable hosts
+          meta: clear_host_errors
