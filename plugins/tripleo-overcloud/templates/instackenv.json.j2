@@ -23,7 +23,7 @@
       {% endif %}
       "arch": "{{ host_data.arch }}",
       {% if install.version|default(undercloud_version) | openstack_release >= 11 %}
-        "pm_addr": "{{ ansible_default_ipv4.address }}",
+        "pm_addr": "{{ vbmc_management_address }}",
         "pm_type": "pxe_ipmitool",
         "pm_user": "{{ install.vbmc.username }}",
         "pm_password": "{{ install.vbmc.password }}",
