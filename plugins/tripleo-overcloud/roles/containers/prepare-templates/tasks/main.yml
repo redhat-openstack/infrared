@@ -1,8 +1,3 @@
-- name: get origin(not mirrored) docker registry name
-  shell: |
-      cat {{ containers_images_template_dest_file }} | awk '/pull_source:/ {print $2}' | head -n1 | tr -d ' '
-  register: docker_origin_registry
-
 - name: Get all environment files from the deploy script
   shell: |
      for file in `awk '/^-e / || /^--environment-file / {print $2}' ~/overcloud_deploy.sh`; do if [ -f $file ]; then echo $file; fi; done
@@ -30,41 +25,20 @@
       os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
       undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/rhosp{{ os_version }}"
       undercloud_reg_base_ceph: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
-      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry.stdout) }}/rhosp{{ os_version }}"
-      external_reg_base_ceph: "{{ install.get('registry', {}).mirror|default(docker_origin_registry.stdout) }}"
+      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_insecure_registry) }}/rhosp{{ os_version }}"
+      external_reg_base_ceph: "{{ install.get('registry', {}).mirror|default(docker_insecure_registry) }}"
       reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base)  }}"
       reg_base_ceph: "{{ install.registry.undercloud.skip|ternary(external_reg_base_ceph, undercloud_reg_base_ceph) }}"
   shell: |
       set -exo pipefail
-      tag=`awk '/- imagename:.*openstack-glance-api-docker:.*/ {print $3}' <{{ containers_images_template_dest_file }}  | cut -f 2 -d:`
       openstack overcloud container image prepare \
         --namespace={{ reg_base }} \
         --env-file={{ env_file }} {{ environment_yamls | default('') }} {{ roles_yamls | default('') }} \
-        --prefix=openstack- \
-        --suffix=-docker \
-        --tag=$tag \
-        --set ceph_namespace="{{ reg_base_ceph}}/{{ '/'.join(install.registry.ceph.namespace.split('/')[0:-1]) }}" \
-        --set ceph_image="{{ install.registry.ceph.namespace.split('/')[-1] }}" \
-        --set ceph_tag={{ install.registry.ceph.tag }}
-
-      # TODO(psedlak): remove following in future (few weeks/month) when there is no need for older builds
-      # With previous builds -e _all_environment_yamls_or_roles_ was not used,
-      # seems that when running with those it generates almost empty file
-      # (parameters_defaults as empty dict no single Image entry, or at most with CephDaemonImage)
-      # so in that case, when file is too short, lets try to call it as before.
-      if [[ "$(grep -v '^#' {{ env_file }}|wc -l)" -lt 5 ]]; then
-        echo "Looks like older build - trying backward compatible image preparation method."
-        openstack overcloud container image prepare \
-            --namespace={{ reg_base }} \
-            --env-file={{ env_file }} \
-            --prefix=openstack- \
-            --suffix=-docker \
-            --tag=$tag \
-            --set ceph_namespace="{{ reg_base_ceph}}/{{ '/'.join(install.registry.ceph.namespace.split('/')[0:-1]) }}" \
-            --set ceph_image="{{ install.registry.ceph.namespace.split('/')[-1] }}" \
-            --set ceph_tag={{ install.registry.ceph.tag }}
-      fi
-
+        --prefix={{ container_env['container-image-prepare']['prefix'] }} \
+        --tag={{ container_env['container-image-prepare']['tag'] }} \
+        --set ceph_namespace={{ container_env['container-image-prepare']['ceph-namespace'] }} \
+        --set ceph_image={{ container_env['container-image-prepare']['ceph-image'] }} \
+        --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }}
   tags:
       - skip_ansible_lint
 
