@@ -27,8 +27,8 @@
       openstack overcloud container image prepare \
           --namespace={{ container_env['container-image-prepare']['namespace'] }} \
           --env-file={{ env_file_nondefault }} \
-          --prefix={{ container_env['container-image-prepare']['prefix'] }} \
-          --suffix={{ container_env['container-image-prepare']['suffix'] }} \
+          --prefix={{ container_env['container-image-prepare']['prefix']|default('' }} \
+          --suffix={{ container_env['container-image-prepare']['suffix']|default('') }} \
           --tag={{ container_env['container-image-prepare']['tag'] }} \
           --service-environment-file {{ item.item }}
   with_items: "{{ default_templates.results }}"
