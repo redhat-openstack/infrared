@@ -104,3 +104,23 @@
       - name: Recover from errors during bulk introspection
         include: tasks/introspection_recovery.yml
         when: not bulk_intro_ok
+
+      # when we need to use vbmc for OSP10 we have an issue [1] with pxe_impi driver
+      # and the fix [2] for that issue cannot be backported to the OSP10:
+      # [1] https://bugzilla.redhat.com/show_bug.cgi?id=1373468
+      # [2] https://github.com/openstack/ironic-inspector/commit/0ce5cdb7c8344e981a919aab136c4c2eba79d4a2
+      - name: switch pxe_ssh to the pxe_impi
+        shell: |
+            source ~/stackrc
+            NODE_UUID=$(ironic node-list | grep -w {{ item.key }} | awk '{print $2}' )
+            openstack baremetal node set $NODE_UUID \
+                --driver pxe_ipmitool \
+                --driver-info ipmi_username={{ install.vbmc.username }} \
+                --driver-info ipmi_address=::ffff:{{ ansible_default_ipv4.address }} \
+                --driver-info ipmi_password={{ install.vbmc.password }} \
+                --driver-info ipmi_port={{ item.value }}
+        with_dict: "{{ vbmc_ports }}"
+        when:
+            - install.vbmc.force
+            - install.version|default(undercloud_version) | openstack_release == 10
+            - vbmc_ports is defined
