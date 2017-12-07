@@ -420,6 +420,12 @@ subparsers:
                       default: password
                       help: |
                         VBMC password (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+                  vbmc-force:
+                      type: Bool
+                      default: False
+                      help: |
+                        Specifies whether the vbmc (pxe_ipmitool ironic driver) should be used for
+                        the OSP10 and below.
 
             - title: ansible facts
               options:
