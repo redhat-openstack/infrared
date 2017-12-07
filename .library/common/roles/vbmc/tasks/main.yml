@@ -6,20 +6,40 @@
       disable_gpg_check: yes
   with_items:
       - python-setuptools
-      - python-virtualbmc
       - ipmitool
-  when: ansible_os_family == "RedHat"
 
-- name: Install packages required for 'pxe_ipmitool' ironic's driver on Non-RedHat based distros
+- name: Install python-virtualbmc from repo's
   become: true
   package:
-      name: "{{ item }}"
+      name: python-virtualbmc
       state: latest
-  with_items:
-      - python-setuptools
-      - python-virtualbmc
-      - ipmitool
-  when: ansible_os_family != "RedHat"
+      disable_gpg_check: yes
+  ignore_errors: yes
+  register: virtualbmc_install_result
+
+- block:
+    - name: Install packages required for python-virtualbmc pip package
+      become: true
+      package:
+          name: "{{ item }}"
+          state: latest
+          disable_gpg_check: yes
+      with_items:
+          - gcc
+          - libvirt
+          - libvirt-devel
+
+    - name: install pip
+      become: yes
+      easy_install:
+          name: pip
+
+    - name: Install python-virtualbmc with pip
+      become: true
+      pip:
+          name: virtualbmc
+          state: latest
+  when: virtualbmc_install_result|failed
 
 - name: Add VirtualBMC as systemd service
   become: true
