@@ -6,8 +6,8 @@ def copy_system_selinux(force=True):
         print("Try import...")
         import selinux
     except ImportError as e:
-        new_error = type(e)(e.message + ". check that 'python-libselinux is "
-                                        "installed'")
+        new_error = type(e)(e.message + ". Check that 'libselinux-python' is "
+                                        "installed")
         import sys
         import shutil
         from distutils import sysconfig
