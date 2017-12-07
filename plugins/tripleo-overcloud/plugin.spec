@@ -78,12 +78,14 @@ subparsers:
                   registry-ceph-namespace:
                       type: Value
                       help: namesapce for the ceph container
-                      default: ceph/rhceph-2-rhel7
+
+                  registry-ceph-image:
+                      type: Value
+                      help: namesapce for the ceph container
 
                   registry-ceph-tag:
                       type: Value
                       help: tag used with the ceph container
-                      default: latest
 
             - title: Deployment Description
               options:
