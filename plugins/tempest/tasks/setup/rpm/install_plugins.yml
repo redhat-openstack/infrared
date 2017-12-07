@@ -24,5 +24,5 @@
   include_tasks: install_plugins_source.yml
   loop_control:
       loop_var: plugin_dict
-  when: item.value.package is not defined
+  when: plugin_dict.value.package is not defined
   with_dict: "{{ plugins | default({}) }}"
