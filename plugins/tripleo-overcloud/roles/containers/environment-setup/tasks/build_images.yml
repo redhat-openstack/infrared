@@ -24,6 +24,28 @@
       file: "{{ containers_images_env_template_dest_file }}"
       name: container_env
 
+#TODO(afazekas): Deduplicate the image prepare realted tasks
+- name: Get all environment files from the deploy script
+  shell: |
+     for file in `awk '/^-e / || /^--environment-file / {print $2}' ~/overcloud_deploy.sh`; do if [ -f $file ]; then echo $file; fi; done
+  register: ds_env_files
+
+- name: Create one variable with all the environment yamls
+  set_fact:
+      environment_yamls: "{{ environment_yamls| default('') }} -e {{ item }}"
+  with_items: "{{ ds_env_files.stdout_lines }}"
+  when: "'{{ template_base }}/docker-images.yaml' != item"
+
+- name: Get all roles files from the deploy script
+  shell: |
+     for file in `awk '/^-r / || /^--roles-file / {print $2}' ~/overcloud_deploy.sh`; do if [ -f $file ]; then echo $file; fi; done
+  register: ds_roles_files
+
+- name: Create one variable with all the roles yamls
+  set_fact:
+      roles_yamls: "{{ roles_yamls| default('') }} --roles-file {{ item }}"
+  with_items: "{{ ds_roles_files.stdout_lines }}"
+
 - name: Create {{ containers_images_template_dest_file }} to upload to local registry
   vars:
       os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
@@ -35,6 +57,7 @@
   command: >
     openstack overcloud container image prepare \
         --namespace {{ external_reg_namespace }} \
+         {{ environment_yamls | default('') }} {{ roles_yamls | default('') }} \
         --tag {{ container_env['container-image-prepare']['tag'] }} \
         --prefix  {{ container_env['container-image-prepare']['prefix'] }} \
         --set ceph_namespace={{ container_env['container-image-prepare']['ceph-namespace'] }} \
