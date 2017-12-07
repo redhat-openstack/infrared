@@ -24,6 +24,14 @@
       file: "{{ containers_images_env_template_dest_file }}"
       name: container_env
 
+- name: create nondefault fact for upload
+  include: "{{ role_path }}/tasks/nondefault_images_fact.yml"
+  with_items: "{{ install.overcloud.templates|default([]) }}"
+  loop_control:
+      loop_var: templates_list_file
+  # avoid empty strings
+  when: "templates_list_file != ''"
+
 - name: Create {{ containers_images_template_dest_file }} to upload to local registry
   vars:
       os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
@@ -40,7 +48,8 @@
         --set ceph_namespace={{ container_env['container-image-prepare']['ceph-namespace'] }} \
         --set ceph_image={{ external_ceph_namespace }} \
         --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }} \
-        --output-images-file {{ containers_images_template_dest_file }}
+        --output-images-file {{ containers_images_template_dest_file }} \
+        {{ extra_service_environment|default('') }}
 
 - name: get docker registry name
   vars:
