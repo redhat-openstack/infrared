@@ -36,7 +36,10 @@
   vars:
       os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
       basereg_relative: "{{ install.get('registry', {}).namespace|default(False)|ternary(install.get('registry', {}).namespace, ''.join(container_env['container-image-prepare']['namespace'].split('/')[1:])) }}"
-      cephreg_relative: "{{''.join(container_env['container-image-prepare']['ceph-namespace'].split('/')[1:]) }}"
+      arg_ceph_namespace: "{{ install.get('registry', {}).get('ceph', {}).namespace|default('') }}"
+      arg_ceph_tag: "{{ install.get('registry', {}).get('ceph', {}).tag|default('') }}"
+      ceph_tag: "{{ arg_ceph_tag|ternary(arg_ceph_tag, container_env['container-image-prepare']['ceph-tag']) }}"
+      cephreg_relative: "{{ arg_ceph_namespace|ternary(arg_ceph_namespace, ''.join(container_env['container-image-prepare']['ceph-namespace'].split('/')[1:])) }}"
       mirror_reg: "{{ install.get('registry', {}).mirror|default('') }}"
       external_reg_namespace: "{{ mirror_reg | ternary(mirror_reg + '/' + basereg_relative, container_env['container-image-prepare']['namespace']) }}"
       external_ceph_namespace: "{{ mirror_reg | ternary(mirror_reg + '/' + cephreg_relative, container_env['container-image-prepare']['ceph-namespace']) }}"
@@ -45,9 +48,9 @@
         --namespace {{ external_reg_namespace }} \
         --tag {{ container_env['container-image-prepare']['tag'] }} \
         --prefix  {{ container_env['container-image-prepare']['prefix'] }} \
-        --set ceph_namespace={{ container_env['container-image-prepare']['ceph-namespace'] }} \
+        --set ceph_namespace= {{ external_ceph_namespace }} \
         --set ceph_image={{ external_ceph_namespace }} \
-        --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }} \
+        --set ceph_tag={{ ceph_tag }} \
         --output-images-file {{ containers_images_template_dest_file }} \
         {{ extra_service_environment|default('') }}
 
