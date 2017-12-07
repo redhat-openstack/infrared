@@ -34,23 +34,32 @@
 - name: generate docker images file, using the undercloud registry
   vars:
       env_file: "{{ template_base }}/docker-images.yaml"
-      os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
-      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/rhosp{{ os_version }}"
-      undercloud_reg_base_ceph: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
-      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_insecure_registry) }}/rhosp{{ os_version }}"
-      external_reg_base_ceph: "{{ install.get('registry', {}).mirror|default(docker_insecure_registry) }}"
-      reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base)  }}"
-      reg_base_ceph: "{{ install.registry.undercloud.skip|ternary(external_reg_base_ceph, undercloud_reg_base_ceph) }}"
+      basereg_relative: "{{ install.get('registry', {}).namespace|default(False)|ternary(install.get('registry', {}).namespace|default(''), ''.join(container_env['container-image-prepare']['namespace'].split('/')[1:])) }}"
+      arg_ceph_namespace: "{{ install.get('registry', {}).get('ceph', {}).namespace|default('') }}"
+      cephreg_relative: "{{ arg_ceph_namespace|tenary(arg_ceph_namespace, ''.join(container_env['container-image-prepare']['ceph-namespace'].split('/')[1:])) }}"
+      undercloud_reg_namespace: "{{ ansible_br_ctlplane['ipv4']['address'] + ':8787/' + basereg_relative }}"
+      undercloud_reg_cehp_namespace: "{{ ansible_br_ctlplane['ipv4']['address'] + ':8787/' + cephreg_relative }}"
+      mirror_reg: "{{ install.get('registry', {}).mirror|default('') }}"
+      external_reg: "{{ mirror_reg | tenarey(mirror_reg, container_env['container-image-prepare']['namespace'].split('/')[0]) }}"
+      external_reg_namespace: "{{ external_reg + '/' + basereg_relative }}"
+      external_ceph_namespace: "{{ external_reg + '/' + cephreg_relative }}"
+      arg_ceph_image: "{{ install.get('registry', {}).get('ceph', {}).image|default('') }}"
+      arg_ceph_tag: "{{ install.get('registry', {}).get('ceph', {}).tag|default('') }}"
+      ceph_tag: "{{ arg_ceph_tag|tenary(arg_ceph_tag, container_env['container-image-prepare']['ceph-tag']) }}"
+      ceph_image: "{{ arg_ceph_image|tenary(arg_ceph_image,container_env['container-image-prepare']['ceph-image']) }}"
+      reg_namespace: "{{ install.registry.undercloud.skip|ternary(external_reg_namespace, undercloud_reg_namespace) }}"
+      reg_namespace_ceph: "{{ install.registry.undercloud.skip|ternary(external_ceph_namespace, undercloud_reg_cehp_namespace) }}"
+
   shell: |
       set -exo pipefail
       openstack overcloud container image prepare \
-        --namespace={{ reg_base }} \
+        --namespace={{ reg_namespace }} \
         --env-file={{ env_file }} {{ environment_yamls | default('') }} {{ roles_yamls | default('') }} \
         --prefix={{ container_env['container-image-prepare']['prefix'] }} \
         --tag={{ container_env['container-image-prepare']['tag'] }} \
-        --set ceph_namespace={{ container_env['container-image-prepare']['ceph-namespace'] }} \
-        --set ceph_image={{ container_env['container-image-prepare']['ceph-image'] }} \
-        --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }} \
+        --set ceph_namespace={{ reg_namespace_ceph }} \
+        --set ceph_image={{ ceph_image }} \
+        --set ceph_tag={{ ceph_tag }} \
         {{ extra_service_environment|default('') }}
   tags:
       - skip_ansible_lint
