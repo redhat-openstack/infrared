@@ -21,14 +21,6 @@
   when: missing_templates | default([])
 
 - name: generate docker images file for services not enabled by default (if any)
-  vars:
-      env_file_nondefault: "{{ template_base }}/docker-images-nondefault-{{ item.item|basename|splitext|list|first }}.yaml"
-  shell: |
-      openstack overcloud container image prepare \
-          --namespace={{ container_env['container-image-prepare']['namespace'] }} \
-          --env-file={{ env_file_nondefault }} \
-          --prefix={{ container_env['container-image-prepare']['prefix']|default('') }} \
-          --suffix={{ container_env['container-image-prepare']['suffix']|default('') }} \
-          --tag={{ container_env['container-image-prepare']['tag']|default('latest') }} \
-          --service-environment-file {{ item.item }}
+  set_fact:
+      extra_service_environment: "{{ extra_service_environment|default('') }} --environment-file {{ item.item }} "
   with_items: "{{ default_templates.results }}"

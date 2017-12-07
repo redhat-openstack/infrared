@@ -41,11 +41,3 @@
         --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }}
   tags:
       - skip_ansible_lint
-
-- name: create nondefault images for containers
-  include: "{{ role_path }}/tasks/nondefault_images.yml"
-  with_items: "{{ install.overcloud.templates|default([]) }}"
-  loop_control:
-      loop_var: templates_list_file
-  # avoid empty strings
-  when: "templates_list_file != ''"
