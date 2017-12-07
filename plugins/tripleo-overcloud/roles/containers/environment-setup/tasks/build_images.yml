@@ -25,39 +25,29 @@
       name: container_env
 
 - name: Create {{ containers_images_template_dest_file }} to upload to local registry
+  vars:
+      os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
+      basereg_relative: "{{ install.get('registry', {}).namespace|default(False)|ternary(install.get('registry', {}).namespace, ''.join(container_env['container-image-prepare']['namespace'].split('/')[1:])) }}"
+      cephreg_relative: "{{''.join(container_env['container-image-prepare']['ceph-namespace'].split('/')[1:]) }}"
+      mirror_reg: "{{ install.get('registry', {}).mirror|default('') }}"
+      external_reg_namespace: "{{ mirror_reg | ternary(mirror_reg + '/' + basereg_relative, container_env['container-image-prepare']['namespace']) }}"
+      external_ceph_namespace: "{{ mirror_reg | ternary(mirror_reg + '/' + cephreg_relative, container_env['container-image-prepare']['ceph-namespace']) }}"
   command: >
     openstack overcloud container image prepare \
-        --namespace {{ container_env['container-image-prepare']['namespace'] }} \
+        --namespace {{ external_reg_namespace }} \
         --tag {{ container_env['container-image-prepare']['tag'] }} \
         --prefix  {{ container_env['container-image-prepare']['prefix'] }} \
         --set ceph_namespace={{ container_env['container-image-prepare']['ceph-namespace'] }} \
-        --set ceph_image={{ container_env['container-image-prepare']['ceph-image'] }} \
+        --set ceph_image={{ external_ceph_namespace }} \
         --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }} \
         --output-images-file {{ containers_images_template_dest_file }}
 
-- name: replace docker registry with mirror
-  replace:
-      dest: "{{ containers_images_template_dest_file }}"
-      regexp: '^(- imagename: ).*?(\/.*)'
-      replace: '\1{{ install.registry.mirror }}\2'
-      backup: no
-  when: install.get('registry', {}).mirror|default(false)
-  tags:
-      - container-images-patch
-
-- name: replace docker namespace
-  replace:
-      dest: "{{ containers_images_template_dest_file }}"
-      regexp: '^(- imagename:)(.*)?(\/.*).*?(\/.*)'
-      replace: '\1\2/\{{ install.registry.namespace }}\4'
-      backup: no
-  when: install.get('registry', {}).namespace|default(false)
-  tags:
-      - container-images-patch
-
 - name: get docker registry name
+  vars:
+      mirror_reg: "{{ install.get('registry', {}).mirror|default('') }}"
+      external_reg: "{{ mirror_reg | ternary(mirror_reg, container_env['container-image-prepare']['namespace'].split('/')[0]) }}"
   set_fact:
-      docker_insecure_registry: "{{ container_env['container-image-prepare']['namespace'].split('/')[0] }}"
+      docker_insecure_registry: "{{ external_reg }}"
 
 - name: replace IP with hostname in /etc/sysconfig/docker
   replace:
