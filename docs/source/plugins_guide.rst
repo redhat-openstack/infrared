@@ -18,15 +18,22 @@ So create and init new repo::
 
 Now you need to add two main files of every Infrared plugin:
     * ``plugin.spec``: describes the user interface of the plugin (CLI)
-    * ``main.yml``: the entry point anbile playbook which will be run by the Infrared
+    * ``main.yml``: the default entry point anbile playbook which will be run by the Infrared
 
 
 Create plugin.spec
 ==================
+.. todo(atalmor):: can we change this to the include as plugins.rst
+
 The ``plugin.spec`` holds the descriptions of all the CLI flags as well as plugin name and plugin descriptions.
 Sample plugin specification file can be like::
 
-    plugin_type: other
+    config:
+       plugin_type: other
+       entry_point: main.yml
+       dependencies:
+          - source: "https://sample_github.null/dependency_repo.git"
+            revision: "c5e3b060e8c4095c66db48586817db1eb02da338"
     subparsers:
         # the actual name of the plugin
         simple-plugin:
@@ -43,12 +50,28 @@ Sample plugin specification file can be like::
                           type: Bool
                           default: False
 
-
-
-Options::
-    * ``plugin_type``: plugin type
+Config section:
+    * ``plugin_type``:
         Depending of what plugin is intended to do, can be ``provision``, ``install``, ``test`` or ``other``.
         See `plugin specification`_ for details.
+    * ``entry_point``:
+        The main playbook for the plugin. by default this will refer to main.yml file
+        but can be changed to ant other file.
+    * ``dependencies``:
+        A plugin dependency is a folder that contains directories for common Ansible resources (callback plugins, filter plugins, roles, libraries).
+        The directory should have the following structure::
+
+             dependency_example
+                 ├── roles
+                 ├── library
+                 ├── library
+                 ├── callback_plugins
+                 └── requirements.txt   # python packages requirements
+
+    * ``source`` can be either path to local directory or path to git repo
+    * ``revision`` is optional and should be added when requesting a specifig revision of a git
+        dependency
+Options::
     * ``plugin name`` under the ``subparsers``
         Infrared extends it CLI with that name.
         It is recommended to use ``dash-separated-lowercase-words`` for plugin names.
