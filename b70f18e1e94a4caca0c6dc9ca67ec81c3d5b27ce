@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "26dfaa8d_7e398374",
+        "filename": "plugins/tripleo-overcloud/post/manila.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1007615
+      },
+      "writtenOn": "2017-12-10T11:47:07Z",
+      "side": 1,
+      "message": "This task won\u0027t work correctly after the fix for https://bugs.launchpad.net/tripleo/+bug/1712842 via https://review.openstack.org/#/c/497482/.\n\nNote that manila is not innovating in using \u0027hostgroup\u0027 in this way, but is rather following the pattern set when using pacemaker to control the cinder volume service.\n\nBottom line: to find a host with the manila config \u0027manila service-list\u0027 is no good.  Maybe use \u0027nova list\u0027 on the undercloud to get the controllers?\n\nNote also that with containerized deployments /etc/manila/manila.conf on the controller host will no longer be the active configuration.  /etc/manila/manila.conf in the manila-share container will be reflected as /var/lib/config-data/manila/etc/manila/manila.conf.  Other OpenStack components will also follow this pattern - there\u0027s nothing special here about manila.  But that\u0027s of course an OSP13 thing since manila, cinder, and neutron are still uncontainterized by default in OSP12.",
+      "range": {
+        "startLine": 30,
+        "startChar": 6,
+        "endLine": 35,
+        "endChar": 26
+      },
+      "revId": "b70f18e1e94a4caca0c6dc9ca67ec81c3d5b27ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
