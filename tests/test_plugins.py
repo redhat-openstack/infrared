@@ -160,6 +160,12 @@ def get_plugin_spec_flatten_dict(plugin_dir):
         if "config" in spec_yaml \
         else spec_yaml["plugin_type"]
 
+    entry_point = spec_yaml["config"]["entry_point"] \
+        if "config" in spec_yaml \
+        else spec_yaml["entry_point"] \
+        if "entry_point" in spec_yaml \
+        else "main.yml"
+
     plugin_dependencies = spec_yaml["config"]["dependencies"] \
         if "config" in spec_yaml and "dependencies" in spec_yaml["config"] \
         else ""
@@ -169,7 +175,8 @@ def get_plugin_spec_flatten_dict(plugin_dir):
         dir=plugin_dir,
         description=plugin_description,
         dependencies=plugin_dependencies,
-        type=plugin_type
+        type=plugin_type,
+        main=entry_point
     )
 
     return plugin_spec_dict
@@ -242,6 +249,23 @@ def test_load_plugin(plugin_manager_fixture):
     assert plugin.description == plugin_dict['description'], \
         'Wrong plugin description'
 
+def test_entry_point(plugin_manager_fixture):
+    """Test that spec file has a valid entry point
+     :param plugin_manager_fixture: Fixture object which yields
+    InfraredPluginManger object
+    """
+
+    plugin_dir = 'plugin_with_entry_point'
+    plugin_dict = get_plugin_spec_flatten_dict(
+        os.path.join(os.path.abspath(SAMPLE_PLUGINS_DIR), plugin_dir))
+
+    plugin_manager = plugin_manager_fixture({
+        plugin_dict['type']: {
+            plugin_dict['name']: plugin_dict['dir']}
+    })
+
+    plugin = plugin_manager.get_plugin(plugin_name=plugin_dict['name'])
+    assert plugin.playbook == os.path.join(plugin_dict['dir'], "example.yml")
 
 def test_add_plugin_with_same_name(plugin_manager_fixture):
     """Tests that it not possible to add a plugin with a name that already
@@ -432,6 +456,11 @@ def test_add_plugin_no_spec(plugin_manager_fixture):
         'plugin_type': 'supported_type',
         'description': 'some plugin description',
         'subparsers': ''}),
+    ('no_entry_point_value',{
+        'entry_point': ''}),
+    ('no_entry_point_value_in_config',{
+        'config': {
+            "entry_point": ''}}),
     ('no_type_in_config', {
         'config': {
             "dependencies": [
