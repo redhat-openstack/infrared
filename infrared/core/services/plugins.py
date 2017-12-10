@@ -33,8 +33,6 @@ DEFAULT_PLUGIN_INI = dict(
     ])
 )
 
-
-MAIN_PLAYBOOK = "main.yml"
 PLUGINS_DIR = os.path.abspath("./plugins")
 LOG = logger.LOG
 PLUGINS_REGISTRY_FILE = os.path.join(PLUGINS_DIR, "registry.yaml")
@@ -577,7 +575,7 @@ class InfraredPlugin(object):
     @property
     def playbook(self):
         """Plugin's main playbook"""
-        return os.path.join(self.path, MAIN_PLAYBOOK)
+        return os.path.join(self.path, self.entry_point)
 
     @property
     def spec(self):
@@ -601,6 +599,15 @@ class InfraredPlugin(object):
             # TODO(aopincar): Replace with a proper infrared exception
             raise Exception("Only one plugin should be defined in spec")
         return plugins[0]
+
+    @property
+    def entry_point(self):
+        if "entry_point" in self.config:
+            return self.config['entry_point']
+        elif "config" in self.config and "entry_point" in self.config['config']:
+            return self.config['config']['entry_point']
+        else:
+            return "main.yml"
 
     @property
     def type(self):
@@ -641,6 +648,7 @@ class SpecValidator(object):
         "type": "object",
         "properties": {
             "plugin_type": {"type": "string", "minLength": 1},
+            "entry_point": {"type": "string", "minLength": 1},
             "dependencies": {
                 "type": "array",
                 "items": {
@@ -686,6 +694,7 @@ class SpecValidator(object):
         "type": "object",
         "properties": {
             "plugin_type": {"type": "string", "minLength": 1},
+            "entry_point": {"type": "string", "minLength": 1},
             "description": {"type": "string", "minLength": 1},
             "subparsers": SUBPARSER_PART_SCHEMA
         },
