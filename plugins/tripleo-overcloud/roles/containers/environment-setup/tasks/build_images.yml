@@ -102,11 +102,11 @@
 
 - name: tag the original image(s) with 'before_packages_install' and install rpms&push new ones
   shell: |
-      docker tag {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ containers_images_tag.stdout }} \
-      {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ containers_images_tag.stdout }}-before_packages_install
-      echo "FROM {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ containers_images_tag.stdout }}
-      RUN yum localinstall {{ item.value.split(",") | join(" ") }} -y -v" | docker build -t {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ containers_images_tag.stdout }} -
-      docker push {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ containers_images_tag.stdout }}
+      docker tag {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} \
+      {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }}-before_packages_install
+      echo "FROM {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }}
+      RUN yum localinstall {{ item.value.split(",") | join(" ") }} -y -v" | docker build -t {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} -
+      docker push {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }}
   when: install_container_images_packages is defined
   with_dict: "{{ install_container_images_packages }}"
   become: true
