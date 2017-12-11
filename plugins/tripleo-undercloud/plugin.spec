@@ -1,7 +1,8 @@
+---
 config:
     plugin_type: install
     dependencies:
-        - source: ./.library/common
+        - source: https://github.com/rhos-infra/infrared-common-libraries.git
 subparsers:
     tripleo-undercloud:
         description: Install TripleO on a designated undercloud node

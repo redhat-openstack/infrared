@@ -2,7 +2,7 @@
 config:
     plugin_type: provision
     dependencies:
-        - source: ./.library/common
+        - source: https://github.com/rhos-infra/infrared-common-libraries.git
 subparsers:
     openstack:
         description: Provision systems using Ansible OpenStack modules
