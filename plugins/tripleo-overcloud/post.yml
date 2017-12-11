@@ -22,6 +22,10 @@
   tags: lbaas
   when: install.network.lbaas|default(False)
 
+- include: post/manila.yml
+  tags: lbaas
+  when: install.storage.manila|default(False)
+
 - include: post/ssh_between_compute.yml
   tags: enable_compute_ssh
   when: install.compute.ssh|default(False)

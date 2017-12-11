@@ -309,6 +309,11 @@ subparsers:
                           __LISTYAMLS__
                       default: internal
 
+                  storage-manila:
+                      type: Bool
+                      help: Whether to run Overcloud manila post steps
+                      default: no
+
             - title: Composable roles
               options:
                   role-files:
