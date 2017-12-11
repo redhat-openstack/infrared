@@ -1,4 +1,7 @@
-plugin_type: provision
+config:
+    plugin_type: provision
+    dependencies:
+        - source: https://github.com/rhos-infra/infrared-common-libraries.git
 subparsers:
     virsh:
         description: Provision virtual machines on a single Hypervisor using libvirt
