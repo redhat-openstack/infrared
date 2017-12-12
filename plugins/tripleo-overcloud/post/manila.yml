@@ -41,7 +41,9 @@
   tasks:
       - name: create manila default share
         shell: |
-            source ~/overcloudrc
+            test -f {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3 && \
+                source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3 || \
+                source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc
             manila type-create {{ (share_name.stdout=='')|ternary('default', share_name.stdout) }} False
         when:
           - share_name.rc == 0
