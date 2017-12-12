@@ -41,7 +41,7 @@
   tasks:
       - name: create manila default share
         shell: |
-            source ~/overcloudrc
+            test -f ~/overcloudrc.v3 && source ~/overcloudrc.v3 || source ~/overcloudrc
             manila type-create {{ (share_name.stdout=='')|ternary('default', share_name.stdout) }} False
         when:
           - share_name.rc == 0
