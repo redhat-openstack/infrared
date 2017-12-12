@@ -5,32 +5,32 @@
 
 - name: remove old m1.nano flavor
   shell: |
-      source ~/overcloudrc
+      test -f ~/overcloudrc.v3 && source ~/overcloudrc.v3 || source ~/overcloudrc
       openstack flavor delete m1.nano
   tags: skip_ansible_lint
   ignore_errors: true
 
 - name: create the m1.nano flavor
   shell: |
-      source ~/overcloudrc
+      test -f ~/overcloudrc.v3 && source ~/overcloudrc.v3 || source ~/overcloudrc
       openstack flavor create --id 42 --ram 64 --vcpus 1 m1.nano
   tags: skip_ansible_lint
 
 - name: list all current images
   shell: |
-      source ~/overcloudrc
+      test -f ~/overcloudrc.v3 && source ~/overcloudrc.v3 || source ~/overcloudrc
       glance image-list | grep {{ guest_image.name }} | awk '{print $2}'
   register: current_image_list
 
 - name: delete all current images
   shell: |
-      source ~/overcloudrc
+      test -f ~/overcloudrc.v3 && source ~/overcloudrc.v3 || source ~/overcloudrc
       glance image-delete {{ item }}
   with_items: "{{ current_image_list.stdout_lines }}"
   tags: skip_ansible_lint
 
 - name: create new image
   shell: |
-      source ~/overcloudrc
+      test -f ~/overcloudrc.v3 && source ~/overcloudrc.v3 || source ~/overcloudrc
       glance image-create --name {{ guest_image.name }} --file /var/tmp/{{ guest_image.name }} --disk-format qcow2 --container-format bare --visibility public
   tags: skip_ansible_lint
