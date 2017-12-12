@@ -22,7 +22,9 @@
   tasks:
       - name: find a server with the nova control plane service running
         shell: |
-            source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc
+            test -f {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3 && \
+                source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3 || \
+                source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc
             nova service-list | grep nova-scheduler | awk '{print $6}' | head -1
         register: nova_host
 
@@ -90,7 +92,9 @@
 
       - name: print network details to console
         shell: |
-            source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc
+            test -f {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3 && \
+                source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3 || \
+                source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc
             neutron net-show {{ net_create.network.name }}
         tags: skip_ansible_lint
 
@@ -119,6 +123,8 @@
 
       - name: print subnet details to console
         shell: |
-            source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc
+            test -f {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3 && \
+                source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3 || \
+                source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc
             neutron subnet-show {{ subnet_create.subnet.name }}
         tags: skip_ansible_lint
