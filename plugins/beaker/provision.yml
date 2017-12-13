@@ -4,6 +4,15 @@
   vars_files:
     - "{{ provision.image }}"
   tasks:
+    - name: Enable logging of baremetal machine's serial console into file during provisioning
+      shell: |
+          # Deactivate serial console access if previously there was error or somebody still using it for some reason (otherwise it is not possible to activate it)
+          ipmitool -R 1 -I lanplus -H {{ provision.ipmi.address }} -U {{ provision.ipmi.username }} -P {{ provision.ipmi.password }} sol deactivate > {{ provision.sol.logfile }}
+          ipmitool -R 1 -I lanplus -H {{ provision.ipmi.address }} -U {{ provision.ipmi.username }} -P {{ provision.ipmi.password }} sol activate >> {{ provision.sol.logfile }} &
+      when: provision.sol.monitoring
+      tags:
+        - skip_ansible_lint
+
     - name: Provisioning the machine
       beaker_provisioner:
           url: "{{ provision.url }}"

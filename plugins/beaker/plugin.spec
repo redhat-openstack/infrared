@@ -95,3 +95,30 @@ subparsers:
                       type: Bool
                       help: 'Release system which was previously reserved by beaker-user'
                       default: False
+
+            - title: Serial console monitoring
+                  sol-monitoring:
+                      type: Bool
+                      help: |
+                          Enable logging of serial console during provisioning if baremetal supports it.
+                          You need to also provide ipmi credentials and access point if enabled.
+                      default: False
+                      required: False
+                  ipmi-host-address:
+                      type: Value
+                      help: 'Address/FQDN of the IPMI interface'
+                      required: True
+                  ipmi-username:
+                      type: Value
+                      help: 'Username which will be used as ipmitool -U param'
+                      required: True
+                  ipmi-password:
+                      type: Value
+                      help: 'Password which will be used as ipmitool -P param'
+                      required: True
+                  sol-logfile:
+                      type: VarFile
+                      help: |
+                          File to store output of sol console.
+                      default: 'beaker-sol.log'
+                      required: False
