@@ -21,13 +21,6 @@
   when: missing_templates | default([])
 
 - name: generate docker images file for services not enabled by default (if any)
-  vars:
-      env_file_nondefault: "{{ template_base }}/docker-images-nondefault-{{ item.item|basename|splitext|list|first }}.yaml"
-      os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
-      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/rhosp{{ os_version }}"
-      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_origin_registry) }}/rhosp{{ os_version }}"
-      reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base)  }}"
-  shell: |
-      tag=`awk '/- imagename:.*openstack-glance-api-docker:.*/ {print $3}' </home/stack/container_images.yaml  | cut -f 2 -d:`
-      openstack overcloud container image prepare --namespace={{ reg_base }} --env-file={{ env_file_nondefault }} --prefix=openstack- --suffix=-docker --tag=$tag --service-environment-file {{ item.item }}
+  set_fact:
+      extra_service_environment: "{{ extra_service_environment|default('') }} --environment-file {{ item.item }} "
   with_items: "{{ default_templates.results }}"

@@ -149,6 +149,16 @@
   ignore_errors: true
   tags: skip_ansible_lint
 
+- name: pcs status/config
+  shell: |
+      pcs_log=/var/log/extra/pcslog
+      echo "+ pcs status" &>"$pcs_log"
+      pcs status &>>"$pcs_log"
+      echo "+ pcs config" &>>"$pcs_log"
+      pcs config &>>"$pcs_log"
+  ignore_errors: true
+  tags: skip_ansible_lint
+
 - shell: "virt-host-validate &> /var/log/extra/virt-host-validate"
   ignore_errors: true
 

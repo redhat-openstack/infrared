@@ -1,11 +1,21 @@
 ---
 controller_role:
     name: Controller
+    # primary role will be listed first in the roles_data.yaml file.
+    primary_role: yes
 
+    # include resources
+    # the following vars can be used here:
+    #  - ${ipv6_postfix}: will be replaced with -v6 when the ipv6 protocol is used for installation, otherwise is empty
+    #  - ${ipv6_postfix_underscore}: same as 'ipv6_postfix' but will be replaced with _v6
+    #  - ${deployment_dir} - will be replaced by the deployment folder location on the undercloud. Deployment folder can be specified with the ospd --deployment flag
     resource_registry:
         "OS::TripleO::Controller::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/controller${ipv6_postfix}.yaml"
 
     flavor: controller
+    tags:
+        - primary
+        - controller
     networks:
         - External
         - InternalApi

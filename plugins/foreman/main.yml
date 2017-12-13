@@ -12,6 +12,7 @@
            wait_for_host: "{{ provision.wait | int }}"
            mgmt_strategy: "{{ provision.strategy }}"
            mgmt_action: "{{ provision.action }}"
+           ipmi_address: "{{ (provision.host.ipmi|default({})).address | default(omit) }}"
            ipmi_username: "{{ (provision.host.ipmi|default({})).username | default(omit) }}"
            ipmi_password: "{{ (provision.host.ipmi|default({})).password | default(omit) }}"
       register: created_nodes

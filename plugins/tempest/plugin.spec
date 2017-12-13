@@ -15,6 +15,14 @@ subparsers:
                         For example: smoke,network,volumes
                         __LISTYAMLS__
                       required: yes
+                  plugin:
+                      type: Value
+                      action: append
+                      help: |
+                        The list of additional plugins with tests to install.
+                        Should be specified in next format:
+                            --plugin=repo_url
+                        More that one --plugin option can be provided.
                   openstack-version:
                        type: Value
                        help: |
@@ -29,6 +37,7 @@ subparsers:
                            - "10"
                            - "11"
                            - "12"
+                           - "13"
                            - liberty
                            - kilo
                            - liberty
@@ -117,3 +126,10 @@ subparsers:
                           Output format of tempest results report to generate. Currently supported: junitxml, html.
                           Format: --results-formats junitxml,html
                       default: junitxml
+
+            - title: ansible facts
+              options:
+                  collect-ansible-facts:
+                      type: Bool
+                      help: Save ansible facts as json file(s)
+                      default: False

@@ -50,6 +50,9 @@ subparsers:
                   host-key:
                       type: FileValue
                       help: "User's SSH key"
+                  host-ipmi-address:
+                      type: Value
+                      help: "Host IPMI address"
                   host-ipmi-username:
                       type: Value
                       help: "Host IPMI username"

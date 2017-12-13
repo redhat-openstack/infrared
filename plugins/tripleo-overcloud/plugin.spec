@@ -276,6 +276,10 @@ subparsers:
                           network, creating a new VLAN interface connected to ovs's "br-ctlplane" bridge.
                           NOTE: If your UnderCloud's network is already configured properly, this could disrupt it, making overcloud API unreachable
                           For more details, see: "VALIDATING THE OVERCLOUD" on https://access.redhat.com/documentation/en/red-hat-openstack-platform/10-beta/paged/director-installation-and-usage/chapter-6-performing-tasks-after-overcloud-creation
+                  external-vlan:
+                      type: Value
+                      help: |
+                         An Optional external VLAN ID of the external network (Not to be confused with the Public API network)
 
             - title: Overcloud storage
               options:
@@ -416,3 +420,10 @@ subparsers:
                       default: password
                       help: |
                         VBMC password (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+
+            - title: ansible facts
+              options:
+                  collect-ansible-facts:
+                      type: Bool
+                      help: Save ansible facts as json file(s)
+                      default: False

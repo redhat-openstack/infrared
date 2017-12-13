@@ -17,12 +17,17 @@
             - 'ceph osd set noout'
             - 'ceph osd set norebalance'
 
-      # TODO(yprokule): figure out if we should migrate instances from computes ?
-      - name: put node to standby mode
-        command: |
-            sudo pcs node standby --wait=300
-        ignore_errors: True
-        register: standby_node
+      # check pcs cluster status
+      - name: check pacemaker cluster status
+        become: true
+        shell: pcs status 2>&1 | grep 'cluster is not currently running on this node'
+        register: pcs_active
+        ignore_errors: true
+
+      - name: stop pcs cluster
+        become: true
+        command: pcs cluster stop --request-timeout=300
+        when: pcs_active|failed
 
       - name: reboot the node
         become: true
@@ -71,21 +76,21 @@
         delay: 15
 
       # pacemaker managed services
-      - name: unstandby pacemaker node
+      - name: start pcs cluster on a node
         become: true
-        command: pcs node unstandby
-        when: standby_node|succeeded
+        command: pcs cluster start --wait=300
+        when: pcs_active|failed
 
       - name: wait for pacemaker node to recover
         become: true
-        shell: pcs status | grep 'Online:'
+        shell: pcs status | grep -w 'Online:'
         register: pcs_status
         until: "'{{ inventory_hostname }}' in pcs_status.stdout"
         retries: 6
         delay: 5
-        when: standby_node|succeeded
+        when: pcs_active|failed
 
-      - name: cleanup resource
+      - name: cleanup pacemaker resource
         shell: |
             pcs resource restart {{ item }} ;
             pcs resource cleanup {{ item }}
@@ -96,9 +101,10 @@
         when:
           - cleanup_services is defined
           - cleanup_services|default({})|length > 0
-          - standby_node|succeeded
+          - pcs_active|failed
 
-      - name: Check for any stopped pcs resources
+      # Todo(yprokule): enhance search patterns
+      - name: check for any stopped pcs resources
         become: true
         shell: |
             pcs status | grep {{ item }} || /bin/true
@@ -110,7 +116,7 @@
         with_items:
             - 'Stopped:'
         when:
-            - standby_node|succeeded
+            - pcs_active|failed
             - "'{{ install.deployment.files | basename }}' == 'virt'"
 
       - name: Report pacemaker status for stopped resources
@@ -127,6 +133,7 @@
             - fail_stop|changed
 
 
+      # Todo(yprokule): enhance search patterns
       - name: Check for any unmanaged pcs resources
         become: true
         shell: |
@@ -138,7 +145,7 @@
         delay: 5
         with_items:
             - 'unmanaged'
-        when: standby_node|succeeded
+        when: pcs_active|failed
 
       - name: Report pacemaker status for unmanaged resources
         become: true
@@ -171,6 +178,7 @@
         retries: 24
         delay: 15
         when: "'ceph' in group_names"
+        delegate_to: "{{ groups['controller']|first }}"
 
       - name: check clock_skew on ceph cluster
         become: true
@@ -178,6 +186,7 @@
             ceph status | grep 'Monitor clock skew detected' || echo 'ALL_GOOD'
         register: clock_skew
         when: "'ceph' in group_names"
+        delegate_to: "{{ groups['controller']|first }}"
 
       - name: check ceph cluster status
         become: true

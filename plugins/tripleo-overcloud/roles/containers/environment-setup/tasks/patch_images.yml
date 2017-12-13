@@ -31,15 +31,15 @@
 
 - name: tag the original image(s) with 'before_patching' and patch&push container image(s)
   shell: |
-      docker tag {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }} \
-      {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }}-before_patching
+      docker tag {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
+      {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}-before_patching
       echo "
-      FROM {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }}
+      FROM {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
       COPY patched_rpms.repo /etc/yum.repos.d/patched_rpms.repo
       ADD /patched_rpms /patched_rpms
       RUN yum update -y -v
       " > {{ container_images_patch_dir }}/Dockerfile
-      docker build -t {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }} {{ container_images_patch_dir }}/
-      docker push {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ containers_images_tag.stdout }}
+      docker build -t {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} {{ container_images_patch_dir }}/
+      docker push {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
   with_items: "{{ install_container_images_patch.split(',') }}"
   become: true

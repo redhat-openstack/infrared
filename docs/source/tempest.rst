@@ -59,3 +59,33 @@ Tempest results
 
     -rw-rw-r--. tempest-results-minimal.xml
     -rw-rw-r--. tempest-results-neutron.xml
+
+Downstream tests
+----------------
+
+The tempest plugin provides the ``--plugin`` cli option which can be used to
+specify the plugin url to install. This option can be used, for example, to specify
+a downstream repo with tempest tests and run them::
+
+        ir tempest --tests=neutron_downstream \
+                   --openstack-version=12 \
+                   --openstack-installer=tripleo \
+                   --plugin=https://downstrem.repo/tempest_neutron_plugin \
+                   --setup rpm
+
+The neutron_downstream.yml file can reference the upstream project in case the
+downstream repo is dependant or imports any upstream modules::
+
+    ---
+    test_dict:
+        test_regex: ''
+        whitelist:
+            - "^neutron_plugin.tests.scenario.*"
+        blacklist:
+            - "^tempest.api.network.*"
+            - "^tempest.scenario.test_network_basic_ops.test_hotplug_nic"
+            - "^tempest.scenario.test_network_basic_ops.test_update_instance_port_admin_state"
+            - "^tempest.scenario.test_network_basic_ops.test_port_security_macspoofing_port"
+        plugins:
+            upstream_neutron:
+                repo: "https://github.com/openstack/neutron.git"
