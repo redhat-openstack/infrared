@@ -145,7 +145,7 @@ class BeakerMachine(object):
         resp = self.session.get(url, headers=headers)
 
         assert resp.status_code == requests.codes.OK, \
-            "Failed to get system's details"
+            "Failed to get system's details: %s" % resp.text
 
         return json.loads(resp.text)
 
@@ -211,7 +211,7 @@ class BeakerMachine(object):
         """
         Reserve the system
 
-        :raises AssertionError: If fails to reserve the system
+        :raises AssertionError: If fails to reserve the system try to return
         """
         self._loan_system()
         try:
@@ -231,7 +231,7 @@ class BeakerMachine(object):
         resp = self.session.post(url, headers=headers,
                                  data=json.dumps({'comment': LOAN_COMMENT}))
 
-        assert resp.status_code == requests.codes.OK, "Failed to loan system"
+        assert resp.status_code == requests.codes.OK, "Failed to loan system: %s" % resp.text
 
     def _return_system(self):
         """
@@ -244,7 +244,7 @@ class BeakerMachine(object):
         resp = self.session.patch(url, headers=headers,
                                   data=json.dumps({'finish': 'now'}))
 
-        assert resp.status_code == requests.codes.OK, "Failed to return system"
+        assert resp.status_code == requests.codes.OK, "Failed to return system: %s" % resp.text
 
     def _reserve_system(self):
         """
@@ -257,7 +257,7 @@ class BeakerMachine(object):
         resp = self.session.post(url, headers=headers)
 
         assert resp.status_code == requests.codes.OK, \
-            "Failed to reserve system"
+            "Failed to reserve system: %s" % resp.text
 
     def _release_system(self):
         """
@@ -271,7 +271,7 @@ class BeakerMachine(object):
                                   data=json.dumps({'finish_time': 'now'}))
 
         assert resp.status_code == requests.codes.OK, \
-            "Failed to release system"
+            "Failed to release system: %s" % resp.text
 
     def provision(self, distro_id, ks_meta=None, koptions=None,
                   koptions_post=None, reboot=False, wait_for_host=True,
