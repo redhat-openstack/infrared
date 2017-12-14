@@ -1,8 +1,6 @@
 import tempfile
 
 import yaml
-from ansible.utils.display import Display
-
 from infrared.core.utils import logger
 
 LOG = logger.LOG
@@ -23,6 +21,7 @@ def ansible_playbook(inventory, playbook_path, verbose=None,
     LOG.debug("Additional ansible args: {}".format(ansible_args))
 
     # hack for verbosity
+    from ansible.utils.display import Display
     display = Display(verbosity=verbose)
     import __main__ as main
     setattr(main, "display", display)

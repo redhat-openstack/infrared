@@ -1,4 +1,7 @@
-plugin_type: provision
+config:
+    plugin_type: provision
+    dependencies:
+        - source: ./.library/common
 subparsers:
     virsh:
         description: Provision virtual machines on a single Hypervisor using libvirt
