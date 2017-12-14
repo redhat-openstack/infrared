@@ -14,12 +14,13 @@
           distro_tree_id: "{{ distro_id }}"
           web_service: "{{ provision.web.service }}"
           ca_cert: "{{ (provision.ca|default({})).cert | default(omit) }}"
+          custom_loan_comment: "{{ provision.comment | default('') }}"
       when: not provision.dry
       # Make beaker module prone to instance outages/failures, retry 3 times
       register: provisioner_result
       until: provisioner_result|success
       retries: 3
-      delay: 30
+      delay: 5
 
     - name: Add the host to host list
       add_host:

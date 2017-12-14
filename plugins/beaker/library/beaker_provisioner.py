@@ -70,9 +70,16 @@ options:
         description:
             - CA certificate (python 2.7.9+ only)
         required: false
+    custom_loan_comment:
+        description:
+            - Message stored as "Loan Comment" in Beaker's history
+              Default value is used if not specified
+              Comment can be max 60 lines long (Beaker requirement!),
+              otherwise it will be cut
+        required: false
 '''
 
-LOAN_COMMENT = "Loaned by Ansible's Module For Beaker"
+DEFAULT_LOAN_COMMENT = "Loaned by InfraRed Module For Beaker"
 SYS_FQDN_PATH = '/systems/{fqdn}/'
 WAIT_BETWEEN_PROVISION_CHECKS = 10
 
@@ -90,7 +97,7 @@ class BeakerMachine(object):
         SYSTEMS='systems/',
     )
 
-    def __init__(self, url, username, password, fqdn, web_service, ca_cert,
+    def __init__(self, url, username, password, fqdn, web_service, ca_cert, custom_loan_comment,
                  disable_warnings=True):
         """
         BeakerMachine initializer.
@@ -107,6 +114,7 @@ class BeakerMachine(object):
         self.fqdn = fqdn
         self.web_service = web_service
         self.ca_cert = ca_cert
+        self.loan_comment = custom_loan_comment or DEFAULT_LOAN_COMMENT
         self.disable_warnings = disable_warnings
         self.changed = False
         self.session = None
@@ -229,7 +237,7 @@ class BeakerMachine(object):
         headers = {'Content-Type': 'application/json'}
         url = self._build_url('LOAN', self.fqdn)
         resp = self.session.post(url, headers=headers,
-                                 data=json.dumps({'comment': LOAN_COMMENT}))
+                                 data=json.dumps({'comment': self.loan_comment}))
 
         assert resp.status_code == requests.codes.OK, "Failed to loan system: %s" % resp.text
 
@@ -426,6 +434,7 @@ def main():
             distro_tree_id=dict(default=71576),
             web_service=dict(default='rest', choices=['rest', 'rpc']),
             ca_cert=dict(required=False),
+            custom_loan_comment=dict(default="",required=False),
         ))
 
     if module.params['ca_cert'] and not os.path.exists(os.path.expanduser(module.params['ca_cert'])):
@@ -436,7 +445,8 @@ def main():
                                   password=module.params['password'],
                                   fqdn=module.params['host'],
                                   web_service=module.params['web_service'],
-                                  ca_cert=module.params['ca_cert'])
+                                  ca_cert=module.params['ca_cert'],
+                                  custom_loan_comment=module.params['custom_loan_comment'])
 
     try:
         beaker_client.create_session()
