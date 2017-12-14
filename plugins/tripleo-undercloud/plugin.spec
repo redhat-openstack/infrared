@@ -65,6 +65,13 @@ subparsers:
                           Specifies whether ths SSL should be used for undercloud
                           A self-signed SSL cert will be generated.
                       default: no
+            - title: Splitstack deployment
+              options:
+                  splitstack:
+                      type: Bool
+                      default: no
+                      help: |
+                        Whether to use splistack deployment
 
             - title: Setup Undercloud Packages
               options:
