@@ -27,7 +27,8 @@ class CoreSettings(object):
     def __init__(self, workspaces_base_folder=None,
                  plugins_conf_file=None,
                  install_plugin_at_start=True,
-                 library_base_folder=None):
+                 library_base_folder=None,
+                 plugins_base_folder=None):
         """
         :param workspaces_base_folder: folder where the
         workspace will be stored
@@ -53,6 +54,8 @@ class CoreSettings(object):
         self.install_plugin_at_start = install_plugin_at_start
         self.library_base_folder = library_base_folder or os.path.join(
             infarared_home, '.library')
+        self.plugins_base_folder = plugins_base_folder or os.path.join(
+            infarared_home, 'plugins')
 
 
 class CoreServices(object):
@@ -91,7 +94,8 @@ class CoreServices(object):
                 ServiceName.PLUGINS_MANAGER, plugins.InfraredPluginManager(
                     plugins_conf=core_settings.plugins_conf_file,
                     dependencies_manager=CoreServices.dependency_manager(),
-                    install_plugins=core_settings.install_plugin_at_start))
+                    install_plugins=core_settings.install_plugin_at_start,
+                    plugins_dir=core_settings.plugins_base_folder))
 
     @classmethod
     def register_service(cls, service_name, service):
