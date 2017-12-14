@@ -1,0 +1,111 @@
+---
+- name: Prepare overcloud nodes
+  hosts: overcloud_nodes:!unused
+  any_errors_fatal: true
+  gather_facts: no
+  become: yes
+  vars:
+      local_undercloud_pubkey: "{{ inventory_dir }}/id_rsa_undercloud.pub"
+      default_privatekey: "~/.ssh/id_rsa"
+      default_pubkey: "{{ default_privatekey }}.pub"
+      tmp_oc_repos_dir: /tmp/oc_repos/yum.repos.d
+      rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+  tags:
+    - prepare_splitstack
+  pre_tasks:
+      - setup:
+
+      - name: check for subscription
+        command: subscription-manager identity
+        become: yes
+        ignore_errors: yes
+        register: cdn_status
+        changed_when: false
+        when: install.images.packages|default('') or install.images['update']
+
+      - name: check if rhos-release is available
+        uri:
+            url: "{{ rhos_release_rpm }}"
+            validate_certs: false
+        ignore_errors: yes
+        register: internal_repos
+        when: install.images.packages|default('') or install.images['update']
+
+      - fail:
+            msg: overcloud image customization currently not supported outside Red Hat internal network or when using CDN
+        when:
+            - install.images.packages|default('') or install.images['update']
+            - internal_repos|failed or cdn_status|success
+
+      - name: tmp repos.d for overcloud
+        file:
+          name: "{{ tmp_oc_repos_dir }}"
+          state: directory
+  roles:
+        # modify images - update to core build and install packages
+      - role: rhos-release
+        release: "{{ install.version }}"
+        rr_buildmods: "{{ install.buildmods }}"
+        build: "{{ install.build | default(omit) }}"
+        director_build: "{{ install.get('director', {}).build|default(omit) }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        rr_target_directory: "{{ tmp_oc_repos_dir }}"
+        rr_discover_build: yes
+        rr_distro_version: "{{ install.osrelease|default(omit) }}"
+        # when:
+        #     - install.version|default(undercloud_version)|openstack_distribution == 'OSP'
+        tags: rhos-release
+
+      - role: rdo-release
+        release: "{{ undercloud_version }}"
+        rr_buildmods: "{{ install.buildmods }}"
+        build: "{{ install.build | default(omit)}}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        rr_target_directory: "{{ tmp_oc_repos_dir }}"
+        when:
+            - install.images.packages|default('') or install.images['update']
+            - undercloud_version|default(undercloud_version)|openstack_distribution == 'RDO'
+        tags: rhos-release
+  tasks:
+      - name: backup old repo data
+        command: mv -v /etc/yum.repos.d /etc/yum.repos.d_old
+
+      - name: make new repo dir active
+        command: mv -fu "{{ tmp_oc_repos_dir }}" /etc/
+
+      - name: sudoers no tty
+        lineinfile:
+            dest: /etc/sudoers
+            state: absent
+            regexp: 'Defaults\s+requiretty'
+
+      - name: create default user
+        user:
+            name: "{{ install.user.name }}"
+            state: present
+            password: "{{ install.user.password | password_hash('sha512') }}"
+
+      - name: add user to sudoers
+        lineinfile:
+            dest: "/etc/sudoers"
+            line: "{{ install.user.name }} ALL=(root) NOPASSWD:ALL"
+
+      - name: create .ssh direcotry for non-root user
+        file:
+            path: "{{ default_privatekey | dirname }}"
+            state: directory
+        become_user: "{{ install.user.name }}"
+        become: yes
+
+      - set_fact:
+            uc_publickey: "{{ lookup('file', local_undercloud_pubkey) }}"
+
+      - name: set up authorized_keys for non root user
+        authorized_key:
+            user: "{{ install.user.name }}"
+            key: "{{ uc_publickey }}"
+
+      - name: Install heat-agent package
+        yum:
+            name: 'python-heat-agent'
+            state: latest
