@@ -423,6 +423,14 @@ subparsers:
                       default: password
                       help: |
                         VBMC password (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+                  vbmc-host:
+                      type: Value
+                      default: hypervisor
+                      choices:
+                          - "hypervisor"
+                          - "undercloud"
+                      help: |
+                          Specifies on what server the virtualbmc service should be installed.
 
             - title: ansible facts
               options:
