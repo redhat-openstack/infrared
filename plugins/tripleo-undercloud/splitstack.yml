@@ -1,0 +1,60 @@
+---
+- name: Prepare overcloud nodes
+  hosts: overcloud_nodes:!unused
+  any_errors_fatal: true
+  gather_facts: yes
+  become_user: root
+  vars:
+      local_undercloud_pubkey: "{{ inventory_dir }}/id_rsa_undercloud.pub"
+      default_privatekey: "~/.ssh/id_rsa"
+      default_pubkey: "{{ default_privatekey }}.pub"
+  tags:
+    - prepare_splitstack
+  tasks:
+      - name: sudoers no tty
+        lineinfile:
+            dest: /etc/sudoers
+            state: absent
+            regexp: 'Defaults\s+requiretty'
+
+      - name: create default user
+        user:
+            name: "{{ install.user.name }}"
+            state: present
+            password: "{{ install.user.password | password_hash('sha512') }}"
+
+      - name: add user to sudoers
+        lineinfile:
+            dest: "/etc/sudoers"
+            line: "{{ install.user.name }} ALL=(root) NOPASSWD:ALL"
+
+      - name: create .ssh direcotry for non-root user
+        file:
+            path: "{{ default_privatekey | dirname }}"
+            state: directory
+        become_user: "{{ install.user.name }}"
+        become: yes
+
+      - block:
+          - name: inject local private key to the node
+            copy:
+                src: "{{ ansible_ssh_private_key_file }}"
+                dest: "{{ default_privatekey }}"
+                mode: 0600
+                force: yes
+            register: key_injection
+            become_user: "{{ install.user.name }}"
+            become: yes
+
+          - name: Retrieve public key from private key
+            shell: "ssh-keygen -y -f {{ default_privatekey }} > {{ default_pubkey }}"
+            become_user: "{{ install.user.name }}"
+            become: yes
+
+      - set_fact:
+            publickey: "{{ lookup('file', default_pubkey) }}"
+
+      - name: set up authorized_keys for non root user
+        authorized_key:
+            user: "{{ install.user.name }}"
+            key: "{{ publickey }}"

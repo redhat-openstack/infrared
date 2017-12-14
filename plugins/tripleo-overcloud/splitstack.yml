@@ -1,0 +1,58 @@
+---
+- name: Prepare splitstack deployment templates
+  hosts: undercloud
+  any_errors_fatal: true
+  gather_facts: yes
+  vars:
+      template_base: "{{ ansible_user_dir }}/splitstack"
+  tags:
+      - deploy_preparation
+  tasks:
+      - name: Create configuration directory
+        file:
+            path: "{{ template_base }}"
+            state: directory
+
+      - name: include roles according to the topology
+        include: tasks/composable_roles/add_role_vars.yml
+        with_items: "{{ groups.overcloud_nodes }}"
+        loop_control:
+            loop_var: role
+
+      - name: create the roles_data file
+        template:
+            src: composable_roles/roles_data.yaml.j2
+            dest: "{{ template_base }}/roles_data.yaml"
+            force: yes
+
+      - name: Copy config files to THT
+        copy:
+            src: "{{ item }}"
+            dest: "{{ install.heat.templates.basedir }}"
+        with_fileglob:
+            - "files/splitstack/{{ install.version }}/*"
+        become: yes
+
+      - name: Create network configuration
+        template:
+            src: "templates/splitstack/{{ install.version }}/net-static.yaml"
+            dest: "{{ template_base }}"
+
+      - name: Create neutron public interface configuration
+        template:
+            src: "templates/splitstack/{{ install.version }}/neutron-public-interface.yaml"
+            dest: "{{ template_base }}"
+
+      - name: Create heat agent template
+        template:
+            src: "splitstack/{{ install.version }}/heat-agent.sh.j2"
+            dest: "~/heat-agent.sh"
+            mode: '0755'
+
+      - name: Run heat agent script in a background
+        shell: ./heat-agent.sh >/dev/null 2>&1 &
+
+- name: Deploy the Overcloud with composable roles
+  include: "{{ overcloud_deploy | default('deploy.yml') }}"
+  tags:
+      - splitstack_deploy
