@@ -1,5 +1,5 @@
 - name: Get the undercloud version
-  include: version.yml
+  import_playbook: version.yml
 
 - name: Preparing the images
   hosts: undercloud
@@ -76,10 +76,10 @@
             - undercloud_version|default(undercloud_version)|openstack_distribution == 'RDO'
         tags: rhos-release
   tasks:
-      - include: "tasks/images/{{ install.images.task }}.yml"
+      - include_tasks: "tasks/images/{{ install.images.task }}.yml"
 
       - name: modify images - update to core build and install packages
-        include: tasks/images/repos.yml
+        include_tasks: tasks/images/repos.yml
         # update is a func name (dict.update) so it must be used as str explicitly
         when: install.images.packages|default('') or install.images['update']
 

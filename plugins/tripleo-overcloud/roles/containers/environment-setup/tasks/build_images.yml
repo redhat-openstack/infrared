@@ -25,7 +25,7 @@
       name: container_env
 
 - name: create nondefault fact for upload
-  include: "{{ role_path }}/tasks/nondefault_images_fact.yml"
+  include_tasks: "{{ role_path }}/tasks/nondefault_images_fact.yml"
   with_items: "{{ install.overcloud.templates|default([]) }}"
   loop_control:
       loop_var: templates_list_file
@@ -96,7 +96,7 @@
       - skip_ansible_lint
 
 - name: patch and push container images
-  include: patch_images.yml
+  include_tasks: patch_images.yml
   when: install_container_images_patch is defined
   tags: container-images-patch
 

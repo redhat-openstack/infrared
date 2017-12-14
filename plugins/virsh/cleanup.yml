@@ -32,7 +32,7 @@
     - name: Cleanup libvirt artifacts
       vars:
           libvirt_state: "{{  libvirt_status.results|map(attribute='yumstate')|list }}"
-      include: tasks/cleanup.yml
+      include_tasks: tasks/cleanup.yml
       when: "'installed' in libvirt_state"
 
     - name: remove iptables rules created by infrared, by comment

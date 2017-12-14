@@ -34,12 +34,12 @@
         when: not local_src
 
       - name: enable undercloud-ssl
-        include: tasks/ssl.yml
+        include_tasks: tasks/ssl.yml
         when: install.ssl
         tags: ssl
 
       - name: override values in undercloud conf
-        include: tasks/inject_undercloud_conf.yml
+        include_tasks: tasks/inject_undercloud_conf.yml
         with_dict: "{{ conf.options|default({}) }}"
         loop_control:
             loop_var: section

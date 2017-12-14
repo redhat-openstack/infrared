@@ -1,23 +1,23 @@
 ---
 - name: Patch hypervisor for undercloud deployment (if present)
   tags: hypervisor
-  include: hypervisor.yml
+  import_playbook: hypervisor.yml
   when: "'hypervisor' in groups"
 
-- include: init.yml
+- import_playbook: init.yml
   tags: init
 
 # FIXME(yfried): dump facts?
 
-- include: setup_packages.yml
+- import_playbook: setup_packages.yml
   tags: install
 
 # Need to setup virtualenv on shade node after undercloud has got repos configured
-- include: shade.yml
+- import_playbook: shade.yml
   tags: shade
 
-- include: configure.yml
+- import_playbook: configure.yml
   tags: configure
 
-- include: deploy.yml
+- import_playbook: deploy.yml
   tags: deploy

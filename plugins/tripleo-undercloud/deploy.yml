@@ -38,7 +38,7 @@
             fail_on_missing: yes
 
       - name: update clouds.yaml file
-        include: clouds.yml
+        include_tasks: clouds.yml
         vars:
             auth_file_path: "/home/stack/stackrc"
             cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"

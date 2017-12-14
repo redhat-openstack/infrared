@@ -9,7 +9,7 @@
         include_vars: "vars/venv.yml"
 
       - name: Prepare tempest files
-        include: "tasks/discover_overcloud_version.yml"
+        include_tasks: "tasks/discover_overcloud_version.yml"
         tags:
             - discover_overcloud
         when: test.openstack.version is not defined
@@ -20,22 +20,22 @@
         when: overcloud_version is defined
 
       - name: Prepare tempest files
-        include: tasks/pre/main.yml
+        include_tasks: tasks/pre/main.yml
         tags:
             - pre
 
       - name: Setup tempest
-        include: "tasks/setup/main.yml"
+        include_tasks: "tasks/setup/main.yml"
         tags:
             - setup
 
       - name: Configure tempest
-        include: "tasks/configure/main.yml"
+        include_tasks: "tasks/configure/main.yml"
         tags:
            - configure
 
       - name: Run tempest test suites
-        include: "tasks/run_suite.yml"
+        include_tasks: "tasks/run_suite.yml"
         with_items: "{{ test.tests }}"
         loop_control:
             loop_var: test_suite_file
@@ -43,7 +43,7 @@
             - run
 
       - name: Collect Ansible facts
-        include: 'tasks/collect-ansible-facts.yml'
+        include_tasks: 'tasks/collect-ansible-facts.yml'
         when: test.collect.ansible.facts|default(False)
         tags: collect-ansible-facts
         ignore_errors: True
