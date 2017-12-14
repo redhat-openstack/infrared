@@ -16,6 +16,10 @@
 {% endif -%}
 {% endfor %}
 {% endif %}
+{# Splitstack specific #}
+{% if install.splitstack|default(false) %}
+  disable_constraints: True
+{% endif %}{# end of splitstack specific #}
 {# OSP12 specific #}
 {% if install.version|default(undercloud_version)|openstack_release > 11 %}
 {% if role.tags|default([])|length > 0 %}
