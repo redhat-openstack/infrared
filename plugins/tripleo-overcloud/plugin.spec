@@ -332,6 +332,14 @@ subparsers:
                         roles should be used for OSP12+ composable deployments. If value is 'no', then the OSP11 approach
                         will be used.
 
+            - title: Splitstack deployment
+              options:
+                  splitstack:
+                      type: Bool
+                      default: no
+                      help: |
+                        Whether to use splistack deployment
+
             - title: Overcloud compute
               options:
                   compute-ssh:
