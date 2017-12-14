@@ -1,0 +1,25 @@
+---
+- name: Configure network on undercloud node
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - name: delete ctrlplane-subnet
+        vars:
+            # Here can't be used {{ path_venv }}, because it's not a Jinja template
+            ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
+            # It's cleaner to define top defaults first
+            pool: "{{ subnet.allocation_pool|default({}) }}"
+        os_subnet:
+            # Required for SSL
+            validate_certs: no
+            cloud: overcloud
+            name: external_subnet
+            network_name: "{{ net_create.network.name }}"
+            enable_dhcp: no
+            cidr: "{{ subnet.cidr }}"
+            gateway_ip: "{{ subnet.gateway }}"
+            allocation_pool_start: "{{ pool.start | default(omit) }}"
+            allocation_pool_end: "{{ pool.end | default(omit) }}"
+        register: subnet_create
+        delegate_to: "{{ groups.shade | first }}"

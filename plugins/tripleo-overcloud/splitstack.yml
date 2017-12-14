@@ -1,0 +1,76 @@
+---
+- name: Prepare splitstack deployment templates
+  hosts: undercloud
+  any_errors_fatal: true
+  gather_facts: yes
+  vars:
+      template_base: "{{ ansible_user_dir }}/splitstack"
+  tags:
+      - deploy_preparation
+  tasks:
+      - name: Create configuration directory
+        file:
+            path: "{{ template_base }}"
+            state: directory
+
+      - name: register tht packages
+        yum:
+            list: openstack-tripleo-heat-templates
+        register: tht
+
+      - set_fact:
+            roles_sshd: "{{ install.version|default(undercloud_version)|openstack_release >= 11 or (tht_version | version_compare('5.2.0', '>=') and tht_release | version_compare('15', '>=')) }}"
+        vars:
+            tht_pkg: "{{ tht.results|selectattr('yumstate', 'equalto', 'installed')|first }}"
+            tht_version: "{{ tht_pkg.version }}"
+            tht_release: "{{ tht_pkg.release | splitext | first }}"
+
+      - name: include roles according to the topology
+        include: tasks/composable_roles/add_role_vars.yml
+        with_items: "{{ groups.overcloud_nodes }}"
+        loop_control:
+            loop_var: role
+
+      - name: create the network template file
+        vars:
+            ipv6_postfix: "{{  (install.network.protocol == 'ipv4') | ternary('', '-v6')}}"
+            ipv6_postfix_underscore: "{{  (install.network.protocol == 'ipv4') | ternary('', '_v6')}}"
+            deployment_folder_path: "{{ template_base }}"
+        template:
+            src: composable_roles/network-config.yaml.j2
+            dest: "{{ template_base }}/network-config.yaml"
+            force: yes
+
+      # - name: Copy config files to THT
+      #   copy:
+      #       src: "{{ item }}"
+      #       dest: "{{ install.heat.templates.basedir }}"
+      #   with_fileglob:
+      #       - "files/splitstack/{{ install.version }}/*"
+      #   become: yes
+
+      - name: Copy roles port config 
+        template:
+            src: "splitstack/roles-port-config.yml.j2"
+            dest: "{{ template_base }}/roles-port-config.yml"
+
+      - name: Create heat agent template
+        template:
+            src: "splitstack/{{ install.version }}/heat-agent.sh.j2"
+            dest: "~/heat-agent.sh"
+            mode: '0755'
+
+      - name: Create control plane network template
+        template:
+            src: "splitstack/{{ install.version }}/ctrlplane-template.yml.j2"
+            dest: "{{ template_base }}/ctrlplane-template.yml"
+
+      - name: Run heat agent script in a background
+        shell: ~{{ ansible_ssh_user }}/heat-agent.sh > heat_agent.log 2>&1
+        async: 1000
+        poll: 0
+
+- name: Deploy the Overcloud with composable roles
+  include: "{{ overcloud_deploy | default('deploy.yml') }}"
+  tags:
+      - splitstack_deploy

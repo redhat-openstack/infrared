@@ -1,0 +1,16 @@
+parameter_defaults:
+  EC2MetadataIp: 192.168.24.1
+  ControlPlaneDefaultRoute: 192.168.24.1
+  DeployedServerPortMap:
+    control_virtual_ip:
+      fixed_ips:
+        - ip_address: 192.168.24.20
+      subnets:
+        - cidr: 24
+{% for host_name in groups.overcloud_nodes %}
+    {{ host_name }}-ctlplane:
+      fixed_ips:
+        - ip_address: 192.168.24.{{ loop.index + 20 }}
+      subnets:
+        - cidr: 24
+{% endfor %}
