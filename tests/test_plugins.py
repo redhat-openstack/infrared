@@ -13,7 +13,7 @@ from infrared.core.services.dependency import PluginDependencyManager, \
 from infrared.core.utils.exceptions import IRPluginExistsException, \
     IRUnsupportedPluginType, IRFailedToAddPluginDependency
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
-from infrared.core.utils.exceptions import IRSpecValidatorException
+from infrared.core.utils.exceptions import IRValidatorException
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRUnsupportedSpecOptionType
@@ -21,7 +21,7 @@ from infrared.core.utils.dict_utils import dict_insert
 import infrared.core.services.plugins
 from infrared.core.services.plugins import InfraredPluginManager
 from infrared.core.services.plugins import InfraredPlugin
-from infrared.core.services.plugins import SpecValidator
+from infrared.core.utils.validators import SpecValidator, RegistryValidator
 from infrared.core.services import CoreServices, ServiceName
 
 
@@ -93,7 +93,8 @@ def plugin_manager_fixture(plugins_conf_fixture):
                 os.path.join(lp_file.dirname, ".library")))
         CoreServices.register_service(
             ServiceName.PLUGINS_MANAGER, InfraredPluginManager(
-                lp_file.strpath, CoreServices.dependency_manager()))
+                lp_file.strpath, CoreServices.dependency_manager(),
+                os.path.join(lp_file.dirname, "plugins")))
         return CoreServices.plugins_manager()
 
     yield plugin_manager_helper
@@ -403,7 +404,7 @@ def test_add_plugin_no_spec(plugin_manager_fixture):
     plugins_cfg_mtime_before_add = os.path.getmtime(plugin_manager.config_file)
     plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
 
-    with pytest.raises(IRSpecValidatorException):
+    with pytest.raises(IRValidatorException):
         plugin_manager.add_plugin(plugin_dir)
 
     assert plugins_cnt_before_try == len(plugin_manager.PLUGINS_DICT)
@@ -490,7 +491,7 @@ def test_add_plugin_corrupted_spec(tmpdir_factory, description, plugin_spec):
         yaml.dump(plugin_spec, fp, default_flow_style=True)
 
     try:
-        with pytest.raises(IRSpecValidatorException):
+        with pytest.raises(IRValidatorException):
             SpecValidator.validate_from_file(lp_file.strpath)
     finally:
         lp_dir.remove()
@@ -514,10 +515,7 @@ def test_plugin_with_unsupporetd_option_type_in_spec(plugin_manager_fixture):
         ir_main([plugin_dict['name'], '--help'])
 
 
-@pytest.mark.parametrize("dest,real_dest", [(
-    SAMPLE_PLUGINS_DIR, SAMPLE_PLUGINS_DIR),
-    (None, "plugins")])
-def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
+def test_add_plugin_from_git(plugin_manager_fixture, mocker):
 
     plugin_manager = plugin_manager_fixture()
 
@@ -535,9 +533,7 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
 
     # add_plugin call
     plugin_manager.add_plugin(
-        "https://sample_github.null/plugin_repo.git", dest=dest, rev="test")
-
-    mock_os.path.abspath.assert_has_calls([mocker.call(real_dest)])
+        "https://sample_github.null/plugin_repo.git", rev="test")
 
     mock_tempfile.mkdtemp.assert_called_once()
     mock_os.getcwdu.assert_called_once()
@@ -545,13 +541,11 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker, dest, real_dest):
     mock_git.clone_from.assert_called_with(
         url='https://sample_github.null/plugin_repo.git',
         to_path=mock_os.path.join.return_value)
-    mock_os.join.has_call(real_dest, mock_os.listdir.return_value[0])
+    mock_os.join.has_call(SAMPLE_PLUGINS_DIR, mock_os.listdir.return_value[0])
     mock_os.join.has_call(mock_tempfile.mkdtemp.return_value,
                           mock_os.listdir.return_value[0])
-    mock_shutil.copytree.assert_called_with(mock_os.path.join.return_value,
-                                            mock_os.path.join.return_value)
     mock_os.chdir.assert_has_calls(mock_os.getcwdu.return_value)
-    mock_shutil.rmtree.assert_called_with(mock_tempfile.mkdtemp.return_value)
+    mock_shutil.rmtree.assert_called_with(mock_os.path.join.return_value)
 
 
 def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
@@ -592,7 +586,8 @@ def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
         plugin_manager.add_plugin(
             "https://sample_github.null/plugin_repo.git")
 
-    mock_shutil.rmtree.assert_called_with(mock_tempfile.mkdtemp.return_value)
+    mock_shutil.rmtree.assert_called_with(os.path.join(
+            mock_tempfile.mkdtemp.return_value, "plugin_repo"))
     # clean tmp folder
     shutil.rmtree(mock_tempfile.mkdtemp.return_value)
 
@@ -605,7 +600,7 @@ def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
     # check that it was copied with the plugin name and not repo name
     mock_shutil.copytree.assert_called_with(
         os.path.join(mock_tempfile.mkdtemp.return_value, "plugin_repo"),
-        os.path.join(os.path.abspath("plugins"), plugin_dict["name"]))
+        os.path.join(plugin_manager.plugins_dir, plugin_dict["name"]))
 
 
 def test_add_plugin_from_git_exception(plugin_manager_fixture, mocker):
@@ -672,11 +667,10 @@ def test_plugin_add_all(plugin_manager_fixture):
     )
     tests_plugins_dir = 'tests/example/plugins/add_remove_all_plugins/'
 
-    infrared.core.services.plugins.PLUGINS_REGISTRY = \
+    plugins_registry = \
         dict((pname, {'src': os.path.join(tests_plugins_dir, pname)})
              for pname in tests_plugins)
 
-    plugins_registry = infrared.core.services.plugins.PLUGINS_REGISTRY
     plugin_manager = plugin_manager_fixture()
 
     # Validates that plugins aren't in configuration file from the beginning
@@ -684,7 +678,7 @@ def test_plugin_add_all(plugin_manager_fixture):
         plugin_manager, plugins_registry, present=False)
 
     # Validates all plugins are in the configuration file
-    plugin_manager.add_all_available()
+    plugin_manager.add_all_available(plugins_registry=plugins_registry)
     validate_plugins_presence_in_conf(
         plugin_manager, plugins_registry, present=True)
 
@@ -884,5 +878,115 @@ def test_dependency_already_exist_different_revision(tmpdir,
         plugin_manager.add_plugin(plugin_source=plugin_dict["dir"])
 
 
+@pytest.mark.parametrize("description, registry_yaml", [
+    ('no_type', {
+        'some_plugin_name': {
+            'src': '/path/to/plugin',
+            'desc': 'some plugin description'
+        }
+    }),
+    ('no_desc', {
+        'some_plugin_name': {
+            'src': '/path/to/plugin',
+            'type': 'supported_type'
+        }
+    }),
+    ('no_src', {
+        'some_plugin_name': {
+            'desc': 'some plugin description',
+            'type': 'supported_type'
+        }
+    }),
+    ('empty_revision', {
+        'some_plugin_name': {
+            'src': '/path/to/plugin',
+            'type': 'supported_type',
+            'desc': 'some plugin description',
+            'rev': ''
+        }
+    }),
+    ('empty_src_path', {
+        'some_plugin_name': {
+            'src': '/path/to/plugin',
+            'type': 'supported_type',
+            'desc': 'some plugin description',
+            'src_path': ''
+        }
+    }),
+    ('empty_plugin_key', {
+        '': {
+            'src': '/path/to/plugin',
+            'type': 'supported_type',
+            'desc': 'some plugin description',
+            'src_path': ''
+        }
+    }),
+    ('additional_not_allowed_param', {
+        '': {
+            'src': '/path/to/plugin',
+            'type': 'supported_type',
+            'desc': 'some plugin description',
+            'src_path': '/relative/path',
+            'rev': 'some_rev',
+            'not_allowed_additional_key': 'some_value'
+        }
+    }),
+])
+def test_import_plugins_corrupted_registry(tmpdir_factory, description,
+                                           registry_yaml):
+    """
+    Tests that it's not possible to import plugins with invalid registry file
+    :param tmpdir_factory: pytest builtin fixture for creating temp dirs
+    :param description: test description (adds a description in pytest run)
+    :param registry_yaml: dictionary with data for registry file
+    :return:
+    """
+
+    lp_dir = tmpdir_factory.mktemp('test_tmp_dir')
+    lp_file = lp_dir.join('registry.yaml')
+
+    with open(lp_file.strpath, 'w') as fp:
+        yaml.dump(registry_yaml, fp, default_flow_style=True)
+
+    try:
+        with pytest.raises(IRValidatorException):
+            RegistryValidator.validate_from_file(lp_file.strpath)
+    finally:
+        lp_dir.remove()
 
 
+def test_import_plugins_from_registry(tmpdir, plugin_manager_fixture):
+    """
+    Test that plugins import actually imports the plugins specified in the
+    registry file supplied
+    :param tmpdir: pytest builtin fixture for creating temp dirs
+    :param plugin_manager_fixture: Fixture object which yields
+    """
+    plugin_manager = plugin_manager_fixture()
+    plugins_registry = os.path.join(SAMPLE_PLUGINS_DIR, "registry_example.yml")
+
+    with open(plugins_registry) as fp:
+        registry_yaml = yaml.load(fp)
+
+    # prepare tmp library folder to hold the dependencies
+    tmp_pluginss_dir = str(tmpdir.mkdir("tmp_pluginss_dir"))
+    plugin_manager.plugins_dir = tmp_pluginss_dir
+
+    # Validates that plugins aren't in configuration file from the beginning
+    validate_plugins_presence_in_conf(
+        plugin_manager, registry_yaml, present=False)
+
+    # import all plugins from registry
+    plugin_manager.import_plugins(plugins_registry)
+
+    # check that plugins were copied to the plugins directory
+    assert os.path.isdir(os.path.join(
+        tmp_pluginss_dir, 'type1_plugin1'))
+    assert os.path.isdir(os.path.join(
+        tmp_pluginss_dir, 'type2_plugin1'))
+    assert os.path.isdir(os.path.join(
+        tmp_pluginss_dir, 'type1_plugin2'))
+
+    # Validates all plugins are in the configuration file
+    validate_plugins_presence_in_conf(
+        plugin_manager, registry_yaml, present=True)

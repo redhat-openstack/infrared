@@ -180,7 +180,7 @@ class IRGroupNotFoundException(IRException):
         super(self.__class__, self).__init__(message)
 
 
-class IRSpecValidatorException(IRException):
+class IRValidatorException(IRException):
     def __init__(self, reason_str):
         super(self.__class__, self).__init__(reason_str)
 
