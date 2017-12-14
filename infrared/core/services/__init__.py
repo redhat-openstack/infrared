@@ -41,8 +41,8 @@ class CoreSettings(object):
         # todo(obaranov) replace with
         # todo(obaranov) os.path.join(os.path.expanduser("~"), '.infrared')
         # todo(obaranov) once IR is packaged as pip
-        infarared_home = os.environ.get(
-            "INFRARED_HOME", os.path.abspath(os.getcwd()))
+        infarared_home = os.path.abspath(os.environ.get(
+            "INFRARED_HOME", os.getcwd()))
 
         # todo(obaranov) replace .workspaces to workspaces and .plugins.ini to
         # todo(obaranov) plugins.ini once IR is packaged as pip
