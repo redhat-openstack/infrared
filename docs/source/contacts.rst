@@ -15,7 +15,7 @@ Team
 GitHub
 ------
 
-Issues are tracked via `GitHub <https://github.com/rehdat-openstack/infrared/issues>`_.
+Issues are tracked via `GitHub <https://github.com/redhat-openstack/infrared/issues>`_.
 For any concern, please create a `new issue <https://github.com/redhat-openstack/infrared/issues/new>`_.
 
 IRC
