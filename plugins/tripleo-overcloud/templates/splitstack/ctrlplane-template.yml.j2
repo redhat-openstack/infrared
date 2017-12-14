@@ -1,0 +1,36 @@
+{# macros co caluclate nodes count for each role #}
+{%- macro count(node_name) -%}
+{% set counter = [] %}
+{% for host_name in groups.overcloud_nodes %}
+{% if node_name == host_name.rstrip('1234567890-').split('-')[-1] %}
+{%- if counter.append(node_name) %}{% endif -%}
+{% endif %}
+{% endfor %}
+{{ counter | length }}
+{%- endmacro -%}
+
+parameter_defaults:
+  EC2MetadataIp: 192.168.24.1
+  ControlPlaneDefaultRoute: 192.168.24.1
+{% set saved_roles = [] %}
+{% for host_name in groups.overcloud_nodes %}
+{% set node_name = host_name.rstrip('1234567890-').split('-')[-1] %}
+{%- if node_name not in saved_roles -%}
+{% set role_name = node_name.title() ~ 'DeployedServerCount' %}
+  {{ role_name }}: {{ count(node_name) }}
+{% if saved_roles.append(node_name) %}{% endif %}
+{%- endif -%}
+{% endfor %}
+  DeployedServerPortMap:
+    control_virtual_ip:
+      fixed_ips:
+        - ip_address: 192.168.24.20
+      subnets:
+        - cidr: 24
+{% for host_name in groups.overcloud_nodes %}
+    {{ host_name }}-ctlplane:
+      fixed_ips:
+        - ip_address: {{ hostvars[host_name]['ansible_eth0']['ipv4']['address'] }}
+      subnets:
+        - cidr: 24
+{% endfor %}
