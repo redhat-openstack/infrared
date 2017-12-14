@@ -214,9 +214,6 @@ class PluginManagerSpec(api.SpecObject):
         add_parser.add_argument("--revision", help="git branch/tag/revision"
                                 " sourced plugins. Ingnored for"
                                 "'plugin add all' command.")
-        add_parser.add_argument("--dest", help="Destination directory to "
-                                "clone plugin under, in case of Git URL is "
-                                "provided as path")
 
         # Remove plugin
         remove_parser = plugin_subparsers.add_parser(
@@ -262,6 +259,16 @@ class PluginManagerSpec(api.SpecObject):
             'search', help='Search and list all the available plugins from '
             "rhos-infra organization on GitHub")
 
+        # import plugins from registry yml file
+        plugin_subparsers.add_parser(
+            'import', help='Install plugins from a YAML file')
+
+        # Add plugin
+        import_parser = plugin_subparsers.add_parser(
+            'import', help='Install plugins from a registry YML file')
+        import_parser.add_argument("src",
+                                   help="The registry YML file Source")
+
     def spec_handler(self, parser, args):
         """Handles all the plugin manager commands
 
@@ -278,8 +285,7 @@ class PluginManagerSpec(api.SpecObject):
                 self.plugin_manager.add_all_available()
                 self._list_plugins(print_available=False)
             else:
-                self.plugin_manager.add_plugin(pargs.src, rev=pargs.revision,
-                                               dest=pargs.dest)
+                self.plugin_manager.add_plugin(pargs.src, rev=pargs.revision)
         elif subcommand == 'remove':
             if pargs.name == 'all':
                 self.plugin_manager.remove_all()
@@ -293,6 +299,8 @@ class PluginManagerSpec(api.SpecObject):
                 pargs.name, pargs.revision, pargs.skip_reqs, pargs.hard_reset)
         elif subcommand == 'search':
             self._search_plugins()
+        elif subcommand == 'import':
+            self.plugin_manager.import_plugins(pargs.src)
 
     def _list_plugins(self, print_available=False):
         """Print a list of installed & available plugins"""

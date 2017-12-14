@@ -346,11 +346,21 @@ Remove:
         infrared plugin remove all
 
 Freeze:
+    Output installed plugins with their revisions in a `registry file format <plugins.html#registry-files>`_.
     When you need to be able to install somewhere else the exact same versions
-    of plugins use ``freeze`` command. This will run through installed plugins
-    and save revision to ``plugins/registry.yaml`` for every git sorced one::
+    of plugins use ``freeze`` command::
 
         infrared plugin freeze
+        infrared plugin freeze > registry.yaml
+
+Import:
+    Installs all plugins from the given registry file.
+    The registry file can be either path to local file or to URL::
+
+        infrared plugin import plugins/registry.yaml
+        infrared plugin import https://url/to/registry.yaml
+
+
 
 Update:
     Update a given Git-based plugin to a specific revision.
@@ -365,3 +375,36 @@ Execute:
     the ``main.yml`` `playbook <playbooks>`_::
 
         infrared example
+
+
+Registry Files
+^^^^^^^^^^^^^^
+
+Registry files are files containing a list of plugins to be installed using the infrared plugin import.
+These files are used to hold the result from infrared plugin freeze for the purpose of achieving repeatable installations.
+The Registry file contains a pinned version of everything that was installed when infrared plugin freeze was run.
+
+Registry File Format
+~~~~~~~~~~~~~~~~~~~~
+The registry file is following the YAML format.
+Each section of the registry file contains an object which specifies the plugin to be installed:
+
+* ``src``: The path to the plugin. It can be either local path or git url
+* ``src_path``: (optional) Relative path within the repository where infrared plugin can be found.
+* ``rev``: (optional) If the plugin source is git, this allows to specify the revision to pull.
+* ``desc``: The plugin description.
+* ``type``: Plugin type can be one of the following: ``provision``, ``install``, ``test``, ``other``.
+
+Example of a registry file::
+
+    ---
+
+    plugin_name:
+        src: path/to/plugin/directory
+        rev: some_revision_hash
+        src_path: /path/to/plugin/in/repo
+        desc: Some plugin description
+        type: provision/test/install/other
+
+
+
