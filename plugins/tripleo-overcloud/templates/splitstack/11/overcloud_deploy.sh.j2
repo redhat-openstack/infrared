@@ -1,0 +1,11 @@
+#!/bin/bash
+
+. ~/stackrc
+timeout 100m openstack overcloud deploy --templates {{ install.heat.templates.basedir }} \
+--disable-validation \
+-r /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-server-roles-data.yaml \
+-e /usr/share/openstack-tripleo-heat-templates/environments/deployed-server-environment.yaml \
+-e /usr/share/openstack-tripleo-heat-templates/environments/deployed-server-bootstrap-environment-rhel.yaml \
+-e /usr/share/openstack-tripleo-heat-templates/environments/deployed-server-pacemaker-environment.yaml \
+-e {{ template_base }}/network-config.yaml \
+-e {{ template_base }}/ctrlplane-template.yml \
