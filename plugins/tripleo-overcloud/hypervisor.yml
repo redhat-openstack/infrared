@@ -29,7 +29,7 @@
             name: vbmc
         vars:
             vbmc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
-        when: install.version|default(undercloud_version) | openstack_release >= 11
+        when: install.version|default(undercloud_version) | openstack_release >= 11 or install.vbmc.force
 
       - name: grab undercloud private key
         command: "cat ~/.ssh/id_rsa"
