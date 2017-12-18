@@ -13,7 +13,6 @@ import pip
 import yaml
 import urllib2
 
-from infrared.core.services.dependency import PluginDependency
 from infrared.core.utils import logger
 from infrared.core.utils.validators import SpecValidator, RegistryValidator
 from infrared.core.utils.exceptions import IRFailedToAddPlugin, IRException, \
@@ -26,6 +25,7 @@ DEFAULT_PLUGIN_INI = dict(
         ('install', 'Installing plugins'),
         ('test', 'Testing plugins'),
         ('other', 'Other type plugins'),
+        ('library', 'Ansible Library'),
     ]),
     git_orgs=OrderedDict([
         # Git provider and a comma separated list of organizations
@@ -46,11 +46,9 @@ class InfraredPluginManager(object):
     SUPPORTED_TYPES_SECTION = 'supported_types'
     GIT_PLUGINS_ORGS_SECTION = "git_orgs"
 
-    def __init__(self, plugins_conf, dependencies_manager,
-                 plugins_dir, install_plugins=True):
+    def __init__(self, plugins_conf, plugins_dir, install_plugins=True):
         """
         :param plugins_conf: A path to the main plugins configuration file
-        :param dependencies_manager: PluginDependencyManager object
         :param plugins_dir: the plugins directory location
         :param install_plugins: Specifies if core plugins should be installed
             at start.
@@ -60,7 +58,6 @@ class InfraredPluginManager(object):
         if not os.path.exists(self.plugins_dir):
             os.makedirs(self.plugins_dir)
 
-        self._dependencies_manager = dependencies_manager
         self._config_file = os.path.abspath(os.path.expanduser(plugins_conf))
         self._install_plugins_required = install_plugins
         self._configure()
@@ -122,7 +119,7 @@ class InfraredPluginManager(object):
 
         for plugin_name in PLUGINS_REGISTRY.keys():
             if plugin_name not in installed_plugins_set:
-                plugin_type = PLUGINS_REGISTRY[plugin_name]['type']
+                plugin_type = PLUGINS_REGISTRY[plugin_name]['c']
                 plugin_desc = PLUGINS_REGISTRY[plugin_name]['desc']
                 if plugin_type not in type_based_plugins_dict:
                     type_based_plugins_dict[plugin_type] = {}
@@ -437,7 +434,6 @@ class InfraredPluginManager(object):
         if rm_source:
             shutil.rmtree(plugin_source)
 
-        self._dependencies_manager.install_plugin_dependencies(plugin)
 
         self.config.set(plugin_type, plugin.name, dest)
 
@@ -569,6 +565,47 @@ class InfraredPluginManager(object):
             LOG.warning(
                 "Plugin '{}' has been successfully installed".format(plugin))
 
+    @staticmethod
+    def _override_conf_path(dependency_path, envvar, specific_dir):
+        """
+        Overrides the environment variable.
+        :param envvar:
+        :param specific_dir:
+        :return:
+        """
+        conf_path = os.environ.get(envvar, '')
+        additional_conf_path = os.path.join(dependency_path, specific_dir)
+
+        # return if the env path does not exists
+        if not os.path.exists(additional_conf_path):
+            return
+
+        if conf_path:
+            full_conf_path = ':'.join([additional_conf_path, conf_path])
+        else:
+            full_conf_path = additional_conf_path
+        os.environ[envvar] = full_conf_path
+
+    def inject_libraries(self):
+        """
+        Injects all the libraries to the ansible environment.
+
+        Should be called prior the import of the ansible modules!!!
+        :return:
+        """
+        for _, plugin in self:
+            if plugin.type == 'library':
+                if not os.path.isdir(plugin.path):
+                    return
+                InfraredPluginManager._override_conf_path(
+                    plugin.path, 'ANSIBLE_ROLES_PATH', 'roles')
+                InfraredPluginManager._override_conf_path(
+                    plugin.path, 'ANSIBLE_FILTER_PLUGINS', 'filter_plugins')
+                InfraredPluginManager._override_conf_path(
+                    plugin.path, 'ANSIBLE_CALLBACK_PLUGINS', 'callback_plugins')
+                InfraredPluginManager._override_conf_path(
+                    plugin.path, 'ANSIBLE_LIBRARY', 'library')
+
 
 class InfraredPlugin(object):
     PLUGIN_SPEC_FILE = 'plugin.spec'
@@ -658,19 +695,6 @@ class InfraredPlugin(object):
             return self.config['subparsers'][self.name]['description']
         except KeyError:
             return self.config['description']
-
-    @property
-    def dependencies(self):
-        """
-        Generator that yields a PluginDependency objects from the
-        plugin config dependencies.
-        If dependencies does not exists will return nothing
-        """
-        try:
-            for dependency in self.config['config']['dependencies']:
-                yield PluginDependency(dependency)
-        except KeyError:
-            return
 
     def __repr__(self):
         return self.name

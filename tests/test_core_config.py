@@ -18,7 +18,6 @@ def test_infrared_home_dir(infrared_home):
 
     assert os.path.isdir(infrared_home)
     assert os.path.isdir(os.path.join(infrared_home, '.workspaces'))
-    assert os.path.isdir(os.path.join(infrared_home, '.library'))
     assert os.path.isfile(os.path.join(infrared_home, '.plugins.ini'))
     assert os.path.isdir(os.path.join(infrared_home, 'plugins'))
     assert CoreServices.workspace_manager().workspace_dir == os.path.join(
