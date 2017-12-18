@@ -1,8 +1,5 @@
 config:
    plugin_type: provision
-   dependencies:
-      - source: "https://sample_github.null/dependency_repo.git"
-        revision: "c5e3b060e8c4095c66db48586817db1eb02da338"
 subparsers:
     example:
         description: Example provisioner plugin
