@@ -1,0 +1,38 @@
+swift_proxy_role:
+    name: SwiftProxy
+
+    resource_registry:
+        "OS::TripleO::SwiftProxy::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/swift-proxy.yaml"
+        "OS::TripleO::SwiftProxy::Ports::StorageMgmtPort": "{{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
+        "OS::TripleO::SwiftProxy::Ports::StoragePort": "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
+
+    flavor: swift_proxy
+    networks:
+        - InternalApi
+        - Storage
+        - StorageMgmt
+    host_name_format: 'swift-%index%'
+
+    options:
+        - "{% if install.version|default(undercloud_version)|openstack_release == 11 %}disable_upgrade_deployment: True{% endif %}"
+
+    services:
+        - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::Kernel
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::SwiftProxy
+        - OS::TripleO::Services::SwiftRingBuilder
+        - OS::TripleO::Services::Snmp
+        - OS::TripleO::Services::Timezone
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Tuned{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
+        - OS::TripleO::Services::TripleoPackages
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::FluentdClient
+        - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
+        - "{% if roles_sshd %}OS::TripleO::Services::Sshd{% endif %}"
