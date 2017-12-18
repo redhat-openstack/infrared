@@ -1,6 +1,6 @@
 ---
-- include: "{{ provision_cleanup | default('cleanup.yml') }}"
+- import_playbook: "{{ provision_cleanup | default('cleanup.yml') }}"
   when: provision.release|default(False)
 
-- include: "{{ provision_playbook | default('provision.yml') }}"
+- import_playbook: "{{ provision_playbook | default('provision.yml') }}"
   when: not provision.release|default(False)

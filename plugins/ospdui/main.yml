@@ -1,20 +1,20 @@
 ---
 - name: setup rhos release
-  include: release.yml
+  import_playbook: release.yml
   tags:
       - release
 
 - name: enable display and allow vnc access to the tester
-  include: vnc.yml
+  import_playbook: vnc.yml
   tags:
       - vnc
 
 - name: setup test framework and dependencies
-  include: setup.yml
+  import_playbook: setup.yml
   tags:
       - setup
 
 - name: run tests
-  include: run.yml
+  import_playbook: run.yml
   tags:
       - run

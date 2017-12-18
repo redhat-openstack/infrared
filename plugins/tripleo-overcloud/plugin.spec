@@ -1,5 +1,8 @@
 ---
-plugin_type: install
+config:
+    plugin_type: install
+    dependencies:
+        - source: https://github.com/rhos-infra/infrared-common-libraries.git
 subparsers:
     tripleo-overcloud:
         description: Install a TripleO overcloud using a designated undercloud node
@@ -420,6 +423,20 @@ subparsers:
                       default: password
                       help: |
                         VBMC password (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+                  vbmc-host:
+                      type: Value
+                      default: hypervisor
+                      choices:
+                          - "hypervisor"
+                          - "undercloud"
+                      help: |
+                          Specifies on what server the virtualbmc service should be installed.
+                  vbmc-force:
+                      type: Bool
+                      default: False
+                      help: |
+                        Specifies whether the vbmc (pxe_ipmitool ironic driver) should be used for
+                        the OSP10 and below.
 
             - title: ansible facts
               options:

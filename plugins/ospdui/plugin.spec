@@ -1,4 +1,8 @@
-plugin_type: test
+---
+config:
+    plugin_type: test
+    dependencies:
+        - source: https://github.com/rhos-infra/infrared-common-libraries.git
 subparsers:
     ospdui:
         description: The ospdui test runner

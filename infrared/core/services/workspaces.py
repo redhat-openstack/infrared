@@ -8,9 +8,6 @@ import tempfile
 import time
 import urllib2
 
-from ansible.parsing.dataloader import DataLoader
-from ansible.inventory.manager import InventoryManager
-
 from infrared.core.utils import exceptions, logger
 
 LOG = logger.LOG
@@ -504,5 +501,9 @@ class WorkspaceManager(object):
                 raise exceptions.IRNoActiveWorkspaceFound()
             else:
                 raise exceptions.IRWorkspaceMissing(workspace=workspace_name)
+
+        # need to have import here to avoid ansible patching
+        from ansible.parsing.dataloader import DataLoader
+        from ansible.inventory.manager import InventoryManager
 
         return InventoryManager(DataLoader(), sources=workspace.inventory)

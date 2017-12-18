@@ -5,7 +5,7 @@
       upgrade-non-controller.sh --upgrade {{ node_name }} &> {{ node_name }}-upgrade.log
 
 - name: Reboot Node
-  include: reboot_node.yml
+  include_tasks: reboot_node.yml
   tags: swift_reboot
 
 - name: Wait for the swift services to come back up
@@ -32,4 +32,4 @@
 ## We should add some additional checks here to make sure that the nodes have correctly rejoined the cluster ##
 
 - name: Packages Check
-  include: packages_check.yml
+  include_tasks: packages_check.yml

@@ -63,7 +63,7 @@
         when: not overcloud_deploy_script|default('')
 
       - name: append extra templates provided by user
-        include: tasks/environment_templates.yml
+        include_tasks: tasks/environment_templates.yml
         with_items: "{{ install.overcloud.templates|default([]) }}"
         loop_control:
             loop_var: templates_list_file
@@ -71,13 +71,13 @@
         when: "templates_list_file != ''"
 
       - name: Enable external network access through newly created vlan interface on undercloud
-        include: tasks/undercloud-ext-vlan.yml
+        include_tasks: tasks/undercloud-ext-vlan.yml
         vars:
             undercloud_public_ip: "{{ install.public.get('vlan', {}).get('ip', '') }}"
         when: "'hypervisor' not in groups and undercloud_public_ip"
 
       # ensure we have all envs/roles referenced in deploy script for container image preparation
-      - include: tasks/append_script.yml
+      - include_tasks: tasks/append_script.yml
         when:
             - not overcloud_deploy_script|default('')
             - install.containers|default('')
@@ -92,7 +92,7 @@
             - install.version|default(undercloud_version)|openstack_release >= 12
             - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
-      - include: tasks/append_script.yml
+      - include_tasks: tasks/append_script.yml
         when: not overcloud_deploy_script|default('')
 
       - name: set overcloud_deploy script

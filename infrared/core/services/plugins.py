@@ -1,24 +1,24 @@
-from ConfigParser import ConfigParser
-from collections import OrderedDict
 import datetime
-import os
 import shutil
 import tempfile
 import time
-import yaml
+from ConfigParser import ConfigParser
+from collections import OrderedDict
+
 import git
 import github
 import jsonschema
-
+import os
 # TODO(aopincar): Add pip to the project's requirements
 import pip
+import yaml
 
+from infrared.core.services.dependency import PluginDependency
 from infrared.core.utils import logger
 from infrared.core.utils.exceptions import IRFailedToAddPlugin, IRException, \
     IRSpecValidatorException, IRPluginExistsException, \
-    IRFailedToAddPluginDependency, IRFailedToRemovePlugin, \
+    IRFailedToRemovePlugin, \
     IRFailedToUpdatePlugin, IRUnsupportedPluginType
-
 
 DEFAULT_PLUGIN_INI = dict(
     supported_types=OrderedDict([
@@ -38,10 +38,6 @@ MAIN_PLAYBOOK = "main.yml"
 PLUGINS_DIR = os.path.abspath("./plugins")
 LOG = logger.LOG
 PLUGINS_REGISTRY_FILE = os.path.join(PLUGINS_DIR, "registry.yaml")
-# TODO: use CoreSettings once merged
-LIBRARY_DEPENDENCIES_DIR = os.path.join(
-    os.environ.get("INFRARED_HOME", os.path.abspath(os.getcwd())),
-    ".library")
 
 with open(PLUGINS_REGISTRY_FILE, "r") as fo:
     PLUGINS_REGISTRY = yaml.load(fo)
@@ -52,12 +48,17 @@ class InfraredPluginManager(object):
     SUPPORTED_TYPES_SECTION = 'supported_types'
     GIT_PLUGINS_ORGS_SECTION = "git_orgs"
 
-    def __init__(self, plugins_conf=None):
+    def __init__(self, plugins_conf, dependencies_manager,
+                 install_plugins=True):
         """
         :param plugins_conf: A path to the main plugins configuration file
+        :param install_plugins: Specifies if core plugins should be installed
+            at start.
         """
-        self._dependencies_manager = PluginDependencyManager()
-        self.config = plugins_conf
+        self._dependencies_manager = dependencies_manager
+        self._config_file = os.path.abspath(os.path.expanduser(plugins_conf))
+        self._install_plugins_required = install_plugins
+        self._configure()
         self._load_plugins()
 
     def _load_plugins(self):
@@ -212,17 +213,13 @@ class InfraredPluginManager(object):
     def config(self):
         return self._config
 
-    @config.setter
-    def config(self, plugins_conf):
-        plugins_conf_full_path = \
-            os.path.abspath(os.path.expanduser(plugins_conf))
-
+    def _configure(self):
         init_plugins_conf = False
-        if not os.path.isfile(plugins_conf_full_path):
+        if not os.path.isfile(self._config_file):
             LOG.warning("Plugin conf ('{}') not found, creating it with "
-                        "default data".format(plugins_conf_full_path))
+                        "default data".format(self._config_file))
             init_plugins_conf = True
-            with open(plugins_conf_full_path, 'w') as fp:
+            with open(self._config_file, 'w') as fp:
                 config = ConfigParser()
 
                 for section, section_data in DEFAULT_PLUGIN_INI.items():
@@ -233,14 +230,12 @@ class InfraredPluginManager(object):
 
                 config.write(fp)
 
-        self._config_file = plugins_conf_full_path
-
-        with open(plugins_conf_full_path) as fp:
+        with open(self._config_file) as fp:
             self._config = ConfigParser()
-            self.config.readfp(fp)
+            self._config.readfp(fp)
 
         # TODO(aopincar): Remove auto plugins installation when conf is missing
-        if init_plugins_conf:
+        if self._install_plugins_required and init_plugins_conf:
             self.add_all_available()
 
     def get_desc_of_type(self, s_type):
@@ -761,176 +756,3 @@ class SpecValidator(object):
                     spec_dict[subparsers_key].keys()[0], spec_content))
 
         return spec_dict
-
-
-class PluginDependencyManager(object):
-    """
-    Manages plugin dependencies.
-
-    A plugin dependency is a folder that contains directories for common
-    Ansible resources (callback plugins, filter plugins, roles, libraries)
-    """
-    REQUIRED_DIRS = \
-        {"callback_plugins", "filter_plugins", "library", "roles"}
-
-    def __init__(self):
-        # create library dependencies directory
-        if not os.path.exists(LIBRARY_DEPENDENCIES_DIR):
-            os.makedirs(LIBRARY_DEPENDENCIES_DIR)
-
-    def install_plugin_dependencies(self, plugin):
-        """
-        Install plugin dependencies based on the dependencies specified in spec
-        :param plugin: InfraredPlugin object
-        """
-        # install all dependencies
-        for dependency in plugin.dependencies:
-            self._install_single_dependency(dependency)
-
-    def _install_single_dependency(self, dependency):
-        """
-        Installs single plugin dependency from git or local path
-        :param dependency: PluginDependency object
-        """
-        LOG.debug(
-            "Installing plugin dependency: '{}".format(dependency.source))
-
-        # add the dependency
-        if os.path.exists(dependency.source):
-            perform_post_actions = self._install_local_dependency(dependency)
-        else:
-            perform_post_actions = self._install_git_dependency(dependency)
-
-        if perform_post_actions:
-            self._validate_dependency_folder(dependency)
-            self._install_requirements(
-                os.path.join(dependency.destination, 'requirements.txt'))
-
-    @staticmethod
-    def _install_local_dependency(dependency):
-        """
-        Install a dependency from local path
-        :param dependency: PluginDependency object
-        :return True if succeeded or False if already exist
-        """
-        if os.path.exists(dependency.destination):
-            LOG.debug("Skipping an already exist dependency.")
-            return False
-
-        # copy the library plugin
-        shutil.copytree(dependency.source, dependency.destination)
-        return True
-
-    @staticmethod
-    def _install_git_dependency(dependency):
-        """
-        Install a dependency from git
-        :param dependency: PluginDependency object
-        :return True if succeeded or False if already exist
-        """
-        try:
-            tmpdir = tempfile.mkdtemp(prefix="ir-")
-            cloned_repo = git.Repo.clone_from(
-                url=dependency.source,
-                to_path=tmpdir)
-            if dependency.revision is not None:
-                cloned_repo.git.checkout(dependency.revision)
-
-            # check if the dependency already exists and compare rev
-            if os.path.exists(dependency.destination):
-                existed_repo = git.Repo(dependency.destination)
-                dependency_rev = existed_repo.head.ref.commit.name_rev
-                existed_rev = cloned_repo.head.ref.commit.name_rev
-
-                if dependency_rev != existed_rev:
-                    raise IRFailedToAddPluginDependency(
-                        "Dependency '{}' already exists but with "
-                        "different revision. Revision is '{}'"
-                        "instead of '{}' ".format(dependency.source,
-                                                  dependency_rev,
-                                                  existed_rev))
-                LOG.debug("Skipping an already exist dependency.")
-                return False
-            else:
-                shutil.copytree(tmpdir, dependency.destination)
-                return True
-        except git.exc.GitCommandError as e:
-            raise IRFailedToAddPluginDependency(
-                "Cloning git repo {} has failed: {}".format(
-                    dependency.source, e))
-
-    @classmethod
-    def _validate_dependency_folder(cls, dependency):
-        """
-        Check the dependency folder contains at least one of the req dirs
-        :return:
-        """
-        if not os.path.isdir(dependency.destination):
-            raise IRFailedToAddPluginDependency(
-                "Dependency library '{}' does not exists".format(
-                    dependency.source))
-
-        if not (set(os.listdir(dependency.destination)) & cls.REQUIRED_DIRS):
-            shutil.rmtree(dependency.destination)
-            raise IRFailedToAddPluginDependency(
-                "Dependency library '{}' must contain at least "
-                "one of the following folders: {}".format(
-                    dependency.source, cls.REQUIRED_DIRS))
-
-    @staticmethod
-    def _install_requirements(requirement_file):
-        """
-        Install python requirements from a given requirement file
-        :param requirement_file: The python requirement file
-        """
-        if os.path.isfile(requirement_file):
-            LOG.info(
-                "Installing requirements from: {}".format(requirement_file))
-            pip_args = ['install', '-r', requirement_file]
-            pip.main(args=pip_args)
-
-
-class PluginDependency(object):
-    """
-    Class which defines a plugin dependency
-    """
-
-    def __init__(self, dependency_dict):
-        """
-        :param dependency_dict: dictionary of dependency which contains source
-        and revision as optional
-        """
-        self._source = dependency_dict["source"]
-        self._revision = dependency_dict.get('revision')
-
-    @property
-    def source(self):
-        """
-        The dependency source can be either local path or git url
-        :return: source of dependency
-        """
-        return self._source
-
-    @property
-    def revision(self):
-        """
-        Dependency git revision
-        :return: the git revision or None if not exists
-        """
-        return self._revision
-
-    @property
-    def name(self):
-        """
-        Split the name of the dependency from the source path
-        :return: dependency name
-        """
-        return os.path.split(self.source)[-1].split('.')[0]
-
-    @property
-    def destination(self):
-        """
-        Destination for the dependency installation
-        :return: path to destination folder
-        """
-        return os.path.join(LIBRARY_DEPENDENCIES_DIR, self.name)

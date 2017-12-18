@@ -1,5 +1,8 @@
 ---
-plugin_type: provision
+config:
+    plugin_type: provision
+    dependencies:
+        - source: https://github.com/rhos-infra/infrared-common-libraries.git
 subparsers:
     beaker:
         description: Provision systems using Beaker
@@ -87,6 +90,10 @@ subparsers:
 
             - title: Release host and return it to Beaker's pool
               options:
+                  comment:
+                      type: Value
+                      help: 'Short (60 chars max) description to be stored in node history in Beaker as value of field "Loan Comment"'
+                      required: False
                   release:
                       type: Bool
                       help: 'Release system which was previously reserved by beaker-user'
