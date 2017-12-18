@@ -418,7 +418,7 @@ def main(args=None):
 
     # inject existing libraries.
     # because of that all the ansible modules should be imported after that
-    CoreServices.dependency_manager().inject_libraries()
+    CoreServices.plugins_manager().inject_libraries()
 
     specs_manager = api.SpecManager()
 
@@ -440,7 +440,8 @@ def main(args=None):
 
     # register all plugins
     for plugin in CoreServices.plugins_manager().PLUGINS_DICT.values():
-        specs_manager.register_spec(api.InfraredPluginsSpec(plugin))
+        if plugin.type != 'library':
+            specs_manager.register_spec(api.InfraredPluginsSpec(plugin))
 
     argcomplete.autocomplete(specs_manager.parser)
     return specs_manager.run_specs(args) or 0

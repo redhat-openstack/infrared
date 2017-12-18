@@ -9,10 +9,8 @@ import filecmp
 
 import pytest
 
-from infrared.core.services.dependency import PluginDependencyManager, \
-    PluginDependency
 from infrared.core.utils.exceptions import IRPluginExistsException, \
-    IRUnsupportedPluginType, IRFailedToAddPluginDependency
+    IRUnsupportedPluginType
 from infrared.core.utils.exceptions import IRFailedToAddPlugin
 from infrared.core.utils.exceptions import IRValidatorException
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
@@ -35,7 +33,8 @@ SUPPORTED_TYPES_DICT = dict(
         supported_type2='Tools of supported_type2',
         provision='Provisioning plugins',
         install='Installing plugins',
-        test='Testing plugins'
+        test='Testing plugins',
+        library='Plugin with ansible libraries'
     )
 )
 
@@ -86,16 +85,9 @@ def plugin_manager_fixture(plugins_conf_fixture):
                     config.set(section, option, value)
             config.write(fp)
 
-        # replace core service with or test service
-        # dependency manager will live in the temp folder
-        # so we can keep it unmocked.
-        CoreServices.register_service(
-            ServiceName.DEPENDENCY_MANAGER, PluginDependencyManager(
-                os.path.join(lp_file.dirname, ".library")))
         CoreServices.register_service(
             ServiceName.PLUGINS_MANAGER, InfraredPluginManager(
-                lp_file.strpath, CoreServices.dependency_manager(),
-                os.path.join(lp_file.dirname, "plugins")))
+                lp_file.strpath, os.path.join(lp_file.dirname, "plugins")))
         return CoreServices.plugins_manager()
 
     yield plugin_manager_helper
@@ -477,38 +469,6 @@ def test_add_plugin_no_spec(plugin_manager_fixture):
         'description': 'some plugin description',
         'subparsers': {
             'sample_plugin1:': {}}}),
-    ('no_revision_value_in_git_dependency', {
-        'config': {
-            'plugin_type': 'supported_type',
-            "dependencies": [
-                {
-                    "source": "https://sample_github.null/plugin_repo.git",
-                    "revision": "",
-                 },
-            ],
-        },
-        'description': 'some plugin description',
-        'subparsers': {
-            'sample_plugin1:': {}}}),
-    ('dependency_not_list', {
-        'config': {
-            'plugin_type': 'supported_type',
-            "dependencies": {
-                "source": "https://sample_github.null/plugin_repo.git",
-                "revision": "master"
-            },
-        },
-        'description': 'some plugin description',
-        'subparsers': {
-            'sample_plugin1:': {}}}),
-    ('no_dependency_value', {
-        'config': {
-            'plugin_type': 'supported_type',
-            "dependencies": [],
-        },
-        'description': 'some plugin description',
-        'subparsers': {
-            'sample_plugin1:': {}}})
 ])
 def test_add_plugin_corrupted_spec(tmpdir_factory, description, plugin_spec):
     """Tests that it's not possible to add a plugin with invalid spec file
@@ -759,160 +719,6 @@ def test_git_plugin_update(git_plugin_manager_fixture):
         "Plugin haven't been updated from '{}' to '{}'".format(
             commits_list[-1], commits_list[0])
 
-
-def test_install_dependencies(plugin_manager_fixture):
-    """
-    Test installing plugin dependencies
-    Validate that the plugin's dependencies were installed
-    :param plugin_manager_fixture: Fixture object which yields
-    InfraredPluginManger object
-    """
-    plugin_manager = plugin_manager_fixture()
-    plugin_dir = "plugin_with_dependencies"
-
-    plugin_dict = get_plugin_spec_flatten_dict(
-        os.path.join(SAMPLE_PLUGINS_DIR, plugin_dir))
-
-    # set the expected dictionary of installed plugins
-    expected_installed_plugins = {
-        plugin_dict["name"]: {
-            "src": plugin_dict["dir"]
-        }
-    }
-
-    # validates that the plugin is not in configuration file at the beginning
-    validate_plugins_presence_in_conf(
-        plugin_manager, expected_installed_plugins, present=False)
-
-    # add the plugin with its dependencies
-    plugin_manager.add_plugin(plugin_source=plugin_dict["dir"])
-
-    # validates that the plugin is in config file after adding plugin
-    validate_plugins_presence_in_conf(
-        plugin_manager, expected_installed_plugins, present=True)
-
-    # check that copytree tried to copy the dependency to the library folder
-    expected_dependency_dir = os.path.join(
-        CoreServices.dependency_manager().library_root_dir,
-        os.path.basename(plugin_dict["dependencies"][0]["source"]))
-    assert os.path.isdir(expected_dependency_dir)
-    assert os.path.isdir(os.path.join(
-        expected_dependency_dir, 'callback_plugins'))
-    assert os.path.isdir(os.path.join(
-        expected_dependency_dir, 'filter_plugins'))
-    assert os.path.isdir(os.path.join(
-        expected_dependency_dir, 'library'))
-    assert os.path.isdir(os.path.join(
-        expected_dependency_dir, 'roles'))
-
-
-def test_install_dependencies_already_exist(plugin_manager_fixture):
-    """
-    Test that skipping existing plugins and not trying to install them again
-    :param plugin_manager_fixture: Fixture object which yields
-    InfraredPluginManger object
-    """
-
-    plugin_manager = plugin_manager_fixture()
-    plugin_dir = "plugin_with_dependencies"
-    plugin_dict = get_plugin_spec_flatten_dict(
-        os.path.join(SAMPLE_PLUGINS_DIR, plugin_dir))
-
-    # set the expected dictionary of installed plugins
-    expected_installed_plugins = {
-        plugin_dict["name"]: {
-            "src": plugin_dict["dir"]
-        }
-    }
-
-    # validates that the plugin is not in configuration file at the beginning
-    validate_plugins_presence_in_conf(
-        plugin_manager, expected_installed_plugins, present=False)
-
-    # add the plugin with its dependencies
-    plugin_manager.add_plugin(plugin_source=plugin_dict["dir"])
-
-    # add the same dependency one more time
-    assert CoreServices.dependency_manager()._install_local_dependency(
-        PluginDependency(plugin_dict['dependencies'][0])) is False
-
-
-def test_dependency_library_missing_folders(plugin_manager_fixture, mocker):
-    """
-    Validate that a library dependency must contain the required
-    folders: roles, libraries, filter_plugins, callback_plugins
-    :param plugin_manager_fixture: Fixture object which yields
-    InfraredPluginManger object
-    :param mocker: mocker fixture
-    """
-    plugin_manager = plugin_manager_fixture()
-    plugin_dir = "plugin_with_dependencies"
-
-    plugin_dict = get_plugin_spec_flatten_dict(
-        os.path.join(SAMPLE_PLUGINS_DIR, plugin_dir))
-
-    # check that copytree tried to copy the dependency to the library folder
-    mock_shutil = mocker.patch("infrared.core.services.dependency.shutil")
-    mock_listdir = mocker.patch("infrared.core.services.dependency.os.listdir")
-    mock_listdir.return_value = []
-    mock_isdir = mocker.patch("infrared.core.services.dependency.os.path.isdir")
-    mock_isdir.return_value = True
-
-    with pytest.raises(IRFailedToAddPluginDependency):
-        # add the plugin with its dependencies
-        plugin_manager.add_plugin(plugin_source=plugin_dict["dir"])
-
-    mock_shutil.rmtree.assert_called_once()
-
-
-def test_dependency_already_exist_different_revision(tmpdir,
-                                                     plugin_manager_fixture,
-                                                     mocker):
-    """
-    Validate that if a dependency exist with different revision cannot be added
-    :param tmpdir: pytest builtin fixture for creating temp dirs
-    :param plugin_manager_fixture: Fixture object which yields
-    InfraredPluginManger object
-    :param mocker: mocker fixture
-    """
-    def clone_from_side_effect(url, to_path, **kwargs):
-        """
-        Define a side effect function to override the
-        original behaviour of clone_from
-        """
-        repo_src = os.path.join(tmp_libraries_dir, "dependency_repo")
-        repo_dest = os.path.join(to_path, "dependency_repo")
-        shutil.copytree(src=repo_src,
-                        dst=repo_dest)
-        return git.Repo(repo_dest)
-
-    # prepare tmp library folder to hold the dependencies
-    tmp_libraries_dir = str(tmpdir.mkdir("tmp_libraries_dir"))
-    infrared.core.services.plugins.LIBRARY_DEPENDENCIES_DIR = tmp_libraries_dir
-
-    # extract the git dependency lib
-    dependency_rev1_tar_gz = os.path.join(
-        SAMPLE_PLUGINS_DIR,
-        "plugin_with_git_dependencies/git_dependency/dependency_repo.tar.gz")
-
-    t_rev1_file = tarfile.open(dependency_rev1_tar_gz)
-    t_rev1_file.extractall(path=tmp_libraries_dir)
-
-    plugin_manager = plugin_manager_fixture()
-    # mock git repo
-    mock_git_clone_from = \
-        mocker.patch("infrared.core.services.dependency.git.Repo.clone_from")
-    # use side effect to use copytree instead of original clone
-    mock_git_clone_from.side_effect = clone_from_side_effect
-
-    plugin_dict = get_plugin_spec_flatten_dict(
-        os.path.join(SAMPLE_PLUGINS_DIR, "plugin_with_git_dependencies"))
-
-    with pytest.raises(IRFailedToAddPluginDependency):
-        # add the plugin with its dependencies
-        plugin_manager.add_plugin(plugin_source=plugin_dict["dir"])
-
-
 @pytest.mark.parametrize("description, registry_yaml", [
     ('no_type', {
         'some_plugin_name': {
@@ -1013,7 +819,6 @@ def test_import_plugins_from_registry(tmpdir, plugin_manager_fixture):
 
     # import all plugins from registry
     plugin_manager.import_plugins(plugins_registry)
-
     # check that plugins were copied to the plugins directory
     assert os.path.isdir(os.path.join(
         tmp_pluginss_dir, 'type1_plugin1'))
@@ -1021,7 +826,6 @@ def test_import_plugins_from_registry(tmpdir, plugin_manager_fixture):
         tmp_pluginss_dir, 'type2_plugin1'))
     assert os.path.isdir(os.path.join(
         tmp_pluginss_dir, 'type1_plugin2'))
-
     # Validates all plugins are in the configuration file
     validate_plugins_presence_in_conf(
         plugin_manager, registry_yaml, present=True)
@@ -1073,5 +877,4 @@ def test_add_plugin_with_src_path(plugin_manager_fixture, mocker):
     assert dirs_cmp.right_list == dirs_cmp.left_list, \
         "Plugin directory is does not contain the original files from " \
         "the original plugin source."
-
 

@@ -5,7 +5,6 @@ Stores and resolves all the dependencies for the services.
 import os
 import sys
 
-from infrared.core.services import dependency
 from infrared.core.services import workspaces
 from infrared.core.services import plugins
 from infrared.core.utils import logger
@@ -17,7 +16,6 @@ class ServiceName(object):
     """Holds the supported services names. """
     WORKSPACE_MANAGER = "workspace_manager"
     PLUGINS_MANAGER = "plugins_manager"
-    DEPENDENCY_MANAGER = "dependency_manager"
 
 
 class CoreSettings(object):
@@ -28,7 +26,6 @@ class CoreSettings(object):
     def __init__(self, workspaces_base_folder=None,
                  plugins_conf_file=None,
                  install_plugin_at_start=True,
-                 library_base_folder=None,
                  plugins_base_folder=None):
         """
         :param workspaces_base_folder: folder where the
@@ -53,8 +50,6 @@ class CoreSettings(object):
         self.workspaces_base_folder = workspaces_base_folder or os.path.join(
             infarared_home, '.workspaces')
         self.install_plugin_at_start = install_plugin_at_start
-        self.library_base_folder = library_base_folder or os.path.join(
-            infarared_home, '.library')
         self.plugins_base_folder = plugins_base_folder or os.path.join(
             infarared_home, 'plugins')
 
@@ -83,12 +78,6 @@ class CoreServices(object):
                                  workspaces.WorkspaceManager(
                                      core_settings.workspaces_base_folder))
 
-        # create dependency manager for plugins
-        if ServiceName.DEPENDENCY_MANAGER not in cls._SERVICES:
-            cls.register_service(ServiceName.DEPENDENCY_MANAGER,
-                                 dependency.PluginDependencyManager(
-                                     core_settings.library_base_folder))
-
         # create plugins manager
         if ServiceName.PLUGINS_MANAGER not in cls._SERVICES:
             # A temporary WH to skip all plugins installation on first InfraRed
@@ -99,7 +88,6 @@ class CoreServices(object):
             cls.register_service(
                 ServiceName.PLUGINS_MANAGER, plugins.InfraredPluginManager(
                     plugins_conf=core_settings.plugins_conf_file,
-                    dependencies_manager=CoreServices.dependency_manager(),
                     install_plugins=(core_settings.install_plugin_at_start and
                                      not skip_plugins_install),
                     plugins_dir=core_settings.plugins_base_folder))
@@ -124,8 +112,3 @@ class CoreServices(object):
     def plugins_manager(cls):
         """Gets the plugin manager. """
         return cls._get_service(ServiceName.PLUGINS_MANAGER)
-
-    @classmethod
-    def dependency_manager(cls):
-        """Gets the plugin manager. """
-        return cls._get_service(ServiceName.DEPENDENCY_MANAGER)
