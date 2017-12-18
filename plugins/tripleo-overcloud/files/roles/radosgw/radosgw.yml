@@ -4,6 +4,8 @@ radosgw_role:
 
     resource_registry:
         "OS::TripleO::RadosGW::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/radosgw.yaml"
+        "OS::TripleO::RadosGW::Ports::StorageMgmtPort": "{{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
+        "OS::TripleO::RadosGW::Ports::StoragePort": "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
 
     flavor: radosgw
     networks:
@@ -13,6 +15,7 @@ radosgw_role:
 
     services:
         - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::CephClient
         - OS::TripleO::Services::CephRgw
         - OS::TripleO::Services::Kernel
         - OS::TripleO::Services::Ntp
