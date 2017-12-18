@@ -4,7 +4,8 @@ monitor_role:
 
     resource_registry:
         "OS::TripleO::Monitor::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/monitor.yaml"
-
+        "OS::TripleO::Monitor::Ports::StorageMgmtPort": "{{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
+        "OS::TripleO::Monitor::Ports::StoragePort": "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
     flavor: monitor
     networks:
         - Storage
