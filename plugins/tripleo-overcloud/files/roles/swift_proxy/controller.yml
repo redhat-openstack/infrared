@@ -81,10 +81,8 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::PankoApi{% endif %}"
         - OS::TripleO::Services::Ntp
-        - OS::TripleO::Services::SwiftProxy
+
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ExternalSwiftProxy{% endif %}"
-        - OS::TripleO::Services::SwiftStorage
-        - OS::TripleO::Services::SwiftRingBuilder
         - OS::TripleO::Services::Snmp
         - OS::TripleO::Services::Timezone
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
