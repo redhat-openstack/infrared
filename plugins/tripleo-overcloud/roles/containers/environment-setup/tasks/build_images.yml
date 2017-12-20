@@ -46,7 +46,7 @@
         --tag {{ container_env['container-image-prepare']['tag'] }} \
         --prefix  {{ container_env['container-image-prepare']['prefix'] }} \
         --set ceph_namespace={{ container_env['container-image-prepare']['ceph-namespace'] }} \
-        --set ceph_image={{ external_ceph_namespace }} \
+        --set ceph_image={{ container_env['container-image-prepare']['ceph-image'] }} \
         --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }} \
         --output-images-file {{ containers_images_template_dest_file }} \
         {{ extra_service_environment|default('') }}
