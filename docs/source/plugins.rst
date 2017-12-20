@@ -28,6 +28,13 @@ Plugin structure
 Main entry
 ----------
 `infrared` will look for a playbook called ``main.yml`` to start the execution from.
+.. note:: If you want to use other playbook to start from - simply add it into
+config section in plugin.spec::
+
+  config:
+    plugin_type: other
+    entry_point: your-playbook.yml
+    ...
 
 Plugins are regular Ansible projects, and as such, they might include or reference any item
 (files, roles, var files, ansible plugins, modules, templates, etc...) using relative paths
@@ -37,16 +44,16 @@ provided by `infrared` core.
 
 An example of ``plugin_dir/main.yml``:
 
-.. literalinclude:: ../../tests/example/main.yml
+.. literalinclude:: ../examples/main.yml
    :emphasize-lines: 3-6
    :linenos:
 
 Plugin Specification
 --------------------
 `infrared` gets all plugin info from ``plugin.spec`` file. Following `YAML` format.
-This file define the CLI this plugin exposes, its name and its type.
+This file define the CLI flags this plugin exposes, its name and its type.
 
-.. literalinclude:: ../../tests/example/plugin.spec
+.. literalinclude:: ../examples/plugin.spec
 
 Config section:
     * Plugin type can be one of the following: ``provision``, ``install``, ``test``, ``other``.
@@ -355,7 +362,6 @@ Freeze:
     When you need to be able to install somewhere else the exact same versions
     of plugins use ``freeze`` command::
 
-        infrared plugin freeze
         infrared plugin freeze > registry.yaml
 
 Import:
@@ -364,8 +370,6 @@ Import:
 
         infrared plugin import plugins/registry.yaml
         infrared plugin import https://url/to/registry.yaml
-
-
 
 Update:
     Update a given Git-based plugin to a specific revision.
@@ -411,5 +415,8 @@ Example of a registry file::
         desc: Some plugin description
         type: provision/test/install/other
 
+How to create a new plugin
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-
+A guide how to create a new plugin can be found `here`_
+.. _here: plugins_guide.html

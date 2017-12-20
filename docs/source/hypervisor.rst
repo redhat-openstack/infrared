@@ -35,13 +35,14 @@ What **user has to provide**:
       + in practice disk may be smaller, as they are thin provisioned,
         as long as you don't force writing all the data (aka Tempest with rhel-guest instead of cirros etc)
 
-    - **RHEL-7.3** is tested, **CentOS** is also expected to work
+    - **RHEL-7.3** and **RHEL-7.4** are tested, **CentOS** is also expected to work
 
       + may work with other distributions (best-effort/limited support)
 
     - **yum repositories** has to be **preconfigured** by user (foreman/...) before using `infrared` so it can install dependencies
 
-      + esp. for `infrared` to handle ``ipxe-roms-qemu`` it requires either **RHEL-7.3-server channel**
+      + esp. for `infrared` to handle ``ipxe-roms-qemu`` it requires either **RHEL-7.{3|4}-server
+      channel**
 
 What **infrared takes care of**:
 

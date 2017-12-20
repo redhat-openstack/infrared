@@ -1,6 +1,6 @@
 .. highlight:: plain
 
-VIRSH
+Virsh
 =====
 Virsh provisioner is explicitly designed to be used for setup of virtual environments.
 Such environments are used to emulate production environment like `tripleo-undercloud`_

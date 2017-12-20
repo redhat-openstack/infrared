@@ -8,8 +8,8 @@ Team
 
 .. csv-table::
 
-   "Tal Kammer", "tkammer@redhat.com"
-   "Yair Fried", "yfried@redhat.com"
+   "Frank Jansen", "fjansen@redhat.com"
+   "Oleksii Baranov", "obaranov@redhat.com"
    "Mailing List", "rhos-infrared@redhat.com"
 
 GitHub

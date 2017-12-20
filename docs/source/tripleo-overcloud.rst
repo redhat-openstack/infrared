@@ -261,3 +261,4 @@ Example::
 
   infrared tripleo-overcloud --deployment-files virt --postreboot yes
   infrared tripleo-overcloud --deployment-files virt --ocupdate yes --build latest --postreboot yes
+
