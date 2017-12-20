@@ -6,9 +6,9 @@
 
 - name: Checking overcloud_deploy_file
   stat:
-      path: "~/overcloud_deploy.sh"
+      path: "{{ overcloud_deploy_script }}"
   register: overcloud_deploy_file
 
 - fail:
-      msg: "Overcloud deployment script not found. Expected path: ~/overcloud_deploy.sh "
+      msg: "Overcloud deployment script not found. Expected path: {{ overcloud_deploy_script }} "
   when: overcloud_deploy_file.stat.exists == False
