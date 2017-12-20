@@ -89,3 +89,4 @@ downstream repo is dependant or imports any upstream modules::
         plugins:
             upstream_neutron:
                 repo: "https://github.com/openstack/neutron.git"
+
