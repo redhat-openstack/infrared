@@ -116,7 +116,7 @@
             openstack baremetal node set $NODE_UUID \
                 --driver pxe_ipmitool \
                 --driver-info ipmi_username={{ install.vbmc.username }} \
-                --driver-info ipmi_address=::ffff:{{ ansible_default_ipv4.address }} \
+                --driver-info ipmi_address=::ffff:{{ vbmc_management_address }} \
                 --driver-info ipmi_password={{ install.vbmc.password }} \
                 --driver-info ipmi_port={{ item.value }}
         with_dict: "{{ vbmc_ports }}"
