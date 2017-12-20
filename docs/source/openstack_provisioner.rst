@@ -54,9 +54,31 @@ Topology
 * ``--topology-network``: Description of the network topology.
     By default, 3 networks will be provisioned with 1 router.
     2 of them will be connected via the router to an external network discovered automatically
-    (when more than 1 external network is found, the first will be chosen).
+    (when more than 1 external network is found, the first will be chosen)::
 
-.. TODO(yfried): add network topology image
+If we look in the ``3_nets.yml`` file, we will see this::
+
+    networks:
+            net1:
+                <snip>
+            net2:
+                name: "management"                 # the network name
+                external_connectivity: yes         # whether we want it externally accessible
+                ip_address: "172.16.0.1"           # the IP address of the bridge
+                netmask: "255.255.255.0"
+                forward:                           # forward method
+                    type: "nat"
+                dhcp:                              # omit this if you don't want a DHCP
+                    range:                         # the DHCP range to provide on that network
+                        start: "172.16.0.2"
+                        end: "172.16.0.100"
+                    subnet_cidr: "172.16.0.0/24"
+                    subnet_gateway: "172.16.0.1"
+                floating_ip:                       # whether you want to "save" a range for assigning IPs
+                    start: "172.16.0.101"
+                    end: "172.16.0.150"
+            net3:
+                <snip>
 
 * ``--topology-nodes``: `KeyValueList` description of the nodes.
     A floating IP will be provisioned on a designated network.

@@ -164,3 +164,4 @@ You should see user defined option as well as the common options like --extra-ar
 Run ir command and check the playbook output::
 
     $ ir simple-plugin --options1 HW  --flag yes
+

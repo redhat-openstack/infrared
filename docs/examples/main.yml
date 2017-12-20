@@ -1,0 +1,26 @@
+- name: Main Play
+  hosts: all
+  vars_files:
+      - vars/some_var_file.yml
+  roles:
+    - role: example_role
+  tasks:
+      - name: fail if no vars dict
+        when: "provision is not defined"
+        fail:
+
+      - name: fail if input calls for it
+        when: "provision.foo.bar == 'fail'"
+        fail:
+
+      - debug:
+            var: inventory_dir
+        tags: only_this
+
+      - name: Test output
+        vars:
+            output_file: output.example
+        file:
+            path: "{{ inventory_dir }}/{{ output_file }}"
+            state: touch
+        when: "{{ provision is defined }}"
