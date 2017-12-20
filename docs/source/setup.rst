@@ -10,6 +10,7 @@ Currently supported distros are:
 * Fedora 22, 23, 24, 25
 * RHEL 7.2 (best effort, deprecated)
 * RHEL 7.3
+* RHEL 7.4
 
 .. warning:: Python 2.7 and virtualenv are required.
 
@@ -99,3 +100,4 @@ When working in virtualenv, might be a good idea to add import of this script to
 virtualenv activation one::
 
   echo ". $(pwd)/etc/bash_completion/infrared" >> ${VIRTUAL_ENV}/bin/activate
+

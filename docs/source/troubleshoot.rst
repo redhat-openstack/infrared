@@ -132,3 +132,4 @@ or ``infrared workspace inventory WORKSPACE`` for any workspace by name::
     undercloud-0 | SUCCESS => {
         "changed": false,
         "ping": "pong"
+

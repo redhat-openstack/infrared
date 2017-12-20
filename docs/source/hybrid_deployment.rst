@@ -44,7 +44,6 @@ provisioning the following configuration can be used::
                 end: "172.16.0.150"
     EOF
 
-
 .. note:: Change nic names for the bridget networks to match hypervisor interfaces.
 
 .. note:: Make sure you have ``ip_address`` or ``bootproto=dhcp`` defined for the br-ctlplane bridge. This is need to setup ssh access to the nodes after deployment is completed.

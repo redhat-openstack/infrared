@@ -1,6 +1,6 @@
 .. highlight:: plain
 
-VIRSH
+Virsh
 =====
 Virsh provisioner is explicitly designed to be used for setup of virtual environments.
 Such environments are used to emulate production environment like `tripleo-undercloud`_
@@ -47,7 +47,7 @@ Network layout
 Baremetal machine used as host for such setup is called `hypervisor`. The whole deployment is designed to
 work within boundaries of this machine and (except public/natted traffic) shouldn't reach beyond.
 The following layout is part of default setup defined in
-`plugins defaults <https://github.com/redhat-openstack/infrared/blob/master/plugins/virsh/vars/topology/network/3_nets.yml>`_::
+`plugins defaults <https://github.com/redhat-openstack/infrared/blob/master/plugins/virsh/defaults/topology/network/3_nets.yml>`_::
 
               hypervisor
                   |
@@ -63,8 +63,6 @@ The following layout is part of default setup defined in
             |     |                                                        |
             ------+--------+ external bridge (nat, dhcp, 10.0.0/24)        +------+ external (nic2)
 
-.. User can also provide his own network layout (example `network-sample.yml <https://github.com/redhat-openstack/infrared/blob/master/settings/provisioner/virsh/topology/network/network.sample.yml>`_).
-
 On `hypervisor`, there are 3 new bridges created with libvirt - data, management and external.
 Most important is data network which does not have DHCP and NAT enabled.
 This network can later be used as ``ctlplane`` for OSP director deployments (`tripleo-undercloud`_).
@@ -74,7 +72,7 @@ External network is used for SSH forwarding so client (or Ansible) can access dy
 NAT Forwarding
 ^^^^^^^^^^^^^^
 
-By default, all networks above are `NATed <NAT network>`_, meaning that they
+By default, all networks above are `NATed`_, meaning that they
 private networks only reachable via the `hypervisor` node.
 `infrared` configures the nodes SSH connection to use the `hypervisor` host as
 proxy.
@@ -82,7 +80,7 @@ proxy.
 Bridged Network
 ^^^^^^^^^^^^^^^
 
-Some use-cases call for `direct access <bridged network>`_ to some of the nodes.
+Some use-cases call for `direct access`_ to some of the nodes.
 This is achieved by adding a network with ``forward: bridge`` in its attributes to the
 network-topology file, and marking this network as external network on the relevant node
 files.
@@ -107,10 +105,10 @@ Fore example, see ``tripleo`` `node <tripleo>`_ used in conjunction with ``3_net
 
    infrared virsh [...] --topology-nodes ironic:1,[...] --topology-network 3_net_1_bridge [...]
 
-.. _`bridged network`: https://wiki.libvirt.org/page/Networking#Bridged_networking_.28aka_.22shared_physical_device.22.29
-.. _`NAT network`: https://wiki.libvirt.org/page/Networking#NAT_forwarding_.28aka_.22virtual_networks.22.29
-.. _`ironic`: https://github.com/rehdat-openstack/infrared/tree/master/plugins/virsh/defaults/topology/nodes/tripleo.yml
-.. _`1_bridge`: https://github.com/rehdat-openstack/infrared/tree/master/plugins/virsh/defaults/topology/network/3_nets_1_bridge.yml
+.. _`direct access`: https://wiki.libvirt.org/page/Networking#Bridged_networking_.28aka_.22shared_physical_device.22.29
+.. _`NATed`: https://wiki.libvirt.org/page/Networking#NAT_forwarding_.28aka_.22virtual_networks.22.29
+.. _`ironic`: https://github.com/redhat-openstack/infrared/blob/stable/plugins/virsh/defaults/topology/nodes/tripleo.yml
+.. _`1_bridge`: https://github.com/redhat-openstack/infrared/blob/stable/plugins/virsh/defaults/topology/network/3_nets_1_bridge.yml
 
 
 Workflow
