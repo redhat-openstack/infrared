@@ -1,15 +1,15 @@
 Configuration
 =============
 
-Infrared uses the INFRARED_HOME environment variable which points where infrared
+Infrared uses the IR_HOME environment variable which points where infrared
 should keep all the internal configuration files and workspaces.
 
-Currently by default the INFRARED_HOME points the current working directory
+Currently by default the ``IR_HOME ``points the current working directory
 from which the infrared command is run.
 
-To change that default location user can simply set INFRARED_HOME, for example::
+To change that default location user can simply set ``IR_HOME``, for example::
 
-    $ INFRARED_HOME=/tmp/newhome ir workspace list
+    $ IR_HOME=/tmp/newhome ir workspace list
 
 
 This will generate default configurations files in the specified directory.
