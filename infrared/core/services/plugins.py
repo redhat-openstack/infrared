@@ -262,15 +262,13 @@ class InfraredPluginManager(object):
             raise StopIteration
 
     @staticmethod
-    def _clone_git_plugin(git_url, repo_plugin_path=None, rev=None,
+    def _clone_git_plugin(git_url, repo_plugin_path=None, rev=None):
                           dest_dir=None):
         """Clone a plugin into a given destination directory
 
         :param git_url: Plugin's Git URL
         :param dest_dir: destination where to clone a plugin into (if 'source'
           is a Git URL)
-        :param repo_plugin_path: path in the Git repo where the infrared plugin
-          is defined
         :param rev: git branch/tag/revision
         :return: Path to plugin cloned directory (str)
         """
@@ -291,8 +289,7 @@ class InfraredPluginManager(object):
                 "Cloning git repo {} is failed: {}".format(git_url, e))
 
         plugin_tmp_source = os.path.join(tmpdir, plugin_git_name)
-        if repo_plugin_path:
-            plugin_tmp_source = os.path.join(plugin_tmp_source, repo_plugin_path)
+            plugin_tmp_source = os.path.join(plugin_tmp_source,
 
         # validate & load spec data in order to pull the name of the plugin
         spec_data = SpecValidator.validate_from_file(
@@ -310,8 +307,7 @@ class InfraredPluginManager(object):
             shutil.rmtree(plugin_source)
 
         shutil.copytree(os.path.join(tmpdir, plugin_git_name),
-                        plugin_source)
-
+                                             repo_plugin_path)
         if repo_plugin_path:
             plugin_source = plugin_source + '/' + repo_plugin_path
 
@@ -423,6 +419,7 @@ class InfraredPluginManager(object):
             plugin_data = PLUGINS_REGISTRY[plugin_source]
             plugin_source = PLUGINS_REGISTRY[plugin_source]['src']
 
+        plugin_src_path = plugin_data.get('src_path', '')
         # Local dir plugin
         if os.path.exists(plugin_source):
             pass
@@ -430,12 +427,11 @@ class InfraredPluginManager(object):
         else:
             if rev is None:
                 rev = plugin_data.get('rev')
-            plugin_src_path = plugin_data.get('src_path', '')
             plugin_source = self._clone_git_plugin(
-                plugin_source, plugin_src_path, rev,
+                self._clone_git_plugin(plugin_source, plugin_src_path, rev)
                 dest)
 
-        plugin = InfraredPlugin(plugin_source)
+        plugin = InfraredPlugin(os.path.join(plugin_source, plugin_src_path))
         plugin_type = plugin.type
         # FIXME(yfried) validate spec and throw exception on missing input
 
@@ -450,7 +446,8 @@ class InfraredPluginManager(object):
 
         self._dependencies_manager.install_plugin_dependencies(plugin)
 
-        self.config.set(plugin_type, plugin.name, plugin.path)
+        self.config.set(plugin_type, plugin.name, dest)
+                        os.path.join(dest, plugin_src_path))
 
         with open(self.config_file, 'w') as fp:
             self.config.write(fp)
