@@ -260,12 +260,10 @@ class InfraredPluginManager(object):
             raise StopIteration
 
     @staticmethod
-    def _clone_git_plugin(git_url, repo_plugin_path=None, rev=None):
+    def _clone_git_plugin(git_url, rev=None):
         """Clone a plugin into a given destination directory
 
         :param git_url: Plugin's Git URL
-        :param repo_plugin_path: path in the Git repo where the infrared plugin
-          is defined
         :param rev: git branch/tag/revision
         :return: Path to plugin cloned directory (str)
         """
@@ -285,10 +283,6 @@ class InfraredPluginManager(object):
                 "Cloning git repo {} is failed: {}".format(git_url, e))
 
         plugin_tmp_source = os.path.join(tmpdir, plugin_git_name)
-        if repo_plugin_path:
-            plugin_tmp_source = os.path.join(plugin_tmp_source,
-                                             repo_plugin_path)
-
         os.chdir(cwd)
         return plugin_tmp_source
 
@@ -395,6 +389,7 @@ class InfraredPluginManager(object):
             plugin_data = plugins_registry[plugin_source]
             plugin_source = plugins_registry[plugin_source]['src']
 
+        plugin_src_path = plugin_data.get('src_path', '')
         # Local dir plugin
         if os.path.exists(plugin_source):
             rm_source = False
@@ -402,12 +397,11 @@ class InfraredPluginManager(object):
         else:
             if rev is None:
                 rev = plugin_data.get('rev')
-            plugin_src_path = plugin_data.get('src_path', '')
             plugin_source = \
-                self._clone_git_plugin(plugin_source, plugin_src_path, rev)
+                self._clone_git_plugin(plugin_source, rev)
             rm_source = True
 
-        plugin = InfraredPlugin(plugin_source)
+        plugin = InfraredPlugin(os.path.join(plugin_source, plugin_src_path))
         plugin_type = plugin.type
 
         if plugin_type not in self.supported_plugin_types:
@@ -439,7 +433,8 @@ class InfraredPluginManager(object):
 
         self._dependencies_manager.install_plugin_dependencies(plugin)
 
-        self.config.set(plugin_type, plugin.name, dest)
+        self.config.set(plugin_type, plugin.name,
+                        os.path.join(dest, plugin_src_path))
 
         with open(self.config_file, 'w') as fp:
             self.config.write(fp)
