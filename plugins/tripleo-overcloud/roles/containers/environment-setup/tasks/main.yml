@@ -1,5 +1,13 @@
 - include_tasks: pre.yml
 - include_tasks: build_images.yml
+
+- name: patch images
+  include_tasks: patch_images.yml
+  when:
+      - patched_rpms.stat.exists == True
+      - install.container.images.patch
+  tags: container-images-patch
+
 - include_tasks: workarounds.yml
 - include_tasks: ceph-ansible.yml
   when:
