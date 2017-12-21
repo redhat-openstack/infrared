@@ -117,10 +117,12 @@ resources:
                   addresses:
                   -
                     ip_netmask: {get_param: StorageIpSubnet}
-            -
-              type: interface
-              name: nic3
-              use_dhcp: false
+                -
+                  type: vlan
+                  vlan_id: {get_param: StorageMgmtNetworkVlanID}
+                  addresses:
+                  -
+                    ip_netmask: {get_param: StorageMgmtIpSubnet}
 
 outputs:
   OS::stack_id:
