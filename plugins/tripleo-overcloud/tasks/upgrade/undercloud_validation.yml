@@ -6,7 +6,7 @@
 
 - name: Checking overcloud_deploy_file
   stat:
-      path: "{{ overcloud_deploy_script }}"
+      path: "{{ overcloud_deploy_script|default('~/overcloud_deploy.sh') }}"
   register: overcloud_deploy_file
 
 - fail:
