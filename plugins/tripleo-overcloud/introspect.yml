@@ -45,7 +45,11 @@
       - name: register hosts to instack
         shell: |
             source ~/stackrc
+            {% if install.version|default(undercloud_version) | openstack_release <= 10 %}
             openstack baremetal import --json {{ instack_file_path.stat.path }}
+            {% else %}
+            openstack overcloud node import {{ instack_file_path.stat.path }} --provide
+            {% endif %}
         tags:
             - ironic
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
