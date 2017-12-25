@@ -208,7 +208,7 @@ class PluginManagerSpec(api.SpecObject):
         # Add plugin
         add_parser = plugin_subparsers.add_parser(
             'add', help='Add a plugin')
-        add_parser.add_argument("src",
+        add_parser.add_argument("src", nargs='+',
                                 help="Plugin Source (name/path/git URL)\n'all'"
                                      " will install all available plugins")
         add_parser.add_argument("--revision", help="git branch/tag/revision"
@@ -220,7 +220,7 @@ class PluginManagerSpec(api.SpecObject):
             "remove",
             help="Remove a plugin, 'all' will remove all installed plugins")
         remove_parser.add_argument(
-            "name",
+            "name", nargs='+',
             help="Plugin name").completer = completers.plugin_list
 
         # List command
@@ -281,17 +281,22 @@ class PluginManagerSpec(api.SpecObject):
         if subcommand == 'list':
             self._list_plugins(pargs.available)
         elif subcommand == 'add':
-            if pargs.src == 'all':
+            if 'all' in pargs.src:
                 self.plugin_manager.add_all_available()
                 self._list_plugins(print_available=False)
             else:
-                self.plugin_manager.add_plugin(pargs.src, rev=pargs.revision)
+                if len(pargs.src) > 1 and pargs.revision:
+                    raise exceptions.IRFailedToAddPlugin(
+                        "'--revision' works with one plugin source only.")
+                for _plugin in pargs.src:
+                    self.plugin_manager.add_plugin(_plugin, rev=pargs.revision)
         elif subcommand == 'remove':
-            if pargs.name == 'all':
+            if 'all' in pargs.name:
                 self.plugin_manager.remove_all()
                 self._list_plugins(print_available=False)
             else:
-                self.plugin_manager.remove_plugin(pargs.name)
+                for _plugin in pargs.name:
+                    self.plugin_manager.remove_plugin(_plugin)
         elif subcommand == 'freeze':
             self.plugin_manager.freeze()
         elif subcommand == 'update':
