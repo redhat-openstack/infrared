@@ -45,17 +45,12 @@
       - name: register hosts to instack
         shell: |
             source ~/stackrc
+            {% if install.version|default(undercloud_version) | openstack_release <= 12 %}
             openstack baremetal import --json {{ instack_file_path.stat.path }}
-        tags:
-            - ironic
-            # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
-            - skip_ansible_lint
-
-      # FIXME(yfried): unify in above shell?
-      - name: assign the kernel and ramdisk before introspection begins
-        shell: |
-            source ~/stackrc
             openstack baremetal configure boot
+            {% else %}
+            openstack overcloud node import {{ instack_file_path.stat.path }} --provide
+            {% endif %}
         tags:
             - ironic
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
@@ -81,7 +76,12 @@
       - name: start node introspection
         shell: |
             source ~/stackrc
+            {% if install.version|default(undercloud_version) | openstack_release <= 12 %}
             openstack baremetal introspection bulk start
+            {% else %}
+            openstack overcloud node introspect --all-manageable
+            openstack overcloud node provide --all-manageable
+            {% endif %}
         tags:
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
             - skip_ansible_lint
@@ -103,7 +103,9 @@
       # and also helps with debugging and recovery.
       - name: Recover from errors during bulk introspection
         include_tasks: tasks/introspection_recovery.yml
-        when: not bulk_intro_ok
+        when:
+            - not bulk_intro_ok
+            - if install.version|default(undercloud_version) | openstack_release <= 12
 
       # when we need to use vbmc for OSP10 we have an issue [1] with pxe_impi driver
       # and the fix [2] for that issue cannot be backported to the OSP10:
