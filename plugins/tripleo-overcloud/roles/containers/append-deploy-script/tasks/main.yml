@@ -5,6 +5,7 @@
   when:
       - not install.storage.external
       - storage_backend|default('') == 'ceph'
+      - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
 - name: "Workaround BZ#1538015: append container templates to the build scripts"
   lineinfile:

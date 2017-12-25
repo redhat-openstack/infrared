@@ -82,7 +82,6 @@
             - not overcloud_deploy_script|default('')
             - install.containers|default('')
             - install.version|default(undercloud_version)|openstack_release >= 12
-            - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
       - include_role: name="containers/prepare-templates"
         tags:
@@ -90,7 +89,6 @@
         when:
             - install.containers|default('')
             - install.version|default(undercloud_version)|openstack_release >= 12
-            - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
       - name: add environment plan to deply script
         lineinfile:
