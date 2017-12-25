@@ -1,8 +1,6 @@
 Plugins
 =======
 
-.. note:: Check `HOWTO`_ for the quick guide on how to create a plugin.
-
 In `infrared` 2.0, `plugins` are self contained Ansible projects. They can still
 also depend on common items provided by the core project.
 Any ansible project can become an`infrared` plugin by adhering to the following
@@ -20,7 +18,7 @@ structure (see `tests/example`_ for an example plugin)::
         as Ansible will search for references in the
         relative paths described above. To use an ``ansible.cfg`` config file, use absolute paths to the plugin directory.
 .. _tests/example: https://github.com/redhat-openstack/infrared/tree/master/tests/example
-.. _HOWTO: plugins_guide.html
+
 
 Plugin structure
 ^^^^^^^^^^^^^^^^
@@ -28,6 +26,13 @@ Plugin structure
 Main entry
 ----------
 `infrared` will look for a playbook called ``main.yml`` to start the execution from.
+.. note:: If you want to use other playbook to start from - simply add it into
+config section in plugin.spec::
+
+  config:
+    plugin_type: other
+    entry_point: your-playbook.yml
+    ...
 
 Plugins are regular Ansible projects, and as such, they might include or reference any item
 (files, roles, var files, ansible plugins, modules, templates, etc...) using relative paths
@@ -37,16 +42,16 @@ provided by `infrared` core.
 
 An example of ``plugin_dir/main.yml``:
 
-.. literalinclude:: ../../tests/example/main.yml
+.. literalinclude:: ../examples/main.yml
    :emphasize-lines: 3-6
    :linenos:
 
 Plugin Specification
 --------------------
 `infrared` gets all plugin info from ``plugin.spec`` file. Following `YAML` format.
-This file define the CLI this plugin exposes, its name and its type.
+This file defines the CLI flags this plugin exposes, its name and its type.
 
-.. literalinclude:: ../../tests/example/plugin.spec
+.. literalinclude:: ../examples/plugin.spec
 
 Config section:
     * Plugin type can be one of the following: ``provision``, ``install``, ``test``, ``other``.
@@ -89,7 +94,7 @@ Answers File:
 Common Options:
     * ``--dry-run``: Don't execute Ansible playbook. Only write generated vars dict to stdout
     * ``--output``: Redirect generated vars dict from stdout to an explicit file (YAML format).
-    * ``--extra-vars``: Inject custom input into the `vars dict <Complex option types>`_
+    * ``--extra-vars``: Inject custom input into the `vars dict <plugins.html#Complex option types>`_
 
 Inventory:
     Load a new inventory to active `workspace <workspace.html>`_. The file is copied to
@@ -298,7 +303,7 @@ Plugin Manager
 The following commands are used to manage `infrared` plugins
 
 Add:
-    `infrared` will look for a `plugin.spec <Specification>`_ file in the given source and
+    `infrared` will look for a `plugin.spec <plugins.html#plugin-specification>`_ file in the given source and
     register the plugin under the given plugin-type (when source is 'all', all available plugins will be installed)::
 
         infrared plugin add tests/example
@@ -355,7 +360,6 @@ Freeze:
     When you need to be able to install somewhere else the exact same versions
     of plugins use ``freeze`` command::
 
-        infrared plugin freeze
         infrared plugin freeze > registry.yaml
 
 Import:
@@ -364,8 +368,6 @@ Import:
 
         infrared plugin import plugins/registry.yaml
         infrared plugin import https://url/to/registry.yaml
-
-
 
 Update:
     Update a given Git-based plugin to a specific revision.
@@ -377,7 +379,7 @@ Update:
 
 Execute:
     Plugins are added as subparsers under ``plugin type`` and will execute
-    the ``main.yml`` `playbook <playbooks>`_::
+    the `main playbook <plugins.html#Main entry>`_::
 
         infrared example
 
@@ -411,5 +413,7 @@ Example of a registry file::
         desc: Some plugin description
         type: provision/test/install/other
 
-
-
+How to create a new plugin
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. note::
+Check `COOKBOOK <plugins_guide.html>`_ for the quick guide on how to create a plugin.

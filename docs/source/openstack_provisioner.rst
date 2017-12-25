@@ -54,9 +54,11 @@ Topology
 * ``--topology-network``: Description of the network topology.
     By default, 3 networks will be provisioned with 1 router.
     2 of them will be connected via the router to an external network discovered automatically
-    (when more than 1 external network is found, the first will be chosen).
+    (when more than 1 external network is found, the first will be chosen)::
 
-.. TODO(yfried): add network topology image
+The following is an example of a ``3_nets.yml`` file:
+
+.. literalinclude:: ./examples/3_nets.yml
 
 * ``--topology-nodes``: `KeyValueList` description of the nodes.
     A floating IP will be provisioned on a designated network.

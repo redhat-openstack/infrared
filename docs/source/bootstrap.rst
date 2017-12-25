@@ -19,14 +19,17 @@ Setup virtualenv and `install <setup.html#Installation>`_ from source using pip:
 
 .. warning:: It's important to upgrade ``pip`` first, as default ``pip`` version in RHEL (1.4) might fail on dependencies
 .. note:: `infrared` will create a default `workspace <workspace.html#workspace>`_ for you. This workspace will manage your environment details.
+.. note:: For development work it's better to install in editable
+    mode and work with master branch::
 
+      pip install -e .
 
 Provision
 ---------
 
 In this example we'll use `virsh <virsh.html>`_ provisioner in order to demonstrate how easy and fast it is to provision machines using `infrared`.
 
-Add the virsh `plugin <plugin.html>`_::
+Add the virsh `plugin <plugins.html>`_::
 
     infrared plugin add plugins/virsh
 
@@ -130,8 +133,6 @@ nodes we have provisioned in the previous stage.
 Undercloud
 ^^^^^^^^^^
 
-.. TODO(yfried): replace this with RDO for upstream support, once RDO is verifed
-
 Just like in the provisioning stage, here also the user should take care of the mandatory parameters
 (by CLI or INI file) in order to be able to start the installation process.
 Let's deploy a `TripleO Undercloud`_::
@@ -139,6 +140,14 @@ Let's deploy a `TripleO Undercloud`_::
   infrared tripleo-undercloud --version 10 --images-task rpm
 
 This will deploy OSP 10 (``Newton``) on the node ``undercloud-0`` provisioned previously.
+
+Infrared provides support for upstream RDO deployments::
+
+  infrared tripleo-undercloud --version pike --images-task=import \
+        --images-url=https://images.rdoproject.org/pike/rdo_trunk/current-tripleo/stable/
+
+This will deploy RDO Pike version (``OSP 11``) on the node ``undercloud-0`` provisioned previously.
+Of course it is possible to use ``--images-task=build`` instead.
 
 .. _Tripleo Undercloud: tripleo-undercloud.html
 
