@@ -51,8 +51,9 @@
           state: directory
   roles:
         # modify images - update to core build and install packages
-      - role: rhos-release
-        release: "{{ undercloud_version }}"
+      - name: prepare repos for the images
+        role: rhos-release
+        release: "{{ install.version|default(undercloud_version) }}"
         rr_buildmods: "{{ install.buildmods }}"
         build: "{{ install.build | default(omit) }}"
         director_build: "{{ install.get('director', {}).build|default(omit) }}"
@@ -65,8 +66,9 @@
             - install.version|default(undercloud_version)|openstack_distribution == 'OSP'
         tags: rhos-release
 
-      - role: rdo-release
-        release: "{{ undercloud_version }}"
+      - name: prepare RDO repos for the images
+        role: rdo-release
+        release: "{{ install.version|default(undercloud_version) }}"
         rr_buildmods: "{{ install.buildmods }}"
         build: "{{ install.build | default(omit)}}"
         mirror: "{{ install.mirror | default(omit) }}"
