@@ -3,6 +3,7 @@
 Stores and resolves all the dependencies for the services.
 """
 import os
+import sys
 
 from infrared.core.services import dependency
 from infrared.core.services import workspaces
@@ -90,11 +91,17 @@ class CoreServices(object):
 
         # create plugins manager
         if ServiceName.PLUGINS_MANAGER not in cls._SERVICES:
+            # A temporary WH to skip all plugins installation on first InfraRed
+            # command if the command is 'infrared plugin add'.
+            # Should be removed together with auto plugins installation
+            # mechanism.
+            skip_plugins_install = {'plugin', 'add'}.issubset(sys.argv)
             cls.register_service(
                 ServiceName.PLUGINS_MANAGER, plugins.InfraredPluginManager(
                     plugins_conf=core_settings.plugins_conf_file,
                     dependencies_manager=CoreServices.dependency_manager(),
-                    install_plugins=core_settings.install_plugin_at_start,
+                    install_plugins=(core_settings.install_plugin_at_start and
+                                     not skip_plugins_install),
                     plugins_dir=core_settings.plugins_base_folder))
 
     @classmethod
