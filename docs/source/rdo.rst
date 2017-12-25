@@ -48,6 +48,28 @@ To deploy RDO on virtual environment the following steps can be performed.
          --deploy yes \
          --post yes
 
+To instacl containerized RDO version (pike and above) the ``--registry-*``,  
+``--containers yes`` and ``--registry-skip-puddle yes`` paramters a should be provided:: 
+
+    infrared tripleo-overcloud \
+        --version queens \
+        --deployment-files virt \
+        --introspect yes \
+        --tagging yes \
+        --deploy yes \
+        --containers yes \
+        --registry-mirror trunk.registry.rdoproject.org \
+        --registry-namespace master \
+        --registry-tag tripleo-ci-testing \
+        --registry-prefix=centos-binary- \
+        --registry-skip-puddle yes \
+        --network-octavia yes \
+        --octavia-image-url https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2 \
+        --post yes
+
+ .. note:: The --registry-tag value can be changed to something more stable like ``current-tripleo-rdo``
+
+
 Known issues
 ============
 

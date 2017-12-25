@@ -25,9 +25,10 @@
   vars:
       env_file: "{{ template_base }}/docker-images.yaml"
       os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
-      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/rhosp{{ os_version }}"
+      reg_namespace:  "{{ install.get('registry', {}).namespace|default('rhosp' + os_version) }}"
+      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/{{ reg_namespace }}"
       undercloud_reg_base_ceph: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
-      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_insecure_registry) }}/rhosp{{ os_version }}"
+      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_insecure_registry) }}/{{ reg_namespace }}"
       external_reg_base_ceph: "{{ install.get('registry', {}).mirror|default(docker_insecure_registry) }}"
       reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base)  }}"
       reg_base_ceph: "{{ install.registry.undercloud.skip|ternary(external_reg_base_ceph, undercloud_reg_base_ceph) }}"
