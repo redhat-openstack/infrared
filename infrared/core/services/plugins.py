@@ -2,6 +2,7 @@ import datetime
 import shutil
 import tempfile
 import time
+import sys
 from ConfigParser import ConfigParser
 from collections import OrderedDict
 
@@ -241,7 +242,9 @@ class InfraredPluginManager(object):
             self._config.readfp(fp)
 
         # TODO(aopincar): Remove auto plugins installation when conf is missing
-        if self._install_plugins_required and init_plugins_conf:
+        is_plugin_add_cmd = {'plugin', 'add'}.issubset(sys.argv)
+        if self._install_plugins_required and init_plugins_conf \
+                and not is_plugin_add_cmd:
             self.add_all_available()
 
     @classmethod
