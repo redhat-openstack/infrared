@@ -392,6 +392,13 @@ def test_remove_unexisting_plugin(plugin_manager_fixture):
     ("plugin remove type1_plugin1", dict(
         supported_type1=dict(
             type1_plugin1='tests/example/plugins/type1_plugin1'))),
+    ("plugin add "
+     "tests/example/plugins/type1_plugin1 "
+     "tests/example/plugins/type1_plugin2", None),
+    ("plugin remove type1_plugin1 type1_plugin2", dict(
+            supported_type1=dict(
+                type1_plugin1='tests/example/plugins/type1_plugin1',
+                type1_plugin2='tests/example/plugins/type1_plugin2'))),
 ])
 def test_plugin_cli(plugin_manager_fixture, input_args, plugins_conf):
     """Tests that plugin CLI works
