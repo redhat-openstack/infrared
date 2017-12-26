@@ -371,7 +371,8 @@ class InfraredPluginManager(object):
                 " and manually resolve Git issues.\n"
                 "{}\n{}".format(plugin.path, ex.stdout, ex.stderr))
 
-    def add_plugin(self, plugin_source, rev=None, plugins_registry=None):
+    def add_plugin(self, plugin_source, rev=None, plugins_registry=None,
+                   plugin_src_path=None):
         """Adds (install) a plugin
 
         :param plugin_source: Plugin source.
@@ -381,6 +382,8 @@ class InfraredPluginManager(object):
             3. Git URL
         :param rev: git branch/tag/revision
         :param plugins_registry: content of plugin registry yml file
+        :param plugin_src_path: relative path to the plugin location inside the
+               source
         """
         plugins_registry = plugins_registry or PLUGINS_REGISTRY
         plugin_data = {}
@@ -389,7 +392,9 @@ class InfraredPluginManager(object):
             plugin_data = plugins_registry[plugin_source]
             plugin_source = plugins_registry[plugin_source]['src']
 
-        plugin_src_path = plugin_data.get('src_path', '')
+        if plugin_src_path is None:
+            plugin_src_path = plugin_data.get('src_path', '')
+
         # Local dir plugin
         if os.path.exists(plugin_source):
             rm_source = False

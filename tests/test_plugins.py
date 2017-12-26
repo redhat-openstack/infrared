@@ -5,6 +5,7 @@ import yaml
 import shutil
 import tarfile
 import tempfile
+import filecmp
 
 import pytest
 
@@ -243,6 +244,7 @@ def test_load_plugin(plugin_manager_fixture):
     assert plugin.description == plugin_dict['description'], \
         'Wrong plugin description'
 
+
 def test_entry_point(plugin_manager_fixture):
     """Test that spec file has a valid entry point
      :param plugin_manager_fixture: Fixture object which yields
@@ -260,6 +262,7 @@ def test_entry_point(plugin_manager_fixture):
 
     plugin = plugin_manager.get_plugin(plugin_name=plugin_dict['name'])
     assert plugin.playbook == os.path.join(plugin_dict['dir'], "example.yml")
+
 
 def test_add_plugin_with_same_name(plugin_manager_fixture):
     """Tests that it not possible to add a plugin with a name that already
@@ -1022,3 +1025,53 @@ def test_import_plugins_from_registry(tmpdir, plugin_manager_fixture):
     # Validates all plugins are in the configuration file
     validate_plugins_presence_in_conf(
         plugin_manager, registry_yaml, present=True)
+
+
+def test_add_plugin_with_src_path(plugin_manager_fixture, mocker):
+    """
+    Validates that add plugin copies the whole directory and only reference
+    to the plugin inside the directory
+    :param plugin_manager_fixture: Fixture object which yields
+    InfraredPluginManger object
+    :param mocker: mocker fixture
+    """
+
+    def clone_from_side_effect(url, to_path, **kwargs):
+        """
+        Define a side effect function to override the
+        original behaviour of clone_from
+        """
+        shutil.copytree(src=plugin_src, dst=to_path)
+        return to_path
+
+    plugin_manager = plugin_manager_fixture()
+
+    mock_git = mocker.patch("infrared.core.services.plugins.git.Repo")
+    # use side effect to use copytree instead of original clone
+    mock_git.clone_from.side_effect = clone_from_side_effect
+
+    plugin_src = os.path.abspath(os.path.join(SAMPLE_PLUGINS_DIR,
+                                              "plugin_with_src_path"))
+
+    # add_plugin call
+    plugin_manager.add_plugin(
+        plugin_source="https://sample_github.null/plugin_repo.git",
+        plugin_src_path="infrared_plugin")
+
+    plugin = plugin_manager.get_plugin("plugin_with_src_path")
+    expected_plugin_path = os.path.join(plugin_manager.plugins_dir,
+                                        "plugin_with_src_path")
+
+    expected_plugin_src_path = \
+        os.path.join(expected_plugin_path, "infrared_plugin")
+
+    assert expected_plugin_src_path == plugin.path, \
+        "Plugin path is not as expected"
+
+    # compare the dirs before and after to make sure we copied it entirely
+    dirs_cmp = filecmp.dircmp(plugin_src, expected_plugin_path)
+    assert dirs_cmp.right_list == dirs_cmp.left_list, \
+        "Plugin directory is does not contain the original files from " \
+        "the original plugin source."
+
+

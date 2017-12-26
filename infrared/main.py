@@ -215,6 +215,10 @@ class PluginManagerSpec(api.SpecObject):
                                 " sourced plugins. Ingnored for"
                                 "'plugin add all' command.")
 
+        add_parser.add_argument("--src-path", help="Relative path within the "
+                                                   "repository where infrared "
+                                                   "plugin can be found.")
+
         # Remove plugin
         remove_parser = plugin_subparsers.add_parser(
             "remove",
@@ -285,7 +289,8 @@ class PluginManagerSpec(api.SpecObject):
                 self.plugin_manager.add_all_available()
                 self._list_plugins(print_available=False)
             else:
-                self.plugin_manager.add_plugin(pargs.src, rev=pargs.revision)
+                self.plugin_manager.add_plugin(pargs.src, rev=pargs.revision,
+                                               plugin_src_path=pargs.src_path)
         elif subcommand == 'remove':
             if pargs.name == 'all':
                 self.plugin_manager.remove_all()
