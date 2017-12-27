@@ -1,8 +1,6 @@
 Plugins
 =======
 
-.. note:: Check `HOWTO`_ for the quick guide on how to create a plugin.
-
 In `infrared` 2.0, `plugins` are self contained Ansible projects. They can still
 also depend on common items provided by the core project.
 Any ansible project can become an`infrared` plugin by adhering to the following
@@ -20,7 +18,7 @@ structure (see `tests/example`_ for an example plugin)::
         as Ansible will search for references in the
         relative paths described above. To use an ``ansible.cfg`` config file, use absolute paths to the plugin directory.
 .. _tests/example: https://github.com/redhat-openstack/infrared/tree/master/tests/example
-.. _HOWTO: plugins_guide.html
+
 
 Plugin structure
 ^^^^^^^^^^^^^^^^
@@ -28,6 +26,13 @@ Plugin structure
 Main entry
 ----------
 `infrared` will look for a playbook called ``main.yml`` to start the execution from.
+.. note:: If you want to use other playbook to start from - simply add it into
+config section in plugin.spec::
+
+  config:
+    plugin_type: other
+    entry_point: your-playbook.yml
+    ...
 
 Plugins are regular Ansible projects, and as such, they might include or reference any item
 (files, roles, var files, ansible plugins, modules, templates, etc...) using relative paths
@@ -37,16 +42,16 @@ provided by `infrared` core.
 
 An example of ``plugin_dir/main.yml``:
 
-.. literalinclude:: ../../tests/example/main.yml
+.. literalinclude:: ../examples/main.yml
    :emphasize-lines: 3-6
    :linenos:
 
 Plugin Specification
 --------------------
 `infrared` gets all plugin info from ``plugin.spec`` file. Following `YAML` format.
-This file define the CLI this plugin exposes, its name and its type.
+This file defines the CLI flags this plugin exposes, its name and its type.
 
-.. literalinclude:: ../../tests/example/plugin.spec
+.. literalinclude:: ../examples/plugin.spec
 
 Config section:
     * Plugin type can be one of the following: ``provision``, ``install``, ``test``, ``other``.
@@ -89,7 +94,7 @@ Answers File:
 Common Options:
     * ``--dry-run``: Don't execute Ansible playbook. Only write generated vars dict to stdout
     * ``--output``: Redirect generated vars dict from stdout to an explicit file (YAML format).
-    * ``--extra-vars``: Inject custom input into the `vars dict <Complex option types>`_
+    * ``--extra-vars``: Inject custom input into the `vars dict <plugins.html#Complex option types>`_
 
 Inventory:
     Load a new inventory to active `workspace <workspace.html>`_. The file is copied to
@@ -172,7 +177,12 @@ inner-most level. Example::
     In that case, all these files can be put to the ``<spec_root>/defaults/network`` folder,
     and plugin specification can look like::
 
-        plugin_type: provision
+        config:
+           plugin_type: provision
+           entry_point: main.yml
+           dependencies:
+              - source: "https://sample_github.null/dependency_repo.git"
+                revision: "c5e3b060e8c4095c66db48586817db1eb02da338"
         subparsers:
         my_plugin:
             description: Provisioner virtual machines on a single Hypervisor using libvirt
@@ -293,7 +303,7 @@ Plugin Manager
 The following commands are used to manage `infrared` plugins
 
 Add:
-    `infrared` will look for a `plugin.spec <Specification>`_ file in the given source and
+    `infrared` will look for a `plugin.spec <plugins.html#plugin-specification>`_ file in the given source and
     register the plugin under the given plugin-type (when source is 'all', all available plugins will be installed)::
 
         infrared plugin add tests/example
@@ -346,11 +356,18 @@ Remove:
         infrared plugin remove all
 
 Freeze:
+    Output installed plugins with their revisions in a `registry file format <plugins.html#registry-files>`_.
     When you need to be able to install somewhere else the exact same versions
-    of plugins use ``freeze`` command. This will run through installed plugins
-    and save revision to ``plugins/registry.yaml`` for every git sorced one::
+    of plugins use ``freeze`` command::
 
-        infrared plugin freeze
+        infrared plugin freeze > registry.yaml
+
+Import:
+    Installs all plugins from the given registry file.
+    The registry file can be either path to local file or to URL::
+
+        infrared plugin import plugins/registry.yaml
+        infrared plugin import https://url/to/registry.yaml
 
 Update:
     Update a given Git-based plugin to a specific revision.
@@ -362,6 +379,41 @@ Update:
 
 Execute:
     Plugins are added as subparsers under ``plugin type`` and will execute
-    the ``main.yml`` `playbook <playbooks>`_::
+    the `main playbook <plugins.html#Main entry>`_::
 
         infrared example
+
+
+Registry Files
+^^^^^^^^^^^^^^
+
+Registry files are files containing a list of plugins to be installed using the infrared plugin import.
+These files are used to hold the result from infrared plugin freeze for the purpose of achieving repeatable installations.
+The Registry file contains a pinned version of everything that was installed when infrared plugin freeze was run.
+
+Registry File Format
+~~~~~~~~~~~~~~~~~~~~
+The registry file is following the YAML format.
+Each section of the registry file contains an object which specifies the plugin to be installed:
+
+* ``src``: The path to the plugin. It can be either local path or git url
+* ``src_path``: (optional) Relative path within the repository where infrared plugin can be found.
+* ``rev``: (optional) If the plugin source is git, this allows to specify the revision to pull.
+* ``desc``: The plugin description.
+* ``type``: Plugin type can be one of the following: ``provision``, ``install``, ``test``, ``other``.
+
+Example of a registry file::
+
+    ---
+
+    plugin_name:
+        src: path/to/plugin/directory
+        rev: some_revision_hash
+        src_path: /path/to/plugin/in/repo
+        desc: Some plugin description
+        type: provision/test/install/other
+
+How to create a new plugin
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. note::
+Check `COOKBOOK <plugins_guide.html>`_ for the quick guide on how to create a plugin.

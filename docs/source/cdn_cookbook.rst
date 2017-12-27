@@ -1,13 +1,14 @@
 Tripleo OSP with Red Hat Subscriptions
 ======================================
 
-.. _undercloud_register: https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/11/html/director_installation_and_usage/chap-installing_the_undercloud#sect-Registering_your_System
+.. _must be registered:must be registered: https://access.redhat
+.com/documentation/en-us/red_hat_openstack_platform/11/html/director_installation_and_usage/chap-installing_the_undercloud#sect-Registering_your_System
 .. _uc: tripleo_undercloud.html
 .. _module documentation: http://docs.ansible.com/ansible/redhat_subscription_module.html
 
 Undercloud
 ----------
-To deploy OSP, the Undercloud `must be registered <undercloud_register>`_ to Red Hat channels.
+To deploy OSP, the Undercloud `must be registered`_ to Red Hat channels.
 Define the subscription details:
 
 
@@ -41,11 +42,11 @@ Once the undercloud is registered, the overcloud can be deployed. However, the o
 registered and cannot receive updates. While the nodes can be later registered manually, Tripleo provides a
 way to register them automatically on deployment.
 
-According to the `guide <overcloud_register>`_ there are 2 heat-templates required. They can be included,
-and their defaults overridden, using a `custom templates file <oc>`_.
+According to the `guide`_ there are 2 heat-templates required. They can be included,
+and their defaults overridden, using a `custom templates file`_.
 
-.. _overcloud_register: https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/10/html/advanced_overcloud_customization/sect-registering_the_overcloud
-.. _oc: tripleo_overcloud.html#overcloud-options
+.. _guide: https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/10/html/advanced_overcloud_customization/sect-registering_the_overcloud
+.. _custom templates file:: tripleo_overcloud.html#overcloud-options
 
 .. code-block:: yaml
    :caption: overcloud_cdn.yml

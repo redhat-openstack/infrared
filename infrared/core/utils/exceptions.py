@@ -145,6 +145,12 @@ class IRFailedToUpdatePlugin(IRException):
         super(self.__class__, self).__init__(reason_str)
 
 
+class IRFailedToImportPlugins(IRException):
+    def __init__(self, reason):
+        message = "Failed to import plugins: {}".format(reason)
+        super(self.__class__, self).__init__(message)
+
+
 class IRSshException(IRException):
     def __init__(self, msg):
         message = msg
@@ -180,7 +186,7 @@ class IRGroupNotFoundException(IRException):
         super(self.__class__, self).__init__(message)
 
 
-class IRSpecValidatorException(IRException):
+class IRValidatorException(IRException):
     def __init__(self, reason_str):
         super(self.__class__, self).__init__(reason_str)
 

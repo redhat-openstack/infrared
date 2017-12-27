@@ -7,18 +7,18 @@ from collections import OrderedDict
 
 import git
 import github
-import jsonschema
 import os
 # TODO(aopincar): Add pip to the project's requirements
 import pip
 import yaml
+import urllib2
 
 from infrared.core.services.dependency import PluginDependency
 from infrared.core.utils import logger
+from infrared.core.utils.validators import SpecValidator, RegistryValidator
 from infrared.core.utils.exceptions import IRFailedToAddPlugin, IRException, \
-    IRSpecValidatorException, IRPluginExistsException, \
-    IRFailedToRemovePlugin, \
-    IRFailedToUpdatePlugin, IRUnsupportedPluginType
+    IRPluginExistsException, IRFailedToRemovePlugin, IRFailedToUpdatePlugin, \
+    IRUnsupportedPluginType, IRFailedToImportPlugins
 
 DEFAULT_PLUGIN_INI = dict(
     supported_types=OrderedDict([
@@ -33,11 +33,9 @@ DEFAULT_PLUGIN_INI = dict(
     ])
 )
 
-
-MAIN_PLAYBOOK = "main.yml"
-PLUGINS_DIR = os.path.abspath("./plugins")
 LOG = logger.LOG
-PLUGINS_REGISTRY_FILE = os.path.join(PLUGINS_DIR, "registry.yaml")
+PLUGINS_REGISTRY_FILE = os.path.join(os.path.abspath("./plugins"),
+                                     "registry.yaml")
 
 with open(PLUGINS_REGISTRY_FILE, "r") as fo:
     PLUGINS_REGISTRY = yaml.load(fo)
@@ -49,12 +47,19 @@ class InfraredPluginManager(object):
     GIT_PLUGINS_ORGS_SECTION = "git_orgs"
 
     def __init__(self, plugins_conf, dependencies_manager,
-                 install_plugins=True):
+                 plugins_dir, install_plugins=True):
         """
         :param plugins_conf: A path to the main plugins configuration file
+        :param dependencies_manager: PluginDependencyManager object
+        :param plugins_dir: the plugins directory location
         :param install_plugins: Specifies if core plugins should be installed
             at start.
         """
+        # create plugins directory
+        self.plugins_dir = plugins_dir
+        if not os.path.exists(self.plugins_dir):
+            os.makedirs(self.plugins_dir)
+
         self._dependencies_manager = dependencies_manager
         self._config_file = os.path.abspath(os.path.expanduser(plugins_conf))
         self._install_plugins_required = install_plugins
@@ -154,7 +159,8 @@ class InfraredPluginManager(object):
 
         return plugins_dict
 
-    def get_github_organization_plugins(self, organization, no_forks=False):
+    @staticmethod
+    def get_github_organization_plugins(organization, no_forks=False):
         """
         Returns a dict with all plugins from a GitHub organization
         inspired from: https://gist.github.com/ralphbean/5733076
@@ -238,14 +244,6 @@ class InfraredPluginManager(object):
         if self._install_plugins_required and init_plugins_conf:
             self.add_all_available()
 
-    def get_desc_of_type(self, s_type):
-        """Returns the description of the given supported plugin type
-
-        :param s_type: The type of the plugin you want the description
-        :return: String of the supported plugin description
-        """
-        return self.config.get(self.SUPPORTED_TYPES_SECTION, s_type)
-
     @classmethod
     def get_plugin(cls, plugin_name):
         """Returns an instance of plugin based on name
@@ -262,19 +260,13 @@ class InfraredPluginManager(object):
             raise StopIteration
 
     @staticmethod
-    def _clone_git_plugin(git_url, repo_plugin_path=None, rev=None,
-                          dest_dir=None):
+    def _clone_git_plugin(git_url, rev=None):
         """Clone a plugin into a given destination directory
 
         :param git_url: Plugin's Git URL
-        :param dest_dir: destination where to clone a plugin into (if 'source'
-          is a Git URL)
-        :param repo_plugin_path: path in the Git repo where the infrared plugin
-          is defined
         :param rev: git branch/tag/revision
         :return: Path to plugin cloned directory (str)
         """
-        dest_dir = os.path.abspath(dest_dir or "plugins")
         plugin_git_name = os.path.split(git_url)[-1].split('.')[0]
 
         tmpdir = tempfile.mkdtemp(prefix="ir-")
@@ -291,34 +283,8 @@ class InfraredPluginManager(object):
                 "Cloning git repo {} is failed: {}".format(git_url, e))
 
         plugin_tmp_source = os.path.join(tmpdir, plugin_git_name)
-        if repo_plugin_path:
-            plugin_tmp_source = os.path.join(plugin_tmp_source, repo_plugin_path)
-
-        # validate & load spec data in order to pull the name of the plugin
-        spec_data = SpecValidator.validate_from_file(
-            os.path.join(plugin_tmp_source, InfraredPlugin.PLUGIN_SPEC_FILE))
-        # get the real plugin name from spec
-        plugin_dir_name = spec_data["subparsers"].keys()[0]
-
-        plugin_source = os.path.join(dest_dir, plugin_dir_name)
-        if os.path.islink(plugin_source):
-            LOG.debug("%s found as symlink pointing to %s, unlinking it, not touching the target.",
-                      plugin_source,
-                      os.path.realpath(plugin_source))
-            os.unlink(plugin_source)
-        elif os.path.exists(plugin_source):
-            shutil.rmtree(plugin_source)
-
-        shutil.copytree(os.path.join(tmpdir, plugin_git_name),
-                        plugin_source)
-
-        if repo_plugin_path:
-            plugin_source = plugin_source + '/' + repo_plugin_path
-
         os.chdir(cwd)
-        shutil.rmtree(tmpdir)
-
-        return plugin_source
+        return plugin_tmp_source
 
     def update_plugin(self, plugin_name, revision=None,
                       skip_reqs=False, hard_reset=False):
@@ -405,7 +371,8 @@ class InfraredPluginManager(object):
                 " and manually resolve Git issues.\n"
                 "{}\n{}".format(plugin.path, ex.stdout, ex.stderr))
 
-    def add_plugin(self, plugin_source, rev=None, dest=None):
+    def add_plugin(self, plugin_source, rev=None, plugins_registry=None,
+                   plugin_src_path=None):
         """Adds (install) a plugin
 
         :param plugin_source: Plugin source.
@@ -413,31 +380,34 @@ class InfraredPluginManager(object):
             1. Plugin name (from available in registry)
             2. Path to a local directory
             3. Git URL
-        :param dest: destination where to clone a plugin into (if 'source' is
-          a Git URL)
         :param rev: git branch/tag/revision
+        :param plugins_registry: content of plugin registry yml file
+        :param plugin_src_path: relative path to the plugin location inside the
+               source
         """
+        plugins_registry = plugins_registry or PLUGINS_REGISTRY
         plugin_data = {}
         # Check if a plugin is in the registry
-        if plugin_source in PLUGINS_REGISTRY:
-            plugin_data = PLUGINS_REGISTRY[plugin_source]
-            plugin_source = PLUGINS_REGISTRY[plugin_source]['src']
+        if plugin_source in plugins_registry:
+            plugin_data = plugins_registry[plugin_source]
+            plugin_source = plugins_registry[plugin_source]['src']
+
+        if plugin_src_path is None:
+            plugin_src_path = plugin_data.get('src_path', '')
 
         # Local dir plugin
         if os.path.exists(plugin_source):
-            pass
+            rm_source = False
         # Git Plugin
         else:
             if rev is None:
                 rev = plugin_data.get('rev')
-            plugin_src_path = plugin_data.get('src_path', '')
-            plugin_source = self._clone_git_plugin(
-                plugin_source, plugin_src_path, rev,
-                dest)
+            plugin_source = \
+                self._clone_git_plugin(plugin_source, rev)
+            rm_source = True
 
-        plugin = InfraredPlugin(plugin_source)
+        plugin = InfraredPlugin(os.path.join(plugin_source, plugin_src_path))
         plugin_type = plugin.type
-        # FIXME(yfried) validate spec and throw exception on missing input
 
         if plugin_type not in self.supported_plugin_types:
             raise IRUnsupportedPluginType(plugin_type)
@@ -448,9 +418,28 @@ class InfraredPluginManager(object):
             raise IRPluginExistsException(
                 "Plugin with the same name & type already exists")
 
+        dest = os.path.join(self.plugins_dir, plugin.name)
+        if os.path.abspath(plugin_source) != os.path.abspath(dest):
+            # copy only if plugin was added from a location which is
+            # different from the location of the plugins dir
+            if os.path.islink(dest):
+                LOG.debug("%s found as symlink pointing to %s, "
+                          "unlinking it, not touching the target.",
+                          dest,
+                          os.path.realpath(dest))
+                os.unlink(dest)
+            elif os.path.exists(dest):
+                shutil.rmtree(dest)
+
+            shutil.copytree(plugin_source, dest)
+
+        if rm_source:
+            shutil.rmtree(plugin_source)
+
         self._dependencies_manager.install_plugin_dependencies(plugin)
 
-        self.config.set(plugin_type, plugin.name, plugin.path)
+        self.config.set(plugin_type, plugin.name,
+                        os.path.join(dest, plugin_src_path))
 
         with open(self.config_file, 'w') as fp:
             self.config.write(fp)
@@ -458,11 +447,15 @@ class InfraredPluginManager(object):
         self._install_requirements(plugin_source)
         self._load_plugins()
 
-    def add_all_available(self):
-        """Add all available plugins which aren't already installed"""
-        for plugin in set(PLUGINS_REGISTRY) - \
+    def add_all_available(self, plugins_registry=None):
+        """
+        Add all available plugins which aren't already installed
+        :param plugins_registry: content of plugin registry yml file
+        """
+        plugins_registry = plugins_registry or PLUGINS_REGISTRY
+        for plugin in set(plugins_registry) - \
                 set(self.PLUGINS_DICT):
-            self.add_plugin(plugin)
+            self.add_plugin(plugin, plugins_registry=plugins_registry)
             LOG.warning(
                 "Plugin '{}' has been successfully installed".format(plugin))
 
@@ -505,35 +498,76 @@ class InfraredPluginManager(object):
             pip.main(args=pip_args)
 
     def freeze(self):
+        registry = {}
         for section in self.config.sections():
-            if section == "supported_types":
+            if section in ["supported_types", "git_orgs"]:
                 continue
             for name, path in self.config.items(section):
-                if name not in PLUGINS_REGISTRY:
+                if name not in registry:
                     with open(os.path.join(path, "plugin.spec"), "r") as pls:
                         plugin_spec = yaml.load(pls)
                     # support two types of possible plugin spec files
                     plugin_type = plugin_spec["config"]["plugin_type"] \
                         if "config" in plugin_spec \
                         else plugin_spec["plugin_type"]
-
-                    PLUGINS_REGISTRY[name] = dict(
+                    registry[name] = dict(
                         type=plugin_type,
                         desc=plugin_spec[
                             "subparsers"].items()[0][1]["description"])
                 try:
                     repo = git.Repo(path)
-                    PLUGINS_REGISTRY[name]["src"] = list(
+                    registry[name]["src"] = list(
                         repo.remote().urls)[-1].encode("ascii")
-                    PLUGINS_REGISTRY[name]["rev"] = repo.head.commit.hexsha.encode("ascii")
+                    registry[name]["rev"] = repo.head.commit.hexsha.encode(
+                        "ascii")
                 except git.InvalidGitRepositoryError:
-                    PLUGINS_REGISTRY[name]["src"] = path.replace(
-                        "".join([os.path.split(PLUGINS_DIR)[0],
-                                 os.path.sep]), "")
+                    registry[name]["src"] = path.replace(
+                        "".join([os.path.split(
+                            os.path.dirname(
+                                PLUGINS_REGISTRY_FILE))[0], os.path.sep]), "")
 
-        with open(PLUGINS_REGISTRY_FILE, "w") as fd:
-            yaml.dump(PLUGINS_REGISTRY, fd, default_flow_style=False,
-                      explicit_start=True, allow_unicode=True)
+        for plugin_name, plugin_dict in registry.items():
+            print(yaml.dump({plugin_name: plugin_dict},
+                            default_flow_style=False,
+                            explicit_start=False, allow_unicode=True))
+
+    def import_plugins(self, plugins_registry):
+        """
+        Import and install plugins from registry yml file
+        :param plugins_registry: Path/URL to plugin registry yml file
+        """
+        try:
+            if not os.path.exists(plugins_registry):
+                # if path was not found locally attempt to download it
+                urllib_ret = urllib2.urlopen(plugins_registry)
+                if urllib_ret.code is not 200:
+                    # make sure we received OK status code from url
+                    raise IRFailedToImportPlugins(
+                        'Got unexpected returned code ({}) from registry '
+                        'URL ({})'.format(urllib_ret.code, plugins_registry))
+                # load registry from the url
+                plugins_registry = \
+                    RegistryValidator.validate_from_content(urllib_ret.read())
+            else:
+                # validate from local path
+                plugins_registry = \
+                    RegistryValidator.validate_from_file(plugins_registry)
+
+        except urllib2.HTTPError:
+            raise IRFailedToImportPlugins(
+                'Registry URL not found - ({}) '.format(plugins_registry))
+
+        for plugin in set(plugins_registry):
+            # if plugin exists remove it and then add from new registry
+            if plugin in self.PLUGINS_DICT:
+                self.remove_plugin(plugin)
+                LOG.warning(
+                    "Plugin '{}' has been successfully removed".format(plugin))
+            # add the plugin
+            self.add_plugin(plugin_source=plugin,
+                            plugins_registry=plugins_registry)
+            LOG.warning(
+                "Plugin '{}' has been successfully installed".format(plugin))
 
 
 class InfraredPlugin(object):
@@ -577,7 +611,7 @@ class InfraredPlugin(object):
     @property
     def playbook(self):
         """Plugin's main playbook"""
-        return os.path.join(self.path, MAIN_PLAYBOOK)
+        return os.path.join(self.path, self.entry_point)
 
     @property
     def spec(self):
@@ -601,6 +635,15 @@ class InfraredPlugin(object):
             # TODO(aopincar): Replace with a proper infrared exception
             raise Exception("Only one plugin should be defined in spec")
         return plugins[0]
+
+    @property
+    def entry_point(self):
+        if "entry_point" in self.config:
+            return self.config['entry_point']
+        elif "config" in self.config and "entry_point" in self.config['config']:
+            return self.config['config']['entry_point']
+        else:
+            return "main.yml"
 
     @property
     def type(self):
@@ -631,128 +674,3 @@ class InfraredPlugin(object):
 
     def __repr__(self):
         return self.name
-
-
-class SpecValidator(object):
-    """
-    Class for validating that a plugin spec (YAML) has all required fields
-    """
-    CONFIG_PART_SCHEMA = {
-        "type": "object",
-        "properties": {
-            "plugin_type": {"type": "string", "minLength": 1},
-            "dependencies": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "source": {"type": "string", "minLength": 1},
-                        "revision": {"type": "string", "minLength": 1}
-                    },
-                    "required": ["source"]
-                },
-                "minItems": 1,
-                "uniqueItems": True
-            }
-        },
-        "additionalProperties": False,
-        "required": ["plugin_type"]
-    }
-
-    SUBPARSER_PART_SCHEMA = {
-        "type": "object",
-        "minProperties": 1,
-        "maxProperties": 1,
-        "patternProperties": {
-            "^(?!(?:all)$).+$": {
-                "type": "object",
-            }
-        },
-        "additionalProperties": False
-    }
-
-    SCHEMA_WITH_CONFIG = {
-        "type": "object",
-        "properties": {
-            "description": {"type": "string", "minLength": 1},
-            "config": CONFIG_PART_SCHEMA,
-            "subparsers": SUBPARSER_PART_SCHEMA
-        },
-        "additionalProperties": False,
-        "required": ["config", "subparsers"]
-    }
-
-    SCHEMA_WITHOUT_CONFIG = {
-        "type": "object",
-        "properties": {
-            "plugin_type": {"type": "string", "minLength": 1},
-            "description": {"type": "string", "minLength": 1},
-            "subparsers": SUBPARSER_PART_SCHEMA
-        },
-        "additionalProperties": False,
-        "required": ["plugin_type", "subparsers"]
-    }
-
-    @staticmethod
-    def validate_from_file(spec_file=None):
-        """Loads & validates that spec (YAML) file has all required fields
-
-        :param spec_file: Path to plugin's spec file
-        :raise IRSpecValidatorException: when mandatory
-        data is missing in spec file
-        :return: Dictionary with data loaded from a spec (YAML) file
-        """
-        if spec_file is None:
-            raise IRSpecValidatorException(
-                "Plugin spec file is missing")
-
-        if not os.path.isfile(spec_file):
-            raise IRSpecValidatorException(
-                "Plugin spec doesn't exist: {}".format(spec_file))
-
-        with open(spec_file) as fp:
-            spec_dict = SpecValidator.validate_from_content(fp.read())
-
-        return spec_dict
-
-    @staticmethod
-    def validate_from_content(spec_content=None):
-        """validates that spec (YAML) content has all required fields
-
-        :param spec_content: content of spec file
-        :raise IRSpecValidatorException: when mandatory data
-        is missing in spec file
-        :return: Dictionary with data loaded from a spec (YAML) file
-        """
-        if spec_content is None:
-            raise IRSpecValidatorException(
-                "Plugin spec content is missing")
-
-        spec_dict = yaml.load(spec_content)
-
-        if not isinstance(spec_dict, dict):
-            raise IRSpecValidatorException(
-                "Spec file is empty or corrupted: {}".format(spec_content))
-
-        # check if new spec file structure
-        try:
-            if "config" in spec_dict:
-                jsonschema.validate(spec_dict,
-                                    SpecValidator.SCHEMA_WITH_CONFIG)
-            else:
-                jsonschema.validate(spec_dict,
-                                    SpecValidator.SCHEMA_WITHOUT_CONFIG)
-
-        except jsonschema.exceptions.ValidationError as error:
-            raise IRSpecValidatorException(
-                "{} in file: {}".format(error.message, spec_content))
-
-        subparsers_key = "subparsers"
-        if "description" not in spec_dict \
-                and "description" not in spec_dict[subparsers_key].values()[0]:
-            raise IRSpecValidatorException(
-                "Required key 'description' is missing for supbarser '{}' in "
-                "spec file: {}".format(
-                    spec_dict[subparsers_key].keys()[0], spec_content))
-
-        return spec_dict

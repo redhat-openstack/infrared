@@ -83,7 +83,7 @@ To configure overcloud images::
   infrared tripleo-undercloud --images-task rpm
 
 .. note:: This assumes an undercloud was already installed and
-    will skip `installation <Setup an Undercloud>`_ stage
+    will skip `installation <tripleo-undercloud.html#Setup an Undercloud>`_ stage
     because ``--version`` is missing.
 
 When using RDO (or for OSP 7), ``rpm`` strategy in unavailable. Use ``import`` with ``--images-url`` to download
@@ -120,7 +120,7 @@ Use the ``--ssl=yes`` option to install enable SSL on the undercloud. If used, a
 Custom Repositories
 -------------------
 
-Add custom repositories to the undercloud, after `installing the TripleO repositories <Setup Undercloud Packages>`_.
+Add custom repositories to the undercloud, after `installing the TripleO repositories <tripleo-undercloud.html#Setup an Undercloud>`_.
 
 * ``--repos-config`` setup repos using the ansible yum_repository module.
     Using this option enables you to set specific options for each repository:
@@ -179,7 +179,7 @@ Or optionally, provide the file name of the image to create (defaults to "underc
 This will prepare a qcow2 image of your undercloud ready for usage with `Restore`_.
 
 .. note:: this assumes an undercloud is already installed and will skip
-    `installation <Setup an Undercloud>`_ and `images <Overcloud Images>`_ stages.
+    `installation <tripleo-undercloud.html#Setup an Undercloud>`_ and `images <tripleo-undercloud.html#Overcloud Images>`_ stages.
 
 Restore
 -------

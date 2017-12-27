@@ -53,7 +53,7 @@ Example Script Upgrade
 
    * - `infrared` v2
      - `infrared` v1
-   * - .. literalinclude:: v2_syntax.sh
+   * - .. literalinclude:: ../examples/v2_syntax.sh
           :language: bash
-     - .. literalinclude:: v1_syntax.sh
+     - .. literalinclude:: ../examples/v1_syntax.sh
           :language: bash
