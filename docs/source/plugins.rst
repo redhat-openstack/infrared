@@ -303,12 +303,15 @@ Plugin Manager
 The following commands are used to manage `infrared` plugins
 
 Add:
-    `infrared` will look for a `plugin.spec <plugins.html#plugin-specification>`_ file in the given source and
+    `infrared` will look for a `plugin.spec <plugins.html#plugin-specification>`_ file in each given source and
     register the plugin under the given plugin-type (when source is 'all', all available plugins will be installed)::
 
         infrared plugin add tests/example
+        infrared plugin add example example2
         infrared plugin add <git_url> [--revision <branch/tag/revision>]
         infrared plugin add all
+
+    .. note:: "--revision" works with one plugin source only.
 
 
 List:
@@ -350,9 +353,9 @@ List:
    Check the  `Infrared Configuration <configuration.html>`_ for details.
 
 Remove:
-    Remove the given plugin (when name is 'all', all plugins will be removed)::
+    Remove the given plugins (when name is 'all', all plugins will be removed)::
 
-        infrared plugin remove example
+        infrared plugin remove example example2
         infrared plugin remove all
 
 Freeze:
