@@ -4,7 +4,7 @@
 
 - name: Get plugins from cli
   set_fact:
-      cli_plugins: '{{ cli_plugins|default({}) | combine({ (item|basename): { "repo": item } } ) }}'
+      cli_plugins: "{{ cli_plugins|default({}) | combine({ (item.split(',')[0]|basename): { 'repo': item.split(',')[0], 'setup_dir': item.split(',')[1]|default('') }}) }}"
   with_items: "{{ test.plugin|default([]) }}"
 
 - name: Set plugins list iterator for "{{ test_suite }}"
@@ -53,7 +53,7 @@
 - name: Install plugin packages
   pip:
       virtualenv: "{{ virtualenvs.tempest }}"
-      name: "{{ plugins_dir }}/{{ item }}"
+      name: "{{ plugins_dir }}/{{ item }}/{{ plugins[item]['setup_dir']|default('') }}"
       state: present
       editable: true
   with_items: "{{ plugins.keys() }}"

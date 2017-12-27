@@ -49,6 +49,6 @@
 - name: Install plugin packages globally to the system
   become: yes
   pip:
-      name: "{{ plugins_dir }}/{{ plugin_dict.key }}"
+      name: "{{ plugins_dir }}/{{ plugin_dict.key }}/{{ plugin_dict.value.setup_dir|default('') }}"
       state: present
       editable: true

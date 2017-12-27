@@ -23,9 +23,8 @@ subparsers:
                       action: append
                       help: |
                         The list of additional plugins with tests to install.
-                        Should be specified in next format:
-                            --plugin=repo_url
-                        More that one --plugin option can be provided.
+                        It's possible to provide multiple plugins and to point to the plugin's setup directory.
+                        Usage example:  --plugin=plugin1_url --plugin=plugin2_url,plugin2/setup_dir
                   openstack-version:
                        type: Value
                        help: |

@@ -65,13 +65,16 @@ Downstream tests
 
 The tempest plugin provides the ``--plugin`` cli option which can be used to
 specify the plugin url to install. This option can be used, for example, to specify
-a downstream repo with tempest tests and run them::
+a downstream repo with tempest tests and run them.
+It's possible to provide multiple plugins and to point to a specific plugin's setup directory::
 
         ir tempest --tests=neutron_downstream \
                    --openstack-version=12 \
                    --openstack-installer=tripleo \
-                   --plugin=https://downstrem.repo/tempest_neutron_plugin \
+                   --plugin=https://downstream.repo/tempest_neutron_plugin \
+                   --plugin=https://downstream.repo/tempest_neutron_ext_plugin,setup_dir \
                    --setup rpm
+
 
 The neutron_downstream.yml file can reference the upstream project in case the
 downstream repo is dependant or imports any upstream modules::
