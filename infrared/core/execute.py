@@ -1,3 +1,5 @@
+import os
+import uuid
 import tempfile
 
 import yaml
@@ -19,6 +21,10 @@ def ansible_playbook(inventory, playbook_path, verbose=None,
     """
     ansible_args = ansible_args or []
     LOG.debug("Additional ansible args: {}".format(ansible_args))
+
+    if not os.environ.get('ANSIBLE_SSH_CONTROL_PATH_DIR'):
+        # Put the socket into 'tmp' so it will be cleaned automatically by system.
+        os.environ['ANSIBLE_SSH_CONTROL_PATH_DIR'] = '/tmp/' + str(uuid.uuid1()) + '/cp'
 
     # hack for verbosity
     from ansible.utils.display import Display
