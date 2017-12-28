@@ -1,3 +1,4 @@
+import os
 import sys
 import argcomplete
 
@@ -448,6 +449,8 @@ def main(args=None):
     for plugin in CoreServices.plugins_manager().PLUGINS_DICT.values():
         specs_manager.register_spec(api.InfraredPluginsSpec(plugin))
 
+    if os.environ.get('IR_WORKSPACE'):
+        os.environ['ANSIBLE_SSH_CONTROL_PATH_DIR']='~/.ansible/' + os.environ.get('IR_WORKSPACE', '') + '/cp'
     argcomplete.autocomplete(specs_manager.parser)
     return specs_manager.run_specs(args) or 0
 
