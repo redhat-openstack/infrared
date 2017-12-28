@@ -1,3 +1,5 @@
+import os
+import uuid
 import tempfile
 
 import yaml
@@ -19,6 +21,21 @@ def ansible_playbook(inventory, playbook_path, verbose=None,
     """
     ansible_args = ansible_args or []
     LOG.debug("Additional ansible args: {}".format(ansible_args))
+
+    parallel_run = False
+    if not os.environ.get('ANSIBLE_SSH_CONTROL_PATH'):
+        # Put the socket into temp dir so it will be cleaned automatically by the system.
+        tempdir = tempfile.gettempdir()
+        if os.access(tempdir, os.W_OK):
+            socket_file = tempfile.NamedTemporaryFile(suffix='-ir-cp', dir=tempdir)
+            # Most of systems has a limit on socket name length.
+            # We are checking that our generated socket fits this limit.
+            if len(socket_file.name) < 104:
+                os.environ['ANSIBLE_SSH_CONTROL_PATH'] = socket_file.name
+                parallel_run = True
+
+    if not parallel_run:
+        LOG.warning("Uniq socket control path wasn't created or ANSIBLE_SSH_CONTROL_PATH is already set")
 
     # hack for verbosity
     from ansible.utils.display import Display
