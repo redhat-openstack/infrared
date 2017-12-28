@@ -335,15 +335,6 @@ subparsers:
                         roles should be used for OSP12+ composable deployments. If value is 'no', then the OSP11 approach
                         will be used.
 
-            - title: Overcloud compute
-              options:
-                  compute-ssh:
-                      type: Bool
-                      default: no
-                      help: |
-                          Whether to enable SSH communication between compute nodes.
-                          This is required when a migration needs to work on a non shared storage scenarios.
-
             - title: Overcloud Upgrade
               options:
                   upgrade:
