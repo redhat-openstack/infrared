@@ -1,3 +1,6 @@
+import os
+import uuid
+import shutil
 import tempfile
 
 import yaml
@@ -20,6 +23,10 @@ def ansible_playbook(inventory, playbook_path, verbose=None,
     ansible_args = ansible_args or []
     LOG.debug("Additional ansible args: {}".format(ansible_args))
 
+    if not os.environ.get('ANSIBLE_SSH_CONTROL_PATH_DIR'):
+        temp_cp = str(uuid.uuid1())
+        os.environ['ANSIBLE_SSH_CONTROL_PATH_DIR'] = '~/.ansible/' + temp_cp + '/cp'
+
     # hack for verbosity
     from ansible.utils.display import Display
     display = Display(verbosity=verbose)
@@ -39,6 +46,10 @@ def ansible_playbook(inventory, playbook_path, verbose=None,
 
     results = _run_playbook(cli_args,
                             vars_dict=extra_vars or {})
+
+    if temp_cp:
+        homedir = os.environ['HOME']
+        shutil.rmtree(homedir + '/.ansible/' + temp_cp + '/')
 
     if results:
         LOG.error('Playbook "%s" failed!' % playbook_path)
