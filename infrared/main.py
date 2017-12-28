@@ -1,4 +1,7 @@
+import os
 import sys
+import random
+import string
 import argcomplete
 
 from infrared import api  # noqa
@@ -447,6 +450,12 @@ def main(args=None):
     # register all plugins
     for plugin in CoreServices.plugins_manager().PLUGINS_DICT.values():
         specs_manager.register_spec(api.InfraredPluginsSpec(plugin))
+
+    if not os.environ.get('ANSIBLE_SSH_CONTROL_PATH_DIR'):
+        temp_cp = 'a'
+        while os.path.exists('~/.ansible/' + temp_cp):
+            temp_cp = random.choice(string.letters)
+        os.environ['ANSIBLE_SSH_CONTROL_PATH_DIR']='~/.ansible/' + temp_cp + '/cp'
 
     argcomplete.autocomplete(specs_manager.parser)
     return specs_manager.run_specs(args) or 0
