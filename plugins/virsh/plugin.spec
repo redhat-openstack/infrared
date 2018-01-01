@@ -12,7 +12,9 @@ subparsers:
               options:
                   host-address:
                       type: Value
-                      help: 'Address/FQDN of the BM hypervisor'
+                      help: |
+                          Address/FQDN of the BM hypervisor
+                          Use "localhost" to use the localhost as Hypervisor
                       required: yes
                   host-user:
                       type: Value
@@ -20,8 +22,10 @@ subparsers:
                       default: root
                   host-key:
                       type: Value
-                      help: "User's SSH key"
-                      required: yes
+                      help: |
+                           User's SSH key
+                      default: null
+                      required: true
                   host-validate:
                       type: Bool
                       help: |
