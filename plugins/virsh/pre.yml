@@ -25,7 +25,7 @@
       hypervisor: "{{ provision.host }}"
       hypervisor_name: hypervisor
   tasks:
-    - name: add hosts to host list
+    - name: add hypervisor to host list
       add_host:
           name: "{{ hypervisor.name | default(hypervisor_name) }}"
           groups: "{{ hypervisor.groups|default([hypervisor_name]) | join(',') }}"
@@ -33,3 +33,10 @@
           ansible_ssh_host: "{{ hypervisor.address }}"
           ansible_ssh_private_key_file: "{{ hypervisor.key }}"
           inventory_dir: "{{ inventory_dir }}"
+      when: "{{ (hypervisor.address != 'local') }}"
+
+    - name: make localhost hypervisor
+      add_host:
+          name: localhost
+          groups: "{{ hypervisor.groups|default([hypervisor_name]) | join(',') }}"
+      when: "{{ (hypervisor.address == 'local') }}"
