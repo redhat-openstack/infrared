@@ -17,6 +17,7 @@
             user: "{{ hostvars['hypervisor'].ansible_ssh_user }}"
             key: "{{ uc_pubkey_result.stdout }}"
         delegate_to: hypervisor
+        when: "(hostvars['hypervisor']|default({})).ansible_connection|default('ssh') != 'local'"
 
       - name: insert the public key to the known hosts in hypervisor for stack user
         authorized_key:

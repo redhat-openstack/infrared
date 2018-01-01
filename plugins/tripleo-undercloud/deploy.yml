@@ -76,6 +76,7 @@
         vars:
             auth_file_path: "/home/stack/stackrc"
             cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"
+            hypervisor_connection: "{{ (hostvars['hypervisor']|default({})).ansible_connection|default('ssh') }}"
 
       - name: gathering new facts about the undercloud
         setup:
