@@ -1,6 +1,8 @@
 ---
 config:
     plugin_type: provision
+    dependencies:
+        - source: https://github.com/rhos-infra/infrared-common-libraries.git
 subparsers:
     virsh:
         description: Provision virtual machines on a single Hypervisor using libvirt
@@ -10,7 +12,9 @@ subparsers:
               options:
                   host-address:
                       type: Value
-                      help: 'Address/FQDN of the BM hypervisor'
+                      help: |
+                          Address/FQDN of the BM hypervisor
+                          Use "localhost" to use the localhost as Hypervisor
                       required: yes
                   host-user:
                       type: Value
@@ -18,8 +22,10 @@ subparsers:
                       default: root
                   host-key:
                       type: Value
-                      help: "User's SSH key"
-                      required: yes
+                      help: |
+                           User's SSH key
+                      default: null
+                      required_when: "host-address != localhost"
                   host-validate:
                       type: Bool
                       help: |
@@ -112,16 +118,6 @@ subparsers:
                         NOTE: 'uefi' bootmode is supported only for nodes without OS.
                       choices: ['hd', 'uefi']
                       default: hd
-
-            - title: Disk Bus
-              options:
-                  disk-bus:
-                    type: Value
-                    help: |
-                      Desired bus to use for disks, please refer to: https://wiki.qemu.org/Features/VirtioSCSI
-                      Some of disk busses supports different modes:
-                    choises: ['virtio', 'scsi']
-                    default: 'virtio'
 
             - title: ansible facts
               options:

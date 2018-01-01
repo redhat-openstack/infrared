@@ -38,7 +38,9 @@
               table: filter
               jump: ACCEPT
               destination: "{{ dashboard_address }}"
-        when: "dashboard_address | ipv4"
+        when:
+            - "dashboard_address | ipv4"
+            - "(hostvars['hypervisor']|default({})).ansible_connection|default('ssh') != 'local'"
 
       - name: no ipv6 msg
         vars:
@@ -46,4 +48,6 @@
             dashboard_address: "{{ endpoint_tupple[1] }}"
         debug:
             msg: "Dashboard forwarding not supported for IPv6"
-        when: "not (dashboard_address | ipv4)"
+        when:
+            - "not (dashboard_address | ipv4)"
+            - "(hostvars['hypervisor']|default({})).ansible_connection|default('ssh') != 'local'"

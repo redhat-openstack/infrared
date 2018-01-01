@@ -61,3 +61,5 @@ What **infrared takes care of**:
 
       + for *root* the ``infared/id_rsa.pub`` gets added to authorized_keys
       + for *stack* ``infrared/id_rsa_undercloud.pub`` is added to authorized_keys, created/added later during installation
+
+.. note:: If the target machine is your local machine, configure `localhost` as the **host-address**.
