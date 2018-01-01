@@ -371,17 +371,31 @@ class SpecParser(object):
 
                 # validate conditions
                 for req_when_arg in req_when_args:
-                    req_arg, req_value = req_when_arg.split('==')
-                    req_value = yaml.load(str(req_value))
-                    actual_value = \
-                        args.get(command_name, {}).get(req_arg.strip(), None)
-                    actual_value = yaml.load(str(actual_value))
-                    if actual_value == req_value \
+                    if "==" in req_when_arg:
+                        req_arg, req_value = req_when_arg.split('==')
+                        req_value = yaml.load(str(req_value))
+                        actual_value = \
+                            args.get(command_name, {}).get(req_arg.strip(), None)
+                        actual_value = yaml.load(str(actual_value))
+                        if actual_value == req_value \
                             and self.spec_helper.get_option_state(
                                 command_name,
                                 option_spec['name'],
-                                args) == helper.OptionState['NOT_SET']:
-                        res.append(option_spec['name'])
+                            args) == helper.OptionState['NOT_SET']:
+                            res.append(option_spec['name'])
+
+                    if "!=" in req_when_arg:
+                        req_arg, req_value = req_when_arg.split('!=')
+                        req_value = yaml.load(str(req_value))
+                        actual_value = \
+                            args.get(command_name, {}).get(req_arg.strip(), None)
+                        actual_value = yaml.load(str(actual_value))
+                        if actual_value != req_value \
+                            and self.spec_helper.get_option_state(
+                                command_name,
+                                option_spec['name'],
+                            args) == helper.OptionState['NOT_SET']:
+                            res.append(option_spec['name'])
         return res
 
     def validate_requires_args(self, args):

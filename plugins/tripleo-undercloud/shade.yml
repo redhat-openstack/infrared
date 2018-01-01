@@ -10,6 +10,15 @@
         add_host:
           name: "{{ shade_group|first }}"
           groups: "shade"
+        when: hostvars['hypervisor'].ansible_connection != 'local'
+
+      - name: Adding host to 'shade' group on local hypervisor
+        vars:
+          shade_group: "{{ groups.undercloud }}"
+        add_host:
+          name: "{{ shade_group|first }}"
+          groups: "shade"
+        when: hostvars['hypervisor'].ansible_connection == 'local'
 
       - include_role:
             name: inventory-update
