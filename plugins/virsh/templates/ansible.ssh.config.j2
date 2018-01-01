@@ -7,9 +7,8 @@ Host {{ host }}
     StrictHostKeyChecking no
     UserKnownHostsFile=/dev/null
     ForwardAgent yes
-{% if host != 'hypervisor' %}
+{% if host != 'hypervisor' and provision.host.address != 'localhost' %}
     ProxyCommand ssh -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ hostvars['hypervisor'].ansible_ssh_private_key_file }} {{ provision.host.user }}@{{ provision.host.address }}
 {% endif %}
 {% endif %}
-
 {% endfor %}
