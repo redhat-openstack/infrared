@@ -7,6 +7,8 @@
   register: ctlplane_subnet_cidr
 
 - name: get network list from hypervisor
+  vars:
+      ansible_python_interpreter: "/usr/bin/python"
   delegate_to: hypervisor
   virt_net:
       command: list_nets

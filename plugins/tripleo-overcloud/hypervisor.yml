@@ -17,6 +17,7 @@
             user: "{{ hostvars['hypervisor'].ansible_ssh_user }}"
             key: "{{ uc_pubkey_result.stdout }}"
         delegate_to: hypervisor
+        when: "(hostvars['hypervisor']|default({})).ansible_connection|default('ssh') != 'local'"
 
       - name: insert the public key to the known hosts in hypervisor for stack user
         authorized_key:
@@ -57,6 +58,7 @@
         vars:
             vbmc_nodes: "{{ oc_nodes | difference(bm_nodes_names) }}"
             overcloud_deploy: "no"
+            ansible_python_interpreter: "/usr/bin/python"
         when: install.version|default(undercloud_version) | openstack_release >= 11 or install.vbmc.force
 
       - name: grab undercloud private key
@@ -117,6 +119,7 @@
       - name: power off overcloud nodes
         vars:
             vm_nodes: "{{ oc_nodes | difference(bm_nodes_names) }}"
+            ansible_python_interpreter: "/usr/bin/python"
         virt:
             name: "{{ item }}"
             state: destroyed
