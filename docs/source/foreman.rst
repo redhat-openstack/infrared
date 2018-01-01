@@ -36,6 +36,10 @@ Optional arguments
 
 * ``--roles``: Host roles
 
+* ``--os-id``: Operating system ID to set
+
+* ``--medium-id``: Medium ID to set
+
 .. note:: Please run ``ir foreman --help`` for a full detailed list of all available options.
 
 

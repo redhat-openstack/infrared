@@ -81,6 +81,14 @@ options:
          - Number of seconds we should wait for the host given the 'rebuild' state was set.
      default: 10
      required: false
+   operatingsystem_id:
+     description:
+         - The ID of operating system to set
+     required: false
+   medium_id:
+     description:
+         - The ID of Medium to set
+     required: false
 '''
 
 
@@ -168,13 +176,12 @@ class ForemanManager(object):
         :param host_id: the name or ID of the host we wish to update
         :param update_info: params we wish to update on foreman
         :type update_info: dict
-        :returns: host information
+        :returns: Request's response
         :rtype: dict
         """
         request_url = '{0}/{1}/{2}'.format(self.url, self.default_uri, host_id)
         response = self.session.put(request_url, data=update_info, verify=False)
-        body = response.json()
-        return body.get('host')
+        return response.json()
 
     def set_build_on_host(self, host_id, flag):
         """
@@ -182,10 +189,40 @@ class ForemanManager(object):
         :param host_id: the id or name of the host as it is listed in foreman
         :param flag: a boolean value (true/false) to set the build flag with
         """
-        host = self.update_host(host_id, json.dumps({'build': flag}))
+        self.update_host(host_id, json.dumps({'build': flag}))
         self.get_host(host_id)
         if self.get_host(host_id).get('build') != flag:
             raise Exception("Failed setting build on host {0}".format(host_id))
+
+    def set_host_os(self, host_id, os_id, medium_id):
+        """Sets host's operating system
+
+        :param host_id: Host's FQDN/ID
+        :param os_id: Operating system ID to set
+        :param medium_id: Medium ID to set
+        """
+        os_data = {}
+
+        if os_id:
+            os_data['operatingsystem_id'] = os_id
+        if medium_id:
+            os_data['medium_id'] = medium_id
+
+        # Nothing to update
+        if not os_data:
+            return
+
+        res_body = self.update_host(host_id, json.dumps({'host': os_data}))
+
+        # Validates change
+        if os_id and (res_body.get('operatingsystem_id') != eval(os_id)):
+            raise Exception(
+                "Failed to set 'operatingsystem_id' - Expected '{}' but got '"
+                "{}'.".format(eval(os_id), res_body.get('operatingsystem_id')))
+        if medium_id and (res_body.get('medium_id') != eval(medium_id)):
+            raise Exception(
+                "Failed to set 'medium_id' - Expected '{}' but got '{}'."
+                "".format(eval(medium_id), res_body.get('medium_id')))
 
     def bmc(self, host_id, command):
         """
@@ -233,7 +270,8 @@ class ForemanManager(object):
         return missing_bmc
 
     def provision(self, host_id, mgmt_strategy, mgmt_action, ipmi_address,
-                  ipmi_username, ipmi_password, wait_for_host=10):
+                  ipmi_username, ipmi_password, operatingsystem_id, medium_id,
+                  wait_for_host=10):
         """
         This method rebuilds a machine, doing so by running get_host and bmc.
         :param host_id: the name or ID of the host we wish to rebuild
@@ -246,6 +284,8 @@ class ForemanManager(object):
         :param ipmi_address: remote server address (IPMI)
         :param ipmi_username: remote server username (IPMI)
         :param ipmi_password: remote server password (IPMI)
+        :param operatingsystem_id: Operating system ID
+        :param medium_id: Medium ID
         :raises: KeyError if BMC hasn't been found on the given host
                  Exception in case of machine could not be reached after
                  rebuild
@@ -253,6 +293,7 @@ class ForemanManager(object):
         wait_for_host = int(wait_for_host)
 
         building_host = self.get_host(host_id)
+        self.set_host_os(host_id, operatingsystem_id, medium_id)
         self.set_build_on_host(host_id, True)
         if mgmt_strategy == 'foreman':
             if self._validate_bmc(host_id):
@@ -299,7 +340,9 @@ def main():
             wait_for_host=dict(default=10),
             ipmi_address=dict(default=None),
             ipmi_username=dict(default='ADMIN'),
-            ipmi_password=dict(default='ADMIN')))
+            ipmi_password=dict(default='ADMIN'),
+            operatingsystem_id=dict(default=None),
+            medium_id=dict(default=None)))
 
     foreman_client = ForemanManager(url=module.params['auth_url'],
                                     username=module.params['username'],
@@ -315,7 +358,10 @@ def main():
                                      module.params['ipmi_address'],
                                      module.params['ipmi_username'],
                                      module.params['ipmi_password'],
+                                     module.params['operatingsystem_id'],
+                                     module.params['medium_id'],
                                      module.params['wait_for_host'])
+
         except KeyError as e:
             module.fail_json(msg=e.message)
         else:
