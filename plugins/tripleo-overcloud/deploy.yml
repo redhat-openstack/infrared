@@ -133,6 +133,14 @@
   tags:
       - inventory_update
       - deploy
+  when: when: "{{ hostvars['hypervisor'].ansible_connection == 'local' }}"
+
+- name: Update inventory with overcloud details for localhost
+  import_playbook: update_local_inventory.yml
+  tags:
+      - inventory_update
+      - deploy
+  when: when: "{{ hostvars['hypervisor'].ansible_connection != 'local' }}"
 
 - name: Verify overcloud deployment
   hosts: undercloud
