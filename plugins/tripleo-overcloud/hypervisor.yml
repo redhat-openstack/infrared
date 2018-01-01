@@ -14,16 +14,9 @@
 
       - name: insert the public key to the known hosts in hypervisor
         authorized_key:
-            user: "{{ hostvars['hypervisor'].ansible_ssh_user }}"
+            user: "{{ hostvars['hypervisor'].ansible_ssh_user |default('root') }}"
             key: "{{ uc_pubkey_result.stdout }}"
         delegate_to: hypervisor
-
-      - name: insert the public key to the known hosts in hypervisor for stack user
-        authorized_key:
-            user: stack
-            key: "{{ uc_pubkey_result.stdout }}"
-        delegate_to: hypervisor
-        when: install.version|default(undercloud_version) | openstack_release < 11
 
       - name: Read baremetal nodes got from user input on hybrid deployment
         block:
