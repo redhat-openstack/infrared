@@ -62,6 +62,12 @@ subparsers:
                   host-ipmi-password:
                       type: Value
                       help: "Host IPMI password"
+                  os-id:
+                      type: Value
+                      help: "Operating system ID to set"
+                  medium-id:
+                      type: Value
+                      help: "Medium ID to set"
 
             - title: Host roles
               options:
