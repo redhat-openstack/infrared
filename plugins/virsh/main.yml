@@ -1,4 +1,7 @@
 ---
+- fail:
+     msg: "stop here"
+
 - import_playbook: "{{ provision_cleanup | default('cleanup.yml') }}"
   when: (provision.cleanup|default(False)) or (provision.kill|default(False))
 
