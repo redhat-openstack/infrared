@@ -155,3 +155,12 @@
           dest: "{{ inventory_dir }}/overcloudrc.v3"
           flat: yes
           fail_on_missing: no
+
+    - name: vbmc for overcloud
+      delegate_to: hypervisor
+      include_role:
+          name: vbmc
+      vars:
+          vbmc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
+          overcloud_deploy: "yes"
+      when: vbmc_host == 'hypervisor'
