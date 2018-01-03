@@ -35,6 +35,16 @@
           - version_regex|int
           - version_regex > 0
 
+    - name: Read version from the custom repos
+      set_fact:
+          undercloud_version: "{{ version_regex|int }}"
+      vars:
+          version_regex: "{{ installed_package_data.repo | regex_replace('^rhosp-([0-9]+)', '\\1')}}"
+      when:
+          - undercloud_version is not defined
+          - version_regex|int
+          - version_regex > 0
+
     - set_fact:
           undercloud_version: "{{ version_regex|int }}"
       vars:
