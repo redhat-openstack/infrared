@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c89790c7_937bd0cb",
+        "filename": "infrared/core/execute.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1008329
+      },
+      "writtenOn": "2018-01-03T09:17:09Z",
+      "side": 1,
+      "message": "ANSIBLE_SSH_CONTROL_PATH is the *old* var, you should use ANSIBLE_SSH_CONTROL_PATH_DIR instead, see http://docs.ansible.com/ansible/latest/intro_configuration.html\n\nSo, what you want is to check for _PATH_DIR and to modify both based on the documentation, where you will also find the best value for _PATH one: control_path \u003d %(directory)s/%%h-%%r",
+      "revId": "1a482f8719ede1c1364f5d1af6c0dffb7be814f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3de2e22c_76b2d1f1",
+        "filename": "infrared/core/execute.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1008329
+      },
+      "writtenOn": "2018-01-03T09:17:09Z",
+      "side": 1,
+      "message": "This is wrong because this is forcing ansible to use same socket for all hosts. Read http://docs.ansible.com/ansible/latest/intro_configuration.html#control-path\n\nYou need the _DIR one and let Ansible expand it. Also you need to know the maximum length of Ansible expansion of \"/%%h-%%r\" and substract this from the 104 limit. If I remember well, this is likely to be 40 chars.",
+      "revId": "1a482f8719ede1c1364f5d1af6c0dffb7be814f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36c0551c_a458a22a",
+        "filename": "infrared/core/execute.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1008329
+      },
+      "writtenOn": "2018-01-03T09:17:09Z",
+      "side": 1,
+      "message": "I see no reason to display a warning for this case, if you want to inform user user INFO or DEBUG level, but not warning for this. If this is defined is likely that the user knows his stuff.\n\nI would raise a warning if you are unable to generate a path under 104 chars, as this is clearly a reason for concerns.",
+      "revId": "1a482f8719ede1c1364f5d1af6c0dffb7be814f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
