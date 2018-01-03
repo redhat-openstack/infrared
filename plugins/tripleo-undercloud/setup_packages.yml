@@ -5,6 +5,7 @@
   become: yes
   vars:
       custom_repos: "{{ install.repos|default({}) }}"
+      skip_release: "{{ install.get('repos', {}).get('skip', {}).release|default('')}}"
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
   tags: install
   pre_tasks:
@@ -42,6 +43,7 @@
             - "install.version|openstack_distribution == 'OSP'"
             - not install.cdn|default(False)
             - cdn_status.rc != 0
+            - not skip_release
         tags: rhos-release
 
       - role: rdo-release
@@ -49,7 +51,9 @@
         rr_buildmods: "{{ install.buildmods }}"
         build: "{{ install.build | default(omit) }}"
         mirror: "{{ install.mirror | default(omit) }}"
-        when: install.version|openstack_distribution == 'RDO'
+        when:
+            - install.version|openstack_distribution == 'RDO'
+            - not skip_release
         tags: rhos-release
 
   tasks:
@@ -60,7 +64,7 @@
       - name: Creating extra repositories
         yum_repository:
             name: "{{ item.name }}"
-            state: "{{ item.name | default(omit) }}"
+            state: "{{ item.state | default(omit) }}"
             file: "{{ item.file| default(omit) }}"
             description: "{{ item.description | default(omit) }}"
             baseurl: "{{ item.baseurl | default(omit) }}"
