@@ -2,8 +2,12 @@
 import argparse
 import abc
 import logging
+import sys
 
+import os
 import yaml
+from datetime import datetime
+from logging.handlers import RotatingFileHandler
 
 from infrared import SHARED_GROUPS
 from infrared.core import execute, version
@@ -151,6 +155,47 @@ class InfraredPluginsSpec(SpecObject):
         return result
 
 
+class ExecutionLogger(object):
+    """Logger to log all the ir commands with all the parameters. """
+
+    def __init__(self, log_name="ir-commands", file_name='ir-commands.log'):
+        self.log_name = log_name
+        self.file_name = file_name
+        self.log = None
+
+    def _lazy_init_logger(self):
+        """Initializes the logger. """
+        if self.log is not None:
+            return
+        self.log = logging.getLogger(self.log_name)
+        first_run = os.path.isfile(self.file_name)
+        self.log.addHandler(RotatingFileHandler(
+            self.file_name, maxBytes=5*1024*1024, backupCount=1))
+        self.log.setLevel(logging.INFO)
+
+        if not first_run:
+            self.log.info(
+                "# infrared setup instruction: "
+                "http://infrared.readthedocs.io/en/latest/bootstrap.html"
+                "#setup\n")
+
+            if os.path.isfile('ansible.cfg'):
+                with open('ansible.cfg', 'r') as fd:
+                    self.log.info(
+                        "# create ansible cfg file\n"
+                        "cat << EOF > ansible.cfg\n"
+                        "{}"
+                        "\nEOF\n".format(fd.read()))
+
+    def command(self):
+        """Saves current ir command with arguments to the log. """
+        self._lazy_init_logger()
+        self.log.info("# executed at {}".format(datetime.now()))
+        self.log.info("infrared {}".format(" ".join(sys.argv[1:])).replace(
+            ' -', ' \\\n    -'))
+        self.log.info("")
+
+
 class SpecManager(object):
     """Manages all the available specifications (specs). """
 
@@ -160,8 +205,11 @@ class SpecManager(object):
             description='infrared entry point')
         self.parser.add_argument("--version", action='version',
                                  version=version.version_string())
+        self.parser.add_argument("--no-log-commands", action='store_true',
+                                 help='disables logging of all commands')
         self.root_subparsers = self.parser.add_subparsers(dest="subcommand")
         self.spec_objects = {}
+        self.execution_logger = ExecutionLogger()
 
     def register_spec(self, spec_object):
         spec_object.extend_cli(self.root_subparsers)
@@ -170,6 +218,8 @@ class SpecManager(object):
     def run_specs(self, args=None):
         spec_args = vars(self.parser.parse_args(args))
         subcommand = spec_args.get('subcommand', '')
+        if not spec_args.get('no_log_commands'):
+            self.execution_logger.command()
 
         if subcommand in self.spec_objects:
             return self.spec_objects[subcommand].spec_handler(
