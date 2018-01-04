@@ -3,18 +3,25 @@
       url: " {{ guest_image.url }}"
       dest: "/var/tmp/{{ guest_image.name }}"
 
-- name: remove old m1.nano flavor
+- name: remove old flavors
   shell: |
       source ~/overcloudrc
-      openstack flavor delete m1.nano
+      openstack flavor delete {{ item }}
   tags: skip_ansible_lint
+  with_items:
+      - m1.nano
+      - m1.small
   ignore_errors: true
 
 - name: create the m1.nano flavor
   shell: |
       source ~/overcloudrc
-      openstack flavor create --id 42 --ram 64 --vcpus 1 m1.nano
-  tags: skip_ansible_lint
+      openstack flavor create --id {{ item.id }} \
+          --ram {{ item.ram }} \
+          --vcpus {{ item.vcpus }} {{ item name }}
+  with_items:
+      - { id: 42, ram: 64, vcpus: 1, name: 'm1.nano' }
+      - { id: 43, ram: 512, vcpus: 1, name: 'm1.small' }
 
 - name: list all current images
   shell: |

@@ -15,45 +15,6 @@ Authenticate.validate_nova:
       failure_rate:
         max: 0
 
-EC2Servers.boot_server:
-  -
-    args:
-      flavor:
-        name: "m1.nano"
-      image:
-        name: "{{ guest_image.name }}"
-    runner:
-      type: "constant"
-      times: 2
-      concurrency: 2
-    context:
-      users:
-        tenants: 3
-        users_per_tenant: 1
-    sla:
-      failure_rate:
-        max: 0
-
-EC2Servers.list_servers:
-  -
-    runner:
-      type: "constant"
-      times: 3
-      concurrency: 3
-    context:
-      users:
-        tenants: 3
-        users_per_tenant: 1
-      ec2_servers:
-        flavor:
-          name: "m1.nano"
-        image:
-          name: "{{ guest_image.name }}"
-        servers_per_tenant: 2
-    sla:
-      failure_rate:
-        max: 0
-
 Quotas.nova_update_and_delete:
   -
     args:
@@ -101,6 +62,7 @@ NovaServers.boot_and_delete_server:
       users:
         tenants: 3
         users_per_tenant: 2
+      network: {}
     sla:
       failure_rate:
         max: 0
@@ -483,94 +445,6 @@ NovaImages.list_images:
       failure_rate:
         max: 0
 
-NovaSecGroup.create_and_delete_secgroups:
-  -
-    args:
-      security_group_count: 5
-      rules_per_security_group: 5
-    runner:
-      type: "constant"
-      times: 4
-      concurrency: 4
-    context:
-      users:
-        tenants: 3
-        users_per_tenant: 2
-      quotas:
-        nova:
-          security_groups: -1
-          security_group_rules: -1
-    sla:
-      failure_rate:
-        max: 0
-
-NovaSecGroup.create_and_update_secgroups:
-  -
-    args:
-      security_group_count: 5
-    runner:
-      type: "constant"
-      times: 4
-      concurrency: 4
-    context:
-      users:
-        tenants: 3
-        users_per_tenant: 2
-      quotas:
-        nova:
-          security_groups: -1
-    sla:
-      failure_rate:
-        max: 0
-
-NovaSecGroup.create_and_list_secgroups:
-  -
-    args:
-      security_group_count: 5
-      rules_per_security_group: 5
-    runner:
-      type: "constant"
-      times: 4
-      concurrency: 4
-    context:
-      users:
-        tenants: 3
-        users_per_tenant: 2
-      quotas:
-        nova:
-          security_groups: -1
-          security_group_rules: -1
-    sla:
-      failure_rate:
-        max: 0
-
-NovaSecGroup.boot_and_delete_server_with_secgroups:
-  -
-    args:
-      flavor:
-        name: "m1.nano"
-      image:
-        name: "{{ guest_image.name }}"
-      security_group_count: 5
-      rules_per_security_group: 5
-    runner:
-      type: "constant"
-      times: 2
-      concurrency: 2
-    context:
-      users:
-        tenants: 3
-        users_per_tenant: 2
-      network:
-        start_cidr: "10.2.0.0/24"
-      quotas:
-        nova:
-          security_groups: -1
-          security_group_rules: -1
-    sla:
-      failure_rate:
-        max: 0
-
 NovaKeypair.create_and_delete_keypair:
   -
     runner:
@@ -680,38 +554,6 @@ NovaServers.boot_and_delete_multiple_servers:
       failure_rate:
         max: 0
 
-NovaFloatingIpsBulk.create_and_list_floating_ips_bulk:
-  -
-    args:
-      start_cidr: "10.2.0.0/27"
-    runner:
-      type: "constant"
-      times: 4
-      concurrency: 2
-    context:
-      users:
-        tenants: 2
-        users_per_tenant: 2
-    sla:
-      failure_rate:
-        max: 0
-
-NovaFloatingIpsBulk.create_and_delete_floating_ips_bulk:
-  -
-    args:
-      start_cidr: "10.2.0.0/27"
-    runner:
-      type: "constant"
-      times: 4
-      concurrency: 2
-    context:
-      users:
-        tenants: 2
-        users_per_tenant: 2
-    sla:
-      failure_rate:
-        max: 0
-
 VMTasks.boot_runcommand_delete:
   -
     args:
@@ -719,7 +561,7 @@ VMTasks.boot_runcommand_delete:
         name: "m1.nano"
       image:
         name: "{{ guest_image.name }}"
-      floating_network: "public"
+      floating_network: "{{ floating_network|default('nova') }}"
       use_floatingip: true
       command:
         script_inline: |
@@ -744,22 +586,21 @@ VMTasks.boot_runcommand_delete:
       users:
         tenants: 1
         users_per_tenant: 1
+      network: {}
     sla:
       failure_rate:
         max: 0
 
+VMTasks.dd_load_test:
   -
     args:
       flavor:
-        name: "m1.nano"
+          name: "m1.nano"
       image:
-        name: "{{ guest_image.name }}"
-      volume_args:
-          size: 2
-      use_floatingip: true
-      command:
-        script_file: "{{ rally.dir }}/samples/tasks/support/instance_test.sh"
-        interpreter: "/bin/sh"
+          name: "{{ guest_image.name }}"
+      floating_network: "{{ floating_network|default('nova') }}"
+      force_delete: false
+      interpreter: "/bin/sh"
       username: "cirros"
     runner:
       type: "constant"
@@ -769,29 +610,7 @@ VMTasks.boot_runcommand_delete:
       users:
         tenants: 1
         users_per_tenant: 1
-    sla:
-      failure_rate:
-        max: 0
-
-  -
-    args:
-      flavor:
-        name: "m1.nano"
-      image:
-        name: "{{ guest_image.name }}"
-      use_floatingip: false
-      command:
-        script_file: "{{ rally.dir }}/samples/tasks/support/instance_test.sh"
-        interpreter: "/bin/sh"
-      username: "cirros"
-    runner:
-      type: "constant"
-      times: 2
-      concurrency: 2
-    context:
-      users:
-        tenants: 1
-        users_per_tenant: 1
+      network: {}
     sla:
       failure_rate:
         max: 0
