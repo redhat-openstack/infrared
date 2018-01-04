@@ -2,8 +2,11 @@
 import argparse
 import abc
 import logging
+import sys
 
+import os
 import yaml
+from datetime import datetime
 
 from infrared import SHARED_GROUPS
 from infrared.core import execute, version
@@ -151,6 +154,28 @@ class InfraredPluginsSpec(SpecObject):
         return result
 
 
+class ExecutionLogger(object):
+    """ Logger to log all the ir commands with all the parameters. """
+
+    def __init__(self, log_name="ir-execution", file_name='ir-execution.log'):
+        log = logging.getLogger(log_name)
+        first_run = os.path.isfile(file_name)
+        log.addHandler(logging.FileHandler(file_name))
+        log.setLevel(logging.INFO)
+        self.log = log
+        if not first_run:
+            self.log.info(
+                "# infrared setup instruction: "
+                "http://infrared.readthedocs.io/en/latest/bootstrap.html#setup\n")
+
+    def command(self):
+        """ Saves current ir command wit argument to the log. """
+        self.log.info("# executed at {}".format(datetime.now()))
+        self.log.info("infrared {}".format(" ".join(sys.argv[1:])).replace(
+            ' -', ' \\\n    -'))
+        self.log.info("")
+
+
 class SpecManager(object):
     """Manages all the available specifications (specs). """
 
@@ -162,14 +187,17 @@ class SpecManager(object):
                                  version=version.version_string())
         self.root_subparsers = self.parser.add_subparsers(dest="subcommand")
         self.spec_objects = {}
+        self.execution_logger = ExecutionLogger()
 
     def register_spec(self, spec_object):
         spec_object.extend_cli(self.root_subparsers)
         self.spec_objects[spec_object.get_name()] = spec_object
 
     def run_specs(self, args=None):
+
         spec_args = vars(self.parser.parse_args(args))
         subcommand = spec_args.get('subcommand', '')
+        self.execution_logger.command()
 
         if subcommand in self.spec_objects:
             return self.spec_objects[subcommand].spec_handler(
