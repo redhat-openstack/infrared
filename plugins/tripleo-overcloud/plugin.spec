@@ -209,6 +209,12 @@ subparsers:
                       help: Overrides the overcloud stack name
                       default: "overcloud"
 
+                  tls-everywhere:
+                      type: Bool
+                      help: |
+                          Specifies whether TLS Everywhere with FreeIPA should be implemented
+                      default: no
+
             - title: Network Configuration
               options:
                   network-backend:

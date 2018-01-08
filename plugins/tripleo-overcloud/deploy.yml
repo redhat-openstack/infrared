@@ -43,6 +43,17 @@
       - deploy_preparation
       - templates
 
+- name: Prepare TLS Everywhere
+  import_playbook: tls_everywhere.yml
+  tags:
+      - deploy_preparation
+      - templates
+      - freeipa
+  when:
+      - install.tls.everywhere|default(False)
+      - install.version|default(undercloud_version)|openstack_release >= 12
+      - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
+
 - name: Deploy the Overcloud
   hosts: undercloud
   gather_facts: yes

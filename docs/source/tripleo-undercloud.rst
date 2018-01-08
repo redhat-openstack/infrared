@@ -220,3 +220,9 @@ Example for update of Undercloud and Images::
         infrared tripleo-undercloud -v --update-undercloud yes --images-task rpm
 
 .. warning:: Infrared support update for RHOSP from version 8.
+
+TLS Everywhere
+______________
+Setup TLS Everywhere with FreeIPA.
+
+``tls-everywhere``: It will install FreeIPA on first node from freeipa group and it will configure undercloud for TLS Everywhere.
