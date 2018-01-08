@@ -35,11 +35,15 @@ class WorkspaceManagerSpec(api.SpecObject):
         # checkout
         checkout_parser = workspace_subparsers.add_parser(
             'checkout',
-            help='Creates a workspace if it is not presents and '
-                 'switches to it')
+            help='Switches workspace to the specified workspace')
         checkout_parser.add_argument(
             "name",
             help="Workspace name").completer = completers.workspace_list
+        checkout_parser.add_argument(
+            "-c", "--create", action='store_true', default=True,
+            dest="checkout_create",
+            help="Creates a workspace if not exists and "
+                 "switches to it")
 
         # inventory
         inventory_parser = workspace_subparsers.add_parser(
@@ -125,7 +129,7 @@ class WorkspaceManagerSpec(api.SpecObject):
         if subcommand == 'create':
             self._create_workspace(pargs.name)
         elif subcommand == 'checkout':
-            self._checkout_workspace(pargs.name)
+            self._checkout_workspace(pargs.name, pargs.checkout_create)
         elif subcommand == 'inventory':
             self._fetch_inventory(pargs.name)
         elif subcommand == 'list':
@@ -163,18 +167,29 @@ class WorkspaceManagerSpec(api.SpecObject):
             print fancy_table(
                 ("Name", "Nodes"), *[group_name for group_name in groups])
 
-    # deprecated method
     def _create_workspace(self, name):
-        """Creates a workspace """
+        """ Creates a workspace
 
-        self._checkout_workspace(name)
+        :param name: Name of the workspace to create
+        """
+        LOG.warning("Deprecated: create will only create the workspace "
+                    "and will no longer switch to it.")
+        self._checkout_workspace(name, True)
 
-    def _checkout_workspace(self, name):
-        """Checkouts (create+activate) a workspace """
+    def _checkout_workspace(self, name, create=False):
+        """Checkouts (activate) a workspace
 
-        if not self.workspace_manager.has_workspace(name):
+        :param name: The name of the workspace to checkout
+        :param create: if set to true will create a new workspace
+        before checking out to it
+        """
+        # backward compatible, change later
+        if create and not self.workspace_manager.has_workspace(name):
+            LOG.warning("Deprecated: checkout will not be creating "
+                        "workspace unless -c or --create is also specified.")
             self.workspace_manager.create(name)
             print("Workspace '{}' added".format(name))
+
         self.workspace_manager.activate(name)
         print("Now using workspace: '{}'".format(name))
 
