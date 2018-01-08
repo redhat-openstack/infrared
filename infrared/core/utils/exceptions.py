@@ -107,10 +107,10 @@ class IRWorkspaceIsActive(IRException):
 class IRNoActiveWorkspaceFound(IRException):
     def __init__(self):
         message = "There is no active workspace found. " \
-                  "You can create and activate workspace by" \
+                  "You can create and checkout workspace by" \
                   " running the following commands: " \
                   "\n infrared workspace create <workspace_name>" \
-                  "\n infrared workspace activate <workspace_name>"
+                  "\n infrared workspace checkout <workspace_name>"
         super(IRNoActiveWorkspaceFound, self).__init__(message)
 
 
