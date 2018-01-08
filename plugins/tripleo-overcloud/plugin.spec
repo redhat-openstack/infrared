@@ -201,6 +201,12 @@ subparsers:
                       help: Overrides the templates base dir for the overcloud deploy script.
                       default: "/usr/share/openstack-tripleo-heat-templates"
 
+                  tls-everywhere:
+                      type: Bool
+                      help: |
+                          Specifies whether TLS Everywhere with FreeIPA should be implemented
+                      default: no
+
             - title: Network Configuration
               options:
                   network-backend:
