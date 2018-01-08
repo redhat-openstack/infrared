@@ -57,6 +57,13 @@
       state: absent
   with_items: "{{ vm_names.list_vms }}"
 
+- name: Removing previous Overcloud Entries
+  become: true
+  blockinfile:
+      path: /etc/hosts
+      marker: "### {mark} Overcloud Entries"
+      state: absent
+
 # ignoring errors in the known-hosts tasks
 # because this module validates known_hosts files
 # and we cannot ensure that this file is always
