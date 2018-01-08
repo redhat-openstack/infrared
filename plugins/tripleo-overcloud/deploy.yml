@@ -43,6 +43,17 @@
       - deploy_preparation
       - templates
 
+- name: Prepare TLS Everywhere
+  import_playbook: tls_everywhere.yml
+  tags:
+      - deploy_preparation
+      - templates
+      - freeipa
+  when:
+      - install.tls.everywhere|default(False)
+      - install.version|default(undercloud_version)|openstack_release >= 12
+      - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
+
 - name: Deploy the Overcloud
   hosts: undercloud
   gather_facts: yes
@@ -70,6 +81,16 @@
             bash {{ overcloud_deploy_script }} &> overcloud_install.log
         register: overcloud_deploy
         ignore_errors: yes
+
+      - include_role:
+            name: tls-everywhere
+        vars:
+            stages:
+                - post_overcloud
+        when:
+            - install.tls.everywhere|default(False)
+            - install.version|default(undercloud_version)|openstack_release >= 12
+            - overcloud_deploy.rc == 0
 
       - name: Print the last few lines of the output to spot failures
         command: tail -n60 overcloud_install.log

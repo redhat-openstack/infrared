@@ -70,6 +70,12 @@ subparsers:
                           A self-signed SSL cert will be generated.
                       default: no
 
+                  tls-everywhere:
+                      type: Bool
+                      help: |
+                          Specifies whether TLS Everywhere with FreeIPA should be implemented
+                      default: no
+
             - title: Setup Undercloud Packages
               options:
                   mirror:
