@@ -202,13 +202,12 @@ class WorkspaceManagerSpec(api.SpecObject):
                 ("Name", "Nodes"), *[group_name for group_name in groups])
 
     def _create_workspace(self, name):
-        """ Creates a workspace
+        """Creates a workspace
 
         :param name: Name of the workspace to create
         """
-        LOG.warning("Deprecated: create will only create the workspace "
-                    "and will no longer switch to it.")
-        self._checkout_workspace(name, create=True)
+        self.workspace_manager.create(name)
+        print("Workspace '{}' added".format(name))
 
     def _checkout_workspace(self, name, create=False):
         """Checkouts (activate) a workspace
@@ -217,18 +216,8 @@ class WorkspaceManagerSpec(api.SpecObject):
         :param create: if set to true will create a new workspace
         before checking out to it
         """
-        if create and self.workspace_manager.has_workspace(name):
-            raise exceptions.IRWorkspaceExists(workspace=name)
-
-        # backward compatible, change later
-        if not self.workspace_manager.has_workspace(name):
-            if not create:
-                LOG.warning("Deprecated: checkout will not be creating "
-                            "workspace unless -c or --create "
-                            "is also specified.")
-            self.workspace_manager.create(name)
-            print("Workspace '{}' added".format(name))
-
+        if create:
+            self._create_workspace(name)
         self.workspace_manager.activate(name)
         print("Now using workspace: '{}'".format(name))
 
