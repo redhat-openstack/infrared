@@ -7,17 +7,28 @@
   # avoid empty strings
   when: "templates_list_file != ''"
 
+# versions and registry addresses is job metadata we want to collect in json file
+# when 'collect-ansible-facts' role is called hence using set_facts instead of vars
+- name: set required facts for "container image prepare"
+  set_fact:
+      container_image:
+          openstack_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
+          basereg_relative: "{{ install.get('registry', {}).namespace|default(False)|ternary(install.get('registry', {}).namespace, ''.join(container_env['container-image-prepare']['namespace'].split('/')[1:])) }}"
+          cephreg_relative: "{{''.join(container_env['container-image-prepare']['ceph-namespace'].split('/')[1:]) }}"
+          mirror_reg: "{{ install.get('registry', {}).mirror|default('') }}"
+  tags: container-images-packages
+
+- name: set required facts for "container image prepare" - part two
+  set_fact:
+      container_image_external:
+          reg_namespace: "{{ container_image['mirror_reg'] | ternary(container_image['mirror_reg'] + '/' + container_image['basereg_relative'], container_env['container-image-prepare']['namespace']) }}"
+          ceph_namespace: "{{ container_image['mirror_reg'] | ternary(container_image['mirror_reg'] + '/' + container_image['cephreg_relative'], container_env['container-image-prepare']['ceph-namespace']) }}"
+  tags: container-images-packages
+
 - name: Create {{ containers_images_template_dest_file }} to upload to local registry
-  vars:
-      os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
-      basereg_relative: "{{ install.get('registry', {}).namespace|default(False)|ternary(install.get('registry', {}).namespace, ''.join(container_env['container-image-prepare']['namespace'].split('/')[1:])) }}"
-      cephreg_relative: "{{''.join(container_env['container-image-prepare']['ceph-namespace'].split('/')[1:]) }}"
-      mirror_reg: "{{ install.get('registry', {}).mirror|default('') }}"
-      external_reg_namespace: "{{ mirror_reg | ternary(mirror_reg + '/' + basereg_relative, container_env['container-image-prepare']['namespace']) }}"
-      external_ceph_namespace: "{{ mirror_reg | ternary(mirror_reg + '/' + cephreg_relative, container_env['container-image-prepare']['ceph-namespace']) }}"
   command: >
     openstack overcloud container image prepare \
-        --namespace {{ external_reg_namespace }} \
+        --namespace {{ container_image_external['reg_namespace'] }} \
         --tag {{ container_env['container-image-prepare']['tag'] }} \
         --prefix  {{ container_env['container-image-prepare']['prefix'] }} \
         --set ceph_namespace={{ container_env['container-image-prepare']['ceph-namespace'] }} \
@@ -27,11 +38,9 @@
         {{ extra_service_environment|default('') }}
 
 - name: get docker registry name
-  vars:
-      mirror_reg: "{{ install.get('registry', {}).mirror|default('') }}"
-      external_reg: "{{ mirror_reg | ternary(mirror_reg, container_env['container-image-prepare']['namespace'].split('/')[0]) }}"
   set_fact:
-      docker_insecure_registry: "{{ external_reg }}"
+      docker_insecure_registry: "{{ container_image_external['reg_namespace'].split('/')[0] }}"
+  tags: container-images-packages
 
 - name: replace IP with hostname in /etc/sysconfig/docker
   replace:
@@ -69,14 +78,7 @@
   when: not install.registry.undercloud.skip
   tags: skip_ansible_lint
 
-- name: tag the original image(s) with 'before_packages_install' and install rpms&push new ones
-  shell: |
-      docker tag {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} \
-      {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }}-before_packages_install
-      echo "FROM {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }}
-      RUN yum localinstall {{ item.value.split(",") | join(" ") }} -y -v" | docker build -t {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} -
-      docker push {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }}
+- name: install packages in container images
+  include_tasks: container_images_packages.yml
   when: install_container_images_packages is defined
-  with_dict: "{{ install_container_images_packages }}"
-  become: true
   tags: container-images-packages

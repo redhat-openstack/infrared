@@ -17,6 +17,19 @@
       - install.registry.undercloud.skip
   tags: container-images-patch
 
+- name: set facts for container images packages install
+  set_fact:
+      install_container_images_packages: "{{ install.get('container', {}).get('images', {}).get('packages', {}) }}"
+  when: install.get('container', {}).get('images', {}).get('packages', {})
+  tags: container-images-packages
+
+- fail:
+      msg: "installing packages in container images is not supported when 'registry-undercloud-skip' is set to True"
+  when:
+      - install_container_images_packages is defined
+      - install.registry.undercloud.skip
+  tags: container-images-packages
+
 - name: reboot the undercloud
   shell: "sleep 2 && shutdown -r now"
   become: yes
@@ -67,12 +80,16 @@
   shell: |
       cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '.*(?=\/.*\/\$basearch)'
   register: containers_puddle_base_url
-  tags: container-images-patch
+  tags:
+      - container-images-packages
+      - container-images-patch
 
 - name: get puddle number
   command: "/usr/bin/puddle-version {{ containers_puddle_base_url.stdout }}"
   register: containers_puddle_number
-  tags: container-images-patch
+  tags:
+      - container-images-packages
+      - container-images-patch
 
 - name: puddle to be used
   debug:
@@ -93,12 +110,6 @@
       - container-images-packages
       - container-images-patch
 
-- name: set facts for container images install packages
-  set_fact:
-      install_container_images_packages: "{{ install.get('container', {}).get('images', {}).get('packages', {}) }}"
-  when: install.get('container', {}).get('images', {}).get('packages', {})
-  tags: container-images-packages
-
 - name: modify puddle number url
   shell: >
       echo '{{ containers_puddle_base_url.stdout }}' | sed 's/{{ containers_puddle_number.stdout }}/{{ install.build|default("latest") }}/'
@@ -106,13 +117,17 @@
   when:
       - install.ocupdate|default(False)
       - install.build is defined and install.build != 'None'
-  tags: container-images-patch
+  tags:
+      - container-images-packages
+      - container-images-patch
 
 - name: adjust containers_puddle_base_url
   set_fact:
       containers_puddle_base_url: "{{ modified_url }}"
   when: modified_url|changed
-  tags: container-images-patch
+  tags:
+      - container-images-patch
+      - container-images-packages
 
 - name: Downloading overcloud container images environment file
   get_url:
@@ -120,10 +135,14 @@
       dest: "{{ containers_images_env_template_dest_file }}"
       force: true
   delegate_to: localhost
-  tags: container-images-patch
+  tags:
+      - container-images-patch
+      - container-images-packages
 
 - name: Load variables from container environment file
   include_vars:
       file: "{{ containers_images_env_template_dest_file }}"
       name: container_env
-  tags: container-images-patch
+  tags:
+      - container-images-patch
+      - container-images-packages
