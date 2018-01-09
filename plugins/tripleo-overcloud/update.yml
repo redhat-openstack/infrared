@@ -2,21 +2,14 @@
   hosts: undercloud:overcloud_nodes:!unused
   gather_facts: yes
   any_errors_fatal: true
-  tags: update_collect_info
-  tasks:
-      - name: Get Undercloud version
-        become: true
-        find:
-            use_regex: yes
-            patterns: 'rhos-release-[0-9]+.*'
-            paths:
-              - '/etc/yum.repos.d/'
-        register: result
-        when: "'undercloud' in group_names"
-
-      - name: Setting undercloud_version
-        set_fact:
-            undercloud_version: "{{ hostvars[groups['undercloud'][0]]['result'].files[0]['path'] | basename | regex_replace('^rhos-release-([0-9]+).*$', '\\1') }}"
+  vars:
+      discovery_types:
+          - rhos_release_file
+          - nova
+  tags:
+      - upgrade_collect_info
+  roles:
+      - version-discovery
 
 - name: Undercloud Validation
   hosts: undercloud
