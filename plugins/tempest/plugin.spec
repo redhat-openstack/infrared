@@ -93,6 +93,7 @@ subparsers:
                       type: Value
                       help: |
                           Adds an extra black (skip) regex to the ostestr/tempest invocation.
+                          To add multiple tests seperate by pipe.
                   revision:
                       type: Value
                       help: The setup (git) revision if applicable
