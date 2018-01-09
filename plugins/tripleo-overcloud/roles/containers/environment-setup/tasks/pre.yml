@@ -97,8 +97,14 @@
     - container-images-patch
     - container-images-packages
 
-- name: set facts for container images install packages
+- name: set facts for container images packages install
   set_fact:
       install_container_images_packages: "{{ install.get('container', {}).get('images', {}).get('packages', {}) }}"
   when: install.get('container', {}).get('images', {}).get('packages', {})
   tags: container-images-packages
+
+- fail:
+      msg: "installing packages in container images is not supported when 'registry-undercloud-skip' is set to True"
+  when:
+      - install_container_images_packages is defined
+      - install.registry.undercloud.skip
