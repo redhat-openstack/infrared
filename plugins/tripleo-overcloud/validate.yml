@@ -20,3 +20,9 @@
             - not (install.storage|default({})).backend|default(False)
             - "'swift' in groups"
             - "'ceph' in groups"
+
+      - name: Verify storage-config is provided
+        fail:
+            msg: "The --storage-config file should be provided for storage backend if --storage-external used. "
+        when:
+            - (install.storage.external and install.storage.config != 'internal')
