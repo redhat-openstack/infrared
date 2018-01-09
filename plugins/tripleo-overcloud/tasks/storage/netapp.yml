@@ -1,5 +1,11 @@
 # We currently only support external netapp
 - block:
+      - name: Verify storage-config has been provided
+        fail:
+            msg: "The --storage-config file is not provided for netapp backend"
+        when:
+            install.storage.config == 'internal'
+
       - name: Copy storage configuration file to the remote
         copy:
             src: "vars/storage/config/{{ install.storage.config }}.yml"
