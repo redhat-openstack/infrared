@@ -8,11 +8,12 @@
       - name: Include virtual environment vars
         include_vars: "vars/venv.yml"
 
-      - name: Prepare tempest files
-        include_tasks: "tasks/discover_overcloud_version.yml"
-        tags:
-            - discover_overcloud
-        when: test.openstack.version is not defined
+      - include_role:
+            name: version-discovery
+        vars:
+            discovery_types:
+                - rhos_release_file
+                - nova
         delegate_to: "{{ groups.controller[0] }}"
 
       - debug:
