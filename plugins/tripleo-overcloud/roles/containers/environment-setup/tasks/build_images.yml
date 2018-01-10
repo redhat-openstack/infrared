@@ -95,11 +95,6 @@
   tags:
       - skip_ansible_lint
 
-- name: patch and push container images
-  include_tasks: patch_images.yml
-  when: install_container_images_patch is defined
-  tags: container-images-patch
-
 - name: tag the original image(s) with 'before_packages_install' and install rpms&push new ones
   shell: |
       docker tag {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} \
@@ -111,6 +106,3 @@
   with_dict: "{{ install_container_images_packages }}"
   become: true
   tags: container-images-packages
-
-- name: Output from uploading images
-  debug: var=image_upload
