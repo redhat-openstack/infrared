@@ -1,0 +1,36 @@
+---
+controller_role:
+    name: Controller
+    primary_role: yes
+
+    resource_registry:
+        "OS::TripleO::Controller::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/controller${ipv6_postfix}.yaml"
+
+    flavor: controller
+    host_name_format: 'controller-%index%'
+
+    services:
+      - OS::TripleO::Services::CACerts
+      - OS::TripleO::Services::CephClient
+      - OS::TripleO::Services::CinderBackup
+      - OS::TripleO::Services::CinderVolume
+      - "{% if install.version |int < 11 %}OS::TripleO::Services::Core{% endif %}"
+      - OS::TripleO::Services::Kernel
+      - OS::TripleO::Services::MySQL
+      - OS::TripleO::Services::MongoDb
+      - OS::TripleO::Services::RabbitMQ
+      - OS::TripleO::Services::HAproxy
+      - OS::TripleO::Services::Keepalived
+      - OS::TripleO::Services::Memcached
+      - OS::TripleO::Services::Pacemaker
+      - OS::TripleO::Services::Redis
+      - OS::TripleO::Services::Ntp
+      - OS::TripleO::Services::Snmp
+      - OS::TripleO::Services::Timezone
+      - OS::TripleO::Services::ManilaShare
+      - OS::TripleO::Services::TripleoPackages
+      - OS::TripleO::Services::TripleoFirewall
+      - OS::TripleO::Services::SensuClient
+      - OS::TripleO::Services::FluentdClient
+      - "{% if install.version |int < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+      - "{% if install.version |int > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
