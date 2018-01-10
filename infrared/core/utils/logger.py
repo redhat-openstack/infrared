@@ -1,3 +1,4 @@
+import os
 import logging
 import sys
 import traceback
@@ -18,7 +19,9 @@ logger_formatter = colorlog.ColoredFormatter(
 )
 
 LOGGER_NAME = "IRLogger"
-DEFAULT_LOG_LEVEL = logging.WARNING
+DEFAULT_LOG_LEVEL = logging.WARN
+if os.environ.get('IR_DEBUG'):
+    DEFAULT_LOG_LEVEL = logging.DEBUG
 
 LOG = logging.getLogger(LOGGER_NAME)
 LOG.setLevel(DEFAULT_LOG_LEVEL)

@@ -15,6 +15,8 @@
            ipmi_address: "{{ (provision.host.ipmi|default({})).address | default(omit) }}"
            ipmi_username: "{{ (provision.host.ipmi|default({})).username | default(omit) }}"
            ipmi_password: "{{ (provision.host.ipmi|default({})).password | default(omit) }}"
+           operatingsystem_id: "{{ (provision.os | default({})).id | default(omit) }}"
+           medium_id: "{{ (provision.medium | default({})).id | default(omit) }}"
       register: created_nodes
 
     - name: wait for ssh
