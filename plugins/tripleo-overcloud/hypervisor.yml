@@ -29,6 +29,7 @@
             name: vbmc
         vars:
             vbmc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
+            overcloud_deploy: "no"
         when: install.version|default(undercloud_version) | openstack_release >= 11 or install.vbmc.force
 
       - name: grab undercloud private key
