@@ -163,4 +163,7 @@
       vars:
           vbmc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
           overcloud_deploy: "yes"
-      when: vbmc_host == 'hypervisor'
+      when:
+          - install.version|default(undercloud_version) | openstack_release >= 11 or install.vbmc.force
+          - "'hypervisor' in groups"
+          - vbmc_host == 'hypervisor'
