@@ -204,6 +204,11 @@ subparsers:
                       help: Overrides the templates base dir for the overcloud deploy script.
                       default: "/usr/share/openstack-tripleo-heat-templates"
 
+                  overcloud-stack:
+                      type: Value
+                      help: Overrides the overcloud stack name
+                      default: "overcloud"
+
             - title: Network Configuration
               options:
                   network-backend:
