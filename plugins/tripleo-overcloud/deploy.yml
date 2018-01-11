@@ -48,7 +48,7 @@
   gather_facts: yes
   any_errors_fatal: true
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/overcloudrc"
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
   tags:
       - deploy
   tasks:
@@ -118,7 +118,7 @@
   gather_facts: no
   any_errors_fatal: true
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/overcloudrc"
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
   tags:
       - deploy
   tasks:
@@ -151,8 +151,8 @@
       tags:
           - fetch_rc_file
       fetch:
-          src: "{{ ansible_user_dir }}/overcloudrc.v3"
-          dest: "{{ inventory_dir }}/overcloudrc.v3"
+          src: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3"
+          dest: "{{ inventory_dir }}/{{ install.overcloud.stack }}rc.v3"
           flat: yes
           fail_on_missing: no
 
