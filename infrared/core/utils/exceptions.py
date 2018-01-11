@@ -199,3 +199,10 @@ class IRPluginExistsException(IRException):
 class IRFailedToAddPluginDependency(IRException):
     def __init__(self, reason_str):
         super(self.__class__, self).__init__(reason_str)
+
+
+class IRExtraVarsException(IRException):
+    def __init__(self, extra_var):
+        super(self.__class__, self).__init__(
+            '"%s" - extra-var argument must be in the "key=value" '
+            'form' % extra_var)

@@ -1,7 +1,8 @@
 import pytest
 
 from infrared import api
-from infrared.core.utils.exceptions import IRRequiredArgsMissingException
+from infrared.core.utils.exceptions import IRRequiredArgsMissingException, \
+    IRExtraVarsException
 from tests.test_execute import spec_fixture  # noqa
 from tests.test_workspace import workspace_manager_fixture, test_workspace  # noqa
 
@@ -39,3 +40,15 @@ def test_required_when(spec_fixture, workspace_manager_fixture, test_workspace,
     else:
         with pytest.raises(IRRequiredArgsMissingException):
             spec_manager.run_specs(args=['example'] + cli_args.split())
+
+
+def test_extra_vars(spec_fixture, workspace_manager_fixture, test_workspace):
+    """ Verify the --extra-vars parameter is validated"""
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
+
+    workspace_manager_fixture.activate(test_workspace.name)
+    assert spec_manager.run_specs(args=['example', '-e', 'key=value']) == 0
+
+    with pytest.raises(IRExtraVarsException):
+        spec_manager.run_specs(args=['example', '-e', 'key'])
