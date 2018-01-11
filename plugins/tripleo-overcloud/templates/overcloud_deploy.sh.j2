@@ -2,6 +2,7 @@
 
 timeout 100m openstack overcloud deploy \
 --templates {{ install.heat.templates.basedir }} \
+--stack {{ install.overcloud.stack }} \
 --libvirt-type kvm \
 --ntp-server {{ install.ntp.server }} \
 {% if install.version|default(undercloud_version)|openstack_release < 11 %}
