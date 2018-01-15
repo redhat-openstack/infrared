@@ -130,6 +130,10 @@ subparsers:
                           Output format of tempest results report to generate. Currently supported: junitxml, html.
                           Format: --results-formats junitxml,html
                       default: junitxml
+                  list:
+                      type: Bool
+                      help: List all the tests which will be run.
+                      default: no
 
             - title: ansible facts
               options:
