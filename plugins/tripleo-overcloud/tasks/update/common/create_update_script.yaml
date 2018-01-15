@@ -21,12 +21,13 @@
       - '--compute'
       - '--ceph'
       - '--storage'
+      - '--stack'
 
 - name: change 'deploy' to 'update'
   lineinfile:
       dest: "{{ overcloud_update_script }}"
       regexp: openstack overcloud deploy
-      line: yes ""| openstack overcloud update stack overcloud -i \
+      line: yes ""| openstack overcloud update stack  {{ install.overcloud.stack }} -i \
 
 - name: assert overcloud-resource-registry-puppet.yaml already present
   command: |
