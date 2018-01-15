@@ -50,6 +50,19 @@
             - ironic
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
             - skip_ansible_lint
+        when:
+            - undercloud_version | openstack_release < 13
+
+      - name: register hosts to instack (queens and later)
+        shell: |
+            source ~/stackrc
+            openstack overcloud node import --provide {{ instack_file_path.stat.path }}
+        tags:
+            - ironic
+            # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
+            - skip_ansible_lint
+        when:
+            - undercloud_version | openstack_release >= 13
 
       # FIXME(yfried): unify in above shell?
       - name: assign the kernel and ramdisk before introspection begins
@@ -60,6 +73,8 @@
             - ironic
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
             - skip_ansible_lint
+        when:
+            - undercloud_version | openstack_release > 13
 
       - name: set the root device for baremetal nodes (with size hint)
         shell: |
