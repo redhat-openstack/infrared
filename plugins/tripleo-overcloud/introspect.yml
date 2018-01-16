@@ -42,20 +42,24 @@
         when: not instack_file_path.stat.exists
         tags: ironic
 
-      - name: register hosts to instack
+      # FIXME(psedlak): netboot boot for non-virthost nodes?
+      # Not confirmed atm, but there is likely change needed (for 13+?),
+      # to in place of --instance-boot-option local,
+      # use netboot instead of local, when nodes are not local vms?
+      # That would also mean to instead of passing instance-boot-option to
+      # import, to instead after import do loop over all nodes uuids,
+      # and based on if they are virthost or not, set corresponding value.
+      - name: register hosts to instack and configure boot
         shell: |
+            set -eo pipefail
             source ~/stackrc
-            openstack baremetal import --json {{ instack_file_path.stat.path }}
-        tags:
-            - ironic
-            # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
-            - skip_ansible_lint
 
-      # FIXME(yfried): unify in above shell?
-      - name: assign the kernel and ramdisk before introspection begins
-        shell: |
-            source ~/stackrc
+            {% if install.version|default(undercloud_version) |openstack_release < 13 %}
+            openstack baremetal import --json {{ instack_file_path.stat.path }}
             openstack baremetal configure boot
+            {% else %}
+            openstack overcloud node import --instance-boot-option=local {{ instack_file_path.stat.path }}
+            {% endif %}
         tags:
             - ironic
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
@@ -81,7 +85,11 @@
       - name: start node introspection
         shell: |
             source ~/stackrc
+            {% if install.version|default(undercloud_version) |openstack_release < 13 %}
             openstack baremetal introspection bulk start
+            {% else %}
+            openstack overcloud node introspect --provide --all-manageable
+            {% endif %}
         tags:
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
             - skip_ansible_lint
