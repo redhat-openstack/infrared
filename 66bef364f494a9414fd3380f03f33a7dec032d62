@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8762ccad_c68019a0",
+        "filename": "infrared/main.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-01-16T22:26:38Z",
+      "side": 1,
+      "message": "shouldn\u0027t the condition be \u0027if NOT create and not has_workspace\u0027?\n\nAs it seems now it would print deprecated msg to those who use the new --create flag, and not create the workspace otherwise (so no backward compat?).\n\nI guess there are two branches needed in logical style of:\n\n  if not has_workspace():\n    if not create:\n      warn(deprecated)\n    create()\n\n\n// and after grace period changed to single one as is there now:\n\n  if create and not has_workspace:\n    create()",
+      "revId": "66bef364f494a9414fd3380f03f33a7dec032d62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
