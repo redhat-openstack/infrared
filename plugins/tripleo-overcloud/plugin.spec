@@ -155,6 +155,14 @@ subparsers:
                             The target file should contains information about the bare-metals servers
                             that will be added to the instackenv.json file during introspection.
 
+                  environment-plan:
+                      type: Value
+                      short: p
+                      help: |
+                            The absolute path or url address to a custom environment plan file.
+                            Environment plan file example:
+                            plugins/tripleo-overcloud/vars/environment/plan/plan-example.yml
+
             - title: Overcloud Options
               options:
                   overcloud-debug:
