@@ -8,7 +8,11 @@
   shell: |
       source ~/stackrc
       ironic node-list
+      {% if install.version|default(undercloud_version) | openstack_release < 13 %}
       openstack baremetal introspection bulk status
+      {% else %}
+      openstack baremetal introspection list
+      {% endif %}
       systemctl list-units | grep ironic
   ignore_errors: yes
   tags:
@@ -17,7 +21,11 @@
 - name: Get output of bulk introspection status and store as yaml
   shell: |
        source ~/stackrc
+       {% if install.version|default(undercloud_version) | openstack_release < 13 %}
        openstack baremetal introspection bulk status -f yaml
+       {% else %}
+       openstack baremetal introspection list -f yaml
+       {% endif %}
   register: bulk_status
   ignore_errors: yes
   when: install.version|default(undercloud_version)|openstack_release > 7
@@ -31,9 +39,13 @@
 
 # Construct list of UUID's of nodes failing introspection
 - set_fact:
-      failed_nodes_uuids: "{{ (failed_nodes_uuids | default([]) ) + [ item['Node UUID'] ] }}"
+      failed_nodes_uuids: "{{ (failed_nodes_uuids | default([]) ) + [ item[uuid_field_name] ] }}"
   with_items: "{{ introspected_nodes | default([]) }}"
-  when: install.version|default(undercloud_version)|openstack_release > 7 and item['Finished'] == false
+  vars:
+      - osp_version: "{{ install.version|default(undercloud_version) | openstack_release }}"
+      - uuid_field_name: "{{ ( osp_version|int < 13) | ternary('Node UUID', 'UUID') }}"
+      - finished_condition:  "{{ (osp_version|int < 13) | ternary(item.get('Finished') == false, item.get('Finished at')== '') }}"
+  when: install.version|default(undercloud_version)|openstack_release > 7 and finished_condition
 
 # Ironic in OSPd7 doesn't support yaml/json output format, it must be done "bash" way
 - name: get and store full list of UUIDs of nodes that failed introspection (OSPd7)
@@ -105,7 +117,11 @@
 - name: store uuid's of all nodes in ironic db
   shell: |
        source ~/stackrc
+       {% if install.version|default(undercloud_version) | openstack_release < 13 %}
        openstack baremetal introspection bulk status | grep -Ei '(True|False)' |  awk '{print $2}'
+       {% else %}
+       openstack baremetal introspection list | tail -n +4 | head -n -1 | awk {'print $2'}
+       {% endif %}
   register: total_nodes
   tags:
       - skip_ansible_lint
@@ -127,6 +143,10 @@
   shell: |
       source ~/stackrc
       ironic node-list
+      {% if install.version|default(undercloud_version) | openstack_release < 13 %}
       openstack baremetal introspection bulk status
+      {% else %}
+      openstack baremetal introspection list
+      {% endif %}
   tags:
       - skip_ansible_lint
