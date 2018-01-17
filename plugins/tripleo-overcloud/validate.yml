@@ -20,3 +20,13 @@
             - not (install.storage|default({})).backend|default(False)
             - "'swift' in groups"
             - "'ceph' in groups"
+
+- name: Perform pre-deployment validations on undercloud
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+
+      - name: validate and copy environment plan file
+        include_tasks: tasks/environment_plan.yml
+        when: (install.environment|default({})).plan|default(false)

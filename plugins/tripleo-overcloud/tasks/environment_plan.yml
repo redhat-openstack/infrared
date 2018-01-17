@@ -1,0 +1,20 @@
+- name: check that openstack version is supproted
+  fail:
+      msg: Environment plan is supported by RHOSP version 12 and greater.
+  when: install.version|default(undercloud_version)|openstack_release < 12
+
+- name: download environment plan from url
+  get_url:
+      url: "{{ install.environment.plan }}"
+      dest: "~/environment_plan.yaml"
+      force: true
+      mode: 0755
+  register: download_result
+  ignore_errors: yes
+
+- name: copy environment plan file from path
+  copy:
+      src: "{{ install.environment.plan }}"
+      dest: "~/environment_plan.yaml"
+      mode: 0755
+  when: download_result.status_code is not defined or download_result.status_code != 200
