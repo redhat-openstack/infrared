@@ -155,6 +155,13 @@ subparsers:
                             The target file should contains information about the bare-metals servers
                             that will be added to the instackenv.json file during introspection.
 
+                  environment-plan:
+                      type: Bool
+                      default: no
+                      help: |
+                            load custom environment plan file to provide workflow specific inputs
+                            for the derived parameters workflow.
+
             - title: Overcloud Options
               options:
                   overcloud-debug:
@@ -443,3 +450,34 @@ subparsers:
                       type: Bool
                       help: Save ansible facts as json file(s)
                       default: False
+
+            - title: environment plan parameters
+              options:
+                  phy-cores-per-numa:
+                      type: Value
+                      help: |
+                            Specifices the minimum number of CPU physical cores to be allocated for DPDK
+                            PMD threads. The actual allocation will be based on network config, if
+                            the a DPDK port is associated with a numa node, then this configuration
+                            will be used, else 1.
+                      default: 2
+
+                  huge-page-allocation:
+                      type: Value
+                      help: |
+                            Amount of memory to be configured as huge pages in percentage. Ouf the
+                            total available memory (excluding the NovaReservedHostMemory), the
+                            specified percentage of the remaining is configured as huge pages.
+                      default: 90
+
+                  hci-profile:
+                      type: Value
+                      choices:
+                          - default
+                          - many_small_vms
+                          - few_large_vms
+                          - nfv_default
+                      help: |
+                            HCI profile include parameters of average guest memory size in MB
+                            and average guest cpu utilization percentage.
+                      default: default

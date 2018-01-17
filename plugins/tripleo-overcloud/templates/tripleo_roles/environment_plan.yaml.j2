@@ -1,0 +1,24 @@
+version: 1.0
+name: overcloud
+description: 'Default Deployment plan'
+template: overcloud.yaml
+environments:
+  - path: overcloud-resource-registry-puppet.yaml
+workflow_parameters:
+  tripleo.derive_params.v1.derive_parameters:
+    num_phy_cores_per_numa_node_for_pmd: {{ (install.phy.cores.per.numa|default(2)) }}
+    huge_page_allocation_percentage: {{ (install.huge.page.allocation|default(90)) }}
+    hci_profile: {{ (install.hci.profile|default(default)) }}
+    hci_profile_config:
+      default:
+        average_guest_memory_size_in_mb: 2048
+        average_guest_cpu_utilization_percentage: 50
+      many_small_vms:
+        average_guest_memory_size_in_mb: 1024
+        average_guest_cpu_utilization_percentage: 20
+      few_large_vms:
+        average_guest_memory_size_in_mb: 4096
+        average_guest_cpu_utilization_percentage: 80
+      nfv_default:
+        average_guest_memory_size_in_mb: 8192
+        average_guest_cpu_utilization_percentage: 90
