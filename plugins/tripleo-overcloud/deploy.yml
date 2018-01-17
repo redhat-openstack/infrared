@@ -156,12 +156,22 @@
           flat: yes
           fail_on_missing: no
 
+    - name: Read baremetal nodes got from user input on hybrid deployment
+        include_vars:
+            file: "{{ install.hybrid }}"
+            name: bm_nodes
+        when: install.hybrid is defined
+
+    - name: Get overcloud nodes
+      set_fact:
+        oc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
+
     - name: vbmc for overcloud
       delegate_to: hypervisor
       include_role:
           name: vbmc
       vars:
-          vbmc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
+          vbmc_nodes: "{{ oc_nodes | difference(bm_nodes) }}"
           overcloud_deploy: "yes"
       when:
           - install.version|default(undercloud_version) | openstack_release >= 11 or install.vbmc.force
