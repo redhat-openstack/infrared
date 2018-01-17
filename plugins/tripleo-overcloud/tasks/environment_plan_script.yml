@@ -1,0 +1,15 @@
+- name: download environmant plan from url
+  get_url:
+      url: "{{ install.environment.plan }}"
+      dest: "~/environment_plan.yaml"
+      force: true
+      mode: 0755
+  register: download_result
+  ignore_errors: yes
+
+- name: copy environmant plan file from path
+  copy:
+      src: "{{ install.environment.plan }}"
+      dest: "~/environment_plan.yaml"
+      mode: 0755
+  when: "{{ download_result.status_code|default('') != 200 }}"

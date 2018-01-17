@@ -32,6 +32,11 @@ Deployment Description
 * ``--hybrid``: Specifies whether deploying a hybrid environment.
     When this flag it set, the user should pass to the ``--instackenv-file`` parameter a link to a JSON/YAML file.
     The file contains information about the bare-metals servers that will be added to the instackenv.json file during introspection.
+* ``--environment-plan``/``-p``: Import environment plan yaml file to provide the details of the plan to be deployed by TripleO.
+    Along with the details of the heat environments and parameters, it is also possible to provide workflow specific parameters to
+    the TripleO mistral workflows.
+
+    .. warning:: Infrared support this option for RHOSP from version 12.
 
     Below are examples of a JSON & YAML files in a valid format:
 

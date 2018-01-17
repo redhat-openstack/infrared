@@ -38,6 +38,12 @@
             content: "{{ yaml_content | to_nice_yaml }}"
         when: install.get('config', {}).get('heat', {})
 
+      - name: copy environmant plan file
+        include_tasks: tasks/environment_plan_script.yml
+        when:
+            - (install.environment|default({})).plan|default(false)
+            - install.version|default(undercloud_version)|openstack_release >= 12
+
       - name: check if custom overcloud_deploy.sh exists
         stat:
             path: "{{ template_base }}/overcloud_deploy.sh"
@@ -91,6 +97,14 @@
             - install.containers|default('')
             - install.version|default(undercloud_version)|openstack_release >= 12
             - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
+
+      - name: add environment plan to deply script
+        lineinfile:
+            dest: "~/overcloud_deploy.sh"
+            line: '-p ~/environment_plan.yaml \'
+        when:
+            - (install.environment|default({})).plan|default(false)
+            - install.version|default(undercloud_version)|openstack_release >= 12
 
       - include_tasks: tasks/append_script.yml
         when: not overcloud_deploy_script|default('')
