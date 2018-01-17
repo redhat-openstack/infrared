@@ -1,0 +1,22 @@
+- name: check if environmant plan address is url
+  uri:
+      url: "{{ install.environment.plan }}"
+      return_content: yes
+  register: webpage
+  ignore_errors: yes
+
+
+- name: download environmant plan from url
+  get_url:
+      url: "{{ install.environment.plan }}"
+      dest: "~/environment_plan.yaml"
+      force: true
+  when: webpage|success
+
+
+- name: copy environmant plan file from path
+  copy:
+      src: "{{ install.environment.plan }}"
+      dest: "~/environment_plan.yaml"
+      mode: 0755
+  when: webpage|failed
