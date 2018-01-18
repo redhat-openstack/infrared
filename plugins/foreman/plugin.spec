@@ -68,6 +68,9 @@ subparsers:
                   medium-id:
                       type: Value
                       help: "Medium ID to set"
+                  ping_deadline:
+                      type: Value
+                      help: "Timeout in seconds for 'ping' command (If 'wait' isn't 0/False)"
 
             - title: Host roles
               options:
