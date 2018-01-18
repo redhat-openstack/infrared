@@ -6,7 +6,7 @@
       - name: get dashboard endpoint
         # TODO(yfried): find a way to get dashboard explicit details instead of keystone auth
         command: >
-            awk -F'[=/:]' '/^export OS_AUTH_URL=/ {print $2 " " $5}' overcloudrc
+            awk -F'[=/:]' '/^export OS_AUTH_URL=/ {print $2 " " $5}' {{ install.overcloud.stack }}rc
         register: ui_endpoint
         delegate_to: "{{ groups.undercloud | first }}"
         failed_when: "{{ (ui_endpoint.stdout|trim).split(' ') | length != 2 }}"
