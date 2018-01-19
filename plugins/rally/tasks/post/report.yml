@@ -11,38 +11,38 @@
 #        chdir: "{{ tester.rally.dir }}"
 
 - name: Create Report
-  command: "{{ rally.path }}/bin/rally task report --out {{ rally.outputdir }}/results.html"
+  command: "{{ rally.bin }} task report --out {{ rally.outputdir }}/results.html"
   args:
       creates: "{{ rally.outputdir }}/results.html"
 
 - name: Create Report JUnit
-  command: "{{ rally.path }}/bin/rally task report --junit --out {{ rally.outputdir }}/nosetests.xml"
+  command: "{{ rally.bin }} task report --junit --out {{ rally.outputdir }}/nosetests.xml"
   args:
       creates: "{{ rally.outputdir }}/nosetests.xml"
 
 - name: JSON results
-  shell: "{{ rally.path }}/bin/rally task results | {{ rally.path }}/bin/python -m json.tool > {{ rally.outputdir }}/results.json"
+  shell: "{{ rally.bin }} task results | python -m json.tool > {{ rally.outputdir }}/results.json"
   args:
       creates: "{{ rally.outputdir }}/results.json"
 
 - name: Iteration Data
-  shell: "{{ rally.path }}/bin/rally task detailed > {{ rally.outputdir }}/detailed.txt"
+  shell: "{{ rally.bin }} task detailed > {{ rally.outputdir }}/detailed.txt"
   args:
       creates: "{{ rally.outputdir }}/detailed.txt"
 
 - name: Detatiled Iteration Data
-  shell: "{{ rally.path }}/bin/rally task detailed --iterations-data > {{ rally.outputdir }}/detailed_with_iterations.txt"
+  shell: "{{ rally.bin }} task detailed --iterations-data > {{ rally.outputdir }}/detailed_with_iterations.txt"
   args:
       creates: "{{ rally.outputdir }}/detailed_with_iterations.txt"
 
 - name: SLA Check
-  shell: "{{ rally.path }}/bin/rally task sla_check > {{ rally.outputdir }}/sla.txt"
+  shell: "{{ rally.bin }} task sla_check > {{ rally.outputdir }}/sla.txt"
   args:
       creates: "{{ rally.outputdir }}/sla.txt"
   ignore_errors: true
 
 - name: SLA Check JSON
-  shell: "{{ rally.path }}/bin/rally task sla_check --json > {{ rally.outputdir }}/sla.json"
+  shell: "{{ rally.bin }} task sla_check --json > {{ rally.outputdir }}/sla.json"
   args:
       creates: "{{ rally.outputdir }}/sla.json"
   ignore_errors: true
