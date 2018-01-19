@@ -32,11 +32,25 @@
       - absent
       - directory
 
-- name: tag the original image(s) with 'before_patching' and patch container image(s)
+- name: load container images info from yaml file
+  include_vars: "{{ containers_images_template_dest_file }}"
+
+- name: debug
+  debug:
+      var: hostvards[inventory_hostname]
+
+- name: checking which container images need patching
+  shell: |
+      echo {{ item }}
+      echo {{ item.key }}
+      echo {{ item.value }}
+  with_items: container_images
+- fail:
+      msg: "I wanted to fail"
+
+- name: discover container images that require patching
   shell: |
       set -e
-      docker tag {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
-      {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}-before_patching
       echo "
       FROM {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
       COPY patched_rpms.repo /etc/yum.repos.d/patched_rpms.repo
