@@ -67,8 +67,7 @@
       source /home/stack/stackrc
       openstack overcloud container image upload --verbose --config-file {{ containers_images_template_dest_file }}
   when: not install.registry.undercloud.skip
-  tags:
-      - skip_ansible_lint
+  tags: skip_ansible_lint
 
 - name: tag the original image(s) with 'before_packages_install' and install rpms&push new ones
   shell: |

@@ -3,22 +3,16 @@
       install_container_images_patch: "{{ install.get('container', {}).get('images', {}).get('patch', {}) }}"
   when: install.get('container', {}).get('images', {}).get('patch', {})
 
-- fail:
-      msg: "patching container images is not supported when 'registry-undercloud-skip' is set to True"
-  when:
-      - install_container_images_patch is defined
-      - install.registry.undercloud.skip
-
 - name: checking /patched_rpms directory
   stat:
       path: /patched_rpms
   register: patched_rpms
 
 - fail:
-      msg: "/patched_rpms directory exists but 'container-images-patch' parameter not specified at command line"
+      msg: "patching container images is not supported when 'registry-undercloud-skip' is set to True"
   when:
-      - patched_rpms.stat.exists == True
-      - install_container_images_patch is not defined
+      - install_container_images_patch is defined or patched_rpms.stat.exists == False
+      - install.registry.undercloud.skip
 
 - name: reboot the undercloud
   shell: "sleep 2 && shutdown -r now"
