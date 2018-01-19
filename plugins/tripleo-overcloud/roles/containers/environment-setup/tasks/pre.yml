@@ -2,23 +2,20 @@
   set_fact:
       install_container_images_patch: "{{ install.get('container', {}).get('images', {}).get('patch', {}) }}"
   when: install.get('container', {}).get('images', {}).get('patch', {})
-
-- fail:
-      msg: "patching container images is not supported when 'registry-undercloud-skip' is set to True"
-  when:
-      - install_container_images_patch is defined
-      - install.registry.undercloud.skip
+  tags: container-images-patch
 
 - name: checking /patched_rpms directory
   stat:
       path: /patched_rpms
   register: patched_rpms
+  tags: container-images-patch
 
 - fail:
-      msg: "/patched_rpms directory exists but 'container-images-patch' parameter not specified at command line"
+      msg: "patching container images is not supported when 'registry-undercloud-skip' is set to True"
   when:
-      - patched_rpms.stat.exists == True
-      - install_container_images_patch is not defined
+      - install_container_images_patch is defined or patched_rpms.stat.exists == False
+      - install.registry.undercloud.skip
+  tags: container-images-patch
 
 - name: reboot the undercloud
   shell: "sleep 2 && shutdown -r now"
@@ -70,10 +67,12 @@
   shell: |
       cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '.*(?=\/.*\/\$basearch)'
   register: containers_puddle_base_url
+  tags: container-images-patch
 
 - name: get puddle number
   command: "/usr/bin/puddle-version {{ containers_puddle_base_url.stdout }}"
   register: containers_puddle_number
+  tags: container-images-patch
 
 - name: puddle to be used
   debug:
@@ -82,13 +81,17 @@
 - name: set os_version fact
   set_fact:
       os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
-  tags: container-images-packages
+  tags:
+      - container-images-packages
+      - container-images-patch
 
 - name: set docker_registry_undercloud facts
   set_fact:
       docker_registry_undercloud: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
       docker_registry_undercloud_namespace: "/rhosp{{ os_version }}"
-  tags: container-images-packages
+  tags:
+      - container-images-packages
+      - container-images-patch
 
 - name: set facts for container images install packages
   set_fact:
@@ -103,11 +106,13 @@
   when:
       - install.ocupdate|default(False)
       - install.build is defined and install.build != 'None'
+  tags: container-images-patch
 
 - name: adjust containers_puddle_base_url
   set_fact:
       containers_puddle_base_url: "{{ modified_url }}"
   when: modified_url|changed
+  tags: container-images-patch
 
 - name: Downloading overcloud container images environment file
   get_url:
@@ -115,8 +120,10 @@
       dest: "{{ containers_images_env_template_dest_file }}"
       force: true
   delegate_to: localhost
+  tags: container-images-patch
 
 - name: Load variables from container environment file
   include_vars:
       file: "{{ containers_images_env_template_dest_file }}"
       name: container_env
+  tags: container-images-patch

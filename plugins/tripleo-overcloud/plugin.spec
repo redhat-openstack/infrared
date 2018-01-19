@@ -50,6 +50,9 @@ subparsers:
                             Comma,separated list of docker container images to patch using '/patched_rpm' yum repository.
                             NOTE: Patching involves 'yum update' inside the container. This feature is not supported when
                             registry-undercloud-skip is set to True.
+                            Also, if this option is not specified, InfraRed auto discovers images that should be updated.
+                            This option may be used to patch only a specific container image(s) without updating others that
+                            would normally be patched.
                             Example:
                                 --container-images-patch openstack-opendaylight,openstack-nova-compute
 
