@@ -11,6 +11,7 @@ subparsers:
                       help: |
                           The full path or relative path to the openstackrc file.
                           When empty, infrared will search active profile for the 'keystonerc' file and use it.
+                  # Add deprecated notes
                   git-repo:
                       type: Value
                       help: URL of the git repository to clone
@@ -27,6 +28,12 @@ subparsers:
                       type: Value
                       help: Revision of Rally plugins git repository
                       default: HEAD
+                  setup:
+                      type: Value
+                      help: |
+                          The setup type for rally.
+                          __LISTYAMLS__
+                      default: rpm
                   tests:
                       type: VarFile
                       help: |
