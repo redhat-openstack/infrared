@@ -1,0 +1,23 @@
+- name: Install git
+  become: yes
+  yum:
+      name: "git"
+      state: present
+
+- name: Install pip
+  become: yes
+  easy_install:
+      name: pip
+      state: latest
+
+- name: Create plugins directory
+  file:
+      state: directory
+      path: "{{ rally.git.plugins.dir }}"
+
+- name: Clone Rally-Plugins git repo
+  git:
+      repo: "{{ test.get('git', {}).get('plugins', {}).repo|default(rally.git.plugins.repo) }}"
+      version: "{{ test.get('git', {}).get('plugins', {}).revision|default(rally.git.plugins.revision) }}"
+      dest: "{{ rally.git.plugins.dir }}"
+  when: test.get('git', {}).get('plugins', {}).repo is defined or rally.git.plugins.repo is defined
