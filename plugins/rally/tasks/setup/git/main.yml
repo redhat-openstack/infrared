@@ -1,0 +1,52 @@
+- name: Install devel packages for package build dependencies
+  become: yes
+  package:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ setup.packages }}"
+
+- name: Install pip
+  command: easy_install pip
+  become: yes
+
+- name: Install required pip packages
+  pip:
+      name: "{{ item }}"
+      state: latest
+  with_items: "{{ setup.pip_packages }}"
+  become: yes
+
+# TODO(rusichenko) Following variables will be deprecated and removed in the next releases
+# - test.git.repo
+# - test.git.revision
+# - test.git.plugins.repo
+# - test.git.plugins.revision
+- name: Clone Rally from git repo
+  git:
+      repo: "{{ test.git.repo | try_default(rally.git.repo) }}"
+      version: "{{ test.git.revision | try_default(rally.git.revision) }}"
+      dest: "{{ rally.dir }}"
+
+- name: Clone Rally-Plugins git repo
+  vars:
+      rally_git_plugins: "{{ test.git.plugins.repo | try_default(rally.git.plugins.repo, ignore=True) }}"
+  git:
+      repo: "{{ test.git.plugins.repo | try_default(rally.git.plugins.repo) }}"
+      version: "{{ test.git.plugins.revision| try_default(rally.git.plugins.revision) }}"
+      dest: "{{ rally.git.plugins.dir }}"
+  when: rally_git_plugins
+
+- name: Run Rally installation script
+  shell: "{{ rally.dir }}/install_rally.sh -v -y -d {{ rally.path }} | tee {{ rally.dir }}/rally_install.log"
+  args:
+      creates: "{{ rally.bin }}"
+
+- name: List rally version
+  shell: "{{ rally.bin }} --version |& cut -d '~' -f1"
+  register: rally_version
+
+- name: List rally release
+  shell: "{{ rally.bin }} --version |& cut -d '~' -f2"
+  register: rally_release
+
+- debug: "msg='Build mark: rally={{ rally_version.stdout }}-{{ rally_release.stdout }}'"

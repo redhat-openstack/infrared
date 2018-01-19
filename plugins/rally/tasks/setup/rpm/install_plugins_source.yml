@@ -1,0 +1,22 @@
+- name: Install git
+  become: yes
+  yum:
+      name: "git"
+      state: present
+
+- name: Install pip
+  become: yes
+  easy_install:
+      name: pip
+      state: latest
+
+- name: Create plugins directory
+  file:
+      state: directory
+      path: "{{ rally.git.plugins.dir }}"
+
+- name: Clone Rally-Plugins git repo
+  git:
+      repo: "{{ test.git.plugins.repo | try_default(rally.git.plugins.repo) }}"
+      version: "{{ test.git.plugins.revision| try_default(rally.git.plugins.revision) }}"
+      dest: "{{ rally.git.plugins.dir }}"
