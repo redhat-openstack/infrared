@@ -1,0 +1,42 @@
+- name: Install rally dependency
+  become: yes
+  package:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ setup.dependencies.defaults }}"
+
+- name: Install rally from rpm
+  become: yes
+  package:
+      name: "openstack-rally"
+      state: present
+  register: rally_rpm
+
+- name: List rally version
+  command: "rpm -q --qf %{VERSION} openstack-rally"
+  register: rally_version
+
+- name: List rally release
+  command: "rpm -q --qf %{RELEASE} openstack-rally"
+  register: rally_release
+
+- set_fact:
+      rally_manage: 'rally-manage'
+  when: rally_version.stdout | version_compare('0.10', '<')
+
+- name: Get rally db revision
+  command: "{{ rally_manage | default('rally') }} db revision"
+  register: rally_db_revision
+
+- name: Create rally db
+  command: "{{ rally_manage | default('rally') }} db create"
+  when:
+    - rally_db_revision.stdout == 'None'
+
+- name: Install plugin from source "{{ test_suite }}" suite
+  vars:
+      rally_git_plugins: "{{ test.git.plugins.repo | try_default(rally.git.plugins.repo, ignore=True) }}"
+  include_tasks: install_plugins_source.yml
+  when: rally_git_plugins
+
+- debug: "msg='Build mark: rally={{ rally_version.stdout }}-{{ rally_release.stdout }}'"
