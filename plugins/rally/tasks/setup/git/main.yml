@@ -1,0 +1,40 @@
+- name: Install devel packages for package build dependencies
+  become: yes
+  package:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ setup.packages }}"
+
+- name: Install pip
+  command: easy_install pip
+  become: yes
+
+- name: Install required pip packages
+  pip:
+      name: "{{ item }}"
+      state: latest
+  with_items: "{{ setup.pip_packages }}"
+  become: yes
+
+# TODO(rusichenko) Following variables will be deprecated and removed in the next releases
+# - test.git.repo
+# - test.git.revision
+# - test.git.plugins.repo
+# - test.git.plugins.revision
+- name: Clone Rally from git repo
+  git:
+      repo: "{{ test.get('git', {}).repo|default(rally.git.repo) }}"
+      version: "{{ test.get('git', {}).revision|default(rally.git.revision) }}"
+      dest: "{{ rally.dir }}"
+
+- name: Clone Rally-Plugins git repo
+  git:
+      repo: "{{ test.get('git', {}).get('plugins', {}).repo|default(rally.git.plugins.repo) }}"
+      version: "{{ test.get('git', {}).get('plugins', {}).revision|default(rally.git.plugins.revision) }}"
+      dest: "{{ rally.git.plugins.dir }}"
+  when: test.get('git', {}).get('plugins', {}).repo is defined or rally.git.plugins.repo is defined
+
+- name: Run Rally installation script
+  shell: "{{ rally.dir }}/install_rally.sh -v -y -d {{ rally.path }} | tee {{ rally.dir }}/rally_install.log"
+  args:
+      creates: "{{ rally.bin }}"
