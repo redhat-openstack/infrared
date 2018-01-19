@@ -1,29 +1,4 @@
 ---
-- name: modify puddle number url
-  shell: >
-      echo '{{ containers_puddle_base_url.stdout }}' | sed 's/{{ containers_puddle_number.stdout }}/{{ install.build|default("latest") }}/'
-  register: modified_url
-  when:
-      - install.ocupdate|default(False)
-      - install.build is defined and install.build != 'None'
-
-- name: adjust containers_puddle_base_url
-  set_fact:
-      containers_puddle_base_url: "{{ modified_url }}"
-  when: modified_url|changed
-
-- name: Downloading overcloud container images environment file
-  get_url:
-      url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_env_template_download_basename }}"
-      dest: "{{ containers_images_env_template_dest_file }}"
-      force: true
-  delegate_to: localhost
-
-- name: Load variables from container environment file
-  include_vars:
-      file: "{{ containers_images_env_template_dest_file }}"
-      name: container_env
-
 - name: create nondefault fact for upload
   include_tasks: "{{ role_path }}/tasks/nondefault_images_fact.yml"
   with_items: "{{ install.overcloud.templates|default([]) }}"

@@ -25,6 +25,7 @@
       container_images_patch_logdir: /var/log/extra/infrared_container-images-patch/
 
 - name: "create {{ container_images_patch_logdir }} to keep the patching logs"
+  become: true
   file:
       path: "{{ container_images_patch_logdir }}"
       state: "{{ item }}"
@@ -35,20 +36,26 @@
 - name: tag the original image(s) with 'before_patching' and patch container image(s)
   shell: |
       set -e
+      ORIG_USER="$( docker run --rm {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} /usr/bin/bash -c "echo -n \$(id -u --name)" )"
+
       docker tag {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
       {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}-before_patching
       echo "
       FROM {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
       COPY patched_rpms.repo /etc/yum.repos.d/patched_rpms.repo
       ADD /patched_rpms /patched_rpms
-      RUN sudo yum repolist all
-      RUN sudo yum list installed
-      RUN sudo yum list available
-      RUN sudo yum list updates
-      RUN sudo yum update -y -v
+      USER root
+      RUN yum repolist all
+      RUN yum list installed
+      RUN yum list available
+      RUN yum list updates
+      RUN yum update -y -v
+      ARG ORIG_USER
+      USER $ORIG_USER
       " > {{ container_images_patch_dir }}/Dockerfile
+
       docker build -t {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
-      {{ container_images_patch_dir }}/ > {{ container_images_patch_logdir }}/docker_build_{{ item }}.log 2>&1
+      {{ container_images_patch_dir }}/ --build-arg ORIG_USER=$ORIG_USER > {{ container_images_patch_logdir }}/docker_build_{{ item }}.log 2>&1
       if ! grep -q "Installed products updated" "{{ container_images_patch_logdir }}/docker_build_{{ item }}.log" ; then
           echo -e "\n\nno packages updated!!!\n\n." >&2
           exit 1
