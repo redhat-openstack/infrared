@@ -1,26 +1,43 @@
 # TODO (tjamrisk): Need to somehow skip this if deployment exists
+#- name: Create Rally deployment
+#  shell: |
+#      source ~/overcloudrc
+#      {{ rally.path }}/bin/rally deployment create --fromenv --name {{ test.deployment }} | awk '/{{ test.deployment }}/ {print $2}'
+#  register: rally_deployment_uuid
+#  ignore_errors: true
+#
+#- name: Use Rally deployment
+#  shell: |
+#      {{ rally.path }}/bin/rally deployment use {{ test.deployment }} | awk '/Using deployment/ {print $3}'
+#  register: rally_deployment_uuid
+#  when: "'Deployment' in rally_deployment_uuid.stdout"
 - name: Create Rally deployment
   shell: |
       test -f ~/overcloudrc.v3 && source ~/overcloudrc.v3 || source ~/overcloudrc
-      {{ rally.path }}/bin/rally deployment create --fromenv --name {{ test.deployment }} | awk '/{{ test.deployment }}/ {print $2}'
+      {{ rally.bin }} deployment create --fromenv --name {{ test.deployment }} | awk '/{{ test.deployment }}/ {print $2}'
   register: rally_deployment_uuid
   ignore_errors: true
 
 - name: Use Rally deployment
   shell: |
-      {{ rally.path }}/bin/rally deployment use {{ test.deployment }} | awk '/Using deployment/ {print $3}'
+      {{ rally.bin }} deployment use {{ test.deployment }} | awk '/Using deployment/ {print $3}'
   register: rally_deployment_uuid
   when: "'Deployment' in rally_deployment_uuid.stdout"
 
+- name: Ensures {{ rally.dir }}/rally-jobs dir exists
+  file: path={{ rally.dir }}/rally-jobs state=directory
+
 - name: Copy Task file from vars
+  vars:
+      rally_version_stdout: "{{ rally_version.stdout }}"
   template:
       src: "{{ test.tests }}"
       dest: "{{ rally.dir }}/{{ test.taskfile }}"
       force: yes
 
 - name: Check Rally deployment
-  command: "{{ rally.path }}/bin/rally deployment check"
+  command: "{{rally.bin}} deployment check"
 
 - name: Start Rally task
-  command: "{{ rally.path }}/bin/rally task start --task {{ rally.dir }}/{{ test.taskfile }}"
+  command: "{{rally.bin}} task start --task {{ rally.dir }}/{{ test.taskfile }}"
   ignore_errors: yes

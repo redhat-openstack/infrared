@@ -13,7 +13,7 @@ subparsers:
                           When empty, infrared will search active profile for the 'keystonerc' file and use it.
                   git-repo:
                       type: Value
-                      help: URL of the git repository to clone
+                      help: URL of the git repository to clone.
                       default: https://git.openstack.org/openstack/rally
                   git-revision:
                       type: Value
@@ -27,6 +27,12 @@ subparsers:
                       type: Value
                       help: Revision of Rally plugins git repository
                       default: HEAD
+                  setup:
+                      type: Value
+                      help: |
+                          The setup type for rally.
+                          __LISTYAMLS__
+                      default: rpm
                   tests:
                       type: VarFile
                       help: |
