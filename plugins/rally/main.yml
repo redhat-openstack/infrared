@@ -2,49 +2,49 @@
   hosts: tester
   gather_facts: yes
   any_errors_fatal: yes
+  vars_files:
+      - "vars/setup/{{ test.setup }}.yml"
+      - "{{ test.image }}"
   vars:
-      rally:
+      default_config:
+          bin: "rally"
           dir: "{{ ansible_user_dir }}/rally_repo"
           path: "{{ ansible_user_dir }}/rally"
           outputdir: /tmp/rally_output
-      packages:
-          - git
-          - wget
-          - which
-          - gcc
-          - libffi-devel
-          - libxml2-devel
-          - libxslt-devel
-          - openssl-devel
-          - python-virtualenv
-          - python-setuptools
-          - postgresql-devel
-          - python-devel
-          - gmp-devel
-      pip_packages:
-          - six
+          git:
+              plugins:
+                  dir: "~/.rally/plugins"
+                  revision: HEAD
+      rally: "{{ default_config | combine(config, recursive=True) }}"
   tasks:
-      - name: Include image vars
-        include_vars: "{{ test.image }}"
+      - include_role:
+            name: version-discovery
+        vars:
+            discovery_types:
+                - rhos_release_file
+                - nova
+        delegate_to: "{{ groups.controller[0] }}"
+
+      - debug:
+            msg: "Overcloud's OpenStack version that has been auto discovered is {{ overcloud_version }}"
+        when: overcloud_version is defined
+
+      - name: Prepare rally files
+        include_tasks: "tasks/pre/main.yml"
         tags:
-            - always
+            - pre
 
       - name: Setup rally
-        include_tasks: tasks/setup_rally.yml
+        include_tasks: "tasks/setup/main.yml"
         tags:
-            - rally_dependencies
-
-      - name: Setup openstack for rally
-        include_tasks: tasks/setup_openstack.yml
-        tags:
-            - rally_openstack
+            - setup
 
       - name: Run rally
-        include_tasks: tasks/run.yml
+        include_tasks: "tasks/run.yml"
         tags:
-            - rally_run
+            - run
 
-      - name: Rally report
-        include_tasks: tasks/make_report.yml
+      - name: Generate report
+        include_tasks: "tasks/post/report.yml"
         tags:
-            - rally_report
+            - post
