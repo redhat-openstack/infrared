@@ -1,9 +1,9 @@
-- name: Install support packages for pip-based deps building
+- name: Install devel packages for package build dependencies
+  become: yes
   package:
       name: "{{ item }}"
       state: present
-  with_items: "{{ packages }}"
-  become: yes
+  with_items: "{{ setup.packages }}"
 
 - name: Install pip
   command: easy_install pip
@@ -13,7 +13,7 @@
   pip:
       name: "{{ item }}"
       state: latest
-  with_items: "{{ pip_packages }}"
+  with_items: "{{ setup.pip_packages }}"
   become: yes
 
 - name: Clone Rally from git repo
@@ -32,4 +32,4 @@
 - name: Run Rally installation script
   shell: "{{ rally.dir }}/install_rally.sh -v -y -d {{ rally.path }} | tee {{ rally.dir }}/rally_install.log"
   args:
-      creates: "{{ rally.path }}/bin/rally"
+      creates: "{{ rally.bin }}"
