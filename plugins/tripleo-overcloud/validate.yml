@@ -3,7 +3,6 @@
   gather_facts: yes
   any_errors_fatal: true
   tasks:
-
       - name: "Install/Upgrade are mutually exclusive"
         fail:
             msg: "Options '--deploy' and '--upgrade' and '--ocupdate' are mutually exclusive"
@@ -30,7 +29,7 @@
 
           - name: check if user provided external storage config
             stat:
-                path: "{{ install.storage.config }}"
+                path: "vars/storage/config/{{ install.storage.config }}.yml"
             register: install_storage_config_file
 
           - fail:
