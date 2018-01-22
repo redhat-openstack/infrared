@@ -2,6 +2,8 @@
   hosts: localhost
   gather_facts: yes
   any_errors_fatal: true
+  vars:
+      template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
   tasks:
 
       - name: "Install/Upgrade are mutually exclusive"
@@ -30,7 +32,7 @@
 
           - name: check if user provided external storage config
             stat:
-                path: "{{ install.storage.config }}"
+                path: "{{ template_base }}/{{ install.storage.config }}.yaml"
             register: install_storage_config_file
 
           - fail:
