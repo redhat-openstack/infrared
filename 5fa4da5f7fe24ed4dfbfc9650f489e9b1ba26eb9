@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1627800_4e7a3e8b",
+        "filename": "plugins/tripleo-overcloud/validate.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-01-22T12:44:45Z",
+      "side": 1,
+      "message": "for ( ! internal ) storage config currently used path references are from:\n  tripleo-overcloud/tasks/storage/*:\n  \n   src \u003d vars/storage/config/{{ install.storage.config }}.yml\n   dest \u003d {{ template_base }}/{{ install.storage.config }}.yaml\n\n- this check is performed on localhost (see few lines above) ... [aside it being done badly too late in execution ...] ... and so should reference the \"SOURCE\" not destination (which is on undercloud)\n\n- also beware that they change extension there too! so what is .yml in this repo/user input, will appear as .yaml on uc",
+      "revId": "5fa4da5f7fe24ed4dfbfc9650f489e9b1ba26eb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
