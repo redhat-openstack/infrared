@@ -55,6 +55,14 @@ class IRRequiredArgsMissingException(IRException):
         super(IRRequiredArgsMissingException, self).__init__(message)
 
 
+class IRInvalidChoiceException(IRException):
+    def __init__(self, arg_name, arg_value, available_choices):
+        message = \
+            "Argument {}: invalid choice '{}' (choose from {})".format(
+                arg_name, arg_value, available_choices)
+        super(self.__class__, self).__init__(message)
+
+
 class SpecParserException(Exception):
     """
     The spec parser specific exception.

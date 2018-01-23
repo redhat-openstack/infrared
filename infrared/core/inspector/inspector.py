@@ -287,6 +287,7 @@ class SpecParser(object):
         dict_utils.dict_merge(defaults, file_args)
         dict_utils.dict_merge(defaults, cli_args)
         self.validate_requires_args(defaults)
+        self.validate_choices_args(defaults)
 
         # now resolve complex types.
         self.resolve_custom_types(defaults)
@@ -422,6 +423,29 @@ class SpecParser(object):
                             for cmd_name, args in res.items() if len(args) > 0)
         if missing_args:
             raise exceptions.IRRequiredArgsMissingException(missing_args)
+
+    def validate_choices_args(self, args):
+        """Check if value of choice arguments is one of the available choices.
+
+        :param args: The received arguments.
+        """
+        for parser_name, parser_dict in args.items():
+            for spec_option in \
+                    self.spec_helper.get_parser_option_specs(parser_name):
+                if 'choices' not in spec_option:
+                    # skip options that does not contain choices
+                    continue
+                option_name = spec_option['name']
+                if option_name in parser_dict:
+                    # resolve choices
+                    choices = spec_option['choices']
+                    option_value = parser_dict[option_name]
+                    if option_value not in choices:
+                        raise exceptions.IRInvalidChoiceException(
+                            arg_name=option_name,
+                            arg_value=option_value,
+                            available_choices=choices
+                        )
 
     def get_silent_args(self, args):
         """list of silenced argument
