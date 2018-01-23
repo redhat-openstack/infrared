@@ -2,14 +2,22 @@
 test_dict:
     test_regex: ''
     whitelist:
-        - "^tempest.api.volume.*"
-        - "^cinder.tests.tempest.*"
+        default:
+          - "^tempest.api.volume.*"
+          - "^cinder.tests.tempest.*"
+        13:
+          - "^tempest.api.volume.*"
+          - "^cinder_tempest_plugin.*"
     blacklist: []
     plugins:
         cinder:
-            repo: "https://github.com/openstack/cinder.git"
+            repo:
+              default: "https://github.com/openstack/cinder.git"
+              13: "https://github.com/openstack/cinder-tempest-plugin.git"
             package:
                 9: "python-cinder-tests"
                 10: "python-cinder-tests"
                 11: "python-cinder-tests"
+                12: "python-cinder-tests"
+                13: "python-cinder-tests-tempest"
                 default: "python-cinder"
