@@ -32,6 +32,18 @@
   when: plugin_dict.value.dependencies is defined
   become: yes
 
+- debug:
+      var: plugin_dict
+
+- name: Install extra pip dependencies system-wide
+  pip:
+      name: "{{ item.name }}"
+      state: present
+      extra_args: "{{ item.extra_args }}"
+  when: plugin_dict.value.pip_dependencies is defined
+  with_items: "{{ plugin_dict.value.pip_dependencies }}"
+  become: yes
+
 - block:
     # some repos have "test-requirements" files and some don't.
     - name: Check if test-requirements exists
