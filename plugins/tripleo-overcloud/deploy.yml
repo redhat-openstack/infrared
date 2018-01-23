@@ -132,11 +132,22 @@
           state: present
           timeout: 60
 
+    - name: check if we have v3 rc file
+      stat:
+          path: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3"
+      register: rc_file_path
+      tags:
+          - clouds_file
+
     - name: update clouds.yaml file
       include_tasks: clouds.yml
       vars:
-            auth_file_path: "{{ overcloudrc_file }}"
+            v3_file: "{{ install.overcloud.stack }}rc.v3"
+            v2_file: "{{ install.overcloud.stack }}rc"
+            auth_file_path: "{{ ansible_user_dir }}/{{ rc_file_path.stat.exists | ternary(v3_file, v2_file) }}"
             cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"
+      tags:
+          - clouds_file
 
     - name: fetch the overcloud rc file
       tags:
