@@ -1,5 +1,12 @@
 ---
 test_dict:
     test_regex: tempest.api.baremetal
-    whitelist: []
+    whitelist:
+        - "^tempest.api.baremetal.*"
+        - "^ironic_tempest_plugin.*"
     blacklist: []
+    plugins:
+        ironic:
+            repo: "http://git.openstack.org/openstack/ironic-tempest-plugin"
+            package:
+                default: "python-ironic-tests-tempest"
