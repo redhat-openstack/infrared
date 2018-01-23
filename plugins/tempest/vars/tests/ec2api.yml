@@ -1,10 +1,13 @@
 ---
 test_dict:
-    test_regex: ec2api
-    whitelist: []
+    test_regex:
+    whitelist:
+        - "^ec2api.*"
+        - "^ec2api_tempest_plugin.*"
     blacklist: []
     plugins:
         ec2api_tests:
-            repo: "https://github.com/openstack/ec2-api.git"
+            repo: "http://git.openstack.org/cgit/openstack/ec2api-tempest-plugin"
             package:
-                default: "ec2api-tests"
+                12: "python-ec2-api-tests"
+                default: "python-ec2api-tests-tempest"
