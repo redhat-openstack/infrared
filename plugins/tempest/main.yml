@@ -15,6 +15,7 @@
                 - rhos_release_file
                 - nova
         delegate_to: "{{ groups.controller[0] }}"
+        when: test.openstack.version is not defined
 
       - debug:
             msg: "Overcloud's OpenStack version that has been auto discovered is {{ overcloud_version }}"
