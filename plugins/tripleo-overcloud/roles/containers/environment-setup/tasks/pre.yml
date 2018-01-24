@@ -2,7 +2,6 @@
   set_fact:
       install_container_images_patch: "{{ install.get('container', {}).get('images', {}).get('patch', {}) }}"
   when: install.get('container', {}).get('images', {}).get('patch', {})
-  tags: container-images-patch
 
 - fail:
       msg: "patching container images is not supported when 'registry-undercloud-skip' is set to True"
@@ -14,14 +13,12 @@
   stat:
       path: /patched_rpms
   register: patched_rpms
-  tags: container-images-patch
 
 - fail:
       msg: "/patched_rpms directory exists but 'container-images-patch' parameter not specified at command line"
   when:
       - patched_rpms.stat.exists == True
       - install_container_images_patch is not defined
-  tags: container-images-patch
 
 - name: reboot the undercloud
   shell: "sleep 2 && shutdown -r now"
@@ -85,20 +82,41 @@
 - name: set os_version fact
   set_fact:
       os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
-  tags:
-    - container-images-patch
-    - container-images-packages
+  tags: container-images-packages
 
 - name: set docker_registry_undercloud facts
   set_fact:
       docker_registry_undercloud: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
       docker_registry_undercloud_namespace: "/rhosp{{ os_version }}"
-  tags:
-    - container-images-patch
-    - container-images-packages
+  tags: container-images-packages
 
 - name: set facts for container images install packages
   set_fact:
       install_container_images_packages: "{{ install.get('container', {}).get('images', {}).get('packages', {}) }}"
   when: install.get('container', {}).get('images', {}).get('packages', {})
   tags: container-images-packages
+
+- name: modify puddle number url
+  shell: >
+      echo '{{ containers_puddle_base_url.stdout }}' | sed 's/{{ containers_puddle_number.stdout }}/{{ install.build|default("latest") }}/'
+  register: modified_url
+  when:
+      - install.ocupdate|default(False)
+      - install.build is defined and install.build != 'None'
+
+- name: adjust containers_puddle_base_url
+  set_fact:
+      containers_puddle_base_url: "{{ modified_url }}"
+  when: modified_url|changed
+
+- name: Downloading overcloud container images environment file
+  get_url:
+      url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_env_template_download_basename }}"
+      dest: "{{ containers_images_env_template_dest_file }}"
+      force: true
+  delegate_to: localhost
+
+- name: Load variables from container environment file
+  include_vars:
+      file: "{{ containers_images_env_template_dest_file }}"
+      name: container_env
