@@ -168,16 +168,27 @@
           fail_on_missing: no
 
     - name: Read baremetal nodes got from user input on hybrid deployment
-      include_vars:
-          file: "{{ install.hybrid }}"
-          name: bm_nodes
-      register: result_hybrid
+      block:
+        - name: Set hybrid var
+          include_vars:
+              file: "{{ install.hybrid }}"
+              name: bm_nodes
+
+        - name: get nodes name
+          set_fact:
+              node_name: "{{ item.name }}"
+          with_items: "{{ bm_nodes.nodes }}"
+          register: nodes
+
+        - name: set list of bm nodes
+          set_fact:
+              bm_nodes: "{{ nodes.results | map(attribute='ansible_facts.node_name') | list }}"
       when: install.hybrid is defined
 
     - name: set bm_nodes to empty when not hybrid
       set_fact:
           bm_nodes: ""
-      when: result_hybrid|skipped
+      when: install.hybrid is not defined
 
     - name: Get overcloud nodes
       set_fact:
