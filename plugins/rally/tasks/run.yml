@@ -24,3 +24,7 @@
 - name: Start Rally task
   command: "{{ rally.path }}/bin/rally task start --task {{ rally.dir }}/{{ test.taskfile }}"
   ignore_errors: yes
+
+- name: Generate Rally report
+  command: "{{ rally.path }}/bin/rally task report --out {{ rally.dir }}/rally-report.html"
+  ignore_errors: yes
