@@ -12,6 +12,23 @@
       plugins: "{{ test_dict.plugins | default({}) | combine(cli_plugins|default({})) }}"
       plugins_dir: "{{ ansible_user_dir }}/{{test.dir | dirname }}/plugins"
 
+- name: Install extra system requirements for tests
+  package:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ test.packages.split(',') }}"
+  when: item is defined
+  become: yes
+
+- name: Install extra pip dependencies system-wide - sometimes required to install pip packages before installing test-requirements.txt
+  pip:
+      name: "{{ item }}"
+      state: present
+      extra_args: '-U'
+  with_items: "{{ pip_packages }}"
+  when: item is defined
+  become: yes
+
 - name: Install plugin packages for "{{ test_suite }}" suite
   become: yes
   package:

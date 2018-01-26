@@ -4,11 +4,11 @@
       name: "git"
       state: present
 
-- name: Install pip
-  become: yes
-  easy_install:
-      name: pip
-      state: latest
+# easy_install way of installing pip is super slow
+- name: Install pip using get-pip.py
+  shell: |
+      curl https://bootstrap.pypa.io/get-pip.py | python
+  become: true
 
 - name: Create plugins directory
   file:
@@ -23,14 +23,11 @@
       dest: "{{ plugins_dir }}/{{ plugin_dict.key }}"
       accept_hostkey: true
   retries: 3
+  ignore_errors: true
   delay: 60
 
-- name: Install extra system requirements for tests
-  package:
-      name: "{{ plugin_dict.value.dependencies }}"
-      state: present
-  when: plugin_dict.value.dependencies is defined
-  become: yes
+- debug:
+      var: plugin_dict
 
 - block:
     # some repos have "test-requirements" files and some don't.
