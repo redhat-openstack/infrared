@@ -50,5 +50,12 @@
   with_items:
       "{{ test.get('results', {}).get('formats', {}).split(',') }}"
 
+- name: set 'pip_packages' facts
+  vars:
+      pip_packages: []
+  set_fact:
+      pip_packages: "{{ pip_packages }} + [ '{{ item }}' ]"
+  with_items: "{{ test.get('pip', {}).get('packages', ('')).split(',') | default('') }}"
+
 - name: run configuration tasks for installer '{{ test.openstack.installer }}'
   include_tasks: "{{ test.openstack.installer }}.yml"
