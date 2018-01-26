@@ -1,0 +1,28 @@
+- name: Install rhos repos
+  hosts: freeipa
+  gather_facts: yes
+  any_errors_fatal: true
+  tags: tls-everywhere
+  vars:
+      rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+  roles:
+      - role: rhos-release
+        release: "{{ install.version }}"
+        rr_buildmods: "{{ install.buildmods }}"
+        build: "{{ install.build | default(omit) }}"
+        director_build: "{{ install.get('director', {}).build|default(omit) }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        rr_distro_version: "{{ install.osrelease|default(omit) }}"
+        when:
+            - "install.version|openstack_distribution == 'OSP'"
+
+- name: Prepare freeipa and undercloud for tls everywhere
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tags: tls-everywhere
+  roles:
+      - role: tls-everywhere
+        stages:
+            - prepare_freeipa
+            - prepare_undercloud

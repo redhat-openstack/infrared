@@ -1,0 +1,15 @@
+- name: Gather facts
+  hosts: freeipa
+  gather_facts: yes
+  any_errors_fatal: False
+
+- name: Prepare TLS Everywhere
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - include_role:
+            name: tls-everywhere
+        vars:
+            stages:
+                - prepare_overcloud
