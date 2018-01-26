@@ -70,6 +70,12 @@ subparsers:
                           A self-signed SSL cert will be generated.
                       default: no
 
+                  - title: Testing merge conflict
+                      options:
+                          conflict:
+                             type: Book
+                             default: yes
+
                   tls-everywhere:
                       type: Bool
                       help: |
@@ -237,3 +243,9 @@ subparsers:
                       type: Value
                       help: |
                           Override the default RHEL version. Default 'ansible_distribution_version'
+
+            - title: Testing merge conflict
+              options:
+                  conflict:
+                     type: Book
+                     default: yes
