@@ -237,3 +237,9 @@ subparsers:
                       type: Value
                       help: |
                           Override the default RHEL version. Default 'ansible_distribution_version'
+
+            - title: Testing merge conflict
+              options:
+                  conflict:
+                     type: Book
+                     default: yes
