@@ -89,6 +89,11 @@ options:
      description:
          - The ID of Medium to set
      required: false
+   ping_deadline:
+     description:
+         - Timeout in seconds for 'ping' command (works with 'wait_for_host')
+     default: 600
+     required: false
 '''
 
 
@@ -271,7 +276,7 @@ class ForemanManager(object):
 
     def provision(self, host_id, mgmt_strategy, mgmt_action, ipmi_address,
                   ipmi_username, ipmi_password, operatingsystem_id, medium_id,
-                  wait_for_host=10):
+                  ping_deadline, wait_for_host=10):
         """
         This method rebuilds a machine, doing so by running get_host and bmc.
         :param host_id: the name or ID of the host we wish to rebuild
@@ -286,6 +291,8 @@ class ForemanManager(object):
         :param ipmi_password: remote server password (IPMI)
         :param operatingsystem_id: Operating system ID
         :param medium_id: Medium ID
+        :param ping_deadline: Timeout in seconds for 'ping' command
+        (works with 'wait_for_host')
         :raises: KeyError if BMC hasn't been found on the given host
                  Exception in case of machine could not be reached after
                  rebuild
@@ -319,11 +326,13 @@ class ForemanManager(object):
             while self.get_host(host_id).get('build'):
                 time.sleep(wait_for_host)
 
-            command = "ping -q -c 30 -w 300 {0}".format(building_host.get('name'))
+            command = "ping -q -c 30 -w {0} {1}".format(
+                ping_deadline, building_host.get('name'))
             return_code = subprocess.call(command, shell=True)
 
             if return_code:
                 raise Exception("Could not reach {0}, rc={1}, cmd={2}".format(host_id, return_code, command))
+
 
 def main():
     module = AnsibleModule(
@@ -338,6 +347,7 @@ def main():
             mgmt_action=dict(default='cycle', choices=['on', 'off', 'cycle',
                                                        'reset', 'soft']),
             wait_for_host=dict(default=10),
+            ping_deadline=dict(default=600),
             ipmi_address=dict(default=None),
             ipmi_username=dict(default='ADMIN'),
             ipmi_password=dict(default='ADMIN'),
@@ -360,6 +370,7 @@ def main():
                                      module.params['ipmi_password'],
                                      module.params['operatingsystem_id'],
                                      module.params['medium_id'],
+                                     module.params['ping_deadline'],
                                      module.params['wait_for_host'])
 
         except KeyError as e:

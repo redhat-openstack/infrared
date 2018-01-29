@@ -262,3 +262,8 @@ Example::
   infrared tripleo-overcloud --deployment-files virt --postreboot yes
   infrared tripleo-overcloud --deployment-files virt --ocupdate yes --build latest --postreboot yes
 
+TLS Everywhere
+______________
+Setup TLS Everywhere with FreeIPA.
+
+``tls-everywhere``: It will configure overcloud for TLS Everywhere.

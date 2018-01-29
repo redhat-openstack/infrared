@@ -102,7 +102,7 @@ NeutronSecurityGroup.create_and_update_security_groups:
 NeutronNetworks.create_and_list_floating_ips:
   -
     args:
-      floating_network: "public"
+      floating_network: "{{ floating_network|default('nova') }}"
       floating_ip_args: {}
     runner:
       type: "constant"
@@ -518,7 +518,7 @@ NeutronNetworks.create_and_delete_subnets:
 NeutronNetworks.create_and_delete_floating_ips:
   -
     args:
-      floating_network: "public"
+      floating_network: "{{ floating_network|default('nova') }}"
       floating_ip_args: {}
     runner:
       type: "constant"

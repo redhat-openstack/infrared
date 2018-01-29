@@ -14,6 +14,9 @@ Create:
         infrared workspace create example
 
         Workspace 'example' added
+
+    .. note:: The create option will not switch to the newly created workspace. In order to switch to the new workspace, the ``checkout`` command should be used
+
 Inventory:
     Fetch workspace inventory file (a symlink to the real file that might be changed by `infrared` executions)::
 
@@ -21,9 +24,15 @@ Inventory:
 
         /home/USER/.infrared/workspaces/example/hosts
 Checkout
-    Creates new workspace if needed and switches to it::
+    Switches to the specified workspace::
 
         infrared workspace checkout example3
+
+        Now using workspace: 'example3'
+
+    Creates a new workspace if the ``--create`` or ``-c`` is specified and switches to it::
+
+        infrared workspace checkout --create example3
 
         Workspace 'example3' added
         Now using workspace: 'example3'

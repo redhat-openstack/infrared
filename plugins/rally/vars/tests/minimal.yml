@@ -1,0 +1,20 @@
+---
+  NovaServers.boot_and_delete_multiple_servers:
+    -
+      args:
+        image:
+          name: "{{ guest_image.name }}"
+        flavor:
+          name: "m1.nano"
+        count: 5
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0

@@ -43,6 +43,17 @@
       - deploy_preparation
       - templates
 
+- name: Prepare TLS Everywhere
+  import_playbook: tls_everywhere.yml
+  tags:
+      - deploy_preparation
+      - templates
+      - freeipa
+  when:
+      - install.tls.everywhere|default(False)
+      - install.version|default(undercloud_version)|openstack_release >= 12
+      - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
+
 - name: Deploy the Overcloud
   hosts: undercloud
   gather_facts: yes
@@ -70,6 +81,16 @@
             bash {{ overcloud_deploy_script }} &> overcloud_install.log
         register: overcloud_deploy
         ignore_errors: yes
+
+      - include_role:
+            name: tls-everywhere
+        vars:
+            stages:
+                - post_overcloud
+        when:
+            - install.tls.everywhere|default(False)
+            - install.version|default(undercloud_version)|openstack_release >= 12
+            - overcloud_deploy.rc == 0
 
       - name: Print the last few lines of the output to spot failures
         command: tail -n60 overcloud_install.log
@@ -132,11 +153,22 @@
           state: present
           timeout: 60
 
+    - name: check if we have v3 rc file
+      stat:
+          path: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3"
+      register: rc_file_path
+      tags:
+          - clouds_file
+
     - name: update clouds.yaml file
       include_tasks: clouds.yml
       vars:
-            auth_file_path: "{{ overcloudrc_file }}"
+            v3_file: "{{ install.overcloud.stack }}rc.v3"
+            v2_file: "{{ install.overcloud.stack }}rc"
+            auth_file_path: "{{ ansible_user_dir }}/{{ rc_file_path.stat.exists | ternary(v3_file, v2_file) }}"
             cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"
+      tags:
+          - clouds_file
 
     - name: fetch the overcloud rc file
       tags:
@@ -155,3 +187,42 @@
           dest: "{{ inventory_dir }}/{{ install.overcloud.stack }}rc.v3"
           flat: yes
           fail_on_missing: no
+
+    - name: Read baremetal nodes got from user input on hybrid deployment
+      block:
+        - name: Set hybrid var
+          include_vars:
+              file: "{{ install.hybrid }}"
+              name: bm_nodes
+
+        - name: get nodes name
+          set_fact:
+              node_name: "{{ item.name }}"
+          with_items: "{{ bm_nodes.nodes }}"
+          register: nodes
+
+        - name: set list of bm nodes
+          set_fact:
+              bm_nodes: "{{ nodes.results | map(attribute='ansible_facts.node_name') | list }}"
+      when: install.hybrid is defined
+
+    - name: set bm_nodes to empty when not hybrid
+      set_fact:
+          bm_nodes: ""
+      when: install.hybrid is not defined
+
+    - name: Get overcloud nodes
+      set_fact:
+        oc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
+
+    - name: vbmc for overcloud
+      delegate_to: hypervisor
+      include_role:
+          name: vbmc
+      vars:
+          vbmc_nodes: "{{ oc_nodes | difference(bm_nodes) }}"
+          overcloud_deploy: "yes"
+      when:
+          - install.version|default(undercloud_version) | openstack_release >= 11 or install.vbmc.force
+          - "'hypervisor' in groups"
+          - vbmc_host == 'hypervisor'

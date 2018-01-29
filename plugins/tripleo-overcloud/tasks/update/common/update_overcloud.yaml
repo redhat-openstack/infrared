@@ -4,7 +4,7 @@
     dest: "{{ overcloud_update_script }}"
     mode: 0755
     content: |
-        yes ""| tail -n +1 | openstack overcloud update stack -i overcloud
+        yes ""| tail -n +1 | openstack overcloud update stack -i {{ install.overcloud.stack }}
   when:
     - undercloud_version|openstack_release > 9
 

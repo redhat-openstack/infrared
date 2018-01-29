@@ -94,6 +94,7 @@
             if test.threads|default('') else '' }}
             {{ ('--black-regex ' + test.blackre|string|quote )
             if test.blackre|default('') else '' }}
+            {{ (test.list) | ternary ('--list','') }}
             > {{ test_output_filename }}.subunit;
         args:
             executable: /bin/bash

@@ -1,5 +1,17 @@
 - include_tasks: pre.yml
+  tags: container-images-patch
+
 - include_tasks: build_images.yml
+
+- stat:
+      path: /etc/yum.repos.d/patched_rpms.repo
+  register: patched_rpms_repo
+
+- name: patch images
+  include_tasks: patch_images.yml
+  when: install_container_images_patch is defined or patched_rpms_repo.stat.exists == True
+  tags: container-images-patch
+
 - include_tasks: workarounds.yml
 - include_tasks: ceph-ansible.yml
   when:

@@ -55,6 +55,16 @@ class IRRequiredArgsMissingException(IRException):
         super(IRRequiredArgsMissingException, self).__init__(message)
 
 
+class IRInvalidChoiceException(IRException):
+    def __init__(self, invalid_options):
+        message = "The following arguments contain invalid choices:"
+        for arg_name, arg_value, available_choices in invalid_options:
+            message += \
+                "\nArgument {}: invalid choice '{}' (choose from {})".format(
+                    arg_name, arg_value, available_choices)
+        super(self.__class__, self).__init__(message)
+
+
 class SpecParserException(Exception):
     """
     The spec parser specific exception.
@@ -107,10 +117,9 @@ class IRWorkspaceIsActive(IRException):
 class IRNoActiveWorkspaceFound(IRException):
     def __init__(self):
         message = "There is no active workspace found. " \
-                  "You can create and activate workspace by" \
-                  " running the following commands: " \
-                  "\n infrared workspace create <workspace_name>" \
-                  "\n infrared workspace activate <workspace_name>"
+                  "You can create and checkout workspace by" \
+                  " running the following command: " \
+                  "\n infrared workspace checkout --create <workspace_name>"
         super(IRNoActiveWorkspaceFound, self).__init__(message)
 
 
@@ -199,3 +208,10 @@ class IRPluginExistsException(IRException):
 class IRFailedToAddPluginDependency(IRException):
     def __init__(self, reason_str):
         super(self.__class__, self).__init__(reason_str)
+
+
+class IRExtraVarsException(IRException):
+    def __init__(self, extra_var):
+        super(self.__class__, self).__init__(
+            '"%s" - extra-var argument must be in the "key=value" '
+            'form' % extra_var)

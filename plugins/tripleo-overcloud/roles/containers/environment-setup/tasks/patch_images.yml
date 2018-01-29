@@ -1,16 +1,4 @@
 ---
-- stat:
-      path: /etc/yum.repos.d/patched_rpms.repo
-  register: patched_rpms_repo
-
-- fail:
-      msg: /etc/yum.repos.d/patched_rpms.repo doesn't exist
-  when: patched_rpms_repo.stat.exists == False
-
-- stat:
-      path: /patched_rpms
-  register: patched_rpms
-
 - fail:
       msg: /patched_rpms doesn't exist
   when: patched_rpms.stat.exists == False
@@ -22,24 +10,62 @@
 - name: create docker context dir for images patching - required to copy files into the new image
   file:
       path: "{{ container_images_patch_dir }}"
-      state: directory
+      state: "{{ item }}"
+  with_items:
+      - absent
+      - directory
 
 - name: populate docker context dir with patched rpms and repo
-  command: |
-      cp /etc/yum.repos.d/patched_rpms.repo {{ container_images_patch_dir }}/;
+  shell: |
+      cp /etc/yum.repos.d/patched_rpms.repo {{ container_images_patch_dir }}/
       cp -r /patched_rpms {{ container_images_patch_dir }}/
 
-- name: tag the original image(s) with 'before_patching' and patch&push container image(s)
+- name: set container_images_patch_logdir fact
+  set_fact:
+      container_images_patch_logdir: /var/log/extra/infrared_container-images-patch/
+
+- name: "create {{ container_images_patch_logdir }} to keep the patching logs"
+  become: true
+  file:
+      path: "{{ container_images_patch_logdir }}"
+      state: "{{ item }}"
+  with_items:
+      - absent
+      - directory
+
+- name: tag the original image(s) with 'before_patching' and patch container image(s)
   shell: |
+      set -e
+      ORIG_USER="$( docker run --rm {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} /usr/bin/bash -c "echo -n \$(id -u --name)" )"
+
       docker tag {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
       {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}-before_patching
       echo "
       FROM {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
       COPY patched_rpms.repo /etc/yum.repos.d/patched_rpms.repo
       ADD /patched_rpms /patched_rpms
+      USER root
+      RUN yum repolist all
+      RUN yum list installed
+      RUN yum list available
+      RUN yum list updates
       RUN yum update -y -v
+      ARG ORIG_USER
+      USER $ORIG_USER
       " > {{ container_images_patch_dir }}/Dockerfile
-      docker build -t {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} {{ container_images_patch_dir }}/
+
+      docker build -t {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
+      {{ container_images_patch_dir }}/ --build-arg ORIG_USER=$ORIG_USER > {{ container_images_patch_logdir }}/docker_build_{{ item }}.log 2>&1
+      if ! grep -q "Installed products updated" "{{ container_images_patch_logdir }}/docker_build_{{ item }}.log" ; then
+          echo -e "\n\nno packages updated!!!\n\n." >&2
+          exit 1
+      fi
+  with_items: "{{ install_container_images_patch.split(',') }}"
+  become: true
+
+- name: push patched container image(s) to docker registry on undercloud
+  shell: |
+      set -e
       docker push {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
   with_items: "{{ install_container_images_patch.split(',') }}"
   become: true

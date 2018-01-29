@@ -23,9 +23,9 @@ subparsers:
                       action: append
                       help: |
                         The list of additional plugins with tests to install.
-                        Should be specified in next format:
+                        Should be specified in the following format:
                             --plugin=repo_url
-                        More that one --plugin option can be provided.
+                        More than one --plugin option can be provided.
                   openstack-version:
                        type: Value
                        help: |
@@ -93,6 +93,7 @@ subparsers:
                       type: Value
                       help: |
                           Adds an extra black (skip) regex to the ostestr/tempest invocation.
+                          To add multiple tests seperate by pipe.
                   revision:
                       type: Value
                       help: The setup (git) revision if applicable
@@ -129,6 +130,10 @@ subparsers:
                           Output format of tempest results report to generate. Currently supported: junitxml, html.
                           Format: --results-formats junitxml,html
                       default: junitxml
+                  list:
+                      type: Bool
+                      help: List all the tests which will be run.
+                      default: no
 
             - title: ansible facts
               options:

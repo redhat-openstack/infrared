@@ -1,17 +1,4 @@
 ---
-- name: Get Overcloud version
-  become: true
-  find:
-      use_regex: yes
-      patterns: 'rhos-release-[0-9]+.*'
-      paths:
-        - '/etc/yum.repos.d/'
-  register: result
-
-- name: Setting overcloud_version
-  set_fact:
-      overcloud_version: "{{ result.files[0]['path'] | basename | regex_replace('^rhos-release-([0-9]+).*$', '\\1') }}"
-
 - fail:
-      msg: "Validation of overcloud version failed. Undercloud version {{ undercloud_version}}, Overcloud version {{ undercloud_version }}. Upgrade is posible only if undercloud is with the next version"
-  when:  (overcloud_version|int) + 1  != (undercloud_version|int)
+      msg: "Validation of overcloud version failed. Undercloud version {{ hostvars[groups['undercloud']|first].undercloud_version }}, Overcloud version {{ overcloud_version }}. Upgrade is posible only if undercloud is with the next version"
+  when:  (overcloud_version|int) + 1  != (hostvars[groups['undercloud']|first].undercloud_version|int)

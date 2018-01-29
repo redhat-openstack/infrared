@@ -48,7 +48,10 @@ subparsers:
                       type: Value
                       help: |
                             Comma,separated list of docker container images to patch using '/patched_rpm' yum repository.
-                            NOTE: Patching involves 'yum update' inside the container.
+                            NOTE: Patching involves 'yum update' inside the container. This feature is not supported when
+                            registry-undercloud-skip is set to True.
+                            Example:
+                                --container-images-patch openstack-opendaylight,openstack-nova-compute
 
                   container-images-packages:
                       type: IniType
@@ -205,6 +208,12 @@ subparsers:
                       type: Value
                       help: Overrides the overcloud stack name
                       default: "overcloud"
+
+                  tls-everywhere:
+                      type: Bool
+                      help: |
+                          Specifies whether TLS Everywhere with FreeIPA should be implemented
+                      default: no
 
             - title: Network Configuration
               options:

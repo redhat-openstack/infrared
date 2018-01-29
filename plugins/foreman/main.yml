@@ -9,6 +9,7 @@
            username: "{{ provision.user }}"
            password: "{{ provision.password }}"
            host_id: "{{ provision.host.address }}"
+           ping_deadline: "{{ (provision.ping | default({})).deadline | default(omit) }}"
            wait_for_host: "{{ provision.wait | int }}"
            mgmt_strategy: "{{ provision.strategy }}"
            mgmt_action: "{{ provision.action }}"

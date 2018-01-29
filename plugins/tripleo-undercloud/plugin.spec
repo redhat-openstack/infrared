@@ -70,6 +70,12 @@ subparsers:
                           A self-signed SSL cert will be generated.
                       default: no
 
+                  tls-everywhere:
+                      type: Bool
+                      help: |
+                          Specifies whether TLS Everywhere with FreeIPA should be implemented
+                      default: no
+
             - title: Setup Undercloud Packages
               options:
                   mirror:
@@ -164,6 +170,12 @@ subparsers:
                       type: Value
                       help: |
                           comma separated list of URLs to download repo files to ``/etc/yum.repos.d``
+                  repos-skip-release:
+                      type: Bool
+                      help: |
+                          specifies whether the rhos/rdo-release tools should
+                          be used to install tripleo packages.
+
 
             - title: Overcloud images
               options:
