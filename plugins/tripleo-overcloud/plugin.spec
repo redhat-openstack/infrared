@@ -158,6 +158,15 @@ subparsers:
                             The target file should contains information about the bare-metals servers
                             that will be added to the instackenv.json file during introspection.
 
+                  environment-plan:
+                      type: Value
+                      short: p
+                      help: |
+                            The absolute path or url address to a custom environment plan file.
+                            Environment plan file example:
+                              tripleo-overcloud/vars/environment/plan/example.yml
+                            NOTE: Infrared support this option for RHOSP from version 12.
+
             - title: Overcloud Options
               options:
                   overcloud-debug:
