@@ -25,10 +25,37 @@
         delegate_to: hypervisor
         when: install.version|default(undercloud_version) | openstack_release < 11
 
+      - name: Read baremetal nodes got from user input on hybrid deployment
+        block:
+          - name: Set hybrid var
+            include_vars:
+                file: "{{ install.hybrid }}"
+                name: bm_nodes
+
+          - name: get nodes name
+            set_fact:
+                node_name: "{{ item.name }}"
+            with_items: "{{ bm_nodes.nodes }}"
+            register: nodes
+
+          - name: set list of bm nodes
+            set_fact:
+                bm_nodes_names: "{{ nodes.results | map(attribute='ansible_facts.node_name') | list }}"
+        when: install.hybrid is defined
+
+      - name: set bm_nodes to empty when not hybrid
+        set_fact:
+            bm_nodes_names: ""
+        when: install.hybrid is not defined
+
+      - name: Get overcloud nodes
+        set_fact:
+          oc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
+
       - include_role:
             name: vbmc
         vars:
-            vbmc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
+            vbmc_nodes: "{{ oc_nodes | difference(bm_nodes_names) }}"
             overcloud_deploy: "no"
         when: install.version|default(undercloud_version) | openstack_release >= 11 or install.vbmc.force
 
@@ -47,6 +74,8 @@
         when: provison_virsh_network_name is not defined
 
       - name: get information about vm's from hypervisor
+        vars:
+            vm_nodes: "{{ oc_nodes | difference(bm_nodes_names) }}"
         delegate_to: hypervisor
         shell: |
             NODE_XML=`virsh dumpxml {{ item }}`
@@ -66,16 +95,10 @@
                 'disk_bytes': '`virsh domblkinfo {{ item }} vda | grep -e Capacity | cut -d\: -f2 | xargs`',
                 'disks': '${disks_list}',
             }"
-        with_items: "{{ groups['overcloud_nodes']|sort }}"
+        with_items: "{{ vm_nodes|sort }}"
         register: nodes_info
         tags:
             - skip_ansible_lint
-
-      - name: Read baremetal nodes got from user input on hybrid deployment
-        include_vars:
-            file: "{{ install.hybrid }}"
-            name: bm_nodes
-        when: install.hybrid is defined
 
       - name: prepare instackenv.json file
         vars:
@@ -92,8 +115,10 @@
       # https://github.com/ansible/ansible/issues/16972
       # This issue causes an exception when that playbook is included with the false condition
       - name: power off overcloud nodes
+        vars:
+            vm_nodes: "{{ oc_nodes | difference(bm_nodes_names) }}"
         virt:
             name: "{{ item }}"
             state: destroyed
-        with_items: "{{ groups['overcloud_nodes'] }}"
+        with_items: "{{ vm_nodes }}"
         delegate_to: hypervisor
