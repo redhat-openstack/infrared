@@ -9,11 +9,10 @@
       - name: Install packages
         become: true
         package:
-            name: "{{ item }}"
+            name:
+              - pytest
+              - git
             state: latest
-        with_items:
-            - pytest
-            - git
 
       - name: Clean old files
         file:

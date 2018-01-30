@@ -1,15 +1,14 @@
 - name: install common packages
   package:
-      name: "{{ item }}"
+      name:
+        - gcc
+        - git
+        - gzip
+        - java-openjdk
+        - openssl-devel
+        - python-virtualenv
+        - unzip
       state: present
-  with_items:
-      - git
-      - python-virtualenv
-      - gcc
-      - java-openjdk
-      - openssl-devel
-      - unzip
-      - gzip
   become: yes
 
 # todo(obaranov) make sure 46+ version is installed.
