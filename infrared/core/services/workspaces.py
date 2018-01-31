@@ -467,7 +467,7 @@ class WorkspaceManager(object):
         hosts = invent.get_hosts(pattern)
 
         return [(host.name,
-                 host.vars.get("ansible_ssh_host"),
+                 host.vars.get("ansible_host"),
                  ', '.join(str(group) for group in host.groups
                            if str(group) not in EXCLUDED_GROUPS))
                 for host in hosts
