@@ -6,7 +6,7 @@ After=syslog.target network.target
 Type=forking
 # Clean any existing files in /tmp/.X11-unix environment
 ExecStartPre=/bin/sh -c '/usr/bin/vncserver -kill :{{ vnc_display_number }} > /dev/null 2>&1 || :'
-ExecStart=/usr/sbin/runuser -l {{ ansible_ssh_user }} -c "/usr/bin/vncserver :{{ vnc_display_number }}"
+ExecStart=/usr/sbin/runuser -l {{ ansible_user }} -c "/usr/bin/vncserver :{{ vnc_display_number }}"
 ExecStop=/bin/sh -c '/usr/bin/vncserver -kill :{{ vnc_display_number }} > /dev/null 2>&1 || :'
 
 [Install]
