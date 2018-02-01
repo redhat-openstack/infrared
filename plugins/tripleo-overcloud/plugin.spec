@@ -77,7 +77,7 @@ subparsers:
                       type: Bool
                       help: Avoid using and mass populating the undercloud registry.
                             The registry or the registry-mirror will be used directly when possible,
-                            recommended to use this option when you have very good bandwith to your registry.
+                            recommended to use this option when you have very good bandwidth to your registry.
                       default: False
 
                   registry-namespace:
