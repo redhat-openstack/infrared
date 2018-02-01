@@ -139,6 +139,12 @@ subparsers:
                       type: Bool
                       help: List all the tests which will be run.
                       default: no
+                  packages:
+                      type: Value
+                      help: Comma,delimited list of packages to install system-wide before installing tests packages and their requirements.
+                  pip-packages:
+                      type: Value
+                      help: Comma,delimited list of pip packages to install system-wide before installing tests packages and their requirements.
 
             - title: ansible facts
               options:

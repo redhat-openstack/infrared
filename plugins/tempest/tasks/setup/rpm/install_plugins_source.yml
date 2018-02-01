@@ -4,11 +4,11 @@
       name: "git"
       state: present
 
-- name: Install pip
-  become: yes
-  easy_install:
-      name: pip
-      state: latest
+# not using easy_install due to problems similar to https://github.com/pypa/pip/issues/4596
+- name: Install pip using get-pip.py
+  shell: |
+      curl https://bootstrap.pypa.io/get-pip.py | python
+  become: true
 
 - name: Create plugins directory
   file:
