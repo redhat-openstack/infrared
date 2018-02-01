@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3cb8793_89628f43",
+        "filename": "plugins/tripleo-overcloud/vars/deployment/files/splitstack/network/nic-configs/controller.yaml",
+        "patchSetId": 27
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1013202
+      },
+      "writtenOn": "2018-02-01T15:31:06Z",
+      "side": 1,
+      "message": "I guess, it\u0027s better to move common part of parameters to separated file and just include it here.\n\nparameters.yaml.j2\n---------------------------------\nControlPlaneIp:\n  default: \u0027\u0027\n  description: IP address/subnet on the ctlplane network\n  type: string\nExternalIpSubnet:\n  default: \u0027\u0027\n  description: IP address/subnet on the external network\n  type: string\nInternalApiIpSubnet:\n  default: \u0027\u0027\n  description: IP address/subnet on the internal API network\n  type: string\n\n....\n\n\nceph-storage.yaml.j2\n---------------------------------\nheat_template_version: ocata\n\ndescription: \u003e\n  Software Config to drive os-net-config to configure multiple interfaces\n  for the ceph storage role.\n\nparameters:\n{{ lookup(\u0027file\u0027, \u0027parameters.yaml.j2\u0027)|indent(2, indentfirst\u003dTrue) }}\n  EC2MetadataIp: # Override this via parameter_defaults\n    description: The IP address of the EC2 metadata server.\n    type: string",
+      "revId": "0b5b3a28b6e65671a98ff94fe874123bcefd0b6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
