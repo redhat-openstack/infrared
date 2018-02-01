@@ -26,7 +26,7 @@
 
       - name: stop pcs cluster
         become: true
-        command: pcs cluster stop --request-timeout=300
+        command: "pcs cluster stop --request-timeout=300 {% if groups['controller']|length  < 3 %} --force {% endif %}"
         when: pcs_active|failed
 
       - name: reboot the node
