@@ -21,6 +21,29 @@
             - "'swift' in groups"
             - "'ceph' in groups"
 
+      - block:
+          - name: validate storage-config option is provided
+            fail:
+                msg: "The --storage-config cli option should be provided for external storage backend when --storage-external is used. "
+            when:
+                - install.storage.config == 'internal'
+
+          - name: check if user provided external storage config
+            stat:
+                path: "vars/storage/config/{{ install.storage.config }}.yml"
+            register: install_storage_config_file
+
+          - fail:
+                msg: |
+                    "The file for external storage config is not found.
+                    Expected path: vars/storage/config/{{ install.storage.config }}.yml"
+            when:
+                - install_storage_config_file.stat.exists == False
+
+        when:
+            - install.deploy|default('')
+            - install.storage.external
+
 - name: Perform pre-deployment validations on undercloud
   hosts: undercloud
   gather_facts: no
