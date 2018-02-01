@@ -13,7 +13,7 @@
 - fail:
       msg: "patching container images is not supported when 'registry-undercloud-skip' is set to True"
   when:
-      - install_container_images_patch is defined or patched_rpms.stat.exists == False
+      - install_container_images_patch is defined or patched_rpms.stat.exists == True
       - install.registry.undercloud.skip
   tags: container-images-patch
 
