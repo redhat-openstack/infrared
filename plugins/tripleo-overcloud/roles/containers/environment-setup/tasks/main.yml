@@ -10,7 +10,7 @@
 
 - name: patch images
   include_tasks: patch_images.yml
-  when: install_container_images_patch is defined or patched_rpms_repo.stat.exists == True
+  when: install_container_images_patch is defined or (patched_rpms_repo.stat.exists == True and install.version|default(undercloud_version)|openstack_release > 12)
   tags: container-images-patch
 
 - include_tasks: workarounds.yml
