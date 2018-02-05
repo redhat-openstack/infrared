@@ -445,6 +445,9 @@ def main(args=None):
     # because of that all the ansible modules should be imported after that
     CoreServices.dependency_manager().inject_libraries()
 
+    # inject ansible config file
+    CoreServices.ansible_config_manager().inject_config()
+
     specs_manager = api.SpecManager()
 
     # Init Managers
