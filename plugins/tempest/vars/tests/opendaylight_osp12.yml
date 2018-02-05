@@ -1,14 +1,16 @@
 ---
 test_dict:
-  test_regex: ''
-  whitelist:
-    - tempest.api.network
-    - tempest.scenario..*network
-    - "^neutron.tests.tempest.*"
-  blacklist: ''
-  plugins:
-    neutron:
-        repo: "https://github.com/openstack/neutron.git"
-        version: "master"
-        package:
-          default: "python-neutron-tests"
+    test_regex: ''
+    whitelist:
+        - tempest.api.network
+        - tempest.scenario..*network
+        - "^neutron.tests.tempest.*" # from python-neutron-tests RPM package
+        - neutron_plugin.*
+        - neutron_tempest_plugin.*
+    blacklist: ''
+    plugins:
+        neutron-tempest-plugin:
+            repo: "https://github.com/openstack/neutron-tempest-plugin"
+            version: "master"
+            package:
+                default: "python-neutron-tests"

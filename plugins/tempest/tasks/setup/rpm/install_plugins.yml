@@ -12,6 +12,30 @@
       plugins: "{{ test_dict.plugins | default({}) | combine(cli_plugins|default({})) }}"
       plugins_dir: "{{ ansible_user_dir }}/{{test.dir | dirname }}/plugins"
 
+- name: Install extra system requirements for tests
+  package:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ test.packages.split(',') }}"
+  when: item is defined
+  become: yes
+
+# not using easy_install due to problems similar to https://github.com/pypa/pip/issues/4596
+- name: Install pip using get-pip.py
+  shell: |
+      curl https://bootstrap.pypa.io/get-pip.py | python
+  become: true
+  when: pip_packages is defined
+
+- name: Install extra pip packages before installing plugins
+  pip:
+      name: "{{ item }}"
+      state: present
+      extra_args: '-U'
+  with_items: "{{ pip_packages }}"
+  when: item is defined
+  become: yes
+
 - name: Install plugin packages for "{{ test_suite }}" suite
   become: yes
   package:
