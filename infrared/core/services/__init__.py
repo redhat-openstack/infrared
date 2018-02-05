@@ -8,6 +8,7 @@ import sys
 from infrared.core.services import dependency
 from infrared.core.services import workspaces
 from infrared.core.services import plugins
+from infrared.core.services import ansible_config
 from infrared.core.utils import logger
 
 LOG = logger.LOG
@@ -18,6 +19,7 @@ class ServiceName(object):
     WORKSPACE_MANAGER = "workspace_manager"
     PLUGINS_MANAGER = "plugins_manager"
     DEPENDENCY_MANAGER = "dependency_manager"
+    ANSIBLE_CONFIG_MANAGER = "ansible_config_manager"
 
 
 class CoreSettings(object):
@@ -43,20 +45,20 @@ class CoreSettings(object):
         # todo(obaranov) replace with
         # todo(obaranov) os.path.join(os.path.expanduser("~"), '.infrared')
         # todo(obaranov) once IR is packaged as pip
-        infarared_home = os.path.abspath(os.environ.get(
+        self.infrared_home = os.path.abspath(os.environ.get(
             "IR_HOME", os.getcwd()))
 
         # todo(obaranov) replace .workspaces to workspaces and .plugins.ini to
         # todo(obaranov) plugins.ini once IR is packaged as pip
         self.plugins_conf_file = plugins_conf_file or os.path.join(
-            infarared_home, '.plugins.ini')
+            self.infrared_home, '.plugins.ini')
         self.workspaces_base_folder = workspaces_base_folder or os.path.join(
-            infarared_home, '.workspaces')
+            self.infrared_home, '.workspaces')
         self.install_plugin_at_start = install_plugin_at_start
         self.library_base_folder = library_base_folder or os.path.join(
-            infarared_home, '.library')
+            self.infrared_home, '.library')
         self.plugins_base_folder = plugins_base_folder or os.path.join(
-            infarared_home, 'plugins')
+            self.infrared_home, 'plugins')
 
 
 class CoreServices(object):
@@ -104,6 +106,12 @@ class CoreServices(object):
                                      not skip_plugins_install),
                     plugins_dir=core_settings.plugins_base_folder))
 
+        # create ansible config manager
+        if ServiceName.ANSIBLE_CONFIG_MANAGER not in cls._SERVICES:
+            cls.register_service(ServiceName.ANSIBLE_CONFIG_MANAGER,
+                                 ansible_config.AnsibleConfigManager(
+                                     core_settings.infrared_home))
+
     @classmethod
     def register_service(cls, service_name, service):
         """Protect the _SERVICES dict"""
@@ -129,3 +137,8 @@ class CoreServices(object):
     def dependency_manager(cls):
         """Gets the plugin manager. """
         return cls._get_service(ServiceName.DEPENDENCY_MANAGER)
+
+    @classmethod
+    def ansible_config_manager(cls):
+        """Gets the ansible config manager. """
+        return cls._get_service(ServiceName.ANSIBLE_CONFIG_MANAGER)
