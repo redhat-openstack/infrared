@@ -85,6 +85,23 @@ Install ``infrared`` from source::
 
       pip install -e .
 
+Ansible Configuration
+---------------------
+Infrared require a valid ansible.cfg. Infrared try to locate the config in this order:
+
+   * ANSIBLE_CONFIG (an environment variable)
+   * ansible.cfg (in the current directory)
+   * ansible.cfg (in the Infrared home directory)
+   * .ansible.cfg (in the home directory)
+   * /etc/ansible/ansible.cfg
+
+If none of this location contains ansible.cfg, InfraRed will create a default one in Infrared's home directory
+
+.. literalinclude:: ../examples/ansible.cfg
+   :linenos:
+
+.. note:: Values for `forks`, `host_key_checking` and `timeout` have to be the same or greater.
+
 Bash completion
 ---------------
 Bash completion script is in etc/bash_completion.d directory of git repository.
