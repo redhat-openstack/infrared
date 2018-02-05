@@ -1,4 +1,5 @@
 from infrared.core.utils.exceptions import IRValidatorException
+from ConfigParser import RawConfigParser
 
 import jsonschema
 import yaml
@@ -145,7 +146,6 @@ class SpecValidator(Validator):
 
 
 class RegistryValidator(Validator):
-
     SCHEMA_REGISTRY = {
         "type": "object",
         "patternProperties": {
@@ -193,3 +193,67 @@ class RegistryValidator(Validator):
                 "{} in file:\n{}".format(error.message, file_content))
 
         return registry_dict
+
+
+class AnsibleConfigValidator(Validator):
+    IR_DOC_URL = 'http://infrared.readthedocs.io/en/stable/setup.html#' \
+                 'ansible-configuration'
+
+    SCHEMA_ANSIBLE_DEFAULT_OPTIONS = {
+        "type": "object",
+        "properties": {
+            "host_key_checking": {"type": "string", "pattern": "^(F|f)alse$"},
+            "forks": {"type": "integer", "minimum": 500},
+            "timeout": {"type": "integer", "minimum": 30}
+        },
+        "additionalProperties": True,
+        "required": ["host_key_checking", "forks", "timeout"]
+    }
+
+    SCHEMA_ANSIBLE_CONFIG = {
+        "type": "object",
+        "properties": {
+            "defaults": SCHEMA_ANSIBLE_DEFAULT_OPTIONS
+        },
+        "additionalProperties": True,
+        "required": ["defaults"]
+    }
+
+    @classmethod
+    def validate_from_file(cls, yaml_file=None):
+        config = RawConfigParser()
+        config.read(yaml_file)
+        config_json = cls._convert_config_to_dict(config)
+
+        try:
+            # validate schema
+            jsonschema.validate(config_json,
+                                cls.SCHEMA_ANSIBLE_CONFIG)
+
+        except jsonschema.exceptions.ValidationError:
+            raise IRValidatorException(
+                "There is an issue with Ansible configuration in {}, "
+                "for more info please check at {}\n".format(yaml_file,
+                                                            cls.IR_DOC_URL))
+
+    @classmethod
+    def validate_from_content(cls, file_content=None):
+        pass
+
+    @staticmethod
+    def _convert_config_to_dict(config):
+        config_dict = {}
+        for section in config.sections():
+            if section not in config_dict:
+                config_dict[section] = {}
+
+            for option in config.options(section):
+                option_value = config.get(section, option)
+                try:
+                    option_value = int(option_value)
+                except ValueError:
+                    pass
+
+                config_dict[section][option] = option_value
+
+        return config_dict
