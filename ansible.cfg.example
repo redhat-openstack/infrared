@@ -1,27 +1,16 @@
 # see https://raw.githubusercontent.com/ansible/ansible/devel/examples/ansible.cfg
 
 [defaults]
+host_key_checking = False # It is needed for openstack plugin
 forks = 500
-
-# SSH timeout
 timeout = 30
+force_color = 1
+
+[ssh_connection]
+pipelining = True
+ssh_args = -o ControlMaster=auto -o ControlPersist=60s
 
 # 'debug' (formerly human_readable) output prints multi-line stdout/stderr
 # for humans instead of JSON. It has nothing to do with debugging.
 # Users can still override this value by using ANSIBLE_STDOUT_CALLBACK
-stdout_callback = debug
-
-
-[paramiko_connection]
-record_host_keys = False
-
-
-[persistent_connection]
-
-
-[ssh_connection]
-host_key_checking = False
-pipelining = True
-ssh_args = -o ControlMaster=auto -o ControlPersist=60s
-
-# keep [ssh_connection] last to allow appending control_path to it
+# stdout_callback = debug
