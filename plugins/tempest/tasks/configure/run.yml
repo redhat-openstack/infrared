@@ -27,7 +27,11 @@
               -v \
               --create \
               {% if test.image|default('') %}
-              --image {{ test.image }} \
+                  {% if test.images.packages|default('') }
+                      --image ~/tempest_image \
+                  {% else %}
+                      --image {{ test.image }} \
+                  {% endif %}
               {% endif %}
               identity.uri $OS_AUTH_URL \
               identity.admin_password $OS_PASSWORD \
