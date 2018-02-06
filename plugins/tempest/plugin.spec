@@ -77,6 +77,9 @@ subparsers:
                       type: Value
                       help: |
                           An image to be uploaded to glance and used for testing. Path have to be a url.
+                  images-packages:
+                      type: Value
+                      help: Comma delimited list of packages to install in guest image tempest will use for testing
                   config-options:
                        type: IniType
                        action: append
