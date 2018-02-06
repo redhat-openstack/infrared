@@ -1,0 +1,14 @@
+---
+- name: Install libguestfs-tools to get virt-customize
+  become: yes
+  package:
+      name: libguestfs-tools
+      state: present
+
+- name: Download tempest image
+  get_url:
+      dest: "~/tempest_image"
+      url: "{{ install.images }}"
+
+- name: Install packages in guest image tempest will use for testing
+  command: "virt-customize -a ~/tempest_image --install {{ install.images.packages }} --selinux-relabel"
