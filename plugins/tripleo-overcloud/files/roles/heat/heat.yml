@@ -20,7 +20,7 @@ heat_role:
         - OS::TripleO::Services::TripleoPackages
         - OS::TripleO::Services::TripleoFirewall
         - OS::TripleO::Services::SensuClient
-        - OS::TripleO::Services::FluentdClient
+        - OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}
         - OS::TripleO::Services::AuditD
         - OS::TripleO::Services::Collectd
         - OS::TripleO::Services::MySQLClient
