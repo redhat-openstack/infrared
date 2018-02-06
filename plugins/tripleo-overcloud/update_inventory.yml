@@ -69,6 +69,7 @@
             name: "{{ host_id }}"
             # groups can only be added
             groups: unused
+            inventory_dir: "{{ inventory_dir | default(omit) }}"
 
       # Connection for baremetals must be forwarded through UC as OC nodes
       # lie on ctplane not accessible from anywhere else.
@@ -81,6 +82,7 @@
                 ansible_ssh_common_args: "-o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                                           -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
                                           {{ hostvars[groups['undercloud'][0]].ansible_ssh_user }}@{{ hostvars[groups['undercloud'][0]].ansible_ssh_host }}\""
+                inventory_dir: "{{ inventory_dir | default(omit) }}"
             when: "'hypervisor' not in groups"
 
             with_items: "{{ openstack_servers }}"
@@ -92,6 +94,7 @@
                                        -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                                        -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
                                           {{ hostvars['hypervisor'].ansible_ssh_user }}@{{ hostvars['hypervisor'].ansible_ssh_host }}\""
+            inventory_dir: "{{ inventory_dir | default(omit) }}"
         when:
           - "'hypervisor' in groups"
           - install.hybrid|default(false)

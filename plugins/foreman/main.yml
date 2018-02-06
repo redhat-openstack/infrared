@@ -40,6 +40,7 @@
             ansible_ssh_user: "{{ provision.host.user }}"
             ansible_ssh_pass: "{{ provision.host.password | default(omit) }}"
             ansible_ssh_private_key_file: "{{ provision.host.key | default(omit) }}"
+            inventory_dir: "{{ inventory_dir | default(omit) }}"
 
       - include_role:
             name: inventory-update

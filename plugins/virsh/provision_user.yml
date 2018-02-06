@@ -51,6 +51,7 @@
       add_host:
           name: "{{ item }}"
           ansible_ssh_user: "{{ provision.topology.username }}"
+          inventory_dir: "{{ inventory_dir | default(omit) }}"
       when:
         - item not in groups.overcloud_nodes|default([])
         - hostvars[item].create_user|changed

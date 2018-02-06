@@ -36,6 +36,7 @@
   add_host:
       name: "{{ topology_node.name }}-{{ item }}"
       ansible_connection: "local"
+      inventory_dir: "{{ inventory_dir | default(omit) }}"
   with_sequence: start={{ node_start_index|int }} end={{ node.value|int + node_start_index|int - 1 }}
 
 - include_role:

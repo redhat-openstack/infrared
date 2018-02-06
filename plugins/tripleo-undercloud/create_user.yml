@@ -86,6 +86,7 @@
         add_host:
             name: "{{ inventory_hostname }}"
             ansible_ssh_user: "{{ install.user.name }}"
+            inventory_dir: "{{ inventory_dir | default(omit) }}"
 
 - name: update inventory file
   hosts: localhost

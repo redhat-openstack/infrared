@@ -34,6 +34,7 @@
           # Moreover ssh-askpass doesn't support Host Key checking enabled,
           # we need to forcefully disable it until PKI is enabled.
           ansible_ssh_common_args: "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o AddressFamily=inet -o HostbasedAuthentication=no"
+          inventory_dir: "{{ inventory_dir | default(omit) }}"
 
     - name: Wait for ssh port to be open
       wait_for:
@@ -60,6 +61,7 @@
           ansible_ssh_user: "{{ provision.host.user }}"
           ansible_ssh_pass: ''
           ansible_ssh_private_key_file: "{{ provision.host.privkey }}"
+          inventory_dir: "{{ inventory_dir | default(omit) }}"
 
 - name: generate inventory file
   hosts: localhost
