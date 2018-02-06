@@ -1,0 +1,17 @@
+---
+- name: Install libguestfs-tools
+  become: yes
+  package:
+      name: libguestfs-tools
+      state: present
+
+- name: Download tempest image
+  get_url:
+      dest: "~/tempest_image"
+      url: "{{ test.image }}"
+      
+- name: Push repos to guest image tempest will use for testing                                                                                                                                                       
+  command: "virt-copy-in -a ~/tempest_image /etc/yum.repos.d /etc/"
+
+- name: Install packages in guest image tempest will use for testing
+  command: "virt-customize -a ~/tempest_image --install {{ test.images.packages }} --selinux-relabel"

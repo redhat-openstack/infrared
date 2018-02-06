@@ -31,6 +31,13 @@
         tags:
             - setup
 
+      - name: Customize guest image
+        import_tasks: "tasks/image/main.yml"
+        tags: image
+        when:
+            - test.image is defined and test.image
+            - test.images is defined and test.images.packages
+
       - name: Configure tempest
         include_tasks: "tasks/configure/main.yml"
         tags:
