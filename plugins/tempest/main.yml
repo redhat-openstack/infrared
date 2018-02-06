@@ -31,6 +31,12 @@
         tags:
             - setup
 
+      - name: Edit image
+        include_tasks: "tasks/image/main.yml"
+        tags:
+            - image
+        when: test.image.packages is defined
+
       - name: Configure tempest
         include_tasks: "tasks/configure/main.yml"
         tags:
