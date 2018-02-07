@@ -1,6 +1,6 @@
 #!/bin/bash
 set -x
-RUN_ENVS="pep8 py27 cli ansible-lint any-errors-fatal conflicts plugin-registry"
+RUN_ENVS="pep8 py27 cli ansible-lint any-errors-fatal conflicts"
 
 FAILED=""
 run_tox() {

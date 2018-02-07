@@ -76,3 +76,92 @@ SHARED_GROUPS = [
         },
     }
 ]
+
+PLUGINS_REGISTRY = {
+    'beaker': {
+        'src': 'plugins/beaker',
+        'desc': 'Provision systems using Beaker',
+        'type': 'provision'
+    },
+    'cloud-config': {
+        'src': 'https://github.com/rhos-infra/cloud-config.git',
+        'desc': 'Collection of overcloud configuration tasks',
+        'type': 'install'
+    },
+    'collect-logs': {
+        'src': 'plugins/collect-logs',
+        'desc': 'Collect log from all nodes in the active workspace',
+        'type': 'other'
+    },
+    'pytest-runner': {
+        'src': 'plugins/pytest-runner',
+        'desc': 'The Pytest runner',
+        'type': 'test'
+    },
+    'foreman': {
+        'src': 'plugins/foreman',
+        'desc': 'Provision systems using Foreman',
+        'type': 'provision'
+    },
+    'gabbi': {
+        'src': 'https://github.com/rhos-infra/gabbi.git',
+        'desc': 'The gabbi test runner',
+        'type': 'test'
+    },
+    'list-builds': {
+        'src': 'plugins/list-builds',
+        'desc': 'Lists all the available puddles',
+        'type': 'other'
+    },
+    'octario': {
+        'src': 'https://github.com/redhat-openstack/octario.git',
+        'desc': 'Octario test runner',
+        'type': 'test'
+    },
+    'openstack': {
+        'src': 'plugins/openstack',
+        'desc': 'Provision systems using Ansible OpenStack modules',
+        'type': 'provision'
+    },
+    'ospdui': {
+        'src': 'plugins/ospdui',
+        'desc': 'The ospdui test runner',
+        'type': 'test'
+    },
+    'packstack': {
+        'src': 'plugins/packstack',
+        'desc': 'OpenStack installation using Packstack',
+        'type': 'install'
+    },
+    'rally': {
+        'src': 'plugins/rally',
+        'desc': 'Rally tests runner',
+        'type': 'test'
+    },
+    'tempest': {
+        'src': 'plugins/tempest',
+        'desc': 'The tempest test runner',
+        'type': 'test'
+    },
+    'tripleo-overcloud': {
+        'src': 'plugins/tripleo-overcloud',
+        'desc': 'Install TripleO overcloud using a designated undercloud node',
+        'type': 'install'
+    },
+    'tripleo-undercloud': {
+        'src': 'plugins/tripleo-undercloud',
+        'desc': 'Install TripleO on a designated undercloud node',
+        'type': 'install'
+    },
+    'tripleo-upgrade': {
+        'src': 'https://github.com/openstack/tripleo-upgrade.git',
+        'src_path': 'infrared_plugin',
+        'desc': 'Upgrade or update TripleO deployment',
+        'type': 'install'
+    },
+    'virsh': {
+        'src': 'plugins/virsh',
+        'desc': 'Provision virtual machines on a single Hypervisor using libvirt',
+        'type': 'provision'
+    }
+}
