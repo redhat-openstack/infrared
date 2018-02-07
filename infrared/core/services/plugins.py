@@ -13,6 +13,7 @@ import pip
 import yaml
 import urllib2
 
+from infrared import PLUGINS_REGISTRY
 from infrared.core.services.dependency import PluginDependency
 from infrared.core.utils import logger
 from infrared.core.utils.validators import SpecValidator, RegistryValidator
@@ -34,12 +35,6 @@ DEFAULT_PLUGIN_INI = dict(
 )
 
 LOG = logger.LOG
-PLUGINS_REGISTRY_FILE = os.path.join(os.path.abspath("./plugins"),
-                                     "registry.yaml")
-
-with open(PLUGINS_REGISTRY_FILE, "r") as fo:
-    PLUGINS_REGISTRY = yaml.load(fo)
-
 
 class InfraredPluginManager(object):
     PLUGINS_DICT = OrderedDict()
@@ -381,7 +376,7 @@ class InfraredPluginManager(object):
             2. Path to a local directory
             3. Git URL
         :param rev: git branch/tag/revision
-        :param plugins_registry: content of plugin registry yml file
+        :param plugins_registry: content of plugin registry dictionary
         :param plugin_src_path: relative path to the plugin location inside the
                source
         """
