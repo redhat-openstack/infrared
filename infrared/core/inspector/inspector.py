@@ -333,11 +333,11 @@ class SpecParser(object):
         :param spec_defaults:  the default values from spec files
         """
 
-        def warn_diff(diff, command_name, cmd_dict, source_name):
+        def show_diff(diff, command_name, cmd_dict, source_name):
             if diff:
                 for arg_name in diff:
                     value = cmd_dict[arg_name]
-                    LOG.warning(
+                    LOG.info(
                         "[{}] Argument '{}' was set to"
                         " '{}' from the {} source.".format(
                             command_name, arg_name, value, source_name))
@@ -345,12 +345,12 @@ class SpecParser(object):
         for command, command_dict in cli_args.items():
             file_dict = answer_file_args.get(command, {})
             file_diff = set(file_dict.keys()) - set(command_dict.keys())
-            warn_diff(file_diff, command, file_dict, 'answers file')
+            show_diff(file_diff, command, file_dict, 'answers file')
 
             def_dict = spec_defaults.get(command, {})
             default_diff = set(def_dict.keys()) - set(
                 command_dict.keys()) - file_diff
-            warn_diff(default_diff, command, def_dict, 'spec defaults')
+            show_diff(default_diff, command, def_dict, 'spec defaults')
 
     def _get_conditionally_required_args(self, command_name, options_spec,
                                          args):
