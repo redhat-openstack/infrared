@@ -73,7 +73,7 @@
             # FIXME(yfried): this is commented because virthost solution is misconfiguring vlan. Need to reevaluate the vlan indicators
             # # If 'datacentre' physnet is in vlan trunk, this means ext-net must be of vlan type
             # physnet_type: "{{ (physnet_name in vlan_trunks.stdout) | ternary('vlan', 'flat') }}"
-            physnet_type: "{{ ('hypervisor' in groups or 'bmc' in groups) | ternary('flat', 'vlan') }}"
+            physnet_type: "{{ ('hypervisor' in groups or 'bmc' in groups) and install.hybrid is not defined | ternary('flat', 'vlan') }}"
             vlan_id: "{{ install.get('external', {}).vlan | default(((network_template|default({})).parameter_defaults|default({})).ExternalNetworkVlanID|default('')) }}"
             # Here can't be used {{ path_venv }}, because it's not a Jinja template
             ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
