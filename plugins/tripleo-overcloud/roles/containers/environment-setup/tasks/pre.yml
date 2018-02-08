@@ -23,6 +23,7 @@
   async: 1
   poll: 0
   ignore_errors: true
+  tags: container-prepare-reboot
 
 # Ansible bug around delegate+vars+wait
 # https://github.com/ansible/ansible/issues/11705
@@ -37,6 +38,7 @@
       timeout: 360
   delegate_to: localhost
   when: "'hypervisor' not in groups"
+  tags: container-prepare-reboot
 
 - name: waiting for the undercloud to be available
   become: no
@@ -48,18 +50,21 @@
       timeout: 360
   delegate_to: hypervisor
   when: "'hypervisor' in groups"
+  tags: container-prepare-reboot
 
 - name: Pause for a few seconds after reboot
   pause:
       seconds: 10
   delegate_to: localhost
   when: "'hypervisor' not in groups"
+  tags: container-prepare-reboot
 
 - name: Pause for a few seconds after reboot
   pause:
       seconds: 10
   delegate_to: hypervisor
   when: "'hypervisor' in groups"
+  tags: container-prepare-reboot
 
 - name: get puddle url from the repos
   vars:
