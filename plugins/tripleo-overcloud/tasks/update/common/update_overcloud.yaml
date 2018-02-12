@@ -13,6 +13,13 @@
   when:
     - undercloud_version|openstack_release < 10
 
+- block:
+    - debug: msg="Starting floating IP dataplane ping check during minor update"
+    - include: startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+
 - name: run overcloud-update script
   shell: |
     source {{ undercloud_rc }} ;
@@ -41,3 +48,8 @@
     - overcloud_update.rc == 0
     - "'update finished with status COMPLETE' in overcloud_update.stdout_lines"
   ignore_errors: True
+
+- block:
+    - debug: msg="Ending floating IP dataplane ping check during minor update"
+    - include: endping.yaml
+  when: install.dataplaneping|default(False)
