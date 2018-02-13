@@ -34,6 +34,7 @@
   when:
       - install.deploy|default('')
       - not install.role|default('') or (install.role is defined and install.role.files == 'default')
+      - not install.splitstack
 
 - name: Deploy the Overcloud with composable roles
   vars:
@@ -46,6 +47,20 @@
       - install.deploy|default('')
       - install.role is defined and install.role.files != 'default'
       - (install.version|default(undercloud_version) | openstack_release < 12) or install.tht.roles == false
+      - not install.splitstack
+
+- name: Deploy the Overcloud with splitstack
+  vars:
+      deploy_script_template: templates/splitstack/overcloud_deploy.sh.j2
+      templates:
+          generate_host_name_template: no
+          storage_add_scale: no
+  include: "{{ splitstack | default('splitstack.yml') }}"
+  when:
+      - install.deploy|default('')
+      - install.splitstack|default(False)
+  tags:
+      - splitstack
 
 #  todo(obaranov) temporary disable tripleo roles cause they do not respect
 #  netwrok settings and templates
@@ -63,6 +78,7 @@
       - install.role.files is defined
       - install.version|default(undercloud_version) | openstack_release > 11
       - install.tht.roles == true
+      - not install.splitstack
 
 - name: "After overcloud container workarounds (remove it ASAP)"
   import_playbook: "docker_after_workaround.yml"

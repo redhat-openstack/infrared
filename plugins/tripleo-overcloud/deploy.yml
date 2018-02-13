@@ -54,6 +54,18 @@
       - install.version|default(undercloud_version)|openstack_release >= 12
       - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
+- name: Run heat agent script in a background if splitstack deployment
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags: deploy_preparation
+  tasks:
+    - name: Run heat agent script in a background if splitstack deployment
+      shell: ~{{ ansible_ssh_user }}/heat-agent.sh > heat_agent.log 2>&1
+      async: 1000
+      poll: 0
+      when: install.splitstack|default(False)
+
 - name: Deploy the Overcloud
   hosts: undercloud
   gather_facts: yes

@@ -362,6 +362,15 @@ subparsers:
                         roles should be used for OSP12+ composable deployments. If value is 'no', then the OSP11 approach
                         will be used.
 
+            - title: Splitstack deployment
+              options:
+                  splitstack:
+                      type: Bool
+                      default: no
+                      help: |
+                        If customer has already provisioned nodes for an overcloud splitstack should be used to utilize these
+                        nodes.(https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/11/html/director_installation_and_usage/chap-configuring_basic_overcloud_requirements_on_pre_provisioned_nodes)
+
             - title: Overcloud Upgrade
               options:
                   upgrade:
