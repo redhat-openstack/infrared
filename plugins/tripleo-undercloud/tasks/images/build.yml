@@ -53,7 +53,7 @@
   tags: backup
   shell: |
       source ~/stackrc
-      openstack overcloud image build --builder-extra-args rdo-release > openstack-build-images.log
+      openstack overcloud image build > openstack-build-images.log
   environment:
       DIB_YUM_REPO_CONF: "{{ dib_yum_repos | default(repo_find.files | map(attribute='path') | join(' ')) }}"
       RDO_RELEASE: "{{ install.version | default(undercloud_version) }}"
