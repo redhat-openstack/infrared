@@ -45,7 +45,7 @@ compute_role:
         - OS::TripleO::Services::NeutronSriovAgent
         - OS::TripleO::Services::OpenDaylightOvs
         - OS::TripleO::Services::SensuClient
-        - OS::TripleO::Services::FluentdClient
+        - OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}
         - "{% if install.version|default(undercloud_version)|openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
         - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
         - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}OS::TripleO::Services::Sshd{% endif %}"

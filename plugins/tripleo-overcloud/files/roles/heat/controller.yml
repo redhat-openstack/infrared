@@ -48,9 +48,9 @@ controller_role:
         - OS::TripleO::Services::SwiftRingBuilder
         - OS::TripleO::Services::Snmp
         - OS::TripleO::Services::Timezone
-        - OS::TripleO::Services::CeilometerApi
-        - OS::TripleO::Services::CeilometerCollector
-        - OS::TripleO::Services::CeilometerExpirer
+        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::CeilometerApi{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::CeilometerCollector{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::CeilometerExpirer{% endif %}"
         - OS::TripleO::Services::CeilometerAgentCentral
         - OS::TripleO::Services::CeilometerAgentNotification
         - OS::TripleO::Services::Horizon
@@ -59,7 +59,7 @@ controller_role:
         - OS::TripleO::Services::GnocchiStatsd
         - OS::TripleO::Services::ManilaApi
         - OS::TripleO::Services::ManilaScheduler
-        - OS::TripleO::Services::ManilaBackendGeneric
+        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::ManilaBackendGeneric{% endif %}"
         - OS::TripleO::Services::ManilaBackendNetapp
         - OS::TripleO::Services::ManilaBackendCephFs
         - OS::TripleO::Services::ManilaShare
@@ -77,7 +77,7 @@ controller_role:
         - OS::TripleO::Services::TripleoFirewall
         - OS::TripleO::Services::OpenDaylightApi
         - OS::TripleO::Services::SensuClient
-        - OS::TripleO::Services::FluentdClient
+        - OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::Sshd{% endif %}"
