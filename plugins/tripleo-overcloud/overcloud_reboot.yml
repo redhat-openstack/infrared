@@ -24,10 +24,20 @@
         register: pcs_active
         ignore_errors: true
 
+      - name: check this if this is pcmk-remote node
+        become: true
+        shell: |
+            pcs status 2>&1 | grep -w 'RemoteOnline:' | grep {{ inventory_hostname }}
+        register: pcmk_remote
+        ignore_errors: true
+        when: pcs_active|failed
+
       - name: stop pcs cluster
         become: true
         command: "pcs cluster stop --request-timeout=300 {% if groups['controller']|length  < 3 %} --force {% endif %}"
-        when: pcs_active|failed
+        when:
+            - pcs_active|failed
+            - pcmk_remote|failed
 
       - name: reboot the node
         become: true
@@ -75,11 +85,24 @@
         retries: 20
         delay: 15
 
+      - name: check pcmk_remote node is up
+        become: true
+        shell: pcs status | grep -w 'RemoteOnline:'
+        register: remote_online
+        until: "'{{ inventory_hostname }}' in remote_online.stdout"
+        retries: 6
+        delay: 5
+        when:
+            - pcs_active|failed
+            - pcmk_remote|succeeded
+
       # pacemaker managed services
       - name: start pcs cluster on a node
         become: true
         command: pcs cluster start --wait=300
-        when: pcs_active|failed
+        when:
+            - pcs_active|failed
+            - pcmk_remote|failed
 
       - name: wait for pacemaker node to recover
         become: true
@@ -88,7 +111,9 @@
         until: "'{{ inventory_hostname }}' in pcs_status.stdout"
         retries: 6
         delay: 5
-        when: pcs_active|failed
+        when:
+            - pcs_active|failed
+            - pcmk_remote|failed
 
       - name: cleanup pacemaker resource
         shell: |
@@ -102,6 +127,7 @@
           - cleanup_services is defined
           - cleanup_services|default({})|length > 0
           - pcs_active|failed
+          - pcmk_remote|failed
 
       # Todo(yprokule): enhance search patterns
       - name: check for any stopped pcs resources
@@ -117,6 +143,7 @@
             - 'Stopped:'
         when:
             - pcs_active|failed
+            - pcmk_remote|failed
             - "'{{ install.deployment.files | basename }}' == 'virt'"
 
       - name: Report pacemaker status for stopped resources
@@ -145,7 +172,9 @@
         delay: 5
         with_items:
             - 'unmanaged'
-        when: pcs_active|failed
+        when:
+            - pcs_active|failed
+            - pcmk_remote|failed
 
       - name: Report pacemaker status for unmanaged resources
         become: true
