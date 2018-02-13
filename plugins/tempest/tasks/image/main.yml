@@ -13,5 +13,14 @@
 - name: Push repos to guest image tempest will use for testing
   command: "virt-copy-in -a ~/tempest_image /etc/yum.repos.d /etc/"
 
+- name: Check if /patched_rpms exist
+  stat:
+      path: '/patched_rpms'
+  register: patched_rpms_dir
+
+- name: Disable 'patched-rpms' yum repository in guest image
+  command: "virt-customize -a ~/tempest_image --run-command \"yum-config-manager --disable patched-rpms\""
+  when: patched_rpms_dir.stat.exists == True
+
 - name: Install packages in guest image tempest will use for testing
   command: "virt-customize -a ~/tempest_image --install {{ test.images.packages }} --selinux-relabel"
