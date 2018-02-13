@@ -1,6 +1,37 @@
 Advance Features
 ================
 
+Profiling
+^^^^^^^^^
+
+Please note that this feature is not specific to Infrared, it's purely a feature
+of Ansible and is documented here only for user convenience.
+
+If you want to enable profiling of executed jobs you can do it easily using
+native ansible support for profiling. You can enable these via ``ansible.cfg``
+or via environment variables, like below::
+
+    ANSIBLE_CALLBACK_WHITELIST=timer,profile_tasks
+    PROFILE_TASKS_TASK_OUTPUT_LIMIT=20
+    PROFILE_TASKS_SORT_ORDER=descending
+    infrared ...
+
+``timer`` adds one liner at the end of the execution that looks like
+
+    Playbook run took 0 days, 1 hours, 2 minutes, 3 seconds
+
+``profile_tasks`` adds one line after each task and one final report of the 20
+longest running tasks. It looks like::
+
+    TASK [foo] ********************************************************************
+    Tuesday 13 February 2018  13:12:58 +0000 (0:00:00.112)       0:00:00.112 ******
+    ok: [localhost]
+    ...
+    PLAY RECAP ********************************************************************
+    foo --------------------------------------------------------------------- 1.56s
+
+Full documentation can be found at <https://docs.ansible.com/ansible/devel/plugins/callback/profile_tasks.html>
+
 Injection points
 ^^^^^^^^^^^^^^^^
 
@@ -14,12 +45,17 @@ Looking at our ``virsh`` main playbook, you will see::
     - include: "{{ provision_cleanup | default('cleanup.yml') }}"
       when: provision.cleanup|default(False)
 
-Notice that the ``include:`` first tried to evaluate the variable ``provision_cleanup`` and afterwards defaults to our own cleanup playbook.
+Notice that the `include:`` first tried to evaluate the variable ``provision_cleanup`` and afterwards defaults to our own cleanup playbook.
 
 This condition allows users to inject their own custom cleanup process while still reuse all of our other playbooks.
 
 Override playbooks
 ------------------
+``timer`` adds one liner at the end of the execution that looks like
+
+   Playbook run took 0 days, 1 hours, 2 minutes, 3 seconds
+
+``
 
 In this example we'll use a custom playbook to override our cleanup play and replace it with the process described above.
 First, lets create an empty playbook called: ``noop.yml``::
@@ -186,4 +222,3 @@ When UEFI is in use, libvirt will require additional setup on the host, for IPv6
 2. Enable the IPv6 related NAT modules::
 
         modprobe nf_nat_ipv6
-
