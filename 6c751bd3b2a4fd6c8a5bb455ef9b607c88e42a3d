@@ -1,0 +1,129 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ccd95707_33d81958",
+        "filename": "infrared/core/inspector/inspector.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-02-13T21:49:27Z",
+      "side": 1,
+      "message": "not sure if this is intended change in this patch\n\nif needed, likely should be done in separate patch, describing exactly what the bug/issue is and what is the intended behavior and how the fix is going to achieve it\n\n(separate fix for library from change of plugin|ansible)",
+      "revId": "6c751bd3b2a4fd6c8a5bb455ef9b607c88e42a3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b0e82b8_a844c61b",
+        "filename": "plugins/tripleo-overcloud/forward_overcloud_dashboard.yml",
+        "patchSetId": 18
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-02-13T21:49:27Z",
+      "side": 1,
+      "message": "i guess this wouldn\u0027t exactly work,\nwould have to be ansible fact representing default/main IP of the virthost itself?\n\nas access from remote machine will not appear as request to \u0027localhost\u0027 but instead as request to this hosts ip  ... if i\u0027m reading this code correctly though",
+      "revId": "6c751bd3b2a4fd6c8a5bb455ef9b607c88e42a3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27b64054_6f1e4d91",
+        "filename": "plugins/tripleo-overcloud/hypervisor.yml",
+        "patchSetId": 18
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-02-13T21:49:27Z",
+      "side": 1,
+      "message": "hm, maybe this step should be then skipped if it\u0027s already local? at least not inserting keys to root as we are not to ssh there with ansible are we? only for stack/old pxe stuff it would be needed i guess? but not sure would need to be confirmed",
+      "revId": "6c751bd3b2a4fd6c8a5bb455ef9b607c88e42a3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfceae59_a02de1be",
+        "filename": "plugins/tripleo-undercloud/clouds.yml",
+        "patchSetId": 18
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-02-13T21:49:27Z",
+      "side": 1,
+      "message": "i\u0027m not seeing the issue here, why these would have to be dupplicated, imho it should work as is too\n\nin case there is something i\u0027ve overlooked few points:\n- make sure tasks have always different names (insert cloud parameters below is duplicated)\n- update this shell step code to match the one above exactly (all domain handling and such)\n- likely you can use one insert cloud params block (cloud_details|default(local_cloud_details) or something like that)",
+      "revId": "6c751bd3b2a4fd6c8a5bb455ef9b607c88e42a3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "834bec96_2b320a1e",
+        "filename": "plugins/tripleo-undercloud/shade.yml",
+        "patchSetId": 18
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-02-13T21:49:27Z",
+      "side": 1,
+      "message": "again seems as likely not needed change,\nhypervisor even in \u0027local\u0027 mode should be viable choice for shade operations (it should have same access as if connected to via ip)",
+      "revId": "6c751bd3b2a4fd6c8a5bb455ef9b607c88e42a3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56a0d785_d275a795",
+        "filename": "plugins/virsh/pre.yml",
+        "patchSetId": 18
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-02-13T21:49:27Z",
+      "side": 1,
+      "message": "\u0027key\u0027 | default(\u0027\u0027)\n\nshould always result in \u0027key\u0027 (static hardcoded string value cannot disapear or be empty)",
+      "range": {
+        "startLine": 9,
+        "startChar": 30,
+        "endLine": 9,
+        "endChar": 48
+      },
+      "revId": "6c751bd3b2a4fd6c8a5bb455ef9b607c88e42a3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8eda77d8_39de4061",
+        "filename": "plugins/virsh/tasks/netip_natted.yml",
+        "patchSetId": 18
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-02-13T21:49:27Z",
+      "side": 1,
+      "message": "no issue here, just note that likely this should/could be reflected in \u0027ir workspace\u0027 archiving/exporting (like customized job does, as when workspace gets moved to different host, it wouldn\u0027t work well  with localhost||direct-hosts-connection)\n\nif not easily solvable there (key may not be known at all unless provided despite using --host \u0027localhost\u0027) it should be mentioned in docs, maybe printed as warning in exporting workspace ... and maybe recorded in output files (e.g. note in inventory etc ... or more complicated warning impl. to record in exported workspace something ir could pick when reusing that workspace and warn also at next execution time ... )",
+      "revId": "6c751bd3b2a4fd6c8a5bb455ef9b607c88e42a3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
