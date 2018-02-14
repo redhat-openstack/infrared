@@ -14,7 +14,6 @@ import yaml
 import urllib2
 
 from infrared import PLUGINS_REGISTRY
-from infrared.core.services.dependency import PluginDependency
 from infrared.core.utils import logger
 from infrared.core.utils.validators import SpecValidator, RegistryValidator
 from infrared.core.utils.exceptions import IRFailedToAddPlugin, IRException, \
@@ -42,11 +41,10 @@ class InfraredPluginManager(object):
     SUPPORTED_TYPES_SECTION = 'supported_types'
     GIT_PLUGINS_ORGS_SECTION = "git_orgs"
 
-    def __init__(self, plugins_conf, dependencies_manager,
+    def __init__(self, plugins_conf,
                  plugins_dir, install_plugins=True):
         """
         :param plugins_conf: A path to the main plugins configuration file
-        :param dependencies_manager: PluginDependencyManager object
         :param plugins_dir: the plugins directory location
         :param install_plugins: Specifies if core plugins should be installed
             at start.
@@ -56,7 +54,6 @@ class InfraredPluginManager(object):
         if not os.path.exists(self.plugins_dir):
             os.makedirs(self.plugins_dir)
 
-        self._dependencies_manager = dependencies_manager
         self._config_file = os.path.abspath(os.path.expanduser(plugins_conf))
         self._install_plugins_required = install_plugins
         self._configure()
@@ -432,8 +429,6 @@ class InfraredPluginManager(object):
         if rm_source:
             shutil.rmtree(plugin_source)
 
-        self._dependencies_manager.install_plugin_dependencies(plugin)
-
         self.config.set(plugin_type, plugin.name,
                         os.path.join(dest, plugin_src_path))
 
@@ -651,19 +646,6 @@ class InfraredPlugin(object):
             return self.config['subparsers'][self.name]['description']
         except KeyError:
             return self.config['description']
-
-    @property
-    def dependencies(self):
-        """
-        Generator that yields a PluginDependency objects from the
-        plugin config dependencies.
-        If dependencies does not exists will return nothing
-        """
-        try:
-            for dependency in self.config['config']['dependencies']:
-                yield PluginDependency(dependency)
-        except KeyError:
-            return
 
     def __repr__(self):
         return self.name

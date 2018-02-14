@@ -1,0 +1,27 @@
+---
+- name: Get nova version
+  shell: nova-manage --version 2>&1 | awk -F . '{print $1}'
+  register: nova_version
+  ignore_errors: yes
+
+- name: Set overcloud_version from nova-manage output
+  vars:
+      version_map:
+          - nova_version: '17'
+            rhos_version: '13'
+          - nova_version: '16'
+            rhos_version: '12'
+          - nova_version: '15'
+            rhos_version: '11'
+          - nova_version: '14'
+            rhos_version: '10'
+          - nova_version: '13'
+            rhos_version: '9'
+          - nova_version: '12'
+            rhos_version: '8'
+          - nova_version: '2015'
+            rhos_version: '7'
+  set_fact:
+      undercloud_version: "{{ (version_map|selectattr('nova_version', 'equalto', nova_version.stdout)|first)['rhos_version'] }}"
+      overcloud_version: "{{ (version_map|selectattr('nova_version', 'equalto', nova_version.stdout)|first)['rhos_version'] }}"
+  when: nova_version|succeeded

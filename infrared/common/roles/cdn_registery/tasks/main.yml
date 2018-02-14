@@ -1,0 +1,25 @@
+---
+- name: Actively reigter the host to Red Hat account
+  include_tasks: register_cdn.yml
+  # no need to register if machine already subscribed
+  when: "cdn_args_file != ''"
+
+- name: unregister from all repos
+  command: subscription-manager repos --disable=*
+
+- name: register to openstack repos
+  vars:
+      repo_list: "{{ subscriptions.common + subscriptions[install_version|openstack_release] }}"
+      modified_list: "{{ repo_list | map('regex_replace', '(.*)', '--enable=\\1') | join(' ') }}"
+  command: "subscription-manager repos {{ modified_list }}"
+
+- name: refresh yum cache
+  package:
+      name: kernel
+      state: present
+      update_cache: yes
+  become: true
+
+- name: repolist
+  command: "yum -d 7 repolist"
+  become: true
