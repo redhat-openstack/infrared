@@ -15,3 +15,11 @@
       - '-e {{ install.heat.templates.basedir }}/environments/docker-ha.yaml \'
   when:
       - install.version|default(undercloud_version)|openstack_release == 13
+
+- name: Include required OVN template (BZ#1545085)
+  lineinfile:
+      dest: "{{ containers_ir_deploy_script }}"
+      line: '-e {{ install.heat.templates.basedir }}/environments/services-docker/neutron-ovn-ha.yaml \'
+  when:
+      - install.network.ovn
+      - install.version|default(undercloud_version)|openstack_release >= 13
