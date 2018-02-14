@@ -5,8 +5,8 @@
 {% set role_prefix = host_name.rstrip('1234567890-').split('-')[-1].title() %}
 {%- if role_prefix not in ns.saved_roles %}
 {% set ns.saved_roles = ns.saved_roles ~ role_prefix ~ 'DeployedServer' ~ ' ' %}
-{% set ns.role_hosts_key = role_prefix ~ 'DeployedServer' ~ '_hosts' %}
 {% endif -%}
+{% set ns.role_hosts_key = role_prefix ~ 'DeployedServer' ~ '_hosts' %}
 {% set _dummy = ns.role_hosts.update({ ns.role_hosts_key: ns.role_hosts[ns.role_hosts_key]|default('') ~ hostvars[host_name]['ansible_eth0']['ipv4']['address'] ~ ' ' }) %}
 {% endfor %}
 export OVERCLOUD_ROLES="{{ ns.saved_roles }}"
