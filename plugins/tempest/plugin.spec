@@ -1,8 +1,6 @@
 ---
 config:
     plugin_type: test
-    dependencies:
-        - source: https://github.com/rhos-infra/infrared-common-libraries.git
 subparsers:
     tempest:
         description: The tempest test runner

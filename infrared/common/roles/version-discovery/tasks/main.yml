@@ -1,0 +1,30 @@
+---
+- include_tasks: repos.yml
+  when: "'repos' in discovery_types"
+
+- include_tasks:  rhos_release_file.yml
+  when:
+      - "'rhos_release_file' in discovery_types"
+      - undercloud_version is not defined
+
+- include_tasks: nova.yml
+  when:
+      - "'nova' in discovery_types"
+      - undercloud_version is not defined
+
+- name: Fallback to install.version
+  set_fact:
+      undercloud_version: "{{ install.version }}"
+      overcloud_version: "{{ install.version }}"
+  when:
+      - (install|default({})).get('version', False)
+      - undercloud_version is not defined
+
+- fail:
+      msg: "Unable to determine the undercloud version"
+  when: undercloud_version is not defined
+
+- name: print the undercloud_version
+  debug:
+      var: undercloud_version
+      verbosity: 2

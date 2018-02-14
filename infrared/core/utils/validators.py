@@ -49,19 +49,6 @@ class SpecValidator(Validator):
         "properties": {
             "plugin_type": {"type": "string", "minLength": 1},
             "entry_point": {"type": "string", "minLength": 1},
-            "dependencies": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "source": {"type": "string", "minLength": 1},
-                        "revision": {"type": "string", "minLength": 1}
-                    },
-                    "required": ["source"]
-                },
-                "minItems": 1,
-                "uniqueItems": True
-            }
         },
         "additionalProperties": False,
         "required": ["plugin_type"]
