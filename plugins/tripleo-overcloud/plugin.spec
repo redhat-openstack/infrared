@@ -445,11 +445,13 @@ subparsers:
                       default: admin
                       help: |
                         VBMC username (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+                        NOTE: Option has to be used during introspection (--introspect yes)
                   vbmc-password:
                       type: Value
                       default: password
                       help: |
                         VBMC password (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+                        NOTE: Option has to be used during introspection (--introspect yes)
                   vbmc-host:
                       type: Value
                       default: hypervisor
@@ -458,12 +460,14 @@ subparsers:
                           - "undercloud"
                       help: |
                           Specifies on what server the virtualbmc service should be installed.
+                          NOTE: Option has to be used during introspection (--introspect yes)
                   vbmc-force:
                       type: Bool
                       default: False
                       help: |
                         Specifies whether the vbmc (pxe_ipmitool ironic driver) should be used for
                         the OSP10 and below.
+                        NOTE: Option has to be used during introspection (--introspect yes)
 
             - title: ansible facts
               options:
