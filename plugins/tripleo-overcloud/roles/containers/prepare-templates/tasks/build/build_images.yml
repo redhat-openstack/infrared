@@ -1,12 +1,4 @@
 ---
-- name: create nondefault fact for upload
-  include_tasks: "{{ role_path }}/tasks/nondefault_images_fact.yml"
-  with_items: "{{ install.overcloud.templates|default([]) }}"
-  loop_control:
-      loop_var: templates_list_file
-  # avoid empty strings
-  when: "templates_list_file != ''"
-
 # versions and registry addresses is job metadata we want to collect in json file
 # when 'collect-ansible-facts' role is called hence using set_facts instead of vars
 - name: set required facts for "container image prepare"
@@ -43,7 +35,7 @@
         --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }} \
         {% endif %}
         --output-images-file {{ containers_images_template_dest_file }} \
-        {{ extra_service_environment|default('') }}
+        {{ environment_yamls | default('') }} {{ roles_yamls | default('') }}
 
 - name: get docker registry name
   set_fact:
@@ -90,3 +82,12 @@
   include_tasks: container_images_packages.yml
   when: install_container_images_packages is defined
   tags: container-images-packages
+
+- stat:
+      path: /etc/yum.repos.d/patched_rpms.repo
+  register: patched_rpms_repo
+
+- name: patch images
+  include_tasks: patch_images.yml
+  when: install_container_images_patch is defined or patched_rpms_repo.stat.exists == True
+  tags: container-images-patch
