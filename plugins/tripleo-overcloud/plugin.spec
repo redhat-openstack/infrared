@@ -437,6 +437,11 @@ subparsers:
                           Useful with '--ocupdate' to reboot nodes after minor update,
                           or with '--deploy' to reboot after oc is deployed.
                       default: False
+                  dataplaneping:
+                      type: Bool
+                      help: |
+                          Validate connectivity to floating IP doesn't get interrupted during update/upgrade.
+                      default: False
 
             - title: Ironic Configuration
               options:
