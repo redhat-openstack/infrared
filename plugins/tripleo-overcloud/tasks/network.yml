@@ -102,7 +102,10 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/neutron-ml2-ovn-ha.yaml \'
-  when: install.network.ovn and not install.network.dvr
+  when:
+      - install.network.ovn
+      - not install.network.dvr
+      - install.version|default(undercloud_version)|openstack_release < 13 or not install.containers|default('')
 
 - name: append the ovn HA DVR template line to the base overcloud deploy script
   lineinfile:

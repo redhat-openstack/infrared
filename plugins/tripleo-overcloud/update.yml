@@ -62,9 +62,6 @@
   vars:
       template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
   roles:
-      - role: containers/environment-setup
-        when: undercloud_version|openstack_release > 11
-
       - role: containers/prepare-templates
         when: undercloud_version|openstack_release > 11
 
