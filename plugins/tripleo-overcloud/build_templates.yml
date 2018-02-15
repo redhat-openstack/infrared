@@ -28,6 +28,15 @@
             dest: "{{ template_base }}/debug.yaml"
         when: install.overcloud.debug
 
+      - name: "Workaround BZ#1543914 - selinux prevents booting VMs"
+        vars:
+            selinux_mode: "permissive"
+        template:
+            src: templates/selinux.yaml.j2
+            dest: "{{ template_base }}/selinux.yaml"
+        when:
+            - install.version|default(undercloud_version)|openstack_release == 13
+
       - name: inject config_heat.yaml so it will be auto discovered with user templates
         vars:
             config_heat: "{{ install.get('config', {}).get('heat', {}) }}"
