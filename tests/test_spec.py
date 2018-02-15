@@ -16,6 +16,8 @@ from tests.test_workspace import workspace_manager_fixture, test_workspace  # no
     ("--req-arg-a=yes --uni-dep=uni-val", False),
     ("--req-arg-b=yes --multi-dep=multi-val", True),
     ("--req-arg-a=yes --uni-dep=uni-val --multi-dep=multi-val", True),
+    ("--req-arg-a=yes --uni-dep=uni --multi-dep=multi-val ", False),
+    ("--req-arg-a=yes --uni-dep=uni --multi-dep=multi-val --uni-neg=uni-neg-val", True),
 ])
 def test_required_when(spec_fixture, workspace_manager_fixture, test_workspace,
                        cli_args, should_pass):

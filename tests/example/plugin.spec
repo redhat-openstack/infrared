@@ -41,6 +41,11 @@ subparsers:
                           - "req-arg-a == yes"
                           - "req-arg-b == yes"
 
+                  uni-neg:
+                      type: Value
+                      help: "Help for --uni-neg"
+                      required_when: "uni-dep != uni-val"
+
                   req-arg-a:
                       type: Bool
                       help: "Help for --req-arg-a"
