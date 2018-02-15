@@ -82,7 +82,6 @@ class SpecParser(object):
             if default_value is not None:
                 sub = parser['name']
                 result[sub][option['name']] = default_value
-
         return result
 
     def get_spec_defaults(self):
@@ -362,26 +361,37 @@ class SpecParser(object):
         :return: list, list of argument names with matched ``required_when``
             condition
         """
+        var_names = [option_spec['name'] for option_spec in options_spec]
         res = []
         for option_spec in options_spec:
             if option_spec and 'required_when' in option_spec:
                 req_when_args = [option_spec['required_when']] \
                     if not type(option_spec['required_when']) is list \
                     else option_spec['required_when']
-
+                results = []
                 # validate conditions
                 for req_when_arg in req_when_args:
-                    req_arg, req_value = req_when_arg.split('==')
-                    req_value = yaml.load(str(req_value))
-                    actual_value = \
-                        args.get(command_name, {}).get(req_arg.strip(), None)
-                    actual_value = yaml.load(str(actual_value))
-                    if actual_value == req_value \
-                            and self.spec_helper.get_option_state(
-                                command_name,
-                                option_spec['name'],
-                                args) == helper.OptionState['NOT_SET']:
-                        res.append(option_spec['name'])
+                    splited_args_list = req_when_arg.split()
+                    if splited_args_list[0] in var_names:
+                        splited_args_list[0] = args.get(command_name, {}).get(splited_args_list[0].strip(),{})
+                        if not splited_args_list[0]:
+                            res.append(option_spec['name'])
+                            return res
+                for idx, req_arg in enumerate(splited_args_list):
+                    try:
+                        if not any((c in '<>=') for c in splited_args_list[idx]):
+                            splited_args_list[idx] = "'{0}'".format(yaml.load(str(req_arg)))
+                    except NameError:
+                        pass
+                condition = ' '.join(map(str, splited_args_list))
+                result = bool(eval(condition))
+                results.append(result)
+                if any(results) and \
+                        self.spec_helper.get_option_state(
+                            command_name,
+                            option_spec['name'],
+                            args) == helper.OptionState['NOT_SET']:
+                    res.append(option_spec['name'])
         return res
 
     def validate_requires_args(self, args):
@@ -391,14 +401,11 @@ class SpecParser(object):
 
         def validate_parser(parser_name, expected_options, parser_args):
             """Helper method to resolve dict_merge. """
-
             result = collections.defaultdict(list)
             condition_req_args = self._get_conditionally_required_args(
                 parser_name, expected_options, args)
-
             for option in expected_options:
                 name = option['name']
-
                 # check required options.
                 if (option.get('required', False) and
                         name not in parser_args or

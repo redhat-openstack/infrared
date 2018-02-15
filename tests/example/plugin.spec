@@ -41,6 +41,11 @@ subparsers:
                           - "req-arg-a == yes"
                           - "req-arg-b == yes"
 
+                  uni-dep-val:
+                      type: int
+                      help: "Help for --uni-dep-val"
+                      required_when: "uni-dep != string1"
+
                   req-arg-a:
                       type: Bool
                       help: "Help for --req-arg-a"
