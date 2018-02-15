@@ -14,8 +14,11 @@ from tests.test_workspace import workspace_manager_fixture, test_workspace  # no
     ("--req-arg-a=no --req-arg-b=yes", False),
     ("--req-arg-a=yes --req-arg-b=no", False),
     ("--req-arg-a=yes --uni-dep=uni-val", False),
-    ("--req-arg-b=yes --multi-dep=multi-val", True),
-    ("--req-arg-a=yes --uni-dep=uni-val --multi-dep=multi-val", True),
+    ("--req-arg-b=yes --multi-dep=multi-val", False),
+    ("--req-arg-a=yes --uni-dep=uni-val --multi-dep=multi-val", False),
+    ("--req-arg-a=yes --req-arg-b=yes --uni-dep=string1 --multi-dep=multi-val", True),
+    ("--req-arg-a=yes --req-arg-b=yes --uni-dep=string2 --multi-dep=multi-val", False),
+    ("--req-arg-a=yes --req-arg-b=yes --uni-dep=string2 --multi-dep=multi-val --uni-dep-val=12", True),
 ])
 def test_required_when(spec_fixture, workspace_manager_fixture, test_workspace,
                        cli_args, should_pass):
@@ -41,14 +44,16 @@ def test_required_when(spec_fixture, workspace_manager_fixture, test_workspace,
         with pytest.raises(IRRequiredArgsMissingException):
             spec_manager.run_specs(args=['example'] + cli_args.split())
 
-
-def test_extra_vars(spec_fixture, workspace_manager_fixture, test_workspace):
+@pytest.mark.parametrize("cli_args", [  # noqa
+    ("--req-arg-a=yes --req-arg-b=yes --uni-dep=string1 --multi-dep=multi-val"),
+])
+def test_extra_vars(spec_fixture, workspace_manager_fixture, test_workspace, cli_args):
     """ Verify the --extra-vars parameter is validated"""
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
     workspace_manager_fixture.activate(test_workspace.name)
-    assert spec_manager.run_specs(args=['example', '-e', 'key=value']) == 0
+    assert spec_manager.run_specs(args=['example', '-e', 'key=value'] + cli_args.split()) == 0
 
     with pytest.raises(IRExtraVarsException):
-        spec_manager.run_specs(args=['example', '-e', 'key'])
+        spec_manager.run_specs(args=['example', '-e', 'key'] + cli_args.split())

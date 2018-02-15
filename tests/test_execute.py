@@ -43,7 +43,7 @@ def test_execute_no_workspace(spec_fixture, workspace_manager_fixture):   # noqa
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
 
-    input_string = ['example']
+    input_string = ['example',"--req-arg-a=yes", "--req-arg-b=yes", "--uni-dep=string1", "--multi-dep=multi-val"]
     spec_manager.run_specs(args=input_string)
     assert workspace_manager_fixture.get_active_workspace()
 
@@ -52,7 +52,8 @@ def test_execute_fail(spec_fixture, workspace_manager_fixture,          # noqa
                       test_workspace):
     """Verify execution fails as expected with CLI input. """
 
-    input_string = ['example', "--foo-bar", "fail"]
+    input_string = ['example', "--foo-bar", "fail", "--req-arg-a=yes", "--req-arg-b=yes", \
+                    "--uni-dep=string1", "--multi-dep=multi-val"]
 
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
@@ -81,7 +82,7 @@ def test_execute_main(spec_fixture, workspace_manager_fixture,          # noqa
     Verifies that plugin roles are invoked properly.
     """
 
-    input_string = ['example']
+    input_string = ['example', "--req-arg-a=yes", "--req-arg-b=yes", "--uni-dep=string1", "--multi-dep=multi-val"]
 
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
@@ -105,7 +106,8 @@ def test_fake_inventory(spec_fixture, workspace_manager_fixture,          # noqa
                         test_workspace):
     """Verify "--inventory" updates workspace's inventory. """
 
-    input_string = ['example', '--inventory', 'fake']
+    input_string = ['example', '--inventory', 'fake',"--req-arg-a=yes", "--req-arg-b=yes", \
+                    "--uni-dep=string1", "--multi-dep=multi-val"]
 
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
@@ -132,7 +134,8 @@ def test_bad_user_inventory(spec_fixture, workspace_manager_fixture,   # noqa
     fake_inventory.write("host2")
     test_workspace.inventory = str(fake_inventory)
 
-    input_string = ['example', '--inventory', str(fake_inventory)]
+    input_string = ['example', '--inventory', str(fake_inventory),"--req-arg-a=yes", "--req-arg-b=yes", \
+                    "--uni-dep=string1", "--multi-dep=multi-val"]
 
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
@@ -158,9 +161,11 @@ def test_nested_value_CLI(spec_fixture,
     dry_output = tmpdir.mkdir("tmp").join("dry_output.yml")
 
     if input_value:
-        input_string = ['example', '--foo-bar', input_value]
+        input_string = ['example', '--foo-bar', input_value,"--req-arg-a=yes", "--req-arg-b=yes", \
+                        "--uni-dep=string1", "--multi-dep=multi-val"]
     else:
-        input_string = ['example']
+        input_string = ['example',"--req-arg-a=yes", "--req-arg-b=yes", \
+                        "--uni-dep=string1", "--multi-dep=multi-val"]
 
     input_string.extend(["-o", str(dry_output)])
 
@@ -191,26 +196,38 @@ def test_nested_value_CLI(spec_fixture,
 @pytest.mark.parametrize("input_args, expected_output_dict",       # noqa
                          [
                              # No spaces
-                             (["--extra-vars=key=val"],
+                             (["--req-arg-a=yes", "--req-arg-b=yes",
+                               "--uni-dep=string1", "--multi-dep=multi-val",
+                               "--extra-vars=key=val"],
                               {"key": "val"}),
                              # Single var
-                             (["--extra-vars", "key=val"],
+                             (["--req-arg-a=yes", "--req-arg-b=yes",
+                               "--uni-dep=string1", "--multi-dep=multi-val",
+                               "--extra-vars", "key=val"],
                               {"key": "val"}),
                              # multiple usage
-                             (["--extra-vars", "key=val",
+                             (["--req-arg-a=yes", "--req-arg-b=yes",
+                               "--uni-dep=string1", "--multi-dep=multi-val",
+                               "--extra-vars", "key=val",
                                "-e", "another.key=val1",
                                "-e", "another.key2=val2"],
                               {"key": "val",
                                "another": {"key": "val1",
                                            "key2": "val2"}}),
                              # nested vars
-                             (["--extra-vars", "nested.key=val"],
+                             (["--req-arg-a=yes", "--req-arg-b=yes",
+                               "--uni-dep=string1", "--multi-dep=multi-val",
+                               "--extra-vars", "nested.key=val"],
                               {"nested": {"key": "val"}}),
                              # Mixed with spec input
-                             (["--foo-bar", "val1",
+                             (["--req-arg-a=yes", "--req-arg-b=yes",
+                               "--uni-dep=string1", "--multi-dep=multi-val",
+                               "--foo-bar", "val1",
                                "--extra-vars", "provision.foo.key=val2"],
-                              {"provision": {"foo": {"bar": "val1",
-                                                     "key": "val2"}}}),
+                              {'provision': {'uni': {'dep': 'string1'}, 'multi': {'dep': 'multi-val'},
+                                             'foo': {'bar': 'val1', 'key': 'val2'},
+                                             'req': {'arg': {'a': True, 'b': True}}}}
+                              ),
                          ])
 def test_extra_vars(spec_fixture,
                     workspace_manager_fixture,
@@ -220,7 +237,8 @@ def test_extra_vars(spec_fixture,
     dry_output = tmpdir.mkdir("tmp").join("dry_output.yml")
 
     input_string = ['example'] + input_args + ["-o", str(dry_output),
-                                               "--dry-run"]
+                                               "--dry-run","--req-arg-a=yes", "--req-arg-b=yes", \
+                                               "--uni-dep=string1", "--multi-dep=multi-val"]
 
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
@@ -242,17 +260,20 @@ def test_extra_vars(spec_fixture,
 @pytest.mark.parametrize("input_args, file_dicts, expected_output_dict",       # noqa
                          [
                              # No spaces
-                             (["--extra-vars=@dict_file"],
+                             (["--extra-vars=@dict_file", "--req-arg-a=yes", "--req-arg-b=yes", \
+                               "--uni-dep=string1", "--multi-dep=multi-val"],
                               [{"filename": "dict_file",
                                 "content": {"key": "val"}}],
                               {"key": "val"}),
                              # Single var
-                             (["--extra-vars", "@dict_file"],
+                             (["--extra-vars", "@dict_file", "--req-arg-a=yes", "--req-arg-b=yes", \
+                               "--uni-dep=string1", "--multi-dep=multi-val"],
                               [{"filename": "dict_file",
                                 "content": {"key": "val"}}],
                               {"key": "val"}),
                              # multiple usage
-                             (["--extra-vars", "key=val",
+                             (["--req-arg-a=yes", "--req-arg-b=yes", \
+                               "--uni-dep=string1", "--multi-dep=multi-val", "--extra-vars",  "key=val",
                                "-e", "another.key=val1",
                                "-e", "another.key2=val2",
                                "--extra-vars", "@dict_file1",
@@ -267,13 +288,18 @@ def test_extra_vars(spec_fixture,
                                "file-key": "file-val",
                                "file-key-list": ["a", "b"]}),
                              # Mixed with spec input
-                             (["--foo-bar", "val1",
+                             (["--uni-dep=string1",
+                               "--req-arg-a=yes",
+                               "--req-arg-b=yes",
+                               "--multi-dep=multi-val",
+                               "--foo-bar", "val1",
                                "--extra-vars", "@dict_file"],
                               [{"filename": "dict_file",
                                 "content":
-                                    {"provision": {"foo": {"key": "val2"}}}}],
-                              {"provision": {"foo": {"bar": "val1",
-                                                     "key": "val2"}}}),
+                                    {"provision": {"foo": {"key": "val2"}},}}],
+                              {'provision': {'uni': {'dep': 'string1'}, 'multi': {'dep': 'multi-val'},
+                                             'foo': {'bar': 'val1', 'key': 'val2'},
+                                             'req': {'arg': {'a': True, 'b': True}}}}),
                          ])
 def test_extra_vars_with_file(spec_fixture,
                               workspace_manager_fixture,
@@ -347,7 +373,8 @@ def test_nested_KeyValueList_CLI(spec_fixture,
 
     dry_output = tmpdir.mkdir("tmp").join("dry_output.yml")
 
-    input_string = ['example'] + input_value
+    input_string = ['example'] + input_value + ["--req-arg-a=yes", "--req-arg-b=yes", \
+                        "--uni-dep=string1", "--multi-dep=multi-val"]
 
     input_string.extend(["-o", str(dry_output)])
 
@@ -387,7 +414,7 @@ def test_nested_KeyValueList_negative(
         spec_fixture, workspace_manager_fixture, test_workspace, bad_input):
     """Tests that bad input for KeyValueList raises exception. """
 
-    input_string = list(('example', "--dry-run", "--dictionary-val"))
+    input_string = list(('example',"--req-arg-a=yes", "--req-arg-b=yes", "--uni-dep=string1", "--multi-dep=multi-val", "--dry-run", "--dictionary-val"))
     input_string.append(bad_input)
 
     spec_manager = api.SpecManager()
@@ -418,9 +445,11 @@ def test_nested_value_dry_run(spec_fixture,
     dry = "--dry-run" in input_value
 
     if input_value:
-        input_string = ['example', '--foo-bar'] + input_value
+        input_string = ['example', '--foo-bar'] + input_value + ["--req-arg-a=yes", "--req-arg-b=yes", \
+                    "--uni-dep=string1", "--multi-dep=multi-val"]
     else:
-        input_string = ['example']
+        input_string = ['example'] + ["--req-arg-a=yes", "--req-arg-b=yes", \
+                    "--uni-dep=string1", "--multi-dep=multi-val"]
 
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
@@ -458,7 +487,8 @@ def test_nested_value_CLI_with_answers_file(spec_fixture, tmpdir,
     with open(str(answers_file), 'wb') as configfile:
         config.write(configfile)
 
-    input_string = ['example', '--from-file', str(answers_file)]
+    input_string = ['example', '--from-file', str(answers_file),"--req-arg-a=yes", "--req-arg-b=yes", \
+                    "--uni-dep=string1", "--multi-dep=multi-val"]
     if input_value:
         input_string += ['--foo-bar', input_value]
     input_string.extend(["-o", str(dry_output)])
@@ -493,7 +523,8 @@ def test_generate_answers_file(spec_fixture, workspace_manager_fixture,  # noqa
 
     answers_file = tmpdir.mkdir("tmp").join("answers_file")
     input_string = \
-        ['example', '--generate-answers-file', str(answers_file), '--dry-run']
+        ['example', '--generate-answers-file', str(answers_file), '--dry-run',"--req-arg-a=yes", "--req-arg-b=yes", \
+         "--uni-dep=string1", "--multi-dep=multi-val"]
 
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
@@ -517,7 +548,8 @@ def test_ansible_args(spec_fixture, workspace_manager_fixture,          # noqa
     """Verify execution runs with --ansible-args. """
 
     input_string = ['example', '--ansible-args',
-                    'start-at-task="Test output";tags=only_this']
+                    'start-at-task="Test output";tags=only_this',"--req-arg-a=yes", "--req-arg-b=yes", \
+                    "--uni-dep=string1", "--multi-dep=multi-val"]
 
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
@@ -569,7 +601,8 @@ def test_output_with_IniType(spec_fixture, tmpdir,
     my_temp_dir = tmpdir.mkdir("tmp")
     dry_output = my_temp_dir.join("dry_output.yml")
 
-    input_string = ['example', "--dry-run", "-o", str(dry_output)]
+    input_string = ['example', "--dry-run", "-o", str(dry_output),"--req-arg-a=yes", "--req-arg-b=yes", \
+                    "--uni-dep=string1", "--multi-dep=multi-val"]
 
     if from_file:
         input_string += ['--from-file', from_file]
@@ -601,13 +634,13 @@ def test_deprecation(spec_fixture, workspace_manager_fixture,  # noqa
 
     deprecated_input_string = \
         ['example', '--deprecated-way', 'TestingValue', '--dry-run',
-         '-o', str(deprecated_output)]
+         '-o', str(deprecated_output),"--req-arg-a=yes", "--req-arg-b=yes", "--uni-dep=string1", "--multi-dep=multi-val"]
 
     output = my_temp_dir.join("output.yml")
 
     input_string = \
         ['example', '--new-way', 'TestingValue', '--dry-run',
-         '-o', str(output)]
+         '-o', str(output),"--req-arg-a=yes", "--req-arg-b=yes", "--uni-dep=string1", "--multi-dep=multi-val"]
 
     spec_manager = api.SpecManager()
     spec_manager.register_spec(spec_fixture)
