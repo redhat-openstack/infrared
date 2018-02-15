@@ -1,0 +1,8 @@
+{#
+    nodes_without_hostname_format is dict, which contains nodes without
+    hostname format in role data.
+#}
+parameter_defaults:
+{% for node_type, heat_name in nodes_without_hostname_format.iteritems() %}
+    {{ heat_name }}HostnameFormat: '{{ node_type }}-%index%'
+{% endfor %}
