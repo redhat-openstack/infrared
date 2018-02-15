@@ -61,7 +61,7 @@
   tags: deploy_preparation
   tasks:
     - name: Run heat agent script in a background if splitstack deployment
-      shell: ~{{ ansible_ssh_user }}/heat-agent.sh > heat_agent.log 2>&1
+      shell: sleep 300 && ~{{ ansible_ssh_user }}/heat-agent.sh > heat_agent.log 2>&1
       async: 1000
       poll: 0
       when: install.splitstack|default(False)
