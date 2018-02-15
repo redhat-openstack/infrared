@@ -12,6 +12,9 @@
       role_names_mapping:
           ceph: CephStorage
           swift: ObjectStorage
+      node_names_mapping:
+          CephStorage: ceph
+          ObjectStorage: swift
   tasks:
       - name: create roles folder
         file:
@@ -29,6 +32,20 @@
             source ~/stackrc
             bash "{{ template_base }}/roles/tripleo_roles.sh" &> roles_data.log
         register: roles_data
+
+      - name: read roles data file
+        command: "cat {{ template_base }}/roles/roles_data.yaml"
+        register: roles_data_output
+
+      - name: Load deployment network configuration as YAML
+        set_fact:
+            roles_data_var: "{{ roles_data_output.stdout | from_yaml }}"
+
+      - name: create list with nodes which don't have hostname format
+        set_fact:
+            nodes_without_hostname_format: "{{ nodes_without_hostname_format|default([]) + [node_names_mapping.get(item.name, item.name|lower)] }}"
+        when: item.HostnameFormatDefault is not defined
+        with_items: "{{ roles_data_var }}"
 
       - name: create the nodes file
         vars:

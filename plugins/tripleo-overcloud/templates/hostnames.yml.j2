@@ -4,6 +4,7 @@
 #}
 
 parameter_defaults:
+{% if nodes_without_hostname_format|default([])|length == 0 %}
 {% if install.scheduler_hints|default(False) %}
 {% for node_type, details in node_types.iteritems() %}
 {% if groups[node_type]|default([])|length %}
@@ -21,5 +22,14 @@ parameter_defaults:
     HostnameMap:
 {% for old_name, new_name in install.overcloud.hostname.HostnameMap.iteritems() %}
         {{ old_name }}: {{ new_name }}
+{% endfor %}
+{% endif %}
+{% else %}
+{#
+    nodes_without_hostname_format is array which contains nodes without
+    hostname format in role data.
+#}
+{% for node in nodes_without_hostname_format %}
+    {{ node_types[node].heat_name }}HostnameFormat: '{{ node }}-%index%'
 {% endfor %}
 {% endif %}
