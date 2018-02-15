@@ -371,16 +371,21 @@ class SpecParser(object):
 
                 # validate conditions
                 for req_when_arg in req_when_args:
-                    req_arg, req_value = req_when_arg.split('==')
-                    req_value = yaml.load(str(req_value))
-                    actual_value = \
-                        args.get(command_name, {}).get(req_arg.strip(), None)
-                    actual_value = yaml.load(str(actual_value))
-                    if actual_value == req_value \
-                            and self.spec_helper.get_option_state(
-                                command_name,
-                                option_spec['name'],
-                                args) == helper.OptionState['NOT_SET']:
+                    splited_args_list = req_when_arg.split()
+                    splited_args_list[0] = \
+                        args.get(command_name, {}).get(splited_args_list[0].strip(), splited_args_list[0])
+                    for idx, req_arg in enumerate(splited_args_list):
+                        try:
+                            if not any((c in '<>=') for c in splited_args_list[idx]):
+                                splited_args_list[idx] = "'{0}'".format(yaml.load(str(req_arg)))
+                        except TypeError:
+                            pass
+                    condition = ' '.join(map(str, splited_args_list))
+                    result = bool(eval(condition))
+                    if not result and self.spec_helper.get_option_state(
+                        command_name,
+                        option_spec['name'],
+                        args) == helper.OptionState['NOT_SET']:
                         res.append(option_spec['name'])
         return res
 
@@ -395,17 +400,14 @@ class SpecParser(object):
             result = collections.defaultdict(list)
             condition_req_args = self._get_conditionally_required_args(
                 parser_name, expected_options, args)
-
             for option in expected_options:
                 name = option['name']
-
                 # check required options.
                 if (option.get('required', False) and
                         name not in parser_args or
                         option['name'] in condition_req_args) and \
                         name not in silent_args:
                     result[parser_name].append(name)
-
             return result
 
         res = {}
