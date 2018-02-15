@@ -362,7 +362,9 @@ class SpecParser(object):
         :return: list, list of argument names with matched ``required_when``
             condition
         """
-        res = []
+        opts_names = [option_spec['name'] for option_spec in options_spec]
+        missing_args = []
+        option_results = []
         for option_spec in options_spec:
             if option_spec and 'required_when' in option_spec:
                 req_when_args = [option_spec['required_when']] \
@@ -371,18 +373,28 @@ class SpecParser(object):
 
                 # validate conditions
                 for req_when_arg in req_when_args:
-                    req_arg, req_value = req_when_arg.split('==')
-                    req_value = yaml.load(str(req_value))
-                    actual_value = \
-                        args.get(command_name, {}).get(req_arg.strip(), None)
-                    actual_value = yaml.load(str(actual_value))
-                    if actual_value == req_value \
-                            and self.spec_helper.get_option_state(
-                                command_name,
-                                option_spec['name'],
-                                args) == helper.OptionState['NOT_SET']:
-                        res.append(option_spec['name'])
-        return res
+                    splited_args_list = req_when_arg.split()
+                    for idx, req_arg in enumerate(splited_args_list):
+                        if req_arg in opts_names:
+                            splited_args_list[idx] = args.get(command_name, {}).get(req_arg.strip())
+                        if splited_args_list[idx] is None:
+                            option_results.append(False)
+                            break
+                        else:
+                            if not any((c in '<>=') for c in splited_args_list[idx]):
+                                splited_args_list[idx] = "'{0}'".format(yaml.load(str(splited_args_list[idx])))
+                    else:
+                        eval_result = eval(' '.join(splited_args_list))
+                        option_results.append(bool(eval_result))
+                if all(option_results) and \
+                        self.spec_helper.get_option_state(
+                            command_name,
+                            option_spec['name'],
+                            args) == helper.OptionState['NOT_SET']:
+                    missing_args.append(option_spec['name'])
+                option_results = []
+        print missing_args
+        return missing_args
 
     def validate_requires_args(self, args):
         """Check if all the required arguments have been provided. """
