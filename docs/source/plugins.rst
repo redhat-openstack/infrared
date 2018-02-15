@@ -284,7 +284,9 @@ Required Arguments
 InfraRed provides the ability to mark an argument in a specification file as 'required' using two flags:
 
 1. 'required' - A boolean value tell whether the arguments required or not. (default is 'False')
-2. 'required_when' - Makes this argument required only when the mentioned argument is given and has the exact mentioned value. (More than one condition is allowed with YAML list style)
+2. 'required_when' - Makes this argument required only when the mentioned argument is given and has the exact mentioned
+    value for '==' or value is not equal for '!='. More than one condition is allowed with YAML list style. In this case
+    the argument will be required if one of the conditions is true.
 
 For example, take a look on the ``plugin.spec`` ('Group C') in `Plugin Specification`_
 

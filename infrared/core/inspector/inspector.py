@@ -362,27 +362,36 @@ class SpecParser(object):
         :return: list, list of argument names with matched ``required_when``
             condition
         """
-        res = []
+        opts_names = [option_spec['name'] for option_spec in options_spec]
+        missing_req = []
         for option_spec in options_spec:
             if option_spec and 'required_when' in option_spec:
                 req_when_args = [option_spec['required_when']] \
                     if not type(option_spec['required_when']) is list \
                     else option_spec['required_when']
-
                 # validate conditions
                 for req_when_arg in req_when_args:
-                    req_arg, req_value = req_when_arg.split('==')
-                    req_value = yaml.load(str(req_value))
-                    actual_value = \
-                        args.get(command_name, {}).get(req_arg.strip(), None)
-                    actual_value = yaml.load(str(actual_value))
-                    if actual_value == req_value \
-                            and self.spec_helper.get_option_state(
+                    splited_args_list = req_when_arg.split(" ")
+                    for idx, req_arg in enumerate(splited_args_list):
+                        if req_arg in opts_names:
+                            args_command = args.get(command_name, {})
+                            if req_arg in args_command.keys():
+                                splited_args_list[idx] = args_command.get(req_arg, {})
+                            else:
+                                continue
+                        if not any((c in '<>=') for c in splited_args_list[idx]):
+                            splited_args_list[idx] = "'{0}'".format(yaml.load(str(splited_args_list[idx])))
+                    try:
+                        req_eval = eval(' '.join(splited_args_list))
+                    except NameError:
+                        continue
+                    if bool(req_eval) and \
+                            self.spec_helper.get_option_state(
                                 command_name,
                                 option_spec['name'],
                                 args) == helper.OptionState['NOT_SET']:
-                        res.append(option_spec['name'])
-        return res
+                        missing_req.append(option_spec['name'])
+        return missing_req
 
     def validate_requires_args(self, args):
         """Check if all the required arguments have been provided. """

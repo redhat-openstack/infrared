@@ -12,7 +12,6 @@ from tests.test_workspace import workspace_manager_fixture, test_workspace  # no
 
 def subdict_in_dict(subdict, superdict):
     """True is subdict in subdict_in_dict. Else False.
-
     >>> subdict_in_dict({"k1": "v1"}, {"k1": "v1"})
     True
     >>> subdict_in_dict({"k1": "v1"}, {"k1": "v1", "k2": "v2"})
@@ -73,11 +72,9 @@ def test_execute_fail(spec_fixture, workspace_manager_fixture,          # noqa
 def test_execute_main(spec_fixture, workspace_manager_fixture,          # noqa
                       test_workspace):
     """Verify execution runs the main.yml playbook.
-
     Implicitly covers that vars dict is passed, since we know it will fail
     on task "fail if no vars dict" because test_test_execute_fail verifies
     failure is respected and output file isn't generated.
-
     Verifies that plugin roles are invoked properly.
     """
 
@@ -123,7 +120,6 @@ def test_fake_inventory(spec_fixture, workspace_manager_fixture,          # noqa
 def test_bad_user_inventory(spec_fixture, workspace_manager_fixture,   # noqa
                             test_workspace, tmpdir):
     """Verify user-inventory is loaded and not default inventory.
-
     tests/example/main.yml playbook runs on all hosts. New inventory defines
     unreachable node.
     """
@@ -151,7 +147,6 @@ def test_nested_value_CLI(spec_fixture,
                           workspace_manager_fixture,
                           test_workspace, input_value, tmpdir):
     """Tests that CLI input of Complex type Value is nested in vars dict.
-
     Use "-o output_file" and evaluate output YAML file.
     """
 
@@ -341,7 +336,6 @@ def test_nested_KeyValueList_CLI(spec_fixture,
                                  test_workspace, tmpdir,
                                  input_value, expected_output_dict):
     """Tests that CLI input of Complex type KeyValueList is nested in vars dict.
-
     Use "-o output_file" and evaluate output YAML file.
     """
 
@@ -443,7 +437,6 @@ def test_nested_value_CLI_with_answers_file(spec_fixture, tmpdir,
                                             workspace_manager_fixture,
                                             test_workspace, input_value):
     """Verfies answers file is loaded and that CLI overrides it.
-
     Use "-o output_file" and evaluate output YAML file.
     """
     mytempdir = tmpdir.mkdir("tmp")

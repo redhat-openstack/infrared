@@ -16,11 +16,12 @@ from tests.test_workspace import workspace_manager_fixture, test_workspace  # no
     ("--req-arg-a=yes --uni-dep=uni-val", False),
     ("--req-arg-b=yes --multi-dep=multi-val", True),
     ("--req-arg-a=yes --uni-dep=uni-val --multi-dep=multi-val", True),
+    ("--req-arg-a=yes --uni-dep=uni --multi-dep=multi-val ", False),
+    ("--req-arg-a=yes --uni-dep=uni --multi-dep=multi-val --uni-neg=uni-neg-val", True),
 ])
 def test_required_when(spec_fixture, workspace_manager_fixture, test_workspace,
                        cli_args, should_pass):
     """Tests the 'required_when' mechanism
-
     :param spec_fixture: Fixtures which creates 'testing spec' (tests/example)
     :param workspace_manager_fixture: Fixture which sets the default workspace
       directory
@@ -36,6 +37,7 @@ def test_required_when(spec_fixture, workspace_manager_fixture, test_workspace,
 
     if should_pass:
         rc = spec_manager.run_specs(args=['example'] + cli_args.split())
+        print rc
         assert rc == 0, "Execution failed, return code is: {}".format(rc)
     else:
         with pytest.raises(IRRequiredArgsMissingException):
