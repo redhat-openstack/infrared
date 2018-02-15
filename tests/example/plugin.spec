@@ -41,12 +41,26 @@ subparsers:
                           - "req-arg-a == yes"
                           - "req-arg-b == yes"
 
+                  uni-neg-dep:
+                      type: Value
+                      help: "Help for --uni-neg"
+                      required_when: "uni-dep != uni-val"
+
+                  uni-int:
+                      type: Value
+                      help: "Help for --uni-neg"
+                      required_when: version > 10
+
                   req-arg-a:
                       type: Bool
                       help: "Help for --req-arg-a"
 
                   req-arg-b:
                       type: Bool
+                      help: "Help for --req-arg-b"
+
+                  version:
+                      type: int
                       help: "Help for --req-arg-b"
 
             - title: Group D
