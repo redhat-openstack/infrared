@@ -26,7 +26,11 @@ subparsers:
                       help:
                            The test suite to run. This value will be passed to the test runner.
                            __LISTYAMLS__
-                      required: yes
+                  test:
+                      type: Value
+                      help:
+                           The relative path to a single test within the ospdui test framework.
+                           For example, tests/login.py
                   ssl:
                       type: Bool
                       help: specifies whether the ui should be accessed by https for http protocol.

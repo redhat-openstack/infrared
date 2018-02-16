@@ -3,12 +3,20 @@
   gather_facts: no
   any_errors_fatal: true
   tasks:
+      - name: fail if tests are not defined
+        fail:
+            msg: Please provide test to run using the '--test' or '--tests' options.
+        when:
+            - test.tests is not defined
+            - test.test is not defined
+
       - name: include tests suite var
         include_vars: "{{ test.tests }}"
+        when: test.tests|default('')
 
       - name: set test suite name
         set_fact:
-            test_suite: "{{ test.tests | basename | splitext | first }}"
+            test_suite: "{{ test.tests|default(test.test) | basename | splitext | first }}"
 
       - name: install test runner
         pip:
@@ -24,6 +32,7 @@
             chdir: "{{ setup.ospdui.dir }}/webui/ospdui/widget_containers/"
             executable: /bin/bash
         tags: skip_ansible_lint
+        when: test.openstack.version|int < 11
 
       - name: run ospdui tests
         environment:
@@ -31,7 +40,7 @@
             PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/bin"
         shell: |
             source .venv/bin/activate
-            py.test -s {{ test_pattern }} \
+            py.test -s {{ test_pattern|default(test.test)  }} \
                 --junit-xml={{ test_suite }}.xml
         args:
             chdir: "{{ setup.ospdui.dir }}"
