@@ -1,4 +1,12 @@
 ---
-- name: placeholder for workarounds
-  hosts: localhost
+- name: Disable Compute se-linux State(without changes to tripleo puppet)
+  #(skatlapa) For all OC nodes
+  hosts: undercloud
+  become: true
+  shell: |
+     set -ex
+     setenforce 0
+  when:
+      - install.version|openstack_distribution == 'OSP'
+      - install.version|openstack_release == 13
   gather_facts: no
