@@ -11,7 +11,7 @@
   tags: skip_ansible_lint
 
 - name: start ping
-  shell: "ping -D {{ floatip.stdout }} >> ~/ping_results_{{ pingtimestamp.stdout }} &"
+  shell: "ping -D {{ floatip.stdout }} >> ~/ping_results_{{ pingtimestamp.stdout }}.log &"
   async: 21660
   poll: 0
   when: floatip|succeeded
