@@ -1,4 +1,9 @@
 ---
-- name: placeholder for workarounds
-  hosts: localhost
+- name: Disable Compute se-linux State(without changes to tripleo puppet)
+  #(skatlapa) For all OC nodes
+  hosts: compute
+  become: true
   gather_facts: no
+  #tags: init
+  any_errors_fatal: true
+  command: "setenforce 0"
