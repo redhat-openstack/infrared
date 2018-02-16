@@ -24,6 +24,7 @@
             chdir: "{{ setup.ospdui.dir }}/webui/ospdui/widget_containers/"
             executable: /bin/bash
         tags: skip_ansible_lint
+        when: test.openstack.version|int < 11
 
       - name: run ospdui tests
         environment:
