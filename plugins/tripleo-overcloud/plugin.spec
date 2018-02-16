@@ -437,6 +437,12 @@ subparsers:
                           Useful with '--ocupdate' to reboot nodes after minor update,
                           or with '--deploy' to reboot after oc is deployed.
                       default: False
+                  postreboot_evacuate:
+                      type: Bool
+                      help: |
+                          Live migrate instances before rebooting compute nodes and migrate them back after
+                          the node boots.
+                      default: False
                   dataplaneping:
                       type: Bool
                       help: |
