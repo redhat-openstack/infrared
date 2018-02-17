@@ -80,11 +80,11 @@
       - install.tht.roles == true
       - not install.splitstack
 
-- name: "After overcloud container workarounds (remove it ASAP)"
+- name: Workaround for BZ#1543914 - set SELinux to permissive for OSP 13
   import_playbook: "docker_after_workaround.yml"
   when:
       - install.deploy|default('')
-      - install.version|default(hostvars[groups['undercloud'][0]].undercloud_version) | openstack_release > 11
+      - install.version|default(hostvars[groups['undercloud'][0]].undercloud_version) | openstack_release > 12
       - install.containers|bool
   tags: deploy
 
