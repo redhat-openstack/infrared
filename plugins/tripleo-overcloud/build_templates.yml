@@ -28,15 +28,24 @@
             dest: "{{ template_base }}/debug.yaml"
         when: install.overcloud.debug
 
-      - name: inject config_heat.yaml so it will be auto discovered with user templates
+      - name: set parameter_defaults for config_heat.yaml
+        set_fact:
+            config_heat_yaml:
+                parameter_defaults: "{{ install.get('config', {}).get('heat', {}) }}"
+        when: install.get('config', {}).get('heat', {})
+
+      - name: set resource_registry for config_heat.yaml
         vars:
-            config_heat: "{{ install.get('config', {}).get('heat', {}) }}"
-            yaml_content:
-                parameter_defaults: "{{ config_heat }}"
+            config_resource: "{{ install.get('config', {}).get('resource', {}) }}"
+        set_fact:
+            config_heat_yaml: "{{ config_heat_yaml | default({}) | combine({'resource_registry': config_resource}) }}"
+        when: install.get('config', {}).get('resource', {})
+
+      - name: inject config_heat.yaml so it will be auto discovered with user templates
         copy:
             dest: "{{ template_base }}/config_heat.yaml"
-            content: "{{ yaml_content | to_nice_yaml }}"
-        when: install.get('config', {}).get('heat', {})
+            content: "{{ config_heat_yaml | to_nice_yaml }}"
+        when: config_heat_yaml is defined
 
       - name: check if custom overcloud_deploy.sh exists
         stat:
