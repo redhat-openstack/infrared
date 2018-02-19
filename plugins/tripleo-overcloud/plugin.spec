@@ -212,6 +212,20 @@ subparsers:
                                       nova::allow_resize_to_same_host: true
                                   NeutronOVSFirewallDriver: openvswitch
 
+                  config-resource:
+                      type: NestedDict
+                      action: append
+                      help: |
+                          Inject additional Tripleo Heat Templates configuration options under "resource_registry"
+                          entry point.
+                          Example:
+                              --config-resource OS::TripleO::BlockStorage::Net::SoftwareConfig=/home/stack/nic-configs/cinder-storage.yaml
+                          should inject the following yaml to "overcloud deploy" command:
+
+                              ---
+                              resource_registry:
+                                  OS::TripleO::BlockStorage::Net::SoftwareConfig: /home/stack/nic-configs/cinder-storage.yaml
+
                   heat-templates-basedir:
                       type: Value
                       help: Overrides the templates base dir for the overcloud deploy script.

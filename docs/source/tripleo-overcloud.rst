@@ -157,6 +157,21 @@ Tripleo Heat Templates configuration options
               nova::allow_resize_to_same_host: true
           NeutronOVSFirewallDriver: openvswitch
 
+* ``--config-resource``: Inject additional Tripleo Heat Templates configuration options under "resource_registry"
+    entry point. Example:
+
+    .. code-block:: plain
+
+       --config-resource OS::TripleO::BlockStorage::Net::SoftwareConfig=/home/stack/nic-configs/cinder-storage.yaml
+
+    should inject the following yaml to "overcloud deploy" command:
+
+    .. code-block:: yaml
+
+       ---
+       resource_registry:
+           OS::TripleO::BlockStorage::Net::SoftwareConfig: /home/stack/nic-configs/cinder-storage.yaml
+
 Overcloud Public Network
 ------------------------
 * ``--public-network``: Bool. Whether to have `infrared` create a public network on the overcloud.
