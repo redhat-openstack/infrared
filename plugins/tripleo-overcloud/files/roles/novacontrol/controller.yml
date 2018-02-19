@@ -120,6 +120,7 @@ controller_role:
         - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::Collectd{% endif %}"
         - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::BarbicanApi{% endif %}"
         - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::CephMds{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::CephMgr{% endif %}"
         - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::CephRbdMirror{% endif %}"
         - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::CinderHPELeftHandISCSI{% endif %}"
         - "{% if install.version |openstack_release > 10 %}OS::TripleO::Services::Congress{% endif %}"
