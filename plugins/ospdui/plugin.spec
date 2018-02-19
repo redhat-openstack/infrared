@@ -22,10 +22,9 @@ subparsers:
                           The full path or relative path to the undercloud rc file.
                           When empty, infrared will search active workspace for the 'stackrc' file and use it.
                   tests:
-                      type: VarFile
+                      type: Value
                       help:
-                           The test suite to run. This value will be passed to the test runner.
-                           __LISTYAMLS__
+                           The full path or relative path to tests to run. This value will be passed to the test runner.
                       required: yes
                   ssl:
                       type: Bool

@@ -3,12 +3,10 @@
   gather_facts: no
   any_errors_fatal: true
   tasks:
-      - name: include tests suite var
-        include_vars: "{{ test.tests }}"
-
-      - name: set test suite name
+      - name: set test suite name and pattern
         set_fact:
             test_suite: "{{ test.tests | basename | splitext | first }}"
+            test_pattern: "{{ test.tests }}"
 
       - name: install test runner
         pip:
