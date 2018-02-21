@@ -77,11 +77,12 @@
             vlan_id: "{{ install.get('external', {}).vlan | default(((network_template|default({})).parameter_defaults|default({})).ExternalNetworkVlanID|default('')) }}"
             # Here can't be used {{ path_venv }}, because it's not a Jinja template
             ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
+            network_name: "{{ install.public.get('net', {}).name|default(pool_name.stdout_lines|last) }}"
         os_network:
             # Required for SSL
             validate_certs: no
             cloud: overcloud
-            name: "{{ pool_name.stdout_lines|last }}"
+            name: "{{ network_name }}"
             external: yes
             shared: no
             provider_physical_network: "{{ physnet_name }}"
