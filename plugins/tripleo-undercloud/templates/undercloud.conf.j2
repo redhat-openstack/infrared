@@ -1,7 +1,7 @@
 [DEFAULT]
 # Network interface on the Undercloud that will be handling the PXE
 # boots and DHCP for Overcloud instances. (string value)
-{% if 'bmc' in groups %}
+{% if 'bmc' in groups or install.splitstack|default(False) %}
 local_interface = eth1
 {% else %}
 local_interface = eth0

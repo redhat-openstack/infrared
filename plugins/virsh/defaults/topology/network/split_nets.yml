@@ -1,17 +1,23 @@
 ---
 networks:
     net1:
+        external_connectivity: yes
+        name: "split"
+        ip_address: "192.168.25.1"
+        netmask: "255.255.255.0"
+        forward: nat
+        dhcp:
+            range:
+                start: "192.168.25.100"
+                end: "192.168.25.150"
+            subnet_cidr: "192.168.25.0/24"
+            subnet_gateway: "192.168.25.1"
+    net2:
         external_connectivity: no
         name: "data"
         ip_address: "192.168.24.254"
         netmask: "255.255.255.0"
-        dhcp:
-            range:
-                start: "192.168.24.100"
-                end: "192.168.24.150"
-            subnet_cidr: "192.168.24.0/24"
-            subnet_gateway: "192.168.24.1"
-    net2:
+    net3:
         external_connectivity: yes
         name: "management"
         ip_address: "172.16.0.1"
@@ -26,7 +32,7 @@ networks:
         floating_ip:
             start: "172.16.0.101"
             end: "172.16.0.150"
-    net3:
+    net4:
         external_connectivity: yes
         name: "external"
         ipv6:
@@ -52,11 +58,12 @@ networks:
 nodes:
     default:
         interfaces:
+            - network: "split"
             - network: "data"
             - network: "management"
             - network: "external"
         external_network:
-            network: "management"
+            network: "split"
     novacontrol:
         interfaces:
             - network: "data"
