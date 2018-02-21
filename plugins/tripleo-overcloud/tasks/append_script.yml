@@ -69,13 +69,13 @@
 
 - name: append all custom templates provided by the user
   lineinfile:
-      dest: "~/overcloud_deploy.sh"
+      dest: "{{ overcloud_deploy_script }}"
       line: '-e {{ item.path }} \'
       insertbefore: "^--log-file.*"
   with_items: "{{ template_list.files }}"
 
 - name: Append the invocation line to the base overcloud deploy script
   lineinfile:
-      dest: "~/overcloud_deploy.sh"
+      dest: "{{ overcloud_deploy_script }}"
       regexp: "^--log-file .*"
       line: "--log-file overcloud_deployment_{{ 100 | random }}.log"

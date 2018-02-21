@@ -46,11 +46,13 @@
             dest: "{{ template_base }}/config_heat.yaml"
             content: "{{ config_heat_yaml | to_nice_yaml }}"
         when: config_heat_yaml is defined
+        tags: deploy-script
 
       - name: check if custom overcloud_deploy.sh exists
         stat:
             path: "{{ template_base }}/overcloud_deploy.sh"
         register: deploy_script
+        tags: deploy-script
 
       - name: copy our overcloud deployment script if provided by the user
         tags: overcloud_deploy
@@ -60,24 +62,23 @@
             mode: 0644
             force: yes
         when: install.overcloud.script|default('')
+        tags: deploy-script
 
       - set_fact:
-            overcloud_deploy_script: "{{ install.overcloud.script|default('') or deploy_script.stat.path|default('') | basename }}"
+            overcloud_deploy_script: "{{ install.overcloud.script|default('') or deploy_script.stat.path|default('') | basename or '~/overcloud_deploy.sh'}}"
+        tags:
+            - deploy
+            - deploy-script
 
       - name: create the base overcloud deploy script
         template:
             src: "{{ deploy_script_template | default('templates/overcloud_deploy.sh.j2') }}"
-            dest: "~/overcloud_deploy.sh"
+            dest: "{{ overcloud_deploy_script }}"
             mode: 0755
-        when: not overcloud_deploy_script|default('')
-
-      - name: append extra templates provided by user
-        include_tasks: tasks/environment_templates.yml
-        with_items: "{{ install.overcloud.templates|default([]) }}"
-        loop_control:
-            loop_var: templates_list_file
-        # avoid empty strings
-        when: "templates_list_file != ''"
+        when:
+            - not install.overcloud.get('script', {})
+            - not deploy_script.stat.get('path', {})
+        tags: deploy-script
 
       - name: Enable external network access through newly created vlan interface on undercloud
         include_tasks: tasks/undercloud-ext-vlan.yml
@@ -101,20 +102,27 @@
             - install.version|default(undercloud_version)|openstack_release >= 12
             - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
-      - name: add environment plan to deply script
+      - name: add environment plan to deploy script
         lineinfile:
-            dest: "~/overcloud_deploy.sh"
+            dest: "{{ overcloud_deploy_script }}"
             line: '-p ~/environment_plan.yaml \'
         when: (install.environment|default({})).plan|default(false)
+        tags: deploy-script
 
       - include_tasks: tasks/append_script.yml
         when: not overcloud_deploy_script|default('')
 
-      - name: set overcloud_deploy script
-        set_fact:
-           overcloud_deploy_script: '~/overcloud_deploy.sh'
-        tags: deploy
+      - name: append extra templates provided by user
+        include_tasks: tasks/environment_templates.yml
+        with_items: "{{ install.overcloud.templates|default([]) }}"
+        loop_control:
+            loop_var: templates_list_file
+        # avoid empty strings
+        when: "templates_list_file != ''"
+        tags: deploy-script
 
       - name: Print deploy command
         command: "cat {{ overcloud_deploy_script }}"
-        tags: deploy
+        tags:
+            - deploy
+            - deploy-script

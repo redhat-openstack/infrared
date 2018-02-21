@@ -1,6 +1,6 @@
 - name: Get all environment files from the deploy script
   shell: |
-     for file in `awk '/^-e / || /^--environment-file / {print $2}' ~/overcloud_deploy.sh`; do if [ -f $file ]; then echo $file; fi; done
+     for file in `awk '/^-e / || /^--environment-file / {print $2}' {{ overcloud_deploy_script }}`; do if [ -f $file ]; then echo $file; fi; done
   register: ds_env_files
 
 - name: Create one variable with all the environment yamls
@@ -13,7 +13,7 @@
 
 - name: Get all roles files from the deploy script
   shell: |
-     for file in `awk '/^-r / || /^--roles-file / {print $2}' ~/overcloud_deploy.sh`; do if [ -f $file ]; then echo $file; fi; done
+     for file in `awk '/^-r / || /^--roles-file / {print $2}' {{ overcloud_deploy_script }}`; do if [ -f $file ]; then echo $file; fi; done
   register: ds_roles_files
 
 - name: Create one variable with all the roles yamls
