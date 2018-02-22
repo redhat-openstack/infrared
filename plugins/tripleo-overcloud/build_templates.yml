@@ -71,14 +71,6 @@
             mode: 0755
         when: not overcloud_deploy_script|default('')
 
-      - name: append extra templates provided by user
-        include_tasks: tasks/environment_templates.yml
-        with_items: "{{ install.overcloud.templates|default([]) }}"
-        loop_control:
-            loop_var: templates_list_file
-        # avoid empty strings
-        when: "templates_list_file != ''"
-
       - name: Enable external network access through newly created vlan interface on undercloud
         include_tasks: tasks/undercloud-ext-vlan.yml
         vars:
@@ -114,6 +106,14 @@
         set_fact:
            overcloud_deploy_script: '~/overcloud_deploy.sh'
         tags: deploy
+
+      - name: append extra templates provided by user
+        include_tasks: tasks/environment_templates.yml
+        with_items: "{{ install.overcloud.templates|default([]) }}"
+        loop_control:
+            loop_var: templates_list_file
+        # avoid empty strings
+        when: "templates_list_file != ''"
 
       - name: Print deploy command
         command: "cat {{ overcloud_deploy_script }}"
