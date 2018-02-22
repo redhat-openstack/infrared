@@ -15,3 +15,28 @@
       - '-e {{ install.heat.templates.basedir }}/environments/docker-ha.yaml \'
   when:
       - install.version|default(undercloud_version)|openstack_release == 13
+
+# OVN environment file should be appended AFTER docker-ha.yaml
+- name: append the ovn HA OSP 12 template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/neutron-ml2-ovn-ha.yaml \'
+  when:
+      - install.network.ovn and not install.network.dvr
+      - install.version|default(undercloud_version)|openstack_release == 12
+
+- name: append the ovn HA OSP > 12 template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/services-docker/neutron-ovn-ha.yaml \'
+  when:
+      - install.network.ovn and not install.network.dvr
+      - install.version|default(undercloud_version)|openstack_release > 12
+
+- name: append the ovn DVR HA OSP > 12 template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/services-docker/neutron-ovn-dvr-ha.yaml \'
+  when:
+      - install.network.ovn and install.network.dvr
+      - install.version|default(undercloud_version)|openstack_release > 12
