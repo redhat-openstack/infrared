@@ -1,7 +1,12 @@
 parameter_defaults:
+{% if (install.version | default(undercloud_version) | openstack_release >= 13)  %}
+  CollectdGnocchiServer: {{ opstools_ip_addess }}
+  CollectdGnocchiUser: admin
+{% else %}
   CollectdServer: {{ opstools_ip_addess }}
   CollectdServerPort: 25826
   CollectdSecurityLevel: None
+{% endif %}
 
   CollectdDefaultPlugins:
       - load
