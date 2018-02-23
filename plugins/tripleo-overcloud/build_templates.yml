@@ -28,18 +28,15 @@
             dest: "{{ template_base }}/debug.yaml"
         when: install.overcloud.debug
 
-      - name: set parameter_defaults for config_heat.yaml
-        set_fact:
-            config_heat_yaml:
-                parameter_defaults: "{{ install.get('config', {}).get('heat', {}) }}"
-        when: install.get('config', {}).get('heat', {})
-
-      - name: set resource_registry for config_heat.yaml
+      - name: "Option to disable Firewall for debugging"
+        #(skatlapa)- remove after RHOS 13 docker bug fixed
         vars:
-            config_resource: "{{ install.get('config', {}).get('resource', {}) }}"
-        set_fact:
-            config_heat_yaml: "{{ config_heat_yaml | default({}) | combine({'resource_registry': config_resource}) }}"
-        when: install.get('config', {}).get('resource', {})
+            firewall_mode: "false"
+        template:
+            src: templates/firewall.yaml.j2
+            dest: "{{ template_base }}/firewall.yaml"
+        when:
+            - install.version|default(undercloud_version)|openstack_release == 13
 
       - name: inject config_heat.yaml so it will be auto discovered with user templates
         copy:
