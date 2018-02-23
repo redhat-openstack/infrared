@@ -41,6 +41,15 @@
             config_heat_yaml: "{{ config_heat_yaml | default({}) | combine({'resource_registry': config_resource}) }}"
         when: install.get('config', {}).get('resource', {})
 
+      - name: "Disable SElinux w/a"
+        vars:
+            firewall_mode: "false"
+        template:
+            src: templates/firewall.yaml.j2
+            dest: "{{ template_base }}/firewall.yaml"
+        when:
+            - install.version|default(undercloud_version)|openstack_release == 13
+
       - name: inject config_heat.yaml so it will be auto discovered with user templates
         copy:
             dest: "{{ template_base }}/config_heat.yaml"
