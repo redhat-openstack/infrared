@@ -301,6 +301,12 @@ subparsers:
                       default: yes
                       help: Deploy "public" external network on the overcloud as post-install.
 
+                  public-net-name:
+                      type: Value
+                      help: |
+                          Specifies the name of the public network.
+                          NOTE: If not provided it will use the default one for the OSP version
+
                   public-subnet:
                       type: VarFile
                       help: |
