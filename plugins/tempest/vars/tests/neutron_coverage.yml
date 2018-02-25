@@ -1,0 +1,62 @@
+---
+test_dict:
+    test_regex: ''
+    whitelist:
+        - "^tempest.api.network.*"
+        - "^tempest.scenario.test_network_advanced_server_ops"
+        - "^tempest.scenario.test_network_basic_ops"
+        - "^tempest.scenario.test_network_v6"
+        - "^tempest.scenario.test_security_groups_basic_ops"
+        - "^neutron.tests.tempest.*"
+        - "^neutron_tempest_plugin.*"
+    blacklist:
+        # Disabling following tests which fail due to timeout.
+        # This is due to the slowdown that the coverage tool is causing
+        # when measuring code coverage on neutron services during tempest tests.
+        - "^tempest.scenario.test_network_advanced_server_ops.TestNetworkAdvancedServerOps.test_server_connectivity_pause_unpause"
+        - "^tempest.scenario.test_security_groups_basic_ops.TestSecurityGroupsBasicOps.test_cross_tenant_traffic"
+        - "^tempest.scenario.test_network_advanced_server_ops.TestNetworkAdvancedServerOps.test_server_connectivity_reboot"
+        - "^neutron.tests.tempest.api.admin.test_dhcp_agent_scheduler.DHCPAgentSchedulersTestJSON.test_dhcp_port_status_active"
+        - "^tempest.scenario.test_security_groups_basic_ops.TestSecurityGroupsBasicOps.test_in_tenant_traffic"
+        - "^tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_hotplug_nic"
+        - "^tempest.scenario.test_network_advanced_server_ops.TestNetworkAdvancedServerOps.test_server_connectivity_rebuild"
+        - "^tempest.scenario.test_security_groups_basic_ops.TestSecurityGroupsBasicOps.test_multiple_security_groups"
+        - "^neutron.tests.tempest.scenario.test_trunk.TrunkTest.test_trunk_subport_lifecycle"
+        - "^tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_mtu_sized_frames"
+        - "^tempest.scenario.test_network_advanced_server_ops.TestNetworkAdvancedServerOps.test_server_connectivity_stop_start"
+        - "^neutron.tests.tempest.scenario.test_qos.QoSTest.test_qos"
+        - "^tempest.scenario.test_security_groups_basic_ops.TestSecurityGroupsBasicOps.test_port_security_disable_security_group"
+        - "^tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_network_basic_ops"
+        - "^neutron.tests.tempest.scenario.test_portsecurity.PortSecurityTest.test_port_security_removed_added"
+        - "^tempest.scenario.test_network_advanced_server_ops.TestNetworkAdvancedServerOps.test_server_connectivity_suspend_resume"
+        - "^tempest.scenario.test_security_groups_basic_ops.TestSecurityGroupsBasicOps.test_port_update_new_security_group"
+        - "^tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_port_security_macspoofing_port"
+        - "^neutron.tests.tempest.scenario.test_security_groups.NetworkDefaultSecGroupTest.test_default_sec_grp_scenarios"
+        - "^neutron.tests.tempest.api.test_routers.RoutersIpV6Test.test_router_interface_status"
+        - "^neutron.tests.tempest.api.test_routers.RoutersTest.test_router_interface_status"
+        - "^tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_preserve_preexisting_port"
+        - "^neutron.tests.tempest.scenario.test_security_groups.NetworkDefaultSecGroupTest.test_protocol_number_rule"
+        - "^neutron.tests.tempest.scenario.test_security_groups.NetworkDefaultSecGroupTest.test_two_sec_groups"
+        - "^tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_router_rescheduling"
+        - "^tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_subnet_details"
+        - "^tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_update_instance_port_admin_state"
+        - "^tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_update_router_admin_state"
+        - "^tempest.scenario.test_network_v6.TestGettingAddress.test_dhcp6_stateless_from_os"
+        - "^tempest.scenario.test_network_v6.TestGettingAddress.test_dualnet_dhcp6_stateless_from_os"
+        - "^tempest.scenario.test_network_v6.TestGettingAddress.test_dualnet_multi_prefix_dhcpv6_stateless"
+        - "^tempest.scenario.test_network_v6.TestGettingAddress.test_dualnet_multi_prefix_slaac"
+        - "^tempest.scenario.test_network_v6.TestGettingAddress.test_dualnet_slaac_from_os"
+        - "^tempest.scenario.test_network_v6.TestGettingAddress.test_multi_prefix_dhcpv6_stateless"
+        - "^tempest.scenario.test_network_v6.TestGettingAddress.test_multi_prefix_slaac"
+        - "^tempest.scenario.test_network_v6.TestGettingAddress.test_slaac_from_os"
+        - "^neutron.tests.tempest.scenario.test_basic.NetworkBasicTest.test_basic_instance"
+        - "^tempest.scenario.test_security_groups_basic_ops.TestSecurityGroupsBasicOps.test_boot_into_disabled_port_security_network_without_secgroup"
+
+    plugins:
+        neutron-tempest-plugin:
+            repo: "http://git.openstack.org/openstack/neutron-tempest-plugin"
+            package:
+                10: "python-neutron-tests"
+                11: "python-neutron-tests"
+                12: "python-neutron-tests"
+                default: "python-neutron-tests-tempest"
