@@ -73,6 +73,7 @@ subparsers:
                   registry-mirror:
                       type: Value
                       help: The alternative docker registry to use for deployment.
+                      required_when: "registry-skip-puddle == True"
 
                   registry-undercloud-skip:
                       type: Bool
@@ -81,14 +82,42 @@ subparsers:
                             recommended to use this option when you have very good bandwidth to your registry.
                       default: False
 
+                  registry-skip-puddle:
+                      type: Bool
+                      help: Skip reading any private puddle files to auto-detect the containers parameters
+                      default: False
+
                   registry-namespace:
                       type: Value
                       help: The alternative docker registry namespace to use for deployment.
 
+                  registry-prefix:
+                      type: Value
+                      help: The images prefix
+
+                  registry-tag:
+                      type: Value
+                      help: The images tag
+                      required_when: "registry-skip-puddle == True"
+
+                  registry-tag-label:
+                      type: Value
+                      help: |
+                          If this option is set then infrared will try to get
+                          tag hash using the openstack overcloud container image tag discover
+                          command
+                  registry-tag-image:
+                      type: Value
+                      help: |
+                          The image to use to read the tab hash
+
                   registry-ceph-namespace:
                       type: Value
                       help: namesapce for the ceph container
-                      default: ceph/rhceph-2-rhel7
+
+                  registry-ceph-image:
+                      type: Value
+                      help: image for the ceph container
 
                   registry-ceph-tag:
                       type: Value
