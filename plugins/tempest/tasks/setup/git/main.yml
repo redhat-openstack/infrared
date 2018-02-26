@@ -5,19 +5,29 @@
       state: present
   with_items: "{{ setup.packages }}"
 
-- name: Install pip
-  become: yes
-  easy_install:
-      name: pip
-      state: latest
+#- name: Install pip
+#  become: yes
+#  easy_install:
+#      name: pip
+#      state: latest
 
-- name: Clone tempest
+- name: Clone tempest from default source (if not specified at command line)
   git:
       repo: "{{ setup.repo.get(test.openstack.version|default(overcloud_version)|openstack_release, setup.repo.defaults).url }}"
       version: "{{ setup.repo.get(test.openstack.version|default(overcloud_version)|openstack_release, setup.repo.defaults).branch }}"
       dest: "~/{{ test.dir }}"
   register: tempest_repo
-  when: setup.local_dir is not defined
+  when:
+      - setup.local_dir is not defined
+      - test.source.repo is not defined
+
+- name: Clone tempest from source specified at command line
+  git:
+      repo: "{{ test.source.repo }}"
+      version: "{{ test.revision }}"
+      dest: "~/{{ test.dir }}"
+  register: tempest_repo
+  when: test.source.repo is defined
 
 - name: Fetch tempest from change
   synchronize: dest={{ test.dir }} src={{ test.local_dir }}/
