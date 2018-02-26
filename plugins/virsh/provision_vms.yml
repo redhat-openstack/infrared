@@ -4,7 +4,7 @@
   gather_facts: yes
   any_errors_fatal: true
   vars:
-      base_image_path: /var/lib/libvirt/images
+      base_image_path: "{{ disk_pool | default('/var/lib/libvirt/images') }}"
       url: "{{ provision.image.url }}"
   tasks:
     - name: provision image for each node
