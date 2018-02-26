@@ -223,6 +223,12 @@ subparsers:
                           Removes all the downloaded images when images-task is in 'rpm' or 'import'
                       default: yes
 
+                  disk-pool:
+                      type: Value
+                      help: |
+                        A path to the undercloud image. Default is Storage Pool from libvirt
+                      default: "/var/lib/libvirt/images"
+
             - title: Undercloud Upgrade
               options:
                   upgrade:
