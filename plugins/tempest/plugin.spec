@@ -109,7 +109,7 @@ subparsers:
                       default: 8
                   dir:
                       type: Value
-                      help: The tempest wokring direcotry on the tester node
+                      help: The tempest working direcotry on the tester node
                       default: tempest-dir
                   legacy-config:
                       type: Bool
