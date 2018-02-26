@@ -45,6 +45,12 @@ subparsers:
                         Default is internal path for RHEL guest image
                       default: https://url.corp.redhat.com/rhel-guest-image-7-4-191-x86-64-qcow2
 
+                  disk-pool:
+                      type: Value
+                      help: |
+                        A path to the image pool. Default is Storage Pool from libvirt
+                      default: "/var/lib/libvirt/images"
+
             - title: topology
               options:
                   prefix:
