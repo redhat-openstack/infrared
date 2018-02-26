@@ -100,6 +100,10 @@ subparsers:
                       help: |
                           Adds an extra black (skip) regex to the ostestr/tempest invocation.
                           To add multiple tests seperate by pipe.
+                  source-repo:
+                      type: Value
+                      help: The url of tempest git repository to use. Note 'setup' has to be 'git' as well.
+                      default: https://git.openstack.org/openstack/tempest.git
                   revision:
                       type: Value
                       help: The setup (git) revision if applicable
@@ -110,7 +114,7 @@ subparsers:
                       default: 8
                   dir:
                       type: Value
-                      help: The tempest wokring direcotry on the tester node
+                      help: The tempest working directory on the tester node
                       default: tempest-dir
                   legacy-config:
                       type: Bool
