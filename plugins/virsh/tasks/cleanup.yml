@@ -109,5 +109,5 @@
 - name: remove any existing VM disks that we created
   shell: "rm -f {{ item }}*disk*.qcow*"
   args:
-      chdir: /var/lib/libvirt/images
+      chdir: "{{ provision.disk.pool }}"
   with_items: "{{ vm_names.list_vms }}"

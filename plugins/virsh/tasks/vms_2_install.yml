@@ -21,6 +21,10 @@
   set_fact:
       node_start_index: 0
 
+- name: define disk pool path
+  set_fact:
+      disk_pool: "{{ provision.disk.pool if (topology_node.disks.disk1.path == None) else topology_node.disks.disk1.path }}"
+
 - name: Calculate node_start_index
   set_fact:
       node_start_index: "{{ node_start_index|int + 1 if (topology_node.name + '-' in item) and hostvars[item].get('ansible_connection') == 'ssh' else node_start_index|int }}"
@@ -53,7 +57,7 @@
           {% if disk_values.import_url is defined and disk_values.import_url %}
            --disk path={{ base_image_path }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus={{ provision.disk.bus }},format=qcow2,cache={{ disk_values.cache }} \
           {% else %}
-           --disk path={{ disk_values.path }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus={{ provision.disk.bus }},format=qcow2,cache={{ disk_values.cache }} \
+           --disk path={{ disk_pool }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus={{ provision.disk.bus }},format=qcow2,cache={{ disk_values.cache }} \
           {% endif -%}
           {% endfor %}
           {% else %}
