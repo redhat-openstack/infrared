@@ -76,6 +76,9 @@
       wait: yes
   register: floating_ips
   with_items: "{{ servers.results | map(attribute='server') | list }}"
+  tags:
+    - create_floating_ips
+
 
 - name: Get flavor facts
   os_flavor_facts:
@@ -83,7 +86,7 @@
       name: "{{ topology_node.flavor | default(flavor_id) }}"
       limit: 1
 
-- name: Add created servers to inventory
+- name: Add created servers to inventory with floating IPs
   vars:
       instance_flavor: "{{ openstack_flavors | first }}"
   add_host:
@@ -98,3 +101,20 @@
       disk: "{{ instance_flavor.disk }}"
       vcpus: "{{ instance_flavor.vcpus }}"
   with_items: "{{ floating_ips.results }}"
+  when: floating_ips is defined
+
+- name: Add created servers to inventory with private IPs
+  vars:
+      instance_flavor: "{{ openstack_flavors | first }}"
+  add_host:
+      # item.item is the server object
+      name: "{{ item.name }}"
+      ansible_ssh_host: "{{ item.private_v4 }}"
+      groups: "{{ topology_node.groups | join(',') }}"
+      ansible_ssh_private_key_file: "{{ provision.key.file }}"
+      ansible_ssh_user: "{{ topology_node.get('image', {}).ssh_user | default(provision.username) }}"
+      ram: "{{ instance_flavor.ram }}"
+      disk: "{{ instance_flavor.disk }}"
+      vcpus: "{{ instance_flavor.vcpus }}"
+  with_items: "{{ servers.results | map(attribute='server') | list }}"
+  when: floating_ips is undefined
