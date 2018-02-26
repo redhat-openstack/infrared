@@ -1,3 +1,25 @@
 ---
 tripleo_heat_templates:
     - "{{ install.heat.templates.basedir }}/environments/services/ironic.yaml"
+
+custom_templates:
+  parameter_defaults:
+    NeutronBridgeMappings: datacentre:br-ex,baremetal:br-baremetal
+    NeutronFlatNetworks: datacentre,baremetal
+    IronicCleaningNetwork: baremetal
+    IronicEnabledDrivers:
+        - pxe_ipmitool
+        - fake
+    NovaSchedulerDefaultFilters:
+        - RetryFilter
+        - AggregateInstanceExtraSpecsFilter
+        - AvailabilityZoneFilter
+        - RamFilter
+        - DiskFilter
+        - ComputeFilter
+        - ComputeCapabilitiesFilter
+        - ImagePropertiesFilter
+    IronicCleaningDiskErase: metadata
+    IronicIPXEEnabled: true
+    ControllerExtraConfig:
+        ironic::drivers::ssh::libvirt_uri: 'qemu:///system'
