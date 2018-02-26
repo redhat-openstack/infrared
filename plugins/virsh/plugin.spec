@@ -115,6 +115,16 @@ subparsers:
                       choices: ['hd', 'uefi']
                       default: hd
 
+            - title: Disk Bus
+              options:
+                  disk-bus:
+                    type: Value
+                    help: |
+                      Desired bus to use for disks, please refer to: https://wiki.qemu.org/Features/VirtioSCSI
+                      Some of disk busses supports different modes:
+                    choises: ['virtio', 'scsi']
+                    default: 'virtio'
+
             - title: ansible facts
               options:
                   collect-ansible-facts:
