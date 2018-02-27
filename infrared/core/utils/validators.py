@@ -233,8 +233,12 @@ class AnsibleConfigValidator(Validator):
         except jsonschema.exceptions.ValidationError:
             raise IRValidatorException(
                 "There is an issue with Ansible configuration in {}, "
-                "for more info please check at {}\n".format(yaml_file,
-                                                            cls.IR_DOC_URL))
+                "for more info please check at {}\n"
+                "Mandatory config options:\n"
+                "- 'host_key_checking' to be False\n"
+                "- 'forks' greater than 500\n"
+                "- 'timeout' greater than 30\n".format(yaml_file,
+                                                       cls.IR_DOC_URL))
 
     @classmethod
     def validate_from_content(cls, file_content=None):
