@@ -49,6 +49,14 @@
       version: "2.11.1"
       virtualenv: "{{ virtualenvs.tempest }}"
 
+# Make sure os-testr is installed since it was removed
+# from tempest requirements file on tempest master branch
+- name: Install os-testr
+  pip:
+      name: "os-testr"
+      virtualenv: "{{ virtualenvs.tempest }}"
+      state: latest
+
 - name: Get repo requirements
   pip:
       virtualenv: "{{ virtualenvs.tempest }}"
