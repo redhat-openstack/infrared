@@ -19,14 +19,28 @@
         register: undercloud_deployment
         ignore_errors: yes
 
-      - name: print the last 60 lines of the undercloud installation
-        command: tail -n60 undercloud_install.log
+      - block:
 
-      - name: print any nested error entries in undercloud installation
-        shell: "grep -B2 -A5 -i 'info:.*error:' undercloud_install.log || true"
+        - name: tail 60 lines of the undercloud installation
+          command: tail -n60 undercloud_install.log
+          register: undercloud_failure
+          changed_when: false
+          no_log: true
 
-      - fail:
-            msg: "Undercloud deployment failed... :("
+        - name: print any nested error entries in undercloud installation
+          shell: "grep -B2 -A5 -i 'info:.*error:' undercloud_install.log | tail -n30"
+          failed_when: false
+          register: tailed_undercloud_install_log
+          changed_when: false
+          no_log: true
+
+        - fail:
+              msg: |
+                Undercloud deployment failed... :( More details:
+                {{ undercloud_failure.stdout }}
+                tailed undercloud_install.log:
+                {{ tailed_undercloud_install_log.stdout }}
+
         when: undercloud_deployment.rc != 0
 
       - name: remove workaround for BZ#1428608
