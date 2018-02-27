@@ -146,34 +146,47 @@ class Workspace(object):
             print new_line
 
     def _copy_outside_keys(self):
-        """Copy key from out of the workspace into one"""
-        paths_map = {}
+        """Copies SSH keys into the workspace's directory
+
+        Also replaces workspace paths with workspace placeholder and updates
+        the inventory file with the changes
+        """
         real_inv = os.path.join(self.path, os.readlink(self.inventory))
 
-        for line in fileinput.input(real_inv, inplace=True):
-            key_defs = re.findall(r"ansible_ssh_private_key_file=\/\S+", line)
-            for key_def in key_defs:
-                path = key_def.split("=")[-1]
-                paths_map.setdefault(path, path)
+        with open(real_inv, 'a+') as f:
+            inventory_content = f.read()
 
-            new_line = line.strip()
-            for mapped_orig, mapped_new in paths_map.iteritems():
-                if mapped_orig == mapped_new:
-                    keyfilename = os.path.basename(mapped_orig)
-                    rand_part = next(tempfile._get_candidate_names())
-                    new_fname = "{}-{}".format(keyfilename, rand_part)
+            ssh_keys = set(re.findall(
+                r"ansible_ssh_private_key_file=(\/\S+)", inventory_content))
+            LOG.debug("SSH keys to copy:\n  {}".format(ssh_keys))
 
-                    shutil.copy2(mapped_orig, os.path.join(
-                                 self.path, new_fname))
-                    paths_map[mapped_orig] = os.path.join(
-                        self.path_placeholder, new_fname)
-                    new_fname = paths_map[mapped_orig]
-                else:
-                    new_fname = mapped_new
+            for ssh_key in sorted(ssh_keys, reverse=True):
+                # Skip SSH keys that already in the workspace
+                if ssh_key.startswith(self.path) or \
+                        ssh_key.startswith(self.path_placeholder):
+                    continue
 
-                new_line = re.sub(mapped_orig, new_fname, new_line)
+                ssh_key_name = os.path.basename(ssh_key)
+                rand_str = next(tempfile._get_candidate_names())
+                ssh_key_name_new = "{}-{}".format(ssh_key_name, rand_str)
+                new_ssh_key = os.path.join(self.path, ssh_key_name_new)
 
-            print(new_line)
+                LOG.debug(
+                    "Copying SSH key '{}' to workspace's dir: '{}'".format(
+                        ssh_key, new_ssh_key))
+                shutil.copy2(ssh_key, new_ssh_key)
+
+                new_ssh_key_with_placeholder = \
+                    os.path.join(self.path_placeholder, ssh_key_name_new)
+                LOG.debug(
+                    "Replacing SSH key '{}' path with workspace placeholder "
+                    "'{}'".format(ssh_key, new_ssh_key_with_placeholder))
+                inventory_content = re.sub(
+                    ssh_key, new_ssh_key_with_placeholder, inventory_content)
+
+            f.seek(0)
+            f.truncate()
+            f.write(inventory_content)
 
     def link_file(self, file_path,
                   dest_name=None, unlink=True, add_to_reg=True):

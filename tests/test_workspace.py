@@ -172,7 +172,7 @@ def test__copy_outside_keys(test_workspace, mocker):
         assert inv.read() == (
             "hypervisor ansible_ssh_private_key_file={key}\n"
             "host-0 {key}\n"
-            "host-1 id_rsa\n").format(key=os.path.join(
+            "host-1 id_rsa").format(key=os.path.join(
                 test_workspace.path_placeholder, "id_rsa_tkey-zzzzz"))
 
     assert "id_rsa_tkey-zzzzz" in os.listdir(test_workspace.path)
