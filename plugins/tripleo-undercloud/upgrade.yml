@@ -37,5 +37,5 @@
             - upgrade
             - upgrade_repos
   tasks:
-      - name: "{{ operation_type }} to version {{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }} build {{ install.build | default('latest') }}"
+      - name: Perform undercloud upgrade
         include_tasks: "tasks/upgrade/upgrade.yml"
