@@ -53,6 +53,9 @@ This file defines the CLI flags this plugin exposes, its name and its type.
 
 .. literalinclude:: ../examples/plugin.spec
 
+Config section:
+    * Plugin type can be one of the following: ``provision``, ``install``, ``test``, ``other``.
+
 To access the options defined in the spec from your playbooks and roles use
 the plugin type with the option name.
 For example, to access ``dictionary-val`` use ``{{ provision.dictionary.val }}``.
