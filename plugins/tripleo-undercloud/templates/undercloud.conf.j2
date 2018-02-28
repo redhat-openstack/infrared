@@ -7,7 +7,11 @@ local_interface = eth1
 local_interface = eth0
 {% endif %}
 # 192.168.24.0 subnet is by default used since RHOS11
+{% if install.splitstack|default(False) %}
+local_ip = {{ ansible_ssh_host }}/24
+{% else %}
 local_ip = 192.168.24.1/24
+{% endif %}
 network_gateway = 192.168.24.1
 undercloud_public_vip = 192.168.24.2
 undercloud_admin_vip = 192.168.24.3
