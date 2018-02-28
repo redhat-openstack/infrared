@@ -41,8 +41,7 @@ class InfraredPluginManager(object):
     SUPPORTED_TYPES_SECTION = 'supported_types'
     GIT_PLUGINS_ORGS_SECTION = "git_orgs"
 
-    def __init__(self, plugins_conf,
-                 plugins_dir, install_plugins=True):
+    def __init__(self, plugins_conf, plugins_dir, install_plugins=True):
         """
         :param plugins_conf: A path to the main plugins configuration file
         :param plugins_dir: the plugins directory location
