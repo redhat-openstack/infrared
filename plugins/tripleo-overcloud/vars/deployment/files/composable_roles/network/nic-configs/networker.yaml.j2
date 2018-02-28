@@ -74,56 +74,73 @@ parameters:
 
 resources:
   OsNetConfigImpl:
+{% if install.version|default(undercloud_version)|openstack_release > 10 %}
+  type: OS::Heat::SoftwareConfig
+  properties:
+      group: script
+      config:
+          str_replace:
+              template:
+                  get_file: {{ install.heat.templates.basedir }}/network/scripts/run-os-net-config.sh
+              params:
+                   $network_config:
+                       network_config:
+{% else %}
     type: OS::Heat::StructuredConfig
     properties:
       group: os-apply-config
       config:
         os_net_config:
           network_config:
+{% endif %}
             -
               type: interface
               name: nic1
               use_dhcp: false
-              dns_servers: {get_param: DnsServers}
+              dns_servers:
+                  get_param: DnsServers
               addresses:
                 -
                   ip_netmask:
                     list_join:
                       - '/'
-                      - - {get_param: ControlPlaneIp}
-                        - {get_param: ControlPlaneSubnetCidr}
+                      - - get_param: ControlPlaneIp
+                        - get_param: ControlPlaneSubnetCidr
               routes:
                 -
+                  # Optionally have this interface as default route
+                  next_hop:
+                      get_param: ControlPlaneDefaultRoute
                   default: true
-                  next_hop: {get_param: ControlPlaneDefaultRoute}
                 -
                   ip_netmask: 169.254.169.254/32
-                  next_hop: {get_param: EC2MetadataIp}
-
-            - type: interface
-              name: nic2
+                  next_hop:
+                      get_param: EC2MetadataIp
+            -
+              type: ovs_bridge
+              name: br-isolated
               use_dhcp: false
-              addresses:
+              members:
                 -
-                  ip_netmask: {get_param: ExternalIpSubnet}
-              routes:
+                  type: interface
+                  name: nic2
+                  primary: true
                 -
-                  ip_netmask: 0.0.0.0/0
-                  next_hop: {get_param: ExternalInterfaceDefaultRoute}
-            - type: vlan
-              device: nic2
-              vlan_id:
-                get_param: InternalApiNetworkVlanID
-              addresses:
-              - ip_netmask:
-                  get_param: InternalApiIpSubnet
-            - type: vlan
-              device: nic2
-              vlan_id:
-                get_param: StorageMgmtNetworkVlanID
-              addresses:
-              - ip_netmask:
-                  get_param: StorageMgmtIpSubnet
+                  type: vlan
+                  vlan_id:
+                      get_param: InternalApiNetworkVlanID
+                  addresses:
+                  -
+                    ip_netmask:
+                        get_param: InternalApiIpSubnet
+                -
+                  type: vlan
+                  vlan_id:
+                      get_param: TenantNetworkVlanID
+                  addresses:
+                  -
+                    ip_netmask:
+                        get_param: TenantIpSubnet
 
             -
               type: ovs_bridge
@@ -134,35 +151,9 @@ resources:
                   type: interface
                   name: nic3
                   primary: true
-            -
-              type: ovs_bridge
-              name: br-tenant
-              use_dhcp: false
-              members:
-                -
-                  type: interface
-                  name: nic4
-                  primary: true
-                - type: vlan
-                  device: nic4
-                  vlan_id:
-                    get_param: TenantNetworkVlanID
-                  addresses:
-                  - ip_netmask:
-                      get_param: TenantIpSubnet
-
-            - type: interface
-              name: nic5
-              use_dhcp: false
-            - type: vlan
-              device: nic5
-              vlan_id:
-                get_param: StorageNetworkVlanID
-              addresses:
-              - ip_netmask:
-                  get_param: StorageIpSubnet
 
 outputs:
   OS::stack_id:
     description: The OsNetConfigImpl resource.
-    value: {get_resource: OsNetConfigImpl}
+    value:
+        get_resource: OsNetConfigImpl

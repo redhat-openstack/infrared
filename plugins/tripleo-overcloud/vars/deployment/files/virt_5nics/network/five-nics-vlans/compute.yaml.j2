@@ -2,7 +2,7 @@ heat_template_version: 2015-04-30
 
 description: >
   Software Config to drive os-net-config to configure multiple interfaces
-  for the ironic role.
+  for the controller role.
 
 parameters:
   ControlPlaneIp:
@@ -33,6 +33,10 @@ parameters:
     default: ''
     description: IP address/subnet on the management network
     type: string
+  ExternalNetworkVlanID:
+    default: 10
+    description: Vlan ID for the external network traffic.
+    type: number
   InternalApiNetworkVlanID:
     default: 20
     description: Vlan ID for the internal_api network traffic.
@@ -41,10 +45,18 @@ parameters:
     default: 30
     description: Vlan ID for the storage network traffic.
     type: number
+  StorageMgmtNetworkVlanID:
+    default: 40
+    description: Vlan ID for the storage mgmt network traffic.
+    type: number
   TenantNetworkVlanID:
     default: 50
     description: Vlan ID for the tenant network traffic.
     type: number
+  ExternalInterfaceDefaultRoute:
+    default: '10.0.0.1'
+    description: default route for the external network
+    type: string
   ControlPlaneSubnetCidr: # Override this via parameter_defaults
     default: '24'
     description: The subnet CIDR of the control plane network.
@@ -62,55 +74,89 @@ parameters:
 
 resources:
   OsNetConfigImpl:
+{% if install.version|default(undercloud_version)|openstack_release > 10 %}
+  type: OS::Heat::SoftwareConfig
+  properties:
+      group: script
+      config:
+          str_replace:
+              template:
+                  get_file: {{ install.heat.templates.basedir }}/network/scripts/run-os-net-config.sh
+              params:
+                   $network_config:
+                       network_config:
+{% else %}
     type: OS::Heat::StructuredConfig
     properties:
       group: os-apply-config
       config:
         os_net_config:
           network_config:
+{% endif %}
             -
               type: interface
               name: nic1
               use_dhcp: false
+              dns_servers:
+                  get_param: DnsServers
               addresses:
                 -
                   ip_netmask:
                     list_join:
                       - '/'
-                      - - {get_param: ControlPlaneIp}
-                        - {get_param: ControlPlaneSubnetCidr}
+                      - - get_param: ControlPlaneIp
+                        - get_param: ControlPlaneSubnetCidr
               routes:
                 -
-                  ip_netmask: 0.0.0.0/0
-                  next_hop: {get_param: ControlPlaneDefaultRoute}
-                  # Optionally have this interface as default route
                   default: true
+                  next_hop:
+                      get_param: ControlPlaneDefaultRoute
                 -
                   ip_netmask: 169.254.169.254/32
-                  next_hop: {get_param: EC2MetadataIp}
+                  next_hop:
+                      get_param: EC2MetadataIp
+
+            - type: interface
+              name: nic2
+              use_dhcp: false
+            - type: vlan
+              device: nic2
+              vlan_id:
+                get_param: InternalApiNetworkVlanID
+              addresses:
+              - ip_netmask:
+                  get_param: InternalApiIpSubnet
+
             -
               type: ovs_bridge
-              name: br-isolated
+              name: br-tenant
               use_dhcp: false
               members:
                 -
                   type: interface
-                  name: nic2
+                  name: nic3
                   primary: true
-                -
-                  type: vlan
-                  vlan_id: {get_param: InternalApiNetworkVlanID}
+                - type: vlan
+                  device: nic3
+                  vlan_id:
+                    get_param: TenantNetworkVlanID
                   addresses:
-                  -
-                    ip_netmask: {get_param: InternalApiIpSubnet}
-                -
-                  type: vlan
-                  vlan_id: {get_param: StorageNetworkVlanID}
-                  addresses:
-                  -
-                    ip_netmask: {get_param: StorageIpSubnet}
+                  - ip_netmask:
+                      get_param: TenantIpSubnet
+
+            - type: interface
+              name: nic4
+              use_dhcp: false
+            - type: vlan
+              device: nic4
+              vlan_id:
+                get_param: StorageNetworkVlanID
+              addresses:
+              - ip_netmask:
+                  get_param: StorageIpSubnet
 
 outputs:
   OS::stack_id:
     description: The OsNetConfigImpl resource.
-    value: {get_resource: OsNetConfigImpl}
+    value:
+        get_resource: OsNetConfigImpl

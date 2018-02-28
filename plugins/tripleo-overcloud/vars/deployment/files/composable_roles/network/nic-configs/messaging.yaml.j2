@@ -2,7 +2,7 @@ heat_template_version: 2015-04-30
 
 description: >
   Software Config to drive os-net-config to configure multiple interfaces
-  for the ceph storage role.
+  for the controller role.
 
 parameters:
   ControlPlaneIp:
@@ -74,33 +74,49 @@ parameters:
 
 resources:
   OsNetConfigImpl:
+{% if install.version|default(undercloud_version)|openstack_release > 10 %}
+  type: OS::Heat::SoftwareConfig
+  properties:
+      group: script
+      config:
+          str_replace:
+              template:
+                  get_file: {{ install.heat.templates.basedir }}/network/scripts/run-os-net-config.sh
+              params:
+                   $network_config:
+                       network_config:
+{% else %}
     type: OS::Heat::StructuredConfig
     properties:
       group: os-apply-config
       config:
         os_net_config:
           network_config:
+{% endif %}
             -
               type: interface
               name: nic1
               use_dhcp: false
-              dns_servers: {get_param: DnsServers}
+              dns_servers:
+                  get_param: DnsServers
               addresses:
                 -
                   ip_netmask:
                     list_join:
                       - '/'
-                      - - {get_param: ControlPlaneIp}
-                        - {get_param: ControlPlaneSubnetCidr}
+                      - - get_param: ControlPlaneIp
+                        - get_param: ControlPlaneSubnetCidr
               routes:
                 -
                   ip_netmask: 0.0.0.0/0
-                  next_hop: {get_param: ControlPlaneDefaultRoute}
+                  next_hop:
+                      get_param: ControlPlaneDefaultRoute
                   # Optionally have this interface as default route
                   default: true
                 -
                   ip_netmask: 169.254.169.254/32
-                  next_hop: {get_param: EC2MetadataIp}
+                  next_hop:
+                      get_param: EC2MetadataIp
             -
               type: ovs_bridge
               name: br-isolated
@@ -109,22 +125,67 @@ resources:
                 -
                   type: interface
                   name: nic2
-                  # force the MAC address of the bridge to this interface
                   primary: true
                 -
                   type: vlan
-                  vlan_id: {get_param: StorageNetworkVlanID}
+                  vlan_id:
+                      get_param: InternalApiNetworkVlanID
                   addresses:
                   -
-                    ip_netmask: {get_param: StorageIpSubnet}
+                    ip_netmask:
+                        get_param: InternalApiIpSubnet
                 -
                   type: vlan
-                  vlan_id: {get_param: StorageMgmtNetworkVlanID}
+                  vlan_id:
+                      get_param: StorageNetworkVlanID
                   addresses:
                   -
-                    ip_netmask: {get_param: StorageMgmtIpSubnet}
+                    ip_netmask:
+                        get_param: StorageIpSubnet
+                -
+                  type: vlan
+                  vlan_id:
+                      get_param: StorageMgmtNetworkVlanID
+                  addresses:
+                  -
+                    ip_netmask:
+                        get_param: StorageMgmtIpSubnet
+                -
+                  type: vlan
+                  vlan_id:
+                      get_param: TenantNetworkVlanID
+                  addresses:
+                  -
+                    ip_netmask:
+                        get_param: TenantIpSubnet
+            -
+              type: ovs_bridge
+              # This will default to br-ex, anything else requires specific
+              # brige mapping entries for it to be used.
+{% if install.version|default(undercloud_version)|openstack_release > 10 %}
+              name: bridge_name
+{% else %}
+              name: {get_input: bridge_name}
+{% endif %}
+              use_dhcp: false
+              addresses:
+                -
+                  ip_netmask:
+                      get_param: ExternalIpSubnet
+              routes:
+                -
+                  ip_netmask: 0.0.0.0/0
+                  next_hop:
+                      get_param: ExternalInterfaceDefaultRoute
+              members:
+                -
+                  type: interface
+                  name: nic3
+                  # force the MAC address of the bridge to this interface
+                  primary: true
 
 outputs:
   OS::stack_id:
     description: The OsNetConfigImpl resource.
-    value: {get_resource: OsNetConfigImpl}
+    value:
+        get_resource: OsNetConfigImpl
