@@ -53,22 +53,6 @@ This file defines the CLI flags this plugin exposes, its name and its type.
 
 .. literalinclude:: ../examples/plugin.spec
 
-Config section:
-    * Plugin type can be one of the following: ``provision``, ``install``, ``test``, ``other``.
-    * Dependencies:
-        A plugin dependency is a folder that contains directories for common Ansible resources (callback plugins, filter plugins, roles, libraries).
-        The directory should have the following structure::
-
-             dependency_example
-                 ├── roles
-                 ├── library
-                 ├── library
-                 ├── callback_plugins
-                 └── requirements.txt   # python packages requirements
-
-        * Source can be either path to local directory or path to git repo
-        * Revision is optional and should be added when requesting a specifig revision of a git dependency
-
 To access the options defined in the spec from your playbooks and roles use
 the plugin type with the option name.
 For example, to access ``dictionary-val`` use ``{{ provision.dictionary.val }}``.

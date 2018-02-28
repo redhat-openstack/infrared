@@ -1,0 +1,167 @@
+---
+- name: ensure previous repo mirror config is removed
+  become: true
+  lineinfile:
+      dest: '/etc/hosts'
+      regexp: '.* (download\.lab.*redhat\.com|rhos-qe-mirror).*'
+      state: absent
+
+- block:
+    - name: copy select-mirror.sh into home
+      copy:
+          src: "select-mirror.sh"
+          dest: "~/select-mirror.sh"
+          mode: "0755"
+
+    - name: run select-mirror with provided mirror value
+      command: "~/select-mirror.sh {{ mirror }}"
+      register: selected_mirror
+
+    - name: process results of mirror selection
+      set_fact:
+          mirror_fqdn: "{{ selected_mirror.stdout | trim }}"
+
+    - name: switch rhos-release url to mirror
+      set_fact:
+          rhos_release_rpm: "http://{{ mirror_fqdn }}/rhos-release/repos/rhos-release/rhos-release-latest.noarch.rpm"
+      when: "mirror_fqdn and ('url.corp.' in rhos_release_rpm)"
+
+  when: "mirror|default('')"
+  become: true
+
+- name: gather repo file names to remove
+  find:
+      path: "{{ rr_target_directory }}"
+  register: files_to_remove
+
+- name: remove all repo files
+  file:
+      state: absent
+      path: "{{ item.path }}"
+  with_items: "{{ files_to_remove.files|default([]) }}"
+  when: item.path != "/etc/yum.repos.d/patched_rpms.repo"
+  become: true
+
+- name: check rehos-release already available
+  become: true
+  shell: |
+      rpm -qa | grep rhos-release || echo "rhos-release not_installed"
+  register: rr_pre_installed
+
+- name: get the rhos-release RPM
+  become: true
+  get_url:
+      url: "{{ rhos_release_rpm }}"
+      dest: "/tmp/rhos-release-latest.rpm"
+      force: yes
+      validate_certs: no
+  when: 'not rr_skip_install_if_present or "rhos-release not_installed" in rr_pre_installed.stdout'
+  register: download_result
+  until: '"Request failed" not in download_result.msg'
+  retries: 5
+  delay: 5
+
+- name: install the rhos-release RPM
+  package:
+      name: /tmp/rhos-release-latest.rpm
+      state: present
+      use: yum
+  become: true
+  when: 'not rr_skip_install_if_present or "rhos-release not_installed" in rr_pre_installed.stdout'
+
+- name: remove rhos-release repos if needed
+  rhos_release:
+      state: uninstall
+      target_directory: "{{ rr_target_directory }}"
+  become: true
+
+- block:
+      - name: create necessary repos for director using rhos-release
+        rhos_release:
+            state: install
+            release: "{{ release }}"
+            build_date: "{{ build }}"
+            director_build_date: "{{ director_build | default(omit) }}"
+            buildmods: "{{ rr_buildmods|default([])}}"
+            target_directory: "{{ rr_target_directory }}"
+            distro_version: "{{ rr_distro_version }}"
+            source_hostname: "{{ (selected_mirror|default(omit)).get('stdout', '')|trim }}"
+            discover_build: "{{ rr_discover_build }}"
+        register: command_result
+        until: command_result.stderr.find('Connection reset by peer') == -1
+        retries: 40
+        delay: 5
+        become: true
+  rescue:
+      - name: run rhos-release without retries
+        rhos_release:
+            state: install
+            release: "{{ release }}"
+            build_date: "{{ build }}"
+            director_build_date: "{{ director_build | default(omit) }}"
+            buildmods: "{{ rr_buildmods|default([]) }}"
+            target_directory: "{{ rr_target_directory }}"
+            distro_version: "{{ rr_distro_version }}"
+            source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
+            discover_build: "{{ rr_discover_build }}"
+        register: command_result
+        ignore_errors: yes
+
+      - fail:
+            msg:
+                error: "rhos-release failed unexpectedly"
+                rhos_release_output: "{{ command_result }}"
+
+- block:
+    - name: parse specific number of director puddle used from rhos-release output
+      set_fact:
+          director_puddle_version: "{{ command_result.releases.director.version }}"
+
+    - debug:
+          msg: "Build mark: director_puddle={{ director_puddle_version }}"
+  when: "'director' in command_result.releases"
+  # checking for director is more flexible than specific versions
+
+- name: parse specific number of puddle used from rhos-release output
+  set_fact:
+      core_puddle_version: "{{ command_result.releases.core.version }}"
+
+- name: write version to file
+  copy:
+      content: "{{ core_puddle_version }}"
+      dest: ~/core_puddle_version
+  become: false
+
+- debug:
+      msg: "Build mark: core_puddle={{ core_puddle_version }}"
+
+- block:
+    - name: copy use-mirror.sh to home
+      copy:
+          src: "use-mirror.sh"
+          dest: "~/use-mirror.sh"
+          mode: 0755
+
+    - name: reconfigure system to use mirror
+      command: "~/use-mirror.sh {{ mirror_fqdn }}"
+      args:
+          chdir: "{{ rr_target_directory }}"
+      register: mirror_used_cmd
+      changed_when: "'Skipping mirror' not in mirror_used_cmd.stdout"
+  when: "mirror_fqdn|default('')"
+  become: true
+
+- name: Clean yum cache on RedHat based distros
+  command: yum clean all
+  when: ansible_os_family == "RedHat"
+
+- name: refresh yum cache
+  package:
+      name: kernel
+      state: present
+      update_cache: yes
+  become: true
+
+- name: repolist
+  command: "yum -d 7 repolist"
+  become: true

@@ -1,0 +1,41 @@
+- name: Get free repos for CentOS
+  vars:
+      - release: "{{ install.version|default(undercloud_version) }}"
+  shell: |
+      {% for repo_name, repo_data in rr_rdo_repos.get((release==rr_master_release)|ternary('master', release) + '_' + install.build|default('current'), rr_rdo_repos['default']).iteritems()  %}
+      {% if 'url' in repo_data %}
+      curl -L -o {{ repo_name }}-{{ release }}.repo {{ repo_data.url }}
+
+      {# ------- setup current repo ------- #}
+      {% if repo_data.type|default('') == 'current' %}
+      sed -i 's/\[delorean\]/\[delorean-current\]/' {{ repo_name }}-{{ release }}.repo
+      {% endif %}
+
+      {# ------- allow only defined packages ------- #}
+      {% if repo_data.packages|default([])|length > 0 %}
+      sudo /bin/bash -c "cat <<EOF>>{{ repo_name }}-{{ release }}.repo
+
+      includepkgs={{ repo_data.packages|join(',') }}
+      EOF"
+      {% endif %}
+      {% endif %} {# url check #}
+
+      {% if 'package' in repo_data %}
+      yum -y install --enablerepo=extras {{ repo_data.package }}
+      [ -f /etc/yum.repos.d/{{ repo_data.file_name }} ] && sed -i -e 's%gpgcheck=.*%gpgcheck=0%' /etc/yum.repos.d/{{ repo_data.file_name }} || echo "skiping repo modification"
+      {% if rr_target_directory != '/etc/yum.repos.d' %}
+      cp /etc/yum.repos.d/{{ repo_data.file_name }} {{ rr_target_directory }}/{{ repo_data.file_name }}
+      {% endif %}
+      {% endif %}
+      {% endfor %}
+  when: ansible_distribution == 'CentOS'
+  args:
+      chdir: "{{ rr_target_directory }}"
+  become: true
+
+- name: Enable the OpenStack repository on RHEL
+  package:
+      state: present
+      name:  "https://rdoproject.org/repos/openstack-{{ install.version|default(undercloud_version) }}/rdo-release-{{ install.version|default(undercloud_version) }}.rpm"
+  when: ansible_distribution == 'RedHat'
+  become: true
