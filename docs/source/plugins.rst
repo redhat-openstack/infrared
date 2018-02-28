@@ -53,6 +53,11 @@ This file defines the CLI flags this plugin exposes, its name and its type.
 
 .. literalinclude:: ../examples/plugin.spec
 
+Config section:
+    * Plugin type can be one of the following: ``provision``, ``install``, ``test``, ``other``.
+    * Entry point is the main playbook for the plugin. by default this will refer to main.yml file
+        but can be changed to ant other file.
+
 To access the options defined in the spec from your playbooks and roles use
 the plugin type with the option name.
 For example, to access ``dictionary-val`` use ``{{ provision.dictionary.val }}``.
@@ -164,9 +169,6 @@ inner-most level. Example::
         config:
            plugin_type: provision
            entry_point: main.yml
-           dependencies:
-              - source: "https://sample_github.null/dependency_repo.git"
-                revision: "c5e3b060e8c4095c66db48586817db1eb02da338"
         subparsers:
         my_plugin:
             description: Provisioner virtual machines on a single Hypervisor using libvirt

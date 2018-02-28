@@ -84,9 +84,6 @@ def plugin_manager_fixture(plugins_conf_fixture):
                     config.set(section, option, value)
             config.write(fp)
 
-        # replace core service with or test service
-        # dependency manager will live in the temp folder
-        # so we can keep it unmocked.
         CoreServices.register_service(
             ServiceName.PLUGINS_MANAGER, InfraredPluginManager(
                 lp_file.strpath,
