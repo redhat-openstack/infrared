@@ -409,6 +409,25 @@ subparsers:
                         roles should be used for OSP12+ composable deployments. If value is 'no', then the OSP11 approach
                         will be used.
 
+            - title: Control Node Placement
+              options:
+                  specific-node-ids:
+                      type: Bool
+                      default: no
+                      help: |
+                          This procedure assigns node ID to specific nodes. Examples of node IDs include controller-0,
+                          controller-1, compute-0, compute-1, and so forth.
+
+                  custom-hostnames-file:
+                      type: Value
+                      help: Path to yaml file which contains HostnameMap for the custom host names
+
+                  predictable-ips:
+                      type: Bool
+                      default: no
+                      help: |
+                          Need to update
+
             - title: Splitstack deployment
               options:
                   splitstack:

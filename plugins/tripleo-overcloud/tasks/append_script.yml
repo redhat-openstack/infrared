@@ -26,6 +26,14 @@
       - install.version|default(undercloud_version)|openstack_release >= 12
       - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
+- name: Assigning specific node ids
+  import_tasks: control_node_placement/specific_node_ids.yml
+  when:
+     - install.specific.node.ids
+     - install.version|default(undercloud_version) | openstack_release >= 10
+  vars:
+      generate_scheduler_hints: no
+
 - name: Generate the hostnames template
   include_tasks: hostname.yml
   when: templates.generate_host_name_template|default(True)
