@@ -26,6 +26,21 @@
       - install.version|default(undercloud_version)|openstack_release >= 12
       - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
+- name: Assigning specific node ids
+  import_tasks: control_node_placement/specific_node_ids.yml
+  when:
+     - install.specific.node.ids
+     - install.version|default(undercloud_version) | openstack_release >= 10
+     - not install.role|default('') or (install.role is defined and install.role.files == 'default')
+  vars:
+      generate_scheduler_hints: no
+
+- name: Custom hostnames
+  import_tasks: control_node_placement/custom_hostnames.yml
+  when:
+      - install.get('custom', {}).hostnames|default(False)
+      - install.version|default(undercloud_version) | openstack_release >= 10
+
 - name: Generate the hostnames template
   include_tasks: hostname.yml
   when: templates.generate_host_name_template|default(True)

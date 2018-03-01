@@ -1,0 +1,82 @@
+- block:
+    - name: get ironic info for the node
+      shell: |
+          source ~/stackrc
+          openstack baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} show {{ uuid }} -c name -f value
+      vars:
+          uuid: "{{ node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] }}"
+      register: baremetal_info
+      when:
+          - install.version|default(undercloud_version) | openstack_release != 8
+
+    - name: osp8 - get ironic info for the node
+      shell: |
+          source ~/stackrc
+          ironic node-list --fields uuid name | grep {{ uuid }} | awk '{print $4}'
+      vars:
+          uuid: "{{ node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] }}"
+      register: ironic_info
+      when:
+          - install.version|default(undercloud_version) | openstack_release == 8
+
+    - name: set baremetal_name
+      set_fact:
+          baremetal_name: "{{ (install.version|default(undercloud_version)|openstack_release == 8) | ternary(ironic_info.stdout, baremetal_info.stdout) }}"
+
+    - name: update nodes arrays
+      set_fact:
+          nodes_to_delete: "{{ nodes_to_delete|default([]) + [baremetal_name] }}"
+          nodes_added: "{{ nodes_added|default([]) + [node_info.name] }}"
+      when:
+          - node_info.name != baremetal_name
+
+    - name: reset node_groups
+      set_fact:
+          node_groups: []
+
+    - name: update nodes_groups from original groups
+      set_fact:
+          node_groups: "{{( baremetal_name in item.value and item.key not in ignored_groups ) | ternary(node_groups|default([]) + [item.key], node_groups|default([])) }}"
+      with_dict: "{{ groups }}"
+      vars:
+          ignored_groups: ['ungrouped', 'ovb']
+      when:
+          - baremetal_name in groups.all
+
+    - name: update nodes_groups with predefined ones
+      set_fact:
+          node_groups: "{{ ['overcloud_nodes', 'openstack_nodes', node_info.name.split('-')[0]] | join(',') }}"
+      when:
+          - baremetal_name not in groups.all
+
+    # todo(obaranov) Remove hosts from the 'unused' group
+    # Currently ansible does not allow to remove existing host from a group
+    - name: add hosts to host list
+      add_host:
+          name: "{{ node_info.name }}"
+          # only add groups for new nodes. don't touch existing nodes' groups
+          groups: "{{ node_groups }}"
+          ansible_user: "{{ user }}"
+          ansible_ssh_pass: ""
+          ansible_host: "{{ node_info.accessIPv4 }}"
+          ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
+
+    - name: add original name
+      add_host:
+          name: "{{ node_info.name }}"
+          original_name: "{{ baremetal_name }}"
+      when:
+          - node_info.name != baremetal_name
+
+    - name: add ssh common args for hypervisor
+      add_host:
+          name: "{{ node_info.name }}"
+          ansible_ssh_common_args: " -o ForwardAgent=yes -o IdentitiesOnly=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no \
+                                     -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                                     -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
+                                        {{ hostvars['hypervisor'].ansible_user }}@{{ hostvars['hypervisor'].ansible_host }}\""
+      when:
+          - node_info.name != baremetal_name
+          - "'hypervisor' in groups"
+  when:
+      - node_info.status != 'ERROR'
