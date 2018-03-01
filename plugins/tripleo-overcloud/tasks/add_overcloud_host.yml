@@ -1,0 +1,69 @@
+- name: get ironic info for the node
+  shell: |
+      source ~/stackrc
+      openstack baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} show {{ uuid }} -c name -f value
+  vars:
+      uuid: "{{ node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] }}"
+  register: baremetal_name
+
+- name: add old nodes to nodes_to_delete
+  set_fact:
+      nodes_to_delete: "{{ nodes_to_delete|default([]) + [baremetal_name.stdout] }}"
+  when:
+      - node_info.name != baremetal_name.stdout
+
+- debug:
+      msg: "{{ nodes_to_delete|default([]) }}"
+
+- debug:
+      msg: "t {{ node_info.name }} t"
+
+- debug:
+      msg: "t {{ baremetal_name.stdout }} t"
+
+- name: reset node_groups
+  set_fact:
+      node_groups: []
+
+- name: update nodes_groups from original groups
+  set_fact:
+      node_groups: "{{( baremetal_name.stdout in item.value and item.key != 'ungrouped' ) | ternary(node_groups|default([]) + [item.key], node_groups|default([])) }}"
+  with_dict: "{{ groups }}"
+  when:
+      - baremetal_name.stdout in groups.all
+
+- name: update nodes_groups with predefined ones
+  set_fact:
+      node_groups: "{{ ['overcloud_nodes', 'openstack_nodes', node_info.name.split('-')[0]] | join(',') }}"
+  when:
+      - baremetal_name.stdout not in groups.all
+
+# todo(obaranov) Remove hosts from the 'unused' group
+# Currently ansible does not allow to remove existing host from a group
+- name: add hosts to host list
+  add_host:
+      name: "{{ node_info.name }}"
+      # only add groups for new nodes. don't touch existing nodes' groups
+      groups: "{{ node_groups }}"
+      ansible_ssh_user: "{{ user }}"
+      ansible_ssh_pass: ""
+      ansible_ssh_host: "{{ node_info.accessIPv4 }}"
+      ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
+
+- name: add original name
+  add_host:
+      name: "{{ node_info.name }}"
+      original_name: "{{ baremetal_name.stdout }}"
+  when:
+      - node_info.name != baremetal_name.stdout
+
+- name: add ssh common args for hypervisor
+  add_host:
+      name: "{{ node_info.name }}"
+      ansible_ssh_common_args: " -o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                                 -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                                 -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
+                                    {{ hostvars['hypervisor'].ansible_ssh_user }}@{{ hostvars['hypervisor'].ansible_ssh_host }}\""
+  when:
+      - node_info.name != baremetal_name.stdout
+      - "'hypervisor' in groups"
