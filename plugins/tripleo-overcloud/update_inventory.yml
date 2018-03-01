@@ -33,18 +33,11 @@
 
       # todo(obaranov) Remove hosts from the 'unused' group
       # Currently ansible does not allow to remove existing host from a group
-      - name: add hosts to host list
-        add_host:
-            name: "{{ item.name }}"
-            # only add groups for new nodes. don't touch existing nodes' groups
-            groups: "{{ ( item.name in groups.all ) | ternary(omit,
-                ['overcloud_nodes', 'openstack_nodes', item.name.split('-')[0]] | join(',')
-                ) }}"
-            ansible_user: "{{ user }}"
-            ansible_ssh_pass: ""
-            ansible_host: "{{ item.accessIPv4 }}"
-            ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
+      - name: add overcloud host
+        include_tasks: tasks/add_overcloud_host.yml
         with_items: "{{ openstack_servers }}"
+        loop_control:
+            loop_var: node_info
 
       - name: list ironic nodes
         # Use CSV format as JSON not supported in old versions
@@ -115,6 +108,7 @@
       - role: inventory-update
         omit_groups: [ 'ovb' ]
         inventory_file_name: 'hosts-install'
+        omit_hosts: "{{ hostvars[groups['undercloud'][0]].nodes_to_delete|default([])|difference(hostvars[groups['undercloud'][0]].nodes_added|default([])) }}"
   tasks:
     - name: refresh dynamic inventory
       meta: refresh_inventory

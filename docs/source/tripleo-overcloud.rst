@@ -209,6 +209,70 @@ Tripleo Heat Templates configuration options
        resource_registry:
            OS::TripleO::BlockStorage::Net::SoftwareConfig: /home/stack/nic-configs/cinder-storage.yaml
 
+Controlling Node Placement
+--------------------------
+The default behavior for the director is to randomly select nodes for each role, usually based on their profile tag.
+However, the director provides the ability to define specific node placement. This is a useful method to:
+
+    * Assign specific node IDs
+    * Assign custom hostnames
+    * Assign specific IP addresses
+
+`Cookbook <control_placement.html>`_ example
+
+.. note:: Options are supported for OSP10+
+
+* ``--specific-node-ids``: Bool. Default tagging behaviour is to set properties/capabilities profile, which is based
+    on the node_type for all nodes from this type. If this value is set to true/yes, default behaviour will be
+    overwritten and profile will be removed, node id will be added to properties/capabilities and scheduler hints
+    will be generated. Examples of node IDs include controller-0, controller-1, compute-0, compute-1, and so forth.
+
+* ``--custom-hostnames``: Option to provide custom Hostnames for the nodes. Custom hostnames can be provided
+    as values or a env file. Examples:
+
+    .. code-block:: plain
+       --custom-hostnames controller-0=ctr-rack-1-0,compute-0=compute-rack-2-0,ceph-0=ceph-rack-3-0
+
+    .. code-block:: plain
+       --custom-hostnames local/path/to/custom_hostnames.yaml
+
+    .. code-block:: yaml
+        ---
+        parameter_defaults:
+            HostnameMap:
+                ceph-0: storage-0
+                ceph-1: storage-1
+                ceph-2: storage-2
+                compute-0: novacompute-0
+                compute-1: novacompute-1
+                controller-0: ctrl-0
+                controller-1: ctrl-1
+                controller-2: ctrl-2
+                networker-0: net-0
+
+    .. warning:: When custom hostnames are used, after Overcloud install, InfraRed inventory will be updated with the new
+        nodes names. Original node name will be stored as inventory variable named "original_name". "original_name" can
+        be used in playbooks as normal host var.
+
+* ``--predictable-ips``: Bool, assign Overcloud nodes with specific IPs on each network. IPs have to be outside DHCP pools.
+
+    .. warning:: Currently InfraRed only creates template for "resource_registry". Nodes IPs need to be provided
+        as user environment template, with option --overcloud-templates.
+
+    Example of the template:
+    .. code-block:: yaml
+        ---
+        parameter_defaults:
+            CephStorageIPs:
+                storage:
+                - 172.16.1.100
+                - 172.16.1.101
+                - 172.16.1.102
+                storage_mgmt:
+                - 172.16.3.100
+                - 172.16.3.101
+                - 172.16.3.102
+
 Overcloud Public Network
 ------------------------
 * ``--public-network``: Bool. Whether to have `infrared` create a public network on the overcloud.
