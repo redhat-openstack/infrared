@@ -96,15 +96,17 @@ resources:
                   ip_netmask:
                     list_join:
                       - '/'
-                      - - {get_param: ControlPlaneIp}
-                        - {get_param: ControlPlaneSubnetCidr}
+                      - - get_param: ControlPlaneIp
+                        - get_param: ControlPlaneSubnetCidr
               routes:
                 -
                   ip_netmask: 169.254.169.254/32
-                  next_hop: {get_param: EC2MetadataIp}
+                  next_hop:
+                    get_param: EC2MetadataIp
                 -
                   default: true
-                  next_hop: {get_param: ControlPlaneDefaultRoute}
+                  next_hop:
+                    get_param: ControlPlaneDefaultRoute
             -
               type: ovs_bridge
               name: br-isolated
@@ -116,43 +118,54 @@ resources:
                   primary: true
                 -
                   type: vlan
-                  vlan_id: {get_param: InternalApiNetworkVlanID}
+                  vlan_id:
+                    get_param: InternalApiNetworkVlanID
                   addresses:
                   -
-                    ip_netmask: {get_param: InternalApiIpSubnet}
+                    ip_netmask:
+                      get_param: InternalApiIpSubnet
                 -
                   type: vlan
-                  vlan_id: {get_param: StorageNetworkVlanID}
+                  vlan_id:
+                    get_param: StorageNetworkVlanID
                   addresses:
                   -
-                    ip_netmask: {get_param: StorageIpSubnet}
+                    ip_netmask:
+                      get_param: StorageIpSubnet
                 -
                   type: vlan
-                  vlan_id: {get_param: StorageMgmtNetworkVlanID}
+                  vlan_id:
+                    get_param: StorageMgmtNetworkVlanID
                   addresses:
                   -
-                    ip_netmask: {get_param: StorageMgmtIpSubnet}
+                    ip_netmask:
+                      get_param: StorageMgmtIpSubnet
                 -
                   type: vlan
-                  vlan_id: {get_param: TenantNetworkVlanID}
+                  vlan_id:
+                    get_param: TenantNetworkVlanID
                   addresses:
                   -
-                    ip_netmask: {get_param: TenantIpSubnet}
+                    ip_netmask:
+                      get_param: TenantIpSubnet
             -
               type: ovs_bridge
               # This will default to br-ex, anything else requires specific
               # brige mapping entries for it to be used.
-              name: {get_input: bridge_name}
-              dns_servers: {get_param: DnsServers}
+              name: bridge_name
+              dns_servers:
+                get_param: DnsServers
               use_dhcp: false
 #              defroute: true
               addresses:
                 -
-                  ip_netmask: {get_param: ExternalIpSubnet}
+                  ip_netmask:
+                    get_param: ExternalIpSubnet
               routes:
                 -
                   default: true
-                  next_hop: {get_param: ExternalInterfaceDefaultRoute}
+                  next_hop:
+                    get_param: ExternalInterfaceDefaultRoute
               members:
                 -
                   type: interface
