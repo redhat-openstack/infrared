@@ -1,0 +1,24 @@
+---
+- name: load networks mapping for specific ips
+  include_vars:
+      file: "files/control_node_placement/network_mapping.yaml"
+
+- name: prepare predictable ips template
+  template:
+      src: "control_node_placement/predictable_ips.yaml.j2"
+      dest: "{{ template_base }}/predictable_ips_rr.yml"
+      force: yes
+  vars:
+      ipv6_postfix: "{{  (install.network.protocol == 'ipv4') | ternary('', '-v6')}}"
+      ipv6_postfix_underscore: "{{  (install.network.protocol == 'ipv4') | ternary('', '_v6')}}"
+      roles:
+          Controller: ['External', 'InternalApi', 'Storage', 'StorageMgmt', 'Tenant']
+          Compute: ['InternalApi', 'Storage', 'Tenant']
+          CephStorage: [ 'Storage', 'StorageMgmt']
+          ObjectStorage: ['InternalApi', 'Storage', 'StorageMgmt']
+          SwiftStorage: ['InternalApi', 'Storage', 'StorageMgmt']
+
+- name: Append the predictable ips template to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ template_base }}/predictable_ips_rr.yml \'

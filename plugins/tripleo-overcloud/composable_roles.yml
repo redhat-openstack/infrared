@@ -49,6 +49,13 @@
             dest: "{{ template_base }}/roles/nodes.yaml"
             force: yes
 
+      - name: load networks mapping for specific ips
+        include_vars:
+            file: "files/control_node_placement/network_mapping.yaml"
+        when:
+           - install.predictable.ips
+           - install.version|default(undercloud_version) | openstack_release >= 10
+
       - name: create the network template file
         vars:
             ipv6_postfix: "{{  (install.network.protocol == 'ipv4') | ternary('', '-v6')}}"
@@ -59,6 +66,15 @@
             src: composable_roles/network-config.yaml.j2
             dest: "{{ template_base }}/roles/network-config.yaml"
             force: yes
+
+      - name: assigning specific node ids
+        import_tasks: tasks/control_node_placement/specific_node_ids.yml
+        when:
+           - install.specific.node.ids
+           - install.version|default(undercloud_version) | openstack_release >= 10
+        vars:
+            role_file_path: "{{ template_base }}/roles/roles_data.yaml"
+            generate_scheduler_hints: yes
 
 - name: Deploy the Overcloud with composable roles
   import_playbook: "{{ overcloud_deploy | default('deploy.yml') }}"

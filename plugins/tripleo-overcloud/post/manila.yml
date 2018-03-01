@@ -22,22 +22,28 @@
       - name: Restart manila services
         shell: systemctl restart openstack-manila\*
 
-- name: Get default share name from manila.conf
-  hosts: controller-0
-  become: true
-  gather_facts: no
-  any_errors_fatal: true
-  tasks:
-      - name: get the default share from manila.conf
-        command: "awk -F \"=\" '/^default_share_type/ {print $2}' /etc/manila/manila.conf"
-        register: share_name
+      - name: Check for manila.conf
+        stat:
+            path: /etc/manila/manila.conf
+        register: manila_conf
+
+      - block:
+          - name: get the default share from manila.conf
+            command: "awk -F \"=\" '/^default_share_type/ {print $2}' /etc/manila/manila.conf"
+            register: share_name
+
+          - set_fact:
+                share_name: "{{ share_name }}"
+            delegate_to: "{{ item }}"
+            delegate_facts: yes
+            with_items: "{{ groups['undercloud'] }}"
+
+        when: manila_conf.stat.exists
 
 - name: Setup default share for manila
   hosts: undercloud
   gather_facts: yes
   any_errors_fatal: true
-  vars:
-      share_name: "{{hostvars['controller-0']['share_name']}}"
   tasks:
       - name: create manila default share
         shell: |

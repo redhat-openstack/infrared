@@ -1,0 +1,29 @@
+---
+- name: get baremetal info
+  shell: |
+      source ~/stackrc
+      openstack baremetal node show {{ item }} -f json
+  register: nodes_baremetal_info
+  with_items: "{{ groups.overcloud_nodes }}"
+
+- name: set specific node ids
+  shell: |
+      source ~/stackrc
+      openstack baremetal node set --property capabilities='node:{{ (item.stdout|from_json).name }},boot_option:local' {{ (item.stdout|from_json).uuid }}
+  with_items: "{{ nodes_baremetal_info.results }}"
+
+- block:
+    - name: read roles data file
+      command: "cat {{ role_file_path }}"
+      register: roles_data_output
+
+    - name: load roles data to var
+      set_fact:
+          roles_data_var: "{{ roles_data_output.stdout | from_yaml }}"
+
+    - name: create scheduler_hints_env.yaml
+      template:
+          src: control_node_placement/scheduler_hints_env.yaml.j2
+          dest: "{{ template_base }}/scheduler_hints_env.yaml"
+
+  when: generate_scheduler_hints|default(False)
