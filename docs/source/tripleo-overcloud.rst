@@ -209,6 +209,53 @@ Tripleo Heat Templates configuration options
        resource_registry:
            OS::TripleO::BlockStorage::Net::SoftwareConfig: /home/stack/nic-configs/cinder-storage.yaml
 
+Controlling Node Placement
+--------------------------
+* ``--specific-node-ids``: Bool, this procedure assigns node ID to specific nodes. Examples of node IDs include
+    controller-0, controller-1, compute-0, compute-1, ceph-0
+
+* ``--custom-hostnames``: Option to provide custom Hostnames for the nodes. Custom hostnames can be provided
+    as values or a env file. Examples:
+
+    .. code-block:: plain
+       --custom-hostnames controller-0=ctr-rack-1-0,compute-0=compute-rack-2-0,ceph-0=ceph-rack-3-0
+
+    .. code-block:: plain
+       --custom-hostnames local/path/to/custom_hostnames.yaml
+
+    .. code-block:: yaml
+        ---
+        parameter_defaults:
+            HostnameMap:
+                ceph-0: storage-0
+                ceph-1: storage-1
+                ceph-2: storage-2
+                compute-0: novacompute-0
+                compute-1: novacompute-1
+                controller-0: ctrl-0
+                controller-1: ctrl-1
+                controller-2: ctrl-2
+                networker-0: net-0
+
+* ``--predictable-ips``: Bool, assign Overcloud nodes with specific IPs on each network. IPs have to be outside DHCP pools.
+
+    .. warning:: Currently InfraRed only creates template for "resource_registry". Nodes IPs need to be provided
+        as user environment template, with option --overcloud-templates.
+
+    Example of the template:
+    .. code-block:: yaml
+        ---
+        parameter_defaults:
+            CephStorageIPs:
+                storage:
+                - 172.16.1.100
+                - 172.16.1.101
+                - 172.16.1.102
+                storage_mgmt:
+                - 172.16.3.100
+                - 172.16.3.101
+                - 172.16.3.102
+
 Overcloud Public Network
 ------------------------
 * ``--public-network``: Bool. Whether to have `infrared` create a public network on the overcloud.
