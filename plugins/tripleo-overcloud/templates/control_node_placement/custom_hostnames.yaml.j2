@@ -1,0 +1,5 @@
+parameter_defaults:
+    HostnameMap:
+{% for host_record in install.custom.hostnames.split(',') %}
+        {{ host_record.split('=')[0] }}: {{ host_record.split('=')[1] }}
+{% endfor %}
