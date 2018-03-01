@@ -4,10 +4,10 @@
 #}
 
 parameter_defaults:
-{% if install.scheduler_hints|default(False) %}
+{% if install.scheduler_hints|default(False) or (install.specific.node.ids and install.version|default(undercloud_version)|openstack_release >= 10) %}
 {% for node_type, details in node_types.iteritems() %}
 {% if groups[node_type]|default([])|length %}
-    {{ details.heat_name }}SchedulerHints:
+    {% if details.scheduler_heat_name is defined %}{{ details.scheduler_heat_name }}{% else %}{{ details.heat_name }}{% endif %}SchedulerHints:
         'capabilities:node': '{{ node_type }}-%index%'
 {% endif %}
 {% endfor %}
