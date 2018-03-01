@@ -30,17 +30,17 @@
       - directory
 
 - name: discover container images names (if container-images-patch not defined at command line)
-  shell: docker images {{ docker_registry_undercloud }}/{{ docker_registry_undercloud_namespace }}/* --format "{{ '{{' }} .Repository {{ '}}' }}:{{ '{{' }}.Tag {{ '}}' }}"
+  shell: docker images {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/* --format "{{ '{{' }} .Repository {{ '}}' }}:{{ '{{' }}.Tag {{ '}}' }}"
   register: container_images
   when: install_container_images_patch is not defined
   become: true
 
 - name: discover container images that require patching (if container-images-patch not defined at command line)
   vars:
-      imagename: "{{ item | regex_replace(docker_registry_undercloud + '/' + docker_registry_undercloud_namespace + '/') | regex_replace (':.*') }}"
+      imagename: "{{ item | regex_replace(docker_registry_undercloud + docker_registry_undercloud_namespace + '/') | regex_replace (':.*') }}"
   shell: |
       docker run --user root -v /patched_rpms:/patched_rpms -v /etc/yum.repos.d/patched_rpms.repo:/etc/yum.repos.d/patched_rpms.repo \
-      --rm {{ docker_registry_undercloud }}/{{ docker_registry_undercloud_namespace }}/{{ imagename }}:{{ container_env['container-image-prepare']['tag'] }} \
+      --rm {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ imagename }}:{{ container_env['container-image-prepare']['tag'] }} \
       yum check-update
   register: _container_images_check_update
   with_items: "{{ container_images.stdout_lines }}"
@@ -51,7 +51,7 @@
 
 - name: rewrite results of container images discovery into a dictionary
   vars:
-      imagename: "{{ item.item | regex_replace(docker_registry_undercloud + '/' + docker_registry_undercloud_namespace + '/') | regex_replace (':.*') }}"
+      imagename: "{{ item.item | regex_replace(docker_registry_undercloud + docker_registry_undercloud_namespace + '/') | regex_replace (':.*') }}"
       needs_updating: "{{ item.rc == 100 }}"
   set_fact:
       container_images_to_update: "{{ container_images_to_update | default({}) | combine({ imagename : needs_updating }) }}"
@@ -73,13 +73,13 @@
 - name: tag the original image(s) with 'before_patching' and patch container image(s)
   shell: |
       set -euo pipefail
-      docker tag {{ docker_registry_undercloud }}/{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
-      {{ docker_registry_undercloud }}/{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}-before_patching
+      docker tag {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
+      {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}-before_patching
 
-      ORIG_USER="$( docker run --rm {{ docker_registry_undercloud }}/{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} /usr/bin/bash -c "echo -n \$(id -u --name)" )"
+      ORIG_USER="$( docker run --rm {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} /usr/bin/bash -c "echo -n \$(id -u --name)" )"
 
       echo "
-      FROM {{ docker_registry_undercloud }}/{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
+      FROM {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
       COPY patched_rpms.repo /etc/yum.repos.d/patched_rpms.repo
       ADD /patched_rpms /patched_rpms
       USER root
@@ -92,7 +92,7 @@
       USER $ORIG_USER
       " > {{ container_images_patch_dir }}/Dockerfile
 
-      docker build -t {{ docker_registry_undercloud }}/{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
+      docker build -t {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
       {{ container_images_patch_dir }}/ --build-arg ORIG_USER=$ORIG_USER > {{ container_images_patch_logdir }}/docker_build_{{ item }}.log 2>&1
       if ! grep -q "Installed products updated" "{{ container_images_patch_logdir }}/docker_build_{{ item }}.log" ; then
           echo -e "\n\nno packages updated!!!\n\n." >&2
@@ -104,6 +104,6 @@
 - name: push patched container image(s) to docker registry on undercloud
   shell: |
       set -e
-      docker push {{ docker_registry_undercloud }}/{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
+      docker push {{ docker_registry_undercloud }}{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
   with_items: "{{ container_images_to_update }}"
   become: true
