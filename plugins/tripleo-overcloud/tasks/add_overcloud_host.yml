@@ -1,0 +1,51 @@
+- name: get ironic info for the node
+  shell: |
+      source ~/stackrc
+      ironic --json node-show {{ uuid }}
+  vars:
+      uuid: "{{ node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] }}"
+  register: ironic_info
+
+- name: add old nodes to nodes_to_delete
+  set_fact:
+      nodes_to_delete: "{{ nodes_to_delete|default([]) + [original_name] }}"
+  vars:
+      original_name: "{{ (ironic_info.stdout|from_json).name }}"
+  when:
+      - node_info.name != original_name
+
+- name: reset node_groups
+  set_fact:
+      node_groups: []
+
+- name: update nodes_groups from original groups
+  set_fact:
+      node_groups: "{{( original_name in item.value and item.key != 'ungrouped' ) | ternary(node_groups|default([]) + [item.key], node_groups|default([])) }}"
+  vars:
+      original_name: "{{ (ironic_info.stdout|from_json).name }}"
+  with_dict: "{{ groups }}"
+  when:
+      - original_name in groups.all
+
+- name: update nodes_groups with predefined ones
+  set_fact:
+      node_groups: "{{ ['overcloud_nodes', 'openstack_nodes', node_info.name.split('-')[0]] | join(',') }}"
+  vars:
+      original_name: "{{ (ironic_info.stdout|from_json).name }}"
+  when:
+      - original_name not in groups.all
+
+# todo(obaranov) Remove hosts from the 'unused' group
+# Currently ansible does not allow to remove existing host from a group
+- name: add hosts to host list
+  add_host:
+      name: "{{ node_info.name }}"
+      original_name: "{{ original_name }}"
+      # only add groups for new nodes. don't touch existing nodes' groups
+      groups: "{{ node_groups }}"
+      ansible_ssh_user: "{{ user }}"
+      ansible_ssh_pass: ""
+      ansible_ssh_host: "{{ node_info.accessIPv4 }}"
+      ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
+  vars:
+      original_name: "{{ (ironic_info.stdout|from_json).name }}"
