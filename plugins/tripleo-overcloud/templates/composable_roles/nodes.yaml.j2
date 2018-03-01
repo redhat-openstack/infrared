@@ -17,7 +17,7 @@ parameter_defaults:
 {%- if node_name not in saved_roles -%}
 {% set role = hostvars[ansible_play_hosts[0]].get(node_name + '_role') %}
    {{ role.name }}Count: {{ count(node_name) }}
-   Overcloud{{ flavor_name_mapping.get(role.name, role.name) }}Flavor: {{ role.flavor | default(role_default_flavor) }}
+   Overcloud{{ flavor_name_mapping.get(role.name, role.name) }}Flavor: {{ (not install.specific.node.ids) | ternary(role.flavor|default(role_default_flavor), 'baremetal') }}
 {% if saved_roles.append(node_name) %}{% endif %}
 {%- endif -%} {# end of if node_name not in saved_roles #}
 {% endfor %}
