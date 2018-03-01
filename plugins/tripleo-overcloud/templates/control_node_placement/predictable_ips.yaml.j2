@@ -1,0 +1,9 @@
+{% macro eval(value) -%}
+{{ value | replace('${ipv6_postfix}', ipv6_postfix) | replace('${ipv6_postfix_underscore}', ipv6_postfix_underscore) }}
+{%- endmacro %}
+resource_registry:
+{% for role in roles %}
+{% for network in network_mapping %}
+    OS::TripleO::{{ role }}::Ports::{{ network_mapping[network].get('port-name', network + 'Port') }}: {{ eval(network_mapping[network]['heat-template']) }}
+{% endfor %}
+{% endfor %}
