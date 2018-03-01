@@ -48,7 +48,7 @@
 - set_fact:
       skip_container_images_patching: 'not_defined'
 
-- name: if 'patched-rpms' yum repo contains _only_ 'not_containerized_rpms' then skip container images patching
+- name: loop thru list of RPMs in /patched_rpms and compare it against not_containerized_rpms list, if all patched_rpms are in not_containerized_rpms then skip patching container images
   set_fact:
       skip_container_images_patching: "{%- if item not in not_containerized_rpms or skip_container_images_patching == False -%} False {%- else -%} True {%- endif -%}"
   with_items: "{{ patched_rpms_packages_shell.stdout_lines }}"
