@@ -40,15 +40,19 @@
 - name: get docker registry name
   set_fact:
       docker_insecure_registry: "{{ container_image_external['reg_namespace'].split('/')[0] }}"
+      docker_insecure_ceph_registry: "{{ container_image_external['ceph_namespace'].split('/')[0] }}"
   tags: container-images-packages
 
 - name: replace IP with hostname in /etc/sysconfig/docker
   replace:
       dest: /etc/sysconfig/docker
       regexp: '^(INSECURE_REGISTRY=".*)"'
-      replace: '\1 --insecure-registry {{ docker_insecure_registry }}"'
+      replace: '\1 --insecure-registry {{ item }}"'
       backup: no
   become: true
+  with_items:
+      - "{{ docker_insecure_registry }}"
+      - "{{ docker_insecure_ceph_registry }}"
 
 - name: restart docker service
   service:
