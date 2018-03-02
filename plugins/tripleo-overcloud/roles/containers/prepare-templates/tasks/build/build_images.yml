@@ -42,6 +42,12 @@
       docker_insecure_registry: "{{ container_image_external['reg_namespace'].split('/')[0] }}"
   tags: container-images-packages
 
+- name: set insecure ceph registry
+  set_fact:
+      docker_insecure_ceph_registry: "{{ container_env['container-image-prepare']['ceph-namespace'].split('/')[0] }}"
+  when:
+      - container_env['container-image-prepare']['ceph-namespace'] != ''
+
 - name: replace IP with hostname in /etc/sysconfig/docker
   replace:
       dest: /etc/sysconfig/docker
@@ -49,6 +55,16 @@
       replace: '\1 --insecure-registry {{ docker_insecure_registry }}"'
       backup: no
   become: true
+
+- name: add insecure ceph registry to /etc/sysconfig/docker
+  replace:
+      dest: /etc/sysconfig/docker
+      regexp: '^(INSECURE_REGISTRY=".*)"'
+      replace: '\1 --insecure-registry {{ docker_insecure_ceph_registry }}"'
+      backup: no
+  become: true
+  when:
+      - docker_insecure_ceph_registry is defined
 
 - name: restart docker service
   service:
