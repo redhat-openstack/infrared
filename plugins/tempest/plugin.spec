@@ -143,6 +143,10 @@ subparsers:
                   pip-packages:
                       type: Value
                       help: Comma,delimited list of pip packages to install system-wide before installing tests packages and their requirements.
+                  tempestconf-revision:
+                      type: Value
+                      help: The tempest conf (git) revision if applicable
+                      default: HEAD
 
             - title: ansible facts
               options:
