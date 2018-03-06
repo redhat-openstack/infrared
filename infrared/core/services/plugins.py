@@ -4,10 +4,12 @@ import tempfile
 import time
 from ConfigParser import ConfigParser
 from collections import OrderedDict
+from pkg_resources import iter_entry_points
 
 import git
 import github
 import os
+import imp
 # TODO(aopincar): Add pip to the project's requirements
 import pip
 import yaml
@@ -377,28 +379,25 @@ class InfraredPluginManager(object):
         :param plugin_src_path: relative path to the plugin location inside the
                source
         """
-        plugins_registry = plugins_registry or PLUGINS_REGISTRY
-        plugin_data = {}
-        # Check if a plugin is in the registry
-        if plugin_source in plugins_registry:
-            plugin_data = plugins_registry[plugin_source]
-            plugin_source = plugins_registry[plugin_source]['src']
+        available_plugins = {}
+        for entry_point in iter_entry_points(group='infrared.plugins'):
+            available_plugins[entry_point.name] = entry_point
 
-        if plugin_src_path is None:
-            plugin_src_path = plugin_data.get('src_path', '')
-
-        # Local dir plugin
-        if os.path.exists(plugin_source):
+        if plugin_source in available_plugins.keys():
+            # PIP package plugin
+            package_name = available_plugins[plugin_source].module_name
+            plugin_path = imp.find_module(package_name)[1]
             rm_source = False
-        # Git Plugin
+        elif os.path.isdir(plugin_source):
+            # If plugin from local directory
+            plugin_path = plugin_source
         else:
-            if rev is None:
-                rev = plugin_data.get('rev')
-            plugin_source = \
+            # Try to clone plugin from git
+            plugin_path = \
                 self._clone_git_plugin(plugin_source, rev)
             rm_source = True
 
-        plugin = InfraredPlugin(os.path.join(plugin_source, plugin_src_path))
+        plugin = InfraredPlugin(plugin_path)
         plugin_type = plugin.type
 
         if plugin_type not in self.supported_plugin_types:
@@ -411,7 +410,7 @@ class InfraredPluginManager(object):
                 "Plugin with the same name & type already exists")
 
         dest = os.path.join(self.plugins_dir, plugin.name)
-        if os.path.abspath(plugin_source) != os.path.abspath(dest):
+        if os.path.abspath(plugin_path) != os.path.abspath(dest) and rm_source:
             # copy only if plugin was added from a location which is
             # different from the location of the plugins dir
             if os.path.islink(dest):
@@ -423,18 +422,18 @@ class InfraredPluginManager(object):
             elif os.path.exists(dest):
                 shutil.rmtree(dest)
 
-            shutil.copytree(plugin_source, dest)
+            shutil.copytree(plugin_path, dest)
+            shutil.rmtree(plugin_path)
+            plugin_path = dest
+        else:
+            os.symlink(plugin_path, os.path.join(self.plugins_dir, plugin.name))
 
-        if rm_source:
-            shutil.rmtree(plugin_source)
-
-        self.config.set(plugin_type, plugin.name,
-                        os.path.join(dest, plugin_src_path))
+        self.config.set(plugin_type, plugin.name, plugin_path)
 
         with open(self.config_file, 'w') as fp:
             self.config.write(fp)
 
-        self._install_requirements(plugin_source)
+        self._install_requirements(plugin_path)
         self._load_plugins()
 
     def add_all_available(self, plugins_registry=None):
@@ -442,12 +441,10 @@ class InfraredPluginManager(object):
         Add all available plugins which aren't already installed
         :param plugins_registry: content of plugin registry yml file
         """
-        plugins_registry = plugins_registry or PLUGINS_REGISTRY
-        for plugin in set(plugins_registry) - \
-                set(self.PLUGINS_DICT):
-            self.add_plugin(plugin, plugins_registry=plugins_registry)
+        for entry_point in iter_entry_points(group='infrared.plugins'):
+            self.add_plugin(entry_point.name)
             LOG.warning(
-                "Plugin '{}' has been successfully installed".format(plugin))
+                "Plugin '{}' has been successfully installed".format(entry_point.name))
 
     def remove_plugin(self, plugin_name):
         """Removes an installed plugin
@@ -466,6 +463,7 @@ class InfraredPluginManager(object):
             self.config.remove_section(plugin.type)
         with open(self.config_file, 'w') as fp:
             self.config.write(fp)
+        os.unlink(os.path.join(self.plugins_dir, plugin_name))
         self._load_plugins()
 
     def remove_all(self):

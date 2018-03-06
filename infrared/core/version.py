@@ -2,7 +2,7 @@
 
 from pbr import version as pbr_version
 
-version_info = pbr_version.VersionInfo("infrared")
+version_info = pbr_version.VersionInfo("infrared-V3")
 
 
 def version_string():
