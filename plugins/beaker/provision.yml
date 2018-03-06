@@ -26,8 +26,8 @@
       add_host:
           name: "{{ provision.host.address }}"
           groups: "beaker-baremetal"
-          ansible_ssh_host: "{{ provision.host.address }}"
-          ansible_ssh_user: "{{ provision.host.user }}"
+          ansible_host: "{{ provision.host.address }}"
+          ansible_user: "{{ provision.host.user }}"
           ansible_ssh_pass: "{{ provision.host.password }}"
           # Temporarily disable strict host checking and Ipv6 as this can introduce
           # issues when accessing host by SSH password initially.
@@ -56,8 +56,8 @@
       add_host:
           name: "{{ provision.host.address }}"
           groups: "{{ provision.groups | join(',') }}"
-          ansible_ssh_host: "{{ provision.host.address }}"
-          ansible_ssh_user: "{{ provision.host.user }}"
+          ansible_host: "{{ provision.host.address }}"
+          ansible_user: "{{ provision.host.user }}"
           ansible_ssh_pass: ''
           ansible_ssh_private_key_file: "{{ provision.host.privkey }}"
 
