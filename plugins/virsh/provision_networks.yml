@@ -25,6 +25,15 @@
           - ipv6_sys.rc != 0
       with_dict: "{{ networks }}"
 
+    - name: enable router advertisements
+      sysctl:
+        name: "net.ipv6.conf.{{ ansible_default_ipv6.interface }}.accept_ra"
+        value: 2
+        sysctl_set: yes
+        state: present
+        reload: yes
+
+
     - name: create bridged network
       include_tasks: tasks/bridged_network.yml
       vars:

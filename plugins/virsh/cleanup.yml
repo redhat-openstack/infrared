@@ -24,16 +24,24 @@
       ignore_virsh_nets:
           - default
   tasks:
-    - yum:
-          list: libvirt
+    - name: Install packages
+      action: "{{ ansible_pkg_mgr }} state=installed name=libvirt"
+      with_items: package_list
       register: libvirt_status
+
 
     # Don't cleanup if the libvirtd process is unavailable
     - name: Cleanup libvirt artifacts
       vars:
           libvirt_state: "{{  libvirt_status.results|map(attribute='yumstate')|list }}"
       include_tasks: tasks/cleanup.yml
-      when: "'installed' in libvirt_state"
+      when: "('installed' in libvirt_state) and (ansible_pkg_mgr == 'yum')"
+
+    - name: Clenup libvirt artifacts dnf module
+      vars:
+          libvirt_state: "{{  libvirt_status.results|map(attribute='name')|list }}"
+      include_tasks: tasks/cleanup.yml
+      when: "('libvirt' in libvirt_state) and (ansible_pkg_mgr == 'dnf')"
 
     - name: remove iptables rules created by infrared, by comment
       # Can't use iptables module, because it can't delete by generic comment
