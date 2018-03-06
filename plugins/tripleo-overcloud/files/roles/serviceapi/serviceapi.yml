@@ -7,7 +7,7 @@ serviceapi_role:
     #  - ${ipv6_postfix}: will be replaced with _v6 when the ipv6 protocol is used for installation, otherwise is empty
     #  - ${deployment_dir} - will be replaced by the deployment folder location on the undercloud. Deployment folder can be specified with the ospd --deployment flag
     resource_registry:
-        OS::TripleO::ServiceApi::Net::SoftwareConfig: ${deployment_dir}/network/nic-configs/serviceapi.yaml
+        OS::TripleO::ServiceApi::Net::SoftwareConfig: ${deployment_dir}/network/nic-configs/${nics_subfolder}/serviceapi.yaml
         OS::TripleO::ServiceApi::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/tenant.yaml
         OS::TripleO::ServiceApi::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api${ipv6_postfix_underscore}.yaml
         OS::TripleO::ServiceApi::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/storage${ipv6_postfix_underscore}.yaml
