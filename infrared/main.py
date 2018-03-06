@@ -208,7 +208,7 @@ class WorkspaceManagerSpec(api.SpecObject):
         """
         LOG.warning("Deprecated: create will only create the workspace "
                     "and will no longer switch to it.")
-        self._checkout_workspace(name)
+        self._checkout_workspace(name, create=True)
 
     def _checkout_workspace(self, name, create=False):
         """Checkouts (activate) a workspace
