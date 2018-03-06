@@ -4,7 +4,7 @@ heat_role:
     CountDefault: 1
 
     resource_registry:
-        OS::TripleO::Heat::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/heat.yaml"
+        OS::TripleO::Heat::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/${nics_subfolder}/heat.yaml"
         OS::TripleO::Heat::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api${ipv6_postfix_underscore}.yaml"
     flavor: heat
     host_name_format: 'heat-%index%'
