@@ -9,10 +9,19 @@
       - vars/topology/undercloud.yml
   vars:
       undercloud_image_file: "{{ install.quickstart.image | basename }}"
-      undercloud_disk_path: "/var/lib/libvirt/images/{{ install.quickstart.filename.rstrip('.qcow2') | basename }}-disk1.qcow2"
+      undercloud_disk_path: "{{ install.disk.pool }}/{{ install.quickstart.filename.rstrip('.qcow2') | basename }}-disk1.qcow2"
       undercloud_user: "{{ install.user.name | default('stack') }}"
       # todo(yfried): add external refs so users can override these values and customize the Undercloud
   tasks:
+      - name: check and create directory
+        file:
+          path: "{{ undercloud_disk_path }}"
+          state: directory
+          owner: root
+          group: root
+          mode: 0755
+        when: undercloud_disk_path | default(False)
+
       - name: download image
         get_url:
             url: "{{ install.quickstart.image }}"
