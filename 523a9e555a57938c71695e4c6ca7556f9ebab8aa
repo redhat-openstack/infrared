@@ -33,6 +33,24 @@
       "revId": "523a9e555a57938c71695e4c6ca7556f9ebab8aa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7268a27_9400c86e",
+        "filename": "plugins/virsh/cleanup.yml",
+        "patchSetId": 7
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1013516
+      },
+      "writtenOn": "2018-03-07T22:26:31Z",
+      "side": 1,
+      "message": "Shashank, sorry but maybe I not understand your propose\nNow we have next step - check if the package is installed then delete VM\nYou want that we use not parameter \u0027list\u0027 for dnf but parameter \u0027state\u0027 \nThe parameter \u0027state\u0027 can only install or delete, it not has \u0027state: list\u0027 and it has only outputs:\n \"msg\": \"\", \n    \"rc\": 0, \n    \"results\": [\n        \"libvirt-3.2.0-14.el7_4.7.x86_64 providing libvirt is already installed\"\nIn this case yum module has more informative outputs in parameter \u0027list\u0027 like \u0027yumstate: installed\u0027\n\n1.When package is instaled it\u0027s only provide repo with \"@\"\n ok: [hypervisor] \u003d\u003e {\n    \"libvirt_status.results\": [\n        {\n            \"arch\": \"x86_64\", \n            \"epoch\": \"0\", \n            \"name\": \"libvirt\", \n            \"nevra\": \"0:libvirt-3.7.0-4.fc27.x86_64\", \n            \"release\": \"4.fc27\", \n            \"repo\": \"@System\", \n            \"version\": \"3.7.0\"\n        }, \n        {\n            \"arch\": \"x86_64\", \n            \"epoch\": \"0\", \n            \"name\": \"libvirt\", \n            \"nevra\": \"0:libvirt-3.7.0-2.fc27.x86_64\", \n            \"release\": \"2.fc27\", \n            \"repo\": \"beaker-Fedora-Everything\", \n            \"version\": \"3.7.0\"\n        }, \n        {\n            \"arch\": \"x86_64\", \n            \"epoch\": \"0\", \n            \"name\": \"libvirt\", \n            \"nevra\": \"0:libvirt-3.7.0-4.fc27.x86_64\", \n            \"release\": \"4.fc27\", \n            \"repo\": \"updates\", \n            \"version\": \"3.7.0\"\n        }\n    ]\n}\n \n2. When the package is not installed It only displays repo where package exists \n\nok: [hypervisor] \u003d\u003e {\n    \"libvirt_status.results\": [\n        {\n            \"arch\": \"x86_64\", \n            \"epoch\": \"0\", \n            \"name\": \"libvirt\", \n            \"nevra\": \"0:libvirt-3.7.0-2.fc27.x86_64\", \n            \"release\": \"2.fc27\", \n            \"repo\": \"beaker-Fedora-Everything\", \n            \"version\": \"3.7.0\"\n        }, \n        {\n            \"arch\": \"x86_64\", \n            \"epoch\": \"0\", \n            \"name\": \"libvirt\", \n            \"nevra\": \"0:libvirt-3.7.0-4.fc27.x86_64\", \n            \"release\": \"4.fc27\", \n            \"repo\": \"updates\", \n            \"version\": \"3.7.0\"\n        }\n    ]\n}",
+      "parentUuid": "f993aa9e_c4048e96",
+      "revId": "523a9e555a57938c71695e4c6ca7556f9ebab8aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
