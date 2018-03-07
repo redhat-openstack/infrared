@@ -1,4 +1,5 @@
 import os
+import json
 from pbr import version
 import pkg_resources as pkg
 import sys
@@ -142,6 +143,9 @@ class WorkspaceManagerSpec(api.SpecObject):
             "-g", "--group",
             help="List nodes in specific group"
             ).completer = completers.group_list
+        nodelist_parser.add_argument(
+            "-f", "--format", choices=['fancy', 'json'], default='fancy',
+            help="Output format")
 
         # group list
         grouplist_parser = workspace_subparsers.add_parser(
@@ -193,9 +197,15 @@ class WorkspaceManagerSpec(api.SpecObject):
                 pargs.filename, pargs.workspacename)
         elif subcommand == 'node-list':
             nodes = self.workspace_manager.node_list(pargs.name, pargs.group)
-            print fancy_table(
-                ("Name", "Address", "Groups"),
-                *[node_name for node_name in nodes])
+            if pargs.format == 'json':
+                nodes_dict = [
+                    {'name': name, 'address': address, 'groups': groups}
+                    for name, address, groups in nodes]
+                print json.dumps({'nodes': nodes_dict})
+            else:
+                print fancy_table(
+                    ("Name", "Address", "Groups"),
+                    *[node_name for node_name in nodes])
         elif subcommand == "group-list":
             groups = self.workspace_manager.group_list(pargs.name)
             print fancy_table(
