@@ -16,7 +16,15 @@
 
       - name: run collect logs
         import_tasks: tasks/collect_host_logs.yml
-        when: inventory_hostname in play_hosts
+        when: 
+            - inventory_hostname in play_hosts
+            - not other.sosreport
+
+      - name: run sosreport
+        import_tasks: tasks/collect_sosreport.yml
+        when:
+            - inventory_hostname in play_hosts
+            - other.sosreport
 
 
 - name: Aggregate and print info for build marks
