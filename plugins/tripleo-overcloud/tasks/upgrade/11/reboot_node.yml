@@ -2,7 +2,7 @@
 - block:
     - name: register latest installed kernel version
       shell: |
-        rpm -qa | grep ^kernel-[0-9] | sort | tail -1 | awk -F 'kernel-' {'print $2'}
+        rpm -qa | grep ^kernel-[0-9] | sort --version-sort | tail -1 | awk -F 'kernel-' {'print $2'}
       register: installed_kernel
 
     - name: register loaded kernel
