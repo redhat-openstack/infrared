@@ -130,8 +130,6 @@ resources:
                               next_hop: {get_param: ControlPlaneDefaultRoute}
 {% endif %}
 
-                              # Optionally have this interface as default route
-                              default: true
                             -
                               ip_netmask: 169.254.169.254/32
 {% if install.version|default(undercloud_version)|openstack_release > 10 %}
@@ -240,6 +238,9 @@ resources:
 {% else %}
                               next_hop: {get_param: ExternalInterfaceDefaultRoute}
 {% endif %}
+
+                              # Optionally have this interface as default route
+                              default: true
                           members:
                             -
                               type: interface
