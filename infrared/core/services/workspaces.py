@@ -468,16 +468,13 @@ class WorkspaceManager(object):
            :param workspace_name: workspace name to list nodes from.
            :param group_name: filter nodes only on specific group
         """
-        pattern = 'all'
-
         invent = self._get_inventory(workspace_name)
 
         if group_name:
-            if group_name not in invent.get_groups():
+            if group_name not in invent.groups:
                 raise exceptions.IRGroupNotFoundException(group_name)
-            pattern = group_name
 
-        hosts = invent.get_hosts(pattern)
+        hosts = invent.get_hosts(group_name or 'all')
 
         return [(host.name,
                  host.vars.get("ansible_ssh_host"),
