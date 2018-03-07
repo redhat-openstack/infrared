@@ -23,6 +23,9 @@ subparsers:
                         The list of additional plugins with tests to install.
                         Should be specified in the following format:
                             --plugin=repo_url
+                        The plugin flag can also specify the version/branch to clone.
+                        In order to specify version the repo_url should be separated by comma:
+                            --plugin=repo_url,version
                         More than one --plugin option can be provided.
                   openstack-version:
                        type: Value

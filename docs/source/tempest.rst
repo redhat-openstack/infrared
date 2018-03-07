@@ -73,6 +73,15 @@ a downstream repo with tempest tests and run them::
                    --plugin=https://downstrem.repo/tempest_neutron_plugin \
                    --setup rpm
 
+The plugin flag can also specify version of plugin to clone by separating
+the url and version with a comma::
+
+        ir tempest --tests=neutron_downstream \
+                   --openstack-version=12 \
+                   --openstack-installer=tripleo \
+                   --plugin=https://downstrem.repo/tempest_neutron_plugin,osp10 \
+                   --setup rpm
+
 The neutron_downstream.yml file can reference the upstream project in case the
 downstream repo is dependant or imports any upstream modules::
 
