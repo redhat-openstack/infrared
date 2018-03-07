@@ -30,7 +30,7 @@
 - name: print overcloud failures
   shell: |
     source {{ undercloud_rc }} ;
-    openstack stack failures list overcloud
+    openstack stack failures list --long {{ install.overcloud.stack }}
   when:
     - overcloud_update.rc != 0
     - undercloud_version|openstack_release > 9
