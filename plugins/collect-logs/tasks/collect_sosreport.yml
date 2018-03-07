@@ -1,0 +1,46 @@
+---
+- name: Define sosrep folder
+  set_fact:
+      tmp_sos_dir: '/var/sosrep'
+
+- name: Make sure that sosreport is installed on the host
+  yum:
+      name: sos
+      state: latest
+
+- name: Cleanup sosreport dir if exists
+  file:
+      name: "{{ tmp_sos_dir }}"
+      state: absent
+
+- name: Create dir for sosreport
+  file:
+      name: "{{ tmp_sos_dir }}"
+      state: directory
+      mode: 0644
+
+- name: Collect sosreport logs
+  command: "sosreport --batch --tmp-dir {{ tmp_sos_dir }} --name={{ inventory_hostname }} -z gzip"
+  register: sosreport_result
+  failed_when: "'sosreport has been generated' not in sosreport_result.stdout"
+
+- name: get name of the generated file
+  find:
+      paths: "{{ tmp_sos_dir }}"
+      patterns: "sosreport-{{ inventory_hostname }}-*.tar.gz"
+      recurse: no
+  register: sosreport_file
+
+- name: fetch sosreport archive
+  fetch:
+      flat: yes
+      src: "{{ item.path }}"
+      dest: "{{ dest_dir }}/"
+      validate_checksum: no
+  ignore_errors: true
+  with_items: "{{ sosreport_file.files }}"
+
+- name: Cleanup sosreport dir after run
+  file:
+      name: "{{ tmp_sos_dir }}"
+      state: absent

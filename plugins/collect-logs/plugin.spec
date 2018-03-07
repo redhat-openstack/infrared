@@ -21,3 +21,12 @@ subparsers:
               type: Value
               help: Number of levels to descend at most when collecting logs
               default: 4
+          logger:
+              type: Value
+              help: |
+                    Specifies which facility we are using for log collection:
+                        * host - gather and fetch log files from the system
+                        * sosreport - use sosreport utility to get logs
+                        * all -  use both variants
+              choices: ['host', 'sosreport', 'all']
+              default: 'host'
