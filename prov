@@ -1,0 +1,35 @@
+#!/bin/bash
+
+source /all/src/.venv-ir/bin/activate
+
+cat << EOF > ansible.cfg
+[defaults]
+host_key_checking = False
+forks = 500
+pipelining = True
+timeout = 30
+force_color = 1
+roles_path = infrared/common/roles
+library = infrared/common/library
+filter_plugins = infrared/common/filter_plugins
+callback_plugins = infrared/common/callback_plugins
+callback_whitelist = timer,profile_tasks
+
+#[ssh_connection]
+#control_path = /all/src/.venv-ir/%%h-%%r
+EOF
+
+infrared virsh -v -o cleanup.yml \
+             --host-address sealusa26.mobius.lab.eng.rdu2.redhat.com \
+             --host-key /home/psedlak/.ssh/rhos-jenkins \
+             --cleanup yes
+
+infrared virsh -v \
+    -o provision.yml \
+    --topology-nodes undercloud:1,controller:1,compute:1,ceph:1 \
+    --host-address sealusa26.mobius.lab.eng.rdu2.redhat.com \
+    --host-key /home/psedlak/.ssh/rhos-jenkins \
+    --image-url http://rhos-qe-mirror-qeos.usersys.redhat.com/rcm-guest/puddles/OpenStack/rhel-7.5-guest-image-for-ci/rhel-guest-image-7.5-100.x86_64.qcow2 \
+    --host-memory-overcommit True \
+    -e override.controller.cpu=8 \
+    -e override.controller.memory=32768

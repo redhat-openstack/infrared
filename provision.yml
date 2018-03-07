@@ -1,0 +1,28 @@
+override:
+  controller:
+    cpu: '8'
+    memory: '32768'
+provision:
+  bootmode: hd
+  collect:
+    ansible:
+      facts: false
+  host:
+    address: sealusa26.mobius.lab.eng.rdu2.redhat.com
+    key: /home/psedlak/.ssh/rhos-jenkins
+    memory:
+      overcommit: true
+    user: root
+    validate: true
+  image:
+    url: http://rhos-qe-mirror-qeos.usersys.redhat.com/rcm-guest/puddles/OpenStack/rhel-7.5-guest-image-for-ci/rhel-guest-image-7.5-100.x86_64.qcow2
+  prefix: ir-
+  topology:
+    extend: false
+    network: /home/psedlak/all/src/ir/plugins/virsh/defaults/topology/network/3_nets.yml
+    nodes:
+      /home/psedlak/all/src/ir/plugins/virsh/defaults/topology/nodes/ceph.yml: 1
+      /home/psedlak/all/src/ir/plugins/virsh/defaults/topology/nodes/compute.yml: 1
+      /home/psedlak/all/src/ir/plugins/virsh/defaults/topology/nodes/undercloud.yml: 1
+      /home/psedlak/all/src/ir/plugins/virsh/vars/topology/nodes/controller.yml: 1
+    username: cloud-user

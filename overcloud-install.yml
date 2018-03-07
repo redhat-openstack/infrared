@@ -1,0 +1,32 @@
+install:
+  compute:
+    ssh: false
+  deploy: true
+  deployment:
+    files: /home/psedlak/all/src/ir/plugins/tripleo-overcloud/vars/deployment/files/virt
+  introspect: true
+  network:
+    backend: vxlan
+    dvr: false
+    lbaas: false
+    protocol: ipv4
+  overcloud:
+    debug: true
+    ssl: false
+    templates:
+    - /home/psedlak/all/src/ir/plugins/tripleo-overcloud/vars/overcloud/templates/sahara.yml
+    - /home/psedlak/all/src/ir/plugins/tripleo-overcloud/vars/overcloud/templates/cinder_backup.yml
+  post: true
+  public:
+    network: true
+    subnet: /home/psedlak/all/src/ir/plugins/tripleo-overcloud/vars/public/subnet/default_subnet.yml
+    vlan: false
+  storage:
+    backend: ceph
+    config: internal
+    external: false
+  tagging: true
+  vbmc:
+    password: password
+    username: admin
+  version: '11'
