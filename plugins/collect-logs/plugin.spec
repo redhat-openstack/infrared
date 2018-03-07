@@ -21,3 +21,7 @@ subparsers:
               type: Value
               help: Number of levels to descend at most when collecting logs
               default: 4
+          sosreport:
+              type: Bool
+              help: Whether we use sosreport to generate logs
+              default: False
