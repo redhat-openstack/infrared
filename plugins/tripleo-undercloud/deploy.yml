@@ -3,17 +3,6 @@
   hosts: undercloud
   any_errors_fatal: true
   tasks:
-      - name: apply workaround for BZ#1428608
-        lineinfile:
-            line: 'exclude=docker-distribution'
-            insertafter: EOF
-            dest: /etc/yum.conf
-        become: true
-        become_user: root
-        when:
-          - install.version|openstack_release == 10
-          - install.build == 'ga'
-
       - name: install the undercloud
         command: bash ~/undercloud_deploy.sh
         register: undercloud_deployment
@@ -28,17 +17,6 @@
       - fail:
             msg: "Undercloud deployment failed... :("
         when: undercloud_deployment.rc != 0
-
-      - name: remove workaround for BZ#1428608
-        lineinfile:
-            line: 'exclude=docker-distribution'
-            state: absent
-            dest: /etc/yum.conf
-        become: true
-        become_user: root
-        when:
-          - install.version|openstack_release == 10
-          - install.build == 'ga'
 
       - name: "Workaround BZ#1543580 - iptables FORWARD DROP"
         shell: |
