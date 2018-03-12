@@ -29,11 +29,28 @@
       - absent
       - directory
 
-- name: discover container images names (if container-images-patch not defined at command line)
-  shell: docker images {{ docker_registry_undercloud }}/{{ docker_registry_undercloud_namespace }}/* --format "{{ '{{' }} .Repository {{ '}}' }}:{{ '{{' }}.Tag {{ '}}' }}"
-  register: container_images
+- name: get list of images available on undercloud registry
+  get_url:
+     url: "http://{{ docker_registry_undercloud }}/v2/_catalog"
+     dest: "{{ undercloud_registry_images_file }}"
+     force: true
+  delegate_to: localhost
+
+- name: load list of images from undercloud registry as undercloud_registry_images_raw fact
+  include_vars:
+     file: "{{ undercloud_registry_images_file }}"
+     name: undercloud_registry_images_raw
+
+- name: find container images names (if container-images-patch not defined at command line)
+  vars:
+      container_image_var: "{{ item | regex_replace('^.*/') }}"
+  set_fact:
+      undercloud_registry_images: "{{ undercloud_registry_images | default({}) | combine({ container_image_var: '' }) }}"
+  with_items: "{{ undercloud_registry_images_raw.repositories }}"
   when: install_container_images_patch is not defined
-  become: true
+
+- debug:
+     var: undercloud_registry_images
 
 - name: discover container images that require patching (if container-images-patch not defined at command line)
   vars:
@@ -43,7 +60,7 @@
       --rm {{ docker_registry_undercloud }}/{{ docker_registry_undercloud_namespace }}/{{ imagename }}:{{ container_env['container-image-prepare']['tag'] }} \
       yum check-update
   register: _container_images_check_update
-  with_items: "{{ container_images.stdout_lines }}"
+  with_items: "{{ undercloud_registry_images }}"
   when: install_container_images_patch is not defined
   failed_when: _container_images_check_update.rc not in [0, 1, 100]
   tags: skip_ansible_lint
