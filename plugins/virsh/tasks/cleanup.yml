@@ -35,6 +35,13 @@
 
   when: provision.kill | default(False)
 
+- block:
+  - name: remove all snapshots
+    include_tasks: remove_snapshots.yml
+    with_items: "{{ vm_names.list_vms }}"
+    loop_control:
+      loop_var: vm_name
+
 - name: destroy undefined vms
   virt:
       name: "{{ item }}"
