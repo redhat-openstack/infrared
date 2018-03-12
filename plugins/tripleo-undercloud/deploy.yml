@@ -12,7 +12,8 @@
         become_user: root
         when:
           - install.version|openstack_release == 10
-          - install.build == 'ga'
+          - install.build|default('') == 'ga'
+        register: apply_workaround_bz1428608
 
       - name: install the undercloud
         command: bash ~/undercloud_deploy.sh
@@ -36,9 +37,7 @@
             dest: /etc/yum.conf
         become: true
         become_user: root
-        when:
-          - install.version|openstack_release == 10
-          - install.build == 'ga'
+        when: not apply_workaround_bz1428608|skipped
 
       - name: "Workaround BZ#1543580 - iptables FORWARD DROP"
         shell: |
