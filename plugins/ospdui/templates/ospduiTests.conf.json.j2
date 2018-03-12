@@ -13,7 +13,8 @@
     "password": "{{ ui_admin_password }}"
     },
   "connector": {
-    "hostname": "{{ hostvars[groups.undercloud | first].ansible_host }}",
+    "hostname": "{{ hostvars[groups.undercloud|first].ansible_host|
+                    default(hostvars[groups.undercloud|first].ansible_ssh_host) }}",
     "username": "stack",
     "password": "stack",
     "rcFile": "stackrc"
