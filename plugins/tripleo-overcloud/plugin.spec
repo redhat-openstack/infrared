@@ -195,6 +195,14 @@ subparsers:
                               tripleo-overcloud/vars/environment/plan/example.yml
                             NOTE: Infrared support this option for RHOSP from version 12.
 
+                  libvirt-type:
+                      type: Value
+                      help: The libvirt type to use during the overcloud deployment
+                      default: kvm
+                      choices:
+                          - kvm
+                          - qemu
+
             - title: Overcloud Options
               options:
                   overcloud-debug:
