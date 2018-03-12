@@ -9,7 +9,7 @@
           Description=VirtualBMC service
           After=network.target
           [Service]
-          User={{ ansible_user }}
+          User={{ ansible_user|default(ansible_ssh_user) }}
           Type=oneshot
           ExecStart=/bin/bash -c 'for bmc in $(ls {{ ansible_user_dir }}/.vbmc/); do vbmc start $bmc; done'
           ExecStop=/bin/bash -c 'for bmc in $(ls {{ ansible_user_dir }}/.vbmc/); do vbmc stop $bmc; done'

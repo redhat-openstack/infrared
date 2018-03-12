@@ -91,7 +91,7 @@
         ignore_errors: true
 
       - name: wait for node to go down
-        command: ping -c1 {{ ansible_host }}
+        command: ping -c1 {{ ansible_host|default(ansible_ssh_host) }}
         register: node_down
         until: node_down.rc != 0
         retries: 60

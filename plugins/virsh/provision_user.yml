@@ -25,7 +25,7 @@
             state: present
             password: "{{ non_root_pw | password_hash('sha512') }}"
         register: create_user
-        when: ansible_user == 'root'
+        when: ansible_user|default(ansible_ssh_user) == 'root'
 
       - name: add user to sudoers
         lineinfile:
