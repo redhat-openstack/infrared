@@ -12,7 +12,7 @@
         become_user: root
         when:
           - install.version|openstack_release == 10
-          - install.build == 'ga'
+          - install.build|default('') == 'ga'
 
       - name: install the undercloud
         command: bash ~/undercloud_deploy.sh
@@ -38,7 +38,7 @@
         become_user: root
         when:
           - install.version|openstack_release == 10
-          - install.build == 'ga'
+          - install.build|default('') == 'ga'
 
       - name: "Workaround BZ#1543580 - iptables FORWARD DROP"
         shell: |
