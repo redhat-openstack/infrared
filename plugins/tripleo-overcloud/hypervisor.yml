@@ -14,7 +14,7 @@
 
       - name: insert the public key to the known hosts in hypervisor
         authorized_key:
-            user: "{{ hostvars['hypervisor'].ansible_user }}"
+            user: "{{ hostvars['hypervisor'].ansible_user|default(hostvars['hypervisor'].ansible_ssh_user) }}"
             key: "{{ uc_pubkey_result.stdout }}"
         delegate_to: hypervisor
 
