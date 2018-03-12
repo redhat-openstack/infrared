@@ -119,9 +119,9 @@
             hostname: "undercloud-0"
             node_label: "undercloud-0"
             groups: "undercloud,tester,openstack_nodes"
-            ansible_ssh_user: "{{ undercloud_user }}"
+            ansible_user: "{{ undercloud_user }}"
             ansible_ssh_private_key_file: "{{ hostvars[groups['overcloud_nodes'][0]].ansible_ssh_private_key_file }}"
-            ansible_ssh_host: "{{ undercloud_ip.stdout | ipaddr('address') }}"
+            ansible_host: "{{ undercloud_ip.stdout | ipaddr('address') }}"
             ansible_ssh_common_args: "
                 -o ForwardAgent=yes
                 -o IdentitiesOnly=yes
@@ -130,7 +130,7 @@
                 -o ControlPersist=30m
                 -o StrictHostKeyChecking=no
                 -o UserKnownHostsFile=/dev/null
-                -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_ssh_user }}@{{ ansible_ssh_host }}\""
+                -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_user }}@{{ ansible_host }}\""
         notify:
             - update /etc/hosts with undercloud's details
 
@@ -172,7 +172,7 @@
       - name: update /etc/hosts with undercloud's details
         lineinfile:
             dest: "/etc/hosts"
-            line: "{{ hostvars[groups['undercloud'][0]].ansible_ssh_host }}    {{ groups['undercloud'][0] }}.redhat.local {{ groups['undercloud'][0] }}"
+            line: "{{ hostvars[groups['undercloud'][0]].ansible_host }}    {{ groups['undercloud'][0] }}.redhat.local {{ groups['undercloud'][0] }}"
             state: present
 
 # workaround for selinux errors while introspection from qs image

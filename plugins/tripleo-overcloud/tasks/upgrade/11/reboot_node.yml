@@ -32,7 +32,7 @@
       delegate_to: "{{ node_name }}"
 
     - name: Wait for {{ node_name }} to go down
-      command: "ping -c1 {{ hostvars[node_name].ansible_ssh_host }}"
+      command: "ping -c1 {{ hostvars[node_name].ansible_host }}"
       ignore_errors: true
       register: node_down
       until: node_down.rc != 0
@@ -42,7 +42,7 @@
     - name: waiting for the {{ node_name }} to be available
       wait_for:
           port: 22
-          host: "{{ hostvars[node_name].ansible_ssh_host }}"
+          host: "{{ hostvars[node_name].ansible_host }}"
           search_regex: OpenSSH
           delay: 5
   when: (installed_kernel.stdout != loaded_kernel.stdout) or (installed_ovs.stdout != loaded_ovs.stdout)

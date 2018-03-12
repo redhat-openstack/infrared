@@ -91,7 +91,7 @@
         ignore_errors: true
 
       - name: wait for node to go down
-        command: ping -c1 {{ ansible_ssh_host }}
+        command: ping -c1 {{ ansible_host }}
         register: node_down
         until: node_down.rc != 0
         retries: 60
@@ -103,7 +103,7 @@
             - name: waiting for the node to be available
               wait_for:
                   port: 22
-                  host: "{{ ansible_ssh_host }}"
+                  host: "{{ ansible_host }}"
                   search_regex: OpenSSH
                   delay: 60
                   timeout: 360
@@ -113,7 +113,7 @@
             - name: waiting for the node to be available
               become: no
               wait_for:
-                  host: "{{ ansible_ssh_host }}"
+                  host: "{{ ansible_host }}"
                   port: 22
                   search_regex: OpenSSH
                   delay: 30
@@ -125,7 +125,7 @@
       - name: check node is ssh-able
         shell: id || echo "NOT_READY"
         register: id_ssh
-        until: "'{{ ansible_ssh_user }}' in id_ssh.stdout"
+        until: "'{{ ansible_user }}' in id_ssh.stdout"
         retries: 20
         delay: 15
 
