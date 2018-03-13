@@ -15,12 +15,12 @@
   tasks:
       - name: check and create directory
         file:
-          path: "{{ undercloud_disk_path }}"
+          path: "{{ install.disk.pool }}"
           state: directory
           owner: root
           group: root
           mode: 0755
-        when: undercloud_disk_path | default(False)
+        when: install.disk.pool | default(False)
 
       - name: download image
         get_url:
