@@ -9,6 +9,7 @@ Setup an Undercloud
 * ``--version``: TripleO release to install.
     Accepts either an integer for RHEL-OSP release, or a community release
     name (``Liberty``, ``Mitaka``, ``Newton``, etc...) for RDO release
+
 * ``--build``: Specify a build date or a label for the repositories.
     Supports any rhos-release labels.
     Examples: ``passed_phase1``, ``2016-08-11.1``, ``Y1``, ``Z3``, ``GA``
@@ -39,6 +40,21 @@ Setup an Undercloud
 
     .. note:: Pre-registered undercloud are also supported if ``--cdn`` flag is missing.
     .. warning:: The contents of the file are hidden from the logged output, to protect private account credentials.
+
+* ``--from-source`` Build tripleo components from the upstream git repository.
+    Accepts list of tripleo components. The delorean project is used to build rpm packages. For more information about
+    delorean, visit `Delorean documentation <http://dlrn.readthedocs.io/en/latest>`_.
+
+    To deploy specific tripleo components from git repository::
+
+      infrared tripleo-undercloud --version 13 \
+        --from-source name=openstack/python-tripleoclient \
+        --from-source name=openstack/neutron,refs=refs/changes/REF_ID \
+        --from-source name=openstack/puppet-neutron
+
+    .. note::
+         - This feature is supported by OSP 13 or RDO queens versions.
+         - This feature is expiremental and should be used only for development.
 
 .. _module documentation: http://docs.ansible.com/ansible/redhat_subscription_module.html
 
