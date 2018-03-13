@@ -84,8 +84,9 @@
 
       - name: Update hosts user
         add_host:
-            name: "{{ inventory_hostname }}"
+            name: "{{ hostvars[item]['inventory_hostname'] }}"
             ansible_user: "{{ install.user.name }}"
+        with_items: "{{ groups['undercloud'] }}"
 
 - name: update inventory file
   hosts: localhost
