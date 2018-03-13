@@ -56,6 +56,17 @@
             - not skip_release
         tags: rhos-release
 
+      - role: git
+        release: "{{ install.version }}"
+        rr_buildmods: "{{ install.buildmods }}"
+        build: "{{ install.build | default(omit) }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        build_components: "{{ install.git }}"
+        when:
+            - install.git is defined
+            - not skip_release
+        tags: git-release
+
   tasks:
       - name: load custom repos configuration file
         include_vars: "{{ custom_repos.config|default('') }}"

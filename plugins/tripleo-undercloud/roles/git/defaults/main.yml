@@ -1,0 +1,29 @@
+rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+work_dir: '/home/stack'
+build_components: []
+
+git:
+  - name: dlrn
+    repo: https://github.com/openstack-packages/delorean.git
+    dest: delorean
+  - name: rdoinfo
+    repo: https://github.com/redhat-openstack/rdoinfo.git
+    dest: delorean/rdoinfo
+
+setup:
+  dependencies:
+    defaults:
+      - git
+      - gcc
+      - createrepo
+      - mock
+      - rpm-build
+      - rpmdevtools
+      - redhat-rpm-config
+      - yum-utils
+      - python-devel
+      - python-pip
+      - puppet
+      - jq
+      - screen
+      - python-virtualenv
