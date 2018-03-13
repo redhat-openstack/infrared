@@ -45,6 +45,18 @@
           - python-networking-ovn.noarch
   when: install.version|default(undercloud_version)|openstack_release == 12
 
+- name: set fact - not_containerized_rpms for OSP13
+  set_fact:
+      not_containerized_rpms:
+          - openvswitch-debuginfo.x86_64
+          - openvswitch-devel.x86_64
+          - openvswitch-ovn-central.x86_64
+          - openvswitch-ovn-common.x86_64
+          - openvswitch-ovn-docker.x86_64
+          - openvswitch-ovn-host.x86_64
+          - openvswitch-ovn-vtep.x86_64
+  when: install.version|default(undercloud_version)|openstack_release == 13
+
 - set_fact:
       skip_container_images_patching: 'not_defined'
 
