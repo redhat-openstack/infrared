@@ -144,6 +144,15 @@ subparsers:
                           cdn - use internal mirrors of the CDN repos. (internal use)
                           none - use none of those flags
                       default: pin
+                  git:
+                      type: NestedList
+                      action: append
+#                      type: Value
+#                      action: append
+                      help: |
+                          Install tripleo components from source code
+                          --git name=openstack/instack-undercloud,repo=,rpmrepo=,branch=,refs=, \
+                          --git name=openstack/python-tripleoclient
 
             - title: TripleO User
               options:
