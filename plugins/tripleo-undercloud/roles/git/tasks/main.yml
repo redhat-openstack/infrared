@@ -1,0 +1,87 @@
+- name: enable test repo in order to get access to pip
+  shell: |
+    yum-config-manager \
+      --setopt 'rhelosp-{{ install.version }}.0-test-deps.includepkgs=python-pip,python2-pip' \
+      --enable rhelosp-{{ install.version }}.0-test-deps >/var/log/yum.log
+  args:
+    warn: no
+  tags: skip_ansible_lint
+
+- name: Install epel-release-latest-7
+  shell: yum localinstall -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
+- name: Creating delorean-latest extra repositories
+  yum_repository:
+      name: "delorean-latest"
+      description: "delorean-latest"
+      baseurl: "https://trunk.rdoproject.org/centos7-master/deps/latest/"
+      enabled: "1"
+      gpgcheck: "0"
+      includepkgs: "puppet*,python*,openstack-kolla"
+      keepcache: "0"
+
+- name: Creating delorean-passed-ci extra repositories
+  yum_repository:
+      name: "delorean-passed-ci"
+      description: "delorean-passed-ci"
+      baseurl: "https://trunk.rdoproject.org/centos7/current-passed-ci/"
+      enabled: "1"
+      gpgcheck: "0"
+      includepkgs: "python*,puppet*,openstack-kolla"
+      keepcache: "0"
+
+- name: Install build deps
+  yum:
+      name: "{{ item }}"
+      state: latest
+  with_items:
+      - git
+      - gcc
+      - python-devel
+      - python-pip
+      - puppet
+      - jq
+      - screen
+      - python-virtualenv
+
+- name: Clone tripleo-ci repo
+  become: no
+  git:
+    repo: "{{ tripleo_ci }}"
+    dest: "{{ tripleo_ci_dir }}"
+    force: yes
+
+- block:
+    - name: Create tripleo-ci virtualenv
+      shell: "virtualenv {{ tripleo_ci_venv }}"
+      creates: "{{ tripleo_ci_venv }}"
+
+    - name: Install tripleo-ci
+      shell: |
+          source {{ tripleo_ci_venv }}/bin/activate
+          pip install -U {{ tripleo_ci_dir }}/
+
+    - name: Prepare delorean-setup
+      shell: |
+          source {{ tripleo_ci_venv }}/bin/activate
+          {{ tripleo_ci_dir }}/scripts/tripleo.sh --delorean-setup
+
+    # TODO Create and replace centos.cfg file by redhat
+    - name: Disable gpg check for delorean repo
+      replace:
+          dest: ~/tripleo/delorean/scripts/centos.cfg
+          regexp: "gpgcheck=1"
+          replace: "gpgcheck=0"
+
+    - name: Build package of tripleo components
+      shell: |
+          source {{ tripleo_ci_venv }}/bin/activate
+          {{ tripleo_ci_dir }}/scripts/tripleo.sh --delorean-build \
+          {{ build_components|json_query('[*].name')|join(' ') }}
+
+  become: no
+
+- name: Setup repository in /etc/yum.repos.d
+  template:
+    src: patched_rpms.j2
+    dest: '/etc/yum.repos.d/patched_rpms.repo'
