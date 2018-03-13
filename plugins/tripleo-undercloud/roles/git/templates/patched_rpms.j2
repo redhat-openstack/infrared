@@ -1,0 +1,10 @@
+{% for repo in repopath.stdout_lines %}
+{% set repo_name = repo.split('/')[-1] %}
+[{{ repo_name }}]
+name={{ repo_name }}
+baseurl=file://{{ work_dir }}/delorean/{{ repo }}
+enabled=1
+gpgcheck=0
+priority=1
+
+{% endfor %}
