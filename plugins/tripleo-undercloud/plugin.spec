@@ -153,6 +153,13 @@ subparsers:
                           cdn - use internal mirrors of the CDN repos. (internal use)
                           none - use none of those flags
                       default: pin
+                  from-source:
+                      type: NestedList
+                      action: append
+                      help: |
+                          Install tripleo components from upstream git repository
+                          --from-source name=openstack/neutron,refs=refs/changes/REF_ID
+                          --from-source name=openstack/python-tripleoclient
 
                   enable-testing-repos:
                       type: Value

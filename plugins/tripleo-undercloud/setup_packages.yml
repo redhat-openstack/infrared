@@ -57,6 +57,17 @@
             - not skip_release
         tags: rhos-release
 
+      - role: from-source
+        release: "{{ install.version }}"
+        rr_buildmods: "{{ install.buildmods }}"
+        build: "{{ install.build | default(omit) }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        build_components: "{{ install.from.source }}"
+        when:
+            - install.get('from', {}).source is defined
+            - not skip_release
+        tags: git-release
+
   tasks:
       - name: load custom repos configuration file
         include_vars: "{{ custom_repos.config|default('') }}"
@@ -72,6 +83,7 @@
             mirrorlist: "{{ item.mirrorlist | default(omit) }}"
             enabled: "{{ item.enabled | default(omit) }}"
             gpgcheck: "{{ item.gpgcheck | default(omit) }}"
+            includepkgs: "{{ item.includepkgs | default(omit) }}"
         with_items: "{{ extra_repos|default({}) }}"
         when: "extra_repos|default({})"
 
