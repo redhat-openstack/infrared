@@ -5,7 +5,7 @@
 # Starting from OSP11, the overcloud deploy deprecated the neutron flags
 # and because they should be used even in older releases, there is no reason
 # to not do so.
-- name: append the network type
+- name: Append the network type
   yedit:
       src: "{{ template_base }}/network/{{ network_environment_file }}"
       update: True
@@ -15,7 +15,7 @@
               '{{ install.network.backend }}'
 
 # OSPd7 can not recognize NeutronTunnelTypes option at all
-- name: append the network type
+- name: Append the network type
   yedit:
       src: "{{ template_base }}/network/{{ network_environment_file }}"
       update: True
@@ -25,17 +25,17 @@
               "{{ (install.network.backend) | regex_replace('vlan', '') | regex_replace(',,', ',') | regex_replace(',$', '') | regex_replace('^,', '') }}"
   when: install.version|default(undercloud_version)|openstack_release >= 8
 
-- name: append the network isolation template line to the base overcloud deploy script
+- name: Append the network isolation template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/{{ isolation_file }} \'
 
-- name: append the network environment template line to the base overcloud deploy script
+- name: Append the network environment template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ template_base }}/network/{{ network_environment_file }} \'
 
-- name: find the controller network template file in deployment files
+- name: Find the controller network template file in deployment files
   vars:
       basename: "controller{{ (install.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
   find:
@@ -45,7 +45,7 @@
   register: controller_path
   when: install.network.dvr
 
-- name: fail unless 1 file was found
+- name: Fail unless 1 file was found
   fail:
       msg:
           error: found multiple controller network templates, or not at all.
@@ -54,13 +54,13 @@
       - install.network.dvr
       - "{{ controller_path.matched != 1 }}"
 
-- name: append the bgpvpn template line to the base overcloud deploy script
+- name: Append the bgpvpn template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/neutron-bgpvpn.yaml \'
   when: install.network.bgpvpn
 
-- name: inject dvr override template
+- name: Inject dvr override template
   vars:
       controller_abspath: "{{ controller_path.files[0].path }}"
   template:
@@ -68,25 +68,41 @@
       dest: "{{ template_base }}/network/dvr-override.yaml"
   when: install.network.dvr
 
-- name: append the dvr template line to the base overcloud deploy script
+- name: Append the dvr template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/neutron-ovs-dvr.yaml \'
   when: install.network.dvr
 
-- name: append the l2gw template line to the base overcloud deploy script
+- name: Append the l2gw template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/neutron-l2gw.yaml \'
   when: install.network.l2gw
 
-- name: append the octavia template line to the base overcloud deploy script
+- name: Append the octavia template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/services-docker/octavia.yaml \'
   when: install.network.octavia
 
-- name: append the network dvr overrides
+- name: Install Octavia image
+  become: yes
+  yum:
+      name: octavia-amphora-image
+      state: present
+  when: install.network.octavia
+
+- name: Append Octavia amphora image path
+  yedit:
+      src: "{{ template_base }}/network/{{ network_environment_file }}"
+      update: True
+      key: parameter_defaults
+      value:
+          OctaviaAmphoraImageFilename: '/usr/share/rhosp-director-images/octavia-amphora.qcow2'
+  when: install.network.octavia
+
+- name: Append the network dvr overrides
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ template_base }}/network/dvr-override.yaml \'
