@@ -92,6 +92,13 @@
       line: '-e {{ install.heat.templates.basedir }}/environments/services-docker/octavia.yaml \'
   when: install.network.octavia
 
+- name: Install Octavia image
+  become: yes
+  yum:
+      name: octavia-amphora-image
+      state: present
+  when: install.network.octavia
+
 - name: append the network dvr overrides
   lineinfile:
       dest: "~/overcloud_deploy.sh"
