@@ -10,11 +10,20 @@ controller_role:
     host_name_format: 'controller-%index%'
 
     services:
+        - OS::TripleO::Services::AodhApi
+        - OS::TripleO::Services::AodhEvaluator
+        - OS::TripleO::Services::AodhListener
+        - OS::TripleO::Services::AodhNotifier
         - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::CeilometerAgentCentral
+        - OS::TripleO::Services::CeilometerAgentNotification
+        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::CeilometerApi{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::CeilometerCollector{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::CeilometerExpirer{% endif %}"
+        - OS::TripleO::Services::CephExternal
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::CephMds{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::CephMgr{% endif %}"
         - OS::TripleO::Services::CephMon
-        - OS::TripleO::Services::CephExternal
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::CephRbdMirror{% endif %}"
         - OS::TripleO::Services::CephRgw
         - OS::TripleO::Services::CinderApi
@@ -22,63 +31,54 @@ controller_role:
         - OS::TripleO::Services::CinderScheduler
         - OS::TripleO::Services::CinderVolume
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::Core{% endif %}"
-        - OS::TripleO::Services::Kernel
-        - OS::TripleO::Services::Keystone
+        - OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}
         - OS::TripleO::Services::GlanceApi
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::GlanceRegistry{% endif %}"
-        - OS::TripleO::Services::NeutronApi
-        - OS::TripleO::Services::NeutronCorePlugin
-        - OS::TripleO::Services::RabbitMQ
-        - OS::TripleO::Services::HAproxy
-        - OS::TripleO::Services::Keepalived
-        - OS::TripleO::Services::Memcached
-        - OS::TripleO::Services::Pacemaker
-        - OS::TripleO::Services::Redis
-        - OS::TripleO::Services::NovaConductor
-        - OS::TripleO::Services::MongoDb
-        - OS::TripleO::Services::NovaApi
-        - OS::TripleO::Services::NovaMetadata
-        - OS::TripleO::Services::NovaScheduler
-        - OS::TripleO::Services::NovaConsoleauth
-        - OS::TripleO::Services::NovaVncProxy
-        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::PankoApi{% endif %}"
-        - OS::TripleO::Services::Ntp
-        - OS::TripleO::Services::SwiftProxy
-        - OS::TripleO::Services::SwiftStorage
-        - OS::TripleO::Services::SwiftRingBuilder
-        - OS::TripleO::Services::Snmp
-        - OS::TripleO::Services::Timezone
-        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::CeilometerApi{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::CeilometerCollector{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::CeilometerExpirer{% endif %}"
-        - OS::TripleO::Services::CeilometerAgentCentral
-        - OS::TripleO::Services::CeilometerAgentNotification
-        - OS::TripleO::Services::Horizon
         - OS::TripleO::Services::GnocchiApi
         - OS::TripleO::Services::GnocchiMetricd
         - OS::TripleO::Services::GnocchiStatsd
-        - OS::TripleO::Services::ManilaApi
-        - OS::TripleO::Services::ManilaScheduler
-        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::ManilaBackendGeneric{% endif %}"
-        - OS::TripleO::Services::ManilaBackendNetapp
-        - OS::TripleO::Services::ManilaBackendCephFs
-        - OS::TripleO::Services::ManilaShare
-        - OS::TripleO::Services::AodhApi
-        - OS::TripleO::Services::AodhEvaluator
-        - OS::TripleO::Services::MySQL
-        - OS::TripleO::Services::AodhNotifier
-        - OS::TripleO::Services::AodhListener
-        - OS::TripleO::Services::SaharaApi
-        - OS::TripleO::Services::SaharaEngine
+        - OS::TripleO::Services::HAproxy
+        - OS::TripleO::Services::Horizon
         - OS::TripleO::Services::IronicApi
         - OS::TripleO::Services::IronicConductor
-        - OS::TripleO::Services::NovaIronic
-        - OS::TripleO::Services::TripleoPackages
-        - OS::TripleO::Services::TripleoFirewall
-        - OS::TripleO::Services::OpenDaylightApi
-        - OS::TripleO::Services::SensuClient
-        - OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}
-        - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+        - OS::TripleO::Services::Keepalived
+        - OS::TripleO::Services::Kernel
+        - OS::TripleO::Services::Keystone
+        - OS::TripleO::Services::ManilaApi
+        - OS::TripleO::Services::ManilaBackendCephFs
+        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::ManilaBackendGeneric{% endif %}"
+        - OS::TripleO::Services::ManilaBackendNetapp
+        - OS::TripleO::Services::ManilaScheduler
+        - OS::TripleO::Services::ManilaShare
+        - OS::TripleO::Services::Memcached
+        - OS::TripleO::Services::MongoDb
+        - OS::TripleO::Services::MySQL
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
+        - OS::TripleO::Services::NeutronApi
+        - OS::TripleO::Services::NeutronCorePlugin
+        - OS::TripleO::Services::NovaApi
+        - OS::TripleO::Services::NovaConductor
+        - OS::TripleO::Services::NovaConsoleauth
+        - OS::TripleO::Services::NovaIronic
+        - OS::TripleO::Services::NovaMetadata
+        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
+        - OS::TripleO::Services::NovaScheduler
+        - OS::TripleO::Services::NovaVncProxy
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::OpenDaylightApi
+        - OS::TripleO::Services::Pacemaker
+        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::PankoApi{% endif %}"
+        - OS::TripleO::Services::RabbitMQ
+        - OS::TripleO::Services::Redis
+        - OS::TripleO::Services::SaharaApi
+        - OS::TripleO::Services::SaharaEngine
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::Snmp
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::Sshd{% endif %}"
+        - OS::TripleO::Services::SwiftProxy
+        - OS::TripleO::Services::SwiftRingBuilder
+        - OS::TripleO::Services::SwiftStorage
+        - OS::TripleO::Services::Timezone
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::TripleoPackages
+        - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
