@@ -100,6 +100,24 @@ subparsers:
                       help: |
                           Adds an extra black (skip) regex to the ostestr/tempest invocation.
                           To add multiple tests seperate by pipe.
+                  regexlist-file:
+                      type: Value
+                      help: |
+                          A path to a file that contains a list of regular expressions with black/white-listed tests.
+                          Black/white-listed tests will be ammended to the tempest black/white-list files.
+                          Example of the regexlist-file content
+                          blacklist: [
+                              test.foo.1,
+                              test.foo.2
+                          ]
+                          whitelist: [
+                              test.zoo.1,
+                              test.zoo.2
+                          ]
+                          foo.1, foo.2 will be ammended to the tempest blacklist file, while zoo.1, zoo.2 will
+                          be ammended to the tempest whitelist file (in addition to the tests that were contained
+                          therein). For more details on how black/white list operate refer to:
+                          http://stestr.readthedocs.io/en/latest/MANUAL.html#test-selection
                   revision:
                       type: Value
                       help: The setup (git) revision if applicable
