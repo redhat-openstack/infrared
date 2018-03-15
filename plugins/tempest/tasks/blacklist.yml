@@ -1,0 +1,21 @@
+- name: Obtain blacklist*.yml file path
+  find:
+     paths: "{{ test.blacklist.file }}"
+     patterns: 'blacklist*.yml'
+     recurse: yes
+  register: files_matched
+
+- name: Include blacklist variable from the blacklist*.yml
+  include_vars:
+     file: "{{ files_matched.files[0].path }}"
+     name: blacklist
+  when: "{{ files_matched.matched }} == 1"
+
+- name: Add blacklisted tests from the blacklist variable
+  lineinfile:
+      create: yes
+      dest: "{{ test.dir }}/black_list_{{ test_suite }}"
+      line: "{{ item }}"
+      regexp: "^{{ item }}$"
+  with_items: "{{ blacklist | default([]) }}"
+  when: "{{ files_matched.matched }} == 1"

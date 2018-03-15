@@ -62,6 +62,9 @@
           regexp: "^{{ item }}$"
       with_items: "{{ test_dict.blacklist | default([]) }}"
 
+    - name: Add blacklisted tests from file 
+      include_tasks: tasks/blacklist.yml
+
     - name: add blacklist invocation
       set_fact:
           blacklistfile: "--blacklist_file black_list_{{ test_suite }}"

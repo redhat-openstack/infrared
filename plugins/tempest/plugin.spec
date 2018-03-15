@@ -100,6 +100,16 @@ subparsers:
                       help: |
                           Adds an extra black (skip) regex to the ostestr/tempest invocation.
                           To add multiple tests seperate by pipe.
+                  blacklist-file:
+                      type: File
+                      help: |
+                          A path to a file that contains blacklisted tests specified by variable.
+                          Blacklisted tests will be ammended to the tempest blacklist file.
+                          Example of the blacklist-file content:
+                          blacklist: [
+                                  test.foo.1,
+                                  test.foo.2
+                          ]
                   revision:
                       type: Value
                       help: The setup (git) revision if applicable
