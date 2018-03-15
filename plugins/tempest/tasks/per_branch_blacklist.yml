@@ -1,0 +1,33 @@
+ - find:
+      paths: /home/cloud-user
+      patterns: 'blacklist.yml'
+      recurse: yes
+    register: files_matched
+
+  - debug:
+      msg: "{{ files_matched.matched }}"
+    register: files_num
+ 
+  - debug:
+      msg: "{{ files_num }}"
+
+
+  - name: found
+    shell: echo "Found!!!! {{ files_matched.files[0].path }}" 
+    when: "{{ files_num.msg }} == 1"
+
+  - name: not found
+    shell: echo  "Not found"
+    when: "{{ files_num.msg }} != 1"
+
+  - name: Include black list variable from the component
+    include_vars: "{{ files_matched.files[0].path }}"
+
+
+  - name: add blacklisted tests from the component branch 
+    lineinfile:
+        create: yes
+        dest: "{{ test.dir }}/black_list_{{ test_suite }}"
+        line: "{{ item }}"
+        regexp: "^{{ item }}$"
+    with_items: "{{ blacklist | default([]) }}"
