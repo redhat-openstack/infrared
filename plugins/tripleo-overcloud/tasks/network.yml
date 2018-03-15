@@ -86,6 +86,22 @@
       line: '-e {{ install.heat.templates.basedir }}/environments/neutron-l2gw.yaml \'
   when: install.network.l2gw
 
+- name: Disable l2gw agent
+  become: yes
+  replace:
+      path: "{{ install.heat.templates.basedir }}/environments/neutron-l2gw.yaml"
+      regexp: '../puppet/services/neutron-l2gw-agent.yaml'
+      replace: 'OS::Heat::None'
+  when: install.network.l2gw
+
+- name: Configure several service plugins
+  become: yes
+  replace:
+      path: "{{ install.heat.templates.basedir }}/environments/neutron-l2gw.yaml"
+      regexp: '\"networking_l2gw.services.l2gateway.plugin.L2GatewayPlugin\"'
+      replace: 'router,qos,trunk,networking_l2gw.services.l2gateway.plugin.L2GatewayPlugin'
+  when: install.network.l2gw
+
 - name: Append the octavia template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
