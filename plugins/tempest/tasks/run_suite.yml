@@ -67,6 +67,10 @@
           blacklistfile: "--blacklist_file black_list_{{ test_suite }}"
   when: test_dict.blacklist is defined and test_dict.blacklist
 
+- name: Add blacklisted/whitelisted tests from file
+  include_tasks: tasks/regexlist.yml
+  when: test.regexlist.file is defined
+
 # For getting ostestr version, if tempest is installed from git, then it will
 # first check for venv then activate the venv then get the ostestr version.
 # else tempest is installed from rpm then venv will be not available it will
