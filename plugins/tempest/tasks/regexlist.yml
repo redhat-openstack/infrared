@@ -1,0 +1,21 @@
+- name: Include blacklist variable from the blacklist*.yml
+  include_vars:
+     file: "{{ test.regexlist.file }}"
+     name: regexlist_file 
+
+- name: Add blacklisted tests from the blacklist variable
+  lineinfile:
+      create: yes
+      dest: "{{ test.dir }}/black_list_{{ test_suite }}"
+      line: "{{ item }}"
+      regexp: "^{{ item }}$"
+  with_items: "{{ regexlist_file.blacklist | default([]) }}"
+
+- name: Add whitelisted tests from the whitelist variable
+  lineinfile:
+      create: yes
+      dest: "{{ test.dir }}/white_list_{{ test_suite }}"
+      line: "{{ item }}"
+      regexp: "^{{ item }}$"
+  with_items: "{{ regexlist_file.whitelist | default([]) }}"
+
