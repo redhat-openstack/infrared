@@ -40,9 +40,9 @@
             groups: "{{ ( item.name in groups.all ) | ternary(omit,
                 ['overcloud_nodes', 'openstack_nodes', item.name.split('-')[0]] | join(',')
                 ) }}"
-            ansible_ssh_user: "{{ user }}"
+            ansible_user: "{{ user }}"
             ansible_ssh_pass: ""
-            ansible_ssh_host: "{{ item.accessIPv4 }}"
+            ansible_host: "{{ item.accessIPv4 }}"
             ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
         with_items: "{{ openstack_servers }}"
 
@@ -80,7 +80,7 @@
                 name: "{{ item.name }}"
                 ansible_ssh_common_args: "-o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                                           -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
-                                          {{ hostvars[groups['undercloud'][0]].ansible_ssh_user }}@{{ hostvars[groups['undercloud'][0]].ansible_ssh_host }}\""
+                                          {{ hostvars[groups['undercloud'][0]].ansible_user }}@{{ hostvars[groups['undercloud'][0]].ansible_host }}\""
             when: "'hypervisor' not in groups"
 
             with_items: "{{ openstack_servers }}"
@@ -88,10 +88,10 @@
       - name: Enable SSH forwarding using hypervisor node for hybrid OC nodes
         add_host:
             name: "{{ item.name }}"
-            ansible_ssh_common_args: " -o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                                       -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            ansible_ssh_common_args: " -o ForwardAgent=yes -o IdentitiesOnly=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no \
+                                       -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                                        -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
-                                          {{ hostvars['hypervisor'].ansible_ssh_user }}@{{ hostvars['hypervisor'].ansible_ssh_host }}\""
+                                          {{ hostvars['hypervisor'].ansible_user }}@{{ hostvars['hypervisor'].ansible_host }}\""
         when:
           - "'hypervisor' in groups"
           - install.hybrid|default(false)

@@ -11,20 +11,20 @@ heat_role:
 
 
     services:
-        - OS::TripleO::Services::CACerts
-        - OS::TripleO::Services::Kernel
-        - OS::TripleO::Services::Ntp
-        - OS::TripleO::Services::Snmp
-        - OS::TripleO::Services::Sshd
-        - OS::TripleO::Services::Timezone
-        - OS::TripleO::Services::TripleoPackages
-        - OS::TripleO::Services::TripleoFirewall
-        - OS::TripleO::Services::SensuClient
-        - OS::TripleO::Services::FluentdClient
         - OS::TripleO::Services::AuditD
+        - OS::TripleO::Services::CACerts
         - OS::TripleO::Services::Collectd
-        - OS::TripleO::Services::MySQLClient
+        - OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}
         - OS::TripleO::Services::HeatApi
         - OS::TripleO::Services::HeatApiCfn
         - OS::TripleO::Services::HeatApiCloudwatch
         - OS::TripleO::Services::HeatEngine
+        - OS::TripleO::Services::Kernel
+        - OS::TripleO::Services::MySQLClient
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::Snmp
+        - OS::TripleO::Services::Sshd
+        - OS::TripleO::Services::Timezone
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::TripleoPackages

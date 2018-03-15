@@ -1,5 +1,41 @@
+import os
+import json
+from pbr import version
+import pkg_resources as pkg
 import sys
 import argcomplete
+
+
+def inject_common_paths():
+    """Discover the path to the common/ directory provided
+       by infrared core.
+    """
+    def override_conf_path(common_path, envvar, specific_dir):
+        conf_path = os.environ.get(envvar, '')
+        additional_conf_path = os.path.join(common_path, specific_dir)
+        if conf_path:
+            full_conf_path = ':'.join([additional_conf_path, conf_path])
+        else:
+            full_conf_path = additional_conf_path
+        os.environ[envvar] = full_conf_path
+
+    version_info = version.VersionInfo('infrared')
+
+    common_path = pkg.resource_filename(version_info.package,
+                                        'common')
+    override_conf_path(common_path, 'ANSIBLE_ROLES_PATH', 'roles')
+    override_conf_path(common_path, 'ANSIBLE_FILTER_PLUGINS', 'filter_plugins')
+    override_conf_path(common_path, 'ANSIBLE_CALLBACK_PLUGINS',
+                       'callback_plugins')
+    override_conf_path(common_path, 'ANSIBLE_LIBRARY', 'library')
+
+
+# This needs to be called here because as soon as an ansible class is loaded
+# the code in constants.py is triggered. That code reads the configuration
+# settings from all sources (ansible.cfg, environment variables, etc).
+# If the first include to ansible modules is moved deeper in the InfraRed
+# code (or on demand), then this call can be moved as well in that place.
+inject_common_paths()
 
 from infrared import api  # noqa
 from infrared.core.services import CoreServices  # noqa
@@ -107,6 +143,9 @@ class WorkspaceManagerSpec(api.SpecObject):
             "-g", "--group",
             help="List nodes in specific group"
             ).completer = completers.group_list
+        nodelist_parser.add_argument(
+            "-f", "--format", choices=['fancy', 'json'], default='fancy',
+            help="Output format")
 
         # group list
         grouplist_parser = workspace_subparsers.add_parser(
@@ -158,9 +197,15 @@ class WorkspaceManagerSpec(api.SpecObject):
                 pargs.filename, pargs.workspacename)
         elif subcommand == 'node-list':
             nodes = self.workspace_manager.node_list(pargs.name, pargs.group)
-            print fancy_table(
-                ("Name", "Address", "Groups"),
-                *[node_name for node_name in nodes])
+            if pargs.format == 'json':
+                nodes_dict = [
+                    {'name': name, 'address': address, 'groups': groups}
+                    for name, address, groups in nodes]
+                print json.dumps({'nodes': nodes_dict})
+            else:
+                print fancy_table(
+                    ("Name", "Address", "Groups"),
+                    *[node_name for node_name in nodes])
         elif subcommand == "group-list":
             groups = self.workspace_manager.group_list(pargs.name)
             print fancy_table(
@@ -173,7 +218,7 @@ class WorkspaceManagerSpec(api.SpecObject):
         """
         LOG.warning("Deprecated: create will only create the workspace "
                     "and will no longer switch to it.")
-        self._checkout_workspace(name)
+        self._checkout_workspace(name, create=True)
 
     def _checkout_workspace(self, name, create=False):
         """Checkouts (activate) a workspace
@@ -441,9 +486,8 @@ class SSHSpec(api.SpecObject):
 def main(args=None):
     CoreServices.setup()
 
-    # inject existing libraries.
-    # because of that all the ansible modules should be imported after that
-    CoreServices.dependency_manager().inject_libraries()
+    # inject ansible config file
+    CoreServices.ansible_config_manager().inject_config()
 
     specs_manager = api.SpecManager()
 

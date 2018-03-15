@@ -1,0 +1,41 @@
+---
+- name: Install packages required for 'pxe_ipmitool' ironic's driver on RedHat based distros
+  become: true
+  package:
+      name:
+        - python-setuptools
+        - ipmitool
+      state: latest
+      disable_gpg_check: yes
+
+- name: Install python-virtualbmc from repo's
+  become: true
+  package:
+      name: python-virtualbmc
+      state: latest
+      disable_gpg_check: yes
+  ignore_errors: yes
+  register: virtualbmc_install_result
+
+- block:
+    - name: Install packages required for python-virtualbmc pip package
+      become: true
+      package:
+          name:
+            - gcc
+            - libvirt
+            - libvirt-devel
+          state: latest
+          disable_gpg_check: yes
+
+    - name: install pip
+      become: yes
+      easy_install:
+          name: pip
+
+    - name: Install python-virtualbmc with pip
+      become: true
+      pip:
+          name: virtualbmc
+          state: latest
+  when: virtualbmc_install_result|failed

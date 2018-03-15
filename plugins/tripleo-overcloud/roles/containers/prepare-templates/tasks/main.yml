@@ -1,45 +1,37 @@
-- name: Get all environment files from the deploy script
-  shell: |
-     for file in `awk '/^-e / || /^--environment-file / {print $2}' ~/overcloud_deploy.sh`; do if [ -f $file ]; then echo $file; fi; done
-  register: ds_env_files
-
-- name: Create one variable with all the environment yamls
-  set_fact:
-      environment_yamls: "{{ environment_yamls| default('') }} -e {{ item }}"
-  with_items: "{{ ds_env_files.stdout_lines }}"
-  vars:
-      exclude_item: "{{ template_base }}/docker-images.yaml"
-  when: exclude_item != item
-
-- name: Get all roles files from the deploy script
-  shell: |
-     for file in `awk '/^-r / || /^--roles-file / {print $2}' ~/overcloud_deploy.sh`; do if [ -f $file ]; then echo $file; fi; done
-  register: ds_roles_files
-
-- name: Create one variable with all the roles yamls
-  set_fact:
-      roles_yamls: "{{ roles_yamls| default('') }} --roles-file {{ item }}"
-  with_items: "{{ ds_roles_files.stdout_lines }}"
+- include_tasks: pre.yml
+- include_tasks: env_files.yml
+- include_tasks: build/build_images.yml
+- include_tasks: workarounds.yml
+- include_tasks: ceph-ansible.yml
+  when:
+      - storage_backend|default('') == 'ceph'
 
 - name: generate docker images file, using the undercloud registry
   vars:
       env_file: "{{ template_base }}/docker-images.yaml"
       os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
-      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/rhosp{{ os_version }}"
+      reg_namespace:  "{{ install.get('registry', {}).namespace|default('rhosp' + os_version) }}"
+      undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/{{ reg_namespace }}"
       undercloud_reg_base_ceph: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
-      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_insecure_registry) }}/rhosp{{ os_version }}"
+      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_insecure_registry) }}/{{ reg_namespace }}"
       external_reg_base_ceph: "{{ install.get('registry', {}).mirror|default(docker_insecure_registry) }}"
       reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base)  }}"
       reg_base_ceph: "{{ install.registry.undercloud.skip|ternary(external_reg_base_ceph, undercloud_reg_base_ceph) }}"
   shell: |
       set -exo pipefail
       openstack overcloud container image prepare \
-        --namespace={{ reg_base }} \
+        --namespace={{ reg_base.rstrip('/') }} \
         --env-file={{ env_file }} {{ environment_yamls | default('') }} {{ roles_yamls | default('') }} \
         --prefix={{ container_env['container-image-prepare']['prefix'] }} \
         --tag={{ container_env['container-image-prepare']['tag'] }} \
+        {% if container_env['container-image-prepare']['ceph-namespace'] %}
         --set ceph_namespace={{ container_env['container-image-prepare']['ceph-namespace'] }} \
+        {% endif %}
+        {% if container_env['container-image-prepare']['ceph-image'] %}
         --set ceph_image={{ container_env['container-image-prepare']['ceph-image'] }} \
+        {% endif %}
+        {% if container_env['container-image-prepare']['ceph-tag'] %}
         --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }}
+        {% endif %}
   tags:
       - skip_ansible_lint

@@ -55,19 +55,8 @@ This file defines the CLI flags this plugin exposes, its name and its type.
 
 Config section:
     * Plugin type can be one of the following: ``provision``, ``install``, ``test``, ``other``.
-    * Dependencies:
-        A plugin dependency is a folder that contains directories for common Ansible resources (callback plugins, filter plugins, roles, libraries).
-        The directory should have the following structure::
-
-             dependency_example
-                 ├── roles
-                 ├── library
-                 ├── library
-                 ├── callback_plugins
-                 └── requirements.txt   # python packages requirements
-
-        * Source can be either path to local directory or path to git repo
-        * Revision is optional and should be added when requesting a specifig revision of a git dependency
+    * Entry point is the main playbook for the plugin. by default this will refer to main.yml file
+        but can be changed to ant other file.
 
 To access the options defined in the spec from your playbooks and roles use
 the plugin type with the option name.
@@ -180,9 +169,6 @@ inner-most level. Example::
         config:
            plugin_type: provision
            entry_point: main.yml
-           dependencies:
-              - source: "https://sample_github.null/dependency_repo.git"
-                revision: "c5e3b060e8c4095c66db48586817db1eb02da338"
         subparsers:
         my_plugin:
             description: Provisioner virtual machines on a single Hypervisor using libvirt
@@ -284,7 +270,9 @@ Required Arguments
 InfraRed provides the ability to mark an argument in a specification file as 'required' using two flags:
 
 1. 'required' - A boolean value tell whether the arguments required or not. (default is 'False')
-2. 'required_when' - Makes this argument required only when the mentioned argument is given and has the exact mentioned value. (More than one condition is allowed with YAML list style)
+2. 'required_when' - Makes this argument required only when the mentioned argument is given and the condition is True.
+    More than one condition is allowed with YAML list style. In this case the argument will be required if all the
+    conditions are True.
 
 For example, take a look on the ``plugin.spec`` ('Group C') in `Plugin Specification`_
 

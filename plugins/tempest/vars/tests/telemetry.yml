@@ -1,5 +1,12 @@
 ---
 test_dict:
-    test_regex: tempest.api.telemetry
-    whitelist: []
+    test_regex:
+    whitelist:
+        - "^tempest.api.telemetry.*"
+        - "^telemetry_tempest_plugin.*"
     blacklist: []
+    plugins:
+        telemetry:
+            repo: "http://git.openstack.org/openstack/telemetry-tempest-plugin"
+            package:
+                default: "python-telemetry-tests-tempest"

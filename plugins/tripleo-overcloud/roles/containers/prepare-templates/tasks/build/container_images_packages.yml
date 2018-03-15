@@ -1,0 +1,62 @@
+- name: set container_images_packages_logdir fact
+  set_fact:
+      container_images_packages_dir: "{{ containers_home_dir }}/container-images-packages/"
+      container_images_packages_logdir: /var/log/extra/container-images-packages/
+  tags: container-images-packages
+
+- name: "create {{ container_images_packages_dir }} to keep the docker build context"
+  become: true
+  file:
+      path: "{{ container_images_packages_dir }}"
+      state: "{{ item }}"
+  with_items:
+      - absent
+      - directory
+  tags: container-images-packages
+
+- name: "create {{ container_images_packages_logdir }} to keep the logs"
+  become: true
+  file:
+      path: "{{ container_images_packages_logdir }}"
+      state: "{{ item }}"
+  with_items:
+      - absent
+      - directory
+  tags: container-images-packages
+
+- name: tag the original image(s) with 'before_packages_install' and install rpms&push new ones
+  become: true
+  shell: |
+      set -o errexit
+
+      ORIG_USER="$( docker run --rm {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} /usr/bin/bash -c "echo -n \$(id -u --name)" )"
+
+      # tag the original container image with 'before_packages_install'
+      docker tag {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} \
+      {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }}-before_packages_install
+
+      # install requested package(s) in the image
+      echo "
+      FROM {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }}
+      USER root
+      RUN yum list installed
+      RUN yum localinstall {{ item.value.split(",") | join(" ") }} -y -v
+      RUN yum list installed
+      ARG ORIG_USER
+      USER $ORIG_USER
+      " > {{ container_images_packages_dir }}/Dockerfile
+
+      docker build -t {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} \
+      {{ container_images_packages_dir }} \
+      --build-arg ORIG_USER=$ORIG_USER \
+      > {{ container_images_packages_logdir }}/docker_build_{{ item.key }}.log
+
+      if ! grep -q "Complete!" "{{ container_images_packages_logdir }}/docker_build_{{ item.key }}.log" ; then
+          echo -e "\n\nno packages installed!!!\n\n." >&2
+          exit 2
+      fi
+
+      # push the patched container image in place of the original
+      docker push {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }}
+  with_dict: "{{ install_container_images_packages }}"
+  tags: container-images-packages

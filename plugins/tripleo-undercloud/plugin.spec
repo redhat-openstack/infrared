@@ -1,8 +1,6 @@
 ---
 config:
     plugin_type: install
-    dependencies:
-        - source: https://github.com/rhos-infra/infrared-common-libraries.git
 subparsers:
     tripleo-undercloud:
         description: Install TripleO on a designated undercloud node
@@ -69,6 +67,13 @@ subparsers:
                           Specifies whether ths SSL should be used for undercloud
                           A self-signed SSL cert will be generated.
                       default: no
+            - title: Splitstack deployment
+              options:
+                  splitstack:
+                      type: Bool
+                      default: no
+                      help: |
+                        Whether to use splistack deployment
 
                   tls-everywhere:
                       type: Bool
@@ -217,6 +222,12 @@ subparsers:
                       help: |
                           Removes all the downloaded images when images-task is in 'rpm' or 'import'
                       default: yes
+
+                  disk-pool:
+                      type: Value
+                      help: |
+                        A path to the undercloud image. Default is Storage Pool from libvirt
+                      default: "/var/lib/libvirt/images"
 
             - title: Undercloud Upgrade
               options:

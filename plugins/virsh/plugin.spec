@@ -1,8 +1,6 @@
 ---
 config:
     plugin_type: provision
-    dependencies:
-        - source: https://github.com/rhos-infra/infrared-common-libraries.git
 subparsers:
     virsh:
         description: Provision virtual machines on a single Hypervisor using libvirt
@@ -46,6 +44,12 @@ subparsers:
                         URL to the image used for node provisioning.
                         Default is internal path for RHEL guest image
                       default: https://url.corp.redhat.com/rhel-guest-image-7-4-191-x86-64-qcow2
+
+                  disk-pool:
+                      type: Value
+                      help: |
+                        A path to the image pool. Default is Storage Pool from libvirt
+                      default: "/var/lib/libvirt/images"
 
             - title: topology
               options:
@@ -114,6 +118,16 @@ subparsers:
                         NOTE: 'uefi' bootmode is supported only for nodes without OS.
                       choices: ['hd', 'uefi']
                       default: hd
+
+            - title: Disk Bus
+              options:
+                  disk-bus:
+                    type: Value
+                    help: |
+                      Desired bus to use for disks, please refer to: https://wiki.qemu.org/Features/VirtioSCSI
+                      Some of disk busses supports different modes:
+                    choises: ['virtio', 'scsi']
+                    default: 'virtio'
 
             - title: ansible facts
               options:

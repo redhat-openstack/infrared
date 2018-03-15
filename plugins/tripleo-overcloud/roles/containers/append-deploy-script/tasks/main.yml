@@ -5,16 +5,7 @@
   when:
       - not install.storage.external
       - storage_backend|default('') == 'ceph'
-
-- name: "Workaround BZ#1538015: append container templates to the build scripts"
-  lineinfile:
-      dest: "{{ containers_ir_deploy_script }}"
-      line: "{{ item }}"
-  with_items:
-      - '-e {{ install.heat.templates.basedir }}/environments/docker.yaml \'
-      - '-e {{ install.heat.templates.basedir }}/environments/docker-ha.yaml \'
-  when:
-      - install.version|default(undercloud_version)|openstack_release == 13
+      - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
 # OVN environment file should be appended AFTER docker-ha.yaml
 - name: append the ovn HA OSP 12 template line to the base overcloud deploy script

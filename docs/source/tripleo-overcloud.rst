@@ -13,6 +13,43 @@ Run is broken into the following stages. Omitting any of the flags (or setting i
 * ``--deploy`` overcloud of given ``--version`` (see below)
 * Execute ``--post`` installation steps (like creating a public network - see below)
 
+Containers
+----------
+
+* ``--containers``: boolean. Specifies if containers should be used for deployment. Default value: True
+
+.. note:: Containers are supported by OSP version >=12.
+
+* ``--container-images-packages``: the pairs for container images and packages URL(s) to install into those images.
+    Container images don't have any yum repositories enabled by default, hence specifying URL of an RPM to
+    install is mandatory. This option can be used multiple times for different container images.
+
+.. note:: Only specified image(s) will get the packages installed. All images that depend on an updated image
+      have to be updated as well (using this option or otherwise).
+
+Example::
+
+    --container-images-packages openstack-opendaylight-docker=https://kojipkgs.fedoraproject.org//packages/tmux/2.5/3.fc27/x86_64/tmux-2.5-3.fc27.x86_64.rpm,https://kojipkgs.fedoraproject.org//packages/vim/8.0.844/2.fc27/x86_64/vim-minimal-8.0.844-2.fc27.x86_64.rpm
+
+* ``--container-images-patch``: comma, separated list of docker container images to patch using '/patched_rpm' yum repository.
+    Patching involves 'yum update' inside the container. This feature is not supported when ``registry-undercloud-skip``
+    is set to True. Also, if this option is not specified, InfraRed auto discovers images that should be updated. This option
+    may be used to patch only a specific container image(s) without updating others that could be normally patched.
+
+Example::
+
+    --container-images-patch openstack-opendaylight,openstack-nova-compute
+
+* ``--registry-undercloud-skip``: avoid using and mass populating the undercloud registry.
+    The registry or the ``registry-mirror`` will be used directly when possible, recommended using this option
+    when you have a very good bandwidth to your registry.
+* ``--registry-mirror``: the alternative docker registry to use for deployment.
+* ``--registry-namespace``: the alternative docker registry namespace to use for deployment.
+
+* The following options define the ceph container:
+    ``--registry-ceph-tag``: tag used with the ceph container. Default value: latest
+    ``--registry-ceph-namespace``: namesapce for the ceph container
+
 Deployment Description
 ----------------------
 
@@ -32,6 +69,10 @@ Deployment Description
 * ``--hybrid``: Specifies whether deploying a hybrid environment.
     When this flag it set, the user should pass to the ``--instackenv-file`` parameter a link to a JSON/YAML file.
     The file contains information about the bare-metals servers that will be added to the instackenv.json file during introspection.
+* ``--environment-plan``/``-p``: Import environment plan YAML file that details the plan to be deployed by TripleO.
+    Beside specifying Heat environments and parameters, one can also provide parameters for TripleO Mistral workflows.
+
+    .. warning:: This option is supported by RHOSP version 12 and greater.
 
     Below are examples of a JSON & YAML files in a valid format:
 
@@ -153,6 +194,21 @@ Tripleo Heat Templates configuration options
               nova::allow_resize_to_same_host: true
           NeutronOVSFirewallDriver: openvswitch
 
+* ``--config-resource``: Inject additional Tripleo Heat Templates configuration options under "resource_registry"
+    entry point. Example:
+
+    .. code-block:: plain
+
+       --config-resource OS::TripleO::BlockStorage::Net::SoftwareConfig=/home/stack/nic-configs/cinder-storage.yaml
+
+    should inject the following yaml to "overcloud deploy" command:
+
+    .. code-block:: yaml
+
+       ---
+       resource_registry:
+           OS::TripleO::BlockStorage::Net::SoftwareConfig: /home/stack/nic-configs/cinder-storage.yaml
+
 Overcloud Public Network
 ------------------------
 * ``--public-network``: Bool. Whether to have `infrared` create a public network on the overcloud.
@@ -190,7 +246,7 @@ Overcloud Upgrade
 .. warning:: Before Overcloud upgrade you need to perform upgrade of `Undercloud <tripleo-undercloud.html>`_
 
 .. warning:: Upgrading from version 11 to version 12 isn't supported via the tripleo-overcloud plugin anymore. Please
-     check the tripleo-upgrade plugin for 11 to 12 `upgrade instructions <tripleo_upgrade.html>`
+     check the tripleo-upgrade plugin for 11 to 12 `upgrade instructions <tripleo_upgrade.html>`_.
 
 Upgrade will detect Undercloud version and will upgrade Overcloud to the same version.
 

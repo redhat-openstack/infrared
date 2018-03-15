@@ -1,0 +1,60 @@
+---
+- fail:
+      msg: /patched_rpms doesn't exist
+  when: patched_rpms.stat.exists == False
+
+- name: get the list of RPMs in patched-rpms yum repo
+  shell: |
+      yum --disablerepo "*" --enablerepo "patched-rpms" list available | awk '$0 !~ /Loaded plugins/ && $0 !~ /Available Packages/ && $0 !~ /^\s*patched-rpms/ {print $1}'
+  register: patched_rpms_packages_shell
+
+- name: set image patching fact(s)
+  set_fact:
+      not_containerized_rpms: []
+
+- name: set fact - not_containerized_rpms for OSP12
+  set_fact:
+      not_containerized_rpms:
+          - openstack-cinder.noarch
+          - openstack-manila-share.noarch
+          - openstack-manila-ui.noarch
+          - openstack-manila.noarch
+          - openstack-neutron.noarch
+          - openstack-neutron-common.noarch
+          - openstack-neutron-fwaas.noarch
+          - openstack-neutron-lbaas.noarch
+          - openstack-neutron-lbaas-ui.noarch
+          - openstack-neutron-linuxbridge.noarch
+          - openstack-neutron-macvtap-agent.noarch
+          - openstack-neutron-metering-agent.noarch
+          - openstack-neutron-ml2.noarch
+          - openstack-neutron-openvswitch.noarch
+          - openstack-neutron-rpc-server.noarch
+          - openstack-neutron-sriov-nic-agent.noarch
+          - python-cinder-tests.noarch
+          - python-cinder.noarch
+          - python-cinderclient.noarch
+          - python-manila-tests.noarch
+          - python-manila.noarch
+          - python-manilaclient.noarch
+          - python-neutron.noarch
+          - python-neutron-lbaas.noarch
+          - python-neutron-tests.noarch
+          - python-neutron-lbaas-tests.noarch
+          - python-neutronclient.noarch
+          - python-networking-ovn.noarch
+  when: install.version|default(undercloud_version)|openstack_release == 12
+
+- set_fact:
+      skip_container_images_patching: 'not_defined'
+
+- name: if 'patched-rpms' yum repo contains _only_ 'not_containerized_rpms' then skip container images patching
+  set_fact:
+      skip_container_images_patching: "{%- if item not in not_containerized_rpms or skip_container_images_patching == False -%} False {%- else -%} True {%- endif -%}"
+  with_items: "{{ patched_rpms_packages_shell.stdout_lines }}"
+
+- debug:
+      var: skip_container_images_patching
+
+- include_tasks: patch_images_do.yml
+  when: skip_container_images_patching == False

@@ -1,0 +1,16 @@
+---
+- name: Check for /etc/rhosp-release
+  stat:
+      path: "/etc/rhosp-release"
+  register: rhosp_release_file
+
+- name: Get /etc/rhosp-release content
+  command: cat /etc/rhosp-release
+  register: rhosp_release_content
+  when: rhosp_release_file.stat.exists
+
+- name: Set overcloud_version from /etc/rhosp-release output
+  set_fact:
+      undercloud_version: "{{ rhosp_release_content.stdout | regex_replace('^Red Hat OpenStack Platform release ([0-9]+)\\.\\d+\\s.*$', '\\1') }}"
+      overcloud_version: "{{ rhosp_release_content.stdout | regex_replace('^Red Hat OpenStack Platform release ([0-9]+)\\.\\d+\\s.*$', '\\1') }}"
+  when: rhosp_release_file.stat.exists

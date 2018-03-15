@@ -1,6 +1,7 @@
 #!/bin/bash
 
 timeout 100m openstack overcloud deploy --templates {{ install.heat.templates.basedir }} \
+  --libvirt-type {{ install.libvirt.type }} \
   --stack {{ install.overcloud.stack }} \
   -r {{ template_base }}/roles/roles_data.yaml \
   -e {{ template_base }}/roles/nodes.yaml \

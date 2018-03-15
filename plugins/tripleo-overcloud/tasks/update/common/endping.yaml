@@ -1,0 +1,21 @@
+---
+- name: register ping pid
+  shell: "/usr/sbin/pidof ping"
+  register: pingpid
+  tags: skip_ansible_lint
+
+- name: kill ping
+  shell: "kill -s INT {{ pingpid.stdout }}"
+  tags: skip_ansible_lint
+
+- name: print ping results
+  shell: "tail -2 ~/ping_results_{{ pingtimestamp.stdout }}.log"
+  tags: skip_ansible_lint
+
+- name: register loss percent
+  shell: |
+    tail -2 ping_results_{{ pingtimestamp.stdout }}.log | head -1 | awk {'print $6'} | sed s/\%//
+  register: pingloss
+
+- fail: msg="Ping loss higher than 1% detected"
+  when: pingloss.stdout|int > 1

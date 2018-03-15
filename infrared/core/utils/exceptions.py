@@ -205,11 +205,6 @@ class IRPluginExistsException(IRException):
         super(self.__class__, self).__init__(reason_str)
 
 
-class IRFailedToAddPluginDependency(IRException):
-    def __init__(self, reason_str):
-        super(self.__class__, self).__init__(reason_str)
-
-
 class IRExtraVarsException(IRException):
     def __init__(self, extra_var):
         super(self.__class__, self).__init__(

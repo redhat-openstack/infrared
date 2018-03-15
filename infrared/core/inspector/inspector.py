@@ -9,7 +9,6 @@ from infrared.core.cli.cli import CliParser
 from infrared.core.cli.cli import COMPLEX_TYPES
 import helper
 
-
 LOG = logger.LOG
 
 
@@ -333,11 +332,11 @@ class SpecParser(object):
         :param spec_defaults:  the default values from spec files
         """
 
-        def warn_diff(diff, command_name, cmd_dict, source_name):
+        def show_diff(diff, command_name, cmd_dict, source_name):
             if diff:
                 for arg_name in diff:
                     value = cmd_dict[arg_name]
-                    LOG.warning(
+                    LOG.info(
                         "[{}] Argument '{}' was set to"
                         " '{}' from the {} source.".format(
                             command_name, arg_name, value, source_name))
@@ -345,12 +344,12 @@ class SpecParser(object):
         for command, command_dict in cli_args.items():
             file_dict = answer_file_args.get(command, {})
             file_diff = set(file_dict.keys()) - set(command_dict.keys())
-            warn_diff(file_diff, command, file_dict, 'answers file')
+            show_diff(file_diff, command, file_dict, 'answers file')
 
             def_dict = spec_defaults.get(command, {})
             default_diff = set(def_dict.keys()) - set(
                 command_dict.keys()) - file_diff
-            warn_diff(default_diff, command, def_dict, 'spec defaults')
+            show_diff(default_diff, command, def_dict, 'spec defaults')
 
     def _get_conditionally_required_args(self, command_name, options_spec,
                                          args):
@@ -362,8 +361,10 @@ class SpecParser(object):
         :return: list, list of argument names with matched ``required_when``
             condition
         """
-        res = []
+        opts_names = [option_spec['name'] for option_spec in options_spec]
+        missing_args = []
         for option_spec in options_spec:
+            option_results = []
             if option_spec and 'required_when' in option_spec:
                 req_when_args = [option_spec['required_when']] \
                     if not type(option_spec['required_when']) is list \
@@ -371,18 +372,29 @@ class SpecParser(object):
 
                 # validate conditions
                 for req_when_arg in req_when_args:
-                    req_arg, req_value = req_when_arg.split('==')
-                    req_value = yaml.load(str(req_value))
-                    actual_value = \
-                        args.get(command_name, {}).get(req_arg.strip(), None)
-                    actual_value = yaml.load(str(actual_value))
-                    if actual_value == req_value \
-                            and self.spec_helper.get_option_state(
-                                command_name,
-                                option_spec['name'],
-                                args) == helper.OptionState['NOT_SET']:
-                        res.append(option_spec['name'])
-        return res
+                    splited_args_list = req_when_arg.split()
+                    for idx, req_arg in enumerate(splited_args_list):
+                        if req_arg in opts_names:
+                            splited_args_list[idx] = \
+                                args.get(command_name, {}).get(req_arg.strip())
+                        if splited_args_list[idx] is None:
+                            option_results.append(False)
+                            break
+                        splited_args_list[idx] = str(splited_args_list[idx])
+                        if not any(
+                                (c in '<>=') for c in splited_args_list[idx]):
+                            splited_args_list[idx] = "'{0}'".format(
+                                yaml.load(splited_args_list[idx]))
+                    else:
+                        option_results.append(
+                            eval(' '.join(splited_args_list)))
+                if all(option_results) and \
+                        self.spec_helper.get_option_state(
+                            command_name,
+                            option_spec['name'],
+                            args) == helper.OptionState['NOT_SET']:
+                    missing_args.append(option_spec['name'])
+        return missing_args
 
     def validate_requires_args(self, args):
         """Check if all the required arguments have been provided. """
@@ -401,8 +413,8 @@ class SpecParser(object):
 
                 # check required options.
                 if (option.get('required', False) and
-                        name not in parser_args or
-                        option['name'] in condition_req_args) and \
+                    name not in parser_args or
+                    option['name'] in condition_req_args) and \
                         name not in silent_args:
                     result[parser_name].append(name)
 
@@ -462,10 +474,10 @@ class SpecParser(object):
         for (parser_name, parser_dict, arg_name, arg_value,
              arg_spec) in self._iterate_received_arguments(args):
             if arg_spec and 'silent' in arg_spec and \
-                self.spec_helper.get_option_state(
-                    parser_name,
-                    arg_name,
-                    args) == helper.OptionState['IS_SET']:
+                    self.spec_helper.get_option_state(
+                        parser_name,
+                        arg_name,
+                        args) == helper.OptionState['IS_SET']:
                 silent_args_names.extend(arg_spec['silent'])
 
         return list(set(silent_args_names))

@@ -1,0 +1,28 @@
+resource_registry:
+  # Port assignments for the controller role
+  OS::TripleO::ControllerDeployedServer::Ports::ExternalPort: "{{ install.heat.templates.basedir }}/network/ports/external.yaml"
+  OS::TripleO::ControllerDeployedServer::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
+  OS::TripleO::ControllerDeployedServer::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
+  OS::TripleO::ControllerDeployedServer::Ports::StorageMgmtPort: "{{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
+  OS::TripleO::ControllerDeployedServer::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
+  #OS::TripleO::ControllerDeployedServer::Ports::ManagementPort: "{{ install.heat.templates.basedir }}/network/ports/management.yaml"
+
+  # Port assignments for the compute role
+  OS::TripleO::ComputeDeployedServer::Ports::ExternalPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+  OS::TripleO::ComputeDeployedServer::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
+  OS::TripleO::ComputeDeployedServer::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
+  OS::TripleO::ComputeDeployedServer::Ports::StorageMgmtPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+  OS::TripleO::ComputeDeployedServer::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
+  #OS::TripleO::ComputeDeployedServer::Ports::ManagementPort: "{{ install.heat.templates.basedir }}/network/ports/management.yaml"
+
+  # Port assignments for the ceph storage role
+  OS::TripleO::CephStorageDeployedServer::Ports::ExternalPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+  OS::TripleO::CephStorageDeployedServer::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+  OS::TripleO::CephStorageDeployedServer::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
+  OS::TripleO::CephStorageDeployedServer::Ports::StorageMgmtPort: "{{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
+  OS::TripleO::CephStorageDeployedServer::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+  #OS::TripleO::CephStorageDeployedServer::Ports::ManagementPort: "{{ install.heat.templates.basedir }}/network/ports/management.yaml"
+
+  OS::TripleO::DeployedServer::ControlPlanePort: "{{ install.heat.templates.basedir }}/deployed-server/deployed-neutron-port.yaml"
+  OS::TripleO::Network::Ports::ControlPlaneVipPort: "{{ install.heat.templates.basedir }}/deployed-server/deployed-neutron-port.yaml"
+  OS::TripleO::Network::Ports::RedisVipPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"

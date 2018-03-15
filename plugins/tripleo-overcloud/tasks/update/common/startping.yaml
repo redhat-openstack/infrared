@@ -1,0 +1,17 @@
+---
+- name: register first floating ip address
+  shell: |
+    source {{ overcloudrc_file }}
+    openstack floating ip list -f json | jq -r -c '.[] | select(.Port) | .["Floating IP Address"]' | head -1
+  register: floatip
+
+- name: register timestamp
+  shell: "date +%Y%m%d%H%M"
+  register: pingtimestamp
+  tags: skip_ansible_lint
+
+- name: start ping
+  shell: "ping -D {{ floatip.stdout }} >> ~/ping_results_{{ pingtimestamp.stdout }}.log &"
+  async: 21660
+  poll: 0
+  when: floatip|succeeded

@@ -190,5 +190,5 @@
         args:
             executable: /bin/bash
             chdir: "{{ test.dir }}"
-        when: test.cleanup
+        when: test.cleanup and test.openstack.version|default(overcloud_version)|openstack_release > 7
   when: test_dict.test_regex is defined or whitelistfile is defined or blacklistfile is defined

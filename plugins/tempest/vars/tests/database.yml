@@ -1,5 +1,13 @@
 ---
 test_dict:
     test_regex: tempest.api.database
-    whitelist: []
+    whitelist:
+        - "^tempest.api.database.*"
+        - "^trove_tempest_plugin.*"
     blacklist: []
+    plugins:
+        trove:
+            repo: "http://git.openstack.org/openstack/trove-tempest-plugin"
+            package:
+                12: "python-trove-tests"
+                default: "python-trove-tests-tempest"

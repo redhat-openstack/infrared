@@ -93,13 +93,13 @@
             remote_src: true
 
       - name: Scan nodes ssh keys
-        command: "ssh-keyscan -t rsa {{ hostvars[item].ansible_ssh_host }}"
+        command: "ssh-keyscan -t rsa {{ hostvars[item].ansible_host }}"
         with_items: "{{ groups.overcloud_nodes|default([])|difference(groups.unused|default([])) }}"
         register: pubkeys
 
       - name: Add nodes to known_hosts
         known_hosts:
-            name: "{{ hostvars[item.item].ansible_ssh_host  }}"
+            name: "{{ hostvars[item.item].ansible_host  }}"
             key: "{{ item.stdout }}"
         with_items: "{{ pubkeys.results }}"
 

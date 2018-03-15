@@ -57,6 +57,7 @@ Welcome to infrared's documentation!
    :caption: Cookbook
 
    rdo
+   splitstack
    composable_roles
    cdn_cookbook.rst
    hybrid_deployment

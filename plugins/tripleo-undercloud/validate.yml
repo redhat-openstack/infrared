@@ -35,7 +35,8 @@
         when:
             - director_build is defined and director_build
             - not install.get('update', {}).undercloud|default(False)
-            - "install.version|openstack_release > 9"
+            - install.version|default('')
+            - install.version|openstack_release > 9
 
 - name: Validate Undercloud
   hosts: undercloud

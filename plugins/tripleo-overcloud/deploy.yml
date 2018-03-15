@@ -1,20 +1,3 @@
-- name: Environment setup
-  hosts: undercloud
-  gather_facts: yes
-  any_errors_fatal: true
-  tags:
-      - deploy_preparation
-      - deploy_environment
-  pre_tasks:
-      - name: discover storage
-        include_tasks: tasks/storage/discover_backend.yml
-  roles:
-      - role: containers/environment-setup
-        when:
-          - install.containers|default('')
-          - install.version|default(undercloud_version)|openstack_release >= 12
-          - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
-
 - name: non-container hacks
   hosts: undercloud
   any_errors_fatal: true
@@ -34,7 +17,6 @@
         when:
           - install.containers|bool == false
           - install.version|default(undercloud_version)|openstack_release >= 12
-          - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
         become: yes
 
 - name: Populate the overcloud deploy script
@@ -53,6 +35,18 @@
       - install.tls.everywhere|default(False)
       - install.version|default(undercloud_version)|openstack_release >= 12
       - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
+
+- name: Run heat agent script in a background if splitstack deployment
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tags: deploy_preparation
+  tasks:
+    - name: Run heat agent script in a background if splitstack deployment
+      shell: ~{{ ansible_user }}/heat-agent.sh > heat_agent.log 2>&1
+      async: 1000
+      poll: 0
+      when: install.splitstack|default(False)
 
 - name: Deploy the Overcloud
   hosts: undercloud
@@ -123,8 +117,8 @@
         shell: |
             mkdir -p /var/log/extra/
             source ~/stackrc
-            ~{{ ansible_ssh_user }}/deploy_info.sh --long > /var/log/extra/deploy_resources.log 2>&1 &
-            ~{{ ansible_ssh_user }}/deploy_info.sh 2>&1 &
+            ~{{ ansible_user }}/deploy_info.sh --long > /var/log/extra/deploy_resources.log 2>&1 &
+            ~{{ ansible_user }}/deploy_info.sh 2>&1 &
             wait
         tags: summary
 

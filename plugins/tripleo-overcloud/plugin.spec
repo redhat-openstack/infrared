@@ -1,8 +1,6 @@
 ---
 config:
     plugin_type: install
-    dependencies:
-        - source: https://github.com/rhos-infra/infrared-common-libraries.git
 subparsers:
     tripleo-overcloud:
         description: Install a TripleO overcloud using a designated undercloud node
@@ -60,34 +58,64 @@ subparsers:
                       type: IniType
                       action: append
                       help: |
-                            'imagename=package1{,package2}' pairs to install package(s) from URL(s) in the container
-                            before overcloud deployment. Container images don't have any yum repositories enabled by
-                            default hence specifying URL of an RPM to install is mandatory. This option can be used
-                            multiple times for different container images.
+                            'imagename=package1{,package2}' pairs to install package(s) from URL(s) in the container image
+                            before overcloud is deployed. Container images don't have any yum repositories enabled by
+                            default hence specifying a location in a form of URL to the RPM to install is mandatory.
+                            This option can be used multiple times for different container images. This feature is
+                            not supported when registry-undercloud-skip is set to True.
                             NOTE: Only specified image(s) will get the packages installed. All images that depend on
                             updated image have to be updated as well (using this option or otherwise).
                             Example:
-                                --container-images-packages openstack-opendaylight-docker=https://kojipkgs.fedoraproject.org//packages/tmux/2.5/3.fc27/x86_64/tmux-2.5-3.fc27.x86_64.rpm,https://kojipkgs.fedoraproject.org//packages/vim/8.0.844/2.fc27/x86_64/vim-minimal-8.0.844-2.fc27.x86_64.rpm
+                                --container-images-packages openstack-opendaylight=https://kojipkgs.fedoraproject.org//packages/tmux/2.5/3.fc27/x86_64/tmux-2.5-3.fc27.x86_64.rpm,https://kojipkgs.fedoraproject.org//packages/vim/8.0.844/2.fc27/x86_64/vim-minimal-8.0.844-2.fc27.x86_64.rpm
 
                   registry-mirror:
                       type: Value
                       help: The alternative docker registry to use for deployment.
+                      required_when: "registry-skip-puddle == True"
 
                   registry-undercloud-skip:
                       type: Bool
                       help: Avoid using and mass populating the undercloud registry.
                             The registry or the registry-mirror will be used directly when possible,
-                            recommended to use this option when you have very good bandwith to your registry.
+                            recommended to use this option when you have very good bandwidth to your registry.
+                      default: False
+
+                  registry-skip-puddle:
+                      type: Bool
+                      help: Skip reading any private puddle files to auto-detect the containers parameters
                       default: False
 
                   registry-namespace:
                       type: Value
                       help: The alternative docker registry namespace to use for deployment.
 
+                  registry-prefix:
+                      type: Value
+                      help: The images prefix
+
+                  registry-tag:
+                      type: Value
+                      help: The images tag
+                      required_when: "registry-skip-puddle == True"
+
+                  registry-tag-label:
+                      type: Value
+                      help: |
+                          If this option is set then infrared will try to get
+                          tag hash using the openstack overcloud container image tag discover
+                          command
+                  registry-tag-image:
+                      type: Value
+                      help: |
+                          The image to use to read the tab hash
+
                   registry-ceph-namespace:
                       type: Value
                       help: namesapce for the ceph container
-                      default: ceph/rhceph-2-rhel7
+
+                  registry-ceph-image:
+                      type: Value
+                      help: image for the ceph container
 
                   registry-ceph-tag:
                       type: Value
@@ -158,6 +186,23 @@ subparsers:
                             The target file should contains information about the bare-metals servers
                             that will be added to the instackenv.json file during introspection.
 
+                  environment-plan:
+                      type: Value
+                      short: p
+                      help: |
+                            The absolute path or url address to a custom environment plan file.
+                            Environment plan file example:
+                              tripleo-overcloud/vars/environment/plan/example.yml
+                            NOTE: Infrared support this option for RHOSP from version 12.
+
+                  libvirt-type:
+                      type: Value
+                      help: The libvirt type to use during the overcloud deployment
+                      default: kvm
+                      choices:
+                          - kvm
+                          - qemu
+
             - title: Overcloud Options
               options:
                   overcloud-debug:
@@ -201,6 +246,20 @@ subparsers:
                                   ComputeExtraConfig:
                                       nova::allow_resize_to_same_host: true
                                   NeutronOVSFirewallDriver: openvswitch
+
+                  config-resource:
+                      type: NestedDict
+                      action: append
+                      help: |
+                          Inject additional Tripleo Heat Templates configuration options under "resource_registry"
+                          entry point.
+                          Example:
+                              --config-resource OS::TripleO::BlockStorage::Net::SoftwareConfig=/home/stack/nic-configs/cinder-storage.yaml
+                          should inject the following yaml to "overcloud deploy" command:
+
+                              ---
+                              resource_registry:
+                                  OS::TripleO::BlockStorage::Net::SoftwareConfig: /home/stack/nic-configs/cinder-storage.yaml
 
                   heat-templates-basedir:
                       type: Value
@@ -277,6 +336,12 @@ subparsers:
                       default: yes
                       help: Deploy "public" external network on the overcloud as post-install.
 
+                  public-net-name:
+                      type: Value
+                      help: |
+                          Specifies the name of the public network.
+                          NOTE: If not provided it will use the default one for the OSP version
+
                   public-subnet:
                       type: VarFile
                       help: |
@@ -352,6 +417,15 @@ subparsers:
                         roles should be used for OSP12+ composable deployments. If value is 'no', then the OSP11 approach
                         will be used.
 
+            - title: Splitstack deployment
+              options:
+                  splitstack:
+                      type: Bool
+                      default: no
+                      help: |
+                        If customer has already provisioned nodes for an overcloud splitstack should be used to utilize these
+                        nodes.(https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/11/html/director_installation_and_usage/chap-configuring_basic_overcloud_requirements_on_pre_provisioned_nodes)
+
             - title: Overcloud Upgrade
               options:
                   upgrade:
@@ -418,6 +492,17 @@ subparsers:
                           Useful with '--ocupdate' to reboot nodes after minor update,
                           or with '--deploy' to reboot after oc is deployed.
                       default: False
+                  postreboot_evacuate:
+                      type: Bool
+                      help: |
+                          Live migrate instances before rebooting compute nodes and migrate them back after
+                          the node boots.
+                      default: False
+                  dataplaneping:
+                      type: Bool
+                      help: |
+                          Validate connectivity to floating IP doesn't get interrupted during update/upgrade.
+                      default: False
 
             - title: Ironic Configuration
               options:
@@ -425,12 +510,18 @@ subparsers:
                       type: Value
                       default: admin
                       help: |
-                        VBMC username (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+                          VBMC username (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+                          NOTE: If you use non default value for the option, and you execute introspection
+                          and deploy (--introspect yes/--deploy yes) in different IR runs, you need to provide
+                          the option on both runs.
                   vbmc-password:
                       type: Value
                       default: password
                       help: |
-                        VBMC password (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+                          VBMC password (Relevant when Ironic's driver is 'pxe_ipmitool' - OSP >= 11)
+                          NOTE: If you use non default value for the option, and you execute introspection
+                          and deploy (--introspect yes/--deploy yes) in different IR runs, you need to provide
+                          the option on both runs.
                   vbmc-host:
                       type: Value
                       default: hypervisor
@@ -439,12 +530,18 @@ subparsers:
                           - "undercloud"
                       help: |
                           Specifies on what server the virtualbmc service should be installed.
+                          NOTE: If you use non default value for the option, and you execute introspection
+                          and deploy (--introspect yes/--deploy yes) in different IR runs, you need to provide
+                          the option on both runs.
                   vbmc-force:
                       type: Bool
                       default: False
                       help: |
-                        Specifies whether the vbmc (pxe_ipmitool ironic driver) should be used for
-                        the OSP10 and below.
+                          Specifies whether the vbmc (pxe_ipmitool ironic driver) should be used for
+                          the OSP10 and below.
+                          NOTE: If you use non default value for the option, and you execute introspection
+                          and deploy (--introspect yes/--deploy yes) in different IR runs, you need to provide
+                          the option on both runs.
 
             - title: ansible facts
               options:

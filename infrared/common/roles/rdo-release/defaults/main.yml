@@ -1,0 +1,74 @@
+rr_distro_version: "{{ ansible_distribution_version }}"
+rr_target_directory: /etc/yum.repos.d
+rr_use_public_repos: false
+rr_master_release: queens
+
+# rdo repos
+# can bee overriden with the '-e' cli option.
+rr_release_name_discovered: "{{ install.version|default(undercloud_version) }}"
+
+# override with -e to use real release instead of master
+# for example when centos7-*queens* should be used instead of master
+rr_release_name: "{{ (rr_release_name_discovered == rr_master_release)|ternary('master', rr_release_name_discovered) }}"
+rr_rdo_repos:
+    default:
+        delorean:
+            url: "https://trunk.rdoproject.org/centos7-{{ rr_release_name }}/{{ install.build|default('current') }}/delorean.repo"
+        delorean_deps:
+            url: "https://trunk.rdoproject.org/centos7-{{ rr_release_name }}/delorean-deps.repo"
+        ceph:
+            package: "centos-release-ceph-{{ (rr_release_name_discovered|openstack_release < 10)|ternary('hammer', 'jewel') }}"
+            file_name: "CentOS-Ceph-{{ (rr_release_name_discovered|openstack_release < 10)|ternary('Hammer', 'Jewel') }}.repo"
+
+    master_current:
+        delorean:
+            url: https://trunk.rdoproject.org/centos7-master/current-tripleo/delorean.repo
+        delorean_current:
+            url: https://trunk.rdoproject.org/centos7/current/delorean.repo
+            type: current
+            packages:
+                - diskimage-builder
+                - instack
+                - instack-undercloud
+                - os-apply-config
+                - os-collect-config
+                - os-net-config
+                - os-refresh-config
+                - python-tripleoclient
+                - openstack-tripleo-common*
+                - openstack-tripleo-heat-templates
+                - openstack-tripleo-image-elements
+                - openstack-tripleo
+                - openstack-tripleo-puppet-elements
+                - openstack-puppet-modules
+                - openstack-tripleo-ui
+                - puppet-*
+        delorean_deps:
+            url: https://trunk.rdoproject.org/centos7-master/delorean-deps.repo
+        ceph:
+            package: "centos-release-ceph-{{ (rr_release_name_discovered|openstack_release < 10)|ternary('hammer', 'jewel') }}"
+            file_name: "CentOS-Ceph-{{ (rr_release_name_discovered|openstack_release < 10)|ternary('Hammer', 'Jewel') }}.repo"
+
+    master_master-tripleo-ci:
+        delorean:
+            url: "https://trunk.rdoproject.org/centos7/current-tripleo/delorean.repo"
+        delorean_deps:
+            url: "https://trunk.rdoproject.org/centos7-master/delorean-deps.repo"
+        ceph:
+            package: "centos-release-ceph-{{ (rr_release_name_discovered|openstack_release < 10)|ternary('hammer', 'jewel') }}"
+            file_name: "CentOS-Ceph-{{ (rr_release_name_discovered|openstack_release < 10)|ternary('Hammer', 'Jewel') }}.repo"
+        delorean_current:
+             url: "https://trunk.rdoproject.org/centos7/current/delorean.repo"
+             type: current
+             packages:
+                 - diskimage-builder
+                 - instack
+                 - instack-undercloud
+                 - os-apply-config
+                 - os-collect-config
+                 - os-net-config
+                 - os-refresh-config
+                 - python-tripleoclient
+                 - openstack-tripleo-*
+                 - openstack-puppet-modules
+                 - puppet-*

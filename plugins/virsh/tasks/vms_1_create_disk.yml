@@ -17,6 +17,10 @@
       topology_node: "{{ topology_node | combine(network_info.nodes[topology_node.name]|default(network_info.nodes.default), recursive=True) }}"
   when: not topology_node.interfaces
 
+- name: define disk pool path
+  set_fact:
+      disk_pool: "{{ provision.disk.pool if (topology_node.disks.disk1.path == None) else topology_node.disks.disk1.path }}"
+
 - name: Set default node_start_index
   set_fact:
       node_start_index: 0
@@ -40,6 +44,15 @@
                 disk_size: "{{ topology_node.disks.disk1.size }}"
         when: (topology_node.disks.disk1.size|filesize('M')|int - topology_node.swap|default(0)|int) < (disk1_min|filesize('M')|int)
 
+      - name: check and create directory
+        file:
+          path: "{{ disk_pool }}"
+          state: directory
+          owner: root
+          group: root
+          mode: 0755
+        when: disk_pool | default(False)
+
       # For disks usually it will be only 1 disk so the async will run on nodes rather than disks creation
       - name: create disk(s) from vm base image
         vars:
@@ -55,14 +68,14 @@
             {% if not disk_values.import_url %}
 
             # create empty disk
-            qemu-img create -f qcow2 -o preallocation={{ disk_values.preallocation }} {{ disk_values.path  }}/{{ node_image }} {{ disk_values.size }}
+            qemu-img create -f qcow2 -o preallocation={{ disk_values.preallocation }} {{ disk_pool  }}/{{ node_image }} {{ disk_values.size }}
 
             {% if disk_name == 'disk1' and topology_node.deploy_os|default(True) -%}
             # expand (copy-content) into new image in case of system disk
             # virt-resize needs target file with expected size to already exists
-            virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ image_name }} {{ disk_values.path }}/{{ node_image }}
+            virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
             # incjet DEFROUT to file and set it on for external network only
-            virt-customize -a {{ disk_values.path }}/{{ node_image }} \
+            virt-customize -a {{ disk_pool }}/{{ node_image }} \
             {% for interface in topology_node.interfaces %}
                 {% if loop.index0 == 0 %}--run-command 'grep DEFROUTE {{ net_scripts }}/ifcfg-eth{{ loop.index0 }} || echo "DEFROUTE=yes" >> {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}'
                 {%- else -%}--run-command 'cp {{ net_scripts }}/ifcfg-eth{0,{{ loop.index0 }}} && sed -i s/DEVICE=.*/DEVICE=eth{{ loop.index0 }}/g {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' {% endif %} \
@@ -80,9 +93,9 @@
             # todo(yfried): use builtin module for chown
             {% else %}{# else import_url #}
             # in case of import simply copy that image to use as a disk
-            cp -rf {{ base_image_path }}/{{ image_name }} {{ disk_values.path }}/{{ node_image }}
+            cp -rf {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
             {% endif %}{# endif not import_url #}
-            chown qemu:qemu {{ disk_values.path }}/{{ node_image }}
+            chown qemu:qemu {{ disk_pool }}/{{ node_image }}
             {% endfor %}{# endfor vm disks #}
             {% endfor %}{# endfor vm-type(controller etc).amount #}
       #  todo(yfried) needs a "creates"

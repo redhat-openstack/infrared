@@ -77,7 +77,7 @@
       - name: waiting for the undercloud to be available
         wait_for:
             port: 22
-            host: "{{ ansible_ssh_host }}"
+            host: "{{ ansible_host }}"
             search_regex: OpenSSH
             delay: 10
             timeout: 360
@@ -87,7 +87,7 @@
       - name: waiting for the undercloud to be available
         become: no
         wait_for:
-            host: "{{ ansible_ssh_host }}"
+            host: "{{ ansible_host }}"
             search_regex: OpenSSH
             delay: 10
             timeout: 360

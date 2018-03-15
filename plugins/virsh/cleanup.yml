@@ -11,8 +11,8 @@
       add_host:
           name: "{{ hypervisor.name | default(hypervisor_name) }}"
           groups: "{{ hypervisor.groups|default([hypervisor_name]) | join(',') }}"
-          ansible_ssh_user: "{{ hypervisor.user }}"
-          ansible_ssh_host: "{{ hypervisor.address }}"
+          ansible_user: "{{ hypervisor.user }}"
+          ansible_host: "{{ hypervisor.address }}"
           ansible_ssh_private_key_file: "{{ hypervisor.key }}"
 
 - name: Remove all VMs and networks that were created
@@ -24,16 +24,14 @@
       ignore_virsh_nets:
           - default
   tasks:
-    - yum:
-          list: libvirt
+    - name: check if installed package
+      command: "rpm -qa libvirt"
       register: libvirt_status
 
     # Don't cleanup if the libvirtd process is unavailable
     - name: Cleanup libvirt artifacts
-      vars:
-          libvirt_state: "{{  libvirt_status.results|map(attribute='yumstate')|list }}"
       include_tasks: tasks/cleanup.yml
-      when: "'installed' in libvirt_state"
+      when: "(libvirt_status.stdout_lines | length != 0)"
 
     - name: remove iptables rules created by infrared, by comment
       # Can't use iptables module, because it can't delete by generic comment

@@ -3,8 +3,11 @@
   include_vars: "{{ test_suite }}"
 
 - name: Get plugins from cli
+  vars:
+    item_src: "{{ item.split(',')[0] }}"
+    item_ver: "{{ item.split(',')[1] | default('HEAD') }}"
   set_fact:
-      cli_plugins: '{{ cli_plugins|default({}) | combine({ (item|basename): { "repo": item } } ) }}'
+      cli_plugins: '{{ cli_plugins|default({}) | combine({ (item_src|basename): { "repo": item_src, "version": item_ver } } ) }}'
   with_items: "{{ test.plugin|default([]) }}"
 
 - name: Set plugins list iterator for "{{ test_suite }}"

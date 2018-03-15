@@ -48,6 +48,28 @@ To deploy RDO on virtual environment the following steps can be performed.
          --deploy yes \
          --post yes
 
+To install containerized RDO version (pike and above) the
+``--registry-*``, ``--containers yes`` and ``--registry-skip-puddle yes``
+parameters should be provided::
+
+    infrared tripleo-overcloud \
+        --version queens \
+        --deployment-files virt \
+        --introspect yes \
+        --tagging yes \
+        --deploy yes \
+        --containers yes \
+        --registry-mirror trunk.registry.rdoproject.org \
+        --registry-namespace master \
+        --registry-tag current-tripleo-rdo \
+        --registry-prefix=centos-binary- \
+        --registry-skip-puddle yes \
+        --post yes
+
+.. note:: For the  --registry-tag the following RDO tags can be used:
+       ``current-passed-ci``, ``current-tripleo``, ``current``, ``tripleo-ci-testing``, etc
+
+
 Known issues
 ============
 

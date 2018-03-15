@@ -1,0 +1,27 @@
+- include_vars:
+      file: "{{ templates_list_file}}"
+      name: current_file
+
+- name: find the template file or corresponding j2 template
+  find:
+      path: "{{ item| dirname }}"
+      pattern: "{{ item|basename|splitext|first }}\\.(?:yaml|j2\\.yaml)$"
+      use_regex: yes
+  with_items: "{{ current_file.tripleo_heat_templates | default([]) }}"
+  register: default_templates
+
+- name: fail because file not found
+  vars:
+      missing_templates: "{{ default_templates.results|rejectattr('matched')|map(attribute='item')|list }}"
+  fail:
+      msg:
+          error: "Unable to locate templates from file '{{ templates_list_file }}'"
+          source_file: "{{ templates_list_file }}"
+          missing_templates: "{{ missing_templates }}"
+  when: missing_templates | default([])
+
+- name: generate docker images file for services not enabled by default (if any)
+  set_fact:
+      environment_yamls: "{{ environment_yamls|default('') }} --e {{ item.item }} "
+  with_items: "{{ default_templates.results }}"
+  when: item.item not in ds_env_files.stdout_lines

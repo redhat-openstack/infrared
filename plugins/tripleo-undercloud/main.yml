@@ -25,4 +25,5 @@
 
 - name: Setup Overcloud images on the undercloud
   import_playbook: "{{ install_images | default('images.yml') }}"
-  when: install.images.task|default('')
+  when:
+    - install.images.task|default('')

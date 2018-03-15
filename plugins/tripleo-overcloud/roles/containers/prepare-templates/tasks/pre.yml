@@ -1,0 +1,182 @@
+- name: set facts for container images patching
+  set_fact:
+      install_container_images_patch: "{{ install.get('container', {}).get('images', {}).get('patch', {}) }}"
+  when: install.get('container', {}).get('images', {}).get('patch', {})
+  tags: container-images-patch
+
+- name: checking /patched_rpms directory
+  stat:
+      path: /patched_rpms
+  register: patched_rpms
+  tags: container-images-patch
+
+- fail:
+      msg: "patching container images is not supported when 'registry-undercloud-skip' is set to True"
+  when:
+      - install_container_images_patch is defined or patched_rpms.stat.exists == True
+      - install.registry.undercloud.skip
+  tags: container-images-patch
+
+- name: set facts for container images packages install
+  set_fact:
+      install_container_images_packages: "{{ install.get('container', {}).get('images', {}).get('packages', {}) }}"
+  when: install.get('container', {}).get('images', {}).get('packages', {})
+  tags: container-images-packages
+
+- fail:
+      msg: "installing packages in container images is not supported when 'registry-undercloud-skip' is set to True"
+  when:
+      - install_container_images_packages is defined
+      - install.registry.undercloud.skip
+  tags: container-images-packages
+
+- name: reboot the undercloud
+  shell: "sleep 2 && shutdown -r now"
+  become: yes
+  async: 1
+  poll: 0
+  ignore_errors: true
+  tags: container-prepare-reboot
+
+# Ansible bug around delegate+vars+wait
+# https://github.com/ansible/ansible/issues/11705
+# http://www.elmund.io/configuration%20management/2015/07/23/ansible-delegate_to-and-variables/
+- name: waiting for the undercloud to be available
+  become: no
+  wait_for:
+      port: 22
+      host: "{{ ansible_host }}"
+      search_regex: OpenSSH
+      delay: 10
+      timeout: 360
+  delegate_to: localhost
+  when: "'hypervisor' not in groups"
+  tags: container-prepare-reboot
+
+- name: waiting for the undercloud to be available
+  become: no
+  wait_for:
+      port: 22
+      host: "{{ ansible_host }}"
+      search_regex: OpenSSH
+      delay: 10
+      timeout: 360
+  delegate_to: hypervisor
+  when: "'hypervisor' in groups"
+  tags: container-prepare-reboot
+
+- name: Pause for a few seconds after reboot
+  pause:
+      seconds: 10
+  delegate_to: localhost
+  when: "'hypervisor' not in groups"
+  tags: container-prepare-reboot
+
+- name: Pause for a few seconds after reboot
+  pause:
+      seconds: 10
+  delegate_to: hypervisor
+  when: "'hypervisor' in groups"
+  tags: container-prepare-reboot
+
+- name: Check if we have user input for image preparation
+  set_fact:
+      container_env:
+          container-image-prepare:
+              namespace: "{{ install.get('registry', {}).namespace|default('') }}"
+              prefix: "{{ install.registry.prefix|default('') }}"
+              tag: "{{ install.registry.tag }}"
+              ceph-namespace: "{{ install.get('registry', {}).get('ceph', {}).namespace|default('') }}"
+              ceph-image: "{{ install.get('registry', {}).get('ceph', {}).image|default('') }}"
+              ceph-tag: "{{ install.get('registry', {}).get('ceph', {}).tag|default('') }}"
+  when: install.registry.skip.puddle
+
+- name: Fail non-osp deployment
+  fail:
+      msg: |
+          For non-OSP deployment set --registry-skip-puddle=yes and provide
+          '-registy-namespace' '--registry-tag' options.
+  when:
+      - (install.version|default(undercloud_version)|openstack_distribution) != 'OSP'
+      - container_env is not defined
+
+- block:
+    - name: get puddle url from the repos
+      vars:
+          repod_file: "/etc/yum.repos.d/rhos-release-{{ undercloud_version|default(install.version) }}.repo"
+      shell: |
+          cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '.*(?=\/.*\/\$basearch)'
+      register: containers_puddle_base_url
+      tags:
+          - container-images-packages
+          - container-images-patch
+
+    - name: get puddle number
+      command: "/usr/bin/puddle-version {{ containers_puddle_base_url.stdout }}"
+      register: containers_puddle_number
+      tags:
+          - container-images-packages
+          - container-images-patch
+
+    - name: puddle to be used
+      debug:
+          msg: "{{ containers_puddle_number.stdout }}"
+
+    - name: modify puddle number url
+      shell: >
+          echo '{{ containers_puddle_base_url.stdout }}' | sed 's/{{ containers_puddle_number.stdout }}/{{ install.build|default("latest") }}/'
+      register: modified_url
+      when:
+          - install.ocupdate|default(False)
+          - install.build is defined and install.build != 'None'
+      tags:
+          - container-images-packages
+          - container-images-patch
+
+    - name: adjust containers_puddle_base_url
+      set_fact:
+          containers_puddle_base_url: "{{ modified_url }}"
+      when: modified_url|changed
+      tags:
+          - container-images-patch
+          - container-images-packages
+
+    - name: Downloading overcloud container images environment file
+      get_url:
+          url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_env_template_download_basename }}"
+          dest: "{{ containers_images_env_template_dest_file }}"
+          force: true
+      delegate_to: localhost
+      tags:
+          - container-images-patch
+          - container-images-packages
+
+    - name: Load variables from container environment file
+      include_vars:
+          file: "{{ containers_images_env_template_dest_file }}"
+          name: container_env
+      tags:
+          - container-images-patch
+          - container-images-packages
+  when: not install.registry.skip.puddle
+
+- name: set os_version fact
+  set_fact:
+      os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
+  tags:
+      - container-images-packages
+      - container-images-patch
+
+- name: set docker_registry_undercloud facts
+  set_fact:
+      docker_registry_undercloud: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
+      docker_registry_undercloud_namespace: "{{ install.get('registry', {}).namespace|default('rhosp' + os_version) }}"
+  tags:
+      - container-images-packages
+      - container-images-patch
+
+- name: set facts for container images install packages
+  set_fact:
+      install_container_images_packages: "{{ install.get('container', {}).get('images', {}).get('packages', {}) }}"
+  when: install.get('container', {}).get('images', {}).get('packages', {})
+  tags: container-images-packages
