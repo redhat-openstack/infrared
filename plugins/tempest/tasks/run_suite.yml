@@ -67,6 +67,21 @@
           blacklistfile: "--blacklist_file black_list_{{ test_suite }}"
   when: test_dict.blacklist is defined and test_dict.blacklist
 
+# NOTE: FileValue parameter is not suitable in this case since
+# one has to be able to specify --regexlist-file parameter to
+# a possibly non existing file
+- name: Check the existance of regexlist-file
+  stat:
+    path: "{{ test.regexlist.file }}"
+  register: regexlist_file
+  when:
+      - test.regexlist is defined
+      - test.regexlist.file is defined
+
+- name: Add blacklisted/whitelisted tests from regexlist-file
+  include_tasks: tasks/regexlist.yml
+  when: regexlist_file.stat.islnk is defined
+
 # For getting ostestr version, if tempest is installed from git, then it will
 # first check for venv then activate the venv then get the ostestr version.
 # else tempest is installed from rpm then venv will be not available it will
