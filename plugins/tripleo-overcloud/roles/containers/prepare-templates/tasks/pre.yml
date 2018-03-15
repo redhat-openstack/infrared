@@ -30,54 +30,12 @@
       - install.registry.undercloud.skip
   tags: container-images-packages
 
-- name: reboot the undercloud
-  shell: "sleep 2 && shutdown -r now"
-  become: yes
-  async: 1
-  poll: 0
-  ignore_errors: true
-  tags: container-prepare-reboot
-
-# Ansible bug around delegate+vars+wait
-# https://github.com/ansible/ansible/issues/11705
-# http://www.elmund.io/configuration%20management/2015/07/23/ansible-delegate_to-and-variables/
-- name: waiting for the undercloud to be available
-  become: no
-  wait_for:
-      port: 22
-      host: "{{ ansible_host }}"
-      search_regex: OpenSSH
-      delay: 10
-      timeout: 360
-  delegate_to: localhost
-  when: "'hypervisor' not in groups"
-  tags: container-prepare-reboot
-
-- name: waiting for the undercloud to be available
-  become: no
-  wait_for:
-      port: 22
-      host: "{{ ansible_host }}"
-      search_regex: OpenSSH
-      delay: 10
-      timeout: 360
-  delegate_to: hypervisor
-  when: "'hypervisor' in groups"
-  tags: container-prepare-reboot
-
-- name: Pause for a few seconds after reboot
-  pause:
-      seconds: 10
-  delegate_to: localhost
-  when: "'hypervisor' not in groups"
-  tags: container-prepare-reboot
-
-- name: Pause for a few seconds after reboot
-  pause:
-      seconds: 10
-  delegate_to: hypervisor
-  when: "'hypervisor' in groups"
-  tags: container-prepare-reboot
+- name: Reload SSHd
+  become: true
+  shell: sleep 1; pkill -u {{ ansible_ssh_user }} sshd
+  async: 5
+  poll: 2
+  tags: reload_ssh
 
 - name: Check if we have user input for image preparation
   set_fact:
