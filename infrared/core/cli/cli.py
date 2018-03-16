@@ -426,7 +426,25 @@ class KeyValueList(ComplexType):
         return result_dict
 
 
-class NestedDict(ComplexType):
+class NestedBase(object):
+    """Base Nested type"""
+
+    def _resolve(self, value):
+        if isinstance(value, str):
+            value = value.split(',')
+
+        results_dict = {}
+        for item in value:
+            data = item.strip().split('=')
+            if len(data) > 2:
+                raise ValueError(
+                    'Wrong number of arguments are provided {}'.format(data))
+            key, _value = data
+            dict_utils.dict_insert(results_dict, _value, *key.split("."))
+        return results_dict
+
+
+class NestedDict(ComplexType, NestedBase):
     """Returns a dict from a dict-like string / list of strings
 
     For example:
@@ -441,17 +459,31 @@ class NestedDict(ComplexType):
     """
 
     def resolve(self, value):
-        if isinstance(value, str):
-            value = value.split(',')
-
-        results_dict = {}
-        for item in value:
-            item = item.strip()
-            key, _value = item.split('=')
-            dict_utils.dict_insert(results_dict, _value, *key.split("."))
-        return results_dict
+        return self._resolve(value)
 
 IniType = NestedDict
+
+
+class NestedList(ComplexType, NestedBase):
+    """Returns a list from a dict-like string / list of strings
+
+    For example:
+      "section.option=value"
+        -> [{'section': {'option': 'value'}}]
+
+      "section1.option1=value1,section1.option2=value2"
+        -> [{'section1': {'option1': 'value1', 'option2': 'value2'}}]
+
+      ["section1.option1=value1", "section1.option2=value2"]
+        -> [{'section1': {'option1': 'value1'}},
+            {'section1': {'option2': 'value2'}}]
+    """
+
+    def resolve(self, value):
+        if isinstance(value, str):
+            return [self._resolve(value)]
+        else:
+            return [self._resolve(v) for v in value]
 
 
 class ListValue(ComplexType):
@@ -649,6 +681,7 @@ COMPLEX_TYPES = {
     'ListValue': ListValue,
     'IniType': IniType,
     'NestedDict': NestedDict,
+    'NestedList': NestedList,
     'FileValue': FileType,
     'VarFile': VarFileType,
     'VarDir': VarDirType,
