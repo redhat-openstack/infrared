@@ -16,6 +16,23 @@ subparsers:
                         For example: smoke,network,volumes
                         __LISTYAMLS__
                       required: yes
+                  mode:
+                      type: Value
+                      help: |
+                        Mode tempest plugin should run in.
+                        normal - use RPM version of Tempest (the usual way Tempest is ran)
+                        debug_failing - enables installing tempest patches that enable
+                            features (i.e.: run_on_failure) not yet merged to
+                            main Tempest project. See https://review.openstack.org/#/c/553896/
+                            for more details.
+                            Tested only on OSP12 and above.
+                        debug_all - an extended version of 'debug_failing' but running
+                            debugging/info capturing commands on _all_ tempest tests.
+                            Useful when troubleshooting resource leaks and other problems
+                            not directly related to tempest tests failures.
+                            Use with caution (i.e.: only with small test suites) as it consumes
+                            build time and disk space considerably.
+                      default: normal
                   plugin:
                       type: Value
                       action: append
