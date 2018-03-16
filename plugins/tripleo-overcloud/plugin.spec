@@ -322,6 +322,12 @@ subparsers:
                       default: no
                       help: Use OVN (HA) instead of ML2 and OVS.
 
+                  network-management:
+                      type: Bool
+                      default: no
+                      help: Enable TripleO management network
+
+
             - title: Overcloud Public Network
               options:
                   public-network:
