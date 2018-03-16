@@ -1,0 +1,52 @@
+#!/bin/bash
+
+set +e
+
+LOGDIR={{ debug_mode.sosreports_dir }}
+OVERCLOUD_SERVERS_NAMES=()
+OVERCLOUD_SERVERS_IPS=()
+
+print_title(){
+    echo -e "\n\n------\n------ TEMPEST DEBUG: $1\n------"
+}
+
+print_title "This script discovers Overcloud servers and runs sosreport on them"
+
+discover_overcloud_servers() {
+    . /home/stack/stackrc
+    for line in $(openstack server list -f csv --quote minimal -c Name -c Networks|grep -v "Name,Networks"); do
+        server_name=$(echo $line | cut -d',' -f 1)
+        server_ip=$(echo $line | cut -d',' -f 2 | cut -d'=' -f 2)
+        OVERCLOUD_SERVERS_NAMES+=("$server_name")
+        OVERCLOUD_SERVERS_IPS+=("$server_ip")
+    done
+
+    print_title "Discovered Overcloud servers"
+    echo "OVERCLOUD_SERVERS_NAMES: ${OVERCLOUD_SERVERS_NAMES[@]}"
+    echo "OVERCLOUD_SERVERS_IPS: ${OVERCLOUD_SERVERS_IPS[@]}"
+}
+
+discover_overcloud_servers
+
+SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+SOS_CMD="sudo sosreport --batch --build --tmp-dir $LOGDIR"
+
+print_title "Running on local machine first"
+sudo mkdir -p $LOGDIR
+$SOS_CMD --name="'$TEST_NAME'" -p {{ debug_mode.sosreports_profiles }} -e {{ debug_mode.sosreports_plugins }} 2>&1
+
+for oc_server_index in ${!OVERCLOUD_SERVERS_NAMES[@]}; do
+    oc_server_name=${OVERCLOUD_SERVERS_NAMES[$oc_server_index]}
+    oc_server_ip=${OVERCLOUD_SERVERS_IPS[$oc_server_index]}
+
+    print_title "Running on $oc_server_name"
+
+    SSH_REMOTE=heat-admin@$oc_server_ip
+
+    ssh $SSH_ARGS $SSH_REMOTE sudo mkdir -p $LOGDIR
+    ssh $SSH_ARGS $SSH_REMOTE $SOS_CMD --name="'$TEST_NAME'" -p {{ debug_mode.sosreports_profiles }} 2>&1
+    ssh $SSH_ARGS $SSH_REMOTE $SOS_CMD --name="'$TEST_NAME'" --all-logs -o {{ debug_mode.sosreports_plugins }} 2>&1
+
+    # 'opendaylight' plugin available from sos 3.5 so let's try to run it
+    ssh $SSH_ARGS $SSH_REMOTE $SOS_CMD --name="'$TEST_NAME'" --all-logs -o opendaylight 2>&1
+done
