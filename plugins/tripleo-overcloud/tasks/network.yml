@@ -2,6 +2,10 @@
 - set_fact:
       isolation_file: "network-isolation{{ (install.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
 
+- set_fact:
+      management_network_file: "network-management{{ (install.network.protocol == 'ipv6') | ternary('-v6','') }}.yaml"
+  when: install.network.management|default(False)
+
 # Starting from OSP11, the overcloud deploy deprecated the neutron flags
 # and because they should be used even in older releases, there is no reason
 # to not do so.
@@ -29,6 +33,12 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/{{ isolation_file }} \'
+
+- name: Append the management network template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/{{ management_network_file }} \'
+  when: install.network.management|default(False)
 
 - name: Append the network template line for splitstack to the base overcloud deploy script
   lineinfile:
