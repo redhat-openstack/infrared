@@ -16,6 +16,19 @@ subparsers:
                         For example: smoke,network,volumes
                         __LISTYAMLS__
                       required: yes
+                  mode:
+                      type: Value
+                      help: |
+                        Mode tempest plugin should run int.
+                        normal - use RPM version of Tempest
+                        debug - enables installing tempest patches that enable
+                            features (i.e.: run_on_failure) not yet merged to
+                            main project. 'run_on_failure' is used to run
+                            a given shell command at the moment tempest test is
+                            failing but before it tore down used resources.
+                            https://code.engineering.redhat.com/gerrit/#/c/133000/
+                            Tested only on OSP12 and above.
+                      default: normal
                   plugin:
                       type: Value
                       action: append

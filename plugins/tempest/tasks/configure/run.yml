@@ -47,6 +47,9 @@
               {{section_name}}.{{option_name}} {{value}} \
               {% endfor %}
               {% endfor %}
+              {% if test.mode == 'debug' | default('') %}
+              debug.run_on_failure 'sosreport_overcloud.sh' \
+              {% endif %}
               {# remove options #}
               {% if test.get('remove', {}).get('options', {}) %}
                 {% for section_name,options in test.get('remove', {}).get('options', {}).iteritems() %}
