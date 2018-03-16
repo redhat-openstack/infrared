@@ -15,7 +15,9 @@
       - name: update /etc/hosts with VMs details
         lineinfile:
             dest: /etc/hosts
-            line: "{{ hostvars[item].ansible_host }}    {{ item }}.redhat.local {{ item }}"
+            line: "{{ hostvars[item].ansible_host|
+                      default(hostvars[item].ansible_ssh_host) }}    \
+                   {{ item }}.redhat.local {{ item }}"
             regexp: ".*{{ item }}$"
             state: present
         with_items: "{{ groups.all | difference(['localhost']) | difference(['hypervisor']) }}"
