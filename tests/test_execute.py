@@ -592,6 +592,108 @@ def test_output_with_IniType(spec_fixture, tmpdir,
         assert loaded_yml['provision']['iniopt'] == expected_output
 
 
+@pytest.mark.parametrize("cli_args, from_file, expected_output", [    # noqa
+    # Tests CLI (no section)
+    ("--nestedlist opt1=val1",
+     None,
+     [{'opt1': 'val1'}]),
+
+    # Tests CLI
+    ("--nestedlist sec1.opt1=val1",
+     None,
+     [{'sec1': {'opt1': 'val1'}}]),
+
+    # Tests CLI (multiple args)
+    ("--nestedlist sec1.opt1=val1,sec1.opt2=val2",
+     None,
+     [{'sec1': {'opt1': 'val1','opt2': 'val2'}}]),
+])
+def test_output_with_NestedList(spec_fixture, tmpdir,
+                             workspace_manager_fixture, test_workspace,
+                             cli_args, from_file, expected_output):
+    """Verifies the output file with NestedList complex type args
+       from CLI & file
+    """
+    my_temp_dir = tmpdir.mkdir("tmp")
+    dry_output = my_temp_dir.join("dry_output.yml")
+
+    input_string = ['example', "--dry-run", "-o", str(dry_output)]
+
+    if from_file:
+        input_string += ['--from-file', from_file]
+
+    if cli_args:
+        input_string += cli_args.split()
+
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
+
+    workspace_manager_fixture.activate(test_workspace.name)
+    return_value = spec_manager.run_specs(args=input_string)
+
+    assert return_value is None
+    assert path.exists(dry_output.strpath),\
+        "Output file doesn't exit: {}".format(dry_output.strpath)
+
+    with open(dry_output.strpath) as fp:
+        loaded_yml = yaml.safe_load(fp)
+        assert loaded_yml['provision']['nestedlist'] == expected_output
+
+
+@pytest.mark.parametrize("cli_args, from_file, expected_output", [    # noqa
+    # Tests CLI (no section)
+    ("--nestedlist-app opt1=val1",
+     None,
+     [{'opt1': 'val1'}]),
+
+    # Tests CLI
+    ("--nestedlist-app sec1.opt1=val1",
+     None,
+     [{'sec1': {'opt1': 'val1'}}]),
+
+    # Tests CLI (multiple args)
+    ("--nestedlist-app sec1.opt1=val1 --nestedlist-app sec1.opt2=val2",
+     None,
+     [{'sec1': {'opt1': 'val1'}}, {'sec1': {'opt2': 'val2'}}]),
+
+    # Tests CLI (complex multiple args)
+    ("--nestedlist-app sec1.opt1=val1,sec1.opt2=val2 \
+        --nestedlist-app sec1.opt2=val3",
+     None,
+     [{'sec1': {'opt1': 'val1', 'opt2': 'val2'}}, {'sec1': {'opt2': 'val3'}}]),
+])
+def test_output_with_NestedList_app(spec_fixture, tmpdir,
+                             workspace_manager_fixture, test_workspace,
+                             cli_args, from_file, expected_output):
+    """Verifies the output file with NestedList complex type args
+       from CLI & file
+    """
+    my_temp_dir = tmpdir.mkdir("tmp")
+    dry_output = my_temp_dir.join("dry_output.yml")
+
+    input_string = ['example', "--dry-run", "-o", str(dry_output)]
+
+    if from_file:
+        input_string += ['--from-file', from_file]
+
+    if cli_args:
+        input_string += cli_args.split()
+
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
+
+    workspace_manager_fixture.activate(test_workspace.name)
+    return_value = spec_manager.run_specs(args=input_string)
+
+    assert return_value is None
+    assert path.exists(dry_output.strpath),\
+        "Output file doesn't exit: {}".format(dry_output.strpath)
+
+    with open(dry_output.strpath) as fp:
+        loaded_yml = yaml.safe_load(fp)
+        assert loaded_yml['provision']['nestedlist']['app'] == expected_output
+
+
 def test_deprecation(spec_fixture, workspace_manager_fixture,  # noqa
                                test_workspace, tmpdir):
     """Verify execution runs with deprecated option """
