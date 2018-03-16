@@ -16,6 +16,17 @@ subparsers:
                         For example: smoke,network,volumes
                         __LISTYAMLS__
                       required: yes
+                  mode:
+                      type: Value
+                      help: |
+                        Mode tempest plugin should run in.
+                        normal - use RPM version of Tempest (the usual way Tempest is ran)
+                        debug - enables installing tempest patches that enable
+                            features (i.e.: run_on_failure) not yet merged to
+                            main Tempest project. See https://review.openstack.org/#/c/553896/
+                            for more details.
+                            Tested only on OSP12 and above.
+                      default: normal
                   plugin:
                       type: Value
                       action: append
