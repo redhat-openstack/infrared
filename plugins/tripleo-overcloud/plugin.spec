@@ -322,13 +322,6 @@ subparsers:
                       default: no
                       help: Use OVN (HA) instead of ML2 and OVS.
 
-                  octavia-image-url:
-                      type: Value
-                      help: |
-                        URL to the image used for creating the Octavia Amphora node.
-                        Default is internal path for RHEL guest image
-                      default: https://url.corp.redhat.com/rhel-guest-image-7-3-35-x86-64-qcow2
-
             - title: Overcloud Public Network
               options:
                   public-network:
