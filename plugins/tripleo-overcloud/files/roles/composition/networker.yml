@@ -1,6 +1,6 @@
 ---
 networker_role:
-    name: Networker
+    name: Networker{% if install.splitstack|default(False) %}DeployedServer{% endif %}
 
     # include resources
     # the following vars can be used here:
@@ -17,6 +17,7 @@ networker_role:
         - InternalApi
         - Tenant
     host_name_format: 'networker-%index%'
+    disable_constraints: True
 
     services:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Aide{% endif %}"

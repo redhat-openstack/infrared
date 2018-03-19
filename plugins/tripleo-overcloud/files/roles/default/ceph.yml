@@ -10,6 +10,7 @@ ceph_role:
         - Storage
         - StorageMgmt
     host_name_format: 'ceph-%index%'
+    disable_constraints: True
 
     services:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Aide{% endif %}"
