@@ -1,15 +1,16 @@
 ---
 ceph_role:
-    name: CephStorage
+    name: "{% if install.splitstack|default(False) %}CephDeployedServer{% else %}CephStorage{% endif %}"
 
     resource_registry:
-        "OS::TripleO::CephStorage::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/${nics_subfolder}/ceph-storage.yaml"
+        - "OS::TripleO::{% if install.splitstack|default(False) %}CephDeployedServer{% else %}CephStorage{% endif %}::Net::SoftwareConfig: ${deployment_dir}/network/nic-configs/${nics_subfolder}/ceph-storage.yaml"
 
     flavor: ceph
     networks:
         - Storage
         - StorageMgmt
     host_name_format: 'ceph-%index%'
+    disable_constraints: True
 
     services:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Aide{% endif %}"
