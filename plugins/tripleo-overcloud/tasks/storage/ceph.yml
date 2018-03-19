@@ -8,7 +8,7 @@
             - "templates.storage_add_scale | default(True)"
             - install.version|default(undercloud_version)|openstack_release < 11
 
-      - name: append the ceph storage template line to the base overcloud deploy script
+      - name: append the ceph storage flavor name to the base overcloud deploy script
         lineinfile:
             dest: "~/overcloud_deploy.sh"
             line: '--ceph-storage-flavor {{ ("ceph" in existing_flavors.stdout_lines) | ternary("ceph", "baremetal") }} \'
@@ -16,7 +16,9 @@
             - "templates.storage_add_scale | default(True)"
             - install.version|default(undercloud_version)|openstack_release < 11
 
-  when: "not install.storage.external"
+  when: 
+    - "not install.storage.external"
+    - "not install.splitstack"
   vars:
       storage_nodes: "{{ (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 }}"
 
@@ -65,7 +67,15 @@
             dest: "~/overcloud_deploy.sh"
             line: '-e {{ template_base }}/{{ install.storage.config }}.yaml \'
 
-  when: install.storage.config == 'internal'
+  when: 
+    - install.storage.config == 'internal'
+    - "not install.splitstack"
+
+- name: append the storage ceph template in splitstack deployment
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible.yaml \'
+  when: "install.splitstack"
 
 - block:
       - name: Copy storage configuration file to the remote
