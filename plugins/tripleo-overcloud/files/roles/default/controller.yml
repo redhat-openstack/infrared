@@ -1,5 +1,5 @@
 controller_role:
-    name: Controller
+    name: Controller{% if install.splitstack|default(False) %}DeployedServer{% endif %}
     # primary role will be listed first in the roles_data.yaml file.
     primary_role: yes
 
@@ -23,6 +23,7 @@ controller_role:
         - StorageMgmt
         - Tenant
     host_name_format: 'controller-%index%'
+    disable_constraints: True
 
     # condition can be used to include or disable services. For example:
     #  - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
