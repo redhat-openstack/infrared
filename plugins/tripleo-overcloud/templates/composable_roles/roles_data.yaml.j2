@@ -18,6 +18,9 @@
 {% endif %}
 {# OSP12 specific #}
 {% if install.version|default(undercloud_version)|openstack_release > 11 %}
+{% if role.disable_constraints|default(False) %}
+  disable_constraints: True
+{% endif -%} {# end of role.disable_constraints #}
 {% if role.tags|default([])|length > 0 %}
   tags:
 {% for tag in role.tags %}
