@@ -42,6 +42,12 @@
         loop_control:
             loop_var: role
 
+      - name: create the roles_data file
+        template:
+            src: composable_roles/roles_data.yaml.j2
+            dest: "{{ template_base }}/roles_data.yaml"
+            force: yes
+
       - name: create the network template file
         vars:
             ipv6_postfix: "{{ (install.network.protocol == 'ipv4') | ternary('', '-v6')}}"
