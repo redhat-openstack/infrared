@@ -1,0 +1,22 @@
+networker_role:
+  name: NetworkerDeployedServer
+
+  resource_registry:
+      "OS::TripleO::NetworkerDeployedServer::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/networking${ipv6_postfix}.yaml"
+  services:
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::NeutronDhcpAgent
+    - OS::TripleO::Services::NeutronL3Agent
+    - OS::TripleO::Services::NeutronMetadataAgent
+    - OS::TripleO::Services::NeutronOvsAgent
+    - OS::TripleO::Services::Ntp
+    - OS::TripleO::Services::OpenDaylightOvs
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::SensuClient
+    - OS::TripleO::Services::FluentdClient
+    - OS::TripleO::Services::MySQLClient
+    - OS::TripleO::Services::Sshd

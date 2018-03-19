@@ -1,0 +1,19 @@
+messaging_role:
+    name: MessagingDeployedServer
+
+    resource_registry:
+        "OS::TripleO::MessagingDeployedServer::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/messaging${ipv6_postfix}.yaml"
+    services:
+        - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::Timezone
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::Snmp
+        - OS::TripleO::Services::Kernel
+        - OS::TripleO::Services::Pacemaker
+        - OS::TripleO::Services::RabbitMQ
+        - OS::TripleO::Services::TripleoPackages
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::FluentdClient
+        - OS::TripleO::Services::MySQLClient
+        - OS::TripleO::Services::Sshd
