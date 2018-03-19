@@ -1,0 +1,19 @@
+database_role:
+    name: DatabaseDeployedServer
+    disable_constraints: True
+    resource_registry:
+          "OS::TripleO::DatabaseDeployedServer::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/${nics_subfolder}/database${ipv6_postfix}.yaml"
+    services:
+        - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::FluentdClient
+        - OS::TripleO::Services::Kernel
+        - OS::TripleO::Services::MySQL
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::Snmp
+        - OS::TripleO::Services::Timezone
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::TripleoPackages
+        - OS::TripleO::Services::Pacemaker
+        - OS::TripleO::Services::MySQLClient
+        - OS::TripleO::Services::Sshd

@@ -6,6 +6,7 @@
       - not install.storage.external
       - storage_backend|default('') == 'ceph'
       - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
+      - (install.version|default(undercloud_version)|openstack_release) > 11
 
 # OVN environment file should be appended AFTER docker-ha.yaml
 - name: append the ovn HA OSP 12 template line to the base overcloud deploy script
