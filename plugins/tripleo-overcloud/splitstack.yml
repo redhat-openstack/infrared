@@ -15,10 +15,25 @@
   any_errors_fatal: true
   gather_facts: yes
   vars:
-      template_base: "{{ ansible_user_dir }}/splitstack"
+      template_base: "{{ ansible_user_dir }}/composable_roles"
+      role_substitutions:
+          "Compute": "ComputeDeployedServer"
+          "Controller": "ControllerDeployedServer"
+          "CephStorage": "CephDeployedServer"
+          "Database": "DatabaseDeployedServer"
+          "Networker": "NetworkerDeployedServer"
+          "Messaging:": "MessagingDeployedServer"
   tags:
       - deploy_preparation
   tasks:
+      - name: Append the network type
+        yedit:
+            src: "{{ ansible_user_dir }}/deploy_info.yml"
+            update: True
+            key: global
+            value:
+                splitstack: 'True'
+
       - name: Create configuration directory
         file:
             path: "{{ template_base }}"
@@ -42,12 +57,23 @@
         loop_control:
             loop_var: role
 
+      - name: create roles folder
+        file:
+            path: "{{ template_base }}/roles"
+            state: directory
+
+      - name: create the roles_data file
+        template:
+            src: composable_roles/roles_data.yaml.j2
+            dest: "{{ template_base }}/roles/roles_data.yaml"
+            force: yes
+
       - name: create the network template file
         vars:
             ipv6_postfix: "{{ (install.network.protocol == 'ipv4') | ternary('', '-v6')}}"
             ipv6_postfix_underscore: "{{  (install.network.protocol == 'ipv4') | ternary('', '_v6')}}"
             deployment_folder_path: "{{ template_base }}"
-            nics_subfolder: ""
+            nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('osp11', 'legacy') }}"
         template:
             src: composable_roles/network-config.yaml.j2
             dest: "{{ template_base }}/network-config.yaml"
@@ -68,6 +94,29 @@
         template:
             src: "splitstack/ctrlplane-template.yml.j2"
             dest: "{{ template_base }}/ctrlplane-template.yml"
+
+      - name: Modifying role data file to adjust role names
+        replace:
+            path: "{{ template_base }}/roles/roles_data.yaml"
+            regexp: "^(- name: ){{ item.key }}$"
+            replace: "- name: {{ item.value }}"
+        with_dict: "{{ role_substitutions }}"
+
+      - name: Modifying role names in network cofig file
+        replace:
+            path: "{{ template_base }}/network-config.yaml"
+            regexp: "{{ item.key }}"
+            replace: "{{ item.value }}"
+        with_dict: "{{ role_substitutions }}"
+
+      # Workaround for BZ1561544
+      - name: Fix get-occ-config.sh
+        lineinfile:
+            dest: '/usr/share/openstack-tripleo-heat-templates/deployed-server/scripts/get-occ-config.sh'
+            regexp: '(^\s*)(\(\(i\+\+\)\))'
+            line: '\1let i+=1'
+            backrefs: yes
+        become: yes
 
 - name: Deploy the Overcloud with composable roles
   include: "{{ overcloud_deploy | default('deploy.yml') }}"
