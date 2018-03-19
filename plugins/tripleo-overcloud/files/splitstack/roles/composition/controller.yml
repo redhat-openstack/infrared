@@ -1,12 +1,21 @@
 controller_role:
     name: ControllerDeployedServer
-
+    primary_role: yes
+    disable_constraints: True
     resource_registry:
-        "OS::TripleO::ControllerDeployedServer::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/controller${ipv6_postfix}.yaml"
+        "OS::TripleO::ControllerDeployedServer::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/${nics_subfolder}/controller${ipv6_postfix}.yaml"
+    networks:
+        - External
+        - InternalApi
+        - Storage
+        - StorageMgmt
+        - Tenant
     services:
         - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::CephMds
         - OS::TripleO::Services::CephMon
         - OS::TripleO::Services::CephExternal
+        - OS::TripleO::Services::CephRbdMirror
         - OS::TripleO::Services::CephRgw
         - OS::TripleO::Services::CinderApi
         - OS::TripleO::Services::CinderBackup
@@ -19,15 +28,8 @@ controller_role:
         - OS::TripleO::Services::HeatApiCfn
         - OS::TripleO::Services::HeatApiCloudwatch
         - OS::TripleO::Services::HeatEngine
-        - OS::TripleO::Services::MySQL
-        - OS::TripleO::Services::MySQLClient
-        - OS::TripleO::Services::NeutronDhcpAgent
-        - OS::TripleO::Services::NeutronL3Agent
-        - OS::TripleO::Services::NeutronMetadataAgent
         - OS::TripleO::Services::NeutronApi
         - OS::TripleO::Services::NeutronCorePlugin
-        - OS::TripleO::Services::NeutronOvsAgent
-        - OS::TripleO::Services::RabbitMQ
         - OS::TripleO::Services::HAproxy
         - OS::TripleO::Services::Keepalived
         - OS::TripleO::Services::Memcached
@@ -37,10 +39,11 @@ controller_role:
         - OS::TripleO::Services::MongoDb
         - OS::TripleO::Services::NovaApi
         - OS::TripleO::Services::NovaMetadata
-        - OS::TripleO::Services::NovaPlacement
         - OS::TripleO::Services::NovaScheduler
         - OS::TripleO::Services::NovaConsoleauth
         - OS::TripleO::Services::NovaVncProxy
+        - OS::TripleO::Services::NovaPlacement
+        - OS::TripleO::Services::PankoApi
         - OS::TripleO::Services::Ntp
         - OS::TripleO::Services::SwiftProxy
         - OS::TripleO::Services::SwiftStorage
@@ -77,7 +80,5 @@ controller_role:
         - OS::TripleO::Services::OpenDaylightOvs
         - OS::TripleO::Services::SensuClient
         - OS::TripleO::Services::FluentdClient
-        - OS::TripleO::Services::BarbicanApi
-        - OS::TripleO::Services::PankoApi
-        - OS::TripleO::Services::Zaqar
-        - OS::TripleO::Services::OVNDBs
+        - OS::TripleO::Services::MySQLClient
+        - OS::TripleO::Services::Sshd
