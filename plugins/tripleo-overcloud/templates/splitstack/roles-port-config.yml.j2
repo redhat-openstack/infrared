@@ -26,3 +26,27 @@ resource_registry:
   OS::TripleO::DeployedServer::ControlPlanePort: "{{ install.heat.templates.basedir }}/deployed-server/deployed-neutron-port.yaml"
   OS::TripleO::Network::Ports::ControlPlaneVipPort: "{{ install.heat.templates.basedir }}/deployed-server/deployed-neutron-port.yaml"
   OS::TripleO::Network::Ports::RedisVipPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+
+  # Port assignments for the database role
+  OS::TripleO::DatabaseDeployedServer::Ports::ExternalPort: "{{ install.heat.templates.basedir }}/network/ports/external.yaml"
+  OS::TripleO::DatabaseDeployedServer::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
+  OS::TripleO::DatabaseDeployedServer::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
+  OS::TripleO::DatabaseDeployedServer::Ports::StorageMgmtPort: "{{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
+  OS::TripleO::DatabaseDeployedServer::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
+  #OS::TripleO::DatabaseDeployedServer::Ports::ManagementPort: "{{ install.heat.templates.basedir }}/network/ports/management.yaml"
+
+  # Port assignments for the messaging role
+  OS::TripleO::NetworkerDeployedServer::Ports::ExternalPort: "{{ install.heat.templates.basedir }}/network/ports/external.yaml"
+  OS::TripleO::NetworkerDeployedServer::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
+  OS::TripleO::NetworkerDeployedServer::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
+  OS::TripleO::NetworkerDeployedServer::Ports::StorageMgmtPort: "{{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
+  OS::TripleO::NetworkerDeployedServer::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
+  #OS::TripleO::NetworkerDeployedServer::Ports::ManagementPort: "{{ install.heat.templates.basedir }}/network/ports/management.yaml"
+
+  # Port assignments for the networker role
+  OS::TripleO::MessagingDeployedServer::Ports::ExternalPort: "{{ install.heat.templates.basedir }}/network/ports/external.yaml"
+  OS::TripleO::MessagingDeployedServer::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
+  OS::TripleO::MessagingDeployedServer::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
+  OS::TripleO::MessagingDeployedServer::Ports::StorageMgmtPort: "{{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
+  OS::TripleO::MessagingDeployedServer::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
+  #OS::TripleO::MessagingDeployedServer::Ports::ManagementPort: "{{ install.heat.templates.basedir }}/network/ports/management.yaml"
