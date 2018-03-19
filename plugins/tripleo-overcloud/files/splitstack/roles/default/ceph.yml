@@ -1,5 +1,17 @@
-compute_role:
+ceph_role:
   name: CephDeployedServer
 
   resource_registry:
       "OS::TripleO::CephDeployedServer::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/ceph-storage${ipv6_postfix}.yaml"
+
+  services:
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephOSD
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::Ntp
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::SensuClient
+    - OS::TripleO::Services::FluentdClient

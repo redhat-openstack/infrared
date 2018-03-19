@@ -15,7 +15,7 @@
   any_errors_fatal: true
   gather_facts: yes
   vars:
-      template_base: "{{ ansible_user_dir }}/splitstack"
+      template_base: "{{ ansible_user_dir }}/composable_roles"
   tags:
       - deploy_preparation
   tasks:
@@ -41,6 +41,17 @@
         with_items: "{{ groups.overcloud_nodes }}"
         loop_control:
             loop_var: role
+
+      - name: create roles folder
+        file:
+            path: "{{ template_base }}/roles"
+            state: directory
+
+      - name: create the roles_data file
+        template:
+            src: composable_roles/roles_data.yaml.j2
+            dest: "{{ template_base }}/roles/roles_data.yaml"
+            force: yes
 
       - name: create the network template file
         vars:
