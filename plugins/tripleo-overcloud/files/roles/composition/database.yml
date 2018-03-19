@@ -1,6 +1,6 @@
 ---
 database_role:
-    name: Database
+    name: Database{% if install.splitstack|default(False) %}DeployedServer{% endif %}
 
     resource_registry:
         OS::TripleO::Database::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/${nics_subfolder}/database_internal.yaml"
@@ -10,6 +10,7 @@ database_role:
     networks:
         - InternalApi
     host_name_format: 'database-%index%'
+    disable_constraints: True
 
     services:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Aide{% endif %}"

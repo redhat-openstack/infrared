@@ -141,6 +141,16 @@ resources:
                           type: ovs_bridge
                           name: br-ex
                           use_dhcp: false
+{% if install.splitstack|default(False) %}
+                          addresses:
+                            -
+                                ip_netmask:
+                                    get_param: ExternalIpSubnet
+                          routes:
+                            - ip_netmask: 0.0.0.0/0
+                              next_hop:
+                                  get_param: ExternalInterfaceDefaultRoute
+{% endif %}
                           members:
                             -
                               type: interface
