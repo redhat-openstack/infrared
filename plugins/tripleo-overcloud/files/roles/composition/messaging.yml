@@ -1,6 +1,6 @@
 ---
 messaging_role:
-    name: Messaging
+    name: Messaging{% if install.splitstack|default(False) %}DeployedServer{% endif %}
 
     resource_registry:
         OS::TripleO::Messaging::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/${nics_subfolder}/messaging_internal.yaml"

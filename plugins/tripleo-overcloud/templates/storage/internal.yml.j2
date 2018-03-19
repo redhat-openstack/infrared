@@ -15,9 +15,13 @@ parameter_defaults:
     CephPoolDefaultPgNum: 32
     CephAnsibleDisksConfig:
         devices:
+{% if install.splitstack|default(False) %}
+            - '/dev/vdb'
+{% else %}
 {% for disk in storage_node_disks[1:] %}
             - '/dev/{{ disk }}'
 {% endfor %}
+{% endif %}{# end of install.splitstack #}
         journal_size: 512
         osd_scenario: collocated
 {% else %}

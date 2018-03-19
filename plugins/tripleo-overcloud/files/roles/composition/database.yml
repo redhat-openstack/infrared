@@ -1,6 +1,6 @@
 ---
 database_role:
-    name: Database
+    name: Database{% if install.splitstack|default(False) %}DeployedServer{% endif %}
 
     resource_registry:
         OS::TripleO::Database::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/${nics_subfolder}/database_internal.yaml"
