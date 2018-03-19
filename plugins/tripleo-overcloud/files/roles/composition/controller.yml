@@ -1,6 +1,6 @@
 ---
 controller_role:
-    name: Controller
+    name: Controller{% if install.splitstack|default(False) %}DeployedServer{% endif %}
     primary_role: yes
 
     resource_registry:
@@ -17,6 +17,7 @@ controller_role:
         - StorageMgmt
         - Tenant
     host_name_format: 'controller-%index%'
+    disable_constraints: True
 
     services:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Aide{% endif %}"
