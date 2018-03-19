@@ -49,7 +49,7 @@
         become_user: root
         when:
             - install.version|openstack_distribution == 'OSP'
-            - install.version|openstack_release == 13
+            - install.version|openstack_release >= 10
 
       # rhosp-release provides /etc/rhosp-release, which is used in upgrade for version discovery.
       - name: install rhosp-release
