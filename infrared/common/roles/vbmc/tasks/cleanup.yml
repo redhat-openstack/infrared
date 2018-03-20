@@ -1,0 +1,25 @@
+- name: Check if install package
+  command: "rpm -qa {{ item }}"
+  with_items:
+      - python-virtualbmc
+      - python2-virtualbmc
+  register: vbmc_status
+
+- name: remove pakage
+  action: "{{ ansible_pkg_mgr }} name={{ item.item }} state=absent"
+  when: (item.stdout | length != 0)
+  with_items: "{{ vbmc_status.results }}"
+
+- name: remove python-virtualbmc from pip
+  become: true
+  pip:
+      name: virtualbmc
+      state: absent
+
+- name: dellete scripts and service
+  file:
+      path: "{{ item }}"
+      state: absent
+  with_items:
+      - /usr/lib/systemd/system/virtualbmc.service
+      - "{{ ansible_user_dir }}.vbmc/"

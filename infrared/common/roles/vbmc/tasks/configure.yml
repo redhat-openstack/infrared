@@ -9,10 +9,10 @@
           Description=VirtualBMC service
           After=network.target
           [Service]
-          User={{ ansible_user|default(ansible_ssh_user) }}
+          User=root
           Type=oneshot
-          ExecStart=/bin/bash -c 'for bmc in $(ls {{ ansible_user_dir }}/.vbmc/); do vbmc start $bmc; done'
-          ExecStop=/bin/bash -c 'for bmc in $(ls {{ ansible_user_dir }}/.vbmc/); do vbmc stop $bmc; done'
+          ExecStart=/bin/bash -c 'for bmc in $(ls /root/.vbmc/); do vbmc start $bmc; done'
+          ExecStop=/bin/bash -c 'for bmc in $(ls /root/.vbmc/); do vbmc stop $bmc; done'
           RemainAfterExit=yes
           [Install]
           WantedBy=multi-user.target
@@ -23,7 +23,6 @@
         name: virtualbmc
         state: started
         enabled: true
-  when: vbmc_host == 'undercloud'
 
 - name: Remove existing Virtual BMCs
   # grab only lines with port number (more than 2 digits)
