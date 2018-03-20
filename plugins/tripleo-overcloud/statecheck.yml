@@ -1,0 +1,37 @@
+- name: Undercloud check before deploy
+  hosts: undercloud
+  any_errors_fatal: true
+  gather_facts: yes
+
+  tasks:
+    - name: get need variable from undercloud
+      set_fact:
+        oc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
+        vbmc_ip: "{{ ansible_default_ipv4.address }}"
+
+    - name: check vbmc node state
+      shell: "vbmc list | awk '/{{ item }}/ {print $4,$8}'"
+      register: vbmc_status
+      with_items:  "{{ oc_nodes }}"
+      delegate_to: hypervisor
+
+    - name: run vbmc node
+      command: "vbmc start {{ item.item }}"
+      delegate_to: hypervisor
+      with_items: "{{ vbmc_status.results }}"
+      when: item.stdout.split()[0]  == 'down'
+
+    - name: renew iptables rules
+      become: True
+      iptables:
+          action: insert
+          comment: "Infrared: vbmc ports"
+          table: filter
+          chain: INPUT
+          jump: ACCEPT
+          protocol: "udp"
+          source: "{{ vbmc_ip }}"
+          destination_port: "{{ item.stdout.split()[1] }}"
+      with_items:
+          - "{{ vbmc_status.results }}"
+      delegate_to: hypervisor
