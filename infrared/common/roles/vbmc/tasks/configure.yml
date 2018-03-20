@@ -23,7 +23,6 @@
         name: virtualbmc
         state: started
         enabled: true
-  when: vbmc_host == 'undercloud'
 
 - name: Remove existing Virtual BMCs
   # grab only lines with port number (more than 2 digits)
@@ -63,6 +62,15 @@
 
 - name: Start nodes using vbmc
   command: "vbmc start {{ item.key }}"
+  with_dict: "{{ vbmc_ports }}"
+
+- name: Create folder
+  file:
+      path:  "{{ ansible_user_dir }}/.vbmc"
+      state: directory
+
+- name: Add node to start sckripts
+  command: "touch {{ ansible_user_dir }}/.vbmc/{{ item.key }}"
   with_dict: "{{ vbmc_ports }}"
 
 - name: Setting nodes power status using ipmitool
