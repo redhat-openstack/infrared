@@ -14,6 +14,7 @@
 
 - name: push patched_rpms.repo to overcloud image
   command: "{{ item }}"
+  register: image_repos
   with_items:
     - "virt-copy-in -a {{ overcloud_image_file }} /etc/yum.repos.d/patched_rpms.repo /etc/yum.repos.d"
     - "virt-copy-in -a {{ overcloud_image_file }} /patched_rpms /"
@@ -22,6 +23,7 @@
 
 - name: Install packages in overcloud image
   command: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel"
+  register: image_packages
   when: install.images.packages|default(None) != None
 
 # restart libvirt service to avoid possible hangs of virt-customize task.
@@ -33,6 +35,7 @@
 
 - name: update packages on repos
   command: "virt-customize -a {{ overcloud_image_file }} --update --memsize {{ requested_mem }} --smp {{ (ansible_processor_vcpus/2)|round|int }}  --selinux-relabel"
+  register: image_update
   vars:
       available_mem: "{{ [ansible_memory_mb.nocache.free, (ansible_memtotal_mb/2)|round|int] | min }}"
       # don't overreach
@@ -43,6 +46,12 @@
 
 - name: Set selinux state
   command: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --run-command 'sed -i s/SELINUX=.*/SELINUX={{ install.selinux }}/g /etc/selinux/config'"
+  register: image_selinux
   when:
       - install.selinux is defined
       - install.selinux == 'permissive' or install.selinux =='disabled'
+
+- name: remove machine-id from overcloud image
+  command: "virt-sysprep --operation machine-id -a {{ overcloud_image_file }}"
+  when:
+      - image_repos|changed or image_packages|changed or image_update|changed or image_selinux|changed
