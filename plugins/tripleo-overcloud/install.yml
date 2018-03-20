@@ -19,6 +19,14 @@
   tags:
       - introspect
 
+- name: Check hypervisor state
+  import_playbook: statecheck.yml
+  when:
+      - "'hypervisor' in groups"
+      - install.deploy|default('')
+      - not install.introspect
+      - vbmc_host != 'undercloud' or (vbmc_host is not defined)
+
 - name: Tag our machines with proper flavors
   import_playbook: "{{ overcloud_flavors | default('tag.yml') }}"
   when: install.tagging|default('')
