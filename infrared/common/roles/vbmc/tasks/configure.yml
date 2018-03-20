@@ -1,29 +1,40 @@
-- block:
-    - name: Add VirtualBMC as systemd service
-      become: true
-      copy:
-        mode: 0664
-        dest: "/usr/lib/systemd/system/virtualbmc.service"
-        content: |
-          [Unit]
-          Description=VirtualBMC service
-          After=network.target
-          [Service]
-          User={{ ansible_user|default(ansible_ssh_user) }}
-          Type=oneshot
-          ExecStart=/bin/bash -c 'for bmc in $(ls {{ ansible_user_dir }}/.vbmc/); do vbmc start $bmc; done'
-          ExecStop=/bin/bash -c 'for bmc in $(ls {{ ansible_user_dir }}/.vbmc/); do vbmc stop $bmc; done'
-          RemainAfterExit=yes
-          [Install]
-          WantedBy=multi-user.target
-
-    - name: Start the Virtual BMCs
-      become: true
-      service:
-        name: virtualbmc
-        state: started
-        enabled: true
+- name: set vbmc user in undercloud
+  set_fact:
+      vbmc_user: "{{ ansible_user|default(ansible_ssh_user) }}"
+      vbmc_dir: "{{ ansible_user_dir }}"
   when: vbmc_host == 'undercloud'
+
+- name: set vbmc user in hypervisor
+  set_fact:
+      vbmc_user: root
+      vbmc_dir: '/root'
+  when: vbmc_host == 'hypervisor'
+
+- name: adds VirtualBMC as systemd service
+  become: true
+  copy:
+    mode: 0664
+    dest: "/usr/lib/systemd/system/virtualbmc.service"
+    content: |
+      [Unit]
+      Description=VirtualBMC service
+      After=network.target
+      [Service]
+      User={{ vbmc_user }}
+      Type=oneshot
+      ExecStart=/bin/bash -c 'for bmc in $(ls {{ vbmc_dir }}/.vbmc/); do vbmc start $bmc; done'
+      ExecStop=/bin/bash -c 'for bmc in $(ls {{ vbmc_dir }}/.vbmc/); do vbmc stop $bmc; done'
+      RemainAfterExit=yes
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Start the Virtual BMCs
+  become: true
+  systemd:
+    name: virtualbmc
+    daemon_reload: yes
+    state: restarted
+    enabled: yes
 
 - name: Remove existing Virtual BMCs
   # grab only lines with port number (more than 2 digits)
@@ -64,6 +75,13 @@
 - name: Start nodes using vbmc
   command: "vbmc start {{ item.key }}"
   with_dict: "{{ vbmc_ports }}"
+
+- name: Show status vbmc node
+  command: "vbmc list"
+  register: debug_bmc
+
+- debug:
+    msg: "{{ debug_bmc }}"
 
 - name: Setting nodes power status using ipmitool
   command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H {{ vbmc_management_address }} -p {{ item.value }} chassis power on"
