@@ -91,7 +91,7 @@
       - name: Add nodes to known_hosts
         known_hosts:
             name: "{{ hostvars[item.item].ansible_host|
-                      default(hostvars[item.item].ansible_ssh_host }}"
+                      default(hostvars[item.item].ansible_ssh_host) }}"
             key: "{{ item.stdout }}"
         with_items: "{{ pubkeys.results }}"
 
