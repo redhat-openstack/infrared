@@ -1,0 +1,53 @@
+telemetry_role:
+    name: Telemetry
+
+    resource_registry:
+        OS::TripleO::Messaging::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/messaging_internal.yaml"
+        OS::TripleO::Messaging::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
+    flavor: telemetry
+    networks:
+        - InternalApi
+    host_name_format: 'telemetry-%index%'
+
+    services:
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Aide{% endif %}"
+        - OS::TripleO::Services::AodhApi
+        - OS::TripleO::Services::AodhEvaluator
+        - OS::TripleO::Services::AodhListener
+        - OS::TripleO::Services::AodhNotifier
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::AuditD{% endif %}"
+        - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::CeilometerAgentCentral
+        - OS::TripleO::Services::CeilometerAgentNotification
+        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::CeilometerApi{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::CeilometerCollector{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::CeilometerExpirer{% endif %}"
+        - OS::TripleO::Services::CephClient
+        - OS::TripleO::Services::CephExternal
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
+        - OS::TripleO::Services::Collectd
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
+        - OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}
+        - OS::TripleO::Services::GnocchiApi
+        - OS::TripleO::Services::GnocchiMetricd
+        - OS::TripleO::Services::GnocchiStatsd
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Ipsec{% endif %}"
+        - OS::TripleO::Services::Kernel
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::LoginDefs{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::MongoDb{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::Pacemaker
+        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::PankoApi{% endif %}"
+        - OS::TripleO::Services::Redis
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Rhsm{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::RsyslogSidecar{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::Snmp
+        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::Sshd{% endif %}"
+        - OS::TripleO::Services::Timezone
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::TripleoPackages
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Tuned{% endif %}"
