@@ -78,7 +78,9 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/neutron-ovs-dvr.yaml \'
-  when: install.network.dvr
+  when:
+      - install.network.dvr
+      - not install.network.ovn
 
 - name: Append the l2gw template line to the base overcloud deploy script
   lineinfile:
