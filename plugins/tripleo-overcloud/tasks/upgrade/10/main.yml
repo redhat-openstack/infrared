@@ -10,6 +10,13 @@
       - upgrade
       - upgrade_ssl
 
+- block:
+    - debug: msg="Starting floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+
 - name: Pre-Upgrade Ceilometer migration
   include_tasks: "ceilometer_migration.yml"
   tags:
@@ -89,6 +96,11 @@
       - upgrade_aodh
   vars:
       aodh_migration_script: "~/aodh_migration.sh"
+
+- block:
+    - debug: msg="Ending floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
 
 - name: Deleting temp folder
   file:
