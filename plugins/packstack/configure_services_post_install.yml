@@ -32,7 +32,15 @@
             section: key_manager
             option: api_class
             value: "nova.keymgr.conf_key_mgr.ConfKeyManager"
-        when: "install.version|openstack_release >= 12"
+        when: "install.version|openstack_release == 12"
+
+      - name: Setup fixed key backend for encrypted volumes for nova
+        ini_file:
+            dest: /etc/nova/nova.conf
+            section: key_manager
+            option: backend
+            value: "nova.keymgr.conf_key_mgr.ConfKeyManager"
+        when: "install.version|openstack_release >= 13"
 
       - name: Restart nova compute service
         service:
@@ -47,13 +55,31 @@
   become: yes
   any_errors_fatal: true
   tasks:
+      - name: Setup fixed key for encrypted volumes
+        ini_file:
+            dest: /etc/cinder/cinder.conf
+            section: key_manager
+            option: fixed_key
+            value: "{{ randkey.stdout }}"
+        # FIXME(psedlak): this task likey does not have access to randkey.stdout variable
+        when: "install.version|openstack_release >= 13"
+        # NOTE(psedlak): possibly for even younger than 13, but afaik no issue there
+
       - name: Setup fixed key class for encrypted volumes for cinder
         ini_file:
             dest: /etc/cinder/cinder.conf
             section: key_manager
             option: api_class
             value: "cinder.keymgr.conf_key_mgr.ConfKeyManager"
-        when: "install.version|openstack_release >= 12"
+        when: "install.version|openstack_release == 12"
+
+      - name: Setup fixed key class for encrypted volumes for cinder
+        ini_file:
+            dest: /etc/cinder/cinder.conf
+            section: key_manager
+            option: backend
+            value: "cinder.keymgr.conf_key_mgr.ConfKeyManager"
+        when: "install.version|openstack_release >= 13"
 
       - name: Restart cinder services on controller
         service:
