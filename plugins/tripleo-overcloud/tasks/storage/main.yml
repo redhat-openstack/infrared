@@ -6,6 +6,7 @@
       storage_group: "{{ groups[storage_backend] | list }}"
   include_tasks: disks_from_instackenv.yml
   when:
+      - storage_backend in groups
       - storage_backend in ['swift', 'ceph']
       - "not install.storage.external"
 
