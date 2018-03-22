@@ -247,7 +247,7 @@
   shell: "for i in `find . -xtype l`; do ls -la $i >> BROKEN_LINKS.txt; rm -rf $i; done"
   args:
       chdir: "/tmp/{{ inventory_hostname }}"
-  ignore_erros: true
+  ignore_errors: true
 
 - name: compress logs in tar ball
   command: "tar cf{{ other.gzip|ternary ('z', '') }} {{ inventory_hostname }}.tar{{ other.gzip|ternary ('.gz', '') }} {{ inventory_hostname }}"
