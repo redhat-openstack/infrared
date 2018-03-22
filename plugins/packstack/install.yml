@@ -1,7 +1,7 @@
 ---
 - name: Setup packstack on controller
   hosts: controller
-  gather_facts: no
+  gather_facts: yes
   become: yes
   any_errors_fatal: true
   vars_files:
@@ -70,6 +70,13 @@
             option: CONFIG_COMPUTE_HOSTS
             value: "{% for host in groups.compute %}{{ hostvars[host]['ansible_default_ipv4']['address'] }}{% if not loop.last %},{% endif %}{% endfor %}"
         when: groups.compute is defined
+
+      - name: Set workers
+        ini_file:
+            dest: "{{ answers_file }}"
+            section: general
+            option: CONFIG_SERVICE_WORKERS
+            value: "{{ [ ansible_processor_vcpus // 2, 1 ] | max  }}"
 
       - name: Update password values in answer file with default password
         replace:
