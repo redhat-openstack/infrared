@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "f073fc89_b909ac78",
+        "filename": "plugins/tripleo-overcloud/install.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1006589
+      },
+      "writtenOn": "2018-03-22T09:27:34Z",
+      "side": 1,
+      "message": "nope, you don\u0027t need to run all tasks. Just add logic to the vbmc/tasks/main.yaml:\n\n  - include_tasks: check.yml\n    when: action \u003d\u003d \u0027check\u0027\n  - include_tasks: install.yml\n    when: action \u003d\u003d \u0027install\u0027\n\nBy default, action will be equal to install. \n\nI just want to keep everything related to vbmc in the vbmc role.",
+      "parentUuid": "b45470c4_955ec3cc",
+      "range": {
+        "startLine": 23,
+        "startChar": 2,
+        "endLine": 23,
+        "endChar": 33
+      },
+      "revId": "4d0590ef7bac091eab46b5bf0447843afdc03163",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "777536ef_c2320580",
         "filename": "plugins/tripleo-overcloud/install.yml",
         "patchSetId": 2
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "No, it does not return a error because we have next check with undefined variable\nIn gate-jobs vbmc_host not defined",
       "parentUuid": "777536ef_c2320580",
+      "range": {
+        "startLine": 28,
+        "startChar": 8,
+        "endLine": 28,
+        "endChar": 63
+      },
+      "revId": "4d0590ef7bac091eab46b5bf0447843afdc03163",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cb43948_c92d40a7",
+        "filename": "plugins/tripleo-overcloud/install.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1006589
+      },
+      "writtenOn": "2018-03-22T09:27:34Z",
+      "side": 1,
+      "message": "yup. you are right here. I thought ansible should not validate second \u0027OR\u0027 expression when the first one is failed",
+      "parentUuid": "baade247_275d7561",
       "range": {
         "startLine": 28,
         "startChar": 8,
