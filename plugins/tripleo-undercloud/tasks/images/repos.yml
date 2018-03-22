@@ -55,3 +55,9 @@
   command: "virt-sysprep --operation machine-id -a {{ overcloud_image_file }}"
   when:
       - image_repos|changed or image_packages|changed or image_update|changed or image_selinux|changed
+
+# mcornea: remove once we have a resolution for BZ#1559151 
+- name: implement workaround for BZ#1559151
+  command: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --delete /usr/libexec/os-apply-config/templates/etc/os-net-config/config.json"
+  when:
+    - install.version|openstack_release == 11
