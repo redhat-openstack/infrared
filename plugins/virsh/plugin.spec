@@ -35,15 +35,31 @@ subparsers:
                           to change default behaviour.
                       default: False
 
+            - title: deployment
+              options:
+                  deployment-type:
+                      type: Value
+                      help: Deployment version type to be used, either OSP or RDO, defaults to OSP 
+                      default: osp
+                      choices:
+                          - osp
+                          - rdo
+
             - title: image
               options:
-
-                  image-url:
+                  osp-url:
                       type: Value
                       help: |
                         URL to the image used for node provisioning.
-                        Default is internal path for RHEL guest image
-                      default: https://url.corp.redhat.com/rhel-guest-image-7-4-191-x86-64-qcow2
+                        Depends on deployment-type parameter.
+                      default: http://download-node-02.eng.bos.redhat.com/brewroot/packages/rhel-guest-image/7.5/105/images/rhel-guest-image-7.5-105.x86_64.qcow2
+
+                  rdo-url:
+                      type: Value
+                      help: |
+                        URL to the image used for node provisioning.
+                        Depends on deployment-type parameter.
+                      default: http://rhos-qe-mirror-tlv.usersys.redhat.com/cloud-centos/centos/7/images/CentOS-7-x86_64-GenericCloud-1703.qcow2
 
                   disk-pool:
                       type: Value

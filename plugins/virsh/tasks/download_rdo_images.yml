@@ -12,7 +12,7 @@
       source: "{{ item.value.import_url|default('') or node_dict.import_url|default('') or url }}"
   get_url:
       # Use default url if unless disk has a different source
-      url: "{{ source }}"
+      url: "{{ provision.rdo.url }}"
       # use original basename explicitly, otherwise, "force" doesn't work
       dest: "{{ base_image_path }}/{{ source | basename }}"
       # Download new images only.
