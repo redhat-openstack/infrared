@@ -43,7 +43,7 @@ subparsers:
                       help: |
                         URL to the image used for node provisioning.
                         Default is internal path for RHEL guest image
-                      default: https://url.corp.redhat.com/rhel-guest-image-7-4-191-x86-64-qcow2
+                      default: http://download-node-02.eng.bos.redhat.com/brewroot/packages/rhel-guest-image/7.5/105/images/rhel-guest-image-7.5-105.x86_64.qcow2
 
                   disk-pool:
                       type: Value
