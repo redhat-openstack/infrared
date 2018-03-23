@@ -5,14 +5,23 @@
   any_errors_fatal: true
   vars:
       base_image_path: /var/lib/libvirt/images
-      url: "{{ provision.image.url }}"
+      #url: "{{ provision.image.url }}"
   tasks:
-    - name: provision image for each node
-      include_tasks: tasks/download_images.yml
+    - name: provision image for osp node(s)
+      include_tasks: tasks/download_osp_images.yml
       with_dict: "{{ provision.topology.nodes }}"
       loop_control:
           loop_var: node
       tags: images
+      when: provision.deployment.type == 'osp'
+
+    - name: provision image for rdo node(s)
+      include_tasks: tasks/download_rdo_images.yml
+      with_dict: "{{ provision.topology.nodes }}"
+      loop_control:
+          loop_var: node
+      tags: images
+      when: provision.deployment.type == 'rdo'
 
     # Create Disks
     - block:
