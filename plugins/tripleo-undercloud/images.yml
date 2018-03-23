@@ -29,7 +29,9 @@
         ignore_errors: yes
         register: cdn_status
         changed_when: false
-        when: install.images.packages|default('') or install.images['update']
+        when: 
+            - install.images.packages|default('') or install.images['update']
+            - install.version|default(undercloud_version)|openstack_distribution == 'OSP'
 
       - name: check if rhos-release is available
         uri:
@@ -37,7 +39,9 @@
             validate_certs: false
         ignore_errors: yes
         register: internal_repos
-        when: install.images.packages|default('') or install.images['update']
+        when: 
+            - install.images.packages|default('') or install.images['update']
+            - install.version|default(undercloud_version)|openstack_distribution == 'OSP'
 
       - fail:
             msg: overcloud image customization currently not supported outside Red Hat internal network or when using CDN

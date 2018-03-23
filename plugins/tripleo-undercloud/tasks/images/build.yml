@@ -55,7 +55,7 @@
       source ~/stackrc
       openstack overcloud image build > openstack-build-images.log
   environment:
-      DIB_YUM_REPO_CONF: "{{ dib_yum_repos | default(repo_find.files | map(attribute='path') | join(' ')) }}"
+      DIB_YUM_REPO_CONF: "{{ dib_yum_repos | default(repo_find.files | map(attribute='path') | join(' ')) }}" #(skatlapa) check
       RDO_RELEASE: "{{ install.version | default(undercloud_version) }}"
       DIB_LOCAL_IMAGE: "{{ (images_source|default('')) | ternary(images_dest, '') }}"
   when: install.version|default(undercloud_version)|openstack_distribution == 'RDO'

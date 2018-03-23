@@ -48,13 +48,13 @@
 
       - role: rdo-release
         release: "{{ install.version }}"
-        rr_buildmods: "{{ install.buildmods }}"
+        #rr_buildmods: "{{ install.buildmods }}"
         build: "{{ install.build | default(omit) }}"
         mirror: "{{ install.mirror | default(omit) }}"
         when:
-            - install.version|openstack_distribution == 'RDO'
+            - "install.version|openstack_distribution == 'RDO'"
             - not skip_release
-        tags: rhos-release
+        tags: rhos-release #check
 
   tasks:
       - name: load custom repos configuration file
