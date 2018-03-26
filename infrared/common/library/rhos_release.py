@@ -51,6 +51,10 @@ options:
         description:
             - specifieis whether the poodle repo should be enables or not.
         default: 'no'
+    enable_testing_repos:
+        description:
+            - specifies whether to enable testing (pending) repositories.
+        default: 'no'
     poodle_type:
         description:
             - specifies the poodle to use. Should be used with
@@ -262,7 +266,8 @@ def main():
             enable_flea_repos=dict(default=False),
             one_shot_mode=dict(default=False),
             buildmods=dict(type='list'),
-            discover_build=dict(type='bool', default=False)
+            discover_build=dict(type='bool', default=False),
+            enable_testing_repos=dict()
         )
     )
     base_cmd = 'rhos-release'
@@ -280,6 +285,7 @@ def main():
     one_shot_mode = module.params['one_shot_mode']
     buildmods = module.params['buildmods']
     discover_build = module.params['discover_build']
+    enable_testing_repos = module.params['enable_testing_repos']
 
     repo_args = ['-t', str(repo_directory)] if repo_directory else[]
 
@@ -295,6 +301,7 @@ def main():
     source_hostname = ['-H', source_hostname] if source_hostname else []
     enable_flea_repos = ['-f'] if module.boolean(enable_flea_repos) else []
     one_shot_mode = ['-O'] if module.boolean(one_shot_mode) else []
+    enable_testing_repos = ['-T', str(enable_testing_repos)] if enable_testing_repos else []
 
     mods = {
         'pin': '-P',
@@ -341,6 +348,7 @@ def main():
             cmd.extend(distro_version)
             cmd.extend(source_hostname)
             cmd.extend(one_shot_mode)
+            cmd.extend(enable_testing_repos)
             cmd.extend(repo_args)
             cmd.append(';')
 
