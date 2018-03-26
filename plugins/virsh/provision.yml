@@ -27,6 +27,11 @@
   import_playbook: "{{ provision_user | default('provision_user.yml') }}"
   tags: user
 
+- name: Set VMs timezone
+  import_playbook: "{{ provision_vms_timezone | default('provision_vms_timezone.yml') }}"
+  tags: timezone
+  when: provision.topology.timezone|default('')
+
 - name: Including post provision tasks
   import_playbook: "{{ provision_post | default('post.yml') }}"
   tags: post

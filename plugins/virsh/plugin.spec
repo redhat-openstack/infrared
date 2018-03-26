@@ -89,6 +89,12 @@ subparsers:
                       default: False
                       help: |
                           Use it to extend existing deployment with nodes provided by topology.
+                  topology-timezone:
+                      type: Value
+                      help: |
+                          If provided infrared will set specific timezone for the topology. Value
+                          has to be a valid timezone.
+                          None: Option change Hypervisor Timezone also
 
             - title: cleanup
               options:
