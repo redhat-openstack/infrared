@@ -61,9 +61,7 @@
             section: key_manager
             option: fixed_key
             value: "{{ randkey.stdout }}"
-        # FIXME(psedlak): this task likey does not have access to randkey.stdout variable
         when: "install.version|openstack_release >= 13"
-        # NOTE(psedlak): possibly for even younger than 13, but afaik no issue there
 
       - name: Setup fixed key class for encrypted volumes for cinder
         ini_file:
@@ -73,7 +71,7 @@
             value: "cinder.keymgr.conf_key_mgr.ConfKeyManager"
         when: "install.version|openstack_release == 12"
 
-      - name: Setup fixed key class for encrypted volumes for cinder
+      - name: Setup fixed key backend for encrypted volumes for cinder
         ini_file:
             dest: /etc/cinder/cinder.conf
             section: key_manager
