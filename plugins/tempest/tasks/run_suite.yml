@@ -46,11 +46,6 @@
           line: "{{ item }}"
           regexp: "^{{ item }}$"
       with_items: "{{ test_dict.whitelist | default([]) }}"
-
-    - name: add whitelist invocation
-      set_fact:
-          whitelistfile: "--whitelist_file white_list_{{ test_suite }}"
-
   when: test_dict.whitelist is defined and test_dict.whitelist
 
 - block:
@@ -61,11 +56,46 @@
           line: "{{ item }}"
           regexp: "^{{ item }}$"
       with_items: "{{ test_dict.blacklist | default([]) }}"
-
-    - name: add blacklist invocation
-      set_fact:
-          blacklistfile: "--blacklist_file black_list_{{ test_suite }}"
   when: test_dict.blacklist is defined and test_dict.blacklist
+
+# NOTE: FileValue parameter is not suitable in this case since
+# one has to be able to specify --regexlist-file parameter to
+# a possibly non existing file
+- block:
+    - name: Check the existance of regexlist-file
+      stat:
+        path: "{{ test.regexlist.file }}"
+      register: regexlist_islnk
+      delegate_to: localhost
+
+    - name: Add blacklisted/whitelisted tests from regexlist-file
+      include_tasks: tasks/regexlist.yml
+      when: regexlist_islnk.stat.exists
+
+  when:
+      - test.regexlist is defined
+      - test.regexlist.file is defined
+
+- name: Check for the existance of black_list_file
+  stat:
+    path: "{{ test.dir }}/black_list_{{ test_suite }}"
+  register: black_list_file
+
+- name: Add blacklist invocation
+  set_fact:
+      blacklistfile: "--blacklist_file black_list_{{ test_suite }}"
+  when: black_list_file.stat.exists
+
+- name: Check for the existance of white_list_file
+  stat:
+    path: "{{ test.dir }}/white_list_{{ test_suite }}"
+  register: white_list_file
+
+- name: Add whitelist invocation
+  set_fact:
+      whitelistfile: "--whitelist_file white_list_{{ test_suite }}"
+  when: white_list_file.stat.exists
+
 
 # For getting ostestr version, if tempest is installed from git, then it will
 # first check for venv then activate the venv then get the ostestr version.
