@@ -686,7 +686,8 @@ def test_git_plugin_update(git_plugin_manager_fixture):
       1. Plugin update without new changes
       2. Plugin update to an older commit
       3. No update when there are local changes
-      4. Update discarding local changes ('--hard-rest')
+      4. Switch back to master after checking out old revision
+      5. Switch to revision that does not exists
     :param git_plugin_manager_fixture: Fixture object which yields
     InfraredPluginManger object with git plugin installed
     """
@@ -698,22 +699,39 @@ def test_git_plugin_update(git_plugin_manager_fixture):
     assert len(commits_list) > 1, \
         "Can perform the test without at least two commits"
 
+    # Plugin update without new changes
     assert gpm.update_plugin('git_plugin') is None, \
         "Failed to pull changes from remote with up-to-date local branch"
 
+    # Plugin update to an older commit
     gpm.update_plugin(plugin_name='git_plugin', revision=commits_list[-1])
     assert commits_list[-1] == repo.git.rev_parse('HEAD'), \
         "Failed to Update plugin to: {}".format(commits_list[-1])
 
+    # No update when there are local changes
+    file_name = os.path.join(repo.working_dir, 'test.txt')
+    # create new file and add it to git to create local changes
+    with open(file_name, 'w') as f:
+        f.write('test')
+    repo.git.add([file_name])
     with pytest.raises(IRFailedToUpdatePlugin):
         gpm.update_plugin(plugin_name='git_plugin')
     assert commits_list[-1] == repo.git.rev_parse('HEAD'), \
-        "Plugin wasn't suppose to be changed when update failed..."
+        "Plugin wasn't supposed to be changed when update failed..."
 
-    gpm.update_plugin(plugin_name='git_plugin', hard_reset=True)
+    # Switch back to master after checking out old revision
+    gpm.update_plugin(plugin_name='git_plugin',
+                      revision='master', hard_reset=True)
     assert commits_list[0] == repo.git.rev_parse('HEAD'), \
         "Plugin haven't been updated from '{}' to '{}'".format(
             commits_list[-1], commits_list[0])
+
+    # Switch to revision that does not exists
+    branch_before = repo.active_branch
+    with pytest.raises(IRFailedToUpdatePlugin):
+        gpm.update_plugin(plugin_name='git_plugin', revision='not_exists_rev')
+    assert branch_before == repo.active_branch, \
+        "Plugin's revision wasn't supposed to change"
 
 
 @pytest.mark.parametrize("description, registry_yaml", [
