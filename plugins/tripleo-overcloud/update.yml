@@ -51,6 +51,7 @@
         build: "{{ install.build|default('latest') }}"
         mirror: "{{ install.mirror | default(omit) }}"
         rr_distro_version: "{{ install.osrelease|default(omit) }}"
+        enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
         when: hostvars[groups['undercloud'][0]]['oc_cdn_register']|int == 1
 
 - name: Prepare Containerized Environment

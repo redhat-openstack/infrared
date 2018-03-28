@@ -54,6 +54,7 @@
         build: "{{ install.build|default('None') if install.build != 'None' else 'latest' }}"
         director: no
         mirror: "{{ install.mirror | default(omit) }}"
+        enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
 
 # todo(abregman): remove once rhbz#1434344 is resolved
 - name: Apply workaround for rhbz 1434344

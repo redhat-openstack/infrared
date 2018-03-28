@@ -259,6 +259,10 @@ Example::
 
 * ``--build``: target build to upgrade to
 
+* ``--enable-testing-repos``: Let you the option to enable testing/pending repos with rhos-release. Multiple values
+    have to be coma separated.
+    Examples: ``--enable-testing-repos rhel,extras,ceph`` or ``--enable-testing-repos all``
+
 Example::
 
   infrared tripleo-overcloud -v --upgrade yes --build 2017-05-30.1 --deployment-files virt
@@ -287,6 +291,10 @@ Minor update detects Undercloud's version and updates packages within same versi
   defaults to ``None``, in which case, update is disabled.
   possible values: build-date, ``latest``, ``passed_phase1``, ``z3`` and all other labels supported by ``rhos-release``
   When specified, rhos-release repos would be setup and used for minor updates.
+
+* ``--enable-testing-repos``: Let you the option to enable testing/pending repos with rhos-release. Multiple values
+    have to be coma separated.
+    Examples: ``--enable-testing-repos rhel,extras,ceph`` or ``--enable-testing-repos all``
 
 Example::
 

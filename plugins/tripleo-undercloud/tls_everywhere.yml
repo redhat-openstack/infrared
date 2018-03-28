@@ -13,6 +13,7 @@
         director_build: "{{ install.get('director', {}).build|default(omit) }}"
         mirror: "{{ install.mirror | default(omit) }}"
         rr_distro_version: "{{ install.osrelease|default(omit) }}"
+        enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
         when:
             - "install.version|openstack_distribution == 'OSP'"
 
