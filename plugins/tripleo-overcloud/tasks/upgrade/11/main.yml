@@ -58,11 +58,25 @@
   when: is_roles.rc == 0
   tags: convert_roles_data
 
+- block:
+    - debug:
+          msg: "Starting floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+
 - name: Initiate composable upgrade process
   include_tasks: composable_upgrade.yml
   tags: composable_upgrade
   vars:
       composable_upgrade_script: "~/overcloud_upgrade_composable.sh"
+
+- block:
+    - debug:
+          msg: "Ending floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
 
 - name: Grab auth data from {{ overcloud_rc }} file and publish it as YAML
   shell: |
@@ -81,12 +95,34 @@
       fi
   register: creds
 
+- block:
+    - debug:
+          msg: "Starting floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+
 - name: Compute Upgrade
   include_tasks: compute_upgrade.yml
   with_items: "{{ groups.compute|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: computes_upgrade
+
+- block:
+    - debug:
+          msg: "Ending floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
+
+- block:
+    - debug:
+          msg: "Starting floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
 
 - name: Swift Upgrade
   include_tasks: swift_upgrade.yml
@@ -95,11 +131,39 @@
       loop_var: node_name
   tags: swift_upgrade
 
+- block:
+    - debug:
+          msg: "Ending floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
+
+- block:
+    - debug:
+          msg: "Starting floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+
 - name: Converge
   include_tasks: converge_upgrade.yml
   tags: converge_upgrade
   vars:
       converge_script: "~/overcloud_upgrade_converge.sh"
+
+- block:
+    - debug:
+          msg: "Ending floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
+
+- block:
+    - debug:
+          msg: "Starting floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
 
 - name: Ceph Upgrade
   include_tasks: ceph_upgrade.yml
@@ -108,12 +172,26 @@
       loop_var: node_name
   tags: upgrade_ceph
 
+- block:
+    - debug:
+          msg: "Ending floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
+
 - name: List custom roles nodes
   shell: |
       source {{ undercloud_rc }}
       openstack server list -f json
   register: custom_nodes
   tags: custom_role_post
+
+- block:
+    - debug:
+          msg: "Starting floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
 
 - include_tasks: custom_roles_upgrade.yml
   with_items: "{{ custom_nodes.stdout|default([]) }}"
@@ -130,9 +208,29 @@
       node_name: "{{ item.Name }}"
   tags: custom_role_post
 
+- block:
+    - debug:
+          msg: "Ending floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
+
+- block:
+    - debug:
+          msg: "Starting floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+
 - name: Post upgrade controller nodes
   include_tasks: controller_postupgrade.yml
   with_items: "{{ groups.controller|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: controller_post
+
+- block:
+    - debug:
+          msg: "Ending floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
