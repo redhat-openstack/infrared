@@ -132,7 +132,7 @@
                 -o UserKnownHostsFile=/dev/null \
                 -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                 -W %h:%p -i {{ ansible_ssh_private_key_file }} \
-                {{ ansible_user|default(ansible_ssh_user) }}@{{ ansible_host|default(ansible_ssh_host) }}\""
+                {{ ansible_user|default(ansible_user) }}@{{ ansible_host|default(ansible_host) }}\""
         notify:
             - update /etc/hosts with undercloud's details
 
@@ -175,7 +175,7 @@
         lineinfile:
             dest: "/etc/hosts"
             line: "{{ hostvars[groups['undercloud'][0]].ansible_host|
-                      default(hostvars[groups['undercloud'][0]].ansible_ssh_host) }}    \
+                      default(hostvars[groups['undercloud'][0]].ansible_host) }}    \
                    {{ groups['undercloud'][0] }}.redhat.local \
                    {{ groups['undercloud'][0] }}"
             state: present

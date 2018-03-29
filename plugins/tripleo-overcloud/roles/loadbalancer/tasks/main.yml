@@ -7,7 +7,7 @@
   lineinfile:
       dest: "/etc/ssh/sshd_config"
       line: "ListenAddress {{ hostvars[inventory_hostname].ansible_host|
-                              default(hostvars[inventory_hostname].ansible_ssh_host) }}"
+                              default(hostvars[inventory_hostname].ansible_host) }}"
 
 - name: setup ssh for loadbalancer to listen on external VIP
   lineinfile:
@@ -109,7 +109,7 @@
   delegate_to: localhost
   wait_for:
       host: "{{ hostvars[inventory_hostname].ansible_host|
-                default(hostvars[inventory_hostname].ansible_ssh_host) }}"
+                default(hostvars[inventory_hostname].ansible_host) }}"
       timeout: 120
   become: no
 
