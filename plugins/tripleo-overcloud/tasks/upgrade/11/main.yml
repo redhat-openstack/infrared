@@ -58,6 +58,13 @@
   when: is_roles.rc == 0
   tags: convert_roles_data
 
+- block:
+    - debug: msg="Starting floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+
 - name: Initiate composable upgrade process
   include_tasks: composable_upgrade.yml
   tags: composable_upgrade
@@ -136,3 +143,8 @@
   loop_control:
       loop_var: node_name
   tags: controller_post
+
+- block:
+    - debug: msg="Ending floating IP dataplane ping check during major upgrade"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
