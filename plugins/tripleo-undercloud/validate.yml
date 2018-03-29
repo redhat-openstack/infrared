@@ -46,3 +46,12 @@
       - fail:
             msg: "Tripleo not supported for non Red Hat operating systems"
         when: ansible_os_family != "RedHat"
+
+      - fail:
+            msg: "OSP {{ install.version }} requires Red Hat Operating System >= 7.5,
+                  installed version is {{ ansible_distribution_version }}"
+        when:
+            - install.version|default('')
+            - install.version|openstack_distribution == 'OSP'
+            - install.version|openstack_release >= 13
+            - ansible_distribution_version|version_compare('7.5', '<')
