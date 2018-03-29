@@ -55,6 +55,13 @@
             dest: "{{ template_base }}/hostnames.yaml"
         when: nodes_without_hostname_format is defined
 
+      - name: load networks mapping for specific ips
+        include_vars:
+            file: "files/control_node_placement/network_mapping.yaml"
+        when:
+           - install.predictable.ips
+           - install.version|default(undercloud_version) | openstack_release >= 10
+
       - name: create the nodes file
         vars:
             ipv6_postfix: "{{  (install.network.protocol == 'ipv4') | ternary('', '-v6')}}"
@@ -79,6 +86,15 @@
         with_items:
             - old: novacompute
               new: compute
+
+      - name: assigning specific node ids
+        import_tasks: tasks/control_node_placement/specific_node_ids.yml
+        when:
+           - install.specific.node.ids
+           - install.version|default(undercloud_version) | openstack_release >= 10
+        vars:
+            role_file_path: "{{ template_base }}/roles/roles_data.yaml"
+            generate_scheduler_hints: yes
 
 - name: Deploy the Overcloud with composable roles
   import_playbook: "{{ overcloud_deploy | default('deploy.yml') }}"

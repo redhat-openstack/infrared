@@ -410,6 +410,36 @@ subparsers:
                         roles should be used for OSP12+ composable deployments. If value is 'no', then the OSP11 approach
                         will be used.
 
+            - title: Control Node Placement
+              options:
+                  specific-node-ids:
+                      type: Bool
+                      default: no
+                      help: |
+                          Default tagging behaviour is to set properties/capabilities profile, which is based on the
+                          node_type for all nodes from this type. If this value is set to true/yes, default behaviour
+                          will be overwritten and profile will be removed, node id will be added to properties/capabilities
+                          and scheduler hints will be generated.
+                          Examples of node IDs include controller-0, controller-1, compute-0, compute-1, and so forth.
+
+                  custom-hostnames:
+                      type: Value
+                      help: |
+                          Option to provide custom Hostnames for the nodes.
+                          Note: Custom hostnames can be provided as values or a env file.
+                          Value example :
+                          --custom-hostnames controller-0=ctr-rack-1-0,compute-0=compute-rack-2-0,ceph-0=ceph-rack-3-0
+                          File example:
+                          --custom-hostnames local/path/to/custom_hostnames.yaml
+
+                  predictable-ips:
+                      type: Bool
+                      default: no
+                      help: |
+                          Assign Overcloud nodes with specific IPs on each network. IPs are outside DHCP pools.
+                          Note: Currently InfraRed only creates template for "resource_registry". Nodes IPs need
+                          to be provided as user environment template, with option --overcloud-templates
+
             - title: Splitstack deployment
               options:
                   splitstack:

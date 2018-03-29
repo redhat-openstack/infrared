@@ -30,6 +30,13 @@
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/{{ isolation_file }} \'
 
+- name: Predictable IPs resource_registry
+  import_tasks: control_node_placement/predictable_ips.yml
+  when:
+     - install.predictable.ips
+     - install.version|default(undercloud_version) | openstack_release >= 10
+     - not install.role|default('') or (install.role is defined and install.role.files == 'default')
+
 - name: Append the network template line for splitstack to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"

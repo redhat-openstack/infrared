@@ -1,15 +1,15 @@
 parameter_defaults:
     ControllerCount: {{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or '1' }}
-    OvercloudControlFlavor: {{ ('controller' in existing_flavors.stdout_lines) | ternary('controller', 'baremetal') }}
+    OvercloudControlFlavor: {{ ('controller' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('controller', 'baremetal') }}
     ComputeCount: {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or '1' }}
-    OvercloudComputeFlavor: {{ ('compute' in existing_flavors.stdout_lines) | ternary('compute', 'baremetal') }}
+    OvercloudComputeFlavor: {{ ('compute' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('compute', 'baremetal') }}
 {% if not install.storage.external %}
 {%- if storage_backend == 'ceph' %}
     CephStorageCount: {{ (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 }}
-    OvercloudCephStorageFlavor: {{ ('ceph' in existing_flavors.stdout_lines) | ternary('ceph', 'baremetal') }}
+    OvercloudCephStorageFlavor: {{ ('ceph' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('ceph', 'baremetal') }}
 {% endif -%}
 {%- if storage_backend == 'swift' %}
     ObjectStorageCount: {{ (install.storage.nodes|default(0)) or (groups['swift']|default([])|length) or 1 }}
-    OvercloudSwiftStorageFlavor: {{ ('swift' in existing_flavors.stdout_lines) | ternary('swift', 'baremetal') }}
+    OvercloudSwiftStorageFlavor: {{ ('swift' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('swift', 'baremetal') }}
 {% endif -%}
 {% endif %}
