@@ -67,6 +67,15 @@ subparsers:
                           Specifies whether ths SSL should be used for undercloud
                           A self-signed SSL cert will be generated.
                       default: no
+                  shade-host:
+                      type: Value
+                      help: |
+                          The name of the host which will be used as a shade node to handle all the os_* ansible
+                          modules requests. If this value is not provided, Infrared will use hypervisor host if present,
+                          otherwise undercloud is used.
+                          Example:
+                                --shade-host undercloud-0
+
             - title: Splitstack deployment
               options:
                   splitstack:
