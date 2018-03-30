@@ -8,7 +8,7 @@
         vars:
           shade_group: "{{ groups.hypervisor|default(groups.undercloud) }}"
         add_host:
-          name: "{{ shade_group|first }}"
+          name: "{{ install.get('shade', {}).host|default(shade_group|first) }}"
           groups: "shade"
 
       - include_role:
