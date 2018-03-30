@@ -97,9 +97,13 @@
 
       - name: Enable external network access through newly created vlan interface on undercloud
         include_tasks: tasks/undercloud-ext-vlan.yml
+        tags:
+            - ext_vlan
         vars:
             undercloud_public_ip: "{{ install.public.get('vlan', {}).get('ip', '') }}"
-        when: "'hypervisor' not in groups and undercloud_public_ip"
+        when:
+            - "'hypervisor' not in groups or install.hybrid|default(false)"
+            - undercloud_public_ip
 
       # ensure we have all envs/roles referenced in deploy script for container image preparation
       - include_tasks: tasks/append_script.yml
