@@ -62,7 +62,6 @@ controller_role:
         - OS::TripleO::Services::Keystone
         - OS::TripleO::Services::ManilaApi
         - OS::TripleO::Services::ManilaBackendCephFs
-        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::ManilaBackendGeneric{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ManilaBackendIsilon{% endif %}"
         - OS::TripleO::Services::ManilaBackendNetapp
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ManilaBackendUnity{% endif %}"
