@@ -56,6 +56,7 @@
   set_fact:
       pip_packages: "{{ pip_packages }} + [ '{{ item }}' ]"
   with_items: "{{ test.get('pip', {}).get('packages', ('')).split(',') | default('') }}"
+  when: item != ''
 
 - name: run configuration tasks for installer '{{ test.openstack.installer }}'
   include_tasks: "{{ test.openstack.installer }}.yml"
