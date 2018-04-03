@@ -1,9 +1,12 @@
 from infrared.core.utils.exceptions import IRValidatorException
+from infrared.core.utils import logger
 from ConfigParser import RawConfigParser
 
 import jsonschema
 import yaml
 import os
+
+LOG = logger.LOG
 
 
 class Validator(object):
@@ -183,53 +186,103 @@ class RegistryValidator(Validator):
 
 
 class AnsibleConfigValidator(Validator):
-    IR_DOC_URL = 'http://infrared.readthedocs.io/en/stable/setup.html#' \
-                 'ansible-configuration'
-
-    SCHEMA_ANSIBLE_DEFAULT_OPTIONS = {
-        "type": "object",
-        "properties": {
-            "host_key_checking": {"type": "string", "pattern": "^(F|f)alse$"},
-            "forks": {"type": "integer", "minimum": 500},
-            "timeout": {"type": "integer", "minimum": 30}
-        },
-        "additionalProperties": True,
-        "required": ["host_key_checking", "forks", "timeout"]
-    }
-
-    SCHEMA_ANSIBLE_CONFIG = {
-        "type": "object",
-        "properties": {
-            "defaults": SCHEMA_ANSIBLE_DEFAULT_OPTIONS
-        },
-        "additionalProperties": True,
-        "required": ["defaults"]
+    ANSIBLE_CONFIG_OPTIONS = {
+        'defaults': {
+            'host_key_checking': {
+                'type': 'bool',
+                'comparison': 'eq',
+                'expected_value': False,
+                'critical': True
+            },
+            'forks': {
+                'type': 'int',
+                'comparison': 'gt',
+                'expected_value': 500,
+                'critical': False
+            },
+            'timeout': {
+                'type': 'int',
+                'comparison': 'gt',
+                'expected_value': 30,
+                'critical': False
+            }
+        }
     }
 
     @classmethod
     def validate_from_file(cls, yaml_file=None):
         config = RawConfigParser()
         config.read(yaml_file)
-        config_json = cls._convert_config_to_dict(config)
+        config_dict = cls._convert_config_to_dict(config)
 
-        try:
-            # validate schema
-            jsonschema.validate(config_json,
-                                cls.SCHEMA_ANSIBLE_CONFIG)
-
-        except jsonschema.exceptions.ValidationError:
-            raise IRValidatorException(
-                "There is an issue with Ansible configuration in {}, "
-                "for more info please check at {}\n"
-                "Mandatory config options:\n"
-                "- 'host_key_checking' to be False\n"
-                "- 'forks' greater than 500\n"
-                "- 'timeout' greater than 30\n".format(yaml_file,
-                                                       cls.IR_DOC_URL))
+        for section, option_details in cls.ANSIBLE_CONFIG_OPTIONS.items():
+            for opt_name, opt_params in option_details.items():
+                try:
+                    config_value = config_dict[section][opt_name]
+                    cls._validate_config_option(yaml_file,
+                                                opt_name,
+                                                opt_params['type'],
+                                                opt_params['comparison'],
+                                                opt_params['expected_value'],
+                                                config_value,
+                                                opt_params['critical'])
+                except KeyError:
+                    cls._handle_missing_value(yaml_file, section, opt_name,
+                                              opt_params['expected_value'],
+                                              opt_params['critical'])
 
     @classmethod
     def validate_from_content(cls, file_content=None):
         pass
+
+    @classmethod
+    def _validate_config_option(cls, yaml_file, opt_name, opt_type,
+                                comparison, exp_value, cur_value, critical):
+        if opt_type == 'int':
+            cur_value = int(cur_value)
+        if opt_type == 'bool':
+            if cur_value == 'True':
+                cur_value = True
+            else:
+                cur_value = False
+
+        if comparison == 'eq':
+            if cur_value != exp_value:
+                cls._handle_wrong_value(yaml_file, opt_name, exp_value,
+                                        cur_value, critical)
+
+        if comparison == 'gt':
+            if cur_value < exp_value:
+                cls._handle_wrong_value(yaml_file, opt_name, exp_value,
+                                        cur_value, critical)
+
+    @classmethod
+    def _handle_wrong_value(cls, yaml_file, option_name, exp_value,
+                            cur_value, critical):
+        if critical:
+            raise IRValidatorException(
+                "There is an issue with Ansible configuration in "
+                "{}. Expected value for the option '{}' is '{}', "
+                "current value is '{}'".format(yaml_file, option_name,
+                                               exp_value, cur_value))
+        else:
+            LOG.warn("Ansible configuration file %s, contains option "
+                     "'%s' with value of '%s', but expected value is '%s'",
+                     yaml_file, option_name, cur_value, exp_value)
+
+    @classmethod
+    def _handle_missing_value(cls, yaml_file, section, option_name,
+                              exp_value, critical):
+        if critical:
+            raise IRValidatorException(
+                "There is an issue with Ansible configuration in"
+                " {}. Option '{}' with value of '{}' not found in"
+                " section '{}'\n".format(yaml_file, option_name,
+                                         exp_value, section))
+        else:
+            LOG.warn("Ansible configuration file %s, is not containing "
+                     "option '%s' with value of '%s' in section '%s'\n",
+                     yaml_file, option_name, exp_value, section)
 
     @staticmethod
     def _convert_config_to_dict(config):
