@@ -1,0 +1,4 @@
+- name: Run custom post configure command
+  shell: "{{ item }}" &>> tempest_post_configure.log
+  with_items: "{{ test.post.config.commands }}"
+  when: test.post is defined
