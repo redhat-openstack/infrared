@@ -164,7 +164,11 @@ subparsers:
                   pip-packages:
                       type: Value
                       help: Comma,delimited list of pip packages to install system-wide before installing tests packages and their requirements.
-
+                  post-config-commands:
+                      type: ListValue
+                      help: |
+                          Comma separated list of commands to execute after tempest config is executed.
+                          For example: 'ls -l','echo awesome'
             - title: ansible facts
               options:
                   collect-ansible-facts:
