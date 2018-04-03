@@ -1,0 +1,96 @@
+{%- set rhos_version = 11 %}
+version: '1'
+stack:
+    ovb:
+        - openstack:
+              topology-nodes: ovb_undercloud:1,bmc:1,ovb_controller:1,ovb_compute:1
+              topology-network: 3_nets_ovb
+              cloud: rhos-qe-ci
+              prefix: testrusichenko-
+              anti-spoofing: false
+              cleanup: yes
+              output: cleanup.yml
+    ovb1:
+        - openstack:
+              topology-nodes: ovb_undercloud:1,bmc:1,ovb_controller:1,ovb_compute:1
+              topology-network: 3_nets_ovb
+              cloud: rhos-qe-ci
+              key-file: /home/loman/.ssh/multi-cloud
+              prefix: rusichenko-
+              anti-spoofing: false
+              cleanup: yes
+              output: cleanup.yml
+    ovb2:
+        - openstack:
+              topology-nodes: 'ovb_undercloud:1,bmc:1,ovb_controller:1,ovb_compute:1'
+              topology-network: 3_nets_ovb
+              image: rhel-guest-image-7.4-191
+              cloud: rhos-qe-ci
+              prefix: rusichenko-
+              key-file: /home/loman/.ssh/multi-cloud
+              dns: 10.10.160.1
+        - tripleo-undercloud:
+              output: install.yml
+              mirror: qeos
+              version: "{{ rhos_version }}"
+              build: passed_phase1
+              ssl: yes
+        - tripleo-undercloud:
+              output: undercloud-images.yml
+              mirror: qeos
+              build: passed_phase1
+              images-task: rpm
+              images-update: no
+        - tripleo-overcloud:
+              output: overcloud-install.yml
+              version: "{{ rhos_version }}"
+              deployment-files: ovb
+              introspect: yes
+              tagging: no
+              deploy: no
+              post: no
+        - tripleo-overcloud:
+              output: overcloud-install.yml
+              deployment-files: ovb
+              introspect: no
+              tagging: yes
+              deploy: no
+              post: no
+        - tripleo-overcloud:
+              output: overcloud-install.yml
+              deployment-files: ovb
+              overcloud-templates: none
+              storage-backend: lvm
+              overcloud-ssl: yes
+              network-backend: vxlan
+              network-protocol: ipv4
+              network-bgpvpn: no
+              network-dvr: no
+              network-l2gw: no
+              storage-external: no
+              overcloud-debug: yes
+              version: "{{ rhos_version }}"
+              public-subnet: default_subnet
+              introspect: 'no'
+              tagging: 'no'
+              deploy: 'yes'
+              post: 'no'
+              containers: no
+              collect-ansible-facts: False
+              public-network: 'yes'
+              public-subnet: ovb_subnet
+        - tempest:
+              output: test.yml
+              setup: rpm
+              revision: HEAD
+              openstack-version: "{{ rhos_version }}"
+              tests: neutron
+              openstack-installer: tripleo
+              results-formats: junitxml,html
+              config-options:
+                  - image.http_image='http://rhos-qe-mirror-tlv.usersys.redhat.com/images/cirros-0.3.5-x86_64-uec.tar.gz'
+                  - neutron_plugin_options.available_type_drivers=vxlan
+                  - identity-feature-enabled.api_v2_admin='True'
+                  - network-feature-enabled.port_security='True'
+              remove-options: network-feature-enabled.api_extensions=dvr
+              blackre: 'neutron.tests.tempest.scenario.test_floatingip'
