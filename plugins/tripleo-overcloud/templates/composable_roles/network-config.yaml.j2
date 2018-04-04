@@ -7,12 +7,12 @@ resource_registry:
 {% set node_name = host_name.rstrip('1234567890-').split('-')[-1] %}
 {%- if node_name not in saved_roles -%}
 {% set role = hostvars[ansible_play_hosts[0]].get(node_name + '_role') %}
-{% for option, value in role.get("resource_registry", {}).iteritems() %}
+{% for value in role.resource_registry %}
 {% if not install.get('predictable', {}).ips|default(False) %}
-    {{ option }}: {{ eval(value) }}
+    {{ eval(value) }}
 {% else %}
 {% if 'SoftwareConfig' in option %}
-    {{ option }}: {{ eval(value) }}
+    {{ eval(value) }}
 {% endif %}
 {% for network in role.get("networks", {}) %}
     OS::TripleO::{{ role.name }}::Ports::{{ network_mapping[network].get('port-name', network + 'Port') }}: {{ install.heat.templates.basedir }}/{{ eval(network_mapping[network]['heat-template']) }}

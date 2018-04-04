@@ -3,8 +3,8 @@ messaging_role:
     name: Messaging
 
     resource_registry:
-        OS::TripleO::Messaging::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/${nics_subfolder}/messaging_internal.yaml"
-        OS::TripleO::Messaging::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
+        - "OS::TripleO::Messaging::Net::SoftwareConfig: ${deployment_dir}/network/nic-configs/${nics_subfolder}/messaging_internal.yaml"
+        - "OS::TripleO::Messaging::Ports::InternalApiPort: {{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
 
     flavor: messaging
     networks:
