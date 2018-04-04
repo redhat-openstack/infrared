@@ -3,13 +3,13 @@ controller_role:
     primary_role: yes
 
     resource_registry:
-        OS::TripleO::Controller::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/${nics_subfolder}/controller${ipv6_postfix}.yaml"
-        OS::TripleO::Controller::Ports::ExternalPort: "{{ install.heat.templates.basedir }}/network/ports/external.yaml"
-        OS::TripleO::Controller::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
-        OS::TripleO::Controller::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage.yaml"
-        OS::TripleO::Controller::Ports::StorageMgmtPort: "{{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
-        OS::TripleO::Controller::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
-        #OS::TripleO::Controller::Ports::ManagementPort: "{{ install.heat.templates.basedir }}/network/ports/management.yaml"
+        - "OS::TripleO::Controller::Net::SoftwareConfig: ${deployment_dir}/network/nic-configs/${nics_subfolder}/controller${ipv6_postfix}.yaml"
+        - "OS::TripleO::Controller::Ports::ExternalPort: {{ install.heat.templates.basedir }}/network/ports/external.yaml"
+        - "OS::TripleO::Controller::Ports::InternalApiPort: {{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
+        - "OS::TripleO::Controller::Ports::StoragePort: {{ install.heat.templates.basedir }}/network/ports/storage.yaml"
+        - "OS::TripleO::Controller::Ports::StorageMgmtPort: {{ install.heat.templates.basedir }}/network/ports/storage_mgmt.yaml"
+        - "OS::TripleO::Controller::Ports::TenantPort: {{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
+        #OS::TripleO::Controller::Ports::ManagementPort: {{ install.heat.templates.basedir }}/network/ports/management.yaml"
 
     flavor: controller
     tags:
