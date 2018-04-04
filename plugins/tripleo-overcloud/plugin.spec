@@ -271,6 +271,11 @@ subparsers:
                       help: Overrides the overcloud stack name
                       default: "overcloud"
 
+                  overcloud-ssh-user:
+                      type: Value
+                      help: Overrides the overcloud ssh user name
+                      default: ''
+
                   tls-everywhere:
                       type: Bool
                       help: |

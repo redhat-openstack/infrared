@@ -3,6 +3,9 @@
 openstack overcloud deploy \
 --timeout 100 \
 --templates {{ install.heat.templates.basedir }} \
+{% if install.overcloud.ssh.user != '' %}
+--overcloud-ssh-user {{ install.overcloud.ssh.user }} \
+{% endif %}
 --stack {{ install.overcloud.stack }} \
 --libvirt-type {{ install.libvirt.type }} \
 --ntp-server {{ install.ntp.server }} \

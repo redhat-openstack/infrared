@@ -2,6 +2,9 @@
 
 timeout 100m openstack overcloud deploy --templates {{ install.heat.templates.basedir }} \
   --libvirt-type {{ install.libvirt.type }} \
+{% if install.overcloud.ssh.user != '' %}
+  --overcloud-ssh-user {{ install.overcloud.ssh.user }} \
+{% endif %}
   --stack {{ install.overcloud.stack }} \
   -r {{ template_base }}/roles/roles_data.yaml \
   -e {{ template_base }}/roles/nodes.yaml \
