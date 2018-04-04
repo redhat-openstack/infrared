@@ -62,6 +62,7 @@ Welcome to infrared's documentation!
    cdn_cookbook.rst
    hybrid_deployment
    plugins_guide
+   control_placement
 
 Indices and tables
 ==================

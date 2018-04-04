@@ -1,13 +1,14 @@
 #!/bin/bash
 
-timeout 100m openstack overcloud deploy \
+openstack overcloud deploy \
+--timeout 100 \
 --templates {{ install.heat.templates.basedir }} \
 --stack {{ install.overcloud.stack }} \
 --libvirt-type {{ install.libvirt.type }} \
 --ntp-server {{ install.ntp.server }} \
 {% if install.version|default(undercloud_version)|openstack_release < 11 %}
 --control-scale {{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or '1' }} \
---control-flavor {{ ('controller' in existing_flavors.stdout_lines) | ternary('controller', 'baremetal') }} \
+--control-flavor {{ ('controller' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('controller', 'baremetal') }} \
 --compute-scale {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or '1' }} \
---compute-flavor {{ ('compute' in existing_flavors.stdout_lines) | ternary('compute', 'baremetal') }} \
+--compute-flavor {{ ('compute' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('compute', 'baremetal') }} \
 {% endif %}

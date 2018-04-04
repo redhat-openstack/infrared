@@ -117,15 +117,40 @@ These options are nested into the vars dict that is later passed to Ansible as e
 * IniType:
     Value is in ``section.option=value`` format.
     ``append`` is the default action for this type, so users can provide multiple args for the same parameter.
+.. warning:: The `IniType` option is deprecated, use `NestedDict` instead of.
+* NestedDict:
+    Value is in ``section.option=value`` format.
+    ``append`` is the default action for this type, so users can provide multiple args for the same parameter. Example::
+
+     infrared example --foo option1=value1 --foo option2=value2
+
+    .. code:: json
+       :name: NestedDict
+
+        {"foo": {"option1": "value1",
+                 "option2": "value2"}}
+
+* NestedList:
+    The `NestedList` option inherits `NestedDict` attributes and differs from `NestedDict` by value format. It composes
+    value as list of dictionaries. Example::
+
+     infrared example --foo option1=value1 --foo option1=value2
+
+    .. code:: json
+       :name: NestedList
+
+        {"foo": [{"option1": "value1"},
+                 {"option1": "value2"}]}
+
 * KeyValueList:
     String representation of a flat dict ``--options option1:value1,option2:value2``
     becomes:
 
-        .. code:: json
-           :name: KeyValueList
+    .. code:: json
+       :name: KeyValueList
 
-            {"options": {"option1": "value1",
-                         "option2": "value2"}}
+        {"options": {"option1": "value1",
+                     "option2": "value2"}}
 
 
 The nesting is done in the following manner: option name is split by ``-`` delimiter and each part is

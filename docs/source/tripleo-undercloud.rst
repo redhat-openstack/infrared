@@ -23,6 +23,10 @@ Setup an Undercloud
 
  .. note:: ``--buildmods`` and ``--build`` flags are internal Red Hat users only.
 
+* ``--enable-testing-repos``: Let you the option to enable testing/pending repos with rhos-release. Multiple values
+    have to be coma separated.
+    Examples: ``--enable-testing-repos rhel,extras,ceph`` or ``--enable-testing-repos all``
+
 * ``--cdn`` Register the undercloud with a Red Hat Subscription Management platform.
     Accepts a file with subscription details.
 

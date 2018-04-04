@@ -1,6 +1,6 @@
 {
   {% if install.version|default(undercloud_version) | openstack_release < 11 %}
-  "ssh-user": "{{ ansible_user }}",
+  "ssh-user": "{{ ansible_user|default(ansible_ssh_user) }}",
   "ssh-key": "{{ undercloud_private_key }}",
   "power_manager": "nova.virt.baremetal.virtual_power_driver.VirtualPowerManager",
   "host-ip": "{{ hostvars['hypervisor'].ansible_management.ipv4.address }}",
@@ -31,7 +31,7 @@
       {% else %}
         "pm_addr": "{{ hostvars['hypervisor'].ansible_management.ipv4.address }}",
         "pm_type": "pxe_ssh",
-        "pm_user": "{{ ansible_user }}",
+        "pm_user": "{{ ansible_user|default(ansible_ssh_user) }}",
         "pm_password": "{{ undercloud_private_key }}"
       {% endif %}
     }{% if not loop.last %},{% endif %}

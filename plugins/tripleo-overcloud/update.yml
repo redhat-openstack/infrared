@@ -51,6 +51,7 @@
         build: "{{ install.build|default('latest') }}"
         mirror: "{{ install.mirror | default(omit) }}"
         rr_distro_version: "{{ install.osrelease|default(omit) }}"
+        enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
         when: hostvars[groups['undercloud'][0]]['oc_cdn_register']|int == 1
 
 - name: Prepare Containerized Environment
@@ -83,13 +84,15 @@
         when: undercloud_version|openstack_release in [10, 11]
 
       - name: Scan nodes ssh keys
-        command: "ssh-keyscan -t rsa {{ hostvars[item].ansible_host }}"
+        command: "ssh-keyscan -t rsa {{ hostvars[item].ansible_host|
+                                        default(hostvars[item].ansible_ssh_host) }}"
         with_items: "{{ groups.overcloud_nodes|default([])|difference(groups.unused|default([])) }}"
         register: pubkeys
 
       - name: Add nodes to known_hosts
         known_hosts:
-            name: "{{ hostvars[item.item].ansible_host  }}"
+            name: "{{ hostvars[item.item].ansible_host|
+                      default(hostvars[item.item].ansible_ssh_host) }}"
             key: "{{ item.stdout }}"
         with_items: "{{ pubkeys.results }}"
 

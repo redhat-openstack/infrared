@@ -24,7 +24,15 @@
         --env-file={{ env_file }} {{ environment_yamls | default('') }} {{ roles_yamls | default('') }} \
         --prefix={{ container_env['container-image-prepare']['prefix'] }} \
         --tag={{ container_env['container-image-prepare']['tag'] }} \
+        {% if not install.registry.undercloud.skip %}
         {% if container_env['container-image-prepare']['ceph-namespace'] %}
+        {% if '/' in container_env['container-image-prepare']['ceph-namespace'] %}
+        --set ceph_namespace={{ reg_base_ceph + '/' + container_env['container-image-prepare']['ceph-namespace'].split('/')[-1] }} \
+        {% else %}
+        --set ceph_namespace={{ reg_base_ceph }} \
+        {% endif %}
+        {% endif %}
+        {% else %}
         --set ceph_namespace={{ container_env['container-image-prepare']['ceph-namespace'] }} \
         {% endif %}
         {% if container_env['container-image-prepare']['ceph-image'] %}

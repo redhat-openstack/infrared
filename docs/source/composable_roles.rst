@@ -62,13 +62,17 @@ To deploy overcloud with the composable roles the additional templates should be
   - template with the information about roles resources (usually network and port resources)::
 
         resource_registry:
-            OS::TripleO::ObjectStorage::Net::SoftwareConfig: /home/stack/deployment_files/network/nic-configs/swift-storage.yaml
-            OS::TripleO::Controller::Net::SoftwareConfig: /home/stack/deployment_files/network/nic-configs/controller.yaml
-            OS::TripleO::Compute::Net::SoftwareConfig: /home/stack/deployment_files/network/nic-configs/compute.yaml
+            OS::TripleO::ObjectStorage::Net::SoftwareConfig: /home/stack/deployment_files/network/nic-configs/osp11/swift-storage.yaml
+            OS::TripleO::Controller::Net::SoftwareConfig: /home/stack/deployment_files/network/nic-configs/osp11/controller.yaml
+            OS::TripleO::Compute::Net::SoftwareConfig: /home/stack/deployment_files/network/nic-configs/osp11/compute.yaml
             OS::TripleO::Networker::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/tenant.yaml
             OS::TripleO::Networker::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/internal_api.yaml
-            OS::TripleO::Networker::Net::SoftwareConfig: /home/stack/deployment_files/network/nic-configs/networker.yaml
+            OS::TripleO::Networker::Net::SoftwareConfig: /home/stack/deployment_files/network/nic-configs/osp11/networker.yaml
             [...]
+
+  .. note:: The nic-configs in the infrared deployment folder are stored in two folders (``osp11`` and ``legacy``) depending on the product version installed.
+
+
 
 InfraRed allows to simplify the process of templates generation and auto-populates the roles according to the deployed topology.
 
@@ -219,8 +223,10 @@ Below is an example of the controller default role::
         # the following vars can be used here:
         #  - ${ipv6_postfix}: will be replaced with _v6 when the ipv6 protocol is used for installation, otherwise is empty
         #  - ${deployment_dir} - will be replaced by the deployment folder location on the undercloud. Deployment folder can be specified with the ospd --deployment flag
+        #  - ${nics_subfolder} - will be replaced by the appropriate subfolder with the nic-config's. The subfolder value
+        #        is dependent on the product version installed.
         resource_registry:
-            "OS::TripleO::Controller::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/controller${ipv6_postfix}.yaml"
+            "OS::TripleO::Controller::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/${nics_subfolder}/controller${ipv6_postfix}.yaml"
         # required to support OSP12 deployments
         networks:
             - External

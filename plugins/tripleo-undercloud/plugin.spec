@@ -145,6 +145,12 @@ subparsers:
                           none - use none of those flags
                       default: pin
 
+                  enable-testing-repos:
+                      type: Value
+                      help: |
+                          Let you the option to enable testing/pending repos with rhos-release. Multiple values have to be coma separated.
+                          Examples: --enable-testing-repos rhel,extras,ceph or --enable-testing-repos all
+
             - title: TripleO User
               options:
                   user-name:

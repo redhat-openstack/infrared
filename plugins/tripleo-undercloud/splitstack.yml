@@ -52,6 +52,7 @@
         rr_target_directory: "{{ tmp_oc_repos_dir }}"
         rr_discover_build: yes
         rr_distro_version: "{{ install.osrelease|default(omit) }}"
+        enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
         # when:
         #     - install.version|default(undercloud_version)|openstack_distribution == 'OSP'
         tags: rhos-release

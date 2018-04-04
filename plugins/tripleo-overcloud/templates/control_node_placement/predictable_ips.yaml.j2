@@ -1,0 +1,13 @@
+{% macro eval(value) -%}
+{{ value | replace('${ipv6_postfix}', ipv6_postfix) | replace('${ipv6_postfix_underscore}', ipv6_postfix_underscore) }}
+{%- endmacro %}
+resource_registry:
+{% for role, networks_list in roles.iteritems() %}
+{% for network in network_mapping %}
+{% if network in networks_list %}
+    OS::TripleO::{{ role }}::Ports::{{ network_mapping[network].get('port-name', network + 'Port') }}: {{ install.heat.templates.basedir }}/{{ eval(network_mapping[network]['heat-template']) }}
+{% else %}
+    OS::TripleO::{{ role }}::Ports::{{ network_mapping[network].get('port-name', network + 'Port') }}: {{ install.heat.templates.basedir }}/network/ports/noop.yaml
+{% endif %}
+{% endfor %}
+{% endfor %}

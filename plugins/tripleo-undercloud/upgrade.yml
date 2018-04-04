@@ -33,6 +33,8 @@
         build: "{{ install.build | default(omit) }}"
         mirror: "{{ install.mirror | default(omit) }}"
         rr_distro_version: "{{ install.osrelease|default(omit) }}"
+        rr_buildmods: "{{ install.buildmods }}"
+        enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
         tags:
             - upgrade
             - upgrade_repos

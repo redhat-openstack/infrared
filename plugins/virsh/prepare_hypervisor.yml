@@ -119,3 +119,20 @@
           - files:
             - "{{ inventory_dir }}/id_rsa.pub"
             skip: true
+
+    - block:
+        - name: Change timezone to {{ provision.topology.timezone }}
+          timezone:
+              name: "{{ provision.topology.timezone }}"
+          register: timezone_change
+
+        - debug:
+              msg: "Changing timezone from {{ timezone_change.diff.before.name }} to {{ timezone_change.diff.after.name }}"
+
+        - name: Restart libvirtd after timezone change
+          service:
+              name: "libvirtd"
+              state: "restarted"
+
+      tags: timezone
+      when: provision.topology.timezone|default('')

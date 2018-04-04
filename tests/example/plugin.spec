@@ -24,6 +24,15 @@ subparsers:
                       help: "Help for '--iniopt'"
                       action: append
 
+                  nestedlist-app:
+                      type: NestedList
+                      help: "Help for '--nestedlist-app'"
+                      action: append
+
+                  nestedlist:
+                      type: NestedList
+                      help: "Help for '--nestedlist'"
+
             - title: Group C
               options:
                   uni-dep:

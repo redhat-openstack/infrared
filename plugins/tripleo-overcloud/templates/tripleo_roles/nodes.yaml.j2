@@ -9,6 +9,10 @@
 {{ counter | length }}
 {%- endmacro -%}
 
+{% macro eval(value) -%}
+{{ value | replace('${ipv6_postfix}', ipv6_postfix) | replace('${ipv6_postfix_underscore}', ipv6_postfix_underscore) }}
+{%- endmacro %}
+
 {# write count and flavor parameters #}
 parameter_defaults:
 {% set saved_roles = [] %}
@@ -17,19 +21,26 @@ parameter_defaults:
 {%- if node_name not in saved_roles -%}
 {% set role_name = role_names_mapping.get(node_name, node_name|title) %}
    {{ role_name }}Count: {{ count(node_name) }}
-   Overcloud{{ flavor_name_mapping.get(role_name, role_name) }}Flavor: {{ node_name | default(role_default_flavor) }}
+   Overcloud{{ flavor_name_mapping.get(role_name, role_name) }}Flavor: {{ (not install.specific.node.ids) | ternary(node_name | default(role_default_flavor), 'baremetal') }}
 {% if saved_roles.append(node_name) %}{% endif %}
 {%- endif -%} {# end of if node_name not in saved_roles #}
 {% endfor %}
 
 {# include net-configs templates #}
 resource_registry:
-    OS::TripleO::Controller::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/controller{{ ipv6_postfix }}.yaml"
-    OS::TripleO::ControllerOpenstack::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/controller{{ ipv6_postfix }}.yaml"
-    OS::TripleO::CephStorage::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/ceph-storage.yaml"
-    OS::TripleO::Compute::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/compute.yaml"
-    OS::TripleO::ObjectStorage::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/swift-storage.yaml"
-    OS::TripleO::Database::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/database_internal.yaml"
-    OS::TripleO::Messaging::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/messaging_internal.yaml"
-    OS::TripleO::Novacontrol::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/novacontrol.yaml"
-    OS::TripleO::Networker::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/networker.yaml"
+    OS::TripleO::Controller::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/controller{{ ipv6_postfix }}.yaml"
+    OS::TripleO::ControllerOpenstack::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/controller{{ ipv6_postfix }}.yaml"
+    OS::TripleO::CephStorage::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/ceph-storage.yaml"
+    OS::TripleO::Compute::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/compute.yaml"
+    OS::TripleO::ObjectStorage::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/swift-storage.yaml"
+    OS::TripleO::Database::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/database_internal.yaml"
+    OS::TripleO::Messaging::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/messaging_internal.yaml"
+    OS::TripleO::Novacontrol::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/novacontrol.yaml"
+    OS::TripleO::Networker::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/networker.yaml"
+{% if install.get('predictable', {}).ips|default(False) %}
+{% for role in roles_data_var %}
+{% for network in role.get("networks", {}) %}
+    OS::TripleO::{{ role.name }}::Ports::{{ network_mapping[network].get('port-name', network + 'Port') }}: {{ install.heat.templates.basedir }}/{{ eval(network_mapping[network]['heat-template']) }}
+{% endfor %}
+{% endfor %}
+{% endif %}

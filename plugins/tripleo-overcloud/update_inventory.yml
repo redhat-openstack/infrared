@@ -33,18 +33,11 @@
 
       # todo(obaranov) Remove hosts from the 'unused' group
       # Currently ansible does not allow to remove existing host from a group
-      - name: add hosts to host list
-        add_host:
-            name: "{{ item.name }}"
-            # only add groups for new nodes. don't touch existing nodes' groups
-            groups: "{{ ( item.name in groups.all ) | ternary(omit,
-                ['overcloud_nodes', 'openstack_nodes', item.name.split('-')[0]] | join(',')
-                ) }}"
-            ansible_user: "{{ user }}"
-            ansible_ssh_pass: ""
-            ansible_host: "{{ item.accessIPv4 }}"
-            ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
+      - name: add overcloud host
+        include_tasks: tasks/add_overcloud_host.yml
         with_items: "{{ openstack_servers }}"
+        loop_control:
+            loop_var: node_info
 
       - name: list ironic nodes
         # Use CSV format as JSON not supported in old versions
@@ -76,22 +69,32 @@
       # one variable multiple times in block context.
       - block:
           - name: Enable SSH forwarding using UC node for baremetal OC nodes
+            vars:
+                ssh_user: "{{ hostvars[groups['undercloud'][0]].ansible_user|
+                              default(hostvars[groups['undercloud'][0]].ansible_ssh_user) }}"
+                ssh_host: "{{ hostvars[groups['undercloud'][0]].ansible_host|
+                              default(hostvars[groups['undercloud'][0]].ansible_ssh_host) }}"
             add_host:
                 name: "{{ item.name }}"
                 ansible_ssh_common_args: "-o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                                           -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
-                                          {{ hostvars[groups['undercloud'][0]].ansible_user }}@{{ hostvars[groups['undercloud'][0]].ansible_host }}\""
+                                          {{ ssh_user }}@{{ ssh_host }}\""
             when: "'hypervisor' not in groups"
 
             with_items: "{{ openstack_servers }}"
 
       - name: Enable SSH forwarding using hypervisor node for hybrid OC nodes
+        vars:
+            ssh_user: "{{ hostvars['hypervisor'].ansible_user|
+                          default(hostvars['hypervisor'].ansible_ssh_user) }}"
+            ssh_host: "{{ hostvars['hypervisor'].ansible_host|
+                          default(hostvars['hypervisor'].ansible_ssh_host) }}"
         add_host:
             name: "{{ item.name }}"
             ansible_ssh_common_args: " -o ForwardAgent=yes -o IdentitiesOnly=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no \
                                        -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                                        -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
-                                          {{ hostvars['hypervisor'].ansible_user }}@{{ hostvars['hypervisor'].ansible_host }}\""
+                                          {{ ssh_user }}@{{ ssh_host }}\""
         when:
           - "'hypervisor' in groups"
           - install.hybrid|default(false)
@@ -105,6 +108,7 @@
       - role: inventory-update
         omit_groups: [ 'ovb' ]
         inventory_file_name: 'hosts-install'
+        omit_hosts: "{{ hostvars[groups['undercloud'][0]].nodes_to_delete|default([])|difference(hostvars[groups['undercloud'][0]].nodes_added|default([])) }}"
   tasks:
     - name: refresh dynamic inventory
       meta: refresh_inventory

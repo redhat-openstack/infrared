@@ -1,5 +1,5 @@
 {% macro eval(value) -%}
-{{ value | replace('${ipv6_postfix}', ipv6_postfix) | replace('${ipv6_postfix_underscore}', ipv6_postfix_underscore) | replace('${deployment_dir}', deployment_folder_path ) }}
+{{ value | replace('${ipv6_postfix}', ipv6_postfix) | replace('${ipv6_postfix_underscore}', ipv6_postfix_underscore) | replace('${deployment_dir}', deployment_folder_path ) | replace('${nics_subfolder}', nics_subfolder) }}
 {%- endmacro %}
 resource_registry:
 {% set saved_roles = [] %}
@@ -8,7 +8,16 @@ resource_registry:
 {%- if node_name not in saved_roles -%}
 {% set role = hostvars[ansible_play_hosts[0]].get(node_name + '_role') %}
 {% for option, value in role.get("resource_registry", {}).iteritems() %}
+{% if not install.get('predictable', {}).ips|default(False) %}
     {{ option }}: {{ eval(value) }}
+{% else %}
+{% if 'SoftwareConfig' in option %}
+    {{ option }}: {{ eval(value) }}
+{% endif %}
+{% for network in role.get("networks", {}) %}
+    OS::TripleO::{{ role.name }}::Ports::{{ network_mapping[network].get('port-name', network + 'Port') }}: {{ install.heat.templates.basedir }}/{{ eval(network_mapping[network]['heat-template']) }}
+{% endfor %}
+{% endif %}
 {% endfor %}
 {% if saved_roles.append(node_name) %}{% endif %}
 {%- endif -%}
