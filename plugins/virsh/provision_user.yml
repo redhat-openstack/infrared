@@ -36,9 +36,7 @@
       - name: Set up authorized_keys for non root user
         authorized_key:
             user: "{{ provision.topology.username }}"
-            key: "{{ item }}"
-        with_file:
-            - "{{ inventory_dir }}/id_rsa.pub"
+            key: "{{ lookup('file',  inventory_dir + '/id_rsa.pub') }}"
         when: create_user|changed
       when: inventory_hostname not in groups.overcloud_nodes|default([])
 
