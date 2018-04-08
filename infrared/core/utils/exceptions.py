@@ -65,6 +65,16 @@ class IRInvalidChoiceException(IRException):
         super(self.__class__, self).__init__(message)
 
 
+class IRInvalidMinMaxRangeException(IRException):
+    def __init__(self, invalid_options):
+        message = "The following arguments contain invalid options:"
+        for name, expected_type, expected_value, value in invalid_options:
+            message += "\nArgument {}: Expected {} should be {}, " \
+                       "actual value is {}".format(name, expected_type,
+                                                   expected_value, value)
+        super(self.__class__, self).__init__(message)
+
+
 class SpecParserException(Exception):
     """
     The spec parser specific exception.

@@ -179,6 +179,16 @@ class CliParser(object):
                 opt_kwargs['help'].rstrip() + \
                 "\nDefault value: '{}'.".format(opt_kwargs['default'])
 
+        # print minimum value to the help
+        if 'minimum' in option_data:
+            opt_kwargs['help'] += "\nMinimum value: '{}'.".format(
+                option_data['minimum'])
+
+        # print maximum value to the help
+        if 'maximum' in option_data:
+            opt_kwargs['help'] += "\nMaximum value: '{}'.".format(
+                option_data['maximum'])
+
         # print silent args to the help
         if option_data.get('silent', None):
             opt_kwargs['help'] += "\nWhen this option is set the following " \
