@@ -1,3 +1,4 @@
+from numbers import Number
 import collections
 import ConfigParser
 import yaml
@@ -287,6 +288,7 @@ class SpecParser(object):
         dict_utils.dict_merge(defaults, cli_args)
         self.validate_requires_args(defaults)
         self.validate_choices_args(defaults)
+        self.validate_min_max_args(defaults)
 
         # now resolve complex types.
         self.resolve_custom_types(defaults)
@@ -463,6 +465,54 @@ class SpecParser(object):
         if invalid_options:
             # raise exception with all arguments that contains invalid choices
             raise exceptions.IRInvalidChoiceException(invalid_options)
+
+    def validate_min_max_args(self, args):
+        """Check if value of arguments is between minimum and maximum values.
+
+        :param args: The received arguments.
+        """
+        invalid_options = []
+        for parser_name, parser_dict in args.items():
+            for spec_option in \
+                    self.spec_helper.get_parser_option_specs(parser_name):
+                if ('maximum' not in spec_option) and \
+                        ('minimum' not in spec_option):
+                    # skip options that does not contain minimum or maximum
+                    continue
+                option_name = spec_option['name']
+
+                if option_name in parser_dict:
+                    option_value = parser_dict[option_name]
+                    # make sure that the value is number
+                    if not isinstance(option_value, Number):
+                        raise exceptions.IRException(
+                            "'{}' must be a number type."
+                            " Current type is: '{}'.".format(
+                                option_name,
+                                spec_option['type']
+                            ))
+                    # check bigger than minimum
+                    if 'minimum'in spec_option and \
+                            option_value < spec_option['minimum']:
+                        invalid_options.append((
+                            option_name,
+                            "minimum",
+                            spec_option['minimum'],
+                            option_value
+                        ))
+                    # check bigger than maximum
+                    if 'maximum' in spec_option and \
+                            option_value > spec_option['maximum']:
+                        invalid_options.append((
+                            option_name,
+                            "maximum",
+                            spec_option['maximum'],
+                            option_value
+                        ))
+
+        if invalid_options:
+            # raise exception with all arguments that contains invalid choices
+            raise exceptions.IRInvalidMinMaxRangeException(invalid_options)
 
     def get_silent_args(self, args):
         """list of silenced argument
