@@ -89,3 +89,12 @@ subparsers:
                             will look in plugin folder for directory name as 'lookup_dir' value, and
                             will add all file names to "Allowed Values"
                         lookup_dir: 'post_tasks'
+
+            - title: Group F
+              options:
+                    value-minmax:
+                        type: int
+                        help: "value with a minimum and maximum values"
+                        minimum: 100
+                        maximum: 200
+
