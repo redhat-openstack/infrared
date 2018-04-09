@@ -26,7 +26,6 @@
   when: vbmc_host == 'undercloud'
 
 - name: Remove existing Virtual BMCs
-  # grab only lines with port number (more than 2 digits)
   shell: |
       vbmc stop {{ hostvars[item].original_name|default(item) }}
       vbmc delete {{ hostvars[item].original_name|default(item) }}
@@ -34,8 +33,9 @@
   with_items: "{{ vbmc_nodes }}"
 
 - name: Get current count of used vbmc ports
-  shell: vbmc list | grep 62 | wc -l
-  register: vbmc_used_ports
+  # grab only lines with port number (matching 3 start digits to confirm same pool of ports)
+  shell: vbmc list | grep 623 | wc -l
+  register: vbmc_used_common_ports
 
 - name: Define vbmc_port for each VM
   set_fact:
@@ -43,6 +43,7 @@
   with_indexed_items: "{{ vbmc_nodes }}"
   vars:
       vbmc_start_port: 6230
+  when: vbmc_used_common_ports.rc == 0
 
 - include_tasks: iptables.yml
 
