@@ -371,6 +371,16 @@ subparsers:
                       help: Whether to use an external storage rather than setting it up with the director
                       default: no
 
+                  storage-method:
+                      type: Value
+                      choices:
+                          - puppet
+                          - ansible
+                      help: |
+                        Selecting deploy method when multiple method is possible.
+                        Today this option is only used when the openetsk version is pike or newer and
+                        the storage-external is yes/true, but it can be extended in the future.
+                        Default behavior depends on the OpenStack version.
                   storage-backend:
                       type: Value
                       choices:
