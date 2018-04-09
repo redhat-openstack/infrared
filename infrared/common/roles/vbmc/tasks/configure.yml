@@ -39,8 +39,8 @@
 
 - name: Define vbmc_port for each VM
   set_fact:
-      vbmc_ports: "{{ vbmc_ports|default({})|combine({ hostvars[item.1].original_name|default(item.1): vbmc_start_port + vbmc_used_ports.stdout|int + item.0 }) }}"
-  with_indexed_items: "{{ vbmc_nodes }}"
+      vbmc_ports: "{{ vbmc_ports|default({})|combine({ hostvars[item].original_name|default(item): vbmc_used_ports.stdout|int + item }) }}"
+  with_items: "{{ vbmc_nodes }}"
   vars:
       vbmc_start_port: 6230
 
