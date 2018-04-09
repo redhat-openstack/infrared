@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "f4ae0e46_64b59e8b",
+        "filename": "infrared/core/inspector/inspector.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2018-04-09T16:39:01Z",
+      "side": 1,
+      "message": "I don\u0027t agree with this.\nThis will require using the .get function twice instead of once...\nFor example:\nmin_value \u003d \u0027\u0027 if \u0027minimum\u0027 in spec_option and spec_option.get(\u0027minimum\u0027) is None else spec_option.get(\u0027minimum\u0027)",
+      "parentUuid": "08e9ab45_f231f0e9",
+      "range": {
+        "startLine": 485,
+        "startChar": 20,
+        "endLine": 486,
+        "endChar": 58
+      },
+      "revId": "bc10be244a3ae888f01eaf32dd2d1a26cb384b65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "590ba219_343c13bd",
         "filename": "infrared/core/inspector/inspector.py",
         "patchSetId": 5
@@ -71,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "28d92504_6285f112",
+        "filename": "infrared/core/inspector/inspector.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2018-04-09T16:39:01Z",
+      "side": 1,
+      "message": "same here",
+      "parentUuid": "590ba219_343c13bd",
+      "range": {
+        "startLine": 489,
+        "startChar": 65,
+        "endLine": 489,
+        "endChar": 74
+      },
+      "revId": "bc10be244a3ae888f01eaf32dd2d1a26cb384b65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "389724b7_6727ee94",
         "filename": "infrared/core/inspector/inspector.py",
         "patchSetId": 5
@@ -82,6 +130,30 @@
       "writtenOn": "2018-04-09T16:10:08Z",
       "side": 1,
       "message": "spec_option.get(\u0027maximum\u0027)",
+      "range": {
+        "startLine": 491,
+        "startChar": 65,
+        "endLine": 491,
+        "endChar": 74
+      },
+      "revId": "bc10be244a3ae888f01eaf32dd2d1a26cb384b65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f61cafe_afb37a31",
+        "filename": "infrared/core/inspector/inspector.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2018-04-09T16:39:01Z",
+      "side": 1,
+      "message": "same here",
+      "parentUuid": "389724b7_6727ee94",
       "range": {
         "startLine": 491,
         "startChar": 65,
@@ -128,6 +200,30 @@
       "writtenOn": "2018-04-09T16:10:08Z",
       "side": 1,
       "message": "Personally, I don\u0027t like code duplication.\nMaybe it\u0027ll be better to combine these two checks into one check:\n\nif not min_value \u003c\u003d option_value \u003c\u003d max_value:\n  raise ...\n\nAnd the new exception class in this patch (IRInvalidMinMaxRangeException) will get only three args: min_value, max_value, option_value\nand will print a proper exception",
+      "range": {
+        "startLine": 512,
+        "startChar": 0,
+        "endLine": 527,
+        "endChar": 26
+      },
+      "revId": "bc10be244a3ae888f01eaf32dd2d1a26cb384b65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a4193e9_61c94c46",
+        "filename": "infrared/core/inspector/inspector.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2018-04-09T16:39:01Z",
+      "side": 1,
+      "message": "you cannot combine them into one check because it is not required to have both min and max values.\nYou can have only max or only min. in that case you cannot compare both min and max on the same if condition.\nIt can be done however in a loop, although I don\u0027t see the big difference in that case, because you\u0027ll still need to have different conditions for min and max.",
+      "parentUuid": "13ec1189_7afb2d7f",
       "range": {
         "startLine": 512,
         "startChar": 0,
@@ -197,6 +293,30 @@
       "writtenOn": "2018-04-09T16:10:08Z",
       "side": 1,
       "message": "Please don\u0027t forget to check valid args for min\u0026max params with invalid args for test_key (option_value)",
+      "range": {
+        "startLine": 141,
+        "startChar": 55,
+        "endLine": 141,
+        "endChar": 72
+      },
+      "revId": "bc10be244a3ae888f01eaf32dd2d1a26cb384b65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b39c9c1_97fca63b",
+        "filename": "tests/test_spec.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1012221
+      },
+      "writtenOn": "2018-04-09T16:39:01Z",
+      "side": 1,
+      "message": "this is already being tested in the test before this one -\ntest_min_max_args",
+      "parentUuid": "713f2114_0c684174",
       "range": {
         "startLine": 141,
         "startChar": 55,
