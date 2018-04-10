@@ -12,6 +12,14 @@
         mirror: "{{ install.mirror | default(omit) }}"
         enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
   tasks:
+      - name: Enable current dev working repo
+        yum_repository:
+            description: "Adding devtools repo"
+            enabled: yes
+            baseurl=http://download-node-02.eng.bos.redhat.com/rcm-guest/puddles/OpenStack/rhos-release/
+            name: rhelosp-{{ install.version }}.0-devtools-puddle
+            includepkgs: openstack-packstack
+
       - name: Update all packages
         package:
             name: "*"
@@ -19,6 +27,6 @@
 
       - name: Enable patched_rpms repository
         yum_repository:
-            enabled: true
+            enabled: yes
             name: patched_rpms
         when: patch is defined
