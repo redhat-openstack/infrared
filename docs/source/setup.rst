@@ -7,10 +7,8 @@ Supported distros
 -----------------
 Currently supported distros are:
 
-* Fedora 22, 23, 24, 25
-* RHEL 7.2 (best effort, deprecated)
-* RHEL 7.3
-* RHEL 7.4
+* Fedora 25, 26, 27
+* RHEL 7.3, 7.4, 7.5
 
 .. warning:: Python 2.7 and virtualenv are required.
 
