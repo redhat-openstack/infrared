@@ -12,6 +12,13 @@
         mirror: "{{ install.mirror | default(omit) }}"
         enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
   tasks:
+      - name: Enable current dev working repo
+        shell: |
+            yum-config-manager \
+            --setopt 'rhelosp-{{ install.version }}.0-devtools-puddle.includepkgs=openstack-packstack*' \
+            --enable rhelosp-{{ install.version }}.0-devtools-puddle >>/var/log/yum.log
+        when: "install.version|openstack_release >= 13"
+
       - name: Update all packages
         package:
             name: "*"
@@ -19,6 +26,6 @@
 
       - name: Enable patched_rpms repository
         yum_repository:
-            enabled: true
+            enabled: yes
             name: patched_rpms
         when: patch is defined
