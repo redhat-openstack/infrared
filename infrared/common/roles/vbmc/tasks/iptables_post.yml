@@ -1,0 +1,18 @@
+# opens vbmc ports after overcloud deploy
+- name: Get current vbmc ports
+  shell: vbmc list | awk -F '|'  'NR>2 NF { print $5 }'
+  register: vbmc_current_ports
+
+- name: allow access to port vbmc ports from overcloud
+  become: True
+  iptables:
+      action: insert
+      comment: "Infrared: vbmc ports"
+      table: filter
+      chain: INPUT
+      jump: ACCEPT
+      protocol: "udp"
+      source: "{{ hostvars[groups.hypervisor|first].ansible_default_ipv4.address }}"
+      destination_port: "{{ item }}"
+  with_items:
+      - "{{ vbmc_current_ports.stdout_lines }}"

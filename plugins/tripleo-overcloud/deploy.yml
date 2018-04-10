@@ -213,9 +213,9 @@
       delegate_to: hypervisor
       include_role:
           name: vbmc
+          tasks_from: iptables_post
       vars:
           vbmc_nodes: "{{ oc_nodes | difference(bm_nodes) }}"
-          overcloud_deploy: "yes"
       when:
           - install.version|default(undercloud_version) | openstack_release >= 11 or install.vbmc.force
           - "'hypervisor' in groups"
