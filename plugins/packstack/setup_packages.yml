@@ -12,6 +12,11 @@
         mirror: "{{ install.mirror | default(omit) }}"
         enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
   tasks:
+      - name: enable repo for testing puddle
+        shell: |
+            yum-config-manager \
+            --enable rhelosp-{{ install.version }}.0-devtools-puddle >/var/log/yum.log \
+
       - name: Update all packages
         package:
             name: "*"
