@@ -45,7 +45,7 @@
   import_playbook: "{{ composable_roles | default('composable_roles.yml') }}"
   when:
       - install.deploy|default('')
-      - install.role is defined and install.role.files != 'default'
+      - install.role is defined
       - (install.version|default(undercloud_version) | openstack_release < 12) or install.tht.roles == false
       - not install.splitstack
 
