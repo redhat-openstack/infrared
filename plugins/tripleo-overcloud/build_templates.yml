@@ -96,12 +96,8 @@
             - "'hypervisor' not in groups or install.hybrid|default(false)"
             - undercloud_public_ip
 
-      # ensure we have all envs/roles referenced in deploy script for container image preparation
       - include_tasks: tasks/append_script.yml
-        when:
-            - not overcloud_deploy_script|default('')
-            - install.containers|default('')
-            - install.version|default(undercloud_version)|openstack_release >= 12
+        when: not overcloud_deploy_script|default('')
 
       - name: append extra templates provided by user
         include_tasks: tasks/environment_templates.yml
@@ -123,9 +119,6 @@
             dest: "~/overcloud_deploy.sh"
             line: '-p ~/environment_plan.yaml \'
         when: (install.environment|default({})).plan|default(false)
-
-      - include_tasks: tasks/append_script.yml
-        when: not overcloud_deploy_script|default('')
 
       - name: set overcloud_deploy script
         set_fact:
