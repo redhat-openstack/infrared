@@ -67,6 +67,15 @@ subparsers:
                           Specifies whether ths SSL should be used for undercloud
                           A self-signed SSL cert will be generated.
                       default: no
+                  shade-host:
+                      type: Value
+                      help: |
+                          The name of the host which will be used as a shade node to handle all the os_* ansible
+                          modules requests. If this value is not provided, Infrared will use hypervisor host if present,
+                          otherwise undercloud is used.
+                          Example:
+                                --shade-host undercloud-0
+
             - title: Splitstack deployment
               options:
                   splitstack:
@@ -144,6 +153,13 @@ subparsers:
                           cdn - use internal mirrors of the CDN repos. (internal use)
                           none - use none of those flags
                       default: pin
+                  from-source:
+                      type: NestedList
+                      action: append
+                      help: |
+                          Install tripleo components from upstream git repository
+                          --from-source name=openstack/neutron,refs=refs/changes/REF_ID
+                          --from-source name=openstack/python-tripleoclient
 
                   enable-testing-repos:
                       type: Value

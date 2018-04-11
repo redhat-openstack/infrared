@@ -1,0 +1,11 @@
+{% for repo in repopath.files %}
+{% set repo_path = repo.path.replace('/repodata', '') %}
+{% set repo_name = repo_path.split('/')[-1] %}
+[{{ repo_name }}]
+name={{ repo_name }}
+baseurl=file://{{ repo_path }}
+enabled=1
+gpgcheck=0
+priority=1
+
+{% endfor %}

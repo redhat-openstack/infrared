@@ -1,0 +1,113 @@
+- name: enable test repo in order to get access to pip
+  shell: |
+      yum-config-manager \
+          --setopt 'rhelosp-{{ install.version }}.0-test-deps.includepkgs=python-pip,python2-pip' \
+          --enable rhelosp-{{ install.version }}.0-test-deps >/var/log/yum.log \
+          --setopt 'rhelosp-rhel-{{ ansible_distribution_version }}-server-opt.includepkgs=yum-plugin-priorities' \
+          --enable rhelosp-rhel-{{ ansible_distribution_version }}-server-opt >/var/log/yum.log
+  args:
+      warn: no
+  tags: skip_ansible_lint
+
+- name: Install epel-release-latest-7
+  yum:
+      name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+      state: present
+
+- name: Add delorean extra repository to extra_repos fact
+  set_fact:
+      extra_repos: "{{ extra_repos|default([]) }} + {{ extra_delorean }}"
+
+- name: Install build dependencies
+  package:
+      name: "{{ setup.dependencies[overcloud_version|default('defaults')] }}"
+      state: present
+
+- name: Add user to mock group
+  user:
+      name: stack
+      groups: mock
+      append: yes
+
+- block:
+    - name: Clone delorean project
+      git:
+          repo: "{{ item.repo }}"
+          dest: "{{ work_dir }}/{{ item.dest }}"
+          version: "{{ item.version|default('master') }}"
+          force: yes
+      with_items: "{{ git }}"
+
+    - name: Create delorean virtualenv
+      pip:
+          requirements: "{{ work_dir }}/delorean/requirements.txt"
+          virtualenv: "{{ work_dir }}/delorean/venv"
+          virtualenv_python: "{{ pip_virtualenv_python }}"
+
+    - name: Install delorean
+      shell: |
+          source venv/bin/activate
+          pip install .
+      args:
+          chdir: "{{ work_dir }}/delorean"
+
+    - name: Disable gpg check for delorean repo
+      replace:
+          dest: "{{ work_dir }}/delorean/scripts/centos.cfg"
+          regexp: "gpgcheck=1"
+          replace: "gpgcheck=0"
+
+    - name: Update openstack project names
+      set_fact:
+          openstack_projects: "
+              {%- for prj in build_components -%}
+                  {%- set tmp_dest = prj['name'].split('/')[-1] -%}
+                  {%- if tmp_dest.startswith(('puppet', 'python')) -%}
+                      {{ prj.update({'dest': tmp_dest}) }}
+                  {%- else -%}
+                      {{ prj.update({'dest': 'openstack-%s' % tmp_dest}) }}
+                  {%- endif -%}
+              {%- endfor -%}
+              {{ build_components }}"
+
+    - name: Clone tripleo components
+      git:
+          repo: "https://git.openstack.org/{{ item.name }}"
+          dest: "{{ work_dir }}/delorean/data/{{ item.dest }}"
+          refspec: "{{ item.refs }}"
+          version: 'FETCH_HEAD'
+      with_items: "{{ openstack_projects }}"
+      when:
+        - item.refs is defined
+
+    - name: Build package of tripleo components
+      vars:
+          branch: "{{ item.branch|default(os_release_mapping.get(install.version|openstack_release, 'master')) }}"
+          distro: "{{ (branch == 'master')|ternary('rpm-master', '%s-rdo' % branch) }}"
+          source: "{{ (branch == 'master')|ternary('master', 'stable/%s' % branch) }}"
+      shell: |
+          sed -e 's|\(distro=\).*|\1{{ distro }}|' \
+              -e 's|\(source=\).*|\1{{ source }}|' -i projects.ini
+
+          source venv/bin/activate
+          ./venv/bin/dlrn --package-name {{ item.dest }} \
+                          --config-file projects.ini \
+                          --info-repo rdoinfo --dev --local
+      with_items: "{{ openstack_projects }}"
+      args:
+          chdir: "{{ work_dir }}/delorean"
+
+    - name: Find delorean repos
+      find:
+        paths: "{{ work_dir }}/delorean/data/repos"
+        patterns: 'repodata'
+        file_type: directory
+        recurse: yes
+      register: repopath
+  become: no
+
+- name: Setup repository in /etc/yum.repos.d
+  template:
+      src: patched_rpms.j2
+      dest: '/etc/yum.repos.d/from_source.repo'
+  when: repopath.files|length > 0

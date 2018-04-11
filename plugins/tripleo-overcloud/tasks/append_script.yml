@@ -9,7 +9,7 @@
       path: "{{ template_base }}/network"
   register: network
 
-- name: Append netwrok templates to the deploy script
+- name: Append network templates to the deploy script
   include_tasks: network.yml
   tags: network
   when: network.stat.exists
@@ -75,20 +75,20 @@
       - install.version|openstack_release >= 12
       - (install.version|openstack_distribution) == 'OSP'
 
-- name: check for list of user defined templates
+- name: "find user defined templates in {{ template_base }}"
   find:
       paths: "{{ template_base }}"
       patterns: "*.yaml"
   register: template_list
 
-- name: append all custom templates provided by the user
+- name: "append all custom templates provided by the user in {{ template_base }}"
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ item.path }} \'
       insertbefore: "^--log-file.*"
   with_items: "{{ template_list.files }}"
 
-- name: Append the invocation line to the base overcloud deploy script
+- name: Append log-file invocation line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       regexp: "^--log-file .*"

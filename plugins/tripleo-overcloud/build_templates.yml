@@ -63,13 +63,12 @@
             content: "{{ config_heat_yaml | to_nice_yaml }}"
         when: config_heat_yaml is defined
 
-      - name: check if custom overcloud_deploy.sh exists
+      - name: "check if custom overcloud_deploy.sh already exists in {{ template_base }}"
         stat:
             path: "{{ template_base }}/overcloud_deploy.sh"
         register: deploy_script
 
-      - name: copy our overcloud deployment script if provided by the user
-        tags: overcloud_deploy
+      - name: copy overcloud deployment script if provided by the user at the command line
         copy:
             src: "{{ install.overcloud.script }}"
             dest: "~/{{ install.overcloud.script | basename }}"
@@ -87,19 +86,15 @@
             mode: 0755
         when: not overcloud_deploy_script|default('')
 
-      - name: append extra templates provided by user
-        include_tasks: tasks/environment_templates.yml
-        with_items: "{{ install.overcloud.templates|default([]) }}"
-        loop_control:
-            loop_var: templates_list_file
-        # avoid empty strings
-        when: "templates_list_file != ''"
-
       - name: Enable external network access through newly created vlan interface on undercloud
         include_tasks: tasks/undercloud-ext-vlan.yml
+        tags:
+            - ext_vlan
         vars:
             undercloud_public_ip: "{{ install.public.get('vlan', {}).get('ip', '') }}"
-        when: "'hypervisor' not in groups and undercloud_public_ip"
+        when:
+            - "'hypervisor' not in groups or install.hybrid|default(false)"
+            - undercloud_public_ip
 
       # ensure we have all envs/roles referenced in deploy script for container image preparation
       - include_tasks: tasks/append_script.yml
@@ -108,6 +103,14 @@
             - install.containers|default('')
             - install.version|default(undercloud_version)|openstack_release >= 12
 
+      - name: append extra templates provided by user
+        include_tasks: tasks/environment_templates.yml
+        with_items: "{{ install.overcloud.templates|default([]) }}"
+        loop_control:
+            loop_var: templates_list_file
+        # avoid empty strings
+        when: "templates_list_file != ''"
+
       - include_role: name="containers/prepare-templates"
         tags:
             - containers
@@ -115,7 +118,7 @@
             - install.containers|default('')
             - install.version|default(undercloud_version)|openstack_release >= 12
 
-      - name: add environment plan to deply script
+      - name: add environment plan to deploy script
         lineinfile:
             dest: "~/overcloud_deploy.sh"
             line: '-p ~/environment_plan.yaml \'
@@ -132,3 +135,4 @@
       - name: Print deploy command
         command: "cat {{ overcloud_deploy_script }}"
         tags: deploy
+        no_log: False
