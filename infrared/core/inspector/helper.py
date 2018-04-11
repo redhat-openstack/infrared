@@ -112,6 +112,9 @@ class SpecDictHelper(object):
                         group,
                         parser_dict['name']))
 
+            for option in grp_dict.get('options', {}).values():
+                option['is_shared_group_option'] = True
+
             parser_groups_list = parser_dict.get('groups', [])
             parser_groups_list.append(deepcopy(grp_dict))
             parser_dict['groups'] = parser_groups_list

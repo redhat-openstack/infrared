@@ -574,7 +574,7 @@ class SpecParser(object):
                     arg_spec.get('type', None) in
                     [ctype_name for ctype_name, klass in
                      COMPLEX_TYPES.items() if klass.is_nested]
-                    ]):
+                    ]) or ('is_shared_group_option' not in arg_spec):
                 if arg_name in nested:
                     LOG.warning(
                         "Duplicated nested argument found:'{}'. "
