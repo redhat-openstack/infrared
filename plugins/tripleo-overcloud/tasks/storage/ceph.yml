@@ -26,14 +26,24 @@
       line: '-e {{ install.heat.templates.basedir }}/environments/storage-environment.yaml \'
   when: (not install.containers) or (install.version|default(undercloud_version)|openstack_release < 12)
 
-
-- name: append the storage template line to the base overcloud deploy script
+- name: append the storage template line to the base overcloud external ansible ceph deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e  /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible-external.yaml \'
   when:
       - (install.version|default(undercloud_version)|openstack_release >= 12)
       - install.storage.external
+      - ((install.storage.method is not defined and (install.version|default(undercloud_version)|openstack_release > 12)) or (install.storage.method is defined and install.storage.method == 'ansible'))
+
+
+- name: append the storage template line to the base overcloud external puppet ceph deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e  /usr/share/openstack-tripleo-heat-templates/environments/puppet-ceph-external.yaml \'
+  when:
+      - (install.version|default(undercloud_version)|openstack_release >= 12)
+      - install.storage.external
+      - ((install.storage.method is not defined and (install.version|default(undercloud_version)|openstack_release == 12)) or (install.storage.method is defined and install.storage.method == 'puppet'))
 
 - block:
       - name: prepare ceph storage template
