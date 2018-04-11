@@ -5,6 +5,46 @@
       state: present
   register: tempest_rpm
 
+- block:
+    - name: load 'debug mode' facts from file
+      include_vars:
+          file: "vars/debug_mode.yml"
+          name: 'debug_mode'
+
+    - name: setup 'debug mode' version of Tempest
+      shell: |
+            curl --insecure -L -4 \
+            https://review.openstack.org/changes/553896/revisions/7ca5bb8eedc56329c0375b3bf6bf84b4778fbd30/patch?download | \
+            base64 --decode | \
+            sudo git apply --directory /usr/lib/python2.7/site-packages/
+      # TODO: make it discover whether the patch was already applied instead of ingoring errors
+      # it might have been already applied
+      ignore_errors: true
+  when: test.mode == 'debug_failing' or test.mode == 'debug_all'
+  tags: debug_mode
+
+- name: install sosreport_overcloud.sh that will capture openstack related data
+  template:
+      src: "sosreport_overcloud.sh.j2"
+      dest: "/usr/local/bin/sosreport_overcloud.sh"
+      mode: 0755
+  become: true
+  when:
+      - test.mode == 'debug_failing' or test.mode == 'debug_all'
+      - test.debug.command | regex_search('(sosreport_overcloud)')
+  tags: debug_mode
+
+- name: install opendaylight_analyze.sh that will capture all things opendaylight
+  template:
+      src: "opendaylight_analyze.sh.j2"
+      dest: "/usr/local/bin/opendaylight_analyze.sh"
+      mode: 0755
+  become: true
+  when:
+      - test.mode == 'debug_failing' or test.mode == 'debug_all'
+      - test.debug.command | regex_search('(opendaylight_analyze)')
+  tags: debug_mode
+
 - name: List tempest version
   become: yes
   command: "rpm -q --qf %{VERSION} openstack-tempest"
@@ -15,7 +55,7 @@
   command: "rpm -q --qf %{RELEASE} openstack-tempest"
   register: tempest_rpm_release
 
-- debug: "msg='Build mark: tempest={{ tempest_rpm_version.stdout }}-{{ tempest_rpm_release.stdout }}'"
+- debug: "msg='Build mark: tempest={{ tempest_rpm_version.stdout }}-{{ tempest_rpm_release.stdout }}{{ tempest_version_suffix | default('') }}'"
 
 - name: Install test plugins
   include_tasks: install_plugins.yml
