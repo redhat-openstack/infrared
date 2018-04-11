@@ -1,0 +1,148 @@
+#!/bin/bash
+
+# to make the errors part of output captured by tempest
+exec 2>&1
+
+# we try to capture as much as possible - we don't care if some commands fail
+set +e
+
+TEST_NAME="${TEST_NAME:-no-test-name}"
+TEST_NAME_SHORT=${TEST_NAME/% */}
+DATETIME=$(date +%Y%m%d_%H%M%S)
+OVS_OUTPUT_DIR={{ debug_mode.tempest_debug_dir }}/$DATETIME-openvswitch_analyze-$TEST_NAME_SHORT
+SOS_OUTPUT_DIR={{ debug_mode.tempest_debug_dir }}/$DATETIME-sosreport-$TEST_NAME_SHORT
+TMP_DIR=$(mktemp -d /tmp/sosreport_overcloud-XXXXXX)
+SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+SOS_CMD="sudo -E sosreport --batch --build --tmp-dir $SOS_OUTPUT_DIR --log-size=1 -o {{ debug_mode.sosreports_plugins }}"
+
+trap "{ rm -rf $TMP_DIR; }" EXIT INT TERM
+
+OVERCLOUD_SERVERS_NAMES=()
+OVERCLOUD_SERVERS_IPS=()
+
+print_title(){
+    echo -e "\n\n\nTEMPEST DEBUG($oc_server_name): $1\n-------------\n"
+}
+
+print_title_and_run(){
+    print_title "$1"
+    $1
+}
+
+oc_server_name=$(hostname)
+log_server=$oc_server_name
+
+print_title "This script discovers Overcloud servers and runs sosreport on them"
+
+discover_overcloud_servers() {
+    . /home/stack/stackrc
+    for line in $(openstack server list -f csv --quote minimal -c Name -c Networks|grep -v "Name,Networks"); do
+        server_name=$(echo $line | cut -d',' -f 1)
+        server_ip=$(echo $line | cut -d',' -f 2 | cut -d'=' -f 2)
+        OVERCLOUD_SERVERS_NAMES+=("$server_name")
+        OVERCLOUD_SERVERS_IPS+=("$server_ip")
+    done
+
+    print_title "Discovered Overcloud servers"
+    echo "OVERCLOUD_SERVERS_NAMES: ${OVERCLOUD_SERVERS_NAMES[@]}"
+    echo "OVERCLOUD_SERVERS_IPS: ${OVERCLOUD_SERVERS_IPS[@]}"
+}
+
+check_update_sos(){
+    print_title "Check and update sos to at least 3.5 if needed"
+    SOS_VERSION=$(rpm -q --qf %{VERSION} sos)
+    SOS_VERSION_INT=${SOS_VERSION/./}
+    if [ $SOS_VERSION_INT -lt 35 ] ; then
+        # sos before 3.5 is practically unusable from openvswitch/opendaylight point of view
+        print_title "Discovered old version of sos ($SOS_VERSION). Installing version 3.5."
+        curl -sL --insecure https://url.corp.redhat.com/sos-3-5-5-el7-noarch-rpm -o $TMP_DIR/sos.rpm
+        sudo yum install -y $TMP_DIR/sos.rpm
+    fi
+}
+
+_ovs_dump_openflow(){
+    for cmd_ in "sudo ovs-ofctl -O OpenFlow13 show $1" "sudo ovs-ofctl -O OpenFlow13 dump-flows $1" "sudo ovs-ofctl -O OpenFlow13 dump-groups $1" "sudo ovs-ofctl -O OpenFlow13 dump-group-stats $1"; do
+        print_title_and_run "$cmd_"
+    done
+}
+
+ovs_show(){
+    print_title_and_run "sudo ovs-vsctl show"
+    print_title_and_run "sudo ovs-vsctl list Open_vSwitch"
+
+    OVS_BRIDGES="$(sudo ovs-vsctl show | awk '$0 ~ /Bridge/ {print $2}')"
+    print_title "All discovered bridges"
+    echo "$OVS_BRIDGES"
+    for bridge in $OVS_BRIDGES ; do
+        _ovs_dump_openflow $bridge
+    done
+}
+
+net_info(){
+    for cmd_ in "sudo ip -s link" "sudo ip -o addr" "sudo ip n" "sudo ip route list table all" "sudo ip netns"; do
+        print_title_and_run "$cmd_"
+    done
+
+    for net_ns in $(sudo ip netns | cut -f1 -d' '); do
+        net_ns_cmd_pre="sudo ip netns exec $net_ns"
+        for net_ns_cmd in "ip -s link" "ip -o a" "ip r" "ip n"; do
+            print_title_and_run "$net_ns_cmd_pre $net_ns_cmd"
+        done
+    done
+}
+
+main() {
+    sudo mkdir -p $LOG_DIR $SOS_OUTPUT_DIR
+
+    discover_overcloud_servers
+    check_update_sos
+
+    # some sos plugins run openstack cli commands hence need openstack credentials - for undercloud
+    . /home/stack/stackrc
+    ovs_show; net_info;
+    $SOS_CMD --name="'$TEST_NAME-$oc_server_name'" -o {{ debug_mode.sosreports_plugins }}
+
+    # some sos plugins run openstack cli commands hence need openstack credentials - for overcloud
+    . /home/stack/overcloudrc
+
+    for oc_server_index in ${!OVERCLOUD_SERVERS_NAMES[@]}; do
+        oc_server_name=${OVERCLOUD_SERVERS_NAMES[$oc_server_index]}
+        export oc_server_name
+        oc_server_ip=${OVERCLOUD_SERVERS_IPS[$oc_server_index]}
+
+        print_title "Save functions to a file so we can run it on remote machine(s)"
+        echo "set -a" > $TMP_DIR/sosreport_overcloud_functions
+        # avoid exporting OS_ variables to the remote machines as sosreport's openstack client
+        # commands will run there as well = duplication of data that was already
+        # captured on $log_server
+        env | grep -i "oc_server" >> $TMP_DIR/sosreport_overcloud_functions
+
+        # we want sosreport to run openstack commands (via openstack client) on first controller
+        # to capture port/routers/servers/other resources currently created
+        if [ "$oc_server_name" == "controller-0" ]; then
+            env | grep -i "os_" >> $TMP_DIR/sosreport_overcloud_functions
+        fi
+
+        declare -f >> $TMP_DIR/sosreport_overcloud_functions
+
+        SSH_REMOTE=heat-admin@$oc_server_ip
+
+        OVS_OUTPUT_FILE="$OVS_OUTPUT_DIR/openvswitch_analyze-$DATETIME-$TEST_NAME-$oc_server_name.log"
+        SOS_CMD_LOCAL="$SOS_CMD --name=\"'$TEST_NAME-$oc_server_name'\""
+
+        scp $SSH_ARGS $TMP_DIR/sosreport_overcloud_functions $SSH_REMOTE:
+
+        print_title "Displaying and saving openvswitch analyze (openflow, net info) to $OVS_OUTPUT_FILE"
+        ssh $SSH_ARGS $SSH_REMOTE "source sosreport_overcloud_functions; mkdir -p $OVS_OUTPUT_DIR; { ovs_show; net_info; } | tee $OVS_OUTPUT_FILE"
+
+        ssh $SSH_ARGS $SSH_REMOTE "source sosreport_overcloud_functions; check_update_sos"
+
+        print_title "Run sos with requested plugins - sosreports saved on each overcloud machine (not the $log_server)"
+        ssh $SSH_ARGS $SSH_REMOTE "source sosreport_overcloud_functions; sudo mkdir -p $LOG_DIR $SOS_OUTPUT_DIR; $SOS_CMD_LOCAL"
+
+        # cleanup
+        ssh $SSH_ARGS $SSH_REMOTE "cat sosreport_overcloud_functions; rm -f sosreport_overcloud_functions"
+    done
+}
+
+time main

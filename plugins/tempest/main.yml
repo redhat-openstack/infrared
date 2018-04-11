@@ -7,6 +7,7 @@
   tasks:
       - name: Include virtual environment vars
         include_vars: "vars/venv.yml"
+        tags: always
 
       - include_role:
             name: version-discovery
@@ -22,12 +23,12 @@
         when: overcloud_version is defined
 
       - name: Prepare tempest files
-        include_tasks: tasks/pre/main.yml
+        import_tasks: tasks/pre/main.yml
         tags:
             - pre
 
       - name: Setup tempest
-        include_tasks: "tasks/setup/main.yml"
+        import_tasks: "tasks/setup/main.yml"
         tags:
             - setup
 
@@ -39,7 +40,7 @@
             - test.images is defined and test.images.packages
 
       - name: Configure tempest
-        include_tasks: "tasks/configure/main.yml"
+        import_tasks: "tasks/configure/main.yml"
         tags:
            - configure
 
@@ -52,7 +53,7 @@
             - run
 
       - name: Collect Ansible facts
-        include_tasks: 'tasks/collect-ansible-facts.yml'
+        import_tasks: 'tasks/collect-ansible-facts.yml'
         when: test.collect.ansible.facts|default(False)
         tags: collect-ansible-facts
         ignore_errors: True
