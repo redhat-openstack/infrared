@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# so all errors are part of output captured by tempest
+exec 2>&1
+
+# we don't care if some commands fail
+set +e
+
+DATETIME=$(date +%Y%m%d%H%M%S)
+WORKDIR=/tmp/netvirt-$DATETIME
+TEST_NAME_SHORT=${TEST_NAME/% */}
+LOGDIR={{ debug_mode.sosreports_dir }}/opendaylight_analyze/$TEST_NAME_SHORT-$DATETIME
+LOGDIR_PACKAGE=$(basename $LOGDIR).tar.gz
+
+trap "{ rm -rf $WORKDIR; }" EXIT INT TERM
+
+mkdir -p $WORKDIR
+sudo mkdir -p $LOGDIR
+sudo chmod -R 777 $LOGDIR/../
+
+. /home/stack/overcloudrc
+
+curl -4 https://git.opendaylight.org/gerrit/changes/70961/revisions/eb1ee1aa5f5a90cd596c4de3cb4c26ed23cc59d9/archive?format=tgz | tar zx --directory $WORKDIR
+
+CONTROLLER_IP="$(echo $OS_AUTH_URL | awk '{ match($0, /([0-9]+.){4}/); print substr($0, RSTART, RLENGTH-1)}')"
+
+ODL_IP=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null heat-admin@$CONTROLLER_IP \ "
+sudo awk '\$0 ~ /192.168.*8081/ { \
+match(\$0, /([0-9]+.){4}/); \
+print substr(\$0, RSTART, RLENGTH-1) \
+}' /var/lib/config-data/puppet-generated/haproxy/etc/haproxy/haproxy.cfg")
+
+echo "saving OpenDaylight captures (datastores) into $LOGDIR_PACKAGE"
+# ignore errors since there may be things we try to capture but they don't exist in OpenDaylight (i.e.: due to configuration)
+python $WORKDIR/resources/tools/odl/netvirt/ds_analyze.py -i $ODL_IP -t 8081 -u odladmin -p redhat -d $LOGDIR -m get_all_dumps
+
+tar --directory $LOGDIR/../ zcvf $LOGDIR_PACKAGE $LOGDIR
+rm -rf $LOGDIR
+
+exit 0
