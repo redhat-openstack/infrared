@@ -44,6 +44,19 @@
                 disk_size: "{{ topology_node.disks.disk1.size }}"
         when: (topology_node.disks.disk1.size|filesize('M')|int - topology_node.swap|default(0)|int) < (disk1_min|filesize('M')|int)
 
+      # get disk_pool path
+      - stat:
+          path: "{{ disk_pool }}"
+        register: disk_pool_path
+        when: disk_pool | default(False)
+
+      # check if disk_pool is link and get path where the link points to
+      - stat:
+          path: "{{ disk_pool_path.stat.lnk_source }}"
+        register: disk_pool_link
+        when: (disk_pool | default(False)) and (disk_pool_path.stat.islnk is defined and disk_pool_path.stat.islnk)
+
+      # create disk_pool dir or ommit this step if it exists and is dir or link pointing to dir
       - name: check and create directory
         file:
           path: "{{ disk_pool }}"
@@ -51,7 +64,7 @@
           owner: root
           group: root
           mode: 0755
-        when: disk_pool | default(False)
+        when: (disk_pool | default(False)) and not (disk_pool_link.stat is defined and disk_pool_link.stat.isdir is defined and disk_pool_link.stat.isdir)
 
       # For disks usually it will be only 1 disk so the async will run on nodes rather than disks creation
       - name: create disk(s) from vm base image
