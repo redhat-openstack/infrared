@@ -155,6 +155,12 @@ subparsers:
                           Use "virt" to enable preset templates for virtual POC environment.
                       required: yes
 
+                  deployment-timeout:
+                      type: int
+                      help: The overcloud deployment timeout in minutes.
+                      default: 100
+                      maximum: 180
+
                   instackenv-file:
                       type: Value
                       help: The path to the instackenv.json configuration file used for introspection.
