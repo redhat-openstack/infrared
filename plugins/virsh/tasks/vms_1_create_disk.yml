@@ -44,6 +44,17 @@
                 disk_size: "{{ topology_node.disks.disk1.size }}"
         when: (topology_node.disks.disk1.size|filesize('M')|int - topology_node.swap|default(0)|int) < (disk1_min|filesize('M')|int)
 
+      - stat:
+          path: "{{ disk_pool }}"
+        register: disk_pool_stat
+      - debug:
+          msg: "Path exists and is a symlink"
+        when: disk_pool_stat.stat.islnk is defined and disk_pool_stat.stat.islnk
+      - stat:
+          path: "{{ disk_pool_stat.stat.lnk_source }}"
+        register: disk_pool_lnk_source_stat
+        when: disk_pool_stat.stat.islnk is defined and disk_pool_stat.stat.islnk
+
       - name: check and create directory
         file:
           path: "{{ disk_pool }}"
