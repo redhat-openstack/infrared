@@ -52,12 +52,15 @@
 #the --nvram arg is required in case VMs were provisioned with bootmode=uefi
 #The cleanup step isn't aware of original bootmode setting
 - name: undefine relevant VMs
-  command: "sudo virsh undefine --nvram {{ item }}"
+  become: true
+  command: "virsh undefine --nvram {{ item }}"
+  args:
+    warn: no
   with_items: "{{ vm_names.list_vms }}"
   tags: skip_ansible_lint
 
 - name: Clean /etc/hosts file
-  become: yes
+  become: true
   lineinfile:
       dest: /etc/hosts
       regexp: ".*{{ item }}.*"
@@ -117,4 +120,5 @@
   shell: "rm -f {{ item }}*disk*.qcow*"
   args:
       chdir: "{{ provision.disk.pool }}"
+      warn: no
   with_items: "{{ vm_names.list_vms }}"

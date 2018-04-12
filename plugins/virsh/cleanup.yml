@@ -26,6 +26,8 @@
   tasks:
     - name: check if installed package
       command: "rpm -qa libvirt"
+      args:
+        warn: no
       register: libvirt_status
 
     # Don't cleanup if the libvirtd process is unavailable
@@ -62,7 +64,7 @@
     - name: kill vbmc processes
       command: killall vbmc
       when: vbmc_proc.rc == 0
-      ignore_errors: true
+      failed_when: false
 
 - name: Clean old inventory file
   hosts: localhost
