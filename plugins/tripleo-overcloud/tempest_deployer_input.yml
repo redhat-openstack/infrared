@@ -59,6 +59,11 @@
                   option: plugins
                   value: "ambari,cdh,mapr"
                   condition: "{{ install.version|default(undercloud_version)|openstack_release >= 12 }}"
+                # The extenasions not configured by tempest-conf on 8  rhbz#1323991, rhbz#1318842
+                - secteio: identity-feature-enabled
+                  option: api_extensions
+                  value: "OS-EC2"
+                  condition: "{{ install.version|default(undercloud_version)|openstack_release == 8 }}"
         ini_file:
             dest: "{{ inventory_dir }}/{{ deployer_input | basename }}"
             section: "{{ item.section }}"
