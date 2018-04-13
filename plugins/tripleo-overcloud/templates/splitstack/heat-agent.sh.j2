@@ -1,7 +1,8 @@
 #!/bin/bash
 . ~/stackrc
-{% set ns = namespace(saved_roles='', role_hosts=dict(), role_hosts_key='') %}
+{% set ns = namespace(saved_roles='', role_hosts=dict(), role_hosts_key='', oc_nodes='' ) %}
 {% for host_name in groups.overcloud_nodes %}
+{% set ns.oc_nodes = ns.oc_nodes ~ hostvars[host_name]['ansible_eth0']['ipv4']['address'] ~ ' ' %}
 {% set role_prefix = host_name.rstrip('1234567890-').split('-')[-1].title() %}
 {%- if role_prefix not in ns.saved_roles %}
 {% set ns.saved_roles = ns.saved_roles ~ role_prefix ~ 'DeployedServer' ~ ' ' %}
@@ -9,8 +10,10 @@
 {% set ns.role_hosts_key = role_prefix ~ 'DeployedServer' ~ '_hosts' %}
 {% set _dummy = ns.role_hosts.update({ ns.role_hosts_key: ns.role_hosts[ns.role_hosts_key]|default('') ~ hostvars[host_name]['ansible_eth0']['ipv4']['address'] ~ ' ' }) %}
 {% endfor %}
+export OVERCLOUD_HOSTS="{{ ns.oc_nodes }}"
 export OVERCLOUD_ROLES="{{ ns.saved_roles }}"
 {% for key,value in ns.role_hosts.items() %}
 export {{ key }}="{{ value }}"
 {% endfor %}
+/usr/share/openstack-tripleo-heat-templates/deployed-server/scripts/enable-ssh-admin.sh
 /usr/share/openstack-tripleo-heat-templates/deployed-server/scripts/get-occ-config.sh
