@@ -1,7 +1,9 @@
 #!/bin/bash
 
 . ~/stackrc
-timeout 100m openstack overcloud deploy --templates {{ install.heat.templates.basedir }} \
+openstack overcloud deploy \
+--timeout {{ install.deployment.timeout | int | default(100) }} \
+--templates {{ install.heat.templates.basedir }} \
 --libvirt-type {{ install.libvirt.type }} \
 --disable-validation \
 -r /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-server-roles-data.yaml \

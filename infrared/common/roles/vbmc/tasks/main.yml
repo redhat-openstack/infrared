@@ -1,7 +1,3 @@
-- name: set vars
-  set_fact:
-      overcloud_deploy: "no"
-
 - include_tasks: install.yml
   delegate_to: "{{  vbmc_inventory_host }}"
 
@@ -10,7 +6,7 @@
 
 - include_tasks: iptables.yml
   delegate_to: "{{  vbmc_inventory_host }}"
-  when: vbmc_inventory_host == "hypervisor" and overcloud_deploy == "yes"
+  when: vbmc_inventory_host == "hypervisor"
 
 - name: Register vars for instackenv template
   set_fact:

@@ -287,6 +287,7 @@ class SpecParser(object):
         dict_utils.dict_merge(defaults, cli_args)
         self.validate_requires_args(defaults)
         self.validate_choices_args(defaults)
+        self.validate_min_max_args(defaults)
 
         # now resolve complex types.
         self.resolve_custom_types(defaults)
@@ -464,6 +465,77 @@ class SpecParser(object):
             # raise exception with all arguments that contains invalid choices
             raise exceptions.IRInvalidChoiceException(invalid_options)
 
+    def validate_min_max_args(self, args):
+        """Check if value of arguments is between minimum and maximum values.
+
+        :param args: The received arguments.
+        """
+        invalid_options = []
+        for parser_name, parser_dict in args.items():
+            for spec_option in \
+                    self.spec_helper.get_parser_option_specs(parser_name):
+                if all([key not in spec_option
+                        for key in ('maximum', 'minimum')]):
+                    # skip options that does not contain minimum or maximum
+                    continue
+                option_name = spec_option['name']
+
+                if option_name in parser_dict:
+                    option_value = parser_dict[option_name]
+                    min_value = spec_option.get('minimum')
+                    max_value = spec_option.get('maximum')
+                    # handle empty values in spec files which load as None
+                    min_value = '' if 'minimum' in spec_option \
+                                      and min_value is None else min_value
+                    max_value = '' if 'maximum' in spec_option \
+                                      and max_value is None else max_value
+
+                    values = {
+                        "value": option_value,
+                        "maximum": max_value,
+                        "minimum": min_value
+                    }
+
+                    # make sure that values are numbers
+                    is_all_values_numbers = True
+                    for name, num in values.items():
+                        if num is not None \
+                                and (isinstance(num, bool) or
+                                     not isinstance(num, (int, float))):
+                            invalid_options.append((
+                                option_name,
+                                name,
+                                "number",
+                                type(num).__name__
+                            ))
+                            is_all_values_numbers = False
+
+                    if not is_all_values_numbers:
+                        # don't continue to min max checks since some of the
+                        # values are not numbers
+                        continue
+
+                    # check bigger than minimum
+                    if min_value is not None and option_value < min_value:
+                        invalid_options.append((
+                            option_name,
+                            "minimum",
+                            min_value,
+                            option_value
+                        ))
+                    # check smaller than maximum
+                    if max_value is not None and option_value > max_value:
+                        invalid_options.append((
+                            option_name,
+                            "maximum",
+                            max_value,
+                            option_value
+                        ))
+
+        if invalid_options:
+            # raise exception with all arguments that contains invalid choices
+            raise exceptions.IRInvalidMinMaxRangeException(invalid_options)
+
     def get_silent_args(self, args):
         """list of silenced argument
 
@@ -502,7 +574,7 @@ class SpecParser(object):
                     arg_spec.get('type', None) in
                     [ctype_name for ctype_name, klass in
                      COMPLEX_TYPES.items() if klass.is_nested]
-                    ]):
+                    ]) or ('is_shared_group_option' not in arg_spec):
                 if arg_name in nested:
                     LOG.warning(
                         "Duplicated nested argument found:'{}'. "
