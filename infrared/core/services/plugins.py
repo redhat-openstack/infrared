@@ -9,7 +9,10 @@ import git
 import github
 import os
 # TODO(aopincar): Add pip to the project's requirements
-import pip
+try:
+    from pip._internal import main as pip_main
+except ImportError:
+    from pip import main as pip_main
 import yaml
 import urllib2
 
@@ -393,7 +396,7 @@ class InfraredPluginManager(object):
         if not skip_reqs:
             reqs_file = os.path.join(plugin.path, 'requirements.txt')
             if os.path.isfile(reqs_file):
-                pip.main(['install', '-r', reqs_file])
+                pip_main(['install', '-r', reqs_file])
 
     def add_plugin(self, plugin_source, rev=None, plugins_registry=None,
                    plugin_src_path=None):
@@ -517,7 +520,7 @@ class InfraredPluginManager(object):
             LOG.info(
                 "Installing requirements from: {}".format(requirement_file))
             pip_args = ['install', '-r', requirement_file]
-            pip.main(args=pip_args)
+            pip_main(args=pip_args)
 
     def freeze(self):
         registry = {}
