@@ -122,6 +122,20 @@
             wait
         tags: summary
 
+- name: Post steps on controllers
+  hosts: controller
+  any_errors_fatal: true
+  tasks:
+        # w/a rhbz#1306633 rhbz#1366141 rhbz#1377788
+      - name: workaround heat-engine pcs start timeout rhbz#1306633 rhbz#1366141 rhbz#1377788
+        become: yes
+        shell: |
+            if ! systemctl is-active openstack-heat-engine; then
+               echo heat-engin is not active! Attempting to clean pcs  >&2
+               pcs resource cleanup openstack-heat-engine
+            fi
+         when: install.version|default(undercloud_version)|openstack_release == 7
+
 - name: Update inventory with overcloud details
   import_playbook: update_inventory.yml
   tags:
