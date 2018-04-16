@@ -111,6 +111,11 @@
         # avoid empty strings
         when: "templates_list_file != ''"
 
+      - name: Append nova schedulers template
+        vars:
+            templates_list_file: "nova_schedulers"
+        include_tasks: tasks/environment_templates.yml
+
       - import_role: name="containers/prepare-templates"
         tags:
             - containers
