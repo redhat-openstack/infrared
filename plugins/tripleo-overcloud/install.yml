@@ -33,7 +33,8 @@
             - "'hypervisor' in groups"
             - install.deploy|default('')
             - not install.introspect
-            - vbmc_host != 'undercloud' or (vbmc_host is not defined)
+            - vbmc_host is defined
+            - vbmc_host != 'undercloud'
 
 - name: Tag our machines with proper flavors
   import_playbook: "{{ overcloud_flavors | default('tag.yml') }}"
