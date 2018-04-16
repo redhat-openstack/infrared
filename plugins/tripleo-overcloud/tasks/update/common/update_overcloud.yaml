@@ -53,3 +53,9 @@
     - debug: msg="Ending floating IP dataplane ping check during minor update"
     - include: endping.yaml
   when: install.dataplaneping|default(False)
+
+- name: workaround bz#1568004
+  become: true
+  command: /usr/bin/gnocchi-upgrade
+  delegate_to: "{{ groups.controller | first }}"
+
