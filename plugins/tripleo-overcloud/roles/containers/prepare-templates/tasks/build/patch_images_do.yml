@@ -123,4 +123,5 @@
       set -e
       docker push {{ docker_registry_undercloud }}/{{ docker_registry_undercloud_namespace }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
   with_items: "{{ container_images_to_update }}"
+  when: item != 'rhceph-3-rhel7'
   become: true
