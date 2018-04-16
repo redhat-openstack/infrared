@@ -19,14 +19,12 @@
           - install.version|default(undercloud_version)|openstack_release >= 12
         become: yes
 
-- name: Populate the overcloud deploy script
-  import_playbook: build_templates.yml
+- import_playbook: build_templates.yml
   tags:
       - deploy_preparation
       - templates
 
-- name: Prepare TLS Everywhere
-  import_playbook: tls_everywhere.yml
+- import_playbook: tls_everywhere.yml
   tags:
       - deploy_preparation
       - templates
