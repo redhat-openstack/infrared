@@ -591,6 +591,20 @@ subparsers:
                           NOTE: If you use non default value for the option, and you execute introspection
                           and deploy (--introspect yes/--deploy yes) in different IR runs, you need to provide
                           the option on both runs.
+                  resource-class:
+                      type: NestedList
+                      action: append
+                      help: |
+                          Scheduling based on resource classes, a Compute service flavor is able to use the
+                          node’s resource_class field (available starting with Bare Metal API version 1.21)
+                          for scheduling, instead of the CPU, RAM, and disk properties defined in the flavor.
+                          A flavor can request exactly one instance of a bare metal resource class.
+                          The 'node' field supports 'controller' or 'controller-0' patterns.
+                          Example:
+                          --resource-class name=baremetal-ctr,flavor=controller,node=controller
+                          --resource-class name=baremetal-cmp,flavor=compute,node=compute-0
+                          --resource-class name=baremetal-other,flavor=compute,node=swift-0:baremetal
+                          (https://docs.openstack.org/ironic/latest/install/configure-nova-flavors.html#scheduling-based-on-resource-classes)
 
             - title: ansible facts
               options:
