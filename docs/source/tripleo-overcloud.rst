@@ -174,6 +174,30 @@ Overcloud Options
 * ``--heat-templates-basedir``: Allows to override the templates base dir
     to be used for deployment. Default value: "/usr/share/openstack-tripleo-heat-templates"
 
+* ``--resource-class``: Allows to enable or disable scheduling based on resource classes.
+    Scheduling based on resource classes, a Compute service flavor is able to use the
+    node’s resource_class field (available starting with Bare Metal API version 1.21)
+    for scheduling, instead of the CPU, RAM, and disk properties defined in the flavor.
+    A flavor can request exactly one instance of a bare metal resource class.
+    For more information about this feature, visit `Openstack documentation <https://docs.openstack.org/ironic/latest/install/configure-nova-flavors.html#scheduling-based-on-resource-classes>`_.
+
+    .. code-block:: plain
+
+       --resource-class False
+
+.. note::
+    * Scheduling based on resource classes is supported by OSP version >=12.
+    * Scheduling based on resource classes is enabled by default.
+
+* ``--override-resource-class``: Allows to create custom resource class and tie it to flavor and instances.
+    The `node` field supports `controller` or `controller-0` patterns.
+
+    .. code-block:: plain
+
+       --override-resource-class name=baremetal-ctr,flavor=controller,node=controller
+       --override-resource-class name=baremetal-cmp,flavor=compute,node=compute-0
+       --override-resource-class name=baremetal-other,flavor=compute,node=swift-0:baremetal
+
 Tripleo Heat Templates configuration options
 --------------------------------------------
 * ``--config-heat``: Inject additional Tripleo Heat Templates configuration options under "paramater_defaults"
