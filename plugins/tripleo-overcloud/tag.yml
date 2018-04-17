@@ -140,3 +140,26 @@
         with_together:
             - "{{ node_list.results }}"
             - "{{ tagged_flavors | default([]) }}"
+
+      - name: Add custom resource class
+        shell: |
+            source ~/stackrc
+            openstack flavor set {{ item.flavor }} \
+                --property resources:DISK_GB=0 \
+                --property resources:MEMORY_MB=0 \
+                --property resources:VCPU=0 \
+                --property resources:CUSTOM_{{ item.name.replace('-', '_').upper() }}=1
+            {% for node in item.node.split(':') %}
+                {% if '-' in node %}
+                    openstack baremetal node set $(openstack baremetal node show {{ node }} -c uuid -f value) \
+                    --resource-class {{ item.name }}
+                {% else %}
+                    openstack baremetal node list|awk '/{{ node }}/ {print $2}'| \
+                    xargs -I{} openstack baremetal node set {} --resource-class {{ item.name }}
+                {% endif %}
+            {% endfor %}
+        tags: skip_ansible_lint
+        with_items: "{{ install.resource.class }}"
+        when:
+            - install.resource is defined
+            - install.version|default(undercloud_version)|openstack_release >= 12
