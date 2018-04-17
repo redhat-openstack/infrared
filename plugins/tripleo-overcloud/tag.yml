@@ -140,3 +140,49 @@
         with_together:
             - "{{ node_list.results }}"
             - "{{ tagged_flavors | default([]) }}"
+
+      - block:
+          - name: Set default resource-class parameters
+            vars:
+                name: "{{ item.name.rstrip('1234567890-').split('-')[-1] }}"
+            set_fact:
+                default_resource_class: "{{ default_resource_class | default([]) + [{ 'name': name, 'flavor': name, 'node': item.name }] }}"
+            with_items: "{{ overcloud_facts.nodes | default([])}}"
+            tags: skip_ansible_lint
+            when:
+                - "overcloud_facts.nodes[0].name is defined"
+
+          - name: Debug variable
+            debug:
+                msg: "{{ default_resource_class + install.get('override', {}).get('resource', {}).class|default([]) }}"
+
+          - name: Add resource class to flavor and node
+            shell: |
+                set -exo pipefail
+
+                REGEX=".*-[0-9]+$"
+                source ~/stackrc
+                # Remove already exist custom resource class for flavor
+                for rclass in $(openstack flavor show {{ item.flavor }} -f value -c properties | grep -o 'CUSTOM_[A-Z_]*'); do
+                    openstack flavor unset {{ item.flavor }} --property resources:${rclass} 
+                done
+
+                openstack flavor set {{ item.flavor }} \
+                    --property resources:DISK_GB=0 \
+                    --property resources:MEMORY_MB=0 \
+                    --property resources:VCPU=0 \
+                    --property resources:CUSTOM_{{ item.name.replace('-', '_').upper() }}=1
+                {% for node in item.node.split(':') %}
+                    if [[ "{{ node }}" =~ $REGEX ]]; then
+                        openstack baremetal node set $(openstack baremetal node show {{ node }} -c uuid -f value) \
+                        --resource-class {{ item.name }}
+                    else
+                        openstack baremetal node list|awk '/{{ node }}/ {print $2}'| \
+                        xargs -I{} openstack baremetal node set {} --resource-class {{ item.name }}
+                    fi
+                {% endfor %}
+            tags: skip_ansible_lint
+            with_items: "{{ default_resource_class + install.get('override', {}).get('resource', {}).class|default([]) }}"
+        when:
+            - install.resource.class|bool == true
+            - install.version|default(undercloud_version)|openstack_release >= 12
