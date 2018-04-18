@@ -32,7 +32,10 @@
         debug: msg="{{ nova_host.stdout.split('.') | first }}"
 
       - name: get the default floating ip pool name from the server
-        command: "grep -oP \"(?<=default_floating_pool=)(.*$)\" /etc/nova/nova.conf"
+        shell: |
+            test -f /etc/nova/nova.conf && \
+                awk -F'=' '/^default_floating_pool/ {print $2}' /etc/nova/nova.conf || \
+                awk -F'\"' '/default_floating_pool/ {print $4}' /etc/puppet/hieradata/service_configs.json
         register: pool_name
         delegate_to: "{{ nova_host.stdout.split('.') | first }}"
         become: yes
