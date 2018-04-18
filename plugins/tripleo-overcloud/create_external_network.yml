@@ -32,10 +32,18 @@
         debug: msg="{{ nova_host.stdout.split('.') | first }}"
 
       - name: get the default floating ip pool name from the server
+        shell: "awk -F'\"' '/default_floating_pool/ {print $4}' /etc/puppet/hieradata/service_configs.json"
+        register: pool_name
+        delegate_to: "{{ nova_host.stdout.split('.') | first }}"
+        become: yes
+        when: install.version|default(undercloud_version)|openstack_release > 11
+
+      - name: get the default floating ip pool name from the server
         command: "grep -oP \"(?<=default_floating_pool=)(.*$)\" /etc/nova/nova.conf"
         register: pool_name
         delegate_to: "{{ nova_host.stdout.split('.') | first }}"
         become: yes
+        when: install.version|default(undercloud_version)|openstack_release < 12
 
 # FIXME(yfried): this is commented because virthost solution is misconfiguring vlan. Need to reevaluate the vlan indicators
 #      - name: Check if vlan is enabled for public network - get vlan trunks
