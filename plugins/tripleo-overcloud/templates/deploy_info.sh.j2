@@ -36,6 +36,12 @@ openstack server list -f value -c ID | xargs -n 1 openstack server show
 openstack server list |  awk 'BEGIN {a=0}; /\|/{ if (a>2) print $2} {a=a+1}' | xargs -n 1 openstack server show
 {% endif %}
 
+{% if (install.version|default(undercloud_version)|openstack_release) >= 11 %}
+echo "BM node info"
+openstack baremetal node list
+openstack baremetal node list -f value -C UUID | xargs -n 1 openstack baremetal node show
+{% endif %}
+
 echo "Deployments"
 {% if (install.version|default(undercloud_version)|openstack_release) >= 9 %}
 openstack software deployment list --long
