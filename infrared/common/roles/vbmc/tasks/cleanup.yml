@@ -25,11 +25,15 @@
   with_items:
       - python-virtualbmc
       - python2-virtualbmc
+  ignore_errors: true
 
+  # pip can be missing on a target host.
+  # so ignore errors and cleanup as much as possible
 - name: remove python-virtualbmc from pip
   pip:
       name: virtualbmc
       state: absent
+  ignore_errors: true
 
 - name: delete scripts and configuration files
   file:
@@ -37,3 +41,4 @@
       state: absent
   with_items:
       - /usr/lib/systemd/system/virtualbmc.service
+  ignore_errors: true
