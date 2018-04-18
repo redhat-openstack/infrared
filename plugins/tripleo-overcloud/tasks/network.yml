@@ -14,7 +14,6 @@
           NeutronNetworkType:
               '{{ install.network.backend }}'
 
-# OSPd7 can not recognize NeutronTunnelTypes option at all
 - name: Append the network type
   yedit:
       src: "{{ template_base }}/network/{{ network_environment_file }}"
@@ -23,7 +22,6 @@
       value:
           NeutronTunnelTypes:
               "{{ (install.network.backend) | regex_replace('vlan', '') | regex_replace(',,', ',') | regex_replace(',$', '') | regex_replace('^,', '') }}"
-  when: install.version|default(undercloud_version)|openstack_release >= 8
 
 - name: Append the network isolation template line to the base overcloud deploy script
   lineinfile:
