@@ -1,3 +1,5 @@
+.. include:: warning.txt
+
 .. highlight:: plain
 
 Quickstart
