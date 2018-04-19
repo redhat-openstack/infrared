@@ -18,7 +18,7 @@
 
 import requests
 import os
-
+import urlparse
 
 DOCUMENTATION = '''
 ---
@@ -99,7 +99,28 @@ options:
 
 MIN_SUPPORTED_VERSION = 2
 MGMT_SUPPORTED_STRATEGIES = ['foreman', 'ipmi']
-
+RESOURCES = {
+    'v2': {
+        'reserve': {
+            'url': '/api/hosts_reserve?query=name ~ {id}',
+        },
+        'release': {
+            'url': '/api/hosts_release?query=name ~ {id}',
+        },
+        'get': {
+            'url': '/api/v2/hosts/{id}',
+        },
+        'update': {
+            'url': '/api/v2/hosts/{id}',
+        },
+        'power': {
+            'url': '/api/v2/hosts/{id}/power',
+        },
+        'interfaces': {
+            'url': '/api/v2/hosts/{id}/interfaces',
+        }
+    }
+}
 
 class ForemanManager(object):
     """
@@ -131,9 +152,11 @@ class ForemanManager(object):
             headers.update(extra_headers)
 
         self.session.headers.update(headers)
+        self.url = url
+        self.resource = RESOURCES['v2']
 
-        self.url = url.rstrip('/')
-        self.default_uri = '/api/v2/hosts/'
+    def compile_url(self, url, resource):
+        return urlparse.urljoin(url, resource)
 
     def reserve_host(self, host_id):
         """
@@ -143,8 +166,8 @@ class ForemanManager(object):
         :rtype: list of dictionaries -- [{"host": {}}]
         """
         #TODO(tkammer): add the option to provide the query itself after "?"
-        request_url = '{0}/api/hosts_reserve' \
-                      '?query=name ~ {1}'.format(self.url, host_id)
+        request_url = self.compile_url(
+            self.url, self.resource['reserve']['url'].format(id=host_id))
         response = self.session.get(request_url, verify=False)
         body = response.json()
         return body
@@ -156,8 +179,8 @@ class ForemanManager(object):
         :returns: the host name
         :rtype: list of strings
         """
-        request_url = '{0}/api/hosts_release' \
-                      '?query=name ~ {1}'.format(self.url, host_id)
+        request_url = self.compile_url(
+            self.url, self.resource['release']['url'].format(id=host_id))
         response = self.session.get(request_url, verify=False)
         body = response.json()
         Exception(body)
@@ -170,7 +193,8 @@ class ForemanManager(object):
         :returns: host information
         :rtype: dict
         """
-        request_url = '{0}/{1}/{2}'.format(self.url, self.default_uri, host_id)
+        request_url = self.compile_url(
+            self.url, self.resource['get']['url'].format(id=host_id))
         response = self.session.get(request_url, verify=False)
         body = response.json()
         return body
@@ -184,7 +208,8 @@ class ForemanManager(object):
         :returns: Request's response
         :rtype: dict
         """
-        request_url = '{0}/{1}/{2}'.format(self.url, self.default_uri, host_id)
+        request_url = self.compile_url(
+            self.url, self.resource['update']['url'].format(id=host_id))
         response = self.session.put(request_url, data=update_info, verify=False)
         return response.json()
 
@@ -236,7 +261,8 @@ class ForemanManager(object):
         :param command: the command to send through the BMC plugin, supported
         commands: 'status', 'on', 'off', 'cycle', 'reset', 'soft'
         """
-        request_url = '{0}/{1}/{2}/power'.format(self.url, self.default_uri, host_id)
+        request_url = self.compile_url(
+            self.url, self.resource['power']['url'].format(id=host_id))
         command = json.dumps({'power_action': command})
         response = self.session.put(request_url, data=command, verify=False)
         #TODO(tkammer): add verification that the BMC command was issued
@@ -263,8 +289,8 @@ class ForemanManager(object):
         This method validate that there is at least one BMC on the given host
         :param host_id: the id or name of the host as it is listed in foreman
         """
-        request_url = '{0}/{1}/{2}/interfaces'.format(
-            self.url, self.default_uri, host_id)
+        request_url = self.compile_url(
+            self.url, self.resource['interfaces']['url'].format(id=host_id))
         response = self.session.get(request_url, verify=False)
         body = response.json()
         missing_bmc = True
