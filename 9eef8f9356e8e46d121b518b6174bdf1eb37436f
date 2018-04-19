@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9bd15da_80354e0f",
+        "filename": "plugins/tripleo-overcloud/tag.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-04-19T12:55:43Z",
+      "side": 1,
+      "message": "for sure add `set -e`, better `set -ex` to have any chance to debug values used here from logs,\n\nand possibly as \u0027set -exo pipefail\u0027 (see last comment)",
+      "revId": "9eef8f9356e8e46d121b518b6174bdf1eb37436f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2b08dd6_0969dbbd",
+        "filename": "plugins/tripleo-overcloud/tag.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-04-19T12:55:43Z",
+      "side": 1,
+      "message": "maybe approach used for topology parameter should be used,\nto separate/split via \u0027,\u0027  (as e.g. \u0027undercloud:1,controller:3,...\u0027)",
+      "revId": "9eef8f9356e8e46d121b518b6174bdf1eb37436f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a9d01e8_298f0f3c",
+        "filename": "plugins/tripleo-overcloud/tag.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-04-19T12:55:43Z",
+      "side": 1,
+      "message": "\u0027-\u0027 could appear in node class name i believe\n\nthough atm there does not seem to be any, for which ooo/ironic would be used, just openshift-master and openshift-worked ... maybe those should be renamed to _ then, if assumption/check for  \u0027-\u0027 in node would be used\n\notherwise would recommend to use regexp check as /-[0-9]+$/ to be bit more safe",
+      "revId": "9eef8f9356e8e46d121b518b6174bdf1eb37436f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f10cdf9_6101c59a",
+        "filename": "plugins/tripleo-overcloud/tag.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-04-19T12:55:43Z",
+      "side": 1,
+      "message": "most likely \u0027xargs -r -n1\u0027 should be used\n\n---\n\nor/also detect (-r) case when zero nodes found/filtered above and handle as failure?\npossibly with bash pipefail make the awk exit 1 if nothing matched like:\n\n  awk \u0027BEGIN { empty \u003d 1; } /{{ node }}/ { print $2; empty \u003d 0 } END { exit empty }\u0027",
+      "revId": "9eef8f9356e8e46d121b518b6174bdf1eb37436f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
