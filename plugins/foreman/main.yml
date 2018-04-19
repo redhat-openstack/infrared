@@ -22,7 +22,7 @@
 
     - name: wait for ssh
       wait_for:
-           port: 22
+           port: "{{ provision.host.port }}"
            host: "{{ provision.host.address }}"
            search_regex: OpenSSH
       delay: "{{ provision.wait | int }}"
