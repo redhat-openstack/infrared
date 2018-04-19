@@ -41,6 +41,10 @@ subparsers:
                       type: Value
                       help: 'Name or ID of the host as listed in foreman'
                       required: yes
+                  host-port:
+                      type: Value
+                      help: "Server's ssh port"
+                      default: 22
                   host-user:
                       type: Value
                       help: 'User to SSH to the host with'
