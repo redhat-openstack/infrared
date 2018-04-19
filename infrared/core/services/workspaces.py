@@ -251,6 +251,7 @@ class WorkspaceManager(object):
 
     def __init__(self, workspaces_base_dir):
         self.workspace_dir = workspaces_base_dir
+        self.active_path = os.path.join(workspaces_base_dir, 'active')
 
         if not os.path.isdir(self.workspace_dir):
             os.makedirs(self.workspace_dir)
@@ -274,6 +275,8 @@ class WorkspaceManager(object):
         path = os.path.join(self.workspace_dir, name)
         if os.path.exists(path):
             raise exceptions.IRWorkspaceExists(workspace=name)
+        if path == self.active_path:
+            raise exceptions.IRWorkspaceInvalidName(workspace=name)
         os.makedirs(path)
         LOG.debug("Workspace {} created in {}".format(name, path))
         workspace = Workspace(name, path)
@@ -294,6 +297,7 @@ class WorkspaceManager(object):
         if self.has_workspace(name):
             with open(self.active_file, 'w') as prf_file:
                 prf_file.write(name)
+            self._create_active_path(name)
             LOG.debug("Activating workspace %s in %s",
                       name,
                       os.path.join(self.workspace_dir, name))
@@ -316,6 +320,7 @@ class WorkspaceManager(object):
                 f_active_workspace = fp.read().strip()
             if f_active_workspace == name:
                 os.remove(self.active_file)
+                os.remove(self.active_path)
 
         shutil.rmtree(os.path.join(self.workspace_dir, name))
 
@@ -518,3 +523,9 @@ class WorkspaceManager(object):
         from ansible.inventory.manager import InventoryManager
 
         return InventoryManager(DataLoader(), sources=workspace.inventory)
+
+    def _create_active_path(self, name):
+        if os.path.islink(self.active_path):
+            os.remove(self.active_path)
+
+        os.symlink(os.path.join(self.workspace_dir, name), self.active_path)
