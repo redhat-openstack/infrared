@@ -80,7 +80,8 @@
            --noautoconsole \
            --autostart \
            --vnc \
-           --rng /dev/urandom
+           --rng /dev/urandom \
+           --metadata description="infrared_virsh_created_at: {{ ansible_date_time.iso8601 }}"
   with_sequence: start={{ node_start_index|int }} end={{ node.value|int + node_start_index|int - 1 }}
   register: vm_install
   async: 7200
