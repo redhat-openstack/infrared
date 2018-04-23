@@ -33,10 +33,6 @@ please refer to `Topology <topology.html>`_.
 
 Please see `Bootstrap <bootstrap.html>`_ guide where usage is demonstrated.
 
-* ``--topology-extend``: Extend existing deployment with nodes provided by topology.
-    If ``--topology-extend`` is True, all nodes from ``--topology-nodes`` will be
-    added as new additional nodes.
-
 * ``--host-memory-overcommit``
     By default memory overcommitment is false and provision will fail if Hypervisor's free
     memory is lower than required memory for all nodes. Use `--host-memory-overcommit True`
@@ -137,3 +133,25 @@ Environments prepared such in way are usually used as basic virtual infrastructu
 
 .. _`tripleo-undercloud`: tripleo-undercloud.html
 .. _`tripleo-overcloud`: tripleo-overcloud.html
+
+
+Topology Extend
+---------------
+
+* ``--topology-extend``: Extend existing deployment with nodes provided by topology.
+    If ``--topology-extend`` is True, all nodes from ``--topology-nodes`` will be
+    added as new additional nodes::
+
+    infrared virsh [...] --topology-nodes compute:1,[...] --topology-extend yes [...]
+
+
+Topology Shrink
+---------------
+
+* ``--remove-nodes``: Provide option for removing of nodes from existing topology::
+
+    infrared virsh [...] --remove-nodes compute-2,compute3
+
+.. warning:: If try to extend topology after you remove node with index lower than maximum, extending will fail.
+             For example, if you have 4 compute nodes (compute-0,compute-1,compute-2,compute-3), removal of any
+             node different than compute-3, will cause fail of future topology extending.

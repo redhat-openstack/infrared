@@ -1,0 +1,28 @@
+- name: Remove VMs from topology
+  hosts: hypervisor
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - include_tasks: tasks/remove_vm.yml
+        with_items: "{{ provision.remove.nodes }}"
+        vars:
+            vm_name: "{{ hostvars[loop_item].original_name|default(loop_item) }}"
+        loop_control:
+            loop_var: loop_item
+
+      - name: include vbmc's cleanup task
+        include_role:
+            name: vbmc
+        vars:
+            action: "remove"
+            vbmc_node: "{{ item }}"
+        with_items: "{{ provision.remove.nodes }}"
+
+- name: generate inventory file
+  hosts: localhost
+  gather_facts: no
+  tags: always
+  roles:
+      - role: inventory-update
+        omit_hosts: "{{ provision.remove.nodes }}"
+        inventory_file_name: 'hosts-prov'
