@@ -40,18 +40,6 @@
           - install.version|openstack_release == 10
           - install.build == 'ga'
 
-      - name: "Workaround BZ#1543580 - iptables FORWARD DROP"
-        shell: |
-           set -ex
-           iptables -P FORWARD ACCEPT
-           sed -i "s/FORWARD DROP/FORWARD ACCEPT/" /etc/sysconfig/iptables
-           sed -i "s/FORWARD DROP/FORWARD ACCEPT/" /etc/sysconfig/iptables.save
-        become: true
-        become_user: root
-        when:
-            - install.version|openstack_distribution == 'OSP'
-            - install.version|openstack_release == 13
-
       # rhosp-release provides /etc/rhosp-release, which is used in upgrade for version discovery.
       - name: install rhosp-release
         become: true
