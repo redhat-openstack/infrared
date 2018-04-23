@@ -39,6 +39,19 @@
       executable: /bin/bash
   register: freeipa_setup
 
+- name: Configure FreeIPA to publish Master CRL at start
+  become: yes
+  lineinfile:
+      path: /etc/pki/pki-tomcat/ca/CS.cfg
+      regexp: '^ca.crl.MasterCRL.publishOnStart=(.*)$'
+      line: 'ca.crl.MasterCRL.publishOnStart=true'
+
+- name: Restart FreeIPA server
+  become: yes
+  service:
+      name: ipa
+      state: restarted
+
 - name: Update /etc/hosts with undercloud's details
   become: yes
   lineinfile:
