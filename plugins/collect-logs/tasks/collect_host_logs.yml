@@ -180,7 +180,8 @@
 
 - name: Search for AVC denied
   become: yes
-  shell: "! grep -i denied /var/log/audit/audit*"
+  # sed used to replace numeric runtime/instance values, to reduce list of occurencies to their patterns
+  shell: "! (grep -i denied /var/log/audit/* | sed -r 's/audit\\(.*\\): avc/audit(...): avc/; s/(pid|ino)=[0-9]+ /\\1=... /g'|sort -u)"
   register: result
   ignore_errors: yes
 
