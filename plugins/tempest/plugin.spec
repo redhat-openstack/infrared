@@ -42,6 +42,7 @@ subparsers:
                            - "11"
                            - "12"
                            - "13"
+                           - "14"
                            - liberty
                            - kilo
                            - liberty
@@ -50,6 +51,7 @@ subparsers:
                            - ocata
                            - pike
                            - queens
+                           - rocky
                   openstack-installer:
                        type: Value
                        help: |
