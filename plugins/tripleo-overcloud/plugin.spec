@@ -448,7 +448,7 @@ subparsers:
                       help: |
                           Option to provide custom Hostnames for the nodes.
                           Note: Custom hostnames can be provided as values or a env file.
-                          Value example :
+                          Value example:
                           --custom-hostnames controller-0=ctr-rack-1-0,compute-0=compute-rack-2-0,ceph-0=ceph-rack-3-0
                           File example:
                           --custom-hostnames local/path/to/custom_hostnames.yaml
