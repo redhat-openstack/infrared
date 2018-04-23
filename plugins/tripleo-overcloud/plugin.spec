@@ -139,6 +139,7 @@ subparsers:
                         - "11"
                         - "12"
                         - "13"
+                        - "14"
                         - kilo
                         - liberty
                         - mitaka
@@ -146,6 +147,7 @@ subparsers:
                         - ocata
                         - pike
                         - queens
+                        - rocky
 
                   deployment-files:
                       type: VarDir
