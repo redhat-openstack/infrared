@@ -49,6 +49,15 @@
           ONBOOT=yes
           TYPE=Ethernet
 
+- name: Setting the MTU size of {{ provision.host.mtu.size }}
+  become: yes
+  lineinfile:
+      path: "/etc/sysconfig/network-scripts/ifcfg-{{ nic_data.device }}"
+      state: present
+      insertafter: EOF
+      line: "MTU={{ provision.host.mtu.size }}"
+  when: provision.host.mtu.value|default('False')
+
 - name: bridge network configuration
   become: yes
   copy:
