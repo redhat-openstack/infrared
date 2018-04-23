@@ -1,0 +1,62 @@
+---
+- name: Get VM network info
+  virt_util:
+      command: 'domain_xml_devices'
+      domain: "{{ vm_name }}"
+      device_class: 'interface'
+  register: vm_network_info
+
+- name: Reset network list
+  set_fact:
+      network_list: []
+
+- name: Create network list
+  set_fact:
+      network_list: "{{ network_list + [network_name] }}"
+  vars:
+      network_name: "{{ item.source.network }}"
+  with_items: "{{ vm_network_info.devices }}"
+
+- name: Get VM static IPs
+  shell: virsh net-dumpxml {{ item }} | grep {{ vm_name }}
+  ignore_errors: yes
+  register: vm_static_ips
+  with_items: "{{ network_list }}"
+
+- include_tasks: remove_static_ips.yml
+  vars:
+      network_name: "{{ vm_static_result.item }}"
+      ips_records: "{{ vm_static_result.stdout_lines }}"
+  with_items: "{{ vm_static_ips.results }}"
+  when: item.rc == 0
+  loop_control:
+      loop_var: vm_static_result
+
+- name: remove all snapshots
+  include_tasks: remove_snapshots.yml
+
+- name: destroy undefined vms
+  virt:
+      name: "{{ vm_name }}"
+      state: destroyed
+
+- name: undefine relevant VMs
+  command: "virsh undefine --nvram {{ vm_name }}"
+
+- name: Clean /etc/hosts file
+  become: yes
+  lineinfile:
+      dest: /etc/hosts
+      regexp: ".*{{ vm_name }}.*"
+      state: absent
+
+- name: cleanup known-hosts by name
+  known_hosts:
+      state: absent
+      name: "{{ vm_name }}"
+  ignore_errors: yes
+
+- name: remove any existing VM disks that we created
+  shell: "rm -f {{ vm_name }}*disk*.qcow*"
+  args:
+      chdir: "{{ provision.disk.pool }}"
