@@ -1,0 +1,5 @@
+---
+- name: Remove static IP record
+  shell: virsh net-update {{ network_name }} delete ip-dhcp-host "{{ item.strip() }}" --live --config
+  with_items: "{{ ips_records }}"
+  tags: skip_ansible_lint
