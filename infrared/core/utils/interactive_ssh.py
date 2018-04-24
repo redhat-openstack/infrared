@@ -66,18 +66,23 @@ def ssh_to_host(hostname, remote_command=None):
     # ssh client needs key to be in the directory you're running one from
     # ('ssh -i id_rsa ...') or to be provided by absolute path.
     # assume paths are relative to inventory file.
-    abspath = os.path.join(os.path.abspath(os.path.dirname(inventory_file)),
+    priv_key = os.path.join(os.path.abspath(os.path.dirname(inventory_file)),
                            priv_key)
-    priv_key = abspath if os.path.exists(abspath) else priv_key
+    print(priv_key)
+    if not os.access(priv_key, os.R_OK):
+        raise exceptions.IRSshException("Private key file mentioned does not "
+                                        "exist: {}".format(priv_key))
 
-    cmd_fields["priv_key"] = "-i {}".format(priv_key if priv_key else "")
+    if priv_key:
+        cmd_fields["priv_key"] = "-i {}".format(priv_key)
+    else:
+        cmd_fields["priv_key"] = ""
 
     cmd_fields["comm_args"] = _get_magic_var(host, "ssh_common_args")
     cmd_fields["extra_args"] = _get_magic_var(host, "ssh_extra_args")
 
-    LOG.debug("Establishing ssh connection to {}".format(cmd_fields["host"]))
-
     compiled_cmd = cmd.format(**cmd_fields)
+    LOG.debug("Establishing ssh connection to {} using: {}".format(cmd_fields["host"], compiled_cmd))
     if remote_command is not None:
         compiled_cmd = " ".join(
             [compiled_cmd, '"{}"'.format(remote_command)])
