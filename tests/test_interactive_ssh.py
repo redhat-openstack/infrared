@@ -34,7 +34,7 @@ def test_parse_inventory(workspace_manager_fixture, test_workspace, mocker):
     mocker.patch("os.system")
 
     ssh_cmd_str = " ".join([
-        "ssh -i /some_key_path",
+        "ssh -i /dev/null",
         " -o ForwardAgent=yes",
         "-o ServerAliveInterval=30",
         "-o ControlMaster=auto",
@@ -44,7 +44,7 @@ def test_parse_inventory(workspace_manager_fixture, test_workspace, mocker):
         "-o ProxyCommand=\"ssh",
         "-o StrictHostKeyChecking=no",
         "-o UserKnownHostsFile=/dev/null",
-        "-W %h:%p -i /some_another_key_path ttest@tthost\"",
+        "-W %h:%p -i /dev/null ttest@tthost\"",
         " -p 33 -t test-user@0.0.0.0"
     ])
 
@@ -54,7 +54,7 @@ def test_parse_inventory(workspace_manager_fixture, test_workspace, mocker):
     os.system.assert_called_once_with(ssh_cmd_str)
 
     ssh_cmd_str = " ".join([
-        "ssh -i /some_key_path",
+        "ssh -i /dev/null",
         " -o ForwardAgent=yes",
         "-o ServerAliveInterval=30",
         "-o ControlMaster=auto",
@@ -64,7 +64,7 @@ def test_parse_inventory(workspace_manager_fixture, test_workspace, mocker):
         "-o ProxyCommand=\"ssh",
         "-o StrictHostKeyChecking=no",
         "-o UserKnownHostsFile=/dev/null",
-        "-W %h:%p -i /some_another_key_path ttest@tthost\"",
+        "-W %h:%p -i /dev/null ttest@tthost\"",
         " -p 33 -t test-user@0.0.0.0 \"some cmd line\""
     ])
 
