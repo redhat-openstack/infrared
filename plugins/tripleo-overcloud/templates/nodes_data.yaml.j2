@@ -12,4 +12,8 @@ parameter_defaults:
     ObjectStorageCount: {{ (install.storage.nodes|default(0)) or (groups['swift']|default([])|length) or 1 }}
     OvercloudSwiftStorageFlavor: {{ ('swift' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('swift', 'baremetal') }}
 {% endif -%}
+{%- if storage_backend == 'cinder' %}
+    BlockStorageCount: {{ (install.storage.nodes|default(0)) or (groups['cinder']|default([])|length) or 1 }}
+    OvercloudBlockStorageFlavor: {{ ('cinder' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('cinder', 'baremetal') }}
+{% endif -%}
 {% endif %}
