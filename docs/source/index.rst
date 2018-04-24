@@ -45,6 +45,7 @@ Welcome to infrared's documentation!
    virsh
    tripleo-undercloud
    tripleo-overcloud
+   cloud-config
    tempest
    collect-logs
    gabbi_tester

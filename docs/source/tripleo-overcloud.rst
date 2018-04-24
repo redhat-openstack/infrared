@@ -231,12 +231,15 @@ However, the director provides the ability to define specific node placement. Th
     as values or a env file. Examples:
 
     .. code-block:: plain
+
        --custom-hostnames controller-0=ctr-rack-1-0,compute-0=compute-rack-2-0,ceph-0=ceph-rack-3-0
 
     .. code-block:: plain
+
        --custom-hostnames local/path/to/custom_hostnames.yaml
 
     .. code-block:: yaml
+
         ---
         parameter_defaults:
             HostnameMap:
@@ -260,7 +263,9 @@ However, the director provides the ability to define specific node placement. Th
         as user environment template, with option --overcloud-templates.
 
     Example of the template:
+
     .. code-block:: yaml
+
         ---
         parameter_defaults:
             CephStorageIPs:
@@ -272,19 +277,6 @@ However, the director provides the ability to define specific node placement. Th
                 - 172.16.3.100
                 - 172.16.3.101
                 - 172.16.3.102
-
-Overcloud Public Network
-------------------------
-* ``--public-network``: Bool. Whether to have `infrared` create a public network on the overcloud.
-* ``--public-subnet``:
-    Path to file containing different values for the subnet of the network above.
-* ``--public-vlan``:
-    Set this to ``yes`` if overcloud's external network is on a VLAN that's unreachable from the
-    undercloud. This will configure network access from UnderCloud to overcloud's API/External(floating IPs)
-    network, creating a new VLAN interface connected to ovs's ``br-ctlplane`` bridge.
-    |NOTE: If your UnderCloud's network is already configured properly, this could disrupt it, making overcloud API unreachable
-    For more details, see:
-    `VALIDATING THE OVERCLOUD <https://access.redhat.com/documentation/en/red-hat-openstack-platform/10-beta/paged/director-installation-and-usage/chapter-6-performing-tasks-after-overcloud-creation>`_
 
 Overcloud Storage
 ------------------
