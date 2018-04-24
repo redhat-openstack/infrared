@@ -394,6 +394,7 @@ subparsers:
                       choices:
                           - ceph
                           - swift
+                          - cinder
                           - netapp-iscsi
                           - netapp-nfs
                           - lvm
