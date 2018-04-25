@@ -7,6 +7,11 @@
       base_image_path: /var/lib/libvirt/images
       url: "{{ provision.image.url }}"
   tasks:
+    - name: Get uniq id for current deployment
+      set_fact:
+            prefix: "{{ ansible_local.run.keys()[0] }}"
+      when: provision.prefix is defined
+
     - name: provision image for each node
       include_tasks: tasks/download_images.yml
       with_dict: "{{ provision.topology.nodes }}"
