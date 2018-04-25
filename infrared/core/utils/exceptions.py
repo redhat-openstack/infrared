@@ -124,19 +124,6 @@ class IRWorkspaceIsActive(IRException):
         super(IRWorkspaceIsActive, self).__init__(message)
 
 
-class IRWorkspaceInvalidName(IRException):
-    def __init__(self, workspace):
-        message = "'{}' is not a valid name for workspace".format(workspace)
-        super(IRWorkspaceInvalidName, self).__init__(message)
-
-
-class IRWorkspaceActiveIsNotLink(IRException):
-    def __init__(self, workspace_path):
-        message = "Workspace path {} contains file or folder with name " \
-                  "'active', expected is symlink".format(workspace_path)
-        super(IRWorkspaceActiveIsNotLink, self).__init__(message)
-
-
 class IRNoActiveWorkspaceFound(IRException):
     def __init__(self):
         message = "There is no active workspace found. " \
