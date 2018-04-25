@@ -49,12 +49,28 @@
   gather_facts: yes
   any_errors_fatal: true
   become: true
+  vars:
+    custom_facts: "/etc/ansible/facts.d/"
   tasks:
     - name: include vbmc's cleanup task
       include_role:
           name: vbmc
       vars:
           action: "cleanup"
+
+    - block:
+        - name: Get all deployments
+          set_fact:
+              deployments_info: "{{ deplooyments_info|default({})|combine({item.key : item.value}) }}"
+          when: prefix not in item.key
+          with_dict: "{{ ansible_local.deployment_info }}"
+
+        - name: Create running deployment custom fact
+          template:
+              src: deployments.fact.j2
+              dest: "{{ custom_facts }}/deployment_info.fact"
+              mode: 0644
+      when: provision.prefix is defined
 
 - name: Clean old inventory file
   hosts: localhost
