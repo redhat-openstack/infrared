@@ -35,6 +35,38 @@
 
   when: provision.kill | default(False)
 
+- block:
+  - name: Get deployment prefix
+    set_fact:
+        prefix: "{{ provision.prefix }}"
+
+  - name: Generating list of instances based on prefix
+    set_fact:
+        list_vms: "{{ list_vms|default([])|union([item])}}"
+    when: prefix in item
+    with_items: "{{ vm_names.list_vms }}"
+
+  - name: Updating instances dict
+    set_fact:
+        vm_names: "{{ vm_names |combine({ 'list_vms': list_vms }) }}"
+
+  - name: Generating list of networks based on prefix
+    set_fact:
+        networks: "{{ networks|default({})|combine({item.key: item.value}) }}"
+    when: prefix in item.key
+    with_dict: "{{ vm_nets.networks }}"
+
+  - name: Updating networking dict
+    set_fact:
+        vm_nets: "{{ vm_nets|combine({'networks': networks} ) }}"
+  when: provision.prefix is defined
+
+- block:
+  - name: remove all snapshots
+    include_tasks: remove_snapshots.yml
+    with_items: "{{ vm_names.list_vms }}"
+    loop_control:
+      loop_var: vm_name
 
 - name: remove all snapshots
   include_tasks: remove_snapshots.yml
@@ -73,7 +105,8 @@
       - "{{ vm_nets.networks }}"
       - dhcp_leases
       - skip_missing: yes
-  when: item.0.bridge|default('') not in ignore_virsh_nets
+  when:
+      - item.0.bridge|default('') not in ignore_virsh_nets
   ignore_errors: yes
 
 - name: remove the networks we created
