@@ -64,6 +64,15 @@ class IRInvalidChoiceException(IRException):
                     arg_name, arg_value, available_choices)
         super(self.__class__, self).__init__(message)
 
+class IRInvalidLengthException(IRException):
+    def __init__(self, invalid_options):
+        message = "The following arguments contain invalid choices:"
+        for arg_name, arg_value, length in invalid_options:
+            message += \
+                "\nArgument {}: invalid length '{}' (should be " \
+                "less or equal {})".format(arg_name,
+                                           arg_value, length)
+        super(self.__class__, self).__init__(message)
 
 class IRInvalidMinMaxRangeException(IRException):
     def __init__(self, invalid_options):

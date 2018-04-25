@@ -3,9 +3,55 @@
   hosts: hypervisor
   gather_facts: yes
   any_errors_fatal: true
+  vars:
+    custom_facts: "/etc/ansible/facts.d/"
   vars_files:
     - vars/hypervisor.yml
   tasks:
+
+    - name: Make sure that directory for custom facts exists
+      file:
+          path: "{{ custom_facts }}"
+          state: directory
+          mode: 0755
+
+    - block:
+        - name: Get deployment prefix
+          set_fact: 
+              prefix: "{{ provision.prefix }}"
+
+        - set_fact:
+              net_list: [0]
+
+        - set_fact:
+              data_net_list: [14]
+
+        - block:
+            - set_fact:
+                  net_list: "{{ net_list + [item.value.net|int] }}"
+              with_dict: "{{ ansible_local.deployment_info }}"
+
+            - set_fact:
+                  data_net_list: "{{ data_net_list + [item.value.data_net|int] }}"
+              with_dict: "{{ ansible_local.deployment_info }}"
+          when: ansible_local.deployment_info is defined
+
+        - name: generate deployment info dict
+          vars:
+              id: "{{ prefix }}"
+              net_prefix: "{{ (net_list|max)|int+10 }}"
+              data_net: "{{ (data_net_list|max)|int+10 }}"
+          set_fact:
+              deployments_info: "{{ deployments_info|default({})| combine( {id:{'net': net_prefix, 'data_net': data_net }})}}"
+
+        - name: Create running deployment custom fact
+          template:
+              src: deployments.fact.j2
+              dest: "{{ custom_facts }}/run.fact"
+              mode: 0644
+
+      when: provision.prefix is defined
+
     - name: install packages
       package:
           name: "{{ item }}"

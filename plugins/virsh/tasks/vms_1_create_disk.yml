@@ -12,6 +12,10 @@
   set_fact:
       topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
 
+- name: Replace node names with deployment id
+  set_fact:
+      topology_node: "{{ topology_node|combine({'name': prefix|default('') + topology_node.name}, recursive=True) }}"
+
 - name: update node network info if needed
   set_fact:
       topology_node: "{{ topology_node | combine(network_info.nodes[topology_node.name]|default(network_info.nodes.default), recursive=True) }}"

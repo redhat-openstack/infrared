@@ -7,6 +7,24 @@
     - name: get networks dict
       include_vars: "{{ provision.topology.network }}"
 
+    - name: Get uniq id for current deployment
+      set_fact: 
+            prefix: "{{ ansible_local.run.keys()[0] }}"
+      when: provision.prefix is defined
+
+    - name: set net prefix
+      set_fact:
+          net: "{{ ansible_local.run[prefix].net if prefix is defined else 10 }}"
+
+    - name: set data net prefix
+      set_fact:
+          data_net: "{{ ansible_local.run[prefix].data_net if prefix is defined else 24 }}"
+
+    - name: Update network dict with prefix
+      set_fact:
+          networks: "{{ networks|combine({item.key: {'name': prefix|default('') + (prefix is defined|ternary('-','')) + item.value.name}}, recursive=True) }}"
+      with_dict: "{{ networks }}"
+
     - name: Check if IPv6 mod enabled on host
       shell: "lsmod | grep ipv6"
       ignore_errors: True
