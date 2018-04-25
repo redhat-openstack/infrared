@@ -29,7 +29,7 @@ TYPES = dict((k, getattr(BUILTINS, k)) for k in vars(BUILTINS))
 TYPES['suppress'] = argparse.SUPPRESS
 
 OPTION_ARGPARSE_ATTRIBUTES = ['action', 'nargs', 'const', 'default', 'choices',
-                              'required', 'help', 'metavar', 'type', 'version']
+                              'required', 'help', 'metavar', 'type', 'version', 'length']
 
 YAMLS_PLACEHODER = '__LISTYAMLS__'
 
@@ -178,6 +178,11 @@ class CliParser(object):
             opt_kwargs['help'] = \
                 opt_kwargs['help'].rstrip() + \
                 "\nDefault value: '{}'.".format(opt_kwargs['default'])
+
+        # print length value to the help
+        if 'length' in option_data:
+            opt_kwargs['help'] += "\nMaximum variable length: '{}'.".format(
+                option_data['length'])
 
         # print minimum value to the help
         if 'minimum' in option_data:
