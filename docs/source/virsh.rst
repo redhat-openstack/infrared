@@ -26,7 +26,7 @@ If we use OpenStack as an example, a topology may look something like:
     * 1 VM called controller
     * 1 VM called compute
 
-To control how each VM is created, we have creates a YAML file that describes the
+To control how each VM is created, we have created a YAML file that describes the
 specification of each VM.
 For more information about the structure of the topology files and how to create your own,
 please refer to `Topology <topology.html>`_.
@@ -157,3 +157,23 @@ Topology Shrink
 .. warning:: If try to extend topology after you remove node with index lower than maximum, extending will fail.
              For example, if you have 4 compute nodes (compute-0,compute-1,compute-2,compute-3), removal of any
              node different than compute-3, will cause fail of future topology extending.
+
+Multiply environments
+---------------------
+
+In some use cases it might be needed to have multiply environments on the same host. Virsh provisioner currently supports
+that with ``--prefix`` parameter. Using it user can assign a prefix to created resources such as virtual instances,
+networks, routers etc. 
+
+.. warning:: ``--prefix`` shouldn't be more than 4 characters long because of libvirt limitation on resources name length.
+
+  .. code-block:: shell
+
+     infrared virsh [...] --topology-nodes compute:1,controller1,[...] --prefix foo [...]
+
+Will create resource with ``foo`` prefix.
+Resources from different environments could be differebtiaited using prefix, and virsh plugin will take care so they will not
+interfere with each other in terms of networking, virtual instances etc.
+
+Cleanup procedure also supports ``--prefix`` parameter allowing to cleanup only needed environment, if ``--prefix`` is not given 
+all resources on hypervisor will be cleaned.
