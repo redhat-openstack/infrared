@@ -6,7 +6,7 @@
 - name: Get the script which configures the tempest directory
   shell: ls -d /usr/share/openstack-tempest-*/tools/configure-tempest-directory
   register: configure_tempest_dir
-  ignore_errors: true
+  failed_when: false
 
 - name: Initialize tempest workspace directory using configure-tempest-directory
   command: "{{ configure_tempest_dir.stdout_lines[0] }}"

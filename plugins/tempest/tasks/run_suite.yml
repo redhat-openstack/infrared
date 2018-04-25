@@ -106,6 +106,7 @@
       test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
       ostestr --version | sed 's/ostestr\ version\ //g'
   register: ostestr_version
+  changed_when: false
   when: test.openstack.version|default(overcloud_version)|openstack_release >= 7
 
 - name: add regex invoke for "{{ test_suite }}"
