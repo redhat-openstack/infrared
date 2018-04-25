@@ -8,11 +8,13 @@
 - name: List tempest version
   become: yes
   command: "rpm -q --qf %{VERSION} openstack-tempest"
+  changed_when: false
   register: tempest_rpm_version
 
 - name: List tempest release
   become: yes
   command: "rpm -q --qf %{RELEASE} openstack-tempest"
+  changed_when: false
   register: tempest_rpm_release
 
 - debug: "msg='Build mark: tempest={{ tempest_rpm_version.stdout }}-{{ tempest_rpm_release.stdout }}'"
