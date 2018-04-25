@@ -3,23 +3,23 @@ networks:
     net1:
         external_connectivity: no
         name: "data"
-        ip_address: "192.168.24.254"
+        ip_address: "192.168.{{ data_net }}.254"
         netmask: "255.255.255.0"
     net2:
         external_connectivity: yes
         name: "management"
-        ip_address: "172.16.0.1"
+        ip_address: "172.16.{{ net }}.1"
         netmask: "255.255.255.0"
         forward: nat
         dhcp:
             range:
-                start: "172.16.0.2"
-                end: "172.16.0.100"
-            subnet_cidr: "172.16.0.0/24"
-            subnet_gateway: "172.16.0.1"
+                start: "172.16.{{ net }}.2"
+                end: "172.16.{{ net }}.100"
+            subnet_cidr: "172.16.{{ net }}.0/24"
+            subnet_gateway: "172.16.{{ net }}.1"
         floating_ip:
-            start: "172.16.0.101"
-            end: "172.16.0.150"
+            start: "172.16.{{ net }}.101"
+            end: "172.16.{{ net }}.150"
     net3:
         external_connectivity: yes
         name: "external"
@@ -30,18 +30,18 @@ networks:
                 range:
                     start: "2620:52:0:13b8::fe:1"
                     end: "2620:52:0:13b8::fe:ff"
-        ip_address: "10.0.0.1"
+        ip_address: "10.0.{{ net }}.1"
         netmask: "255.255.255.0"
         forward: nat
         dhcp:
             range:
-                start: "10.0.0.2"
-                end: "10.0.0.100"
-            subnet_cidr: "10.0.0.0/24"
-            subnet_gateway: "10.0.0.1"
+                start: "10.0.{{ net }}.2"
+                end: "10.0.{{ net }}.100"
+            subnet_cidr: "10.0.{{ net }}.0/24"
+            subnet_gateway: "10.0.{{ net }}.1"
         floating_ip:
-            start: "10.0.0.101"
-            end: "10.0.0.150"
+            start: "10.0.{{ net }}.101"
+            end: "10.0.{{ net }}.150"
 
 nodes:
     default:
