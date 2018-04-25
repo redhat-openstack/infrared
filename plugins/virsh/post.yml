@@ -3,3 +3,29 @@
 #configuration playbook
 - hosts: localhost
   gather_facts: no
+
+- name: Update deployment information on hypervisor
+  hosts: hypervisor
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+    custom_facts: "/etc/ansible/facts.d/"
+  tasks:
+    - block:
+        - name: Get all deployments
+          set_fact:
+              deployments_info: "{{ deployments_info|default({})|combine(ansible_local.deployment_info)|combine( ansible_local.run ) }}"
+          when: ansible_local.deployment_info is defined
+
+        - name: Update deployment custom fact
+          template:
+              src: deployments.fact.j2
+              dest: "{{ custom_facts }}/deployment_info.fact"
+              mode: 0644
+
+        - name: Delete local fact for current deployment
+          file:
+              path: "{{ custom_facts }}/run.fact"
+              state: absent
+
+      when: provision.prefix is defined
