@@ -7,38 +7,49 @@
   shell: |
       for node in `vbmc list | awk '/[0-9]{2}/ {print $2}'`
       do
-          vbmc stop ${node}
-          vbmc delete ${node}
+          if [[ ${node} = *"{{ prefix|default('') }}"* ]]
+          then
+              vbmc stop ${node}
+              vbmc delete ${node}
+          fi
       done
   when: vbmc_proc.rc == 0
+  failed_when: false
   ignore_errors: true
 
-- name: kill vbmc processes
-  command: killall vbmc
-  when: vbmc_proc.rc == 0
-  ignore_errors: true
+- name: check if we still have vbmc nodes
+  shell: "vbmc list | awk '/[0-9]{2}/ {print $2}'|wc -l"
+  register: vbmc_list
 
-- name: Check if install package
-  package:
-      name: "{{ item }}"
-      state: absent
-  with_items:
-      - python-virtualbmc
-      - python2-virtualbmc
-  ignore_errors: true
+- block:
+    - name: kill vbmc processes
+      command: killall vbmc
+      when: vbmc_proc.rc == 0
+      ignore_errors: true
 
-  # pip can be missing on a target host.
-  # so ignore errors and cleanup as much as possible
-- name: remove python-virtualbmc from pip
-  pip:
-      name: virtualbmc
-      state: absent
-  ignore_errors: true
+    - name: Check if install package
+      package:
+          name: "{{ item }}"
+          state: absent
+      with_items:
+          - python-virtualbmc
+          - python2-virtualbmc
+      ignore_errors: true
 
-- name: delete scripts and configuration files
-  file:
-      path: "{{ item }}"
-      state: absent
-  with_items:
-      - /usr/lib/systemd/system/virtualbmc.service
-  ignore_errors: true
+    # pip can be missing on a target host.
+    # so ignore errors and cleanup as much as possible
+    - name: remove python-virtualbmc from pip
+      pip:
+          name: virtualbmc
+          state: absent
+      ignore_errors: true
+
+    - name: delete scripts and configuration files
+      file:
+          path: "{{ item }}"
+          state: absent
+      with_items:
+          - /usr/lib/systemd/system/virtualbmc.service
+      ignore_errors: true
+
+  when: vbmc_list.stdout|int == 0
