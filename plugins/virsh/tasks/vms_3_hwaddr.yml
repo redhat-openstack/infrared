@@ -12,6 +12,10 @@
   set_fact:
       topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
 
+- name: Replace node names with deployment id
+  set_fact:
+      topology_node: "{{ topology_node|combine({'name': prefix|default('') + topology_node.name}, recursive=True) }}"
+
 - name: update node network info if needed
   set_fact:
       topology_node: "{{ topology_node | combine(network_info.nodes[topology_node.name]|default(network_info.nodes.default), recursive=True) }}"
@@ -30,14 +34,16 @@
 - block:
   - name: get MAC list
     vars:
-        inv_int: "{{ topology_node.provision_network if 'provision_network' in topology_node else topology_node.external_network.network }}"
+        inv_clear_int: "{{ topology_node.provision_network if 'provision_network' in topology_node else topology_node.external_network.network }}"
+        inv_int: "{{ prefix|default('') + inv_clear_int }}"
     shell: "virsh domiflist {{ topology_node.name }}-{{ item }} | awk '/{{ inv_int }}/ {print $5};'"
     with_sequence: start={{ node_start_index|int }} end={{ node.value|int + node_start_index|int - 1 }}
     register: mac_list
 
   - name: Set inventary netwrok info
     vars:
-        inv_net: "{{ topology_node.provision_network if 'provision_network' in topology_node else topology_node.external_network.network }}"
+        inv_clear_net: "{{ topology_node.provision_network if 'provision_network' in topology_node else topology_node.external_network.network }}"
+        inv_net: "{{ prefix|default('') + inv_clear_net }}"
     set_fact:
         vm_inv_info: "{{ vm_inv_info | default([]) + [{'name': item.cmd.split()[2], 'mac': item.stdout, 'groups': topology_node.groups, 'net': inv_net }] }}"
     with_items: "{{ mac_list.results }}"

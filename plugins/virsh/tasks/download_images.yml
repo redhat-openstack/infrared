@@ -7,6 +7,11 @@
   set_fact:
       topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
 
+- name: Replace node names with deployment id
+  set_fact:
+      topology_node: "{{ topology_node|combine({'name': prefix + '-' + topology_node.name}, recursive=True) }}"
+  when: prefix is defined
+
 - name: download base image for node
   vars:
       source: "{{ item.value.import_url|default('') or node_dict.import_url|default('') or url }}"
