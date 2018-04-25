@@ -75,13 +75,27 @@
 
 - include_tasks: iptables.yml
 
+- block:
+    - name: Get the deployment prefix for multiply deployments
+      set_fact:
+          prefix: "{{ item.key }}"
+      when: (item.key + "-") in groups.undercloud|first
+      with_dict: "{{ hostvars['hypervisor'].ansible_local.deployment_info }}"
+  rescue:
+    - name: Setup prefix to empty if no deployments
+      set_fact:
+          prefix: ''
+
+- set_fact:
+      management_net: "{{ 'ansible_' + prefix|default('') + prefix is defined|ternary('_','') + 'management' }}"
+
 - name: Set management bmc address
   set_fact:
-      vbmc_management_address: "{{ (vbmc_host == 'hypervisor')|ternary(hostvars['hypervisor'].ansible_management.ipv4.address, ansible_default_ipv4.address) }}"
+      vbmc_management_address: "{{ (vbmc_host == 'hypervisor')|ternary(hostvars['hypervisor'][management_net].ipv4.address, ansible_default_ipv4.address) }}"
 
 - name: Add nodes to vbmc
   command: "vbmc add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ vbmc_management_address }} \
-            --libvirt-uri \"qemu+ssh://{{ hostvars['hypervisor'].ansible_user_id }}@{{ hostvars['hypervisor'].ansible_management.ipv4.address }}/system?no_verify=1&no_tty=1\""
+            --libvirt-uri \"qemu+ssh://{{ hostvars['hypervisor'].ansible_user_id }}@{{ hostvars['hypervisor'][management_net].ipv4.address }}/system?no_verify=1&no_tty=1\""
   with_dict: "{{ vbmc_ports }}"
   when: vbmc_host == 'undercloud'
 
