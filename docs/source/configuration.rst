@@ -14,6 +14,25 @@ To change that default location user can simply set ``IR_HOME``, for example::
 
 This will generate default configurations files in the specified directory.
 
+
+Defaults from environment variables
+-----------------------------------
+
+Infrared will load all environment variables starting with IR_ and will
+transform them in default argument values that are passed to all modules.
+
+This means that ``IR_FOO_BAR=1`` will do the same thing as adding
+``--foo-bar=1`` to infrared CLI.
+
+Infrared uses the same precedence order as Ansible when it decide
+which value to load, first found is used:
+
+* command line argument
+* environment variable
+* configuration file
+* code (plugin spec default) value
+
+
 Ansible configuration and limitations
 -------------------------------------
 Usually `infrared` does not touch the settings specified in the ansible configuration
