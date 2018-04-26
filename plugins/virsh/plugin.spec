@@ -34,6 +34,12 @@ subparsers:
                           memory is lower than required memory for all nodes. Use `--host-mem-overcommitment True`
                           to change default behaviour.
                       default: False
+                  host-mtu-size:
+                      type: Value
+                      help: |
+                          Setting the custom MTU size on the provided networks of the Hypervisor. If the custom size is not defined,
+                          the default MTU size of '1500' will be used.
+                      default: False
 
             - title: image
               options:
