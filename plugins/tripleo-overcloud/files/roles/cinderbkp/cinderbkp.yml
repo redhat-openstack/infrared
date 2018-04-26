@@ -1,0 +1,53 @@
+---
+novacontrol_role:
+    name: Cinderbkp
+
+    # include resources
+    # the following vars can be used here:
+    #  - ${ipv6_postfix}: will be replaced with _v6 when the ipv6 protocol is used for installation, otherwise is empty
+    #  - ${deployment_dir} - will be replaced by the deployment folder location on the undercloud. Deployment folder can be specified with the ospd --deployment flag
+    resource_registry:
+        OS::TripleO::Novacontrol::Net::SoftwareConfig: "${deployment_dir}/network/nic-configs/${nics_subfolder}/novacontrol.yaml"
+        OS::TripleO::Novacontrol::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api${ipv6_postfix_underscore}.yaml"
+        OS::TripleO::Novacontrol::Ports::StoragePort: "{{ install.heat.templates.basedir }}/network/ports/storage${ipv6_postfix_underscore}.yaml"
+
+    flavor: novacontrol
+    networks:
+        - InternalApi
+        - Storage
+
+    host_name_format: 'cinderbkp-%index%'
+
+    services:
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Aide{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::AuditD{% endif %}"
+        - OS::TripleO::Services::CACerts
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Collectd{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
+        - OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Ipsec{% endif %}"
+        - OS::TripleO::Services::Kernel
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::LoginDefs{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
+        - OS::TripleO::Services::NovaApi
+        - OS::TripleO::Services::NovaConductor
+        - OS::TripleO::Services::NovaConsoleauth
+        - OS::TripleO::Services::NovaMetadata
+        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
+        - OS::TripleO::Services::NovaScheduler
+        - OS::TripleO::Services::NovaVncProxy
+        - OS::TripleO::Services::Ntp
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
+        - OS::TripleO::Services::Pacemaker
+        - OS::TripleO::Services::RabbitMQ
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Rhsm{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::RsyslogSidecar{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::Snmp
+        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::Sshd{% endif %}"
+        - OS::TripleO::Services::Timezone
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::TripleoPackages
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Tuned{% endif %}"
