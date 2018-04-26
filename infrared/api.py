@@ -1,10 +1,12 @@
 # provides API to run plugins
 import argparse
 import abc
+from collections import OrderedDict
 import logging
 import sys
 
 import os
+import re
 import yaml
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
@@ -17,6 +19,7 @@ from infrared.core.settings import VarsDictManager
 from infrared.core.utils import logger
 
 LOG = logger.LOG
+_environ_prefix_re = re.compile(r"^IR_", re.I)
 
 
 class SpecObject(object):
@@ -214,9 +217,13 @@ class SpecManager(object):
     """Manages all the available specifications (specs). """
 
     def __init__(self):
+
+        self.envars = self.get_environ_vars()
+
         # create entry point
         self.parser = argparse.ArgumentParser(
             description='infrared entry point')
+        self.parser.set_defaults(**self.envars)
         self.parser.add_argument("--version", action='version',
                                  version=version.version_string())
         self.parser.add_argument("--no-log-commands", action='store_true',
@@ -224,6 +231,15 @@ class SpecManager(object):
         self.root_subparsers = self.parser.add_subparsers(dest="subcommand")
         self.spec_objects = {}
         self.execution_logger = None
+
+    def get_environ_vars(self):
+        """Returns a generator with all environmental vars with prefix IR_"""
+        def get_environ_vars_gen():
+            for key, val in sorted(os.environ.items()):
+                if _environ_prefix_re.search(key):
+                    yield ('subcommand' + _environ_prefix_re.sub("", key).lower().replace('_', '-'),val)
+
+        return OrderedDict(get_environ_vars_gen())
 
     def register_spec(self, spec_object):
         spec_object.extend_cli(self.root_subparsers)

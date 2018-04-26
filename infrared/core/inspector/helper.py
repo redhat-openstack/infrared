@@ -71,7 +71,7 @@ class SpecDictHelper(object):
 
         options = self.get_parser_option_specs(command_name)
         return next((opt for opt in options
-                     if opt['name'] == argument_name), None)
+                     if opt['name'] == argument_name), {})
 
     def get_option_state(self, command_name, option_name, args):
         """Gets the option state.
