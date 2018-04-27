@@ -180,6 +180,7 @@ TripleO Undercloud User
 ``--user-name`` and ``--user-password`` define a user, with password,
 for the undercloud. Acorrding to TripleO guidelines, the default username is ``stack``.
 User will be created if necessary.
+.. note:: Stack user password needs to be changed in case of public deployments
 
 Backup
 ------

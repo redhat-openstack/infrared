@@ -14,6 +14,7 @@ DEFAULT_ANSIBLE_SETTINGS = dict(
         ('timeout', 30),
         ('pipelining', 'True'),
         ('force_color', 1),
+        ('how_custom_stats', 'True'),
     ]),
 )
 
