@@ -1,0 +1,11 @@
+- hosts: localhost
+  vars:
+      - post_install: |
+          Please, change default stack user password,
+          Don't use the simple password for production deployment
+  tasks:
+      - name: Notification
+        set_stats:
+          data:
+            WARNING: "{{ post_install }}"
+        when: install.user.password is undefined or install.user.password == 'stack'
