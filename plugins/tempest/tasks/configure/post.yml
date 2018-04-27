@@ -1,5 +1,7 @@
 - name: Run custom post configure command
   shell: "{{ item }}"
+  args:
+    executable: /bin/bash
   with_items: "{{ test.post.config.commands }}"
   when: test.post is defined
   tags: skip_ansible_lint
