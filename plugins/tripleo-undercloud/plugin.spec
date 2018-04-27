@@ -178,7 +178,7 @@ subparsers:
 
                   user-password:
                       type: Value
-                      help: The installation user password
+                      help: The installation user password. Please change it.
                       default: stack
 
             - title: Custom Repositories
