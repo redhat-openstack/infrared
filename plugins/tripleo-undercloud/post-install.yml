@@ -1,0 +1,10 @@
+- hosts: localhost
+  vars:
+      - post_install: |
+          Please, change default user password
+  tasks:
+      - name: Notification
+        set_stats:
+          data:
+            WARNING: "{{ post_install }}"
+        when: install.user.password == 'stack'
