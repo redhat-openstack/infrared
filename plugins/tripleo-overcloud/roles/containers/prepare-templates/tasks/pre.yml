@@ -85,8 +85,7 @@
           echo '{{ containers_puddle_base_url.stdout }}' | sed 's/{{ containers_puddle_number.stdout }}/{{ install.build|default("latest") }}/'
       register: modified_url
       when:
-          - install.ocupdate|default(False)
-          - install.build is defined and install.build != 'None'
+          - install.build is defined and install.build != 'None' or (install.ocupdate|default(False) and install.build is defined and install.build != 'None')
       tags:
           - container-images-packages
           - container-images-patch
