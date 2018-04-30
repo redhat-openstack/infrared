@@ -22,7 +22,9 @@
   tags:
       - lbaas
       - post
-  when: install.network.lbaas|default(False)
+  when:
+      - install.network.lbaas|default(False)
+      - install.version|default(undercloud_version)|openstack_release < 13
 
 - import_playbook: post/manila.yml
   tags: manila
