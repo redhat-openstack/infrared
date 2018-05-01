@@ -22,6 +22,12 @@ test_dict:
         - test_dualnet_multi_prefix_slaac
         - test_multi_prefix_dhcpv6_stateless
         - test_multi_prefix_slaac
+
+        # DVR not supported: https://bugzilla.redhat.com/show_bug.cgi?id=1573285
+        # these tests shouldn't run, more details: https://bugs.launchpad.net/bugs/1768209
+        - api.admin.test_routers_dvr.RoutersTestDVR.test_centralized_router_update_to_dvr
+        - api.test_routers.DvrRoutersTest.test_convert_centralized_router
+
     plugins:
         neutron-tempest-plugin:
             repo: "https://github.com/openstack/neutron-tempest-plugin"
