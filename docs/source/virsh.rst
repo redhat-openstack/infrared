@@ -1,4 +1,4 @@
-.. highlight:: plain
+.. highlight:: text
 
 Virsh
 =====
@@ -139,10 +139,12 @@ Topology Extend
 ---------------
 
 * ``--topology-extend``: Extend existing deployment with nodes provided by topology.
-    If ``--topology-extend`` is True, all nodes from ``--topology-nodes`` will be
-    added as new additional nodes::
+  If ``--topology-extend`` is True, all nodes from ``--topology-nodes`` will be
+  added as new additional nodes
 
-    infrared virsh [...] --topology-nodes compute:1,[...] --topology-extend yes [...]
+  .. code-block:: shell
+
+     infrared virsh [...] --topology-nodes compute:1,[...] --topology-extend yes [...]
 
 
 Topology Shrink

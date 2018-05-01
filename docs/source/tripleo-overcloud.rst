@@ -149,14 +149,14 @@ Overcloud Options
 * ``--overcloud-templates``: Add extra environment template files or custom templates
     to "overcloud deploy" command. Format:
 
-    .. code-block:: plain
+    .. code-block:: yaml
        :caption: sahara.yml
 
        ---
        tripleo_heat_templates:
            - /usr/share/openstack-tripleo-heat-templates/environments/services/sahara.yaml
 
-    .. code-block:: plain
+    .. code-block:: yaml
        :caption: ovs-security-groups.yml
 
        ---
@@ -179,7 +179,7 @@ Tripleo Heat Templates configuration options
 * ``--config-heat``: Inject additional Tripleo Heat Templates configuration options under "paramater_defaults"
     entry point. Example:
 
-    .. code-block:: plain
+    .. code-block:: shell
 
        --config-heat ComputeExtraConfig.nova::allow_resize_to_same_host=true
        --config-heat NeutronOVSFirewallDriver=openvswitch
@@ -197,7 +197,7 @@ Tripleo Heat Templates configuration options
 * ``--config-resource``: Inject additional Tripleo Heat Templates configuration options under "resource_registry"
     entry point. Example:
 
-    .. code-block:: plain
+    .. code-block:: shell
 
        --config-resource OS::TripleO::BlockStorage::Net::SoftwareConfig=/home/stack/nic-configs/cinder-storage.yaml
 
@@ -230,11 +230,11 @@ However, the director provides the ability to define specific node placement. Th
 * ``--custom-hostnames``: Option to provide custom Hostnames for the nodes. Custom hostnames can be provided
     as values or a env file. Examples:
 
-    .. code-block:: plain
+    .. code-block:: shell
 
        --custom-hostnames controller-0=ctr-rack-1-0,compute-0=compute-rack-2-0,ceph-0=ceph-rack-3-0
 
-    .. code-block:: plain
+    .. code-block:: shell
 
        --custom-hostnames local/path/to/custom_hostnames.yaml
 

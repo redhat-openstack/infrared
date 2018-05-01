@@ -89,7 +89,7 @@ Generate Answers file for `virsh` provisioner::
 Review the config file and edit as required:
 
 .. code-block:: ini
-   :emphasize-lines: 6,7
+   :emphasize-lines: 4,5
    :caption: virsh_prov.ini
 
    [virsh]
@@ -106,6 +106,8 @@ Review the config file and edit as required:
 
 Edit mandatory parameters values in the answers file::
 
+.. code-block:: ini
+
    [virsh]
    host-key = ~/.ssh/id_rsa
    host-address = my.host.address
@@ -114,7 +116,9 @@ Edit mandatory parameters values in the answers file::
 
 Execute provisioning using the newly created answers file::
 
-    infrared virsh --from-file=virsh_prov.ini
+.. code-block:: shell
+
+  infrared virsh --from-file=virsh_prov.ini
 
 .. note:: You can always overwrite parameters from answers file with parameters from CLI::
 

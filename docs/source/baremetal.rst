@@ -33,7 +33,7 @@ Infrared allows to perform baremetal deployments.
 
 
 
-   .. code:: none
+   .. code:: shell
 
      ...
      "cpu": "2",

@@ -39,11 +39,13 @@ Welcome to infrared's documentation!
    :maxdepth: 2
    :caption: Plugins
 
+   baremetal
    beaker
    foreman
    openstack_provisioner
    virsh
    tripleo-undercloud
+   tripleo_upgrade
    tripleo-overcloud
    cloud-config
    tempest

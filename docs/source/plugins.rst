@@ -26,18 +26,21 @@ Plugin structure
 Main entry
 ----------
 `infrared` will look for a playbook called ``main.yml`` to start the execution from.
-.. note:: If you want to use other playbook to start from - simply add it into
-config section in plugin.spec::
 
-  config:
-    plugin_type: other
-    entry_point: your-playbook.yml
-    ...
+.. note:: If you want to use other playbook to start from - simply add it into
+          config section in ``plugin.spec``:
+
+.. code-block:: yaml
+
+    config:
+      plugin_type: other
+      entry_point: your-playbook.yml
+      ...
 
 Plugins are regular Ansible projects, and as such, they might include or reference any item
 (files, roles, var files, ansible plugins, modules, templates, etc...) using relative paths
 to current playbook.
-They can also use roles, callback and filter plugins defined in the common/ directory
+They can also use roles, callback and filter plugins defined in the ``common/`` directory
 provided by `infrared` core.
 
 An example of ``plugin_dir/main.yml``:
@@ -117,7 +120,7 @@ These options are nested into the vars dict that is later passed to Ansible as e
 * IniType:
     Value is in ``section.option=value`` format.
     ``append`` is the default action for this type, so users can provide multiple args for the same parameter.
-.. warning:: The `IniType` option is deprecated, use `NestedDict` instead of.
+    .. warning:: The `IniType` option is deprecated, use `NestedDict` instead of.
 * NestedDict:
     Value is in ``section.option=value`` format.
     ``append`` is the default action for this type, so users can provide multiple args for the same parameter. Example::
@@ -408,7 +411,7 @@ These files are used to hold the result from infrared plugin freeze for the purp
 The Registry file contains a pinned version of everything that was installed when infrared plugin freeze was run.
 
 Registry File Format
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 The registry file is following the YAML format.
 Each section of the registry file contains an object which specifies the plugin to be installed:
 
@@ -431,5 +434,4 @@ Example of a registry file::
 
 How to create a new plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. note::
-Check `COOKBOOK <plugins_guide.html>`_ for the quick guide on how to create a plugin.
+.. note:: Check `COOKBOOK <plugins_guide.html>`_ for the quick guide on how to create a plugin.

@@ -4,7 +4,7 @@ Configuration
 Infrared uses the IR_HOME environment variable which points where infrared
 should keep all the internal configuration files and workspaces.
 
-Currently by default the ``IR_HOME ``points the current working directory
+Currently by default the ``IR_HOME`` points the current working directory
 from which the infrared command is run.
 
 To change that default location user can simply set ``IR_HOME``, for example::
@@ -18,7 +18,7 @@ This will generate default configurations files in the specified directory.
 Defaults from environment variables
 -----------------------------------
 
-Infrared will load all environment variables starting with IR_ and will
+Infrared will load all environment variables starting with ``IR_`` and will
 transform them in default argument values that are passed to all modules.
 
 This means that ``IR_FOO_BAR=1`` will do the same thing as adding
