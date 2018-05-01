@@ -1,13 +1,13 @@
 Tripleo OSP with Red Hat Subscriptions
 ======================================
 
-.. _must be registered:must be registered: https://access.redhat
-.com/documentation/en-us/red_hat_openstack_platform/11/html/director_installation_and_usage/chap-installing_the_undercloud#sect-Registering_your_System
+.. _must be registered: https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/11/html/director_installation_and_usage/chap-installing_the_undercloud#sect-Registering_your_System
 .. _uc: tripleo_undercloud.html
 .. _module documentation: http://docs.ansible.com/ansible/redhat_subscription_module.html
 
 Undercloud
 ----------
+
 To deploy OSP, the Undercloud `must be registered`_ to Red Hat channels.
 Define the subscription details:
 
@@ -46,7 +46,7 @@ According to the `guide`_ there are 2 heat-templates required. They can be inclu
 and their defaults overridden, using a `custom templates file`_.
 
 .. _guide: https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/10/html/advanced_overcloud_customization/sect-registering_the_overcloud
-.. _custom templates file:: tripleo_overcloud.html#overcloud-options
+.. _custom templates file: tripleo_overcloud.html
 
 .. code-block:: yaml
    :caption: overcloud_cdn.yml

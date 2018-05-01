@@ -1,4 +1,4 @@
-.. highlight:: plain
+.. highlight:: text
 
 Setup
 =====
@@ -85,7 +85,7 @@ Install ``infrared`` from source::
 
 Ansible Configuration
 ---------------------
-Config file(ansible.cfg) could be provided to get custom behavior for Ansible. For more details about Ansible config file options: `http://docs.ansible.com/ansible/latest/intro_configuration.html`_
+Config file(`ansible.cfg <http://docs.ansible.com/ansible/latest/intro_configuration.html>`_) could be provided to get custom behavior for Ansible.
 
 Infrared try to locate the Ansible config file(ansible.cfg) in several locations, in the following order:
 
@@ -116,4 +116,3 @@ When working in virtualenv, might be a good idea to add import of this script to
 virtualenv activation one::
 
   echo ". $(pwd)/etc/bash_completion/infrared" >> ${VIRTUAL_ENV}/bin/activate
-

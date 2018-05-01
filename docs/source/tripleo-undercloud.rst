@@ -31,7 +31,7 @@ Setup an Undercloud
 * ``--cdn`` Register the undercloud with a Red Hat Subscription Management platform.
     Accepts a file with subscription details.
 
-      .. code-block:: plain
+      .. code-block:: yaml
          :caption: cdn_creds.yml
 
           server_hostname: example.redhat.com
@@ -145,7 +145,7 @@ Add custom repositories to the undercloud, after `installing the TripleO reposit
 * ``--repos-config`` setup repos using the ansible yum_repository module.
     Using this option enables you to set specific options for each repository:
 
-      .. code-block:: plain
+      .. code-block:: yaml
          :caption: repos_config.yml
 
           ---

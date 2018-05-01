@@ -84,7 +84,7 @@ Add undercloud configuration::
                 - network: "management"
             external_network:
                 network: "management"
-    EOF 
+    EOF
 
 Provision virtual nodes with virsh plugin
 -----------------------------------------
@@ -152,7 +152,7 @@ Run introspection and tagging with infrared::
         --hybrid hybrid_nodes.json
 
 .. note:: Make sure to provide the 'provison_virsh_network_name' name to specify
-network name to be used for provisioning.
+          network name to be used for provisioning.
 
 Run deployment with appropriate templates
 -----------------------------------------
