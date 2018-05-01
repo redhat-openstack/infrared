@@ -84,18 +84,20 @@ subparsers:
                           List of of nodes types and they amount, in a "key:value" format.
                           Example: "'--topology-nodes 'undercloud:1,controller:3,compute:2'"
                           __LISTYAMLS__
-                      required: yes
+
                   topology-username:
                       type: Value
                       default: cloud-user
                       help: |
                           Non-root username with sudo privileges that will be created on nodes.
                           Will be use as main ssh user subsequently.
+
                   topology-extend:
                       type: Bool
                       default: False
                       help: |
                           Use it to extend existing deployment with nodes provided by topology.
+
                   topology-timezone:
                       type: Value
                       help: |
@@ -120,6 +122,12 @@ subparsers:
                       # default: False
                       silent:
                           - topology-nodes
+
+                  remove-nodes:
+                      type: ListValue
+                      help: |
+                          Use it to remove nodes from existing topology.
+                          Example: compute-3,compute-4,compute-5
 
             - title: Boot Mode
               options:

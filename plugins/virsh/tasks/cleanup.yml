@@ -35,34 +35,18 @@
 
   when: provision.kill | default(False)
 
-- block:
-  - name: remove all snapshots
-    include_tasks: remove_snapshots.yml
-    with_items: "{{ vm_names.list_vms }}"
-    loop_control:
-      loop_var: vm_name
 
-- name: destroy undefined vms
-  virt:
-      name: "{{ item }}"
-      state: destroyed
+- name: remove all snapshots
+  include_tasks: remove_snapshots.yml
   with_items: "{{ vm_names.list_vms }}"
+  loop_control:
+    loop_var: vm_name
 
-#Since the virt module doesn't support extra args, doing it via shell
-#the --nvram arg is required in case VMs were provisioned with bootmode=uefi
-#The cleanup step isn't aware of original bootmode setting
-- name: undefine relevant VMs
-  command: "sudo virsh undefine --nvram {{ item }}"
+- name: remove all vms
+  include_tasks: remove_vm.yml
   with_items: "{{ vm_names.list_vms }}"
-  tags: skip_ansible_lint
-
-- name: Clean /etc/hosts file
-  become: yes
-  lineinfile:
-      dest: /etc/hosts
-      regexp: ".*{{ item }}.*"
-      state: absent
-  with_items: "{{ vm_names.list_vms }}"
+  loop_control:
+    loop_var: vm_name
 
 - name: Removing previous Overcloud Entries
   become: true
@@ -76,12 +60,6 @@
 # and we cannot ensure that this file is always
 # correct on the user machine.
 # So do whatever we can and continue with cleanup.
-- name: cleanup known-hosts by name
-  known_hosts:
-      state: absent
-      name: "{{ item }}"
-  with_items: "{{ vm_names.list_vms }}"
-  ignore_errors: yes
 
 - name: cleanup known-hosts by ip
   tags: networks
@@ -112,9 +90,3 @@
   when:
       - item.key not in ignore_virsh_nets
       - item.value.forward_mode|default('') == 'bridge'
-
-- name: remove any existing VM disks that we created
-  shell: "rm -f {{ item }}*disk*.qcow*"
-  args:
-      chdir: "{{ provision.disk.pool }}"
-  with_items: "{{ vm_names.list_vms }}"
