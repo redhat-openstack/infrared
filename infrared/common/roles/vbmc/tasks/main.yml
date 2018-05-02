@@ -1,14 +1,21 @@
-- include_tasks: install.yml
-  delegate_to: "{{  vbmc_inventory_host }}"
+- block:
+      - include_tasks: install.yml
+        delegate_to: "{{  vbmc_inventory_host }}"
 
-- include_tasks: configure.yml
-  delegate_to: "{{  vbmc_inventory_host }}"
+      - include_tasks: configure.yml
+        delegate_to: "{{  vbmc_inventory_host }}"
 
-- include_tasks: iptables.yml
-  delegate_to: "{{  vbmc_inventory_host }}"
-  when: vbmc_inventory_host == "hypervisor"
+      - name: Register vars for instackenv template
+        set_fact:
+            vbmc_ports: "{{ vbmc_ports }}"
+            vbmc_management_address: "{{ vbmc_management_address }}"
+  when: action == 'install'
 
-- name: Register vars for instackenv template
-  set_fact:
-      vbmc_ports: "{{ vbmc_ports }}"
-      vbmc_management_address: "{{ vbmc_management_address }}"
+- include_tasks: check.yml
+  when: action == 'check'
+
+- include_tasks: cleanup.yml
+  when: action == 'cleanup'
+
+- include_tasks: remove.yml
+  when: action == 'remove'

@@ -34,6 +34,12 @@ subparsers:
                           memory is lower than required memory for all nodes. Use `--host-mem-overcommitment True`
                           to change default behaviour.
                       default: False
+                  host-mtu-size:
+                      type: Value
+                      help: |
+                          Setting the custom MTU size on the provided networks of the Hypervisor. If the custom size is not defined,
+                          the default MTU size of '1500' will be used.
+                      default: False
 
             - title: image
               options:
@@ -42,8 +48,9 @@ subparsers:
                       type: Value
                       help: |
                         URL to the image used for node provisioning.
-                        Default is internal path for RHEL guest image
-                      default: https://url.corp.redhat.com/rhel-guest-image-7-4-191-x86-64-qcow2
+                        Default url to RHEL 7.5 guest image
+                        RHEL 7.5 is unavailble for OSP 7
+                      default: https://url.corp.redhat.com/rhel-guest-image-7-5-146-x86-64-qcow2
 
                   disk-pool:
                       type: Value
@@ -77,18 +84,20 @@ subparsers:
                           List of of nodes types and they amount, in a "key:value" format.
                           Example: "'--topology-nodes 'undercloud:1,controller:3,compute:2'"
                           __LISTYAMLS__
-                      required: yes
+
                   topology-username:
                       type: Value
                       default: cloud-user
                       help: |
                           Non-root username with sudo privileges that will be created on nodes.
                           Will be use as main ssh user subsequently.
+
                   topology-extend:
                       type: Bool
                       default: False
                       help: |
                           Use it to extend existing deployment with nodes provided by topology.
+
                   topology-timezone:
                       type: Value
                       help: |
@@ -113,6 +122,12 @@ subparsers:
                       # default: False
                       silent:
                           - topology-nodes
+
+                  remove-nodes:
+                      type: ListValue
+                      help: |
+                          Use it to remove nodes from existing topology.
+                          Example: compute-3,compute-4,compute-5
 
             - title: Boot Mode
               options:

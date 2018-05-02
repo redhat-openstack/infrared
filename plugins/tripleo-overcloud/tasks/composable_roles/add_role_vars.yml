@@ -9,17 +9,14 @@
       role_var_name: "{{ node_name + '_role' }}"
 
 - name: check if we have vars in user defined role folder
-  vars:
-      role_path: "{{ install.splitstack|default('')|ternary('files/splitstack/roles','files/roles') }}"
   stat:
-      path: "{{ role_path }}/{{ install.role.files }}/{{ node_name }}.yml"
+      path: "files/roles/{{ install.role.files }}/{{ node_name }}.yml"
   register: user_role
   delegate_to: localhost
   when: hostvars[inventory_hostname][role_var_name] is not defined
 
 - name: include role vars for "{{ node_name }}"
   vars:
-      role_path: "{{ install.splitstack|default('')|ternary('files/splitstack/roles','files/roles') }}"
       folder: "{{ 'default' if not user_role.stat.exists else install.role.files }}"
-  include_vars: "{{ role_path }}/{{ folder }}/{{ node_name }}.yml"
+  include_vars: "files/roles/{{ folder }}/{{ node_name }}.yml"
   when: hostvars[inventory_hostname][role_var_name] is not defined

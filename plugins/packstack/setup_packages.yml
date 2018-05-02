@@ -15,7 +15,7 @@
       - name: Enable current dev working repo
         shell: |
             yum-config-manager \
-            --setopt 'rhelosp-{{ install.version }}.0-devtools-puddle.includepkgs=openstack-packstack*' \
+            --setopt 'rhelosp-{{ install.version }}.0-devtools-puddle.includepkgs=openstack-packstack*,puppet-tempest' \
             --enable rhelosp-{{ install.version }}.0-devtools-puddle >>/var/log/yum.log
         when: "install.version|openstack_release >= 13"
 

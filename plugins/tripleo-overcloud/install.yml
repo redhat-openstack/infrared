@@ -19,6 +19,23 @@
   tags:
       - introspect
 
+- name: Check hypervisor state
+  hosts: hypervisor
+  tags: deploy
+  any_errors_fatal: true
+  tasks:
+      - name: include role vbmc check
+        include_role:
+            name: vbmc
+        vars:
+            action: "check"
+        when:
+            - "'hypervisor' in groups"
+            - install.deploy|default('')
+            - not install.introspect
+            - vbmc_host is defined
+            - vbmc_host != 'undercloud'
+
 - name: Tag our machines with proper flavors
   import_playbook: "{{ overcloud_flavors | default('tag.yml') }}"
   when: install.tagging|default('')

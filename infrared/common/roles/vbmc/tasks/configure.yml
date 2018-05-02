@@ -1,6 +1,10 @@
+- name: set vbmc user and path
+  set_fact:
+      vbmc_user: "{{ (vbmc_host == 'undercloud') | ternary(ansible_user|default(ansible_ssh_user), 'root') }}"
+      vbmc_dir: "{{ (vbmc_host == 'undercloud') | ternary(ansible_user_dir, '/root') }}"
+
 - block:
-    - name: Add VirtualBMC as systemd service
-      become: true
+    - name: adds VirtualBMC as systemd service
       copy:
         mode: 0664
         dest: "/usr/lib/systemd/system/virtualbmc.service"
@@ -9,21 +13,46 @@
           Description=VirtualBMC service
           After=network.target
           [Service]
-          User={{ ansible_user|default(ansible_ssh_user) }}
+          User={{ vbmc_user }}
           Type=oneshot
-          ExecStart=/bin/bash -c 'for bmc in $(ls {{ ansible_user_dir }}/.vbmc/); do vbmc start $bmc; done'
-          ExecStop=/bin/bash -c 'for bmc in $(ls {{ ansible_user_dir }}/.vbmc/); do vbmc stop $bmc; done'
+          ExecStart=/bin/bash -c 'for bmc in $(ls {{ vbmc_dir }}/.vbmc/); do vbmc start $bmc; done'
+          ExecStop=/bin/bash -c 'for bmc in $(ls {{ vbmc_dir }}/.vbmc/); do vbmc stop $bmc; done'
           RemainAfterExit=yes
           [Install]
           WantedBy=multi-user.target
 
-    - name: Start the Virtual BMCs
-      become: true
-      service:
-        name: virtualbmc
-        state: started
-        enabled: true
-  when: vbmc_host == 'undercloud'
+    - name: Create VirtualBMC directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0750
+        owner: root
+        group: root
+      with_items:
+        - "/etc/virtualbmc"
+        - "/var/log/virtualbmc"
+
+    - name: Create VirtualBMC configuration file
+      copy:
+        mode: 0750
+        dest: "/etc/virtualbmc/virtualbmc.conf"
+        content: |
+          [default]
+          config_dir= {{ vbmc_dir }}/.vbmc
+          [log]
+          logfile=/var/log/virtualbmc/virtualbmc.log
+          debug=True
+          [ipmi]
+          session_timout=20
+  become: true
+
+- name: Start the Virtual BMCs
+  become: true
+  systemd:
+    name: virtualbmc
+    daemon_reload: yes
+    state: restarted
+    enabled: yes
 
 - name: Remove existing Virtual BMCs
   # grab only lines with port number (more than 2 digits)

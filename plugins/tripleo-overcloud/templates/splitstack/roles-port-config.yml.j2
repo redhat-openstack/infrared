@@ -26,3 +26,14 @@ resource_registry:
   OS::TripleO::DeployedServer::ControlPlanePort: "{{ install.heat.templates.basedir }}/deployed-server/deployed-neutron-port.yaml"
   OS::TripleO::Network::Ports::ControlPlaneVipPort: "{{ install.heat.templates.basedir }}/deployed-server/deployed-neutron-port.yaml"
   OS::TripleO::Network::Ports::RedisVipPort: "{{ install.heat.templates.basedir }}/network/ports/noop.yaml"
+
+  # Port assignments for the database role
+  OS::TripleO::DatabaseDeployedServer::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
+  #OS::TripleO::DatabaseDeployedServer::Ports::ManagementPort: "{{ install.heat.templates.basedir }}/network/ports/management.yaml"
+
+  # Port assignments for the networker role
+  OS::TripleO::NetworkerDeployedServer::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"
+  OS::TripleO::NetworkerDeployedServer::Ports::TenantPort: "{{ install.heat.templates.basedir }}/network/ports/tenant.yaml"
+
+  # Port assignments for the messaging role
+  OS::TripleO::MessagingDeployedServer::Ports::InternalApiPort: "{{ install.heat.templates.basedir }}/network/ports/internal_api.yaml"

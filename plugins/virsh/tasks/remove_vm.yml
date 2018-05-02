@@ -1,0 +1,26 @@
+---
+- name: destroy undefined vms
+  virt:
+      name: "{{ vm_name }}"
+      state: destroyed
+
+- name: undefine relevant VMs
+  command: "virsh undefine --nvram {{ vm_name }}"
+
+- name: Clean /etc/hosts file
+  become: yes
+  lineinfile:
+      dest: /etc/hosts
+      regexp: ".*{{ vm_name }}.*"
+      state: absent
+
+- name: cleanup known-hosts by name
+  known_hosts:
+      state: absent
+      name: "{{ vm_name }}"
+  ignore_errors: yes
+
+- name: remove any existing VM disks that we created
+  shell: "rm -f {{ vm_name }}*disk*.qcow*"
+  args:
+      chdir: "{{ provision.disk.pool }}"

@@ -23,6 +23,12 @@
           destination_port: "{{ item.value }}"
       with_dict: "{{ vbmc_ports }}"
 
+    - name: Install iptables-services
+      become: true
+      package:
+          name: iptables-services
+          state: latest
+
     - name: Make created iptables rules persistant
       become: true
       shell: "/sbin/service iptables save"

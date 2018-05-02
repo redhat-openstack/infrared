@@ -4,23 +4,27 @@
       path: "{{ install.custom.hostnames }}"
   register: custom_hostname_files
   delegate_to: localhost
+  when: install.custom.hostnames.split('/')[-1]|length <= 255
 
-- name: validate custom hostnames
-  fail:
-      msg: "{{ item }} is not valid value for --custom-hostnames"
-  when:
-      - not item.split('=')[1]|default(False)
-      - not custom_hostname_files.stat.exists
-  with_items: "{{ install.custom.hostnames.split(',') }}"
+- block:
+    - name: validate custom hostnames
+      fail:
+          msg: "{{ item }} is not valid value for --custom-hostnames"
+      when:
+          - not item.split('=')[1]|default(False)
+      with_items: "{{ install.custom.hostnames.split(',') }}"
 
-- name: create custom_hostnames.yaml
-  template:
-      src: control_node_placement/custom_hostnames.yaml.j2
-      dest: "{{ template_base }}/custom_hostnames.yaml"
-  when: not custom_hostname_files.stat.exists
+    - name: create custom_hostnames.yaml
+      template:
+          src: control_node_placement/custom_hostnames.yaml.j2
+          dest: "{{ template_base }}/custom_hostnames.yaml"
+
+  when: install.custom.hostnames.split('/')[-1]|length > 255 or not custom_hostname_files.stat.exists
 
 - name: copy provided env file for custom hostnames
   copy:
       src: "{{ install.custom.hostnames }}"
       dest: "{{ template_base }}/custom_hostnames.yaml"
-  when: custom_hostname_files.stat.exists
+  when:
+      - install.custom.hostnames.split('/')[-1]|length <= 255
+      - custom_hostname_files.stat.exists

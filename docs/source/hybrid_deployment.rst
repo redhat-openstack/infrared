@@ -42,6 +42,7 @@ provisioning the following configuration can be used::
             floating_ip:
                 start: "172.16.0.101"
                 end: "172.16.0.150"
+
     EOF
 
 .. note:: Change nic names for the bridget networks to match hypervisor interfaces.
@@ -51,86 +52,39 @@ provisioning the following configuration can be used::
 Create configurations files for the virtual nodes
 -------------------------------------------------
 
-Next step is to deploy virtual nodes for the hybrid cloud: ``controller`` and ``undercloud``.
+Next step is to add network topology of virtual nodes for the hybrid cloud: ``controller`` and ``undercloud``.
 Interface section for every node configuration should match to the network configuration.
 
-Create controller configuration::
 
-    cat << EOF > plugins/virsh/vars/topology/nodes/hybrid_controller.yml
-    name: controller
-    prefix: null
-    cpu: "4"
-    cpumodel: "host-model"
-    memory: "8192"
-    swap: "0"
-    os:
-        type: "linux"
-        variant: "rhel7"
-    disks:
-        disk1:
-            import_url: null
-            path: "/var/lib/libvirt/images"
-            dev: "/dev/vda"
-            size: "40G"
-            cache: "unsafe"
-            preallocation: "metadata"
-    interfaces:
-        - network: "br-ctlplane"
-          bridged: yes
-        - network: "br-vlan"
-          bridged: yes
-        - network: "br-link"
-          bridged: yes
-        - &external
-          network: management
-    external_network: *external
+Add controller configuration::
 
-    groups:
-        - controller
-        - openstack_nodes
-        - overcloud_nodes
-        - network
-
+    cat << EOF >> plugins/virsh/vars/topology/network/3_bridges_1_net.yml
+    nodes:
+        undercloud:
+            interfaces:
+                - network: "br-ctlplane"
+                  bridged: yes
+                - network: "management"
+            external_network:
+                network: "management"
     EOF
 
 
-Create undercloud configuration::
+Add undercloud configuration::
 
-    cat << EOF > plugins/virsh/vars/topology/nodes/hybrid_undercloud.yml
-    name: undercloud
-    prefix: null
-    cpu: "4"
-    cpumodel: "host-model"
-    memory: "16384"
-    swap: "0"
-    os:
-        type: "linux"
-        variant: "rhel7"
-    disks:
-        disk1:
-            import_url: null
-            path: "/var/lib/libvirt/images"
-            dev: "/dev/vda"
-            size: "40G"
-            cache: "unsafe"
-            preallocation: "metadata"
-    interfaces:
-        - network: "br-ctlplane"
-          bridged: yes
-        - network: "br-vlan"
-          bridged: yes
-        - network: "br-link"
-          bridged: yes
-        - &external
-          network: management
-    external_network: *external
-
-    groups:
-        - undercloud
-        - tester
-        - openstack_nodes
-    EOF
-
+    cat << EOF >> plugins/virsh/vars/topology/network/3_bridges_1_net.yml
+        controller:
+            interfaces:
+                - network: "br-ctlplane"
+                  bridged: yes
+                - network: "br-vlan"
+                  bridged: yes
+                - network: "br-link"
+                  bridged: yes
+                - network: "management"
+            external_network:
+                network: "management"
+    EOF 
 
 Provision virtual nodes with virsh plugin
 -----------------------------------------
@@ -139,7 +93,7 @@ Once node configurations are done, the ``virsh`` plugin can be used to provision
 on a dedicated hypervisor::
 
     infrared virsh -v \
-        --topology-nodes hybrid_undercloud:1,hybrid_controller:1 \
+        --topology-nodes undercloud:1,controller:1 \
         -e override.controller.memory=28672 \
         -e override.undercloud.memory=28672 \
         -e override.controller.cpu=6 \
@@ -147,7 +101,6 @@ on a dedicated hypervisor::
         --host-address hypervisor.redhat.com \
         --host-key ~/.ssh/key_file \
         --topology-network 3_bridges_1_net
-
 
 
 Install undercloud
