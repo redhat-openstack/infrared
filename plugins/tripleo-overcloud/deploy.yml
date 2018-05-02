@@ -67,6 +67,22 @@
         command: "systemctl restart openstack-nova-*"
         become: yes
 
+      - name: Apply the vbmc patch - w/a for BZ1571384
+        shell: |
+          GIT_SSL_NO_VERIFY=true git clone https://review.openstack.org/openstack/virtualbmc.git
+          pushd virtualbmc
+          GIT_SSL_NO_VERIFY=true git fetch https://git.openstack.org/openstack/virtualbmc refs/changes/78/564878/5 && git checkout FETCH_HEAD
+          virtualenv venv2
+          . venv2/bin/activate
+          pip install -e .
+          systemctl stop virtualbmc
+          for domain in $(ls ~/.vbmc)
+          do
+             vbmc start $domain
+          done
+        delegate_to: hypervisor
+        become: yes
+
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
