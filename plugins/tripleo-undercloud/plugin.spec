@@ -204,7 +204,14 @@ subparsers:
                       help: |
                           specifies whether the rhos/rdo-release tools should
                           be used to install tripleo packages.
-
+                  skip-remove-repos:
+                      type: Value
+                      action: append
+                      help: |
+                          In rhos-release role all repositories are clean up before deployment, if
+                          some repos should be present during deployment use option '--skip-remove-repos'
+                          and path to repos file.
+                          Example: --skip-remove-repos /etc/yum.repos.d/rhel-updates.repo
 
             - title: Overcloud images
               options:

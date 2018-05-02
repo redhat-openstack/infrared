@@ -35,11 +35,12 @@
   register: files_to_remove
 
 - name: remove all repo files
+  vars:
   file:
       state: absent
       path: "{{ item.path }}"
   with_items: "{{ files_to_remove.files|default([]) }}"
-  when: item.path != "/etc/yum.repos.d/patched_rpms.repo"
+  when: item.path not in default_skip_remove_repos + skip_remove_repos|default([])
   become: true
 
 - name: check rehos-release already available
