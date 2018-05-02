@@ -18,7 +18,7 @@
       - name: check for subscription
         command: subscription-manager identity
         become: yes
-        ignore_errors: yes
+        failed_when: false
         register: cdn_status
         changed_when: false
         when: install.images.packages|default('') or install.images['update']
