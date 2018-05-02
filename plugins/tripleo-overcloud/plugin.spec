@@ -404,14 +404,8 @@ subparsers:
                         Default behavior depends on the OpenStack version.
                   storage-backend:
                       type: Value
-                      choices:
-                          - ceph
-                          - swift
-                          - netapp-iscsi
-                          - netapp-nfs
-                          - lvm
                       help: |
-                        The storage that we would like to use.
+                        The storage that we would like to use which can be one of internal values ceph, swift, netapp-iscsi, netapp-nfs, lvm or it can be be file-path or url to the yaml storage config file.
                         If not supplied, Infrared will try to discover storage nodes and select appropriate backed.
                         The 'lvm' value will be used when storage nodes were not found.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
