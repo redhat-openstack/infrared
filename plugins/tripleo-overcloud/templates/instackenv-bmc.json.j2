@@ -6,7 +6,7 @@
       "pm_addr": "{{ hostvars[host_name].ipmi_ip }}",
       "mac": ["{{ hostvars[host_name].ipmi_mac }}"],
       "pm_password": "password",
-      "pm_type": "pxe_ipmitool",
+      "pm_type": "{% if install.version|default(undercloud_version)|openstack_release >= 14 %}ipmi{% else %}pxe_ipmitool{% endif %}",
       "arch": "x86_64",
       "pm_user": "admin"
     }{% if not loop.last %},{% endif %}
