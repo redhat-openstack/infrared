@@ -28,17 +28,20 @@
             when:
                 - install.storage.config == 'internal'
 
-          - name: check if user provided external storage config
-            stat:
-                path: "vars/storage/config/{{ install.storage.config }}.yml"
-            register: install_storage_config_file
+          - name: download storage config file
+            get_url:
+              url: install.storage.config
+              dest: "storage-config.yml.tmp"
+            when: install.storage.config is match("http[s]://.*")
 
-          - fail:
-                msg: |
-                    "The file for external storage config is not found.
-                    Expected path: vars/storage/config/{{ install.storage.config }}.yml"
-            when:
-                - install_storage_config_file.stat.exists == False
+          - name: lookup for external storage config
+            set_fact:
+              install_storage_config_file: "{{ lookup('first_found', findme) }}"
+            vars:
+              findme:
+              - "storage-config.yml.tmp"
+              - "{{ install.storage.config }}"
+              - "vars/storage/config/{{ install.storage.config }}.yml"
 
         when:
             - install.deploy|default('')
