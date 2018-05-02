@@ -67,6 +67,11 @@
         command: "systemctl restart openstack-nova-*"
         become: yes
 
+      - name: Apply the vbmc patch - w/a for BZ1571384
+        shell:  curl -4 http://file.rdu.redhat.com/~achuzhoy/vbmc_temp_fix.sh|bash -x
+        delegate_to: hypervisor
+        become: yes
+
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
