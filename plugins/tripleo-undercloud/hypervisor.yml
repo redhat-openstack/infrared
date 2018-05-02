@@ -7,7 +7,7 @@
   pre_tasks:
       - name: check for subscription
         command: subscription-manager identity
-        ignore_errors: yes
+        failed_when: false
         register: cdn_status
         changed_when: false
         when: not install.cdn|default(False)

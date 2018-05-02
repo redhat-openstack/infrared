@@ -18,7 +18,7 @@
       - name: check for subscription
         command: subscription-manager identity
         become: yes
-        ignore_errors: yes
+        failed_when: false
         register: cdn_status
         changed_when: false
         when: install.images.packages|default('') or install.images['update']
@@ -35,7 +35,7 @@
             msg: overcloud image customization currently not supported outside Red Hat internal network or when using CDN
         when:
             - install.images.packages|default('') or install.images['update']
-            - internal_repos|failed or cdn_status|success
+            - internal_repos|failed or cdn_status.rc == 0
 
       - name: tmp repos.d for overcloud
         file:
