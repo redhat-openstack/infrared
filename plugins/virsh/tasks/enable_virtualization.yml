@@ -5,7 +5,8 @@
 
 - name: check if CPU supports INTEL based KVM
   command: "egrep -c 'vmx' /proc/cpuinfo"
-  ignore_errors: True
+  failed_when: False
+  changed_when: False
   register: kvm_intel
 
 - name: set fact for Intel based KVM
@@ -15,7 +16,8 @@
 
 - name: check if CPU supports AMD based KVM
   command: "egrep -c 'svm' /proc/cpuinfo"
-  ignore_errors: True
+  failed_when: False
+  changed_when: False
   register: kvm_amd
 
 - name: set fact for AMD based KVM
