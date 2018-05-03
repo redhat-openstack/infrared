@@ -98,3 +98,19 @@
       disk: "{{ instance_flavor.disk }}"
       vcpus: "{{ instance_flavor.vcpus }}"
   with_items: "{{ floating_ips.results }}"
+  when: provision.osp.versions == 'old'
+
+- name: Add created servers to inventory for new osp versions
+  add_host:
+      # item.item is the server object
+      name: "{{ item.item.name }}"
+      ansible_host: "{{ item.floating_ip.floating_ip_address }}"
+      groups: "{{ topology_node.groups | join(',') }}"
+      ansible_ssh_private_key_file: "{{ provision.key.file }}"
+      ansible_user: "{{ topology_node.get('image', {}).ssh_user | default(provision.username) }}"
+#      eth1_interface_ip: "{{ item.item.addresses[data_network.name][0].addr }}"
+      ram: "{{ topology_node.ram }}"
+      disk: "{{ topology_node.disk }}"
+      vcpus: "{{ topology_node.vcpus }}"
+  with_items: "{{ floating_ips.results }}"
+  when: provision.osp.versions == 'new'
