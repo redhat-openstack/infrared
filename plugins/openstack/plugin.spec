@@ -34,6 +34,13 @@ subparsers:
                           Disable in case arbitary MAC and IP addresses need to reach outside assigned ports
                           (e.g. useful for OpenStack in OpenStack deployments). Disabling this will also set security_groups
                           to None.
+                  osp-versions:
+                      type: Value
+                      default: new
+                      choices:
+                          - new
+                          - old
+                      help: This flag is used to overrride default openstack flavor
             - title: Topology
               options:
                   prefix:
