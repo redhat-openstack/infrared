@@ -6,13 +6,6 @@
       src: cloud-names.yaml.j2
       dest: "{{ freeipa_templates_basedir }}/cloud-names.yaml"
 
-- name: Generate ceph-extra-config.yaml
-  template:
-      src: ceph-mon-use-fqdn.yaml.j2
-      dest: "{{ freeipa_templates_basedir }}/ceph-mon-use-fqdn.yaml"
-  when:
-      - freeipa_use_ceph
-
 - name: Assign dns as freeipa node to ctrlplane-subnet
   shell: |
       source {{ freeipa_undercloud_rc }}
