@@ -1,4 +1,4 @@
-.. highlight:: plain
+.. highlight:: text
 
 Workspaces
 ^^^^^^^^^^
@@ -142,8 +142,11 @@ Node list:
         infrared workspace node-list --name some_workspace_name
 
     ``--group`` - list nodes that are member of specific group.
+
 Group list:
-    List groups and nodes in them, managed by a specific workspace::
+    List groups and nodes in them, managed by a specific workspace:
+
+    .. code-block:: console
 
         infrared workspace group-list
         | Name            | Nodes                              |

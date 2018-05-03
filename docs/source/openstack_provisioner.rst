@@ -8,7 +8,7 @@ OpenStack Cloud Details
 * ``--cloud``: reference to OpenStack cloud credentials, using `os-client-config`_
     This library expects properly configured ``cloud.yml`` file:
 
-        .. code-block:: plain
+        .. code-block:: yaml
            :caption: clouds.yml
 
            clouds:
@@ -27,7 +27,7 @@ OpenStack Cloud Details
 
         .. note:: You can also omit the cloud parameter, and `infrared` will sourced openstackrc file:
 
-          .. code-block:: plain
+          .. code-block:: shell
 
                 source keystonerc
                 infrared openstack openstack ...
@@ -54,11 +54,11 @@ Topology
 * ``--topology-network``: Description of the network topology.
     By default, 3 networks will be provisioned with 1 router.
     2 of them will be connected via the router to an external network discovered automatically
-    (when more than 1 external network is found, the first will be chosen)::
+    (when more than 1 external network is found, the first will be chosen).
 
-The following is an example of a ``3_nets.yml`` file:
+    The following is an example of a ``3_nets.yml`` file:
 
-.. literalinclude:: ./examples/3_nets.yml
+    .. literalinclude:: ../examples/3_nets.yml
 
 * ``--topology-nodes``: `KeyValueList` description of the nodes.
     A floating IP will be provisioned on a designated network.

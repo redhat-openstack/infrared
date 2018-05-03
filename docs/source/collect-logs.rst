@@ -1,4 +1,4 @@
-.. highlight:: plain
+.. highlight:: text
 
 Collect-logs
 ============

@@ -31,7 +31,7 @@ Setup an Undercloud
 * ``--cdn`` Register the undercloud with a Red Hat Subscription Management platform.
     Accepts a file with subscription details.
 
-      .. code-block:: plain
+      .. code-block:: yaml
          :caption: cdn_creds.yml
 
           server_hostname: example.redhat.com
@@ -78,20 +78,20 @@ will be later created.
 
 * Depending on ``--images-task`` these the undercloud can be either:
 
-        * ``build`` images:
-                Build the overcloud images from a fresh guest image.
-                To use a different image than the default CentOS cloud
-                guest image, use ``--images-url`` to define base image than CentOS.
-                For OSP installation, you must provide a url of a valid RHEL image.
-        * ``import`` images from url:
-                Download pre-built images from a given ``--images-url``.
-        * Download images via ``rpm``:
-                Starting from OSP 8, TripleO is packages with pre-built images avialable via RPM.
+    * ``build`` images:
+        Build the overcloud images from a fresh guest image.
+        To use a different image than the default CentOS cloud
+        guest image, use ``--images-url`` to define base image than CentOS.
+        For OSP installation, you must provide a url of a valid RHEL image.
+    * ``import`` images from url:
+        Download pre-built images from a given ``--images-url``.
+    * Download images via ``rpm``:
+        Starting from OSP 8, TripleO is packages with pre-built images avialable via RPM.
 
-                To use different RPM, use ``--images-url`` to define the location of the RPM. You need
-                to provide all dependencies of the remote RPM. Locations have to be separated with comma
+        To use different RPM, use ``--images-url`` to define the location of the RPM. You need
+        to provide all dependencies of the remote RPM. Locations have to be separated with comma
 
-                .. note:: This option is invalid for `RDO` installation.
+        .. note:: This option is invalid for `RDO` installation.
 
 * Use ``--images-packages`` to define a list of additional packages to install on the OverCloud image.
   Packages can be specified by name or by providing direct url to the rpm file.
@@ -145,7 +145,7 @@ Add custom repositories to the undercloud, after `installing the TripleO reposit
 * ``--repos-config`` setup repos using the ansible yum_repository module.
     Using this option enables you to set specific options for each repository:
 
-      .. code-block:: plain
+      .. code-block:: yaml
          :caption: repos_config.yml
 
           ---

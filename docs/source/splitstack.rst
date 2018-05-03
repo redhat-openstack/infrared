@@ -1,5 +1,5 @@
 SplitStack deployment
---------------
+---------------------
 
 Infrared allows to perform SplitStack_ based deployment.
 
@@ -41,4 +41,3 @@ To deploy SplitStack on virtual environment the following steps can be performed
 		--deploy yes \
 		--splitstack yes \
 		--post no
-
