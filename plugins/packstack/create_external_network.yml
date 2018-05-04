@@ -101,3 +101,11 @@
         become: yes
         shell: "ip addr add {{ gateway_ip }} dev br-myphysnet || ( ip -o addr show dev br-myphysnet | grep {{ gateway_ip }}/ )"
         when: install.network.gwhack
+      - name: allow reverse path for heat-cfn connectivity
+        sysctl:
+            name: net.ipv4.conf.eth0.rp_filter
+            value: 2
+            sysctl_file: /etc/sysctl.d/infrared.conf
+            reload: no
+            sysctl_set : yes
+        ignore_errors: yes
