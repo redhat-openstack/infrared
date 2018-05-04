@@ -22,6 +22,6 @@
 
 - name: generate docker images file for services not enabled by default (if any)
   set_fact:
-      environment_yamls: "{{ environment_yamls|default('') }} --e {{ item.item }} "
+      environment_yamls: "{{ environment_yamls|default('') }} -e {{ item.item }} "
   with_items: "{{ default_templates.results }}"
   when: item.item not in ds_env_files.stdout_lines
