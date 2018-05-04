@@ -95,7 +95,6 @@ class InfraredPluginManager(object):
 
             for plugin_name in self.config.options(supported_type):
                 plugin_desc = self.PLUGINS_DICT[plugin_name].description
-
                 plugins_dict[supported_type][plugin_name] = plugin_desc
 
         if plugins_type:
@@ -247,6 +246,14 @@ class InfraredPluginManager(object):
         :return: InfraredPlugin instance
         """
         return cls.PLUGINS_DICT[plugin_name]
+
+    def get_plugin_version(self, plugin_name):
+        try:
+            repo = git.Repo(os.path.join(self.plugins_dir, plugin_name))
+            return str(repo.active_branch) + " / " + str(
+                repo.head.commit.hexsha)
+        except git.InvalidGitRepositoryError:
+            return 'local'
 
     def __iter__(self):
         for plugin in self.PLUGINS_DICT.iteritems():
