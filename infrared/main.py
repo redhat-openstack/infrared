@@ -287,6 +287,9 @@ class PluginManagerSpec(api.SpecObject):
             "--available", action='store_true',
             help="Prints all available plugins in addition "
                  "to installed plugins")
+        list_parser.add_argument(
+            "--versions", action='store_true',
+            help="Prints version of each installed plugins")
 
         # Update plugin
         update_parser = plugin_subparsers.add_parser(
@@ -336,11 +339,11 @@ class PluginManagerSpec(api.SpecObject):
         subcommand = pargs.command0
 
         if subcommand == 'list':
-            self._list_plugins(pargs.available)
+            self._list_plugins(pargs.available, pargs.versions)
         elif subcommand == 'add':
             if 'all' in pargs.src:
                 self.plugin_manager.add_all_available()
-                self._list_plugins(print_available=False)
+                self._list_plugins(print_available=False, print_version=False)
             else:
                 if len(pargs.src) > 1 and (pargs.revision or pargs.src_path):
                     raise exceptions.IRFailedToAddPlugin(
@@ -352,7 +355,7 @@ class PluginManagerSpec(api.SpecObject):
         elif subcommand == 'remove':
             if 'all' in pargs.name:
                 self.plugin_manager.remove_all()
-                self._list_plugins(print_available=False)
+                self._list_plugins(print_available=False, print_version=False)
             else:
                 for _plugin in pargs.name:
                     self.plugin_manager.remove_plugin(_plugin)
@@ -366,7 +369,7 @@ class PluginManagerSpec(api.SpecObject):
         elif subcommand == 'import':
             self.plugin_manager.import_plugins(pargs.src)
 
-    def _list_plugins(self, print_available=False):
+    def _list_plugins(self, print_available=False, print_version=False):
         """Print a list of installed & available plugins"""
         table_rows = []
         table_headers = ["Type", "Name"]
@@ -390,23 +393,41 @@ class PluginManagerSpec(api.SpecObject):
                 installed_plugins_mark_list = \
                     [installed_mark if plugin_name in installed_plugins_list
                      else '' for plugin_name in all_plugins_list]
+
                 plugins_descs = \
                     [PLUGINS_REGISTRY.get(plugin, {}).get('desc', '')
                      for plugin in all_plugins_list]
 
-                table_rows.append([
-                    plugins_type,
-                    '\n'.join(all_plugins_list),
-                    '\n'.join(installed_plugins_mark_list),
-                    '\n'.join(plugins_descs)])
+                row = [plugins_type, '\n'.join(all_plugins_list),
+                       '\n'.join(installed_plugins_mark_list),
+                       '\n'.join(plugins_descs)]
+
+                if print_version:
+                    plugins_version = [
+                        self.plugin_manager.get_plugin_version(plugin_name)
+                        if plugin_name in installed_plugins_list else ''
+                        for plugin_name in all_plugins_list]
+
+                    row.append('\n'.join(plugins_version))
+
             else:
-                table_rows.append([
+                row = [
                     plugins_type,
-                    '\n'.join(installed_plugins_list)])
+                    '\n'.join(installed_plugins_list)]
+
+                if print_version:
+                    plugins_version = [self.plugin_manager.get_plugin_version(
+                        plugin_name) for plugin_name in installed_plugins_list]
+                    row.append('\n'.join(plugins_version))
+
+            table_rows.append(row)
 
         if print_available:
             table_headers.append("Installed")
             table_headers.append("Description")
+
+        if print_version:
+            table_headers.append("Version")
 
         print fancy_table(table_headers, *table_rows)
 
