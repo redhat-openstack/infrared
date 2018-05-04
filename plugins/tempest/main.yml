@@ -7,6 +7,8 @@
   tasks:
       - name: Include virtual environment vars
         include_vars: "vars/venv.yml"
+        tags:
+            - always
 
       - include_role:
             name: version-discovery
@@ -16,7 +18,8 @@
                 - nova
         delegate_to: "{{ groups.controller[0] }}"
         when: test.openstack.version is not defined
-
+        tags:
+            - always
       - debug:
             msg: "Overcloud's OpenStack version that has been auto discovered is {{ overcloud_version }}"
         when: overcloud_version is defined
