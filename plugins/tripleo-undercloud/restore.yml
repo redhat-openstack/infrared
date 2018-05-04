@@ -123,8 +123,8 @@
             ansible_ssh_private_key_file: "{{ hostvars[groups['overcloud_nodes'][0]].ansible_ssh_private_key_file }}"
             ansible_host: "{{ undercloud_ip.stdout | ipaddr('address') }}"
             ansible_ssh_common_args: "
+                -o BatchMode=yes \
                 -o ForwardAgent=yes \
-                -o IdentitiesOnly=yes \
                 -o ServerAliveInterval=30 \
                 -o ControlMaster=auto \
                 -o ControlPersist=30m \
