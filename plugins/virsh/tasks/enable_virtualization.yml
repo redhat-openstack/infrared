@@ -46,14 +46,14 @@
   modprobe:
       name: "kvm_{{ kvm_base }}"
       state: absent
-  ignore_errors: True
+  failed_when: False
   when: kvm_base is defined
 
 - name: load KVM module
   modprobe:
       name: "kvm_{{ kvm_base }}"
       state: present
-  ignore_errors: True
+  failed_when: False
   when: kvm_base is defined
 
 - name: install required QEMU-KVM packages
@@ -67,11 +67,11 @@
   modprobe:
       name: "vhost-net"
       state: absent
-  ignore_errors: True
+  failed_when: False
   when: kvm_base is defined
 
 - name: load KVM module
   modprobe:
       name: "vhost-net"
       state: present
-  ignore_errors: True
+  failed_when: False
