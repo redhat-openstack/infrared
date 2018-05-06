@@ -92,6 +92,32 @@
       replace: 'router,qos,trunk,networking_l2gw.services.l2gateway.plugin.L2GatewayPlugin'
   when: install.network.l2gw
 
+- name: Create neutron-lbaas-agent environment file
+  become: yes
+  copy:
+      dest: "{{ install.heat.templates.basedir }}/environments/services/neutron-lbaas-agent.yaml"
+      src: "files/network/neutron-lbaas-agent.yml"
+  when: install.network.lbaas
+
+- name: Append the LBaaS Agent template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/services/neutron-lbaas-agent.yaml \'
+  when: install.network.lbaas
+
+- name: Create neutron-lbaas environment file
+  become: yes
+  copy:
+      dest: "{{ install.heat.templates.basedir }}/environments/services/neutron-lbaas.yaml"
+      src: "files/network/neutron-lbaas.yml"
+  when: install.network.lbaas
+
+- name: Append the LBaaS v2 template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/services/neutron-lbaas.yaml \'
+  when: install.network.lbaas
+
 - name: Append the octavia template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
