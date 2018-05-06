@@ -67,6 +67,9 @@
         command: "systemctl restart openstack-nova-*"
         become: yes
 
+      - pause:
+            minutes: 3600000
+
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
