@@ -1,12 +1,10 @@
 # provides API to run plugins
 import argparse
 import abc
-from collections import OrderedDict
 import logging
 import sys
 
 import os
-import re
 import yaml
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
@@ -212,30 +210,14 @@ class ExecutionLogger(object):
                     "\nEOF\n", file_name, conf_file.read())
 
 
-class Defaults(OrderedDict):
-    def __init__(self, *args, **kwargs):
-        super(Defaults, self).__init__(*args, **kwargs)
-
-    def as_args(self):
-        return ' '.join(['--%s=%s' % (k, v) for k, v in self.items()])
-
-    def as_argparser_defaults(self):
-        r = dict()
-        for k, v in self.items():
-            r["subcommand" + k] = v
-        return r
-
-
 class SpecManager(object):
     """Manages all the available specifications (specs). """
 
     def __init__(self):
 
-        self.defaults = self.get_defaults_from_environ()
         # create entry point
         self.parser = argparse.ArgumentParser(
             description='infrared entry point')
-        self.parser.set_defaults(**self.defaults.as_argparser_defaults())
         self.parser.add_argument("--version", action='version',
                                  version=version.version_string())
         self.parser.add_argument("--no-log-commands", action='store_true',
@@ -243,23 +225,6 @@ class SpecManager(object):
         self.root_subparsers = self.parser.add_subparsers(dest="subcommand")
         self.spec_objects = {}
         self.execution_logger = None
-
-    def get_defaults_from_environ(self):
-        """Returns a dictionary with all default argument values loaded from
-        environmental variable with prefix IR_
-        """
-        _prefix_re = re.compile(r"^IR_", re.I)
-
-        defaults = Defaults()
-        for key, val in sorted(os.environ.items()):
-            if _prefix_re.search(key):
-                key_var = _prefix_re.sub("", key).lower().replace('_', '-')
-                LOG.info("[environ] Argument '{}' was set to"
-                         " '{}' from the {} environment variable."
-                         .format(key_var, val, key))
-                defaults[key_var] = val
-
-        return defaults
 
     def register_spec(self, spec_object):
         spec_object.extend_cli(self.root_subparsers)
