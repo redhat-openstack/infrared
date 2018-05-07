@@ -1,6 +1,7 @@
 import collections
 import ConfigParser
 import yaml
+import os
 
 from infrared.core.utils import logger
 from infrared.core.utils import dict_utils
@@ -93,14 +94,26 @@ class SpecParser(object):
             :param option: argument name
             """
 
-            default_value = None
-            if option.get('default', None) is not None:
+            # first try to get environment variable with IR_ prefix
+            default_value = SpecParser.get_env_option(option['name'])
+            if default_value is not None:
+                LOG.info(
+                    "[environ] Loading '{0}' default value"
+                    " '{1}' from the environment variable".format(
+                        option['name'], default_value))
+            elif option.get('default', None) is not None:
                 default_value = option['default']
             elif option.get('action', None) in ['store_true']:
                 default_value = False
             return default_value
 
         return self._get_defaults(spec_default_getter)
+
+    @staticmethod
+    def get_env_option(name):
+        """ Try get """
+        return os.environ.get('IR_' + name.upper().replace('-', '_'))
+
 
     def get_deprecated_args(self):
         """Returning dict with options which deprecate others. """
