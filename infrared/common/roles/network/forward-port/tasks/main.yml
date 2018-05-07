@@ -1,0 +1,32 @@
+- name: open destination port
+  iptables:
+      action: insert
+      chain: INPUT
+      comment: "Infrared: open forward port on host"
+      protocol: tcp
+      jump: ACCEPT
+      destination_port: "{{ fp_destination_port }}"
+
+- name: set DNAT rules
+  iptables:
+      action: insert
+      comment: "Infrared: forward port"
+      table: "{{ item.table }}"
+      chain: "{{ item.chain }}"
+      protocol: tcp
+      destination: "{{ item.destination }}"
+      destination_port: "{{ item.destination_port|default(omit) }}"
+      jump: "{{ item.jump }}"
+      to_destination: "{{ item.to_destination|default(omit) }}"
+  with_items:
+      - chain: PREROUTING
+        table: nat
+        to_destination: "{{ fp_ip_address_from }}:{{ fp_port_forward_from }}"
+        # port 8080
+        destination_port: "{{ fp_destination_port }}"
+        jump: DNAT
+        destination: "{{ ansible_host }}"
+      - chain: FORWARD
+        table: filter
+        jump: ACCEPT
+        destination: "{{ fp_ip_address_from }}"
