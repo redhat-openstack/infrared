@@ -31,7 +31,10 @@ class VarsDictManager(object):
         """
         vars_dict = {entry_point: {}}
         try:
+            print "nested_args: " + str(nested_args)
             for _name, argument in nested_args.items():
+                print "Vars_dict: " + str(vars_dict)
+                print "Inserting: argument {0}, _name: {1} ".format(argument, _name)
                 dict_utils.dict_insert(vars_dict[entry_point],
                                        argument,
                                        *_name.split(delimiter))
