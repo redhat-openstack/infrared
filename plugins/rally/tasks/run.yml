@@ -2,6 +2,7 @@
 - name: Create Rally deployment
   shell: |
       test -f ~/overcloudrc.v3 && source ~/overcloudrc.v3 || source ~/overcloudrc
+      echo $OS_AUTH_URL | grep https > /dev/null && export OS_INSECURE=True
       {{ rally.bin }} deployment create --fromenv --name {{ test.deployment }} | awk '/{{ test.deployment }}/ {print $2}'
   register: rally_deployment_uuid
   ignore_errors: true
