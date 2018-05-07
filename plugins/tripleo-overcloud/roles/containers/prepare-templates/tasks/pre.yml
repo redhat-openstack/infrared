@@ -32,7 +32,7 @@
 
 - name: Reload SSHd
   become: true
-  shell: sleep 1; pkill -u {{ ansible_ssh_user }} sshd
+  shell: sleep 1; pkill -u {{ ansible_user | default(ansible_ssh_user) }} sshd
   async: 5
   poll: 2
   tags: reload_ssh
