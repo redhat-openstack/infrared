@@ -3,7 +3,8 @@
   vars:
       openstackrc: ~/stackrc
   register: undercloud_ssl
-  ignore_errors: true
+  failed_when: false
+  changed_when: false
 
 - name: discover undercloud cert exists
   vars:
@@ -67,5 +68,5 @@
           line: '-e {{ item.dest }} \'
       with_items: "{{ copy_templates.results }}"
   when:
-      - undercloud_ssl|succeeded
+      - undercloud_ssl.rc == 0
       - uc_cert_exists.stat.exists
