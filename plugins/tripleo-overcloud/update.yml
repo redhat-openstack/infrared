@@ -27,7 +27,7 @@
 
       - name: check for cdn registration env file
         command: grep "{{ reg_file }}" {{ overcloud_deploy_script }}
-        ignore_errors: yes
+        failed_when: false
         register: cdn_status
 
       - name: set fact oc registered
