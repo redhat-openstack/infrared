@@ -16,7 +16,20 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
+from xml.etree import cElementTree as ET
+import ipaddr
+from collections import defaultdict
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.pycompat24 import get_exception
+
+
+try:
+    import libvirt
+except ImportError:
+    HAS_VIRT = False
+else:
+    HAS_VIRT = True
 
 DOCUMENTATION = '''
 ---
@@ -141,22 +154,6 @@ network:
   sample: {'network': ...}
 
 '''
-
-
-from xml.etree import cElementTree as ET
-import ipaddr
-from collections import defaultdict
-
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.pycompat24 import get_exception
-
-
-try:
-    import libvirt
-except ImportError:
-    HAS_VIRT = False
-else:
-    HAS_VIRT = True
 
 
 class UtilError(Exception):
