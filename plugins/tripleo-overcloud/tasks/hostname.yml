@@ -47,7 +47,7 @@
             # ospd_hostname: novacompute
             heat_name: Compute
             ospd_hostname: compute
-            scheduler_heat_name: NovaCompute
+            scheduler_heat_name: "{{ (install.version|default(undercloud_version) | openstack_release < 12) | ternary('NovaCompute', 'Compute') }}"
         controller:
             heat_name: Controller
             ospd_hostname: controller
