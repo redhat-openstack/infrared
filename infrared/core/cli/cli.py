@@ -179,6 +179,11 @@ class CliParser(object):
                 opt_kwargs['help'].rstrip() + \
                 "\nDefault value: '{}'.".format(opt_kwargs['default'])
 
+        # print length value to the help
+        if 'length' in option_data:
+            opt_kwargs['help'] += "\nMaximum variable length: '{}'.".format(
+                option_data['length'])
+
         # print minimum value to the help
         if 'minimum' in option_data:
             opt_kwargs['help'] += "\nMinimum value: '{}'.".format(
