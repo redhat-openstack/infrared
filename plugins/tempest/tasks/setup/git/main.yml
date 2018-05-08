@@ -15,12 +15,12 @@
   git:
       repo: "{{ setup.repo.get(test.openstack.version|default(overcloud_version)|openstack_release, setup.repo.defaults).url }}"
       version: "{{ setup.repo.get(test.openstack.version|default(overcloud_version)|openstack_release, setup.repo.defaults).branch }}"
-      dest: "~/{{ test.dir }}"
+      dest: "~/{{ setup.clone_dir }}"
   register: tempest_repo
   when: setup.local_dir is not defined
 
 - name: Fetch tempest from change
-  synchronize: dest={{ test.dir }} src={{ test.local_dir }}/
+  synchronize: dest={{ setup.clone_dir }} src={{ test.local_dir }}/
                  archive=no recursive=yes perms=yes links=yes
   register: tempest_local_dir
   when: setup.local_dir is defined
@@ -28,7 +28,7 @@
 - name: Print repo version
   command: "git log -1 --pretty=format:%h"
   args:
-      chdir: "{{ test.dir }}"
+      chdir: "{{ setup.clone_dir }}"
   register: tempest_repo_version
 
 - debug: "msg='Build mark: tempest={{ tempest_repo_version.stdout }}'"
@@ -60,7 +60,7 @@
 - name: Get repo requirements
   pip:
       virtualenv: "{{ virtualenvs.tempest }}"
-      chdir: "~/{{ test.dir }}"
+      chdir: "~/{{ setup.clone_dir }}"
       requirements: "{{ item }}"
   with_items:
       - requirements.txt
@@ -68,7 +68,7 @@
 
 - name: Install extra requirements
   pip:
-      chdir: "~/{{ test.dir }}"
+      chdir: "~/{{ setup.clone_dir }}"
       virtualenv: "{{ virtualenvs.tempest }}"
       name: "{{ item }}"
       state: present
@@ -76,7 +76,7 @@
 
 - name: Install Tempest package
   pip:
-      chdir: "~/{{ test.dir }}"
+      chdir: "~/{{ setup.clone_dir }}"
       virtualenv: "{{ virtualenvs.tempest }}"
       name: "."
       editable: true

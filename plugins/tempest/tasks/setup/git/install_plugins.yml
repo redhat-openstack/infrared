@@ -13,7 +13,7 @@
 - name: Set plugins list iterator for "{{ test_suite }}"
   set_fact:
       plugins: "{{ test_dict.plugins | default({}) | combine(cli_plugins|default({})) }}"
-      plugins_dir: "{{ ansible_user_dir }}/{{test.dir | dirname }}/plugins"
+      plugins_dir: "{{ ansible_user_dir }}/{{ setup.clone_dir | dirname }}/plugins"
 
 - name: Create plugins directory
   file:
@@ -49,7 +49,7 @@
     - name: Get repo requirements
       pip:
           virtualenv: "{{ virtualenvs.tempest }}"
-          chdir: "~/{{ test.dir }}"
+          chdir: "~/{{ setup.clone_dir }}"
           requirements: "{{ item }}"
       with_items: "{{ plugins_reqs.results|selectattr('stat.exists')|map(attribute='stat.path')|list }}"
 
