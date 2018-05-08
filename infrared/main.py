@@ -44,7 +44,7 @@ from infrared.core.utils import exceptions  # noqa
 from infrared.core.utils import logger  # noqa
 from infrared.core.utils import interactive_ssh  # noqa
 from infrared.core.utils.print_formats import fancy_table  # noqa
-import bash_completers as completers
+import bash_completers as completers  # noqa
 
 LOG = logger.LOG
 
