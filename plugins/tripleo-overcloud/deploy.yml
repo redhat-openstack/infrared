@@ -67,6 +67,13 @@
         command: "systemctl restart openstack-nova-*"
         become: yes
 
+      - name: append 'deploy-extra-params' to deploy script
+        lineinfile:
+            dest: "{{ overcloud_deploy_script }}"
+            line: "{{ item }} \\"
+            insertbefore: "^--log-file.*"
+        with_items: "{{ install.deploy.get('extra', {}).get('params', {}) }}"
+
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
