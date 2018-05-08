@@ -36,6 +36,11 @@ test_dict:
 
         # https://bugzilla.redhat.com/show_bug.cgi?id=1575032
         - scenario.test_trunk.TrunkTest.test_subport_connectivity
+
+        # stop skipping once https://review.openstack.org/#/c/508554/ and available in downstream RPM
+        - test_dualnet_dhcp6_stateless_from_os
+        - test_dualnet_slaac_from_os
+
     plugins:
         neutron-tempest-plugin:
             repo: "https://github.com/openstack/neutron-tempest-plugin"
