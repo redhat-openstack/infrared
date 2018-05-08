@@ -330,6 +330,11 @@ subparsers:
                       default: no
                       help: Deploy Overcloud with Octavia (Load Balancer).
 
+                  network-lbaas:
+                      type: Bool
+                      default: no
+                      help: Deploy Overcloud with LBaaS v2. (OSP >= 13, RDO >= Queens)
+
                   network-ovn:
                       type: Bool
                       default: no
