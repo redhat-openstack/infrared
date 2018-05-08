@@ -1,7 +1,12 @@
 # include environment template files from undercloud in overcloud_deploy script
+- template:
+    src: "{{ templates_list_file  }}"
+    dest: "/tmp/{{ templates_list_file | basename }}"
+  delegate_to: localhost
+
 - include_vars:
-      file: "{{ templates_list_file}}"
-      name: current_file
+    file: "/tmp/{{ templates_list_file | basename }}"
+    name: current_file
 
 - name: find the template file or corresponding j2 template
   find:
