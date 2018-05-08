@@ -1,0 +1,31 @@
+---
+base_image_path: /var/lib/libvirt/images
+url: http://rhos-qe-mirror-brq.usersys.redhat.com/brewroot/packages/rhel-guest-image/7.5/146/images/rhel-guest-image-7.5-146.x86_64.qcow2
+provision:
+  bootmode: hd
+  collect:
+    ansible:
+      facts: false
+  disk:
+    bus: virtio
+    pool: /var/lib/libvirt/images
+  host:
+    address: example.redhat.com
+    key: ~/.ssh/multi-cloud
+    memory:
+      overcommit: true
+    mtu:
+      size: false
+    user: root
+    validate: true
+  image:
+    url: http://rhos-qe-mirror-brq.usersys.redhat.com/brewroot/packages/rhel-guest-image/7.5/146/images/rhel-guest-image-7.5-146.x86_64.qcow2
+  prefix: ir-
+  topology:
+    extend: false
+    network: ../defaults/topology/network/3_nets.yml
+    nodes:
+      ../defaults/topology/nodes/compute.yml: 1
+      ../defaults/topology/nodes/controller.yml: 1
+      ../defaults/topology/nodes/undercloud.yml: 1
+    username: cloud-user

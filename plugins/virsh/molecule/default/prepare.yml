@@ -1,0 +1,17 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Mock create directory /var/lib/libvirt/images
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - /var/lib/libvirt/images
+        - /root/.ssh
+
+    - name: Prepare id_rsa.pub and ssh keys
+      copy:
+        content: "Mock data"
+        dest: "/root/.ssh/id_rsa.pub"
