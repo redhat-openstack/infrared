@@ -8,7 +8,11 @@ custom_templates:
             nova::config::nova_config:
                 notifications/notification_format:
                     value: 'unversioned'
+{% if install.version|default(undercloud_version) | openstack_release > 11 %}
+        ComputeExtraConfig:
+{% else %}
         NovaComputeExtraConfig:
+{% endif %}
             nova::config::nova_config:
                 notifications/notification_format:
                     value: 'unversioned'
