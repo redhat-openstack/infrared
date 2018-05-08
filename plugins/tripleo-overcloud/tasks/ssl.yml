@@ -25,11 +25,12 @@
   vars:
       openstackrc: ~/stackrc
   register: undercloud_ssl
-  ignore_errors: true
+  failed_when: false
+  changed_when: false
 
 - name: create the self signed SSL
   command: "openssl genrsa -out {{ template_base }}/overcloud-privkey.pem 2048"
-  when: not undercloud_ssl|succeeded
+  when: not undercloud_ssl.rc == 0
 
 - name: extract our external allocation pools start value
   command: "cat {{ template_base }}/network/{{ network_environment_file }}"
@@ -59,13 +60,13 @@
           -keyout {{ template_base }}/overcloud-privkey.pem
   command: >
       openssl req
-      {{ uc_signed if undercloud_ssl|succeeded else self_signed }}
+      {{ uc_signed if undercloud_ssl.rc == 0 else self_signed }}
       -out {{ template_base }}/overcloud-cacert.pem -days 365
       -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ external_allocation_pool_start }}'
 
 - name: process server RSA keys
   command: "openssl rsa -in {{ template_base }}/overcloud-privkey.pem  -out {{ template_base }}/overcloud-privkey.pem"
-  when: undercloud_ssl|succeeded
+  when: undercloud_ssl.rc == 0
 
 - name: sign request with undercloud CA
   vars:
@@ -78,7 +79,7 @@
       -CAkey {{ undercloud_pkey }}
       -set_serial 01
       -out {{ template_base }}/overcloud-cacert.pem
-  when: undercloud_ssl|succeeded
+  when: undercloud_ssl.rc == 0
 
 - name: update the tls template
   replace:
@@ -104,7 +105,7 @@
 - name: register the CA certificate
   command: cat /etc/pki/ca-trust/source/anchors/undercloud-cacert.pem
   register: uc_cacert
-  when: undercloud_ssl|succeeded
+  when: undercloud_ssl.rc == 0
 
 - name: register the private key
   command: "cat {{ template_base }}/overcloud-privkey.pem"
@@ -112,7 +113,7 @@
 
 - name: insert the content of the CA certificate and private key respectfully
   vars:
-      root_cert: "{{ uc_cacert if undercloud_ssl|succeeded else oc_cacert}}"
+      root_cert: "{{ uc_cacert if undercloud_ssl.rc == 0 else oc_cacert}}"
   replace:
       dest: "{{ item.dest }}"
       regexp: "{{ item.regex }}"
