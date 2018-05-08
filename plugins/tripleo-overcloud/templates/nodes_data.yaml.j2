@@ -1,6 +1,10 @@
 parameter_defaults:
     ControllerCount: {{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or '1' }}
+{% if install.version|default(undercloud_version) | openstack_release > 11 %}
+    OvercloudControllerFlavor: {{ ('controller' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('controller', 'baremetal') }}
+{% else %}
     OvercloudControlFlavor: {{ ('controller' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('controller', 'baremetal') }}
+{% endif %}
     ComputeCount: {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or '1' }}
     OvercloudComputeFlavor: {{ ('compute' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('compute', 'baremetal') }}
 {% if not install.storage.external %}
@@ -10,6 +14,10 @@ parameter_defaults:
 {% endif -%}
 {%- if storage_backend == 'swift' %}
     ObjectStorageCount: {{ (install.storage.nodes|default(0)) or (groups['swift']|default([])|length) or 1 }}
+{% if install.version|default(undercloud_version) | openstack_release > 11 %}
+    OvercloudObjectStorageFlavor: {{ ('swift' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('swift', 'baremetal') }}
+{% else %}
     OvercloudSwiftStorageFlavor: {{ ('swift' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('swift', 'baremetal') }}
+{% endif -%}
 {% endif -%}
 {% endif %}

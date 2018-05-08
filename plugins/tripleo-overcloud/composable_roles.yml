@@ -7,8 +7,8 @@
       template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
       role_default_flavor: baremetal
       flavor_name_mapping:
-          Controller: Control
-          ObjectStorage: SwiftStorage
+          Controller: "{{ (install.version|default(undercloud_version) | openstack_release < 12) | ternary('Control', 'Controller') }}"
+          ObjectStorage: "{{ (install.version|default(undercloud_version) | openstack_release < 12) | ternary('SwiftStorage', 'ObjectStorage') }}"
       vars:
           roles_config: {}
   tags:
