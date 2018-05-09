@@ -9,7 +9,7 @@
   shell: |
       vbmc stop {{ hostvars[vbmc_node].original_name|default(vbmc_node) }}
       vbmc delete {{ hostvars[vbmc_node].original_name|default(vbmc_node) }}
-  ignore_errors: true
+  failed_when: false
   when:
       - vbmc_proc.rc == 0
       - vbmc_node is defined
