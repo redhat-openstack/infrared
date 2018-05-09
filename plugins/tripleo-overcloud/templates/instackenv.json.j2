@@ -21,6 +21,9 @@
       {% if install.version|default(undercloud_version)|openstack_release < 11 %}
         "disks": {{ host_data.disks }},
       {% endif %}
+      {% if install.boot.mode == 'uefi' %}
+      "capabilities": "profile:compute,boot_option:uefi"
+      {% endif %}
       "arch": "{{ host_data.arch }}",
       {% if install.version|default(undercloud_version) | openstack_release >= 11 %}
         "pm_addr": "{{ vbmc_management_address }}",
