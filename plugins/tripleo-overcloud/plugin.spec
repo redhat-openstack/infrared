@@ -269,6 +269,14 @@ subparsers:
                               resource_registry:
                                   OS::TripleO::BlockStorage::Net::SoftwareConfig: /home/stack/nic-configs/cinder-storage.yaml
 
+                  extra-deploy-params:
+                      type: Value
+                      help: |
+                          Extra parameters to append to 'openstack overcloud deploy' command.
+                          NOTE: Using equal(=) sign is mandatory here.
+                          Example:
+                              --extra-deploy-params="--config-download"
+
                   heat-templates-basedir:
                       type: Value
                       help: Overrides the templates base dir for the overcloud deploy script.
