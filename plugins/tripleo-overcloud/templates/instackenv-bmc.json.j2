@@ -9,7 +9,13 @@
       "pm_type": "{% if install.version|default(undercloud_version)|openstack_release >= 14 %}ipmi{% else %}pxe_ipmitool{% endif %}",
       "arch": "x86_64",
       "pm_user": "admin"
+      {% if install.boot.mode == 'uefi' %}
+      "capabilities": "profile:compute,boot_option:uefi"
+      {% endif %}
     }{% if not loop.last %},{% endif %}
 {% endfor %}
     ]
+  {% if install.boot.mode == 'uefi' %}
+  "capabilities": "profile:compute,boot_option:local,boot_mode:uefi"
+  {% endif %}
 }
