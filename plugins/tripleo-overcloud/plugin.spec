@@ -695,6 +695,13 @@ subparsers:
                               --root-disk-override node=controller,hint=size,hintvalue=50
                               --root-disk-override node=compute-0,hint=name,hintvalue=/dev/sda
                               --root-disk-override node=ceph,hint=rotational,hintvalue=false
+                  boot-mode:
+                      type: Value
+                      help: |
+                          TripleO supports booting overcloud nodes in UEFI mode instead of the default BIOS mode.
+                          This is required to use advanced features like secure boot, and some hardware may only
+                          feature UEFI support.
+                      default: bios
 
             - title: ansible facts
               options:
