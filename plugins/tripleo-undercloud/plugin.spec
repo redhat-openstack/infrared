@@ -54,6 +54,16 @@ subparsers:
                           If no `undercloud.conf` file found, it will use default `/usr/share/instack-undercloud/undercloud.conf.sample`
                           that is provided by the installation.
 
+                  boot-mode:
+                      type: Value
+                      help: |
+                          The default boot mode is the legacy BIOS mode.
+                          Newer systems might require UEFI boot mode instead of the legacy BIOS mode.
+                      choices:
+                          - bios
+                          - uefi
+                      default: bios
+
                   config-options:
                       type: IniType
                       action: append
