@@ -20,6 +20,8 @@
       "disk": "{{ (host_data.disk_bytes|int / 1073741824)|round|int }}",
       {% if install.version|default(undercloud_version)|openstack_release < 11 %}
         "disks": {{ host_data.disks }},
+      {% if install.boot.mode == 'uefi' %}
+      "capabilities": "profile:compute,boot_option:uefi"
       {% endif %}
       "arch": "{{ host_data.arch }}",
       {% if install.version|default(undercloud_version) | openstack_release >= 11 %}
