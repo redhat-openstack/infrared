@@ -37,4 +37,13 @@
     }{% if not loop.last %},{% endif %}
 {% endfor %}
     ]
+      {% if install.boot.mode == 'uefi' %}
+      "capabilities": [
+        {
+          #"boot_mode:uefi"
+          "profile:compute",
+          "boot_option:local"
+        }
+      ],
+      {% endif %}
 }
