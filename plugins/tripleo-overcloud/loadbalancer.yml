@@ -1,5 +1,5 @@
 - name: Deploy and configure external loadbalancer instance
-  hosts: loadbalancer
+  hosts: "{{ loadbalancer | default('empty') }}"
   tags: loadbalancer
   any_errors_fatal: true
   become: yes

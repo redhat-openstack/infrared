@@ -16,7 +16,7 @@
           ansible_ssh_private_key_file: "{{ hypervisor.key }}"
 
 - name: Remove all VMs and networks that were created
-  hosts: hypervisor
+  hosts: "{{ hypervisor | default('empty') }}"
   gather_facts: yes
   any_errors_fatal: true
   vars:

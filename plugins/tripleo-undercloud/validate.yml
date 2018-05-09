@@ -39,7 +39,7 @@
             - install.version|openstack_release > 9
 
 - name: Validate Undercloud
-  hosts: undercloud
+  hosts: "{{ undercloud | default('empty') }}"
   gather_facts: yes
   any_errors_fatal: true
   tasks:
