@@ -132,6 +132,13 @@
            overcloud_deploy_script: '~/overcloud_deploy.sh'
         tags: deploy
 
+      - name: append 'extra-deploy-params' to deploy script
+        lineinfile:
+            dest: "{{ overcloud_deploy_script }}"
+            line: "{{ item }} \\"
+            insertbefore: "^--log-file.*"
+        with_items: "{{ install.extra.get('deploy', {}).get('params', {}) }}"
+
       - name: Print deploy command
         command: "cat {{ overcloud_deploy_script }}"
         tags: deploy
