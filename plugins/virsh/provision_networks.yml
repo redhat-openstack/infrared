@@ -32,7 +32,7 @@
         sysctl_set: yes
         state: present
         reload: yes
-      ignore_errors: True
+      when: "'interface' in ansible_default_ipv6"
 
     - name: create bridged network
       include_tasks: tasks/bridged_network.yml
