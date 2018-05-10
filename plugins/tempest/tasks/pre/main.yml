@@ -22,18 +22,18 @@
 - name: fail when deployer file was not found
   fail:
       msg: "Unable to find deployer input file: {{ test.deployer.input.file }}"
-  when: not deployer_find|skipped and deployer_find.matched == 0
+  when: not deployer_find is skipped and deployer_find.matched == 0
 
 - name: check if default deployer file is present
   stat:
       path: "{{ inventory_dir }}/tempest-deployer-input.conf"
   delegate_to: localhost
   register: default_deployer_stat
-  when: deployer_find|skipped
+  when: deployer_find is skipped
 
 - name: copy the tempest-deployer-input to the tester
   vars:
-      input_file: "{{ deployer_find.files[0].path if not deployer_find|skipped else default_deployer_stat.stat.path|default('') }}"
+      input_file: "{{ deployer_find.files[0].path if not deployer_find is skipped else default_deployer_stat.stat.path|default('') }}"
   copy:
       src: "{{ input_file }}"
       dest: "{{ deployer_input }}"

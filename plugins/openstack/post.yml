@@ -22,7 +22,7 @@
         service:
             name: sshd
             state: restarted
-        when: sshd_dns_config | changed
+        when: sshd_dns_config is changed
         become: yes
 
       - name: read os_server_facts
@@ -67,7 +67,7 @@
             ifdown {{ item.item }}
             ifup {{ item.item }}
         tags: skip_ansible_lint
-        when: item|changed
+        when: item is changed
         with_items: "{{ nics.results }}"
         become: yes
 

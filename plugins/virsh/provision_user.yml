@@ -31,13 +31,13 @@
         lineinfile:
             dest: "/etc/sudoers"
             line: "{{ provision.topology.username }} ALL=(ALL) NOPASSWD:ALL"
-        when: create_user|changed
+        when: create_user is changed
 
       - name: Set up authorized_keys for non root user
         authorized_key:
             user: "{{ provision.topology.username }}"
             key: "{{ lookup('file',  inventory_dir + '/id_rsa.pub') }}"
-        when: create_user|changed
+        when: create_user is changed
       when: inventory_hostname not in groups.overcloud_nodes|default([])
 
     # this task should be out of block above
@@ -50,5 +50,5 @@
           ansible_user: "{{ provision.topology.username }}"
       when:
         - item not in groups.overcloud_nodes|default([])
-        - hostvars[item].create_user|changed
+        - hostvars[item].create_user is changed
       with_items: "{{ ansible_play_hosts }}"

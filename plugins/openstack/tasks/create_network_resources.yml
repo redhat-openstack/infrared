@@ -10,7 +10,7 @@
 - name: save secgroup for registration
   set_fact:
       security_group_list: "{{ security_group_list|default([]) + [security_group.secgroup] }}"
-  when: security_group|changed
+  when: security_group is changed
 
 - name: Add rules to the security group
   os_security_group_rule:
