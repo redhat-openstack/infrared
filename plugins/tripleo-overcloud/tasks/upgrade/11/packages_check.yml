@@ -5,6 +5,13 @@
   register: yum_update
   delegate_to: "{{ node_name }}"
 
-- fail:
-      msg: "There are remaining packages to be updated on {{ hostvars[node_name].ansible_fqdn }} or yum didn't run successfully"
+- block:
+    - name: list not-updates packages
+      becom: true
+      shell: |
+          yum check-update 2>&1 | tee
+      delegate_to: "{{ node_name }}"
+
+    - fail:
+          msg: "There are remaining packages to be updated on {{ hostvars[node_name].ansible_fqdn }} or yum didn't run successfully"
   when: yum_update.stdout != '0'
