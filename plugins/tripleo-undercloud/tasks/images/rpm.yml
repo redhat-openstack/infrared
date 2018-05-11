@@ -1,4 +1,53 @@
 ---
+- block:
+    # TODO: using 'hypervisor' is covering only virsh deployments
+    # make the below steps to support baremetal deployments as well
+    - name: export /var/cache/ over NFS
+      lineinfile:
+        path: '/etc/exports'
+        line: '/var/cache/ *(rw,sync,no_root_squash)'
+        state: present
+      become: true
+      delegate_to: hypervisor
+
+    - name: make sure NFS server is restarted
+      service:
+        name: nfs
+        state: restarted
+        enabled: true
+      become: true
+      delegate_to: hypervisor
+
+    - name: set keepcache=1
+      lineinfile:
+          path: /etc/yum.conf
+          line: keepcache=1
+          state: present
+          regexp: keepcache=.*
+      delegate_to: hypervisor
+
+    - name: set keepcache=1
+      lineinfile:
+          path: /etc/yum.conf
+          line: keepcache=1
+          state: present
+          regexp: keepcache=.*
+
+    - debug:
+        var: hostvars['localhost']
+
+    - name: try mounting /var/cache/yum over NFS
+      mount:
+        path: "/var/cache/yum"
+        src: "10.0.0.1:/var/cache/yum"
+        fstype: "nfs"
+        state: mounted
+      become: true
+      ignore_errors: true
+
+  tags: shared_cache
+  when: install.shared.cache
+
 - name: install the RPM with the pre-built overcloud images
   become: yes
   package:

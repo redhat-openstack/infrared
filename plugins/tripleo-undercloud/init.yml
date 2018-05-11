@@ -24,5 +24,17 @@
           line: "127.0.0.1   {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
           state: present
 
+    # rhel role cleans up yum cache, we don't want that to be done on shared yum cache
+    - name: try unmounting /var/cache/yum over NFS from ansible host
+      mount:
+        path: "/var/cache/yum"
+        src: "10.0.0.1:/var/cache/yum"
+        fstype: "nfs"
+        state: unmounted
+      become: true
+      ignore_errors: true
+      tags: shared_cache
+      when: install.shared.cache
+
 - import_playbook: create_user.yml
   tags: user

@@ -15,6 +15,18 @@
           - install.build|default('') == 'ga'
         register: apply_workaround_bz1428608
 
+      # 'openstack undercloud install' cleans up yum cache, we don't want that to be done on shared yum cache
+      - name: try unmounting /var/cache/yum over NFS from ansible host
+        mount:
+          path: "/var/cache/yum"
+          src: "10.0.0.1:/var/cache/yum"
+          fstype: "nfs"
+          state: unmounted
+        become: true
+        ignore_errors: true
+        tags: shared_cache
+        when: install.shared.cache
+
       - name: install the undercloud
         command: bash ~/undercloud_deploy.sh
         register: undercloud_deployment

@@ -169,6 +169,17 @@ subparsers:
                           Let you the option to enable testing/pending repos with rhos-release. Multiple values have to be coma separated.
                           Examples: --enable-testing-repos rhel,extras,ceph or --enable-testing-repos all
 
+                  shared-cache:
+                      type: Bool
+                      help: |
+                          Whether to share yum, pip and other cached data between hypervisor and undercloud in virsh deployments.
+
+                          NOT IMPLEMENTED YET:
+                          NOTE: It makes most sense to enable this option when machine that runs this plugin and undercloud
+                          are close to each other with good network bandwidth between them. Otherwise using localized mirrors
+                          and proxies makes more sense.
+                      default: False
+
             - title: TripleO User
               options:
                   user-name:
