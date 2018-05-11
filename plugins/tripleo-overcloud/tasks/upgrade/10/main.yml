@@ -11,7 +11,7 @@
       - upgrade_ssl
 
 - block:
-    - debug: msg="Starting floating IP dataplane ping check during major upgrade"
+    - debug: msg="Starting floating IP dataplane ping check before Ceilometer migration"
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
@@ -25,6 +25,18 @@
   vars:
       ceilometer_migration_script: "~/ceilometer_migration.sh"
 
+- block:
+    - debug: msg="Ending floating IP dataplane ping check after Ceilometer migration"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
+
+- block:
+    - debug: msg="Starting floating IP dataplane ping check before Overcloud Upgrade Init"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+
 - name: Overcloud Upgrade Init
   include_tasks: "upgrade_init.yml"
   tags:
@@ -32,6 +44,11 @@
       - upgrade_init
   vars:
       upgrade_init_script: "~/upgrade_init.sh"
+
+- block:
+    - debug: msg="Ending floating IP dataplane ping check after Overcloud Upgrade Init"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
 
 - name: Object Storage Upgrade
   shell: |
@@ -55,6 +72,13 @@
   register: pcs_stopped
   delegate_to: "{{ groups.controller | first }}"
 
+- block:
+    - debug: msg="Starting floating IP dataplane ping check before Controller And Block Storage Upgrade"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+
 - name: Controller And Block Storage Upgrade
   include_tasks: "controller_upgrade.yml"
   tags:
@@ -62,6 +86,18 @@
       - upgrade_controller
   vars:
       controller_upgrade_script: "~/controller_upgrade.sh"
+
+- block:
+    - debug: msg="Ending floating IP dataplane ping check after Controller And Block Storage Upgrade"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
+
+- block:
+    - debug: msg="Starting floating IP dataplane ping check before Compute Upgrade"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
 
 - name: Compute Upgrade
   shell: |
@@ -72,6 +108,11 @@
     - upgrade_compute
   with_items: "{{ groups.compute|default([])|difference(groups.unused|default([]))|default([]) }}"
 
+- block:
+    - debug: msg="Ending floating IP dataplane ping check after Compute Upgrade"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
+
 - name: Ceph Upgrade
   shell: |
       source {{ undercloud_rc }}
@@ -81,6 +122,13 @@
     - upgrade_ceph
   with_items: "{{ groups.ceph|default([])|difference(groups.unused|default([]))|default([]) }}"
 
+- block:
+    - debug: msg="Starting floating IP dataplane ping check before Convergence"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+
 - name: Convergence
   include_tasks: "convergence.yml"
   tags:
@@ -88,6 +136,18 @@
       - upgrade_convergence
   vars:
       convergence_script: "~/convergence.sh"
+
+- block:
+    - debug: msg="Ending floating IP dataplane ping check after Convergence"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
+
+- block:
+    - debug: msg="Starting floating IP dataplane ping check before Post-Upgrade Aodh migration"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
 
 - name: Overcloud Post-Upgrade Aodh migration
   include_tasks: "aodh_migration.yml"
@@ -98,7 +158,7 @@
       aodh_migration_script: "~/aodh_migration.sh"
 
 - block:
-    - debug: msg="Ending floating IP dataplane ping check during major upgrade"
+    - debug: msg="Ending floating IP dataplane ping check after Post-Upgrade Aodh migration"
     - include: ../../update/common/endping.yaml
   when: install.dataplaneping|default(False)
 
