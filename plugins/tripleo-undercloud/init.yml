@@ -24,5 +24,46 @@
           line: "127.0.0.1   {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
           state: present
 
+    - name: export /var/cache/yum over NFS from localhost
+      lineinfile:
+        path: '/etc/exports'
+        line: '/var/cache/yum  *(rw,sync,no_root_squash)'
+        state: present
+      become: true
+      delegate_to: hypervisor
+
+    - name: make sure NFS server is running
+      service:
+        name: nfs
+        state: started
+        enabled: true
+      become: true
+      delegate_to: hypervisor
+
+    - name: set keepcache=1
+      lineinfile:
+          path: /etc/yum.conf
+          line: keepcache=1
+          state: present
+          regexp: keepcache=.*
+      delegate_to: hypervisor
+
+    - name: try mounting /var/cache/yum over NFS from the host
+      mount:
+        path: "/var/cache/yum"
+        src: "10.0.0.1:/var/cache/yum"
+        fstype: "nfs"
+        state: mounted
+      become: true
+      ignore_errors: true
+
+    - name: set keepcache=1
+      lineinfile:
+          path: /etc/yum.conf
+          line: keepcache=1
+          state: present
+          regexp: keepcache=.*
+
+
 - import_playbook: create_user.yml
   tags: user
