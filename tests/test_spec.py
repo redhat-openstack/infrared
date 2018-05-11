@@ -2,9 +2,39 @@ import pytest
 
 from infrared import api
 from infrared.core.utils.exceptions import IRRequiredArgsMissingException, \
-    IRExtraVarsException, IRInvalidMinMaxRangeException, IRException
+    IRExtraVarsException, IRInvalidMinMaxRangeException, IRException, \
+    IRInvalidLengthException
 from tests.test_execute import spec_fixture  # noqa
 from tests.test_workspace import workspace_manager_fixture, test_workspace  # noqa
+
+
+@pytest.mark.parametrize("cli_args, should_pass", [  # noqa
+    ("--value-len=testing", False),
+    ("--value-len=test", True),
+])
+def test_length(spec_fixture, workspace_manager_fixture, test_workspace,
+                cli_args, should_pass):
+    """ Tests the 'length' mechanism
+    :param spec_fixture: Fixtures which creates 'testing spec' (tests/example)
+    :param workspace_manager_fixture: Fixture which sets the default workspace
+      directory
+    :param test_workspace: Fixture which creates temporary workspace directory
+    :param cli_args: CLI arguments
+    :param should_pass: Boolean value tells whether the test should pass or not
+    :return:
+    """
+
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
+
+    workspace_manager_fixture.activate(test_workspace.name)
+
+    if should_pass:
+        rc = spec_manager.run_specs(args=['example'] + cli_args.split())
+        assert rc == 0, "Execution failed, return code is: {}".format(rc)
+    else:
+        with pytest.raises(IRInvalidLengthException):
+            spec_manager.run_specs(args=['example'] + cli_args.split())
 
 
 @pytest.mark.parametrize("cli_args, should_pass", [  # noqa

@@ -113,3 +113,10 @@ subparsers:
                         type: int
                         help: "value with a maximum zero value"
                         maximum: 0
+
+            - title: Group G
+              options:
+                    value-len:
+                        type: Value
+                        help: "value with length"
+                        length: 4
