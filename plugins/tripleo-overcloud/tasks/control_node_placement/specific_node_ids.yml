@@ -22,6 +22,9 @@
           roles_data_var: "{{ roles_data_output.stdout | from_yaml }}"
 
     - name: create scheduler_hints_env.yaml
+      vars:
+          node_name_mapping:
+              Compute: NovaCompute
       template:
           src: control_node_placement/scheduler_hints_env.yaml.j2
           dest: "{{ template_base }}/scheduler_hints_env.yaml"

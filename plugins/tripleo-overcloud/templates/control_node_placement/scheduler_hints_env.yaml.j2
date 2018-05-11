@@ -1,6 +1,6 @@
 parameter_defaults:
 {% for role in roles_data_var %}
-    {{ role.name }}SchedulerHints:
+    {{ node_name_mapping.get(role.name, role.name) }}SchedulerHints:
 {# cover composable and tht roles with HostnameFormatDefault #}
 {% if role.HostnameFormatDefault is defined %}
         'capabilities:node': '{{ role.HostnameFormatDefault }}'
