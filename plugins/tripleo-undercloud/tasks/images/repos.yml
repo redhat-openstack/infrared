@@ -60,4 +60,4 @@
 - name: remove machine-id from overcloud image
   command: "virt-sysprep --operation machine-id -a {{ overcloud_image_file }}"
   when:
-      - image_repos|changed or image_packages|changed or image_update|changed or image_selinux|changed
+      - image_repos is changed or image_packages is changed or image_update is changed or image_selinux is changed

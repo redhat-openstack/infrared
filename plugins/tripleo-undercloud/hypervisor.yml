@@ -41,7 +41,7 @@
       # Remove when fixed (https://github.com/ansible/ansible-modules-core/issues/4318)
       - name: make sure we have latest ipxe-roms-qemu (workaround ansible-modules-core yum bug 4318)
         command: 'yum install ipxe-roms-qemu -y'
-        when: not update|changed
+        when: not update is changed
 
 
 # In case we're dealing with hypervisor, we need to make sure the undercloud is able to ssh to the hypervisor

@@ -18,7 +18,7 @@
       public_key: "{{ public_key_content.stdout }}"
       state: present
   register: key
-  when: not public_key_content|skipped
+  when: not public_key_content is skipped
 
 - name: register keypair
   vars:
@@ -27,4 +27,4 @@
               # use default to avoid warnings on skip
               - "{{ key.key|default('') }}"
   include_tasks: register_resources_file.yml
-  when: not public_key_content|skipped
+  when: not public_key_content is skipped

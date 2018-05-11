@@ -201,7 +201,7 @@
         fail:
             msg: Some pacemeker resource failed to come back online after reboot
         when:
-            - fail_stop|changed
+            - fail_stop is changed
 
 
       # Todo(yprokule): enhance search patterns
@@ -231,7 +231,7 @@
         fail:
             msg: Some pacemeker resource(s) unmanged after reboot
         when:
-            - fail_unmanaged|changed
+            - fail_unmanaged is changed
 
       # Re-enable ceph rebalance
       - name: reenable ceph rebalance
