@@ -37,6 +37,7 @@ resource_registry:
     OS::TripleO::Messaging::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/messaging_internal.yaml"
     OS::TripleO::Novacontrol::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/novacontrol.yaml"
     OS::TripleO::Networker::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/networker.yaml"
+    OS::TripleO::BlockStorage::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/cinder-storage.yaml"
 {% if install.get('predictable', {}).ips|default(False) %}
 {% for role in roles_data_var %}
 {% for network in role.get("networks", {}) %}
