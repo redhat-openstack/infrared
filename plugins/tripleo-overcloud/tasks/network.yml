@@ -171,3 +171,9 @@
   when:
       - install.network.ovn and install.network.dvr
       - install.version|default(undercloud_version)|openstack_release > 12
+
+- name: Enable Designate
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/enable-designate.yaml \'
+  when: install.designate

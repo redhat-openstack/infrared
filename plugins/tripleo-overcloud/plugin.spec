@@ -187,6 +187,11 @@ subparsers:
                             Ntp server name (or IP) to use.
                       default: clock.redhat.com
 
+                  designate:
+                      type: Bool
+                      default: no
+                      help: Specifies whether to enable Designate (DNS) service
+
                   hybrid:
                       type: FileValue
                       help: |
