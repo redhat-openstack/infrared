@@ -1,4 +1,18 @@
 - block:
+    - name: Install iptables-services
+      become: true
+      package:
+          name: iptables-services
+          state: latest
+
+    - name: Make created iptables rules persistant
+      become: true
+      shell: |
+            systemctl start iptables
+            systemctl start ip6tables
+            systemctl enable iptables
+            systemctl enable ip6tables
+
     - name: Ease iptables rules on hypervisor
       iptables:
           action: insert
@@ -22,17 +36,7 @@
           protocol: "udp"
           destination_port: "{{ item.value }}"
       with_dict: "{{ vbmc_ports }}"
-
-    - name: Install iptables-services
-      become: true
-      package:
-          name: iptables-services
-          state: latest
-
-    - name: Make created iptables rules persistant
-      become: true
-      shell: "/sbin/service iptables save"
-  when: vbmc_host == 'undercloud'
+  when: vbmc_host == 'undercloud' and 'controller'
 
 - block:
     - name: allow access to port vbmc ports from undercloud
