@@ -1,0 +1,42 @@
+cinder_role:
+    name: BlockStorage
+
+    resource_registry:
+        "OS::TripleO::BlockStorage::Net::SoftwareConfig": "${deployment_dir}/network/nic-configs/${nics_subfolder}/cinder-storage.yaml"
+
+    flavor: cinder
+    networks:
+        - InternalApi
+        - Storage
+        - StorageMgmt
+    host_name_format: 'cinder-%index%'
+
+    options:
+        - uses_deprecated_params: True
+
+    services:
+        - OS::TripleO::Services::Aide
+        - OS::TripleO::Services::AuditD
+        - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::CertmongerUser
+        - OS::TripleO::Services::Collectd
+        - OS::TripleO::Services::Docker
+        - OS::TripleO::Services::Fluentd
+        - OS::TripleO::Services::Ipsec
+        - OS::TripleO::Services::Kernel
+        - OS::TripleO::Services::LoginDefs
+        - OS::TripleO::Services::MySQLClient
+        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::ContainersLogrotateCrond
+        - OS::TripleO::Services::Rhsm
+        - OS::TripleO::Services::RsyslogSidecar
+        - OS::TripleO::Services::Securetty
+        - OS::TripleO::Services::SensuClient
+        - OS::TripleO::Services::Snmp
+        - "{% if roles_sshd %}OS::TripleO::Services::Sshd{% endif %}"
+        - OS::TripleO::Services::BlockStorageCinderVolume
+        - OS::TripleO::Services::CinderBackendVRTSHyperScale
+        - OS::TripleO::Services::Timezone
+        - OS::TripleO::Services::TripleoFirewall
+        - OS::TripleO::Services::TripleoPackages
+        - OS::TripleO::Services::Tuned
