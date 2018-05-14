@@ -58,6 +58,19 @@
   register: servers
   with_sequence: "count={{ node.value }}"
 
+- name: Restore any stopped, suspended or paused instances
+  vars:
+    vm_state_to_action:
+      stopped: start
+      paused: unpause
+      suspended: resume
+  os_server_action:
+    action: "{{ vm_state_to_action[item.server.vm_state] }}"
+    server: "{{ item.server.name }}"
+    cloud: "{{ provision.cloud | default(omit) }}"
+  when: "('vm_state' in item.server) and (item.server.vm_state in vm_state_to_action)"
+  with_items: "{{ servers.results }}"
+
 # need to write all servers to file at once
 - name: save servers for registration
   set_fact:
