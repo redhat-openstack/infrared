@@ -29,7 +29,7 @@
 - name: Print stack failures
   shell: |
       source {{ undercloud_rc }}
-      openstack stack failures list overcloud
+      openstack stack failures list {{ install.overcloud.stack }}
   when: overcloud_upgrade_composable.rc != 0
 
 - fail:
