@@ -1,11 +1,13 @@
 ---
 - fail:
       msg: /patched_rpms doesn't exist
-  when: patched_rpms.stat.exists == False
+#  when: patched_rpms.stat.exists == False
+  when: patched_rpms.results | selectattr('stat.exists', 'equalto', True) | list | length == 0
 
 - name: get the list of RPMs in patched-rpms yum repo
   shell: |
       yum --disablerepo "*" --enablerepo "patched-rpms" list available | awk '$0 !~ /Loaded plugins/ && $0 !~ /Available Packages/ && $0 !~ /^\s*patched-rpms/ {print $1}'
+      yum --disablerepo "*" --enablerepo "*_dev" list available | awk '$0 !~ /Loaded plugins/ && $0 !~ /Available Packages/ && $0 !~ /^\s*_dev/ {print $1}'
   register: patched_rpms_packages_shell
 
 - name: set image patching fact(s)
