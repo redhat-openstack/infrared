@@ -28,14 +28,19 @@
   with_dict: "{{ topology_node.disks }}"
   when: topology_node.disks|count > 0
 
+- name: create backing file for base image
+  command: |
+        qemu-img create -b {{ base_image_path }}/{{ source | basename }} \
+            -f qcow2 {{ base_root }}
+
 - name: adjust base image for this run
   shell: |
       set -ex
       export LIBGUESTFS_BACKEND=direct
-      virt-sysprep -a {{ item.dest }} \
+      virt-sysprep -a {{ base_root }} \
           --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
 
-      virt-customize -a {{ item.dest }} \
+      virt-customize -a {{ base_root }} \
       {% if not item.item.value.image_url|default('') %}
           --run-command 'yum remove -y cloud-init*' \
       {% endif %}
@@ -46,5 +51,3 @@
           --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys \
           --delete /etc/dhcp/dhclient.conf \
           --selinux-relabel
-  with_items: "{{ download_image_result.results }}"
-  when: item is changed
