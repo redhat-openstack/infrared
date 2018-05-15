@@ -35,7 +35,6 @@
   when:
      - install.predictable.ips
      - install.version|default(undercloud_version) | openstack_release >= 10
-     - not install.role|default('') or (install.role is defined and install.role.files == 'default')
 
 - name: Append the network template line for splitstack to the base overcloud deploy script
   lineinfile:

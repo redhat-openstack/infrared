@@ -13,8 +13,13 @@
       ipv6_postfix_underscore: "{{  (install.network.protocol == 'ipv4') | ternary('', '_v6')}}"
       roles:
           Controller: ['External', 'InternalApi', 'Storage', 'StorageMgmt', 'Tenant']
+          ControllerOpenstack: ['External', 'InternalApi', 'Storage', 'StorageMgmt', 'Tenant']
           Compute: ['InternalApi', 'Storage', 'Tenant']
           CephStorage: [ 'Storage', 'StorageMgmt']
+          Database: ['InternalApi']
+          Messaging: ['InternalApi']
+          Novacontrol: ['InternalApi', 'Storage']
+          Networker: ['InternalApi', 'Tenant']
           ObjectStorage: ['InternalApi', 'Storage', 'StorageMgmt']
           SwiftStorage: ['InternalApi', 'Storage', 'StorageMgmt']
 
@@ -22,3 +27,10 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ template_base }}/predictable_ips_rr.yml \'
+
+- name: Append predefined predictable IPs to the overcloud deploy script
+  vars:
+      ipv6_postfix: "{{  (install.network.protocol == 'ipv4') | ternary('', '-v6')}}"
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ template_base }}/network/predictable-ips{{ ipv6_postfix }}.yaml \'
