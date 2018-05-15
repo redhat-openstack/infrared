@@ -20,6 +20,12 @@
       name: "{{ vm_name }}"
   ignore_errors: yes
 
+- name: remove any existing backing file for VM's disk
+  shell: |
+      rm -f "$(find . -iname '{{ vm_name }}*disk*.qcow*' -exec qemu-img info {} \;|awk '/backing file:/ {print $3}')"
+  args:
+      chdir: "{{ provision.disk.pool }}"
+
 - name: remove any existing VM disks that we created
   shell: "rm -f {{ vm_name }}*disk*.qcow*"
   args:
