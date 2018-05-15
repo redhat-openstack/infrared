@@ -116,6 +116,8 @@
       RUN yum list available
       RUN yum list updates
       RUN yum update -y -v
+      # OpenDaylight UnInstall process leaves previous version tar'd - it's big, delete it
+      RUN rm -f /opt/opendaylight-*.tar || true
       ARG ORIG_USER
       USER $ORIG_USER
       " > {{ container_images_patch_dir }}/Dockerfile
