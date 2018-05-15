@@ -1,6 +1,17 @@
 #
 # Reboot overcloud nodes one-by-one.
 #
+- name: Determine RHOS version
+  hosts: undercloud:overcloud_nodes:!unused
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      discovery_types:
+          - rhos_release_file
+          - nova
+  roles:
+      - version-discovery
+
 - name: Overcloud Reboot
   hosts: overcloud_nodes:!unused
   gather_facts: false
@@ -184,7 +195,7 @@
         retries: 36
         delay: 5
         with_items:
-            - 'Stopped:'
+            - '{% if undercloud_version|int > 12 %}Stopped{% else %}Stopped:{% endif %}'
         when:
             - pcs_active|failed
             - pcmk_remote|failed
