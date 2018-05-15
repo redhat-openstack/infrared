@@ -68,13 +68,12 @@
             {% set image_name = (disk_values.import_url|default('') or node_dict.import_url|default('') or url) | basename %}
             {% if not disk_values.import_url %}
 
-            # create empty disk
-            qemu-img create -f qcow2 -o preallocation={{ disk_values.preallocation }} {{ disk_pool  }}/{{ node_image }} {{ disk_values.size }}
+            # create node disk with backing base_root image
+            qemu-img create -b {{ disk_pool }}/base_{{ image_name }} -f qcow2 {{ disk_pool  }}/{{ node_image }} -o backing_fmt=qcow2 {{ disk_values.size }}
 
             {% if disk_name == 'disk1' and topology_node.deploy_os|default(True) -%}
             # expand (copy-content) into new image in case of system disk
             # virt-resize needs target file with expected size to already exists
-            virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
             # incjet DEFROUT to file and set it on for external network only
             virt-customize -a {{ disk_pool }}/{{ node_image }} \
             {% for interface in topology_node.interfaces %}
