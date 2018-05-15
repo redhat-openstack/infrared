@@ -67,6 +67,12 @@ Welcome to infrared's documentation!
    plugins_guide
    control_placement
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Release notes
+
+   release_notes
+
 Indices and tables
 ==================
 
