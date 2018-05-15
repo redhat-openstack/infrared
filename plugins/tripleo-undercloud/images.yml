@@ -23,27 +23,26 @@
       overcloud_image_file: overcloud-full.qcow2
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
   pre_tasks:
-      - name: check for subscription
-        command: subscription-manager identity
-        become: yes
-        failed_when: false
-        register: cdn_status
-        changed_when: false
-        when: install.images.packages|default('') or install.images['update']
+      - block:
+          - name: check for subscription
+            command: subscription-manager identity
+            become: yes
+            failed_when: false
+            register: cdn_status
+            changed_when: false
 
-      - name: check if rhos-release is available
-        uri:
-            url: "{{ rhos_release_rpm }}"
-            validate_certs: false
-        ignore_errors: yes
-        register: internal_repos
-        when: install.images.packages|default('') or install.images['update']
+          - name: check if rhos-release is available
+            uri:
+                url: "{{ rhos_release_rpm }}"
+                validate_certs: false
+            ignore_errors: yes
+            register: internal_repos
 
-      - fail:
-            msg: overcloud image customization currently not supported outside Red Hat internal network or when using CDN
-        when:
-            - install.images.packages|default('') or install.images['update']
-            - internal_repos|failed or cdn_status.rc == 0
+          - fail:
+                msg: overcloud image customization currently not supported outside Red Hat internal network or when using CDN
+            when:
+                - internal_repos|failed or cdn_status.rc == 0
+        when: install.images.packages|default('') or install.images['update']
 
       - name: tmp repos.d for overcloud
         file:

@@ -1,0 +1,35 @@
+- name: Get base_url from repository info
+  command: awk -F'file://' '/baseurl/ {print $2}' {{ repo_config.stat.path }}
+  register: base_url
+
+- name: Merge base_urls from repository info
+  set_fact:
+      merge_base_url: "
+          {%- if base_url.results is defined -%}
+              {%- for url in base_url.results -%}
+                  {{ base_urls|default([]) + url.stdout_lines }}
+              {%- endfor -%}
+          {%- else -%}
+              {{ base_url.stdout_lines }}
+          {%- endif -%}"
+
+- name: Copy custom repository to tmp overcloud directory
+  copy:
+      src: "{{ repo_config.stat.path }}"
+      dest: "{{ tmp_oc_repos_dir }}"
+      remote_src: yes
+      force: yes
+
+- name: Update baseurl
+  vars:
+      new_repo_dir: '/'
+  lineinfile:
+      path: "{{ tmp_oc_repos_dir }}/{{ repo_config.stat.path|basename }}"
+      regexp: '^(.*file://){{ item }}'
+      line: '\1{{ new_repo_dir }}{{ item | basename }}'
+      backrefs: yes
+  with_items: "{{ merge_base_url }}"
+
+- name: Populate docker context dir with patched rpms and repo
+  command: "cp -Lr {{ item }} {{ container_images_patch_dir }}/packages"
+  with_items: "{{ merge_base_url }}"
