@@ -90,9 +90,12 @@
               -e 's|\(source=\).*|\1{{ source }}|' -i projects.ini
 
           source venv/bin/activate
-          ./venv/bin/dlrn --package-name {{ item.dest }} \
-                          --config-file projects.ini \
-                          --info-repo rdoinfo --dev --local
+          ./venv/bin/dlrn \
+              {% if item.name != 'openstack/all' %}
+              --package-name {{ item.dest }} \
+              {% endif %}
+              --config-file projects.ini \
+              --info-repo rdoinfo --dev --local
       with_items: "{{ openstack_projects }}"
       args:
           chdir: "{{ work_dir }}/delorean"
