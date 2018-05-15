@@ -1,0 +1,23 @@
+- name: Get list libvirt images
+  command: |
+      find . -iname 'base_*.qcow2' -exec basename {} \;
+  args:
+      chdir: "{{ provision.disk.pool }}"
+  register: base_images
+
+- name: Count number links to base image
+  shell: |
+      find . -iname '*-disk*.qcow2' -exec qemu-img info {} \;|grep -c {{ item }}
+  register: linked_images
+  with_items: "{{ (base_images|default({})).get('stdout_lines', []) }}"
+  args:
+      chdir: "{{ provision.disk.pool }}"
+  failed_when: false
+  changed_when: false
+
+- name: Delete base image
+  file:
+      path: "{{ provision.disk.pool }}/{{ item.item }}"
+      state: absent
+  with_items: "{{ (linked_images|default({})).get('results', []) }}"
+  when: item.stdout|int == 0

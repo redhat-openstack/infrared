@@ -33,13 +33,18 @@
     var: download_image_result
 
 - name: adjust base image for this run
+  vars:
+      backing_image: "{{ base_image_path }}/base_{{ item.dest | basename }}"
   shell: |
       set -ex
       export LIBGUESTFS_BACKEND=direct
-      virt-sysprep -a {{ item.dest }} \
+      # Create backing image as base
+      qemu-img create -b {{ item.dest }} -f qcow2 -o backing_fmt=qcow2 {{ backing_image }}
+
+      virt-sysprep -a {{ backing_image }} \
           --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
 
-      virt-customize -a {{ item.dest }} \
+      virt-customize -a {{ backing_image }} \
       {% if not item.item.value.image_url|default('') %}
           --run-command 'yum remove -y cloud-init*' \
       {% endif %}
@@ -50,5 +55,6 @@
           --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys \
           --delete /etc/dhcp/dhclient.conf \
           --selinux-relabel
+  args:
+      creates: "{{ backing_image }}"
   with_items: "{{ download_image_result.results }}"
-  when: item is changed
