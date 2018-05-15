@@ -55,6 +55,10 @@
       marker: "### {mark} Overcloud Entries"
       state: absent
 
+- name: Cleanup base_root backing image
+  file:
+      path: "{{ provision.disk.pool }}/base_root.qcow2"
+
 # ignoring errors in the known-hosts tasks
 # because this module validates known_hosts files
 # and we cannot ensure that this file is always
