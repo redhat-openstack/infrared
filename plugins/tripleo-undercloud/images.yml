@@ -23,27 +23,26 @@
       overcloud_image_file: overcloud-full.qcow2
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
   pre_tasks:
-      - name: check for subscription
-        command: subscription-manager identity
-        become: yes
-        failed_when: false
-        register: cdn_status
-        changed_when: false
-        when: install.images.packages|default('') or install.images['update']
+      - block:
+          - name: check for subscription
+            command: subscription-manager identity
+            become: yes
+            failed_when: false
+            register: cdn_status
+            changed_when: false
 
-      - name: check if rhos-release is available
-        uri:
-            url: "{{ rhos_release_rpm }}"
-            validate_certs: false
-        ignore_errors: yes
-        register: internal_repos
-        when: install.images.packages|default('') or install.images['update']
+          - name: check if rhos-release is available
+            uri:
+                url: "{{ rhos_release_rpm }}"
+                validate_certs: false
+            ignore_errors: yes
+            register: internal_repos
 
-      - fail:
-            msg: overcloud image customization currently not supported outside Red Hat internal network or when using CDN
-        when:
-            - install.images.packages|default('') or install.images['update']
-            - internal_repos|failed or cdn_status.rc == 0
+          - fail:
+                msg: overcloud image customization currently not supported outside Red Hat internal network or when using CDN
+            when:
+                - internal_repos|failed or cdn_status.rc == 0
+        when: install.images.packages|default('') or install.images['update'] or install.get('from', {}).source is defined
 
       - name: tmp repos.d for overcloud
         file:
@@ -63,7 +62,7 @@
         rr_distro_version: "{{ install.osrelease|default(omit) }}"
         enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
         when:
-            - install.images.packages|default('') or install.images['update']
+            - install.images.packages|default('') or install.images['update'] or install.get('from', {}).source is defined
             - install.version|default(undercloud_version)|openstack_distribution == 'OSP'
         tags: rhos-release
 
@@ -75,7 +74,7 @@
         mirror: "{{ install.mirror | default(omit) }}"
         rr_target_directory: "{{ tmp_oc_repos_dir }}"
         when:
-            - install.images.packages|default('') or install.images['update']
+            - install.images.packages|default('') or install.images['update'] or install.get('from', {}).source is defined
             - undercloud_version|default(undercloud_version)|openstack_distribution == 'RDO'
         tags: rhos-release
   tasks:
@@ -84,7 +83,7 @@
       - name: modify images - update to core build and install packages
         include_tasks: tasks/images/repos.yml
         # update is a func name (dict.update) so it must be used as str explicitly
-        when: install.images.packages|default('') or install.images['update']
+        when: install.images.packages|default('') or install.images['update'] or install.get('from', {}).source is defined
 
        #Need to fix  BZ1462703 to apply --os-cloud
       - name: upload the overcloud images to glance
