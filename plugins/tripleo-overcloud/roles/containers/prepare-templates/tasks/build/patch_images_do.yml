@@ -11,10 +11,26 @@
       - absent
       - directory
 
+- name: Copy custom repos to tmp container directory
+  copy:
+      src: "{{ item.stat.path }}"
+      dest: "{{ container_images_patch_dir }}"
+      remote_src: yes
+      force: yes
+  when: item.stat.exists
+  with_items: "{{ (patched_rpms|default({})).get('results', []) }}"
+
 - name: populate docker context dir with patched rpms and repo
   shell: |
-      cp /etc/yum.repos.d/patched_rpms.repo {{ container_images_patch_dir }}/
-      cp -Lr /patched_rpms {{ container_images_patch_dir }}/
+      mkdir -p {{ container_images_patch_dir }}/packages
+      repo_path=$(awk -F'file://' '/baseurl/ {print $2}' {{ item.stat.path }})
+      for repo in $repo_path;do
+          new_repo_path="/var/from_source/packages/${repo##*/}"
+          sed -i "s|${repo}|${new_repo_path}|" {{ container_images_patch_dir }}/{{ item.stat.path|basename }}
+          cp -Lr ${repo_path} {{ container_images_patch_dir }}/packages
+      done
+  when: item.stat.exists
+  with_items: "{{ (patched_rpms|default({})).get('results', []) }}"
 
 - name: set container_images_patch_logdir fact
   set_fact:
@@ -32,9 +48,14 @@
 - name: get list of images available on undercloud registry
   get_url:
      url: "http://{{ docker_registry_undercloud }}/v2/_catalog"
-     dest: "{{ undercloud_registry_images_file }}"
+     dest: "{{ containers_home_dir }}/{{ undercloud_registry_images_file | basename }}"
      force: true
-  delegate_to: localhost
+
+- name: fetch containers catalog file from undercloud to localhost
+  fetch:
+     src: "{{ containers_home_dir }}/{{ undercloud_registry_images_file | basename }}"
+     dest: "{{ undercloud_registry_images_file }}"
+     flat: yes
 
 - name: load list of images from undercloud registry as undercloud_registry_images_raw fact
   include_vars:
@@ -62,8 +83,18 @@
 
 - name: discover container images that require patching (if container-images-patch not defined at command line)
   shell: |
-      docker run --user root -v /patched_rpms:/patched_rpms -v /etc/yum.repos.d/patched_rpms.repo:/etc/yum.repos.d/patched_rpms.repo \
-      --rm {{ docker_registry_undercloud }}/{{ item }}:{{ undercloud_registry_images[item] }} \
+      docker run --user root \
+      {% for patch in (patched_rpms|default({})).get('results', []) %}
+          {% if patch.stat.exists and 'patched_rpms.repo' == patch.stat.path|basename %}
+          -v /patched_rpms:/patched_rpms \
+          -v /etc/yum.repos.d/patched_rpms.repo:/etc/yum.repos.d/patched_rpms.repo \
+          {% endif %}
+          {% if patch.stat.exists and 'from_source.repo' == patch.stat.path|basename %}
+          -v /home/stack/images_patch/from_source.repo:/etc/yum.repos.d/from_source.repo \
+          -v /home/stack/images_patch:/var/from_source \
+          {% endif %}
+      {% endfor %}
+          --rm {{ docker_registry_undercloud }}/{{ item }}:{{ undercloud_registry_images[item] }} \
       yum check-update
   register: _container_images_check_update
   with_items: "{{ undercloud_registry_images }}"
@@ -108,8 +139,16 @@
 
       echo "
       FROM {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
+      {% for patch in (patched_rpms|default({})).get('results', []) %}
+      {% if patch.stat.exists and 'patched_rpms.repo' == patch.stat.path|basename %}
       COPY patched_rpms.repo /etc/yum.repos.d/patched_rpms.repo
       ADD /patched_rpms /patched_rpms
+      {% endif %}
+      {% if patch.stat.exists and 'from_source.repo' == patch.stat.path|basename %}
+      COPY from_source.repo /etc/yum.repos.d/from_source.repo
+      ADD packages /var/from_source/packages
+      {% endif %}
+      {% endfor %}
       USER root
       RUN yum repolist all
       RUN yum list installed
