@@ -113,3 +113,7 @@ If we look in the ``3_nets.yml`` file, we will see this::
         net3:
             <snip>
 
+To override default values in the network dict the extra vars can be provided through the CLI. For example,
+to change ip address of net2 network, the ``override.networks.net2.ip_address`` value should be set::
+
+    infrared virsh --topology-nodes controller:1,compute:1 -e override.networks.net2.ip_address=10.0.0.3
