@@ -5,21 +5,32 @@
       name: libguestfs-tools
       state: present
 
-- name: push repos to overcloud image
+- name: Get custom repository file stat
+  vars:
+      repo_dir: /etc/yum.repos.d
+  stat:
+      path: "{{ repo_dir }}/{{ item }}"
+  register: patched_rpms
+  with_items:
+      - patched_rpms.repo
+      - from_source.repo
+
+- name: Prepare custom repository tmp directory
+  include_tasks: prepare_tmp_repos.yml
+  when: repo_config.stat.exists
+  with_items: "{{ patched_rpms.results }}"
+  loop_control:
+      loop_var: repo_config
+
+- name: Push repository to overcloud image
   command: "virt-copy-in -a {{ overcloud_image_file }} {{ tmp_oc_repos_dir }} /etc/"
 
-- stat:
-      path: /etc/yum.repos.d/patched_rpms.repo
-  register: patched_rpms
+- name: Install yum-plugin-priorities package inside overcloud image
+  command: "virt-customize -a {{ overcloud_image_file }} --install yum-plugin-priorities"
+  when: install.get('from', {}).source is defined
 
-- name: push patched_rpms.repo to overcloud image
-  command: "{{ item }}"
-  register: image_repos
-  with_items:
-    - "virt-copy-in -a {{ overcloud_image_file }} /etc/yum.repos.d/patched_rpms.repo /etc/yum.repos.d"
-    - "virt-copy-in -a {{ overcloud_image_file }} /patched_rpms /"
-    - "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }}"
-  when: patched_rpms.stat.exists
+- name: Do package update inside of overcloud image
+  command: "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }}"
 
 - name: Install packages in overcloud image
   command: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel"
@@ -42,7 +53,7 @@
       safe_mem: "{{ (available_mem|int * 0.6)|round|int }}"
       # don't ask lower than virt-customize default:
       requested_mem: "{{ [safe_mem, 500] | max}}"
-  when: install.images['update'] or patched_rpms.stat.exists
+  when: install.images['update'] or patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
 - name: Set selinux state
   command: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --run-command 'sed -i s/SELINUX=.*/SELINUX={{ install.selinux }}/g /etc/selinux/config'"

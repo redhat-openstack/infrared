@@ -1,0 +1,53 @@
+- name: Get base_url from repository info
+  command: awk -F'file://' '/baseurl/ {print $2}' {{ repo_config.stat.path }}
+  register: base_url
+
+- name: Merge base_urls from repository info
+  set_fact:
+      merge_base_url: "
+          {%- if base_url.results is defined -%}
+              {%- for url in base_url.results -%}
+                  {{ base_urls|default([]) + url.stdout_lines }}
+              {%- endfor -%}
+          {%- else -%}
+              {{ base_url.stdout_lines }}
+          {%- endif -%}"
+
+- name: Copy custom repository to tmp overcloud directory
+  copy:
+      src: "{{ repo_config.stat.path }}"
+      dest: "{{ tmp_oc_repos_dir }}"
+      remote_src: yes
+      force: yes
+
+- name: Update baseurl
+  vars:
+      new_repo_dir: '/'
+  lineinfile:
+      path: "{{ tmp_oc_repos_dir }}/{{ repo_config.stat.path|basename }}"
+      regexp: '^(.*file://){{ item }}'
+      line: '\1{{ new_repo_dir }}{{ item | basename }}'
+      backrefs: yes
+  with_items: "{{ merge_base_url }}"
+
+- name: Upload yum config with enabled custom repository to overcloud image
+  register: image_repos
+  shell: |
+      virt-copy-in -a {{ overcloud_image_file }} {{ merge_base_url | join(' ') }} /
+
+- block:
+      - name: Enable rhelosp-rhel-server-opt repository
+        ini_file:
+            path: "{{ tmp_oc_repos_dir }}/rhos-release-rhel-{{ ansible_distribution_version }}.repo"
+            section: "rhelosp-rhel-{{ ansible_distribution_version }}-server-opt"
+            option: enabled
+            value: 1
+
+      - name: Add includepkgs option to rhos-release-rhel
+        ini_file:
+            path: "{{ tmp_oc_repos_dir }}/rhos-release-rhel-{{ ansible_distribution_version }}.repo"
+            section: "rhelosp-rhel-{{ ansible_distribution_version }}-server-opt"
+            option: includepkgs
+            value: yum-plugin-priorities
+  become: yes
+  when: install.get('from', {}).source is defined
