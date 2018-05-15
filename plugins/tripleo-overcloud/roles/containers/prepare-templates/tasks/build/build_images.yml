@@ -101,12 +101,18 @@
   when: install_container_images_packages is defined
   tags: container-images-packages
 
-- stat:
-      path: /etc/yum.repos.d/patched_rpms.repo
-  register: patched_rpms_repo
-  tags: container-images-patch
+- name: Get patched_rpms and from_source file stat
+  vars:
+      repo_dir: /etc/yum.repos.d
+  stat:
+      path: "{{ repo_dir }}/{{ item }}"
+  register: patched_rpms
+  with_items:
+      - patched_rpms.repo
+      - from_source.repo
+  tags: container-images-packages
 
 - name: patch images
   import_tasks: patch_images.yml
-  when: install_container_images_patch is defined or patched_rpms_repo.stat.exists == True
-  tags: container-images-patch
+  when: install_container_images_patch is defined or patched_rpms.results | selectattr('stat.exists', 'equalto', True) | list | length > 0
+  tags: container-images-packages
