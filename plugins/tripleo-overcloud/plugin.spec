@@ -340,6 +340,11 @@ subparsers:
                       default: no
                       help: Use OVN (HA) instead of ML2 and OVS.
 
+                  network-management:
+                      type: Bool
+                      default: no
+                      help: Deploy Overcloud with managment network 
+
             - title: Overcloud Public Network
               options:
                   public-network:
