@@ -33,6 +33,10 @@ parameters:
     default: ''
     description: IP address/subnet on the management network
     type: string
+  ManagementInterfaceDefaultRoute:
+    default: '10.0.1.1'
+    description: default route for the management network
+    type: string
   ExternalNetworkVlanID:
     default: 10
     description: Vlan ID for the external network traffic.
@@ -51,6 +55,10 @@ parameters:
     type: number
   TenantNetworkVlanID:
     default: 50
+  ManagementNetworkVlanID:
+    default: 60
+    description: Vlan ID for the management network traffic.
+    type: number
     description: Vlan ID for the tenant network traffic.
     type: number
   ExternalInterfaceDefaultRoute:
@@ -143,6 +151,19 @@ resources:
                               -
                                 ip_netmask:
                                     get_param: StorageMgmtIpSubnet
+                            -
+                              type: vlan
+                              vlan_id:
+                                  get_param: ManagementNetworkVlanID
+                              addresses:
+                              -
+                                ip_netmask:
+                                    get_param: ManagementIpSubnet
+                              routes:
+                              -
+                                default: true
+                                next_hop:
+                                    get_param: ManagementInterfaceDefaultRoute
 
 outputs:
   OS::stack_id:
