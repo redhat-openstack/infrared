@@ -53,7 +53,11 @@ parameters:
     default: 50
     description: Vlan ID for the tenant network traffic.
     type: number
-  ExternalInterfaceDefaultRoute:
+  ManagementNetworkVlanID:
+    default: 60
+    description: Vlan ID for the management network traffic.
+    type: number
+ExternalInterfaceDefaultRoute:
     default: '10.0.0.1'
     description: default route for the external network
     type: string
@@ -135,6 +139,17 @@ resources:
                               addresses:
                               -
                                 ip_netmask: {get_param: TenantIpSubnet}
+                            -
+                              type: vlan
+                              device: bond1
+                              vlan_id: {get_param: ManagementNetworkVlanID}
+                              addresses:
+                                 -
+                                   ip_netmask: {get_param: ManagementIpSubnet}
+                              routes:
+                                 -
+                                   default: true
+                                   next_hop: {get_param: ManagementInterfaceDefaultRoute}
                         -
                           type: ovs_bridge
                           # This will default to br-ex, anything else requires specific
