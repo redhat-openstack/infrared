@@ -35,6 +35,10 @@ parameters:
     default: ''
     description: IP address/subnet on the management network
     type: string
+  ManagementInterfaceDefaultRoute:
+    default: 'fd00:fd00:fd00:6000::1'
+    description: default route for the management network
+    type: string
   ExternalNetworkVlanID:
     default: 10
     description: Vlan ID for the external network traffic.
@@ -102,9 +106,11 @@ resources:
                             -
                               ip_netmask: 169.254.169.254/32
                               next_hop: {get_param: EC2MetadataIp}
+{% if not install.network.management %}
                             -
                               default: true
                               next_hop: {get_param: ControlPlaneDefaultRoute}
+{% endif %}
                         -
                           type: ovs_bridge
                           name: br-isolated
@@ -138,6 +144,21 @@ resources:
                               addresses:
                               -
                                 ip_netmask: {get_param: TenantIpSubnet}
+{% if install.network.management %}
+                            -
+                              type: vlan
+                              vlan_id:
+                                  get_param: ManagementNetworkVlanID
+                              addresses:
+                              -
+                                ip_netmask:
+                                    get_param: ManagementIpSubnet
+                              routes:
+                              -
+                                default: true
+                                next_hop:
+                                    get_param: ManagementInterfaceDefaultRoute
+{% endif %}
                         -
                           type: ovs_bridge
                           # This will default to br-ex, anything else requires specific
