@@ -79,8 +79,8 @@
                 ansible_ssh_common_args: "-o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                                           -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
                                           {{ ssh_user }}@{{ ssh_host }}\""
+                ansible_ssh_user: "{{ user }}"
             when: "'hypervisor' not in groups"
-
             with_items: "{{ openstack_servers }}"
 
       - name: Enable SSH forwarding using hypervisor node for hybrid OC nodes
