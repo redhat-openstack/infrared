@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a956b28_90e66867",
+        "filename": "plugins/virsh/tasks/remove_vm.yml",
+        "patchSetId": 6
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-05-18T08:40:32Z",
+      "side": 1,
+      "message": "this may be bit unsafe - fail ... what if does not find any: rm -f \"\"\ncould be safer to switch to xargs --no-run-if-empty rm -f   or something similar\n\n---\nalso, not exactly big issue for this review, but seems this could be unsafe in case of \u003e1 parallel deployments on same virthost\n\n\nassuming that same original image (the one before keys/modifications) can be reused again/later for other deployments,\nthen also the same backing file ... could be used by multiple topologies at the same time\n\nand then this code when removing one of the deployments would find that backing file reported by qemu-img info ...\nand attempt/remove it ... yet there would be the vm\u0027s + disks from the another existing deployment ... and those would loose backing file on runtime ...\n\nthough it may be addressable in the change enabling parallel deployments https://review.gerrithub.io/#/c/redhat-openstack/infrared/+/409638/8/plugins/virsh/tasks/vms_1_create_disk.yml  ... by maybe using the prefix/runID as part of backing file name (${prefix}_base_ ...) or such.\n\n\n\n(it also for a brief moment makes the vm_name*disks.qcow2 itself broken by first erasing backing file [shared by all nodes and their disks in current topo] and only then erasing individual disks)\n\nmore safe solution could be something like this:\n1) gather list of backing files for vms we are cleaning\n2) clean their images\n3) filter list of backing files from step1 - remove all which are referenced by any remaining existing image (ours are gone after step2)\n4) remove images remaining in the filtered list of backing files\n// but i believe may not be needed, if as suggested above also base image gets scoped to prefix/run id\n\n--- \n\nin any case ... is there a reason why to add another shell ansible step? ansible overhead (ssh+python startup) on these is quite high (more expensive then the find call itself for ex. maybe even rm one)\nbetter place both rm steps into one shell task (+ add e.g. set -ex)",
+      "revId": "1599d10a65b9fe2f4be1d0d4f2807d38695d4d7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
