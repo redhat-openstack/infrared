@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d06c5a64_56259a98",
+        "filename": "plugins/virsh/provision_networks.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1005418
+      },
+      "writtenOn": "2018-05-18T18:23:20Z",
+      "side": 1,
+      "message": "I believe this is not covering all the use cases, we have hosts with ipv6 enabled(which can be used for virsh networks interfaces) but without any ipv6 addresses set on the physical nics at provisioning time:\n\n[root@sealusa11 ~]# ansible -m setup localhost | grep ansible_all_ipv6_addresses\n [WARNING]: provided hosts list is empty, only localhost is available. Note that the implicit localhost does not match \u0027all\u0027\n        \"ansible_all_ipv6_addresses\": [], \n\n\n[root@sealusa11 ~]# ip -6 a\n1: lo: \u003cLOOPBACK,UP,LOWER_UP\u003e mtu 65536 state UNKNOWN qlen 1\n    inet6 ::1/128 scope host \n       valid_lft forever preferred_lft forever",
+      "range": {
+        "startLine": 7,
+        "startChar": 6,
+        "endLine": 7,
+        "endChar": 113
+      },
+      "revId": "100cd7024a31a0aff1887b11940a3355d3ae4f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
