@@ -54,6 +54,14 @@
       line: '-e {{ install.heat.templates.basedir }}/environments/neutron-bgpvpn.yaml \'
   when: install.network.bgpvpn
 
+- name: Append the bgpvpn template line to the base overcloud deploy script for OSP > 12
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/services-docker/neutron-bgpvpn-opendaylight.yaml \'
+  when:
+      - install.network.bgpvpn
+      - install.version|default(undercloud_version)|openstack_release > 12
+
 - name: Inject dvr override template
   vars:
       nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('osp11', 'legacy') }}"
