@@ -16,6 +16,24 @@
       "revId": "e264b56fac74513037c7e0486e625a6869d2a7a5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6830118c_3265fc8d",
+        "filename": "plugins/tripleo-overcloud/build_templates.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2018-05-18T21:55:07Z",
+      "side": 1,
+      "message": "hey, I\u0027m not sure whether I get you correctly either...\nthis \u0027-extra-deploy-params\u0027 will append whateve ryou specify to openstack overcloud deploy command, i.e.:\nopenstack overcloud deploy \\\n--timeout 100 \\\n--templates /usr/share/openstack-tripleo-heat-templates \\\n--stack overcloud \\\n--libvirt-type kvm \\\n--ntp-server clock.redhat.com \\\n-e /home/stack/virt/config_lvm.yaml \\\n-e /usr/share/openstack-tripleo-heat-templates/environments/network-isolation.yaml \\\n-e /home/stack/virt/network/network-environment.yaml \\\n-e /home/stack/virt/inject-trust-anchor.yaml \\\n-e /home/stack/virt/hostnames.yml \\\n-e /home/stack/virt/nodes_data.yaml \\\n-e /home/stack/virt/debug.yaml \\\n-e /home/stack/virt/config_heat.yaml \\\n--environment-file /usr/share/openstack-tripleo-heat-templates/environments/services-docker/neutron-opendaylight.yaml \\\n-e /home/stack/virt/docker-images.yaml \\\n(\u003cHERE_THE_NEW_BIT\u003e) --config-download (/\u003e) \\\n--log-file overcloud_deployment_87.log\n\napart from \u0027--config-download\u0027 there may be any other option that you may want to use with \"openstack overcloud deploy\" command, any of these (many of them are already covered by infrared, but some are not): https://github.com/openstack/python-tripleoclient/blob/master/tripleoclient/v1/overcloud_deploy.py#L599-L813",
+      "parentUuid": "6787cb8c_f796b3a7",
+      "revId": "e264b56fac74513037c7e0486e625a6869d2a7a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
