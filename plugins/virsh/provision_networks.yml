@@ -7,6 +7,12 @@
     - name: get networks dict
       include_vars: "{{ provision.topology.network }}"
 
+    - name: merge overriden settings to the separate var
+      set_fact:
+          networks: "{{ networks|default({}) | combine(item.value, recursive=True) }}"
+      when: item.key == 'networks'
+      with_dict: "{{ override|default({}) }}"
+
     - name: Check if IPv6 mod enabled on host
       shell: "lsmod | grep ipv6"
       ignore_errors: True
