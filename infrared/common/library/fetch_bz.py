@@ -42,7 +42,7 @@ options:
       description:
           - The URL of the Bugzilla instance to talk with
       required: False
-      default: https://bugzilla.redhat.com (Red Hat’s Bugzilla instance)
+      default: https://bugzilla.redhat.com (Red Hat's Bugzilla instance)
       type: str
     user:
       description:
