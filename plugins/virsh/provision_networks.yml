@@ -13,10 +13,10 @@
       when: item.key == 'networks'
       with_dict: "{{ override|default({}) }}"
 
-    - name: Check if IPv6 mod enabled on host
-      shell: "lsmod | grep ipv6"
+    - name: Check if interfaces have inet6 address family capabilities
+      shell: "ip addr show | grep inet6"
       ignore_errors: True
-      register: ipv6_mod
+      register: ipv6_addr
 
     - name: Check if IPv6 enabled on host
       shell: "grep -q ^0$ /sys/module/ipv6/parameters/disable"
@@ -27,8 +27,7 @@
           msg: "Network '{{ item.value.name }}' requires IPv6, but modules aren't loaded..."
       when:
           - item.value.ipv6 is defined
-          - ipv6_mod.rc != 0
-          - ipv6_sys.rc != 0
+          - (ipv6_addr.rc != 0 or ipv6_sys.rc != 0 )
       with_dict: "{{ networks }}"
 
     - name: enable router advertisements
