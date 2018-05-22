@@ -1,0 +1,19 @@
+---
+- name: install dstat package
+  package:
+      name: dstat
+      state: present
+- name: deploy dstat.service
+  copy:
+      src: dstat.service
+      dest: /etc/systemd/system/dstat.service
+  register: dstat_service_file
+- name: reload systemd to pickup dstat.service
+  systemd:
+    daemon-reload: yes
+  when: dstat_service_file | changed
+- name: ensure dstat.service is up
+  service:
+    name: dstat
+    enabled: yes
+    state: started
