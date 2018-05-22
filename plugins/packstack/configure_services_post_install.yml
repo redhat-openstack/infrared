@@ -16,7 +16,7 @@
             section: keymgr
             option: fixed_key
             value: "{{ randkey.stdout }}"
-        when: "install.version|openstack_release < 9"
+        when: "install.version|openstack_release <= 9"
 
       - name: Setup fixed key for encrypted volumes
         ini_file:
@@ -24,7 +24,7 @@
             section: key_manager
             option: fixed_key
             value: "{{ randkey.stdout }}"
-        when: "install.version|openstack_release >= 9"
+        when: "install.version|openstack_release > 9"
 
       - name: Setup fixed key class for encrypted volumes for nova
         ini_file:
