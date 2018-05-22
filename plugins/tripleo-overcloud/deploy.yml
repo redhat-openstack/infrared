@@ -67,9 +67,31 @@
         command: "systemctl restart openstack-nova-*"
         become: yes
 
+      - shell: |
+          cd /usr/share/openstack-tripleo-heat-templates
+          sed -i  "s;OS::TripleO::Services::BlockStorageCinderVolume: puppet/services/cinder-volume.yaml;OS::TripleO::Services::BlockStorageCinderBackup: puppet/services/cinder-backup.yaml;g" overcloud-resource-registry-puppet.j2.yaml
+          find . -type f  -exec sed -i 's/BlockStorageCinderVolume/BlockStorageCinderBackup/g' {} \;
+          cd /home/stack
+          openstack overcloud roles generate -o roles_data.yaml Controller Compute BlockStorage
+          touch volume-backup-role.yaml
+          echo "parameter_defaults:" > volume-backup-role.yaml
+          echo "  BlockStorageCount: 1" >> volume-backup-role.yaml
+          echo "  OvercloudBlockStorageFlavor: cinderbkp" >> volume-backup-role.yaml
+        become: yes
+
+# sed -i '8i\-r /home/stack/roles_data.yaml -e /home/stack/volume-backup-role.yaml \\' overcloud_deploy.sh
+
+
+      - name: append params to deploy script
+        lineinfile:
+            dest: "{{ overcloud_deploy_script }}"
+            line: "-r /home/stack/roles_data.yaml -e /home/stack/volume-backup-role.yaml \\"
+            insertbefore: "^--log-file.*"
+
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
+            sleep 300
             bash {{ overcloud_deploy_script }} &> overcloud_install.log
         register: overcloud_deploy
         ignore_errors: yes
@@ -78,7 +100,6 @@
             name: tls-everywhere
         vars:
             stages:
-                - post_overcloud
         when:
             - install.tls.everywhere|default(False)
             - install.version|default(undercloud_version)|openstack_release >= 12
