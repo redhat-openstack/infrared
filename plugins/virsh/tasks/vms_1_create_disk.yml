@@ -68,8 +68,13 @@
             {% set image_name = (disk_values.import_url|default('') or node_dict.import_url|default('') or url) | basename %}
             {% if not disk_values.import_url %}
 
-            # create empty disk
-            qemu-img create -f qcow2 -o preallocation={{ disk_values.preallocation }} {{ disk_pool  }}/{{ node_image }} {{ disk_values.size }}
+            # create node disk with enabled backing image
+            qemu-img create -b {{ disk_pool }}/base_{{ image_name }} -f qcow2 {{ disk_pool  }}/{{ node_image }} -o backing_fmt=qcow2 {{ disk_values.size }}
+            qemu-img create -b {{ disk_pool }}/base_{{ image_name }} -f qcow2 {{ disk_pool  }}/{{ node_image }}.temp -o backing_fmt=qcow2 {{ disk_values.size }}
+
+            # Expand internal root filesystem since by default it has only 8GB and that's not enought to serve as undercloud's fs
+            virt-resize --expand /dev/sda1 {{ disk_pool }}/{{ node_image }} {{ disk_pool }}/{{ node_image }}.temp
+            mv {{ disk_pool }}/{{ node_image }}.temp {{ disk_pool }}/{{ node_image }}
 
             {% if disk_name == 'disk1' and topology_node.deploy_os|default(True) -%}
             # expand (copy-content) into new image in case of system disk
