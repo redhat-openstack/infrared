@@ -29,7 +29,7 @@
         "pm_password": "{{ install.vbmc.password }}",
         "pm_port": "{{ vbmc_ports[host_data.name] }}"
       {% else %}
-        "pm_addr": "{{ hostvars['hypervisor'].ansible_management.ipv4.address }}",
+        "pm_addr": "{{ ansible_management.ipv4.address }}",
         "pm_type": "pxe_ssh",
         "pm_user": "{{ ansible_user|default(ansible_ssh_user) }}",
         "pm_password": "{{ undercloud_private_key }}"
