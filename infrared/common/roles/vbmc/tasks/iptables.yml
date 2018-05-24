@@ -11,6 +11,20 @@
       with_dict: "{{ vbmc_ports }}"
       delegate_to: hypervisor
 
+    - name: Ease iptables rules on all controller nodes
+      iptables:
+          action: insert
+          comment: "Infrared: vbmc ports"
+          table: filter
+          chain: FORWARD
+          jump: ACCEPT
+          protocol: "udp"
+          destination_port: "{{ item.value }}"
+      with_dict: "{{ vbmc_ports }}"
+      delegate_to: "{{ item }}"
+      delegate_facts: True
+      loop: "{{ groups['controller'] }}"
+
     - name: Ease iptables rules on vbmc host
       become: true
       iptables:
