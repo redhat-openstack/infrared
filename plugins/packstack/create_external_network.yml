@@ -4,9 +4,14 @@
 # Playbook is idempotent
 # This playbook uses ansible openstack modules from localhost as it has mandatory shade
 - name: External network creation
-  gather_facts: no
+  # need to gather facts here because we run that playbook without become: yes.
+  # so need to have facts updated for ssh user instead of root.
+  # see https://github.com/ansible/ansible/issues/13592#issuecomment-178008852
+  gather_facts: yes
   any_errors_fatal: true
   hosts: controller[0]
+  tags:
+      - external_net
 # TODO(yfried): enable if/when packstack uses floating ips and localhost can access cloud
 #  hosts: localhost
 #  vars:
