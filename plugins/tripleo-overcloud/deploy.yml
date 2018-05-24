@@ -67,6 +67,14 @@
         command: "systemctl restart openstack-nova-*"
         become: yes
 
+      - name: Execute the pre overcloud deploy action
+        shell: |
+          {{ install.overcloud.predeploy_action }} &> pre_overcloud_install_action.log
+        register: pre_overcloud_install_action
+        ignore_errors: yes
+        when:
+          install.overcloud.predeploy_action is defined and install.overcloud.predeploy_action
+
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
