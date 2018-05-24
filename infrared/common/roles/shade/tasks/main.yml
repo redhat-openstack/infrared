@@ -18,7 +18,8 @@
   become: yes
   pip:
       name: virtualenv
-      version: 15.0.3
+      state: present
+      extra_args: --user
 
 # required to avoid any conflicts in venv with
 # different packages versions (especially shade)
@@ -33,6 +34,7 @@
   pip:
       name: "{{ item }}"
       virtualenv: "{{ shade_path_venv }}"
+      virtualenv_command: "{{ ansible_env.HOME }}/.local/bin/virtualenv"
   with_items:
     - setuptools==17.0
     - pip==9.0.1
@@ -46,3 +48,4 @@
       # see https://projects.engineering.redhat.com/browse/RHOSINFRA-1562
       # TODO: unpin shade to avoid other conflicts
       virtualenv: "{{ shade_path_venv }}"
+      virtualenv_command: "{{ ansible_env.HOME }}/.local/bin/virtualenv"
