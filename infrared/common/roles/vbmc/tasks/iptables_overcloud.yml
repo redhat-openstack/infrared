@@ -1,0 +1,33 @@
+# allows to access vbmc ports from any node
+- name: Get overcloud nodes
+  set_fact:
+        oc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
+
+- block:
+    - name: get vbmc node state
+      shell: "vbmc list | awk '/{{ item }}/ {print $4,$8}'"
+      register: vbmc_status
+      with_items:  "{{ oc_nodes }}"
+      delegate_to: "{{  vbmc_inventory_host }}"
+
+    - name: create list with vbmc ports
+      set_fact:
+          vbmc_ports_only: "{{ vbmc_ports_only|default([]) + [item.stdout.split()[1]] }}"
+      with_items: "{{ vbmc_status.results }}"
+
+    - name: allow access vbmc ports from overcloud
+      become: True
+      iptables:
+          action: insert
+          comment: "Infrared: vbmc ports from overcloud"
+          table: filter
+          chain: INPUT
+          jump: ACCEPT
+          protocol: "udp"
+          source: "{{ ansible_default_ipv4.address }}"
+          destination_port: "{{ item }}"
+      delegate_to: "{{ vbmc_inventory_host }}"
+      with_items: "{{ vbmc_ports_only }}"
+      serial: 1
+  when: oc_nodes|length > 0
+

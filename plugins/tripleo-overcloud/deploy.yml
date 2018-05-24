@@ -206,3 +206,19 @@
     - name: Get overcloud nodes
       set_fact:
         oc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
+
+- name: Allow vbmc ports for all the overcloud nodes
+  hosts: overcloud_nodes:!unused
+  gather_facts: no
+  any_errors_fatal: true
+  tags:
+      - deploy
+      - vbmc_post
+  tasks:
+      - name: setup vbmc access for all the available overcloud nodes
+        include_role:
+            name: vbmc
+            tasks_from: iptables_overcloud.yml
+        when:
+            - "'hypervisor' in groups"
+            - install.version|default(undercloud_version) | openstack_release >= 11 or install.vbmc.force
