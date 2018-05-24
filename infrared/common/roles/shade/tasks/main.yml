@@ -7,18 +7,13 @@
         - python-devel
         - python-setuptools
         - libffi-devel
+        - python-virtualenv
       state: present
 
 - name: install pip
   become: yes
   easy_install:
       name: pip
-
-- name: install virtualenv pip module
-  become: yes
-  pip:
-      name: virtualenv
-      version: 15.0.3
 
 # required to avoid any conflicts in venv with
 # different packages versions (especially shade)
