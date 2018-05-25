@@ -39,7 +39,11 @@
         --set ceph_image={{ container_env['container-image-prepare']['ceph-image'] }} \
         {% endif %}
         {% if container_env['container-image-prepare']['ceph-tag'] %}
-        --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }}
+        --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }} \
+        {% endif %}
+        {# Workaround RHBZ1582149 - prepare is not able to detect all containers without docker*.yamls #}
+        {% if install.version|default(undercloud_version)|openstack_release == 14 %}
+        -e /usr/share/openstack-tripleo-heat-templates/environments/docker.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/docker-ha.yaml
         {% endif %}
   tags:
       - skip_ansible_lint
