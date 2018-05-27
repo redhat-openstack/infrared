@@ -119,22 +119,6 @@
       line: '-e {{ install.heat.templates.basedir }}/environments/services-docker/octavia.yaml \'
   when: install.network.octavia
 
-- name: Install Octavia image
-  become: yes
-  yum:
-      name: octavia-amphora-image
-      state: present
-  when: install.network.octavia
-
-- name: Append Octavia amphora image path
-  yedit:
-      src: "{{ template_base }}/network/{{ network_environment_file }}"
-      update: True
-      key: parameter_defaults
-      value:
-          OctaviaAmphoraImageFilename: '/usr/share/rhosp-director-images/octavia-amphora.qcow2'
-  when: install.network.octavia
-
 - name: Append the network dvr overrides
   lineinfile:
       dest: "~/overcloud_deploy.sh"
