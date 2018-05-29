@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "197b12e0_3e6eff77",
+        "filename": "plugins/virsh/tasks/vms_1_create_disk.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-05-29T08:47:11Z",
+      "side": 1,
+      "message": "this seem to eliminate benefit of backing file ... \n\nwhen using backing file we want to avoid actually expanding any/all of the blocks with content ... to not overwrite/overlay parts which come from backing image ... \n\nwhat we need from this \u0027resize\u0027 step is, afaik:\n- partition expansion\n- also/especially the FS resize (if virt-resize can recognize the fs on the partition, which is likely, it will take care of growfs too)\n\nwe could stop removing cloud-init and actually utilize it ...\n(in cloud/boot mode) it can handle all of this automatically + with correct disk config attached it can take care of injecting keys, allowing root and any/all other initial preparation needed\n(fyi for overcloud nodes we even do not need any image just empty one)\n\notherwise seems it would be better handled explicitly, without usage of virt-resize which seems to do quite simple (as in dumb) copy of data (files or blocks or such) without any consideration it\u0027s already in backing image (ideally by utilizing cloud-init directly, before removing it, not in cloud/boot mode)\n\ncurrent code ends up as:\n\n  // rhel-guest \u003d\u003d downloaded\n  // my.qcow2 \u003d\u003d base_\n  // new.qcow2 \u003d\u003d node_image\n  \n  660M -rw-r--r--   1 qemu qemu 660M May 29 09:55 rhel-guest-image-7.5-146.x86_64.qcow2\n  196K -rw-r--r--   1 qemu qemu 193K May 29 09:57 my.qcow2\n  1.4G -rw-r--r--   1 root root 1.4G May 29 10:00 new.qcow2\n  \n  # qemu-img info new.qcow2 \n  image: new.qcow2\n  file format: qcow2\n  virtual size: 42G (45097156608 bytes)\n  disk size: 1.3G\n  cluster_size: 65536\n  backing file: my.qcow2\n  backing file format: qcow2\n  Format specific information:\n      compat: 1.1\n      lazy refcounts: false\n      refcount bits: 16\n      corrupt: false\n\nwhen done by calling cloudinit explicitly:\n\n  # virt-customize -a new-manual.qcow2 --run-command \u0027cloud-init single --name cc_growpart --frequency once; cloud-init single --name resizefs --frequency once; df -h\u0027 -v -\n  ... snip ...\n  commandrvf: /bin/sh -c \"exec \u003e\u003e\u0027/tmp/builder.log\u0027 2\u003e\u00261\n  \n  cloud-init single --name cc_growpart --frequency once; cloud-init single --name resizefs --frequency once; df -h\n  ... snip ...\n  Cloud-init v. 0.7.9 running \u0027single\u0027 at Tue, 29 May 2018 08:38:40 +0000. Up 13.36 seconds.\n  Cloud-init v. 0.7.9 running \u0027single\u0027 at Tue, 29 May 2018 08:38:41 +0000. Up 13.96 seconds.\n  Filesystem      Size  Used Avail Use% Mounted on\n  /dev/sda1        42G  918M   42G   3% /\n  /dev            225M     0  225M   0% /dev\n\n  # ls -lash new-manual.qcow2    // node_image, cloud-init\u0027s growpart+resizefs instead of virsh-resize\n  11M -rw-r--r--   1 root root  11M May 29 10:38 new-manual.qcow2",
+      "revId": "3ad5d72dfd15ab9b1f88f63c1ca5eba6e2abfd71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
