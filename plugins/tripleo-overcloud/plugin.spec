@@ -611,7 +611,7 @@ subparsers:
                       default: True
                       help: |
                           Scheduling based on resource classes, a Compute service flavor is able to use the
-                          node’s resource_class field (available starting with Bare Metal API version 1.21)
+                          node's resource_class field (available starting with Bare Metal API version 1.21)
                           for scheduling, instead of the CPU, RAM, and disk properties defined in the flavor.
                           A flavor can request exactly one instance of a bare metal resource class.
                           (https://docs.openstack.org/ironic/latest/install/configure-nova-flavors.html#scheduling-based-on-resource-classes)
