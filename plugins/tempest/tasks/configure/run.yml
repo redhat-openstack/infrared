@@ -41,6 +41,10 @@
               {% if test.openstack.version|default(overcloud_version)|openstack_release < 10 %}
               volume-feature-enabled.backup false \
               {% endif %}
+              {# This option only exists for letting mitaka tempest to run with liberty openstack, otherwise it must be set to true #}
+              {% if test.openstack.version|default(overcloud_version)|openstack_release == 9 %}
+              volume-feature-enabled.volume_services true \
+              {% endif %}
               {# config options #}
               {% for section_name,options in config_options.iteritems() %}
               {% for option_name,value in options.iteritems() %}
