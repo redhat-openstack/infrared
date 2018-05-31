@@ -16,19 +16,17 @@
         register: apply_workaround_bz1428608
 
       - name: install the undercloud
-        command: bash ~/undercloud_deploy.sh
+        shell: |
+          err_handler() {
+             rc=$?
+             &2< echo "Undercloud deployment failed... :("
+             &2< tail -n60 undercloud_install.log
+             &2< grep -B2 -A5 -i 'info:.*error:' undercloud_install.log || true
+             exit $rc
+          }
+          trap err_handler ERR
+          bash ~/undercloud_deploy.sh
         register: undercloud_deployment
-        ignore_errors: yes
-
-      - name: print the last 60 lines of the undercloud installation
-        command: tail -n60 undercloud_install.log
-
-      - name: print any nested error entries in undercloud installation
-        shell: "grep -B2 -A5 -i 'info:.*error:' undercloud_install.log || true"
-
-      - fail:
-            msg: "Undercloud deployment failed... :("
-        when: undercloud_deployment.rc != 0
 
       - name: remove workaround for BZ#1428608
         lineinfile:
