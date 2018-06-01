@@ -21,28 +21,37 @@
             - "'swift' in groups"
             - "'ceph' in groups"
 
-      - block:
+      - name: set default storage config file location
+        set_fact:
+          install_storage_config_file: "vars/storage/config/{{ install.storage.config }}.yml"
+
+      - when:
+          - install.deploy|default('')
+          - install.storage.external
+        block:
           - name: validate storage-config option is provided
             fail:
                 msg: "The --storage-config cli option should be provided for external storage backend when --storage-external is used. "
             when:
                 - install.storage.config == 'internal'
 
-          - name: check if user provided external storage config
-            stat:
-                path: "vars/storage/config/{{ install.storage.config }}.yml"
-            register: install_storage_config_file
+          - name: download storage config file
+            get_url:
+              url: install.storage.config
+              dest: "storage-config.yml.tmp"
+              force: yes
+            when: install.storage.config is match("http[s]://.*")
 
-          - fail:
-                msg: |
-                    "The file for external storage config is not found.
-                    Expected path: vars/storage/config/{{ install.storage.config }}.yml"
-            when:
-                - install_storage_config_file.stat.exists == False
+          - name: lookup for external storage config
+            set_fact:
+              install_storage_config_file: "{{ lookup('first_found', findme) }}"
+            vars:
+              findme:
+              - "storage-config.yml.tmp"
+              - "{{ install.storage.config }}"
+              - "vars/storage/config/{{ install.storage.config }}.yml"
 
-        when:
-            - install.deploy|default('')
-            - install.storage.external
+      - debug: msg="install_storage_config_file set to {{ install_storage_config_file }}"
 
 - name: Perform pre-deployment validations on undercloud
   hosts: undercloud
