@@ -37,10 +37,10 @@
 
           - name: download storage config file
             get_url:
-              url: install.storage.config
+              url: "{{ install.storage.config }}"
               dest: "storage-config.yml.tmp"
               force: yes
-            when: install.storage.config is match("http[s]://.*")
+            when: install.storage.config is match("http[s]?://.*")
 
           - name: lookup for external storage config
             set_fact:
