@@ -1,3 +1,8 @@
 ---
 tripleo_heat_templates:
     - /usr/share/openstack-tripleo-heat-templates/environments/neutron-bgpvpn.yaml
+
+custom_templates:
+  parameter_defaults:
+    NeutronServicePlugins: 'odl-router_v2,trunk,bgpvpn'
+    BgpvpnServiceProvider: 'BGPVPN:Dummy:networking_bgpvpn.neutron.services.service_drivers.driver_api.BGPVPNDriver:default' 
