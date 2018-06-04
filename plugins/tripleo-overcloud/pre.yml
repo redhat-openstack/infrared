@@ -4,4 +4,8 @@
   tags: init
   any_errors_fatal: true
   tasks:
-       - setup:
+       - name: URL to download package
+         shell: yum install -y {{ install.download.url }}
+         when:
+             - install.pre == 'True'
+             - install.download.url
