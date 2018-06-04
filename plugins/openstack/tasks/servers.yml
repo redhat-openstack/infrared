@@ -13,10 +13,11 @@
   set_fact:
       topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
 
-- name: Set the nic order
+- name: Get nics list ordered
   command: "echo net-name={{ provision.prefix }}{{ topology_node.interfaces[item].network }}"
   with_items: "{{ topology_node.interfaces | sort }}"
   register: nics
+  changed_when: false
 
 - name: Create instances
   vars:
