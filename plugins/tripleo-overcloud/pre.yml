@@ -4,4 +4,13 @@
   tags: init
   any_errors_fatal: true
   tasks:
-       - setup:
+       - name: Install pre-defined Undercloud packages
+         yum:
+             name: "{{ install.undercloud.packages }}"
+             state: present
+         when:
+             - install.undercloud is defined
+             - install.undercloud.packages
+         become_method: sudo
+         register: yum_result
+         failed_when: "'Failed' in yum_result.stderr"

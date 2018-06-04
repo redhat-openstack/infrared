@@ -276,6 +276,16 @@ subparsers:
                           NOTE: Using equal(=) sign is mandatory here.
                           Example:
                               --extra-deploy-params="--config-download"
+                  undercloud-packages:
+                      type: Value
+                      help: |
+                          Comma delimited list of names or URLs of the packages to be installed on
+                          undercloud before Overcloud deployment, uses "yum" package manager.
+                          NOTE: When trying to install packages with this parameter please be sure
+                          that the appropriate repositories have been enabled.
+                          Examples:
+                              --undercloud-packages python-tripleoclient
+                              --undercloud-packages python-tripleoclient,http://download-node-02.eng.bos.redhat.com/composes/auto/ceph-3.1-rhel-7/latest-RHCEPH-3-RHEL-7/compose/Tools/x86_64/os/Packages/golang-1.9.4-1.el7.x86_64.rpm
 
                   heat-templates-basedir:
                       type: Value
