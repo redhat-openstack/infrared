@@ -183,7 +183,7 @@ Overcloud Options
 
     To disable scheduling based on resource classes:
 
-    .. code-block:: plain
+    .. code-block:: shell
 
        --resource-class-enabled False
 

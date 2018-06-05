@@ -34,6 +34,7 @@ Welcome to infrared's documentation!
    contribute
    ovb
    troubleshoot.rst
+   current_temporary_hacks.rst
 
 .. toctree::
    :maxdepth: 2
