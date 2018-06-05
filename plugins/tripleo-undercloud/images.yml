@@ -49,6 +49,16 @@
         file:
           name: "{{ tmp_oc_repos_dir }}"
           state: directory
+
+      - name: Get the information about the undercloud cloud
+        os_client_config:
+          clouds:
+            - undercloud
+        failed_when: false
+
+      - set_fact:
+            cloud_credentials: "{{ (openstack.clouds[0] is defined and install.version|openstack_release > 11) |ternary('openstack --os-cloud undercloud','source ~/stackrc; openstack') }}"
+
   roles:
         # modify images - update to core build and install packages
       - name: prepare repos for the images
@@ -86,12 +96,10 @@
         # update is a func name (dict.update) so it must be used as str explicitly
         when: install.images.packages|default('') or install.images['update']
 
-       #Need to fix  BZ1462703 to apply --os-cloud
       - name: upload the overcloud images to glance
         shell: |
             set -exuo pipefail
-            source ~/stackrc
-            openstack overcloud image upload --update-existing
+            {{ cloud_credentials }} overcloud image upload --update-existing
         tags: skip_ansible_lint
 
       - name: check for existing nodes ( OS <= 10 )
@@ -106,9 +114,7 @@
             - undercloud_version|openstack_release <= 10
 
       - name: check for existing nodes ( OS >= 11 )
-        shell: |
-            source ~/stackrc
-            openstack baremetal node list -c UUID -f json
+        shell: "{{ cloud_credentials }} baremetal node list -c UUID -f json"
         tags:
             - skip_ansible_lint
         register: oc_nodes
@@ -127,9 +133,7 @@
 
       # https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/11/html/upgrading_red_hat_openstack_platform/chap-director-minor-update#sect-Updating_Overcloud_and_Introspection_Images
       - name: configure nodes to use updated kernel and ramdisk ( OS >= 11 )
-        shell: |
-            source ~/stackrc
-            openstack overcloud node configure {{ ' '.join(oc_nodes.stdout|from_json|map(attribute='UUID')) }}
+        shell: "{{ cloud_credentials }} overcloud node configure {{ ' '.join(oc_nodes.stdout|from_json|map(attribute='UUID')) }}"
         tags:
             - skip_ansible_lint
         when:

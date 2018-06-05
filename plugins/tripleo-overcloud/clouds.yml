@@ -20,7 +20,10 @@
       dest: "~/clouds.yaml"
       marker: "#{mark} HEADER"
       create: yes
-  delegate_to: "{{ groups.shade | first }}"
+  delegate_to: "{{ item }}"
+  with_items:
+        - "{{ groups.shade | first }}"
+        - "{{ groups.undercloud | first }}"
 
 - name: insert cloud parameters
   blockinfile:
@@ -29,4 +32,15 @@
             {{ cloud_details.stdout|from_yaml|to_nice_yaml(indent=4) }}
       insertbefore: "#END {{ cloudname }} SECTION"
       marker: "#{mark} {{ cloudname }} PARAMETERS"
-  delegate_to: "{{ groups.shade | first }}"
+  delegate_to: "{{ item }}"
+  with_items:
+        - "{{ groups.shade | first }}"
+        - "{{ groups.undercloud | first }}"
+
+  - name: Get the information about the undercloud cloud
+    os_client_config:
+      clouds:
+        - "{{ cloudname }}"
+
+  - set_fact:
+        use_os_client_config: "{{ (openstack.clouds[0] and install.version|openstack_release >= 12) |ternary(True,False) }}"

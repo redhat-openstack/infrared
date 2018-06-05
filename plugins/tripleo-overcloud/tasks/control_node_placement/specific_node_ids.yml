@@ -1,15 +1,13 @@
 ---
 - name: get baremetal info
   shell: |
-      source ~/stackrc
-      openstack baremetal node show {{ item }} -f json
+      {{ cloud_credentials }} baremetal node show {{ item }} -f json
   register: nodes_baremetal_info
   with_items: "{{ groups.overcloud_nodes }}"
 
 - name: set specific node ids
   shell: |
-      source ~/stackrc
-      openstack baremetal node set --property capabilities='node:{{ (item.stdout|from_json).name }},boot_option:local' {{ (item.stdout|from_json).uuid }}
+      {{ cloud_credentials }} baremetal node set --property capabilities='node:{{ (item.stdout|from_json).name }},boot_option:local' {{ (item.stdout|from_json).uuid }}
   with_items: "{{ nodes_baremetal_info.results }}"
 
 - block:

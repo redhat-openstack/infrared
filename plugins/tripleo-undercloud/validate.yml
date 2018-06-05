@@ -1,57 +1,19 @@
-- name: Perform validation
-  hosts: localhost
-  gather_facts: yes
-  any_errors_fatal: true
-  tasks:
-      - fail:
-            msg: "Please provide either --version OR --images-task OR --quickstart-{backup|restore} OR --upgrade OR --update-undercloud"
-        when:
-            - not install.version|default('')
-            - not install.images.task|default('')
-            - not install.quickstart.backup|default('')
-            - not install.quickstart.restore|default('')
-            - not install.upgrade|default('')
-            - not install.get('update', {}).undercloud|default('')
-
-      - fail:
-            msg: "Please provide either --version OR --upgrade OR --update-undercloud"
-        when:
-            - install.version|default('')
-            - install.upgrade|default('')
-            - install.get('update', {}).undercloud|default('')
-
-      - fail:
-            msg: "Image task 'rpm' is not supported for product version '{{ install.version }}'. Use another image task."
-        when:
-            - install.version|default('')
-            - install.version|openstack_release < 8
-            - install.images.task|default('')  == 'rpm'
-
-      - name: validate director build
-        vars:
-            director_build: "{{ install.get('director', {}).build|default(False) }}"
-        debug:
-            msg: "No director puddle for release {{ install.version }}"
-        when:
-            - director_build is defined and director_build
-            - not install.get('update', {}).undercloud|default(False)
-            - install.version|default('')
-            - install.version|openstack_release > 9
-
 - name: Validate Undercloud
   hosts: undercloud
-  gather_facts: yes
+  gather_facts: no
   any_errors_fatal: true
   tasks:
+      - name: Get the information about the undercloud cloud
+        os_client_config:
+          clouds:
+            - undercloud
+        failed_when: false
+
+      - set_fact:
+            cloud_credentials: "{{ (openstack.clouds[0] is defined and install.version|openstack_release > 11) |ternary('openstack --os-cloud undercloud','source ~/stackrc; openstack') }}"
       - fail:
-            msg: "Tripleo not supported for non Red Hat operating systems"
-        when: ansible_os_family != "RedHat"
+            var: cloud_credentials
 
       - fail:
             msg: "OSP {{ install.version }} requires Red Hat Operating System >= 7.5,
                   installed version is {{ ansible_distribution_version }}"
-        when:
-            - install.version|default('')
-            - install.version|openstack_distribution == 'OSP'
-            - install.version|openstack_release >= 13
-            - ansible_distribution_version|version_compare('7.5', '<')

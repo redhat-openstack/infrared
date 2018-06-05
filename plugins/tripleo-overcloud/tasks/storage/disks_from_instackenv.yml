@@ -20,17 +20,16 @@
   vars:
       storage_node: "{{ instackenv_data.nodes | selectattr('name', 'match', storage_group|join('|')) | list | first}}"
   shell: |
-      source ~/stackrc
       # Get list of baremetal introspection UUIDs
-      for UUID in $(openstack baremetal introspection list | tail -n +4 | head -n -1 | awk {'print $2'});
+      for UUID in $({{ cloud_credentials }} baremetal introspection list | tail -n +4 | head -n -1 | awk {'print $2'});
       do
           # For every UUID get introspection data and search for mac address, defined in 'instackenv.json'
-          MATCH=$(openstack baremetal introspection data save ${UUID} | jq ''|grep "{{ storage_node.mac[0] }}" | wc -l)
+          MATCH=$({{ cloud_credentials }} baremetal introspection data save ${UUID} | jq ''|grep "{{ storage_node.mac[0] }}" | wc -l)
           # If mac address if found
           if [ ${MATCH} != 0 ];
           then
               # get corresponding section from baremetal introspection
-              echo "$(openstack baremetal introspection data save ${UUID} | jq '.inventory.disks | map(.name)' | sed 's/\/dev\///g')"
+              echo "$({{ cloud_credentials }} baremetal introspection data save ${UUID} | jq '.inventory.disks | map(.name)' | sed 's/\/dev\///g')"
           fi
       done
   # All hosts 'from instackenv.json' which name is in storage group (swift or ceph) of inventory

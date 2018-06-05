@@ -1,9 +1,8 @@
 # this shell supports OSP7 and above.
 - name: get ctlplane subnet
   shell: |
-      source ~/stackrc
-      subnet_id=$(openstack network show {{ uc_provision_net|default('ctlplane')  }} | grep -owP 'subnets.*\|\s\K.*[^\|]+')
-      neutron subnet-show $subnet_id | grep -owP 'cidr.*\|\s\K.*[^\|]+' | tr -d ' '
+      subnet_id=$({{ cloud_credentials }} network show {{ uc_provision_net|default('ctlplane')  }} | grep -owP 'subnets.*\|\s\K.*[^\|]+')
+      {{ cloud_credentials }} subnet show $subnet_id | grep -owP 'cidr.*\|\s\K.*[^\|]+' | tr -d ' '
   register: ctlplane_subnet_cidr
 
 - name: get network list from hypervisor

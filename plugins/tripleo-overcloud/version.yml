@@ -6,3 +6,17 @@
       - images
   roles:
       - version-discovery
+
+- name: Cloud Credentials Validation
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: Get the information about the undercloud cloud
+        os_client_config:
+          clouds:
+            - undercloud
+        failed_when: false
+
+      - set_fact:
+            cloud_credentials: "{{ (openstack.clouds[0] is defined and install.version|openstack_release > 11) |ternary('openstack --os-cloud undercloud','source ~/stackrc; openstack') }}"

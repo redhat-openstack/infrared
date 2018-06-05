@@ -3,6 +3,15 @@
 # http://docs.openstack.org/developer/tripleo-docs/basic_deployment/basic_deployment_cli.html
 # This should run as non-root
 
+- name: Get the information about the undercloud cloud
+  os_client_config:
+    clouds:
+      - undercloud
+  failed_when: false
+
+- set_fact:
+      cloud_credentials: "{{ (openstack.clouds[0] is defined and install.version|openstack_release > 11) |ternary('openstack --os-cloud undercloud','source ~/stackrc; openstack') }}"
+
 - name: Download guest image for build if needed
   # Keep "private" here in case someone doesn't understand why it's gone
   # images_source: private.images.base_url + '/rhel-guest-image-latest.qcow2'
@@ -35,7 +44,7 @@
 # TODO: Move environment to a file / template so a user can make customize it
 - name: Build OC images (RHOS)
   tags: backup
-  shell: "source ~/stackrc; openstack overcloud image build --all > openstack-build-images.log"
+  shell: "{{ cloud_credentials }} overcloud image build --all > openstack-build-images.log"
   environment:
       DIB_LOCAL_IMAGE: "{{ images_dest }}"
       DIB_YUM_REPO_CONF: "{{ dib_yum_repos | default(repo_find.files | map(attribute='path') | join(' ')) }}"
@@ -51,9 +60,7 @@
 # Currently supports only centos images.
 - name: Build OC images (RDO)
   tags: backup
-  shell: |
-      source ~/stackrc
-      openstack overcloud image build > openstack-build-images.log
+  shell: "{{ cloud_credentials }} overcloud image build > openstack-build-images.log"
   environment:
       DIB_YUM_REPO_CONF: "{{ dib_yum_repos | default(repo_find.files | map(attribute='path') | join(' ')) }}"
       RDO_RELEASE: "{{ install.version | default(undercloud_version) }}"

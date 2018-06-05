@@ -17,13 +17,21 @@
           } $(if [ -n "$OS_IDENTITY_API_VERSION" ]; then echo ",'identity_api_version': '${OS_IDENTITY_API_VERSION}'"; fi) }"
   register: cloud_details
 
+- name: Make .config subdirectory
+  file:
+    name: "/home/stack/.config/openstack/"
+    state: directory
+
 - name: create clouds.yaml if doesn't exist
   blockinfile:
       content: 'clouds:'
       dest: "~/clouds.yaml"
       marker: "#{mark} HEADER"
       create: yes
-  delegate_to: "{{ groups.shade | first }}"
+  delegate_to: "{{ item }}"
+  with_items:
+        - "{{ groups.shade | first }}"
+        - "{{ groups.undercloud | first }}"
 
 - name: insert cloud parameters
   blockinfile:
@@ -32,4 +40,15 @@
             {{ cloud_details.stdout|from_yaml|to_nice_yaml(indent=4) }}
       insertbefore: "#END {{ cloudname }} SECTION"
       marker: "#{mark} {{ cloudname }} PARAMETERS"
-  delegate_to: "{{ groups.shade | first }}"
+  delegate_to: "{{ item }}"
+  with_items:
+        - "{{ groups.shade | first }}"
+        - "{{ groups.undercloud | first }}"
+
+- name: Get the information about the undercloud cloud
+  os_client_config:
+    clouds:
+      - undercloud
+
+- set_fact:
+      use_os_client_config: "{{ (openstack.clouds[0] and install.version|openstack_release >= 12) |ternary(True,False) }}"

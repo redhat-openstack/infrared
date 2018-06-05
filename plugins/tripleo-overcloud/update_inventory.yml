@@ -42,8 +42,7 @@
       - name: list ironic nodes
         # Use CSV format as JSON not supported in old versions
         shell: |
-            source ~/stackrc
-            openstack baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} list -f csv
+            {{ cloud_credentials }} baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} list -f csv
         register: ironic_node_list
         tags: skip_ansible_lint
         # Bug in Liberty version: No "node list" in openstack client, and no formatter in ironic client.

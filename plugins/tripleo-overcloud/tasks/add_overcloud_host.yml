@@ -1,8 +1,7 @@
 - block:
     - name: get ironic info for the node
       shell: |
-          source ~/stackrc
-          openstack baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} show {{ uuid }} -c name -f value
+           {{ cloud_credentials }} baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} show {{ uuid }} -c name -f value
       vars:
           uuid: "{{ node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] }}"
       register: baremetal_info
@@ -11,8 +10,7 @@
 
     - name: osp8 - get ironic info for the node
       shell: |
-          source ~/stackrc
-          ironic node-list --fields uuid name | grep {{ uuid }} | awk '{print $4}'
+          {{ cloud_credentials }} node list --fields uuid name | grep {{ uuid }} | awk '{print $4}'
       vars:
           uuid: "{{ node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] }}"
       register: ironic_info

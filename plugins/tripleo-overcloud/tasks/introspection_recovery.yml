@@ -6,12 +6,11 @@
 
 - name: get overall bulk status during failure
   shell: |
-      source ~/stackrc
-      ironic node-list
+      {{ cloud_credentials }} node list
       {% if install.version|default(undercloud_version) | openstack_release < 13 %}
-      openstack baremetal introspection bulk status
+      {{ cloud_credentials }} baremetal introspection bulk status
       {% else %}
-      openstack baremetal introspection list
+      {{ cloud_credentials }} baremetal introspection list
       {% endif %}
       systemctl list-units | grep ironic
   ignore_errors: yes
@@ -20,11 +19,10 @@
 
 - name: Get output of bulk introspection status and store as yaml
   shell: |
-       source ~/stackrc
        {% if install.version|default(undercloud_version) | openstack_release < 13 %}
-       openstack baremetal introspection bulk status -f yaml
+       {{ cloud_credentials }} baremetal introspection bulk status -f yaml
        {% else %}
-       openstack baremetal introspection list -f yaml
+       {{ cloud_credentials }} baremetal introspection list -f yaml
        {% endif %}
   register: bulk_status
   when: install.version|default(undercloud_version)|openstack_release > 7
@@ -48,9 +46,7 @@
 
 # Ironic in OSPd7 doesn't support yaml/json output format, it must be done "bash" way
 - name: get and store full list of UUIDs of nodes that failed introspection (OSPd7)
-  shell: |
-       source ~/stackrc
-       openstack baremetal introspection bulk status | grep -Ei '(False|Timeout)' |  awk '{print $2}'
+  shell: |"{{ cloud_credentials }} baremetal introspection bulk status | grep -Ei '(False|Timeout)' |  awk '{print $2}'"
   register: failed_nodes_uuids_7
   ignore_errors: yes
   when: install.version|default(undercloud_version)|openstack_release == 7
@@ -65,9 +61,7 @@
   when: install.version|default(undercloud_version)|openstack_release > 7 and failed_nodes_uuids is defined
 
 - name: get details about failed nodes
-  shell: |
-      source ~/stackrc
-      ironic node-show {{ item }}
+  shell: "{{ cloud_credentials }} baremetal node show {{ item }}"
   register: failed_nodes_details
   ignore_errors: yes
   # Merge both lists failed_nodes_uuids and failed_nodes_uuids_7 here as only one of them is defined
@@ -97,15 +91,14 @@
 
 - name: introspect and retry sequentially node by node the khaleesi way
   shell: >
-      source ~/stackrc;
-      openstack baremetal introspection start {{ item }};
-      export STATUS=$(openstack baremetal introspection status {{ item }} | grep 'finished');
+      {{ cloud_credentials }} baremetal introspection start {{ item }};
+      export STATUS=$({{ cloud_credentials }} baremetal introspection status {{ item }} | grep 'finished');
       while [[ $STATUS != *"True"* ]]; do
           echo "Waiting for instrospection of {{ item }} to complete.";
           sleep 10;
-          export STATUS=$(openstack baremetal introspection status {{ item }} | grep 'finished');
+          export STATUS=$({{ cloud_credentials }} baremetal introspection status {{ item }} | grep 'finished');
       done;
-      openstack baremetal introspection status {{ item }} | grep 'error'
+      {{ cloud_credentials }} baremetal introspection status {{ item }} | grep 'error'
   register: introspect_status
   retries: 3
   delay: 5
@@ -115,11 +108,10 @@
 
 - name: store uuid's of all nodes in ironic db
   shell: |
-       source ~/stackrc
        {% if install.version|default(undercloud_version) | openstack_release < 13 %}
-       openstack baremetal introspection bulk status | grep -Ei '(True|False)' |  awk '{print $2}'
+       {{ cloud_credentials }} baremetal introspection bulk status | grep -Ei '(True|False)' |  awk '{print $2}'
        {% else %}
-       openstack baremetal introspection list | tail -n +4 | head -n -1 | awk {'print $2'}
+       {{ cloud_credentials }} baremetal introspection list | tail -n +4 | head -n -1 | awk {'print $2'}
        {% endif %}
   register: total_nodes
   tags:
@@ -129,9 +121,9 @@
 # makes them invisible to overcloud deploy stage.
 - name: set provision state of all nodes to available if bulk introspection failed to do so
   shell: |
-      source ~/stackrc;
-      export PROV_STATE=$(ironic node-show {{ item }} | grep ' provision_state ');
+      export PROV_STATE=$({{ cloud_credentials }} baremetal node show {{ item }} | grep ' provision_state ');
       if [[ $PROV_STATE != *"available"* ]]; then
+          source ~/stackrc;
           ironic node-set-provision-state {{ item }} provide;
       fi
   with_items: "{{ total_nodes.stdout_lines | default([]) }}"
@@ -140,12 +132,11 @@
 
 - name: see overall status after node-by-node introspection was done
   shell: |
-      source ~/stackrc
-      ironic node-list
+      {{ cloud_credentials }} node list
       {% if install.version|default(undercloud_version) | openstack_release < 13 %}
-      openstack baremetal introspection bulk status
+      {{ cloud_credentials }} baremetal introspection bulk status
       {% else %}
-      openstack baremetal introspection list
+      {{ cloud_credentials }} baremetal introspection list
       {% endif %}
   tags:
       - skip_ansible_lint

@@ -12,6 +12,7 @@
       undercloud_disk_path: "{{ install.disk.pool }}/{{ install.quickstart.filename.rstrip('.qcow2') | basename }}-disk1.qcow2"
       undercloud_user: "{{ install.user.name | default('stack') }}"
       # todo(yfried): add external refs so users can override these values and customize the Undercloud
+
   tasks:
       - name: check and create directory
         file:
@@ -161,13 +162,30 @@
                     ResultActive=yes
                 dest: "/etc/polkit-1/localauthority/50-local.d/50-libvirt-user-{{ install.user.name }}.pkla"
 
+      - name: update clouds.yaml file
+        include_tasks: clouds.yml
+        delegate_to: "{{ groups.undercloud | first }}"
+        gather_facts: no
+        any_errors_fatal: true
+        tags: restore_clouds_yml
+        vars:
+            auth_file_path: "/home/stack/stackrc"
+            cloudname: "undercloud"
+
+      - name: Get the information about the undercloud cloud
+        os_client_config:
+          clouds:
+            - undercloud
+        failed_when: false
+
+      - set_fact:
+            cloud_credentials: "{{ (openstack.clouds[0] is defined and install.version|openstack_release > 11) |ternary('openstack --os-cloud undercloud','source ~/stackrc; openstack') }}"
+
       - name: test openstack environment
         delegate_to: "{{ groups.undercloud | first }}"
         become: true
         become_user: stack
-        shell: |
-            source ~/stackrc
-            openstack server list
+        shell: "{{ cloud_credentials }} server list"
         tags: skip_ansible_lint
 
   handlers:
@@ -196,19 +214,6 @@
 # need to setup shade node after restore
 - import_playbook: shade.yml
   tags: restore_shade
-
-# update clouds.yml basing on the starckrc file from the restored undercloud
-- name: update clouds.yml
-  hosts: undercloud
-  gather_facts: no
-  any_errors_fatal: true
-  tags: restore_clouds_yml
-  tasks:
-      - name: update clouds.yaml file
-        include_tasks: clouds.yml
-        vars:
-            auth_file_path: "/home/stack/stackrc"
-            cloudname: "undercloud"
 
 - name: print core/director puddle version
   hosts: undercloud

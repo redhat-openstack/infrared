@@ -52,13 +52,12 @@
       - name: register hosts to instack and configure boot
         shell: |
             set -eo pipefail
-            source ~/stackrc
 
             {% if install.version|default(undercloud_version) |openstack_release < 13 %}
-            openstack baremetal import --json {{ instack_file_path.stat.path }}
-            openstack baremetal configure boot
+            {{ cloud_credentials }} baremetal import --json {{ instack_file_path.stat.path }}
+            {{ cloud_credentials }} baremetal configure boot
             {% else %}
-            openstack overcloud node import --instance-boot-option=local {{ instack_file_path.stat.path }}
+            {{ cloud_credentials }} overcloud node import --instance-boot-option=local {{ instack_file_path.stat.path }}
             {% endif %}
         tags:
             - ironic
@@ -67,8 +66,8 @@
 
       - name: set the root device for baremetal nodes (with size hint)
         shell: |
+            NODE_UUID=$({{ cloud_credentials }} node list | grep -w {{ item }} | awk '{print $2}' )
             source ~/stackrc
-            NODE_UUID=$(ironic node-list | grep -w {{ item }} | awk '{print $2}' )
             ironic node-update ${NODE_UUID} add properties/root_device='{"size": {{ hostvars[item].disk  }} }'
         with_items: "{{ groups['overcloud_nodes'] | default([])}}"
         when: "'bmc' in groups"
@@ -84,11 +83,10 @@
 
       - name: start node introspection
         shell: |
-            source ~/stackrc
             {% if install.version|default(undercloud_version) |openstack_release < 13 %}
-            openstack baremetal introspection bulk start
+            {{ cloud_credentials }} baremetal introspection bulk start
             {% else %}
-            openstack overcloud node introspect --provide --all-manageable
+            {{ cloud_credentials }} overcloud node introspect --provide --all-manageable
             {% endif %}
         tags:
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
@@ -119,9 +117,8 @@
       # [2] https://github.com/openstack/ironic-inspector/commit/0ce5cdb7c8344e981a919aab136c4c2eba79d4a2
       - name: switch pxe_ssh to the pxe_impi
         shell: |
-            source ~/stackrc
-            NODE_UUID=$(ironic node-list | grep -w {{ item.key }} | awk '{print $2}' )
-            openstack baremetal node set $NODE_UUID \
+            NODE_UUID=$({{ cloud_credentials }} baremetal node list | grep -w {{ item.key }} | awk '{print $2}' )
+            {{ cloud_credentials }} baremetal node set $NODE_UUID \
                 --driver pxe_ipmitool \
                 --driver-info ipmi_username={{ install.vbmc.username }} \
                 --driver-info ipmi_address=::ffff:{{ vbmc_management_address }} \
