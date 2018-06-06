@@ -29,7 +29,7 @@ options:
     state:
         description:
             - Whether to install (C(install)) release, remove (C(uninstall)) or update
-            (C(update)) repo files.
+              (C(update)) repo files.
         choices: ['install', 'uninstall', 'update']
     version:
         description:
@@ -37,13 +37,13 @@ options:
     build_date:
         description:
             - specific puddle selection.
-            This can be a known-symlink (Y1, Z1, GA, etc.), or
-            a puddle date stamp in the form of YYYY-MM-DD.X
-            (X = puddle generation # that day)
+              This can be a known-symlink (Y1, Z1, GA, etc.), or
+              a puddle date stamp in the form of YYYY-MM-DD.X
+              (X = puddle generation # that day)
     director:
         description:
             - Install director packages. Applicable for OSP 7-9 only.
-            default: 'yes'
+        default: 'yes'
     target_directory:
         description:
             - target directory for repo files
@@ -61,17 +61,17 @@ options:
     poodle_type:
         description:
             - specifies the poodle to use. Should be used with
-             (C(enable_poodle_repos)) set to true. Implies (C(build)) value.
+              (C(enable_poodle_repos)) set to true. Implies (C(build)) value.
         choices: ['weekly_stable', 'daily-stable', 'smoke']
     pin_puddle:
         description:
             - pin puddle (dereference 'latest' links to prevent content
-            from changing)
+              from changing)
         default: 'yes'
     source_hostname:
         description:
             - the host name to override for download servers.
-            Ignores empty hostname.
+              Ignores empty hostname.
     enable_flea_repos:
         description:
             - specifieis whether the flea repos should be enables or not.
@@ -79,11 +79,12 @@ options:
     one_shot_mode:
         description:
             - One-shot mode.  Only install a specific repository;
-             do not install dependent repositories.
+              do not install dependent repositories.
         default: 'no'
     buildmods:
         description:
-            - List of flags that will be enabled. only works with pin puddle, flea-repos, unstable and cdn
+            - List of flags that will be enabled. only works with pin puddle,
+              flea-repos, unstable and cdn
 notes:
     - requires rhos-release version 1.0.23
 requirements: [ rhos-release ]
