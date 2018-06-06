@@ -35,6 +35,8 @@
       - name: "initialize temp variables"
         set_fact:
             selinux_problems: 0
+            # use list to convert selinux avc denials from all nodes into list of unique patterns from all of them together
+            selinux_problems_list: []
             segfault_problems: 0
             oom_killer_problems: 0
             counted_hosts: "{{ groups['all'] | difference( groups['local'] + (groups['tester'] | default([]) | difference(groups['controller']|default([]))) ) }}"
@@ -44,7 +46,8 @@
 
       - name: "add together all issue counts from all hosts except localhost and tester"
         set_fact:
-            selinux_problems: "{{ selinux_problems | int + ( hostvars[item]['selinux_problems_found'] | default([]) | length ) }}"
+            selinux_problems_list: "{{ selinux_problems_list + (hostvars[item]['selinux_problems_found'] | default([])) }}"
+            selinux_problems: "{{ selinux_problems_list | length }}"
             segfault_problems: "{{ segfault_problems | int + ( hostvars[item]['segfault_problems_found'] | default([]) | length ) }}"
             oom_killer_problems: "{{ oom_killer_problems | int + ( hostvars[item]['oom_killer_problems_found'] | default([]) | length ) }}"
         with_items: "{{ counted_hosts }}"
