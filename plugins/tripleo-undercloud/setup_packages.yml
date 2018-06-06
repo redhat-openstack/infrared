@@ -30,6 +30,7 @@
         when:
             - "install.cdn|default(False) or cdn_status.rc == 0"
             - "install.version|openstack_distribution == 'OSP'"
+            - not skip_release
         become: yes
 
       - role: rhos-release
