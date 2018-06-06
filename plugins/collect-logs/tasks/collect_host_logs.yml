@@ -94,6 +94,7 @@
 - shell: |
     if [[ -f "/etc/ceph/ceph.client.admin.keyring" || -f "/etc/ceph/ceph.keyring" || -f "/etc/ceph/keyring" || -f "/etc/ceph/keyring.bin" ]]; then
         ceph status &>/var/log/extra/ceph
+        ceph health detail &>>/var/log/extra/ceph
     fi
 
     if command -v docker && systemctl is-active docker; then
@@ -101,6 +102,7 @@
         for CID in $CEPH_CONTAINERS_IDS; do
             echo -e "\n===========================\n --- $CID\n" >> /var/log/extra/ceph
             docker exec $CID ceph status &>>/var/log/extra/ceph
+            docker exec $CID ceph health detail &>>/var/log/extra/ceph
         done
     fi
   ignore_errors: true
