@@ -31,8 +31,9 @@ ANSIBLE_METADATA = {'metadata_version': '1.0',
 DOCUMENTATION = '''
 ---
 module: redhat_subscription
-short_description: Manage registration and subscriptions to RHSM using the
-C(subscription-manager) command
+short_description: 
+    - Manage registration and subscriptions to RHSM using the 
+      C(subscription-manager) command
 description:
     - Manage registration and subscription to the Red Hat Subscription
       Management entitlement platform using the C(subscription-manager) command
@@ -46,14 +47,14 @@ requirements:
 options:
     state:
         description:
-          - whether to register and subscribe (C(present)), or unregister
-            (C(absent)) a system
-        required: false
+            - whether to register and subscribe (C(present)), or unregister
+              (C(absent)) a system
+        required: False
         choices: [ "present", "absent" ]
         default: "present"
     username:
         description:
-            - access.redhat.com or Sat6  username
+            - access.redhat.com or Sat6 username
         required: False
         default: null
     password:
@@ -119,8 +120,7 @@ options:
         version_added: "2.1"
     consumer_id:
         description:
-            - |
-              References an existing consumer ID to resume using a previous registration
+            - References an existing consumer ID to resume using a previous registration
               for this system. If the  system's identity certificate is lost or corrupted,
               this option allows it to resume using its previous identity and subscriptions.
               The default is to not specify a consumer ID so a new ID is created.
@@ -129,7 +129,7 @@ options:
         version_added: "2.1"
     force_register:
         description:
-            -  Register the system even if it is already registered
+            - Register the system even if it is already registered
         required: False
         default: False
         version_added: "2.2"
