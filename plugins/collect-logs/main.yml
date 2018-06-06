@@ -39,8 +39,9 @@
             selinux_problems_list: []
             segfault_problems: 0
             oom_killer_problems: 0
-            counted_hosts: "{{ groups['all'] | difference( groups['local'] + (groups['tester'] | default([]) | difference(groups['controller']|default([]))) ) }}"
-
+            # aggregate from all hosts, excluding any nonproduct ones
+            # non product is localhost and tester nodes (unless they are also UC or controller too)
+            counted_hosts: "{{ groups['all'] | difference( groups['local'] + (groups['tester'] | default([]) | difference(groups['undercloud']|default([]) + groups['controller']|default([]))) ) }}"
       - debug:
             msg: "counting issues from hosts: {{ counted_hosts }}"
 
