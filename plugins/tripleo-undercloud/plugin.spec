@@ -203,7 +203,8 @@ subparsers:
                       type: Bool
                       help: |
                           specifies whether the rhos/rdo-release tools should
-                          be used to install tripleo packages.
+                          be used to install tripleo packages. This flag also disables installation of the extra cdn
+                          repositories.
                   skip-remove-repo:
                       type: Value
                       action: append
