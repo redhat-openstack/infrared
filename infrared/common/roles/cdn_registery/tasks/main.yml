@@ -4,14 +4,16 @@
   # no need to register if machine already subscribed
   when: "cdn_args_file != ''"
 
-- name: unregister from all repos
-  command: subscription-manager repos --disable=*
+- block:
+    - name: unregister from all repos
+      command: subscription-manager repos --disable=*
 
-- name: register to openstack repos
-  vars:
-      repo_list: "{{ subscriptions.common + subscriptions[install_version|openstack_release] }}"
-      modified_list: "{{ repo_list | map('regex_replace', '(.*)', '--enable=\\1') | join(' ') }}"
-  command: "subscription-manager repos {{ modified_list }}"
+    - name: register to openstack repos
+      vars:
+          repo_list: "{{ subscriptions.common + subscriptions[install_version|openstack_release] }}"
+          modified_list: "{{ repo_list | map('regex_replace', '(.*)', '--enable=\\1') | join(' ') }}"
+      command: "subscription-manager repos {{ modified_list }}"
+  when: not cdn_skip_openstack_repos
 
 - name: refresh yum cache
   package:
@@ -23,3 +25,4 @@
 - name: repolist
   command: "yum -d 7 repolist"
   become: true
+
