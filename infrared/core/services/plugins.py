@@ -14,7 +14,7 @@ try:
 except ImportError:
     from pip import main as pip_main
 import yaml
-import urllib2
+import urllib3
 
 from infrared import PLUGINS_REGISTRY
 from infrared.core.utils import logger
@@ -568,21 +568,22 @@ class InfraredPluginManager(object):
         try:
             if not os.path.exists(plugins_registry):
                 # if path was not found locally attempt to download it
-                urllib_ret = urllib2.urlopen(plugins_registry)
-                if urllib_ret.code is not 200:
+                http = urllib3.PoolManager()
+                urllib_ret = http.request('GET', plugins_registry)
+                if urllib_ret.status is not 200:
                     # make sure we received OK status code from url
                     raise IRFailedToImportPlugins(
                         'Got unexpected returned code ({}) from registry '
-                        'URL ({})'.format(urllib_ret.code, plugins_registry))
+                        'URL ({})'.format(urllib_ret.status, plugins_registry))
                 # load registry from the url
                 plugins_registry = \
-                    RegistryValidator.validate_from_content(urllib_ret.read())
+                    RegistryValidator.validate_from_content(urllib_ret.data)
             else:
                 # validate from local path
                 plugins_registry = \
                     RegistryValidator.validate_from_file(plugins_registry)
 
-        except urllib2.HTTPError:
+        except urllib3.exceptions.HTTPError:
             raise IRFailedToImportPlugins(
                 'Registry URL not found - ({}) '.format(plugins_registry))
 

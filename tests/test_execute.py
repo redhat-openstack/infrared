@@ -1,4 +1,4 @@
-import ConfigParser
+from six.moves import configparser
 from os import path
 
 import pytest
@@ -449,7 +449,7 @@ def test_nested_value_CLI_with_answers_file(spec_fixture, tmpdir,
     mytempdir = tmpdir.mkdir("tmp")
     dry_output = mytempdir.join("dry_output.yml")
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.add_section('example')
     config.set('example', 'foo-bar', 'from_answers_file')
 
@@ -502,7 +502,7 @@ def test_generate_answers_file(spec_fixture, workspace_manager_fixture,  # noqa
     return_value = spec_manager.run_specs(args=input_string)
     assert return_value is None
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(str(answers_file))
     assert config.get("example", "foo-bar") == "default string"
 
