@@ -10,7 +10,7 @@ import abc
 import os
 import re
 import sys
-import ConfigParser
+from six.moves import configparser
 from copy import deepcopy
 from six import string_types
 import yaml
@@ -260,7 +260,7 @@ class ReadAnswersAction(argparse.Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
         # reading file
-        _config = ConfigParser.ConfigParser()
+        _config = configparser.ConfigParser()
         with open(values) as fd:
             _config.readfp(fd)
         # todo(obaranov) add different file types loaders

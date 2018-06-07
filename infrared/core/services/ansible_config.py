@@ -1,6 +1,6 @@
 import os
 from collections import OrderedDict
-from ConfigParser import ConfigParser
+from six.moves import configparser
 
 from infrared.core.utils import logger
 from infrared.core.utils.validators import AnsibleConfigValidator
@@ -66,7 +66,7 @@ class AnsibleConfigManager(object):
                     "default data".format(self.ansible_config_path))
 
         with open(self.ansible_config_path, 'w') as fp:
-            config = ConfigParser()
+            config = configparser.ConfigParser()
 
             for section, section_data in DEFAULT_ANSIBLE_SETTINGS.items():
                 if not config.has_section(section):

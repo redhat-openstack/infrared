@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import json
 from pbr import version
@@ -44,7 +46,7 @@ from infrared.core.utils import exceptions  # noqa
 from infrared.core.utils import logger  # noqa
 from infrared.core.utils import interactive_ssh  # noqa
 from infrared.core.utils.print_formats import fancy_table  # noqa
-import bash_completers as completers  # noqa
+import infrared.bash_completers as completers  # noqa
 
 LOG = logger.LOG
 
@@ -172,17 +174,17 @@ class WorkspaceManagerSpec(api.SpecObject):
             self._fetch_inventory(pargs.name)
         elif subcommand == 'list':
             if pargs.print_active:
-                print self.workspace_manager.get_active_workspace().name
+                print(self.workspace_manager.get_active_workspace().name)
             else:
                 workspaces = self.workspace_manager.list()
                 headers = ("Name", "Active")
                 workspaces = sorted([workspace.name for workspace in
                                      self.workspace_manager.list()])
-                print fancy_table(
+                print(fancy_table(
                     headers,
                     *[(workspace, ' ' * (len(headers[-1]) / 2) + "*" if
                         self.workspace_manager.is_active(workspace) else "")
-                      for workspace in workspaces])
+                      for workspace in workspaces]))
         elif subcommand == 'delete':
             for workspace_name in pargs.name:
                 self.workspace_manager.delete(workspace_name)
@@ -201,15 +203,15 @@ class WorkspaceManagerSpec(api.SpecObject):
                 nodes_dict = [
                     {'name': name, 'address': address, 'groups': groups}
                     for name, address, groups in nodes]
-                print json.dumps({'nodes': nodes_dict})
+                print(json.dumps({'nodes': nodes_dict}))
             else:
-                print fancy_table(
+                print(fancy_table(
                     ("Name", "Address", "Groups"),
-                    *[node_name for node_name in nodes])
+                    *[node_name for node_name in nodes]))
         elif subcommand == "group-list":
             groups = self.workspace_manager.group_list(pargs.name)
-            print fancy_table(
-                ("Name", "Nodes"), *[group_name for group_name in groups])
+            print(fancy_table(
+                ("Name", "Nodes"), *[group_name for group_name in groups]))
 
     def _create_workspace(self, name):
         """Creates a workspace
@@ -242,7 +244,7 @@ class WorkspaceManagerSpec(api.SpecObject):
             wkspc = self.workspace_manager.get_active_workspace()
         if not wkspc:
             raise exceptions.IRNoActiveWorkspaceFound()
-        print wkspc.inventory
+        print(wkspc.inventory)
 
 
 class PluginManagerSpec(api.SpecObject):
@@ -429,7 +431,7 @@ class PluginManagerSpec(api.SpecObject):
         if print_version:
             table_headers.append("Version")
 
-        print fancy_table(table_headers, *table_rows)
+        print(fancy_table(table_headers, *table_rows))
 
     def _search_plugins(self):
         """

@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import datetime
 import os
 import fileinput
@@ -6,7 +8,7 @@ import re
 import tarfile
 import tempfile
 import time
-import urllib2
+import urllib3
 
 from infrared.core.utils import exceptions, logger
 
@@ -127,7 +129,7 @@ class Workspace(object):
         for line in fileinput.input(real_inv, inplace=True):
             new_line = re.sub(self.path_placeholder, self.path,
                               line.rstrip())
-            print new_line
+            print(new_line)
 
     def _purge_paths(self, path):
         """replace path in inventory with placeholders.
@@ -143,7 +145,7 @@ class Workspace(object):
             new_line = re.sub(path,
                               self.path_placeholder,
                               line.rstrip())
-            print new_line
+            print(new_line)
 
     def _copy_outside_keys(self):
         """Copies SSH keys into the workspace's directory
@@ -430,16 +432,17 @@ class WorkspaceManager(object):
         original_src = workspace_src
         try:
             if not os.path.exists(workspace_src):
-                urllib_ret = urllib2.urlopen(workspace_src)
-                if urllib_ret.code is not 200:
+                http = urllib3.PoolManager()
+                urllib_ret = http.request('GET', workspace_src)
+                if urllib_ret.status is not 200:
                     raise exceptions.IRFailedToImportWorkspace(
                         'Got unexpected returned code ({}) from workspace '
-                        'URL ({})'.format(urllib_ret.code, workspace_src))
+                        'URL ({})'.format(urllib_ret.status, workspace_src))
                 tmp_dir = tempfile.mkdtemp()
                 workspace_src = \
                     os.path.join(tmp_dir, workspace_src.split('/')[-1])
                 with open(workspace_src, 'w') as f:
-                    f.write(urllib_ret.read())
+                    f.write(urllib_ret.data)
 
             if workspace_name is None:
                 basename = os.path.basename(workspace_src)
@@ -453,7 +456,7 @@ class WorkspaceManager(object):
             with tarfile.open(workspace_src) as tar:
                 tar.extractall(path=new_workspace.path)
 
-        except urllib2.HTTPError:
+        except urllib3.exceptions.HTTPError:
             raise exceptions.IRFailedToImportWorkspace(
                 'Workspace URL not found - ({}) '.format(workspace_src))
         except tarfile.ReadError as e:
@@ -466,8 +469,6 @@ class WorkspaceManager(object):
                            ' please make sure to provide its type'
             raise exceptions.IRFailedToImportWorkspace(err_msg)
         finally:
-            if 'urllib_ret' in locals():
-                urllib_ret.close()
             if 'tmp_dir' in locals():
                 shutil.rmtree(tmp_dir)
 

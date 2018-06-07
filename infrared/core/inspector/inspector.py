@@ -1,5 +1,5 @@
 import collections
-import ConfigParser
+from six.moves import configparser
 import yaml
 import os
 
@@ -8,7 +8,7 @@ from infrared.core.utils import dict_utils
 from infrared.core.utils import exceptions
 from infrared.core.cli.cli import CliParser
 from infrared.core.cli.cli import COMPLEX_TYPES
-import helper
+from infrared.core.inspector import helper
 
 LOG = logger.LOG
 
@@ -179,7 +179,7 @@ class SpecParser(object):
                     'action', '') == 'generate-answers':
                 options_to_save = \
                     self.spec_helper.get_parser_option_specs(parser_name)
-                out_answers = ConfigParser.ConfigParser(allow_no_value=True)
+                out_answers = configparser.ConfigParser(allow_no_value=True)
 
                 if not out_answers.has_section(parser_name):
                     out_answers.add_section(parser_name)
