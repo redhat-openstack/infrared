@@ -1,25 +1,25 @@
-- name: copy the enable-tls.yaml file locally
-  vars:
-      template_dir: "{{ install.heat.templates.basedir }}/environments{{ ('/ssl' if install.version|default(undercloud_version)|openstack_release > 11 else '') }}"
-  copy:
-      src: "{{ template_dir}}/{{ item }}"
-      dest: "{{ template_base }}/{{ item }}"
-      remote_src: yes
-  with_items:
-        - enable-tls.yaml
-        - inject-trust-anchor.yaml
-  register: copy_templates
-
-- name: adjust the reference of template dir
-  vars:
-      replace_with: "{{ ( (item.src|dirname|dirname|dirname) if install.version|default(undercloud_version)|openstack_release > 11 else (item.src|dirname|dirname) ) }}"
-      regex: "{{ ('\\.\\./\\.\\.' if install.version|default(undercloud_version)|openstack_release > 11 else '\\.\\.' ) }}"
-  replace:
-      dest: "{{ item.dest }}"
-      replace: "{{ replace_with }}"
-      regexp: "{{ regex }}"
-  with_items: "{{ copy_templates.results }}"
-
+#- name: copy the enable-tls.yaml file locally
+#  vars:
+#      template_dir: "{{ install.heat.templates.basedir }}/environments{{ ('/ssl' if install.version|default(undercloud_version)|openstack_release > 11 else '') }}"
+#  copy:
+#      src: "{{ template_dir}}/{{ item }}"
+#      dest: "{{ template_base }}/{{ item }}"
+#      remote_src: yes
+#  with_items:
+#        - enable-tls.yaml
+#        - inject-trust-anchor.yaml
+#  register: copy_templates
+#
+#- name: adjust the reference of template dir
+#  vars:
+#      replace_with: "{{ ( (item.src|dirname|dirname|dirname) if install.version|default(undercloud_version)|openstack_release > 11 else (item.src|dirname|dirname) ) }}"
+#      regex: "{{ ('\\.\\./\\.\\.' if install.version|default(undercloud_version)|openstack_release > 11 else '\\.\\.' ) }}"
+#  replace:
+#      dest: "{{ item.dest }}"
+#      replace: "{{ replace_with }}"
+#      regexp: "{{ regex }}"
+#  with_items: "{{ copy_templates.results }}"
+#
 - name: discover undercloud ssl
   command: "grep -Fq OS_AUTH_URL=https {{ openstackrc }}"
   vars:
@@ -70,15 +70,15 @@
 
 - name: sign request with undercloud CA
   vars:
-      undercloud_pkey: ~/undercloud-privkey.pem
-      underdloud_cacert: /etc/pki/ca-trust/source/anchors/undercloud-cacert.pem
+      undercloud_pkey: "{% if install.version|default(undercloud_version)|openstack_release<=13 %} ~/undercloud-privkey.pem {% else %} /etc/pki/tls/private/undercloud-front.key {% endif %}"
+      undercloud_cacert: "{% if install.version|default(undercloud_version)|openstack_release<=13 %} /etc/pki/ca-trust/source/anchors/undercloud-cacert.pem {% else %} /etc/pki/tls/certs/undercloud-front.crt {% endif %}"
   command: >
       openssl x509 -req
       -in {{ template_base }}/overcloud-cacert.pem -days 365
-      -CA {{ underdloud_cacert }}
+      -CA {{ undercloud_cacert }}
       -CAkey {{ undercloud_pkey }}
       -set_serial 01
-      -out {{ template_base }}/overcloud-cacert.pem
+      -out {{ template_base }}/overcloud-cacert2.pem
   when: undercloud_ssl.rc == 0
 
 - name: update the tls template
