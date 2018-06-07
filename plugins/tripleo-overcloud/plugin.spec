@@ -33,6 +33,11 @@ subparsers:
                       help: Specifies whether we should run pre install tasks
                       default: False
 
+                  delete:
+                      type: Bool
+                      help: Deletes existing Overcloud
+                      default: False
+
             - title: Containers
               options:
                   containers:

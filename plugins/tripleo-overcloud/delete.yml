@@ -1,0 +1,16 @@
+- name: Delete existing Overcloud
+  hosts: undercloud
+  gather_facts: yes
+  tags: delete
+  any_errors_fatal: true
+  tasks:
+      - name: Show details about existing Overcloud
+        shell: |
+            source ~/stackrc
+            openstack stack list
+            openstack stack show overcloud > openstack_stack_show_overcloud.log
+
+      - name: Delete existing overcloud Heat stack
+        shell: |
+            source ~/stackrc
+            openstack stack delete overcloud --yes --wait

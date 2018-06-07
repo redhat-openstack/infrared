@@ -1,3 +1,9 @@
+- name: Delete existing Overcloud
+  import_playbook: "{{ delete_overcloud | default('delete.yml') }}"
+  when: install.delete|default('')
+  tags:
+      - delete
+
 - name: Perform pre install tasks
   import_playbook: "{{ overcloud_pre | default('pre.yml') }}"
   when: install.pre|default('')
