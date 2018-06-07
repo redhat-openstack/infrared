@@ -1,14 +1,15 @@
+from __future__ import print_function
 import os
 
 
 def copy_system_selinux(force=True):
+    import sys
     try:
-        print("Try import...")
+        print("Try import...", file=sys.stderr)
         import selinux
     except ImportError as e:
         new_error = type(e)(e.message + ". Check that 'libselinux-python' is "
                                         "installed")
-        import sys
         import shutil
         from distutils import sysconfig
 
