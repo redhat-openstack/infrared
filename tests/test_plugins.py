@@ -1,4 +1,4 @@
-import ConfigParser
+from six.moves import configparser
 import os
 import git
 import yaml
@@ -77,7 +77,7 @@ def plugin_manager_fixture(plugins_conf_fixture):
         plugins_conf_dict.update(SUPPORTED_TYPES_DICT)
 
         with lp_file.open(mode='w') as fp:
-            config = ConfigParser.ConfigParser()
+            config = configparser.ConfigParser()
             for section, section_data in plugins_conf_dict.items():
                 config.add_section(section)
                 for option, value in section_data.items():
@@ -172,7 +172,7 @@ def plugin_in_conf(plugins_conf, plugin_type, plugin_name):
     :param plugin_name: The Plugin's name
     :return: True if plugin is in the conf file, otherwise False
     """
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     with open(plugins_conf) as fp:
         config.readfp(fp)
 
@@ -629,7 +629,7 @@ def validate_plugins_presence_in_conf(
         "'absent' accept only Boolean values, got: '{}'".format(str(present))
 
     with open(plugin_manager.config_file) as config_file:
-        plugins_cfg = ConfigParser.ConfigParser()
+        plugins_cfg = configparser.ConfigParser()
         plugins_cfg.readfp(config_file)
 
         for plugin_path in plugins_dict.values():

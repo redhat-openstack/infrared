@@ -1,6 +1,6 @@
 from infrared.core.utils.exceptions import IRValidatorException
 from infrared.core.utils.logger import LOG as logger
-from ConfigParser import RawConfigParser
+from six.moves import configparser
 
 import jsonschema
 import yaml
@@ -209,7 +209,7 @@ class AnsibleConfigValidator(Validator):
 
     @classmethod
     def validate_from_file(cls, yaml_file=None):
-        config = RawConfigParser()
+        config = configparser.RawConfigParser()
         config.read(yaml_file)
         config_dict = cls._convert_config_to_dict(config)
 
