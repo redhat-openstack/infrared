@@ -14,16 +14,26 @@
   tags: network
   when: network.stat.exists
 
-- name: Setup the overcloud ssl
+- name: Setup the overcloud ssl for releases >= OSPd14
+  include_tasks: ssl_ge14.yml
+  tags: overcloud_ssl
+  when:
+      - install.overcloud.ssl
+      - install.version|default(undercloud_version)|openstack_release >= 14
+
+- name: Setup the overcloud ssl legacy way
   include_tasks: ssl.yml
   tags: overcloud_ssl
-  when: install.overcloud.ssl
+  when:
+      - install.overcloud.ssl
+      - install.version|default(undercloud_version)|openstack_release < 14
 
 - name: Trust to undercloud cert
   include_tasks: trust_uc.yml
   when:
       - not install.overcloud.ssl
       - install.version|default(undercloud_version)|openstack_release >= 12
+      - install.version|default(undercloud_version)|openstack_release < 14
       - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
 - name: Assigning specific node ids
