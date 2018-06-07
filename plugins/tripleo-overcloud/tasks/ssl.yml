@@ -70,12 +70,12 @@
 
 - name: sign request with undercloud CA
   vars:
-      undercloud_pkey: ~/undercloud-privkey.pem
-      underdloud_cacert: /etc/pki/ca-trust/source/anchors/undercloud-cacert.pem
+      undercloud_pkey: "{% if install.version|default(undercloud_version)|openstack_release<=13 %} ~/undercloud-privkey.pem {% else %} /etc/pki/tls/private/undercloud-front.key {% endif %}"
+      undercloud_cacert: "{% if install.version|default(undercloud_version)|openstack_release<=13 %} /etc/pki/ca-trust/source/anchors/undercloud-cacert.pem {% else %} /etc/pki/tls/certs/undercloud-front.crt {% endif %}"
   command: >
-      openssl x509 -req
+      sudo openssl x509 -req
       -in {{ template_base }}/overcloud-cacert.pem -days 365
-      -CA {{ underdloud_cacert }}
+      -CA {{ undercloud_cacert }}
       -CAkey {{ undercloud_pkey }}
       -set_serial 01
       -out {{ template_base }}/overcloud-cacert.pem
@@ -103,7 +103,9 @@
   register: oc_cacert
 
 - name: register the CA certificate
-  command: cat /etc/pki/ca-trust/source/anchors/undercloud-cacert.pem
+  vars:
+      undercloud_cacert: "{% if install.version|default(undercloud_version)|openstack_release<=13 %} /etc/pki/ca-trust/source/anchors/undercloud-cacert.pem {% else %} /etc/pki/tls/certs/undercloud-front.crt {% endif %}"
+  command: sudo cat {{ undercloud_cacert }}
   register: uc_cacert
   when: undercloud_ssl.rc == 0
 
