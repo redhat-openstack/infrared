@@ -1,4 +1,4 @@
-import ConfigParser
+from six.moves import configparser
 import os
 import git
 import yaml
@@ -77,7 +77,7 @@ def plugin_manager_fixture(plugins_conf_fixture):
         plugins_conf_dict.update(SUPPORTED_TYPES_DICT)
 
         with lp_file.open(mode='w') as fp:
-            config = ConfigParser.ConfigParser()
+            config = configparser.ConfigParser()
             for section, section_data in plugins_conf_dict.items():
                 config.add_section(section)
                 for option, value in section_data.items():

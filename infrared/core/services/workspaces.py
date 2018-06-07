@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import datetime
 import os
 import fileinput
@@ -127,7 +129,7 @@ class Workspace(object):
         for line in fileinput.input(real_inv, inplace=True):
             new_line = re.sub(self.path_placeholder, self.path,
                               line.rstrip())
-            print new_line
+            print(new_line)
 
     def _purge_paths(self, path):
         """replace path in inventory with placeholders.
@@ -143,7 +145,7 @@ class Workspace(object):
             new_line = re.sub(path,
                               self.path_placeholder,
                               line.rstrip())
-            print new_line
+            print(new_line)
 
     def _copy_outside_keys(self):
         """Copies SSH keys into the workspace's directory
