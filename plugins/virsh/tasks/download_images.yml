@@ -48,3 +48,47 @@
           --selinux-relabel
   with_items: "{{ download_image_result.results }}"
   when: item is changed
+
+- name: set path of this run's base image (if no image customisations requested)
+  set_fact:
+      thisrun_image_path: "{{ download_image_result.results[0].dest }}"
+  when: provision.get('images', {}).get('packages', {}) == {}
+
+- block:
+    - name: set run's datetime fact
+      set_fact:
+          run_datetime: "{{ ansible_date_time.year + ansible_date_time.month + ansible_date_time.day +
+           '_' + ansible_date_time.hour + ansible_date_time.minute + ansible_date_time.second }}"
+
+    - name: set path of this run's base image (if image customisations requested)
+      set_fact:
+          thisrun_image_path: "{{ download_image_result.results[0].dest | dirname }}/{{ (download_image_result.results[0].dest | basename | splitext)[0] }}_{{ run_datetime }}{{ (download_image_result.results[0].dest | basename | splitext)[1] }}"
+
+    - name: check whether the base image for this run already exists
+      stat:
+          path: "{{ thisrun_image_path }}"
+      register: thisrun_image_path_stat
+
+    - name: 'create a base image file used only by this run (required for customisations, i.e.: image-packages)'
+      copy:
+        remote_src: True
+        src: "{{ download_image_result.results[0].dest }}"
+        dest: "{{ thisrun_image_path }}"
+      when: thisrun_image_path_stat.stat.exists == false
+
+  when: provision.get('images', {}).get('packages', {}) != {}
+
+- name: Install packages in the base image for this run
+  command: "virt-customize -a {{ thisrun_image_path }} --install {{ provision.images.packages }} --selinux-relabel"
+  register: images_packages_run
+  # we don't want to fail here, we want to get to next step to remove a left over image file
+  ignore_errors: True
+  when:
+      - provision.get('images', {}).get('packages', {}) != {}
+      - thisrun_image_path_stat.stat.exists == false
+
+- name: remove this run's base image if something went wrong
+  file:
+      path: "{{ thisrun_image_path }}"
+      state: absent
+  when: images_packages_run.failed is defined and images_packages_run.failed == true

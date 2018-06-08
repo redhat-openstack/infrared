@@ -58,6 +58,12 @@ subparsers:
                         A path to the image pool. Default is Storage Pool from libvirt
                       default: "/var/lib/libvirt/images"
 
+                  images-packages:
+                      type: Value
+                      help: |
+                          List of packages to install separated by commas.
+                          Example: vim,git,
+
             - title: topology
               options:
                   prefix:
@@ -66,7 +72,7 @@ subparsers:
                           Prefix VMs and networks names with this value.
                           Designed for cleanup improvement (clean only prefixed resources) and not for
                           several deployments on the same hypervisor.
-                          Emty prefix on cleanup stage will cause deletion of all resources.
+                          Empty prefix on cleanup stage will cause deletion of all resources.
                       default: ir-
 
                   # fixme(yfried): add support for user files
@@ -90,7 +96,7 @@ subparsers:
                       default: cloud-user
                       help: |
                           Non-root username with sudo privileges that will be created on nodes.
-                          Will be use as main ssh user subsequently.
+                          Will be used as main ssh user subsequently.
 
                   topology-extend:
                       type: Bool

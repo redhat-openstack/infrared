@@ -65,7 +65,6 @@
             {% for num in range(node_start_index|int, amount|int, 1) %}
             {% for disk_name, disk_values in topology_node.disks.iteritems() %}
             {% set node_image = '{0}-{1}-{2}.qcow2'.format(topology_node.name, num, disk_name) %}
-            {% set image_name = (disk_values.import_url|default('') or node_dict.import_url|default('') or url) | basename %}
             {% if not disk_values.import_url %}
 
             # create empty disk
@@ -74,7 +73,7 @@
             {% if disk_name == 'disk1' and topology_node.deploy_os|default(True) -%}
             # expand (copy-content) into new image in case of system disk
             # virt-resize needs target file with expected size to already exists
-            virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
+            virt-resize --expand /dev/sda1 {{ thisrun_image_path }} {{ disk_pool }}/{{ node_image }}
             # incjet DEFROUT to file and set it on for external network only
             virt-customize -a {{ disk_pool }}/{{ node_image }} \
             {% for interface in topology_node.interfaces %}
@@ -94,7 +93,7 @@
             # todo(yfried): use builtin module for chown
             {% else %}{# else import_url #}
             # in case of import simply copy that image to use as a disk
-            cp -rf {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
+            cp -rf {{ thisrun_image_path }} {{ disk_pool }}/{{ node_image }}
             {% endif %}{# endif not import_url #}
             chown qemu:qemu {{ disk_pool }}/{{ node_image }}
             {% endfor %}{# endfor vm disks #}
@@ -109,5 +108,10 @@
       - name: save disks jids
         set_fact:
             async_disks: "{{ async_disks|default([]) + [vm_disks.ansible_job_id] }}"
+
+      - name: remove this run's base image after creating disks of nodes
+        file:
+            path: "{{ thisrun_image_path }}"
+            state: absent
 
   when: topology_node.disks|count > 0
