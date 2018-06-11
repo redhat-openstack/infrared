@@ -16,7 +16,7 @@
       # use original basename explicitly, otherwise, "force" doesn't work
       dest: "{{ base_image_path }}/{{ source | basename }}"
       # Download new images only.
-      force: no
+      force: "{{ item.value.force|default({}).image|default({}).download|default(false)|bool or provision.force.image.download }}"
       validate_certs: "{{ url.startswith('https://url.corp.redhat.com/') | ternary(false, omit)}}"
       owner: qemu
       group: qemu
@@ -27,6 +27,9 @@
   delay: 5
   with_dict: "{{ topology_node.disks }}"
   when: topology_node.disks|count > 0
+
+- debug:
+    var: download_image_result
 
 - name: adjust base image for this run
   shell: |

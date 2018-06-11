@@ -52,6 +52,13 @@ subparsers:
                         RHEL 7.5 is unavailble for OSP 7
                       default: https://url.corp.redhat.com/rhel-guest-image-7-5-146-x86-64-qcow2
 
+                  force-image-download:
+                      type: Bool
+                      help: |
+                        Forces downloading the image.
+                        If 'False' (default), the image won't be downloaded if one already exists on the destination
+                      default: False
+
                   disk-pool:
                       type: Value
                       help: |
