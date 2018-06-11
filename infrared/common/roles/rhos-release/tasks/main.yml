@@ -165,6 +165,10 @@
       update_cache: yes
   become: true
 
+- name: disable helper rhos-release mirrors
+  shell: yum-config-manager --disable rhos-release*
+  become: true
+
 - name: repolist
   command: "yum -d 7 repolist"
   become: true
