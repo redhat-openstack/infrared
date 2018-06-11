@@ -13,6 +13,7 @@
           > docker-ha.yaml
           find . -exec sed -i -e "s|docker/services/collectd.yaml|puppet/services/metrics/collectd.yaml|g" {} \;
           find . -exec sed -e "s|docker/services/sensu-client.yaml|puppet/services/monitoring/sensu-client.yaml|g" -i {} \;
+          find . -exec sed -e "s|docker/services/ceph-ansible/|puppet/services/|g" -i {} \;
           find . -exec sed -e "s|docker/services|puppet/services|g" -i {} \;
         when:
           - install.containers|bool == false
