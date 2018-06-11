@@ -175,6 +175,12 @@
       state: directory
       dest: /var/log/extra/mysqldump
 
+- name: stop dstat service if present
+  service:
+      name: dstat
+      state: stopped
+  ignore_errors: true
+
 - name: backup the mysql databases
   shell: "echo show databases\\;| mysql | awk 'BEGIN {a=0}; { if (a>0) print $1; a=a+1}' | while read a; do echo Dump $a..; mysqldump --lock-all-tables \"$a\" | xz >\"/var/log/extra/mysqldump/$a.sql.xz\"; done"
   ignore_errors: true
