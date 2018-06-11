@@ -96,7 +96,14 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::NeutronSfcApi{% endif %}"
         - OS::TripleO::Services::NeutronCorePlugin
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronL2gwApi{% endif %}"
+        - OS::TripleO::Services::NovaApi
+        - OS::TripleO::Services::NovaConductor
+        - OS::TripleO::Services::NovaConsoleauth
         - OS::TripleO::Services::NovaIronic
+        - OS::TripleO::Services::NovaMetadata
+        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
+        - OS::TripleO::Services::NovaScheduler
+        - OS::TripleO::Services::NovaVncProxy
         - OS::TripleO::Services::Ntp
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OctaviaApi{% endif %}"
