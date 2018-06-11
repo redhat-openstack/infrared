@@ -13,7 +13,7 @@ retries=3
 while [[ "$mirror_status" = "unreachable" && $retries -gt 0 ]]; do
     retries=$(( $retries - 1 ))
     mirror_status="$(curl --max-time 3 "http://${mirror}/status" || echo "unreachable")"
-    [[ "$mirror_status" = "unreachable" ]] && echo "WARNING: mirror not reached, remaining $retries attempts ... "
+    [[ "$mirror_status" = "unreachable" ]] && echo "WARNING: mirror not reached, remaining $retries attempts ... " >&2
 done
 
 echo "Mirror ${mirror} status: '$mirror_status'" >&2
