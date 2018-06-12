@@ -1,5 +1,6 @@
 - name: Placeholder for the undercloud pre-tasks
   hosts: undercloud
+  become: true
   gather_facts: yes
   tags: init
   any_errors_fatal: true
@@ -9,9 +10,7 @@
              name: "{{ install.undercloud.packages }}"
              state: present
          when:
-             - install.undercloud is defined
-             - install.undercloud.packages
-         become_method: sudo
+             - install.undercloud.packages is defined
          #(skatlapa): Check if the below are needed against any_errors_fatal
          #register: yum_result
          #failed_when: "'Nothing to do' in yum_result.stderr"
