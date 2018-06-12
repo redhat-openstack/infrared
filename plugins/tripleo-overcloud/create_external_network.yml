@@ -25,7 +25,7 @@
             test -f {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3 && \
                 source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3 || \
                 source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc
-            nova service-list | grep nova-scheduler | awk '{print $6}' | head -1
+            openstack compute service list | grep nova-scheduler | awk '{print $6}' | head -1
         register: nova_host
 
       - name: server found
@@ -99,7 +99,7 @@
             test -f {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3 && \
                 source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3 || \
                 source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc
-            neutron net-show {{ net_create.network.name }}
+            openstack network show {{ net_create.network.name }}
         tags: skip_ansible_lint
 
       # OSPD "External*" data can't be used to discover subnet details because:
@@ -130,5 +130,5 @@
             test -f {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3 && \
                 source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3 || \
                 source {{ ansible_user_dir }}/{{ install.overcloud.stack }}rc
-            neutron subnet-show {{ subnet_create.subnet.name }}
+            openstack subnet show {{ subnet_create.subnet.name }}
         tags: skip_ansible_lint

@@ -29,7 +29,7 @@
                 source {{ overcloud_rc }}
                 openstack server list --host {{ compute_fqdn.stdout }} -f json | jq -r -c '.[] | select(.Status | contains("ACTIVE") or contains("PAUSED")) | .Name'
             register: compute_instances
-
+          #TODO(vgriner): change nova host-evacuate-live to openstackclient command
           - name: Quiesce compute node
             shell: |
                 source {{ overcloud_rc }}
@@ -289,7 +289,7 @@
       - name: migrate instance back to {{ compute_fqdn.stdout }}
         shell: |
           source {{ overcloud_rc }}
-          nova live-migration {% if 'ceph' not in storage_backend.stdout %}--block-migrate{% endif %} {{ item }} {{ compute_fqdn.stdout }}
+          openstack server migrate {{ item }}  --live {{ compute_fqdn.stdout }} {% if 'ceph' not in storage_backend.stdout %}--block-migrate{% endif %}
           openstack server show {{ item }}  -f json | jq -r -c '. | .["OS-EXT-SRV-ATTR:host"]'
         register: instance_host
         until: instance_host.stdout.find(compute_fqdn.stdout) > -1

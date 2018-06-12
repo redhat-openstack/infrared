@@ -39,7 +39,7 @@
       - name: Workarond for BZ #1317312
         shell: |
             source ~/stackrc
-            nova flavor-delete {{ item[0] }}
+            openstack flavor delete {{ item[0] }}
         tags: skip_ansible_lint
         when: "'public endpoint for messaging service not found' in item[1].stderr "
         with_together:
@@ -72,7 +72,7 @@
       - name: Set baremetal capability for OSPd7 nodes as it must be done explicitely
         shell: |
             source ~/stackrc
-            for node in `ironic node-list | awk '{print $2}' | grep -v "\(ID\|^$\)"`; do ironic node-update $node add properties/capabilities=profile:baremetal,boot_option:local; done
+            for node in `openstack baremetal node list | awk '{print $2}' | grep -v "\(ID\|^$\)"`; do openstack baremetal node set $node --property capabilities=profile:'baremetal',boot_option:local; done
         tags: skip_ansible_lint
         when:
             - install.version|default(undercloud_version)|openstack_release == 7
@@ -115,7 +115,7 @@
             - name: get the node UUID
               shell: |
                   source ~/stackrc
-                  ironic node-list | grep -w {{ item.name | default(item) }} | awk '{print $2}'
+                  openstack baremetal node list | grep -w {{ item.name | default(item) }} | awk '{print $2}'
               with_items: "{{ overcloud_facts.nodes | default([])}}"
               register: node_list
         when: "overcloud_facts.nodes[0].name is defined"
@@ -134,9 +134,23 @@
       - name: tag our nodes with the proper profile
         shell: |
             source ~/stackrc
+            openstack baremetal node set {{ item[0].stdout }} --property capabilities='profile':'{{ item[1].cmd.split() | last }}','boot_option'='local'
+        tags: skip_ansible_lint
+        ignore_errors: true
+        register: tag_nodes_to_profile
+        when: "item[0].item.name is defined and item[1].cmd is defined and item[0].item.name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
+        with_together:
+            - "{{ node_list.results }}"
+            - "{{ tagged_flavors | default([]) }}"
+
+      - name: tag our nodes with the proper profile deprecated ironic rescue command
+        shell: |
+            source ~/stackrc
             ironic node-update {{ item[0].stdout }} add properties/capabilities='profile:{{ item[1].cmd.split() | last }},boot_option:local'
         tags: skip_ansible_lint
-        when: "item[0].item.name is defined and item[1].cmd is defined and item[0].item.name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
+        when:
+            - "item[0].item.name is defined and item[1].cmd is defined and item[0].item.name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
+            - tag_nodes_to_profile | failed
         with_together:
             - "{{ node_list.results }}"
             - "{{ tagged_flavors | default([]) }}"
