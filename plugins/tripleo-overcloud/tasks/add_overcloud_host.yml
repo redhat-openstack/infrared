@@ -12,7 +12,7 @@
     - name: osp8 - get ironic info for the node
       shell: |
           source ~/stackrc
-          ironic node-list --fields uuid name | grep {{ uuid }} | awk '{print $4}'
+          openstack baremetal node list --fields uuid name | grep {{ uuid }} | awk '{print $4}'
       vars:
           uuid: "{{ node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] }}"
       register: ironic_info

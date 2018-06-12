@@ -7,7 +7,7 @@
 - name: get node details
   shell: |
       source ~/stackrc
-      ironic --json node-show {{ item }}
+      openstack baremetal node show -f json {{ item }}
   with_items: "{{ groups['overcloud_nodes'] }}"
   register: ironic_nodes
   tags: skip_ansible_lint
@@ -16,13 +16,11 @@
 - name: update node capabilities with node name for scheduler hints
   shell: >
       source ~/stackrc;
-      NODE_UUID=$(ironic node-list | grep -w {{ (item | from_json)['name'] }} | awk '{print $2}')
+      NODE_UUID=$(openstack baremetal list | grep -w {{ (item | from_json)['name'] }} | awk '{print $2}')
       ironic node-update ${NODE_UUID} replace
-      properties/capabilities='node:{{ (item | from_json)['name'] }},{{ (item | from_json)['properties']['capabilities'] }}'
-  with_items: "{{ ironic_nodes.results | default([]) | map(attribute='stdout') | list }}"
+      properties/capabilities='node:{{ (item | from_json)['name'] }},{{ (item | from_json)['properties']['capabilities'] }}'  with_items: "{{ ironic_nodes.results | default([]) | map(attribute='stdout') | list }}"
   tags: skip_ansible_lint
   when: (install.scheduler_hints|default(False)) and (not file_result.stat.exists)
-
 
 - name: prepare hostname template
   template:
