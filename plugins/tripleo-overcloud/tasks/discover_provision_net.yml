@@ -3,7 +3,7 @@
   shell: |
       source ~/stackrc
       subnet_id=$(openstack network show {{ uc_provision_net|default('ctlplane')  }} | grep -owP 'subnets.*\|\s\K.*[^\|]+')
-      neutron subnet-show $subnet_id | grep -owP 'cidr.*\|\s\K.*[^\|]+' | tr -d ' '
+      openstack subnet show $subnet_id | grep -owP 'cidr.*\|\s\K.*[^\|]+' | tr -d ' '
   register: ctlplane_subnet_cidr
 
 - name: get network list from hypervisor

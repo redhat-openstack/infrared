@@ -7,7 +7,7 @@
 - name: get overall bulk status during failure
   shell: |
       source ~/stackrc
-      ironic node-list
+      openstack baremetal node list
       {% if install.version|default(undercloud_version) | openstack_release < 13 %}
       openstack baremetal introspection bulk status
       {% else %}
@@ -67,7 +67,7 @@
 - name: get details about failed nodes
   shell: |
       source ~/stackrc
-      ironic node-show {{ item }}
+      openstack baremetal node show {{ item }}
   register: failed_nodes_details
   ignore_errors: yes
   # Merge both lists failed_nodes_uuids and failed_nodes_uuids_7 here as only one of them is defined
@@ -130,9 +130,9 @@
 - name: set provision state of all nodes to available if bulk introspection failed to do so
   shell: |
       source ~/stackrc;
-      export PROV_STATE=$(ironic node-show {{ item }} | grep ' provision_state ');
+      export PROV_STATE=$(openstack baremetal node show {{ item }} | grep ' provision_state ');
       if [[ $PROV_STATE != *"available"* ]]; then
-          ironic node-set-provision-state {{ item }} provide;
+          openstack baremetal node provide {{ item }};
       fi
   with_items: "{{ total_nodes.stdout_lines | default([]) }}"
   tags:
@@ -141,7 +141,7 @@
 - name: see overall status after node-by-node introspection was done
   shell: |
       source ~/stackrc
-      ironic node-list
+      openstack baremetal node list
       {% if install.version|default(undercloud_version) | openstack_release < 13 %}
       openstack baremetal introspection bulk status
       {% else %}

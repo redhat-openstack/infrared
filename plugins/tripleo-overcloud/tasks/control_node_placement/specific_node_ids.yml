@@ -9,7 +9,7 @@
 - name: set specific node ids
   shell: |
       source ~/stackrc
-      openstack baremetal node set --property capabilities='node:{{ (item.stdout|from_json).name }},boot_option:local' {{ (item.stdout|from_json).uuid }}
+      openstack baremetal node set {{ (item.stdout|from_json).uuid }} --property capabilities='node:{{ (item.stdout|from_json).name }}' --property capabilities='boot_option':'local'
   with_items: "{{ nodes_baremetal_info.results }}"
 
 - block:
