@@ -8,6 +8,5 @@ setuptools.setup(
 if 'redhat' in platform.linux_distribution(
         supported_dists='redhat',
         full_distribution_name=False):
-    print("Fixing selinux for redhat systems...")
     from infrared.core.utils.selinux_fix import copy_system_selinux
     copy_system_selinux()
