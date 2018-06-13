@@ -50,6 +50,12 @@
                 parameter_defaults: "{{ install.get('config', {}).get('heat', {}) }}"
         when: install.get('config', {}).get('heat', {})
 
+      - name: set parameter_defaults for heat_params_yamls
+        set_fact:
+            heat_params_yamls:
+                parameter_defaults: "{{ install.get('heat', {}).get('params', {}) | from_yaml }}"
+        when: install.get('heat', {}).get('params', {})
+
       - name: set resource_registry for config_heat.yaml
         vars:
             config_resource: "{{ install.get('config', {}).get('resource', {}) }}"
@@ -57,11 +63,17 @@
             config_heat_yaml: "{{ config_heat_yaml | default({}) | combine({'resource_registry': config_resource}) }}"
         when: install.get('config', {}).get('resource', {})
 
-      - name: inject config_heat.yaml so it will be auto discovered with user templates
+      - name: create config_heat.yaml which will be auto discovered with user templates
         copy:
             dest: "{{ template_base }}/config_heat.yaml"
             content: "{{ config_heat_yaml | to_nice_yaml }}"
         when: config_heat_yaml is defined
+
+      - name: create heat_params.yaml which will be auto discovered with user templates
+        copy:
+            dest: "{{ template_base }}/heat_params.yaml"
+            content: "{{ heat_params_yamls | to_nice_yaml }}"
+        when: heat_params_yamls is defined
 
       - name: "check if custom overcloud_deploy.sh already exists in {{ template_base }}"
         stat:
