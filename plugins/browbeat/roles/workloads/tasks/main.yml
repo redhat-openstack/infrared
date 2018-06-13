@@ -1,0 +1,37 @@
+---
+
+- name: Check browbeat_network
+  fail: msg="browbeat_network needs to be set"
+  when: browbeat_network is not defined
+
+- name: Copy userdata files
+  template:
+    src: "{{ browbeat_workloads[item].src }}"
+    dest: "{{ browbeat_workloads[item].dest }}"
+  with_items: "{{ browbeat_workloads }}"
+
+- name: Build images
+  shell: source {{ overcloudrc }} ; openstack server create --wait --flavor m1.small --image {{ browbeat_workloads[item].image }} --nic net-id={{ browbeat_network }} --user-data {{ browbeat_workloads[item].dest }} {{ browbeat_workloads[item].name }} | egrep '\sid\s' | awk '{print $4}'
+  register: workload_ids
+  with_items: "{{ browbeat_workloads }}"
+
+- name: Check status of images
+  shell:  source {{ overcloudrc }} ; nova console-log {{ item.stdout }}
+  register: guest_output
+  until: guest_output.stdout.find("Browbeat workload installed") != -1
+  retries: 10
+  with_items: "{{ workload_ids.results }}"
+
+- name: Copy prepared workload guest into Glance
+  shell: source {{ overcloudrc }} ; openstack server image create --wait --name {{ browbeat_workloads[item].name }} {{ browbeat_workloads[item].name }}
+  with_items: "{{ browbeat_workloads }}"
+
+- name: Update visibility
+  shell: source {{ overcloudrc }} ; openstack image set {{ browbeat_workloads[item].name }} --public
+  with_items: "{{ browbeat_workloads }}"
+
+- name: Delete workload guests after copying
+  shell: |
+    . {{ overcloudrc }}
+    openstack server delete {{browbeat_workloads[item].name}}
+  with_items: "{{browbeat_workloads}}"

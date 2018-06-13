@@ -1,0 +1,14 @@
+- name: Install browbeat
+  import_playbook: install.yml
+  tags:
+    - install
+
+- name: Install monitoring
+  import_playbook: collectd-openstack.yml
+  tags:
+    - monitor
+
+- name: Run Browbeat
+  import_playbook: run-browbeat.yml
+  tags:
+    - run 

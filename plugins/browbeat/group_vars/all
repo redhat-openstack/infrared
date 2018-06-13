@@ -1,0 +1,446 @@
+---
+
+########################################
+# Browbeat Install Configuration
+########################################
+
+# Adjust Browbeat user if you are deploying Browbeat on a different machine than the Undercloud
+browbeat_user: stack
+# Login user for the local/jump machine (Typically Undercloud)
+local_remote_user: stack
+# Login user for the Overcloud hosts
+host_remote_user: heat-admin
+
+# OpenStack Installer
+# Tripleo is the only installer supported currently
+tripleo: true
+
+home_dir: "/home/{{browbeat_user}}"
+browbeat_path: "{{home_dir}}/browbeat"
+
+# The Overcloud RC file
+overcloudrc: "{{home_dir}}/overcloudrc"
+
+# The Overcloud CA cert file
+# overcloud_ca_path: /etc/pki/ca-trust/source/anchors/overcloud.crt.pem
+
+# The default Browbeat venv
+browbeat_venv: "{{browbeat_path}}/.browbeat-venv"
+
+# The default Rally venv
+rally_venv: "{{browbeat_path}}/.rally-venv"
+
+# Rally version to install
+rally_version: 0.10.1
+
+# The default Shaker venv
+shaker_venv: "{{browbeat_path}}/.shaker-venv"
+
+# Shaker version to Install
+shaker_version: 1.1.0
+
+# PerfKitBenchmarker Settings
+perfkit_venv: "{{browbeat_path}}/.perfkit-venv"
+perfkit_version: v1.13.0
+
+# Configuration items to adjust browbeat results served through httpd
+browbeat_results_port: 9001
+browbeat_results_in_httpd: true
+supported_distro: ((ansible_distribution == "CentOS" && ansible_distribution_major_version >= "7") or
+                   (ansible_distribution == "RedHat" && ansible_distribution_major_version >= "7"))
+
+# iptables file - RHEL (/etc/sysconfig/iptables) CentOS (/etc/sysconfig/iptables-config)
+iptables_file: /etc/sysconfig/iptables
+
+########################################
+# Browbeat Workloads
+########################################
+
+# Install Browbeat workloads
+install_browbeat_workloads: false
+
+# Network ID which has external access
+browbeat_network:
+
+# For Pbench Repos - Provide the internal RPM URL
+pbench_internal_url:
+
+# linpack url
+linpack_url: http://registrationcenter-download.intel.com/akdlm/irc_nas/9752/l_mklb_p_2018.0.006.tgz
+linpack_path: /benchmarks_2018/linux/mkl/benchmarks/linpack/
+
+# Browbeat Rally workloads
+browbeat_workloads:
+  linpack:
+    name: browbeat-linpack
+    src: linpack-user.file
+    dest: "{{ browbeat_path }}/linpack-user.file"
+    image: centos7
+  uperf:
+    name: browbeat-uperf
+    src: pbench-uperf-user.file
+    dest: "{{ browbeat_path }}/pbench-uperf-user.file"
+    image: centos7
+
+########################################
+# Other Install Configuration Items
+########################################
+# Toggle creating flavors:
+browbeat_create_flavors: true
+
+# Guest images for the Overcloud
+# Note hash key name must match intended name for image upload to
+# work consistently (Ex. images['cirros'].name == 'cirros')
+browbeat_upload_guest_images: true
+browbeat_guest_images:
+  centos7:
+    name: centos7
+    url: http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
+    type: qcow2
+    convert_to_raw: false
+  cirros:
+    name: cirros
+    url: http://download.cirros-cloud.net/0.3.5/cirros-0.3.5-x86_64-disk.img
+    type: qcow2
+    convert_to_raw: false
+
+# DNS Server to add
+dns_server: 8.8.8.8
+
+# Proxy Settings
+proxy_env: {}
+# Example use:
+# proxy_env:
+#   http_proxy: http://proxy.example.com:80
+#   https_proxy: http://proxy.example.com:80
+#   no_proxy: localhost, example.sat6.com, graphite-server.com, elk-server.com
+
+# Disables dns lookup by overcloud sshd process
+disable_ssh_dns: false
+
+# epel7 rpm for collectd packages
+epel7_rpm: https://download.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+epel7_rpmkey: https://download.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
+
+# Extra Repos to add during collectd install
+repos: {}
+# repos:
+#   rhel-7-server-beta:
+#     baseurl: http://walkabout.foobar.com/released/RHEL-7/7.3-Beta/Server/x86_64/os/
+
+########################################
+# Collectd Configuration
+########################################
+# Install collectd from EPEL
+collectd_from_epel: true
+# Interval in seconds
+collectd_interval: 10
+# Typically: carbon-cache port=2003 or Graphite with carbon-relay=2013
+collectd_write_graphite_port: 2003
+# Run collectd on specific openstack nodes:
+collectd_undercloud: true
+collectd_controller: true
+collectd_networker: true
+collectd_blockstorage: true
+collectd_objectstorage: true
+collectd_cephstorage: true
+collectd_compute: false
+
+# Opt-In Collectd plugins configuration:
+########################
+# Apache plugin
+########################
+# Undercloud
+apache_undercloud_collectd_plugin: false
+apache_undercloud_mod_status_port: 5001
+# Overcloud Controller
+apache_controller_collectd_plugin: false
+apache_controller_mod_status_port: 5001
+
+########################
+# Apache request time
+########################
+# Setups up Apache to log request time and collectd to grab request time from
+# httpd log files.  This provides request times from Apache for Keystone,
+# Gnocchi, and Nova Placement APIs hosted under httpd.
+apache_controller_collectd_request_time: false
+
+########################
+# Ceph plugin
+########################
+# Overcloud Controller
+# Python plugin is prefered (At the Current Moment)
+ceph_controller_collectd_radosbench_plugin: false
+ceph_controller_collectd_radosbench_interval: 30
+ceph_controller_collectd_mon_plugin: false
+ceph_controller_collectd_mon_interval: 10
+ceph_controller_collectd_osd_plugin: false
+ceph_controller_collectd_osd_interval: 10
+ceph_controller_collectd_pg_plugin: false
+ceph_controller_collectd_pg_interval: 10
+ceph_controller_collectd_pool_plugin: false
+ceph_controller_collectd_pool_interval: 10
+# Collectd provided Ceph plugins
+ceph_controller_collectd_plugin: false
+ceph_storage_collectd_plugin: false
+
+########################
+# Gnocchi Status plugin
+########################
+gnocchi_status_undercloud_collectd_plugin: false
+gnocchi_status_undercloud_collectd_interval: 10
+gnocchi_status_controller_collectd_plugin: false
+gnocchi_status_controller_collectd_interval: 10
+
+########################
+# Disk/IOStat plugin
+########################
+# Disk plugin metrics are opt-out, IOStat metrics are opt-in
+disk_undercloud_collectd_plugin: true
+disk_controller_collectd_plugin: true
+disk_networker_collectd_plugin: true
+disk_cephstorage_collectd_plugin: true
+disk_compute_collectd_plugin: true
+disk_blockstorage_collectd_plugin: true
+disk_objectstorage_collectd_plugin: true
+# Enable these for more comprehensive IOStat metrics
+iostat_undercloud_collectd_plugin: false
+iostat_undercloud_collectd_interval: 10
+iostat_controller_collectd_plugin: false
+iostat_controller_collectd_interval: 10
+iostat_networker_collectd_plugin: false
+iostat_networker_collectd_interval: 10
+iostat_cephstorage_collectd_plugin: false
+iostat_cephstorage_collectd_interval: 10
+iostat_compute_collectd_plugin: false
+iostat_compute_collectd_interval: 10
+iostat_blockstorage_collectd_plugin: false
+iostat_blockstorage_collectd_interval: 10
+iostat_objectstorage_collectd_plugin: false
+iostat_objectstorage_collectd_interval: 10
+
+########################
+# Keystone token count
+########################
+# If you have UUID tokens, we can count those via the collectd dbi plugin
+keystone_undercloud_collectd_plugin: false
+keystone_overcloud_collectd_plugin: false
+
+########################
+# Rabbitmq plugin
+########################
+rabbitmq_undercloud_collectd_plugin: false
+rabbitmq_undercloud_collectd_interval: 10
+rabbitmq_controller_collectd_plugin: false
+rabbitmq_controller_collectd_interval: 10
+
+# Queues to monitor message count on Undercloud
+undercloud_monitored_queues:
+  - "metering.sample"
+  - "event.sample"
+  - "notifications.sample"
+  - "notifications.audit"
+  - "notifications.info"
+  - "notifications.warn"
+  - "notifications.error"
+  - "notifications.critical"
+
+# Queues to monitor message count on Controllers
+controller_monitored_queues:
+  - "metering.sample"
+  - "event.sample"
+  - "notifications.sample"
+  - "notifications.audit"
+  - "notifications.info"
+  - "notifications.warn"
+  - "notifications.error"
+  - "notifications.critical"
+
+########################
+# ovsagent monitoring
+########################
+ovsagent_compute_monitor: false
+ovsagent_controller_monitor: false
+ovsagent_networker_monitor: false
+
+controller_monitored_ints:
+  - "tap"
+
+networker_monitored_ints:
+  - "tap"
+
+compute_monitored_ints:
+  - "qvo"
+
+controller_monitored_ns:
+  - "qrouter"
+  - "qdhcp"
+
+networker_monitored_ns:
+  - "qrouter"
+  - "qdhcp"
+
+########################
+# Swift stat plugin
+########################
+# Provides metrics on Swift Account using Gnocchi Swift Configuration
+swift_stat_controller_collectd_plugin: false
+swift_stat_controller_collectd_interval: 10
+
+########################
+# tail plugin
+########################
+# Determines if WARN/INFO messages are also counted
+regex_warn: false
+regex_info: false
+
+
+########################################################
+# Ping Plugin for Latency and Jitter between controllers
+########################################################
+# Might result in more network traffic
+ping_plugin: false
+ping_interval: 1
+
+############################
+# OpenDaylight JAVA Plugin
+###########################
+
+# Plugin assumes that JAVA is already installed on the host
+opendaylight_java_plugin: false
+karaf_user: karaf
+karaf_password: karaf
+
+########################################
+# Docker related
+# (use these if deploying graphite/carbon/grafana as containers)
+########################################
+persistent_carbon_data_path: /data/carbon/whisper
+persistent_grafana_data_path: /data/grafana
+docker_carbon_cache_port: 2003
+docker_graphite_port: 8888
+docker_grafana_port: 3000
+carbon_cache_docker_image: kambiz/carbon-cache:0.9.15
+graphite_web_docker_image: kambiz/graphite-web:0.9.15
+grafana_docker_image: grafana/grafana:2.6.0
+
+########################################
+# Carbon/Graphite Configuration
+########################################
+# Graphite Server ip address (Collectd -> Graphite server)
+# you must fill out graphite_host prior to playbook execution
+graphite_host:
+graphite_port: 80
+carbon_cache_port: 2003
+# Graphite prefix / Cloud name used both with graphite and grafana dashboards
+graphite_prefix: openstack
+# Graphite username and password for login on the dashboard
+# credential aren't created when you deploy graphite, use manage.py
+graphite_username: root
+graphite_password: calvin
+# List of cloud names taken by other infrastructure
+# attempting to use them should fail.
+forbidden_cloud_names:
+  - "statsd"
+  - "stats"
+  - "stats_counts"
+
+########################################
+# Grafana Dashboarding Configuration
+########################################
+# Grafana Server IP Address/Port (Can be hosted on the Graphite server)
+# you must fill out grafana_host prior to playbook execution
+# If you are deploying grafana the username/password combination will be set
+# (if you're using the grafana-docker playbook this does not currently work,
+# it will deploy with admin/admin). If you're uploading dashboards be sure to
+# set the password here to whatever it actually is.
+grafana_host:
+grafana_port: 3000
+grafana_username: admin
+grafana_password: admin
+grafana_apikey:
+# Batch number of hosts per row for all-{cpu, memory, disk, network} openstack dashboards
+dashboards_batch: 20
+# For use with all-{cpu, memory, disk, network} openstack dashboards, uses the graphite prefix to create dashboards for specific openstack cloud
+dashboard_cloud_name: "{{graphite_prefix}}"
+
+########################################
+# StatsD Configuration
+# Points at configured Graphite instance
+########################################
+statsd_host:
+statsd_port: 8125
+statsd_enabled: False
+
+########################################
+# Shaker Configuration
+########################################
+# Port for Shaker (5555 should suffice)
+shaker_port: 5555
+# Base image for disk image builder
+shaker_image: centos7
+shaker_region: regionOne
+
+########################################
+# ELK Server Variables
+########################################
+#
+# port filebeat client grabs the client SSL certificate
+# e.g. 9999
+elk_server_ssl_cert_port: 8080
+#
+### logging backend ###
+# you can pick between logstash or fluentd
+# if left empty logstash will be used
+### accepted options ###
+# logging_backend:
+# logging_backend: logstash
+# logging_backend: fluentd
+# logging_backend: rsyslog
+logging_backend:
+#
+### logstash options ###
+logstash_syslog_port: 5044
+### fluentd options ###
+fluentd_syslog_port: 42185
+fluentd_http_port: 9919
+fluentd_debug_port: 24230
+### rsyslog options ###
+# Used for the rsyslog -> elasticsearch
+# or rsyslog forwarder -> rsyslog aggregator -> elasticsearch
+# logging pattern
+rsyslog_elasticsearch_server: "{{es_ip}}"
+rsyslog_elasticsearch_port: "{{es_local_port}}"
+rsyslog_aggregator_server: "{{es_ip}}"
+rsyslog_aggregator_port: "7894"
+rsyslog_cloud_name: "{{graphite_prefix}}"
+disk_backed_rsyslog: false
+rsyslog_forwarding: true
+# If true up to 2gb of messages will be logged
+# to disk if es goes down vs a 100mb in memory
+# cache otherwise
+## elasticsearch local port listener
+# we will enable localhost listening on TCP/9200
+# due to utilizing elasticsearch connectors, general
+# usage may want to disable this option due to security reasons
+# in which case you should set this to false
+es_ip:
+es_local_port: 9200
+es_listen_external: true
+### kibana options ###
+# change this to affect nginx-wrapped htpasswd authentication
+kibana_user: admin
+kibana_password: admin
+es_kibana_index: .kibana
+### kibana nginx ###
+# add nonstandard port here for undercloud usage
+# usage: port nginx listens to reverse-proxy Kibana
+# e.g. 8888
+nginx_kibana_port: 80
+### install curator tool ###
+# curator is the recommended tool for managing elasticsearch indexes
+# https://www.elastic.co/guide/en/elasticsearch/client/curator/current/index.html
+# default is no (set to blank) or false
+# set the below variable to 'true' to activate
+install_curator_tool: false
+

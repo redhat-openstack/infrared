@@ -1,0 +1,344 @@
+# Installed by Browbeat Ansible Installer
+# Config type: {{config_type}}
+
+# Interval default is 10s
+Interval {{collectd_interval}}
+
+# Hostname for this machine, if not defined, use gethostname(2) system call
+Hostname "{{inventory_hostname}}"
+
+# Loaded Plugins:
+LoadPlugin "logfile"
+<Plugin "logfile">
+  File "/var/log/collectd.log"
+  LogLevel "info"
+  PrintSeverity true
+  Timestamp true
+</Plugin>
+
+LoadPlugin write_graphite
+LoadPlugin cpu
+LoadPlugin conntrack
+LoadPlugin df
+LoadPlugin disk
+LoadPlugin exec
+LoadPlugin interface
+LoadPlugin irq
+LoadPlugin load
+LoadPlugin match_regex
+LoadPlugin memory
+LoadPlugin numa
+LoadPlugin processes
+{%if iostat_compute_collectd_plugin %}
+<LoadPlugin python>
+  Globals true
+</LoadPlugin>
+{% endif %}
+LoadPlugin swap
+LoadPlugin tail
+LoadPlugin turbostat
+LoadPlugin unixsock
+LoadPlugin uptime
+
+# Open unix domain socket for collectdctl
+<Plugin unixsock>
+  SocketFile "/var/run/collectd-unixsock"
+  SocketGroup "collectd"
+  SocketPerms "0770"
+  DeleteSocket true
+</Plugin>
+
+PreCacheChain "PreCache"
+<Chain "PreCache">
+  <Rule "ignore_tap">
+    <Match "regex">
+      Plugin "^interface$"
+      PluginInstance "^tap*"
+    </Match>
+    Target "stop"
+  </Rule>
+  <Rule "ignore_interfaces_q">
+    <Match "regex">
+      Plugin "^interface$"
+      PluginInstance "^q.*"
+    </Match>
+    Target "stop"
+  </Rule>
+  Target "return"
+</Chain>
+
+# Graphite Host Configuration
+<Plugin write_graphite>
+  <Carbon>
+    Host "{{graphite_host}}"
+    Port "{{collectd_write_graphite_port}}"
+    Prefix "{{graphite_prefix}}."
+    Protocol "tcp"
+    LogSendErrors true
+    StoreRates true
+    AlwaysAppendDS false
+    EscapeCharacter "_"
+  </Carbon>
+</Plugin>
+
+<Plugin df>
+  FSType anon_inodefs
+  FSType bdev
+  FSType cgroup
+  FSType cpuset
+  FSType debugfs
+  FSType devpts
+  FSType devtmpfs
+  FSType ecryptfs
+  FSType fuse
+  FSType fusectl
+  FSType hugetlbfs
+  FSType mqueue
+  FSType nfs
+  FSType nfs4
+  FSType nfsd
+  FSType overlay
+  FSType pipefs
+  FSType proc
+  FSType pstore
+  FSType ramfs
+  #FSType rootfs
+  FSType rpc_pipefs
+  FSType securityfs
+  FSType sockfs
+  FSType sysfs
+  FSType tmpfs
+  FSType vboxsf
+  MountPoint "/^/var/lib/docker/.*/"
+  IgnoreSelected true
+  ValuesPercentage true
+  ReportInodes true
+</Plugin>
+
+{%if disk_compute_collectd_plugin %}
+<Plugin disk>
+  Disk "/^[hsv]d[a-z]+[0-9]?$/"
+  Disk "/^nvm/"
+  IgnoreSelected false
+</Plugin>
+
+{% endif %}
+{%if iostat_compute_collectd_plugin %}
+<Plugin python>
+  ModulePath "/usr/local/bin/"
+  Import "collectd_iostat_python"
+
+  <Module collectd_iostat_python>
+    Path "/usr/bin/iostat"
+    Interval {{iostat_compute_collectd_interval}}
+    IostatInterval 2
+    Count 2
+    Verbose false
+    NiceNames false
+    PluginName collectd_iostat_python
+  </Module>
+</Plugin>
+
+{% endif %}
+# (akrzos) Including the version of OpenStack that the process was verified as running after
+# OpenStack Installation with a comment at the end of each Process/ProcessMatch statement.
+# A Minus before the version means the process was not found in that version. (Ex -10)
+<Plugin processes>
+  # Ceilometer (OpenStack Installed)
+  ProcessMatch "ceilometer-polling" "ceilometer-polling"                                # 10,11,12,13
+
+  # Collectd (Browbeat Installed)
+  ProcessMatch "collectd" "/usr/sbin/collectd"
+
+  # Neutron (OpenStack Installed)
+  ProcessMatch "neutron-l3-agent" "python.+neutron-l3-agent"                            # 10 with DVR
+  ProcessMatch "neutron-ns-metadata-proxy" "python.+neutron-ns-metadata-proxy"          # 10 with DVR
+  ProcessMatch "neutron-metadata-agent" "python.+neutron-metadata-agent"                # 10 with DVR
+  ProcessMatch "neutron-openvswitch-agent" "python.+neutron-openvswitch-agent"          # 10,11,12,13
+
+  # Nova (OpenStack Installed)
+  ProcessMatch "nova-compute" "python.+nova-compute"                                    # 10,11,12,13
+  ProcessMatch "privsep-helper" "python.+/bin/privsep-helper"                           # 11,12,13
+
+  # OVS (OpenStack Installed)
+  ProcessMatch "ovs-vswitchd" "ovs-vswitchd.+openvswitch"                               # 10,11,12,13
+  ProcessMatch "ovsdb-client" "ovsdb-client"                                            # 10,11,12,13
+  ProcessMatch "ovsdb-server" "ovsdb-server.+openvswitch"                               # 10,11,12,13
+  ProcessMatch "ovn-controller" "ovn-controller.+openvswitch"                           # 9,10
+  ProcessMatch "ovn-controller-vtep" "ovn-controller-vtep.+openvswitch"                 # 9,10
+
+  # QEMU / libvirt (OpenStack Installed)
+  ProcessMatch "qemu-kvm" "/usr/libexec/qemu-kvm"                                       # 10,11,12,13
+  ProcessMatch "libvirtd" "/usr/sbin/libvirtd"                                          # 10,11,12,13
+  ProcessMatch "virtlockd" "/usr/sbin/virtlockd"                                        # 10,11,-12,-13
+  ProcessMatch "virtlogd" "/usr/sbin/virtlogd"                                          # 10,11,12,13
+</Plugin>
+
+<Plugin swap>
+  ReportBytes true
+  ValuesPercentage true
+</Plugin>
+
+# Tail plugin configuration
+<Plugin "tail">
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/ceilometer/compute.log">
+  {% else %}
+  <File "/var/log/ceilometer/compute.log">
+  {% endif %}
+    Instance "ceilometer-compute"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+
+  <File "/var/log/neutron/l3-agent.log">
+    Instance "neutron-l3-agent"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  <File "/var/log/neutron/metadata-agent.log">
+    Instance "neutron-metadata-agent"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+
+  {%if 'Queens' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/neutron/openvswitch-agent.log">
+  {% else %}
+  <File "/var/log/neutron/openvswitch-agent.log">
+  {% endif %}
+    Instance "neutron-openvswitch-agent"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/nova/nova-compute.log">
+  {% else %}
+  <File "/var/log/nova/nova-compute.log">
+  {% endif %}
+    Instance "nova-compute"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+
+</Plugin>
+
+{% if ovsagent_compute_monitor  %}
+<Plugin python>
+  ModulePath "/usr/local/bin/"
+  LogTraces true
+  Interactive false
+  Import "collectd_ovsagent"
+  <Module collectd_ovsagent>
+    prefix ovsagent
+    interval 10
+    interfaces {% for int in compute_monitored_ints %} {{int}} {% endfor %}
+
+  </Module>
+</Plugin>
+{% endif %}
+
+# Include other collectd configuration files
+Include "/etc/collectd.d"

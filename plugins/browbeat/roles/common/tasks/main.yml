@@ -1,0 +1,18 @@
+---
+#
+# Browbeat Install Common
+#
+- name: Check external connectivity
+  command: ping google.com -c 1 -q
+  register: ping
+  ignore_errors: true
+  become: true
+  tags:
+    # Skip ANSIBLE0012 Commands should not change things if nothing needs doing
+    # Need to check external activity every time
+    - skip_ansible_lint
+
+- name: Add DNS record
+  become: true
+  lineinfile: dest=/etc/resolv.conf state=present line="nameserver {{ dns_server }}" insertafter="^search"
+  when: ping.rc != 0

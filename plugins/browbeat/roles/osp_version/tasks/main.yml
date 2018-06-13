@@ -1,0 +1,25 @@
+---
+#
+# Slurp OSP version file
+#
+
+- name: Check if /etc/rhosp-release exists
+  stat:
+    path: /etc/rhosp-release
+  register: rhosp_release_stat
+
+- name: Get OSP Version
+  become: true
+  slurp:
+    src: "/etc/rhosp-release"
+  register: osp_version
+  when: rhosp_release_stat.stat.exists
+
+- debug: msg="WARNING /etc/rhosp-release not found, defaulting version of OSP to Pike"
+  when: not rhosp_release_stat.stat.exists
+
+- name: Set OSP Version Default
+  set_fact:
+    osp_version:
+      content: "{{'Pike' | b64encode}}"
+  when: not rhosp_release_stat.stat.exists

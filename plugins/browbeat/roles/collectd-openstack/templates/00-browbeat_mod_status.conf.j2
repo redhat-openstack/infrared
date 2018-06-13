@@ -1,0 +1,25 @@
+# Installed by Browbeat Ansible Installer
+
+LoadModule status_module modules/mod_status.so
+
+{% if 'undercloud' in group_names %}
+Listen {{apache_undercloud_mod_status_port}}
+{% endif %}
+{% if 'controller' in group_names %}
+Listen {{apache_controller_mod_status_port}}
+{% endif %}
+
+ExtendedStatus on
+{% if 'undercloud' in group_names %}
+<VirtualHost *:{{apache_undercloud_mod_status_port}}>
+{% endif %}
+{% if 'controller' in group_names %}
+<VirtualHost *:{{apache_controller_mod_status_port}}>
+{% endif %}
+  <Location /mod_status>
+    SetHandler server-status
+    Order deny,allow
+    Deny from all
+    Allow from 127.0.0.1
+  </Location>
+</VirtualHost>

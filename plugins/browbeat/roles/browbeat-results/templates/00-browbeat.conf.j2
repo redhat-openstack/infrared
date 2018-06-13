@@ -1,0 +1,14 @@
+# Browbeat httpd config to serve results on undercloud
+# Installed via browbeat installer
+
+Listen {{ browbeat_results_port }}
+<VirtualHost *:{{ browbeat_results_port }}>
+  ServerName browbeat-results
+  DocumentRoot "{{ browbeat_path }}/results"
+  <Directory  "{{ browbeat_path }}/results">
+    Options Indexes FollowSymLinks
+    IndexOptions NameWidth=*
+    AllowOverride None
+    Require all granted
+  </Directory>
+</VirtualHost>

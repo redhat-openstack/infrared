@@ -1,0 +1,54 @@
+- hosts: undercloud
+  remote_user: "{{ local_remote_user }}"
+  vars:
+    config_type: undercloud
+  roles:
+    - { role: common, when: collectd_undercloud }
+    - { role: epel, when: collectd_undercloud }
+    - { role: repo }
+    - { role: collectd-openstack, when: collectd_undercloud }
+  tasks:
+    - name: Collectd off if not collectd_undercloud
+      service: name=collectd state=stopped enabled=false
+      become: true
+      when: not collectd_undercloud
+      ignore_errors: true
+  environment: "{{proxy_env}}"
+
+- hosts: controller
+  remote_user: "{{ host_remote_user }}"
+  vars:
+    config_type: controller
+  roles:
+    - { role: osp_version }
+    - { role: common, when: collectd_controller }
+    - { role: epel, when: collectd_controller }
+    - { role: repo }
+    - { role: collectd-openstack, when: collectd_controller }
+  tasks:
+    - name: Collectd off if not collectd_controller
+      service: name=collectd state=stopped enabled=false
+      become: true
+      when: not collectd_controller
+      ignore_errors: true
+  environment: "{{proxy_env}}"
+
+- hosts: compute
+  remote_user: "{{ host_remote_user }}"
+  vars:
+    config_type: compute
+  roles:
+    - { role: osp_version }
+    - { role: common, when: collectd_compute }
+    - { role: epel, when: collectd_compute }
+    - { role: repo }
+    - { role: collectd-openstack, when: collectd_compute }
+  tasks:
+    - name: Collectd off if not collectd_compute
+      service: name=collectd state=stopped enabled=false
+      become: true
+      when: not collectd_compute
+      ignore_errors: true
+  environment: "{{proxy_env}}"
+
+

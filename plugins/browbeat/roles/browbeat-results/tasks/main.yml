@@ -1,0 +1,69 @@
+---
+#
+# Browbeat Results via httpd
+#
+
+- name: Install httpd
+  yum:
+    name: httpd
+    state: present
+  become: true
+
+- name: Remove welcome.conf if it exists
+  file:
+    path: /etc/httpd/conf.d/welcome.conf
+    state: absent
+  become: true
+  notify:
+    - restart httpd
+
+- name: Setup browbeat.conf in /etc/httpd/conf.d
+  template:
+    src: 00-browbeat.conf.j2
+    dest: "/etc/httpd/conf.d/00-browbeat-{{browbeat_user}}.conf"
+    owner: root
+    group: root
+    mode: 0644
+  become: true
+  notify:
+    - restart httpd
+
+- name: Set seboolean(httpd_read_user_content)
+  seboolean:
+    name: httpd_read_user_content
+    state: yes
+    persistent: yes
+  become: true
+  when: "ansible_selinux['status'] == 'enabled'"
+
+- name: Allow httpd to serve content in "{{ home_dir }}"
+  file:
+    path: "{{ home_dir }}"
+    state: directory
+    mode: 0755
+
+# (akrzos) Port 9000 is already in use by zaqar-server with Newton and thus the fact that likely the
+# user will choose a port that is not enabled by selinux to allow httpd to listen, we need to modify
+# the ports enabled by selinux for httpd.  If the port is already defined you will run into this
+# issue if you use the "seport" ansible module:
+# https://github.com/ansible/ansible-modules-extras/pull/2694
+# This is not in upstream Ansible releases as of 2.1.1.0
+- name: Allow httpd to listen to port ({{browbeat_results_port}})
+  shell: "/usr/sbin/semanage port -m -t http_port_t -p tcp {{browbeat_results_port}}"
+  become: true
+  register: seport_modified
+  when: "ansible_selinux['status'] == 'enabled'"
+  ignore_errors: true
+
+# If port can not be modified, it likely has to be added (Ex. Port 9002)
+- name: Allow httpd to listen to port ({{browbeat_results_port}}) via add
+  shell: "/usr/sbin/semanage port -a -t http_port_t -p tcp {{browbeat_results_port}}"
+  become: true
+  when: "(ansible_selinux['status'] == 'enabled') and (seport_modified.rc != 0)"
+
+- name: Start httpd
+  service:
+    name: httpd
+    state: started
+    enabled: true
+  become: true

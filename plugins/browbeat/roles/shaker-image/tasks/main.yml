@@ -1,0 +1,18 @@
+---
+- name: Check external connectivity
+  shell: ping -c 1 google.com
+  register: ping
+  ignore_errors: true
+
+- name: Fail if no external connectivity
+  fail:
+    msg: "There should be external connectivity to build shaker image"
+  when: ping.rc != 0
+
+- name: Build shaker image
+  shell: >
+          source {{ overcloudrc }}; source {{ shaker_venv }}/bin/activate;
+          shaker-image-builder --image-builder-mode dib --image-builder-distro
+          {{shaker_image}} --os-region-name {{ shaker_region }}
+  register: image_result
+  failed_when: image_result.rc != 0

@@ -1,0 +1,13 @@
+---
+- hosts: tester
+  remote_user: "{{ browbeat_user }}"
+  tasks:
+    - name: Run Browbeat
+      command:
+        source {{browbeat_vevn}}/bin/activate; ./browbeat.py -s
+        {{test.config.file}} {{test.workloads}}
+      args:
+        chdir: "{{browbeat_path}}"
+
+            
+

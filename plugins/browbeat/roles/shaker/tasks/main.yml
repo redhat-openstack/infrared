@@ -1,0 +1,19 @@
+---
+#
+# Browbeat's Shaker Install
+#
+
+- name: Create shaker virtualenv
+  command: virtualenv {{ shaker_venv }} creates={{ shaker_venv }}
+
+- name: Setup shaker-venv CA certificate path
+  lineinfile:
+    dest: "{{ shaker_venv }}/bin/activate"
+    line: 'export REQUESTS_CA_BUNDLE={{ overcloud_ca_path }}'
+  when: overcloud_ca_path is defined
+
+- name: Install shaker
+  pip:
+    name: pyshaker
+    version: "{{ shaker_version }}"
+    virtualenv: "{{ shaker_venv }}"

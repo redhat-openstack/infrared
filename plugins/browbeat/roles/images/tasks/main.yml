@@ -1,0 +1,42 @@
+---
+#
+# Obtain/Upload browbeat_guest_images to OpenStack Cloud
+#
+
+- name: Fetch image
+  get_url:
+    url: "{{ browbeat_guest_images[item].url }}"
+    dest: "{{ home_dir }}/{{ browbeat_guest_images[item].name }}.{{ browbeat_guest_images[item].type }}"
+  with_items: "{{ browbeat_guest_images }}"
+
+- name: Determine if image exists
+  shell: . {{ browbeat_venv }}/bin/activate; . {{ overcloudrc }}; openstack image list | grep '{{ browbeat_guest_images[item].name }}'
+  register: image_exists
+  ignore_errors: true
+  changed_when: false
+  with_items: "{{ browbeat_guest_images }}"
+
+- name: Remove image from dictionary of images if image exists
+  set_fact:
+    browbeat_guest_images: "{{ browbeat_guest_images|dict_remove(item[0]) }}"
+  when: "'{{ item[0] }}' in '{{ item[1].stdout }}'"
+  with_nested:
+    - "{{ browbeat_guest_images }}"
+    - "{{ image_exists.results }}"
+
+- name: Convert images to raw
+  command: qemu-img convert -f {{browbeat_guest_images[item].type}} -O raw {{ home_dir }}/{{ browbeat_guest_images[item].name }}.{{ browbeat_guest_images[item].type }} {{ home_dir }}/{{ browbeat_guest_images[item].name }}.raw
+  when: "browbeat_guest_images[item].convert_to_raw == true"
+  with_items: "{{ browbeat_guest_images }}"
+
+- name: Upload image into cloud (Newton and Ocata versions)
+  shell: . {{ browbeat_venv }}/bin/activate; . {{ overcloudrc }}; openstack image create --public --disk-format={{ browbeat_guest_images[item].type }} --container-format=bare {{ browbeat_guest_images[item].name }} < {{ home_dir }}/{{ browbeat_guest_images[item].name }}.{{ browbeat_guest_images[item].type }}
+  ignore_errors: true
+  when: "browbeat_guest_images[item].convert_to_raw == false"
+  with_items: "{{ browbeat_guest_images }}"
+
+- name: Upload raw image into cloud (Newton and Ocata versions)
+  shell: . {{ browbeat_venv }}/bin/activate; . {{ overcloudrc }}; openstack image create --public --disk-format=raw --container-format=bare {{ browbeat_guest_images[item].name }} < {{ home_dir }}/{{ browbeat_guest_images[item].name }}.raw
+  ignore_errors: true
+  when: "browbeat_guest_images[item].convert_to_raw == true"
+  with_items: "{{ browbeat_guest_images }}"

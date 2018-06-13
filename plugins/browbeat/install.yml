@@ -1,0 +1,22 @@
+---
+#
+# Playbook to install Browbeat (Rally + Shaker + PerfKitBenchmarker)
+#
+
+- hosts: tester
+  remote_user: "{{ browbeat_user }}"
+  roles:
+    - common
+    - browbeat
+    - { role: browbeat-results, when: browbeat_results_in_httpd}
+    - firewall
+    - perfkitbenchmarker
+    - rally
+    - shaker
+    - { role: flavors, when: browbeat_create_flavors}
+    - { role: images, when: browbeat_upload_guest_images}
+    - { role: workloads, when: install_browbeat_workloads}
+    - shaker-image
+  environment: "{{proxy_env}}"
+
+

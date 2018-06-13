@@ -1,0 +1,28 @@
+---
+#
+# Tasks install EPEL packages
+#
+
+- name: Remove old EPEL
+  yum: name=epel-release state=absent
+  become: true
+
+# The fedoraproject CDN has problems somtimes, this will keep trying
+#  for up to 10 minutes before failing.
+- name: Import EPEL GPG Key
+  shell: rpm --import {{ epel7_rpmkey }}
+  become: true
+  register: import_result
+  until: "import_result.rc==0"
+  retries: 10
+  delay: 10
+
+# Same as above but with the Centos CDN
+- name: Check for EPEL repo
+  yum: "name={{ epel7_rpm }} state=present"
+  become: true
+  register: install_result
+  until: install_result|success
+  retries: 10
+  delay: 10
+  notify: remove_epel

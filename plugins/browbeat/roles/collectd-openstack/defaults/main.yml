@@ -1,0 +1,170 @@
+########################################
+# Collectd Configuration
+########################################
+# Install collectd from EPEL
+collectd_from_epel: true
+# Interval in seconds
+collectd_interval: 10
+# Typically: carbon-cache port=2003 or Graphite with carbon-relay=2013
+collectd_write_graphite_port: 2003
+# Run collectd on specific openstack nodes:
+collectd_undercloud: true
+collectd_controller: true
+collectd_blockstorage: true
+collectd_objectstorage: true
+collectd_cephstorage: true
+collectd_compute: false
+
+# Opt-In Collectd plugins configuration:
+########################
+# Apache plugin
+########################
+# Undercloud
+apache_undercloud_collectd_plugin: false
+apache_undercloud_mod_status_port: 5001
+# Overcloud Controller
+apache_controller_collectd_plugin: false
+apache_controller_mod_status_port: 5001
+
+########################
+# Apache request time
+########################
+# Setups up Apache to log request time and collectd to grab request time from
+# httpd log files.  This provides request times from Apache for Keystone,
+# Gnocchi, and Nova Placement APIs hosted under httpd.
+apache_controller_collectd_request_time: false
+
+########################
+# Ceph plugin
+########################
+# Overcloud Controller
+# Python plugin is prefered (At the Current Moment)
+ceph_controller_collectd_radosbench_plugin: false
+ceph_controller_collectd_radosbench_interval: 30
+ceph_controller_collectd_mon_plugin: false
+ceph_controller_collectd_mon_interval: 10
+ceph_controller_collectd_osd_plugin: false
+ceph_controller_collectd_osd_interval: 10
+ceph_controller_collectd_pg_plugin: false
+ceph_controller_collectd_pg_interval: 10
+ceph_controller_collectd_pool_plugin: false
+ceph_controller_collectd_pool_interval: 10
+# Collectd provided Ceph plugins
+ceph_controller_collectd_plugin: false
+ceph_storage_collectd_plugin: false
+
+########################
+# Gnocchi Status plugin
+########################
+gnocchi_status_undercloud_collectd_plugin: false
+gnocchi_status_undercloud_collectd_interval: 10
+gnocchi_status_controller_collectd_plugin: false
+gnocchi_status_controller_collectd_interval: 10
+
+########################
+# Disk/IOStat plugin
+########################
+# Disk plugin metrics are opt-out, IOStat metrics are opt-in
+disk_undercloud_collectd_plugin: true
+disk_controller_collectd_plugin: true
+disk_cephstorage_collectd_plugin: true
+disk_compute_collectd_plugin: true
+disk_blockstorage_collectd_plugin: true
+disk_objectstorage_collectd_plugin: true
+# Enable these for more comprehensive IOStat metrics
+iostat_undercloud_collectd_plugin: false
+iostat_undercloud_collectd_interval: 10
+iostat_controller_collectd_plugin: false
+iostat_controller_collectd_interval: 10
+iostat_cephstorage_collectd_plugin: false
+iostat_cephstorage_collectd_interval: 10
+iostat_compute_collectd_plugin: false
+iostat_compute_collectd_interval: 10
+iostat_blockstorage_collectd_plugin: false
+iostat_blockstorage_collectd_interval: 10
+iostat_objectstorage_collectd_plugin: false
+iostat_objectstorage_collectd_interval: 10
+
+########################
+# Keystone token count
+########################
+# If you have UUID tokens, we can count those via the collectd dbi plugin
+keystone_undercloud_collectd_plugin: false
+keystone_overcloud_collectd_plugin: false
+
+########################
+# Rabbitmq plugin
+########################
+rabbitmq_undercloud_collectd_plugin: false
+rabbitmq_undercloud_collectd_interval: 10
+rabbitmq_controller_collectd_plugin: false
+rabbitmq_controller_collectd_interval: 10
+
+# Queues to monitor message count on Undercloud
+undercloud_monitored_queues:
+  - "metering.sample"
+  - "event.sample"
+  - "notifications.sample"
+  - "notifications.audit"
+  - "notifications.info"
+  - "notifications.warn"
+  - "notifications.error"
+  - "notifications.critical"
+
+# Queues to monitor message count on Controllers
+controller_monitored_queues:
+  - "metering.sample"
+  - "event.sample"
+  - "notifications.sample"
+  - "notifications.audit"
+  - "notifications.info"
+  - "notifications.warn"
+  - "notifications.error"
+  - "notifications.critical"
+
+########################
+# ovsagent monitoring
+########################
+ovsagent_compute_monitor: false
+ovsagent_controller_monitor: false
+
+controller_monitored_ints:
+  - "tap"
+
+compute_monitored_ints:
+  - "qvo"
+
+controller_monitored_ns:
+  - "qrouter"
+  - "qdhcp"
+
+########################
+# Swift stat plugin
+########################
+# Provides metrics on Swift Account using Gnocchi Swift Configuration
+swift_stat_controller_collectd_plugin: false
+swift_stat_controller_collectd_interval: 10
+
+
+############################
+# OpenDaylight JAVA Plugin
+###########################
+
+# Plugin assumes that JAVA is already installed on the host
+opendaylight_java_plugin: false
+karaf_user: karaf
+karaf_password: karaf
+
+########################
+# tail plugin
+########################
+# Determines if WARN/INFO messages are also counted
+regex_warn: false
+regex_info: false
+
+########################################################
+# Ping Plugin for Latency and Jitter between controllers
+########################################################
+# Might result in more network traffic
+ping_plugin: false
+ping_interval: 1

@@ -1,0 +1,52 @@
+---
+#
+# Browbeat's PerfKitBenchmarker Install
+#
+
+- name: Create perfkit virtualenv
+  command: virtualenv {{ perfkit_venv }} creates={{ perfkit_venv }}
+
+- name: Setup perfkit-venv CA certificate path
+  lineinfile:
+    dest: "{{ perfkit_venv }}/bin/activate"
+    line: 'export REQUESTS_CA_BUNDLE={{ overcloud_ca_path }}'
+  when: overcloud_ca_path is defined
+
+- name: Determine if PerfKitBenchmarker is already cloned
+  stat:
+    path: "{{ perfkit_venv }}/PerfKitBenchmarker"
+  register: perfkit_exists
+
+- debug: msg="PerfKitBenchmarker already exists on the host"
+  when: perfkit_exists.stat.isdir is defined and perfkit_exists.stat.isdir
+
+- name: Clone PerfKitBenchmarker on undercloud
+  git:
+    repo: https://github.com/GoogleCloudPlatform/PerfKitBenchmarker.git
+    dest: "{{perfkit_venv}}/PerfKitBenchmarker"
+    version: "{{perfkit_version}}"
+  when: perfkit_exists.stat.isdir is undefined
+
+- name: Install PerfKitBenchmarker requirements into perfkit-venv
+  pip:
+     requirements: "{{perfkit_venv}}/PerfKitBenchmarker/requirements.txt"
+     virtualenv: "{{perfkit_venv}}"
+
+- name: Install PerfKitBenchmarker Openstack requirements into perfkit-venv
+  pip:
+     requirements: "{{ perfkit_venv }}/PerfKitBenchmarker/perfkitbenchmarker/providers/openstack/requirements.txt"
+     virtualenv: "{{perfkit_venv}}"
+
+# (akrzos) - These requirements are what works for OpenStack Ocata
+- name: Fix requirements for (OSP11 Ocata) inside perfkit-venv
+  pip:
+    name: "{{item.name}}"
+    version: "{{item.version}}"
+    virtualenv: "{{perfkit_venv}}"
+  with_items:
+    - name: openstacksdk
+      version: 0.9.17
+    - name: python-openstackclient
+      version: 3.12.0
+    - name: python-novaclient
+      version: 9.1.0

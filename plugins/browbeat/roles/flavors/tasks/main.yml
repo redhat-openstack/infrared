@@ -1,0 +1,10 @@
+---
+#
+# Add flavors to OpenStack Cloud
+#
+
+# Ignore errors here incase the flavors already exist.
+- name: Add flavors to overcloud
+  shell: . {{ browbeat_venv }}/bin/activate; . {{ overcloudrc }}; nova flavor-create {{item.name}} auto {{item.memory}} {{item.disk}} {{item.cpu}}
+  with_items: "{{browbeat_flavors}}"
+  ignore_errors: true

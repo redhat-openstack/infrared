@@ -1,0 +1,60 @@
+---
+#
+# Browbeat's Rally Install
+#
+
+- name: Create rally virtualenv
+  command: virtualenv {{ rally_venv }} creates={{ rally_venv }}
+
+- name: Rally Add browbeat to Python path
+  shell: echo 'export PYTHONPATH=$PYTHONPATH:{{ browbeat_path }}' >> {{ rally_venv }}/bin/activate
+
+- name: Setup rally-venv CA certificate path
+  lineinfile:
+    dest: "{{ rally_venv }}/bin/activate"
+    line: 'export REQUESTS_CA_BUNDLE={{ overcloud_ca_path }}'
+  when: overcloud_ca_path is defined
+
+- name: Install rally into rally-venv
+  pip:
+    name: rally
+    version: "{{ rally_version }}"
+    virtualenv: "{{ rally_venv }}"
+
+# (akrzos) Rally 0.10.1 installs a version (4.0.0) of gnocchiclient which deprecated service_type
+# session option.
+- name: Downgrade gnocchiclient in Rally venv
+  pip:
+    name: gnocchiclient
+    version: 3.3.1
+    virtualenv: "{{ rally_venv }}"
+
+- name: Install elasticsearch into rally-venv
+  pip:
+    name: elasticsearch
+    virtualenv: "{{ rally_venv }}"
+
+- name: Create rally configuration directory
+  file:
+    path: "{{ rally_venv }}/etc/rally"
+    state: directory
+
+- name: Setup rally.conf
+  template:
+    src: rally.conf.j2
+    dest: "{{ rally_venv }}/etc/rally/rally.conf"
+
+- name: Setup rally database
+  shell: . {{ rally_venv }}/bin/activate; rally-manage db recreate
+
+- name: Setup rally deployment
+  shell: . {{ rally_venv }}/bin/activate; . {{ overcloudrc }}; rally deployment create --fromenv --name overcloud
+
+- name: Check Rally deployment
+  shell: . {{ rally_venv }}/bin/activate; . {{ overcloudrc }}; rally deployment check
+  register: rally_deployment_check
+
+- name: Fail if Rally deployment cannot be verfied
+  fail:
+    msg: "Failed to verify that your deployment is ready to benchmark"
+  when: rally_deployment_check.rc != 0

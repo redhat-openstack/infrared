@@ -1,0 +1,2146 @@
+# Installed by Browbeat Ansible Installer
+# Config type: {{config_type}}
+
+# Interval default is 10s
+Interval {{collectd_interval}}
+
+# Hostname for this machine, if not defined, use gethostname(2) system call
+Hostname "{{inventory_hostname}}"
+
+# Loaded Plugins:
+LoadPlugin "logfile"
+<Plugin "logfile">
+  File "/var/log/collectd.log"
+  LogLevel "info"
+  PrintSeverity true
+  Timestamp true
+</Plugin>
+
+LoadPlugin write_graphite
+{% if apache_controller_collectd_plugin %}
+LoadPlugin apache
+{% endif %}
+{% if ceph_controller_collectd_plugin %}
+{% if inventory_hostname == groups['controller'][0] %}
+LoadPlugin ceph
+{% endif %}
+{% endif %}
+LoadPlugin cpu
+LoadPlugin conntrack
+{% if keystone_overcloud_collectd_plugin %}
+{%if inventory_hostname == groups['controller'][0] %}
+LoadPlugin dbi
+{% endif %}
+{% endif %}
+LoadPlugin df
+LoadPlugin disk
+LoadPlugin exec
+LoadPlugin interface
+LoadPlugin irq
+LoadPlugin load
+LoadPlugin match_regex
+LoadPlugin memory
+LoadPlugin mysql
+LoadPlugin numa
+LoadPlugin processes
+<LoadPlugin python>
+  Globals true
+</LoadPlugin>
+LoadPlugin swap
+LoadPlugin tail
+LoadPlugin turbostat
+LoadPlugin unixsock
+LoadPlugin uptime
+{% if ping_plugin %}
+LoadPlugin ping
+{% endif %}
+{% if opendaylight_java_plugin %}
+LoadPlugin java
+{% endif %}
+
+# Open unix domain socket for collectdctl
+<Plugin unixsock>
+  SocketFile "/var/run/collectd-unixsock"
+  SocketGroup "collectd"
+  SocketPerms "0770"
+  DeleteSocket true
+</Plugin>
+
+PreCacheChain "PreCache"
+<Chain "PreCache">
+  <Rule "ignore_tap">
+    <Match "regex">
+      Plugin "^interface$"
+      PluginInstance "^tap*"
+    </Match>
+    Target "stop"
+  </Rule>
+  <Rule "ignore_interfaces_q">
+    <Match "regex">
+      Plugin "^interface$"
+      PluginInstance "^q.*"
+    </Match>
+    Target "stop"
+  </Rule>
+  Target "return"
+</Chain>
+
+# Graphite Host Configuration
+<Plugin write_graphite>
+  <Carbon>
+    Host "{{graphite_host}}"
+    Port "{{collectd_write_graphite_port}}"
+    Prefix "{{graphite_prefix}}."
+    Protocol "tcp"
+    LogSendErrors true
+    StoreRates true
+    AlwaysAppendDS false
+    EscapeCharacter "_"
+  </Carbon>
+</Plugin>
+{% if apache_controller_collectd_plugin %}
+
+<Plugin apache>
+  <Instance "status">
+    URL "http://127.0.0.1:{{apache_controller_mod_status_port}}/mod_status?auto"
+  </Instance>
+</Plugin>
+{% endif %}
+{% if ceph_controller_collectd_plugin %}
+{% if inventory_hostname == groups['controller'][0] %}
+
+<Plugin ceph>
+  LongRunAvgLatency false
+  ConvertSpecialMetricTypes true
+  <Daemon "mon.{{inventory_hostname}}">
+    SocketPath "/var/run/ceph/ceph-mon.{{inventory_hostname}}.asok"
+  </Daemon>
+</Plugin>
+
+{% endif %}
+{% endif %}
+{% if ceph_controller_collectd_radosbench_plugin or ceph_controller_collectd_mon_plugin or ceph_controller_collectd_osd_plugin or ceph_controller_collectd_pg_plugin or ceph_controller_collectd_pool_plugin %}
+{% if inventory_hostname == groups['controller'][0] %}
+
+<Plugin python>
+  LogTraces true
+  Interactive false
+  ModulePath "/usr/local/bin/"
+  Import "collectd_ceph_storage"
+  <Module collectd_ceph_storage>
+    CephCluster "ceph"
+
+    CephRadosBench {{ceph_controller_collectd_radosbench_plugin}}
+    CephRadosBenchInterval {{ceph_controller_collectd_radosbench_interval}}
+    CephMONStats {{ceph_controller_collectd_mon_plugin}}
+    CephMONStatsInterval {{ceph_controller_collectd_mon_interval}}
+    CephOSDStats {{ceph_controller_collectd_osd_plugin}}
+    CephOSDStatsInterval {{ceph_controller_collectd_osd_interval}}
+    CephPGStats {{ceph_controller_collectd_pg_plugin}}
+    CephPGStatsInterval {{ceph_controller_collectd_pg_interval}}
+    CephPoolStats {{ceph_controller_collectd_pool_plugin}}
+    CephPoolStatsInterval {{ceph_controller_collectd_pool_interval}}
+  </Module>
+</Plugin>
+{% endif %}
+{% endif %}
+{% if keystone_overcloud_collectd_plugin %}
+{%if inventory_hostname == groups['controller'][0] %}
+
+<Plugin dbi>
+  <Query token_count>
+    Statement "select count(*) as count from token"
+    <Result>
+      Type gauge
+      InstancePrefix "token"
+      ValuesFrom "count"
+    </Result>
+  </Query>
+  <Database "keystone">
+    Driver "mysql"
+    DriverOption "host" "localhost"
+    DriverOption "dbname" "keystone"
+    DriverOption "username" "root"
+    DriverOption "password" "{{mysql_root_password.stdout}}"
+    DriverOption "mysql_unix_socket" "/var/lib/mysql/mysql.sock"
+    Query token_count
+  </Database>
+</Plugin>
+{% else %}
+# Token Count plugin installed and enabled on {{groups['controller'][0]}}
+{% endif %}
+{% endif %}
+
+<Plugin df>
+  FSType anon_inodefs
+  FSType bdev
+  FSType cgroup
+  FSType cpuset
+  FSType debugfs
+  FSType devpts
+  FSType devtmpfs
+  FSType ecryptfs
+  FSType fuse
+  FSType fusectl
+  FSType hugetlbfs
+  FSType mqueue
+  FSType nfs
+  FSType nfs4
+  FSType nfsd
+  FSType overlay
+  FSType pipefs
+  FSType proc
+  FSType pstore
+  FSType ramfs
+  #FSType rootfs
+  FSType rpc_pipefs
+  FSType securityfs
+  FSType sockfs
+  FSType sysfs
+  FSType tmpfs
+  FSType vboxsf
+  MountPoint "/^/var/lib/docker/.*/"
+  IgnoreSelected true
+  ValuesPercentage true
+  ReportInodes true
+</Plugin>
+
+{%if disk_controller_collectd_plugin %}
+<Plugin disk>
+  Disk "/^[hsv]d[a-z]+[0-9]?$/"
+  Disk "/^nvm/"
+  IgnoreSelected false
+</Plugin>
+
+{% endif %}
+{%if iostat_controller_collectd_plugin %}
+<Plugin python>
+  ModulePath "/usr/local/bin/"
+  Import "collectd_iostat_python"
+
+  <Module collectd_iostat_python>
+    Path "/usr/bin/iostat"
+    Interval {{iostat_controller_collectd_interval}}
+    IostatInterval 2
+    Count 2
+    Verbose false
+    NiceNames false
+    PluginName collectd_iostat_python
+  </Module>
+</Plugin>
+
+{% endif %}
+{%if gnocchi_status_controller_collectd_plugin %}
+{%if inventory_hostname == groups['controller'][0] %}
+<Plugin python>
+  ModulePath "/usr/local/bin/"
+  LogTraces true
+  Interactive false
+  Import "collectd_gnocchi_status"
+  <Module collectd_gnocchi_status>
+    interval {{gnocchi_status_controller_collectd_interval}}
+  </Module>
+</Plugin>
+
+{% else %}
+# Gnocchi status plugin installed and enabled on {{groups['controller'][0]}}
+
+{% endif %}
+{% endif %}
+<Plugin mysql>
+  <Database "overcloud">
+    Host "localhost"
+    User "root"
+    Password "{{mysql_root_password.stdout}}"
+    Socket "/var/lib/mysql/mysql.sock"
+    InnodbStats true
+  </Database>
+</Plugin>
+
+# (akrzos) Including the version of OpenStack that the process was verified as running after
+# OpenStack Installation with a comment at the end of each Process/ProcessMatch statement.
+# A Minus before the version means the process was not found in that version. (Ex -10)
+<Plugin processes>
+  # Aodh (OpenStack Installed)
+  ProcessMatch "aodh-evaluator" "aodh-evaluator"                                        # 10,11,12,13
+  ProcessMatch "aodh-listener" "aodh-listener"                                          # 10,11,12,13
+  ProcessMatch "aodh-notifier" "aodh-notifier"                                          # 10,11,12,13
+  ProcessMatch "aodh_wsgi" "aodh_wsgi.*-DFOREGROUND"                                    # 11,12,13
+
+  # Ceilometer (OpenStack Installed)
+  ProcessMatch "ceilometer-agent-notification" "ceilometer-agent-notification"          # 10,11,12,13
+  ProcessMatch "ceilometer-collector" "ceilometer-collector"                            # 10,11,-12,-13
+  ProcessMatch "ceilometer-polling" "ceilometer-polling"                                # 10,11,12,13
+  ProcessMatch "ceilometer_wsgi" "ceilometer_wsgi.*-DFOREGROUND"                        # 11,-12,-13
+
+  # Ceph (OpenStack Installed)
+  # When CephStorage nodes deployed
+  ProcessMatch "ceph-mon" "^/usr/bin/ceph-mon"                                          # -10,-11,-12,-13
+
+  # Cinder (OpenStack Installed)
+  ProcessMatch "cinder-api" "python.+cinder-api"                                        # 10,-11,-12
+  ProcessMatch "cinder-scheduler" "python.+cinder-scheduler"                            # 10,11,12,13
+  ProcessMatch "cinder-volume" "python.+cinder-volume"                                  # 10,11,12,13
+  ProcessMatch "cinder_wsgi" "cinder_wsgi.*-DFOREGROUND"                                # 11,12,13
+
+  # Collectd (Browbeat Installed)
+  ProcessMatch "collectd" "/usr/sbin/collectd"
+
+  # Docker (OpenStack Installed)
+  ProcessMatch "dockerd-current" "dockerd-current"                                      # 12,13
+
+  # Pacemaker / Corosync (OpenStack Installed)
+  ProcessMatch "attrd" "/usr/libexec/pacemaker/attrd"                                   # 10,11,12,13
+  ProcessMatch "cib" "/usr/libexec/pacemaker/cib"                                       # 10,11,12,13
+  Process "corosync"                                                                    # 10,11,12,13
+  ProcessMatch "crmd" "/usr/libexec/pacemaker/crmd"                                     # 10,11,12,13
+  ProcessMatch "lrmd" "/usr/libexec/pacemaker/lrmd"                                     # 10,11,12,13
+  ProcessMatch "pacemakerd" "/usr/sbin/pacemakerd"                                      # 10,11,12,13
+  ProcessMatch "pcsd" "^/usr/bin/ruby.+/usr/lib/pcsd"                                   # 10,11,12,13
+  ProcessMatch "pengine" "/usr/libexec/pacemaker/pengine"                               # 10,11,12,13
+  ProcessMatch "stonithd" "/usr/libexec/pacemaker/stonithd"                             # 10,11,12,13
+
+  # Everything Else (OpenStack Installed)
+  # (Processes displayed under "Everything Else" on Grafana Dashboards)
+  ProcessMatch "dnsmasq" "^dnsmasq.+"                                                   # 10,11,12
+  ProcessMatch "haproxy" "/usr/sbin/haproxy.+/etc/haproxy/haproxy.cfg"                  # 10,11,12,13
+  Process "httpd"                                                                       # 10,11,12,13
+  Process "keepalived"                                                                  # 10,11,12
+  Process "memcached"                                                                   # 10,11,12,13
+  Process "mongod"                                                                      # 10,11,-12,-13
+  ProcessMatch "mysqld" "/usr/libexec/mysqld"                                           # 10,11,12,13
+  ProcessMatch "rabbitmq" "/usr/lib64/erlang/erts-.+/bin/beam.smp"                      # 10,11,12,13
+  Process "redis-server"                                                                # 10,11,12,13
+  ProcessMatch "karaf" "java.+karaf"                                                    # ODL Specific
+
+  # Glance (OpenStack Installed)
+  ProcessMatch "glance-api" "python.+glance-api"                                        # 10,11,12,13
+  ProcessMatch "glance-registry" "python.+glance-registry"                              # 10,-11,-12,-13
+
+  # Gnocchi (OpenStack Installed)
+  ProcessMatch "gnocchi-metricd-master" "gnocchi-metricd.*master"                       # 11,12,13
+  ProcessMatch "gnocchi-metricd-scheduler" "gnocchi-metricd.*scheduler"                 # 10,11,-12,-13
+  ProcessMatch "gnocchi-metricd-processing" "gnocchi-metricd.*processing"               # 10,11,12,13
+  ProcessMatch "gnocchi-metricd-reporting" "gnocchi-metricd.*reporting"                 # 10,11,12,13
+  ProcessMatch "gnocchi-metricd-janitor" "gnocchi-metricd.*janitor"                     # 10,11,12,13
+  ProcessMatch "gnocchi-metricd" "gnocchi-metricd "                                     # 10(Old proctitle)
+  ProcessMatch "gnocchi-statsd" "python.+gnocchi-statsd"                                # 10,11,12,13
+  ProcessMatch "gnocchi_wsgi" "gnocchi_wsgi.*-DFOREGROUND"                              # 11,12,13
+
+  # Heat (OpenStack Installed)
+  ProcessMatch "heat-api" "python.+heat-api --config-file"                              # 10,11,-12,-13
+  ProcessMatch "heat-api-cfn" "python.+heat-api-cfn"                                    # 10,11,-12,-13
+  ProcessMatch "heat-api-cloudwatch" "python.+heat-api-cloudwatch"                      # 10,11,-12,-123
+  ProcessMatch "heat_api_cfn" "heat_api_cfn_ws"                                         # 12,13
+  ProcessMatch "heat_api_cloudwatch" "heat_api_cloudw"                                  # 12,-13
+  ProcessMatch "heat_api_wsgi" "heat_api_wsgi"                                          # 12,13
+  ProcessMatch "heat-engine" "python.+heat-engine"                                      # 10,11,12,13
+
+  # Horizon (OpenStack Installed)
+  ProcessMatch "horizon" "horizon"                                                      # 13
+
+  # Keystone (OpenStack Installed)
+  ProcessMatch "keystone-admin" "keystone-admin.*-DFOREGROUND"                          # 10,11,12,13
+  ProcessMatch "keystone-main" "keystone-main.*-DFOREGROUND"                            # 10,11,12,13
+  # Starting Pike, fernet tokens are default thus token_flush not needed
+  ProcessMatch "keystone-token-flush" "keystone-manage.*token_flush"                    # 10,11,-12,-13
+
+  # Neutron (OpenStack Installed)
+  ProcessMatch "neutron-dhcp-agent" "python.+neutron-dhcp-agent"                        # 10,11,12,13
+  ProcessMatch "neutron-l3-agent" "python.+neutron-l3-agent"                            # 10,11,12,13
+  ProcessMatch "neutron-metadata-agent" "python.+neutron-metadata-agent"                # 10,11,12,13
+  ProcessMatch "neutron-ns-metadata-proxy" "python.+neutron-ns-metadata-proxy"          # 10,11
+  ProcessMatch "neutron-openvswitch-agent" "python.+neutron-openvswitch-agent"          # 10,11,12,13
+  ProcessMatch "neutron-rootwrap-daemon" "python.+neutron-rootwrap-daemon"              # 10,11,12,13
+  ProcessMatch "neutron-server" "python.+neutron-server"                                # 10,11,12,13
+
+  # Nova (OpenStack Installed)
+  ProcessMatch "nova-api" "python.+nova-api$"                                           # 10,11,-12,-13
+  ProcessMatch "nova-api-metadata" "python.+nova-api-metadata"                          # 12,13
+  ProcessMatch "nova_api_wsgi" "nova_api_wsgi"                                          # 12,13
+  ProcessMatch "nova-conductor" "python.+nova-conductor"                                # 10,11,12,13
+  ProcessMatch "nova-consoleauth" "python.+nova-consoleauth"                            # 10,11,12,13
+  ProcessMatch "nova-novncproxy" "python.+nova-novncproxy"                              # 10,11,12,13
+  ProcessMatch "nova-scheduler" "python.+nova-scheduler"                                # 10,11,12,13
+  ProcessMatch "placement_wsgi" "placement_wsgi.*-DFOREGROUND"                          # 11,12,13
+
+  ProcessMatch "octavia-housekeeping" "python.+octavia-housekeeping"                    # 13
+  ProcessMatch "octavia-health-manager" "python.+octavia-health-manager"                # 13
+  ProcessMatch "octavia-api" "python.+octavia-api"                                      # 13
+  ProcessMatch "octavia-worker" "octavia-worker --config-file"                          # 13
+
+  # OVS (OpenStack Installed)
+  ProcessMatch "ovs-vswitchd" "ovs-vswitchd.+openvswitch"                               # 10,11,12,13
+  ProcessMatch "ovsdb-client" "ovsdb-client"                                            # 10,11,12,13
+  ProcessMatch "ovsdb-server" "ovsdb-server.+openvswitch"                               # 10,11,12,13
+  ProcessMatch "ovn-northd" "ovn-northd.+openvswitch"                                   # 9,10
+  ProcessMatch "ovn-controller" "ovn-controller.+openvswitch"                           # 9,10
+  ProcessMatch "ovn-controller-vtep" "ovn-controller-vtep.+openvswitch"                 # 9,10
+
+  # Panko (OpenStack Installed)
+  ProcessMatch "panko_wsgi" "panko_wsgi.*-DFOREGROUND"                                  # 11,12,13
+
+  # Swift (OpenStack Installed)
+  ProcessMatch "swift-account-auditor" "python.+swift-account-auditor"                  # 10,11,12,13
+  ProcessMatch "swift-account-reaper" "python.+swift-account-reaper"                    # 10,11,12,13
+  ProcessMatch "swift-account-replicator" "python.+swift-account-replicator"            # 10,11,12,13
+  ProcessMatch "swift-account-server" "python.+swift-account-server"                    # 10,11,12,13
+  ProcessMatch "swift-container-auditor" "python.+swift-container-auditor"              # 10,11,12,13
+  ProcessMatch "swift-container-replicator" "python.+swift-container-replicator"        # 10,11,12,13
+  ProcessMatch "swift-container-server" "python.+swift-container-server"                # 10,11,12,13
+  ProcessMatch "swift-container-updater" "python.+swift-container-updater"              # 10,11,12,13
+  ProcessMatch "swift-object-auditor" "python.+swift-object-auditor"                    # 10,11,12,13
+  ProcessMatch "swift-object-expirer" "python.+swift-object-expirer"                    # 11,12,13
+  ProcessMatch "swift-object-replicator" "python.+swift-object-replicator"              # 10,11,12,13
+  ProcessMatch "swift-object-server" "python.+swift-object-server"                      # 10,11,12,13
+  ProcessMatch "swift-object-updater" "python.+swift-object-updater"                    # 10,11,12,13
+  ProcessMatch "swift-proxy-server" "python.+swift-proxy-server"                        # 10,11,12,13
+</Plugin>
+
+{%if rabbitmq_controller_collectd_plugin %}
+{%if inventory_hostname == groups['controller'][0] %}
+<Plugin python>
+  ModulePath "/usr/local/bin/"
+  LogTraces true
+  Interactive false
+  Import "collectd_rabbitmq_monitoring"
+  <Module collectd_rabbitmq_monitoring>
+    interval {{rabbitmq_controller_collectd_interval}}
+    host "{{inventory_hostname}}.internalapi.localdomain"
+    port 15672
+    username {{controller0_rabbitmq_username.stdout}}
+    password {{controller0_rabbitmq_password.stdout}}
+    message_count {% for a_queue in controller_monitored_queues %}"{{a_queue}}" {% endfor %}
+
+  </Module>
+</Plugin>
+{% else %}
+# Rabbitmq plugin installed and enabled on {{groups['controller'][0]}}
+{% endif %}
+{% endif %}
+{%if swift_stat_controller_collectd_plugin %}
+{%if inventory_hostname == groups['controller'][0] %}
+
+<Plugin python>
+  ModulePath "/usr/local/bin/"
+  LogTraces true
+  Interactive false
+  Import "collectd_swift_stat"
+  <Module collectd_swift_stat>
+    Interval {{swift_stat_controller_collectd_interval}}
+    Prefix "gnocchi"
+    AuthURL "{{controller0_gnocchi_swift_authurl.stdout}}"
+    AuthVersion "{{controller0_gnocchi_swift_authversion.stdout}}"
+    User "{{controller0_gnocchi_swift_user.stdout}}"
+    Password "{{controller0_gnocchi_swift_auth_key.stdout}}"
+    Project "service"
+  </Module>
+</Plugin>
+{% else %}
+# swift_stat plugin installed and enabled on {{groups['controller'][0]}}
+{% endif %}
+{% endif %}
+
+<Plugin swap>
+  ReportBytes true
+  ValuesPercentage true
+</Plugin>
+
+# ping plugin
+{% if ping_plugin %}
+{% if groups['controller'] | length > 1 %}
+<Plugin "ping">
+{% if inventory_hostname == groups['controller'][0] %}
+   Host "{{groups['controller'][1]}}"
+   Host "{{groups['controller'][2]}}"
+{% elif inventory_hostname == groups['controller'][1] %}
+   Host "{{groups['controller'][0]}}"
+   Host "{{groups['controller'][2]}}"
+{% elif inventory_hostname == groups['controller'][2] %}
+   Host "{{groups['controller'][0]}}"
+   Host "{{groups['controller'][1]}}"
+{% endif %}
+   Interval {{ping_interval}}
+</Plugin>
+{% endif %}
+{% endif %}
+
+# Tail plugin configuration
+<Plugin "tail">
+
+# Tail httpd request time
+{%if apache_controller_collectd_request_time %}
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/httpd/gnocchi-api/gnocchi_wsgi_access.log">
+  {% else %}
+  <File "/var/log/httpd/gnocchi_wsgi_access.log">
+  {% endif %}
+    Instance "gnocchi-api"
+
+    # Gnocchi API Post
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "post"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "GaugeMax"
+      Type "latency"
+      Instance "post-max"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      <DSType "Distribution">
+        Percentile 99
+        Bucket 0 100
+      </DSType>
+      Type "latency"
+      Instance "post"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "GaugeAverage"
+      Type "latency"
+      Instance "post-avg"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "GaugeMin"
+      Type "latency"
+      Instance "post-min"
+    </Match>
+
+    # Gnocchi API Patch
+    <Match>
+      Regex "RT:([0-9]+).*PATCH"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "patch"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*PATCH"
+      DSType "GaugeMax"
+      Type "latency"
+      Instance "patch-max"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*PATCH"
+      <DSType "Distribution">
+        Percentile 99
+        Bucket 0 100
+      </DSType>
+      Type "latency"
+      Instance "patch"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*PATCH"
+      DSType "GaugeAverage"
+      Type "latency"
+      Instance "patch-avg"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*PATCH"
+      DSType "GaugeMin"
+      Type "latency"
+      Instance "patch-min"
+    </Match>
+
+    # Gnocchi API Get
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "get"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "GaugeMax"
+      Type "latency"
+      Instance "get-max"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      <DSType "Distribution">
+        Percentile 99
+        Bucket 0 100
+      </DSType>
+      Type "latency"
+      Instance "get"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "GaugeAverage"
+      Type "latency"
+      Instance "get-avg"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "GaugeMin"
+      Type "latency"
+      Instance "get-min"
+    </Match>
+  </File>
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/httpd/keystone/keystone_wsgi_admin_access.log">
+  {% else %}
+  <File "/var/log/httpd/keystone_wsgi_admin_access.log">
+  {% endif %}
+    Instance "keystone-admin-api"
+
+    # Keystone Admin Post
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "post"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "GaugeMax"
+      Type "latency"
+      Instance "post-max"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      <DSType "Distribution">
+        Percentile 99
+        Bucket 0 100
+      </DSType>
+      Type "latency"
+      Instance "post"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "GaugeAverage"
+      Type "latency"
+      Instance "post-avg"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "GaugeMin"
+      Type "latency"
+      Instance "post-min"
+    </Match>
+
+    # Keystone Admin Get
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "get"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "GaugeMax"
+      Type "latency"
+      Instance "get-max"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      <DSType "Distribution">
+        Percentile 99
+        Bucket 0 100
+      </DSType>
+      Type "latency"
+      Instance "get"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "GaugeAverage"
+      Type "latency"
+      Instance "get-avg"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "GaugeMin"
+      Type "latency"
+      Instance "get-min"
+    </Match>
+  </File>
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/httpd/keystone/keystone_wsgi_main_access.log">
+  {% else %}
+  <File "/var/log/httpd/keystone_wsgi_main_access.log">
+  {% endif %}
+    Instance "keystone-main-api"
+
+    # Keystone Main Post
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "post"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "GaugeMax"
+      Type "latency"
+      Instance "post-max"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      <DSType "Distribution">
+        Percentile 99
+        Bucket 0 100
+      </DSType>
+      Type "latency"
+      Instance "post"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "GaugeAverage"
+      Type "latency"
+      Instance "post-avg"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "GaugeMin"
+      Type "latency"
+      Instance "post-min"
+    </Match>
+
+    # Keystone Main Get
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "get"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "GaugeMax"
+      Type "latency"
+      Instance "get-max"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      <DSType "Distribution">
+        Percentile 99
+        Bucket 0 100
+      </DSType>
+      Type "latency"
+      Instance "get"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "GaugeAverage"
+      Type "latency"
+      Instance "get-avg"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "GaugeMin"
+      Type "latency"
+      Instance "get-min"
+    </Match>
+  </File>
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/httpd/nova-placement/placement_wsgi_access.log">
+  {% else %}
+  <File "/var/log/httpd/placement_wsgi_access.log">
+  {% endif %}
+    Instance "nova-placement-api"
+
+    # Nova Placement Post
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "post"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "GaugeMax"
+      Type "latency"
+      Instance "post-max"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      <DSType "Distribution">
+        Percentile 99
+        Bucket 0 100
+      </DSType>
+      Type "latency"
+      Instance "post"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "GaugeAverage"
+      Type "latency"
+      Instance "post-avg"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*POST"
+      DSType "GaugeMin"
+      Type "latency"
+      Instance "post-min"
+    </Match>
+
+    # Nova Placement Put
+    <Match>
+      Regex "RT:([0-9]+).*PUT"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "put"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*PUT"
+      DSType "GaugeMax"
+      Type "latency"
+      Instance "put-max"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*PUT"
+      <DSType "Distribution">
+        Percentile 99
+        Bucket 0 100
+      </DSType>
+      Type "latency"
+      Instance "put"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*PUT"
+      DSType "GaugeAverage"
+      Type "latency"
+      Instance "put-avg"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*PUT"
+      DSType "GaugeMin"
+      Type "latency"
+      Instance "put-min"
+    </Match>
+
+    # Nova Placement Get
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "get"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "GaugeMax"
+      Type "latency"
+      Instance "get-max"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      <DSType "Distribution">
+        Percentile 99
+        Bucket 0 100
+      </DSType>
+      Type "latency"
+      Instance "get"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "GaugeAverage"
+      Type "latency"
+      Instance "get-avg"
+    </Match>
+    <Match>
+      Regex "RT:([0-9]+).*GET"
+      DSType "GaugeMin"
+      Type "latency"
+      Instance "get-min"
+    </Match>
+  </File>
+
+{% endif %}
+# End Tail httpd request time
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/aodh/aodh-evaluator.log">
+  {% else %}
+  <File "/var/log/aodh/evaluator.log">
+  {% endif %}
+    Instance "aodh-evaluator"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/aodh/aodh-listener.log">
+  {% else %}
+  <File "/var/log/aodh/listener.log">
+  {% endif %}
+    Instance "aodh-listener"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/aodh/aodh-notifier.log">
+  {% else %}
+  <File "/var/log/aodh/notifier.log">
+  {% endif %}
+    Instance "aodh-notifier"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/httpd/aodh-api/aodh_wsgi_error.log">
+  {% else %}
+  <File "/var/log/httpd/aodh_wsgi_error.log">
+  {% endif %}
+    Instance "aodh-wsgi-api"
+    <Match>
+      Regex ":error"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+  </File>
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/ceilometer/agent-notification.log">
+  {% else %}
+  <File "/var/log/ceilometer/agent-notification.log">
+  {% endif %}
+    Instance "ceilometer-agent-notification"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/ceilometer/central.log">
+  {% else %}
+  <File "/var/log/ceilometer/central.log">
+  {% endif %}
+    Instance "ceilometer-central"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+{%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  # No need to tail for ceilometer-collector/ceilometer_wsgi in Queens/Pike
+{% else %}
+  <File "/var/log/ceilometer/collector.log">
+    Instance "ceilometer-collector"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+    {%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+    {% endif %}
+    {%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+    {% endif %}
+  </File>
+  <File "/var/log/httpd/ceilometer_wsgi_error.log">
+    Instance "ceilometer-wsgi-api"
+    <Match>
+      Regex ":error"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+  </File>
+{% endif %}
+
+  <File "/var/log/ceph/ceph.log">
+    Instance "ceph"
+    <Match>
+      Regex "\\[ERR\\]"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex "\\[WRN\\]"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex "\\[INF\\]"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+
+  {%if ('Queens' in osp_version['content'] | b64decode) %}
+  <File "/var/log/containers/cinder/cinder-api.log">
+  {%elif 'Pike' in osp_version['content'] | b64decode or 'Ocata' in osp_version['content'] | b64decode %}
+  <File "/var/log/cinder/cinder-api.log">
+  {% else %}
+  <File "/var/log/cinder/api.log">
+  {% endif %}
+    Instance "cinder-api"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if ('Queens' in osp_version['content'] | b64decode) %}
+  <File "/var/log/containers/cinder/cinder-scheduler.log">
+  {% else %}
+  <File "/var/log/cinder/scheduler.log">
+  {% endif %}
+    Instance "cinder-scheduler"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if ('Queens' in osp_version['content'] | b64decode) %}
+  <File "/var/log/containers/cinder/cinder-volume.log">
+  {% else %}
+  <File "/var/log/cinder/volume.log">
+  {% endif %}
+    Instance "cinder-volume"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/glance/api.log">
+  {% else %}
+  <File "/var/log/glance/api.log">
+  {% endif %}
+    Instance "glance-api"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+
+{%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  # No Glance registry in Queens/Pike
+{% else %}
+  <File "/var/log/glance/registry.log">
+    Instance "glance-registry"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+{% endif %}
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/gnocchi/app.log">
+  {% else %}
+  <File "/var/log/gnocchi/app.log">
+  {% endif %}
+    Instance "gnocchi-app"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/gnocchi/gnocchi-metricd.log">
+  {% else %}
+  <File "/var/log/gnocchi/metricd.log">
+  {% endif %}
+    Instance "gnocchi-metricd"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/gnocchi/gnocchi-statsd.log">
+  {% else %}
+  <File "/var/log/gnocchi/statsd.log">
+  {% endif %}
+    Instance "gnocchi-statsd"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/httpd/gnocchi-api/gnocchi_wsgi_error.log">
+  {% else %}
+  <File "/var/log/httpd/gnocchi_wsgi_error.log">
+  {% endif %}
+    Instance "gnocchi-wsgi-api"
+    <Match>
+      Regex ":error"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+  </File>
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/heat/heat_api_cfn.log">
+  {% else %}
+  <File "/var/log/heat/heat-api-cfn.log">
+  {% endif %}
+    Instance "heat-api-cfn"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/heat/heat_api_cfn.log">
+  {% else %}
+  <File "/var/log/heat/heat-api-cloudwatch.log">
+  {% endif %}
+    Instance "heat-api-cloudwatch"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/heat/heat_api.log">
+  {% else %}
+  <File "/var/log/heat/heat-api.log">
+  {% endif %}
+    Instance "heat-api"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/heat/heat-engine.log">
+  {% else %}
+  <File "/var/log/heat/heat-engine.log">
+  {% endif %}
+    Instance "heat-engine"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/keystone/keystone.log">
+  {% else %}
+  <File "/var/log/keystone/keystone.log">
+  {% endif %}
+    Instance "keystone"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/httpd/keystone/keystone_wsgi_admin_error.log">
+  {% else %}
+  <File "/var/log/httpd/keystone_wsgi_admin_error.log">
+  {% endif %}
+    Instance "keystone-wsgi-admin"
+    <Match>
+      Regex ":error"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/httpd/keystone/keystone_wsgi_main_error.log">
+  {% else %}
+  <File "/var/log/httpd/keystone_wsgi_main_error.log">
+  {% endif %}
+    Instance "keystone-wsgi-main"
+    <Match>
+      Regex ":error"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+  </File>
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/pacemaker/bundles/galera-bundle-0/mysqld.log">
+  {% else %}
+  <File "/var/log/mysqld.log">
+  {% endif %}
+    Instance "mysqld"
+    <Match>
+      Regex "\\[ERROR\\]"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex "\\[Warning\\]"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex "\\[Note\\]"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+
+  {%if 'Queens' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/neutron/dhcp-agent.log">
+  {% else %}
+  <File "/var/log/neutron/dhcp-agent.log">
+  {% endif %}
+    Instance "neutron-dhcp-agent"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/neutron/l3-agent.log">
+  {% else %}
+  <File "/var/log/neutron/l3-agent.log">
+  {% endif %}
+    Instance "neutron-l3-agent"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/neutron/metadata-agent.log">
+  {% else %}
+  <File "/var/log/neutron/metadata-agent.log">
+  {% endif %}
+    Instance "neutron-metadata-agent"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/neutron/openvswitch-agent.log">
+  {% else %}
+  <File "/var/log/neutron/openvswitch-agent.log">
+  {% endif %}
+    Instance "neutron-openvswitch-agent"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/neutron/server.log">
+  {% else %}
+  <File "/var/log/neutron/server.log">
+  {% endif %}
+    Instance "neutron-server"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/nova/nova-api.log">
+  {% else %}
+  <File "/var/log/nova/nova-api.log">
+  {% endif %}
+    Instance "nova-api"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+{%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/nova/nova-api-metadata.log">
+    Instance "nova-api-metadata"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+    {%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+    {% endif %}
+    {%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+    {% endif %}
+  </File>
+{% endif %}
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/nova/nova-conductor.log">
+  {% else %}
+  <File "/var/log/nova/nova-conductor.log">
+  {% endif %}
+    Instance "nova-conductor"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/nova/nova-consoleauth.log">
+  {% else %}
+  <File "/var/log/nova/nova-consoleauth.log">
+  {% endif %}
+    Instance "nova-consoleauth"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/nova/nova-novncproxy.log">
+  {% else %}
+  <File "/var/log/nova/nova-novncproxy.log">
+  {% endif %}
+    Instance "nova-novncproxy"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/nova/nova-placement-api.log">
+  {% else %}
+  <File "/var/log/nova/nova-placement-api.log">
+  {% endif %}
+    Instance "nova-placement-api"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/nova/nova-scheduler.log">
+  {% else %}
+  <File "/var/log/nova/nova-scheduler.log">
+  {% endif %}
+    Instance "nova-scheduler"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/httpd/nova-placement/placement_wsgi_error.log">
+  {% else %}
+  <File "/var/log/httpd/placement_wsgi_error.log">
+  {% endif %}
+    Instance "nova-placement-wsgi-api"
+    <Match>
+      Regex ":error"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+  </File>
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/panko/app.log">
+  {% else %}
+  <File "/var/log/panko/app.log">
+  {% endif %}
+    Instance "panko"
+    <Match>
+      Regex " ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex " WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex " INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+  {%if 'Pike' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/containers/httpd/panko-api/panko_wsgi_error.log">
+  {% else %}
+  <File "/var/log/httpd/panko_wsgi_error.log">
+  {% endif %}
+    Instance "panko-wsgi-api"
+    <Match>
+      Regex ":error"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+  </File>
+
+  {%if 'Queens' in osp_version['content'] | b64decode or 'Pike' in osp_version['content'] | b64decode %}
+  <File "/var/log/pacemaker/bundles/rabbitmq-bundle-0/rabbitmq/rabbit\@{{ansible_hostname}}.log">
+  {% else %}
+  <File "/var/log/rabbitmq/rabbit\@{{ansible_hostname}}.log">
+  {% endif %}
+    Instance "rabbitmq"
+    <Match>
+      Regex "ERROR REPORT"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex "WARNING REPORT"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex "INFO REPORT"
+      DSType "CounterInc"
+      Type "counter"
+      Instance "info"
+    </Match>
+{% endif %}
+  </File>
+
+  # Swift logs all into the same file
+  <File "/var/log/swift/swift.log">
+    Instance "swift"
+    <Match>
+      Regex "account-server: ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "account-server-error"
+    </Match>
+    <Match>
+      Regex "container-server: ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "container-server-error"
+    </Match>
+    <Match>
+      Regex "object-server: ERROR "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "object-server-error"
+    </Match>
+{%if regex_warn %}
+    <Match>
+      Regex "account-server: WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "account-server-warn"
+    </Match>
+    <Match>
+      Regex "container-server: WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "container-server-warn"
+    </Match>
+    <Match>
+      Regex "object-server: WARNING "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "object-server-warn"
+    </Match>
+{% endif %}
+{%if regex_info %}
+    <Match>
+      Regex "account-server: INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "account-server-info"
+    </Match>
+    <Match>
+      Regex "container-server: INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "container-server-info"
+    </Match>
+    <Match>
+      Regex "object-server: INFO "
+      DSType "CounterInc"
+      Type "counter"
+      Instance "object-server-info"
+    </Match>
+{% endif %}
+  </File>
+
+</Plugin>
+
+{% if opendaylight_java_plugin %}
+
+<Plugin "java">
+JVMArg "-Djava.class.path=/usr/share/collectd/java/collectd-api.jar:/usr/share/collectd/java/generic-jmx.jar"
+LoadPlugin "org.collectd.java.GenericJMX"
+<Plugin "GenericJMX">
+  <MBean "gc-count">
+    ObjectName "java.lang:type=GarbageCollector,*"
+    InstancePrefix "gc-"
+    InstanceFrom "name"
+    <Value>
+      Type "derive"
+      Table false
+      Attribute "CollectionCount"
+      InstancePrefix "count"
+    </Value>
+  </MBean>
+   <MBean "gc-time">
+    ObjectName "java.lang:type=GarbageCollector,*"
+    InstancePrefix "gc-"
+    InstanceFrom "name"
+    <Value>
+      Type "derive"
+      Table false
+      Attribute "CollectionTime"
+      InstancePrefix "time"
+    </Value>
+  </MBean>
+  <MBean "memory_pool">
+    ObjectName "java.lang:type=MemoryPool,*"
+    InstancePrefix "memory_pool-"
+    InstanceFrom "name"
+    <Value>
+      Type "memory"
+      Table true
+      Attribute "Usage"
+    </Value>
+  </MBean>
+   <MBean "memory-heap">
+    ObjectName "java.lang:type=Memory"
+    InstancePrefix "memory-heap"
+    <Value>
+      Type "memory"
+      Table true
+      Attribute "HeapMemoryUsage"
+    </Value>
+  </MBean>
+  <MBean "memory-nonheap">
+    ObjectName "java.lang:type=Memory"
+    InstancePrefix "memory-nonheap"
+    <Value>
+      Type "memory"
+      Table true
+      Attribute "NonHeapMemoryUsage"
+    </Value>
+  </MBean>
+   <MBean "thread">
+    ObjectName "java.lang:type=Threading"
+    InstancePrefix "threading"
+    <Value>
+      Type "gauge"
+      Table false
+      Attribute "ThreadCount"
+      InstancePrefix "count"
+    </Value>
+  </MBean>
+  <MBean "thread-daemon">
+    ObjectName "java.lang:type=Threading"
+    InstancePrefix "threading"
+    <Value>
+      Type "gauge"
+      Table false
+      Attribute "DaemonThreadCount"
+      InstancePrefix "count-daemon"
+    </Value>
+  </MBean>
+  <Connection>
+    ServiceURL "service:jmx:rmi:///jndi/rmi://localhost:1099/karaf-root"
+    Collect "memory_pool"
+    Collect "memory-heap"
+    Collect "memory-nonheap"
+    Collect "gc-count"
+    Collect "gc-time"
+    Collect "thread"
+    Collect "thread-daemon"
+    User "{{karaf_user}}"
+    Password "{{karaf_password}}"
+  </Connection>
+</Plugin>
+</Plugin>
+{% endif %}
+
+{% if ovsagent_controller_monitor %}
+<Plugin python>
+  ModulePath "/usr/local/bin/"
+  LogTraces true
+  Interactive false
+  Import "collectd_ovsagent"
+  <Module collectd_ovsagent>
+    interval 10
+    prefix ovsagent
+    interfaces {% for int in controller_monitored_ints %} {{int}} {% endfor %}
+
+    namespaces {% for ns in controller_monitored_ns %} {{ns}} {% endfor %}
+
+  </Module>
+</Plugin>
+{% endif %}
+
+# Include other collectd configuration files
+Include "/etc/collectd.d"

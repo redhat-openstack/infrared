@@ -1,0 +1,32 @@
+#!/bin/bash
+sudo echo "nameserver {{ dns_server }}" > /etc/resolv.conf
+sudo curl -o /etc/yum.repos.d/pbench.repo "{{ pbench_internal_url }}"
+
+sudo cat << EOF >> /etc/yum.repos.d/pbench.repo
+# Template file to be used with ansible playbook "pbench-repo.yml"
+
+###########################################################################
+# External COPR repo
+[copr-pbench]
+name=Copr repo for pbench owned by ndokos
+baseurl=https://copr-be.cloud.fedoraproject.org/results/ndokos/pbench/epel-7-x86_64/
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://copr-be.cloud.fedoraproject.org/results/ndokos/pbench/pubkey.gpg
+enabled=1
+enabled_metadata=1
+skip_if_unavailable=1
+EOF
+cat /etc/yum.repos.d/pbench.repo
+sudo yum clean all
+sudo yum install -y pbench-agent-internal
+sudo yum install -y pbench-agent
+sudo yum install -y pbench-sysstat
+sudo yum install -y pbench-uperf
+sudo sed -i 's/disable_root: 1/disable_root: 0/g' /etc/cloud/cloud.cfg
+sudo sed -i 's/^.*sleep 10" //g' /root/.ssh/authorized_keys
+sudo cat /root/.ssh/authorized_keys
+sudo cat /etc/cloud/cloud.cfg
+sudo chattr +i /etc/cloud/cloud.cfg
+
+echo "Browbeat workload installed"

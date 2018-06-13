@@ -1,0 +1,92 @@
+---
+#
+# Browbeat Install
+#
+
+- name: Check for supported distribution
+  fail: msg="**Unsupported Linux distribution! Please use CentOS 7+, RHEL 7+, or add support for your distribution**"
+  when: not supported_distro
+
+- name: Install python development tools
+  yum:
+    name: python-devel
+    state: present
+  become: true
+
+- name: Install dependencies for CentOS
+  yum:
+    name: "{{ item }}"
+    state: present
+  become: true
+  with_items:
+    - gcc
+    - gcc-c++
+    - git
+    - libffi-devel
+    - libsemanage-python
+    - openssl-devel
+    - policycoreutils-python
+
+- name: Install pip
+  easy_install:
+    name: pip
+  become: true
+
+- name: Update virtualenv and setuptools
+  pip:
+    name: "{{item.name}}"
+    version: "{{item.version}}"
+  become: true
+  with_items:
+    - name: virtualenv
+      version: 15.2.0
+    - name: setuptools
+      version: 38.7.0
+
+- name: Determine if browbeat directory exists already
+  stat:
+    path: "{{ browbeat_path }}"
+  register: browbeat_exists
+
+- debug: msg="Browbeat directory exists already."
+  when: browbeat_exists.stat.isdir is defined and browbeat_exists.stat.isdir
+
+- name: Clone browbeat on undercloud
+  git:
+    repo: https://github.com/openstack/browbeat.git
+    dest: "{{ browbeat_path }}"
+    version: master
+  when: browbeat_exists.stat.isdir is undefined
+
+- name: Create browbeat virtualenv
+  command: virtualenv {{ browbeat_venv }} creates={{ browbeat_venv }}
+
+- name: Setup browbeat-venv CA certificate path
+  lineinfile:
+    dest: "{{ browbeat_venv }}/bin/activate"
+    line: 'export REQUESTS_CA_BUNDLE={{ overcloud_ca_path }}'
+  when: overcloud_ca_path is defined
+
+- name: Determine if generate_tripleo_hostfile has been run
+  stat:
+    path: "{{ browbeat_path }}/ansible/hosts"
+  register: hosts_file_exists
+
+- debug: msg="Hosts file is already generated."
+  when: hosts_file_exists.stat.exists and hosts_file_exists.stat.isreg
+
+- name: Generate hosts and ssh-config on Browbeat Machine
+  shell: . {{ home_dir }}/stackrc; {{ browbeat_path }}/ansible/generate_tripleo_hostfile.sh -t localhost
+  when: "(tripleo == true and (hosts_file_exists.stat.exists == false or hosts_file_exists.stat.isreg == false))"
+
+- name: Move files to correct location
+  command: mv {{ home_dir }}/{{item}} {{ browbeat_path }}/ansible/{{item}}
+  with_items:
+    - hosts
+    - heat-admin-id_rsa
+  when: "(tripleo == true and (hosts_file_exists.stat.exists == false or hosts_file_exists.stat.isreg == false))"
+
+- name: Install requirements.txt into browbeat-venv
+  pip:
+    requirements: "{{ browbeat_path }}/requirements.txt"
+    virtualenv: "{{ browbeat_venv }}"

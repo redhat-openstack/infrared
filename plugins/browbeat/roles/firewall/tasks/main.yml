@@ -1,0 +1,116 @@
+---
+#
+# Setup firewalld or iptables for Browbeat
+#
+
+- name: Determine if firewalld is in use
+  shell: systemctl is-enabled firewalld.service | egrep -qv 'masked|disabled'
+  ignore_errors: true
+  register: firewalld_in_use
+  no_log: true
+  tags:
+    # Skip ANSIBLE0012 Commands should not change things if nothing needs doing
+    # Need to check if firewall is in use
+    - skip_ansible_lint
+
+- name: Determine if firewalld is active
+  shell: systemctl is-active firewalld.service | egrep -vq 'inactive|unknown'
+  ignore_errors: true
+  register: firewalld_is_active
+  no_log: true
+  tags:
+    # Skip ANSIBLE0012 Commands should not change things if nothing needs doing
+    # Need to check if firewall is active
+    - skip_ansible_lint
+
+- name: (shaker) Determine if TCP/{{shaker_port}} is already active
+  shell: firewall-cmd --list-ports | egrep -q "^{{shaker_port}}/tcp"
+  ignore_errors: true
+  register: firewalld_shaker_port_exists
+  no_log: true
+  tags:
+    # Skip ANSIBLE0012 Commands should not change things if nothing needs doing
+    # Need to check if port is already active
+    - skip_ansible_lint
+
+- name: (browbeat_results) Determine if TCP/{{browbeat_results_port}} is already active
+  shell: firewall-cmd --list-ports | egrep -q "^{{browbeat_results_port}}/tcp"
+  ignore_errors: true
+  register: firewalld_browbeat_results_port_exists
+  no_log: true
+  tags:
+    # Skip ANSIBLE0012 Commands should not change things if nothing needs doing
+    # Need to check if port is already active
+    - skip_ansible_lint
+
+# add firewall rule via firewalld module
+- name: (shaker) Add firewall rule for TCP/{{shaker_port}} (firewalld)
+  firewalld:
+    port: "{{ shaker_port }}/tcp"
+    state: enabled
+    zone: public
+    permanent: true
+    immediate: true
+  become: true
+  when: firewalld_in_use.rc == 0 and firewalld_is_active.rc == 0 and firewalld_shaker_port_exists.rc != 0
+
+- name: (browbeat_results) Add firewall rule for TCP/{{browbeat_results_port}} (firewalld)
+  firewalld:
+    port: "{{ browbeat_results_port }}/tcp"
+    state: enabled
+    zone: public
+    permanent: true
+    immediate: true
+  become: true
+  when: browbeat_results_in_httpd and firewalld_in_use.rc == 0 and firewalld_is_active.rc == 0 and firewalld_browbeat_results_port_exists.rc != 0
+
+# iptables-services
+- name: (shaker) check firewall rules for TCP/{{shaker_port}} (iptables-services)
+  shell: "grep \"dport {{shaker_port}} \\-j ACCEPT\" {{iptables_file}} | wc -l"
+  ignore_errors: true
+  become: true
+  register: iptables_shaker_port_exists
+  no_log: true
+  tags:
+    # Skip ANSIBLE0012 Commands should not change things if nothing needs doing
+    # Need to check if port is already active
+    - skip_ansible_lint
+
+- name: (browbeat_results) Check firewall rules for TCP/{{browbeat_results_port}} (iptables-services)
+  shell: "grep \"dport {{browbeat_results_port}} \\-j ACCEPT\" {{iptables_file}} | wc -l"
+  when: browbeat_results_in_httpd
+  ignore_errors: true
+  become: true
+  register: iptables_browbeat_results_port_exists
+  no_log: true
+  tags:
+    # Skip ANSIBLE0012 Commands should not change things if nothing needs doing
+    # Need to check if port is already active
+    - skip_ansible_lint
+
+- name: check if iptables rules exist
+  stat:
+    path: "{{ iptables_file }}"
+  register: iptables_file_present
+
+- name: (shaker) Add firewall rule for TCP/{{shaker_port}} (iptables-services)
+  lineinfile:
+    dest: "{{iptables_file}}"
+    line: '-A INPUT -p tcp -m tcp --dport {{shaker_port}} -j ACCEPT'
+    insertbefore: '^-A INPUT -i lo'
+    backup: yes
+  become: true
+  when: firewalld_in_use.rc != 0 and firewalld_is_active.rc != 0 and iptables_shaker_port_exists.stdout|int == 0 and iptables_file_present.stat.exists
+  notify:
+    - restart iptables
+
+- name: (browbeat_results) Add firewall rule for TCP/{{browbeat_results_port}} (iptables-services)
+  lineinfile:
+    dest: "{{iptables_file}}"
+    line: '-A INPUT -p tcp -m tcp --dport {{browbeat_results_port}} -j ACCEPT'
+    insertbefore: '^-A INPUT -i lo'
+    backup: yes
+  become: true
+  when: browbeat_results_in_httpd and firewalld_in_use.rc != 0 and firewalld_is_active.rc != 0 and iptables_browbeat_results_port_exists.stdout|int == 0 and iptables_file_present.stat.exists
+  notify:
+    - restart iptables
