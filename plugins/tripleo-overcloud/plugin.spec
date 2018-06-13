@@ -260,6 +260,23 @@ subparsers:
                                       nova::allow_resize_to_same_host: true
                                   NeutronOVSFirewallDriver: openvswitch
 
+                  heat-params:
+                      type: Value
+                      help: |
+                          Inject additional Tripleo Heat parameters. It works similar to 'config-heat' above
+                          with the difference that it's possible to use params containing dots (.) in parameters.
+                          NOTE: Value of this parameter has to be in oneline Yaml format (with {} instead of newline+indent marking).
+                          Also, strings that contain colons have to be singlequoted (') otherwise these colons will considered as dictionary marker.
+                          Example:
+                              --heat-params "{ ExtraConfig: { 'opendaylight::log_levels': { org.opendaylight.openflowplugin.impl: TRACE }}}"
+                          will inject the following yaml to "overcloud deploy" command:
+
+                              ---
+                              parameter_defaults:
+                                  ExtraConfig:
+                                      opendaylight::log_levels:
+                                          org.opendaylight.openflowplugin.impl: TRACE
+
                   config-resource:
                       type: NestedDict
                       action: append
