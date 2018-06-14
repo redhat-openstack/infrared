@@ -18,7 +18,7 @@
             clockdiff {{ hostvars[host]['ansible_default_ipv4']['address'] }} &>>"$time_log"
             {% endif %}
             {% endfor %}
-        ignore_errors: true
+        failed_when: false
         tags: skip_ansible_lint
 
       - name: ntp date
@@ -44,5 +44,5 @@
             clockdiff {{ hostvars[host]['ansible_default_ipv4']['address'] }} &>>"$time_log"
             {% endif %}
             {% endfor %}
-        ignore_errors: true
+        failed_when: false
         tags: skip_ansible_lint
