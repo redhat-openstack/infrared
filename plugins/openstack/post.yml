@@ -18,12 +18,18 @@
         register: sshd_dns_config
         become: yes
 
-      - name: restart sshd after config change
-        service:
-            name: sshd
-            state: restarted
+      - block:
+          - name: restart sshd after config change
+            service:
+                name: sshd
+                state: restarted
+            become: yes
+
+          - name: Wait for nodes to be accesible by ansible
+            wait_for_connection:
+              sleep: 10
+              timeout: 300
         when: sshd_dns_config is changed
-        become: yes
 
       - name: read os_server_facts
         os_server_facts:
