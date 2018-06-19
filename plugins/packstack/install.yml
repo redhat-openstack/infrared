@@ -22,6 +22,7 @@
           CONFIG_NOVA_NETWORK_DEFAULTFLOATINGPOOL: public
           CONFIG_SAHARA_INSTALL: "{% if install.component.sahara %}y{% else %}n{% endif %}"
           CONFIG_TROVE_INSTALL: "{% if install.component.trove %}y{% else %}n{% endif %}"
+          CONFIG_DEBUG_MODE: y
       packstack_config: "{{ basic_config | combine(network_config) | combine(network_variant_config) }}"
       answers_file: "/root/{{ install.answer.file }}"
   tasks:
