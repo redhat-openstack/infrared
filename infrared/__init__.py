@@ -1,5 +1,27 @@
 # Holds the default variables
+from pbr import version as pbr_version
+import platform
 import os
+
+_v = pbr_version.VersionInfo("infrared").semantic_version()
+__version__ = _v.release_string()
+version_info = _v.version_tuple()
+
+
+def version_details():
+    from infrared import __version__  # noqa
+    from ansible import __version__ as ansible_version  # noqa
+    python_version = platform.python_version()
+    python_revision = ', '.join(platform.python_build())
+    return "{__version__} (" \
+        "ansible-{ansible_version}, " \
+        "python-{python_version})".format(**locals())
+
+__all__ = (
+    '__version__',   # string, standard across most modules
+    'version_info',  # version tuple, same format as python sys.version_info
+    'version_details'  # detailed version information, which may include major deps or plugins, used for bug reporting
+)
 
 SHARED_GROUPS = [
     {
