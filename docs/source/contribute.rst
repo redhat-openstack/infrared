@@ -51,7 +51,7 @@ Refer to the reno documentation for the full list of sections.
 
 
 When a release note is needed
-=============================
+-----------------------------
 A release note is required anytime a reno section is needed. Below are some examples for each section.
 Any sections that would be blank should be left out of the note file entirely.
 
