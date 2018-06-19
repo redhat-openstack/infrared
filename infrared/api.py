@@ -9,8 +9,10 @@ import yaml
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
 
+
 from infrared import SHARED_GROUPS
-from infrared.core import execute, version
+from infrared import version_string
+from infrared.core import execute
 from infrared.core.inspector.inspector import SpecParser
 from infrared.core.services import CoreServices
 from infrared.core.settings import VarsDictManager
@@ -217,9 +219,10 @@ class SpecManager(object):
 
         # create entry point
         self.parser = argparse.ArgumentParser(
-            description='infrared entry point')
+            description='infrared entry point',
+            formatter_class=argparse.RawTextHelpFormatter)
         self.parser.add_argument("--version", action='version',
-                                 version=version.version_string())
+                                 version=version_string)
         self.parser.add_argument("--no-log-commands", action='store_true',
                                  help='disables logging of all commands')
         self.root_subparsers = self.parser.add_subparsers(dest="subcommand")
