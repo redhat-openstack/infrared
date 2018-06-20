@@ -10,7 +10,7 @@ controller_role:
     host_name_format: 'controller-%index%'
 
     services:
-      - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::CACerts
         - OS::TripleO::Services::CephClient
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CinderBackendVRTSHyperScale{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CinderBackendDellEMCUnity{% endif %}"
