@@ -18,6 +18,7 @@
 
 import requests
 import os
+from distutils.util import strtobool
 
 try:
     import urlparse
@@ -225,7 +226,6 @@ class ForemanManager(object):
         :param flag: a boolean value (true/false) to set the build flag with
         """
         self.update_host(host_id, json.dumps({'build': flag}))
-        self.get_host(host_id)
         if self.get_host(host_id).get('build') != flag:
             raise Exception("Failed setting build on host {0}".format(host_id))
 
@@ -352,7 +352,7 @@ class ForemanManager(object):
             raise Exception("{0} is not a supported "
                             "management strategy".format(mgmt_strategy))
         if wait_for_host:
-            while self.get_host(host_id).get('build'):
+            while strtobool(self.get_host(host_id).get('build')):
                 time.sleep(wait_for_host)
 
             command = "ping -q -c 30 -w {0} {1}".format(
