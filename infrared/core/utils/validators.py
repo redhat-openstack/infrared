@@ -123,12 +123,12 @@ class SpecValidator(Validator):
                 "{} in file:\n{}".format(error.message, spec_content))
 
         subparsers_key = "subparsers"
-        if "description" not in spec_dict \
-                and "description" not in spec_dict[subparsers_key].values()[0]:
+        if ("description" not in spec_dict and "description"
+                not in list(spec_dict[subparsers_key].values())[0]):
             raise IRValidatorException(
                 "Required key 'description' is missing for supbarser '{}' in "
                 "spec file: {}".format(
-                    spec_dict[subparsers_key].keys()[0], spec_content))
+                    list(spec_dict[subparsers_key].keys())[0], spec_content))
 
         return spec_dict
 

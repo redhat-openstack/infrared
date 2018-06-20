@@ -412,7 +412,7 @@ class KeyValueList(ComplexType):
 
     def resolve(self, value):
         result_dict = {}
-        for style, data in self.regex_formats.iteritems():
+        for style, data in self.regex_formats.items():
             p = self.re_pattern.format(
                 assign=data['assign'], separate=data['separate'])
             match_obj = re.match(pattern=p, string=value)

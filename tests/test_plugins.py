@@ -144,7 +144,7 @@ def get_plugin_spec_flatten_dict(plugin_dir):
     with open(os.path.join(plugin_dir, PLUGIN_SPEC)) as fp:
         spec_yaml = yaml.load(fp)
 
-    plugin_name = spec_yaml['subparsers'].keys()[0]
+    plugin_name = list(spec_yaml['subparsers'].keys())[0]
 
     plugin_description = spec_yaml['description'] \
         if "description" in spec_yaml \
