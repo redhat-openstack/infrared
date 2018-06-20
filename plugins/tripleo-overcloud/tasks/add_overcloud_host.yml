@@ -26,7 +26,7 @@
     - name: update nodes arrays
       set_fact:
           nodes_to_delete: "{{ nodes_to_delete|default([]) + [baremetal_name] }}"
-          nodes_added: "{{ nodes_added|default([]) + [node_info.name] }}"
+          nodes_added: "{{ nodes_added|default([]) + [node_info.name|lower] }}"
       when:
           - node_info.name != baremetal_name
 
@@ -53,7 +53,7 @@
     # Currently ansible does not allow to remove existing host from a group
     - name: add hosts to host list
       add_host:
-          name: "{{ node_info.name }}"
+          name: "{{ node_info.name|lower }}"
           # only add groups for new nodes. don't touch existing nodes' groups
           groups: "{{ node_groups }}"
           ansible_user: "{{ user }}"
@@ -63,14 +63,14 @@
 
     - name: add original name
       add_host:
-          name: "{{ node_info.name }}"
+          name: "{{ node_info.name|lower }}"
           original_name: "{{ baremetal_name }}"
       when:
           - node_info.name != baremetal_name
 
     - name: add ssh common args for hypervisor
       add_host:
-          name: "{{ node_info.name }}"
+          name: "{{ node_info.name|lower }}"
           ansible_ssh_common_args: " -o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no \
                                      -o BatchMode=yes \
                                      -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
