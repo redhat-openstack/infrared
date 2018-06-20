@@ -46,5 +46,6 @@
           host: "{{ hostvars[node_name].ansible_host|
                     default(hostvars[node_name].ansible_ssh_host) }}"
           search_regex: OpenSSH
-          delay: 5
+          delay: 10
+          sleep: 3
   when: (installed_kernel.stdout != loaded_kernel.stdout) or (installed_ovs.stdout != loaded_ovs.stdout)
