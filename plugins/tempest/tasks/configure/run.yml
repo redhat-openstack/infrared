@@ -46,8 +46,8 @@
               volume-feature-enabled.volume_services true \
               {% endif %}
               {# config options #}
-              {% for section_name,options in config_options.iteritems() %}
-              {% for option_name,value in options.iteritems() %}
+              {% for section_name,options in config_options.items() %}
+              {% for option_name,value in options.items() %}
               {{section_name}}.{{option_name}} {{value}} \
               {% endfor %}
               {% endfor %}
@@ -59,8 +59,8 @@
               {% endif %}
               {# remove options #}
               {% if test.get('remove', {}).get('options', {}) %}
-                {% for section_name,options in test.get('remove', {}).get('options', {}).iteritems() %}
-                    {% for option_name,value in options.iteritems() %}
+                {% for section_name,options in test.get('remove', {}).get('options', {}).items() %}
+                    {% for option_name,value in options.items() %}
                         --remove {{section_name}}.{{option_name}}={{value}} \
                     {% endfor %}
                 {% endfor %}

@@ -208,12 +208,12 @@ class Util(object):
         """
         self.module = module
 
-        uri = self._validate_args('uri').values()[0]
+        uri = list(self._validate_args('uri').values())[0]
         self.conn = libvirt.open(uri)
         if self.conn is None:
             raise UtilError('Failed to open connection to {}'.format(uri))
 
-        command = self._validate_args('command').values()[0]
+        command = list(self._validate_args('command').values())[0]
 
         kwargs = self._validate_args(*COMMANDS[command]['args'])
         return COMMANDS[command]['call'](self, **kwargs)
@@ -227,12 +227,12 @@ class Util(object):
         if children:
             dd = defaultdict(list)
             for dc in map(Util._xmlET2dict, children):
-                for k, v in dc.iteritems():
+                for k, v in dc.items():
                     dd[k].append(v)
             d = {t.tag: {
-                k: v[0] if len(v) == 1 else v for k, v in dd.iteritems()}}
+                k: v[0] if len(v) == 1 else v for k, v in dd.items()}}
         if t.attrib:
-            d[t.tag].update((k, v) for k, v in t.attrib.iteritems())
+            d[t.tag].update((k, v) for k, v in t.attrib.items())
         if t.text:
             text = t.text.strip()
             if children or t.attrib:

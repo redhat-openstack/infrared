@@ -314,7 +314,7 @@ class SpecParser(object):
         :param answer_file_args:  the dict of arguments from files
         """
 
-        for deprecated, deprecates in self.get_deprecated_args().iteritems():
+        for deprecated, deprecates in self.get_deprecated_args().items():
             for input_args in (answer_file_args.items(), cli_args.items()):
                 for command, command_dict in input_args:
                     if deprecated in command_dict:

@@ -7,7 +7,7 @@ resource_registry:
 {% set node_name = host_name.rstrip('1234567890-').split('-')[-1] %}
 {%- if node_name not in saved_roles -%}
 {% set role = hostvars[ansible_play_hosts[0]].get(node_name + '_role') %}
-{% for option, value in role.get("resource_registry", {}).iteritems() %}
+{% for option, value in role.get("resource_registry", {}).items() %}
 {% if not install.get('predictable', {}).ips|default(False) %}
     {{ option }}: {{ eval(value) }}
 {% else %}

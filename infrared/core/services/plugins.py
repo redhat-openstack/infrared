@@ -256,7 +256,7 @@ class InfraredPluginManager(object):
             return 'builtin'
 
     def __iter__(self):
-        for plugin in self.PLUGINS_DICT.iteritems():
+        for plugin in self.PLUGINS_DICT.items():
             yield plugin
         else:
             raise StopIteration
@@ -664,7 +664,7 @@ class InfraredPlugin(object):
         if len(plugins) != 1:
             # TODO(aopincar): Replace with a proper infrared exception
             raise Exception("Only one plugin should be defined in spec")
-        return plugins[0]
+        return list(plugins)[0]
 
     @property
     def entry_point(self):
