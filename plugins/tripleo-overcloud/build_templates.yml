@@ -50,6 +50,22 @@
                 parameter_defaults: "{{ install.get('config', {}).get('heat', {}) }}"
         when: install.get('config', {}).get('heat', {})
 
+      - name: set parameter_defaults for heat_params_yamls
+        set_fact:
+            heat_params_yamls:
+                parameter_defaults: "{{ install.get('heat', {}).get('params', {}) | regex_replace('^', '{ ') | regex_replace('=(.*)', ''': \"\\1\" }') | regex_replace('\\.(.*)', ': { '' \\1 } ')  | regex_replace('(^\\w.*)', '{ \\1 }') }}"
+#                parameter_defaults: "{{ install.get('heat', {}).get('params', {}) | regex_replace('^', '{ ') | regex_replace('\\.(.*)', ': { '' \\1 } ') | regex_replace('=(.*)', ' '': \"\\1\" }') | regex_replace('(^\\w.*)', '{ \\1 }') }}"
+        when: install.get('heat', {}).get('params', {})
+
+      - debug:
+            var: config_heat_yaml
+
+      - debug:
+            msg: "{{ heat_params_yamls | from_yaml | to_nice_yaml }}"
+
+      - fail:
+            msg: I'm failing!
+
       - name: set resource_registry for config_heat.yaml
         vars:
             config_resource: "{{ install.get('config', {}).get('resource', {}) }}"
