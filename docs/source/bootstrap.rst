@@ -137,6 +137,10 @@ nodes we have provisioned in the previous stage.
 Undercloud
 ^^^^^^^^^^
 
+First, we need to enable the tripleo-undercloud `plugin <plugins.html>`_::
+
+  infrared plugin add plugins/tripleo-undercloud
+
 Just like in the provisioning stage, here also the user should take care of the mandatory parameters
 (by CLI or INI file) in order to be able to start the installation process.
 Let's deploy a `TripleO Undercloud`_::
@@ -157,6 +161,10 @@ Of course it is possible to use ``--images-task=build`` instead.
 
 Overcloud
 ^^^^^^^^^
+
+Like previously, need first to enable the associated `plugin <plugins.html>`_::
+
+  infrared plugin add plugins/tripleo-overcloud
 
 Let's deploy a `TripleO Overcloud`_::
 
