@@ -35,6 +35,16 @@
   args:
       creates: "{{ rally.bin }}"
 
+- name: Install rally-openstack package
+  pip:
+      name: "{{ item }}"
+      state: latest
+      virtualenv: "{{ rally.path }}"
+  with_items:
+      - prettytable
+      - rally-openstack
+  become: yes
+
 - name: List rally version
   shell: "{{ rally.bin }} --version |& cut -d '~' -f1"
   register: rally_version
