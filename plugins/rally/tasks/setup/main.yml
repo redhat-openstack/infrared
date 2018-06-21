@@ -1,2 +1,12 @@
 - name: Setup rally
   include_tasks: "{{ test.setup }}/main.yml"
+
+- name: Install rally-openstack package
+  pip:
+      name: "{{ item }}"
+      state: latest
+      virtualenv: "{{ rally.path }}"
+  with_items:
+      - prettytable
+      - rally-openstack
+  become: yes
