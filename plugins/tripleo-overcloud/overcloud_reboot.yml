@@ -310,5 +310,6 @@
         delegate_to: undercloud-0
         when:
           - "'compute' in group_names"
+          - groups.compute|difference(groups.unused|default([]))|length > 1
           - install.postreboot_evacuate|default(False)
           - compute_instances.stdout | length > 0
