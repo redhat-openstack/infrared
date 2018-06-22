@@ -98,7 +98,7 @@ def main():
         bug = bzapi.getbug(objid=bz_id)
 
         result.update(
-            {key: val for key, val in vars(bug).iteritems()
+            {key: val for key, val in vars(bug).items()
              if is_serializable(val)})
 
     # Raised when the user is not authorized or not logged in

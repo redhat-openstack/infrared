@@ -5,7 +5,7 @@
 
 parameter_defaults:
 {% if install.scheduler_hints|default(False) or (install.specific.node.ids and install.version|default(undercloud_version)|openstack_release >= 10) %}
-{% for node_type, details in node_types.iteritems() %}
+{% for node_type, details in node_types.items() %}
 {% if groups[node_type]|default([])|length %}
     {% if details.scheduler_heat_name is defined %}{{ details.scheduler_heat_name }}{% else %}{{ details.heat_name }}{% endif %}SchedulerHints:
         'capabilities:node': '{{ node_type }}-%index%'
@@ -13,13 +13,13 @@ parameter_defaults:
 {% endfor %}
 {% endif %}
 
-{% for node_type, details in node_types.iteritems() %}
+{% for node_type, details in node_types.items() %}
     {{ details.heat_name }}HostnameFormat: '{{ node_type }}-%index%'
 {% endfor %}
 
 {% if install.get("overcloud", {}).get("hostname", {}).get("HostnameMap", false) %}
     HostnameMap:
-{% for old_name, new_name in install.overcloud.hostname.HostnameMap.iteritems() %}
+{% for old_name, new_name in install.overcloud.hostname.HostnameMap.items() %}
         {{ old_name }}: {{ new_name }}
 {% endfor %}
 {% endif %}

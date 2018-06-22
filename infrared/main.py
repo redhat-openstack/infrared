@@ -382,7 +382,7 @@ class PluginManagerSpec(api.SpecObject):
             if print_available \
             else self.plugin_manager.get_installed_plugins()
 
-        for plugins_type, plugins in plugins_dict.iteritems():
+        for plugins_type, plugins in plugins_dict.items():
             installed_plugins_list = \
                 self.plugin_manager.get_installed_plugins(plugins_type).keys()
             plugins_names = plugins.keys()
@@ -443,7 +443,7 @@ class PluginManagerSpec(api.SpecObject):
         plugins_dict = \
             self.plugin_manager.get_all_git_plugins()
 
-        for plugins_type, plugins in plugins_dict.iteritems():
+        for plugins_type, plugins in plugins_dict.items():
             # prepare empty lists
             all_plugins_list = []
             plugins_descs = []

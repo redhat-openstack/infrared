@@ -44,6 +44,6 @@ def plugin_list(**kwargs):
     plugin_manager = CoreServices.plugins_manager()
     installed_plugins = plugin_manager.get_installed_plugins()
     completions = []
-    for ptype, plugin in installed_plugins.iteritems():
+    for ptype, plugin in installed_plugins.items():
         completions.extend(plugin.keys())
     return completions
