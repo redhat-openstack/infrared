@@ -35,11 +35,11 @@
     with_sequence: start={{ node_start_index|int }} end={{ node.value|int + node_start_index|int - 1 }}
     register: mac_list
 
-  - name: Set inventary netwrok info
+  - name: Set inventory netwrok info
     vars:
         inv_net: "{{ topology_node.provision_network if 'provision_network' in topology_node else topology_node.external_network.network }}"
     set_fact:
-        vm_inv_info: "{{ vm_inv_info | default([]) + [{'name': item.cmd.split()[2], 'mac': item.stdout, 'groups': topology_node.groups, 'net': inv_net }] }}"
+        vm_inv_info: "{{ vm_inv_info | default({})|combine({ item.cmd.split()[2]: { 'mac': item.stdout, 'groups': topology_node.groups, 'net': inv_net, 'deploy_os': topology_node.deploy_os|default(True) }}) }}"
     with_items: "{{ mac_list.results }}"
 
   when: "not topology_node.external_network.bridged|default(False)"
