@@ -62,8 +62,8 @@
       tags: ips
 
     - name: restart VMs
-      command: "virsh reboot {{ item.value.name }}"
-      with_dict: "{{ vms_info }}"
+      command: "virsh reboot {{ item.key }}"
+      with_dict: "{{ vm_inv_info }}"
 
     - name: update tunneling conf
       template:
