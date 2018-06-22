@@ -3,44 +3,35 @@
 - name: get networks dict
   include_vars: "{{ provision.topology.network }}"
 
-- name: gether networks dhcp ranges
-  set_fact:
-      dhcp_ranges: "{{ dhcp_ranges | default({})| combine({item.value.name: {'start': item.value.dhcp.range.start, 'end': item.value.dhcp.range.end }}) }}"
-  with_dict: "{{ networks }}"
-  when: item.value.dhcp is defined
-
-- name: ip adresses list from subnet range
-  local_action: 'shell python -c "import netaddr;print \"\\n\".join(map(lambda x: x.__str__(), netaddr.iter_iprange(\"{{ item.value.start }}\", \"{{ item.value.end }}\")))"'
-  with_dict: "{{ dhcp_ranges }}"
+- name: wait until one of the VMs gets an IP
+  shell: |
+      virsh net-dhcp-leases {{ item.value.net }} | awk '($4 == "ipv4")  && ($3 == "{{ item.value.mac }}") {print $5}'
   register: ip_list
-
-- name: populate dhcp_ranges with addresses
-  set_fact:
-      dhcp_ranges: "{{ dhcp_ranges | combine({item.item.key: {'ips': item.stdout_lines}}) }}"
-  with_items: "{{ ip_list.results }}"
-
-- name: remove already used ips from dhcp_ranges
-  include_tasks: remove_used_ips.yml
-  with_dict: "{{ networks|default({}) }}"
-  loop_control:
-          loop_var: network
-  when: provision.topology.extend|default(False)
+  until: "ip_list.stdout != ''"
+  retries: 40
+  delay: 5
+  with_dict: "{{ vm_inv_info }}"
+  tags: skip_ansible_lint
 
 - name: update vms info with ip addresses
   set_fact:
-      vms_info: "{{ vms_info | default({}) | combine({dhcp_ranges[item.net].ips | difference(vms_info | default({}) | list) | first | ipaddr('address'): item}) }}"
-  with_items: "{{ vm_inv_info }}"
+      vm_ip_dict: "{{ vm_ip_dict | default({}) | combine({ item.item.key: { 'ip': item.stdout|ipaddr('address') }}) }}"
+  with_items: "{{ ip_list.results }}"
+
+- name: update vms info with ip addresses
+  set_fact:
+      vm_inv_info: "{{ vm_inv_info | default({}) | combine(vm_ip_dict, recursive=True) }}"
 
 - name: make IPs persistent
-  shell: "virsh net-update {{ item.value.net }} add ip-dhcp-host \"<host mac='{{ item.value.mac }}' name='{{ item.value.name }}' ip='{{ item.key }}' />\" --live --config"
-  with_dict: "{{ vms_info }}"
+  shell: "virsh net-update {{ item.value.net }} add ip-dhcp-host \"<host mac='{{ item.value.mac }}' name='{{ item.key }}' ip='{{ item.value.ip }}' />\" --live --config"
+  with_dict: "{{ vm_inv_info }}"
 
 - name: add hosts to host list
   add_host:
-      name: "{{ item.value.name }}"
+      name: "{{ item.key }}"
       groups: "{{ item.value.groups | join(',') }}"
       ansible_user: "root"
-      ansible_host: "{{ item.key }}"
+      ansible_host: "{{ item.value.ip }}"
       ansible_ssh_private_key_file: "{{ inventory_dir }}/id_rsa"
       # Set 'ansible_connection' explicitly here, because in vms_2_install.yaml it was initially set to 'local'.
       ansible_connection: "ssh"
@@ -54,7 +45,7 @@
           -o UserKnownHostsFile=/dev/null
           -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_user|default(ansible_ssh_user) }}@{{ ansible_host|default(ansible_ssh_host) }}\""
       inventory_dir: "{{ inventory_dir }}"
-  with_dict: "{{ vms_info }}"
+  with_dict: "{{ vm_inv_info }}"
 
 - include_role:
       name: inventory-update

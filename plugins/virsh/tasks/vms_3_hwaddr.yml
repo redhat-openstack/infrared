@@ -39,7 +39,7 @@
     vars:
         inv_net: "{{ topology_node.provision_network if 'provision_network' in topology_node else topology_node.external_network.network }}"
     set_fact:
-        vm_inv_info: "{{ vm_inv_info | default([]) + [{'name': item.cmd.split()[2], 'mac': item.stdout, 'groups': topology_node.groups, 'net': inv_net }] }}"
+        vm_inv_info: "{{ vm_inv_info | default({})|combine({ item.cmd.split()[2]: { 'mac': item.stdout, 'groups': topology_node.groups, 'net': inv_net }}) }}"
     with_items: "{{ mac_list.results }}"
 
   when: "not topology_node.external_network.bridged|default(False)"
