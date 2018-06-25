@@ -15,10 +15,10 @@
       name: pip
 
 - name: install virtualenv pip module
+  become: yes
   pip:
       name: virtualenv
       state: forcereinstall
-      extra_args: --user
 
 # required to avoid any conflicts in venv with
 # different packages versions (especially shade)
@@ -31,12 +31,10 @@
 # do not use shimming for these two special packages
 - name: shade virtualenv core deps
   pip:
-      name: "{{ item }}"
+      name:
+        - setuptools>=39.0.0
+        - pip>=10.0.1
       virtualenv: "{{ shade_path_venv }}"
-      virtualenv_command: "{{ ansible_env.HOME }}/.local/bin/virtualenv"
-  with_items:
-    - setuptools>=39.0.0
-    - pip>=10.0.1
 
 - name: shade virtualenv deps
   pip:
@@ -48,4 +46,3 @@
       # see https://projects.engineering.redhat.com/browse/RHOSINFRA-1562
       # TODO: unpin shade to avoid other conflicts
       virtualenv: "{{ shade_path_venv }}"
-      virtualenv_command: "{{ ansible_env.HOME }}/.local/bin/virtualenv"
