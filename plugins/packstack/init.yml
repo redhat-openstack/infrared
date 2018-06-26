@@ -66,16 +66,3 @@
         authorized_key:
             user: root
             key: "{{ lookup('file', '/tmp/ssh_keys/id_rsa.pub') }}"
-
-- name: "Workaround RHBZ#1265306 updated sqlalchemy breaks rhos-5 db_sync"
-  hosts: openstack_nodes
-  gather_facts: no
-  become: yes
-  any_errors_fatal: true
-  tasks:
-      - name: exclude python-sqlalchemy from rhel-7.2 repo for rhos-5.0
-        command: yum-config-manager --save --setopt=rhelosp-rhel-7-server.exclude=python-sqlalchemy
-        when:
-            - workarounds is defined
-            - (workarounds['rhbz1265306']['enabled'] is defined and workarounds['rhbz1265306']['enabled'] | bool) and
-              install.version == '5'
