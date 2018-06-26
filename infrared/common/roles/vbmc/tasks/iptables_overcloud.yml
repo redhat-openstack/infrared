@@ -1,11 +1,11 @@
 # allows to access vbmc ports from any node
 - name: Get overcloud nodes
   set_fact:
-        oc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
+        oc_nodes: "{{ groups.get('overcloud_nodes', []) | hybrid }}"
 
 - block:
     - name: get vbmc node state
-      shell: "vbmc list | awk '/{{ item }}/ {print $8}'"
+      shell: "vbmc list | awk '/{{ hostvars[item].original_name|default(item) }}/ {print $8}'"
       register: vbmc_status
       with_items:  "{{ oc_nodes }}"
       delegate_to: "{{ vbmc_inventory_host }}"
@@ -23,5 +23,6 @@
           destination_port: "{{ item.stdout }}"
       delegate_to: "{{ vbmc_inventory_host }}"
       with_items: "{{ vbmc_status.results }}"
+      when: item.stdout != ""
   when: oc_nodes|length > 0
 
