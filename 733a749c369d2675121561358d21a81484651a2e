@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96b11ce1_5214cac4",
+        "filename": "plugins/beaker/provision.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1006589
+      },
+      "writtenOn": "2018-06-26T11:10:04Z",
+      "side": 1,
+      "message": "From the \u0027wait_for\u0027 module documentation delay is \u0027Number of seconds to wait before starting to poll.\u0027 So it seems it does a little different thatn this https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#do-until-loops\n\nLooks like previous implementation is really does not make any sense, because the number of retries will be 1. But your change will results the initial wait for 10 seconds, and then check every 3 seconds with the total timeout eq 300 for ssh connection. Is that what you expected to achieve?  I\u0027m not sure that we need that initial delay..",
+      "range": {
+        "startLine": 43,
+        "startChar": 10,
+        "endLine": 44,
+        "endChar": 18
+      },
+      "revId": "733a749c369d2675121561358d21a81484651a2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
