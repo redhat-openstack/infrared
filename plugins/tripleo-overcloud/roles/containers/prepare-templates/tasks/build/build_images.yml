@@ -97,6 +97,7 @@
       source /home/stack/stackrc
       openstack overcloud container image upload --verbose --config-file {{ containers_images_template_dest_file }}
   when: not install.registry.undercloud.skip
+  become: true
   tags:
       - skip_ansible_lint
       - container_image_upload
