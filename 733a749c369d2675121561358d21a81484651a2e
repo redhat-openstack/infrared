@@ -22,6 +22,30 @@
       "revId": "733a749c369d2675121561358d21a81484651a2e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d963d82b_4d978109",
+        "filename": "plugins/beaker/provision.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011165
+      },
+      "writtenOn": "2018-06-26T15:21:58Z",
+      "side": 1,
+      "message": "Oleksii, that\u0027s correct. You may see the implementations\n\nImplementation of delay is described at https://github.com/ansible/ansible/blob/devel/lib/ansible/modules/utilities/logic/wait_for.py#L46-L49\nImplementation of sleep is described at\nhttps://github.com/ansible/ansible/blob/devel/lib/ansible/modules/utilities/logic/wait_for.py#L79-L83\nHere is how delay works\nhttps://github.com/ansible/ansible/blob/devel/lib/ansible/modules/utilities/logic/wait_for.py#L477-L478\nHere is how sleep works\nhttps://github.com/ansible/ansible/blob/devel/lib/ansible/modules/utilities/logic/wait_for.py#L590\n\nIf you look across all modules/plugins they have different values, I am open for discussion in this case. Playing with Scale Lab, I know these values definitely fixes the issue with long reboots/firewall rate filtering. If we run VMs we\u0027ll get just initial delay 10 seconds which is not bad. However, I can change to 5 seconds and test the change on scale lab",
+      "parentUuid": "96b11ce1_5214cac4",
+      "range": {
+        "startLine": 43,
+        "startChar": 10,
+        "endLine": 44,
+        "endChar": 18
+      },
+      "revId": "733a749c369d2675121561358d21a81484651a2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
