@@ -6,7 +6,9 @@ custom_templates:
   parameter_defaults:
     NeutronBridgeMappings: datacentre:br-ex,baremetal:br-baremetal
     NeutronFlatNetworks: datacentre,baremetal
+    {% if (install.version | default(undercloud_version) | openstack_release >= 11)  %}
     IronicCleaningNetwork: baremetal
+    {% endif %}
     IronicEnabledDrivers:
         - pxe_ipmitool
         - fake
