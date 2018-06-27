@@ -32,7 +32,7 @@ subparsers:
                       help: |
                           The setup type for rally.
                           __LISTYAMLS__
-                      default: git
+                      default: pip
                   tests:
                       type: VarFile
                       help: |
