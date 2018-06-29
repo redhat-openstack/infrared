@@ -41,6 +41,8 @@
       USER root
       RUN yum list installed
       RUN yum localinstall {{ item.value.split(",") | join(" ") }} -y -v
+      # OpenDaylight UnInstall process leaves previous version tar'd - it's big, delete it
+      RUN rm -f /opt/opendaylight-*.tar || true
       RUN yum list installed
       ARG ORIG_USER
       USER $ORIG_USER
