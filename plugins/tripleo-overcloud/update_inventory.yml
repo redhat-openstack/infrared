@@ -49,17 +49,41 @@
         # Bug in Liberty version: No "node list" in openstack client, and no formatter in ironic client.
         when: install.version|default(undercloud_version)|openstack_release != 8
 
-      - name: try to find unused nodes and add them into a new unused group
-        # Set empty list for Liberty version
-        with_items: "{{ ironic_node_list.stdout|default('')|from_csv }}"
+        # at this point we will have in inventory the openstack_node names
+        # and they are often not alligned with the bm names. For example,
+        # compute-2 OC node can correspond to the compute-1 bm node.
+        # node will be marked as unused only when original_name(bm) does not
+        # have instance uuid associated.
+
+        # also need to handle the situation when oc node name is changed
+        # (predictable hostnames and IPs feature)
+        # in that case controller-0 bm can be renamed to ctrl-0 OC.
+        # as the result the controller-0 node should be removed from the inventory
+        # (and not added to the unused group)
+        # and the ctrl-0 should be added with the original_name=controller-0
+      - name: set ironic nodes fact
         vars:
             # take ironic UUID if name is missing
-            host_id: "{{ item.Name or item.UUID }}"
+            - host_id: "{{ item.Name or item.UUID }}"
+            # original name points to the baremetal name
+            - host_original_name: "{{ hostvars.get(host_id, {}).original_name|default('') }}"
+        set_fact:
+            ironic_node_dict: "{{ ironic_node_dict|default({})|combine({ host_id: { 'original_name': host_original_name, 'instance_uuid': item['Instance UUID'] }}) }}"
+            # Set empty list for Liberty version
+        with_items: "{{  ironic_node_list.stdout|default('')|from_csv }}"
+
+      - debug:
+            var: ironic_node_dict
+            verbosity: 2
+
+      - name: try to find unused nodes and add them into a new unused group
+        with_dict: "{{ ironic_node_dict }}"
         when:
-            - host_id not in openstack_servers|map(attribute='name')|list
-            - host_id in groups.all
+            - item.key not in openstack_servers|map(attribute='name')|list
+            - item.key in groups.all
+            - ironic_node_dict.get(item.value.original_name|default(''), item.value).instance_uuid|default('undefined') == ''
         add_host:
-            name: "{{ host_id }}"
+            name: "{{ item.key }}"
             # groups can only be added
             groups: unused
 
@@ -109,7 +133,7 @@
       - role: inventory-update
         omit_groups: [ 'ovb' ]
         inventory_file_name: 'hosts-install'
-        omit_hosts: "{{ hostvars[groups['undercloud'][0]].nodes_to_delete|default([])|difference(hostvars[groups['undercloud'][0]].nodes_added|default([])) }}"
+        omit_hosts: "{{ hostvars[groups['undercloud'][0]].nodes_to_delete|default([])|difference(hostvars[groups['undercloud'][0]].nodes_added|default([]))|difference(groups.get('unused', [])) }}"
   tasks:
     - name: refresh dynamic inventory
       meta: refresh_inventory
