@@ -15,6 +15,17 @@
         register: existing_flavors
         tags: skip_ansible_lint
 
+      - name: Check if deployment files folder exists locally before copying
+        stat:
+          path: "{{ source_dir }}"
+        register: deployment_files
+        delegate_to: localhost
+
+      - name: Fail if deployment files do not exist
+        fail:
+          msg: "The deployment files directory {{ source_dir }} doesn't exist"
+        when: deployment_files.stat.isdir is not defined or not deployment_files.stat.isdir
+
       - name: Create template base folder
         file:
             path: '{{ template_base }}'
