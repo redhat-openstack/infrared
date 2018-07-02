@@ -1,4 +1,5 @@
 #!/bin/bash
+
 set -euxo pipefail
 export TOXENV="pep8,py27,cli,ansible-lint,any-errors-fatal,conflicts,plugin-registry"
 
