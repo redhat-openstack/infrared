@@ -5,11 +5,7 @@
   any_errors_fatal: true
   vars:
       - conf: "{{ install.config|default({}) }}"
-      - default_conf: "{%- if install.version <= 13 -%}
-                /usr/share/instack-undercloud/undercloud.conf.sample
-                {%- else -%}
-                /usr/share/python-tripleoclient/undercloud.conf.sample
-                {%- endif -%}"
+      - default_conf: /usr/share/instack-undercloud/undercloud.conf.sample
       - local_src: "{%- if conf.file|default('') -%}
                 {{ conf.file }}
                 {%- elif 'hypervisor' in groups.all or 'bmc' in groups -%}
