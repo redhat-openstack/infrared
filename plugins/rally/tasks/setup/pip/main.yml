@@ -1,0 +1,38 @@
+# pip10=crashes while importing requests
+- name: Install pip
+  command: easy_install pip==9
+  become: yes
+
+- name: Install devel packages for package build dependencies
+  become: yes
+  package:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ setup.packages }}"
+
+- name: Install required pip packages
+  pip:
+      name: "{{ item }}"
+      state: latest
+      virtualenv: "{{ rally.path }}"
+  with_items: "{{ setup.pip_packages }}"
+
+- name: Install rally-openstack package
+  pip:
+      name: "{{ item }}"
+      state: latest
+      virtualenv: "{{ rally.path }}"
+  with_items:
+      - prettytable
+      - rally-openstack
+
+- name: List rally version
+  shell: "{{ rally.bin }} --version |& cut -d '~' -f1"
+  register: rally_version
+
+- name: List rally release
+  shell: "{{ rally.bin }} --version |& cut -d '~' -f2"
+  register: rally_release
+
+- debug:
+      msg: "Build mark: rally={{ rally_version.stdout }}-{{ rally_release.stdout }}"
