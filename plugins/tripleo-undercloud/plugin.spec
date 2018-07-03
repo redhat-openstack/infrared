@@ -67,6 +67,11 @@ subparsers:
                           Specifies whether ths SSL should be used for undercloud
                           A self-signed SSL cert will be generated.
                       default: no
+                  validations:
+                      type: Bool
+                      help: |
+                          Run validations for TripleO deployments when enabled.
+                      default: no
                   shade-host:
                       type: Value
                       help: |
