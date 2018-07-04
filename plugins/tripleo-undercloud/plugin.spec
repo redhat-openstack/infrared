@@ -68,6 +68,20 @@ subparsers:
                           A self-signed SSL cert will be generated.
                       default: no
 
+                  validations:
+                      type: Bool
+                      help: |
+                          Run validations for TripleO deployments when enabled
+                      default: no
+
+                  undercloud-extra-args:
+                      type: Value
+                      help: |
+                          Extra arguments to be passed to the openstack undercloud deploy script
+                          Example:
+                                --undercloud-extra-args="--use-heat"
+                      default: ''
+
                   shade-host:
                       type: Value
                       help: |
