@@ -17,6 +17,14 @@
       line: '-e {{ item }} \'
   with_items: "{{ ugstage.environment_file }}"
 
+- name: Append extra CLI option(s) to {{ ugstage.step }} script
+  lineinfile:
+      dest: "{{ ugstage.script }}"
+      insertbefore: "{{ deploy_lastline.stdout }}"
+      line: '{{ item }} \'
+  with_items: "{{ ugstage.extra_cli }}"
+  when: ugstage.extra_cli is defined
+
 - name: Change log file name of {{ ugstage.step }} script
   lineinfile:
       dest: "{{ ugstage.script }}"
