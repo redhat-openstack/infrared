@@ -218,6 +218,10 @@ subparsers:
 
             - title: Overcloud Options
               options:
+                  overcloud-predeploy-action:
+                      type: Value
+                      help: Specify a custom command to run before the Overcloud deploy script
+
                   overcloud-debug:
                       type: Bool
                       default: yes
