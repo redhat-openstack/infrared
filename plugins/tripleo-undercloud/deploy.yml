@@ -15,6 +15,17 @@
           - install.build|default('') == 'ga'
         register: apply_workaround_bz1428608
 
+      - name: grab undercloud_public_vip from undercloud.conf
+        command: 'awk -F= "/^undercloud_public_vip\s*=\s*/ {print $2}" ~/undercloud.conf'
+        register: awk_undercloud_public_vip
+        become_user: "{{ install.user.name }}"
+  
+      - name: update /etc/hosts with undercloud details
+        lineinfile:
+            dest: "/etc/hosts"
+            line: "{{ awk_undercloud_public_vip.stdout|trim | ternary(awk_undercloud_public_vip.stdout|trim, '192.168.24.2')}}   {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
+            state: present
+
       - name: install the undercloud
         command: bash ~/undercloud_deploy.sh
         register: undercloud_deployment
