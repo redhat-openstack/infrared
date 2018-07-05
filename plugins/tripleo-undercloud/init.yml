@@ -18,11 +18,5 @@
           # todo(yfried): this seems highly specific. Refactor this to a more generic use case
           name: "{{ inventory_hostname }}.redhat.local"
 
-    - name: update /etc/hosts with undercloud details
-      lineinfile:
-          dest: "/etc/hosts"
-          line: "127.0.0.1   {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
-          state: present
-
 - import_playbook: create_user.yml
   tags: user
