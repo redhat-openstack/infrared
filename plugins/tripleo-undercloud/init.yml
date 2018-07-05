@@ -21,8 +21,9 @@
     - name: update /etc/hosts with undercloud details
       lineinfile:
           dest: "/etc/hosts"
-          line: "127.0.0.1   {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
+          line: "{{ ansible_default_ipv4.address }}   {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
           state: present
+      when: "install.version|openstack_release >= 13"
 
 - import_playbook: create_user.yml
   tags: user
