@@ -33,6 +33,18 @@
             mode: 0755
         when: not local_src
 
+      - name: grab undercloud_public_vip from undercloud.conf
+        command: 'awk -F= "/^undercloud_public_vip\s*=\s*/ {print $2}" ~/undercloud.conf'
+        register: awk_undercloud_public_vip
+
+      - name: update /etc/hosts with undercloud details
+        lineinfile:
+            dest: "/etc/hosts"
+            line: "{{ awk_undercloud_public_vip.stdout|trim | ternary(awk_undercloud_public_vip.stdout|trim, '192.168.24.2')}}   {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
+            state: present
+        become: true
+        become_user: root
+
       - name: enable undercloud-ssl
         include_tasks: tasks/ssl.yml
         when: install.ssl
