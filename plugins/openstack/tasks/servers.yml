@@ -36,7 +36,7 @@
       state: present
       wait: "{{ topology_node.wait | default(wait) }}"
       # default timeout of 180s was *not* enough in few case of high-cloud load
-      timeout: 240
+      timeout: "{{ lookup('env', 'OS_SERVER_TIMEOUT') | default(240) }}"
       meta:
         submitter_user: "{{ lookup('env', 'USER') }}"
         submitter_hostname: "{{ lookup('env', 'HOSTNAME') }}"
