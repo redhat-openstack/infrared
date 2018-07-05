@@ -33,6 +33,10 @@
             mode: 0755
         when: not local_src
 
+      - name: grab undercloud_public_vip from undercloud.conf
+        command: 'awk -F= "/^undercloud_public_vip\s*=\s*/ {print $2}" ~/undercloud.conf'
+        register: awk_undercloud_public_vip
+
       - name: enable undercloud-ssl
         include_tasks: tasks/ssl.yml
         when: install.ssl

@@ -5,10 +5,6 @@
 #      file: ssl.yml
 #      name: ssl
 
-- name: grab undercloud_public_vip from undercloud.conf
-  command: 'awk -F= "/^undercloud_public_vip\s*=\s*/ {print $2}" ~/undercloud.conf'
-  register: awk_undercloud_public_vip
-
 - name: create cert directory
   become: yes
   file:
@@ -35,6 +31,8 @@
   command: "{{ shell_command }}"
   args:
       creates: "{{ ssl.final_cert }}"
+
+- debug: var=awk_undercloud_public_vip.stdout
 
 - name: combine the two files into one for HAProxy
   become: yes
