@@ -94,6 +94,8 @@
 
 # todo (obaranov): investigate how to get cloud rc parameters in more simplier way
 - name: Get cloud auth info
+  environment:
+      OS_CLOUD: "{{ bmc_provision_cloud | default(omit) }}"
   os_client_config:
       clouds:
           - "{{ bmc_provision_cloud | default(omit) }}"
