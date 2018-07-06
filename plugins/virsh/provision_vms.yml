@@ -61,10 +61,7 @@
           when: "not topology_node.external_network.bridged|default(False)"
       tags: ips
 
-    - name: restart VMs
-      command: "virsh reboot {{ item.value.name }}"
-      with_dict: "{{ vms_info }}"
-
+    # TODO(obaranov) This is deprecated config. Remove it.
     - name: update tunneling conf
       template:
           src: ansible.ssh.config.j2
