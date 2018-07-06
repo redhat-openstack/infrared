@@ -25,6 +25,11 @@ from ansible.module_utils.pycompat24 import get_exception
 
 
 try:
+    from collections.abc import Mapping as collections_Mapping
+except ImportError:
+    from collections import Mapping as collections_Mapping
+
+try:
     import libvirt
 except ImportError:
     HAS_VIRT = False
@@ -248,6 +253,16 @@ class Util(object):
 
         return Util._xmlET2dict(ET.XML(xml))
 
+    @staticmethod
+    def _get_key_as_list(value):
+        """Return a key of a dict as a list"""
+        if not value:
+            return []
+        elif isinstance(value, collections_Mapping):
+            return [value]
+        else:
+            return value
+
     @command('domain_xml2dict', domain={'type': 'str'})
     def get_dom_dict(self, domain=''):
         """Get domain xml from libvirt as dict"""
@@ -377,7 +392,7 @@ class Util(object):
         result['disks'] = disks
 
         net = self.get_net_dict(network)
-        hosts = net['network']['ip']['dhcp']['host']
+        hosts = _get_key_as_list(net['network']['ip']['dhcp']['host'])
         for host in hosts:
             if host['name'] == domain:
                 result['mac'] = host['mac']
@@ -422,7 +437,8 @@ class Util(object):
                         dhcp = family.get('dhcp')
                         if dhcp is None:
                             continue
-                        for record in dhcp.get('host', []):
+                        hosts = _get_key_as_list(dhcp.get('host'))
+                        for record in hosts:
                             dhcp_leases.append({'hostname': record['name'],
                                                 'ipaddr': record['ip']})
                     networks[net_name] = {'dhcp_leases': dhcp_leases}
