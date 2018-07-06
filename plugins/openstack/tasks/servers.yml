@@ -20,6 +20,8 @@
   changed_when: false
 
 - name: Create instances
+  environment:
+      OS_CLOUD: "{{ provision.cloud | default('') }}"
   vars:
       resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
       secgroups: "{% if provision.anti.spoofing == true %}{{ topology_node.security_groups }}{% endif %}"
