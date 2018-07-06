@@ -301,7 +301,7 @@ class BeakerMachine(object):
         :raises AssertionError: If fails to  provision the system
         """
         if wait_for_host:
-            last_pre_provison_activity = self._get_last_system_activity()
+            last_pre_provision_activity = self._get_last_system_activity()
 
         headers = {'Content-Type': 'application/json'}
         url = self._build_url('PROVISION', self.fqdn)
@@ -323,7 +323,7 @@ class BeakerMachine(object):
 
         if wait_for_host:
             self._wait_for_provision(
-                last_pre_provison_activity, provision_timeout)
+                last_pre_provision_activity, provision_timeout)
 
     def _get_last_system_activity(self):
         """

@@ -66,11 +66,11 @@
         include_tasks: tasks/discover_provision_net.yml
         vars:
             uc_provision_net: "ctlplane"
-        when: provison_virsh_network_name is not defined
+        when: provision_virsh_network_name is not defined
 
       - fail:
-            msg: "The provision network cannot be discovered. Please rerun infrared command with -e provison_virsh_network_name=<net_name>"
-        when: provison_virsh_network_name is not defined
+            msg: "The provision network cannot be discovered. Please rerun infrared command with -e provision_virsh_network_name=<net_name>"
+        when: provision_virsh_network_name is not defined
 
       - name: get information about vm's from hypervisor
         vars:
@@ -89,7 +89,7 @@
                 'name': '{{ item }}',
                 'arch': '`echo "$NODE_XML" | grep arch | cut -d\' -f2`',
                 'memory_kibs': '`echo "$NODE_XML" | grep currentMemory | cut -d\< -f2 | cut -d\> -f2`',
-                'mac': '`echo "$NODE_XML" | grep {{ provison_virsh_network_name }} -B 1 | grep mac | cut -d\' -f2`',
+                'mac': '`echo "$NODE_XML" | grep {{ provision_virsh_network_name }} -B 1 | grep mac | cut -d\' -f2`',
                 'cpu': '`echo "$NODE_XML" | grep vcpu | cut -d\< -f2 | cut -d\> -f2`',
                 'disk_bytes': '`virsh domblkinfo {{ item }} vda | grep -e Capacity | cut -d\: -f2 | xargs`',
                 'disks': '${disks_list}',

@@ -22,6 +22,6 @@
 
 - name: save network name
   set_fact:
-      provison_virsh_network_name: "{{ item.item }}"
+      provision_virsh_network_name: "{{ item.item }}"
   with_items: "{{ virsh_networks_ips.results }}"
   when: item.stdout |ipaddr('subnet') == ctlplane_subnet_cidr.stdout

@@ -148,10 +148,10 @@ Run introspection and tagging with infrared::
         --introspect=yes \
         --tagging=yes \
         --deploy=no \
-        -e provison_virsh_network_name=br-ctlplane \
+        -e provision_virsh_network_name=br-ctlplane \
         --hybrid hybrid_nodes.json
 
-.. note:: Make sure to provide the 'provison_virsh_network_name' name to specify
+.. note:: Make sure to provide the 'provision_virsh_network_name' name to specify
           network name to be used for provisioning.
 
 Run deployment with appropriate templates
