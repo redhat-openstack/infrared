@@ -378,6 +378,8 @@ class Util(object):
 
         net = self.get_net_dict(network)
         hosts = net['network']['ip']['dhcp']['host']
+        if isinstance(hosts, dict):
+            hosts = [hosts]
         for host in hosts:
             if host['name'] == domain:
                 result['mac'] = host['mac']
@@ -422,7 +424,10 @@ class Util(object):
                         dhcp = family.get('dhcp')
                         if dhcp is None:
                             continue
-                        for record in dhcp.get('host', []):
+                        hosts = dhcp.get('host', [])
+                        if isinstance(hosts, dict):
+                            hosts = [hosts]
+                        for record in hosts:
                             dhcp_leases.append({'hostname': record['name'],
                                                 'ipaddr': record['ip']})
                     networks[net_name] = {'dhcp_leases': dhcp_leases}
