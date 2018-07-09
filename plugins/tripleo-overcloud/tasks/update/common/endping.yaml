@@ -14,7 +14,7 @@
 
 - name: register loss percent
   shell: |
-    tail -2 ping_results_{{ pingtimestamp.stdout }}.log | head -1 | awk {'print $6'} | sed s/\%//
+    awk '/[[:digit:]]+% packet loss/' ping_results_{{ pingtimestamp.stdout }}.log | grep -Eo '[[:digit:]]+%' | sed s/\%//
   register: pingloss
 
 - fail: msg="Ping loss higher than {{ loss_threshold|default(1)|int }}% detected"
