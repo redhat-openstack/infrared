@@ -41,6 +41,12 @@
   register: overcloud_upgrade_step
   ignore_errors: yes
 
+- name: Check stack update status
+  shell: |
+      tail {{ ugstage.script }}.log | grep 'Stack {{ install.overcloud.stack }} UPDATE_FAILED'
+  failed_when: false
+  register: upgrade_err_msg
+
 - name: Print stack failures
   shell: |
       source {{ undercloud_rc }}
@@ -51,4 +57,4 @@
 
 - fail:
       msg: "Overcloud upgrade {{ ugstage.step }} step failed... :("
-  when: overcloud_upgrade_step.rc != 0
+  when: overcloud_upgrade_step.rc != 0 or upgrade_err_msg|succeeded
