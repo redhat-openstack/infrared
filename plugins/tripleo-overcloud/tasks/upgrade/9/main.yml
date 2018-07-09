@@ -25,12 +25,24 @@
       environment_file:
         - /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker-init.yaml
 
+- block:
+    - debug: msg="Starting floating IP dataplane ping check before Object Storage Upgrade"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+
 - name: Object Storage Upgrade
   include_tasks: ../common/node_upgrade.yml
   with_items: "{{ groups.swift|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: swift_upgrade
+
+- block:
+    - debug: msg="Ending floating IP dataplane ping check after Object Storage Upgrade"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
 
 - name: Controller upgrade
   include_tasks: ../common/upgrade_step.yml
@@ -42,6 +54,13 @@
       environment_file:
         - /usr/share/openstack-tripleo-heat-templates/environments/major-upgrade-pacemaker.yaml
 
+- block:
+    - debug: msg="Starting floating IP dataplane ping check before Ceph OSD nodes upgrade"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+
 - name: Ceph OSD nodes upgrade
   include_tasks: ../common/node_upgrade.yml
   with_items: "{{ groups.ceph|default([])|difference(groups.unused|default([])) }}"
@@ -49,12 +68,29 @@
       loop_var: node_name
   tags: upgrade_ceph
 
+- block:
+    - debug: msg="Ending floating IP dataplane ping check after Ceph OSD nodes upgrade"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
+
+- block:
+    - debug: msg="Starting floating IP dataplane ping check before Nova compute upgrade"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+
 - name: Nova compute nodes upgrade
   include_tasks: ../common/node_upgrade.yml
   with_items: "{{ groups.compute|default([])|difference(groups.unused|default([])) }}"
   loop_control:
       loop_var: node_name
   tags: upgrade_compute
+
+- block:
+    - debug: msg="Ending floating IP dataplane ping check after Nova compute upgrade"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
 
 - name: Upgrade convergence
   include_tasks: ../common/upgrade_step.yml
