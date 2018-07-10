@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7cca130f_38d4f61a",
+        "filename": "plugins/tripleo-undercloud/templates/undercloud.conf.j2",
+        "patchSetId": 5
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1006223
+      },
+      "writtenOn": "2018-07-10T02:43:02Z",
+      "side": 1,
+      "message": "So this is not completely correct and should be fixed in the file. Techincally these options are \u003e\u003d 13 and should be configurable as they are dependent on the provided network configuration for the udnercloud",
+      "revId": "42f7b3d05685c18ba516bcd69622717ad2abe18a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d4b9e3d_89f04be1",
+        "filename": "plugins/tripleo-undercloud/templates/undercloud_deploy.sh.j2",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1006223
+      },
+      "writtenOn": "2018-07-10T02:43:02Z",
+      "side": 1,
+      "message": "So this is what I was saying that we should expose the ability to pass in any extra cmd line options here.  This is not correct as we expect the default \u0027openstack undercloud install\u0027 to continue to working.  \n\nIt would be better if this was...\n\nopenstack udnercloud install {{ undercloud_install_extra_options }} \u0026\u003e undercloud_install.log\n\nWe should not be hard coding --use-heat here.",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 11
+      },
+      "revId": "42f7b3d05685c18ba516bcd69622717ad2abe18a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
