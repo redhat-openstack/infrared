@@ -17,5 +17,5 @@
     tail -2 ping_results_{{ pingtimestamp.stdout }}.log | head -1 | awk {'print $6'} | sed s/\%//
   register: pingloss
 
-- fail: msg="Ping loss higher than 1% detected"
-  when: pingloss.stdout|int > 1
+- fail: msg="Ping loss higher than {{ loss_threshold|default(1)|int }}% detected"
+  when: pingloss.stdout|int > {{ loss_threshold|default(1)|int }}
