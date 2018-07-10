@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1343759e_ad4f7b37",
+        "filename": "plugins/tripleo-undercloud/configure.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1006589
+      },
+      "writtenOn": "2018-07-10T07:12:32Z",
+      "side": 1,
+      "message": "I think it is better to use ternary filter here: \n\n     default_conf: \"{{ (install.version|openstack_release \u003c\u003d 13|ternary(\u0027/usr/share/instack-undercloud/undercloud.conf.sample\u0027, \u0027/usr/share/python-tripleoclient/undercloud.conf.sample\u0027) }}\"\n\nAlso don\u0027t forget to use openstack_release filter to get the numbered version of the OSP, because install.version can be also Pike, rocks, etc.",
+      "range": {
+        "startLine": 8,
+        "startChar": 21,
+        "endLine": 8,
+        "endChar": 55
+      },
+      "revId": "f84347deb8d25623fe453c66c03da0bfe8f0b47a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "498bac49_1e1f9cf8",
+        "filename": "plugins/tripleo-undercloud/plugin.spec",
+        "patchSetId": 8
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1006589
+      },
+      "writtenOn": "2018-07-10T07:12:32Z",
+      "side": 1,
+      "message": "I think it is better to have a new option for that. And by default it should be set to yes for OSP\u003e\u003d14. For anything below 14, this option should be ignored and not set.",
+      "range": {
+        "startLine": 82,
+        "startChar": 56,
+        "endLine": 82,
+        "endChar": 66
+      },
+      "revId": "f84347deb8d25623fe453c66c03da0bfe8f0b47a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82c06aa9_e26786f6",
+        "filename": "plugins/tripleo-undercloud/templates/undercloud.conf.j2",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1006589
+      },
+      "writtenOn": "2018-07-10T07:12:32Z",
+      "side": 1,
+      "message": "We need to do the same changes for the templates\\undercloud_ospdui.conf file.",
+      "revId": "f84347deb8d25623fe453c66c03da0bfe8f0b47a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
