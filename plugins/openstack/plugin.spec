@@ -58,6 +58,11 @@ subparsers:
                           -e override.controller.memory=30720
                           __LISTYAMLS__
                       default: "aio:1"
+                  topology-flavors:
+                      type: ListOfVarFiles
+                      help: |
+                          Flavors resources
+                          __LISTYAMLS__
                   image:
                       type: Value
                       help: |

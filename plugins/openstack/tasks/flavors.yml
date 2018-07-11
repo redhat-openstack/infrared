@@ -1,0 +1,18 @@
+- include_vars:
+    file: "{{ flavor_list_file}}"
+    name: current_file
+
+- name: Create flavors
+  os_nova_flavor:
+    cloud: "{{ provision.cloud | default(omit) }}"
+    state: present
+    name: "{{ current_file.name }}"
+    ram: "{{ current_file.ram }}"
+    vcpus: "{{ current_file.vcpus }}"
+    disk: "{{ current_file.disk }}"
+    ephemeral: "{{ current_file.ephemeral | default(omit) }}"
+  register: flavors
+
+- name: save flavors for registration
+  set_fact:
+      flavors_list: "{{ flavors_list|default([]) + [flavors.flavor] }}"

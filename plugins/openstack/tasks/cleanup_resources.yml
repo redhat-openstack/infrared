@@ -22,6 +22,15 @@
   register: servers_cleanup
   ignore_errors: yes
 
+- name: Cleanup flavors
+  os_nova_flavor:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      flavorid: "{{ item.id }}"
+      state: absent
+  with_items: "{{ flavors|default([]) }}"
+  register: flavors_cleanup
+  ignore_errors: yes
+
 # Block tasks are needed for shade >= 1.24.0
 - block:
     - name: Clean subnets dhcp and gateway settings

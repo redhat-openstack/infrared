@@ -1,0 +1,18 @@
+- name: Create Flavors
+  hosts: "{{ provision.host | default('localhost') }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - name: Create flavors specified by user
+        include_tasks: tasks/flavors.yml
+        with_items: "{{ provision.topology.flavors |default([]) }}"
+        loop_control:
+            loop_var: flavor_list_file
+        when: "flavor_list_file != ''"
+
+      - name: register flavors resources
+        vars:
+            input:
+                flavors: "{{ flavors_list }}"
+        include_tasks: tasks/register_resources_file.yml
+        when: provision.get('topology', {}).flavors is defined
