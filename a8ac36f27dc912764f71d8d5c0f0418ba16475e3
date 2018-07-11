@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "4af46f15_0c737e2e",
+        "filename": "plugins/tripleo-undercloud/templates/undercloud.conf.j2",
+        "patchSetId": 11
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1012293
+      },
+      "writtenOn": "2018-07-11T15:07:04Z",
+      "side": 1,
+      "message": "Agree, currently, it does fail for OSP 14 in my testing. That is because the templates for containerized UC are missing in our docker registry.\nI\u0027ll see how I can split into two with incremental changes.",
+      "parentUuid": "f37f490a_cff46194",
+      "revId": "a8ac36f27dc912764f71d8d5c0f0418ba16475e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4b0da545_74657660",
         "filename": "plugins/tripleo-undercloud/templates/undercloud.conf.j2",
         "patchSetId": 11
@@ -53,6 +71,24 @@
       "writtenOn": "2018-07-11T09:33:29Z",
       "side": 1,
       "message": "duplicate of L#33?",
+      "revId": "a8ac36f27dc912764f71d8d5c0f0418ba16475e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad314d80_2fae9d72",
+        "filename": "plugins/tripleo-undercloud/templates/undercloud.conf.j2",
+        "patchSetId": 11
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1012293
+      },
+      "writtenOn": "2018-07-11T15:07:04Z",
+      "side": 1,
+      "message": "No, those fall under [Default] and these under [ctlplane-subnet] sections.",
+      "parentUuid": "4b0da545_74657660",
       "revId": "a8ac36f27dc912764f71d8d5c0f0418ba16475e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -93,6 +129,24 @@
     },
     {
       "key": {
+        "uuid": "fad4e188_42f018a8",
+        "filename": "plugins/tripleo-undercloud/templates/undercloud_ospdui.conf",
+        "patchSetId": 11
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1012293
+      },
+      "writtenOn": "2018-07-11T15:07:04Z",
+      "side": 1,
+      "message": "The patchset seems to be messed up, I\u0027ll fix we need those variables.",
+      "parentUuid": "1f803424_91ac821c",
+      "revId": "a8ac36f27dc912764f71d8d5c0f0418ba16475e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7b4e1c1f_1688bb0a",
         "filename": "plugins/tripleo-undercloud/templates/undercloud_ospdui.conf",
         "patchSetId": 11
@@ -104,6 +158,30 @@
       "writtenOn": "2018-07-11T09:33:29Z",
       "side": 1,
       "message": "Masquerade shoudln\u0027t be enabled by default, we have external OC networks for outside access. This should (and is) only enabled explicitely by custom UC config (http://rhos-qe-mirror-qeos.usersys.redhat.com/cgit/rhos-infrared/tree/settings/installer/ospd/deployment/rhos-qe-06-10-uc-routed/undercloud.conf) or it can be new IR param.\n\nFor UI it might have sense to have it directly here, so I am just keeping this comment as FTR.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 43
+      },
+      "revId": "a8ac36f27dc912764f71d8d5c0f0418ba16475e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72dc63af_b43da835",
+        "filename": "plugins/tripleo-undercloud/templates/undercloud_ospdui.conf",
+        "patchSetId": 11
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1012293
+      },
+      "writtenOn": "2018-07-11T15:07:04Z",
+      "side": 1,
+      "message": "I did have a question about this, but as per official docs it is enabled by default for the above subnets- https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/13/html/director_installation_and_usage/installing-the-undercloud#configuring-the-director \n\nBtw.. also by specifying masquerade_network \u003d 192.168.24.0/24 we intend to set masquerade \u003d true imo",
+      "parentUuid": "7b4e1c1f_1688bb0a",
       "range": {
         "startLine": 39,
         "startChar": 0,
