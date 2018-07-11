@@ -107,9 +107,10 @@
   gather_facts: no
   roles:
       - role: inventory-update
-        omit_groups: [ 'ovb' ]
+        omit_groups: [ 'ovb', 'shade' ]
         inventory_file_name: 'hosts-install'
         omit_hosts: "{{ hostvars[groups['undercloud'][0]].nodes_to_delete|default([])|difference(hostvars[groups['undercloud'][0]].nodes_added|default([])) }}"
+        #TODO(skatlapa): Check the filter working
   tasks:
     - name: refresh dynamic inventory
       meta: refresh_inventory
