@@ -22,6 +22,97 @@
       "revId": "a8ac36f27dc912764f71d8d5c0f0418ba16475e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f37f490a_cff46194",
+        "filename": "plugins/tripleo-undercloud/templates/undercloud.conf.j2",
+        "patchSetId": 11
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2018-07-11T09:33:29Z",
+      "side": 1,
+      "message": "Note: Such dramatic changes to undercloud.conf shoudln\u0027t be coupled in 1 patch with UC containerization. I would split it into 2 since uc.conf have to pass trhu risk gates first, otherwise they can break everything in downstream RHOS CI!",
+      "revId": "a8ac36f27dc912764f71d8d5c0f0418ba16475e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4b0da545_74657660",
+        "filename": "plugins/tripleo-undercloud/templates/undercloud.conf.j2",
+        "patchSetId": 11
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2018-07-11T09:33:29Z",
+      "side": 1,
+      "message": "duplicate of L#33?",
+      "revId": "a8ac36f27dc912764f71d8d5c0f0418ba16475e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "727b1e7b_023219da",
+        "filename": "plugins/tripleo-undercloud/templates/undercloud.conf.j2",
+        "patchSetId": 11
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2018-07-11T09:33:29Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "a8ac36f27dc912764f71d8d5c0f0418ba16475e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f803424_91ac821c",
+        "filename": "plugins/tripleo-undercloud/templates/undercloud_ospdui.conf",
+        "patchSetId": 11
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2018-07-11T09:33:29Z",
+      "side": 1,
+      "message": "undercloud_admin_host has potential to affect (not only) all SSL jobs \u003e\u003d11, definitely candidate for risk gates.\n\nWhat is the reasoning to add such option to \u003e\u003d 11?\n\nI am confused how this looks like for these deployments then, this config will look like (11-12):\nlocal_ip \u003d 192.168.24.1/24\nundercloud_public_host \u003d 192.168.24.2\nundercloud_admin_host \u003d 192.168.24.3\nEOF\n\nThere is no need for dhcp*, inspection* admin_vip variables here anymore?",
+      "revId": "a8ac36f27dc912764f71d8d5c0f0418ba16475e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b4e1c1f_1688bb0a",
+        "filename": "plugins/tripleo-undercloud/templates/undercloud_ospdui.conf",
+        "patchSetId": 11
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2018-07-11T09:33:29Z",
+      "side": 1,
+      "message": "Masquerade shoudln\u0027t be enabled by default, we have external OC networks for outside access. This should (and is) only enabled explicitely by custom UC config (http://rhos-qe-mirror-qeos.usersys.redhat.com/cgit/rhos-infrared/tree/settings/installer/ospd/deployment/rhos-qe-06-10-uc-routed/undercloud.conf) or it can be new IR param.\n\nFor UI it might have sense to have it directly here, so I am just keeping this comment as FTR.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 43
+      },
+      "revId": "a8ac36f27dc912764f71d8d5c0f0418ba16475e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
