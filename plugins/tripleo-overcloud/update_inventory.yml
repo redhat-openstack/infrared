@@ -57,7 +57,7 @@
             host_id: "{{ item.Name or item.UUID }}"
         when:
             - host_id not in openstack_servers|map(attribute='name')|list
-            - host_id in groups.all
+            - host_id in groups.all|ternary(groups.shade)
         add_host:
             name: "{{ host_id }}"
             # groups can only be added
@@ -110,6 +110,7 @@
         omit_groups: [ 'ovb' ]
         inventory_file_name: 'hosts-install'
         omit_hosts: "{{ hostvars[groups['undercloud'][0]].nodes_to_delete|default([])|difference(hostvars[groups['undercloud'][0]].nodes_added|default([])) }}"
+        #TODO(skatlapa): Check the filter working
   tasks:
     - name: refresh dynamic inventory
       meta: refresh_inventory
