@@ -34,6 +34,13 @@
 - name: Print {{ ugstage.step }} command
   command: "cat {{ ugstage.script }}"
 
+- block:
+    - debug: msg="Starting floating IP dataplane ping check before {{ ugstage.step }} step"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+
 - name: Executing {{ ugstage.step }} command
   shell: |
       source {{ undercloud_rc }}
@@ -52,9 +59,14 @@
       source {{ undercloud_rc }}
       openstack stack failures list {{ install.overcloud.stack }}
   when:
-      - overcloud_upgrade_step.rc != 0
+      - overcloud_upgrade_step.rc != 0 or upgrade_err_msg|succeeded
       - undercloud_version|openstack_release > 9
 
 - fail:
       msg: "Overcloud upgrade {{ ugstage.step }} step failed... :("
   when: overcloud_upgrade_step.rc != 0 or upgrade_err_msg|succeeded
+
+- block:
+    - debug: msg="Ending floating IP dataplane ping check after {{ ugstage.step }} step"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
