@@ -10,10 +10,10 @@ LOG = logger.LOG
 DEFAULT_ANSIBLE_SETTINGS = dict(
     defaults=OrderedDict([
         ('host_key_checking', 'False'),
-        ('forks', 500),
-        ('timeout', 30),
+        ('forks', "500"),
+        ('timeout', "30"),
         ('pipelining', 'True'),
-        ('force_color', 1),
+        ('force_color', "1"),
         ('show_custom_stats', 'True'),
     ]),
 )

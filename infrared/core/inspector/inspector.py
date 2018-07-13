@@ -168,7 +168,7 @@ class SpecParser(object):
             config.set(
                 parser_name,
                 option_name,
-                value)
+                str(value))
 
         file_generated = False
 
