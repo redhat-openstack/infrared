@@ -47,7 +47,7 @@ networker_role:
         - OS::TripleO::Services::SensuClient
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::SkydiveAgent{% endif %}"
         - OS::TripleO::Services::Snmp
-        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::Sshd{% endif %}"
+        - "{% if roles_sshd %}OS::TripleO::Services::Sshd{% endif %}"
         - OS::TripleO::Services::Timezone
         - OS::TripleO::Services::TripleoFirewall
         - OS::TripleO::Services::TripleoPackages
