@@ -511,7 +511,7 @@ class InfraredPluginManager(object):
         self._load_plugins()
 
     def remove_all(self):
-        for plugin in self.PLUGINS_DICT:
+        for plugin in list(self.PLUGINS_DICT):
             self.remove_plugin(plugin)
             LOG.warning(
                 "Plugin '{}' has been successfully removed".format(plugin))
