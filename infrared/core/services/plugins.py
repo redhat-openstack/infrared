@@ -272,7 +272,11 @@ class InfraredPluginManager(object):
         plugin_git_name = os.path.split(git_url)[-1].split('.')[0]
 
         tmpdir = tempfile.mkdtemp(prefix="ir-")
-        cwd = os.getcwdu()
+        if hasattr(os, 'getcwdu'):
+            cwd = os.getcwdu()
+        else:
+            # In py3 this is an unicode version
+            cwd = os.getcwd()
         os.chdir(tmpdir)
         try:
             repo = git.Repo.clone_from(

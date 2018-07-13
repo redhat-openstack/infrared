@@ -286,7 +286,7 @@ def test_extra_vars_with_file(spec_fixture,
     for file_dict in file_dicts:
         tmp_file = tmp_dir.join(file_dict["filename"])
         # write dict to tmp yaml file
-        with open(str(tmp_file), 'wb') as yaml_file:
+        with open(str(tmp_file), 'w') as yaml_file:
             yaml_file.write(yaml.safe_dump(file_dict["content"],
                                            default_flow_style=False))
         # Inject full file path to command
@@ -455,7 +455,7 @@ def test_nested_value_CLI_with_answers_file(spec_fixture, tmpdir,
 
     answers_file = mytempdir.join("answers_file")
 
-    with open(str(answers_file), 'wb') as configfile:
+    with open(str(answers_file), 'w') as configfile:
         config.write(configfile)
 
     input_string = ['example', '--from-file', str(answers_file)]
