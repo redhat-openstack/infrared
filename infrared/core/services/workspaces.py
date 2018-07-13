@@ -237,7 +237,7 @@ class Workspace(object):
                     shutil.copy2(abs_path, self.path)
                 break
         if target_path is None:
-            raise IOError("File not found: {}".format(file_path))
+            raise exceptions.IRFileNotFoundException(file_path)
         return target_path
 
 
