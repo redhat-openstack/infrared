@@ -137,7 +137,7 @@
       - install.network.ovn and not install.network.dvr
       - install.version|default(undercloud_version)|openstack_release == 12
 
-- name: Change network type in OVN ML2 environment file OSP > 12
+- name: Change network type in OVN ML2 environment file OSP
   become: yes
   yedit:
       src: "{{ install.heat.templates.basedir }}/environments/services-docker/neutron-ovn-ha.yaml"
@@ -148,7 +148,7 @@
               '{{ install.network.backend }}'
   when:
       - install.network.ovn and not install.network.dvr
-      - install.version|default(undercloud_version)|openstack_release > 12
+      - install.version|default(undercloud_version)|openstack_release == 13
 
 - name: Change network type in OVN DVR environment file
   become: yes
@@ -161,4 +161,30 @@
               '{{ install.network.backend }}'
   when:
       - install.network.ovn and install.network.dvr
-      - install.version|default(undercloud_version)|openstack_release > 12
+      - install.version|default(undercloud_version)|openstack_release == 13
+
+- name: Change network type in OVN ML2 environment file OSP > 13
+  become: yes
+  yedit:
+      src: "{{ install.heat.templates.basedir }}/environments/services/neutron-ovn-ha.yaml"
+      update: True
+      key: parameter_defaults
+      value:
+          NeutronNetworkType:
+              '{{ install.network.backend }}'
+  when:
+      - install.network.ovn and not install.network.dvr
+      - install.version|default(undercloud_version)|openstack_release > 13
+
+- name: Change network type in OVN DVR environment file > 13
+  become: yes
+  yedit:
+      src: "{{ install.heat.templates.basedir }}/environments/services/neutron-ovn-dvr-ha.yaml"
+      update: True
+      key: parameter_defaults
+      value:
+          NeutronNetworkType:
+              '{{ install.network.backend }}'
+  when:
+      - install.network.ovn and install.network.dvr
+      - install.version|default(undercloud_version)|openstack_release > 13
