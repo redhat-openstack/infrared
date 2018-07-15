@@ -190,12 +190,12 @@ to `restore`_ it on a future run, thus saving installation time.
 In order to use this feature, first follow the `Setup an Undercloud`_ section.
 Once an undercloud VM is up and ready, run the following::
 
-    ir tripleo-undercloud --quickstart-backup yes
+    ir tripleo-undercloud --snapshot-backup yes
 
-Or optionally, provide the file name of the image to create (defaults to "undercloud-quickstart.qcow2").
+Or optionally, provide the file name of the image to create (defaults to "undercloud-snapshot.qcow2").
 .. note:: the filename refers to a path on the hypervisor.
 
-    ir tripleo-undercloud --quickstart-backup yes --quickstart-filename custom-name.qcow2
+    ir tripleo-undercloud --snapshot-backup yes --snapshot-filename custom-name.qcow2
 
 This will prepare a qcow2 image of your undercloud ready for usage with `Restore`_.
 
@@ -207,9 +207,9 @@ Restore
 When working on a virtual environment, `infrared` can use a pre-made undercloud image to quickly set up an environment.
 To use this feature, simply run::
 
-    ir tripleo-undercloud --quickstart-restore yes
+    ir tripleo-undercloud --snapshot-restore yes
 
-Or optionally, provide the file name of the image to restore from (defaults to "undercloud-quickstart.qcow2").
+Or optionally, provide the file name of the image to restore from (defaults to "undercloud-snapshot.qcow2").
 .. note:: the filename refers to a path on the hypervisor.
 
 Undercloud Upgrade
