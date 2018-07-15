@@ -1,5 +1,5 @@
 ---
 tripleo_heat_templates:
-    - "{{ install.heat.templates.basedir }}/environments/services-docker/sensu-client.yaml"
-    - "{{ install.heat.templates.basedir }}/environments/services-docker/collectd.yaml"
-    - "{{ install.heat.templates.basedir }}/environments/services-docker/fluentd{{ (install.version | default(undercloud_version) | openstack_release >= 13) | ternary('', '-client') }}.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/services{{ (install.version | default(undercloud_version) | openstack_release >= 14) | ternary('', '-docker') }}/sensu-client.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/services{{ (install.version | default(undercloud_version) | openstack_release >= 14) | ternary('', '-docker') }}/collectd.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/services{{ (install.version | default(undercloud_version) | openstack_release >= 14) | ternary('', '-docker') }}/fluentd{{ (install.version | default(undercloud_version) | openstack_release >= 13) | ternary('', '-client') }}.yaml"
