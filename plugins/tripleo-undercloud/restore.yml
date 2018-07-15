@@ -8,8 +8,8 @@
   vars_files:
       - vars/topology/undercloud.yml
   vars:
-      undercloud_image_file: "{{ install.quickstart.image | basename }}"
-      undercloud_disk_path: "{{ install.disk.pool }}/{{ install.quickstart.filename.rstrip('.qcow2') | basename }}-disk1.qcow2"
+      undercloud_image_file: "{{ install.snapshot.image | basename }}"
+      undercloud_disk_path: "{{ install.disk.pool }}/{{ install.snapshot.filename.rstrip('.qcow2') | basename }}-disk1.qcow2"
       undercloud_user: "{{ install.user.name | default('stack') }}"
       # todo(yfried): add external refs so users can override these values and customize the Undercloud
   tasks:
@@ -24,7 +24,7 @@
 
       - name: download image
         get_url:
-            url: "{{ install.quickstart.image }}"
+            url: "{{ install.snapshot.image }}"
             dest: "{{ undercloud_disk_path }}"
             owner: qemu
             group: qemu
@@ -90,13 +90,6 @@
         virt:
             name: "{{ undercloud_node.name }}"
             state: running
-
-      #TODO(yfried): cleanup should be in a block/allways format
-      # todo: make this optional
-#      - name: remove quickstart tar file
-#        file:
-#            state: absent
-#            path: "{{ undercloud_image_file }}.{{ (tar is defined) | ternary('tar', 'qcow2') }}"
 
       - name: wait for the undercloud IP to become available
         shell: |
