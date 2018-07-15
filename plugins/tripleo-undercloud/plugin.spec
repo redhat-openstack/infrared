@@ -6,12 +6,12 @@ subparsers:
         description: Install TripleO on a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
-            - title: Quickstart Menu
+            - title: Snapshot Menu
               options:
-                  quickstart-backup:
+                  snapshot-backup:
                       type: Bool
                       help: |
-                          This will create an undercloud snapshot for use with the `--quickstart-restore` flag
+                          This will create an undercloud snapshot for use with the `--snapshot-restore` flag
                   dest-address:
                       type: Value
                       help: |
@@ -28,21 +28,21 @@ subparsers:
                       type: Value
                       help: |
                           Username for destination server (in case key was not provided)
-                  quickstart-restore:
+                  snapshot-restore:
                       type: Bool
                       help: |
-                          This will restore an undercloud from a pre-made snapshot created by the `--quickstart-backup` flag
-                          Use --quickstart-image to specify image to use for restore.
-                  quickstart-image:
+                          This will restore an undercloud from a pre-made snapshot created by the `--snapshot-backup` flag
+                          Use --snapshot-image to specify image to use for restore.
+                  snapshot-image:
                        type: Value
                        help: |
                           The url to the image to restore the undercloud from.
-                  quickstart-filename:
+                  snapshot-filename:
                       type: Value
                       help: |
-                          When used with `quickstart-backup`, it will create this file
-                          When used with `quickstart-restore`, it will use this file as the disk name for the domain
-                      default: "undercloud-quickstart.qcow2"
+                          When used with `snapshot-backup`, it will create this file
+                          When used with `snapshot-restore`, it will use this file as the disk name for the domain
+                      default: "undercloud-snapshot.qcow2"
 
             - title: Undercloud Configuration
               options:

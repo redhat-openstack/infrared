@@ -4,7 +4,7 @@
   any_errors_fatal: true
   vars:
       undercloud: "{{ hostvars[(groups.undercloud|first)].inventory_hostname }}"
-      undercloud_image_file: "{{ install.quickstart.filename.rstrip('.qcow2') }}.qcow2"
+      undercloud_image_file: "{{ install.snapshot.filename.rstrip('.qcow2') }}.qcow2"
   tasks:
       - name: install package with virt-sparsify
         package:
