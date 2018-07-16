@@ -4,12 +4,12 @@
   any_errors_fatal: true
   tasks:
       - fail:
-            msg: "Please provide either --version OR --images-task OR --quickstart-{backup|restore} OR --upgrade OR --update-undercloud"
+            msg: "Please provide either --version OR --images-task OR --snapshot-{backup|restore} OR --upgrade OR --update-undercloud"
         when:
             - not install.version|default('')
             - not install.images.task|default('')
-            - not install.quickstart.backup|default('')
-            - not install.quickstart.restore|default('')
+            - not install.snapshot.backup|default('')
+            - not install.snapshot.restore|default('')
             - not install.upgrade|default('')
             - not install.get('update', {}).undercloud|default('')
 
