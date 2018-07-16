@@ -73,6 +73,31 @@
         with_items: "{{ groups['overcloud_nodes'] | default([])}}"
         when: "'bmc' in groups"
 
+      - name: set root-disk override fact
+        set_fact:
+            root_disk: "{{ install.root.disk.get('override', []) }}"
+        when: install.get('root',{}).get('disk',{})
+
+      - name: configure root-disk for multi-disk nodes
+        shell: |
+            set -exo pipefail
+
+            REGEX=".*-[0-9]+$"
+            source ~/stackrc
+
+            {% for node in item.node.split(':') %}
+                if [[ "{{ node }}" =~ $REGEX ]]; then
+                    openstack baremetal node set \
+                      --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}' {{ node }}
+                else
+                    openstack baremetal node list|awk '/{{ node }}/ {print $2}'| \
+                    xargs -I{} openstack baremetal node set {} --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
+                fi
+            {% endfor %}
+        tags: skip_ansible_lint
+        with_items: "{{ root_disk }}"
+        when: root_disk is defined
+
       # Because introspection is faulty and tricky especially on baremetals
       # we need to check multiple times if any failure occured. Reasonable time
       # for this process to take is < 10 minutes no matter how many nodes for baremetals.

@@ -1,0 +1,23 @@
+---
+features:
+  - |
+    Some nodes might use multiple disks. This means the director needs to
+     identify the disk to use for the root disk during provisioning.
+    There are several properties you can use to help the director identify it:
+
+    * model
+    * vendor
+    * serial
+    * size
+    * etc
+
+    This feature allows to configure root disk for a multi-disk nodes.
+    Example:
+    | --root-disk-override node=compute,hint=size,hintvalue=50
+    |   will set a root disk to be a on a device with 50GB for all compute nodes
+    |
+    | --root-disk-override node=controller-1,hint=name,hintvalue=/dev/sdb
+    |   will set a root disk for controller-1 to be /dev/sdb
+
+    For more info please check official docs at:
+    https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/10/html/director_installation_and_usage/chap-configuring_basic_overcloud_requirements_with_the_cli_tools#sect-Defining_the_Root_Disk_for_Nodes
