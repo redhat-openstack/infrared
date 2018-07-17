@@ -38,6 +38,11 @@ enable_validations = true
 enable_validations = false
 {% endif %}
 {% if install.version|openstack_release >= 13 %}
+{% if install.version|openstack_release > 13 %}
+container_images_file=/home/stack/undercloud-containers.yaml
+undercloud_ntp_servers={{ install.ntp.server }}
+docker_insecure_registries={{ install.registry.mirror }}
+{% endif %}
 [ctlplane-subnet]
 local_subnet = ctlplane-subnet
 cidr = 192.168.24.0/24

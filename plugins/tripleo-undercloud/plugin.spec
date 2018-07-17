@@ -79,7 +79,7 @@ subparsers:
                       help: |
                           Extra arguments to be passed to the openstack undercloud deploy script
                           Example:
-                                --undercloud-extra-args="--use-heat"
+                                --undercloud-extra-args --use-heat
                       default: ''
 
                   shade-host:
@@ -90,6 +90,12 @@ subparsers:
                           otherwise undercloud is used.
                           Example:
                                 --shade-host undercloud-0
+
+                  ntp-server:
+                      type: Value
+                      help: |
+                            Ntp server name (or IP) to use.
+                      default: clock.redhat.com
 
             - title: Splitstack deployment
               options:
@@ -296,3 +302,15 @@ subparsers:
                       type: Value
                       help: |
                           Override the default RHEL version. Default 'ansible_distribution_version'
+
+            - title: Containers
+              options:
+                  registry-mirror:
+                      type: Value
+                      help: The alternative docker registry to use for undercloud deployment.
+                      default: "docker-registry.engineering.redhat.com"
+
+                  registry-namespace:
+                      type: Value
+                      help: The alternative docker registry namespace to use for undercloud deployment.
+                      default: "rhosp14"
