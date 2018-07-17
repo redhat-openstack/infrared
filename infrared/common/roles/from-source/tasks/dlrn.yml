@@ -114,3 +114,9 @@
       src: patched_rpms.j2
       dest: '/etc/yum.repos.d/from_source.repo'
   when: repopath.files|length > 0
+
+- name: Disable epel repo to avoid possible version conflicts.
+  yum_repository:
+      name: epel
+      file: epel
+      enabled: no
