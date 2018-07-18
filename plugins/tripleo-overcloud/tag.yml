@@ -113,11 +113,14 @@
               with_items: "{{ overcloud_facts.nodes | default([]) }}"
 
             - name: get the node UUID
+              vars:
+                ironic_cli: "{{ (install.version|openstack_release < 14)|ternary('ironic node-list','openstack baremetal node list') }}"
               shell: |
                   source ~/stackrc
-                  ironic node-list | grep -w {{ item.name | default(item) }} | awk '{print $2}'
+                  {{ ironic_cli }} | awk '/{{ item.name | default(item) }}/ {print $2}'
               with_items: "{{ overcloud_facts.nodes | default([])}}"
               register: node_list
+
         when: "overcloud_facts.nodes[0].name is defined"
 
       - set_fact:
@@ -131,12 +134,26 @@
         when: item.cmd is defined
         with_items: "{{ tagged_flavors | default([]) }}"
 
-      - name: tag our nodes with the proper profile
+      - name: tag our nodes with the proper profile with ironic client
         shell: |
             source ~/stackrc
             ironic node-update {{ item[0].stdout }} add properties/capabilities='profile:{{ item[1].cmd.split() | last }},boot_option:local'
         tags: skip_ansible_lint
-        when: "item[0].item.name is defined and item[1].cmd is defined and item[0].item.name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
+        when:
+            - "item[0].item.name is defined and item[1].cmd is defined and item[0].item.name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
+            - install.version|openstack_release < 14
+        with_together:
+            - "{{ node_list.results }}"
+            - "{{ tagged_flavors | default([]) }}"
+
+      - name: tag our nodes with the proper profile with unified client
+        shell: |
+            source ~/stackrc
+            openstack baremetal node set --property capabilities='profile:{{ item[1].cmd.split() | last }},boot_option:local' {{ item[0].stdout }}
+        tags: skip_ansible_lint
+        when:
+            - "item[0].item.name is defined and item[1].cmd is defined and item[0].item.name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
+            - install.version|openstack_release >= 14
         with_together:
             - "{{ node_list.results }}"
             - "{{ tagged_flavors | default([]) }}"
