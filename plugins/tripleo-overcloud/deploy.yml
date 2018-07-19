@@ -121,7 +121,7 @@
         # TODO(yfried): use "file" module intead mkdir
         shell: |
             mkdir -p /var/log/extra/
-            source ~/stackrc
+            source ~{{ ansible_user|default(ansible_ssh_user) }}/stackrc
             ~{{ ansible_user|default(ansible_ssh_user) }}/deploy_info.sh --long > /var/log/extra/deploy_resources.log 2>&1 &
             ~{{ ansible_user|default(ansible_ssh_user) }}/deploy_info.sh 2>&1 &
             wait
