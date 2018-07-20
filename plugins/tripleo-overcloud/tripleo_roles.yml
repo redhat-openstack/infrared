@@ -6,14 +6,43 @@
   vars:
       template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
       roles_base: "/usr/share/openstack-tripleo-heat-templates/roles"
+      ipv6_postfix: "{{  (install.network.protocol == 'ipv4') | ternary('', '-v6')}}"
+      ipv6_postfix_underscore: "{{  (install.network.protocol == 'ipv4') | ternary('', '_v6')}}"
+      nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('osp11', 'legacy') }}"
       flavor_name_mapping:
           Controller: Control
           ObjectStorage: SwiftStorage
       role_names_mapping:
           ceph: CephStorage
           swift: ObjectStorage
+      tht_mapping:
+          - regexp: ^(Controller).*
+            net_config_file: "controller{{ ipv6_postfix }}.yaml"
+            node_name: controller
+          - regexp: ^(Novacontrol).*
+            net_config_file: "novacontrol.yaml"
+            node_name: novacontrol
+          - regexp: ^(Compute).*
+            net_config_file: "compute.yaml"
+            node_name: compute
+          - regexp: ^(Ceph).*
+            net_config_file: "ceph-storage.yaml"
+            node_name: ceph
+          - regexp: ^(ObjectStorage).*
+            net_config_file: "swift-storage.yaml"
+            node_name: swift
+          - regexp: ^(Database).*
+            net_config_file: "database_internal.yaml"
+            node_name: database
+          - regexp: ^(Messaging).*
+            net_config_file: "messaging_internal.yaml"
+            node_name: messaging
+          - regexp: ^(Networker).*
+            net_config_file: "networker.yaml"
+            node_name: networker
   tags:
       - deploy_preparation
+      - tht_roles
   tasks:
       - name: create roles folder
         file:
@@ -66,10 +95,6 @@
            - install.version|default(undercloud_version) | openstack_release >= 10
 
       - name: create the nodes file
-        vars:
-            ipv6_postfix: "{{  (install.network.protocol == 'ipv4') | ternary('', '-v6')}}"
-            ipv6_postfix_underscore: "{{  (install.network.protocol == 'ipv4') | ternary('', '_v6')}}"
-            nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('osp11', 'legacy') }}"
         template:
             src: tripleo_roles/nodes.yaml.j2
             dest: "{{ template_base }}/roles/nodes.yaml"
@@ -87,7 +112,9 @@
             regexp: 'HostnameFormatDefault: "{{ item.old }}-(.*)"'
             replace: 'HostnameFormatDefault: "{{ item.new }}-\1"'
         with_items:
-            - old: novacompute
+            - old: novacompute[a-z]*
+              new: compute
+            - old: compute[a-z]*
               new: compute
 
       - name: assigning specific node ids
