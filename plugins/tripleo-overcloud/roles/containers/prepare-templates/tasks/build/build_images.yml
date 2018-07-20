@@ -56,16 +56,16 @@
 - name: replace IP with hostname in /etc/sysconfig/docker
   replace:
       dest: /etc/sysconfig/docker
-      regexp: '^(INSECURE_REGISTRY=".*)"'
-      replace: '\1 --insecure-registry {{ docker_insecure_registry }}"'
+      regexp: '^(INSECURE_REGISTRY=.--insecure-registry)'
+      replace: '\1 {{ docker_insecure_registry }} --insecure-registry'
       backup: no
   become: true
 
 - name: add insecure ceph registry to /etc/sysconfig/docker
   replace:
       dest: /etc/sysconfig/docker
-      regexp: '^(INSECURE_REGISTRY=".*)"'
-      replace: '\1 --insecure-registry {{ docker_insecure_ceph_registry }}"'
+      regexp: '^(INSECURE_REGISTRY=.--insecure-registry)'
+      replace: '\1 {{ docker_insecure_ceph_registry }} --insecure-registry'
       backup: no
   become: true
   when:
