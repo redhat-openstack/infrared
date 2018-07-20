@@ -73,6 +73,16 @@
         with_items: "{{ groups['overcloud_nodes'] | default([])}}"
         when: "'bmc' in groups"
 
+      - name: set the root device for virt ceph nodes
+        shell: |
+            source ~/stackrc
+            NODE_UUID=$(ironic node-list | grep -w {{ item }} | awk '{print $2}' )
+            openstack baremetal node set --property root_device='{"name":"/dev/vda"}' ${NODE_UUID}
+        with_items: "{{ groups['ceph'] | default([])}}"
+        when:
+            - "'hypervisor' in groups"
+            - "'ceph' in groups"
+
       - name: set root-disk override fact
         set_fact:
             root_disk: "{{ install.root.disk.get('override', []) }}"
