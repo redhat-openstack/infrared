@@ -112,11 +112,21 @@
       line: '-e {{ install.heat.templates.basedir }}/environments/services/neutron-lbaas.yaml \'
   when: install.network.lbaas
 
-- name: Append the octavia template line to the base overcloud deploy script
+- name: Append the octavia template line to the base overcloud deploy script (OSP < 14)
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/services-docker/octavia.yaml \'
-  when: install.network.octavia
+  when:
+      - install.network.octavia
+      - install.version|default(undercloud_version)|openstack_release < 14
+
+- name: Append the octavia template line to the base overcloud deploy script (OSP >= 14)
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/services/octavia.yaml \'
+  when:
+      - install.network.octavia
+      - install.version|default(undercloud_version)|openstack_release > 13
 
 - name: Append the network dvr overrides
   lineinfile:
