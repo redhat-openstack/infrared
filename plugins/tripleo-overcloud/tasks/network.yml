@@ -54,9 +54,11 @@
   when: install.network.bgpvpn
 
 - name: Append the bgpvpn template line to the base overcloud deploy script for OSP > 12
+  vars:
+    template_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 13) | ternary('services', 'services-docker') }}"
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e {{ install.heat.templates.basedir }}/environments/services-docker/neutron-bgpvpn-opendaylight.yaml \'
+      line: '-e {{ install.heat.templates.basedir }}/environments/{{ template_subfolder }}/neutron-bgpvpn-opendaylight.yaml \'
   when:
       - install.network.bgpvpn
       - install.version|default(undercloud_version)|openstack_release > 12
@@ -113,9 +115,11 @@
   when: install.network.lbaas
 
 - name: Append the octavia template line to the base overcloud deploy script
+  vars:
+    template_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 13) | ternary('services', 'services-docker') }}"
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e {{ install.heat.templates.basedir }}/environments/services-docker/octavia.yaml \'
+      line: '-e {{ install.heat.templates.basedir }}/environments/{{ template_subfolder }}/octavia.yaml \'
   when: install.network.octavia
 
 - name: Append the network dvr overrides
