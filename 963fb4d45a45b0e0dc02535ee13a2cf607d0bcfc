@@ -34,6 +34,24 @@
       "revId": "963fb4d45a45b0e0dc02535ee13a2cf607d0bcfc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6017fc54_163ba4bc",
+        "filename": "plugins/tripleo-overcloud/roles/containers/prepare-templates/tasks/build/build_images.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1001933
+      },
+      "writtenOn": "2018-07-23T11:57:09Z",
+      "side": 1,
+      "message": "\u003e \u003e\u003e\u003e not sure why we\u0027re doing this playbook\n\u003e this is needed to pull images to uc when it serves as a registry for oc nodes.\n\nRight, but what I\u0027m trying to say here is that we already provision the Undercloud with a Docker registry and its containers during \"openstack undercloud install\" step\". Then after the undercloud deployment, we expect the user to run \"openstack tripleo container image prepare\" to pull the rest of the containers used by the overcloud. I guess we need to improve the doc and explain the workflow better.\n\n\u003e \u003e\u003e\u003e but in any case please make sure the undercloud.conf also has the insecure registries.\n\u003e Do U mean \u0027INSECURE_REGISTRY\u003d\"--insecure-registry some.registry.com\"\u0027 has to be added to undercloud.conf ? or what\u0027s the format of uc\u0027s insecure registries?\n\u003e \u003e\u003e\u003eBecause we are configuring docker with Ansible in TripleO during the node bootstrap\n\u003e so the value from undercloud.conf is read and set during uc installation or some extra playbook is used, could U please elaborate ?\n\nWe already do that step here:\nhttps://github.com/openstack/ansible-role-container-registry/blob/master/tasks/docker.yml#L42-L50\n\nwhere the value of insecure registries is given via Heat Template:\nhttps://github.com/openstack/tripleo-heat-templates/blob/master/puppet/services/docker.yaml#L7-L12\n\nAnd read from undercloud.conf via tripleoclient:\nhttps://github.com/openstack/python-tripleoclient/blob/c4eed20b625a2f55628a592d14df0dc24b1d9e9e/tripleoclient/v1/undercloud_config.py#L320\n\nSo when you configure undercloud.conf / docker_insecure_registries, we\u0027ll take the value and set the Heat parameter that is read from our Ansible role to configure Docker.\n\nIs it clear now?",
+      "parentUuid": "bcae0ab6_01a9dd03",
+      "revId": "963fb4d45a45b0e0dc02535ee13a2cf607d0bcfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
