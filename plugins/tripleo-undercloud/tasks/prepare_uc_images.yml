@@ -1,0 +1,19 @@
+---
+- name: generate container images environment file
+  shell: |
+      set -exo pipefail
+      openstack  overcloud container image prepare \
+      --namespace {{ install.registry.mirror }}/{{ install.registry.namespace }} \
+      --tag-from-label {version}-{release} \
+      -e /usr/share/openstack-tripleo-heat-templates/environments/docker.yaml \
+      -e /usr/share/openstack-tripleo-heat-templates/environments/undercloud.yaml \
+      -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic.yaml \
+      -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic-inspector.yaml \
+      -e /usr/share/openstack-tripleo-heat-templates/environments/services/mistral.yaml \
+      -e /usr/share/openstack-tripleo-heat-templates/environments/services/zaqar.yaml \
+      -e /usr/share/openstack-tripleo-heat-templates/environments/services/tripleo-ui.yaml \
+      -e /usr/share/openstack-tripleo-heat-templates/environments/services/tempest.yaml \
+      -e /usr/share/openstack-tripleo-heat-templates/environments/services/undercloud-haproxy.yaml \
+      -e /usr/share/openstack-tripleo-heat-templates/environments/services/undercloud-keepalived.yaml \
+      --roles-file=/usr/share/openstack-tripleo-heat-templates/roles_data_undercloud.yaml \
+      --output-env-file /home/stack/undercloud-containers.yaml
