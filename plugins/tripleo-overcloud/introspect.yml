@@ -147,7 +147,7 @@
       - name: switch pxe_ssh to the pxe_impi
         shell: |
             source ~/stackrc
-            NODE_UUID=$({{ ironic_cli }} | awk '/{{ item.name | default(item) }}/ {print $2}' )
+            NODE_UUID=$({{ ironic_cli }} | grep -w {{ item.key }} | awk '{print $2}' )
             openstack baremetal node set $NODE_UUID \
                 --driver pxe_ipmitool \
                 --driver-info ipmi_username={{ install.vbmc.username }} \
