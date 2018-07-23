@@ -5,13 +5,16 @@
   tags:
       - upgrade
       - upgrade_repos
-  vars:
-      discovery_types:
-          - rhos_release_file
-          - nova
-  roles:
-      - version-discovery
   tasks:
+      - name: get undercloud version
+        tags: undercloud_version_discovery
+        vars:
+            discovery_types:
+                - rhos_release_file
+                - nova
+        import_role:
+            name: version-discovery
+
       - name: Validation
         include_tasks: "tasks/upgrade/validation.yml"
         tags:
