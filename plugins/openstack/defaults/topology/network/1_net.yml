@@ -1,0 +1,38 @@
+---
+# This is the most common network topology for OpenStack Testing deployments
+# FixMe(aopincar): Eliminates recursive loop. Should be moved into root level togther with 'networks_data' data when moving to Ansible => 2.2 (incluve_vars with 'name')
+networks_vars:
+    networks:
+        management:
+            name: 'management'
+
+networks_data:
+    networks: "{{ networks_vars.networks }}"
+
+    subnets:
+        management:
+            name: "{{ networks_vars.networks.management.name }}"
+            network_name: "{{ networks_vars.networks.management.name }}"
+            allocation_pool_start: 172.16.1.10
+            allocation_pool_end: 172.16.1.99
+            cidr: 172.16.1.0/24
+
+    routers:
+        router:
+            name: 'router'
+            attach_subnets:
+                - "{{ networks_vars.networks.management.name }}"
+
+security_groups:
+    general_access:
+        rules:
+            - direction: 'ingress'
+              ethertype: 'IPv4'
+              remote_ip_prefix: '0.0.0.0/0'
+              protocol: icmp
+            - direction: 'ingress'
+              ethertype: 'IPv4'
+              remote_ip_prefix: '0.0.0.0/0'
+              protocol: tcp
+              port_range_min: '22'
+              port_range_max: '22'
