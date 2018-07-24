@@ -1,10 +1,70 @@
 ---
+- name: Check if we have user input for image preparation
+  set_fact:
+      container_env:
+          container-image-prepare:
+              namespace: "{{ install.get('registry', {}).namespace|default('') }}"
+              prefix: "{{ install.registry.prefix|default('') }}"
+              tag: "{{ install.registry.tag.discover|ternary('AUTODETECT', install.registry.tag ) }}"
+  when: install.registry.skip.puddle
+
+- name: Fail non-osp deployment
+  fail:
+      msg: |
+          For non-OSP deployment set --registry-skip-puddle=yes and provide
+          '-registy-namespace' '--registry-tag' options.
+  when:
+      - (install.version|default(undercloud_version)|openstack_distribution) != 'OSP'
+      - container_env is not defined
+
+- block:
+    - name: containers_images_env facts
+      set_fact:
+          containers_images_env_template_download_basename: "overcloud_container_image_prepare.yaml"
+          containers_images_env_template_dest_file: "{{ inventory_dir }}/overcloud_container_image_prepare.yaml"
+
+    - name: get puddle url from the repos
+      vars:
+          next_release: "{{ install.upgrade|default(false)|ternary((undercloud_version|int + 1), undercloud_version) }}"
+          repod_file: "/etc/yum.repos.d/rhos-release-{{ next_release|default(install.version) }}.repo"
+      shell: |
+          cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '.*(?=\/.*\/\$basearch)'
+      register: containers_puddle_base_url
+
+    - name: get puddle number
+      command: "/usr/bin/puddle-version {{ containers_puddle_base_url.stdout }}"
+      register: containers_puddle_number
+
+    - name: puddle to be used
+      debug:
+          msg: "{{ containers_puddle_number.stdout }}"
+
+    - name: Downloading overcloud container images environment file
+      get_url:
+          url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_env_template_download_basename }}"
+          dest: "{{ containers_images_env_template_dest_file }}"
+          force: true
+      delegate_to: localhost
+
+    - name: Load variables from container environment file
+      include_vars:
+          file: "{{ containers_images_env_template_dest_file }}"
+          name: container_env
+
+  when: not install.registry.skip.puddle
+
 - name: generate container images environment file
+  vars:
+      registry: "{{ install.registry.mirror|ternary(install.registry.mirror, container_env['container-image-prepare']['namespace'].split('/')[0] )}}"
+      namespace: "{{ install.registry.namespace|ternary(install.registry.namespace, container_env['container-image-prepare']['namespace'].split('/')[1] )}}"
+      tag_label: "--tag-from-label {version}-{release}"
+      tag_direct: "--tag {{ container_env['container-image-prepare']['tag'] }}"
+      tag: "{{ install.registry.tag.discover|ternary(tag_label, tag_direct) }}"
   shell: |
       set -exo pipefail
       openstack  overcloud container image prepare \
-      --namespace {{ install.registry.mirror }}/{{ install.registry.namespace }} \
-      --tag-from-label {version}-{release} \
+      --namespace {{ registry }}/{{ namespace }} \
+      {{ tag }} \
       -e /usr/share/openstack-tripleo-heat-templates/environments/docker.yaml \
       -e /usr/share/openstack-tripleo-heat-templates/environments/undercloud.yaml \
       -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic.yaml \

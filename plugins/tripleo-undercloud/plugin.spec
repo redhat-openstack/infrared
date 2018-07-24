@@ -308,3 +308,19 @@ subparsers:
                       type: Value
                       help: The alternative docker registry namespace to use for undercloud deployment.
                       default: "rhosp14"
+
+                  registry-skip-puddle:
+                      type: Bool
+                      help: |
+                          Skip reading any private puddle files to auto-detect the containers parameters
+                      default: False
+
+                  registry-tag:
+                      type: Value
+                      help: The images tag
+
+                  registry-tag-discover:
+                      type: Value
+                      help: |
+                          If this option is set then infrared will try to auto discover tag
+                      default: False
