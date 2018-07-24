@@ -14,6 +14,10 @@
                 False
                 {%- endif -%}"
   tasks:
+      - name: set workingr_dir fact
+        set_fact:
+            working_dir: "/home/{{ install.user.name }}"
+
       - name: template the undercloud.conf from local machine
         template:
             src: "{{ local_src }}"

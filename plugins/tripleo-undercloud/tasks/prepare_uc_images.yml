@@ -1,19 +1,146 @@
 ---
-- name: generate container images environment file
-  shell: |
-      set -exo pipefail
-      openstack  overcloud container image prepare \
-      --namespace {{ install.registry.mirror }}/{{ install.registry.namespace }} \
-      --tag-from-label {version}-{release} \
-      -e /usr/share/openstack-tripleo-heat-templates/environments/docker.yaml \
-      -e /usr/share/openstack-tripleo-heat-templates/environments/undercloud.yaml \
-      -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic.yaml \
-      -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic-inspector.yaml \
-      -e /usr/share/openstack-tripleo-heat-templates/environments/services/mistral.yaml \
-      -e /usr/share/openstack-tripleo-heat-templates/environments/services/zaqar.yaml \
-      -e /usr/share/openstack-tripleo-heat-templates/environments/services/tripleo-ui.yaml \
-      -e /usr/share/openstack-tripleo-heat-templates/environments/services/tempest.yaml \
-      -e /usr/share/openstack-tripleo-heat-templates/environments/services/undercloud-haproxy.yaml \
-      -e /usr/share/openstack-tripleo-heat-templates/environments/services/undercloud-keepalived.yaml \
-      --roles-file=/usr/share/openstack-tripleo-heat-templates/roles_data_undercloud.yaml \
-      --output-env-file /home/stack/undercloud-containers.yaml
+- name: set workingr_dir fact
+  set_fact:
+      working_dir: "/home/{{ install.user.name }}"
+
+- name: Check if we have user input for image preparation
+  set_fact:
+      container_env:
+          container-image-prepare:
+              namespace: "{{ install.get('registry', {}).namespace|default('') }}"
+              prefix: "{{ install.registry.prefix|default('') }}"
+              tag: "{{ install.registry.tag.discover|ternary('AUTODETECT', install.registry.tag ) }}"
+  when: install.registry.skip.puddle
+
+- name: Fail non-osp deployment
+  fail:
+      msg: |
+          For non-OSP deployment set --registry-skip-puddle=yes and provide
+          '-registy-namespace' '--registry-tag' options.
+  when:
+      - (install.version|default(undercloud_version)|openstack_distribution) != 'OSP'
+      - container_env is not defined
+
+- block:
+    - name: containers_images_env facts
+      set_fact:
+          containers_images_env_template_download_basename: "overcloud_container_image_prepare.yaml"
+          containers_images_env_template_dest_file: "{{ inventory_dir }}/overcloud_container_image_prepare.yaml"
+
+    - name: set undercloud_version during installation
+      set_fact:
+          undercloud_version: "{{ install.version }}"
+      when: not install.upgrade|default(false)
+
+    - name: get puddle url from the repos
+      vars:
+          upgrade_release: "{{ install.upgrade|default(false)|ternary((undercloud_version|int + 1), undercloud_version) }}"
+          install_release: "{{ undercloud_version|default(install.version) }}"
+          release: "{{  install.upgrade|default(false)|ternary(upgrade_release,install_release) }}"
+          repod_file: "/etc/yum.repos.d/rhos-release-{{ release }}.repo"
+      shell: |
+          cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '.*(?=\/.*\/\$basearch)'
+      register: containers_puddle_base_url
+
+    - name: get puddle number
+      command: "/usr/bin/puddle-version {{ containers_puddle_base_url.stdout }}"
+      register: containers_puddle_number
+
+    - name: puddle to be used
+      debug:
+          msg: "{{ containers_puddle_number.stdout }}"
+
+    - name: Downloading overcloud container images environment file
+      get_url:
+          url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_env_template_download_basename }}"
+          dest: "{{ containers_images_env_template_dest_file }}"
+          force: true
+      delegate_to: localhost
+
+    - name: Load variables from container environment file
+      include_vars:
+          file: "{{ containers_images_env_template_dest_file }}"
+          name: container_env
+
+  when: not install.registry.skip.puddle
+
+- block:
+    - name: generate container images environment file
+      shell: |
+          set -exo pipefail
+          openstack tripleo container image prepare default \
+          --output-env-file {{ working_dir }}/containers-prepare-parameter.yaml \
+          {% if not install.registry.undercloud.skip %}
+          --local-push-destination
+          {% endif %}
+
+    - name: set namespace in containers-prepare-parameter.yaml
+      vars:
+          registry: "{{ install.registry.mirror|ternary(install.registry.mirror, container_env['container-image-prepare']['namespace'].split('/')[0] )}}"
+          namespace: "{{ install.registry.namespace|ternary(install.registry.namespace, container_env['container-image-prepare']['namespace'].split('/')[1] )}}"
+      replace:
+          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+          regexp: 'registry.access.redhat.com/rhosp14'
+          replace: '{{ registry }}/{{ namespace }}'
+
+    - name: set ceph_namespace in containers-prepare-parameter.yaml
+      vars:
+          ceph_namespace: "{{ container_env['container-image-prepare']['ceph-namespace'] | default('registry.access.redhat.com/rhceph') }}"
+      replace:
+          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+          regexp: 'registry.access.redhat.com/rhceph'
+          replace: '{{ ceph_namespace }}'
+
+    - name: set ceph_image in containers-prepare-parameter.yaml
+      vars:
+          ceph_image: "{{ container_env['container-image-prepare']['ceph-image'] | default('rhceph-3-rhel7') }}"
+      replace:
+          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+          regexp: 'rhceph-3-rhel7'
+          replace: '{{ ceph_image }}'
+
+    - name: set ceph_tag in containers-prepare-parameter.yaml
+      vars:
+          ceph_tag: "{{ container_env['container-image-prepare']['ceph-tag'] | default('latest') }}"
+      replace:
+          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+          regexp: 'ceph_tag: latest'
+          replace: 'ceph_tag: {{ ceph_tag }}'
+
+    # BZ#1607627
+    - name: set tag_from_label in containers-prepare-parameter.yaml
+      replace:
+          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+          regexp: 'rdo_version'
+          replace: "'{version}-{release}'"
+      when: install.registry.skip.puddle
+
+    # BZ#1607999. hardcode IP until bz gets fixed.
+    # IP address only gets set during instalation process so ansible
+    # facts do not work for fresh deployments
+    # Use discovered IP during upgrade when UC already insalled
+    - name: replace localhost with br-ctlplane ip
+      vars:
+          uc_static_ip: "192.168.24.1"
+          uc_discovered_ip: "{{ hostvars[groups.undercloud|first].get('ansible_br-ctlplane',{}).get('ipv4',{}).get('address', '192.168.24.1') }}"
+          uc_registry_ip: "{{ install.upgrade|default(false)|ternary(uc_discovered_ip, uc_static_ip) }}"
+      replace:
+          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+          regexp: 'localhost'
+          replace: "{{ uc_registry_ip }}"
+
+    - block:
+        - name: remove tag_from_label in containers-prepare-parameter.yaml
+          lineinfile:
+              path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+              regexp: '.*tag_from_label.*'
+              state: absent
+
+        - name: set tag according to puddle number
+          replace:
+              path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+              regexp: 'tag: latest'
+              replace: "tag: {{ container_env['container-image-prepare']['tag'] }}"
+      when: not install.registry.skip.puddle
+  when:
+      - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
