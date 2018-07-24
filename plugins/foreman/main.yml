@@ -25,9 +25,9 @@
            port: "{{ provision.host.port }}"
            host: "{{ provision.host.address }}"
            search_regex: OpenSSH
-           delay: "{{ provision.wait | int }}"
-           sleep: 3
-      when: provision.wait > 0
+           delay: 3
+           sleep: 30
+      retries: 10
 
 - name: Generate host list
   hosts: localhost
