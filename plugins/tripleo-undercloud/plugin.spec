@@ -36,7 +36,7 @@ subparsers:
                   snapshot-image:
                        type: Value
                        help: |
-                          The url to the image to restore the undercloud from.
+                          The url or path to the image to restore the undercloud from.
                   snapshot-filename:
                       type: Value
                       help: |
