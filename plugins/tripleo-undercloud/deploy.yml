@@ -21,6 +21,9 @@
             - install.version|openstack_distribution == 'OSP'
             - install.version|openstack_release > 13
 
+      - name: apply workaround for BZ#1608508
+        shell: 'sudo setenforce 0'
+
       - name: install the undercloud
         command: bash ~/undercloud_deploy.sh
         register: undercloud_deployment
