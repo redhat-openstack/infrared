@@ -21,6 +21,12 @@
             - install.version|openstack_distribution == 'OSP'
             - install.version|openstack_release > 13
 
+      - name: apply workaround for BZ#1601613
+        shell: 'curl -s -4 https://review.openstack.org/changes/575003/revisions/current/patch?download | base64 -d | sudo patch -d /usr/lib/python2.7/site-packages/ -p1'
+
+      - name: apply workaround for BZ#1608529
+        shell: 'curl -s -4 https://review.openstack.org/changes/584265/revisions/current/patch?download | base64 -d | sudo patch -d /usr/share/openstack-tripleo-heat-templates/ -p1'
+
       - name: install the undercloud
         command: bash ~/undercloud_deploy.sh
         register: undercloud_deployment
