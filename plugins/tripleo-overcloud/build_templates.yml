@@ -28,19 +28,39 @@
         with_filetree: '{{ source_dir }}'
         when: item.state == 'directory'
 
+      - name: Find all j2 template files in source_dir to render
+        find:
+          paths: '{{ source_dir }}'
+          patterns: "*.j2"
+        register: files_to_render
+
       # consider all the files as templates
-      - name: Copy deployment folder
+      - name: Render j2 template files to destination directory
         vars:
             nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('', 'legacy') }}"
         template:
-            src: '{{ item.src }}'
-            dest: '{{ template_base }}/{{ item.path | regex_replace("\.j2$", "") }}'
-        with_filetree: '{{ source_dir }}'
-        when: item.state == 'file'
+            src: '{{ item.path }}'
+            dest: '{{ template_base }}/{{ item.path | basename | regex_replace("\.j2$", "") }}'
+        loop: '{{ files_to_render.files }}'
+
+      - name: Find all yaml/yml files in source_dir to copy
+        find:
+          paths: '{{ source_dir }}'
+          patterns:
+            - "*.yml"
+            - "*.yaml"
+        register: files_to_copy
+
+      - name: Copy yaml/yml files to destination directory
+        copy:
+          src: '{{ item.path }}'
+          dest: '{{ template_base }}'
+        loop: '{{ files_to_copy.files }}'
+        when: not ( item.path | regex_search('(debug.yaml)'))
 
       - name: inject debug.yaml so it will be auto discovered with user templates
-        template:
-            src: templates/debug.yaml.j2
+        copy:
+            src: templates/debug.yaml
             dest: "{{ template_base }}/debug.yaml"
         when: install.overcloud.debug
 
@@ -105,7 +125,7 @@
 
       - name: append extra templates provided by user
         include_tasks: tasks/environment_templates.yml
-        with_items: "{{ install.overcloud.templates|default([]) }}"
+        loop: "{{ install.overcloud.templates|default([]) }}"
         loop_control:
             loop_var: templates_list_file
         # avoid empty strings
@@ -146,7 +166,7 @@
             dest: "{{ overcloud_deploy_script }}"
             line: "{{ item }} \\"
             insertbefore: "^--log-file.*"
-        with_items: "{{ install.get('extra', {}).get('deploy', {}).get('params', {}) }}"
+        loop: "{{ install.get('extra', {}).get('deploy', {}).get('params', {}) }}"
 
       - name: Print deploy command
         command: "cat {{ overcloud_deploy_script }}"
