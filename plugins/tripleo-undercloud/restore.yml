@@ -15,12 +15,31 @@
   tasks:
       - name: check and create directory
         file:
-          path: "{{ install.disk.pool }}"
-          state: directory
-          owner: root
-          group: root
-          mode: 0755
+            path: "{{ install.disk.pool }}"
+            state: directory
+            owner: root
+            group: root
+            mode: 0755
         when: install.disk.pool | default(False)
+
+      - name: Check if shapshot image is path to file or url
+        stat:
+            path: "{{ install.snapshot.image }}"
+        register: image_file
+
+      - name: Fail when snapshot image doesn't exist
+        fail:
+            msg: "Provided snapshot image is not found, path - {{ install.snapshot.image }}"
+        when:
+            - not image_file.stat.exists
+            - not install.snapshot.image|regex_search('^http')
+
+      - name: Copy snapshot to disk path
+        copy:
+            src: "{{ install.snapshot.image }}"
+            dest: "{{ undercloud_disk_path }}"
+            remote_src: true
+        when: image_file.stat.exists
 
       - name: download image
         get_url:
@@ -29,6 +48,7 @@
             owner: qemu
             group: qemu
             force: yes
+        when: install.snapshot.image|regex_search('^http')
 
       - name: install libguestfs-tool / virt-customize
         package:
