@@ -36,6 +36,43 @@
             msg: "Undercloud deployment failed... :("
         when: undercloud_deployment.rc != 0
 
+      # BZ#1608508
+      - name: reboot the undercloud
+        shell: "sleep 2 && shutdown -r now"
+        async: 1
+        poll: 0
+        ignore_errors: true
+        when: update is changed
+
+      # Ansible bug around delegate+vars+wait
+      # https://github.com/ansible/ansible/issues/11705
+      # http://www.elmund.io/configuration%20management/2015/07/23/ansible-delegate_to-and-variables/
+      - name: waiting for the undercloud to be available
+        become: no
+        wait_for:
+            port: 22
+            host: "{{ ansible_host }}"
+            search_regex: OpenSSH
+            delay: 10
+            sleep: 3
+        delegate_to: localhost
+        when: "'hypervisor' not in groups"
+        retries: 6
+        delay: 30
+
+      - name: waiting for the undercloud to be available
+        become: no
+        wait_for:
+            port: 22
+            host: "{{ ansible_host }}"
+            search_regex: OpenSSH
+            delay: 10
+            sleep: 3
+        delegate_to: hypervisor
+        when: "'hypervisor' in groups"
+        retries: 6
+        delay: 30
+
       - name: remove workaround for BZ#1428608
         lineinfile:
             line: 'exclude=docker-distribution'
