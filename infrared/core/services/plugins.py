@@ -476,7 +476,7 @@ class InfraredPluginManager(object):
         with open(self.config_file, 'w') as fp:
             self.config.write(fp)
 
-        self._install_requirements(plugin_source)
+        self._install_requirements(dest)
         self._load_plugins()
 
     def add_all_available(self, plugins_registry=None):
