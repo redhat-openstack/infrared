@@ -36,7 +36,7 @@ subparsers:
                   snapshot-image:
                        type: Value
                        help: |
-                          The url to the image to restore the undercloud from.
+                          The url or path to the image to restore the undercloud from.
                   snapshot-filename:
                       type: Value
                       help: |
@@ -171,6 +171,7 @@ subparsers:
                           cdn - use internal mirrors of the CDN repos. (internal use)
                           none - use none of those flags
                       default: pin
+
                   from-source:
                       type: NestedList
                       action: append
@@ -184,6 +185,16 @@ subparsers:
                       help: |
                           Let you the option to enable testing/pending repos with rhos-release. Multiple values have to be coma separated.
                           Examples: --enable-testing-repos rhel,extras,ceph or --enable-testing-repos all
+
+                  validate:
+                      type: Bool
+                      default: yes
+                      help: Specifies whether we should run pre validation tasks
+
+                  post:
+                      type: Bool
+                      help: Specifies whether we should run post install tasks
+                      default: yes
 
             - title: TripleO User
               options:
