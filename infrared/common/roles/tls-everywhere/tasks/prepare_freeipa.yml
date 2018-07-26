@@ -32,6 +32,17 @@
       line: "sed -i '/^nameserver fe80:.*./d' /etc/resolv.conf"
       state: present
 
+- name: Add extra IPA server parameters
+  lineinfile:
+      path: "{{ freeipa_working_dir }}/freeipa_setup.sh"
+      insertafter: '^export UsingNovajoin.*'
+      line: 'export FreeIPAExtraInstallParams=${FreeIPAExtraInstallParams:-""}'
+      state: present
+- replace:
+      path: "{{ freeipa_working_dir }}/freeipa_setup.sh"
+      regexp: '^(.*)--setup-dns(.*)$'
+      replace: '\1--setup-dns\2 $FreeIPAExtraInstallParams'
+
 - name: Execute freeipa script
   become: yes
   shell: "{{ freeipa_working_dir }}/freeipa_setup.sh"
