@@ -32,10 +32,12 @@ discovery_iprange = 192.168.24.100,192.168.24.120
 {% elif install.version|openstack_release <= 12 %}
 inspection_iprange = 192.168.24.100,192.168.24.120
 {% endif %}
+{% if install.version|openstack_release >= 10 %}
+undercloud_ntp_servers={{ install.ntp.server }}
+{% endif %}
 {% if install.version|openstack_release >= 13 %}
 {% if install.version|openstack_release > 13 %}
 container_images_file=/home/stack/undercloud-containers.yaml
-undercloud_ntp_servers={{ install.ntp.server }}
 docker_insecure_registries={{ install.registry.mirror }}
 {% endif %}
 [ctlplane-subnet]
