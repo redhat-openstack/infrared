@@ -183,6 +183,9 @@
             source ~/stackrc
             openstack server list
         tags: skip_ansible_lint
+        register: result
+        until: result.rc == 0
+        retries: 5
 
   handlers:
       - name: update /etc/hosts with undercloud's details
