@@ -5,6 +5,12 @@ subparsers:
         description: Collect log from all nodes of the active workspace.
         include_groups: ["Ansible options", "Common options"]
         options:
+          hosts:
+              type: Value
+              help: |
+                  Invntory hosts or group to collect logs from. The ansbile host pattern can be used as a value.
+                  (https://docs.ansible.com/ansible/devel/user_guide/intro_patterns.html)
+              default: "all:!localhost:!hypervisor"
           dest-dir:
               type: Value
               help: Path to a destination directory where the collected log will be stored
