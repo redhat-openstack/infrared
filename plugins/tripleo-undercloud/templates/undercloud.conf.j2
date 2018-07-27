@@ -37,7 +37,9 @@ undercloud_ntp_servers={{ install.ntp.server }}
 {% endif %}
 {% if install.version|openstack_release >= 13 %}
 {% if install.version|openstack_release > 13 %}
-container_images_file=/home/stack/undercloud-containers.yaml
+{% if install.version|default(undercloud_version)|openstack_distribution == 'OSP' %}
+container_images_file={{ working_dir }}/containers-prepare-parameter.yaml
+{% endif %}
 docker_insecure_registries={{ install.registry.mirror }}
 {% endif %}
 [ctlplane-subnet]
