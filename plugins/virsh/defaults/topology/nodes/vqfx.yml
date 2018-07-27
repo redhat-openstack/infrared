@@ -1,0 +1,27 @@
+---
+name: vqfx
+prefix: null
+cpu: "2"
+cpumodel: "host-model"
+memory: "2048"
+swap: "0"
+deploy_os: true
+supports_libguestfs: false
+os:
+  type: "vqfx"
+  variant: "freebsd10.0"
+disks:
+  disk1:
+    # move to reliable storage
+    import_url: http://10.9.95.40/virt-images/vqfx.img
+    path: null
+    dev: "/dev/vda"
+    size: "8G"
+    cache: "unsafe"
+    preallocation: "full"
+    bus: ide
+# infraces and external_network dicts were moved to network file.
+interfaces: null
+
+groups:
+  - vswitches

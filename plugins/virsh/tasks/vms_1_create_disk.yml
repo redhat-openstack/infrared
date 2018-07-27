@@ -83,7 +83,7 @@
             # create empty disk
             qemu-img create -f qcow2 -o preallocation={{ disk_values.preallocation }} {{ disk_pool  }}/{{ node_image }} {{ disk_values.size }}
 
-            {% if disk_name == 'disk1' and topology_node.deploy_os|default(True) -%}
+            {% if disk_name == 'disk1' and topology_node.deploy_os|default(True) and topology_node.supports_libguestfs|default(True) -%}
             # expand (copy-content) into new image in case of system disk
             # virt-resize needs target file with expected size to already exists
             virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
