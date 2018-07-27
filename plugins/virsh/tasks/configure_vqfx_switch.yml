@@ -1,0 +1,23 @@
+---
+- name: create a temporary directory for configuration scripts
+  tempfile:
+    state: directory
+  register: temp_dir
+
+- name: copy configuration scripts to the temp directory
+  vars:
+    switch_ssh_key: "{{ hostvars['vqfx-0']['ansible_ssh_private_key_file'] }}.pub"
+    switch_ip: "{{ hostvars['vqfx-0']['ansible_host'] }}"
+  template:
+    src: vqfx/configure.sh
+    dest: "{{ temp_dir.path }}/configure_vqfx.sh"
+    mode: 0755
+
+- name: copy wait script
+  copy:
+    src: vqfx/wait.sh
+    dest: "{{ temp_dir.path }}/vqfx_wait.sh"
+    mode: 0755
+
+- name: call configuration script
+  command: "{{ temp_dir.path }}/configure_vqfx.sh"
