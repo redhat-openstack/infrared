@@ -1,0 +1,32 @@
+---
+# save current node to "{{ node_dict }}"
+- include_vars:
+    file: "{{ node.key }}"
+    name: node_dict
+
+- include_vars:
+    file: "{{ provision.topology.network }}"
+    name: network_info
+
+- name: merge overriden settings to the separate var
+  set_fact:
+      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
+
+- name: update node network info if needed
+  set_fact:
+      topology_node: "{{ topology_node | combine(network_info.nodes[topology_node.name]|default(network_info.nodes.default), recursive=True) }}"
+  when: not topology_node.interfaces
+
+- name: Set default node_start_index
+  set_fact:
+      node_start_index: 0
+
+- name: Calculate node_start_index
+  set_fact:
+      node_start_index: "{{ node_start_index|int + 1 if (topology_node.name + '-' in item ) and hostvars[item].get('ansible_connection') == 'ssh' else node_start_index|int }}"
+  with_items: "{{ groups.all }}"
+  when: provision.topology.extend | default(False)
+
+- name: "configure {{ topology_node.os.type }} switch"
+  include_tasks: "tasks/configure_{{ topology_node.os.type }}_switch.yml"
+  when: topology_node.os.type in infrared_vswitch_types

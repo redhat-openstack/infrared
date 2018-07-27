@@ -6,6 +6,8 @@
   vars:
       base_image_path: /var/lib/libvirt/images
       url: "{{ provision.image.url }}"
+      infrared_vswitch_types:
+        - vqfx
   tasks:
     - name: Get uniq id for current deployment
       set_fact:
@@ -65,6 +67,12 @@
           include_tasks: tasks/netip_natted.yml
           when: "not topology_node.external_network.bridged|default(False)"
       tags: ips
+
+    - name: Post-configure VMs
+      include_tasks: tasks/vms_4_post_configure.yml
+      with_dict: "{{ provision.topology.nodes }}"
+      loop_control:
+          loop_var: node
 
     # TODO(obaranov) This is deprecated config. Remove it.
     - name: update tunneling conf
