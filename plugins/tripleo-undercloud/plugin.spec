@@ -216,6 +216,10 @@ subparsers:
                           YAML file
                           Register the undercloud with a Red Hat Subscription Management platform.
                           see documentation for more details
+                  cdn-extra-repos:
+                      type: ListValue
+                      help: |
+                          Extra repositories to enable using CDN.
                   repos-config:
                       type: VarFile
                       help: |

@@ -85,6 +85,10 @@ subparsers:
                           YAML file
                           Register the BMC node with a Red Hat Subscription Management platform.
                           see documentation for more details
+                  cdn-extra-repos:
+                      type: ListValue
+                      help: |
+                          Extra repositories to enable using CDN.
 
                   bmc-version:
                       type: Value

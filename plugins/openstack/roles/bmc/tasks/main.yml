@@ -20,6 +20,7 @@
   vars:
       cdn_args_file: "{{ provision.bmc.cdn }}"
       install_version: "{{ provision.bmc.version|default(bmc_rhos_release) }}"
+      cdn_extra_repos: "{{ provision.cdn | default({}) | .extra | default({}) | .repos | default(omit) }}"
   when:
       - "provision.bmc is defined"
       - "provision.bmc.cdn is defined"

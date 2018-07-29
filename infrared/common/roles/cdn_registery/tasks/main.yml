@@ -13,6 +13,10 @@
       modified_list: "{{ repo_list | map('regex_replace', '(.*)', '--enable=\\1') | join(' ') }}"
   command: "subscription-manager repos {{ modified_list }}"
 
+- name: enable extra repos
+  command: "subscription-manager repos {{ cdn_extra_repos | map('regex_replace', '(.*)', '--enable=\\1') | join(' ') }}"
+  when: cdn_extra_repos is defined and cdn_extra_repos
+
 - name: refresh yum cache
   package:
       name: kernel
