@@ -24,6 +24,32 @@
       - deploy_preparation
       - templates
 
+- name: Update containers urls in the swift plans
+  hosts: undercloud
+  any_errors_fatal: true
+  vars:
+      docker_images_file: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/docker-images.yaml"
+  tags:
+      - deploy_preparation
+      - containers
+  tasks:
+      - block:
+            - name: check if the docker-images.yaml exists
+              stat:
+                  path: "{{ docker_images_file }}"
+              register: docker_images_stat
+
+            - name: upload "docker-images.yaml" to the "overcloud" plan
+              shell: |
+                  source stackrc
+                  openstack object create overcloud "{{ docker_images_file }}" --name environments/containers-default-parameters.yaml
+              args:
+                  chdir: "{{ ansible_user_dir }}"
+              when: docker_images_stat.stat.exists == True
+        when:
+            - install.version | default(undercloud_version) | openstack_release >= 12
+            - install.containers | bool == True
+
 - import_playbook: tls_everywhere.yml
   tags:
       - deploy_preparation
