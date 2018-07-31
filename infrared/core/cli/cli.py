@@ -445,7 +445,7 @@ class KeyValueList(ComplexType):
 class NestedBase(object):
     """Base Nested type"""
 
-    def _resolve(self, value, skip_nested_split=False):
+    def _resolve(self, value):
         if isinstance(value, string_types):
             value = value.split(',')
 
@@ -456,17 +456,9 @@ class NestedBase(object):
                 raise ValueError(
                     'Wrong number of arguments are provided {}'.format(data))
             key, _value = data
-            if skip_nested_split:
-                dict_utils.dict_insert(results_dict, _value, key)
-            else:
-                dict_utils.dict_insert(results_dict, _value, *key.split('.'))
+            dict_utils.dict_insert(results_dict, _value, *key.split("."))
         return results_dict
 
-class Dict(ComplexType, NestedBase):
-    """Returns a dict from a dict-like string / list of strings"""
-
-    def resolve(self, value):
-        return self._resolve(value, skip_nested_split=True)
 
 class NestedDict(ComplexType, NestedBase):
     """Returns a dict from a dict-like string / list of strings
@@ -699,7 +691,6 @@ ACTIONS = {
 COMPLEX_TYPES = {
     'Value': Value,
     'Bool': Bool,
-    'Dict': Dict,
     'Inventory': Inventory,
     'KeyValueList': KeyValueList,
     'AdditionalArgs': AdditionalOptionsType,

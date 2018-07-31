@@ -248,7 +248,7 @@ subparsers:
                             __LISTYAMLS__
 
                   config-heat:
-                      type: Dict
+                      type: NestedDict
                       action: append
                       help: |
                           Inject additional Tripleo Heat Templates configuration options under "paramater_defaults"
