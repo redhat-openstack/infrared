@@ -155,7 +155,7 @@ class Workspace(object):
         """
         real_inv = os.path.join(self.path, os.readlink(self.inventory))
 
-        with open(real_inv, 'a+') as f:
+        with open(real_inv, 'r+') as f:
             inventory_content = f.read()
 
             ssh_keys = set(re.findall(

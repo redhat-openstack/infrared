@@ -152,7 +152,7 @@ def test_workspace_fetch_inventory(workspace_manager_fixture, test_workspace):
     assert os.path.basename(inventory_path) == "hosts"
 
 
-def test__copy_outside_keys(test_workspace, mocker):
+def test_copy_outside_keys(test_workspace, mocker):
     path = test_workspace.path
     test_inv = os.path.join(path, "new_test_env")
 
@@ -163,7 +163,6 @@ def test__copy_outside_keys(test_workspace, mocker):
         new_inv.write("hypervisor ansible_ssh_private_key_file={key}\n"
                       "host-0 {key}\n"
                       "host-1 id_rsa".format(key=tkey_file))
-
     mocker.patch('tempfile._get_candidate_names',
                  return_value=iter(["zzzzz"]))
     test_workspace.inventory = test_inv
