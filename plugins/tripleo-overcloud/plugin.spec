@@ -352,11 +352,6 @@ subparsers:
                       default: no
                       help: Activate APIs and implementations to support L2 Gateways in Neutron
 
-                  network-octavia:
-                      type: Bool
-                      default: no
-                      help: Deploy Overcloud with Octavia (Load Balancer).
-
                   network-lbaas:
                       type: Bool
                       default: no
