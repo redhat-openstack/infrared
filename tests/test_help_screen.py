@@ -26,7 +26,7 @@ def test_list_yamls_in_help_screen(plugin_manager_fixture):  # noqa
     )
     topology_network_help = """  --topology-networks TOPOLOGY-NETWORKS
                         help of topology-networks option
-                        Available values: """.format(
+                        Available values: {}""".format(
         list(set(['3_nics', '2_nics', '1_nics']))
     )
 
