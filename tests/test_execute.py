@@ -115,9 +115,10 @@ def test_fake_inventory(spec_fixture, workspace_manager_fixture,          # noqa
     assert not path.exists(path.join(inventory_dir, output_file))
 
     workspace_manager_fixture.activate(test_workspace.name)
-    with pytest.raises(IOError) as exc:
+    with pytest.raises(IOError) as e_info:
         spec_manager.run_specs(args=input_string)
-    assert exc.value.message == "File not found: fake"
+    # python3 compatibility
+    assert e_info.value.args[0] == "File not found: fake"
 
 
 def test_bad_user_inventory(spec_fixture, workspace_manager_fixture,   # noqa
@@ -286,7 +287,7 @@ def test_extra_vars_with_file(spec_fixture,
     for file_dict in file_dicts:
         tmp_file = tmp_dir.join(file_dict["filename"])
         # write dict to tmp yaml file
-        with open(str(tmp_file), 'wb') as yaml_file:
+        with open(str(tmp_file), 'w+') as yaml_file:
             yaml_file.write(yaml.safe_dump(file_dict["content"],
                                            default_flow_style=False))
         # Inject full file path to command
@@ -455,7 +456,7 @@ def test_nested_value_CLI_with_answers_file(spec_fixture, tmpdir,
 
     answers_file = mytempdir.join("answers_file")
 
-    with open(str(answers_file), 'wb') as configfile:
+    with open(str(answers_file), 'w+') as configfile:
         config.write(configfile)
 
     input_string = ['example', '--from-file', str(answers_file)]
