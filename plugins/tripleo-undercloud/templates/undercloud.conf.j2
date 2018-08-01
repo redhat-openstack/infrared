@@ -40,7 +40,7 @@ undercloud_ntp_servers={{ install.ntp.server }}
 {% if install.version|default(undercloud_version)|openstack_distribution == 'OSP' %}
 container_images_file={{ working_dir }}/containers-prepare-parameter.yaml
 {% endif %}
-docker_insecure_registries={{ install.registry.mirror }}
+docker_insecure_registries={{ install.registry.mirror }},192.168.24.1:8787
 {% endif %}
 [ctlplane-subnet]
 local_subnet = ctlplane-subnet
