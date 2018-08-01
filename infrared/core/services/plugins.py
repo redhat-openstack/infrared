@@ -2,7 +2,7 @@ import datetime
 import shutil
 import tempfile
 import time
-from six.moves import configparser
+from six.moves import configparser, getcwd
 from collections import OrderedDict
 
 import git
@@ -272,7 +272,7 @@ class InfraredPluginManager(object):
         plugin_git_name = os.path.split(git_url)[-1].split('.')[0]
 
         tmpdir = tempfile.mkdtemp(prefix="ir-")
-        cwd = os.getcwdu()
+        cwd = getcwd()
         os.chdir(tmpdir)
         try:
             repo = git.Repo.clone_from(
@@ -511,7 +511,7 @@ class InfraredPluginManager(object):
         self._load_plugins()
 
     def remove_all(self):
-        for plugin in self.PLUGINS_DICT:
+        for plugin in self.PLUGINS_DICT.copy():
             self.remove_plugin(plugin)
             LOG.warning(
                 "Plugin '{}' has been successfully removed".format(plugin))
