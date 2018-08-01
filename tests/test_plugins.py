@@ -527,7 +527,7 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker):
         "https://sample_github.null/plugin_repo.git", rev="test")
 
     mock_tempfile.mkdtemp.assert_called_once()
-    mock_os.getcwdu.assert_called_once()
+    mock_os.getcwd.assert_called_once()
     mock_os.chdir.assert_has_calls(mock_tempfile.mkdtemp.return_value)
     mock_git.clone_from.assert_called_with(
         url='https://sample_github.null/plugin_repo.git',
@@ -535,7 +535,7 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker):
     mock_os.join.has_call(SAMPLE_PLUGINS_DIR, mock_os.listdir.return_value[0])
     mock_os.join.has_call(mock_tempfile.mkdtemp.return_value,
                           mock_os.listdir.return_value[0])
-    mock_os.chdir.assert_has_calls(mock_os.getcwdu.return_value)
+    mock_os.chdir.assert_has_calls(mock_os.getcwd.return_value)
     mock_shutil.rmtree.assert_called_with(mock_os.path.join.return_value)
 
 
