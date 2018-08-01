@@ -128,6 +128,7 @@ class SpecParser(object):
         """Resolve arguments' values from answers INI file. """
 
         file_result = {}
+        args_to_remove = []
         for (parser_name, parser_dict, arg_name, arg_value,
              option_spec) in self._iterate_received_arguments(cli_args):
             file_result[parser_name] = file_result.get(parser_name, {})
@@ -140,7 +141,15 @@ class SpecParser(object):
                     file_result[parser_name],
                     parser_dict[arg_name])
                 # remove from cli args
-                parser_dict.pop(arg_name)
+                args_to_remove.append((parser_name, arg_name))
+
+        # remove parser dict outside loop to avoid iteration dict modification
+        for parser_name, arg_name in args_to_remove:
+            for spec_parser in self.spec_helper.iterate_parsers():
+                if spec_parser['name'] in cli_args and spec_parser['name'] == parser_name:
+                    parser_dict = cli_args[spec_parser['name']]
+                    parser_dict.pop(arg_name)
+                    break
 
         return file_result
 
@@ -168,7 +177,7 @@ class SpecParser(object):
             config.set(
                 parser_name,
                 option_name,
-                value)
+                str(value))
 
         file_generated = False
 
