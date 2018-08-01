@@ -4,7 +4,6 @@ import setuptools
 setuptools.setup(
     setup_requires=['pbr'],
     pbr=True)
-
 if 'redhat' in platform.linux_distribution(
         supported_dists='redhat',
         full_distribution_name=False):
