@@ -3,3 +3,28 @@
 #configuration playbook
 - hosts: localhost
   gather_facts: no
+
+- name: Post Undercloud Run Tasks
+  hosts: undercloud
+  tags: post
+  gather_facts: no
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    # This cleanup is required, because during provisioning state the foreman
+    # installs packages that's not compatible with undercloud one.
+    - name: Cleanup pre-installed packages
+      package:
+        name: ['mariadb-libs', 'puppetlabs-release-pc1', 'puppet-agent']
+        state: absent
+
+    - name: Get puppetlabs dir state
+      stat:
+        path: '/etc/puppetlabs/'
+      register: puppet_dir
+
+    - name: Remove puppetlabs dir
+      file:
+        path: '{{ puppet_dir.stat.path }}'
+        state: absent
+      when: puppet_dir.stat.exists
