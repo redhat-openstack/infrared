@@ -1,4 +1,12 @@
 ---
+- name: Enable extra repo
+  become: yes
+  shell: |
+      yum-config-manager \
+          --enable rhelosp-{{ test.openstack.version|default(overcloud_version)|openstack_release }}.0-unittest
+  when:
+      - test.setup in ['git', 'rpm']
+
 - name: copy openstackrc file
   vars:
       file_src: "{{ test.openstackrc|default(inventory_dir + '/keystonerc') }}"
