@@ -429,7 +429,16 @@ subparsers:
                         If not supplied, Infrared will try to discover storage nodes and select appropriate backed.
                         The 'lvm' value will be used when storage nodes were not found.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
-
+                  storage-protocol-backend:
+                      type: Value
+                      choices:
+                          - nfs-ganesha
+                          - nfs
+                          - iscsi
+                      help: |
+                        The storage protocol that we would like to use.
+                        nfs-ganesha works only if the sotrage backand is ceph
+                        NOTE: nfs and iscsi are not implemented (to be decoupled from storage backend parameter)
                   storage-config:
                       type: Value
                       help: |
