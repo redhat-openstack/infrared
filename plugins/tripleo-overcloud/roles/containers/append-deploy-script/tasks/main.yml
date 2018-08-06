@@ -30,3 +30,28 @@
   when:
       - install.network.ovn and install.network.dvr
       - install.version|default(undercloud_version)|openstack_release > 12
+
+- block:
+    - name: append docker-images
+      lineinfile:
+          dest: "~/overcloud_deploy.sh"
+          line: '-e /home/stack/composable_roles/docker-images.yaml  \'
+    - name: append network_data_ganesha
+      lineinfile:
+         dest: "~/overcloud_deploy.sh"
+         line: '-n /usr/share/openstack-tripleo-heat-templates/network_data_ganesha.yaml   \'
+
+    - name: apply https://review.openstack.org/#/c/601135/ - first file
+      get_url:
+          url: https://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/tools/yaml-validate.py?h=refs/changes/35/601135/1
+          dest: /usr/share/openstack-tripleo-heat-templates/tools/yaml-validate.py
+          mode: 0755
+
+    - name: apply https://review.openstack.org/#/c/601135/ - second file
+      get_url:
+          url: https://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/roles/ControllerStorageNfs.yaml?h=refs/changes/35/601135/1
+          dest: /usr/share/openstack-tripleo-heat-templates/roles/ControllerStorageNfs.yaml
+          mode: 0755
+  when:
+      - install.storage.protocol.backend == "nfs-ganesha"
+      - install.version|default(undercloud_version)|openstack_release > 12
