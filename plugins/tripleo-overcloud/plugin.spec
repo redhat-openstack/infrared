@@ -462,7 +462,6 @@ subparsers:
                         If not supplied, Infrared will try to discover storage nodes and select appropriate backed.
                         The 'lvm' value will be used when storage nodes were not found.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
-
                   glance-backend:
                       type: Value
                       choices:
@@ -471,7 +470,18 @@ subparsers:
                       default: rbd
                       help: |
                         The storage backend type used for glance, enabling to set Swift or RadosGW as the backend when deploying internal Ceph. Default value is 'rbd'
-
+                  storage-protocol-backend:
+                      type: Value
+                      default: NA
+                      choices:
+                          - nfs-ganesha
+                          - nfs
+                          - iscsi
+                          - NA
+                      help: |
+                        The storage protocol that we would like to use.
+                        nfs-ganesha works only if the sotrage backand is ceph
+                        NOTE: nfs and iscsi are not implemented but added to be decoupled from storage backend parameter
                   storage-config:
                       type: Value
                       help: |
