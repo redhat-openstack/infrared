@@ -1,7 +1,10 @@
 import datetime
+import imp
 import shutil
 import tempfile
 import time
+
+from pkg_resources import iter_entry_points
 from six.moves import configparser
 from collections import OrderedDict
 
@@ -43,6 +46,7 @@ class InfraredPluginManager(object):
     PLUGINS_DICT = OrderedDict()
     SUPPORTED_TYPES_SECTION = 'supported_types'
     GIT_PLUGINS_ORGS_SECTION = "git_orgs"
+    PLUGINS_ENTRY_POINT = "infrared.plugins"
 
     def __init__(self, plugins_conf, plugins_dir, install_plugins=True):
         """
@@ -420,25 +424,38 @@ class InfraredPluginManager(object):
                source
         """
         plugins_registry = plugins_registry or PLUGINS_REGISTRY
+        available_plugins = {}
         plugin_data = {}
+        source_type = 'unknown'
+
+        for entry_point in iter_entry_points(group=self.PLUGINS_ENTRY_POINT):
+            available_plugins[entry_point.name] = entry_point
+        if plugin_source in available_plugins.keys():
+            # PIP package plugin
+            package_name = available_plugins[plugin_source].module_name
+            plugin_source = imp.find_module(package_name)[1]
+            source_type = 'pip'
+
         # Check if a plugin is in the registry
-        if plugin_source in plugins_registry:
-            plugin_data = plugins_registry[plugin_source]
-            plugin_source = plugins_registry[plugin_source]['src']
+        else:
+            plugins_registry = plugins_registry or PLUGINS_REGISTRY
+            if plugin_source in plugins_registry:
+                plugin_data = plugins_registry[plugin_source]
+                plugin_source = plugins_registry[plugin_source]['src']
+
+            if os.path.exists(plugin_source):
+                # If plugin from local directory
+                source_type = 'local'
+            else:
+                # Try to clone plugin from git
+                if rev is None:
+                    rev = plugin_data.get('rev')
+                plugin_source = \
+                    self._clone_git_plugin(plugin_source, rev)
+                source_type = 'git'
 
         if plugin_src_path is None:
             plugin_src_path = plugin_data.get('src_path', '')
-
-        # Local dir plugin
-        if os.path.exists(plugin_source):
-            rm_source = False
-        # Git Plugin
-        else:
-            if rev is None:
-                rev = plugin_data.get('rev')
-            plugin_source = \
-                self._clone_git_plugin(plugin_source, rev)
-            rm_source = True
 
         plugin = InfraredPlugin(os.path.join(plugin_source, plugin_src_path))
         plugin_type = plugin.type
@@ -453,7 +470,8 @@ class InfraredPluginManager(object):
                 "Plugin with the same name & type already exists")
 
         dest = os.path.join(self.plugins_dir, plugin.name)
-        if os.path.abspath(plugin_source) != os.path.abspath(dest):
+        if os.path.abspath(plugin_source) != os.path.abspath(dest) \
+                and source_type != 'pip':
             # copy only if plugin was added from a location which is
             # different from the location of the plugins dir
             if os.path.islink(dest):
@@ -466,10 +484,18 @@ class InfraredPluginManager(object):
                 shutil.rmtree(dest)
 
             shutil.copytree(plugin_source, dest)
-
-        if rm_source:
+        elif source_type == 'pip':
+            if os.path.islink(dest):
+                os.unlink(dest)
+            elif os.path.exists(dest):
+                raise IRPluginExistsException(
+                    "Unable to link '{}' pip plugin. "
+                    "Folder with the same name already exists "
+                    "in the plugins dir. "
+                    "Try to manually remove it.".format(plugin.name))
+            os.symlink(plugin_source, dest)
+        if source_type == 'git':
             shutil.rmtree(plugin_source)
-
         self.config.set(plugin_type, plugin.name,
                         os.path.join(dest, plugin_src_path))
 
@@ -484,12 +510,24 @@ class InfraredPluginManager(object):
         Add all available plugins which aren't already installed
         :param plugins_registry: content of plugin registry yml file
         """
+        # first iterate over pip plugins
+        added_plugins = []
+
+        for entry_point in iter_entry_points(group='infrared.plugins'):
+            self.add_plugin(entry_point.name)
+            added_plugins.append(entry_point.name)
+            LOG.warning(
+                "Plugin '{}' has been successfully "
+                "installed from pip".format(entry_point.name))
+
         plugins_registry = plugins_registry or PLUGINS_REGISTRY
         for plugin in set(plugins_registry) - \
                 set(self.PLUGINS_DICT):
-            self.add_plugin(plugin, plugins_registry=plugins_registry)
-            LOG.warning(
-                "Plugin '{}' has been successfully installed".format(plugin))
+            if plugin not in added_plugins:
+                self.add_plugin(plugin, plugins_registry=plugins_registry)
+                LOG.warning(
+                    "Plugin '{}' has been successfully installed".format(
+                        plugin))
 
     def remove_plugin(self, plugin_name):
         """Removes an installed plugin
