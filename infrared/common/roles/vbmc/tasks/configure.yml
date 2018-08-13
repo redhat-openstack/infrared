@@ -81,10 +81,12 @@
           prefix: "{{ item.key }}"
       when: (item.key + "-") in groups.undercloud|first
       with_dict: "{{ hostvars['hypervisor'].ansible_local.deployment_info }}"
-  rescue:
-    - name: Setup prefix to empty if no deployments
-      set_fact:
-          prefix: ''
+  when: "{{ hostvars['hypervisor'].ansible_local.deployment_info is defined }}"
+
+- name: Setup prefix to empty if no deployments
+  set_fact:
+      prefix: ''
+  when: "{{ prefix is not defined }}"
 
 - set_fact:
       management_net: "{{ 'ansible_' + prefix|default('') + (prefix is defined and prefix|trim != '')|ternary('_','') + 'management' }}"
