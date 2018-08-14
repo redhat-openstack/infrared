@@ -14,9 +14,15 @@
             prefix: "{{ ansible_local.run.keys()[0] }}"
       when: provision.prefix is defined
 
+    - name: load nodes topology configuration
+      include_tasks: tasks/load_topology.yml
+      with_dict: "{{ provision.topology.nodes }}"
+      loop_control:
+          loop_var: node
+
     - name: provision image for each node
       include_tasks: tasks/download_images.yml
-      with_dict: "{{ provision.topology.nodes }}"
+      with_dict: "{{ topology_nodes }}"
       loop_control:
           loop_var: node
       tags: images
@@ -25,7 +31,7 @@
     - block:
         - name: create disks for each VM if not import
           include_tasks: tasks/vms_1_create_disk.yml
-          with_dict: "{{ provision.topology.nodes }}"
+          with_dict: "{{ topology_nodes }}"
           loop_control:
               loop_var: node
 
@@ -42,7 +48,7 @@
     - block:
         - name: define libvirt VMs
           include_tasks: tasks/vms_2_install.yml
-          with_dict: "{{ provision.topology.nodes }}"
+          with_dict: "{{ topology_nodes }}"
           loop_control:
               loop_var: node
 
@@ -59,7 +65,7 @@
     - block:
         - name: Get VMs hardware adresses
           include_tasks: tasks/vms_3_hwaddr.yml
-          with_dict: "{{ provision.topology.nodes }}"
+          with_dict: "{{ topology_nodes }}"
           loop_control:
               loop_var: node
 
@@ -70,7 +76,7 @@
 
     - name: Post-configure VMs
       include_tasks: tasks/vms_4_post_configure.yml
-      with_dict: "{{ provision.topology.nodes }}"
+      with_dict: "{{ topology_nodes }}"
       loop_control:
           loop_var: node
 
