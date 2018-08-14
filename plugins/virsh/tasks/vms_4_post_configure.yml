@@ -16,3 +16,5 @@
   include_tasks: "tasks/configure_{{ topology_node.os.type }}_switch.yml"
   when: topology_node.os.type in infrared_vswitch_types
   with_sequence: start={{ node_start_index|int }} end={{ topology_node.num|int + node_start_index|int - 1 }}
+  loop_control:
+    loop_var: num

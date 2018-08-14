@@ -4,10 +4,15 @@
     state: directory
   register: temp_dir
 
+- name: get host name
+  set_fact:
+    host_name: "{{ topology_node.name }}-{{ num }}"
+
+
 - name: copy configuration scripts to the temp directory
   vars:
-    switch_ssh_key: "{{ hostvars['ir--vqfx-0']['ansible_ssh_private_key_file'] }}.pub"
-    switch_ip: "{{ hostvars['ir--vqfx-0']['ansible_host'] }}"
+    switch_ssh_key: "{{ hostvars[host_name]['ansible_ssh_private_key_file'] }}.pub"
+    switch_ip: "{{ hostvars[host_name]['ansible_host'] }}"
   template:
     src: vqfx/configure.sh.j2
     dest: "{{ temp_dir.path }}/configure_vqfx.sh"

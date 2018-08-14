@@ -49,6 +49,10 @@ nodes:
       - network: data
       - network: management
       - network: external
+      - connect_to: vqfx
+        bridged: yes
+        model: e1000
+        hub: yes
     external_network:
       network: management
   controller:
@@ -56,24 +60,30 @@ nodes:
       - network: data
       - network: management
       - network: external
-      - network: vqfx-ctl
+      - connect_to: vqfx
         bridged: yes
+        model: e1000
+        hub: yes
     external_network:
       network: management
   compute:
     interfaces:
       - network: data
       - network: management
-      - network: vqfx-cmp
+      - connect_to: vqfx
         bridged: yes
+        model: e1000
+        hub: yes
     external_network:
       network: management
   ironic:
     interfaces:
       - network: data
       - network: management
-      - network: vqfx-irn
+      - connect_to: vqfx
         bridged: yes
+        model: e1000
+        hub: yes
     external_network:
       network: management
   vqfx:
@@ -84,18 +94,7 @@ nodes:
       - network: vqfx-inter
         bridged: yes
         model: e1000
-        hub: no
       - network: vqfx-inter
-        bridged: yes
-        model: e1000
-        hub: no
-      - network: vqfx-ctl
-        bridged: yes
-        model: e1000
-      - network: vqfx-cmp
-        bridged: yes
-        model: e1000
-      - network: vqfx-irn
         bridged: yes
         model: e1000
     external_network:
@@ -107,10 +106,8 @@ nodes:
       - network: vqfx-inter
         bridged: yes
         model: e1000
-        hub: no
       - network: vqfx-inter
         bridged: yes
         model: e1000
-        hub: no
     external_network:
       network: management
