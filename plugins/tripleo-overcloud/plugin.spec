@@ -285,6 +285,7 @@ subparsers:
                           NOTE: Using equal(=) sign is mandatory here.
                           Example:
                               --extra-deploy-params="--config-download"
+
                   undercloud-packages:
                       type: Value
                       help: |
@@ -295,6 +296,18 @@ subparsers:
                           Examples:
                               --undercloud-packages python-tripleoclient
                               --undercloud-packages python-tripleoclient,http://download-node-02.eng.bos.redhat.com/composes/auto/ceph-3.1-rhel-7/latest-RHCEPH-3-RHEL-7/compose/Tools/x86_64/os/Packages/golang-1.9.4-1.el7.x86_64.rpm
+
+                  fetchfiles-undercloud:
+                      type: Value
+                      action: append
+                      help: |
+                          Pairs of 'URL,destfile'. File from 'URL' will be downloaded as 'destfile' (overwrite existing file) on Undercloud.
+                          'destfile' is an absolute path on Undercloud ending _with_ file name (because sometimes it's required to change file name).
+                          NOTE: this option is _not_ recommended for production jobs or environments. If files of an official product are fetched/overwritten,
+                          it's advised to mark jobs using this method as 'experimental' and remove using this fetchfiles as soon as required files are in official release.
+                          Example (in case one wants to use files from https://review.openstack.org/#/c/585015/2):
+                              --fetchfiles-undercloud https://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/environments/network-isolation-v6.j2.yaml?h=refs/changes/15/585015/2,/usr/share/openstack-tripleo-heat-templates/environments/network-isolation-v6.j2.yaml
+                              --fetchfiles-undercloud https://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/puppet/services/opendaylight-api.yaml?h=refs/changes/15/585015/2,/usr/share/openstack-tripleo-heat-templates/puppet/services/opendaylight-api.yaml
 
                   heat-templates-basedir:
                       type: Value
@@ -316,6 +329,18 @@ subparsers:
                       help: |
                           Specifies whether TLS Everywhere with FreeIPA should be implemented
                       default: no
+
+                  fetchfiles-overcloud:
+                      type: Value
+                      action: append
+                      help: |
+                          Pairs of 'URL,destfile'. File from 'URL' will be downloaded as 'destfile' (overwrite existing file) in overcloud image which is later used to deploy Overcloud.
+                          'destfile' is an absolute path in overcloud image ending _with_ file name (because sometimes it's required to change file name).
+                          NOTE: this option is _not_ recommended for production jobs or environments. If files of an official product are fetched/overwritten,
+                          it's advised to mark jobs using this method as 'experimental' and remove using this fetchfiles as soon as required files are in official release.
+                          Example (in case one wants to use files from https://review.openstack.org/#/c/585015/2):
+                              --fetchfiles-overcloud https://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/environments/network-isolation-v6.j2.yaml?h=refs/changes/15/585015/2,/usr/share/openstack-tripleo-heat-templates/environments/network-isolation-v6.j2.yaml
+                              --fetchfiles-overcloud https://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/puppet/services/opendaylight-api.yaml?h=refs/changes/15/585015/2,/usr/share/openstack-tripleo-heat-templates/puppet/services/opendaylight-api.yaml
 
             - title: Network Configuration
               options:

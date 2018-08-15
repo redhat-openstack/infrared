@@ -1,0 +1,97 @@
+- name: Fetch files from URLs to locations onto Undercloud as well as into Overcloud image
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - name: Fetch files onto Undercloud
+        vars:
+            _url: "{{ item.split(',')[0] }}"
+            _destfile: "{{ item.split(',')[1] }}"
+        get_url:
+            url: "{{ _url }}"
+            dest: "{{ _destfile }}"
+            backup: yes
+            force: yes
+            validate_certs: no
+            timeout: 5
+        register: fetchfiles_undercloud_result
+        until: fetchfiles_undercloud_result.msg.find("Request failed") == -1
+        retries: 5
+        delay: 5
+        become: true
+        with_items: "{{ install.get('fetchfiles', {}).get('undercloud', {}) }}"
+
+      - block:
+          - name: wipe out /tmp/fetchfiles_overcloud/ directory
+            file:
+                path: /tmp/fetchfiles_overcloud/
+                state: "{{ item }}"
+            with_items:
+                - absent
+                - directory
+
+          - name: create directories structure (under /tmp/fetchfiles_overcloud/) that will be used to fetch files from URLs and later to upload them to overcloud image
+            vars:
+                _destdir:  "/tmp/fetchfiles_overcloud/{{ item.split(',')[1] | dirname }}"
+            file:
+                state: directory
+                path: "{{ _destdir }}"
+            with_items: "{{ install.get('fetchfiles', {}).get('overcloud', {}) }}"
+
+          - name: Fetch files into directories under /tmp/fetchfiles_overcloud/
+            vars:
+                _url: "{{ item.split(',')[0] }}"
+                _destfile: "/tmp/fetchfiles_overcloud/{{ item.split(',')[1] }}"
+            get_url:
+                url: "{{ _url }}"
+                dest: "{{ _destfile }}"
+                backup: yes
+                force: yes
+                validate_certs: no
+                timeout: 5
+            register: fetchfiles_overcloud_result
+            until: fetchfiles_overcloud_result.msg.find("Request failed") == -1
+            retries: 5
+            delay: 5
+            become: true
+            with_items: "{{ install.get('fetchfiles', {}).get('overcloud', {}) }}"
+
+          - name: wipe out /tmp/fetchfiles_overcloud_image directory
+            file:
+                path: /tmp/fetchfiles_overcloud_image
+                state: "{{ item }}"
+            with_items:
+                - absent
+                - directory
+
+          - name: Save overcloud images from glance to files in /tmp/fetchfiles_overcloud_image/
+            shell: |
+                source ~/stackrc
+                openstack image save --file /tmp/fetchfiles_overcloud_image/overcloud-full.qcow2 overcloud-full
+                openstack image save --file /tmp/fetchfiles_overcloud_image/overcloud-full.initrd overcloud-full-initrd
+                openstack image save --file /tmp/fetchfiles_overcloud_image/overcloud-full.vmlinuz overcloud-full-vmlinuz
+
+          - name: Save Ironic Python Agent images from glance to files (we don't actually modify these but they're required to re-upload the overcloud-full image to glance)
+            shell: |
+                source ~/stackrc
+                openstack image save --file /tmp/fetchfiles_overcloud_image/ironic-python-agent.initramfs bm-deploy-ramdisk
+                openstack image save --file /tmp/fetchfiles_overcloud_image/ironic-python-agent.kernel bm-deploy-kernel
+                openstack image save --file /tmp/fetchfiles_overcloud_image/ironic-python-agent.kernel bm-deploy-kernel
+
+          - name: set paths_to_upload fact
+            set_fact:
+                paths_to_upload: "{{ paths_to_upload | default('') }} --upload /tmp/fetchfiles_overcloud/{{ item.split(',')[1] }}:{{ item.split(',')[1] | dirname }}"
+            with_items: "{{ install.get('fetchfiles', {}).get('overcloud', {}) }}"
+            no_log: true
+
+          - name: Inject fetchfiles into overcloud image
+            shell: LIBGUESTFS_BACKEND=direct virt-customize -a /tmp/fetchfiles_overcloud_image/overcloud-full.qcow2 \
+                {{ paths_to_upload }}
+            become: true
+            tags: skip_ansible_lint
+
+          - name: upload updated overcloud-full image to glance
+            shell: |
+                source ~/stackrc
+                openstack overcloud image upload --update-existing --image-path /tmp/fetchfiles_overcloud_image/
+        when: install.get('fetchfiles', {}).get('overcloud', {})
