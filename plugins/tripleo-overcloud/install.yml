@@ -10,6 +10,12 @@
   tags:
       - pre
 
+- import_playbook: fetchfiles.yml
+  when: install.get('fetchfiles', {}).get('undercloud', {}) != {} or install.get('fetchfiles', {}).get('overcloud', {}) != {}
+  tags:
+      - fetchfiles_undercloud
+      - fetchfiles_overcloud
+
 - name: Provision loadbalancer node
   import_playbook: loadbalancer.yml
   tags:
