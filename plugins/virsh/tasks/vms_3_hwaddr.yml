@@ -1,25 +1,6 @@
 ---
-# save current node to "{{ node_dict }}"
-- include_vars:
-    file: "{{ node.key }}"
-    name: node_dict
-
-- include_vars:
-    file: "{{ provision.topology.network }}"
-    name: network_info
-
-- name: merge overriden settings to the separate var
-  set_fact:
-      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
-
-- name: Replace node names with deployment id
-  set_fact:
-      topology_node: "{{ topology_node|combine({'name': prefix|default('') + (prefix is defined|ternary('-','')) + topology_node.name}, recursive=True) }}"
-
-- name: update node network info if needed
-  set_fact:
-      topology_node: "{{ topology_node | combine(network_info.nodes[topology_node.name]|default(network_info.nodes.default), recursive=True) }}"
-  when: not topology_node.interfaces
+- set_fact:
+    topology_node: "{{ node.value }}"
 
 - name: Set default node_start_index
   set_fact:
@@ -37,7 +18,7 @@
         inv_clear_int: "{{ topology_node.provision_network if 'provision_network' in topology_node else topology_node.external_network.network }}"
         inv_int: "{{ prefix|default('')+ (prefix is defined|ternary('-','')) + inv_clear_int }}"
     shell: "virsh domiflist {{ topology_node.name }}-{{ item }} | awk '/{{ inv_int }}/ {print $5};'"
-    with_sequence: start={{ node_start_index|int }} end={{ node.value|int + node_start_index|int - 1 }}
+    with_sequence: start={{ node_start_index|int }} end={{ topology_node.num|int + node_start_index|int - 1 }}
     register: mac_list
 
   - name: Set inventory netwrok info
