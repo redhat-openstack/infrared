@@ -190,7 +190,7 @@ subparsers:
                       type: Value
                       help: |
                             Ntp server name (or IP) to use.
-                      default: clock.redhat.com
+                      default: 0.rhel.pool.ntp.org
 
                   hybrid:
                       type: FileValue
