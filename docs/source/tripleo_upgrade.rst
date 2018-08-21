@@ -5,9 +5,9 @@ Starting with OSP12 the upgrade/update of a TripleO deployment can be done via t
 tripleo-upgrade comes preinstalled as an InfraRed plugin. After a successful InfraRed overcloud deployment 
 you need to run the following steps to upgrade the deployment:
 
-Symlink roles path::
+Enable the tripleo-upgrade plugin::
 
-    ln -s $(pwd)/plugins $(pwd)/plugins/tripleo-upgrade/infrared_plugin/roles
+    ir plugin add tripleo-upgrade
 
 Set up undercloud upgrade repositories::
 
