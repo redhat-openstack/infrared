@@ -33,21 +33,8 @@
   vars:
       inventory_file_name: 'hosts-prov'
 
-- name: create bridges for interfaces that don't belong to any network
-  command: "brctl addbr {{ item.network }}"
-  ignore_errors: true
-  when: item.bridged|default(false)
-  with_items: "{{ topology_node.interfaces }}"
-
-- name: set bridges to hub mode
-  command: "brctl setageing {{ item.network }} 0"
-  when:
-    - item.bridged|default(false)
-    - item.hub|default(true)
-  with_items: "{{ topology_node.interfaces }}"
-
-- name: bring bridges up
-  command: "ip link set {{ item.network }} up"
+- name: create VM bridges for interfaces that don't belong to any network
+  include_tasks: tasks/create_bridges.yml
   when: item.bridged|default(false)
   with_items: "{{ topology_node.interfaces }}"
 
@@ -73,7 +60,8 @@
           --boot {{ provision.bootmode }} \
           {% endif %}
           {% for interface in topology_node.interfaces %}
-           --network {{ 'bridge' if (interface.bridged|default(False)) else 'network' }}:{{ prefix|default('') }}{{(prefix is defined|ternary('-',''))}}{{ interface.network }}
+           --network {{ 'bridge' if (interface.bridged|default(False)) else 'network' }}:{{ prefix|default('') }}{{(prefix is defined|ternary('-',''))}}
+           {%- if interface.needs_formatting | default(False) %}{{ interface.network | format(item) }}{% else %}{{ interface.network }}{% endif %}
            {%- if interface.model is defined and interface.model %},model={{ interface.model }}{% endif %} \
           {% endfor -%}
            --virt-type kvm \
