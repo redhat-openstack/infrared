@@ -35,6 +35,14 @@
   args:
       creates: "{{ rally.bin }}"
 
+- name: List rally version
+  shell: "{{ rally.bin }} --version |& cut -d '~' -f1"
+  register: rally_version
+
+- name: List rally release
+  shell: "{{ rally.bin }} --version |& cut -d '~' -f2"
+  register: rally_release
+
 - name: Install rally-openstack package
   pip:
       name: "{{ item }}"
@@ -45,14 +53,7 @@
       - cryptography
       - git+git://git.openstack.org/openstack/rally-openstack@master
   become: yes
-
-- name: List rally version
-  shell: "{{ rally.bin }} --version |& cut -d '~' -f1"
-  register: rally_version
-
-- name: List rally release
-  shell: "{{ rally.bin }} --version |& cut -d '~' -f2"
-  register: rally_release
+  when: "{{ rally_version | version_compare('1.0.0', '>=')}}"
 
 - debug:
       msg: "Build mark: rally={{ rally_version.stdout }}-{{ rally_release.stdout }}"
