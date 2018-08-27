@@ -129,6 +129,7 @@ subparsers:
                         - "12"
                         - "13"
                         - "14"
+                        - "15"
                         - kilo
                         - liberty
                         - mitaka
@@ -137,6 +138,7 @@ subparsers:
                         - pike
                         - queens
                         - rocky
+                        - stein
                   build:
                       help: |
                           String represents a timestamp of the OSP puddle.

@@ -78,6 +78,7 @@ subparsers:
                            - "12"
                            - "13"
                            - "14"
+                           - "15"
                            - liberty
                            - kilo
                            - liberty
@@ -87,6 +88,7 @@ subparsers:
                            - pike
                            - queens
                            - rocky
+                           - stein
                   openstack-installer:
                        type: Value
                        help: |
