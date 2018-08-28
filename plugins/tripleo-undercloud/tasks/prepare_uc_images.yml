@@ -107,6 +107,15 @@
           regexp: 'ceph_tag: latest'
           replace: 'ceph_tag: {{ ceph_tag }}'
 
+    - name: set ceph_namespace in undercloud.conf
+      vars:
+          ceph_namespace: "{{ container_env['container-image-prepare']['ceph-namespace'] }}"
+      replace:
+          path: "{{ working_dir }}/undercloud.conf"
+          regexp: "(docker_insecure_registries.*)"
+          replace: '\1,{{ ceph_namespace }}'
+      when: container_env['container-image-prepare']['ceph-namespace'] is defined
+
     # BZ#1607627
     - name: set tag_from_label in containers-prepare-parameter.yaml
       replace:
