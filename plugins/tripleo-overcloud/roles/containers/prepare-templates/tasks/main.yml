@@ -47,5 +47,15 @@
         -e /usr/share/openstack-tripleo-heat-templates/environments/docker.yaml \
         -e /usr/share/openstack-tripleo-heat-templates/environments/docker-ha.yaml
         {% endif %}
+  when:
+      - install.version|default(undercloud_version)|openstack_release < 14
   tags:
       - skip_ansible_lint
+
+- name:  append container prepare parameters environment to deploy script
+  lineinfile:
+    dest: "~/overcloud_deploy.sh"
+    line: '-e ~/containers-prepare-parameter.yaml \'
+    insertbefore: "^--log-file.*"
+  when:
+      - install.version|default(undercloud_version)|openstack_release >= 14
