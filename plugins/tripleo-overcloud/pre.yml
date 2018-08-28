@@ -15,3 +15,17 @@
          #(skatlapa): Check if the below are needed against any_errors_fatal
          #register: yum_result
          #failed_when: "'Nothing to do' in yum_result.stderr"
+
+       - name: Install pre-defined Undercloud packages in Containerized Undercloud for OSP 14+
+         docker_container:
+           name: mistral_executor
+           image: rhosp14/openstack-mistral-api
+           #TODO(skatlapa): check image tag, e.g: 2018-08-20.1
+           command: yum localinstall {{ install.undercloud.packages }}
+           state: present
+           restart: yes
+           user: root
+         when:
+             - install.undercloud is defined
+             - install.undercloud.packages
+
