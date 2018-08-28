@@ -15,3 +15,12 @@
          #(skatlapa): Check if the below are needed against any_errors_fatal
          #register: yum_result
          #failed_when: "'Nothing to do' in yum_result.stderr"
+
+       - name: Install pre-defined Undercloud packages
+         command: "docker exec -itd --user root mistral_executor "yum localinstall {{ install.undercloud.packages }}" bash"
+         #TODO:(skatlapa): check if chcon changes have to be made
+         become: true
+         when:
+             - install.undercloud is defined
+             - install.undercloud.packages
+
