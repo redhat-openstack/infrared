@@ -36,6 +36,9 @@ parameter_defaults:
     DnsServers: ["10.0.0.1"]
     EC2MetadataIp: 192.168.24.1
     ControlPlaneDefaultRoute: 192.168.24.1
+{% if install.version|default(undercloud_version) | openstack_release == 14 %}
+    ControlPlaneSubnetCidr: "24"
+{% endif %}
     NeutronExternalNetworkBridge: ""
     NeutronBridgeMappings: "datacentre:br-ex,tenant:br-isolated"
     NeutronNetworkVLANRanges: "tenant:1000:2000"
