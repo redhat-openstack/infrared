@@ -12,6 +12,14 @@
          when:
              - install.undercloud is defined
              - install.undercloud.packages
-         #(skatlapa): Check if the below are needed against any_errors_fatal
-         #register: yum_result
-         #failed_when: "'Nothing to do' in yum_result.stderr"
+
+       - name: Install pre-defined Undercloud packages in Containerized Undercloud for OSP 14+
+         shell: |
+           set -ex
+           docker exec --user root -itd mistral_executor yum localinstall -y "{{ install.undercloud.packages }}"
+           docker restart mistral_executor
+           docker ps -l
+         when:
+             - install.undercloud is defined
+             - install.undercloud.packages
+             - install.version|default(undercloud_version)|openstack_release > 13
