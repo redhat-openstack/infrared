@@ -2,13 +2,16 @@
 test_dict:
     test_regex: ''
     whitelist:
-        - tempest.scenario..*network
+        - tempest\.(api.compute|scenario|thirdparty)
         - "^neutron.tests.tempest.*" # from python-neutron-tests RPM package
         - neutron_plugin.*
         - neutron_tempest_plugin.*
     blacklist:
-        # not running API tests as they rarely indicate a problem  even when ODL is not functional
-        - tempest.api.*
+        # BEGIN: EXCLUDE STUFF LESS RELATED TO NETWORKING, TO REDUCE CI LOAD
+        - tempest\.api\.compute\.admin.*
+        - tempest\.api\.compute\.images.*
+        - tempest\.api\.compute\.volumes.*
+        # not running API tests as they rarely indicate a problem even when ODL is not functional
         - neutron_plugin.api.*
         - neutron_tempest_plugin.api.*
 
