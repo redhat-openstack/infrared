@@ -24,7 +24,7 @@
 - name: create the self signed CA certificate
   become: yes
   vars:
-      public_vip: "{{ awk_undercloud_public_vip.stdout|trim | ternary(awk_undercloud_public_vip.stdout|trim, '192.168.24.2')}}"
+      public_vip: "{{ ansible_default_ipv4.address is defined | ternary(ansible_default_ipv4.address, '192.168.24.2')}}"
       shell_command: "
           openssl req -new -x509
           -days 365
