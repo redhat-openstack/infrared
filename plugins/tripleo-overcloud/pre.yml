@@ -12,6 +12,19 @@
          when:
              - install.undercloud is defined
              - install.undercloud.packages
-         #(skatlapa): Check if the below are needed against any_errors_fatal
-         #register: yum_result
-         #failed_when: "'Nothing to do' in yum_result.stderr"
+
+       - name: Install pre-defined Undercloud packages in Containerized Undercloud for OSP 14+
+         docker_container:
+           name: mistral_executor
+           image: 192.168.24.1:8787/rhosp14/openstack-mistral-executor:2018-08-29.1
+           #TODO(skatlapa): check image tag, e.g: 2018-08-20.1
+           command: yum localinstall -y {{ install.undercloud.packages }}
+           state: present
+           restart: yes
+           user: root #check vs stack
+         become: true
+         when:
+             - install.undercloud is defined
+             - install.undercloud.packages
+             - install.version|default(undercloud_version)|openstack_release > 13
+             #TODO(skatlapa): Add param in plugin.spec to list/enable this hack/method
