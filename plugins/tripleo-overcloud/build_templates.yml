@@ -97,6 +97,12 @@
             - undercloud_public_ip
 
       # ensure we have all envs/roles referenced in deploy script for container image preparation
+      - name: add environment plan to deploy script
+        lineinfile:
+            dest: "~/overcloud_deploy.sh"
+            line: '-p ~/environment_plan.yaml \'
+        when: (install.environment|default({})).plan|default(false)
+
       - include_tasks: tasks/append_script.yml
         when:
             - not overcloud_deploy_script|default('')
@@ -118,12 +124,6 @@
         when:
             - install.containers|default('')
             - install.version|default(undercloud_version)|openstack_release >= 12
-
-      - name: add environment plan to deploy script
-        lineinfile:
-            dest: "~/overcloud_deploy.sh"
-            line: '-p ~/environment_plan.yaml \'
-        when: (install.environment|default({})).plan|default(false)
 
       - include_tasks: tasks/append_script.yml
         when: not overcloud_deploy_script|default('')
