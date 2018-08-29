@@ -65,10 +65,9 @@
            {%- if interface.model is defined and interface.model %},model={{ interface.model }}{% endif %} \
           {% endfor -%}
            --virt-type kvm \
-           --cpu {{ topology_node.cpumodel|default('host-model') }} \
+           --cpu {{ topology_node.cpumodel|default('host-passthrough') }} \
            --ram {{ topology_node.memory }} \
            --vcpus {{ topology_node.cpu }} \
-           --cpu host-passthrough \
            --os-variant {{ topology_node.os.variant }} \
            --import \
            --noautoconsole \
