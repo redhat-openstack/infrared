@@ -4,7 +4,7 @@
   tags: init
   any_errors_fatal: true
   tasks:
-       - name: Install pre-defined Undercloud packages
+       - name: Install pre-defined Undercloud packages for OSP < 13
          yum:
              name: "{{ install.undercloud.packages }}"
              state: present
@@ -12,6 +12,16 @@
          when:
              - install.undercloud is defined
              - install.undercloud.packages
-         #(skatlapa): Check if the below are needed against any_errors_fatal
-         #register: yum_result
-         #failed_when: "'Nothing to do' in yum_result.stderr"
+             - install.version|default(undercloud_version)|openstack_release < 13
+
+       - name: Workaround for ceph-ansible brew job to install packages into mistral-executor container on UC for OSP 13+
+         shell: |
+           set -ex
+           docker exec --user root mistral_executor yum localinstall -y "{{ install.undercloud.packages }}"
+           docker restart mistral_executor
+           docker ps -l
+         become: true
+         when:
+             - install.undercloud is defined
+             - install.undercloud.packages
+             - install.version|default(undercloud_version)|openstack_release >= 14
