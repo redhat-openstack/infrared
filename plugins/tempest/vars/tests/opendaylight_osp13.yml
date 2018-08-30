@@ -50,6 +50,11 @@ test_dict:
         # upstream OpenStack CI does _not_ run 'slow' tests, which test_shelve_instance is part of
         # we need to skip it as the test proves to be unstable in Downstream CI and not related to OpenDaylight
         - tempest.scenario.test_shelve_instance.TestShelveInstance.test_shelve_instance
+
+        # tests dependant on  DifferentHostFilter / SameHostFilter which fail occasionally, https://bugzilla.redhat.com/show_bug.cgi?id=1566148
+        - test_create_servers_on_different_hosts
+        - test_create_servers_on_different_hosts_with_list_of_servers
+        - test_create_servers_on_same_host
     plugins:
         neutron-tempest-plugin:
             repo: "https://github.com/openstack/neutron-tempest-plugin"
