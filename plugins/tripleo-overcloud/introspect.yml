@@ -159,3 +159,45 @@
             - install.vbmc.force
             - install.version|default(undercloud_version) | openstack_release == 10
             - vbmc_ports is defined
+
+#
+# With baremetal deployments hosts from custom instackenv are missing from inventory
+# Add them to Ansible's inventory for future use
+#
+- name: Add introspected BMs to inventory
+  hosts: localhost
+  gather_facts: no
+  any_errors_fatal: true
+  vars:
+      instack_input: "{{ (install.instackenv|default({})).file | default('') }}"
+  tasks:
+    - block:
+        - name: read instackenv file
+          command: cat "~/{{ (instack_input or 'instackenv.json') | basename }}"
+          register: overcloud_hosts_facts
+          delegate_to: "{{ groups['undercloud']|first }}"
+
+        - name: set overcloud_facts
+          set_fact:
+              overcloud_facts: "{{ overcloud_hosts_facts.stdout | from_json }}"
+
+        - name: add bm nodes to inventory
+          add_host:
+              hostname: "{{ item.name }}"
+              groups:
+                  - overcloud_nodes
+                  - openstack_nodes
+                  - "{{ item.name.split('-')[0] }}"
+              ansible_user: root
+          when: "{{ item.name not in groups.get('all',[]) }}"
+          with_items:  "{{ overcloud_facts.nodes }}"
+          register: update_inventory
+
+        - include_role:
+              name: inventory-update
+          vars:
+              inventory_file_name: 'hosts-prov'
+          with_items: "{{ update_inventory.results }}"
+      when:
+        - "'hypervisor' not in groups"
+        - "'bmc' not in groups"
