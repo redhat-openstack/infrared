@@ -62,15 +62,29 @@
           - groups.compute|difference(groups.unused|default([]))|length > 1
           - install.postreboot_evacuate|default(False)
 
-      # Temporerily disable ceph rebalance
+      # Temporarily disable ceph rebalance on OSP < 14
       - name: temporerily disable ceph rebalance
         become: true
         command: "{{ item }}"
-        when: "'ceph' in group_names"
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int < 14
         delegate_to: "{{ groups['controller']|first }}"
         with_items:
             - 'ceph osd set noout'
             - 'ceph osd set norebalance'
+
+      # Temporerily disable ceph rebalance on OSP >= 14
+      - name: temporerily disable ceph rebalance
+        become: true
+        command: "{{ item }}"
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int >= 14
+        delegate_to: "{{ groups['controller']|first }}"
+        with_items:
+            - "docker exec ceph-mon-{{ groups['controller']|first }} ceph osd set noout"
+            - "docker exec ceph-mon-{{ groups['controller']|first }} ceph osd set norebalance"
 
       # check pcs cluster status
       - name: check pacemaker cluster status
@@ -245,15 +259,29 @@
         when:
             - fail_unmanaged is changed
 
-      # Re-enable ceph rebalance
-      - name: reenable ceph rebalance
+      # Re-enable ceph rebalance on OSP < 14
+      - name: temporerily disable ceph rebalance
         become: true
         command: "{{ item }}"
-        when: "'ceph' in group_names"
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int < 14
         delegate_to: "{{ groups['controller']|first }}"
         with_items:
             - 'ceph osd unset noout'
             - 'ceph osd unset norebalance'
+
+      # Re-enable ceph rebalance on OSP >= 14
+      - name: temporerily disable ceph rebalance
+        become: true
+        command: "{{ item }}"
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int >= 14
+        delegate_to: "{{ groups['controller']|first }}"
+        with_items:
+            - "docker exec ceph-mon-{{ groups['controller']|first }} ceph osd unset noout"
+            - "docker exec ceph-mon-{{ groups['controller']|first }} ceph osd unset norebalance"
 
       - name: wait for OSDs to come back
         become: true
