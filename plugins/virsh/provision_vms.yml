@@ -27,6 +27,10 @@
           loop_var: node
       tags: images
 
+    - name: prepare bridge interfaces in the topology
+      set_fact:
+        topology_nodes: "{{ topology_nodes | wirenodes }}"
+
     # Create Disks
     - block:
         - name: create disks for each VM if not import
