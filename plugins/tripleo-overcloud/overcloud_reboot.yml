@@ -62,15 +62,29 @@
           - groups.compute|difference(groups.unused|default([]))|length > 1
           - install.postreboot_evacuate|default(False)
 
-      # Temporerily disable ceph rebalance
-      - name: temporerily disable ceph rebalance
+      # Temporarily disable ceph rebalance on OSP < 14
+      - name: temporarily disable ceph rebalance
         become: true
         command: "{{ item }}"
-        when: "'ceph' in group_names"
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int < 14
         delegate_to: "{{ groups['controller']|first }}"
         with_items:
             - 'ceph osd set noout'
             - 'ceph osd set norebalance'
+
+      # Temporarily disable ceph rebalance on OSP >= 14
+      - name: temporarily disable ceph rebalance
+        become: true
+        command: "{{ item }}"
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int >= 14
+        delegate_to: "{{ groups['controller']|first }}"
+        with_items:
+            - "docker exec ceph-mon-{{ groups['controller']|first }} ceph osd set noout"
+            - "docker exec ceph-mon-{{ groups['controller']|first }} ceph osd set norebalance"
 
       # check pcs cluster status
       - name: check pacemaker cluster status
@@ -245,35 +259,75 @@
         when:
             - fail_unmanaged is changed
 
-      # Re-enable ceph rebalance
+      # Re-enable ceph rebalance on OSP < 14
       - name: reenable ceph rebalance
         become: true
         command: "{{ item }}"
-        when: "'ceph' in group_names"
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int < 14
         delegate_to: "{{ groups['controller']|first }}"
         with_items:
             - 'ceph osd unset noout'
             - 'ceph osd unset norebalance'
 
-      - name: wait for OSDs to come back
+      # Re-enable ceph rebalance on OSP >= 14
+      - name: reenable ceph rebalance
+        become: true
+        command: "{{ item }}"
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int >= 14
+        delegate_to: "{{ groups['controller']|first }}"
+        with_items:
+            - "docker exec ceph-mon-{{ groups['controller']|first }} ceph osd unset noout"
+            - "docker exec ceph-mon-{{ groups['controller']|first }} ceph osd unset norebalance"
+
+      - name: wait for OSDs to come back on OSP < 14
         become: true
         command: ceph pg stat
         register: active_osd
         until: active_osd.stdout.find("active+clean") > -1
         retries: 24
         delay: 15
-        when: "'ceph' in group_names"
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int < 14
         delegate_to: "{{ groups['controller']|first }}"
 
-      - name: check clock_skew on ceph cluster
+      - name: wait for OSDs to come back on OSP >= 14
+        become: true
+        command: "docker exec ceph-mon-{{ groups['controller']|first }} ceph pg stat"
+        register: active_osd
+        until: active_osd.stdout.find("active+clean") > -1
+        retries: 24
+        delay: 15
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int >= 14
+        delegate_to: "{{ groups['controller']|first }}"
+
+      - name: check clock_skew on ceph cluster on OSP < 14
         become: true
         shell: |
             ceph status | grep 'Monitor clock skew detected' || echo 'ALL_GOOD'
         register: clock_skew
-        when: "'ceph' in group_names"
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int < 14
         delegate_to: "{{ groups['controller']|first }}"
 
-      - name: check ceph cluster status
+      - name: check clock_skew on ceph cluster on OSP >= 14
+        become: true
+        shell: |
+            docker exec ceph-mon-{{ groups['controller']|first }} ceph status | grep 'Monitor clock skew detected' || echo 'ALL_GOOD'
+        register: clock_skew
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int >= 14
+        delegate_to: "{{ groups['controller']|first }}"
+
+      - name: check ceph cluster status on OSP < 14
         become: true
         command: ceph status
         register: ceph_health
@@ -285,8 +339,23 @@
             - "'ceph' in group_names"
             - "groups['ceph']|difference(groups['unused']|default([]))|length >= 3"
             - "'ALL_GOOD' in clock_skew"
+            - overcloud_version|int < 14
 
-      - name: check ceph cluster status with clock skew
+      - name: check ceph cluster status on OSP >= 14
+        become: true
+        command: "docker exec ceph-mon-{{ groups['controller']|first }} ceph status"
+        register: ceph_health
+        until: ceph_health.stdout.find("HEALTH_OK") > -1
+        retries: 30
+        delay: 5
+        delegate_to: "{{ groups['controller']|first }}"
+        when:
+            - "'ceph' in group_names"
+            - "groups['ceph']|difference(groups['unused']|default([]))|length >= 3"
+            - "'ALL_GOOD' in clock_skew"
+            - overcloud_version|int >= 14
+
+      - name: check ceph cluster status with clock skew on OSP < 14
         become: true
         command: ceph status
         register: ceph_health
@@ -297,6 +366,20 @@
         when:
             - "'ceph' in group_names"
             - "groups['ceph']|difference(groups['unused']|default([]))|length >= 3"
+            - overcloud_version|int < 14
+
+      - name: check ceph cluster status with clock skew on OSP >=14
+        become: true
+        command: "docker exec ceph-mon-{{ groups['controller']|first }} ceph status"
+        register: ceph_health
+        until: ceph_health.stdout.find("HEALTH_WARN") > -1 or ceph_health.stdout.find("HEALTH_OK") > -1
+        retries: 30
+        delay: 5
+        delegate_to: "{{ groups['controller']|first }}"
+        when:
+            - "'ceph' in group_names"
+            - "groups['ceph']|difference(groups['unused']|default([]))|length >= 3"
+            - overcloud_version|int >= 14
 
       - name: migrate instance back to {{ compute_fqdn.stdout }}
         shell: |
