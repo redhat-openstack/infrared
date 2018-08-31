@@ -1,3 +1,4 @@
 ---
 tripleo_heat_templates:
-    - "{{ install.heat.templates.basedir }}/environments/cinder-backup.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/{% if (install.version | default(undercloud_version) | openstack_release >= 13)  %}services{% endif %}/cinder-backup.yaml"
+
