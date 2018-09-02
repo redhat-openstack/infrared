@@ -34,6 +34,18 @@
             - not image_file.stat.exists
             - not install.snapshot.image|regex_search('^http')
 
+      - name: Stop Undercloud VM if exists
+        virt:
+            command: destroy
+            name: undercloud-0
+        ignore_errors: true
+
+      - name: Remove Undercloud VM if exists
+        virt:
+            command: undefine
+            name: undercloud-0
+        ignore_errors: true
+
       - name: Copy snapshot to disk path
         copy:
             src: "{{ install.snapshot.image }}"
