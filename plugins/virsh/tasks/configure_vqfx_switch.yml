@@ -8,9 +8,17 @@
   set_fact:
     host_name: "{{ topology_node.name }}-{{ num }}"
 
+- name: set SSH key path
+  set_fact:
+    switch_ssh_key: "{{ temp_dir.path }}/id_rsa-{{ host_name }}.pub"
+
+- name: copy SSH key to the hypervisor
+  copy:
+    src: "{{ hostvars[host_name]['ansible_ssh_private_key_file'] }}.pub"
+    dest: "{{ switch_ssh_key }}"
+
 - name: copy configuration scripts to the temp directory
   vars:
-    switch_ssh_key: "{{ hostvars[host_name]['ansible_ssh_private_key_file'] }}.pub"
     switch_ip: "{{ hostvars[host_name]['ansible_host'] }}"
   template:
     src: vqfx/configure.sh.j2
