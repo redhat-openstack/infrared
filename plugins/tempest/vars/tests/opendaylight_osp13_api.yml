@@ -1,0 +1,34 @@
+---
+test_dict:
+    test_regex: ''
+    whitelist:
+        - tempest.api.network
+        - tempest.api.compute
+        - "^neutron.tests.tempest.api.*" # from python-neutron-tests RPM package
+        - neutron_plugin.api.*
+        - neutron_tempest_plugin.api.*
+    blacklist:
+        # not high priority currently, https://bugs.launchpad.net/networking-odl/+bug/1709880
+        # https://bugzilla.redhat.com/show_bug.cgi?id=1480267
+        - test_update_network_constrained_by_revision
+
+        # not high priority currently, https://bugzilla.redhat.com/show_bug.cgi?id=1495576
+        - test_router_interface_status
+        - test_update_router_admin_state
+        - test_update_instance_port_admin_state
+
+        # DVR not supported: https://bugzilla.redhat.com/show_bug.cgi?id=1573285
+        # these tests shouldn't run, more details: https://bugs.launchpad.net/bugs/1768209
+        - api.admin.test_routers_dvr.RoutersTestDVR.test_centralized_router_update_to_dvr
+        - api.test_routers.DvrRoutersTest.test_convert_centralized_router
+
+        # tests dependant on  DifferentHostFilter / SameHostFilter which fail occasionally, https://bugzilla.redhat.com/show_bug.cgi?id=1566148
+        - test_create_servers_on_different_hosts
+        - test_create_servers_on_different_hosts_with_list_of_servers
+        - test_create_servers_on_same_host
+    plugins:
+        neutron-tempest-plugin:
+            repo: "https://github.com/openstack/neutron-tempest-plugin"
+            version: "master"
+            package:
+                default: "python2-neutron-tests-tempest"
