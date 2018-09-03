@@ -119,15 +119,15 @@
     # IP address only gets set during instalation process so ansible
     # facts do not work for fresh deployments
     # Use discovered IP during upgrade when UC already insalled
+    - name: retrieve local_ip from undercloud.conf
+      shell: "grep local_ip {{ working_dir }}/undercloud.conf | grep -v ^# | grep -oP '[0-9.]+' | head -1 | sed s/\ //"
+      register: uc_registry_ip
+
     - name: set br-ctlplane ip to push_destination
-      vars:
-          uc_static_ip: "192.168.24.1"
-          uc_discovered_ip: "{{ hostvars[groups.undercloud|first].get('ansible_br-ctlplane',{}).get('ipv4',{}).get('address', '192.168.24.1') }}"
-          uc_registry_ip: "{{ install.upgrade|default(false)|ternary(uc_discovered_ip, uc_static_ip) }}"
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
           regexp: 'push_destination: true'
-          replace: "push_destination: {{ uc_registry_ip }}:8787"
+          replace: "push_destination: {{ uc_registry_ip.stdout }}:8787"
 
     - block:
         - name: remove tag_from_label in containers-prepare-parameter.yaml
