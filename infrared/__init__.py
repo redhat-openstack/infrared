@@ -160,6 +160,12 @@ PLUGINS_REGISTRY = {
         'desc': 'Rally tests runner',
         'type': 'test'
     },
+    'reportportal': {
+        'src': 'https://github.com/rhos-infra/reportportal.git',
+        'src_path': 'infrared_plugin',
+        'desc': 'Ansible role for sending XUnit test results to ReportPortal',
+        'type': 'other'
+    },
     'tempest': {
         'src': 'plugins/tempest',
         'desc': 'The tempest test runner',
