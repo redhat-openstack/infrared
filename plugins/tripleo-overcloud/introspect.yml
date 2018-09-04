@@ -80,6 +80,20 @@
             root_disk: "{{ install.root.disk.get('override', []) }}"
         when: install.get('root',{}).get('disk',{})
 
+      # Sometimes we have floating issue whan ceph node uses incorrect drive for root.
+      # This is workaround to setup root_device for ceph node explicitly. If you need
+      # to overrid this parameter add '-e ceph_root_disk=/dev/something'
+      - name: configure root disk for ceph node
+        vars:
+            ceph_root_disk: "/dev/vda"
+        shell: |
+            source ~/stackrc
+            openstack baremetal node set {{ item }} --property root_device='name:"{{ceph_root_disk}}"'
+
+        tags: skip_ansible_lint
+        with_items: "{{ groups['ceph'] | default([])}}"
+        when: "'ceph' in groups"
+
       - name: configure root-disk for multi-disk nodes
         shell: |
             set -exo pipefail
