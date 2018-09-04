@@ -120,7 +120,7 @@
     # facts do not work for fresh deployments
     # Use discovered IP during upgrade when UC already insalled
     - name: retrieve local_ip from undercloud.conf
-      shell: "grep local_ip {{ working_dir }}/undercloud.conf | grep -v ^# | grep -oP '[0-9.]+' | head -1 | sed s/\ //"
+      shell: "grep local_ip {{ working_dir }}/undercloud.conf | grep -v ^# | grep -oP '[0-9.]+' | head -1 | sed 's/ //'"
       register: uc_registry_ip
 
     - name: set br-ctlplane ip to push_destination
