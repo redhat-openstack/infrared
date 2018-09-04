@@ -70,6 +70,9 @@
           set -exo pipefail
           openstack tripleo container image prepare default \
           --output-env-file {{ working_dir }}/containers-prepare-parameter.yaml \
+          {% if install.tls.everywhere|default(False) %}
+          -e /usr/share/openstack-tripleo-heat-templates/environments/enable-internal-tls.yaml \
+          {% endif %}
           {% if not install.registry.undercloud.skip %}
           --local-push-destination
           {% endif %}
