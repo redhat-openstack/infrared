@@ -22,12 +22,20 @@
   register: vbmc_list
 
 - block:
-    - name: kill vbmc processes
+    - name: Stop Virtual BMCs if managed by systemd
+      become: true
+      systemd:
+        name: virtualbmc
+        state: stopped
+        enabled: no
+      ignore_errors: true
+
+    - name: kill vbmc processes if not managed by systemd
       command: killall vbmc
       when: vbmc_proc.rc == 0
       ignore_errors: true
 
-    - name: Check if install package
+    - name: Remove package if installed from rpm
       package:
           name: "{{ item }}"
           state: absent
@@ -38,7 +46,7 @@
 
     # pip can be missing on a target host.
     # so ignore errors and cleanup as much as possible
-    - name: remove python-virtualbmc from pip
+    - name: Remove package if installed from pip
       pip:
           name: virtualbmc
           state: absent
