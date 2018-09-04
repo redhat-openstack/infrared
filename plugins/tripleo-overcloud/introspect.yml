@@ -88,7 +88,7 @@
             ceph_root_disk: "/dev/vda"
         shell: |
             source ~/stackrc
-            openstack baremetal node set {{ item }} --property root_device='name:"{{ceph_root_disk}}"'
+            openstack baremetal node set {{ item }} --property root_device='{"name":"{{ceph_root_disk}}"}'
 
         tags: skip_ansible_lint
         with_items: "{{ groups['ceph'] | default([])}}"
