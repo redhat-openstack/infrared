@@ -18,7 +18,7 @@
   pip:
       name: virtualenv
       state: forcereinstall
-      extra_args: --user
+      extra_args: "{{ (lookup('env', 'VIRTUAL_ENV') == '') | ternary('--user', omit) }}"
 
 # required to avoid any conflicts in venv with
 # different packages versions (especially shade)
