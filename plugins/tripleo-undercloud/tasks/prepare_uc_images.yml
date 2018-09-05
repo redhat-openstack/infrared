@@ -123,6 +123,20 @@
       shell: "grep local_ip {{ working_dir }}/undercloud.conf | grep -v ^# | grep -oP '[0-9.]+' | head -1 | sed 's/ //'"
       register: uc_registry_ip
 
+    # to avoid i/o bottlenecks during overcloud deployment
+    # limit the number of nodes being deployed simultaneously to 5
+    - name: set max_concurrent_builds via hieradata
+      copy:
+          content: 'nova::compute::ironic::max_concurrent_builds: 5'
+          dest: "{{ working_dir }}/hiera_override.yaml"
+
+    - name: set hieradata in undercloud.conf
+      ini_file:
+          path: "{{ working_dir }}/undercloud.conf"
+          section: DEFAULT
+          option: hieradata_override
+          value: "{{ working_dir }}/hiera_override.yaml"
+
     - name: set br-ctlplane ip to push_destination
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
