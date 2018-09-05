@@ -55,17 +55,20 @@
   tags:
       - deploy
   tasks:
-      - name: adjust max number of concurrent builds to prevent undercloud overload
-        ini_file:
-            path: /etc/nova/nova.conf
-            section: DEFAULT
-            option: max_concurrent_builds
-            value: 5
-        become: yes
+      - block:
+          - name: adjust max number of concurrent builds to prevent undercloud overload
+            ini_file:
+                path: /etc/nova/nova.conf
+                section: DEFAULT
+                option: max_concurrent_builds
+                value: 5
+            become: yes
 
-      - name: restart nova services
-        command: "systemctl restart openstack-nova-*"
-        become: yes
+          - name: restart nova services
+            command: "systemctl restart openstack-nova-*"
+            become: yes
+        when:
+            - install.version|openstack_release < 10
 
       - name: Execute the pre overcloud deploy action
         shell: |
