@@ -129,6 +129,20 @@
           regexp: 'push_destination: true'
           replace: "push_destination: {{ uc_registry_ip.stdout }}:8787"
 
+    # to avoid i/o bottlenecks during overcloud deployment
+    # limit the number of nodes being deployed simultaneously to 5
+    - name: set max_concurrent_builds via hieradata
+      copy:
+          content: 'nova::compute::ironic::max_concurrent_builds: 5'
+          dest: "{{ working_dir }}/hiera_override.yaml"
+
+    - name: set hieradata in undercloud.conf
+      ini_file:
+          path: "{{ working_dir }}/undercloud.conf"
+          section: DEFAULT
+          option: hieradata_override
+          value: "{{ working_dir }}/hiera_override.yaml"
+
     - block:
         - name: remove tag_from_label in containers-prepare-parameter.yaml
           lineinfile:
