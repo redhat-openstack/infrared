@@ -5,6 +5,9 @@ openstack overcloud deploy \
 --timeout {{ install.deployment.timeout | int | default(100) }} \
 --templates {{ install.heat.templates.basedir }} \
 --libvirt-type {{ install.libvirt.type }} \
+{% if install.overcloud.ssh.user != '' %}
+--overcloud-ssh-user {{ install.overcloud.ssh.user }} \
+{% endif %}
 --disable-validation \
 -r {{ template_base }}/roles/roles_data.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/deployed-server-environment.yaml \
