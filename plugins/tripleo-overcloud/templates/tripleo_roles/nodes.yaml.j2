@@ -15,7 +15,7 @@
 
 {%- macro tht_net_config(role_name) -%}
 {%- for tht_map in tht_mapping if role_name|match(tht_map.regexp) -%}
-OS::TripleO::{{ tht_map.role_name|default(role_name) }}::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/{{ tht_map.net_config_file }}"
+OS::TripleO::{{ tht_map.base_role_name|default(role_name) }}::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/{{ tht_map.net_config_file }}"
 {%- endfor -%}
 {%- endmacro -%}
 
