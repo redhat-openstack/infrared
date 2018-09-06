@@ -35,7 +35,11 @@ parameter_defaults:
 #    DnsServers: ["2620:52:0:13b8::fe"]
     DnsServers: ["192.168.24.254"]
     EC2MetadataIp: 192.168.24.1
+{% if install.splitstack|default(False) %}
+    ControlPlaneDefaultRoute: {{ ansible_host|default(ansible_ssh_host) }}
+{% else %}
     ControlPlaneDefaultRoute: 192.168.24.1
+{% endif %}
     NeutronExternalNetworkBridge: ""
     NeutronBridgeMappings: "datacentre:br-ex,tenant:br-tenant"
     NeutronNetworkVLANRanges: "tenant:1000:2000"
