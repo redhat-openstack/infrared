@@ -1,0 +1,25 @@
+---
+tripleo_heat_templates:
+    - "{{ install.heat.templates.basedir }}/environments/services/ironic.yaml"
+
+custom_templates:
+  parameter_defaults:
+    IronicCleaningDiskErase: metadata
+    IronicCleaningNetwork: baremetal
+    IronicEnabledHardwareTypes:
+        - ipmi
+        - fake-hardware
+    IronicEnabledBootInterfaces: [pxe, fake]
+    IronicEnabledDeployInterfaces: [iscsi, direct, fake]
+    IronicEnabledManagementInterfaces: [ipmitool, fake]
+    IronicEnabledPowerInterfaces: [ipmitool, fake]
+    IronicIPXEEnabled: true
+    NeutronBridgeMappings: datacentre:br-ex,baremetal:br-baremetal
+    NeutronFlatNetworks: datacentre,baremetal
+    NovaSchedulerDefaultFilters:
+        - RetryFilter
+        - AggregateInstanceExtraSpecsFilter
+        - AvailabilityZoneFilter
+        - ComputeFilter
+        - ComputeCapabilitiesFilter
+        - ImagePropertiesFilter
