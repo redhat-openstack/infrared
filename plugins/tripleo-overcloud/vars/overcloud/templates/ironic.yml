@@ -7,19 +7,33 @@ custom_templates:
     NeutronBridgeMappings: datacentre:br-ex,baremetal:br-baremetal
     NeutronFlatNetworks: datacentre,baremetal
     IronicCleaningNetwork: baremetal
+    {% if (install.version | default(undercloud_version) | openstack_release < 14)  %}
     IronicEnabledDrivers:
         - pxe_ipmitool
         - fake
+    {% else %}
+    IronicEnabledHardwareTypes:
+    - ipmi
+    - fake-hardware
+    IronicEnabledBootInterfaces: [pxe, fake]
+    IronicEnabledDeployInterfaces: [iscsi, direct, fake]
+    IronicEnabledManagementInterfaces: [ipmitool, fake]
+    IronicEnabledPowerInterfaces: [ipmitool, fake]
+    {% endif %} 
     NovaSchedulerDefaultFilters:
         - RetryFilter
         - AggregateInstanceExtraSpecsFilter
         - AvailabilityZoneFilter
+    {% if (install.version | default(undercloud_version) | openstack_release < 14)  %}
         - RamFilter
         - DiskFilter
+    {% endif %} 
         - ComputeFilter
         - ComputeCapabilitiesFilter
         - ImagePropertiesFilter
     IronicCleaningDiskErase: metadata
     IronicIPXEEnabled: true
+    {% if (install.version | default(undercloud_version) | openstack_release < 14)  %}
     ControllerExtraConfig:
         ironic::drivers::ssh::libvirt_uri: 'qemu:///system'
+    {% endif %} 
