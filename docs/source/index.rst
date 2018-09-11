@@ -67,6 +67,7 @@ Welcome to infrared's documentation!
    hybrid_deployment
    plugins_guide
    control_placement
+   controller_replacement
 
 .. toctree::
    :maxdepth: 2

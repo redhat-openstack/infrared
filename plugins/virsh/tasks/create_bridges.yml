@@ -1,0 +1,21 @@
+---
+- name: create bridge
+  command: "brctl addbr {{ item.network | format(num) if item.needs_formatting | default(False)  else item.network }}"
+  ignore_errors: true
+  with_sequence: start={{ node_start_index|int }} end={{ topology_node.num|int + node_start_index|int - 1 }}
+  loop_control:
+    loop_var: num
+
+- name: set bridges to hub mode
+  command: "brctl setageing {{ item.network | format(num) if item.needs_formatting | default(False) else item.network }} 0"
+  when:
+    - item.hub|default(False)
+  with_sequence: start={{ node_start_index|int }} end={{ topology_node.num|int + node_start_index|int - 1 }}
+  loop_control:
+    loop_var: num
+
+- name: bring bridges up
+  command: "ip link set {{ item.network | format(num) if item.needs_formatting | default(False) else item.network }} up"
+  with_sequence: start={{ node_start_index|int }} end={{ topology_node.num|int + node_start_index|int - 1 }}
+  loop_control:
+    loop_var: num

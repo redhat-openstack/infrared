@@ -56,7 +56,7 @@
 - name: Append the bgpvpn template line to the base overcloud deploy script for OSP > 12
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e {{ install.heat.templates.basedir }}/environments/services-docker/neutron-bgpvpn-opendaylight.yaml \'
+      line: '-e {{ install.heat.templates.basedir }}/environments/services/neutron-bgpvpn-opendaylight.yaml \'
   when:
       - install.network.bgpvpn
       - install.version|default(undercloud_version)|openstack_release > 12
@@ -121,7 +121,7 @@
 - name: Change network type in OVN ML2 environment file OSP 12
   become: yes
   yedit:
-      src: "{{ install.heat.templates.basedir }}/environments/services-docker/neutron-ml2-ovn-ha.yaml"
+      src: "{{ install.heat.templates.basedir }}/environments/services/neutron-ml2-ovn-ha.yaml"
       update: True
       key: parameter_defaults
       value:
@@ -131,10 +131,10 @@
       - install.network.ovn and not install.network.dvr
       - install.version|default(undercloud_version)|openstack_release == 12
 
-- name: Change network type in OVN ML2 environment file OSP > 12
+- name: Change network type in OVN ML2 environment file OSP
   become: yes
   yedit:
-      src: "{{ install.heat.templates.basedir }}/environments/services-docker/neutron-ovn-ha.yaml"
+      src: "{{ install.heat.templates.basedir }}/environments/services/neutron-ovn-ha.yaml"
       update: True
       key: parameter_defaults
       value:
@@ -142,12 +142,12 @@
               '{{ install.network.backend }}'
   when:
       - install.network.ovn and not install.network.dvr
-      - install.version|default(undercloud_version)|openstack_release > 12
+      - install.version|default(undercloud_version)|openstack_release >= 13
 
 - name: Change network type in OVN DVR environment file
   become: yes
   yedit:
-      src: "{{ install.heat.templates.basedir }}/environments/services-docker/neutron-ovn-dvr-ha.yaml"
+      src: "{{ install.heat.templates.basedir }}/environments/services/neutron-ovn-dvr-ha.yaml"
       update: True
       key: parameter_defaults
       value:
@@ -155,4 +155,4 @@
               '{{ install.network.backend }}'
   when:
       - install.network.ovn and install.network.dvr
-      - install.version|default(undercloud_version)|openstack_release > 12
+      - install.version|default(undercloud_version)|openstack_release >= 13

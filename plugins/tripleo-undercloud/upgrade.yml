@@ -5,13 +5,16 @@
   tags:
       - upgrade
       - upgrade_repos
-  vars:
-      discovery_types:
-          - rhos_release_file
-          - nova
-  roles:
-      - version-discovery
   tasks:
+      - name: get undercloud version
+        tags: undercloud_version_discovery
+        vars:
+            discovery_types:
+                - rhos_release_file
+                - nova
+        import_role:
+            name: version-discovery
+
       - name: Validation
         include_tasks: "tasks/upgrade/validation.yml"
         tags:
@@ -39,5 +42,22 @@
             - upgrade
             - upgrade_repos
   tasks:
+      - name: update python-tripleoclient
+        become: true
+        tags:
+            - undercloud_containers
+            - upgrade
+        yum:
+            name: python-tripleoclient
+            state: latest
+        when: undercloud_version|openstack_release >= 13
+
+      - name: prepare undercloud containers
+        tags:
+            - undercloud_containers
+            - upgrade
+        import_tasks: tasks/prepare_uc_images.yml
+        when: undercloud_version|openstack_release >= 13
+
       - name: "{{ operation_type }} to version {{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }} build {{ install.build | default('latest') }}"
         include_tasks: "tasks/upgrade/upgrade.yml"
