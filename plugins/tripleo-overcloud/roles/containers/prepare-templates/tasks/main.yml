@@ -5,6 +5,7 @@
 - include_tasks: ceph-ansible.yml
   when:
       - storage_backend|default('') == 'ceph'
+      - install.version|default(undercloud_version) | openstack_release < 14
 
 - name: generate docker images file, using the undercloud registry
   vars:

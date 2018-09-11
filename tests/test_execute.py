@@ -115,9 +115,10 @@ def test_fake_inventory(spec_fixture, workspace_manager_fixture,          # noqa
     assert not path.exists(path.join(inventory_dir, output_file))
 
     workspace_manager_fixture.activate(test_workspace.name)
-    with pytest.raises(IOError) as exc:
+    from infrared.core.utils import exceptions
+    with pytest.raises(exceptions.IRFileNotFoundException) as exc:
         spec_manager.run_specs(args=input_string)
-    assert exc.value.message == "File not found: fake"
+    assert "fake" in exc.value.message
 
 
 def test_bad_user_inventory(spec_fixture, workspace_manager_fixture,   # noqa

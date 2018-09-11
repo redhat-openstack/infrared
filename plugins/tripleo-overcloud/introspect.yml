@@ -21,6 +21,7 @@
   vars:
       undercloud_provision_cidr: "{{ ansible_br_ctlplane.ipv4.network }}/{{ ansible_br_ctlplane.ipv4.netmask }}"
       instack_input: "{{ (install.instackenv|default({})).file | default('') }}"
+      ironic_cli: "{{ (install.version|default(undercloud_version)|openstack_release < 14)|ternary('ironic node-list','openstack baremetal node list') }}"
   tasks:
       - name: inject instackenv file if provided by the user
         tags: ironic
@@ -68,10 +69,36 @@
       - name: set the root device for baremetal nodes (with size hint)
         shell: |
             source ~/stackrc
-            NODE_UUID=$(ironic node-list | grep -w {{ item }} | awk '{print $2}' )
+            NODE_UUID=$({{ ironic_cli }} | awk '/{{ item.name | default(item) }}/ {print $2}' )
             ironic node-update ${NODE_UUID} add properties/root_device='{"size": {{ hostvars[item].disk  }} }'
+            #TODO(skatlapa): Check if Ironic CLI BZ#1602066 affects baremetal update command
         with_items: "{{ groups['overcloud_nodes'] | default([])}}"
         when: "'bmc' in groups"
+
+      - name: set root-disk override fact
+        set_fact:
+            root_disk: "{{ install.root.disk.get('override', []) }}"
+        when: install.get('root',{}).get('disk',{})
+
+      - name: configure root-disk for multi-disk nodes
+        shell: |
+            set -exo pipefail
+
+            REGEX=".*-[0-9]+$"
+            source ~/stackrc
+
+            {% for node in item.node.split(':') %}
+                if [[ "{{ node }}" =~ $REGEX ]]; then
+                    openstack baremetal node set \
+                      --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}' {{ node }}
+                else
+                    openstack baremetal node list|awk '/{{ node }}/ {print $2}'| \
+                    xargs -I{} openstack baremetal node set {} --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
+                fi
+            {% endfor %}
+        tags: skip_ansible_lint
+        with_items: "{{ root_disk }}"
+        when: root_disk is defined
 
       # Because introspection is faulty and tricky especially on baremetals
       # we need to check multiple times if any failure occured. Reasonable time
@@ -120,7 +147,7 @@
       - name: switch pxe_ssh to the pxe_impi
         shell: |
             source ~/stackrc
-            NODE_UUID=$(ironic node-list | grep -w {{ item.key }} | awk '{print $2}' )
+            NODE_UUID=$({{ ironic_cli }} | grep -w {{ item.key }} | awk '{print $2}' )
             openstack baremetal node set $NODE_UUID \
                 --driver pxe_ipmitool \
                 --driver-info ipmi_username={{ install.vbmc.username }} \

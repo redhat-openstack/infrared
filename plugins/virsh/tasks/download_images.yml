@@ -1,15 +1,9 @@
-# save current node to "{{ node_dict }}"
-- include_vars:
-    file: "{{ node.key }}"
-    name: node_dict
-
-- name: merge overriden settings to the separate var
-  set_fact:
-      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
+- set_fact:
+    topology_node: "{{ node.value }}"
 
 - name: download base image for node
   vars:
-      source: "{{ item.value.import_url|default('') or node_dict.import_url|default('') or url }}"
+      source: "{{ item.value.import_url|default('') or topology_node.import_url|default('') or url }}"
   get_url:
       # Use default url if unless disk has a different source
       url: "{{ source }}"
@@ -51,4 +45,6 @@
           --delete /etc/dhcp/dhclient.conf \
           --selinux-relabel
   with_items: "{{ download_image_result.results }}"
-  when: item is changed
+  when:
+    - item is changed
+    - topology_node.supports_libguestfs|default(true)
