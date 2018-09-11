@@ -15,29 +15,6 @@
           - install.build|default('') == 'ga'
         register: apply_workaround_bz1428608
 
-      - name: generate container images environment file
-        import_tasks: tasks/prepare_uc_images.yml
-        when:
-            - install.version|openstack_distribution == 'OSP'
-            - install.version|openstack_release > 13
-
-      # to avoid i/o bottlenecks during overcloud deployment
-      # limit the number of nodes being deployed simultaneously to 5
-      - block:
-          - name: set max_concurrent_builds via hieradata
-            copy:
-                content: 'nova::compute::ironic::max_concurrent_builds: 5'
-                dest: "{{ working_dir }}/hiera_override.yaml"
-
-          - name: set hieradata in undercloud.conf
-            ini_file:
-                path: "{{ working_dir }}/undercloud.conf"
-                section: DEFAULT
-                option: hieradata_override
-                value: "{{ working_dir }}/hiera_override.yaml"
-        when:
-            - install.version|openstack_release > 9
-
       - name: install the undercloud
         command: bash ~/undercloud_deploy.sh
         register: undercloud_deployment
