@@ -232,6 +232,12 @@ subparsers:
                       default: no
                       help: Specifies whether ths SSL should be used for overcloud
 
+                  overcloud-fencing:
+                      type: Bool
+                      default: no
+                      help: Specifies whether fencing should be configured and enabled on the overcloud
+                            (Supported from OSP13 and newer)
+
                   overcloud-script:
                       type: Value
                       help: |
