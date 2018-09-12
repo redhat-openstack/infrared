@@ -1,0 +1,20 @@
+---
+- set_fact:
+    topology_node: "{{ node.value }}"
+
+- name: Set default node_start_index
+  set_fact:
+      node_start_index: 0
+
+- name: Calculate node_start_index
+  set_fact:
+      node_start_index: "{{ node_start_index|int + 1 if (topology_node.name + '-' in item ) and hostvars[item].get('ansible_connection') == 'ssh' else node_start_index|int }}"
+  with_items: "{{ groups.all }}"
+  when: provision.topology.extend | default(False)
+
+- name: "configure {{ topology_node.os.type }} switch"
+  include_tasks: "tasks/configure_{{ topology_node.os.type }}_switch.yml"
+  when: topology_node.os.type in infrared_vswitch_types
+  with_sequence: start={{ node_start_index|int }} end={{ topology_node.num|int + node_start_index|int - 1 }}
+  loop_control:
+    loop_var: num

@@ -41,3 +41,15 @@
   become: yes
   command: "ip route add {{ route_result.stdout | replace(\"'\",'') }} dev vlan{{ vlan_result.stdout | replace(\"'\",'') }}"
   failed_when: "result.rc != 0 and result.stderr.find('RTNETLINK answers: File exists') != -1"
+
+- name: generate persistent vlan config
+  vars:
+      vlan_id: "{{ vlan_result.stdout | replace(\"'\",'') }}"
+      ovs_bridge: "br-ctlplane"
+      ipaddr: "{{ undercloud_public_ip }}"
+      netmask: "{{ route_result.stdout | replace(\"'\",'') | ipaddr('netmask') }} "
+  template:
+      src: ifcfg-vlan.j2
+      dest: "/etc/sysconfig/network-scripts/ifcfg-vlan{{ vlan_id }}"
+  become: yes
+  when: ansible_os_family == "RedHat"

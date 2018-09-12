@@ -104,7 +104,7 @@ Review the config file and edit as required:
     in the answers file. `Infrared` will NOT remove those quotation marks
     that surround the values.
 
-Edit mandatory parameters values in the answers file::
+Edit mandatory parameters values in the answers file:
 
 .. code-block:: ini
 
@@ -114,13 +114,13 @@ Edit mandatory parameters values in the answers file::
    topology-nodes = undercloud:1,controller:1,compute:1
    host-user = root
 
-Execute provisioning using the newly created answers file::
+Execute provisioning using the newly created answers file:
 
 .. code-block:: shell
 
   infrared virsh --from-file=virsh_prov.ini
 
-.. note:: You can always overwrite parameters from answers file with parameters from CLI::
+.. note:: You can always overwrite parameters from answers file with parameters from CLI:
 
   .. code-block:: text
 

@@ -1,0 +1,38 @@
+---
+# save current node to "{{ node_dict }}"
+- include_vars:
+      file: "{{ node.key }}"
+      name: node_dict
+
+- include_vars:
+      file: "{{ provision.topology.network }}"
+      name: network_info
+
+- name: merge overriden settings to the separate var
+  set_fact:
+      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
+
+- name: Replace node names with deployment id
+  set_fact:
+      topology_node: "{{ topology_node|combine({'name': prefix|default('')+ (prefix is defined|ternary('-','')) + topology_node.name}, recursive=True) }}"
+
+- name: set net prefix
+  set_fact:
+      net: "{{ ansible_local.run[prefix].net if prefix is defined else 10 }}"
+
+- name: set data net prefix
+  set_fact:
+      data_net: "{{ ansible_local.run[prefix].data_net if prefix is defined else 24 }}"
+
+- name: update node network info if needed
+  set_fact:
+      topology_node: "{{ topology_node | combine(network_info.nodes[topology_node.name]|default(network_info.nodes.default), recursive=True) }}"
+  when: not topology_node.interfaces
+
+- name: store number of nodes of this type
+  set_fact:
+      topology_node: "{{ topology_node | combine({'num': node.value}) }}"
+
+- name: store node to global variable
+  set_fact:
+      topology_nodes: "{{ topology_nodes | default({}) | combine({topology_node.name: topology_node}) }}"

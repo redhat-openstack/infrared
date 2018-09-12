@@ -35,16 +35,6 @@
   args:
       creates: "{{ rally.bin }}"
 
-- name: Install rally-openstack package
-  pip:
-      name: "{{ item }}"
-      state: latest
-      virtualenv: "{{ rally.path }}"
-  with_items:
-      - prettytable
-      - rally-openstack
-  become: yes
-
 - name: List rally version
   shell: "{{ rally.bin }} --version |& cut -d '~' -f1"
   register: rally_version
@@ -52,6 +42,18 @@
 - name: List rally release
   shell: "{{ rally.bin }} --version |& cut -d '~' -f2"
   register: rally_release
+
+- name: Install rally-openstack package
+  pip:
+      name: "{{ item }}"
+      state: latest
+      virtualenv: "{{ rally.path }}"
+  with_items:
+      - prettytable
+      - cryptography
+      - git+git://git.openstack.org/openstack/rally-openstack@master
+  become: yes
+  when: "{{ rally_version.stdout | version_compare('1.0.0', '>=') }}"
 
 - debug:
       msg: "Build mark: rally={{ rally_version.stdout }}-{{ rally_release.stdout }}"

@@ -1,4 +1,9 @@
 ---
+- name: Check if running inside virtualenv
+  command: |
+    python -c "import sys; print True if hasattr(sys, 'real_prefix') else False"
+  register: is_venv
+
 - name: install virtualenv requirments for pip
   become: yes
   package:
@@ -18,11 +23,12 @@
   pip:
       name: virtualenv
       state: forcereinstall
-      extra_args: --user
+      extra_args: "{{ (is_venv.stdout | bool) | ternary(omit, '--user') }}"
 
 # required to avoid any conflicts in venv with
 # different packages versions (especially shade)
 - name: cleanup shade venv if present
+  become: yes
   file:
       state: absent
       path: "{{ shade_path_venv }}"
@@ -30,22 +36,24 @@
 # installing setuptools and pip must happen before other packages and separated
 # do not use shimming for these two special packages
 - name: shade virtualenv core deps
+  vars:
+      venv_cmd: "{{ ansible_env.HOME }}/.local/bin/virtualenv"
   pip:
       name: "{{ item }}"
       virtualenv: "{{ shade_path_venv }}"
-      virtualenv_command: "{{ ansible_env.HOME }}/.local/bin/virtualenv"
+      virtualenv_command: "{{ (is_venv.stdout | bool) | ternary(omit, venv_cmd) }}"
   with_items:
     - setuptools>=39.0.0
     - pip>=10.0.1
 
 - name: shade virtualenv deps
+  vars:
+      venv_cmd: "{{ ansible_env.HOME }}/.local/bin/virtualenv"
   pip:
       name:
         - pytz==2016.4
         - cmd2==0.8.6
-        - shade==1.25.0
-        - keystoneauth1<3.2.0
-      # see https://projects.engineering.redhat.com/browse/RHOSINFRA-1562
+        - shade>=1.25
       # TODO: unpin shade to avoid other conflicts
       virtualenv: "{{ shade_path_venv }}"
-      virtualenv_command: "{{ ansible_env.HOME }}/.local/bin/virtualenv"
+      virtualenv_command: "{{ (is_venv.stdout | bool) | ternary(omit, venv_cmd) }}"

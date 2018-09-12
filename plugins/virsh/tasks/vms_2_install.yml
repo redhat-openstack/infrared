@@ -1,21 +1,6 @@
 ---
-# save current node to "{{ node_dict }}"
-- include_vars:
-    file: "{{ node.key }}"
-    name: node_dict
-
-- include_vars:
-    file: "{{ provision.topology.network }}"
-    name: network_info
-
-- name: merge overriden settings to the separate var
-  set_fact:
-      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
-
-- name: update node network info if needed
-  set_fact:
-      topology_node: "{{ topology_node | combine(network_info.nodes[topology_node.name]|default(network_info.nodes.default), recursive=True) }}"
-  when: not topology_node.interfaces
+- set_fact:
+    topology_node: "{{ node.value }}"
 
 - name: Set default node_start_index
   set_fact:
@@ -40,13 +25,18 @@
   add_host:
       name: "{{ topology_node.name }}-{{ item }}"
       ansible_connection: "local"
-  with_sequence: start={{ node_start_index|int }} end={{ node.value|int + node_start_index|int - 1 }}
+  with_sequence: start={{ node_start_index|int }} end={{ topology_node.num|int + node_start_index|int - 1 }}
 
 - include_role:
       name: inventory-update
   delegate_to: localhost
   vars:
       inventory_file_name: 'hosts-prov'
+
+- name: create VM bridges for interfaces that don't belong to any network
+  include_tasks: tasks/create_bridges.yml
+  when: item.bridged|default(false)
+  with_items: "{{ topology_node.interfaces }}"
 
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
 - name: create vm's
@@ -55,7 +45,8 @@
           {% if topology_node.disks|count > 0 %}
           {% for disk_name, disk_values in topology_node.disks.items() %}
           {% if disk_values.import_url is defined and disk_values.import_url %}
-           --disk path={{ base_image_path }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus={{ provision.disk.bus }},format=qcow2,cache={{ disk_values.cache }} \
+           --disk path={{ base_image_path }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=
+           {%- if topology_node.disks.disk1.bus is defined %}{{ topology_node.disks.disk1.bus }}{% else %}{{ provision.disk.bus }}{% endif %},format=qcow2,cache={{ disk_values.cache }} \
           {% else %}
            --disk path={{ disk_pool }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus={{ provision.disk.bus }},format=qcow2,cache={{ disk_values.cache }} \
           {% endif -%}
@@ -69,10 +60,12 @@
           --boot {{ provision.bootmode }} \
           {% endif %}
           {% for interface in topology_node.interfaces %}
-           --network {{ 'bridge' if (interface.bridged|default(False)) else 'network' }}:{{ interface.network }} \
+           --network {{ 'bridge' if (interface.bridged|default(False)) else 'network' }}:{{ prefix|default('') }}{{(prefix is defined|ternary('-',''))}}
+           {%- if interface.needs_formatting | default(False) %}{{ interface.network | format(item) }}{% else %}{{ interface.network }}{% endif %}
+           {%- if interface.model is defined and interface.model %},model={{ interface.model }}{% endif %} \
           {% endfor -%}
            --virt-type kvm \
-           --cpu {{ topology_node.cpumodel|default('host-model') }} \
+           --cpu {{ topology_node.cpumodel|default('host-passthrough') }} \
            --ram {{ topology_node.memory }} \
            --vcpus {{ topology_node.cpu }} \
            --os-variant {{ topology_node.os.variant }} \
@@ -81,7 +74,7 @@
            --autostart \
            --vnc \
            --rng /dev/urandom
-  with_sequence: start={{ node_start_index|int }} end={{ node.value|int + node_start_index|int - 1 }}
+  with_sequence: start={{ node_start_index|int }} end={{ topology_node.num|int + node_start_index|int - 1 }}
   register: vm_install
   async: 7200
   poll: 0
