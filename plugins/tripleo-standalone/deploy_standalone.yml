@@ -1,0 +1,88 @@
+- name: Deploy in standalone mode
+  any_errors_fatal: true
+  hosts: standalone
+  gather_facts: yes
+  vars:
+      home_dir: /home/cloud-user
+      gateway: 10.0.0.1
+      deployment_user: cloud-user
+      netmask: 24
+      containers_images_env_template_download_basename: "overcloud_container_image_prepare.yaml"
+      containers_images_env_template_dest_file: "{{ inventory_dir }}/overcloud_container_image_prepare.yaml"
+  tasks:
+      - name: read puddle configuration
+        block:
+          - name: get puddle url from the repos
+            vars:
+                repod_file: "/etc/yum.repos.d/rhos-release-{{ undercloud_version|default(install.version) }}.repo"
+            shell: |
+                cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '.*(?=\/.*\/\$basearch)'
+            register: containers_puddle_base_url
+
+          - name: get puddle number
+            command: "/usr/bin/puddle-version {{ containers_puddle_base_url.stdout }}"
+            register: containers_puddle_number
+
+          - name: Downloading overcloud container images environment file
+            get_url:
+                url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_env_template_download_basename }}"
+                dest: "{{ containers_images_env_template_dest_file }}"
+                force: true
+            delegate_to: localhost
+
+          - name: Load variables from container environment file
+            include_vars:
+                file: "{{ containers_images_env_template_dest_file }}"
+                name: container_env
+
+          - debug: var=container_env
+
+      - name: store ip for template
+        shell: |
+            /sbin/ifconfig {{ install.local.interface }} |grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*'
+        register: deploy_ip
+        become: yes
+
+      - name: set hostname
+        shell: |
+            sudo hostnamectl set-hostname {{ install.stackname }}-0.localdomain
+            sudo hostnamectl set-hostname --transient {{ install.stackname }}-0.localdomain
+        become: yes
+
+      - name: Generate standalone_parameters.yaml file
+        vars:
+            dns_server: "10.10.160.1"
+            containers_name_prefix: "{{ container_env['container-image-prepare'].prefix }}"
+            containers_name_suffix: "{{ container_env['container-image-prepare'].name_suffix|default('') }}"
+            containers_namespace: "{{ container_env['container-image-prepare'].namespace }}"
+            containers_tag: "{{ container_env['container-image-prepare'].tag }}"
+        template:
+            src: standalone_parameters.yaml.j2
+            dest: /home/cloud-user/standalone_parameters.yaml
+            owner: "{{ deployment_user }}"
+
+      - name: Generate standalone_deployment.sh file
+        template:
+            src: standalone_deploy.sh.j2
+            dest: "{{ home_dir }}/standalone_deploy.sh"
+            owner: "{{ deployment_user }}"
+            mode: "0755"
+
+      - name: deploy standalone
+        shell: |
+            ./standalone_deploy.sh
+        tags: skip_ansible_lint
+
+      - name: create old-fashioned rc file
+        shell: |
+            echo "export OS_CLOUD={{ install.stackname }}" > {{ home_dir }}/{{ install.stackname }}rc
+        tags: skip_ansible_lint
+
+      - name: fetch clouds yaml file
+        vars:
+            clouds_yaml_file: "{{ home_dir }}/.config/openstack/clouds.yaml"
+        fetch:
+            src: "{{ clouds_yaml_file }}"
+            dest: "{{ inventory_dir }}/{{ clouds_yaml_file | basename }}"
+            flat: yes
+            fail_on_missing: no

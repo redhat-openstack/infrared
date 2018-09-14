@@ -1,0 +1,38 @@
+parameter_defaults:
+  CertmongerCA: local
+  CloudName: {{ deploy_ip.stdout }}
+  CloudDomain: localdomain
+  ContainerImagePrepare:
+  - set:
+      name_prefix: "{{ containers_name_prefix }}"
+      name_suffix: "{{ containers_name_suffix }}"
+      namespace: "{{ containers_namespace }}"
+      neutron_driver: null
+      tag: "{{ containers_tag }}"
+    tag_from_label: "{version}-{release}"
+  # default gateway
+  ControlPlaneStaticRoutes:
+    - ip_netmask: 0.0.0.0/0
+      next_hop: {{ gateway }}
+      default: true
+  Debug: true
+  DeploymentUser: {{ deployment_user }}
+  DnsServers: {{ dns_server }}
+  # needed for vip & pacemaker
+  KernelIpNonLocalBind: 1
+  DockerInsecureRegistryAddress:
+  - {{ deploy_ip.stdout }}:8787
+  - docker-registry.engineering.redhat.com
+  NeutronPublicInterface: {{ install.local.interface }}
+  # re-use ctlplane bridge for public net
+  NeutronBridgeMappings: datacentre:br-ctlplane
+  NeutronPhysicalBridge: br-ctlplane
+  # enable to force metadata for public net
+  #NeutronEnableForceMetadata: true
+  StandaloneEnableRoutedNetworks: false
+  StandaloneHomeDir: {{ home_dir }}
+  StandaloneLocalMtu: 1500
+  # Needed if running in a VM
+  StandaloneExtraConfig:
+    nova::compute::libvirt::services::libvirt_virt_type: qemu
+    nova::compute::libvirt::libvirt_virt_type: qemu
