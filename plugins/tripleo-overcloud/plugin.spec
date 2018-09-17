@@ -462,6 +462,15 @@ subparsers:
                         The 'lvm' value will be used when storage nodes were not found.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
 
+                  glance-backend:
+                      type: Value
+                      choices:
+                          - rbd
+                          - swift
+                      default: rbd
+                      help: |
+                        The storage backend type used for glance, enabling to set Swift or RadosGW as the backend when deploying internal Ceph. Default value is 'rbd'
+
                   storage-config:
                       type: Value
                       help: |
