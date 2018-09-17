@@ -3,7 +3,7 @@ set -x
 
 # copy ssh key to the instance
 expect -c "
-spawn bash -c \"ssh-copy-id -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {{ switch_ssh_key }} {{ switch_ip }}\"
+spawn bash -c \"ssh-copy-id -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {{ switch_ssh_key }}.pub {{ switch_ip }}\"
 expect \"Password:\"
 send \"Juniper\r\"
 expect \"Number of key(s) added: 1\"
@@ -11,7 +11,7 @@ expect \"Number of key(s) added: 1\"
 
 expect -c"
   set timeout 300
-  spawn ssh root@{{ switch_ip }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+  spawn ssh -i {{ switch_ssh_key }} root@{{ switch_ip }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
   expect \"root@:RE:0%\"
   send \"cli\r\"
   expect \"root>\"
@@ -33,12 +33,12 @@ expect -c"
 sleep 60
 
 # copy the infterface wait script into the appliance
-scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {{ temp_dir.path }}/vqfx_wait.sh root@{{ switch_ip }}:~/wait.sh
+scp -i {{ switch_ssh_key  }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {{ temp_dir.path }}/vqfx_wait.sh root@{{ switch_ip }}:~/wait.sh
 
 # wait for interfaces to come up, then configure
 expect -c"
   set timeout 300
-  spawn ssh root@{{ switch_ip }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+  spawn ssh -i {{ switch_ssh_key }} root@{{ switch_ip }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
   expect \"root@:RE:0%\"
   send \"csh wait.sh\r\"
   expect \"root@:RE:0%*\"
