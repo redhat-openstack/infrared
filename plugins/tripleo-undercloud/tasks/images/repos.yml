@@ -30,7 +30,10 @@
   tags: skip_ansible_lint
 
 - name: Push repository to overcloud image
-  command: "virt-copy-in -a {{ overcloud_image_file }} {{ tmp_oc_repos_dir }} /etc/"
+  shell: |
+      export LIBGUESTFS_DEBUG=1 LIBGUESTFS_TRACE=1
+      virt-copy-in -a {{ overcloud_image_file }} {{ tmp_oc_repos_dir }} /etc/
+  tags: skip_ansible_lint
 
 - block:
     - name: Install yum-plugin-priorities package inside overcloud image
