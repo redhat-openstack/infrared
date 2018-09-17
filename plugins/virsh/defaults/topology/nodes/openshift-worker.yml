@@ -1,8 +1,8 @@
 name: openshift-worker
 prefix: null
-cpu: "2"
+cpu: "4"
 cpumodel: "host-passthrough"
-memory: "4096"
+memory: "8192"
 swap: "0"
 deploy_os: true
 os:
@@ -13,11 +13,35 @@ disks:
         import_url: null
         path: null
         dev: "/dev/vda"
-        size: "30G"
+        size: "15G"
         cache: "unsafe"
         preallocation: "metadata"
+    disk2:
+        import_url: null
+        path: null
+        dev: /dev/vdb
+        size: "16G"
+        cache: "unsafe"
+        preallocation: "metadata"
+    disk3:
+        import_url: null
+        path: null
+        dev: /dev/vdc
+        size: "16G"
+        cache: "unsafe"
+        preallocation: "metadata"
+    disk4:
+        import_url: null
+        path: null
+        dev: /dev/vdd
+        size: "16G"
+        cache: "unsafe"
+        preallocation: "metadata"
+
 # infraces and external_network dicts were moved to network file.
 interfaces: null
 
 groups:
     - openshift-worker
+    - overcloud_nodes
+    - openshift_nodes
