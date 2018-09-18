@@ -26,7 +26,9 @@ messaging_role:
         - OS::TripleO::Services::Ntp
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - OS::TripleO::Services::Pacemaker
-        - OS::TripleO::Services::RabbitMQ
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::OsloMessagingRpc{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::OsloMessagingNotify{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release < 14 %}OS::TripleO::Services::RabbitMQ{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Rhsm{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::RsyslogSidecar{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"

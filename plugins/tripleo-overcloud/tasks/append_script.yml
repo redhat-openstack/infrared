@@ -19,6 +19,12 @@
   tags: overcloud_ssl
   when: install.overcloud.ssl
 
+- name: Setup overcloud fencing
+  include_tasks: fencing.yml
+  when:
+      - install.overcloud.fencing|default(False)
+      - install.version|default(undercloud_version)|openstack_release >= 13
+
 - name: Trust to undercloud cert
   include_tasks: trust_uc.yml
   when:

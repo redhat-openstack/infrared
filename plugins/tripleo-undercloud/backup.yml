@@ -24,6 +24,7 @@
                 src: "{{ install.dest.key  | expanduser | realpath }}"
                 dest: "~/backup_server_auth_key"
                 mode: "0400"
+            when: install.dest|default({})
 
           - name: copy the image to temporary server
             shell: |
@@ -37,6 +38,7 @@
             file:
                 path: "{{ undercloud_image_file }}"
                 state: absent
+            when: install.dest|default({})
 
           - name: Power on the undercloud VM
             virt:

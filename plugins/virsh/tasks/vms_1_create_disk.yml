@@ -1,21 +1,6 @@
 ---
-# save current node to "{{ node_dict }}"
-- include_vars:
-    file: "{{ node.key }}"
-    name: node_dict
-
-- include_vars:
-    file: "{{ provision.topology.network }}"
-    name: network_info
-
-- name: merge overriden settings to the separate var
-  set_fact:
-      topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
-
-- name: update node network info if needed
-  set_fact:
-      topology_node: "{{ topology_node | combine(network_info.nodes[topology_node.name]|default(network_info.nodes.default), recursive=True) }}"
-  when: not topology_node.interfaces
+- set_fact:
+    topology_node: "{{ node.value }}"
 
 - name: define disk pool path
   set_fact:
@@ -57,7 +42,7 @@
       # For disks usually it will be only 1 disk so the async will run on nodes rather than disks creation
       - name: create disk(s) from vm base image
         vars:
-            amount: "{{ node.value|int + node_start_index|int }}"
+            amount: "{{ topology_node.num|int + node_start_index|int }}"
             net_scripts: /etc/sysconfig/network-scripts
         shell: |
             set -ex
@@ -65,13 +50,13 @@
             {% for num in range(node_start_index|int, amount|int, 1) %}
             {% for disk_name, disk_values in topology_node.disks.items() %}
             {% set node_image = '{0}-{1}-{2}.qcow2'.format(topology_node.name, num, disk_name) %}
-            {% set image_name = (disk_values.import_url|default('') or node_dict.import_url|default('') or url) | basename %}
+            {% set image_name = (disk_values.import_url|default('') or topology_node.import_url|default('') or url) | basename %}
             {% if not disk_values.import_url %}
 
             # create empty disk
             qemu-img create -f qcow2 -o preallocation={{ disk_values.preallocation }} {{ disk_pool  }}/{{ node_image }} {{ disk_values.size }}
 
-            {% if disk_name == 'disk1' and topology_node.deploy_os|default(True) -%}
+            {% if disk_name == 'disk1' and topology_node.deploy_os|default(True) and topology_node.supports_libguestfs|default(True) -%}
             # expand (copy-content) into new image in case of system disk
             # virt-resize needs target file with expected size to already exists
             virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}

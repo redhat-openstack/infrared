@@ -12,7 +12,7 @@ subparsers:
                       type: Value
                       help: |
                           The OpenStack under test version.
-                      choices: ['10', '11', '12']
+                      choices: ['10', '11', '12', '13', '14']
                       required: yes
                   undercloudrc:
                       type: Value

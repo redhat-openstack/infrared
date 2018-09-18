@@ -5,7 +5,7 @@
   any_errors_fatal: true
   vars:
       - conf: "{{ install.config|default({}) }}"
-      - default_conf: /usr/share/instack-undercloud/undercloud.conf.sample
+      - default_conf: "{{ (install.version|openstack_release <= 13|ternary('/usr/share/instack-undercloud/undercloud.conf.sample', '/usr/share/python-tripleoclient/undercloud.conf.sample') }}"
       - local_src: "{%- if conf.file|default('') -%}
                 {{ conf.file }}
                 {%- elif 'hypervisor' in groups.all or 'bmc' in groups -%}
@@ -14,6 +14,10 @@
                 False
                 {%- endif -%}"
   tasks:
+      - name: set workingr_dir fact
+        set_fact:
+            working_dir: "/home/{{ install.user.name }}"
+
       - name: template the undercloud.conf from local machine
         template:
             src: "{{ local_src }}"
@@ -35,7 +39,7 @@
 
       - name: enable undercloud-ssl
         include_tasks: tasks/ssl.yml
-        when: install.ssl
+        when: install.ssl or install.version|openstack_release > 13
         tags: ssl
 
       - name: override values in undercloud conf
@@ -53,3 +57,26 @@
       - name: the undercloud deploy script
         command: "cat undercloud_deploy.sh"
         tags: deploy
+
+      - name: generate container images environment file
+        import_tasks: tasks/prepare_uc_images.yml
+        when:
+            - install.version|openstack_distribution == 'OSP'
+            - install.version|openstack_release > 13
+
+      # to avoid i/o bottlenecks during overcloud deployment
+      # limit the number of nodes being deployed simultaneously to 5
+      - block:
+          - name: set max_concurrent_builds via hieradata
+            copy:
+                content: 'nova::compute::ironic::max_concurrent_builds: 5'
+                dest: "{{ working_dir }}/hiera_override.yaml"
+
+          - name: set hieradata in undercloud.conf
+            ini_file:
+                path: "{{ working_dir }}/undercloud.conf"
+                section: DEFAULT
+                option: hieradata_override
+                value: "{{ working_dir }}/hiera_override.yaml"
+        when:
+            - install.version|openstack_release > 9

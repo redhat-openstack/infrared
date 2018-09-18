@@ -166,7 +166,7 @@ subparsers:
                       type: int
                       help: The overcloud deployment timeout in minutes.
                       default: 100
-                      maximum: 180
+                      maximum: 240
 
                   instackenv-file:
                       type: Value
@@ -232,6 +232,12 @@ subparsers:
                       default: no
                       help: Specifies whether ths SSL should be used for overcloud
 
+                  overcloud-fencing:
+                      type: Bool
+                      default: no
+                      help: Specifies whether fencing should be configured and enabled on the overcloud
+                            (Supported from OSP13 and newer)
+
                   overcloud-script:
                       type: Value
                       help: |
@@ -248,7 +254,7 @@ subparsers:
                             __LISTYAMLS__
 
                   config-heat:
-                      type: NestedDict
+                      type: Dict
                       action: append
                       help: |
                           Inject additional Tripleo Heat Templates configuration options under "paramater_defaults"
@@ -449,11 +455,21 @@ subparsers:
                           - netapp-iscsi
                           - netapp-nfs
                           - lvm
+                          - nfs
                       help: |
                         The storage that we would like to use.
                         If not supplied, Infrared will try to discover storage nodes and select appropriate backed.
                         The 'lvm' value will be used when storage nodes were not found.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
+
+                  glance-backend:
+                      type: Value
+                      choices:
+                          - rbd
+                          - swift
+                      default: rbd
+                      help: |
+                        The storage backend type used for glance, enabling to set Swift or RadosGW as the backend when deploying internal Ceph. Default value is 'rbd'
 
                   storage-config:
                       type: Value
@@ -667,6 +683,18 @@ subparsers:
                               --resource-class-override name=baremetal-ctr,flavor=controller,node=controller
                               --resource-class-override name=baremetal-cmp,flavor=compute,node=compute-0
                               --resource-class-override name=baremetal-other,flavor=compute,node=swift-0:baremetal
+                  root-disk-override:
+                      type: NestedList
+                      action: append
+                      help: |
+                          This option allows to define custom root disk for multi-disk nodes
+                          The 'node' field supports 'controller' or 'controller-0' patterns.
+                          The 'hint' is property's name that helps to identify the root disk, e.g: serial, wwn
+                          The 'hintvalue' is a specific value for a hint's property, e.g: 123-asb-s1be
+                          Example:
+                              --root-disk-override node=controller,hint=size,hintvalue=50
+                              --root-disk-override node=compute-0,hint=name,hintvalue=/dev/sda
+                              --root-disk-override node=ceph,hint=rotational,hintvalue=false
 
             - title: ansible facts
               options:

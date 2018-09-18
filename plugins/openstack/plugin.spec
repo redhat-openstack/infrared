@@ -34,6 +34,12 @@ subparsers:
                           Disable in case arbitary MAC and IP addresses need to reach outside assigned ports
                           (e.g. useful for OpenStack in OpenStack deployments). Disabling this will also set security_groups
                           to None.
+                  os-server-timeout:
+                      type: Value
+                      default: 240
+                      help: |
+                          Number of seconds to wait for os_server module commands, defaults to 240 instead of
+                          ansible default value of 180 which proved to be too small quite often.
             - title: Topology
               options:
                   prefix:

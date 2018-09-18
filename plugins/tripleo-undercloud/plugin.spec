@@ -36,7 +36,7 @@ subparsers:
                   snapshot-image:
                        type: Value
                        help: |
-                          The url to the image to restore the undercloud from.
+                          The url or path to the image to restore the undercloud from.
                   snapshot-filename:
                       type: Value
                       help: |
@@ -66,7 +66,16 @@ subparsers:
                       help: |
                           Specifies whether ths SSL should be used for undercloud
                           A self-signed SSL cert will be generated.
+                          Starting with OSP 14 ssl is enabled by default regardless of this option.
                       default: no
+
+                  undercloud-extra-args:
+                      type: Value
+                      help: |
+                          Extra arguments to be passed to the openstack undercloud deploy script
+                          Example:
+                                --undercloud-extra-args="--use-heat"
+                      default: ''
 
                   shade-host:
                       type: Value
@@ -76,6 +85,12 @@ subparsers:
                           otherwise undercloud is used.
                           Example:
                                 --shade-host undercloud-0
+
+                  ntp-server:
+                      type: Value
+                      help: |
+                            Ntp server name (or IP) to use.
+                      default: clock.redhat.com
 
             - title: Splitstack deployment
               options:
@@ -156,6 +171,7 @@ subparsers:
                           cdn - use internal mirrors of the CDN repos. (internal use)
                           none - use none of those flags
                       default: pin
+
                   from-source:
                       type: NestedList
                       action: append
@@ -169,6 +185,16 @@ subparsers:
                       help: |
                           Let you the option to enable testing/pending repos with rhos-release. Multiple values have to be coma separated.
                           Examples: --enable-testing-repos rhel,extras,ceph or --enable-testing-repos all
+
+                  validate:
+                      type: Bool
+                      default: yes
+                      help: Specifies whether we should run pre validation tasks
+
+                  post:
+                      type: Bool
+                      help: Specifies whether we should run post install tasks
+                      default: yes
 
             - title: TripleO User
               options:
@@ -282,3 +308,38 @@ subparsers:
                       type: Value
                       help: |
                           Override the default RHEL version. Default 'ansible_distribution_version'
+
+            - title: Containers
+              options:
+                  registry-mirror:
+                      type: Value
+                      help: The alternative docker registry to use for undercloud deployment.
+                      default: "docker-registry.engineering.redhat.com"
+
+                  registry-namespace:
+                      type: Value
+                      help: The alternative docker registry namespace to use for undercloud deployment.
+                      default: "rhosp14"
+
+                  registry-skip-puddle:
+                      type: Bool
+                      help: |
+                          Skip reading any private puddle files to auto-detect the containers parameters
+                      default: False
+
+                  registry-tag:
+                      type: Value
+                      help: The images tag
+
+                  registry-tag-discover:
+                      type: Value
+                      help: |
+                          If this option is set then infrared will try to auto discover tag
+                      default: False
+
+                  registry-undercloud-skip:
+                      type: Bool
+                      help: Avoid using and mass populating the undercloud registry.
+                            The registry or the registry-mirror will be used directly when possible,
+                            recommended to use this option when you have very good bandwidth to your registry.
+                      default: False

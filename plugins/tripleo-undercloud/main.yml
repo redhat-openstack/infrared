@@ -1,6 +1,7 @@
 ---
 - name: Perform validations
   import_playbook: "{{ validate_undercloud | default('validate.yml') }}"
+  when: install.validate|default('')
   tags:
       - validation
 
@@ -10,6 +11,7 @@
 
 - name: Including post provision tasks
   import_playbook: "{{ undercloud_post | default('post.yml') }}"
+  when: install.post|default('')
 
 - name: Create an undercloud backup image (for undercloud snapshot)
   import_playbook: "{{ install_backup | default('backup.yml') }}"

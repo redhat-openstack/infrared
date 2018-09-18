@@ -5,9 +5,16 @@
 #      file: ssl.yml
 #      name: ssl
 
+# RHOS 14 has the new version of undercloud.conf file
+# 'undercloud_public_vip' has been replaced by 'undercloud_public_host'
+# Check both values for all versions
 - name: grab undercloud_public_vip from undercloud.conf
   command: 'awk -F= "/^undercloud_public_vip\s*=\s*/ {print $2}" ~/undercloud.conf'
   register: awk_undercloud_public_vip
+
+- name: grab undercloud_public_host from undercloud.conf
+  command: 'awk -F= "/^undercloud_public_host\s*=\s*/ {print $2}" ~/undercloud.conf'
+  register: awk_undercloud_public_host
 
 - name: create cert directory
   become: yes
@@ -24,7 +31,8 @@
 - name: create the self signed CA certificate
   become: yes
   vars:
-      public_vip: "{{ awk_undercloud_public_vip.stdout|trim | ternary(awk_undercloud_public_vip.stdout|trim, '192.168.24.2')}}"
+      undercloud_public_ip: "{{ (awk_undercloud_public_vip.stdout != '') | ternary(awk_undercloud_public_vip.stdout, awk_undercloud_public_host.stdout) }}"
+      public_vip: "{{ (undercloud_public_ip != '') | ternary(undercloud_public_ip|trim, '192.168.24.2')}}"
       shell_command: "
           openssl req -new -x509
           -days 365
