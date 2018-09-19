@@ -236,7 +236,7 @@ Placeholders
 Placeholders allow users to add a level of sophistication in options help field.
 
 * ``__LISTYAMLS__``:
-    Will be replaced with a list of available YAML (``.yml``) file from the option's settings dir.
+    Will be replaced with a list of available YAML (``.yml`` or ``.yaml``) file from the option's settings dir.
     | Assume a plugin with the following  directory tree is installed::
 
         plugin_dir
