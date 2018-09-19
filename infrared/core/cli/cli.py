@@ -33,6 +33,7 @@ OPTION_ARGPARSE_ATTRIBUTES = ['action', 'nargs', 'const', 'default', 'choices',
 
 YAMLS_PLACEHODER = '__LISTYAMLS__'
 
+FILE_EXTENSION = ['.yml', '.yaml']
 
 class CliParser(object):
     """
@@ -224,13 +225,15 @@ class CliParser(object):
                 allowed_values)
         elif YAMLS_PLACEHODER in opt_kwargs['help']:
             yaml_set = set()
+            yaml_files = []
             for dirname in (spec.vars, spec.defaults):
                 option_dir = os.path.join(dirname, *option_name.split('-'))
                 if not os.path.exists(option_dir):
                     continue
-                yaml_files = [os.path.splitext(yml)[0]
-                              for yml in os.listdir(option_dir)
-                              if yml.endswith('.yml')]
+                for ext in FILE_EXTENSION:
+                    yaml_files += [os.path.splitext(yml)[0]
+                                   for yml in os.listdir(option_dir)
+                                   if yml.endswith(ext)]
                 # yaml_files.sort()
                 # set union operator
                 yaml_set |= set(yaml_files)
@@ -547,11 +550,12 @@ class FileType(ComplexType):
 
     def resolve(self, value):
         pathes = self.get_check_locations(value)
-        # check also for files with yml extension
+        # check also for files with yml and yaml extensions
         if self.SEARCH_YAML:
-            pathes.extend(
-                [path + '.yml' for path in pathes
-                 if not path.endswith('.yml')])
+            for ext in FILE_EXTENSION:
+                pathes.extend(
+                    [path + ext for path in pathes
+                     if not path.endswith(ext)])
 
         target_file = next(
             (file_path for file_path in pathes
