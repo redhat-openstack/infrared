@@ -34,7 +34,9 @@
       inventory_file_name: 'hosts-prov'
 
 - name: create VM bridges for interfaces that don't belong to any network
-  include_tasks: tasks/create_bridges.yml
+  include_role:
+      name: network
+      tasks_from: create_bridges.yml
   when: item.bridged|default(false)
   with_items: "{{ topology_node.interfaces }}"
 
