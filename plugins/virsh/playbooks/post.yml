@@ -1,0 +1,14 @@
+---
+#This is an empty file meant to be overridden by custom post
+#configuration playbook
+- hosts: localhost
+  gather_facts: no
+
+- name: Update deployment information on hypervisor
+  hosts: hypervisor
+  gather_facts: yes
+  any_errors_fatal: true
+  roles:
+    - role: hypervisor
+      action: post
+      when: provision.prefix is defined
