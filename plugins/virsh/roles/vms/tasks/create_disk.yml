@@ -1,0 +1,98 @@
+---
+- set_fact:
+    topology_node: "{{ node.value }}"
+
+- name: define disk pool path
+  set_fact:
+      disk_pool: "{{ provision.disk.pool if (topology_node.disks.disk1.path == None) else topology_node.disks.disk1.path }}"
+
+- name: Set default node_start_index
+  set_fact:
+      node_start_index: 0
+
+- name: Calculate node_start_index
+  set_fact:
+      node_start_index: "{{ node_start_index|int + 1 if (topology_node.name + '-' in item) and hostvars[item].get('ansible_connection') == 'ssh' else node_start_index|int }}"
+  with_items: "{{ groups.all }}"
+  when: provision.topology.extend | default(False)
+
+- block:
+      #todo(yfried): move this to verification section (before execution)
+      - name: verify swap is within disk1 size
+        vars:
+            disk1_min: 8G #GB
+        fail:
+            msg:
+                error: "Not enough disk space for swap"
+                node: "{{ topology_node.name}}"
+                swap: "{{ topology_node.swap }}"
+                disk_size: "{{ topology_node.disks.disk1.size }}"
+        when: (topology_node.disks.disk1.size|filesize('M')|int - topology_node.swap|default(0)|int) < (disk1_min|filesize('M')|int)
+
+      - name: check and create directory
+        file:
+          path: "{{ disk_pool }}"
+          state: directory
+          owner: root
+          group: root
+          mode: 0755
+          follow: yes
+        when: disk_pool | default(False)
+
+      # For disks usually it will be only 1 disk so the async will run on nodes rather than disks creation
+      - name: create disk(s) from vm base image
+        vars:
+            amount: "{{ topology_node.num|int + node_start_index|int }}"
+            net_scripts: /etc/sysconfig/network-scripts
+        shell: |
+            set -ex
+            export LIBGUESTFS_BACKEND=direct
+            {% for num in range(node_start_index|int, amount|int, 1) %}
+            {% for disk_name, disk_values in topology_node.disks.items() %}
+            {% set node_image = '{0}-{1}-{2}.qcow2'.format(topology_node.name, num, disk_name) %}
+            {% set image_name = (disk_values.import_url|default('') or topology_node.import_url|default('') or url) | basename %}
+            {% if not disk_values.import_url %}
+
+            # create empty disk
+            qemu-img create -f qcow2 -o preallocation={{ disk_values.preallocation }} {{ disk_pool  }}/{{ node_image }} {{ disk_values.size }}
+
+            {% if disk_name == 'disk1' and topology_node.deploy_os|default(True) and topology_node.supports_libguestfs|default(True) -%}
+            # expand (copy-content) into new image in case of system disk
+            # virt-resize needs target file with expected size to already exists
+            virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
+            # incjet DEFROUT to file and set it on for external network only
+            virt-customize -a {{ disk_pool }}/{{ node_image }} \
+            {% for interface in topology_node.interfaces %}
+                {% if loop.index0 == 0 %}--run-command 'grep DEFROUTE {{ net_scripts }}/ifcfg-eth{{ loop.index0 }} || echo "DEFROUTE=yes" >> {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}'
+                {%- else -%}--run-command 'cp {{ net_scripts }}/ifcfg-eth{0,{{ loop.index0 }}} && sed -i s/DEVICE=.*/DEVICE=eth{{ loop.index0 }}/g {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' {% endif %} \
+                --run-command 'sed -i s/DEFROUTE=.*/DEFROUTE={{ 'yes' if (topology_node.external_network.network == interface.network) else 'no' }}/g {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' \
+            {% endfor %}
+            {%- if topology_node.swap|default('0')|int > 0 -%}
+                --run-command 'dd if=/dev/zero of=/swapfile bs=1M count={{ topology_node.swap }}' \
+                --run-command 'chmod 600 /swapfile' \
+                --run-command 'mkswap /swapfile' \
+                --run-command 'echo /swapfile none swap defaults 0 0 >> /etc/fstab' \
+            {% endif -%}{# endif swap #}
+                --selinux-relabel
+            {% endif %}{# endif disk1 #}
+
+            # todo(yfried): use builtin module for chown
+            {% else %}{# else import_url #}
+            # in case of import simply copy that image to use as a disk
+            cp -rf {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
+            {% endif %}{# endif not import_url #}
+            chown qemu:qemu {{ disk_pool }}/{{ node_image }}
+            {% endfor %}{# endfor vm disks #}
+            {% endfor %}{# endfor vm-type(controller etc).amount #}
+      #  todo(yfried) needs a "creates"
+      #  args:
+      #      creates: "create disk(s) from vm base image"
+        register: vm_disks
+        async: 7200
+        poll: 0
+
+      - name: save disks jids
+        set_fact:
+            async_disks: "{{ async_disks|default([]) + [vm_disks.ansible_job_id] }}"
+
+  when: topology_node.disks|count > 0
