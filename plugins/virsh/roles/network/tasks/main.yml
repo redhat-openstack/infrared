@@ -1,0 +1,66 @@
+---
+- name: get networks dict
+  include_vars: "{{ provision.topology.network }}"
+
+- name: merge overriden settings to the separate var
+  set_fact:
+      networks: "{{ networks|default({}) | combine(item.value, recursive=True) }}"
+  when: item.key == 'networks'
+  with_dict: "{{ override|default({}) }}"
+- name: Get uniq id for current deployment
+  set_fact:
+        prefix: "{{ ansible_local.run.keys()[0] }}"
+  when: provision.prefix is defined
+
+- name: set net prefix
+  set_fact:
+      net: "{{ ansible_local.run[prefix].net if prefix is defined else 0 }}"
+
+- name: set data net prefix
+  set_fact:
+      data_net: "{{ ansible_local.run[prefix].data_net if prefix is defined else 24 }}"
+
+- name: Update network dict with prefix
+  set_fact:
+      networks: "{{ networks|combine({item.key: {'name': prefix|default('') + (prefix is defined|ternary('-','')) + item.value.name}}, recursive=True) }}"
+  with_dict: "{{ networks }}"
+
+- name: adjust ipv6 options
+  include_tasks: ipv6.yml
+  with_dict: "{{ networks }}"
+  when: item.value.ipv6 is defined
+
+- name: create bridged network
+  include_tasks: bridged_network.yml
+  vars:
+      nic_settings: "{{ item }}"
+      nic_data: "{{ (item.nic == '') | ternary(hostvars[inventory_hostname]['ansible_' + ansible_default_ipv4.interface],
+          hostvars[inventory_hostname]['ansible_' + item.nic]|default('')) }}"
+  with_items:
+      "{{ networks.values() | selectattr('forward', 'defined') | selectattr('forward', 'equalto', 'bridge') | list }}"
+  when: "networks is defined"
+
+- name: check for existing networks
+  virt_net:
+      command: "list_nets"
+  register: network_list
+
+- name: create the networks for the topology
+  virt_net:
+      command: "define"
+      name: "{{ item.value.name }}"
+      xml: "{{ lookup('template', 'templates/network.xml.j2') }}"
+  when: "item.value.name not in network_list.list_nets"
+  with_dict: "{{ networks }}"
+
+- name: set autostart to the created networks
+  virt_net:
+      autostart: "{{ item.value.autostart | default('yes') }}"
+      name: "{{ item.value.name }}"
+  with_dict: "{{ networks }}"
+
+- name: check if network is active
+  virt_net:
+      name: "{{ item.value.name }}"
+      state: active
+  with_dict: "{{ networks }}"
