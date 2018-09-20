@@ -1,0 +1,36 @@
+# Create Disks
+- block:
+    - name: create disks for each VM if not import
+      include_tasks: create_disk.yml
+
+    - name: Wait for all disks to be created
+      async_status:
+          jid: "{{ item }}"
+      register: disk_tasks
+      until: disk_tasks.finished
+      retries: 300
+      with_items: "{{ async_disks }}"
+  tags: disks
+
+# Build VMs
+- block:
+    - name: define libvirt VMs
+      include_tasks: install.yml
+
+    - name: Wait for VMs to be created
+      async_status:
+          jid: "{{ item }}"
+      register: install_tasks
+      until: install_tasks.finished
+      retries: 300
+      with_items: "{{ async_install }}"
+  tags: install
+
+# Fetch IP addresses
+- block:
+    - name: Get VMs hardware adresses
+      include_tasks: hwaddr.yml
+  tags: ips
+
+- name: Post-configure VMs
+  include_tasks: post_configure.yml
