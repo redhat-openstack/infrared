@@ -91,6 +91,9 @@
 - shell: "(set -x; blkid; lsblk; df -T; df -i) &> /var/log/extra/disk"
   ignore_errors: true
 
+- shell: "(set -x; sestatus -v; sestatus -b) &> /var/log/extra/selinux"
+  ignore_errors: true
+
 - shell: |
     if [[ -f "/etc/ceph/ceph.client.admin.keyring" || -f "/etc/ceph/ceph.keyring" || -f "/etc/ceph/keyring" || -f "/etc/ceph/keyring.bin" ]]; then
         ceph status &>/var/log/extra/ceph
