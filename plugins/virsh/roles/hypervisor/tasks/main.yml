@@ -1,0 +1,12 @@
+---
+- name: Prepare hypervisor host
+  include_tasks: prepare.yml
+  when: action == 'prepare'
+
+- name: Hypervisor post stage
+  include_tasks: post.yml
+  when: action == 'post'
+
+- name: Cleanup vms and vbmc
+  include_tasks: cleanup.yml
+  when: action == 'cleanup'
