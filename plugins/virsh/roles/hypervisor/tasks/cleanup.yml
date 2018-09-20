@@ -1,0 +1,48 @@
+- name: check if installed package
+  command: "rpm -qa libvirt"
+  register: libvirt_status
+
+# Don't cleanup if the libvirtd process is unavailable
+- name: Cleanup libvirt artifacts
+  include_tasks: cleanup_vms.yml
+  when: "(libvirt_status.stdout_lines | length != 0)"
+
+- name: remove iptables rules created by infrared, by comment
+  # Can't use iptables module, because it can't delete by generic comment
+  vars:
+      iptables_comment_search: "Infrared"
+  shell: |
+      set -euo pipefail
+      for table in "-t nat" ""
+      do
+          iptables ${table} -S | awk '/{{ iptables_comment_search }}/ {$1="-D"; print $0}' | xargs -r -L1 iptables ${table}
+      done
+
+- block:
+  - name: include vbmc's cleanup task
+    include_role:
+        name: vbmc
+    vars:
+        action: "cleanup"
+        prefix: "{{ provision.prefix|default('') }}"
+  
+  - block:
+      - name: Get all deployments
+        set_fact:
+            deployments_info: "{{ deployments_info|default({})|combine({item.key : item.value}) }}"
+        when: prefix not in item.key
+        with_dict: "{{ ansible_local.deployment_info }}"
+  
+      - name: Create running deployment custom fact
+        template:
+            src: deployments.fact.j2
+            dest: "{{ custom_facts }}/deployment_info.fact"
+            mode: 0644
+    when: provision.prefix is defined
+  
+  - name: Make sure that we don't have deployment_info facts at all in case of full cleanup
+    file:
+        path: "{{ custom_facts }}/deployment_info.fact"
+        state: absent
+    when: provision.prefix is not defined
+  become: true
