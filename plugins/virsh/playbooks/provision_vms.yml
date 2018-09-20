@@ -1,0 +1,46 @@
+---
+- name: Provision VMs
+  hosts: hypervisor
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      base_image_path: /var/lib/libvirt/images
+      url: "{{ provision.image.url }}"
+      infrared_vswitch_types:
+        - vqfx
+  tasks:
+    - name: Get uniq id for current deployment
+      set_fact:
+            prefix: "{{ ansible_local.run.keys()[0] }}"
+      when: provision.prefix is defined
+
+    - name: load nodes topology configuration
+      include_tasks: ../tasks/load_topology.yml
+      with_dict: "{{ provision.topology.nodes }}"
+      loop_control:
+          loop_var: node
+
+    - name: provision image for each node
+      include_tasks: ../tasks/download_images.yml
+      with_dict: "{{ topology_nodes }}"
+      loop_control:
+          loop_var: node
+      tags: images
+
+    - name: prepare bridge interfaces in the topology
+      set_fact:
+        topology_nodes: "{{ topology_nodes | wirenodes }}"
+
+    - name: create virtual machine
+      include_role:
+        name: vms
+      with_dict: "{{ topology_nodes }}"
+      loop_control:
+          loop_var: node
+
+    - name: Set ip VMs ip addresses and add to inventory
+      include_role:
+        name: vms
+        tasks_from: netip_natted.yml
+      when: "not topology_node.external_network.bridged|default(False)"
+      tags: ips

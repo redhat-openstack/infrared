@@ -1,0 +1,173 @@
+- name: Make sure that directory for custom facts exists
+  file:
+      path: "{{ custom_facts }}"
+      state: directory
+      mode: 0755
+
+- block:
+    - name: Get deployment prefix
+      set_fact:
+          prefix: "{{ provision.prefix }}"
+
+    - set_fact:
+          net_list: [0]
+
+    - set_fact:
+          data_net_list: [14]
+
+    - block:
+        - set_fact:
+              net_list: "{{ net_list + [item.value.net|int] }}"
+          with_dict: "{{ ansible_local.deployment_info }}"
+
+        - set_fact:
+              data_net_list: "{{ data_net_list + [item.value.data_net|int] }}"
+          with_dict: "{{ ansible_local.deployment_info }}"
+      when: ansible_local.deployment_info is defined
+
+    - name: generate deployment info dict
+      vars:
+          id: "{{ prefix }}"
+          net_prefix: "{{ (net_list|max)|int+10 }}"
+          data_net: "{{ (data_net_list|max)|int+10 }}"
+      set_fact:
+          deployments_info: "{{ deployments_info|default({})| combine( {id:{'net': net_prefix, 'data_net': data_net }})}}"
+
+    - name: Create running deployment custom fact
+      template:
+          src: deployments.fact.j2
+          dest: "{{ custom_facts }}/run.fact"
+          mode: 0644
+
+  when: provision.prefix is defined
+
+- name: install packages
+  package:
+      name: "{{ item }}"
+      state: present
+  with_items: "{{ packages }}"
+  register: yum_result
+
+- block:
+    - name: check for OVMF package
+      action: "{{ ansible_pkg_mgr }} list=OVMF enablerepo='*'"
+      register: ovmf_status
+
+    - name: install OVMF package
+      action: "{{ ansible_pkg_mgr }} name=OVMF state=present enablerepo='*' "
+      when: ovmf_status.results|list|length > 0
+
+    - name: check if UEFI binaries are installed from OVMF
+      command: "rpm -q OVMF"
+      args:
+          warn: no
+      register: rpm_check_ovmf
+      ignore_errors: True
+      changed_when: False
+      when: ovmf_status.results|list|length == 0
+
+    - name: check if UEFI binaries are installed from edk2.git-ovmf-x64
+      command: "rpm -q edk2.git-ovmf-x64"
+      args:
+          warn: no
+      register: rpm_check_edk2
+      ignore_errors: True
+      changed_when: False
+      when: ovmf_status.results|list|length == 0
+
+    - name: "Fail if UEFI related binaries are missing"
+      fail:
+          msg: "UEFI related binaries are missing, please refer http://infrared.readthedocs.io/en/stable/advance_features.html#uefi-mode-related-binaries"
+      when:
+          - ovmf_status.results|list|length == 0
+          - rpm_check_ovmf.stdout.find('is not installed') != -1
+          - rpm_check_edk2.stdout.find('is not installed') != -1
+
+  when: provision.bootmode == 'uefi'
+
+- name: stop libvirtd
+  service:
+      name: "libvirtd"
+      state: "stopped"
+  when: yum_result.changed
+
+# NOTE(psedlak): due to some flakiness in >few days running libvirt/dbus
+# lets always restart libvirt at beginning of provisioning
+- name: "always restart libvirtd"
+  service:
+      name: "libvirtd"
+      state: "restarted"
+      enabled: yes
+
+- name: check if host supports virtualization
+  include_tasks: enable_virtualization.yml
+
+- name: check if private key exist on system
+  stat:
+      path: "/root/.ssh/id_rsa"
+  register: result
+
+- name: if private key doesn't exist, create it
+  command: "ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''"
+  when: result.stat.exists != true
+
+- name: copy server private key from hypervisor for SSH proxy
+  fetch:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      flat: yes
+  with_items:
+      - {src: "~/.ssh/id_rsa", dest: "{{ inventory_dir }}/id_rsa"}
+      - {src: "~/.ssh/id_rsa.pub", dest: "{{ inventory_dir }}/id_rsa.pub"}
+
+- name: update file permissions
+  file:
+      path: "{{ item }}"
+      mode: 0600
+  with_items:
+      - "{{ inventory_dir }}/id_rsa"
+      - "{{ inventory_dir }}/id_rsa.pub"
+  delegate_to: localhost
+
+- name: Increase ssh session limits
+  lineinfile:
+      dest: "/etc/ssh/sshd_config"
+      regexp: "{{ item.regexp }}"
+      line: "{{ item.line }}"
+  with_items:
+    - regexp: 'MaxSessions'
+      line: 'MaxSessions 100'
+    - regexp: 'MaxStartups'
+      line: 'MaxStartups 100:30:100'
+
+- name: Restart ssh server to apply parameters
+  service:
+      name: "sshd"
+      state: "restarted"
+      enabled: yes
+
+- name: Set up authorized_keys for the deploy user
+  authorized_key:
+      user: root
+      key: "{{ lookup('file', item) }}"
+  with_first_found:
+      - files:
+        - "{{ inventory_dir }}/id_rsa.pub"
+        skip: true
+
+- block:
+    - name: Change timezone to {{ provision.topology.timezone }}
+      timezone:
+          name: "{{ provision.topology.timezone }}"
+      register: timezone_change
+
+    - debug:
+          msg: "Changing timezone from {{ timezone_change.diff.before.name }} to {{ timezone_change.diff.after.name }}"
+
+    - name: Restart libvirtd after timezone change
+      service:
+          name: "libvirtd"
+          state: "restarted"
+
+  tags: timezone
+  when: provision.topology.timezone|default('')
