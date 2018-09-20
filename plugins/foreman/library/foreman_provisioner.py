@@ -126,6 +126,7 @@ RESOURCES = {
     }
 }
 
+
 class ForemanManager(object):
     """
     This class represents a simple interface for foreman* to easily rebuild /
@@ -337,10 +338,9 @@ class ForemanManager(object):
                 raise KeyError("BMC not found on {}".format(host_id))
             self.bmc(host_id, mgmt_action)
         elif mgmt_strategy == 'ipmi':
-            host = None
             if 'interfaces' in building_host and len(building_host.get('interfaces')) > 0:
                 # host found in foreman entry
-                host = "{0}.{1}".format(building_host.get('interfaces')[0].get('name'), building_host.get('domain_name'))
+                host = building_host.get('interfaces')[0].get('name')
             else:
                 # host passed as CLI argument
                 host = ipmi_address
