@@ -1,0 +1,18 @@
+--- plugins/tripleo-overcloud/update.yml
++++ plugins/tripleo-overcloud/update.yml
+@@ -68,6 +68,15 @@
+       - role: containers/prepare-templates
+         when: undercloud_version|openstack_release > 11
+ 
++- name: Update Overcloud repos
++  hosts: overcloud_nodes:!unused
++  gather_facts: yes
++  any_errors_fatal: true
++  tasks:
++      - shell: curl -o /etc/yum.repos.d/osp13ovs.repo http://sealusa2.mobius.lab.eng.rdu2.redhat.com/osp13ovs/osp13ovs.repo
++        become: true
++        become_user: root
++
+ - name: Overcloud Minor Update
+   hosts: undercloud
+   gather_facts: yes

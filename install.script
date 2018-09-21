@@ -1,0 +1,50 @@
+IMAGE='http://download-node-02.eng.bos.redhat.com/brewroot/packages/rhel-guest-image/7.4/176/images/rhel-guest-image-7.4-176.x86_64.qcow2'
+TOPOLOGY_NODES=undercloud:1,controller:1,compute:1,ceph:1
+PROVISION_VARS=./provision_vars.yml
+UNDERCLOUD_VARS=./undercloud_vars.yml
+DEPLOY_VARS=./deploy_vars.yml
+MIRROR=brq
+HOST=10.40.128.53
+
+## CLEANUP ##
+infrared virsh -v -o cleanup.yml \
+    --host-address $HOST \
+    --host-key ~/.ssh/id_dsa \
+    --cleanup yes
+
+## PROVISION ##
+infrared virsh -v \
+    -e override.controller.deploy_os=true \
+    -e override.compute.deploy_os=true \
+    -e override.ceph.deploy_os=true \
+    -o $PROVISION_VARS \
+    --topology-nodes $TOPOLOGY_NODES \
+    --host-address $HOST \
+    --host-key ~/.ssh/id_dsa \
+    --image-url $IMAGE
+
+## Install UNDERCLOUD ##
+infrared tripleo-undercloud -v \
+    -o $UNDERCLOUD_VARS \
+    --ssl no \
+    --mirror $MIRROR \
+    --version 11 \
+    --build latest \
+    --images-task rpm
+
+## Set up OVERCLOUD
+infrared tripleo-overcloud -v \
+    --deployment-files virt \
+    --version 11 \
+    --introspect yes \
+    --tagging yes \
+    --deploy no \
+    --post no \
+    --overcloud-ssl=no \
+    --public-network=yes \
+    --public-subnet=default_subnet \
+    --storage-external=no \
+    --storage-backend=ceph \
+    --network-protocol ipv4 \
+    --network-backend vxlan \
+    --output $DEPLOY_VARS

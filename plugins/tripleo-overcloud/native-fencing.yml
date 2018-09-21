@@ -1,0 +1,9 @@
+- name: Configure auto-fencing
+  hosts: undercloud
+  gather_facts: yes
+  any_errors_fatal: yes
+  tasks:
+      - name: Generate fencing.yml from instackenv.json
+        shell: |
+            source {{ undercloud_rc }}
+            openstack overcloud generate fencing --ipmi-lanplus --ipmi-level administrator --output {{ ansible_user_dir }}/{{ install.deployment.files | basename }}/fencing.yaml ~/instackenv.json
