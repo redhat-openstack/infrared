@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa9c3f4f_e41a4df6",
+        "filename": "plugins/tripleo-overcloud/roles/containers/prepare-templates/tasks/build/build_images.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1005418
+      },
+      "writtenOn": "2018-09-25T18:15:10Z",
+      "side": 1,
+      "message": "This is not going to work as it\u0027s going to generate parametetrs only for the ovn images. Passing the roles_data file should pull all the images required by the services defined in it(the default includes the ovn services). \n\nPlease report this issue in BZ and so we can get a fix in the product.\n\n\n(undercloud) [stack@undercloud-0 ~]$ openstack tripleo container image prepare -e /home/stack/containers-prepare-parameter.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-ha.yaml --roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml --output-env-file test.yaml\nCompleted upload for image docker-registry.engineering.redhat.com/rhosp14/openstack-ovn-sb-db-server:2018-09-06.1\nCompleted upload for image docker-registry.engineering.redhat.com/rhosp14/openstack-ovn-controller:2018-09-06.1\nCompleted upload for image docker-registry.engineering.redhat.com/rhosp14/openstack-ovn-nb-db-server:2018-09-06.1\nCompleted upload for image docker-registry.engineering.redhat.com/rhosp14/openstack-neutron-metadata-agent-ovn:2018-09-06.1\nCompleted upload for image docker-registry.engineering.redhat.com/rhosp14/openstack-ovn-northd:2018-09-06.1\nRemoving local copy of 192.168.24.1:8787/rhosp14/openstack-neutron-metadata-agent-ovn:2018-09-06.1\nRemoving local copy of 192.168.24.1:8787/rhosp14/openstack-ovn-controller:2018-09-06.1\nRemoving local copy of 192.168.24.1:8787/rhosp14/openstack-ovn-nb-db-server:2018-09-06.1\nRemoving local copy of 192.168.24.1:8787/rhosp14/openstack-ovn-northd:2018-09-06.1\nRemoving local copy of 192.168.24.1:8787/rhosp14/openstack-ovn-sb-db-server:2018-09-06.1\nRemoving local copy of docker-registry.engineering.redhat.com/rhosp14/openstack-neutron-metadata-agent-ovn:2018-09-06.1\nRemoving local copy of docker-registry.engineering.redhat.com/rhosp14/openstack-ovn-controller:2018-09-06.1\nRemoving local copy of docker-registry.engineering.redhat.com/rhosp14/openstack-ovn-nb-db-server:2018-09-06.1\nRemoving local copy of docker-registry.engineering.redhat.com/rhosp14/openstack-ovn-northd:2018-09-06.1\nRemoving local copy of docker-registry.engineering.redhat.com/rhosp14/openstack-ovn-sb-db-server:2018-09-06.1\n(undercloud) [stack@undercloud-0 ~]$ cat test.yaml \n# Generated with the following on 2018-09-25T14:10:29.416671\n#\n#   openstack tripleo container image prepare -e /home/stack/containers-prepare-parameter.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-ha.yaml --roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml --output-env-file test.yaml\n#\n\nparameter_defaults:\n  DockerInsecureRegistryAddress:\n  - 192.168.24.1:8787\n  DockerOvnControllerConfigImage: 192.168.24.1:8787/rhosp14/openstack-ovn-controller:2018-09-06.1\n  DockerOvnControllerImage: 192.168.24.1:8787/rhosp14/openstack-ovn-controller:2018-09-06.1\n  DockerOvnDbsConfigImage: 192.168.24.1:8787/rhosp14/openstack-ovn-northd:2018-09-06.1\n  DockerOvnDbsImage: 192.168.24.1:8787/rhosp14/openstack-ovn-northd:2018-09-06.1\n  DockerOvnMetadataImage: 192.168.24.1:8787/rhosp14/openstack-neutron-metadata-agent-ovn:2018-09-06.1\n  DockerOvnNbDbImage: 192.168.24.1:8787/rhosp14/openstack-ovn-nb-db-server:2018-09-06.1\n  DockerOvnNorthdImage: 192.168.24.1:8787/rhosp14/openstack-ovn-northd:2018-09-06.1\n  DockerOvnSbDbImage: 192.168.24.1:8787/rhosp14/openstack-ovn-sb-db-server:2018-09-06.1",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 110,
+        "endChar": 64
+      },
+      "revId": "62e5441a82064349ba4eb9be50f9e418bcb060d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
