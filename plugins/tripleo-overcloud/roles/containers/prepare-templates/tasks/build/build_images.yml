@@ -101,10 +101,12 @@
 
 ## Workaround BZ#1627946
 - name:  Run container image prepare
+  vars:
+      roles_file: '--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml'
   shell: |
       openstack tripleo container image prepare \
         -e ~/containers-prepare-parameter.yaml \
-        {{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
+        {{ environment_yamls | default('') }} {{ roles_yamls | default(roles_file) }} \
         --output-env-file {{ template_base }}/docker-images.yaml
   when:
       - install.version|default(undercloud_version)|openstack_release >= 14
