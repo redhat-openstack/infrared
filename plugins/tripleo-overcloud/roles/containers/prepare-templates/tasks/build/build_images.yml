@@ -101,13 +101,39 @@
 
 ## Workaround BZ#1627946
 - name:  Run container image prepare
+  vars:
+      roles_file: '--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml'
   shell: |
       openstack tripleo container image prepare \
         -e ~/containers-prepare-parameter.yaml \
-        {{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
+        {{ roles_yamls | default(roles_file) }} \
         --output-env-file {{ template_base }}/docker-images.yaml
   when:
       - install.version|default(undercloud_version)|openstack_release >= 14
+
+## Workaround BZ#1629599
+- block:
+    - name: Get all environment files from the deploy script for ovn
+      shell: |
+         for file in $(awk '/^-e / || /^--environment-file / {if (match($2,/ovn/)) print $2}' ~/overcloud_deploy.sh); do
+            [ -f "$file" ] && echo "-e ${file}" || true
+         done
+      register: ovn_env_files
+
+    - name:  Run container image prepare for ovn
+      shell: |
+          openstack tripleo container image prepare \
+            -e ~/containers-prepare-parameter.yaml \
+            {{ ' '.join(ovn_env_files.stdout_lines) | default('') }} \
+            --output-env-file {{ template_base }}/docker-images-ovn.yaml
+
+    - name: append the ovn template line to the base overcloud deploy script
+      lineinfile:
+          dest: "~/overcloud_deploy.sh"
+          line: '-e {{ template_base }}/docker-images-ovn.yaml \'
+  when:
+      - install.version|default(undercloud_version)|openstack_release >= 14
+      - install.network.ovn
 
 - name: install packages in container images
   include_tasks: container_images_packages.yml
