@@ -56,7 +56,7 @@
             retries: 30
             delay: 5
             when: compute_instances.stdout | length > 0
-        delegate_to: undercloud-0
+        delegate_to: "{{ groups['undercloud']|first }}"
         when:
           - "'compute' in group_names"
           - groups.compute|difference(groups.unused|default([]))|length > 1
@@ -115,7 +115,7 @@
         poll: 0
         ignore_errors: true
 
-      - name: wait for node to go down
+      - name: wait for node to go down(hypervisor)
         command: ping -c1 {{ ansible_host|default(ansible_ssh_host) }}
         register: node_down
         until: node_down.rc != 0
@@ -123,30 +123,43 @@
         delay: 3
         ignore_errors: true
         delegate_to: hypervisor
+        when: "'hypervisor' in groups"
 
-      - block:
-            - name: waiting for the node to be available
-              wait_for:
-                  port: 22
-                  host: "{{ ansible_host }}"
-                  search_regex: OpenSSH
-                  delay: 60
-                  sleep: 3
-                  timeout: 360
-              delegate_to: localhost
-              when: "'hypervisor' not in groups"
+      - name: wait for node to go down(undercloud)
+        become: no
+        command: ping -c1 {{ ansible_host|default(ansible_ssh_host) }}
+        register: node_down
+        until: node_down.rc != 0
+        retries: 100
+        delay: 3
+        ignore_errors: true
+        delegate_to: "{{ groups['undercloud']|first }}"
+        when: "'hypervisor' not in groups"
 
-            - name: waiting for the node to be available
-              become: no
-              wait_for:
-                  host: "{{ ansible_host }}"
-                  port: 22
-                  search_regex: OpenSSH
-                  delay: 30
-                  sleep: 15
-                  timeout: 360
-              delegate_to: hypervisor
-              when: "'hypervisor' in groups"
+      - name: waiting for the node to be available(undercloud)
+        become: no
+        wait_for:
+            port: 22
+            host: "{{ ansible_host }}"
+            search_regex: OpenSSH
+            timeout: 30
+        register: uc_reachable
+        delegate_to: "{{ groups['undercloud']|first }}"
+        when: "'hypervisor' not in groups"
+        retries: 21
+        until: uc_reachable|succeeded
+
+      - name: waiting for the node to be available(hypervisor)
+        become: no
+        wait_for:
+            host: "{{ ansible_host }}"
+            port: 22
+            search_regex: OpenSSH
+            delay: 30
+            sleep: 15
+            timeout: 360
+        delegate_to: hypervisor
+        when: "'hypervisor' in groups"
 
       - name: check node is ssh-able
         shell: id || echo "NOT_READY"
@@ -391,7 +404,7 @@
         retries: 30
         delay: 5
         with_items: "{{ compute_instances.stdout_lines }}"
-        delegate_to: undercloud-0
+        delegate_to: "{{ groups['undercloud']|first }}"
         when:
           - "'compute' in group_names"
           - groups.compute|difference(groups.unused|default([]))|length > 1
