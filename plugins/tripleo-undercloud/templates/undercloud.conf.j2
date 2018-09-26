@@ -32,7 +32,8 @@ discovery_iprange = 192.168.24.100,192.168.24.120
 {% elif install.version|openstack_release <= 12 %}
 inspection_iprange = 192.168.24.100,192.168.24.120
 {% endif %}
-{% if install.version|openstack_release >= 10 %}
+#TODO: use release >= 10 when RHBZ#1633193 is resolved
+{% if install.version|openstack_release > 10 %}
 undercloud_ntp_servers={{ install.ntp.server }}
 {% endif %}
 {% if install.version|openstack_release >= 13 %}
