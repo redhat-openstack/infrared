@@ -696,6 +696,9 @@ subparsers:
                               --root-disk-override node=compute-0,hint=name,hintvalue=/dev/sda
                               --root-disk-override node=ceph,hint=rotational,hintvalue=false
 
+                          If this paramters is not set, Infrared will set only ceph root_device to /dev/sda.
+                          To override that behavior use -e ceph_default_disk_name=/dev/sdb option.
+
             - title: ansible facts
               options:
                   collect-ansible-facts:
