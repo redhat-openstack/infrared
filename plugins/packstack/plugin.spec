@@ -89,3 +89,10 @@ subparsers:
                       type: Bool
                       help: Trove enabled
                       default: 'no'
+            - title: Others
+              options:
+                  selinux:
+                      type: Value
+                      help: Change the selinux state.
+                      choices: ["0", "1", "Enforcing", "Permissive", "default"]
+                      default: "default"

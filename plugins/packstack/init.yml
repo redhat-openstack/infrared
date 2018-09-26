@@ -55,6 +55,9 @@
             dest: /tmp/ssh_keys/
             flat: yes
             fail_on_missing: yes
+      - name: set selinux mode (enforcing/permissive)
+        command: setenforce {{install.selinux}}
+        when: install.selinux != 'default'
 
 - name: Copy ssh-key to compute and network hosts
   hosts: openstack_nodes
