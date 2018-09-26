@@ -76,9 +76,17 @@
         when: "'bmc' in groups"
 
       - name: set root-disk override fact
+        tags:
+            - root_device
+        vars:
+            ceph_default_disk_name: '/dev/vda'
+            default_disk_override:
+                - node: "ceph"
+                  hint: "name"
+                  hintvalue: "{{ ceph_default_disk_name }}"
+            ceph_defaults:  "{{ ('ceph' in groups and 'hypervisor' in groups)|ternary(default_disk_override, []) }}"
         set_fact:
-            root_disk: "{{ install.root.disk.get('override', []) }}"
-        when: install.get('root',{}).get('disk',{})
+            root_disk: "{{ ceph_defaults|union(install.get('root',{}).get('disk',{}).get('override', [])) }}"
 
       - name: configure root-disk for multi-disk nodes
         shell: |
@@ -89,14 +97,26 @@
 
             {% for node in item.node.split(':') %}
                 if [[ "{{ node }}" =~ $REGEX ]]; then
+                {% if install.version|default(undercloud_version) |openstack_release > 8 %}
                     openstack baremetal node set \
                       --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}' {{ node }}
+                {% else %}
+                    ironic node-list|awk '/{{ node }}/ {print $2}'| \
+                    xargs -I{} ironic node-update {} add properties/root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
+                {% endif %}
                 else
+                {% if install.version|default(undercloud_version) |openstack_release > 8 %}
                     openstack baremetal node list|awk '/{{ node }}/ {print $2}'| \
                     xargs -I{} openstack baremetal node set {} --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
+                {% else %}
+                    ironic node-list|awk '/{{ node }}/ {print $2}'| \
+                    xargs -I{} ironic node-update {} add properties/root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
+                {% endif %}
                 fi
             {% endfor %}
-        tags: skip_ansible_lint
+        tags:
+            - skip_ansible_lint
+            - root_device
         with_items: "{{ root_disk }}"
         when: root_disk is defined
 
