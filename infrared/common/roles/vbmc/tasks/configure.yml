@@ -20,8 +20,8 @@
           [Service]
           User={{ vbmc_user }}
           Type=oneshot
-          ExecStart=/bin/bash -c 'for bmc in $(ls {{ vbmc_dir }}/.vbmc/); do vbmc start $bmc; done'
-          ExecStop=/bin/bash -c 'for bmc in $(ls {{ vbmc_dir }}/.vbmc/); do vbmc stop $bmc; done'
+          ExecStart=/bin/bash -c 'for bmc in $(ls {{ vbmc_dir }}/.vbmc/); do {{ virtualbmc_install_result.failed|ternary( vbmc_virtualenv ~ '/bin/python', '' ) }} vbmc start $bmc; done'
+          ExecStop=/bin/bash -c 'for bmc in $(ls {{ vbmc_dir }}/.vbmc/); do {{ virtualbmc_install_result.failed|ternary( vbmc_virtualenv ~ '/bin/python', '' ) }} vbmc stop $bmc; done'
           RemainAfterExit=yes
           [Install]
           WantedBy=multi-user.target
