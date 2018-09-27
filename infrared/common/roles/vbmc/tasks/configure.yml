@@ -4,6 +4,11 @@
       vbmc_dir: "{{ (vbmc_host == 'undercloud') | ternary(ansible_user_dir, '/root') }}"
 
 - block:
+    - name: Check if virtualbmc service exists
+      shell: systemctl status virtualbmc
+      register: virtualbmc_service_status
+      ignore_errors: true
+
     - name: adds VirtualBMC as systemd service
       copy:
         mode: 0664
@@ -20,6 +25,7 @@
           RemainAfterExit=yes
           [Install]
           WantedBy=multi-user.target
+      when: virtualbmc_service_status.rc != 0
 
     - name: Create VirtualBMC directories
       file:
