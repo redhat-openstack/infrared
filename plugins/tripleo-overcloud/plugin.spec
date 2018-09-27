@@ -125,7 +125,6 @@ subparsers:
                   registry-ceph-tag:
                       type: Value
                       help: tag used with the ceph container
-                      default: latest
 
             - title: Deployment Description
               options:
