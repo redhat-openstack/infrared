@@ -42,15 +42,16 @@
       with_items:
           - python-virtualbmc
           - python2-virtualbmc
-      ignore_errors: true
+      when: not virtualbmc_install_result.failed
 
     # pip can be missing on a target host.
     # so ignore errors and cleanup as much as possible
     - name: Remove package if installed from pip
       pip:
+          virtualenv: "{{ vbmc_virtualenv }}"
           name: virtualbmc
           state: absent
-      ignore_errors: true
+      when: virtualbmc_install_result.failed
 
     - name: delete scripts and configuration files
       file:
