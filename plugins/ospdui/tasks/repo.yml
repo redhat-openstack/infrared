@@ -79,7 +79,7 @@
       ui_public_vip: "{{ public_vip.stdout }}"
   template:
       src: ospduiTests.conf.json.j2
-      dest: "{{ setup.ospdui.dir }}/conf/ospduiTests.conf.json"
+      dest: "{{ setup.ospdui.dir }}/conf/{{ setup.ospdui.config_name }}"
   when: test.config is not defined
 
 - name: find config file
@@ -103,6 +103,6 @@
       file_src: "{{ config_find.files[0].path if test.openstackrc is defined else inventory_dir + '/keystonerc' }}"
   copy:
       src: "{{ config_find.files[0].path }}"
-      dest: "{{ setup.ospdui.dir }}/conf/ospduiTests.conf.json"
+      dest: "{{ setup.ospdui.dir }}/conf/{{ setup.ospdui.config_name }}"
       force: yes
   when: test.config|default('')
