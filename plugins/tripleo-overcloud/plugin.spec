@@ -144,6 +144,7 @@ subparsers:
                         - "12"
                         - "13"
                         - "14"
+                        - "15"
                         - kilo
                         - liberty
                         - mitaka
@@ -152,6 +153,7 @@ subparsers:
                         - pike
                         - queens
                         - rocky
+                        - stein
 
                   deployment-files:
                       type: VarDir
