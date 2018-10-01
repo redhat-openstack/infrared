@@ -109,6 +109,33 @@
   when:
       - install.version|default(undercloud_version)|openstack_release >= 14
 
+## Workaround BZ#1629599
+- block:
+    - name: Generate custome role for ovn
+      copy:
+          content: |
+              - name: Controller
+                description: Used to pull OVN images
+                CountDefault: 1
+                ServicesDefault:
+                  - OS::TripleO::Services::NeutronApi
+                  - OS::TripleO::Services::NeutronServer
+                  - OS::TripleO::Services::OVNDBs
+                  - OS::TripleO::Services::OVNController
+                  - OS::TripleO::Services::OVNMetadataAgent
+          dest: '~/ovn_roles_data.yaml'
+
+    - name:  Run container image prepare for ovn
+      shell: |
+          openstack tripleo container image prepare \
+            -e ~/containers-prepare-parameter.yaml \
+            --roles-file ~/ovn_roles_data.yaml \
+            --output-env-file {{ template_base }}/docker-images-ovn.yaml
+
+  when:
+      - install.network.ovn
+      - install.version|default(undercloud_version)|openstack_release >= 14
+
 - name: install packages in container images
   include_tasks: container_images_packages.yml
   when: install_container_images_packages is defined
