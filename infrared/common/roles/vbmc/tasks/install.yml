@@ -15,7 +15,7 @@
       state: latest
       disable_gpg_check: yes
   changed_when: false
-  failed_when: false
+  ignore_errors: true
   register: virtualbmc_install_result
 
 - block:
@@ -42,4 +42,4 @@
           virtualenv_site_packages: yes
           name: virtualbmc
           state: latest
-  when: virtualbmc_install_result|failed
+  when: virtualbmc_install_result.rc != 0
