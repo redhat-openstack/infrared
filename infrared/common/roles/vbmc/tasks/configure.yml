@@ -20,7 +20,7 @@
           [Service]
           Type=simple
           User={{ vbmc_user }}
-          ExecStart={{ virtualbmc_install_result.failed|ternary( vbmc_virtualenv ~ '/bin/python', '' ) }} /usr/bin/vbmcd --foreground
+          ExecStart={{ virtualbmc_install_result.failed|ternary( vbmc_virtualenv | absolute_path ~ '/bin/python', '' ) }} {{ virtualbmc_install_result.failed|ternary( vbmc_virtualenv | absolute_path ~ '/bin/vbmcd', '' ) }}  --foreground
           Restart=always
           RestartSec=1
           [Install]
