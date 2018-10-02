@@ -9,7 +9,12 @@
       register: virtualbmc_service_status
       ignore_errors: true
 
-    - name: adds VirtualBMC as systemd service
+    - name: Get vbmc version
+      # "vbmc --version" returns string 'vbmc 1.4.0' to stderr
+      shell: "vbmc --version 2>&1 | awk '{print $(NF)}'"
+      register: vbmc_version
+
+    - name: adds VirtualBMC as systemd service (vbmc >= 1.4.0)
       copy:
         mode: 0664
         dest: "/usr/lib/systemd/system/virtualbmc.service"
@@ -25,7 +30,25 @@
           RestartSec=1
           [Install]
           WantedBy=multi-user.target
-      when: virtualbmc_service_status.rc != 0
+      when: virtualbmc_service_status.rc != 0 and {{ vbmc_version.stdout | version_compare('1.4.0', '>=') }}
+
+    - name: adds VirtualBMC as systemd service (vbmc < 1.4.0)
+      copy:
+        mode: 0664
+        dest: "/usr/lib/systemd/system/virtualbmc.service"
+        content: |
+          [Unit]
+          Description=VirtualBMC service
+          After=network.target
+          [Service]
+          User={{ vbmc_user }}
+          Type=oneshot
+          ExecStart=/bin/bash -c 'for bmc in $(ls {{ vbmc_dir }}/.vbmc/); do vbmc start $bmc; done'
+          ExecStop=/bin/bash -c 'for bmc in $(ls {{ vbmc_dir }}/.vbmc/); do vbmc stop $bmc; done'
+          RemainAfterExit=yes
+          [Install]
+          WantedBy=multi-user.target
+      when: virtualbmc_service_status.rc != 0 and {{ vbmc_version.stdout | version_compare('1.4.0', '<') }}
 
     - name: Create VirtualBMC directories
       file:
