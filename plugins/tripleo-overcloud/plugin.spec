@@ -700,6 +700,18 @@ subparsers:
                           If this parameter is not set, Infrared will set only ceph root_device to /dev/vda.
                           To override that behavior use -e ceph_default_disk_name=/dev/sdb option.
 
+                  boot-mode:
+                      type: Value
+                      help: |
+                          TripleO supports booting overcloud nodes in UEFI mode instead of the default BIOS mode.
+                          This is required to use advanced features like secure boot, and some hardware may only
+                          feature UEFI support.
+                      default: bios
+                      choices:
+                          - bios
+                          - uefi
+
+
             - title: ansible facts
               options:
                   collect-ansible-facts:

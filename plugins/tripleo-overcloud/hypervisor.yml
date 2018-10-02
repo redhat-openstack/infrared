@@ -7,6 +7,8 @@
   hosts: undercloud
   gather_facts: no
   any_errors_fatal: true
+  vars_files:
+      - vars/instackenv/profiles.yml
   tasks:
       - name: Retrieve public key from private key to localhost
         command: "ssh-keygen -y -f ~/.ssh/id_rsa"
