@@ -1,0 +1,23 @@
+---
+- name: 601135 
+  hosts: undercloud
+  tags: post
+  gather_facts: no
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: apply https://review.openstack.org/#/c/601135/ - first file
+      get_url:
+          url: https://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/tools/yaml-validate.py?h=refs/changes/35/601135/1
+          dest: /usr/share/openstack-tripleo-heat-templates/tools/yaml-validate.py
+          mode: 0755
+          force: yes
+      become: yes
+
+    - name: apply https://review.openstack.org/#/c/601135/ - second file
+      get_url:
+          url: https://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/roles/ControllerStorageNfs.yaml?h=refs/changes/35/601135/1
+          dest: /usr/share/openstack-tripleo-heat-templates/roles/ControllerStorageNfs.yaml
+          mode: 0755
+          force: yes
+      become: yes

@@ -9,6 +9,9 @@
   import_playbook: "{{ install_undercloud | default('undercloud.yml') }}"
   when: install.version|default('')
 
+- name: Apply https://review.openstack.org/#/c/601135
+  import_playbook: "601135.yml"
+
 - name: Including post provision tasks
   import_playbook: "{{ undercloud_post | default('post.yml') }}"
   when: install.post|default('')
