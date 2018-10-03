@@ -63,7 +63,7 @@
 
 - name: Inject dvr override template
   vars:
-      nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('osp11', 'legacy') }}"
+      nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('', 'legacy') }}"
   template:
       src: dvr-override.yaml.j2
       dest: "{{ template_base }}/network/dvr-override.yaml"
