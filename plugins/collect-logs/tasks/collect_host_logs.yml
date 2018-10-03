@@ -136,7 +136,7 @@
               echo "+ docker inspect $cont" >> "$INFO_FILE";
               docker inspect "$cont" &>> "$INFO_FILE";
               docker logs "$cont" &> "$INFO_DIR/stdout.log";
-              echo "+ docker exec -it --user root $cont /usr/bin/rpm -qa" >> "$INFO_FILE";
+              echo "+ docker exec --user root $cont /usr/bin/rpm -qa" >> "$INFO_FILE";
               docker exec -it --user root ${cont} /usr/bin/rpm -qa &>> "$INFO_FILE";
               docker cp "$cont:/var/lib/kolla/config_files/config.json" "$INFO_DIR/config.json";
           done;
