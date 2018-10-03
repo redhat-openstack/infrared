@@ -31,7 +31,7 @@
       # consider all the files as templates
       - name: Copy deployment folder
         vars:
-            nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('osp11', 'legacy') }}"
+            nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('', 'legacy') }}"
         template:
             src: '{{ item.src }}'
             dest: '{{ template_base }}/{{ item.path | regex_replace("\.j2$", "") }}'
