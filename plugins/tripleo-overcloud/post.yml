@@ -26,6 +26,13 @@
       - install.network.lbaas|default(False)
       - install.version|default(undercloud_version)|openstack_release < 13
 
+- import_playbook: post/octavia.yml
+  tags:
+      - octavia
+      - post
+  when: install.network.octavia|default(False)
+  when: "'octavia' in install.overcloud.templates"
+
 - import_playbook: post/manila.yml
   tags: manila
 
