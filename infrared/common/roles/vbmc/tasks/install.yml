@@ -14,8 +14,7 @@
       name: python-virtualbmc
       state: latest
       disable_gpg_check: yes
-  changed_when: false
-  failed_when: false
+  ignore_errors: yes
   register: virtualbmc_install_result
 
 - block:
@@ -27,7 +26,6 @@
             - libvirt
             - libvirt-devel
             - python-devel
-            - python-virtualenv
           state: latest
           disable_gpg_check: yes
 
@@ -37,9 +35,10 @@
           name: pip
 
     - name: Install python-virtualbmc with pip
+      become: true
       pip:
-          virtualenv: "{{ vbmc_virtualenv }}"
-          virtualenv_site_packages: yes
           name: virtualbmc
           state: latest
+          extra_args: --no-cache-dir
+      #TODO(skatlapa): https://github.com/pypa/pip/issues/5250
   when: virtualbmc_install_result|failed
