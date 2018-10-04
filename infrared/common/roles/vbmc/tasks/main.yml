@@ -11,11 +11,13 @@
             vbmc_management_address: "{{ vbmc_management_address }}"
   when: action == 'install'
 
-- include_tasks: check.yml
-  when: action == 'check'
+- block:
+    - include_tasks: check.yml
+      when: action == 'check'
 
-- include_tasks: cleanup.yml
-  when: action == 'cleanup'
+    - include_tasks: cleanup.yml
+      when: action == 'cleanup'
 
-- include_tasks: remove.yml
-  when: action == 'remove'
+    - include_tasks: remove.yml
+      when: action == 'remove'
+  delegate_to: "{{  vbmc_inventory_host }}"
