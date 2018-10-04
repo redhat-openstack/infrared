@@ -5,6 +5,9 @@
   tags:
       - validation
 
+- name: Have/Start dstat service
+  import_playbook: dstat.yml
+
 - name: Deploy the Undercloud
   import_playbook: "{{ install_undercloud | default('undercloud.yml') }}"
   when: install.version|default('')
