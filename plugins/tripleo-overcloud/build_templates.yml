@@ -111,6 +111,12 @@
         # avoid empty strings
         when: "templates_list_file != ''"
 
+      - name: append templates for nova nfs backend
+        include_tasks: tasks/storage/nova-nfs.yml
+        when:
+            - install.storage_backend|default('') == 'nova-nfs'
+            - install.storage_path
+
       - import_role:
             name: containers/prepare-templates
         tags:

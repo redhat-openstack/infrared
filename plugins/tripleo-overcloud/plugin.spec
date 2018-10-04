@@ -457,6 +457,7 @@ subparsers:
                           - netapp-nfs
                           - lvm
                           - nfs
+                          - nova-nfs
                       help: |
                         The storage that we would like to use.
                         If not supplied, Infrared will try to discover storage nodes and select appropriate backed.
@@ -471,6 +472,12 @@ subparsers:
                       default: rbd
                       help: |
                         The storage backend type used for glance, enabling to set Swift or RadosGW as the backend when deploying internal Ceph. Default value is 'rbd'
+
+                  storage-path:
+                      type: Value
+                      help: |
+                        The absolute path to an external storage mount
+                        NOTE: this needs to be set when using storage-backend='nova-nfs'
 
                   storage-config:
                       type: Value
