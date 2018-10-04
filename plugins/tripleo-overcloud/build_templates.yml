@@ -115,6 +115,12 @@
         include_tasks: tasks/ironic_environment_templates.yml
         when: install.ironic or install.ironic_inspector
 
+      - name: append templates for nova nfs backend
+        include_tasks: tasks/storage/nova-nfs.yml
+        when:
+            - install.storage_backend|default('') == 'nova-nfs'
+            - install.storage_path
+
       - import_role:
             name: containers/prepare-templates
         tags:
