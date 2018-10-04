@@ -8,38 +8,70 @@
       state: latest
       disable_gpg_check: yes
 
-- name: Install python-virtualbmc from repo's
-  become: true
-  package:
-      name: python-virtualbmc
+- name: Install python-virtualbmc with pip
+  pip:
+      virtualenv: "{{ vbmc_virtualenv }}"
+      virtualenv_site_packages: yes
+      name: virtualbmc
       state: latest
-      disable_gpg_check: yes
-  changed_when: false
-  ignore_errors: true
-  register: virtualbmc_install_result
 
 - block:
-    - name: Install packages required for python-virtualbmc pip package
-      become: true
-      package:
-          name:
-            - gcc
-            - libvirt
-            - libvirt-devel
-            - python-devel
-            - python-virtualenv
-          state: latest
-          disable_gpg_check: yes
+    - name: adds VirtualBMC as systemd service
+      copy:
+        mode: 0664
+        dest: "/etc/systemd/system/virtualbmc.service"
+        content: |
+          [Unit]
+          Description=Virtual Baseboard Management Controller Emulation service
+          After=syslog.target network.target
 
-    - name: install pip
-      become: yes
-      easy_install:
-          name: pip
+          [Service]
+          Type=simple
+          User={{ vbmc_user }}
+          ExecStart={{ vbmcd_bin }} --foreground
+          Restart=always
+          RestartSec=1
 
-    - name: Install python-virtualbmc with pip
-      pip:
-          virtualenv: "{{ vbmc_virtualenv }}"
-          virtualenv_site_packages: yes
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Create VirtualBMC directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0640
+        owner: root
+        group: root
+      with_items:
+        - "/etc/virtualbmc"
+        - "/var/log/virtualbmc"
+
+    - name: Create VirtualBMC configuration file
+      copy:
+        mode: 0640
+        dest: "/etc/virtualbmc/virtualbmc.conf"
+        content: |
+          [default]
+          config_dir= {{ vbmc_config_dir }}
+          [log]
+          logfile=/var/log/virtualbmc/virtualbmc.log
+          debug=True
+          [ipmi]
+          session_timout=20
+
+    - name: reload systemd
+      systemd:
+          daemon_reload: yes
+
+    - name: restart virtualbmc
+      service:
           name: virtualbmc
-          state: latest
-  when: virtualbmc_install_result.rc != 0
+          state: restarted
+  become: true
+
+- name: Start the Virtual BMCs
+  become: true
+  systemd:
+    name: virtualbmc
+    state: started
+    enabled: yes
