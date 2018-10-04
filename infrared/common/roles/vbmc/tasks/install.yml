@@ -16,7 +16,16 @@
       disable_gpg_check: yes
   changed_when: false
   ignore_errors: true
-  register: virtualbmc_install_result
+
+- name: Get RPM version of python-virtualbmc
+  yum:
+    list: python-virtualbmc
+  register: python_virtualbmc
+
+- set_fact:
+    supported_vbmc_rpm: "{{ true in python_virtualbmc.results | map(attribute='version') | list | unique | map('version_compare', item, '>=') | list }}"
+  with_items:
+    - '1.4.0'
 
 - block:
     - name: Install packages required for python-virtualbmc pip package
@@ -27,7 +36,6 @@
             - libvirt
             - libvirt-devel
             - python-devel
-            - python-virtualenv
           state: latest
           disable_gpg_check: yes
 
@@ -36,10 +44,80 @@
       easy_install:
           name: pip
 
+    - name: install virtualenv pip module
+      pip:
+          name: virtualenv
+          state: forcereinstall
+
     - name: Install python-virtualbmc with pip
       pip:
           virtualenv: "{{ vbmc_virtualenv }}"
           virtualenv_site_packages: yes
           name: virtualbmc
           state: latest
-  when: virtualbmc_install_result.rc != 0
+  when: not supported_vbmc_rpm
+
+- name: set vbmc user and path
+  set_fact:
+      vbmc_user: "{{ (vbmc_host == 'undercloud') | ternary(ansible_user|default(ansible_ssh_user), 'root') }}"
+      vbmc_config_dir: "{{ (vbmc_host == 'undercloud') | ternary(ansible_user_dir, '/root') }}/.vbmc"
+      vbmc_install_dir: "{{ (supported_vbmc_rpm == true) | ternary('/usr', vbmc_virtualenv) | absolute_path }}"
+      vbmc_bin: "{{ vbmc_install_dir }}/bin/vbmc"
+      vbmcd_bin: "{{ vbmc_install_dir }}/bin/vbmcd"
+
+- block:
+    - name: adds VirtualBMC as systemd service
+      copy:
+        mode: 0664
+        dest: "/etc/systemd/system/virtualbmc.service"
+        content: |
+          [Unit]
+          Description=Virtual Baseboard Management Controller Emulation service
+          After=syslog.target network.target
+
+          [Service]
+          Type=simple
+          User={{ vbmc_user }}
+          ExecStart={{ vbmcd_bin }} --foreground
+          Restart=always
+          RestartSec=1
+
+          [Install]
+          WantedBy=multi-user.target
+      notify: reload systemd
+
+    - name: Create VirtualBMC directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0640
+        owner: root
+        group: root
+      with_items:
+        - "/etc/virtualbmc"
+        - "/var/log/virtualbmc"
+
+    - name: Create VirtualBMC configuration file
+      copy:
+        mode: 0640
+        dest: "/etc/virtualbmc/virtualbmc.conf"
+        content: |
+          [default]
+          config_dir= {{ vbmc_config_dir }}
+          [log]
+          logfile=/var/log/virtualbmc/virtualbmc.log
+          debug=True
+          [ipmi]
+          session_timout=20
+      notify: restart virtualbmc
+
+    - name: flush handlers
+      meta: flush_handlers
+  become: true
+
+- name: Start the Virtual BMCs
+  become: true
+  systemd:
+    name: virtualbmc
+    state: started
+    enabled: yes
