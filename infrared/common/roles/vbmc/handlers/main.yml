@@ -1,0 +1,9 @@
+- name: reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: restart virtualbmc
+  service:
+    name: virtualbmc
+    state: restarted
+  listen: reload systemd
