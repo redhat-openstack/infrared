@@ -1,6 +1,10 @@
 # choice from hypervisor or undercloud
-vbmc_host: "{{ install.get('vbmc', {}).get('host', 'hypervisor') }}"
+vbmc_host: "{{ install|default({}).get('vbmc', {}).get('host', 'hypervisor') }}"
 vbmc_inventory_host: "{{ groups[vbmc_host]|first }}"
 vbmc_start_port: 6230
 action: install
-vbmc_virtualenv: "{{ ansible_env.HOME }}/.virtualenvs/vbmc"
+vbmc_virtualenv: "/root/.virtualenvs/vbmc"
+vbmc_user: "{{ (vbmc_host == 'undercloud') | ternary(ansible_user|default(ansible_ssh_user), 'root') }}"
+vbmc_config_dir: "{{ (vbmc_host == 'undercloud') | ternary(ansible_user_dir, '/root') }}/.vbmc"
+vbmc_bin: "{{ vbmc_virtualenv }}/bin/vbmc"
+vbmcd_bin: "{{ vbmc_virtualenv }}/bin/vbmcd"

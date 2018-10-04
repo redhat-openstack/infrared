@@ -1,0 +1,50 @@
+- block:
+  - name: Remove package if installed from rpm
+    package:
+        name: "{{ item }}"
+        state: absent
+    with_items:
+        - python-virtualbmc
+        - python2-virtualbmc
+    changed_when: false
+    failed_when: false
+
+  # pip can be missing on a target host.
+  # so ignore errors and cleanup as much as possible
+  - name: Remove package if installed from pip
+    pip:
+        name: virtualbmc
+        state: absent
+    changed_when: false
+    failed_when: false
+
+  - name: delete scripts and configuration files
+    file:
+        path: "{{ item }}"
+        state: absent
+    with_items:
+        - /usr/lib/systemd/system/virtualbmc.service
+    ignore_errors: true
+
+  - name: Install packages required for python-virtualbmc pip package
+    become: true
+    package:
+        name:
+          - gcc
+          - libvirt
+          - libvirt-devel
+          - python-devel
+        state: latest
+        disable_gpg_check: yes
+
+  - name: install pip
+    become: yes
+    easy_install:
+        name: pip
+
+  - name: install virtualenv pip module
+    pip:
+        name: virtualenv
+        extra_args: "--user"
+
+  become: yes
