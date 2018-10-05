@@ -37,16 +37,16 @@
             mode: 0755
         when: not local_src
 
-      - name: enable undercloud-ssl
-        include_tasks: tasks/ssl.yml
-        when: install.ssl or install.version|openstack_release > 13
-        tags: ssl
-
       - name: override values in undercloud conf
         include_tasks: tasks/inject_undercloud_conf.yml
         with_dict: "{{ conf.options|default({}) }}"
         loop_control:
             loop_var: section
+
+      - name: enable undercloud-ssl
+        include_tasks: tasks/ssl.yml
+        when: install.ssl or install.version|openstack_release > 13
+        tags: ssl
 
       - name: create the base undercloud deploy script
         template:
