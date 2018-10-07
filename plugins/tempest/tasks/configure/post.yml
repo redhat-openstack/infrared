@@ -5,3 +5,10 @@
   with_items: "{{ test.post.config.commands }}"
   when: test.post is defined
   tags: skip_ansible_lint
+
+- name: Create keystone role for Octavia (workaround rhbz#1508904)
+  shell: |
+      source ~/overcloudrc
+      openstack role create load-balancer_member
+      openstack role add --user demo --project demo load-balancer_member &> lb_role.log
+  when: "'octavia' in test.tests"
