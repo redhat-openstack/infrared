@@ -10,6 +10,9 @@
       ignore_errors: true
 
     - name: adds VirtualBMC as systemd service
+      vars:
+          python_bin: "{{ virtualbmc_install_result.failed|ternary( vbmc_virtualenv ~ '/bin/python', '' ) }}"
+          vbmc_bin: "{{ virtualbmc_install_result.failed|ternary( vbmc_virtualenv ~ '/bin/vbmcd', '/usr/bin/vbmcd' ) }}"
       copy:
         mode: 0664
         dest: "/usr/lib/systemd/system/virtualbmc.service"
@@ -20,7 +23,7 @@
           [Service]
           Type=simple
           User={{ vbmc_user }}
-          ExecStart={{ virtualbmc_install_result.failed|ternary( vbmc_virtualenv ~ '/bin/python', '' ) }} /usr/bin/vbmcd --foreground
+          ExecStart={{ python_bin }} {{ vbmc_bin }} --foreground
           Restart=always
           RestartSec=1
           [Install]
