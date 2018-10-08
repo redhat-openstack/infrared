@@ -108,30 +108,15 @@
         --output-env-file {{ template_base }}/docker-images.yaml
   when:
       - install.version|default(undercloud_version)|openstack_release >= 14
+      - install.ocupdate|default(False)
 
 ## Workaround BZ#1629599
 - block:
-    - name: Generate custome role for ovn
-      copy:
-          content: |
-              - name: Controller
-                description: Used to pull OVN images
-                CountDefault: 1
-                ServicesDefault:
-                  - OS::TripleO::Services::NeutronApi
-                  - OS::TripleO::Services::NeutronServer
-                  - OS::TripleO::Services::OVNDBs
-                  - OS::TripleO::Services::OVNController
-                  - OS::TripleO::Services::OVNMetadataAgent
-          dest: '~/ovn_roles_data.yaml'
-
-    - name:  Run container image prepare for ovn
-      shell: |
-          openstack tripleo container image prepare \
-            -e ~/containers-prepare-parameter.yaml \
-            --roles-file ~/ovn_roles_data.yaml \
-            --output-env-file {{ template_base }}/docker-images-ovn.yaml
-
+    - name: Set OVN neutron_driver in containers-prepare-parameter.yaml
+      replace:
+          path: "~/containers-prepare-parameter.yaml"
+          regexp: 'neutron_driver: null'
+          replace: 'neutron_driver: ovn'
   when:
       - install.network.ovn
       - install.version|default(undercloud_version)|openstack_release >= 14

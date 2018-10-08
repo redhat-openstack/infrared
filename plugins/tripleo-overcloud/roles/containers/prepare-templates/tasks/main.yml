@@ -46,3 +46,12 @@
       - install.version|default(undercloud_version)|openstack_release < 14
   tags:
       - skip_ansible_lint
+
+- name: append containers-prepare-parameter.yaml to the overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e ~/containers-prepare-parameter.yaml \'
+      insertbefore: "^--log-file.*"
+  when:
+      - install.version|default(undercloud_version)|openstack_release >= 14
+      - not install.ocupdate|default(false)
