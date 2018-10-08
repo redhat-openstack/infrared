@@ -123,7 +123,7 @@
 
             {% for node in item.node.split(':') %}
                 if [[ "{{ node }}" =~ $REGEX ]]; then
-                {% if install.version|default(undercloud_version) |openstack_release > 8 %}
+                {% if install.version|default(undercloud_version) |openstack_release > 9 %}
                     openstack baremetal node set \
                       --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}' {{ node }}
                 {% else %}
@@ -131,7 +131,7 @@
                     xargs -I{} ironic node-update {} add properties/root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
                 {% endif %}
                 else
-                {% if install.version|default(undercloud_version) |openstack_release > 8 %}
+                {% if install.version|default(undercloud_version) |openstack_release > 9 %}
                     openstack baremetal node list|awk '/{{ node }}/ {print $2}'| \
                     xargs -I{} openstack baremetal node set {} --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
                 {% else %}
