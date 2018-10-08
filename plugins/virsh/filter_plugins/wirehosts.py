@@ -5,7 +5,9 @@ from __future__ import print_function
 def create_ifaces(source_node, target_node, bridge_pattern, iface):
     for dst_cnt in range(target_node.get('num', 1)):
         source_iface = iface.copy()
-        del source_iface['connect_to']
+        source_iface['model'] = source_iface['src_model']
+        for key in ['src_model', 'connect_to']:
+            del source_iface[key]
         if source_node.get('num', 1) == 1:
             source_iface['network'] = bridge_pattern.format("0", str(dst_cnt))
         else:
@@ -15,7 +17,8 @@ def create_ifaces(source_node, target_node, bridge_pattern, iface):
 
     for src_cnt in range(source_node.get('num', 1)):
         target_iface = iface.copy()
-        del target_iface['connect_to']
+        for key in ['src_model', 'connect_to']:
+            del source_iface[key]
         if target_node.get('num', 1) == 1:
             target_iface['network'] = bridge_pattern.format(str(src_cnt), "0")
         else:
@@ -30,10 +33,8 @@ def wire_node(nodes, node):
 
     interfaces = node['interfaces']
     node['interfaces'] = []
-    print(node)
 
     for iface in interfaces:
-        print(iface)
         if 'connect_to' in iface:
             try:
                 remote_node = nodes[iface['connect_to']]
