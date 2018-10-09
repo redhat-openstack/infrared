@@ -208,6 +208,13 @@ subparsers:
                       help: Specifies whether we should run post install tasks
                       default: yes
 
+                  workarounds:
+                      type: Value
+                      help: |
+                          Specifies the external workarounds file location.
+                          Example:  --workarounds 'http://server.localdomain/workarounds.yml'
+                      default: ''
+
             - title: TripleO User
               options:
                   user-name:

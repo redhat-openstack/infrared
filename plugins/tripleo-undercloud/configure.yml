@@ -80,3 +80,24 @@
                 value: "{{ working_dir }}/hiera_override.yaml"
         when:
             - install.version|openstack_release > 9
+
+      - block:
+          - name: download workarounds file
+            get_url:
+                url: "{{ install.workarounds }}"
+                dest: ./workarounds.yml
+            delegate_to: localhost
+
+          - name: load workarounds vars
+            include_vars:
+              file: workarounds.yml
+
+          - name: create workarounds scripts
+            template:
+              src: templates/workarounds.sh.j2
+              dest: "~/{{ item }}.sh"
+              mode: 0775
+            with_items:
+              - 'pre_undercloud_deploy_workarounds'
+              - 'post_undercloud_deploy_workarounds'
+        when: install.workarounds != ''
