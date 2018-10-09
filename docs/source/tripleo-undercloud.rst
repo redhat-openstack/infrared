@@ -242,6 +242,32 @@ Example for update of Undercloud and Images::
 
 .. warning:: Infrared support update for RHOSP from version 8.
 
+Undercloud Workarounds
+---------------------
+Allow injecting workarounds defined in an external file before/after the undercloud installation::
+
+    infrared tripleo-undercloud -v --workarounds 'http://server.localdomain/workarounds.yml'
+
+The workarounds can be either patches posted on review.openstack.org or arbitrary shell commands.
+Below is an example of a workarounds file::
+
+        ---
+        pre_undercloud_deploy_workarounds:
+
+          - BZ#1623061:
+             patch: false
+             basedir: ''
+             id: ''
+             command: 'touch /home/stack/pre_workaround_applied'
+
+        post_undercloud_deploy_workarounds:
+
+          - BZ#1637589:
+             patch: true
+             basedir: '/usr/share/openstack-tripleo-heat-templates/'
+             id: '601277'
+             command: ''
+
 TLS Everywhere
 ______________
 Setup TLS Everywhere with FreeIPA.
