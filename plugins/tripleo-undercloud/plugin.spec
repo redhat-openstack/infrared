@@ -208,6 +208,11 @@ subparsers:
                       help: Specifies whether we should run post install tasks
                       default: yes
 
+                  workarounds:
+                      type: Value
+                      help: Specifies whether we should run workaround tasks
+                      default: ''
+
             - title: TripleO User
               options:
                   user-name:
