@@ -116,14 +116,6 @@
           replace: '\1,{{ ceph_namespace }}'
       when: container_env['container-image-prepare']['ceph-namespace'] is defined
 
-    # BZ#1607627
-    - name: set tag_from_label in containers-prepare-parameter.yaml
-      replace:
-          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-          regexp: 'rdo_version'
-          replace: "'{version}-{release}'"
-      when: install.registry.skip.puddle
-
     - block:
         - name: remove tag_from_label in containers-prepare-parameter.yaml
           lineinfile:
