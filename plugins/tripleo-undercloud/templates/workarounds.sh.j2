@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+# Apply workarounds on undercloud
+
+set -euo pipefail
+
+function apply_patch {
+    local patch_dir=$1
+    local patch_id=$2
+
+    curl -4 https://review.openstack.org/changes/${patch_id}/revisions/current/patch?download | \
+        base64 -d > /tmp/patch.txt
+
+    if sudo patch --dry-run --reverse --force -d ${patch_dir} -p1 < /tmp/patch.txt >/dev/null 2>&1
+    then
+        echo "Patch ${patch_id} already applied, skipping"
+    else
+        sudo patch -Ns  -d ${patch_dir} -p1 < /tmp/patch.txt
+    fi
+}
+
+{% if 'pre_undercloud_deploy_workarounds' in item %}
+{% for bugs in pre_undercloud_deploy_workarounds|default([]) %}
+{% for key, value in bugs.items() %}
+echo {{ key }}
+{% if value.patch %}
+apply_patch {{ value.basedir }} {{ value.id }}
+{% else %}
+{{ value.command }}
+
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+{% elif 'post_undercloud_deploy_workarounds' in item %}
+{% for bugs in post_undercloud_deploy_workarounds|default([]) %}
+{% for key, value in bugs.items() %}
+echo {{ key }}
+{% if value.patch %}
+apply_patch {{ value.basedir }} {{ value.id }}
+{% else %}
+{{ value.command }}
+
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+{% endif %}
+
