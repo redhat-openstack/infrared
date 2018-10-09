@@ -110,17 +110,6 @@
       - install.version|default(undercloud_version)|openstack_release >= 14
       - install.ocupdate|default(False)
 
-## Workaround BZ#1629599
-- block:
-    - name: Set OVN neutron_driver in containers-prepare-parameter.yaml
-      replace:
-          path: "~/containers-prepare-parameter.yaml"
-          regexp: 'neutron_driver: null'
-          replace: 'neutron_driver: ovn'
-  when:
-      - install.network.ovn
-      - install.version|default(undercloud_version)|openstack_release >= 14
-
 - name: install packages in container images
   include_tasks: container_images_packages.yml
   when: install_container_images_packages is defined
