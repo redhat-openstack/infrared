@@ -1,0 +1,18 @@
+# include environment template files from undercloud in overcloud_deploy script
+- name: include default ironic template 
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: "--environment-file {{ install.heat.templates.basedir }}/environments/services{% if (install.version | default(undercloud_version) | openstack_release == 12)  %}-docker{% endif %}/ironic.yaml \\"
+
+- name: include default ironic-inspector template
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: "--environment-file {{ install.heat.templates.basedir }}/environments/services/ironic-inspector.yaml \\"
+  when: 
+  - install.ironic.inspector 
+  - install.version | default(undercloud_version) | openstack_release >= 14
+
+- name: create custom ironic template file
+  template:
+      dest: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/ironic-custom.yaml"
+      src: ironic-custom.yaml.j2
