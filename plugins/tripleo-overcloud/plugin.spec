@@ -711,6 +711,19 @@ subparsers:
                           - bios
                           - uefi
 
+                  ironic:
+                      type: Bool
+                      help: |
+                          This options allows adding ironic templates to support overcloud deployment with ironic
+                          enabled services. This is required for booting BM instances in overcloud.
+                      default: False
+
+                  ironic_inspector:
+                      type: Bool
+                      help: |
+                          This options allows adding ironic-inspector templates to support introspection in overcloud.
+                          Note that this option implicitly enables the ironic option.
+                      default: False
 
             - title: ansible facts
               options:
