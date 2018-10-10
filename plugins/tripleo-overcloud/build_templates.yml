@@ -111,6 +111,10 @@
         # avoid empty strings
         when: "templates_list_file != ''"
 
+      - name: append templates for ironic enabled OC
+        include_tasks: tasks/ironic_environment_templates.yml
+        when: install.ironic or install.ironic_inspector
+
       - import_role:
             name: containers/prepare-templates
         tags:
