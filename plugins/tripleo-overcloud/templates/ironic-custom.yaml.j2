@@ -1,0 +1,42 @@
+parameter_defaults:
+  NeutronBridgeMappings: datacentre:br-ex,baremetal:br-baremetal
+  NeutronFlatNetworks: datacentre,baremetal
+  IronicCleaningNetwork: baremetal
+  IronicCleaningDiskErase: metadata
+  IronicIPXEEnabled: true
+{% if install.version|openstack_release < 14 %}
+  IronicEnabledDrivers:
+      - pxe_ipmitool
+      - fake
+{% else %}
+  IronicEnabledHardwareTypes:
+      - ipmi
+      - fake-hardware
+  IronicEnabledBootInterfaces: [pxe, fake]
+  IronicEnabledConsoleInterfaces: [ipmitool-socat, no-console, fake]
+  IronicEnabledDeployInterfaces: [iscsi, direct, fake]
+  IronicEnabledInspectInterfaces: [no-inspect, fake]
+  IronicEnabledManagementInterfaces: [ipmitool, fake]
+  IronicEnabledPowerInterfaces: [ipmitool, fake]
+  IronicEnabledRaidInterfaces: [no-raid, fake]
+  IronicEnabledVendorInterfaces: [ipmitool, fake, no-vendor]
+{% endif %}
+  NovaSchedulerDefaultFilters:
+      - RetryFilter
+      - AggregateInstanceExtraSpecsFilter
+      - AvailabilityZoneFilter
+      - ComputeFilter
+      - ComputeCapabilitiesFilter
+      - ImagePropertiesFilter
+{% if install.version|openstack_release < 14 %}
+      - RamFilter
+      - DiskFilter
+  ControllerExtraConfig:
+      ironic::drivers::ssh::libvirt_uri: 'qemu:///system'
+{% endif %}
+{% if install.version|openstack_release >= 14 && install.ironic.inspector %}
+  IronicInspectorIpRange='{{ ansible_br_ctlplane.ipv4.network }}.210,{{ ansible_br_ctlplane.ipv4.network }}.240'
+  IPAImageURLs: '["http://{{ ansible_br_ctlplane['ipv4']['address'] }}:8088/agent.kernel", "http://{{ ansible_br_ctlplane['ipv4']['address'] }}:8088/agent.ramdisk"]'
+  IronicInspectorInterface: 'br-baremetal'
+{% endif %}
+
