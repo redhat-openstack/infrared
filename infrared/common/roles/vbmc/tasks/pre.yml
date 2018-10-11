@@ -26,24 +26,4 @@
         - /usr/lib/systemd/system/virtualbmc.service
         - "{{ vbmc_config_dir }}"
     ignore_errors: true
-
-  - name: Install packages required for python-virtualbmc pip package
-    package:
-        name:
-          - gcc
-          - libvirt
-          - libvirt-devel
-          - python-devel
-        state: latest
-        disable_gpg_check: yes
-
-  - name: install pip
-    easy_install:
-        name: pip
-
-  - name: install virtualenv pip module
-    pip:
-        name: virtualenv
-        extra_args: "--user"
-
   become: yes
