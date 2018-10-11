@@ -37,9 +37,24 @@
         state: latest
         disable_gpg_check: yes
 
-  - name: install pip
-    easy_install:
-        name: pip
+  - name: Delete pip installation file
+    file:
+        path: "{{ vbmc_home }}/get-pip.py"
+        state: absent
+
+  - name: Download pip installation file
+    get_url:
+        url: https://bootstrap.pypa.io/get-pip.py
+        dest: "{{ vbmc_home }}/get-pip.py"
+    register: result
+    until: "'OK' in result.msg"
+    retries: 5
+    delay: 10
+
+  - name: Install pip
+    shell: "python {{ vbmc_home }}/get-pip.py"
+    register: pip_install
+    failed_when: "'Successfully installed' not in pip_install.stdout"
 
   - name: install virtualenv pip module
     pip:
