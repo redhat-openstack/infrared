@@ -3,6 +3,10 @@
   hosts: undercloud
   any_errors_fatal: true
   tasks:
+      - name: apply pre deploy workarounds
+        command: bash ~/pre_undercloud_deploy_workarounds.sh
+        when: install.workarounds != ''
+
       - name: apply workaround for BZ#1428608
         lineinfile:
             line: 'exclude=docker-distribution'
@@ -29,6 +33,10 @@
       - fail:
             msg: "Undercloud deployment failed... :("
         when: undercloud_deployment.rc != 0
+
+      - name: apply post deploy workarounds
+        command: bash ~/post_undercloud_deploy_workarounds.sh
+        when: install.workarounds != ''
 
       - name: remove workaround for BZ#1428608
         lineinfile:
