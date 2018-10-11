@@ -235,7 +235,9 @@
                   - openstack_nodes
                   - "{{ item.name.split('-')[0] }}"
               ansible_user: root
-          when: item.name not in groups.get('all',[])
+          when:
+            - item.name|default('') != ''
+            - item.name not in groups.get('all',[])
           with_items:  "{{ overcloud_facts.nodes }}"
           register: update_inventory
 
