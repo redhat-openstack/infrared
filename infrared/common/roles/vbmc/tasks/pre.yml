@@ -17,13 +17,3 @@
         state: absent
     changed_when: false
     failed_when: false
-
-  - name: delete scripts and configuration files
-    file:
-        path: "{{ item }}"
-        state: absent
-    with_items:
-        - /usr/lib/systemd/system/virtualbmc.service
-        - "{{ vbmc_config_dir }}"
-    ignore_errors: true
-  become: yes
