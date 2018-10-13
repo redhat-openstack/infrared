@@ -76,6 +76,7 @@
           state: absent
       with_items:
           - /usr/lib/systemd/system/virtualbmc.service
+          - "{{ vbmc_config_dir }}"
       ignore_errors: true
 
   when: vbmc_list.stdout|int == 0
