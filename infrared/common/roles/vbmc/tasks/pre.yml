@@ -18,12 +18,9 @@
     changed_when: false
     failed_when: false
 
-  - name: delete scripts and configuration files
+  - name: delete virtualbmc service file
     file:
-        path: "{{ item }}"
+        path: '/usr/lib/systemd/system/virtualbmc.service'
         state: absent
-    with_items:
-        - /usr/lib/systemd/system/virtualbmc.service
-        - "{{ vbmc_config_dir }}"
     ignore_errors: true
   become: yes
