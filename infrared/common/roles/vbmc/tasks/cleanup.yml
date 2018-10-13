@@ -76,6 +76,28 @@
           state: absent
       with_items:
           - /usr/lib/systemd/system/virtualbmc.service
+          - "{{ vbmc_config_dir }}"
       ignore_errors: true
-
   when: vbmc_list.stdout|int == 0
+
+- block:
+  - name: Remove package if installed from rpm
+    package:
+        name: "{{ item }}"
+        state: absent
+    with_items:
+        - python-virtualbmc
+        - python2-virtualbmc
+    changed_when: false
+    failed_when: false
+
+  # pip can be missing on a target host.
+  # so ignore errors and cleanup as much as possible
+  - name: Remove package if installed from pip
+    pip:
+        name: virtualbmc
+        state: absent
+    changed_when: false
+    failed_when: false
+  become: yes
+
