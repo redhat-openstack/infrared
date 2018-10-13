@@ -44,38 +44,39 @@
       command: killall vbmc
       when: vbmc_proc.rc == 0
       ignore_errors: true
-
-    - name: Remove package if installed from rpm
-      package:
-          name: "{{ item }}"
-          state: absent
-      with_items:
-          - python-virtualbmc
-          - python2-virtualbmc
-      changed_when: false
-      failed_when: false
-
-    # pip can be missing on a target host.
-    # so ignore errors and cleanup as much as possible
-    - name: Remove package if installed from pip
-      pip:
-          virtualenv: "{{ vbmc_virtualenv }}"
-          name: virtualbmc
-          state: absent
-      changed_when: false
-      failed_when: false
-
-    - name: Remove vbmc virtualenv
-      file:
-          path: "{{ vbmc_virtualenv }}"
-          state: absent
-
-    - name: delete scripts and configuration files
-      file:
-          path: "{{ item }}"
-          state: absent
-      with_items:
-          - /usr/lib/systemd/system/virtualbmc.service
-      ignore_errors: true
-
   when: vbmc_list.stdout|int == 0
+
+- block:
+  - name: Remove package if installed from rpm
+    package:
+        name: "{{ item }}"
+        state: absent
+    with_items:
+        - python-virtualbmc
+        - python2-virtualbmc
+    changed_when: false
+    failed_when: false
+
+  # pip can be missing on a target host.
+  # so ignore errors and cleanup as much as possible
+  - name: Remove package if installed from pip
+    pip:
+        name: virtualbmc
+        state: absent
+    changed_when: false
+    failed_when: false
+  become: yes
+
+- name: Remove vbmc virtualenv
+  file:
+      path: "{{ vbmc_virtualenv }}"
+      state: absent
+
+- name: Delete scripts and configuration files
+  file:
+      path: "{{ item }}"
+      state: absent
+  with_items:
+      - /usr/lib/systemd/system/virtualbmc.service
+      - "{{ vbmc_config_dir }}"
+  ignore_errors: true
