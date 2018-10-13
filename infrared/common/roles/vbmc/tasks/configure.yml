@@ -1,8 +1,14 @@
 ---
-- name: Remove existing Virtual BMCs
+- name: Stop existing Virtual BMCs
   # grab only lines with port number (more than 2 digits)
   command: |
       "{{ vbmc_bin }} stop {{ hostvars[item].original_name|default(item) }}"
+  ignore_errors: true
+  with_items: "{{ vbmc_nodes }}"
+
+- name: Remove existing Virtual BMCs
+  # grab only lines with port number (more than 2 digits)
+  command: |
       "{{ vbmc_bin }} delete {{ hostvars[item].original_name|default(item) }}"
   ignore_errors: true
   with_items: "{{ vbmc_nodes }}"
