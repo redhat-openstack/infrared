@@ -7,8 +7,8 @@
 
 - name: remove existing Virtual BMCs
   shell: |
-      {{ vbmc_bin }} stop {{ hostvars[vbmc_node].original_name|default(vbmc_node) }}
-      {{ vbmc_bin }} delete {{ hostvars[vbmc_node].original_name|default(vbmc_node) }}
+      vbmc stop {{ hostvars[vbmc_node].original_name|default(vbmc_node) }}
+      vbmc delete {{ hostvars[vbmc_node].original_name|default(vbmc_node) }}
   failed_when: false
   when:
       - vbmc_proc.rc == 0
