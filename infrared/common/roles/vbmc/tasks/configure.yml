@@ -1,11 +1,24 @@
 ---
-- name: Remove existing Virtual BMCs
+- name: Stop existing Virtual BMCs
   # grab only lines with port number (more than 2 digits)
   command: |
       "{{ vbmc_bin }} stop {{ hostvars[item].original_name|default(item) }}"
+  ignore_errors: true
+  with_items: "{{ vbmc_nodes }}"
+
+- name: Remove existing Virtual BMCs
+  # grab only lines with port number (more than 2 digits)
+  command: |
       "{{ vbmc_bin }} delete {{ hostvars[item].original_name|default(item) }}"
   ignore_errors: true
   with_items: "{{ vbmc_nodes }}"
+
+- name: Remove existing vmbc configuration files
+  file:
+      path: "{{ vbmc_config_dir }}/{{ hostvars[item].original_name|default(item) }}"
+      state: absent
+  with_items: "{{ vbmc_nodes }}"
+  ignore_errors: true
 
 - name: Get current count of used vbmc ports
   shell: "{{ vbmc_bin | quote }} list | grep 62 | wc -l"
