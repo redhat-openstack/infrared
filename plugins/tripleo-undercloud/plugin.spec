@@ -362,3 +362,9 @@ subparsers:
                             The registry or the registry-mirror will be used directly when possible,
                             recommended to use this option when you have very good bandwidth to your registry.
                       default: False
+
+                  registry-prefix:
+                      type: Value
+                      help: |
+                          Container images prefix
+                      default: 'openstack-'
