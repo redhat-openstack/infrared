@@ -725,6 +725,13 @@ subparsers:
                           Note that this option implicitly enables the ironic option.
                       default: False
 
+                  image_direct_deploy:
+                      type: Bool
+                      help: |
+                          This option (when enabled) sets the direct deploy flag on nodes in ironic, instead of the default
+                          iscsi method.
+                      default: False
+
             - title: ansible facts
               options:
                   collect-ansible-facts:
