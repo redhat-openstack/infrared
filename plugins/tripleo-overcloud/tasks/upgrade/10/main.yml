@@ -93,6 +93,27 @@
   when: install.dataplaneping|default(False)
 
 - block:
+    - debug: msg="Starting floating IP dataplane ping check before Ceph Upgrade"
+    - include: ../../update/common/startping.yaml
+  when: install.dataplaneping|default(False)
+  vars:
+      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+
+- name: Ceph Upgrade
+  shell: |
+      source {{ undercloud_rc }}
+      upgrade-non-controller.sh --upgrade {{ item }} &>> ceph-upgrade.log
+  tags:
+    - upgrade
+    - upgrade_ceph
+  with_items: "{{ groups.ceph|default([])|difference(groups.unused|default([]))|default([]) }}"
+
+- block:
+    - debug: msg="Ending floating IP dataplane ping check after Ceph Upgrade"
+    - include: ../../update/common/endping.yaml
+  when: install.dataplaneping|default(False)
+
+- block:
     - debug: msg="Starting floating IP dataplane ping check before Compute Upgrade"
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
@@ -112,15 +133,6 @@
     - debug: msg="Ending floating IP dataplane ping check after Compute Upgrade"
     - include: ../../update/common/endping.yaml
   when: install.dataplaneping|default(False)
-
-- name: Ceph Upgrade
-  shell: |
-      source {{ undercloud_rc }}
-      upgrade-non-controller.sh --upgrade {{ item }} &>> ceph-upgrade.log
-  tags:
-    - upgrade
-    - upgrade_ceph
-  with_items: "{{ groups.ceph|default([])|difference(groups.unused|default([]))|default([]) }}"
 
 - block:
     - debug: msg="Starting floating IP dataplane ping check before Convergence"
