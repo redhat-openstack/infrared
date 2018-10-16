@@ -208,6 +208,16 @@
             - install.version|default(undercloud_version) | openstack_release == 10
             - vbmc_ports is defined
 
+      - name: set deploy_interface option to direct
+        shell: |
+            source ~/stackrc
+            NODE_UUID=$({{ ironic_cli }} | awk '/{{ item.name | default(item) }}/ {print $2}' )
+            openstack baremetal node set --deploy-interface direct ${NODE_UUID}
+        with_items: "{{ groups['overcloud_nodes'] | default([])}}"
+        when:
+            - install.image_direct_deploy != 'iscsi'
+            - install.version|default(undercloud_version) | openstack_release > 13
+
 #
 # With baremetal deployments hosts from custom instackenv are missing from inventory
 # Add them to Ansible's inventory for future use
