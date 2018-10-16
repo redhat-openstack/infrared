@@ -110,7 +110,9 @@
                 - node: "ceph"
                   hint: "name"
                   hintvalue: "{{ ceph_default_disk_name }}"
-            ceph_defaults:  "{{ ('ceph' in groups and 'hypervisor' in groups)|ternary(default_disk_override, []) }}"
+            ceph_defaults: "{{ ((install.version|default(undercloud_version)|openstack_release > 9) and
+                                 'ceph' in groups and
+                                 'hypervisor' in groups)|ternary(default_disk_override, []) }}"
         set_fact:
             root_disk: "{{ ceph_defaults|union(install.get('root',{}).get('disk',{}).get('override', [])) }}"
 
