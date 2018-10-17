@@ -137,6 +137,12 @@
               regexp: '(^\ +)namespace.*'
               replace: "\\1namespace: {{ install.registry.mirror }}"
 
+        - name: set satellite ceph namespace
+          replace:
+              path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+              regexp: '(^\ +)ceph_namespace.*'
+              replace: "\\1ceph_namespace: {{ install.registry.mirror }}"
+
         - name: set satellite prefix
           replace:
               path: "{{ working_dir }}/containers-prepare-parameter.yaml"
