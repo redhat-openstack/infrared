@@ -101,3 +101,25 @@
               - 'pre_undercloud_deploy_workarounds'
               - 'post_undercloud_deploy_workarounds'
         when: install.workarounds != ''
+
+      - block:
+          - name: Initialize a variable with undercloud custom env file content
+            set_fact:
+               undercloud_custom_env_content: |
+                   parameter_defaults:
+                      IronicDefaultDeployInterface: direct
+
+          - name: Create the undercloud custom env file
+            copy:
+               dest: "{{ working_dir }}/undercloud_custom_env.yaml"
+               content: "{{ undercloud_custom_env_content }}"
+
+          - name: set custom env file in undercloud.conf
+            ini_file:
+                path: "{{ working_dir }}/undercloud.conf"
+                section: DEFAULT
+                option: custom_env_files
+                value: "{{ working_dir }}/undercloud_custom_env.yaml"
+        when:
+          - install.deploy_interface_default == 'direct'
+          - install.version|default(undercloud_version) | openstack_release > 13
