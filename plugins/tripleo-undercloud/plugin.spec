@@ -368,3 +368,7 @@ subparsers:
                       help: |
                           Container images prefix
                       default: 'openstack-'
+
+                  registry-ceph-image:
+                      type: Value
+                      help: image for the ceph container
