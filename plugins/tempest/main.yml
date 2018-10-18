@@ -24,6 +24,11 @@
             msg: "Overcloud's OpenStack version that has been auto discovered is {{ overcloud_version }}"
         when: overcloud_version is defined
 
+      - name: Prepare tempest debug command
+        import_tasks: "tasks/debug_mode.yml"
+        tags:
+            - debug_mode
+
       - name: Prepare tempest files
         import_tasks: tasks/pre/main.yml
         tags:
