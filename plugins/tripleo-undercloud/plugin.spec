@@ -102,6 +102,16 @@ subparsers:
                             Ntp server name (or IP) to use.
                       default: clock.redhat.com
 
+                  deploy_interface_default:
+                      type: Value
+                      default: iscsi
+                      help: |
+                          This option (when set to direct) changes the default in Ironic for the value
+                          of deploy_interface from iscsi to direct.
+                      choices:
+                          - iscsi
+                          - direct
+
             - title: Splitstack deployment
               options:
                   splitstack:
