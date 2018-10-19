@@ -2,6 +2,14 @@ rr_distro_version: "{{ ansible_distribution_version }}"
 rr_target_directory: /etc/yum.repos.d
 rr_use_public_repos: false
 rr_master_release: rocky
+rr_ceph_release:
+    10: hammer
+    11: jewel
+    12: jewel
+    13: luminous
+    default: hammer
+rr_ceph_repo_version: "{{ rr_ceph_release[rr_release_name_discovered|openstack_release]|default(rr_ceph_release['default']) }}"
+
 
 # rdo repos
 # can bee overriden with the '-e' cli option.
@@ -17,8 +25,8 @@ rr_rdo_repos:
         delorean_deps:
             url: "https://trunk.rdoproject.org/centos7-{{ rr_release_name }}/delorean-deps.repo"
         ceph:
-            package: "centos-release-ceph-{{ (rr_release_name_discovered|openstack_release < 10)|ternary('hammer', 'jewel') }}"
-            file_name: "CentOS-Ceph-{{ (rr_release_name_discovered|openstack_release < 10)|ternary('Hammer', 'Jewel') }}.repo"
+            package: "centos-release-ceph-{{ rr_ceph_repo_version }}"
+            file_name: "CentOS-Ceph-{{ rr_ceph_repo_version | capitalize }}.repo"
 
     master_current:
         delorean:
