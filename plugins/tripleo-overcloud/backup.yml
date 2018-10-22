@@ -1,0 +1,216 @@
+---
+- name: Initializing local backup directory
+  hosts: undercloud
+  user: stack
+  tasks:
+    - name: Get the timestamp
+      set_fact:
+        fixed_timestamp: "{{ ansible_date_time.iso8601_basic_short }}"
+    - name: Remove existing local backup directory
+      file:
+        path: /var/tmp/overcloud-backup/
+        state: absent
+    - name: Create a temporary local backup directory
+      file:
+        path: /var/tmp/overcloud-backup/
+        state: directory
+
+- name: Initializing database backups on the bootstrap controller node
+  hosts: controller-0
+  user: heat-admin
+  become: true
+  tasks:
+    - name: Remove existing database backup directory
+      file:
+        path: /var/tmp/overcloud-backup-database/
+        state: absent
+    - name: Create a temporary database backup directory
+      file:
+        path: /var/tmp/overcloud-backup-database/
+        state: directory
+
+- name: Backup mariadb database
+  hosts: controller-0
+  user: heat-admin
+  become: true
+  tasks:
+    - name: Create a mysql database backup directory
+      file:
+        path: /var/tmp/overcloud-backup-database/mysql
+        state: directory
+    - name: Get the mysql database password
+      shell: |
+        /bin/hiera -c /etc/puppet/hiera.yaml mysql::server::root_password
+      register: mysql_password
+    - name: Get a list of OpenStack databases
+      shell: |
+        /bin/mysql -uroot -p{{ mysql_password.stdout_lines[0] }} -e "select distinct table_schema from information_schema.tables where engine='innodb' and table_schema != 'mysql';" -s -N
+      register: mysql_databases
+    - name: Dump the OpenStack databases
+      shell: |
+        /bin/mysqldump -uroot -p{{ mysql_password.stdout_lines[0] }} --single-transaction --databases {{ mysql_databases.stdout_lines | join(' ') }}
+      register: mysql_dump
+    - name: Copy the databases to the temporary directory
+      copy:
+        dest: /var/tmp/overcloud-backup-database/mysql/openstack_databases.sql
+        content: "{{ mysql_dump.stdout }}"
+    - name: Get a list of mysql grants databases
+      shell: |
+        /bin/mysql -uroot -p{{ mysql_password.stdout_lines[0] }} -e "SELECT CONCAT('\"SHOW GRANTS FOR ''',user,'''@''',host,''';\"') FROM mysql.user where (length(user) > 0 and user NOT LIKE 'root')" -s -N | xargs -n1 mysql -uroot -p{{ mysql_password.stdout_lines[0] }} -s -N -e | sed 's/$/;/'
+      register: mysql_grants_database
+    - name: Copy the mysql grants database to the temporary directory
+      copy:
+        dest: /var/tmp/overcloud-backup-database/mysql/openstack_databases_grants.sql
+        content: "{{ mysql_grants_database.stdout }}"
+
+- name: Backing up MongoDB
+  hosts: controller-0
+  user: heat-admin
+  become: true
+  tasks:
+    - name: Get the MongoDB bind_ip
+      shell: |
+        /bin/hiera mongodb::server::bind_ip
+      register: mongodb_host
+    - name: Check if mongodb is running
+      command: "mongo --quiet --eval 'db.runCommand( { ping: 1 } )'  --host {{ mongodb_host.stdout }} > /dev/null"
+      register: mongo_running
+      ignore_errors: yes
+    - debug:
+        msg: "{{ mongo_running }}"
+    - name: Create a mongodb backup directory
+      file:
+        path: /var/tmp/overcloud-backup-database/mongodb
+        state: directory
+      when: mongo_running.failed == false
+    - name: Dump the MongoDB database
+      shell: |
+        /bin/mongodump --oplog -o /var/tmp/overcloud-backup-database/mongodb --host {{ mongodb_host.stdout }}
+      when: mongo_running.failed == false
+
+- name: Backing up redis
+  hosts: controller-0
+  user: heat-admin
+  become: true
+  tasks:
+    - name: Create a redis backup directory
+      file:
+        path: /var/tmp/overcloud-backup-database/redis
+        state: directory
+    - name: Get redis_vip
+      shell: |
+        /bin/hiera -c /etc/puppet/hiera.yaml redis_vip
+      register: redis_bind
+    - name: Get the redis password
+      shell: |
+        /bin/hiera -c /etc/puppet/hiera.yaml redis::masterauth
+      register: redis_masterauth
+    - name: Dump the redis database to the default directory
+      command: "/bin/redis-cli -a {{ redis_masterauth.stdout_lines[0] }} -h {{ redis_bind.stdout_lines[0] }} bgsave"
+    - name: Copy the redis database to the backup directory
+      copy:
+        remote_src: True
+        src: /var/lib/redis/dump.rdb
+        dest: /var/tmp/overcloud-backup-database/redis/dump.rdb
+
+- name: Archive database backup directory and copy it to the undercloud
+  hosts: controller-0
+  user: heat-admin
+  become: true
+  tasks:
+    - name: Create an archive of the databases
+      archive:
+        dest: /var/tmp/overcloud-backup-database.tar
+        path: /var/tmp/overcloud-backup-database/*
+    - name: Copy the databases to the undercloud
+      fetch:
+        src: /var/tmp/overcloud-backup-database.tar
+        dest: /var/tmp/overcloud-backup/
+        flat: yes
+    - name: Remove the overcloud-backup-database directory
+      file:
+        state: absent
+        path: /var/tmp/overcloud-backup-database/
+    - name: Remove the overcloud-backup-database archive
+      file:
+        state: absent
+        path: /var/tmp/overcloud-backup-database.tar
+
+- name: Initializing filesystem backup on all controller nodes
+  hosts: controller
+  user: heat-admin
+  become: true
+  tasks:
+    - name: Remove existing filesystem backup directory
+      file:
+        path: /var/tmp/overcloud-backup-filesystem/
+        state: absent
+    - name: Create a temporary filesystem backup directory
+      file:
+        path: /var/tmp/overcloud-backup-filesystem/
+        state: directory
+
+- name: Backing up filesystem on all controller nodes
+  hosts: controller
+  user: heat-admin
+  become: true
+  vars:
+    backup_dirs:
+      - /etc
+      - /var/lib/nova
+      - /var/lib/glance
+      - /var/lib/keystone
+      - /var/lib/cinder
+      - /var/lib/heat
+      - /var/lib/heat-config
+      - /var/lib/heat-cfntools
+      - /var/lib/rabbitmq
+      - /var/lib/neutron
+      - /var/lib/haproxy
+      - /var/lib/openvswitch
+      - /var/lib/redis
+      - /srv/node
+      - /usr/libexec/os-apply-config/
+    backup_excludes:
+      - /var/lib/nova/instances
+  tasks:
+    - name: Create an archive of the filesystem on all controller nodes
+      shell: |
+        /bin/tar --ignore-failed-read --xattrs \
+          -zcf /var/tmp/overcloud-backup-filesystem/overcloud-backup-filesystem.{{ ansible_hostname }}.tar \
+          {% if backup_excludes is defined %}
+          {% for backup_exclude in backup_excludes %}
+          --exclude {{ backup_exclude }} \
+          {% endfor %}
+          {% endif %}
+          {{' '.join(backup_dirs) }}
+      delay: 60
+
+- name: Copy filesystem backups to the undercloud
+  hosts: controller
+  user: heat-admin
+  become: true
+  tasks:
+    - name: Copy the tar files to the undercloud
+      fetch:
+        src: /var/tmp/overcloud-backup-filesystem/overcloud-backup-filesystem.{{ ansible_hostname }}.tar
+        dest: /var/tmp/overcloud-backup/
+        flat: yes
+    - name: Remove the overcloud-backup-database directory
+      file:
+        state: absent
+        path: /var/tmp/overcloud-backup-filesystem/
+
+- name: Creating backup archive
+  hosts: undercloud
+  user: stack
+  tasks:
+    - name: Create an archive of the filesystem
+      shell: |
+        /bin/tar --ignore-failed-read --xattrs \
+          -zcf /home/stack/overcloud-backup-{{ fixed_timestamp }}.tar \
+          /var/tmp/overcloud-backup/*
+    - name: Remove existing local backup directory
+      file:
+        path: /var/tmp/overcloud-backup/
+        state: absent

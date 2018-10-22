@@ -1,48 +1,20 @@
-- name: Backup the Undercloud image
-  hosts: hypervisor
+- name: TripleO Undercloud Backup
+  hosts: undercloud
   gather_facts: yes
-  any_errors_fatal: true
-  vars:
-      undercloud: "{{ hostvars[(groups.undercloud|first)].inventory_hostname }}"
-      undercloud_image_file: "{{ install.snapshot.filename.rstrip('.qcow2') }}.qcow2"
+  become: true
   tasks:
-      - name: install package with virt-sparsify
-        package:
-            name: libguestfs-tools-c
-            state: present
-      - block:
-          - name: shutdown the undercloud VM
-            virt:
-                name: "{{ undercloud }}"
-                state: destroyed
+      - name: Delete previous backup dir just in case
+        file:
+          path: /backup
+          state: absent
+      - name: Create backup directory
+        file:
+          path: /backup
+          state: directory
+      - name: DB backup
+        shell: |
+          mysqldump --opt --all-databases > /root/undercloud-all-databases.sql
 
-          - name: copy and shrink undercloud image
-            command: "virt-sparsify --compress {{ install.disk.pool }}/{{ undercloud }}-disk1.qcow2 {{ undercloud_image_file }}"
-
-          - name: copy our auth key to the virthost
-            copy:
-                src: "{{ install.dest.key  | expanduser | realpath }}"
-                dest: "~/backup_server_auth_key"
-                mode: "0400"
-            when: install.dest|default({})
-
-          - name: copy the image to temporary server
-            shell: |
-                scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
-                ~/backup_server_auth_key {{ undercloud_image_file }} {{ install.dest.user }}@{{ install.dest.address }}:{{install.dest.path}}/{{ undercloud_image_file }}
-            when: install.dest|default({})
-            tags: skip_ansible_lint
-
-        always:
-          - name: cleanup the undercloud image file
-            file:
-                path: "{{ undercloud_image_file }}"
-                state: absent
-            when: install.dest|default({})
-
-          - name: Power on the undercloud VM
-            virt:
-                name: "{{ undercloud }}"
-                state: running
-# TODO(yfried): accept a destination to push image to, and cleanup. Use ansible modules instead
-# of hard-coded scp
+      - name: Directories backup
+        shell: |
+          tar --xattrs --ignore-failed-read -cf /backup/undercloud-backup-`date +%F`.tar /root/undercloud-all-databases.sql /etc /var/log  /var/lib/glance  /var/lib/certmonger /var/lib/docker /var/lib/registry  /srv/node /root /home/stack

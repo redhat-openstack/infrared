@@ -14,11 +14,11 @@
   when: install.post|default('')
 
 - name: Create an undercloud backup image (for undercloud snapshot)
-  import_playbook: "{{ install_backup | default('backup.yml') }}"
+  import_playbook: "{{ install_backup | default('snapshot_backup.yml') }}"
   when: install.snapshot.backup|default('')
 
 - name: Restore an undercloud from image (using undercloud snapshot)
-  import_playbook: "{{ install_restore | default('restore.yml') }}"
+  import_playbook: "{{ install_restore | default('snapshot_restore.yml') }}"
   when: install.snapshot.restore|default('')
 
 - name: Undercloud Upgrade
