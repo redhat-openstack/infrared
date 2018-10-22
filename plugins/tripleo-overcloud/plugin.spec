@@ -23,11 +23,6 @@ subparsers:
                       help: Specifies whether to deploy the overcloud
                       default: False
 
-                  post:
-                      type: Bool
-                      help: Specifies whether we should run post install tasks
-                      default: False
-
                   pre:
                       type: Bool
                       help: Specifies whether we should run pre install tasks
