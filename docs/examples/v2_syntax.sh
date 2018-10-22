@@ -24,11 +24,16 @@ infrared tripleo-overcloud -v \
     --introspect yes \
     --tagging yes \
     --deploy yes \
-    --post yes \
     --deployment-files virt \
     --network-backend vxlan \
     --overcloud-ssl false \
     --network-protocol ipv4
+
+## POST TASKS ##
+infrared cloud-config -v \
+    -o cloud-config.yml \
+    --deployment-files virt \
+    --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input,
 
 ## TEMPEST ##
 infrared tempest -v \

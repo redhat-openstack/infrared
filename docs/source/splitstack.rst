@@ -39,5 +39,4 @@ To deploy SplitStack on virtual environment the following steps can be performed
 		--deployment-files splitstack \
 		--role-files default \
 		--deploy yes \
-		--splitstack yes \
-		--post no
+		--splitstack yes
