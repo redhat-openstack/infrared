@@ -17,8 +17,6 @@
   vars:
       vbmc_start_port: 6230
 
-- include_tasks: iptables.yml
-
 - block:
     - name: Get the deployment prefix for multiply deployments
       set_fact:
@@ -38,6 +36,8 @@
 - name: Set management bmc address
   set_fact:
       vbmc_management_address: "{{ (vbmc_host == 'hypervisor')|ternary(hostvars['hypervisor'][management_net].ipv4.address, ansible_default_ipv4.address) }}"
+
+- include_tasks: iptables.yml
 
 - name: Add nodes to vbmc
   command: "{{ vbmc_bin }} add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ vbmc_management_address }} \
