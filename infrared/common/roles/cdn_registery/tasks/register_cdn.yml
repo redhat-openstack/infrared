@@ -6,9 +6,11 @@
   no_log: yes
 
 - name: Check if Satellite server
-  shell: |
-    curl -L -k -s -D - -o /dev/null https://{{ cdn_creds.server_hostname }}/pub/katello-ca-consumer-latest.noarch.rpm | grep "200 OK"
-  register: satellite_detected
+  uri:
+    url: "https://{{ cdn_creds.server_hostname }}/katello/api/ping"
+    validate_certs: no
+    status_code: 200, 404
+  register: _sat6_check
 
 - block:
     - name: Download katello-ca-consumer-latest.noarch.rpm
@@ -22,7 +24,7 @@
       package:
           name: /tmp/katello-ca-consumer-latest.noarch.rpm
           state: present
-  when: satellite_detected.rc == 0
+  when: _sat6_check['status'] == 200
 
 - name: register machines to CDN
   redhat_subscription:
