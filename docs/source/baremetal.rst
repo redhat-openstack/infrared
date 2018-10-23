@@ -60,4 +60,4 @@ Infrared allows to perform baremetal deployments.
     infrared cloud-config -vv \
     -o cloud-config.yml \
     --deployment-files virt \
-    --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input,
+    --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input

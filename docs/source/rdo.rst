@@ -50,7 +50,7 @@ To deploy RDO on virtual environment the following steps can be performed.
      infrared cloud-config -vv \
      -o cloud-config.yml \
      --deployment-files virt \
-     --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input,
+     --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input
 
 To install containerized RDO version (pike and above) the
 ``--registry-*``, ``--containers yes`` and ``--registry-skip-puddle yes``
@@ -72,7 +72,7 @@ parameters should be provided::
     infrared cloud-config -vv \
     -o cloud-config.yml \
     --deployment-files virt \
-    --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input,
+    --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input
 
 .. note:: For the  --registry-tag the following RDO tags can be used:
        ``current-passed-ci``, ``current-tripleo``, ``current``, ``tripleo-ci-testing``, etc
@@ -102,4 +102,4 @@ Known issues
       infrared cloud-config -vv \
       -o cloud-config.yml \
       --deployment-files virt \
-      --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input,
+      --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input

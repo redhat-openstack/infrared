@@ -170,7 +170,7 @@ Let's deploy a `TripleO Overcloud`_::
 
   infrared tripleo-overcloud --deployment-files virt --version 10 --introspect yes --tagging yes --deploy yes
 
-  infrared cloud-config --deployment-files virt --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input,
+  infrared cloud-config --deployment-files virt --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input
 
 This will deploy OSP 10 (``Newton``) overcloud from the undercloud defined previously previously.
 Given the topology defined by the `Answers File`_ earlier, the overcloud should contain:
