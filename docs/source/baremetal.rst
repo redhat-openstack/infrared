@@ -55,5 +55,9 @@ Infrared allows to perform baremetal deployments.
         --public-network false \
         --introspect yes \
         --tagging yes \
-        --deploy yes \
-        --post yes
+        --deploy yes
+
+    infrared cloud-config -vv \
+    -o cloud-config.yml \
+    --deployment-files virt \
+    --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input,
