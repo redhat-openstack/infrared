@@ -116,6 +116,18 @@
       tags:
           - container-images-patch
           - container-images-packages
+
+    - name: override registry parameters from CLI
+      set_fact:
+          container_env:
+              container-image-prepare:
+                  namespace: "{{ install.get('registry', {}).namespace|default(container_env['container-image-prepare'].namespace) }}"
+                  prefix: "{{ install.get('registry', {}).prefix|default(container_env['container-image-prepare'].prefix) }}"
+                  tag: "{{ install.get('registry', {}).tag|default(container_env['container-image-prepare'].tag) }}"
+                  ceph-namespace: "{{ install.get('registry', {}).get('ceph', {}).namespace|default(container_env['container-image-prepare']['ceph-namespace']) }}"
+                  ceph-image: "{{ install.get('registry', {}).get('ceph', {}).image|default(container_env['container-image-prepare']['ceph-image']) }}"
+                  ceph-tag: "{{ install.get('registry', {}).get('ceph', {}).tag|default(container_env['container-image-prepare']['ceph-tag']) }}"
+
   when: not install.registry.skip.puddle
 
 - name: set os_version fact

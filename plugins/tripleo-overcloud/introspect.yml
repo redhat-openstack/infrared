@@ -23,6 +23,32 @@
       instack_input: "{{ (install.instackenv|default({})).file | default('') }}"
       ironic_cli: "{{ (install.version|default(undercloud_version)|openstack_release < 14)|ternary('ironic node-list','openstack baremetal node list') }}"
   tasks:
+      - block:
+        - name: Get flavor list for UEFI updating
+          shell: |
+              set -eo pipefail
+              source ~/stackrc
+
+              openstack flavor list -c Name -f value
+          register: flavor_list
+
+        - name: Update flavors when UEFI boot mode is used
+          shell: |
+              set -eo pipefail
+              source ~/stackrc
+
+              openstack flavor set {{ item }} \
+                    --property capabilities:boot_option='local' \
+                    --property capabilities:profile='{{ item }}' \
+                    --property capabilities:boot_mode=uefi
+          with_items: "{{ flavor_list.stdout_lines }}"
+        when:
+            - install.boot.mode == 'uefi'
+            - install.version|default(undercloud_version) |openstack_release > 9
+        tags:
+            - ironic
+            - skip_ansible_lint
+
       - name: inject instackenv file if provided by the user
         tags: ironic
         copy:
@@ -76,9 +102,19 @@
         when: "'bmc' in groups"
 
       - name: set root-disk override fact
+        tags:
+            - root_device
+        vars:
+            ceph_default_disk_name: '/dev/vda'
+            default_disk_override:
+                - node: "ceph"
+                  hint: "name"
+                  hintvalue: "{{ ceph_default_disk_name }}"
+            ceph_defaults: "{{ ((install.version|default(undercloud_version)|openstack_release > 9) and
+                                 'ceph' in groups and
+                                 'hypervisor' in groups)|ternary(default_disk_override, []) }}"
         set_fact:
-            root_disk: "{{ install.root.disk.get('override', []) }}"
-        when: install.get('root',{}).get('disk',{})
+            root_disk: "{{ ceph_defaults|union(install.get('root',{}).get('disk',{}).get('override', [])) }}"
 
       - name: configure root-disk for multi-disk nodes
         shell: |
@@ -89,14 +125,26 @@
 
             {% for node in item.node.split(':') %}
                 if [[ "{{ node }}" =~ $REGEX ]]; then
+                {% if install.version|default(undercloud_version) |openstack_release > 9 %}
                     openstack baremetal node set \
                       --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}' {{ node }}
+                {% else %}
+                    ironic node-list|awk '/{{ node }}/ {print $2}'| \
+                    xargs -I{} ironic node-update {} add properties/root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
+                {% endif %}
                 else
+                {% if install.version|default(undercloud_version) |openstack_release > 9 %}
                     openstack baremetal node list|awk '/{{ node }}/ {print $2}'| \
                     xargs -I{} openstack baremetal node set {} --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
+                {% else %}
+                    ironic node-list|awk '/{{ node }}/ {print $2}'| \
+                    xargs -I{} ironic node-update {} add properties/root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
+                {% endif %}
                 fi
             {% endfor %}
-        tags: skip_ansible_lint
+        tags:
+            - skip_ansible_lint
+            - root_device
         with_items: "{{ root_disk }}"
         when: root_disk is defined
 
@@ -160,6 +208,16 @@
             - install.version|default(undercloud_version) | openstack_release == 10
             - vbmc_ports is defined
 
+      - name: set deploy_interface option to direct
+        shell: |
+            source ~/stackrc
+            NODE_UUID=$({{ ironic_cli }} | awk '/{{ item.name | default(item) }}/ {print $2}' )
+            openstack baremetal node set --deploy-interface direct ${NODE_UUID}
+        with_items: "{{ groups['overcloud_nodes'] | default([])}}"
+        when:
+            - install.image_direct_deploy != 'iscsi'
+            - install.version|default(undercloud_version) | openstack_release > 13
+
 #
 # With baremetal deployments hosts from custom instackenv are missing from inventory
 # Add them to Ansible's inventory for future use
@@ -189,7 +247,9 @@
                   - openstack_nodes
                   - "{{ item.name.split('-')[0] }}"
               ansible_user: root
-          when: "{{ item.name not in groups.get('all',[]) }}"
+          when:
+            - item.name|default('') != ''
+            - item.name not in groups.get('all',[])
           with_items:  "{{ overcloud_facts.nodes }}"
           register: update_inventory
 

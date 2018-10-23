@@ -31,7 +31,7 @@
       # consider all the files as templates
       - name: Copy deployment folder
         vars:
-            nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('osp11', 'legacy') }}"
+            nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('', 'legacy') }}"
         template:
             src: '{{ item.src }}'
             dest: '{{ template_base }}/{{ item.path | regex_replace("\.j2$", "") }}'
@@ -110,6 +110,10 @@
             loop_var: templates_list_file
         # avoid empty strings
         when: "templates_list_file != ''"
+
+      - name: append templates for ironic enabled OC
+        include_tasks: tasks/ironic_environment_templates.yml
+        when: install.ironic or install.ironic_inspector
 
       - import_role:
             name: containers/prepare-templates

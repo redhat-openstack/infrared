@@ -4,7 +4,7 @@
   tags: init
   any_errors_fatal: true
   tasks:
-       - name: Install pre-defined Undercloud packages for OSP < 13
+       - name: Install pre-defined Undercloud packages for OSP <= 13
          yum:
              name: "{{ install.undercloud.packages }}"
              state: present
@@ -12,7 +12,7 @@
          when:
              - install.undercloud is defined
              - install.undercloud.packages
-             - install.version|default(undercloud_version)|openstack_release < 13
+             - install.version|default(undercloud_version)|openstack_release <= 13
 
        - name: Workaround for ceph-ansible brew job to install packages into mistral-executor container on UC for OSP 13+
          shell: |

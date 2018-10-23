@@ -91,6 +91,9 @@
 - shell: "(set -x; blkid; lsblk; df -T; df -i) &> /var/log/extra/disk"
   ignore_errors: true
 
+- shell: "(set -x; sestatus -v; sestatus -b) &> /var/log/extra/selinux"
+  ignore_errors: true
+
 - shell: |
     if [[ -f "/etc/ceph/ceph.client.admin.keyring" || -f "/etc/ceph/ceph.keyring" || -f "/etc/ceph/keyring" || -f "/etc/ceph/keyring.bin" ]]; then
         ceph status &>/var/log/extra/ceph
@@ -133,6 +136,8 @@
               echo "+ docker inspect $cont" >> "$INFO_FILE";
               docker inspect "$cont" &>> "$INFO_FILE";
               docker logs "$cont" &> "$INFO_DIR/stdout.log";
+              echo "+ docker exec --user root $cont /usr/bin/rpm -qa" >> "$INFO_FILE";
+              docker exec -it --user root ${cont} /usr/bin/rpm -qa &>> "$INFO_FILE";
               docker cp "$cont:/var/lib/kolla/config_files/config.json" "$INFO_DIR/config.json";
           done;
       fi

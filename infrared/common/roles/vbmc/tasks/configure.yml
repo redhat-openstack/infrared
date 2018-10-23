@@ -1,69 +1,13 @@
-- name: set vbmc user and path
-  set_fact:
-      vbmc_user: "{{ (vbmc_host == 'undercloud') | ternary(ansible_user|default(ansible_ssh_user), 'root') }}"
-      vbmc_dir: "{{ (vbmc_host == 'undercloud') | ternary(ansible_user_dir, '/root') }}"
-
-- block:
-    - name: adds VirtualBMC as systemd service
-      copy:
-        mode: 0664
-        dest: "/usr/lib/systemd/system/virtualbmc.service"
-        content: |
-          [Unit]
-          Description=VirtualBMC service
-          After=network.target
-          [Service]
-          User={{ vbmc_user }}
-          Type=oneshot
-          ExecStart=/bin/bash -c 'for bmc in $(ls {{ vbmc_dir }}/.vbmc/); do vbmc start $bmc; done'
-          ExecStop=/bin/bash -c 'for bmc in $(ls {{ vbmc_dir }}/.vbmc/); do vbmc stop $bmc; done'
-          RemainAfterExit=yes
-          [Install]
-          WantedBy=multi-user.target
-
-    - name: Create VirtualBMC directories
-      file:
-        path: "{{ item }}"
-        state: directory
-        mode: 0750
-        owner: root
-        group: root
-      with_items:
-        - "/etc/virtualbmc"
-        - "/var/log/virtualbmc"
-
-    - name: Create VirtualBMC configuration file
-      copy:
-        mode: 0750
-        dest: "/etc/virtualbmc/virtualbmc.conf"
-        content: |
-          [default]
-          config_dir= {{ vbmc_dir }}/.vbmc
-          [log]
-          logfile=/var/log/virtualbmc/virtualbmc.log
-          debug=True
-          [ipmi]
-          session_timout=20
-  become: true
-
-- name: Start the Virtual BMCs
-  become: true
-  systemd:
-    name: virtualbmc
-    daemon_reload: yes
-    state: restarted
-    enabled: yes
-
-- name: Remove existing Virtual BMCs
-  # grab only lines with port number (more than 2 digits)
+---
+- name: Stop and remove existing Virtual BMCs
   shell: |
-      vbmc stop {{ hostvars[item].original_name|default(item) }}
-      vbmc delete {{ hostvars[item].original_name|default(item) }}
+      {{ vbmc_bin }} stop {{ hostvars[item].original_name|default(item) }}
+      {{ vbmc_bin }} delete {{ hostvars[item].original_name|default(item) }}
   ignore_errors: true
   with_items: "{{ vbmc_nodes }}"
 
 - name: Get current count of used vbmc ports
-  shell: vbmc list | grep 62 | wc -l
+  shell: "{{ vbmc_bin | quote }} list | grep 62 | wc -l"
   register: vbmc_used_ports
 
 - name: Define vbmc_port for each VM
@@ -72,8 +16,6 @@
   with_indexed_items: "{{ vbmc_nodes }}"
   vars:
       vbmc_start_port: 6230
-
-- include_tasks: iptables.yml
 
 - block:
     - name: Get the deployment prefix for multiply deployments
@@ -95,19 +37,21 @@
   set_fact:
       vbmc_management_address: "{{ (vbmc_host == 'hypervisor')|ternary(hostvars['hypervisor'][management_net].ipv4.address, ansible_default_ipv4.address) }}"
 
+- include_tasks: iptables.yml
+
 - name: Add nodes to vbmc
-  command: "vbmc add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ vbmc_management_address }} \
+  command: "{{ vbmc_bin }} add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ vbmc_management_address }} \
             --libvirt-uri \"qemu+ssh://{{ hostvars['hypervisor'].ansible_user_id }}@{{ hostvars['hypervisor'][management_net].ipv4.address }}/system?no_verify=1&no_tty=1\""
   with_dict: "{{ vbmc_ports }}"
   when: vbmc_host == 'undercloud'
 
 - name: Add nodes to vbmc
-  command: "vbmc add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ vbmc_management_address }}"
+  command: "{{ vbmc_bin }} add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ vbmc_management_address }}"
   with_dict: "{{ vbmc_ports }}"
   when: vbmc_host == 'hypervisor'
 
 - name: Start nodes using vbmc
-  command: "vbmc start {{ item.key }}"
+  command: "{{ vbmc_bin }} start {{ item.key }}"
   with_dict: "{{ vbmc_ports }}"
 
 - name: Setting nodes power status using ipmitool

@@ -116,9 +116,3 @@
       - install.version|default(hostvars[groups['undercloud'][0]].undercloud_version) | openstack_release > 12
       - install.containers|bool
   tags: deploy
-
-- name: Perform post install tasks
-  import_playbook: "{{ overcloud_post | default('post.yml') }}"
-  when: install.post|default('')
-  tags:
-      - post

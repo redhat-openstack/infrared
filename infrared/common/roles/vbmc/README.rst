@@ -4,8 +4,8 @@ Virtualbmc role
 This roles installs python-virtualbmc package and configures it for all the
 overcloud nodes hosted on the hypervisor. Should be run on the undercloud node.
 
-By default this role install vbmc on the hypervisor. Target host can be changed
-by setting the vbmc_host value to 'undercloud'.
+By default, this role installs vbmc on the hypervisor. Target host can be
+changed by setting the vbmc_host value to 'undercloud'.
 
 Usage examples
 ==============

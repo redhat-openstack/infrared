@@ -23,11 +23,6 @@ subparsers:
                       help: Specifies whether to deploy the overcloud
                       default: False
 
-                  post:
-                      type: Bool
-                      help: Specifies whether we should run post install tasks
-                      default: False
-
                   pre:
                       type: Bool
                       help: Specifies whether we should run pre install tasks
@@ -125,7 +120,6 @@ subparsers:
                   registry-ceph-tag:
                       type: Value
                       help: tag used with the ceph container
-                      default: latest
 
             - title: Deployment Description
               options:
@@ -145,6 +139,7 @@ subparsers:
                         - "12"
                         - "13"
                         - "14"
+                        - "15"
                         - kilo
                         - liberty
                         - mitaka
@@ -153,6 +148,7 @@ subparsers:
                         - pike
                         - queens
                         - rocky
+                        - stein
 
                   deployment-files:
                       type: VarDir
@@ -695,6 +691,44 @@ subparsers:
                               --root-disk-override node=controller,hint=size,hintvalue=50
                               --root-disk-override node=compute-0,hint=name,hintvalue=/dev/sda
                               --root-disk-override node=ceph,hint=rotational,hintvalue=false
+
+                          If this parameter is not set, Infrared will set only ceph root_device to /dev/vda.
+                          To override that behavior use -e ceph_default_disk_name=/dev/sdb option.
+
+                  boot-mode:
+                      type: Value
+                      help: |
+                          TripleO supports booting overcloud nodes in UEFI mode instead of the default BIOS mode.
+                          This is required to use advanced features like secure boot, and some hardware may only
+                          feature UEFI support.
+                      default: bios
+                      choices:
+                          - bios
+                          - uefi
+
+                  ironic:
+                      type: Bool
+                      help: |
+                          This options allows adding ironic templates to support overcloud deployment with ironic
+                          enabled services. This is required for booting BM instances in overcloud.
+                      default: False
+
+                  ironic_inspector:
+                      type: Bool
+                      help: |
+                          This options allows adding ironic-inspector templates to support introspection in overcloud.
+                          Note that this option implicitly enables the ironic option.
+                      default: False
+
+                  image_direct_deploy:
+                      type: Value
+                      help: |
+                          This option (when set to direct) sets the direct deploy flag on nodes in ironic, instead of the default
+                          iscsi method.
+                      default: iscsi
+                      choices:
+                          - iscsi
+                          - direct
 
             - title: ansible facts
               options:

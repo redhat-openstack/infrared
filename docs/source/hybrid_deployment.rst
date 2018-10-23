@@ -156,7 +156,7 @@ Run introspection and tagging with infrared::
 
 Run deployment with appropriate templates
 -----------------------------------------
-Copy all the templates to the ``plugins/tripleo-undercloud/vars/deployment/files/hybrid/``
+Copy all the templates to the ``plugins/tripleo-overcloud/vars/deployment/files/hybrid/``
 and use ``--deployment-files hybrid``  and ``--deploy yes`` flags to run tripleo-overcloud deployment.
 Additionally the ``--overcloud-templates`` option can be used to pass additional templates::
 

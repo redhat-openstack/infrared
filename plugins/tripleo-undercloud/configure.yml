@@ -37,16 +37,16 @@
             mode: 0755
         when: not local_src
 
-      - name: enable undercloud-ssl
-        include_tasks: tasks/ssl.yml
-        when: install.ssl or install.version|openstack_release > 13
-        tags: ssl
-
       - name: override values in undercloud conf
         include_tasks: tasks/inject_undercloud_conf.yml
         with_dict: "{{ conf.options|default({}) }}"
         loop_control:
             loop_var: section
+
+      - name: enable undercloud-ssl
+        include_tasks: tasks/ssl.yml
+        when: install.ssl or install.version|openstack_release > 13
+        tags: ssl
 
       - name: create the base undercloud deploy script
         template:
@@ -80,3 +80,46 @@
                 value: "{{ working_dir }}/hiera_override.yaml"
         when:
             - install.version|openstack_release > 9
+
+      - block:
+          - name: download workarounds file
+            get_url:
+                url: "{{ install.workarounds }}"
+                dest: ./workarounds.yml
+            delegate_to: localhost
+
+          - name: load workarounds vars
+            include_vars:
+              file: workarounds.yml
+
+          - name: create workarounds scripts
+            template:
+              src: templates/workarounds.sh.j2
+              dest: "~/{{ item }}.sh"
+              mode: 0775
+            with_items:
+              - 'pre_undercloud_deploy_workarounds'
+              - 'post_undercloud_deploy_workarounds'
+        when: install.workarounds != ''
+
+      - block:
+          - name: Initialize a variable with undercloud custom env file content
+            set_fact:
+               undercloud_custom_env_content: |
+                   parameter_defaults:
+                      IronicDefaultDeployInterface: direct
+
+          - name: Create the undercloud custom env file
+            copy:
+               dest: "{{ working_dir }}/undercloud_custom_env.yaml"
+               content: "{{ undercloud_custom_env_content }}"
+
+          - name: set custom env file in undercloud.conf
+            ini_file:
+                path: "{{ working_dir }}/undercloud.conf"
+                section: DEFAULT
+                option: custom_env_files
+                value: "{{ working_dir }}/undercloud_custom_env.yaml"
+        when:
+          - install.deploy_interface_default == 'direct'
+          - install.version|default(undercloud_version) | openstack_release > 13
