@@ -18,6 +18,16 @@
       state: latest
   become: yes
 
+- name: install chrome deps
+  package:
+      name: "{{ item }}"
+      state: present
+  with_items:
+      - mesa-dri-drivers
+      - liberation-fonts-common
+      - liberation-sans-fonts
+  become: yes
+
 - name: install chrome browser
   package:
       name: https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
