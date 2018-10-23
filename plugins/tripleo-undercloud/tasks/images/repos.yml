@@ -22,25 +22,47 @@
   loop_control:
       loop_var: repo_config
 
+- name: workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1535973
+  command: "libguestfs-test-tool"
+  register: libguestfs_test_results
+  failed_when: false
+  changed_when: false
+
+- name: define backend settings
+  set_fact:
+      libguestfs_backend: "{{ (libguestfs_test_results.rc!=0 and
+          'Kernel panic - not syncing: Fatal exception' in libguestfs_test_results.stderr)|ternary(
+              'force_tcg', '') }}"
+
 - name: Upload yum config with enabled custom repository to overcloud image
   register: image_repos
+  environment:
+      LIBGUESTFS_BACKEND_SETTINGS: "{{ libguestfs_backend }}"
   shell: |
       virt-copy-in -a {{ overcloud_image_file }} {{ merge_base_url | join(' ') }} /
   when: merge_base_url is defined
   tags: skip_ansible_lint
 
 - name: Push repository to overcloud image
+  environment:
+      LIBGUESTFS_BACKEND_SETTINGS: "{{ libguestfs_backend }}"
   command: "virt-copy-in -a {{ overcloud_image_file }} {{ tmp_oc_repos_dir }} /etc/"
 
 - block:
     - name: Install yum-plugin-priorities package inside overcloud image
+      environment:
+          LIBGUESTFS_BACKEND_SETTINGS: "{{ libguestfs_backend }}"
       command: "virt-customize -a {{ overcloud_image_file }} --install yum-plugin-priorities"
 
     - name: Do package update inside of overcloud image
+      environment:
+          LIBGUESTFS_BACKEND_SETTINGS: "{{ libguestfs_backend }}"
       command: "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }}"
   when: patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
 - name: Install packages in overcloud image
+  environment:
+      LIBGUESTFS_BACKEND_SETTINGS: "{{ libguestfs_backend }}"
   command: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel"
   register: image_packages
   when: install.images.packages|default(None) != None
@@ -53,6 +75,8 @@
       state: restarted
 
 - name: update packages on repos
+  environment:
+      LIBGUESTFS_BACKEND_SETTINGS: "{{ libguestfs_backend }}"
   command: "virt-customize -a {{ overcloud_image_file }} --update --memsize {{ requested_mem }} --smp {{ (ansible_processor_vcpus/2)|round|int }}  --selinux-relabel"
   register: image_update
   vars:
@@ -64,6 +88,8 @@
   when: install.images['update'] or patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
 - name: Set selinux state
+  environment:
+      LIBGUESTFS_BACKEND_SETTINGS: "{{ libguestfs_backend }}"
   command: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --run-command 'sed -i s/SELINUX=.*/SELINUX={{ install.selinux }}/g /etc/selinux/config'"
   register: image_selinux
   when:
@@ -72,11 +98,15 @@
 
 # mcornea: remove once we have a resolution for BZ#1559151
 - name: implement workaround for BZ#1559151
+  environment:
+      LIBGUESTFS_BACKEND_SETTINGS: "{{ libguestfs_backend }}"
   command: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --delete /usr/libexec/os-apply-config/templates/etc/os-net-config/config.json"
   when:
       - undercloud_version|openstack_release == 11
 
 - name: remove machine-id from overcloud image
+  environment:
+      LIBGUESTFS_BACKEND_SETTINGS: "{{ libguestfs_backend }}"
   command: "virt-sysprep --operation machine-id -a {{ overcloud_image_file }}"
   when:
       - image_repos is changed or image_packages is changed or image_update is changed or image_selinux is changed

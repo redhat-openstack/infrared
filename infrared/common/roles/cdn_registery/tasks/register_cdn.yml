@@ -5,6 +5,25 @@
   # file may contain passwords. Don't print its content to console
   no_log: yes
 
+- name: Check if Satellite server
+  shell: |
+    curl -L -k -s -D - -o /dev/null https://{{ cdn_creds.server_hostname }}/pub/katello-ca-consumer-latest.noarch.rpm | grep "200 OK"
+  register: satellite_detected
+
+- block:
+    - name: Download katello-ca-consumer-latest.noarch.rpm
+      get_url:
+          url: "https://{{ cdn_creds.server_hostname }}/pub/katello-ca-consumer-latest.noarch.rpm"
+          dest: "/tmp/katello-ca-consumer-latest.noarch.rpm"
+          force: yes
+          validate_certs: no
+
+    - name: Install katello-ca-consumer-latest.noarch.rpm
+      package:
+          name: /tmp/katello-ca-consumer-latest.noarch.rpm
+          state: present
+  when: satellite_detected.rc == 0
+
 - name: register machines to CDN
   redhat_subscription:
       # the ability to load dict directly as task params will be depractaed

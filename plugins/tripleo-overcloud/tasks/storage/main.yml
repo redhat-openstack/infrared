@@ -11,13 +11,7 @@
       - "not install.storage.external"
       - "not install.splitstack"
 
-- name: check if user provided storage templates
-  stat:
-      path: "{{ template_base }}/storage"
-  register: storage
-
 # If user provided storage templates, nothing to do here :)
 - include_tasks: "{{ storage_backend }}.yml"
   when:
     - storage_backend|default('')
-    - not storage.stat.exists

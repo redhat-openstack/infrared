@@ -1,10 +1,9 @@
-name: undercloud
+name: openshift-tester
 prefix: null
-cpu: "8"
+cpu: "2"
 cpumodel: "host-passthrough"
-memory: "16384"
+memory: "4096"
 swap: "0"
-deploy_os: true
 os:
     type: "linux"
     variant: "rhel7"
@@ -13,13 +12,11 @@ disks:
         import_url: null
         path: null
         dev: "/dev/vda"
-        size: "55G"
+        size: "40G"
         cache: "unsafe"
         preallocation: "metadata"
-# infraces and external_network dicts were moved to network file.
+
 interfaces: null
 
 groups:
-    - undercloud
-    - tester
-    - openstack_nodes
+    - openshift_tester

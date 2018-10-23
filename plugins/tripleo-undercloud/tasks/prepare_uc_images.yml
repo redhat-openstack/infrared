@@ -116,14 +116,6 @@
           replace: '\1,{{ ceph_namespace }}'
       when: container_env['container-image-prepare']['ceph-namespace'] is defined
 
-    # BZ#1607627
-    - name: set tag_from_label in containers-prepare-parameter.yaml
-      replace:
-          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-          regexp: 'rdo_version'
-          replace: "'{version}-{release}'"
-      when: install.registry.skip.puddle
-
     - block:
         - name: remove tag_from_label in containers-prepare-parameter.yaml
           lineinfile:
@@ -137,5 +129,19 @@
               regexp: '(^\ +)tag: latest'
               replace: "\\1tag: {{ container_env['container-image-prepare']['tag'] }}"
       when: not install.registry.skip.puddle
+
+    - block:
+        - name: set satellite namespace
+          replace:
+              path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+              regexp: '(^\ +)namespace.*'
+              replace: "\\1namespace: {{ install.registry.mirror }}"
+
+        - name: set satellite prefix
+          replace:
+              path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+              regexp: '(^\ +)name_prefix.*'
+              replace: "\\1name_prefix: {{ install.registry.prefix }}"
+      when: install.cdn|default(False)
   when:
       - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'

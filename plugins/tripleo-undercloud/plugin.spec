@@ -54,6 +54,16 @@ subparsers:
                           If no `undercloud.conf` file found, it will use default `/usr/share/instack-undercloud/undercloud.conf.sample`
                           that is provided by the installation.
 
+                  boot-mode:
+                      type: Value
+                      help: |
+                          The default boot mode is the legacy BIOS mode.
+                          Newer systems might require UEFI boot mode instead of the legacy BIOS mode.
+                      choices:
+                          - bios
+                          - uefi
+                      default: bios
+
                   config-options:
                       type: IniType
                       action: append
@@ -92,6 +102,16 @@ subparsers:
                             Ntp server name (or IP) to use.
                       default: clock.redhat.com
 
+                  deploy_interface_default:
+                      type: Value
+                      default: iscsi
+                      help: |
+                          This option (when set to direct) changes the default in Ironic for the value
+                          of deploy_interface from iscsi to direct.
+                      choices:
+                          - iscsi
+                          - direct
+
             - title: Splitstack deployment
               options:
                   splitstack:
@@ -129,6 +149,7 @@ subparsers:
                         - "12"
                         - "13"
                         - "14"
+                        - "15"
                         - kilo
                         - liberty
                         - mitaka
@@ -137,6 +158,7 @@ subparsers:
                         - pike
                         - queens
                         - rocky
+                        - stein
                   build:
                       help: |
                           String represents a timestamp of the OSP puddle.
@@ -195,6 +217,13 @@ subparsers:
                       type: Bool
                       help: Specifies whether we should run post install tasks
                       default: yes
+
+                  workarounds:
+                      type: Value
+                      help: |
+                          Specifies the external workarounds file location.
+                          Example:  --workarounds 'http://server.localdomain/workarounds.yml'
+                      default: ''
 
             - title: TripleO User
               options:
@@ -343,3 +372,9 @@ subparsers:
                             The registry or the registry-mirror will be used directly when possible,
                             recommended to use this option when you have very good bandwidth to your registry.
                       default: False
+
+                  registry-prefix:
+                      type: Value
+                      help: |
+                          Container images prefix
+                      default: 'openstack-'
