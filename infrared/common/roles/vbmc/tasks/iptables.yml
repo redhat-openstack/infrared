@@ -58,7 +58,7 @@
           chain: INPUT
           jump: ACCEPT
           protocol: "udp"
-          source: "{{ hostvars[groups.hypervisor|first].ansible_default_ipv4.address }}"
+          source: "{{ vbmc_management_address }}"
           destination_port: "{{ item.1 }}"
       with_nested:
           - "{{ vbmc_ports.items() }}"
