@@ -223,7 +223,7 @@
         retries: 36
         delay: 5
         with_items:
-            - "{{ (overcloud_version|int > 12) | ternary('Stopped', 'Stopped:') }}"
+            - "{{ (overcloud_version|int > 11) | ternary('Stopped', 'Stopped:') }}"
         when:
             - pcs_active|failed
             - pcmk_remote|failed
