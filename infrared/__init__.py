@@ -181,6 +181,11 @@ PLUGINS_REGISTRY = {
         'desc': 'Install TripleO on a designated undercloud node',
         'type': 'install'
     },
+    'tripleo-standalone': {
+        'src': 'plugins/tripleo-standalone',
+        'desc': 'Install TripleO overcloud in standalone mode',
+        'type': 'install'
+    },
     'tripleo-upgrade': {
         'src': 'https://git.openstack.org/openstack/tripleo-upgrade.git',
         'src_path': 'infrared_plugin',
