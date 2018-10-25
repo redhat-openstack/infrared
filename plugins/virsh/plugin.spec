@@ -48,9 +48,9 @@ subparsers:
                       type: Value
                       help: |
                         URL to the image used for node provisioning.
-                        Default url to RHEL 7.5 guest image
-                        RHEL 7.5 is unavailble for OSP 7
-                      default: https://url.corp.redhat.com/rhel-guest-image-7-5-146-x86-64-qcow2
+                        Default url to RHEL 7.6 guest image
+                        RHEL 7.6 is unavailable for OSP7 and OSP11
+                      default: https://url.corp.redhat.com/rhel-guest-image-7-6-210-x86-64-qcow2
 
                   force-image-download:
                       type: Bool
