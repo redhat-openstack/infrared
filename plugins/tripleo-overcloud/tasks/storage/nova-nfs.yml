@@ -1,0 +1,16 @@
+- block:
+      - name: include default nova nfs template
+        lineinfile:
+            dest: "{{ ansible_env.HOME }}/overcloud_deploy.sh"
+            line: "--environment-file {{ install.heat.templates.basedir }}/environments/storage/nova-nfs.yaml \\"
+            insertbefore: "^--log-file.*"
+
+      - name: create custom nova nfs template file
+        template:
+            dest: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/nova-nfs-custom.yaml"
+            src: storage/nova-nfs-custom.yml.j2
+
+  when:
+      - install.storage.nova.nfs.share is defined
+      - install.nova.nfs.backend | default(False)
+      - install.version | default(undercloud_version) | openstack_release >= 13

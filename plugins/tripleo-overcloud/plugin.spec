@@ -467,6 +467,19 @@ subparsers:
                       help: |
                         The storage backend type used for glance, enabling to set Swift or RadosGW as the backend when deploying internal Ceph. Default value is 'rbd'
 
+                  nova-nfs-backend:
+                      type: Bool
+                      help: |
+                          This options allows configuring NFS backend for Nova component and includes the appropriate
+                          THT template. storage-nova-nfs-share needs to be set when this is set to 'True'
+                      default: False
+
+                  storage-nova-nfs-share:
+                      type: Value
+                      help: |
+                        The absolute path to an external NFS storage mount
+                        NOTE: this needs to be set when nova-nfs-backend is set to 'True'
+
                   storage-config:
                       type: Value
                       help: |
