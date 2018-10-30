@@ -28,6 +28,18 @@
   failed_when: false
   changed_when: false
 
+- name: Check if repo 7.6 file exists
+  stat:
+      path: "{{ tmp_oc_repos_dir }}/rhos-release-rhel-7.6.repo"
+  register: rhel_repo_file
+
+- name: workaround for latest-rhel7 repo for 7.6 image
+  replace:
+      path: "{{ rhel_repo_file.stat.path }}"
+      regexp: 'latest-RHEL-7'
+      replace: 'latest-RHEL-ALT-7'
+  when: rhel_repo_file.stat.exists
+
 - name: define backend settings
   set_fact:
       libguestfs_backend: "{{ (libguestfs_test_results.rc!=0 and
