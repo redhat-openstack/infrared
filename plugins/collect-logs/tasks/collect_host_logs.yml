@@ -8,6 +8,8 @@
         - psmisc
         # ^ pstree
         - tar
+        - expect
+        #^ unbuffer for not-wrapping yum list output
       state: present
   ignore_errors: true
 
@@ -24,7 +26,7 @@
       state: directory
 
 - name: list pkg+repo
-  shell: yum -C list installed > /var/log/extra/packages
+  shell: unbuffer yum -C list installed > /var/log/extra/packages || yum -C list installed > /var/log/extra/packages
 
 - name: collect status of all systemd units
   shell: systemctl --all > /var/log/extra/service 2>&1
