@@ -8,6 +8,7 @@ from collections import OrderedDict
 import git
 import github
 import os
+
 # TODO(aopincar): Add pip to the project's requirements
 try:
     from pip._internal import main as pip_main
@@ -68,8 +69,34 @@ class InfraredPluginManager(object):
             if self.config.has_section(plugin_type_section):
                 for plugin_name, plugin_path in self.config.items(
                         plugin_type_section):
-                    plugin = InfraredPlugin(plugin_path)
-                    self.__class__.PLUGINS_DICT[plugin_name] = plugin
+                    if self._validate_existing_plugin(
+                            plugin_name, plugin_path):
+                        plugin = InfraredPlugin(plugin_path)
+                        self.__class__.PLUGINS_DICT[plugin_name] = plugin
+
+    @staticmethod
+    def _validate_existing_plugin(plugin_name, plugin_path):
+        """
+        Validates plugins from the configuration.
+
+        Currently it checks only the plugin dir is present. In that case
+        we simply ignore that plugin and print error message to the console.
+        Plugin dir can be missing due to many reasons. Most likely due to the
+        Infrared version change when some new plugins have been added
+        or removed. In that case we still need to have working IR with the
+        remaining plugins.
+        """
+        result = True
+        if not os.path.isdir(os.path.abspath(
+                (os.path.expanduser(plugin_path)))):
+            LOG.warning("The '{0}'  plugin was found in config, but not found "
+                        "in the plugins dir. "
+                        "This plugin will not be accessible."
+                        "\nRemove it manually or add it again.".format(
+                            plugin_name))
+            result = False
+
+        return result
 
     def get_installed_plugins(self, plugins_type=None):
         """Returns a dict with all installed plugins
@@ -94,8 +121,9 @@ class InfraredPluginManager(object):
                 plugins_dict[supported_type] = {}
 
             for plugin_name in self.config.options(supported_type):
-                plugin_desc = self.PLUGINS_DICT[plugin_name].description
-                plugins_dict[supported_type][plugin_name] = plugin_desc
+                if plugin_name in self.PLUGINS_DICT:
+                    plugin_desc = self.PLUGINS_DICT[plugin_name].description
+                    plugins_dict[supported_type][plugin_name] = plugin_desc
 
         if plugins_type:
             return plugins_dict.get(plugins_type, {})
