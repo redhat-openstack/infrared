@@ -389,6 +389,14 @@ subparsers:
                       default: no
                       help: Use OVN (HA) instead of ML2 and OVS.
 
+                  custom_network_names:
+                      type: Value
+                      help: |
+                          Option to provide custom names for the networks.
+                          Note: Custom network names can be provided as values.
+                          Value example:
+                          --custom_network_name storage=MyStorageNet,storage_mgmt=MyStorageMgmtNet,internal_api=MyInternalApiNet,tenant=MyTenantNet,external=MyExternalNet
+
             - title: Overcloud Public Network
               options:
                   public-network:
