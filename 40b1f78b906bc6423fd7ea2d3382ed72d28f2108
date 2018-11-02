@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9bf81703_2d7d1ae0",
+        "filename": "plugins/tripleo-overcloud/tasks/network/custom_network_names.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010448
+      },
+      "writtenOn": "2018-11-02T13:46:40Z",
+      "side": 1,
+      "message": "Hardcoding list of networks imho is not the best approach.\nWDYT about reading list of supported networks and using it as a defaults, e.g:\n    - name: load networks\n      shell: |\n        cat /$THT/network_data.yaml\n      register: local_net_data\n\n    - name: set default network names\n      set_fact:\n        valid_net_names: \"{{ local_net_data.stdout|from_yaml|map(attribute\u003d\u0027name_lower\u0027)|list }}\"\n\n    - name: validate custom network names\n      fail:\n        msg: \"{{ item.split(\u0027\u003d\u0027)[0] }} is invalid\"\n      when: \u0027item.split(\"\u003d\")[0] not in valid_net_names\u0027",
+      "range": {
+        "startLine": 6,
+        "startChar": 7,
+        "endLine": 6,
+        "endChar": 32
+      },
+      "revId": "40b1f78b906bc6423fd7ea2d3382ed72d28f2108",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
