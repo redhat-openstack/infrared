@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79f52763_0ff82632",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-11-02T14:46:47Z",
+      "side": 1,
+      "message": "this condition does not need to be inside for, can be placed above it and raise faster without having to go inside loop even once, like\n\nif plugins_type and plugins_type not in self.supported...\n   raise",
+      "revId": "1907f3761cd302a3beb647bb7dd880605c246ffa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2940ee82_bf0f39e5",
+        "filename": "infrared/core/services/plugins.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2018-11-02T14:46:47Z",
+      "side": 1,
+      "message": "is there reason why to bring config in scope here at all?\nto me seems config handling is already done when plugins were loaded above in first place,\nwith corresponding warning and such.\n\nplugins themself do not have information inside what type they are? imo it could make it more easier code here.\nrest of app should be able to work with already vetted/processed outcome of loading (maybe also if this would be wanted very often, already store/categorize plugins in both forms?)\n\nthough it may not be worth the effort, esp not in this patch i guess",
+      "revId": "1907f3761cd302a3beb647bb7dd880605c246ffa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
