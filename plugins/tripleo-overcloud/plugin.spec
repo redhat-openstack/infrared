@@ -482,7 +482,18 @@ subparsers:
                       default: rbd
                       help: |
                         The storage backend type used for glance, enabling to set Swift or RadosGW as the backend when deploying internal Ceph. Default value is 'rbd'
-
+                  storage-protocol-backend:
+                      type: Value
+                      default: NA
+                      choices:
+                          - nfs-ganesha
+                          - nfs
+                          - iscsi
+                          - NA
+                      help: |
+                        The storage protocol that we would like to use.
+                        nfs-ganesha works only if the storage backand is ceph
+                        NOTE: nfs and iscsi are not implemented but added to be decoupled from storage backend parameter
                   nova-nfs-backend:
                       type: Bool
                       help: |
