@@ -36,6 +36,12 @@
      - install.predictable.ips
      - install.version|default(undercloud_version) | openstack_release >= 10
 
+- name: Custom network names
+  import_tasks: network/custom_network_names.yml
+  when:
+     - install.get('custom_network_names',{})|default(False)
+     - install.version|default(undercloud_version) | openstack_release >= 14
+
 - name: Append the network template line for splitstack to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
