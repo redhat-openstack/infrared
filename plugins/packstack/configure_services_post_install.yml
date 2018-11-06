@@ -222,6 +222,16 @@
       - name: Restart neutron service to apply changes in floating ip pool
         command: openstack-service restart neutron
 
+- name: "Workaround BZ1645183: Create floating_ip_pool in nova-net"
+  hosts: controller[0]
+  gather_facts: no
+  become: yes
+  any_errors_fatal: true
+  tasks:
+      - name: register floating ip pool in nova
+        shell: "/usr/bin/nova-manage floating create --pool nova $(sed -nr 's/CONFIG_NOVA_NETWORK_FLOATRANGE=(.*)/\1/p' ~/packstack_config.txt)"
+        when: "install.version|openstack_release == 9 and network_service_common.type == 'nova'"
+
 - name:  Post install for Neutron server
   hosts: controller
   gather_facts: no
