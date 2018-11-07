@@ -83,6 +83,11 @@ subparsers:
                           __LISTYAMLS__
                       default: 3_nets
 
+                  topology-net-url:
+                      type: Value
+                      help: |
+                          URL of network configuration to apply
+
                   topology-nodes:
                       type: ListOfTopologyFiles
                       help: |
