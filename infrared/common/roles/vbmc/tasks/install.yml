@@ -16,18 +16,24 @@
     easy_install:
         name: pip
 
+  - name: "check if there's a virtualenv already installed (i.e.: a system-wide RPM package)"
+    command: virtualenv --version
+    register: virtualenv_installed_check
+
   - name: install virtualenv pip module
     pip:
         name: virtualenv
         extra_args: "--user"
+    when: virtualenv_installed_check.rc != 0
   become: yes
 
 - name: Install python-virtualbmc with pip
   pip:
-      virtualenv_command: "{{ vbmc_home }}/.local/bin/virtualenv"
       virtualenv: "{{ vbmc_virtualenv }}"
       name: virtualbmc
       version: "{{ vbmc_version }}"
+  environment:
+      path: "{{ vbmc_home }}/.local/bin:$PATH" # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a system-wide one
 
 - block:
     - name: adds VirtualBMC as systemd service
