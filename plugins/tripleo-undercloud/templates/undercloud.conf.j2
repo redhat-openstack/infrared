@@ -43,6 +43,10 @@ container_images_file={{ working_dir }}/containers-prepare-parameter.yaml
 {% endif %}
 docker_insecure_registries={{ install.registry.mirror }}
 {% endif %}
+{% if freeipa_cloud_domain is defined %}
+undercloud_hostname = {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}
+overcloud_domain_name = {{ freeipa_cloud_domain }}
+{% endif %}
 [ctlplane-subnet]
 local_subnet = ctlplane-subnet
 cidr = 192.168.24.0/24
