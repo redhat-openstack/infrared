@@ -326,6 +326,11 @@ subparsers:
                       help: Overrides the overcloud ssh user name
                       default: ''
 
+                  overcloud-domain:
+                      type: Value
+                      help: set the CloudDomain parameter
+                      default: ''
+
                   tls-everywhere:
                       type: Bool
                       help: |
