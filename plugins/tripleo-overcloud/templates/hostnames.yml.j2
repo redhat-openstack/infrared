@@ -4,6 +4,9 @@
 #}
 
 parameter_defaults:
+{% if install.overcloud.domain != '' %}
+    CloudDomain: {{  install.overcloud.domain }}
+{% endif %}
 {% if install.scheduler_hints|default(False) or (install.specific.node.ids and install.version|default(undercloud_version)|openstack_release >= 10) %}
 {% for node_type, details in node_types.items() %}
 {% if groups[node_type]|default([])|length %}
