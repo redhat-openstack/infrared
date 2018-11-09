@@ -99,6 +99,17 @@
   when:
       - install.version|default(undercloud_version)|openstack_release < 14
 
+- name: Get patched_rpms and from_source file stat
+  vars:
+      repo_dir: /etc/yum.repos.d
+  stat:
+      path: "{{ repo_dir }}/{{ item }}"
+  register: patched_rpms
+  with_items:
+      - patched_rpms.repo
+      - from_source.repo
+  tags: container-images-packages
+
 ## Workaround BZ#1627946
 - name:  Run container image prepare
   shell: |
@@ -109,22 +120,13 @@
   when:
       - install.version|default(undercloud_version)|openstack_release >= 14
       - install.network.ovn|default(False) or install.ocupdate|default(False)
+      - install_container_images_packages is defined
+      - install_container_images_patch is defined or patched_rpms.results | selectattr('stat.exists', 'equalto', True) | list | length > 0
   tags: skip_ansible_lint
 
 - name: install packages in container images
   include_tasks: container_images_packages.yml
   when: install_container_images_packages is defined
-  tags: container-images-packages
-
-- name: Get patched_rpms and from_source file stat
-  vars:
-      repo_dir: /etc/yum.repos.d
-  stat:
-      path: "{{ repo_dir }}/{{ item }}"
-  register: patched_rpms
-  with_items:
-      - patched_rpms.repo
-      - from_source.repo
   tags: container-images-packages
 
 - name: patch images
