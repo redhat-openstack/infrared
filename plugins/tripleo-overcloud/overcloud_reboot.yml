@@ -179,20 +179,12 @@
             - pcs_active|failed
             - pcmk_remote|succeeded
 
-      # pacemaker managed services
-      - name: start pcs cluster on a node
-        become: true
-        command: pcs cluster start --wait=300
-        when:
-            - pcs_active|failed
-            - pcmk_remote|failed
-
       - name: wait for pacemaker node to recover
         become: true
         shell: pcs status | grep -w 'Online:'
         register: pcs_status
         until: "'{{ inventory_hostname }}' in pcs_status.stdout"
-        retries: 6
+        retries: 60
         delay: 5
         when:
             - pcs_active|failed
