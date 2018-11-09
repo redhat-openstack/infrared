@@ -375,7 +375,7 @@ class PluginManagerSpec(api.SpecObject):
         """Print a list of installed & available plugins"""
         table_rows = []
         table_headers = ["Type", "Name"]
-        installed_mark = ' ' * (len('Installed') / 2) + '*'
+        installed_mark = ' ' * (len('Installed') // 2) + '*'
 
         plugins_dict = \
             self.plugin_manager.get_all_plugins() \
