@@ -182,7 +182,9 @@
       # pacemaker managed services
       - name: start pcs cluster on a node
         become: true
-        command: pcs cluster start --wait=300
+        shell: |
+            sleep 5
+            pcs cluster start --wait=300
         when:
             - pcs_active|failed
             - pcmk_remote|failed
