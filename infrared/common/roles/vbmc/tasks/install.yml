@@ -18,6 +18,8 @@
 
   - name: "check if there's a virtualenv already installed (i.e.: a system-wide RPM package)"
     command: virtualenv --version
+    changed_when: false
+    failed_when: false
     register: virtualenv_installed_check
 
   - name: install virtualenv pip module
@@ -33,7 +35,7 @@
       name: virtualbmc
       version: "{{ vbmc_version }}"
   environment:
-      path: "{{ vbmc_home }}/.local/bin:$PATH" # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a system-wide one
+      PATH: "{{ vbmc_home }}/.local/bin:$PATH" # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a system-wide one
 
 - block:
     - name: adds VirtualBMC as systemd service
