@@ -29,13 +29,16 @@
     when: virtualenv_installed_check.rc != 0
   become: yes
 
+- name: gather info about PATH/env variables
+  setup:
+
 - name: Install python-virtualbmc with pip
   pip:
       virtualenv: "{{ vbmc_virtualenv }}"
       name: virtualbmc
       version: "{{ vbmc_version }}"
   environment:
-      PATH: "{{ vbmc_home }}/.local/bin:$PATH" # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a system-wide one
+      PATH: "{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}" # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a system-wide one
 
 - block:
     - name: adds VirtualBMC as systemd service
