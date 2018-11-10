@@ -35,7 +35,7 @@
       name: virtualbmc
       version: "{{ vbmc_version }}"
   environment:
-      PATH: "{{ vbmc_home }}/.local/bin:$PATH" # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a system-wide one
+      PATH: "{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}" # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a system-wide one
 
 - block:
     - name: adds VirtualBMC as systemd service
