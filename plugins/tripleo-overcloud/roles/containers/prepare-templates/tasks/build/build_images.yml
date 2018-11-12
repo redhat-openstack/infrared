@@ -99,23 +99,6 @@
   when:
       - install.version|default(undercloud_version)|openstack_release < 14
 
-## Workaround BZ#1627946
-- name:  Run container image prepare
-  shell: |
-      openstack tripleo container image prepare \
-        -e ~/containers-prepare-parameter.yaml \
-        {{ environment_yamls | default('') }} {{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
-        --output-env-file {{ template_base }}/docker-images.yaml
-  when:
-      - install.version|default(undercloud_version)|openstack_release >= 14
-      - install.network.ovn|default(False) or install.ocupdate|default(False)
-  tags: skip_ansible_lint
-
-- name: install packages in container images
-  include_tasks: container_images_packages.yml
-  when: install_container_images_packages is defined
-  tags: container-images-packages
-
 - name: Get patched_rpms and from_source file stat
   vars:
       repo_dir: /etc/yum.repos.d
@@ -125,6 +108,28 @@
   with_items:
       - patched_rpms.repo
       - from_source.repo
+  tags: container-images-packages
+
+## Workaround BZ#1627946
+- name:  Run container image prepare
+  shell: |
+      openstack tripleo container image prepare \
+        -e ~/containers-prepare-parameter.yaml \
+        {{ environment_yamls | default('') }} {{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
+        --output-env-file {{ template_base }}/docker-images.yaml
+  when: install.version|default(undercloud_version)|openstack_release >= 14 and
+        ( install.network.ovn|default(False) or
+          install.ocupdate|default(False) or
+          install_container_images_packages is defined or
+          install_container_images_patch is defined or patched_rpms.results | selectattr('stat.exists', 'equalto', True) | list | length > 0
+        )
+  tags:
+      - skip_ansible_lint
+      - container-image-prepare
+
+- name: install packages in container images
+  include_tasks: container_images_packages.yml
+  when: install_container_images_packages is defined
   tags: container-images-packages
 
 - name: patch images
