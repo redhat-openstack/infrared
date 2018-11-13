@@ -36,6 +36,9 @@ inspection_iprange = 192.168.24.100,192.168.24.120
 {% if install.version|openstack_release > 10 %}
 undercloud_ntp_servers={{ install.ntp.server }}
 {% endif %}
+{% if install.version|openstack_release >= 12 and install.overcloud.domain != '' %}
+overcloud_domain_name={{ install.overcloud.domain }}
+{% endif %}
 {% if install.version|openstack_release >= 13 %}
 {% if install.version|openstack_release > 13 %}
 {% if install.version|default(undercloud_version)|openstack_distribution == 'OSP' %}
