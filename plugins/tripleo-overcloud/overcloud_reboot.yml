@@ -221,7 +221,7 @@
         until: srv_status.stdout.find("{{ item }}") == -1
         ignore_errors: true
         retries: 36
-        delay: 5
+        delay: 10
         with_items:
             - "{{ (overcloud_version|int > 11) | ternary('Stopped', 'Stopped:') }}"
         when:
@@ -252,7 +252,7 @@
         until: srv_status.stdout.find("{{ item }}") == -1
         ignore_errors: true
         retries: 36
-        delay: 5
+        delay: 10
         with_items:
             - 'unmanaged'
         when:
