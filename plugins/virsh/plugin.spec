@@ -114,7 +114,8 @@ subparsers:
                       help: |
                           If provided infrared will set specific timezone for the topology. Value
                           has to be a valid timezone.
-                          None: Option change Hypervisor Timezone also
+                          None: This option changes Hypervisor's Timezone too.
+                      default: 'UTC'
 
             - title: cleanup
               options:
