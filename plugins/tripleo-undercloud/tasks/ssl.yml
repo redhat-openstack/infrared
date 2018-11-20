@@ -5,6 +5,13 @@
 #      file: ssl.yml
 #      name: ssl
 
+# NOTE(yprokule) BM environments might miss openssl package
+- name: install openssl package
+  become: true
+  yum:
+    name: openssl
+    state: present
+
 # RHOS 14 has the new version of undercloud.conf file
 # 'undercloud_public_vip' has been replaced by 'undercloud_public_host'
 # Check both values for all versions
