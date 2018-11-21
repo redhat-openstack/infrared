@@ -19,7 +19,7 @@
             - nodes_memory|int <= ansible_memory_mb.nocache.free|int * memory_buffer|float
 
       - fail:
-            msg: "Not enought memory on Hypervisor. Current free memory is {{ ansible_memory_mb.nocache.free }}MB, required is {{ nodes_memory }}MB. Use `--host-memory-overcommit True` if you want to overcommit memory usage"
+            msg: "Not enough memory on Hypervisor. Current free memory is {{ ansible_memory_mb.nocache.free }}MB, required is {{ nodes_memory }}MB. Use `--host-memory-overcommit True` if you want to overcommit memory usage"
         when:
             - nodes_memory|int > ansible_memory_mb.nocache.free|int * memory_buffer|float
             - not provision.host.memory.overcommit|default('False')
