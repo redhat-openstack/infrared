@@ -11,7 +11,6 @@ Run is broken into the following stages. Omitting any of the flags (or setting i
 * ``--introspect`` the overcloud nodes
 * ``--tag`` overcloud nodes with proper flavors
 * ``--deploy`` overcloud of given ``--version`` (see below)
-* Execute ``--post`` installation steps (like creating a public network - see below)
 
 Containers
 ----------
