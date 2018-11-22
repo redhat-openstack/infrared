@@ -28,6 +28,18 @@
           - local_src is defined
           - local_src != False
 
+      - name: make sure ~/.ssh exists
+        file:
+            path: ~/.ssh
+            state: directory
+            mode: 0700
+
+      - name: create default developer-friendly ~/.ssh/config for the stack user
+        template:
+            src: templates/ssh.config.j2
+            dest: ~/.ssh/config
+            mode: 0600
+
       - name: copy default undercloud config
         copy:
             remote_src: yes
