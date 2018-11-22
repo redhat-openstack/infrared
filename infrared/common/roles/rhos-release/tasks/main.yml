@@ -128,6 +128,10 @@
 - name: parse specific number of puddle used from rhos-release output
   set_fact:
       core_puddle_version: "{{ command_result.releases.core.version }}"
+  fail:
+      msg: "The specified puddle version {{ build }} does not exist in {{ release }}"
+  when: command_result.releases.core.version is not search("\d")
+  # If puddle version is 'undetermined!' (it has no digit), task should fail.
 
 - name: write version to file
   copy:
