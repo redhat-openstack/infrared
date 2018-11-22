@@ -129,6 +129,12 @@
   set_fact:
       core_puddle_version: "{{ command_result.releases.core.version }}"
 
+- name: "check if specified puddle {{ build }} exists in release {{ release }}"
+  fail:
+      msg: "The specified puddle {{ build }} does not exist in {{ release }}"
+  when: command_result.releases.core.version is not search("\d")
+  # If puddle version is 'undetermined!' (it has no digit), task should fail.
+
 - name: write version to file
   copy:
       content: "{{ core_puddle_version }}"
