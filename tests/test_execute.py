@@ -194,16 +194,24 @@ def test_nested_value_CLI(spec_fixture,
                              # No spaces
                              (["--extra-vars=key=val"],
                               {"key": "val"}),
+                             # No spaces with val also having "="
+                             (["--extra-vars=key='val='"],
+                              {"key": "val="}),
                              # Single var
                              (["--extra-vars", "key=val"],
                               {"key": "val"}),
+                             # Single var with val also having "="
+                             (["--extra-vars", "key='val='"],
+                              {"key": "val="}),
                              # multiple usage
                              (["--extra-vars", "key=val",
                                "-e", "another.key=val1",
-                               "-e", "another.key2=val2"],
+                               "-e", "another.key2=val2",
+                               "-e", "another.key3='val3='"],
                               {"key": "val",
                                "another": {"key": "val1",
-                                           "key2": "val2"}}),
+                                           "key2": "val2",
+                                           "key3": "val3="}}),
                              # nested vars
                              (["--extra-vars", "nested.key=val"],
                               {"nested": {"key": "val"}}),
