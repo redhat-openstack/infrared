@@ -1,3 +1,8 @@
+- name: Set undercloud/overcloud certificate path fact
+  set_fact:
+      undercloud_cacert: '/etc/pki/ca-trust/source/anchors/undercloud-cacert.pem'
+      overcloud_cacert: '/etc/pki/ca-trust/source/anchors/overcloud-cacert.pem'
+
 - name: copy the enable-tls.yaml file locally
   vars:
       template_dir: "{{ install.heat.templates.basedir }}/environments{{ ('/ssl' if install.version|default(undercloud_version)|openstack_release > 11 else '') }}"
@@ -71,11 +76,10 @@
 - name: sign request with undercloud CA
   vars:
       undercloud_pkey: ~/undercloud-privkey.pem
-      underdloud_cacert: /etc/pki/ca-trust/source/anchors/undercloud-cacert.pem
   command: >
       openssl x509 -req
       -in {{ template_base }}/overcloud-cacert.pem -days 365
-      -CA {{ underdloud_cacert }}
+      -CA {{ undercloud_cacert }}
       -CAkey {{ undercloud_pkey }}
       -set_serial 01
       -out {{ template_base }}/overcloud-cacert.pem
@@ -90,7 +94,7 @@
 - name: copy the self signed CA certification to our trusted store
   copy:
       src: "{{ template_base }}/overcloud-cacert.pem"
-      dest: "/etc/pki/ca-trust/source/anchors/"
+      dest: "{{ overcloud_cacert }}"
       remote_src: yes
   become: yes
 
@@ -103,7 +107,7 @@
   register: oc_cacert
 
 - name: register the CA certificate
-  command: cat /etc/pki/ca-trust/source/anchors/undercloud-cacert.pem
+  command: "cat {{ undercloud_cacert }}"
   register: uc_cacert
   when: undercloud_ssl.rc == 0
 
