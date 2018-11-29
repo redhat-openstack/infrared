@@ -1,24 +1,27 @@
-- name: Get overcloud nodes
-  set_fact:
-        oc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
-
 - block:
-      - name: get vbmc node state
-        shell: "vbmc list | awk '/{{ item }}/ {print $4,$8}'"
-        register: vbmc_status
-        with_items:  "{{ oc_nodes }}"
+  - name: Get overcloud nodes
+    set_fact:
+          oc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
 
-      - name: check and run vbmc node if it is down
-        command: "vbmc start {{ item.item }}"
-        with_items: "{{ vbmc_status.results }}"
-        when: item.stdout.split()[0]  == 'down'
+  - block:
+        - name: get vbmc node state
+          shell: "vbmc list | awk '/{{ item }}/ {print $4,$8}'"
+          register: vbmc_status
+          with_items:  "{{ oc_nodes }}"
 
-      - name: create dictionary with vbmc port
-        set_fact:
-            vbmc_ports: "{{ vbmc_ports|default({})|combine({ item.item: item.stdout.split()[1]}) }}"
-        with_items: "{{ vbmc_status.results }}"
+        - name: check and run vbmc node if it is down
+          command: "vbmc start {{ item.item }}"
+          with_items: "{{ vbmc_status.results }}"
+          when: item.stdout.split()[0]  == 'down'
 
-      - name: include iptables rules chcek
-        include_tasks: iptables.yml
+        - name: create dictionary with vbmc port
+          set_fact:
+              vbmc_ports: "{{ vbmc_ports|default({})|combine({ item.item: item.stdout.split()[1]}) }}"
+          with_items: "{{ vbmc_status.results }}"
 
-  when: oc_nodes|length > 0
+        - name: include iptables rules chcek
+          include_tasks: iptables.yml
+
+    when: oc_nodes|length > 0
+
+  delegate_to: "{{  vbmc_inventory_host }}"
