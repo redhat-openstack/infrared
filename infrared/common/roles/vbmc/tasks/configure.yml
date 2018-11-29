@@ -1,77 +1,79 @@
 ---
-- name: Stop and remove existing Virtual BMCs
-  shell: |
-      {{ vbmc_bin }} stop {{ hostvars[item].original_name|default(item) }}
-      {{ vbmc_bin }} delete {{ hostvars[item].original_name|default(item) }}
-  ignore_errors: true
-  with_items: "{{ vbmc_nodes }}"
-
-- name: Get current count of used vbmc ports
-  shell: "{{ vbmc_bin | quote }} list | grep 62 | wc -l"
-  register: vbmc_used_ports
-
-- name: Define vbmc_port for each VM
-  set_fact:
-      vbmc_ports: "{{ vbmc_ports|default({})|combine({ hostvars[item.1].original_name|default(item.1): vbmc_start_port + vbmc_used_ports.stdout|int + item.0 }) }}"
-  with_indexed_items: "{{ vbmc_nodes }}"
-  vars:
-      vbmc_start_port: 6230
-
 - block:
-    - name: Get the deployment prefix for multiply deployments
-      set_fact:
-          prefix: "{{ item.key }}"
-      when: (item.key + "-") in groups.undercloud|first
-      with_dict: "{{ hostvars['hypervisor'].ansible_local.deployment_info }}"
-  when: "hostvars['hypervisor'].ansible_local.deployment_info is defined"
+  - name: Stop and remove existing Virtual BMCs
+    shell: |
+        {{ vbmc_bin }} stop {{ hostvars[item].original_name|default(item) }}
+        {{ vbmc_bin }} delete {{ hostvars[item].original_name|default(item) }}
+    ignore_errors: true
+    with_items: "{{ vbmc_nodes }}"
 
-- name: Setup prefix to empty if no deployments
-  set_fact:
-      prefix: ''
-  when: "prefix is not defined"
+  - name: Get current count of used vbmc ports
+    shell: "{{ vbmc_bin | quote }} list | grep 62 | wc -l"
+    register: vbmc_used_ports
 
-- set_fact:
-      management_net: "{{ 'ansible_' + prefix|default('') + (prefix is defined and prefix|trim != '')|ternary('_','') + 'management' }}"
+  - name: Define vbmc_port for each VM
+    set_fact:
+        vbmc_ports: "{{ vbmc_ports|default({})|combine({ hostvars[item.1].original_name|default(item.1): vbmc_start_port + vbmc_used_ports.stdout|int + item.0 }) }}"
+    with_indexed_items: "{{ vbmc_nodes }}"
+    vars:
+        vbmc_start_port: 6230
 
-- name: Set management bmc address
-  set_fact:
-      vbmc_management_address: "{{ (vbmc_host == 'hypervisor')|ternary(hostvars['hypervisor'][management_net].ipv4.address, ansible_default_ipv4.address) }}"
+  - block:
+      - name: Get the deployment prefix for multiply deployments
+        set_fact:
+            prefix: "{{ item.key }}"
+        when: (item.key + "-") in groups.undercloud|first
+        with_dict: "{{ hostvars['hypervisor'].ansible_local.deployment_info }}"
+    when: "hostvars['hypervisor'].ansible_local.deployment_info is defined"
 
-- include_tasks: iptables.yml
+  - name: Setup prefix to empty if no deployments
+    set_fact:
+        prefix: ''
+    when: "prefix is not defined"
 
-- name: Add nodes to vbmc
-  command: "{{ vbmc_bin }} add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ vbmc_management_address }} \
-            --libvirt-uri \"qemu+ssh://{{ hostvars['hypervisor'].ansible_user_id }}@{{ hostvars['hypervisor'][management_net].ipv4.address }}/system?no_verify=1&no_tty=1\""
-  with_dict: "{{ vbmc_ports }}"
-  when: vbmc_host == 'undercloud'
+  - set_fact:
+        management_net: "{{ 'ansible_' + prefix|default('') + (prefix is defined and prefix|trim != '')|ternary('_','') + 'management' }}"
 
-- name: Add nodes to vbmc
-  command: "{{ vbmc_bin }} add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ vbmc_management_address }}"
-  with_dict: "{{ vbmc_ports }}"
-  when: vbmc_host == 'hypervisor'
+  - name: Set management bmc address
+    set_fact:
+        vbmc_management_address: "{{ (vbmc_host == 'hypervisor')|ternary(hostvars['hypervisor'][management_net].ipv4.address, ansible_default_ipv4.address) }}"
 
-- name: Start nodes using vbmc
-  command: "{{ vbmc_bin }} start {{ item.key }}"
-  with_dict: "{{ vbmc_ports }}"
+  - include_tasks: iptables.yml
 
-- name: Setting nodes power status using ipmitool
-  command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H {{ vbmc_management_address }} -p {{ item.value }} chassis power on"
-  with_dict: "{{ vbmc_ports }}"
-  register: command_result
-  until: command_result.rc == 0
-  retries: 5
-  delay: 5
+  - name: Add nodes to vbmc
+    command: "{{ vbmc_bin }} add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ vbmc_management_address }} \
+              --libvirt-uri \"qemu+ssh://{{ hostvars['hypervisor'].ansible_user_id }}@{{ hostvars['hypervisor'][management_net].ipv4.address }}/system?no_verify=1&no_tty=1\""
+    with_dict: "{{ vbmc_ports }}"
+    when: vbmc_host == 'undercloud'
 
-- name: Get vbmc VMs power status using ipmitool
-  command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H {{ vbmc_management_address }} -p {{ item.value }} power status"
-  register: ipmitool_results
-  with_dict: "{{ vbmc_ports }}"
-  until: ipmitool_results.rc == 0
-  retries: 5
-  delay: 5
+  - name: Add nodes to vbmc
+    command: "{{ vbmc_bin }} add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ vbmc_management_address }}"
+    with_dict: "{{ vbmc_ports }}"
+    when: vbmc_host == 'hypervisor'
 
-- name: Validate that all VMs are powered on
-  fail:
-      msg: "Node is not powered on! (ipmitool stdout: '{{ item.stdout }}')"
-  when: "item.stdout != 'Chassis Power is on'"
-  with_items: "{{ ipmitool_results.results }}"
+  - name: Start nodes using vbmc
+    command: "{{ vbmc_bin }} start {{ item.key }}"
+    with_dict: "{{ vbmc_ports }}"
+
+  - name: Setting nodes power status using ipmitool
+    command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H {{ vbmc_management_address }} -p {{ item.value }} chassis power on"
+    with_dict: "{{ vbmc_ports }}"
+    register: command_result
+    until: command_result.rc == 0
+    retries: 5
+    delay: 5
+
+  - name: Get vbmc VMs power status using ipmitool
+    command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H {{ vbmc_management_address }} -p {{ item.value }} power status"
+    register: ipmitool_results
+    with_dict: "{{ vbmc_ports }}"
+    until: ipmitool_results.rc == 0
+    retries: 5
+    delay: 5
+
+  - name: Validate that all VMs are powered on
+    fail:
+        msg: "Node is not powered on! (ipmitool stdout: '{{ item.stdout }}')"
+    when: "item.stdout != 'Chassis Power is on'"
+    with_items: "{{ ipmitool_results.results }}"
+  delegate_to: "{{  vbmc_inventory_host }}"

@@ -19,7 +19,7 @@ def _get_magic_var(hostobj, varname, default=""):
         :param default: value, that will be returned if 'varname' is
                         not set in inventory
     """
-    from ansible.playbook.play_context import MAGIC_VARIABLE_MAPPING
+    from ansible.constants import MAGIC_VARIABLE_MAPPING
     for item in MAGIC_VARIABLE_MAPPING[varname]:
         result = hostobj.vars.get(item, "")
         if result:
