@@ -24,6 +24,15 @@
       ignore_virsh_nets:
           - default
   tasks:
+    - name: cleanup iruplink interfaces
+      shell: |
+        for i in $(grep TYPE=iruplink /etc/sysconfig/network-scripts/ifcfg-* | cut -d : -f1); do
+          ifdown $(grep ^NAME $i | cut -d = -f2)
+          rm -f $i
+        done
+        rm -f /etc/sysconfig/network-scripts/ifup-iruplink
+        rm -f /etc/sysconfig/network-scripts/ifdown-iruplink
+
     - name: check if installed package
       command: "rpm -qa libvirt"
       register: libvirt_status
