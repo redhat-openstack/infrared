@@ -94,7 +94,7 @@
             undercloud_public_ip: "{{ install.public.get('vlan', {}).get('ip', '') }}"
         when:
             - "'hypervisor' not in groups or install.hybrid|default(false)"
-            - undercloud_public_ip
+            - undercloud_public_ip|string
 
       # ensure we have all envs/roles referenced in deploy script for container image preparation
       - include_tasks: tasks/append_script.yml
