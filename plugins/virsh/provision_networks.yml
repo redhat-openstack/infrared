@@ -97,3 +97,45 @@
           name: "{{ item.value.name }}"
           state: active
       with_dict: "{{ networks }}"
+
+    - name: create bridge uplink network-scripts
+      copy:
+        src: "iruplink/{{ item }}"
+        dest: "/etc/sysconfig/network-scripts/{{ item }}"
+        mode: 0755
+      with_items:
+        - ifup-iruplink
+        - ifdown-iruplink
+      when: "uplinks is defined"
+
+    - name: create bridge uplinks
+      become: yes
+      copy:
+          force: yes
+          dest: "/etc/sysconfig/network-scripts/ifcfg-{{ item.key }}"
+          content: |
+              DEVICE={{ item.key }}
+              TYPE=iruplink
+              NAME={{ item.key }}
+              PEER_NAME={{ item.value.peer }}
+              FROM_BRIDGE={{ item.value.from }}
+              TO_BRIDGE={{ item.value.to }}
+              NM_CONTROLLED=no
+              ONBOOT=yes
+              {% if item.value.latency is defined and item.value.latency.out is defined %}
+              LATENCY_OUT={{ item.value.latency.out }}
+              {% endif %}
+              {% if item.value.latency is defined and item.value.latency.in is defined %}
+              LATENCY_IN={{ item.value.latency.in }}
+              {% endif %}
+              {% if item.value.rate is defined %}
+              RATE={{ item.value.rate }}
+              {% endif %}
+      with_dict: "{{ uplinks }}"
+      when: "uplinks is defined"
+
+    - name: start bridge uplinks
+      become: yes
+      command: ifup {{ item.key }}
+      with_dict: "{{ uplinks }}"
+      when: "uplinks is defined"

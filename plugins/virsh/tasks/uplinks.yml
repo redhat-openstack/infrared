@@ -1,0 +1,14 @@
+- name: veth interface network configuration
+  become: yes
+  copy:
+      force: yes
+      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ uplink_data.device }}"
+      content: |
+          DEVICE={{ nic_data.device }}
+          NAME={{ nic_data.device }}
+          HWADDR={{ nic_data.macaddress }}
+          BRIDGE={{ nic_settings.name }}
+          # Change to 'no' to disable NetworkManager for this interface.
+          NM_CONTROLLED=no
+          ONBOOT=yes
+          TYPE=Ethernet

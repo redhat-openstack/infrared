@@ -1,0 +1,97 @@
+#!/bin/bash
+# Network Interface Configuration System
+# Copyright (c) 1996-2014 Red Hat, Inc. all rights reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License, version 2,
+# as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+. /etc/init.d/functions
+
+cd /etc/sysconfig/network-scripts
+. ./network-functions
+
+[ -f ../network ] && . ../network
+
+CONFIG=${1}
+
+need_config "${CONFIG}"
+
+source_config
+
+if [ ! -x /usr/sbin/brctl ]; then
+    net_log $"Bridge support not available: brctl not found"
+    exit 1
+fi
+
+
+if [ ! -d /sys/class/net/${FROM_BRIDGE}/bridge ]; then
+    /usr/sbin/brctl addbr -- ${FROM_BRIDGE} 2>/dev/null
+    /usr/sbin/brctl stp -- ${FROM_BRIDGE} on 2>/dev/null
+    /sbin/ip link set dev ${FROM_BRIDGE} up
+fi
+if [ ! -d /sys/class/net/${TO_BRIDGE}/bridge ]; then
+    /usr/sbin/brctl addbr -- ${TO_BRIDGE} 2>/dev/null
+    /usr/sbin/brctl stp -- ${TO_BRIDGE} on 2>/dev/null
+    /sbin/ip link set dev ${TO_BRIDGE} up
+fi
+
+/sbin/ip link add name ${DEVICE} type veth peer name ${PEER_NAME} > /dev/null
+/sbin/ip link set dev ${DEVICE} up
+/sbin/ip link set dev ${PEER_NAME} up
+
+/sbin/ip addr flush dev ${DEVICE} 2>/dev/null
+/sbin/ip addr flush dev ${PEER_NAME} 2>/dev/null
+ethtool_set
+[ -n "${LINKDELAY}" ] && /bin/sleep ${LINKDELAY}
+/usr/sbin/brctl addif -- ${FROM_BRIDGE} ${DEVICE}
+/usr/sbin/brctl addif -- ${TO_BRIDGE} ${PEER_NAME}
+
+# Upon adding a device to a bridge,
+# it's necessary to make radvd reload its config
+[ -r /run/radvd/radvd.pid ] && kill -HUP $(cat /run/radvd/radvd.pid)
+
+ # tc qdisc add dev eth0 root handle 1:0 netem delay 100ms
+ # tc qdisc add dev eth0 parent 1:1 handle 10: tbf rate 256kbit buffer 1600 limit 3000
+
+if [ -n "${LATENCY_OUT}" ]; then
+    # Calulate a default queue len based on the bandwidth-delay product with full packets
+    QUEUELEN=$((${RATE:-10000} * 1000000/8 * ${LATENCY_OUT} / 1500))
+    /usr/sbin/tc qdisc add dev ${DEVICE} root handle 1:0 netem delay ${LATENCY_OUT}ms limit ${QUEUELEN}
+    if [ -n "${RATE}" ]; then
+        BUFFER=$((${RATE} * 10 * 1024 / 8))
+        LATENCY=$((${LATENCY_OUT} / 2))
+        /usr/sbin/tc qdisc add dev ${DEVICE} parent 1:1 handle 2: tbf rate ${RATE}mbit burst ${BUFFER} latency ${LATENCY}ms
+    fi
+elif [ -n "${RATE}" ]; then
+    BUFFER=$((${RATE} * 10 * 1024 / 8))
+    LATENCY=50
+    /usr/sbin/tc qdisc add dev ${DEVICE} root handle 1:0 tbf rate ${RATE}mbit burst ${BUFFER} latency ${LATENCY}ms
+fi
+if [ -n "${LATENCY_IN}" ]; then
+    # Calulate a default queue len based on the bandwidth-delay product with full packets
+    QUEUELEN=$((${RATE:-10000} * 1000000/8 * ${LATENCY_IN} / 1500))
+    /usr/sbin/tc qdisc add dev ${PEER_NAME} root handle 1:0 netem delay ${LATENCY_IN}ms limit ${QUEUELEN}
+    if [ -n "${RATE}" ]; then
+        BUFFER=$((${RATE} * 10 * 1024 / 8))
+        LATENCY=$((${LATENCY_IN} / 2))
+        /usr/sbin/tc qdisc add dev ${PEER_NAME} parent 1:1 handle 2: tbf rate ${RATE}mbit burst ${BUFFER} latency ${LATENCY}ms
+    fi
+elif [ -n "${RATE}" ]; then
+    BUFFER=$((${RATE} * 10 * 1024 / 8))
+    LATENCY=50
+    /usr/sbin/tc qdisc add dev ${PEER_NAME} root handle 1:0 tbf rate ${RATE}mbit burst ${BUFFER} latency ${LATENCY}ms
+fi
+
+
+
+exec /etc/sysconfig/network-scripts/ifup-post ${CONFIG} ${2}
