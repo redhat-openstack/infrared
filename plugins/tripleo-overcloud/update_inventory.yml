@@ -128,6 +128,7 @@
   gather_facts: no
   roles:
       - role: inventory-update
+        oc_user: "{{ install.overcloud.ssh.user|default('stack') }}"
         omit_groups: [ 'ovb' ]
         inventory_file_name: 'hosts-install'
         omit_hosts: "{{ hostvars[groups['undercloud'][0]].nodes_to_delete|default([])|difference(hostvars[groups['undercloud'][0]].nodes_added|default([]))|difference(groups.get('unused', [])) }}"
