@@ -10,6 +10,8 @@
   shell: |
       source {{ freeipa_undercloud_rc }}
       openstack subnet set ctlplane-subnet --dns-nameserver {{ freeipa_node_ipv4_address }}
+  register: subnet_cmd_out
+  failed_when: "subnet_cmd_out.rc != 0 and 'Duplicate nameserver' not in subnet_cmd_out.stderr"
 
 - name: Read deployment network configuration
   command: "cat {{ freeipa_network_environment_file }}"
