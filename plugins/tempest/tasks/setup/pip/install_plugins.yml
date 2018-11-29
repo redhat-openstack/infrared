@@ -3,9 +3,11 @@
   include_vars: "{{ test_suite }}"
 
 - name: Install plugin packages for "{{ test_suite }}" suite
+  vars:
+    os_version: "{{ test.openstack.version|default(overcloud_version) }}"
   become: yes
   package:
-      name: "{{ item.value.package }}"
+      name: "{{ item.value.package.get(os_version, item.value.package.get('default'))|default(item.value.package) }}"
       state: present
   with_dict: "{{ test_dict.plugins | default({}) }}"
 

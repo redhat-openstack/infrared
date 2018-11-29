@@ -1,3 +1,12 @@
+- name: Enable rhos unittest repository in order to install mariadb-devel
+  vars:
+    os_version: "{{ test.openstack.version|default(overcloud_version)|openstack_release }}"
+  become: yes
+  shell: |
+      yum-config-manager \
+          --setopt 'rhelosp-{{ os_version }}.0-unittest.includepkgs=mariadb-devel' \
+          --enable rhelosp-{{ os_version }}.0-unittest >/var/log/yum.log
+
 - name: Install devel packages for package build dependencies
   become: yes
   package:
