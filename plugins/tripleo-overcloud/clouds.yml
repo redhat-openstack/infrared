@@ -14,6 +14,15 @@
           } $(if [ -n "$OS_IDENTITY_API_VERSION" ]; then echo ", 'identity_api_version': '${OS_IDENTITY_API_VERSION}'"; fi) }"
   register: cloud_details
 
+- name: Set clouds_yaml fact
+  set_fact:
+      clouds_yaml: "{{ cloud_details.stdout|from_yaml }}"
+
+- name: Add cacert to clouds_yaml fact
+  set_fact:
+      clouds_yaml: "{{ clouds_yaml | combine({cloudname: {'cacert': undercloud_cacert }}, recursive=True)}}"
+  when: undercloud_cacert is defined
+
 - name: create clouds.yaml if doesn't exist
   blockinfile:
       content: 'clouds:'
@@ -26,7 +35,7 @@
   blockinfile:
       dest: "~/clouds.yaml"
       block: |5
-            {{ cloud_details.stdout|from_yaml|to_nice_yaml(indent=4) }}
+            {{ clouds_yaml|to_nice_yaml(indent=4) }}
       insertbefore: "#END {{ cloudname }} SECTION"
       marker: "#{mark} {{ cloudname }} PARAMETERS"
   delegate_to: "{{ groups.shade | first }}"
