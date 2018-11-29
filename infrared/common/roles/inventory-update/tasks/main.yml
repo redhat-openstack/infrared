@@ -1,15 +1,17 @@
-- set_fact:
-      omit_groups_hosts: "{{ omit_groups_hosts|default([]) + groups.get(item, []) }}"
-  with_items: "{{ omit_groups }}"
+- block:
+  - set_fact:
+        omit_groups_hosts: "{{ omit_groups_hosts|default([]) + groups.get(item, []) }}"
+    with_items: "{{ omit_groups }}"
 
-- name: generate inventory file
-  template:
-      dest: "{{ inventory_dir }}/{{ inventory_file_name }}"
-      src: inventory.j2
-      force: yes
+  - name: generate inventory file
+    template:
+        dest: "{{ inventory_dir }}/{{ inventory_file_name }}"
+        src: inventory.j2
+        force: yes
 
-- name: update inventory file symlink
-  file:
-      dest: "{{ inventory_dir }}/hosts"
-      state: link
-      src: "{{ inventory_file_name }}"
+  - name: update inventory file symlink
+    file:
+        dest: "{{ inventory_dir }}/hosts"
+        state: link
+        src: "{{ inventory_file_name }}"
+  delegate_to: localhost
