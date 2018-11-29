@@ -81,5 +81,5 @@
           - "'hypervisor' in groups"
   when:
       - node_info.status != 'ERROR'
-      - node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] != None
-      - node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] | trim != ''
+      - node_info['OS-EXT-SRV-ATTR:hypervisor_hostname']|default('') != None
+      - node_info['OS-EXT-SRV-ATTR:hypervisor_hostname']|default('')|trim != ''
