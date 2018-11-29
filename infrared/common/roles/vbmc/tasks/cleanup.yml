@@ -1,82 +1,84 @@
-- name: check for any vbmc processes
-  command: pgrep vbmc
-  register: vbmc_proc
-  failed_when: false
-  changed_when: false
-
-- name: Check if vbmc installed from virtualenv
-  stat:
-    path: "{{vbmc_bin }}"
-  register: vbmc_venv
-
-- name: set vbmc executable
-  set_fact:
-    vbmc_bin: vbmc_venv.stat.exists|ternary(vbmc_bin, 'vbmc')
-
-- name: remove existing Virtual BMCs
-  shell: |
-      for node in `{{ vbmc_bin }} list | awk '/[0-9]{2}/ {print $2}'`
-      do
-          if [[ ${node} = *"{{ prefix|default('') }}"* ]]
-          then
-              {{ vbmc_bin }} stop ${node}
-              {{ vbmc_bin }} delete ${node}
-          fi
-      done
-  when: vbmc_proc.rc == 0
-  failed_when: false
-
-- name: check if we still have vbmc nodes
-  shell: "{{ vbmc_bin }} list | awk '/[0-9]{2}/ {print $2}'|wc -l"
-  register: vbmc_list
-  failed_when: false
-
 - block:
-    - name: Stop Virtual BMCs if managed by systemd
-      become: true
-      systemd:
-        name: virtualbmc
-        state: stopped
-        enabled: no
-      ignore_errors: true
+  - name: check for any vbmc processes
+    command: pgrep vbmc
+    register: vbmc_proc
+    failed_when: false
+    changed_when: false
 
-    - name: kill vbmc processes if not managed by systemd
-      command: killall vbmc
-      when: vbmc_proc.rc == 0
-      ignore_errors: true
-  when: vbmc_list.stdout|int == 0
+  - name: Check if vbmc installed from virtualenv
+    stat:
+      path: "{{vbmc_bin }}"
+    register: vbmc_venv
 
-- block:
-  - name: Remove package if installed from rpm
-    package:
-        name: "{{ item }}"
+  - name: set vbmc executable
+    set_fact:
+      vbmc_bin: vbmc_venv.stat.exists|ternary(vbmc_bin, 'vbmc')
+
+  - name: remove existing Virtual BMCs
+    shell: |
+        for node in `{{ vbmc_bin }} list | awk '/[0-9]{2}/ {print $2}'`
+        do
+            if [[ ${node} = *"{{ prefix|default('') }}"* ]]
+            then
+                {{ vbmc_bin }} stop ${node}
+                {{ vbmc_bin }} delete ${node}
+            fi
+        done
+    when: vbmc_proc.rc == 0
+    failed_when: false
+
+  - name: check if we still have vbmc nodes
+    shell: "{{ vbmc_bin }} list | awk '/[0-9]{2}/ {print $2}'|wc -l"
+    register: vbmc_list
+    failed_when: false
+
+  - block:
+      - name: Stop Virtual BMCs if managed by systemd
+        become: true
+        systemd:
+          name: virtualbmc
+          state: stopped
+          enabled: no
+        ignore_errors: true
+
+      - name: kill vbmc processes if not managed by systemd
+        command: killall vbmc
+        when: vbmc_proc.rc == 0
+        ignore_errors: true
+    when: vbmc_list.stdout|int == 0
+
+  - block:
+    - name: Remove package if installed from rpm
+      package:
+          name: "{{ item }}"
+          state: absent
+      with_items:
+          - python-virtualbmc
+          - python2-virtualbmc
+      changed_when: false
+      failed_when: false
+
+    # pip can be missing on a target host.
+    # so ignore errors and cleanup as much as possible
+    - name: Remove package if installed from pip
+      pip:
+          name: virtualbmc
+          state: absent
+      changed_when: false
+      failed_when: false
+    become: yes
+
+  - name: Remove vbmc virtualenv
+    file:
+        path: "{{ vbmc_virtualenv }}"
+        state: absent
+
+  - name: Delete scripts and configuration files
+    file:
+        path: "{{ item }}"
         state: absent
     with_items:
-        - python-virtualbmc
-        - python2-virtualbmc
-    changed_when: false
-    failed_when: false
-
-  # pip can be missing on a target host.
-  # so ignore errors and cleanup as much as possible
-  - name: Remove package if installed from pip
-    pip:
-        name: virtualbmc
-        state: absent
-    changed_when: false
-    failed_when: false
-  become: yes
-
-- name: Remove vbmc virtualenv
-  file:
-      path: "{{ vbmc_virtualenv }}"
-      state: absent
-
-- name: Delete scripts and configuration files
-  file:
-      path: "{{ item }}"
-      state: absent
-  with_items:
-      - /usr/lib/systemd/system/virtualbmc.service
-      - "{{ vbmc_config_dir }}"
-  ignore_errors: true
+        - /usr/lib/systemd/system/virtualbmc.service
+        - "{{ vbmc_config_dir }}"
+    ignore_errors: true
+  delegate_to: "{{  vbmc_inventory_host }}"

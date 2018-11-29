@@ -1,15 +1,17 @@
 ---
-- name: check for any vbmc processes
-  command: pgrep vbmc
-  register: vbmc_proc
-  failed_when: false
-  changed_when: false
+- block:
+  - name: check for any vbmc processes
+    command: pgrep vbmc
+    register: vbmc_proc
+    failed_when: false
+    changed_when: false
 
-- name: remove existing Virtual BMCs
-  shell: |
-      {{ vbmc_bin }} stop {{ hostvars[vbmc_node].original_name|default(vbmc_node) }}
-      {{ vbmc_bin }} delete {{ hostvars[vbmc_node].original_name|default(vbmc_node) }}
-  failed_when: false
-  when:
-      - vbmc_proc.rc == 0
-      - vbmc_node is defined
+  - name: remove existing Virtual BMCs
+    shell: |
+        {{ vbmc_bin }} stop {{ hostvars[vbmc_node].original_name|default(vbmc_node) }}
+        {{ vbmc_bin }} delete {{ hostvars[vbmc_node].original_name|default(vbmc_node) }}
+    failed_when: false
+    when:
+        - vbmc_proc.rc == 0
+        - vbmc_node is defined
+  delegate_to: "{{  vbmc_inventory_host }}"

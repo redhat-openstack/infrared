@@ -4,7 +4,7 @@
 {{ host }} ansible_connection=local ansible_python_interpreter=python
 {%- else %}
 
-{{ host }} {% if hostvars[host]['original_name'] is defined %}original_name={{ hostvars[host]['original_name'] }}{% endif %} {% if 'ansible_host' in hostvars[host] %}ansible_host={{ hostvars[host]['ansible_host']|default(hostvars[host].ansible_ssh_host) }} {% endif %}ansible_connection={{ hostvars[host].get('ansible_connection', 'ssh') }} ansible_user={{ hostvars[host]['ansible_user']|default(hostvars[host].ansible_ssh_user) }}
+{{ host }} {% if hostvars[host]['original_name'] is defined %}original_name={{ hostvars[host]['original_name'] }}{% endif %} {% if 'ansible_host' in hostvars[host] %}ansible_host={{ hostvars[host]['ansible_host']|default(hostvars[host].ansible_ssh_host) }} {% endif %}ansible_connection={{ hostvars[host].get('ansible_connection', 'ssh') }} ansible_user={{ hostvars[host]['ansible_user']|default(hostvars[host].ansible_ssh_user|default(oc_user)) }}
 {%- if hostvars[host]['ansible_ssh_private_key_file'] is defined %} ansible_ssh_private_key_file={{ hostvars[host]['ansible_ssh_private_key_file'] }}
 {%- endif %}
 {%- if hostvars[host]['ansible_ssh_common_args'] is defined %} ansible_ssh_common_args='{{ hostvars[host]['ansible_ssh_common_args'] }}'

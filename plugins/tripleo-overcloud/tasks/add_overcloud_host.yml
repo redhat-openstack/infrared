@@ -4,7 +4,7 @@
           source ~/stackrc
           openstack baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} show {{ uuid }} -c name -f value
       vars:
-          uuid: "{{ node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] }}"
+          uuid: "{{ node_info['hypervisor_hostname'] }}"
       register: baremetal_info
       when:
           - install.version|default(undercloud_version) | openstack_release != 8
@@ -14,7 +14,7 @@
           source ~/stackrc
           ironic node-list --fields uuid name | grep {{ uuid }} | awk '{print $4}'
       vars:
-          uuid: "{{ node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] }}"
+          uuid: "{{ node_info['hypervisor_hostname'] }}"
       register: ironic_info
       when:
           - install.version|default(undercloud_version) | openstack_release == 8
@@ -81,5 +81,5 @@
           - "'hypervisor' in groups"
   when:
       - node_info.status != 'ERROR'
-      - node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] != None
-      - node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] | trim != ''
+      - node_info['hypervisor_hostname'] != None
+      - node_info['hypervisor_hostname'] |trim != ''
