@@ -53,12 +53,11 @@
       - name: update packages prior upgrade
         become: true
         yum:
-            name: "{{ item }}"
-            state: latest
-        with_items:
+          name:
             - 'instack-undercloud'
             - 'openstack-puppet-modules'
             - 'openstack-tripleo-common'
+          state: latest
   when: undercloud_version|openstack_release == 10
 
 - name: Undercloud {{ operation_type }}

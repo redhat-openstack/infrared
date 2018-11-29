@@ -2,12 +2,11 @@
 - name: Install packages
   become: yes
   yum:
-      name:  "{{ item }}"
-      state: present
-  with_items:
+    name:
       - 'net-tools'
       - 'deltarpm'
       - "{{ freeipa_epel_repo_url }}"
+    state: present
 
 - name: Update repos
   become: yes
