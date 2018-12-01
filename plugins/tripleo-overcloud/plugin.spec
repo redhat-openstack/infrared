@@ -647,6 +647,11 @@ subparsers:
                       help: |
                           Validate connectivity to floating IP doesn't get interrupted during update/upgrade.
                       default: False
+                  inventory_update:
+                      type: Bool
+                      help: |
+                          Update the invetory with OC nodes if this wasn't done during the OC deployment, for example when deployed outside of IR.
+                      default: False
 
             - title: Ironic Configuration
               options:
