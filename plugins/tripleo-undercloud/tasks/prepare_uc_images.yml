@@ -30,7 +30,9 @@
     - name: set undercloud_version during installation
       set_fact:
           undercloud_version: "{{ install.version }}"
-      when: not install.upgrade|default(false)
+      when:
+          - not install.upgrade|default(false)
+          - not install.get('update', {}).undercloud|default(false)
 
     - name: get puddle url from the repos
       vars:
