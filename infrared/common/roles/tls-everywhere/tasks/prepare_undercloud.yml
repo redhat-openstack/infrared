@@ -15,7 +15,7 @@
 - name: Prepare novajoin to work
   become: yes
   shell: >
-      /usr/libexec/novajoin-ipa-setup --principal admin --password {{ freeipa_admin_password }} --server {{ freeipa_node }}.{{ freeipa_cloud_domain }} --realm {{ freeipa_cloud_domain|upper }}
+      novajoin-ipa-setup --principal admin --password {{ freeipa_admin_password }} --server {{ freeipa_node }}.{{ freeipa_cloud_domain }} --realm {{ freeipa_cloud_domain|upper }}
       --domain {{ freeipa_cloud_domain }} --hostname {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} --precreate
   register: novajoin
 
