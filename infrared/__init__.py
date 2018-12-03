@@ -171,6 +171,12 @@ PLUGINS_REGISTRY = {
         'desc': 'The tempest test runner',
         'type': 'test'
     },
+    'tripleo-inventory': {
+        'src': 'https://github.com/rhos-infra/tripleo-inventory.git',
+        'src_path': 'infrared_plugin',
+        'desc': 'Generates Tripleo inventory',
+        'type': 'other'
+    },
     'tripleo-overcloud': {
         'src': 'plugins/tripleo-overcloud',
         'desc': 'Install TripleO overcloud using a designated undercloud node',
