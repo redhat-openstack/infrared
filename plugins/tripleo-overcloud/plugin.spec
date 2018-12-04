@@ -405,6 +405,11 @@ subparsers:
                           Value example:
                           --custom_network_name storage=MyStorageNet,storage_mgmt=MyStorageMgmtNet,internal_api=MyInternalApiNet,tenant=MyTenantNet,external=MyExternalNet
 
+                  cleaning-network:
+                      type: Bool
+                      default: no
+                      help: Adds a network for cleaning in OC. Asssumes Ironic in OC was enabled.
+
             - title: Overcloud Public Network
               options:
                   public-network:

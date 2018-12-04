@@ -135,8 +135,17 @@ resources:
                    $network_config:
                        network_config:
                         -
+{% if install.cleaning.network %}
+                          type: ovs_bridge
+                          name: br-baremetal
+                          members:
+                          - type: interface
+                            name: nic1
+                            primary: true
+{% else %}
                           type: interface
                           name: nic1
+{% endif %}
                           use_dhcp: false
                           dns_servers:
                               get_param: DnsServers
