@@ -212,7 +212,7 @@
         shell: |
             source ~/stackrc
             NODE_UUID=$({{ ironic_cli }} | awk '/{{ item.name | default(item) }}/ {print $2}' )
-            openstack baremetal node set --deploy-interface direct ${NODE_UUID}
+            openstack baremetal node set --driver ipmi --deploy-interface direct ${NODE_UUID}
         with_items: "{{ groups['overcloud_nodes'] | default([])}}"
         when:
             - install.image_direct_deploy != 'iscsi'
