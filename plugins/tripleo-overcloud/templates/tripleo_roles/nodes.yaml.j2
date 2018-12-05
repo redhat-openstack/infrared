@@ -56,12 +56,7 @@ resource_registry:
 {% endfor %}
 {% else %}
     OS::TripleO::Controller::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/controller{{ ipv6_postfix }}.yaml
-    OS::TripleO::CephStorage::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/ceph-storage.yaml
     OS::TripleO::Compute::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/compute.yaml
-    OS::TripleO::ObjectStorage::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/swift-storage.yaml
-    OS::TripleO::Database::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/database_internal.yaml
-    OS::TripleO::Messaging::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/messaging_internal.yaml
-    OS::TripleO::Novacontrol::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/novacontrol.yaml
     OS::TripleO::Networker::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/networker.yaml
 {% endif %}
 
