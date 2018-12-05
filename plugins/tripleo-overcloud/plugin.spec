@@ -482,7 +482,7 @@ subparsers:
                       default: rbd
                       help: |
                         The storage backend type used for glance, enabling to set Swift or RadosGW as the backend when deploying internal Ceph. Default value is 'rbd'
-                  storage-protocol-backend:
+                  storage-backend-protocol:
                       type: Value
                       default: NA
                       choices:
