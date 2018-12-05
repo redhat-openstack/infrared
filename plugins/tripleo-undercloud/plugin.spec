@@ -313,6 +313,12 @@ subparsers:
                           List of packages to install separated by commas.
                           Example: vim,git
 
+                  images-remove-packages:
+                      type: Value
+                      help: |
+                          List of packages to uninstall separated by commas.
+                          Example: vim,git
+
                   images-cleanup:
                       type: Bool
                       help: |
