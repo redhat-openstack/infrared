@@ -21,7 +21,7 @@
         failed_when: false
         register: cdn_status
         changed_when: false
-        when: install.images.packages|default('') or install.images['update']
+        when: install.images.packages|default('') or install.images['update'] or install.images.remove|default('')
 
       - name: check if rhos-release is available
         uri:
@@ -29,12 +29,12 @@
             validate_certs: false
         ignore_errors: yes
         register: internal_repos
-        when: install.images.packages|default('') or install.images['update']
+        when: install.images.packages|default('') or install.images['update'] or install.images.remove|default('')
 
       - fail:
             msg: overcloud image customization currently not supported outside Red Hat internal network or when using CDN
         when:
-            - install.images.packages|default('') or install.images['update']
+            - install.images.packages|default('') or install.images['update'] or install.images.remove|default('')
             - internal_repos|failed or cdn_status.rc == 0
 
       - name: tmp repos.d for overcloud
@@ -64,7 +64,7 @@
         mirror: "{{ install.mirror | default(omit) }}"
         rr_target_directory: "{{ tmp_oc_repos_dir }}"
         when:
-            - install.images.packages|default('') or install.images['update']
+            - install.images.packages|default('') or install.images['update'] or install.images.remove|default('')
             - undercloud_version|default(undercloud_version)|openstack_distribution == 'RDO'
         tags: rhos-release
   tasks:
