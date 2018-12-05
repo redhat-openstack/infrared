@@ -95,6 +95,8 @@ will be later created.
 
 * Use ``--images-packages`` to define a list of additional packages to install on the OverCloud image.
   Packages can be specified by name or by providing direct url to the rpm file.
+* Use ``--images-packages-remove`` to define a list of packages to uninstall from the OverCloud image.
+  Packages must be specified by name.
 * ``--images-cleanup`` tells `infrared` do remove the images files original after they are uploaded
   to the undercloud's Glance service.
 
