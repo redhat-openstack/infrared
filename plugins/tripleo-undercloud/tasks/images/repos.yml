@@ -23,6 +23,8 @@
       loop_var: repo_config
 
 - name: workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1535973
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "libguestfs-test-tool"
   register: libguestfs_test_results
   failed_when: false
