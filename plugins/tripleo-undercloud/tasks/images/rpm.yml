@@ -6,6 +6,29 @@
       state: latest
   with_items: "{{ install.images.url is defined | ternary(install.images.get('url', '').split(','), ['rhosp-director-images']) }}"
 
+- block:
+    # newer rhosp-director-images[-ipa] RPM packages started to have tar files with datestamp/version as part of their name
+    # we need to discover these .tar filenames
+
+    - set_fact:
+        tar_images: []
+
+    - name: discover .tar files inside rhosp images RPMs
+      shell: rpm -ql {{ item }} | grep "\.tar$"
+      register: discover_tar_files
+      with_items: "{{ install.images.url is defined | ternary(install.images.get('url', '').split(','), ['rhosp-director-images', 'rhosp-director-images-x86_64', 'rhosp-director-images-ipa', 'rhosp-director-images-ipa-x86_64']) }}"
+      failed_when: false
+      tags: discover_tar_files
+
+    - name: rewrite discovery results into ansible fact
+      vars:
+          tar_files: "{{ item.stdout_lines | map('basename') | map('trim') | list }}"
+      set_fact:
+          tar_images: "{{ tar_images + tar_files }}"
+      with_items: "{{ discover_tar_files.results }}"
+
+  when: undercloud_version|openstack_release >= 14
+
 # todo(yfried): investigate gtar error "Warning: Cannot stat: No such file or directory")'
 - name: untar the images
   become: yes
