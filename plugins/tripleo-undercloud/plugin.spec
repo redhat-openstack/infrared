@@ -109,6 +109,12 @@ subparsers:
                           parameter "CloudDomain" must be set to a matching value.
                       default: ''
 
+                  overcloud-image-name:
+                      type: Value
+                      help: |
+                          Overcloud image name that will be used when uploading to glance
+                      default: 'overcloud-full'
+
                   deploy_interface_default:
                       type: Value
                       default: iscsi

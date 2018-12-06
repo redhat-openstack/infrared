@@ -106,6 +106,12 @@ To configure overcloud images::
     will skip `installation <tripleo-undercloud.html#Setup an Undercloud>`_ stage
     because ``--version`` is missing.
 
+To rename overcloud image during upload to glance:
+
+  infrared tripleo-undercloud --overcloud-image-name overcloud-image-name
+
+.. note:: By default, overcloud-full is used
+
 When using RDO (or for OSP 7), ``rpm`` strategy in unavailable. Use ``import`` with ``--images-url`` to download
 overcloud images from web::
 

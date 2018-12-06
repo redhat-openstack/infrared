@@ -93,5 +93,5 @@
           - name: upload updated overcloud-full image to glance
             shell: |
                 source ~/stackrc
-                openstack overcloud image upload --update-existing --image-path /tmp/fetchfiles_overcloud_image/
+                openstack overcloud image upload --update-existing --image-path /tmp/fetchfiles_overcloud_image/ --os--image-name "{{ install['overcloud']['image']['name'] }}"
         when: install.get('fetchfiles', {}).get('overcloud', {})

@@ -90,7 +90,7 @@
         shell: |
             set -exuo pipefail
             source ~/stackrc
-            openstack overcloud image upload --update-existing
+            openstack overcloud image upload --update-existing --os-image-name "{{ install['overcloud']['image']['name'] }}"
         tags: skip_ansible_lint
 
       - name: check for existing nodes ( OS <= 10 )
