@@ -224,6 +224,7 @@
 #
 - name: Add introspected BMs to inventory
   hosts: localhost
+  tags: add_bms_to_inventory
   gather_facts: no
   any_errors_fatal: true
   vars:
@@ -258,6 +259,4 @@
           vars:
               inventory_file_name: 'hosts-prov'
           with_items: "{{ update_inventory.results }}"
-      when:
-        - "'hypervisor' not in groups"
-        - "'bmc' not in groups"
+      when: ('hypervisor' not in groups and 'bmc' not in groups) or install.get('hybrid', omit) is defined
