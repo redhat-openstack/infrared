@@ -213,7 +213,7 @@
                         openstack baremetal node set $(openstack baremetal node show {{ node }} -c uuid -f value) \
                         --resource-class {{ item.name }}
                     else
-                        openstack baremetal node list|awk '/{{ node }}/ {print $2}'| \
+                        openstack baremetal node list|awk '/{{ node }} / {print $2}'| \
                         xargs -I{} openstack baremetal node set {} --resource-class {{ item.name }}
                     fi
                 {% endfor %}
