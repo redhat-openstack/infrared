@@ -53,6 +53,13 @@
       command: "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }}"
   when: patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
+- name: Uninstall packages from overcloud image
+  environment:
+      LIBGUESTFS_BACKEND_SETTINGS: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --uninstall {{ install.images.remove.packages }} --selinux-relabel"
+  register: image_remove_packages
+  when: install.images.remove|default(None) != None
+
 - name: Install packages in overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
@@ -102,4 +109,4 @@
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-sysprep --operation machine-id -a {{ overcloud_image_file }}"
   when:
-      - image_repos is changed or image_packages is changed or image_update is changed or image_selinux is changed
+      - image_repos is changed or image_packages is changed or image_remove_packages is changed or image_update is changed or image_selinux is changed
