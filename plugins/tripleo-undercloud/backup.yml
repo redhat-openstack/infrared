@@ -27,7 +27,7 @@
             when: install.dest|default({})
 
           - name: register md5 for the image
-            shell: md5sum {{ undercloud_image_file }} | awk '{print $0}'
+            shell: md5sum {{ undercloud_image_file }} | awk '{print $1}'
             register: local_hash
 
           - name: copy the image to temporary server
@@ -38,7 +38,7 @@
             tags: skip_ansible_lint
 
           - name: register md5 for the image on remote host
-            shell: ssh -i ~/backup_server_auth_key {{ install.dest.address }} md5sum {{install.dest.path}}/{{ undercloud_image_file }} | awk '{print $0}'
+            shell: ssh -i ~/backup_server_auth_key {{ install.dest.address }} md5sum {{install.dest.path}}/{{ undercloud_image_file }} | awk '{print $1}'
             register: remote_hash
             tags: skip_ansible_lint
 
