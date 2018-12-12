@@ -170,6 +170,8 @@ Add custom repositories to the undercloud, after `installing the TripleO reposit
         yum_repository module (name, file, description, base_url, enabled and gpg_check).
         For more information about this module, visit `Ansible yum_repository documentation <https://docs.ansible.com/ansible/yum_repository_module.html>`_.
 
+      .. note:: Custom repos generate by ``--repos-config`` can be uploaded to Overcloud guest image buy specifying ``--upload-extra-repos true``
+
 * ``repos-urls``: comma separated list of URLs to download repo files to ``/etc/yum.repos.d``
 
 Both options can be used together::
