@@ -19,6 +19,7 @@
   with_items:
       - patched_rpms.repo
       - from_source.repo
+      - "{{ undercloud_extra_repos | default(omit) }}"
 
 - name: Prepare custom repository tmp directory
   include_tasks: prepare_tmp_repos.yml
@@ -41,7 +42,7 @@
   register: image_repos
   shell: |
       virt-copy-in -a {{ overcloud_image_file }} {{ merge_base_url | join(' ') }} /
-  when: merge_base_url is defined
+  when: merge_base_url is defined and merge_base_url | length>0
   tags: skip_ansible_lint
 
 - name: Push repository to overcloud image
