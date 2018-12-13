@@ -216,7 +216,7 @@
         with_items: "{{ groups['overcloud_nodes'] | default([])}}"
         when:
             - install.image_direct_deploy != 'iscsi'
-            - install.version|default(undercloud_version) | openstack_release > 13
+            - install.version|default(undercloud_version) | openstack_release >= 13
 
 #
 # With baremetal deployments hosts from custom instackenv are missing from inventory
