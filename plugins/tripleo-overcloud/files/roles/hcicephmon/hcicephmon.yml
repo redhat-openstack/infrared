@@ -1,5 +1,5 @@
 ---
-osdcompute_role:
+hcicephmon_role:
     name: HciCephMon
 
     resource_registry:
@@ -16,6 +16,8 @@ osdcompute_role:
         - StorageMgmt
         - Tenant
     host_name_format: 'hcicephmon-%index%'
+    RoleParametersDefault:
+        TunedProfileName: "throughput-performance"
 
     options:
         - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}disable_upgrade_deployment: True{% endif %}"
@@ -42,12 +44,15 @@ osdcompute_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Iscsid{% endif %}"
         - OS::TripleO::Services::Kernel
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::LoginDefs{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::MetricsQdr{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::NeutronBgpVpnBagpipe{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronLinuxbridgeAgent{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronVppAgent{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::NeutronSriovAgent{% endif %}"
         - OS::TripleO::Services::NovaCompute
         - OS::TripleO::Services::NovaLibvirt
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::NovaLibvirtGuests{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NovaMigrationTarget{% endif %}"
         - OS::TripleO::Services::Ntp
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
@@ -67,5 +72,4 @@ osdcompute_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Tuned{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Vpp{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Aide{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::AuditD{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Ptp{% endif %}"

@@ -23,7 +23,13 @@ controller_role:
         - StorageMgmt
         - Tenant
     host_name_format: 'controller-%index%'
-
+    options:
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}default_route_networks: ['External']{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}uses_deprecated_params: True{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_param_extraconfig: 'controllerExtraConfig'{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_param_flavor: 'OvercloudControlFlavor'{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_param_image: 'controllerImage'{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_nic_config_name: 'controller.yaml'{% endif %}"
     # condition can be used to include or disable services. For example:
     #  - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
     services:
@@ -62,6 +68,13 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Congress{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::ContainerImagePrepare{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::Core{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::ContainerImagePrepare{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::DesignateApi{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::DesignateCentral{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::DesignateProducer{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::DesignateWorker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::DesignateMDNS{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::DesignateSink{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Ec2Api{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Etcd{% endif %}"
@@ -74,14 +87,15 @@ controller_role:
         - OS::TripleO::Services::GnocchiStatsd
         - OS::TripleO::Services::HAproxy
         - OS::TripleO::Services::HeatApi
-        - OS::TripleO::Services::HeatApiCfn
         - "{% if install.version|default(undercloud_version) |openstack_release < 12 %}OS::TripleO::Services::HeatApiCloudwatch{% endif %}"
+        - OS::TripleO::Services::HeatApiCfn
         - OS::TripleO::Services::HeatEngine
         - OS::TripleO::Services::Horizon
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Ipsec{% endif %}"
         - OS::TripleO::Services::IronicApi
         - OS::TripleO::Services::IronicConductor
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::IronicPxe{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::IronicNeutronAgent{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Iscsid{% endif %}"
         - OS::TripleO::Services::Keepalived
         - OS::TripleO::Services::Kernel
@@ -111,6 +125,8 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronLbaasv2Agent{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronLinuxbridgeAgent{% endif %}"
         - OS::TripleO::Services::NeutronMetadataAgent
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::NeutronML2FujitsuCfab{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::NeutronML2FujitsuFossw{% endif %}"
         - OS::TripleO::Services::NeutronOvsAgent
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronVppAgent{% endif %}"
         - OS::TripleO::Services::NovaApi
@@ -134,7 +150,9 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNController{% endif %}"
         - OS::TripleO::Services::Pacemaker
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::PankoApi{% endif %}"
-        - OS::TripleO::Services::RabbitMQ
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::OsloMessagingRpc{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::OsloMessagingNotify{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release < 14 %}OS::TripleO::Services::RabbitMQ{% endif %}"
         - OS::TripleO::Services::Redis
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Rhsm{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::RsyslogSidecar{% endif %}"
@@ -147,6 +165,7 @@ controller_role:
         - OS::TripleO::Services::Snmp
         - "{% if roles_sshd %}OS::TripleO::Services::Sshd{% endif %}"
         - OS::TripleO::Services::SwiftProxy
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::SwiftDispersion{% endif %}"
         - OS::TripleO::Services::SwiftStorage
         - OS::TripleO::Services::SwiftRingBuilder
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Tacker{% endif %}"
@@ -157,3 +176,5 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Vpp{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Zaqar{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::Ptp{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::Xinetd{% endif %}"
