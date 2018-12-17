@@ -23,6 +23,9 @@ dhcp_end = 192.168.24.24
 undercloud_public_host = 192.168.24.2
 undercloud_admin_host = 192.168.24.3
 {% endif %}
+{% if not install.ssl|default(true) and install.version > 13 %}
+generate_service_certificate = false
+{% endif %}
 {# OSPd7 doesn't support "inspection_iprange" option.
 If we use "inspection_iprange" there, range won't
 be propagated to ironic-dnsmasq config and introspection
