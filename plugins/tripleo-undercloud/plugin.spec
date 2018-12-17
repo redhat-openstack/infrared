@@ -77,7 +77,7 @@ subparsers:
                           Specifies whether ths SSL should be used for undercloud
                           A self-signed SSL cert will be generated.
                           Starting with OSP 14 ssl is enabled by default regardless of this option.
-                      default: no
+                      default: yes
 
                   undercloud-extra-args:
                       type: Value
