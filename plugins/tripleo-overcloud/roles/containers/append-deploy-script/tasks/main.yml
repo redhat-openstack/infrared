@@ -39,6 +39,14 @@
       - install.storage.protocol.backend == "nfs-ganesha"
       - install.version|default(undercloud_version)|openstack_release == 13
 
+- name: append containers-prepare-parameter
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e /home/stack/containers-prepare-parameter.yaml  \'
+  when:
+      - install.storage.protocol.backend == "nfs-ganesha"
+      - install.version|default(undercloud_version)|openstack_release == 14
+
 - name: append network_data_ganesha
   lineinfile:
       dest: "~/overcloud_deploy.sh"
