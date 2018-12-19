@@ -246,6 +246,7 @@
       find /tmp/{{ inventory_hostname }} -type d -print0 | xargs -0 chmod 755;
       find /tmp/{{ inventory_hostname }} -type f -print0 | xargs -0 chmod 644;
   ignore_errors: true
+  tags: collect_logs
 
 - name: collect custom directories
   shell: |
@@ -255,6 +256,7 @@
       find /tmp/{{ inventory_hostname }}/custom -type f -print0 | xargs -0 chmod 644;
   ignore_errors: true
   with_items: "{{ other.archive.custom.split(',') }}"
+  tags: collect_custom
 
 - name: remove broken links
   shell: "for i in `find . -xtype l`; do ls -la $i >> BROKEN_LINKS.txt; rm -rf $i; done"
