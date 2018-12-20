@@ -43,6 +43,12 @@
   shell: "{{ rally.bin }} --version |& cut -d '~' -f2"
   register: rally_release
 
+- pip:
+      name: dogpile.cache<0.7.0
+      virtualenv: "{{ rally.path }}"
+  become: yes
+  when: "{{ rally_version.stdout | version_compare('1.0.0', '>=') }}"
+
 - name: Install rally-openstack package
   pip:
       name: "{{ item }}"
@@ -53,6 +59,7 @@
       - cryptography
       - oslo.utils
       - oslo.i18n
+      - urllib3
       - git+git://git.openstack.org/openstack/rally-openstack@master
   become: yes
   when: "{{ rally_version.stdout | version_compare('1.0.0', '>=') }}"
