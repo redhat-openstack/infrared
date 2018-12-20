@@ -6,7 +6,7 @@
   with_items: "{{ setup.packages }}"
 
 - name: Install pip
-  command: easy_install pip
+  command: easy_install "pip>18"
   become: yes
 
 - name: Install required pip packages
@@ -42,6 +42,12 @@
 - name: List rally release
   shell: "{{ rally.bin }} --version |& cut -d '~' -f2"
   register: rally_release
+
+- pip:
+      name: dogpile.cache<0.7.0
+      virtualenv: "{{ rally.path }}"
+  become: yes
+  when: "{{ rally_version.stdout | version_compare('1.0.0', '>=') }}"
 
 - name: Install rally-openstack package
   pip:
