@@ -8,6 +8,11 @@ subparsers:
         groups:
             - title: Tempest
               options:
+                  tempest-config:
+                      type: Bool
+                      help: |
+                          Create tempest configuration file
+                      default: yes
                   tests:
                       type: ListOfVarFiles
                       help: |
