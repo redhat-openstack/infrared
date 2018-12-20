@@ -66,6 +66,7 @@
                 {% endfor %}
               {% endif %}
               --out ~/{{ test.dir }}/etc/tempest.conf
+  when: test.tempest.config
   args:
       chdir: "{{ config_dir | default('~/' + test.dir) }}"
   register: config_result
