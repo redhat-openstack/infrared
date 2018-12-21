@@ -1,14 +1,26 @@
 ---
-# Use direct, see https://bugzilla.redhat.com/show_bug.cgi?id=1535973
 - name: define backend settings
   set_fact:
-      libguestfs_backend: direct
+      libguestfs_backend: libvirt
+
+- name: install libvirt-daemon
+  become: yes
+  package:
+      name: libvirt-daemon
+      state: present
 
 - name: install libguestfs-tools to get virt-customize
   become: yes
   package:
       name: libguestfs-tools
       state: present
+
+# restart libvirt service to avoid possible hangs of virt-customize task.
+- name: restart libvirt service
+  become: yes
+  service:
+      name: libvirtd
+      state: restarted
 
 - name: Get custom repository file stat
   vars:
@@ -98,13 +110,6 @@
   command: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel"
   register: image_packages
   when: install.images.packages|default(None) != None
-
-# restart libvirt service to avoid possible hangs of virt-customize task.
-- name: restart libvirt service
-  become: yes
-  service:
-      name: libvirtd
-      state: restarted
 
 - name: update packages on repos
   environment:
