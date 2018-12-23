@@ -88,7 +88,7 @@
   register: image_repos
   shell: |
       virt-copy-in -a {{ overcloud_image_file }} {{ merge_base_url | join(' ') }} /
-  when: merge_base_url is defined
+  when: merge_base_url is defined and merge_base_url | length>0
   tags: skip_ansible_lint
 
 - name: Do package update inside of overcloud image with custom repository enabled
