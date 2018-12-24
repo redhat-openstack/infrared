@@ -85,6 +85,10 @@
         # update is a func name (dict.update) so it must be used as str explicitly
         when: install.images.packages|default('') or install.images['update'] or install.images.remove|default('')
 
+      - name: update default overcloud kernel form modified overcloud image
+        include_tasks: tasks/images/update-kernel.yml
+        when: install['overcloud']['update']['kernel']
+
        #Need to fix  BZ1462703 to apply --os-cloud
       - name: upload the overcloud images to glance
         shell: |
