@@ -336,6 +336,12 @@ subparsers:
                         A path to the undercloud image. Default is Storage Pool from libvirt
                       default: "/var/lib/libvirt/images"
 
+                  overcloud-update-kernel:
+                      type: Bool
+                      help: |
+                          Updating default overcloud kernel with kernel files retrieved from customized overcloud image
+                      default: no
+
             - title: Undercloud Upgrade
               options:
                   upgrade:
