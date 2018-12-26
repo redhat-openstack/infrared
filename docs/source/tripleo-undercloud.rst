@@ -247,7 +247,7 @@ Example for update of Undercloud and Images::
 .. warning:: Infrared support update for RHOSP from version 8.
 
 Undercloud Workarounds
----------------------
+----------------------
 Allow injecting workarounds defined in an external file before/after the undercloud installation::
 
     infrared tripleo-undercloud -v --workarounds 'http://server.localdomain/workarounds.yml'
