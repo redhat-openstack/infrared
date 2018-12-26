@@ -1,6 +1,6 @@
 # pip10=crashes while importing requests
 - name: Install pip
-  command: easy_install pip==9
+  command: easy_install "pip>18"
   become: yes
 
 - name: Install devel packages for package build dependencies
@@ -25,6 +25,7 @@
   with_items:
       - prettytable
       - cryptography
+      - openstacksdk
       - rally-openstack
 
 - name: Clone Rally-Plugins git repo
