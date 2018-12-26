@@ -1,6 +1,6 @@
 # pip10=crashes while importing requests
 - name: Install pip
-  command: easy_install pip==9
+  command: easy_install "pip>18"
   become: yes
 
 - name: Install devel packages for package build dependencies
@@ -16,6 +16,14 @@
       state: latest
       virtualenv: "{{ rally.path }}"
   with_items: "{{ setup.pip_packages }}"
+
+- name: Install rally dependencies packagea
+  pip:
+      name: "{{ item }}"
+      state: latest
+      virtualenv: "{{ rally.path }}"
+  with_items:
+      - openstacksdk
 
 - name: Install rally-openstack package
   pip:
