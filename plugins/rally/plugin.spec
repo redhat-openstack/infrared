@@ -53,3 +53,7 @@ subparsers:
                       type: Value
                       help: The task file to use
                       default: rally-jobs/mytest.json
+                  debug:
+                      type: Bool
+                      help: enable debug mode
+                      default: False

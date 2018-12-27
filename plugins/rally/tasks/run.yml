@@ -29,5 +29,5 @@
   command: "{{rally.bin}} deployment check"
 
 - name: Start Rally task
-  command: "{{rally.bin}} task start --task {{ rally.dir }}/{{ test.taskfile }}"
+  command: "{{rally.bin}} {{rally.debug|ternary('--debug','')}} task start --task {{ rally.dir }}/{{ test.taskfile }}"
   ignore_errors: yes
