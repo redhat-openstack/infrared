@@ -53,7 +53,7 @@
                 openstack server list --host {{ compute_fqdn.stdout }} -f json | jq -r -c '[.[] | select(.Status | contains("ACTIVE") or contains("PAUSED") or contains("MIGRATING"))] | length'
             register: compute_node_instances
             until: compute_node_instances.stdout.find("0") > -1
-            retries: 30
+            retries: 60
             delay: 5
             when: compute_instances.stdout | length > 0
         delegate_to: "{{ groups['undercloud']|first }}"
