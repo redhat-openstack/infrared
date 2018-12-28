@@ -56,4 +56,4 @@ subparsers:
                   debug:
                       type: Bool
                       help: enable debug mode
-                      default: False
+                      default: True
