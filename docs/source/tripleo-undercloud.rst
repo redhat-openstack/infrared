@@ -126,6 +126,12 @@ To use a different image specify ``--images-url``::
 
 .. note:: building the images takes a long time and it's usually quicker to download them.
 
+In order to update default overcloud image kernel provided by sources (for example RPM), with the latest kernel present on overcloud image,
+specify ``overcloud-update-kernel``.
+
+.. note:: when installing kernel-rt inside overcloud guest image, the latest RealTime kernel will be used instead of default kernel.
+
+
 See the `RDO deployment <rdo.html>`_ page for more details on how to setup RDO product.
 
 Undercloud Configuration
