@@ -219,6 +219,11 @@ class CliParser(object):
                     allowed_values = \
                         complex_action.get_allowed_values()
 
+            if option_data['type'] == 'Argument':
+                opt_kwargs['action'] = 'store_true'
+                opt_kwargs.pop('type', None)
+                opt_kwargs.pop('metavar', None)
+
         if allowed_values:
             opt_kwargs['help'] += "\nAllowed values: {}.".format(
                 allowed_values)
@@ -343,6 +348,15 @@ class Bool(Value):
         if not isinstance(value, bool):
             raise exceptions.IRException("--{} expects boolean values".
                                          format(self.arg_name))
+        return value
+
+class Argument(Value):
+    """The simple argument value option. 
+
+    This will always return True and will act as a flag which doesn't parse value
+    """
+
+    def resolve(self, value=True):
         return value
 
 
@@ -701,6 +715,7 @@ ACTIONS = {
 COMPLEX_TYPES = {
     'Value': Value,
     'Bool': Bool,
+    'Argument': Argument,
     'Dict': Dict,
     'Inventory': Inventory,
     'KeyValueList': KeyValueList,
