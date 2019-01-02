@@ -28,6 +28,7 @@
 - name: copy configuration scripts to the temp directory
   vars:
     switch_ip: "{{ hostvars[host_name]['ansible_host'] }}"
+    oc_node_count: "{{ groups.controller | default([]) | length | int + groups.compute | default([]) | length | int }}"
   template:
     src: vqfx/configure.sh.j2
     dest: "{{ temp_dir.path }}/configure_vqfx.sh"
