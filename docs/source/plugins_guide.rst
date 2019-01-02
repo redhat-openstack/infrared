@@ -42,6 +42,7 @@ Sample plugin specification file can be like::
                           type: Value
                           help: Simple option with default value
                           default: foo
+                          ansible_variable: "myvar"
                       flag:
                           type: Bool
                           default: False
@@ -91,8 +92,10 @@ The main playbook is a regular ansible playbook and can look like::
             when: other.flag
 
 
-All the options provided by user goes to the plugin type namespace. Dashes in option names translated to the dots (``.``).
+By default, all the options provided by user goes to the plugin type namespace. Dashes in option names translated to the dots (``.``).
 So for ``--option1 bar`` infrared will create the ``other.option1: bar`` ansible variable.
+
+It's possible to assign a user defined ansible variable to an option by specifying ``ansible_variable`` in plugin.spec(refer to ``plugin.spec`` sample).
 
 Push changes to the remote repo
 ===============================
