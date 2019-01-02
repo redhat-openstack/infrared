@@ -121,7 +121,7 @@ class InfraredPluginsSpec(SpecObject):
             return None
 
         # unpack parsed arguments
-        nested_args, control_args = parsed_args
+        nested_args, control_args, custom_args = parsed_args
 
         if control_args.get('debug', None):
             logger.LOG.setLevel(logging.DEBUG)
@@ -131,6 +131,9 @@ class InfraredPluginsSpec(SpecObject):
             self.plugin.type,
             nested_args,
         )
+
+        # Update vars_dict with custom ansible variables (if needed)
+        vars_dict.update(custom_args)
 
         VarsDictManager.merge_extra_vars(vars_dict,
                                          control_args.get('extra-vars'))
