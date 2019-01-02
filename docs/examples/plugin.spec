@@ -23,6 +23,7 @@ subparsers:
                       type: IniType
                       help: "Help for '--iniopt'"
                       action: append
+                      ansible_variable: 'ini_file'
 
                   nestedlist:
                       type: NestedList
