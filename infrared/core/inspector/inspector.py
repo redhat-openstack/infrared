@@ -77,13 +77,19 @@ class SpecParser(object):
         """
 
         result = collections.defaultdict(dict)
+        custom_results = {}
         for parser, option in self.spec_helper.iterate_option_specs():
             default_value = default_getter_func(option)
             if default_value is not None:
-                sub = parser['name']
-                result[sub][option['name']] = default_value
+                if option.get('ansible_variable'):
+                    ans_var = option.get('ansible_variable')
+                    custom_results[ans_var] = default_value
+                else:
+                    sub = parser['name']
+                    result[sub][option['name']] = default_value
 
-        return result
+        print custom_results
+        return result, custom_results
 
     def get_spec_defaults(self):
         """Resolve arguments' values from spec and other sources. """
@@ -279,9 +285,14 @@ class SpecParser(object):
             * nested arguments dict (arguments to pass to the playbooks)
         """
 
-        spec_defaults = self.get_spec_defaults()
-        cli_args = CliParser.parse_cli_input(arg_parser, args)
+        spec_defaults, custom_spec_defaults = self.get_spec_defaults()
+        cli_args, custom_cli_args = CliParser.parse_cli_input(arg_parser, args)
 
+        # parse custom ansible variables and their values
+        global custom_parsed_cli_args
+        custom_parsed_cli_args = {}
+        for custom_parse in custom_cli_args.values():
+            custom_parsed_cli_args.update(custom_parse)
         file_args = self.get_answers_file_args(cli_args)
 
         # generate answers file and exit
@@ -300,6 +311,12 @@ class SpecParser(object):
                         for key in cli_args.keys() if
                         key in spec_defaults)
 
+        # now filter custom ansible defaults to have values defined:
+        for custom_default in custom_spec_defaults:
+            if custom_default not in custom_parsed_cli_args:
+                custom_parsed_cli_args[custom_default] = custom_spec_defaults[custom_default]
+
+
         # copy cli args with the same name to all parser groups
         self._merge_duplicated_cli_args(cli_args)
         self._merge_duplicated_cli_args(file_args)
@@ -314,7 +331,7 @@ class SpecParser(object):
         # now resolve complex types.
         self.resolve_custom_types(defaults)
         nested, control = self.get_nested_and_control_args(defaults)
-        return nested, control
+        return nested, control, custom_parsed_cli_args
 
     def validate_arg_deprecation(self, cli_args, answer_file_args):
         """Validates and prints the deprecated arguments.
@@ -439,6 +456,9 @@ class SpecParser(object):
                     name not in parser_args or
                     option['name'] in condition_req_args) and \
                         name not in silent_args:
+                    if option.get('ansible_variable') and \
+                       option['ansible_variable'] in custom_parsed_cli_args:
+                           continue
                     result[parser_name].append(name)
 
             return result
