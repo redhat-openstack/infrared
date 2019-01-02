@@ -91,11 +91,16 @@ class CliParser(object):
 
         # move sub commands to the nested dicts
         result = collections.defaultdict(dict)
+        custom_result = {}
+        # arg structure: subcommand<arg_name>
         expr = '^(?P<subcmd_name>subcommand)+(?P<arg_name>.*)$$'
+        # custom ansible arg structure: <cmd_name>ansible<arg_name>
+        custom_ans_expr = '^(?P<cmd_name>.*)ansible(?P<arg_name>.*)$$'
         for arg, value in parse_args.items():
             if value is None:
                 continue
             match = re.search(expr, arg)
+            custom_ans_match = re.search(custom_ans_expr, arg)
             if match and match.groupdict().get('subcmd_name', None) \
                     and not match.groupdict().get('arg_name', None):
                 # create empty nested dict for subcommands
@@ -107,8 +112,14 @@ class CliParser(object):
                 cmd_name = match.group('subcmd_name')
                 sub_name = parse_args[cmd_name]
                 result[sub_name][arg_name] = value
+            elif custom_ans_match and custom_ans_match.groupdict().get('arg_name', None):
+                # we have ansible. populate a dict
+                arg_name = custom_ans_match.group('arg_name')
+                cmd_name = custom_ans_match.group('cmd_name')
+                custom_result[cmd_name] = {}
+                custom_result[cmd_name][arg_name] = yaml.load(str(value))
 
-        return result
+        return result, custom_result
 
     @classmethod
     def _add_groups(cls, spec, arg_parser, parser_name, parser_data,
@@ -146,9 +157,14 @@ class CliParser(object):
             opt_args.append('-{}'.format(option_data['short']))
         opt_args.append('--{}'.format(option_name))
 
+        # add prefix to ensure custom ansible variable declaration later
+        if 'ansible_variable' in option_data:
+            opt_kwargs['dest'] = option_data.get(
+                'dest', option_name + 'ansible' + option_data['ansible_variable'])
         # add prefix to ensure we can group subcommand arguments later
-        opt_kwargs['dest'] = option_data.get(
-            'dest', path_prefix + option_name)
+        else:
+            opt_kwargs['dest'] = option_data.get(
+                'dest', path_prefix + option_name)
         if 'type' in option_data:
             opt_kwargs['type'] = TYPES.get(option_data['type'])
             if opt_kwargs['type'] is None \

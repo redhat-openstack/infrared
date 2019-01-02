@@ -77,13 +77,18 @@ class SpecParser(object):
         """
 
         result = collections.defaultdict(dict)
+        custom_results = {}
         for parser, option in self.spec_helper.iterate_option_specs():
             default_value = default_getter_func(option)
             if default_value is not None:
-                sub = parser['name']
-                result[sub][option['name']] = default_value
+                if option.get('ansible_variable'):
+                    ans_var = option.get('ansible_variable')
+                    custom_results[ans_var] = default_value
+                else:
+                    sub = parser['name']
+                    result[sub][option['name']] = default_value
 
-        return result
+        return result, custom_results
 
     def get_spec_defaults(self):
         """Resolve arguments' values from spec and other sources. """
@@ -128,6 +133,7 @@ class SpecParser(object):
         """Resolve arguments' values from answers INI file. """
 
         file_result = {}
+        custom_file_result = {}
         args_to_remove = []
         for (parser_name, parser_dict, arg_name, arg_value,
              option_spec) in self._iterate_received_arguments(cli_args):
@@ -143,6 +149,19 @@ class SpecParser(object):
                 # remove from cli args
                 args_to_remove.append((parser_name, arg_name))
 
+            # Attempt to iterate over plugin arguments to determine if they should be treated as custom
+            try:
+                for plugin_parser, plugin_option in self.spec_helper.iterate_option_specs():
+                    for plugin_arg in arg_value:
+                        if plugin_arg == plugin_option['name']:
+                            if plugin_option.get('ansible_variable'):
+                                custom_arg = plugin_option.get('ansible_variable')
+                                custom_file_result[custom_arg] = arg_value[plugin_arg]
+                                # remove custom arg from file_result
+                                del file_result[parser_name][plugin_arg]
+            except TypeError:
+                pass
+
         # remove parser dict outside loop to avoid iteration dict modification
         for parser_name, arg_name in args_to_remove:
             for spec_parser in self.spec_helper.iterate_parsers():
@@ -151,12 +170,13 @@ class SpecParser(object):
                     parser_dict.pop(arg_name)
                     break
 
-        return file_result
+        return file_result, custom_file_result
 
-    def generate_answers_file(self, cli_args, spec_defaults):
+    def generate_answers_file(self, cli_args, custom_cli_args, spec_defaults):
         """Generates answers INI file
 
         :param cli_args: list, cli arguments.
+        :param custom_cli_args: dict, custom cli arguments.
         :param spec_defaults: the default values.
         """
 
@@ -180,6 +200,15 @@ class SpecParser(object):
                 str(value))
 
         file_generated = False
+
+        # If custom arguments exist, populate cli_args with custom values
+        if custom_cli_args:
+            parser = cli_args.keys()[0]
+            for arg in custom_cli_args:
+                custom_arg = {}
+                custom_value = custom_cli_args[arg].values()[0]
+                custom_arg[arg] = custom_value
+                cli_args[parser].update(custom_arg)
 
         # load generate answers file for all the parsers
         for (parser_name, parser_dict, arg_name, arg_value,
@@ -222,13 +251,29 @@ class SpecParser(object):
                     out_answers.write(answers_file)
                 file_generated = True
 
+        # If custom arguments exist, pop custom values form cli_args
+        if custom_cli_args:
+            for arg in custom_cli_args:
+                cli_args[parser].pop(arg, None)
+
         return file_generated
 
-    def resolve_custom_types(self, args):
+    def resolve_custom_types(self, args, custom_args):
         """
         Transforms the arguments with custom types
         :param args: the list of received arguments.
+        :param custom_args: the list of custom arguments received. 
         """
+
+        # If custom arguments exist, populate args with custom values
+        if custom_args:
+            parser = args.keys()[0]
+            for arg in custom_args:
+                custom_arg = {}
+                custom_value = custom_args[arg].values()[0]
+                custom_arg[arg] = custom_value
+                args[parser].update(custom_arg)
+
         for parser_name, parser_dict in args.items():
             spec_complex_options = [opt for opt in
                                     self.spec_helper.get_parser_option_specs(
@@ -248,6 +293,11 @@ class SpecParser(object):
 
                     # resolving value
                     parser_dict[option_name] = action.resolve(option_value)
+
+        # If custom arguments exist, pop custom values form cli_args
+        if custom_args:
+            for arg in custom_args:
+                args[parser].pop(arg, None)
 
     def create_complex_argumet_type(self, subcommand, type_name, option_name,
                                     spec_option):
@@ -277,15 +327,20 @@ class SpecParser(object):
         :return: (dict, dict):
             * command arguments dict (arguments to control the IR logic)
             * nested arguments dict (arguments to pass to the playbooks)
+            * custom_args custom arguments dict (arguments with custom ansible variables)
         """
 
-        spec_defaults = self.get_spec_defaults()
-        cli_args = CliParser.parse_cli_input(arg_parser, args)
+        spec_defaults, custom_spec_defaults = self.get_spec_defaults()
+        cli_args, custom_cli_args = CliParser.parse_cli_input(arg_parser, args)
 
-        file_args = self.get_answers_file_args(cli_args)
+        # parse custom ansible variables and their values
+        custom_parsed_cli_args = {}
+        for custom_parse in custom_cli_args.values():
+            custom_parsed_cli_args.update(custom_parse)
+        file_args, custom_file_args = self.get_answers_file_args(cli_args)
 
         # generate answers file and exit
-        if self.generate_answers_file(cli_args, spec_defaults):
+        if self.generate_answers_file(cli_args, custom_cli_args, spec_defaults):
             LOG.warning("Answers file generated. Exiting.")
 
         # print warnings when something was overridden from non-cli source.
@@ -300,21 +355,33 @@ class SpecParser(object):
                         for key in cli_args.keys() if
                         key in spec_defaults)
 
+        # now filter custom ansible defaults to have values defined:
+        for custom_default in custom_spec_defaults:
+            if custom_default not in custom_parsed_cli_args:
+                custom_parsed_cli_args[custom_default] = custom_spec_defaults[custom_default]
+
         # copy cli args with the same name to all parser groups
         self._merge_duplicated_cli_args(cli_args)
         self._merge_duplicated_cli_args(file_args)
 
         dict_utils.dict_merge(defaults, file_args)
+
+        # combine custom cli commands with custom file parsing if needed
+        if custom_file_args:
+            custom_file_args.update(custom_parsed_cli_args)
+            custom_parsed_cli_args
+            custom_parsed_cli_args = custom_file_args
+
         dict_utils.dict_merge(defaults, cli_args)
-        self.validate_requires_args(defaults)
+        self.validate_requires_args(defaults, custom_parsed_cli_args)
         self.validate_length_args(defaults)
         self.validate_choices_args(defaults)
         self.validate_min_max_args(defaults)
 
         # now resolve complex types.
-        self.resolve_custom_types(defaults)
+        self.resolve_custom_types(defaults, custom_cli_args)
         nested, control = self.get_nested_and_control_args(defaults)
-        return nested, control
+        return nested, control, custom_parsed_cli_args
 
     def validate_arg_deprecation(self, cli_args, answer_file_args):
         """Validates and prints the deprecated arguments.
@@ -419,7 +486,7 @@ class SpecParser(object):
                     missing_args.append(option_spec['name'])
         return missing_args
 
-    def validate_requires_args(self, args):
+    def validate_requires_args(self, args, custom_parsed_cli_args):
         """Check if all the required arguments have been provided. """
 
         silent_args = self.get_silent_args(args)
@@ -439,6 +506,9 @@ class SpecParser(object):
                     name not in parser_args or
                     option['name'] in condition_req_args) and \
                         name not in silent_args:
+                    if option.get('ansible_variable') and \
+                       option['ansible_variable'] in custom_parsed_cli_args:
+                            continue
                     result[parser_name].append(name)
 
             return result
