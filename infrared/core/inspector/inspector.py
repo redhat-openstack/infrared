@@ -280,8 +280,7 @@ class SpecParser(object):
         """
 
         spec_defaults = self.get_spec_defaults()
-        cli_args = CliParser.parse_cli_input(arg_parser, args)
-
+        cli_args, custom = CliParser.parse_cli_input(arg_parser, args)
         file_args = self.get_answers_file_args(cli_args)
 
         # generate answers file and exit
@@ -314,7 +313,7 @@ class SpecParser(object):
         # now resolve complex types.
         self.resolve_custom_types(defaults)
         nested, control = self.get_nested_and_control_args(defaults)
-        return nested, control
+        return nested, control, custom
 
     def validate_arg_deprecation(self, cli_args, answer_file_args):
         """Validates and prints the deprecated arguments.
