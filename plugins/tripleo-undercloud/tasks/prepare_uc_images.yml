@@ -144,6 +144,6 @@
               path: "{{ working_dir }}/containers-prepare-parameter.yaml"
               regexp: '(^\ +)name_prefix.*'
               replace: "\\1name_prefix: {{ install.registry.prefix }}"
-      when: install.cdn|default(False)
+      when: "install.cdn and 'server_hostname' in cdn_creds"
   when:
       - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'

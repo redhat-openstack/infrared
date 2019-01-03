@@ -11,6 +11,7 @@
     validate_certs: no
     status_code: 200, 404
   register: _sat6_check
+  when: cdn_creds.get('server_hostname')
 
 - block:
     - name: Download katello-ca-consumer-latest.noarch.rpm
@@ -24,7 +25,7 @@
       package:
           name: /tmp/katello-ca-consumer-latest.noarch.rpm
           state: present
-  when: _sat6_check['status'] == 200
+  when: _sat6_check.get('status') == 200
 
 - name: register machines to CDN
   redhat_subscription:
