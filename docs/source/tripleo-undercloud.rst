@@ -161,19 +161,19 @@ Add custom repositories to the undercloud, after `installing the TripleO reposit
               - name: my_repo1
                 file: my_repo1.file
                 description: my repo1
-                base_url: http://myurl.com/my_repo1
+                baseurl: http://myurl.com/my_repo1
                 enabled: 0
-                gpg_check: 0
+                gpgcheck: 0
               - name: my_repo2
                 file: my_repo2.file
                 description: my repo2
-                base_url: http://myurl.com/my_repo2
+                baseurl: http://myurl.com/my_repo2
                 enabled: 0
-                gpg_check: 0
+                gpgcheck: 0
               ...
 
       .. note:: This expicitly supports some of the options found in
-        yum_repository module (name, file, description, base_url, enabled and gpg_check).
+        yum_repository module (name, file, description, baseurl, enabled and gpgcheck).
         For more information about this module, visit `Ansible yum_repository documentation <https://docs.ansible.com/ansible/yum_repository_module.html>`_.
 
       .. note:: Custom repos generate by ``--repos-config`` can be uploaded to Overcloud guest image by specifying ``--upload-extra-repos true``
