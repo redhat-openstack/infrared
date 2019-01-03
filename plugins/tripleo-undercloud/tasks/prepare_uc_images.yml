@@ -9,7 +9,7 @@
           container-image-prepare:
               namespace: "{{ install.get('registry', {}).namespace|default('') }}"
               prefix: "{{ install.registry.prefix|default('') }}"
-              tag: "{{ install.registry.tag.discover|ternary('AUTODETECT', install.registry.tag ) }}"
+              tag: "{{ install.registry.tag }}"
   when: install.registry.skip.puddle
 
 - name: Fail non-osp deployment
@@ -130,7 +130,7 @@
               path: "{{ working_dir }}/containers-prepare-parameter.yaml"
               regexp: '(^\ +)tag: latest'
               replace: "\\1tag: {{ container_env['container-image-prepare']['tag'] }}"
-      when: not install.registry.skip.puddle
+      when: not install.registry.skip.puddle or install.registry.tag
 
     - block:
         - name: set satellite namespace
