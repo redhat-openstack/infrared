@@ -384,12 +384,6 @@ subparsers:
                       type: Value
                       help: The images tag
 
-                  registry-tag-discover:
-                      type: Value
-                      help: |
-                          If this option is set then infrared will try to auto discover tag
-                      default: False
-
                   registry-undercloud-skip:
                       type: Bool
                       help: Avoid using and mass populating the undercloud registry.

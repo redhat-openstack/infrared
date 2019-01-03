@@ -9,7 +9,7 @@
           container-image-prepare:
               namespace: "{{ install.get('registry', {}).namespace|default('') }}"
               prefix: "{{ install.registry.prefix|default('') }}"
-              tag: "{{ install.registry.tag.discover|ternary('AUTODETECT', install.registry.tag ) }}"
+              tag: "{{ install.registry.tag }}"
   when: install.registry.skip.puddle
 
 - name: Fail non-osp deployment
