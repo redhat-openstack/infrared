@@ -10,6 +10,9 @@
               namespace: "{{ install.get('registry', {}).namespace|default('') }}"
               prefix: "{{ install.registry.prefix|default('') }}"
               tag: "{{ install.registry.tag }}"
+              ceph-image: "{{ install.registry.ceph.image }}"
+              ceph-namespace: "{{ install.registry.ceph.namespace }}"
+              ceph-tag: "{{ install.registry.ceph.tag }}"
   when: install.registry.skip.puddle
 
 - name: Fail non-osp deployment
@@ -87,7 +90,7 @@
 
     - name: set ceph_namespace in containers-prepare-parameter.yaml
       vars:
-          ceph_namespace: "{{ container_env['container-image-prepare']['ceph-namespace'] | default('registry.access.redhat.com/rhceph') }}"
+          ceph_namespace: "{{ container_env['container-image-prepare']['ceph-namespace'] }}"
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
           regexp: 'registry.access.redhat.com/rhceph'
@@ -95,7 +98,7 @@
 
     - name: set ceph_image in containers-prepare-parameter.yaml
       vars:
-          ceph_image: "{{ container_env['container-image-prepare']['ceph-image'] | default('rhceph-3-rhel7') }}"
+          ceph_image: "{{ container_env['container-image-prepare']['ceph-image'] }}"
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
           regexp: 'rhceph-3-rhel7'
@@ -103,7 +106,7 @@
 
     - name: set ceph_tag in containers-prepare-parameter.yaml
       vars:
-          ceph_tag: "{{ container_env['container-image-prepare']['ceph-tag'] | default('latest') }}"
+          ceph_tag: "{{ container_env['container-image-prepare']['ceph-tag'] }}"
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
           regexp: 'ceph_tag: latest'

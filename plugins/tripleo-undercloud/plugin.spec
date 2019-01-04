@@ -396,3 +396,26 @@ subparsers:
                       help: |
                           Container images prefix
                       default: 'openstack-'
+
+                  registry-ceph-namespace:
+                      type: Value
+                      help: |
+                          The alternative Ceph registry to use for undercloud deployment.
+                          You need '--registry-skip-puddle' to be able to use this parameter.
+                      default: "registry.access.redhat.com/rhceph"
+
+                  registry-ceph-image:
+                      type: Value
+                      help: |
+                          The alternative Ceph namespace to use for undercloud deployment.
+                          You need '--registry-skip-puddle' to be able to use this parameter.
+                      default: "rhosp14"
+
+                  registry-ceph-tag:
+                      type: Value
+                      help: |
+                          The alternative Ceph tag to use for undercloud deployment.
+                          You need '--registry-skip-puddle' to be able to use this parameter.
+                      default: "latest"
+
+
