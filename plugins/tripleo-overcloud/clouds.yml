@@ -18,10 +18,19 @@
   set_fact:
       clouds_yaml: "{{ cloud_details.stdout|from_yaml }}"
 
-- name: Add cacert to clouds_yaml fact
-  set_fact:
-      clouds_yaml: "{{ clouds_yaml | combine({cloudname: {'cacert': undercloud_cacert }}, recursive=True)}}"
-  when: undercloud_cacert is defined
+- name: Add ssl certificate to cloud.yaml
+  block:
+      - name: Check if undercloud cert exist
+        stat:
+            path: "{{ undercloud_cacert }}"
+        register: stat_result
+
+      - name: Add cacert to clouds_yaml fact
+        vars:
+          cert: "{{ stat_result.stat.exists | ternary(undercloud_cacert, overcloud_cacert) }}"
+        set_fact:
+            clouds_yaml: "{{ clouds_yaml | combine({cloudname: {'cacert': cert }}, recursive=True)}}"
+  when: install.overcloud.ssl
 
 - name: create clouds.yaml if doesn't exist
   blockinfile:
