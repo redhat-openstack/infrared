@@ -18,10 +18,15 @@
   set_fact:
       clouds_yaml: "{{ cloud_details.stdout|from_yaml }}"
 
+- name: Check if undercloud cert exist
+  stat:
+      path: '/etc/pki/ca-trust/source/anchors/undercloud-cacert.pem'
+  register: stat_result
+
 - name: Add cacert to clouds_yaml fact
   set_fact:
-      clouds_yaml: "{{ clouds_yaml | combine({cloudname: {'cacert': undercloud_cacert }}, recursive=True)}}"
-  when: undercloud_cacert is defined
+      clouds_yaml: "{{ clouds_yaml | combine({cloudname: {'cacert': {{ stat_result.stat.exists | ternary('/etc/pki/ca-trust/source/anchors/undercloud-cacert.pem', '/etc/pki/ca-trust/source/anchors/overcloud-cacert.pem') }} }}, recursive=True)}}"
+  when: (undercloud_cacert is defined) or (overcloud_cacert is defined)
 
 - name: create clouds.yaml if doesn't exist
   blockinfile:
