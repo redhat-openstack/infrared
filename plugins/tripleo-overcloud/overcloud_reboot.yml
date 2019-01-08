@@ -216,6 +216,8 @@
         delay: 10
         with_items:
             - "{{ (overcloud_version|int > 11) | ternary('Stopped', 'Stopped:') }}"
+            - "Starting"
+            - "Promoting"
         when:
             - pcs_active|failed
             - pcmk_remote|failed
