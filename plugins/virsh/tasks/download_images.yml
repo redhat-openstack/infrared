@@ -29,10 +29,14 @@
 - name: adjust base image for this run
   shell: |
       set -ex
+      if [[ ! -d /opt/appliance ]]; then
+        curl -o /opt/libguestfs_appliance.tar.gx http://download.libguestfs.org/binaries/appliance/appliance-1.38.0.tar.xz
+        tar -C /opt/ -xvf /opt/libguestfs_appliance.tar.gx
+      fi
+      export LIBGUESTFS_PATH=/opt/appliance
       export LIBGUESTFS_BACKEND=direct
       virt-sysprep -a {{ item.dest }} \
           --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
-
       virt-customize -a {{ item.dest }} \
       {% if not item.item.value.image_url|default('') %}
           --run-command 'yum remove -y cloud-init*' \
