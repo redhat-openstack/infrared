@@ -46,7 +46,9 @@
             net_scripts: /etc/sysconfig/network-scripts
         shell: |
             set -ex
+            export LIBGUESTFS_PATH=/opt/appliance
             export LIBGUESTFS_BACKEND=direct
+
             {% for num in range(node_start_index|int, amount|int, 1) %}
             {% for disk_name, disk_values in topology_node.disks.items() %}
             {% set node_image = '{0}-{1}-{2}.qcow2'.format(topology_node.name, num, disk_name) %}
@@ -56,10 +58,14 @@
             # create empty disk
             qemu-img create -f qcow2 -o preallocation={{ disk_values.preallocation }} {{ disk_pool  }}/{{ node_image }} {{ disk_values.size }}
 
+            ## Prepare disk image
+
             {% if disk_name == 'disk1' and topology_node.deploy_os|default(True) and topology_node.supports_libguestfs|default(True) -%}
             # expand (copy-content) into new image in case of system disk
             # virt-resize needs target file with expected size to already exists
-            virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
+            os_version=`virt-cat -a {{ base_image_path }}/{{ image_name }} /etc/os-release | awk '/^VERSION=/ {print $1}' | grep -oP '[0-9]+' | head -1`
+            [[ $os_version -ge "8" ]] && partition="/dev/sda3" || partition="/dev/sda1"
+            virt-resize --expand $partition {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
             # incjet DEFROUT to file and set it on for external network only
             virt-customize -a {{ disk_pool }}/{{ node_image }} \
             {% for interface in topology_node.interfaces %}

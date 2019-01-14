@@ -18,6 +18,18 @@
         delegate_to: hypervisor
         tags: vms
 
+      - name: check os version
+        raw: cat /etc/redhat-release | sed 's/[^0-9]*//g' | sed 's/\(.\{1\}\)\(.\{1\}\)/\1.\2/'
+        register: os_version
+      when: inventory_hostname not in groups.overcloud_nodes|default([])
+
+    - name: "create soft link to python"
+      raw: ln -s /usr/libexec/platform-python /usr/bin/python
+      when:
+        - inventory_hostname not in groups.overcloud_nodes|default([])
+        - os_version.stdout|int >= 8
+
+    - block:
       # When we extend topology, these tasks will run also on old nodes and we don't want that.
       # If tasks run on old VM, ansible_user will be overwriten to cloud-user, that is why
       # we need to check if ansible_user is root and to execute the tasks only in this case
