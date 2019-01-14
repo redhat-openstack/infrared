@@ -8,6 +8,25 @@
       non_root_pw: "{{ provision.topology.password | default('redhat') }}"
   tasks:
     - block:
+      - name: "confige AppStream repo"
+        raw: |
+          cat << EOF >> /etc/yum.repos.d/rhel-8.repo
+          [rhel-8-AppStream]
+          Name=rhel-8-AppStream
+          baseurl=http://download.eng.tlv.redhat.com/pub/rhel/rel-eng/latest-RHEL-8/compose/AppStream/x86_64/os/
+          enabled=1
+          gpgcheck=no
+
+      - name: "remove space at beginning of line"
+        raw: sed 's/^\s//g' /etc/yum.repos.d/rhel-8.repo > /tmp/test; cat /tmp/test > /etc/yum.repos.d/rhel-8.repo
+
+      - name: "install python2 for rhel8"
+        raw: test -e /usr/bin/python || yum install -y python3
+
+      - name: "create soft link to python"
+        raw: ln -s /usr/bin/python3 /usr/bin/python
+
+    - block:
       - name: wait for hosts to be reachable
         wait_for:
             port: 22
