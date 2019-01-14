@@ -20,6 +20,14 @@
       loop_control:
           loop_var: node
 
+    - name: Download libguestfs appliance to allow virt-customize on RHEL7 hypervisor
+      shell: |
+          set -ex
+          if [[ ! -d /opt/appliance ]]; then
+            curl -o /opt/libguestfs_appliance.tar.gx http://download.libguestfs.org/binaries/appliance/appliance-1.38.0.tar.xz
+            tar -C /opt/ -xvf /opt/libguestfs_appliance.tar.gx
+          fi
+
     - name: provision image for each node
       include_tasks: tasks/download_images.yml
       with_dict: "{{ topology_nodes }}"
