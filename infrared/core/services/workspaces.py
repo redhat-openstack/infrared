@@ -9,6 +9,7 @@ import tarfile
 import tempfile
 import time
 import urllib3
+import glob
 
 from infrared.core.utils import exceptions, logger
 
@@ -18,6 +19,7 @@ TIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
 ACTIVE_WORKSPACE_ENV_NAME = "IR_WORKSPACE"
 
 INVENTORY_LINK = "hosts"
+INVENTORY_FILES_PATTERN = "hosts-*"
 LOCAL_HOSTS = """[local]
 localhost ansible_connection=local ansible_python_interpreter=python
 """
@@ -68,6 +70,29 @@ class Workspace(object):
         self.name = name
         self.path = path
         self.registy = WorkspaceRegistry(self.path)
+
+    @property
+    def inventory_files(self):
+        """Workspace all inventory files
+
+        Search for inventory files that had been used during different
+        stages of the execution.
+
+        :return: list of inventory files paths
+        """
+        if not getattr(self, '_inventory_files', None):
+            inventory_files = \
+                glob.glob(os.path.join(self.path, INVENTORY_FILES_PATTERN))
+
+            self._inventory_files = \
+                [os.path.join(os.path.dirname(inv), os.readlink(inv))
+                 if os.path.islink(inv)
+                 else inv
+                 for inv in inventory_files + [self.inventory]]
+            # remove duplicates
+            self._inventory_files = list(set(self._inventory_files))
+
+        return self._inventory_files
 
     @property
     def inventory(self):
@@ -122,14 +147,14 @@ class Workspace(object):
     def _populate_paths(self):
         """Update inventory with new workspace directory path. """
 
-        inv = self.inventory
+        inventories = self.inventory_files
 
-        real_inv = os.path.join(os.path.dirname(inv), os.readlink(inv))
-
-        for line in fileinput.input(real_inv, inplace=True):
-            new_line = re.sub(self.path_placeholder, self.path,
-                              line.rstrip())
-            print(new_line)
+        # iterate over all inventory files and purge paths
+        for inv in inventories:
+            for line in fileinput.input(inv, inplace=True):
+                new_line = re.sub(self.path_placeholder, self.path,
+                                  line.rstrip())
+                print(new_line)
 
     def _purge_paths(self, path):
         """replace path in inventory with placeholders.
@@ -137,15 +162,15 @@ class Workspace(object):
         This method is used on tmp workspace, so we can't use self.path,
         we need original path.
         """
-        inv = self.inventory
+        inventories = self.inventory_files
 
-        real_inv = os.path.join(os.path.dirname(inv), os.readlink(inv))
-
-        for line in fileinput.input(real_inv, inplace=True):
-            new_line = re.sub(path,
-                              self.path_placeholder,
-                              line.rstrip())
-            print(new_line)
+        # iterate over all inventory files and purge paths
+        for inv in inventories:
+            for line in fileinput.input(inv, inplace=True):
+                new_line = re.sub(path,
+                                  self.path_placeholder,
+                                  line.rstrip())
+                print(new_line)
 
     def _copy_outside_keys(self):
         """Copies SSH keys into the workspace's directory
@@ -153,42 +178,48 @@ class Workspace(object):
         Also replaces workspace paths with workspace placeholder and updates
         the inventory file with the changes
         """
-        real_inv = os.path.join(self.path, os.readlink(self.inventory))
+        inventories = self.inventory_files
 
-        with open(real_inv, 'r+') as f:
-            inventory_content = f.read()
+        # iterate over all inventory files and purge paths
+        for inv in inventories:
 
-            ssh_keys = set(re.findall(
-                r"ansible_ssh_private_key_file=(\/\S+)", inventory_content))
-            LOG.debug("SSH keys to copy:\n  {}".format(ssh_keys))
+            with open(inv, 'r+') as f:
+                inventory_content = f.read()
 
-            for ssh_key in sorted(ssh_keys, reverse=True):
-                # Skip SSH keys that already in the workspace
-                if ssh_key.startswith(self.path) or \
-                        ssh_key.startswith(self.path_placeholder):
-                    continue
+                ssh_keys = set(re.findall(
+                    r"ansible_ssh_private_key_file=(\/\S+)",
+                    inventory_content))
+                LOG.debug("SSH keys to copy:\n  {}".format(ssh_keys))
 
-                ssh_key_name = os.path.basename(ssh_key)
-                rand_str = next(tempfile._get_candidate_names())
-                ssh_key_name_new = "{}-{}".format(ssh_key_name, rand_str)
-                new_ssh_key = os.path.join(self.path, ssh_key_name_new)
+                for ssh_key in sorted(ssh_keys, reverse=True):
+                    # Skip SSH keys that already in the workspace
+                    if ssh_key.startswith(self.path) or \
+                            ssh_key.startswith(self.path_placeholder):
+                        continue
 
-                LOG.debug(
-                    "Copying SSH key '{}' to workspace's dir: '{}'".format(
-                        ssh_key, new_ssh_key))
-                shutil.copy2(ssh_key, new_ssh_key)
+                    ssh_key_name = os.path.basename(ssh_key)
+                    rand_str = next(tempfile._get_candidate_names())
+                    ssh_key_name_new = "{}-{}".format(ssh_key_name, rand_str)
+                    new_ssh_key = os.path.join(self.path, ssh_key_name_new)
 
-                new_ssh_key_with_placeholder = \
-                    os.path.join(self.path_placeholder, ssh_key_name_new)
-                LOG.debug(
-                    "Replacing SSH key '{}' path with workspace placeholder "
-                    "'{}'".format(ssh_key, new_ssh_key_with_placeholder))
-                inventory_content = re.sub(
-                    ssh_key, new_ssh_key_with_placeholder, inventory_content)
+                    LOG.debug(
+                        "Copying SSH key '{}' to workspace's dir: '{}'".format(
+                            ssh_key, new_ssh_key))
+                    shutil.copy2(ssh_key, new_ssh_key)
 
-            f.seek(0)
-            f.truncate()
-            f.write(inventory_content)
+                    new_ssh_key_with_placeholder = \
+                        os.path.join(self.path_placeholder, ssh_key_name_new)
+                    LOG.debug(
+                        "Replacing SSH key '{}' "
+                        "path with workspace placeholder "
+                        "'{}'".format(ssh_key, new_ssh_key_with_placeholder))
+                    inventory_content = re.sub(
+                        ssh_key, new_ssh_key_with_placeholder,
+                        inventory_content)
+
+                f.seek(0)
+                f.truncate()
+                f.write(inventory_content)
 
     def link_file(self, file_path,
                   dest_name=None, unlink=True, add_to_reg=True):
