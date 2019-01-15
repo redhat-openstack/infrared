@@ -10,10 +10,8 @@
 - name: Install devel packages for package build dependencies
   become: yes
   yum:
-      name: "{{ item }}"
+      name: "{{ setup.packages }}"
       state: present
-  with_items: "{{ setup.packages }}"
-
 - name: Create venv with latest pip, setuptools and pbr
   pip:
       virtualenv: "{{ virtualenvs.tempest }}"
