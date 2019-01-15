@@ -31,13 +31,13 @@
       - install.network.ovn and install.network.dvr
       - install.version|default(undercloud_version)|openstack_release > 12
 
-- name: append docker-images
+- name: append containers-prepare-parameter
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e /home/stack/composable_roles/docker-images.yaml  \'
+      line: '-e /home/stack/containers-prepare-parameter.yaml  \'
   when:
       - install.storage.protocol.backend == "nfs-ganesha"
-      - install.version|default(undercloud_version)|openstack_release == 13
+      - install.version|default(undercloud_version)|openstack_release == 14
 
 - name: append network_data_ganesha
   lineinfile:
