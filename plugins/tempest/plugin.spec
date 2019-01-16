@@ -185,7 +185,7 @@ subparsers:
                       type: Bool
                       help: |
                           Use tempest cleanup to clean the leftover from the tests (usually when tests fail)
-                      default: no
+                      default: True
                   python_tempest_conf_dir:
                       type: Value
                       help: |
