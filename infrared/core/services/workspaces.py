@@ -65,6 +65,8 @@ class Workspace(object):
     """Holds the information about a workspace."""
 
     path_placeholder = "%%workspace_dir%%"
+    UPDATE_PATHS_ACTION_POPULATE = 'populate'
+    UPDATE_PATHS_ACTION_PURGE = 'purge'
 
     def __init__(self, name, path):
         self.name = name
@@ -144,32 +146,31 @@ class Workspace(object):
                 os.unlink(first)
             first = self.registy.pop()
 
-    def _populate_paths(self):
-        """Update inventory with new workspace directory path. """
+    def _update_paths(self, path, action):
+        """Update inventory with new workspace directory path.
 
-        inventories = self.inventory_files
-
-        # iterate over all inventory files and purge paths
-        for inv in inventories:
-            for line in fileinput.input(inv, inplace=True):
-                new_line = re.sub(self.path_placeholder, self.path,
-                                  line.rstrip())
-                print(new_line)
-
-    def _purge_paths(self, path):
-        """replace path in inventory with placeholders.
-
-        This method is used on tmp workspace, so we can't use self.path,
-        we need original path.
+        :param path: This method is sometimes used on tmp workspace,
+         so we can't use self.path, we need original path.
+        :param action: Action to perform. Should be either populate or purge.
         """
+        actions = {
+            Workspace.UPDATE_PATHS_ACTION_PURGE:
+                lambda: re.sub(path, self.path_placeholder,
+                               line.rstrip()),
+            Workspace.UPDATE_PATHS_ACTION_POPULATE:
+                lambda: re.sub(self.path_placeholder, path,
+                               line.rstrip()),
+        }
+
+        if action not in actions.keys():
+            raise Exception
+
         inventories = self.inventory_files
 
-        # iterate over all inventory files and purge paths
+        # iterate over all inventory files and purge / populate paths
         for inv in inventories:
             for line in fileinput.input(inv, inplace=True):
-                new_line = re.sub(path,
-                                  self.path_placeholder,
-                                  line.rstrip())
+                new_line = actions[action]()
                 print(new_line)
 
     def _copy_outside_keys(self):
@@ -439,7 +440,8 @@ class WorkspaceManager(object):
                             symlinks=True)
             tmp_workspace = Workspace(name=workspace.name,
                                       path=tmp_workspace_path)
-            tmp_workspace._purge_paths(workspace.path)
+            tmp_workspace._update_paths(
+                workspace.path, action=Workspace.UPDATE_PATHS_ACTION_PURGE)
             if copykeys:
                 tmp_workspace._copy_outside_keys()
             with tarfile.open(fname + '.tgz', "w:gz") as tar:
@@ -503,7 +505,8 @@ class WorkspaceManager(object):
             if 'tmp_dir' in locals():
                 shutil.rmtree(tmp_dir)
 
-        new_workspace._populate_paths()
+        new_workspace._update_paths(
+            new_workspace.path, action=Workspace.UPDATE_PATHS_ACTION_POPULATE)
         self.activate(new_workspace.name)
 
     def is_active(self, name):
