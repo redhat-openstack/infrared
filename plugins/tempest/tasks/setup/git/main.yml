@@ -83,19 +83,19 @@
       state: present
   with_items: "{{ setup.pip_packages }}"
 
-- name: Install Tempest package
-  pip:
-      chdir: "~/{{ setup.clone_dir }}"
-      virtualenv: "{{ virtualenvs.tempest }}"
-      name: "."
-      editable: true
-
 - name: Install test plugins
   include_tasks: install_plugins.yml
   with_items: "{{ test.tests }}"
   loop_control:
       loop_var: test_suite
   when: test.openstack.version|default(overcloud_version)|openstack_release >= 7
+
+- name: Install Tempest package
+  pip:
+      chdir: "~/{{ setup.clone_dir }}"
+      virtualenv: "{{ virtualenvs.tempest }}"
+      name: "."
+      editable: true
 
 - name: Warning message
   debug:
