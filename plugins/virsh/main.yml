@@ -1,5 +1,13 @@
 ---
-- import_playbook: "{{ provision_cleanup | default('cleanup.yml') }}"
+- hosts: localhost
+  become: true
+  gather_facts: no
+  tasks:
+    - name: cancel ooo-upg wrkload vol
+      shell: |
+         sed -i 's/.*volume.*//g' ../tripleo-upgrade/templates/workload_launch.sh.j2
+ 
+ - import_playbook: "{{ provision_cleanup | default('cleanup.yml') }}"
   when: (provision.cleanup|default(False)) or (provision.kill|default(False))
 
 - import_playbook: remove_nodes.yml
