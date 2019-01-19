@@ -12,6 +12,18 @@
   roles:
       - version-discovery
 
+- name: do server detach vol
+  hosts: undercloud
+  gather_facts: no
+  tasks:
+    - shell: |
+        source ~stack/overcloudrc
+        ser_id=$(openstack server list -f json|jq -c -r '.[0].ID')
+        echo $ser_id
+        vol_id=$(openstack volume show $(openstack server show $ser_id -f json|jq -c -r '.volumes_attached'|sed 's/.*=//g'|tr -d "'") -f json |jq -r '.id')
+        echo $vol_id
+        openstack server remove volume $ser_id $vol_id
+
 - name: Overcloud Reboot
   hosts: overcloud_nodes:!unused
   gather_facts: false
