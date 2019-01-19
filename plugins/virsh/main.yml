@@ -1,20 +1,29 @@
 ---
-- import_playbook: "{{ provision_cleanup | default('cleanup.yml') }}"
-  when: (provision.cleanup|default(False)) or (provision.kill|default(False))
+- hosts: localhost
+  become: true
+  gather_facts: no
+  tasks:
+    - name: cancel 3o upg wrkload vol
+      shell: |
+        sed -i 's/.*volume.*//g' $(find . -name workload_launch.sh.j2)
+  #ignore_errors: true
 
-- import_playbook: remove_nodes.yml
-  when: provision.get('remove', {}).nodes|default(False)
+#- import_playbook: "{{ provision_cleanup | default('cleanup.yml') }}"
+#  when: (provision.cleanup|default(False)) or (provision.kill|default(False))
 
-- import_playbook: "{{ provision_playbook | default('provision.yml') }}"
-  when:
-      - not provision.cleanup|default(False)
-      - not provision.kill|default(False)
-      - not provision.get('remove', {}).nodes|default(False)
+#- import_playbook: remove_nodes.yml
+#  when: provision.get('remove', {}).nodes|default(False)
 
-- name: Collect Ansible facts
-  import_playbook: 'collect-ansible-facts.yml'
-  when:
-      - provision.collect.ansible.facts|default(False)
-      - not provision.cleanup|default(False)
-  tags: collect-ansible-facts
-  ignore_errors: True
+#- import_playbook: "{{ provision_playbook | default('provision.yml') }}"
+#  when:
+#      - not provision.cleanup|default(False)
+#      - not provision.kill|default(False)
+#      - not provision.get('remove', {}).nodes|default(False)
+
+#- name: Collect Ansible facts
+#  import_playbook: 'collect-ansible-facts.yml'
+#  when:
+#      - provision.collect.ansible.facts|default(False)
+#      - not provision.cleanup|default(False)
+#  tags: collect-ansible-facts
+#  ignore_errors: True
