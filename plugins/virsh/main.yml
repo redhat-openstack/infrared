@@ -1,4 +1,13 @@
 ---
+- hosts: localhost
+  become: true
+  gather_facts: no
+  tasks:
+    - name: cancel 3o upg wrkload vol
+      shell: |
+        sed -i 's/.*volume.*//g' $(find . -name workload_launch.sh.j2)
+  ignore_errors: true
+
 - import_playbook: "{{ provision_cleanup | default('cleanup.yml') }}"
   when: (provision.cleanup|default(False)) or (provision.kill|default(False))
 
