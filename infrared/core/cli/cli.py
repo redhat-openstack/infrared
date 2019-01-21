@@ -459,7 +459,10 @@ class NestedBase(object):
             if skip_nested_split:
                 dict_utils.dict_insert(results_dict, _value, key)
             else:
-                dict_utils.dict_insert(results_dict, _value, *key.split('.'))
+                # allow escaping the . (dot) in key of nested dictionaries
+                keys = [k.replace('\\', '')
+                        for k in re.split(r'(?<!\\)\.', key)]
+                dict_utils.dict_insert(results_dict, _value, *keys)
         return results_dict
 
 
