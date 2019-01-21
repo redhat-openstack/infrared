@@ -250,7 +250,7 @@ subparsers:
                             __LISTYAMLS__
 
                   config-heat:
-                      type: Dict
+                      type: NestedDict
                       action: append
                       help: |
                           Inject additional Tripleo Heat Templates configuration options under "paramater_defaults"
@@ -266,6 +266,17 @@ subparsers:
                                       nova::allow_resize_to_same_host: true
                                   NeutronOVSFirewallDriver: openvswitch
 
+                          It is also possible to have . (dot) included in key by escaping it.
+                          Example:
+                              --config-heat "ControllerExtraConfig.opendaylight::log_levels.org\.opendaylight\.netvirt\.elan=TRACE"
+
+                          should inject the following yaml to "overcloud deploy" command:
+
+                               ---
+                               parameter_defaults:
+                                   ControllerExtraConfig:
+                                       opendaylight::log_levels:
+                                           org.opendaylight.netvirt.elan: TRACE
                   config-resource:
                       type: NestedDict
                       action: append
