@@ -106,7 +106,7 @@ PLUGINS_REGISTRY = {
         'type': 'provision'
     },
     'cloud-config': {
-        'src': 'https://github.com/rhos-infra/cloud-config.git',
+        'src': 'https://github.com/pinikomarov/cloud-config.git',
         'desc': 'Collection of overcloud configuration tasks',
         'type': 'install'
     },
@@ -193,7 +193,7 @@ PLUGINS_REGISTRY = {
         'type': 'install'
     },
     'tripleo-upgrade': {
-        'src': 'https://git.openstack.org/openstack/tripleo-upgrade.git',
+        'src': 'https://github.com/pinikomarov/tripleo-upgrade.git',
         'src_path': 'infrared_plugin',
         'desc': 'Upgrade or update TripleO deployment',
         'type': 'install'
