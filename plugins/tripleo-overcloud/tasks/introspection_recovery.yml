@@ -43,7 +43,7 @@
   vars:
       - osp_version: "{{ install.version|default(undercloud_version) | openstack_release }}"
       - uuid_field_name: "{{ ( osp_version|int < 13) | ternary('Node UUID', 'UUID') }}"
-      - finished_condition:  "{{ (osp_version|int < 13) | ternary(item.get('Finished') == false, item.get('Finished at')== null) }}"
+      - finished_condition:  "{{ (osp_version|int < 13) | ternary(item.get('Finished') == false, item.get('Finished at') is none) }}"
   when: install.version|default(undercloud_version)|openstack_release > 7 and finished_condition
 
 # Ironic in OSPd7 doesn't support yaml/json output format, it must be done "bash" way
