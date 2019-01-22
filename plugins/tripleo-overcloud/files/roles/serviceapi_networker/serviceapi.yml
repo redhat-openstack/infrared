@@ -28,18 +28,13 @@ serviceapi_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::BarbicanBackendKmip{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::BarbicanBackendPkcs11Crypto{% endif %}"
         - OS::TripleO::Services::CACerts
+        - OS::TripleO::Services::CephClient
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::CeilometerApi{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::CeilometerCollector{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::CeilometerExpirer{% endif %}"
         - OS::TripleO::Services::CeilometerAgentCentral
         - OS::TripleO::Services::CeilometerAgentNotification
-        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::CephMds{% endif %}"
-        - OS::TripleO::Services::CephMon
-        - OS::TripleO::Services::CephExternal
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::CephMgr{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::CephRbdMirror{% endif %}"
-        - OS::TripleO::Services::CephRgw
         - OS::TripleO::Services::CinderApi
         - OS::TripleO::Services::CinderScheduler
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
