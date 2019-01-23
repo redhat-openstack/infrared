@@ -113,6 +113,30 @@
     },
     {
       "key": {
+        "uuid": "7e9b0a48_7ebfbabb",
+        "filename": "plugins/virsh/provision_user.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1005418
+      },
+      "writtenOn": "2019-01-23T15:35:56Z",
+      "side": 1,
+      "message": "It fails with:\n\nfatal: [undercloud-0]: FAILED! \u003d\u003e {\"changed\": false, \"module_stderr\": \"Shared connection to 172.16.0.4 closed.\\r\\n\", \"module_stdout\": \"/bin/sh: /usr/bin/python: No such file or directory\\r\\n\", \"msg\": \"MODULE FAILURE\", \"rc\": 0}\n\n\nI agree the symlink is not ideal. Perhaps we can set the ansible_python_interpreter globally to /usr/libexec/platform-python(I see it\u0027s also available in rhel7 and centos). wdyt?",
+      "parentUuid": "5ffb2c1a_66ea809a",
+      "range": {
+        "startLine": 43,
+        "startChar": 19,
+        "endLine": 43,
+        "endChar": 35
+      },
+      "revId": "a5e6598b93d4ac458cc433299de417b9a95d0800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "268251e1_ba7f603c",
         "filename": "plugins/virsh/provision_vms.yml",
         "patchSetId": 8
@@ -141,6 +165,30 @@
       "writtenOn": "2019-01-22T18:38:54Z",
       "side": 1,
       "message": "why we change sda3 -\u003e sda1?\n\nin undercloud we getting changed /boot instead of /\n[root@localhost ~]# df -h\nFilesystem      Size  Used Avail Use% Mounted on\ndevtmpfs         12G     0   12G   0% /dev\ntmpfs            12G     0   12G   0% /dev/shm\ntmpfs            12G   17M   12G   1% /run\ntmpfs            12G     0   12G   0% /sys/fs/cgroup\n/dev/vda3       8.0G  1.1G  7.0G  14% /\n/dev/vda1        91G  812M   91G   1% /boot\ntmpfs           2.4G     0  2.4G   0% /run/user/0",
+      "range": {
+        "startLine": 66,
+        "startChar": 41,
+        "endLine": 66,
+        "endChar": 43
+      },
+      "revId": "a5e6598b93d4ac458cc433299de417b9a95d0800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4267c700_5b9774e5",
+        "filename": "plugins/virsh/tasks/vms_1_create_disk.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1005418
+      },
+      "writtenOn": "2019-01-23T15:35:56Z",
+      "side": 1,
+      "message": "On rhel7 image we have the / partition on sda1 while on rhel8 we have it on sda3. We could detect the rhel version inside the image with something like:\n\nvirt-cat -a /var/lib/libvirt/images/rhel-guest-image-8.0-1690.x86_64.qcow2 /etc/os-release | awk \u0027/^VERSION\u003d/ {print $1}\u0027 | grep -oP \u0027[0-9]+\u0027 | head -1",
+      "parentUuid": "5c3e82ad_a70e6380",
       "range": {
         "startLine": 66,
         "startChar": 41,
