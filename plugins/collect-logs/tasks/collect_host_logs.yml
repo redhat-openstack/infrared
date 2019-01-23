@@ -8,6 +8,8 @@
         - psmisc
         # ^ pstree
         - tar
+        - expect
+        #^ unbuffer for not-wrapping yum list output
       state: present
   ignore_errors: true
 
@@ -24,7 +26,7 @@
       state: directory
 
 - name: list pkg+repo
-  shell: yum -C list installed > /var/log/extra/packages
+  shell: unbuffer yum -C list installed > /var/log/extra/packages || yum -C list installed > /var/log/extra/packages
 
 - name: collect status of all systemd units
   shell: systemctl --all > /var/log/extra/service 2>&1
@@ -136,7 +138,7 @@
               echo "+ docker inspect $cont" >> "$INFO_FILE";
               docker inspect "$cont" &>> "$INFO_FILE";
               docker logs "$cont" &> "$INFO_DIR/stdout.log";
-              echo "+ docker exec --user root $cont /usr/bin/rpm -qa" >> "$INFO_FILE";
+              echo "+ docker exec -it --user root $cont /usr/bin/rpm -qa" >> "$INFO_FILE";
               docker exec -it --user root ${cont} /usr/bin/rpm -qa &>> "$INFO_FILE";
               docker cp "$cont:/var/lib/kolla/config_files/config.json" "$INFO_DIR/config.json";
           done;
@@ -246,6 +248,7 @@
       find /tmp/{{ inventory_hostname }} -type d -print0 | xargs -0 chmod 755;
       find /tmp/{{ inventory_hostname }} -type f -print0 | xargs -0 chmod 644;
   ignore_errors: true
+  tags: collect_logs
 
 - name: collect custom directories
   shell: |
@@ -255,6 +258,7 @@
       find /tmp/{{ inventory_hostname }}/custom -type f -print0 | xargs -0 chmod 644;
   ignore_errors: true
   with_items: "{{ other.archive.custom.split(',') }}"
+  tags: collect_custom
 
 - name: remove broken links
   shell: "for i in `find . -xtype l`; do ls -la $i >> BROKEN_LINKS.txt; rm -rf $i; done"

@@ -7,6 +7,7 @@
       custom_repos: "{{ install.repos|default({}) }}"
       skip_release: "{{ install.get('repos', {}).get('skip', {}).release|default('')}}"
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+      undercloud_extra_repos: []
   tags: install
   pre_tasks:
       # FIXME(yfried): figure why this is required in gate only
@@ -85,8 +86,16 @@
             enabled: "{{ item.enabled | default(omit) }}"
             gpgcheck: "{{ item.gpgcheck | default(omit) }}"
             includepkgs: "{{ item.includepkgs | default(omit) }}"
+        register: custom_repos_files
         with_items: "{{ extra_repos|default({}) }}"
         when: "extra_repos|default({})"
+
+      - set_fact:
+          undercloud_extra_repos: "{{ undercloud_extra_repos }} + ['{{ item['diff']['after_header'] | basename}}']"
+        with_items: "{{ custom_repos_files['results'] }}"
+        when:
+          - custom_repos_files is defined
+          - install['upload']['extra']['repos']
 
       - name: Downloading extra repositories
         get_url:

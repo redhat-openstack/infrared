@@ -1,3 +1,12 @@
 ---
 tripleo_heat_templates:
     - "{{ install.heat.templates.basedir }}/environments/services/neutron-ml2-ansible.yaml"
+
+custom_templates:
+  parameter_defaults:
+    ML2HostConfigs:
+      junos:
+        ansible_host: "{{ hostvars['vqfx-0']['ansible_host'] }}"
+        ansible_network_os: junos
+        ansible_ssh_pass: Juniper
+        ansible_user: root

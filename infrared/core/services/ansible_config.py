@@ -72,7 +72,7 @@ class AnsibleConfigManager(object):
                 if not config.has_section(section):
                     config.add_section(section)
                 for option, value in section_data.items():
-                    config.set(section, option, value)
+                    config.set(section, option, str(value))
 
             config.write(fp)
 

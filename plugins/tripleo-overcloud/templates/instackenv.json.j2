@@ -24,7 +24,7 @@
       "arch": "{{ host_data.arch }}",
       {% if install.version|default(undercloud_version) | openstack_release >= 11 %}
         "pm_addr": "{{ vbmc_management_address }}",
-        "pm_type": "{% if install.version|default(undercloud_version)|openstack_release >= 14 %}ipmi{% else %}pxe_ipmitool{% endif %}",
+        "pm_type": "{% if install.version|default(undercloud_version)|openstack_release >= 13 %}ipmi{% else %}pxe_ipmitool{% endif %}",
         "pm_user": "{{ install.vbmc.username }}",
         "pm_password": "{{ install.vbmc.password }}",
         "pm_port": "{{ vbmc_ports[host_data.name] }}"

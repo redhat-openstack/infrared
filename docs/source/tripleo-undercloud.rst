@@ -95,6 +95,8 @@ will be later created.
 
 * Use ``--images-packages`` to define a list of additional packages to install on the OverCloud image.
   Packages can be specified by name or by providing direct url to the rpm file.
+* Use ``--images-remove-packages`` to define a list of packages to uninstall from the OverCloud image.
+  Packages must be specified by name.
 * ``--images-cleanup`` tells `infrared` do remove the images files original after they are uploaded
   to the undercloud's Glance service.
 
@@ -123,6 +125,12 @@ To use a different image specify ``--images-url``::
   infrared tripleo-undercloud --images-task build --images-url http://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
 
 .. note:: building the images takes a long time and it's usually quicker to download them.
+
+In order to update default overcloud image kernel provided by sources (for example RPM), with the latest kernel present on overcloud image,
+specify ``overcloud-update-kernel``.
+
+.. note:: when installing kernel-rt inside overcloud guest image, the latest RealTime kernel will be used instead of default kernel.
+
 
 See the `RDO deployment <rdo.html>`_ page for more details on how to setup RDO product.
 
@@ -153,20 +161,22 @@ Add custom repositories to the undercloud, after `installing the TripleO reposit
               - name: my_repo1
                 file: my_repo1.file
                 description: my repo1
-                base_url: http://myurl.com/my_repo1
+                baseurl: http://myurl.com/my_repo1
                 enabled: 0
-                gpg_check: 0
+                gpgcheck: 0
               - name: my_repo2
                 file: my_repo2.file
                 description: my repo2
-                base_url: http://myurl.com/my_repo2
+                baseurl: http://myurl.com/my_repo2
                 enabled: 0
-                gpg_check: 0
+                gpgcheck: 0
               ...
 
       .. note:: This expicitly supports some of the options found in
-        yum_repository module (name, file, description, base_url, enabled and gpg_check).
+        yum_repository module (name, file, description, baseurl, enabled and gpgcheck).
         For more information about this module, visit `Ansible yum_repository documentation <https://docs.ansible.com/ansible/yum_repository_module.html>`_.
+
+      .. note:: Custom repos generate by ``--repos-config`` can be uploaded to Overcloud guest image by specifying ``--upload-extra-repos true``
 
 * ``repos-urls``: comma separated list of URLs to download repo files to ``/etc/yum.repos.d``
 
@@ -243,7 +253,7 @@ Example for update of Undercloud and Images::
 .. warning:: Infrared support update for RHOSP from version 8.
 
 Undercloud Workarounds
----------------------
+----------------------
 Allow injecting workarounds defined in an external file before/after the undercloud installation::
 
     infrared tripleo-undercloud -v --workarounds 'http://server.localdomain/workarounds.yml'

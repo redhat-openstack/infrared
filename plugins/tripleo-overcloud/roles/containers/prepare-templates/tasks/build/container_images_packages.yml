@@ -48,7 +48,7 @@
       USER $ORIG_USER
       " > {{ container_images_packages_dir }}/Dockerfile
 
-      docker build -t {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} \
+      docker build --network=host -t {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} \
       {{ container_images_packages_dir }} \
       --build-arg ORIG_USER=$ORIG_USER \
       > {{ container_images_packages_logdir }}/docker_build_{{ item.key }}.log

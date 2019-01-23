@@ -54,3 +54,6 @@
   when:
       - install.version|default(undercloud_version)|openstack_release >= 14
       - not install.ocupdate|default(false)
+      - not install_container_images_packages is defined
+      - not install_container_images_patch is defined
+      - install.overcloud.script is not defined

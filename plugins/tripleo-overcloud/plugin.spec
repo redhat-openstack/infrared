@@ -294,10 +294,11 @@ subparsers:
                           Comma delimited list of names or URLs of the packages to be installed on
                           undercloud before Overcloud deployment, uses "yum" package manager.
                           NOTE: When trying to install packages with this parameter please be sure
-                          that the appropriate repositories have been enabled.
+                          that the appropriate Yum repositories have been enabled.
                           Examples:
                               --undercloud-packages python-tripleoclient
-                              --undercloud-packages python-tripleoclient,http://download-node-02.eng.bos.redhat.com/composes/auto/ceph-3.1-rhel-7/latest-RHCEPH-3-RHEL-7/compose/Tools/x86_64/os/Packages/golang-1.9.4-1.el7.x86_64.rpm
+                              --undercloud-packages http://download-node-02.eng.bos.redhat.com/composes/auto/ceph-3.1-rhel-7/latest-RHCEPH-3-RHEL-7/compose/Tools/x86_64/os/Packages/golang-1.9.4-1.el7.x86_64.rpm
+                              --undercloud-packages vim,http://download-node-02.eng.bos.redhat.com/composes/auto/ceph-3.1-rhel-7/latest-RHCEPH-3-RHEL-7/compose/Tools/x86_64/os/Packages/golang-1.9.4-1.el7.x86_64.rpm
 
                   fetchfiles-undercloud:
                       type: Value
@@ -324,6 +325,13 @@ subparsers:
                   overcloud-ssh-user:
                       type: Value
                       help: Overrides the overcloud ssh user name
+                      default: ''
+
+                  overcloud-domain:
+                      type: Value
+                      help: |
+                          Set the CloudDomain parameter. The value for CloudDomain must match the value
+                          for overcloud_domain_name that was configured in undercloud.conf if set.
                       default: ''
 
                   tls-everywhere:
@@ -388,6 +396,19 @@ subparsers:
                       type: Bool
                       default: no
                       help: Use OVN (HA) instead of ML2 and OVS.
+
+                  custom_network_names:
+                      type: Value
+                      help: |
+                          Option to provide custom names for the networks.
+                          Note: Custom network names can be provided as values.
+                          Value example:
+                          --custom_network_name storage=MyStorageNet,storage_mgmt=MyStorageMgmtNet,internal_api=MyInternalApiNet,tenant=MyTenantNet,external=MyExternalNet
+
+                  cleaning-network:
+                      type: Bool
+                      default: no
+                      help: Adds a network for cleaning in OC. Asssumes Ironic in OC was enabled.
 
             - title: Overcloud Public Network
               options:
@@ -466,6 +487,30 @@ subparsers:
                       default: rbd
                       help: |
                         The storage backend type used for glance, enabling to set Swift or RadosGW as the backend when deploying internal Ceph. Default value is 'rbd'
+                  storage-protocol-backend:
+                      type: Value
+                      default: NA
+                      choices:
+                          - nfs-ganesha
+                          - nfs
+                          - iscsi
+                          - NA
+                      help: |
+                        The storage protocol that we would like to use.
+                        nfs-ganesha works only if the storage backand is ceph
+                        NOTE: nfs and iscsi are not implemented but added to be decoupled from storage backend parameter
+                  nova-nfs-backend:
+                      type: Bool
+                      help: |
+                          This options allows configuring NFS backend for Nova component and includes the appropriate
+                          THT template. storage-nova-nfs-share needs to be set when this is set to 'True'
+                      default: False
+
+                  storage-nova-nfs-share:
+                      type: Value
+                      help: |
+                        The absolute path to an external NFS storage mount
+                        NOTE: this needs to be set when nova-nfs-backend is set to 'True'
 
                   storage-config:
                       type: Value

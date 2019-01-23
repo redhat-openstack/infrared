@@ -158,7 +158,7 @@
       USER $ORIG_USER
       " > {{ container_images_patch_dir }}/Dockerfile
 
-      docker build -t {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
+      docker build --network=host -t {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
       {{ container_images_patch_dir }}/ --build-arg ORIG_USER=$ORIG_USER > {{ container_images_patch_logdir }}/docker_build_{{ item.split('/')[1] }}.log 2>&1
       if ! grep -q "Installed products updated" "{{ container_images_patch_logdir }}/docker_build_{{ item.split('/')[1] }}.log" ; then
           echo -e "\n\nno packages updated!!!\n\n." >&2

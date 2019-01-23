@@ -35,7 +35,9 @@
   when: vbmc_host == 'undercloud'
 
 - block:
-    - name: allow access to port vbmc ports from undercloud
+    - name: allow access to port vbmc ports from undercloud managment network
+      vars:
+          mgmt_net: "{{ hostvars[groups.undercloud|first][management_net].ipv4 }}"
       become: True
       iptables:
           action: insert
@@ -44,7 +46,7 @@
           chain: INPUT
           jump: ACCEPT
           protocol: "udp"
-          source: "{{ hostvars[groups.undercloud|first].ansible_default_ipv4.address }}"
+          source: "{{ mgmt_net.network }}/{{ mgmt_net.netmask }}"
           destination_port: "{{ item.1 }}"
       with_nested:
           - "{{ vbmc_ports.items() }}"
