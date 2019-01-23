@@ -35,13 +35,12 @@
         "pm_password": "{{ undercloud_private_key }}"
       {% endif %}
       {% if install.boot.mode == 'uefi' %}
-      "capabilities": [
+      , "capabilities": 
         {
-          "boot_mode:uefi",
-          "profile:{{ uefi[host_data.name.split('-')[0]] }}",
-          "boot_option:local"
+          "boot_mode":"uefi",
+          "profile":"{{ uefi[host_data.name.split('-')[0]] }}",
+          "boot_option":"local"
         }
-      ],
       {% endif %}
     }{% if not loop.last %},{% endif %}
 {% endfor %}
