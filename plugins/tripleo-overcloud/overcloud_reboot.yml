@@ -67,7 +67,8 @@
         become: true
         command: "{{ item }}"
         when:
-          - "'ceph' in group_names"
+          - "'monitor' in group_names" or
+          "'ceph' in group_names" and "'monitor' not in group_names"
           - overcloud_version|int < 14
         delegate_to: "{{ groups['controller']|first }}"
         with_items:
@@ -79,7 +80,8 @@
         become: true
         command: "{{ item }}"
         when:
-          - "'ceph' in group_names"
+          - "'monitor' in group_names" or
+          "'ceph' in group_names" and "'monitor' not in group_names"
           - overcloud_version|int >= 14
         delegate_to: "{{ groups['controller']|first }}"
         with_items:
