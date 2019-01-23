@@ -17,6 +17,8 @@
   gather_facts: false
   any_errors_fatal: true
   serial: 1
+  vars:
+      ceph_client: "{{ groups['controller']|first }}"
   tasks:
       # Evacuate compute node before reboot
       - block:
@@ -62,6 +64,12 @@
           - groups.compute|difference(groups.unused|default([]))|length > 1
           - install.postreboot_evacuate|default(False)
 
+      # Sort out ceph client
+      - name: Set ceph client to be the dedicated ceph monitor node if present
+        set_fact:
+          ceph_client: "{{ groups['monitors']|first }}"
+        when: "'monitors' in groups"
+
       # Temporarily disable ceph rebalance on OSP < 14
       - name: temporarily disable ceph rebalance
         become: true
@@ -69,7 +77,7 @@
         when:
           - "'ceph' in group_names"
           - overcloud_version|int < 14
-        delegate_to: "{{ groups['controller']|first }}"
+        delegate_to: "{{ ceph_client }}"
         with_items:
             - 'ceph osd set noout'
             - 'ceph osd set norebalance'
@@ -81,10 +89,10 @@
         when:
           - "'ceph' in group_names"
           - overcloud_version|int >= 14
-        delegate_to: "{{ groups['controller']|first }}"
+        delegate_to: "{{ ceph_client }}"
         with_items:
-            - "docker exec ceph-mon-{{ groups['controller']|first }} ceph osd set noout"
-            - "docker exec ceph-mon-{{ groups['controller']|first }} ceph osd set norebalance"
+            - "docker exec ceph-mon-{{ ceph_client }} ceph osd set noout"
+            - "docker exec ceph-mon-{{ ceph_client }} ceph osd set norebalance"
 
       # check pcs cluster status
       - name: check pacemaker cluster status
@@ -273,7 +281,7 @@
         when:
           - "'ceph' in group_names"
           - overcloud_version|int < 14
-        delegate_to: "{{ groups['controller']|first }}"
+        delegate_to: "{{ ceph_client }}"
         with_items:
             - 'ceph osd unset noout'
             - 'ceph osd unset norebalance'
@@ -285,10 +293,10 @@
         when:
           - "'ceph' in group_names"
           - overcloud_version|int >= 14
-        delegate_to: "{{ groups['controller']|first }}"
+        delegate_to: "{{ ceph_client }}"
         with_items:
-            - "docker exec ceph-mon-{{ groups['controller']|first }} ceph osd unset noout"
-            - "docker exec ceph-mon-{{ groups['controller']|first }} ceph osd unset norebalance"
+            - "docker exec ceph-mon-{{ ceph_client }} ceph osd unset noout"
+            - "docker exec ceph-mon-{{ ceph_client }} ceph osd unset norebalance"
 
       - name: wait for OSDs to come back on OSP < 14
         become: true
@@ -300,11 +308,11 @@
         when:
           - "'ceph' in group_names"
           - overcloud_version|int < 14
-        delegate_to: "{{ groups['controller']|first }}"
+        delegate_to: "{{ ceph_client }}"
 
       - name: wait for OSDs to come back on OSP >= 14
         become: true
-        command: "docker exec ceph-mon-{{ groups['controller']|first }} ceph pg stat"
+        command: "docker exec ceph-mon-{{ ceph_client }} ceph pg stat"
         register: active_osd
         until: active_osd.stdout.find("active+clean") > -1
         retries: 24
@@ -312,7 +320,7 @@
         when:
           - "'ceph' in group_names"
           - overcloud_version|int >= 14
-        delegate_to: "{{ groups['controller']|first }}"
+        delegate_to: "{{ ceph_client }}"
 
       - name: check clock_skew on ceph cluster on OSP < 14
         become: true
@@ -322,17 +330,17 @@
         when:
           - "'ceph' in group_names"
           - overcloud_version|int < 14
-        delegate_to: "{{ groups['controller']|first }}"
+        delegate_to: "{{ ceph_client }}"
 
       - name: check clock_skew on ceph cluster on OSP >= 14
         become: true
         shell: |
-            docker exec ceph-mon-{{ groups['controller']|first }} ceph status | grep 'Monitor clock skew detected' || echo 'ALL_GOOD'
+            docker exec ceph-mon-{{ ceph_client }} ceph status | grep 'Monitor clock skew detected' || echo 'ALL_GOOD'
         register: clock_skew
         when:
           - "'ceph' in group_names"
           - overcloud_version|int >= 14
-        delegate_to: "{{ groups['controller']|first }}"
+        delegate_to: "{{ ceph_client }}"
 
       - name: check ceph cluster status on OSP < 14
         become: true
@@ -341,7 +349,7 @@
         until: ceph_health.stdout.find("HEALTH_OK") > -1
         retries: 30
         delay: 5
-        delegate_to: "{{ groups['controller']|first }}"
+        delegate_to: "{{ ceph_client }}"
         when:
             - "'ceph' in group_names"
             - "groups['ceph']|difference(groups['unused']|default([]))|length >= 3"
@@ -350,12 +358,12 @@
 
       - name: check ceph cluster status on OSP >= 14
         become: true
-        command: "docker exec ceph-mon-{{ groups['controller']|first }} ceph status"
+        command: "docker exec ceph-mon-{{ ceph_client }} ceph status"
         register: ceph_health
         until: ceph_health.stdout.find("HEALTH_OK") > -1
         retries: 30
         delay: 5
-        delegate_to: "{{ groups['controller']|first }}"
+        delegate_to: "{{ ceph_client }}"
         when:
             - "'ceph' in group_names"
             - "groups['ceph']|difference(groups['unused']|default([]))|length >= 3"
@@ -369,7 +377,7 @@
         until: ceph_health.stdout.find("HEALTH_WARN") > -1 or ceph_health.stdout.find("HEALTH_OK") > -1
         retries: 30
         delay: 5
-        delegate_to: "{{ groups['controller']|first }}"
+        delegate_to: "{{ ceph_client }}"
         when:
             - "'ceph' in group_names"
             - "groups['ceph']|difference(groups['unused']|default([]))|length >= 3"
@@ -377,12 +385,12 @@
 
       - name: check ceph cluster status with clock skew on OSP >=14
         become: true
-        command: "docker exec ceph-mon-{{ groups['controller']|first }} ceph status"
+        command: "docker exec ceph-mon-{{ ceph_client }} ceph status"
         register: ceph_health
         until: ceph_health.stdout.find("HEALTH_WARN") > -1 or ceph_health.stdout.find("HEALTH_OK") > -1
         retries: 30
         delay: 5
-        delegate_to: "{{ groups['controller']|first }}"
+        delegate_to: "{{ ceph_client }}"
         when:
             - "'ceph' in group_names"
             - "groups['ceph']|difference(groups['unused']|default([]))|length >= 3"
