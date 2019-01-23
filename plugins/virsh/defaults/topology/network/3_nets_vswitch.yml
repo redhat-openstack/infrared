@@ -2,6 +2,11 @@
 networks:
   net1:
     external_connectivity: no
+    name: "vqfx-hyper"
+    ip_address: "192.168.{{ data_net }}.254"
+    netmask: "255.255.255.0"
+  net2:
+    external_connectivity: no
     name: management
     ip_address: 172.16.0.1
     netmask: 255.255.255.0
@@ -15,7 +20,7 @@ networks:
     floating_ip:
       start: "172.16.0.101"
       end: "172.16.0.150"
-  net2:
+  net3:
     external_connectivity: yes
     name: "external"
     ip_address: "10.0.0.1"
@@ -30,64 +35,18 @@ networks:
     floating_ip:
       start: "10.0.0.101"
       end: "10.0.0.150"
-  net3:
-    external_connectivity: no
-    name: "data"
-    ip_address: "192.168.24.254"
-    netmask: "255.255.255.0"
 
 nodes:
   default:
     interfaces:
-      - network: data
+      - connect_to: vqfx
+        network: data
+        bridged: yes
+        model: e1000
+        src_model: virtio
+        hub: yes
       - network: management
       - network: external
-    external_network:
-      network: management
-  undercloud:
-    interfaces:
-      - network: data
-      - network: management
-      - network: external
-      - connect_to: vqfx
-        network: vqfx
-        bridged: yes
-        model: e1000
-        hub: yes
-    external_network:
-      network: management
-  controller:
-    interfaces:
-      - network: data
-      - network: management
-      - network: external
-      - connect_to: vqfx
-        network: vqfx
-        bridged: yes
-        model: e1000
-        hub: yes
-    external_network:
-      network: management
-  compute:
-    interfaces:
-      - network: data
-      - network: management
-      - connect_to: vqfx
-        network: vqfx
-        bridged: yes
-        model: e1000
-        hub: yes
-    external_network:
-      network: management
-  ironic:
-    interfaces:
-      - network: data
-      - network: management
-      - connect_to: vqfx
-        network: vqfx
-        bridged: yes
-        model: e1000
-        hub: yes
     external_network:
       network: management
   vqfx:
@@ -100,6 +59,8 @@ nodes:
         model: e1000
       - network: vqfx-inter
         bridged: yes
+        model: e1000
+      - network: vqfx-hyper
         model: e1000
     external_network:
       network: management

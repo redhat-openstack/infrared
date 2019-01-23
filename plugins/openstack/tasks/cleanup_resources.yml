@@ -32,7 +32,7 @@
           enable_dhcp: false
           no_gateway_ip: yes
           use_default_subnetpool: yes
-      where: "{{ item.enable_dhcp }}"
+      when: item.enable_dhcp is defined
       with_items: "{{ subnets|default([]) }}"
       ignore_errors: yes
 

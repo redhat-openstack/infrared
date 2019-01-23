@@ -13,6 +13,10 @@ subparsers:
                       help: "foo.bar option"
                       default: "default string"
 
+                  flag:
+                      type: Flag
+                      help: "flag option"
+
                   dictionary-val:
                       type: KeyValueList
                       help: "dictionary-val option"

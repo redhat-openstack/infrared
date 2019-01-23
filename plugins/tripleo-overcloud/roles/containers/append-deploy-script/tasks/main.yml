@@ -30,3 +30,19 @@
   when:
       - install.network.ovn and install.network.dvr
       - install.version|default(undercloud_version)|openstack_release > 12
+
+- name: append docker-images
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e /home/stack/composable_roles/docker-images.yaml  \'
+  when:
+      - install.storage.protocol.backend == "nfs-ganesha"
+      - install.version|default(undercloud_version)|openstack_release == 13
+
+- name: append network_data_ganesha
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-n /usr/share/openstack-tripleo-heat-templates/network_data_ganesha.yaml   \'
+  when:
+      - install.storage.protocol.backend == "nfs-ganesha"
+      - install.version|default(undercloud_version)|openstack_release > 12

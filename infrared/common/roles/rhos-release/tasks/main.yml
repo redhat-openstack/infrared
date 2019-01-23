@@ -1,6 +1,7 @@
 ---
 - name: ensure previous repo mirror config is removed
   become: true
+  become_user: root
   lineinfile:
       dest: '/etc/hosts'
       regexp: '.* (download\.lab.*redhat\.com|rhos-qe-mirror).*'
@@ -28,6 +29,7 @@
 
   when: "mirror|default('')"
   become: true
+  become_user: root
 
 - name: gather repo file names to remove
   find:
@@ -43,15 +45,18 @@
   with_items: "{{ files_to_remove.files|default([]) }}"
   when: not item.path in ignore_path
   become: true
+  become_user: root
 
 - name: check rhos-release already available
   become: true
+  become_user: root
   shell: |
       rpm -qa | grep rhos-release || echo "rhos-release not_installed"
   register: rr_pre_installed
 
 - name: get the rhos-release RPM
   become: true
+  become_user: root
   get_url:
       url: "{{ rhos_release_rpm }}"
       dest: "/tmp/rhos-release-latest.rpm"
@@ -69,6 +74,7 @@
       state: present
       use: yum
   become: true
+  become_user: root
   when: 'not rr_skip_install_if_present or "rhos-release not_installed" in rr_pre_installed.stdout'
 
 - name: remove rhos-release repos if needed
@@ -76,6 +82,7 @@
       state: uninstall
       target_directory: "{{ rr_target_directory }}"
   become: true
+  become_user: root
 
 - block:
       - name: create necessary repos for director using rhos-release
@@ -95,6 +102,7 @@
         retries: 40
         delay: 5
         become: true
+        become_user: root
   rescue:
       - name: run rhos-release without retries
         rhos_release:
@@ -129,6 +137,12 @@
   set_fact:
       core_puddle_version: "{{ command_result.releases.core.version }}"
 
+- name: "check if specified puddle {{ build }} exists in release {{ release }}"
+  fail:
+      msg: "The specified puddle {{ build }} does not exist in {{ release }}"
+  when: command_result.releases.core.version is not search("\d")
+  # If puddle version is 'undetermined!' (it has no digit), task should fail.
+
 - name: write version to file
   copy:
       content: "{{ core_puddle_version }}"
@@ -153,6 +167,7 @@
       changed_when: "'Skipping mirror' not in mirror_used_cmd.stdout"
   when: "mirror_fqdn|default('')"
   become: true
+  become_user: root
 
 - name: Clean yum cache on RedHat based distros
   command: yum clean all
@@ -164,7 +179,9 @@
       state: present
       update_cache: yes
   become: true
+  become_user: root
 
 - name: repolist
   command: "yum -d 7 repolist"
   become: true
+  become_user: root

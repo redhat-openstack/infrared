@@ -94,7 +94,7 @@
             undercloud_public_ip: "{{ install.public.get('vlan', {}).get('ip', '') }}"
         when:
             - "'hypervisor' not in groups or install.hybrid|default(false)"
-            - undercloud_public_ip
+            - undercloud_public_ip|string
 
       # ensure we have all envs/roles referenced in deploy script for container image preparation
       - include_tasks: tasks/append_script.yml
@@ -114,6 +114,10 @@
       - name: append templates for ironic enabled OC
         include_tasks: tasks/ironic_environment_templates.yml
         when: install.ironic or install.ironic_inspector
+
+      - name: append templates for nova nfs backend
+        include_tasks: tasks/storage/nova-nfs.yml
+        when: install.nova.nfs.backend|default(False)
 
       - import_role:
             name: containers/prepare-templates

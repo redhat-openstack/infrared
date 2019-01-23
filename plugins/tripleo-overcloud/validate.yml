@@ -38,7 +38,7 @@
           - name: download storage config file
             get_url:
               url: "{{ install.storage.config }}"
-              dest: "storage-config.yml.tmp"
+              dest: ./storage-config.yml.tmp
               force: yes
             when: install.storage.config is match("http[s]?://.*")
 
@@ -47,7 +47,7 @@
               install_storage_config_file: "{{ lookup('first_found', findme) }}"
             vars:
               findme:
-              - "storage-config.yml.tmp"
+              - ./storage-config.yml.tmp
               - "{{ install.storage.config }}"
               - "vars/storage/config/{{ install.storage.config }}.yml"
 

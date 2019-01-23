@@ -21,6 +21,10 @@ parameters:
     default: ''
     description: IP address/subnet on the storage network
     type: string
+  StorageNFSIpSubnet:
+    default: ''
+    description: IP address/subnet on the storage network
+    type: string
   StorageMgmtIpSubnet:
     default: ''
     description: IP address/subnet on the storage mgmt network
@@ -52,6 +56,10 @@ parameters:
   TenantNetworkVlanID:
     default: 50
     description: Vlan ID for the tenant network traffic.
+    type: number
+  StorageNFSNetworkVlanID:
+    default: 70
+    description: Vlan ID for the storage network traffic.
     type: number
   ExternalInterfaceDefaultRoute:
     default: '10.0.0.1'
@@ -203,11 +211,21 @@ resources:
                               -
                                 ip_netmask:
                                     get_param: TenantIpSubnet
+{% if install.storage.protocol.backend == 'nfs-ganesha' %}
+                            -
+                              type: vlan
+                              vlan_id:
+                                  get_param: StorageNFSNetworkVlanID
+                              addresses:
+                              -
+                                ip_netmask:
+                                    get_param: StorageNFSIpSubnet
+{% endif %}
                         -
                           type: ovs_bridge
                           # This will default to br-ex, anything else requires specific
                           # brige mapping entries for it to be used.
-                          name: bridge_name
+                          name: br-ex
                           use_dhcp: false
                           addresses:
                             -

@@ -5,9 +5,27 @@
   gather_facts: no
   become: yes
   any_errors_fatal: true
+  vars:
+    ironic_conductor: ironic_conductor
   tasks:
     - name: Set selinux state
       selinux:
           policy: "targeted"
           state: "{{ install.selinux|default('enforcing') }}"
       when: install.selinux is defined
+
+    - name: increase iscsi verify attempts in ironic conductor
+      block:
+        - name: "get {{ ironic_conductor }} container ID"
+          command: 'docker ps -f name={{ ironic_conductor }} --format {% raw %}"{{ .ID }}"{% endraw %}'
+          register: conductor_id
+        - name: set the iscsi verify attempt count
+          lineinfile:
+            path: /var/lib/config-data/puppet-generated/ironic/etc/ironic/ironic.conf
+            insertafter: '^#iscsi_verify_attempts'
+            line: 'iscsi_verify_attempts = 30'
+          notify: restart ironic conductor
+      when: "'vqfx-0' in hostvars"
+  handlers:
+    - name: restart ironic conductor
+      command: docker restart "{{ conductor_id.stdout }}"

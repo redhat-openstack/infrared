@@ -4,6 +4,13 @@
   gather_facts: yes
   any_errors_fatal: true
   tasks:
+    - name: Download custom network configuration
+      get_url:
+          url: "{{ provision.topology.net.url }}"
+          dest: "{{ playbook_dir }}/defaults/topology/networks/{{ provision.topology.network }}.yml"
+          force: yes
+      when: provision.topology.net is defined and provision.topology.net.url
+
     - name: get networks dict
       include_vars: "{{ provision.topology.network }}"
 

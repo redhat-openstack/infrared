@@ -11,6 +11,6 @@
 
 - name: Set overcloud_version from /etc/rhosp-release output
   set_fact:
-      undercloud_version: "{{ rhosp_release_content.stdout | regex_replace('^Red Hat OpenStack Platform release ([0-9]+)\\.\\d+\\s.*$', '\\1') }}"
-      overcloud_version: "{{ rhosp_release_content.stdout | regex_replace('^Red Hat OpenStack Platform release ([0-9]+)\\.\\d+\\s.*$', '\\1') }}"
+      undercloud_version: "{{ rhosp_release_content.stdout | regex_replace('^Red Hat OpenStack Platform release ([0-9]+)\\.\\d+.*', '\\1') }}"
+      overcloud_version: "{{ rhosp_release_content.stdout | regex_replace('^Red Hat OpenStack Platform release ([0-9]+)\\.\\d+.*', '\\1') }}"
   when: rhosp_release_file.stat.exists

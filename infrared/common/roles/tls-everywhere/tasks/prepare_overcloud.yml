@@ -10,6 +10,8 @@
   shell: |
       source {{ freeipa_undercloud_rc }}
       openstack subnet set ctlplane-subnet --dns-nameserver {{ freeipa_node_ipv4_address }}
+  register: subnet_cmd_out
+  failed_when: "subnet_cmd_out.rc != 0 and 'Duplicate nameserver' not in subnet_cmd_out.stderr"
 
 - name: Read deployment network configuration
   command: "cat {{ freeipa_network_environment_file }}"
@@ -52,7 +54,7 @@
       line: "-e {{ item }} \\"
       insertbefore: "{{ oc_deploy_script_last_line.stdout }}"
   with_items:
-      - "{{ freeipa_heat_templates_basedir }}/environments/tls-everywhere-endpoints-dns.yaml"
+      - "{{ freeipa_heat_templates_basedir }}/environments/ssl/tls-everywhere-endpoints-dns.yaml"
       - "{{ freeipa_heat_templates_basedir }}/environments/services/haproxy-public-tls-certmonger.yaml"
-      - "{{ freeipa_heat_templates_basedir }}/environments/enable-internal-tls.yaml"
+      - "{{ freeipa_heat_templates_basedir }}/environments/ssl/enable-internal-tls.yaml"
       - "{{ freeipa_templates_basedir }}/cloud-names.yaml"

@@ -355,5 +355,5 @@ To deploy OpenStack with composable roles on virtual environment the following s
      infrared cloud-config -vv \
      -o cloud-config.yml \
      --deployment-files virt \
-     --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input,
+     --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input
 

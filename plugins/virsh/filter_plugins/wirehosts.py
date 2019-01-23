@@ -1,11 +1,18 @@
 
 from __future__ import print_function
 
+from ansible import errors
+
 
 def create_ifaces(source_node, target_node, bridge_pattern, iface):
     for dst_cnt in range(target_node.get('num', 1)):
         source_iface = iface.copy()
-        del source_iface['connect_to']
+        source_iface['model'] = source_iface['src_model']
+        for key in ['src_model', 'connect_to']:
+            try:
+                del source_iface[key]
+            except KeyError:
+                pass
         if source_node.get('num', 1) == 1:
             source_iface['network'] = bridge_pattern.format("0", str(dst_cnt))
         else:
@@ -15,7 +22,11 @@ def create_ifaces(source_node, target_node, bridge_pattern, iface):
 
     for src_cnt in range(source_node.get('num', 1)):
         target_iface = iface.copy()
-        del target_iface['connect_to']
+        for key in ['src_model', 'connect_to']:
+            try:
+                del target_iface[key]
+            except KeyError:
+                pass
         if target_node.get('num', 1) == 1:
             target_iface['network'] = bridge_pattern.format(str(src_cnt), "0")
         else:
@@ -30,19 +41,18 @@ def wire_node(nodes, node):
 
     interfaces = node['interfaces']
     node['interfaces'] = []
-    print(node)
 
     for iface in interfaces:
-        print(iface)
         if 'connect_to' in iface:
             try:
                 remote_node = nodes[iface['connect_to']]
-                bridge_pattern = "{:s}{{:s}}{:s}{{:s}}".format(
-                    node['name'][:4], iface['connect_to'][:4])
-                create_ifaces(node, remote_node, bridge_pattern, iface)
             except KeyError:
-                print("Node %s does not exist in this topology!",
-                      iface['connect_to'])
+                raise errors.AnsibleRuntimeError(
+                    "Node %s does not exist in this topology!" %
+                    iface['connect_to'])
+            bridge_pattern = "{:s}{{:s}}{:s}{{:s}}".format(
+                node['name'][:4], iface['connect_to'][:4])
+            create_ifaces(node, remote_node, bridge_pattern, iface)
         else:
             node['interfaces'].append(iface)
 

@@ -87,3 +87,12 @@
 
       - name: gathering new facts about the undercloud
         setup:
+
+      - name: configure ironic direct deploy
+        shell: |
+          source ~/stackrc
+          openstack role add --user admin --project service ResellerAdmin
+          openstack --os-project-name service object store account set --property Temp-URL-Key=$(uuidgen | sha1sum | awk '{print $1}')
+        when:
+          - install.deploy_interface_default != 'iscsi'
+          - install.version|default(undercloud_version) | openstack_release == 13

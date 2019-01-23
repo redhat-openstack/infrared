@@ -1,0 +1,33 @@
+- name: Create a local copy of network_data.yaml
+  copy:
+    src: /usr/share/openstack-tripleo-heat-templates/network_data.yaml
+    dest: "{{ template_base }}/network/network_data.yaml"
+    remote_src: yes
+
+- name: load networks
+  command: cat {{ template_base }}/network/network_data.yaml
+  register: local_net_data
+
+- name: set default network names
+  set_fact:
+    valid_net_names: "{{ local_net_data.stdout|from_yaml|map(attribute='name_lower')|list }}"
+
+- name: validate custom network names
+  fail:
+      msg: "{{ item }} is not valid value for --custom_network_names"
+  when:
+      - not item.split('=')[1]|default(False)
+      - item.split("=")[0] not in valid_net_names
+  with_items: "{{ install.custom_network_names.split(',') }}"
+
+- name: Change network names
+  replace:
+    path: "{{ template_base }}/network/network_data.yaml"
+    regexp: '(^  name_lower: ){{ item.split("=")[0] }}$'
+    replace: '\1{{ item.split("=")[1] }}\n  service_net_map_replace: {{ item.split("=")[0] }}'
+  with_items: "{{ install.custom_network_names.split(',') }}"
+
+- name: Append the network_data.yaml template line to the base overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-n {{ template_base }}/network/network_data.yaml \'
