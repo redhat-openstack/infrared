@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "9b183698_7c36e7de",
+        "filename": "plugins/virsh/provision_user.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2019-01-23T13:04:41Z",
+      "side": 1,
+      "message": "Agree with Marius here, do not touch repositories on provisioned nodes here, those depends later on product/tasks done later (and esp not any hardcoded internal and lab location scoped urls here anyway pls).\n\nAlthough i can understand it being here temporarily, as part of work-in-progress attempt on getting closer to solution.",
+      "parentUuid": "4ec85c16_394a1af2",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 62
+      },
+      "revId": "a5e6598b93d4ac458cc433299de417b9a95d0800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "716b8ac4_4eafbdff",
         "filename": "plugins/virsh/provision_user.yml",
         "patchSetId": 8
@@ -62,6 +86,47 @@
       "revId": "a5e6598b93d4ac458cc433299de417b9a95d0800",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ffb2c1a_66ea809a",
+        "filename": "plugins/virsh/provision_user.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2019-01-23T13:04:41Z",
+      "side": 1,
+      "message": "This might work, but do we need to even do such symlinks? What how fails ... couldn\u0027t we just use python from wherever it is location (either by modifying $PATH or maybe ansible_python_interpreter, conditionally of course)?",
+      "parentUuid": "716b8ac4_4eafbdff",
+      "range": {
+        "startLine": 43,
+        "startChar": 19,
+        "endLine": 43,
+        "endChar": 35
+      },
+      "revId": "a5e6598b93d4ac458cc433299de417b9a95d0800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "268251e1_ba7f603c",
+        "filename": "plugins/virsh/provision_vms.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2019-01-23T13:04:41Z",
+      "side": 1,
+      "message": "I\u0027m wondering what will be done if we ever need to use different/newer version than 1.38 ...\nmaybe condition and target dir could be with including version? (And just have symlink for not having to hardcode version in any other file than this one)\n\nsomething in style of pseudocode like:\n\n  if not /opt/appliance-1.38:\n     get 1.38.tar.xz\n     unpack 1.38.tar.xz to /opt/appliance-1.38/\n     ln -snf /opt/appliance-1.38 /opt/appliance\n\n\npotentially whole shell step having creates condition as\n\n  - name: ...\n    shell: |\n        ...\n    args:\n        creates: /opt/appliance-1.38",
+      "revId": "a5e6598b93d4ac458cc433299de417b9a95d0800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
