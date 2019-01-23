@@ -66,9 +66,7 @@
       - name: temporarily disable ceph rebalance
         become: true
         command: "{{ item }}"
-        when:
-          - "'ceph' in group_names"
-          - overcloud_version|int < 14
+        when: ((("'monitor' in group_names") or (("'ceph' in group_names") and ("'monitor' not in group_names"))) and (overcloud_version|int < 14))
         delegate_to: "{{ groups['controller']|first }}"
         with_items:
             - 'ceph osd set noout'
@@ -78,9 +76,7 @@
       - name: temporarily disable ceph rebalance
         become: true
         command: "{{ item }}"
-        when:
-          - "'ceph' in group_names"
-          - overcloud_version|int >= 14
+        when: ((("'monitor' in group_names") or (("'ceph' in group_names") and ("'monitor' not in group_names"))) and (overcloud_version|int >= 14))
         delegate_to: "{{ groups['controller']|first }}"
         with_items:
             - "docker exec ceph-mon-{{ groups['controller']|first }} ceph osd set noout"
