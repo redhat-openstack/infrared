@@ -216,7 +216,7 @@
         with_items: "{{ groups['overcloud_nodes'] | default([])}}"
         when:
             - install.image_direct_deploy != 'iscsi'
-            - install.version|default(undercloud_version) | openstack_release > 13
+            - install.version|default(undercloud_version) | openstack_release >= 13
 
 #
 # With baremetal deployments hosts from custom instackenv are missing from inventory
@@ -224,6 +224,7 @@
 #
 - name: Add introspected BMs to inventory
   hosts: localhost
+  tags: add_bms_to_inventory
   gather_facts: no
   any_errors_fatal: true
   vars:
@@ -258,6 +259,4 @@
           vars:
               inventory_file_name: 'hosts-prov'
           with_items: "{{ update_inventory.results }}"
-      when:
-        - "'hypervisor' not in groups"
-        - "'bmc' not in groups"
+      when: ('hypervisor' not in groups and 'bmc' not in groups) or install.get('hybrid', omit) is defined

@@ -4,7 +4,7 @@
   any_errors_fatal: true
   vars:
       repo_folder: 'pytest-repo/'
-      pytest_output_filename: 'pytest-results.xml'
+      pytest_output_filename: 'pytest-results-{{ ansible_date_time.epoch }}.xml'
   tasks:
       - name: Install packages
         become: true
@@ -30,7 +30,8 @@
 
       - name: Execute test
         ignore_errors: true
-        shell: pytest -v {{ repo_folder }}{{ test.file }} --junitxml={{ pytest_output_filename }} 2>&1
+        shell: pytest -v {{ repo_folder }}{{ test.file }}
+               --junitxml={{ pytest_output_filename }} 2>&1 --tb=no -r fp
         when: test.run|default(False)
         register: pytest_execution
 

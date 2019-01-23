@@ -3,6 +3,9 @@
       path: "{{ rally.outputdir }}"
       state: directory
 
+- set_fact:
+      timestamp: "{{ ansible_date_time.iso8601_basic_short }}"
+
 # TODO(yfried): fix relative link in index so they point to the right path and don't use gz files
 #    - name: Create nice index
 #      shell: "{{ rally.path }}/bin/rally rally/ui/utils.py render tests/ci/rally-gate/index.mako >  {{ rally.outputdir }}/index.html"
@@ -11,40 +14,40 @@
 #        chdir: "{{ tester.rally.dir }}"
 
 - name: Create Report
-  command: "{{ rally.bin }} task report --out {{ rally.outputdir }}/results.html"
+  command: "{{ rally.bin }} task report --out {{ rally.outputdir }}/results-{{ timestamp }}.html"
   args:
-      creates: "{{ rally.outputdir }}/results.html"
+      creates: "{{ rally.outputdir }}/results-{{ timestamp }}.html"
 
 - name: Create Report JUnit
-  command: "{{ rally.bin }} task report --junit --out {{ rally.outputdir }}/nosetests.xml"
+  command: "{{ rally.bin }} task report --junit --out {{ rally.outputdir }}/nosetests-{{ timestamp }}.xml"
   args:
-      creates: "{{ rally.outputdir }}/nosetests.xml"
+      creates: "{{ rally.outputdir }}/nosetests-{{ timestamp }}.xml"
 
 - name: JSON results
-  shell: "{{ rally.bin }} task results | python -m json.tool > {{ rally.outputdir }}/results.json"
+  shell: "{{ rally.bin }} task results | python -m json.tool > {{ rally.outputdir }}/results-{{ timestamp }}.json"
   args:
-      creates: "{{ rally.outputdir }}/results.json"
+      creates: "{{ rally.outputdir }}/results-{{ timestamp }}.json"
 
 - name: Iteration Data
-  shell: "{{ rally.bin }} task detailed > {{ rally.outputdir }}/detailed.txt"
+  shell: "{{ rally.bin }} task detailed > {{ rally.outputdir }}/detailed-{{ timestamp }}.txt"
   args:
-      creates: "{{ rally.outputdir }}/detailed.txt"
+      creates: "{{ rally.outputdir }}/detailed-{{ timestamp }}.txt"
 
 - name: Detatiled Iteration Data
-  shell: "{{ rally.bin }} task detailed --iterations-data > {{ rally.outputdir }}/detailed_with_iterations.txt"
+  shell: "{{ rally.bin }} task detailed --iterations-data > {{ rally.outputdir }}/detailed_with_iterations-{{ timestamp }}.txt"
   args:
-      creates: "{{ rally.outputdir }}/detailed_with_iterations.txt"
+      creates: "{{ rally.outputdir }}/detailed_with_iterations-{{ timestamp }}.txt"
 
 - name: SLA Check
-  shell: "{{ rally.bin }} task sla_check > {{ rally.outputdir }}/sla.txt"
+  shell: "{{ rally.bin }} task sla_check > {{ rally.outputdir }}/sla-{{ timestamp }}.txt"
   args:
-      creates: "{{ rally.outputdir }}/sla.txt"
+      creates: "{{ rally.outputdir }}/sla-{{timestamp }}.txt"
   ignore_errors: true
 
 - name: SLA Check JSON
-  shell: "{{ rally.bin }} task sla_check --json > {{ rally.outputdir }}/sla.json"
+  shell: "{{ rally.bin }} task sla_check --json > {{ rally.outputdir }}/sla-{{ timestamp }}.json"
   args:
-      creates: "{{ rally.outputdir }}/sla.json"
+      creates: "{{ rally.outputdir }}/sla-{{ timestamp }}.json"
   ignore_errors: true
 
 - name: Fetch Results to the active profile
@@ -54,9 +57,9 @@
       flat: yes
   with_items:
 #     - "{{ rally.outputdir }}/index.html"
-      - "{{ rally.outputdir }}/results.html"
-      - "{{ rally.outputdir }}/nosetests.xml"
-      - "{{ rally.outputdir }}/detailed.txt"
-      - "{{ rally.outputdir }}/detailed_with_iterations.txt"
-      - "{{ rally.outputdir }}/sla.txt"
-      - "{{ rally.outputdir }}/sla.json"
+      - "{{ rally.outputdir }}/results-{{ timestamp }}.html"
+      - "{{ rally.outputdir }}/nosetests-{{ timestamp }}.xml"
+      - "{{ rally.outputdir }}/detailed-{{ timestamp }}.txt"
+      - "{{ rally.outputdir }}/detailed_with_iterations-{{ timestamp }}.txt"
+      - "{{ rally.outputdir }}/sla-{{ timestamp }}.txt"
+      - "{{ rally.outputdir }}/sla-{{ timestamp }}.json"

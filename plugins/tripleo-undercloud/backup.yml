@@ -26,6 +26,10 @@
                 mode: "0400"
             when: install.dest|default({})
 
+          - name: register md5 for the image
+            shell: md5sum {{ undercloud_image_file }} | awk '{print $1}'
+            register: local_hash
+
           - name: copy the image to temporary server
             shell: |
                 scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
@@ -33,12 +37,31 @@
             when: install.dest|default({})
             tags: skip_ansible_lint
 
+          - name: register md5 for the image on remote host
+            shell: ssh -i ~/backup_server_auth_key {{ install.dest.address }} md5sum {{install.dest.path}}/{{ undercloud_image_file }} | awk '{print $1}'
+            register: remote_hash
+            tags: skip_ansible_lint
+
+          - name: fail if image corrupted
+            fail:
+                msg: "The copy wasn't successfuly completed. local hash is {{local_hash.stdout }} and remote hash is {{ remote_hash.stdout }}"
+            when: local_hash.stdout != remote_hash.stdout
+
         always:
           - name: cleanup the undercloud image file
             file:
                 path: "{{ undercloud_image_file }}"
                 state: absent
             when: install.dest|default({})
+
+          - name: cleanup in case of failure
+            shell: |
+                ssh -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.address }} rm -f {{install.dest.path}}/{{ undercloud_image_file }}
+            when:
+                - local_hash is defined
+                - remote_hash is defined
+                - local_hash.stdout != remote_hash.stdout
+            tags: skip_ansible_lint
 
           - name: Power on the undercloud VM
             virt:

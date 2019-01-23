@@ -66,7 +66,7 @@ class VarsDictManager(object):
             else:
                 if '=' not in extra_var:
                     raise exceptions.IRExtraVarsException(extra_var)
-                key, value = extra_var.split("=")
+                key, value = extra_var.split("=", 1)
                 if value.startswith('@'):
                     with open(value[1:]) as f_obj:
                         loaded_yml = yaml.load(f_obj)

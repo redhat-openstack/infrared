@@ -64,7 +64,7 @@ def _run_playbook(cli_args, vars_dict):
     #                 verbosity.
     from ansible.cli.playbook import PlaybookCLI
     with tempfile.NamedTemporaryFile(
-            prefix="ir-settings-", delete=True) as tmp:
+            mode='w+', prefix="ir-settings-", delete=True) as tmp:
         tmp.write(yaml.safe_dump(vars_dict, default_flow_style=False))
         # make sure created file is readable.
         tmp.flush()

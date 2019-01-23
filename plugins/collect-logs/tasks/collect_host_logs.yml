@@ -8,6 +8,8 @@
         - psmisc
         # ^ pstree
         - tar
+        - expect
+        #^ unbuffer for not-wrapping yum list output
       state: present
   ignore_errors: true
 
@@ -24,7 +26,7 @@
       state: directory
 
 - name: list pkg+repo
-  shell: yum -C list installed > /var/log/extra/packages
+  shell: unbuffer yum -C list installed > /var/log/extra/packages || yum -C list installed > /var/log/extra/packages
 
 - name: collect status of all systemd units
   shell: systemctl --all > /var/log/extra/service 2>&1
@@ -136,7 +138,7 @@
               echo "+ docker inspect $cont" >> "$INFO_FILE";
               docker inspect "$cont" &>> "$INFO_FILE";
               docker logs "$cont" &> "$INFO_DIR/stdout.log";
-              echo "+ docker exec --user root $cont /usr/bin/rpm -qa" >> "$INFO_FILE";
+              echo "+ docker exec -it --user root $cont /usr/bin/rpm -qa" >> "$INFO_FILE";
               docker exec -it --user root ${cont} /usr/bin/rpm -qa &>> "$INFO_FILE";
               docker cp "$cont:/var/lib/kolla/config_files/config.json" "$INFO_DIR/config.json";
           done;

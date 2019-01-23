@@ -15,7 +15,7 @@
 
 {%- macro tht_net_config(role_name) -%}
 {%- for tht_map in tht_mapping if role_name|match(tht_map.regexp) -%}
-OS::TripleO::{{ tht_map.role_name|default(role_name) }}::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/{{ tht_map.net_config_file }}"
+OS::TripleO::{{ tht_map.role_name|default(role_name) }}::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/{{ tht_map.net_config_file }}
 {%- endfor -%}
 {%- endmacro -%}
 
@@ -55,14 +55,9 @@ resource_registry:
     {{ tht_net_config(role_name) }}
 {% endfor %}
 {% else %}
-    OS::TripleO::Controller::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/controller{{ ipv6_postfix }}.yaml"
-    OS::TripleO::CephStorage::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/ceph-storage.yaml"
-    OS::TripleO::Compute::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/compute.yaml"
-    OS::TripleO::ObjectStorage::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/swift-storage.yaml"
-    OS::TripleO::Database::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/database_internal.yaml"
-    OS::TripleO::Messaging::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/messaging_internal.yaml"
-    OS::TripleO::Novacontrol::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/novacontrol.yaml"
-    OS::TripleO::Networker::Net::SoftwareConfig: "{{ template_base }}/network/nic-configs/{{ nics_subfolder }}/networker.yaml"
+    OS::TripleO::Controller::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/controller{{ ipv6_postfix }}.yaml
+    OS::TripleO::Compute::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/compute.yaml
+    OS::TripleO::Networker::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/networker.yaml
 {% endif %}
 
 {% if install.get('predictable', {}).ips|default(False) %}

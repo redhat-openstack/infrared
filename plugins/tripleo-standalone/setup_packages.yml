@@ -1,0 +1,147 @@
+- name: Configure and Install Undercloud Repositories
+  any_errors_fatal: true
+  hosts: standalone
+  gather_facts: yes
+  become: yes
+  vars:
+      custom_repos: "{{ install.repos|default({}) }}"
+      skip_release: "{{ install.get('repos', {}).get('skip', {}).release|default('')}}"
+      rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+  tags: install
+  pre_tasks:
+      # FIXME(yfried): figure why this is required in gate only
+      - name: gather undercloud facts since sometimes they are missing
+        setup:
+
+      - name: load rdo overrides
+        include_vars: "{{ install.rdo.override }}"
+        when: install.get('rdo', {}).get('override', False)
+
+      - name: check for subscription
+        command: subscription-manager identity
+        failed_when: false
+        register: cdn_status
+        changed_when: false
+        when: not install.cdn|default(False)
+  roles:
+      - role: cdn_registery
+        cdn_args_file: "{{ install.cdn|default('') }}"
+        install_version: "{{ install.version }}"
+        when:
+            - "install.cdn|default(False) or cdn_status.rc == 0"
+            - "install.version|openstack_distribution == 'OSP'"
+        become: yes
+
+      - role: rhos-release
+        release: "{{ install.version }}"
+        rr_buildmods: "{{ install.buildmods }}"
+        build: "{{ install.build | default(omit) }}"
+        director_build: "{{ install.get('director', {}).build|default(omit) }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        rr_distro_version: "{{ install.osrelease|default(omit) }}"
+        enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
+        skip_remove_repo: "{{ install.get('skip', {}).get('remove', {}).repo|default(omit) }}"
+        when:
+            - "install.version|openstack_distribution == 'OSP'"
+            - not install.cdn|default(False)
+            - cdn_status.rc != 0
+            - not skip_release
+        tags: rhos-release
+
+      - role: rdo-release
+        release: "{{ install.version }}"
+        rr_buildmods: "{{ install.buildmods }}"
+        build: "{{ install.build | default(omit) }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        when:
+            - install.version|openstack_distribution == 'RDO'
+            - not skip_release
+        tags: rhos-release
+
+      - role: from-source
+        release: "{{ install.version }}"
+        rr_buildmods: "{{ install.buildmods }}"
+        build: "{{ install.build | default(omit) }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        build_components: "{{ install.from.source }}"
+        when:
+            - install.get('from', {}).source is defined
+            - not skip_release
+        tags: git-release
+
+  tasks:
+      - name: load custom repos configuration file
+        include_vars: "{{ custom_repos.config|default('') }}"
+        when: "custom_repos.config|default('')"
+
+      - name: Creating extra repositories
+        yum_repository:
+            name: "{{ item.name }}"
+            state: "{{ item.state | default(omit) }}"
+            file: "{{ item.file| default(omit) }}"
+            description: "{{ item.description | default(omit) }}"
+            baseurl: "{{ item.baseurl | default(omit) }}"
+            mirrorlist: "{{ item.mirrorlist | default(omit) }}"
+            enabled: "{{ item.enabled | default(omit) }}"
+            gpgcheck: "{{ item.gpgcheck | default(omit) }}"
+            includepkgs: "{{ item.includepkgs | default(omit) }}"
+        with_items: "{{ extra_repos|default({}) }}"
+        when: "extra_repos|default({})"
+
+      - name: Downloading extra repositories
+        get_url:
+            url: "{{ item }}"
+            dest: /etc/yum.repos.d/
+        with_items: "{{ custom_repos.urls|default([]) }}"
+
+      - name: install deltarpm
+        package:
+            state: present
+            name: deltarpm
+
+      - name: update system packages
+        package:
+            state: latest
+            name: "*"
+        register: update
+
+      - name: reboot the undercloud
+        shell: "sleep 2 && shutdown -r now"
+        async: 1
+        poll: 0
+        ignore_errors: true
+        when: update is changed
+
+      # Ansible bug around delegate+vars+wait
+      # https://github.com/ansible/ansible/issues/11705
+      # http://www.elmund.io/configuration%20management/2015/07/23/ansible-delegate_to-and-variables/
+      - name: waiting for the undercloud to be available
+        become: no
+        wait_for:
+            port: 22
+            host: "{{ ansible_host }}"
+            search_regex: OpenSSH
+            delay: 10
+            sleep: 3
+        delegate_to: localhost
+        when: "'hypervisor' not in groups"
+        retries: 6
+        delay: 30
+
+      - name: waiting for the undercloud to be available
+        become: no
+        wait_for:
+            port: 22
+            host: "{{ ansible_host }}"
+            search_regex: OpenSSH
+            delay: 10
+            sleep: 3
+        delegate_to: hypervisor
+        when: "'hypervisor' in groups"
+        retries: 6
+        delay: 30
+
+      - name: install the oscplugin/tripleO client
+        package:
+            name: "{{ (install.version|openstack_release == 7) | ternary('python-rdomanager-oscplugin', 'python-tripleoclient') }}"
+            state: present

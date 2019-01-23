@@ -28,6 +28,13 @@ def nested_dict():
     return cli.NestedDict("TestNestedDict", None, None, None)
 
 
+@pytest.fixture
+def flag_type():
+    """Create a new Flag complex type
+    """
+    return cli.Flag("test", None, None, None)
+
+
 @pytest.mark.parametrize(
     "test_value,expected", [
         ("item1,item2", ["item1", "item2"]),
@@ -59,6 +66,7 @@ def test_nested_dict_resolve(input_value, expected_return, nested_dict):
     """
     assert nested_dict.resolve(input_value) == expected_return
 
+
 @pytest.mark.parametrize("input_value, expected_return", [
     (['k1=v1'], {'k1': 'v1'}),
     (['l1.s1.k1=v1'], {'l1.s1.k1': 'v1'}),
@@ -71,6 +79,15 @@ def test_dict_type_resolve(input_value, expected_return, dict_type):
     """Verifies the return value of 'resolve' method in 'IniType' Complex type
     """
     assert dict_type.resolve(input_value) == expected_return
+
+
+@pytest.mark.parametrize("input_value, expected_return", [
+    ('test', True),
+])
+def test_flag_type_resolve(input_value, expected_return, flag_type):
+    """Verifies the return value of 'resolve' method in 'Flag' Complex type
+    """
+    assert flag_type.resolve(input_value) == expected_return
 
 
 @pytest.fixture(scope="module")
