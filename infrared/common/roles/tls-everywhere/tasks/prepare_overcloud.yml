@@ -1,60 +1,64 @@
 ---
 - include_tasks: validate_overcloud.yml
 
-- name: Generate cloud-names.yml
-  template:
-      src: cloud-names.yaml.j2
-      dest: "{{ freeipa_templates_basedir }}/cloud-names.yaml"
+- block:
+  - name: Generate cloud-names.yml
+    template:
+        src: cloud-names.yaml.j2
+        dest: "{{ freeipa_templates_basedir }}/cloud-names.yaml"
 
-- name: Assign dns as freeipa node to ctrlplane-subnet
-  shell: |
-      source {{ freeipa_undercloud_rc }}
-      openstack subnet set ctlplane-subnet --dns-nameserver {{ freeipa_node_ipv4_address }}
-  register: subnet_cmd_out
-  failed_when: "subnet_cmd_out.rc != 0 and 'Duplicate nameserver' not in subnet_cmd_out.stderr"
+  - name: Assign dns as freeipa node to ctrlplane-subnet
+    shell: |
+        source {{ freeipa_undercloud_rc }}
+        openstack subnet set ctlplane-subnet --dns-nameserver {{ freeipa_node_ipv4_address }}
+    register: subnet_cmd_out
+    failed_when: "subnet_cmd_out.rc != 0 and 'Duplicate nameserver' not in subnet_cmd_out.stderr"
 
-- name: Read deployment network configuration
-  command: "cat {{ freeipa_network_environment_file }}"
-  register: network_template_out
+  - name: Read deployment network configuration
+    command: "cat {{ freeipa_network_environment_file }}"
+    register: network_template_out
 
-- name: Load deployment network configuration as YAML
-  set_fact:
-      network_template: "{{ network_template_out.stdout | from_yaml }}"
+  - name: Load deployment network configuration as YAML
+    set_fact:
+        network_template: "{{ network_template_out.stdout | from_yaml }}"
 
-- name: Assign dns as freeipa node to network-environment
-  lineinfile:
-      dest: "{{ freeipa_network_environment_file }}"
-      regexp: "- {{ network_template.parameter_defaults.DnsServers|first }}"
-      line: "    - {{ freeipa_node_ipaddress }}"
+  - name: Assign dns as freeipa node to network-environment
+    lineinfile:
+        dest: "{{ freeipa_network_environment_file }}"
+        regexp: "- {{ network_template.parameter_defaults.DnsServers|first }}"
+        line: "    - {{ freeipa_node_ipaddress }}"
 
-- name: Read deployment network configuration for ipv6
-  command: "cat {{ freeipa_network_environment_v6_file }}"
-  register: network_template_v6_out
-  when: freeipa_network_protocol != 'ipv4'
+  - name: Read deployment network configuration for ipv6
+    command: "cat {{ freeipa_network_environment_v6_file }}"
+    register: network_template_v6_out
+    when: freeipa_network_protocol != 'ipv4'
 
-- name: Load deployment network configuration as YAML for ipv6
-  set_fact:
-      network_template_v6: "{{ network_template_v6_out.stdout | from_yaml }}"
-  when: freeipa_network_protocol != 'ipv4'
+  - name: Load deployment network configuration as YAML for ipv6
+    set_fact:
+        network_template_v6: "{{ network_template_v6_out.stdout | from_yaml }}"
+    when: freeipa_network_protocol != 'ipv4'
 
-- name: Assign dns as freeipa node to network-environment-v6
-  lineinfile:
-      dest: "{{ freeipa_network_environment_v6_file }}"
-      regexp: "- {{ network_template_v6.parameter_defaults.DnsServers|first }}"
-      line: "    - {{ freeipa_node_ipaddress }}"
-  when: freeipa_network_protocol != 'ipv4'
+  - name: Assign dns as freeipa node to network-environment-v6
+    lineinfile:
+        dest: "{{ freeipa_network_environment_v6_file }}"
+        regexp: "- {{ network_template_v6.parameter_defaults.DnsServers|first }}"
+        line: "    - {{ freeipa_node_ipaddress }}"
+    when: freeipa_network_protocol != 'ipv4'
 
-- name: Get last row of overcloud deploy script
-  command: "tail -n 1 {{ freeipa_overcloud_deploy_script }}"
-  register: oc_deploy_script_last_line
+  - name: Get last row of overcloud deploy script
+    command: "tail -n 1 {{ freeipa_overcloud_deploy_script }}"
+    register: oc_deploy_script_last_line
 
-- name: Append the TLS Everywhere templates lines to the base overcloud deploy script
-  lineinfile:
-      dest: "{{ freeipa_overcloud_deploy_script }}"
-      line: "-e {{ item }} \\"
-      insertbefore: "{{ oc_deploy_script_last_line.stdout }}"
-  with_items:
-      - "{{ freeipa_heat_templates_basedir }}/environments/ssl/tls-everywhere-endpoints-dns.yaml"
-      - "{{ freeipa_heat_templates_basedir }}/environments/services/haproxy-public-tls-certmonger.yaml"
-      - "{{ freeipa_heat_templates_basedir }}/environments/ssl/enable-internal-tls.yaml"
-      - "{{ freeipa_templates_basedir }}/cloud-names.yaml"
+  - name: Append the TLS Everywhere templates lines to the base overcloud deploy script
+    lineinfile:
+        dest: "{{ freeipa_overcloud_deploy_script }}"
+        line: "-e {{ item }} \\"
+        insertbefore: "{{ oc_deploy_script_last_line.stdout }}"
+    with_items:
+        - "{{ freeipa_heat_templates_basedir }}/environments/ssl/tls-everywhere-endpoints-dns.yaml"
+        - "{{ freeipa_heat_templates_basedir }}/environments/services/haproxy-public-tls-certmonger.yaml"
+        - "{{ freeipa_heat_templates_basedir }}/environments/ssl/enable-internal-tls.yaml"
+        - "{{ freeipa_templates_basedir }}/cloud-names.yaml"
+
+  delegate_to: "{{ freeipa_undercloud_node }}"
+

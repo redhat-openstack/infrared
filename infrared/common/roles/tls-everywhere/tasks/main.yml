@@ -1,20 +1,16 @@
 ---
 - name: Freeipa node preparation
   include_tasks: prepare_freeipa.yml
-  delegate_to: "{{ freeipa_node }}"
   when: "'prepare_freeipa' in stages"
 
 - name: Undercloud preparation
   include_tasks: prepare_undercloud.yml
-  delegate_to: "{{ freeipa_undercloud_node }}"
   when: "'prepare_undercloud' in stages"
 
 - name: Overcloud preparation
   include_tasks: prepare_overcloud.yml
-  delegate_to: "{{ freeipa_undercloud_node }}"
   when: "'prepare_overcloud' in stages"
 
 - name: Overcloud post configuration
   include_tasks: post_overcloud.yml
-  delegate_to: "{{ freeipa_undercloud_node }}"
   when: "'post_overcloud' in stages"
