@@ -1,59 +1,61 @@
 ---
-- name: Install packages
-  become: yes
-  yum:
-    name:
-      - 'net-tools'
-      - 'deltarpm'
-      - "{{ freeipa_epel_repo_url }}"
-    state: present
-
-- name: Update repos
-  become: yes
-  shell: yum clean all
-
-- name: Download freeipa setup script
-  get_url:
-     url: "{{ freeipa_setup_script }}"
-     dest: "{{ freeipa_working_dir }}/freeipa_setup.sh"
-     mode: 775
-
-- name: Generate inventory file
-  template:
-      dest: "{{ freeipa_working_dir }}/freeipa-setup.env"
-      src: freeipa-setup.env.j2
-      force: yes
-
-- name: Add w/a for ipv6 link local
-  lineinfile:
-      path: "{{ freeipa_working_dir }}/freeipa_setup.sh"
-      insertafter: '^# Set up FreeIPA'
-      line: "sed -i '/^nameserver fe80:.*./d' /etc/resolv.conf"
+- block:
+  - name: Install packages
+    become: yes
+    yum:
+      name:
+        - 'net-tools'
+        - 'deltarpm'
+        - "{{ freeipa_epel_repo_url }}"
       state: present
 
-- name: Execute freeipa script
-  become: yes
-  shell: "{{ freeipa_working_dir }}/freeipa_setup.sh"
-  args:
-      executable: /bin/bash
-  register: freeipa_setup
+  - name: Update repos
+    become: yes
+    shell: yum clean all
 
-- name: Configure FreeIPA to publish Master CRL at start
-  become: yes
-  lineinfile:
-      path: /etc/pki/pki-tomcat/ca/CS.cfg
-      regexp: '^ca.crl.MasterCRL.publishOnStart=(.*)$'
-      line: 'ca.crl.MasterCRL.publishOnStart=true'
+  - name: Download freeipa setup script
+    get_url:
+       url: "{{ freeipa_setup_script }}"
+       dest: "{{ freeipa_working_dir }}/freeipa_setup.sh"
+       mode: 775
 
-- name: Restart FreeIPA server
-  become: yes
-  service:
-      name: ipa
-      state: restarted
+  - name: Generate inventory file
+    template:
+        dest: "{{ freeipa_working_dir }}/freeipa-setup.env"
+        src: freeipa-setup.env.j2
+        force: yes
 
-- name: Update /etc/hosts with undercloud's details
-  become: yes
-  lineinfile:
-      dest: "/etc/hosts"
-      line: "{{ freeipa_undercloud_ipaddress }} {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} {{ groups['undercloud'][0] }}"
-      state: present
+  - name: Add w/a for ipv6 link local
+    lineinfile:
+        path: "{{ freeipa_working_dir }}/freeipa_setup.sh"
+        insertafter: '^# Set up FreeIPA'
+        line: "sed -i '/^nameserver fe80:.*./d' /etc/resolv.conf"
+        state: present
+
+  - name: Execute freeipa script
+    become: yes
+    shell: "{{ freeipa_working_dir }}/freeipa_setup.sh"
+    args:
+        executable: /bin/bash
+    register: freeipa_setup
+
+  - name: Configure FreeIPA to publish Master CRL at start
+    become: yes
+    lineinfile:
+        path: /etc/pki/pki-tomcat/ca/CS.cfg
+        regexp: '^ca.crl.MasterCRL.publishOnStart=(.*)$'
+        line: 'ca.crl.MasterCRL.publishOnStart=true'
+
+  - name: Restart FreeIPA server
+    become: yes
+    service:
+        name: ipa
+        state: restarted
+
+  - name: Update /etc/hosts with undercloud's details
+    become: yes
+    lineinfile:
+        dest: "/etc/hosts"
+        line: "{{ freeipa_undercloud_ipaddress }} {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} {{ groups['undercloud'][0] }}"
+        state: present
+  delegate_to: "{{ freeipa_node }}"
