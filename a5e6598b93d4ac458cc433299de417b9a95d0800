@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "afbeb357_57c8af86",
+        "filename": "plugins/virsh/provision_user.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1009441
+      },
+      "writtenOn": "2019-01-24T15:33:22Z",
+      "side": 1,
+      "message": "which rpms were needed from that repo?",
+      "parentUuid": "3c95240b_541d0d48",
+      "revId": "a5e6598b93d4ac458cc433299de417b9a95d0800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4ec85c16_394a1af2",
         "filename": "plugins/virsh/provision_user.yml",
         "patchSetId": 8
@@ -137,6 +155,30 @@
     },
     {
       "key": {
+        "uuid": "64b82666_c047ce46",
+        "filename": "plugins/virsh/provision_user.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1009441
+      },
+      "writtenOn": "2019-01-24T15:33:22Z",
+      "side": 1,
+      "message": "That means everyone who uses Infrared will be needed to change ansible_python_interpreter parameter on his ansible env, so my question is - should this \"platform-python\" be the default python interpreter?\n\nwhat is the cost of creating a soft-link against telling everybody to change their default interpreter?",
+      "parentUuid": "7e9b0a48_7ebfbabb",
+      "range": {
+        "startLine": 43,
+        "startChar": 19,
+        "endLine": 43,
+        "endChar": 35
+      },
+      "revId": "a5e6598b93d4ac458cc433299de417b9a95d0800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "268251e1_ba7f603c",
         "filename": "plugins/virsh/provision_vms.yml",
         "patchSetId": 8
@@ -148,6 +190,24 @@
       "writtenOn": "2019-01-23T13:04:41Z",
       "side": 1,
       "message": "I\u0027m wondering what will be done if we ever need to use different/newer version than 1.38 ...\nmaybe condition and target dir could be with including version? (And just have symlink for not having to hardcode version in any other file than this one)\n\nsomething in style of pseudocode like:\n\n  if not /opt/appliance-1.38:\n     get 1.38.tar.xz\n     unpack 1.38.tar.xz to /opt/appliance-1.38/\n     ln -snf /opt/appliance-1.38 /opt/appliance\n\n\npotentially whole shell step having creates condition as\n\n  - name: ...\n    shell: |\n        ...\n    args:\n        creates: /opt/appliance-1.38",
+      "revId": "a5e6598b93d4ac458cc433299de417b9a95d0800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5641f2b_f7f5fbc8",
+        "filename": "plugins/virsh/provision_vms.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1009441
+      },
+      "writtenOn": "2019-01-24T15:33:22Z",
+      "side": 1,
+      "message": "I am not sure if I got this.\nas we already have libguestfs v-1.32, and doing this to get v-1.38, it sounds reasonable to update in the same way in the future if we will need to do so for some reason.",
+      "parentUuid": "268251e1_ba7f603c",
       "revId": "a5e6598b93d4ac458cc433299de417b9a95d0800",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -189,6 +249,30 @@
       "side": 1,
       "message": "On rhel7 image we have the / partition on sda1 while on rhel8 we have it on sda3. We could detect the rhel version inside the image with something like:\n\nvirt-cat -a /var/lib/libvirt/images/rhel-guest-image-8.0-1690.x86_64.qcow2 /etc/os-release | awk \u0027/^VERSION\u003d/ {print $1}\u0027 | grep -oP \u0027[0-9]+\u0027 | head -1",
       "parentUuid": "5c3e82ad_a70e6380",
+      "range": {
+        "startLine": 66,
+        "startChar": 41,
+        "endLine": 66,
+        "endChar": 43
+      },
+      "revId": "a5e6598b93d4ac458cc433299de417b9a95d0800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e02b26e8_a00b2b6a",
+        "filename": "plugins/virsh/tasks/vms_1_create_disk.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1009441
+      },
+      "writtenOn": "2019-01-24T15:33:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4267c700_5b9774e5",
       "range": {
         "startLine": 66,
         "startChar": 41,
