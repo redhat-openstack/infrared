@@ -155,6 +155,11 @@ PLUGINS_REGISTRY = {
         'desc': 'OpenStack installation using Packstack',
         'type': 'install'
     },
+    'patch-components': {
+        'src': 'https://github.com/rhos-infra/patch-components.git',
+        'desc': 'Package and install OpenStack component from source directory',
+        'type': 'install'
+    },
     'rally': {
         'src': 'plugins/rally',
         'desc': 'Rally tests runner',
