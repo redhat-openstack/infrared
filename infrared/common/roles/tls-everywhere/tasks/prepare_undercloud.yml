@@ -1,33 +1,35 @@
 ---
-- name: Update /etc/hosts with freeipa's details
-  become: yes
-  lineinfile:
-      dest: "/etc/hosts"
-      line: "{{ freeipa_node_ipaddress }} {{ freeipa_node }}.{{ freeipa_cloud_domain }} {{ freeipa_node }}"
-      state: present
+- block:
+  - name: Update /etc/hosts with freeipa's details
+    become: yes
+    lineinfile:
+        dest: "/etc/hosts"
+        line: "{{ freeipa_node_ipaddress }} {{ freeipa_node }}.{{ freeipa_cloud_domain }} {{ freeipa_node }}"
+        state: present
 
-- name: Install python novajoin
-  become: yes
-  package:
-      name:  python-novajoin
-      state: present
+  - name: Install python novajoin
+    become: yes
+    package:
+        name:  python-novajoin
+        state: present
 
-- name: Prepare novajoin to work
-  become: yes
-  shell: >
-      /usr/libexec/novajoin-ipa-setup --principal admin --password {{ freeipa_admin_password }} --server {{ freeipa_node }}.{{ freeipa_cloud_domain }} --realm {{ freeipa_cloud_domain|upper }}
-      --domain {{ freeipa_cloud_domain }} --hostname {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} --precreate
-  register: novajoin
+  - name: Prepare novajoin to work
+    become: yes
+    shell: >
+        /usr/libexec/novajoin-ipa-setup --principal admin --password {{ freeipa_admin_password }} --server {{ freeipa_node }}.{{ freeipa_cloud_domain }} --realm {{ freeipa_cloud_domain|upper }}
+        --domain {{ freeipa_cloud_domain }} --hostname {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} --precreate
+    register: novajoin
 
-- name: Edit undercloud.conf
-  blockinfile:
-      path: ~/undercloud.conf
-      backup: yes
-      insertbefore: '^\[ctlplane-subnet\]'
-      marker: "# {mark} TLS EVERYWHERE SETTINGS -->"
-      content: |
-          enable_novajoin = True
-          ipa_otp = {{ novajoin.stdout }}
-          undercloud_hostname = {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}
-          undercloud_nameservers = {{ freeipa_node_ipaddress }}
-          overcloud_domain_name = {{ freeipa_cloud_domain }}
+  - name: Edit undercloud.conf
+    blockinfile:
+        path: ~/undercloud.conf
+        backup: yes
+        insertbefore: '^\[ctlplane-subnet\]'
+        marker: "# {mark} TLS EVERYWHERE SETTINGS -->"
+        content: |
+            enable_novajoin = True
+            ipa_otp = {{ novajoin.stdout }}
+            undercloud_hostname = {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}
+            undercloud_nameservers = {{ freeipa_node_ipaddress }}
+            overcloud_domain_name = {{ freeipa_cloud_domain }}
+  delegate_to: "{{ freeipa_undercloud_node }}"
