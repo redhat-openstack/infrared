@@ -1,6 +1,15 @@
 #
 # Reboot overcloud nodes one-by-one.
 #
+- name: remove replaced controller from hosts
+  hosts: localhost
+  gather_facts: no
+  tags: always
+  roles:
+      - role: inventory-update
+        omit_hosts:
+          - "controller-0"
+
 - name: Determine RHOS version
   hosts: overcloud_nodes:!unused
   gather_facts: yes
