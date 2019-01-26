@@ -2,7 +2,7 @@
 # Reboot overcloud nodes one-by-one.
 #
 - name: Determine RHOS version
-  hosts: overcloud_nodes:!unused
+  hosts: overcloud_nodes:!controller-2
   gather_facts: yes
   any_errors_fatal: true
   vars:
@@ -13,7 +13,7 @@
       - version-discovery
 
 - name: Overcloud Reboot
-  hosts: overcloud_nodes:!unused
+  hosts: overcloud_nodes:!controller-2
   gather_facts: false
   any_errors_fatal: true
   serial: 1
