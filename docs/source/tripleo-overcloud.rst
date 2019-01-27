@@ -221,6 +221,21 @@ Tripleo Heat Templates configuration options
               nova::allow_resize_to_same_host: true
           NeutronOVSFirewallDriver: openvswitch
 
+    It is also possible to have . (dot) included in key by escaping it:
+
+    .. code-block:: shell
+
+        --config-heat "ControllerExtraConfig.opendaylight::log_levels.org\.opendaylight\.netvirt\.elan=TRACE"
+
+    should inject the following yaml to "overcloud deploy" command:
+
+    .. code-block:: yaml
+        ---
+        parameter_defaults:
+            ControllerExtraConfig:
+                opendaylight::log_levels:
+                    org.opendaylight.netvirt.elan: TRACE
+
 * ``--config-resource``: Inject additional Tripleo Heat Templates configuration options under "resource_registry"
     entry point. Example:
 
