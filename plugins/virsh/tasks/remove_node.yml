@@ -28,8 +28,8 @@
   vars:
       network_name: "{{ vm_static_result.item }}"
       ips_records: "{{ vm_static_result.stdout_lines }}"
-  with_items: "{{ vm_static_ips.results }}"
-  when: item.rc == 0
+  loop: "{{ vm_static_ips.results }}"
+  when: vm_static_result.rc == 0
   loop_control:
       loop_var: vm_static_result
 
