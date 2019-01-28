@@ -1,0 +1,58 @@
+---
+- name: undercloud reboot
+  block:
+    - name: Reboot the Undercloud
+      become: true
+      shell: "sleep 2 && shutdown -r now"
+      async: 1
+      poll: 0
+      ignore_errors: true
+
+    - name: wait for node to go down
+      become: false
+      command: ping -c1 {{ ansible_host }}
+      register: node_down
+      until: node_down.rc != 0
+      retries: 60
+      delay: 3
+      ignore_errors: true
+      delegate_to: localhost
+      when: "'hypervisor' not in groups and 'virthost' not in groups"
+
+    - name: wait for node to go down(hypervisor)
+      command: ping -c1 {{ ansible_host }}
+      register: node_down
+      until: node_down.rc != 0
+      retries: 60
+      delay: 3
+      ignore_errors: true
+      delegate_to: hypervisor
+      when: "'hypervisor' in groups"
+
+    - name: wait for node to go down(virthost)
+      command: ping -c1 {{ ansible_host }}
+      register: node_down
+      until: node_down.rc != 0
+      retries: 60
+      delay: 3
+      ignore_errors: true
+      delegate_to: virthost
+      when: "'virthost' in groups"
+
+    - name: waiting for the undercloud to be ssh-able
+      wait_for_connection:
+        connect_timeout: 5
+        sleep: 3
+        timeout: 630
+
+    - name: assert UC services started
+      shell: |
+        source ~/stackrc ;
+        timeout 10 openstack stack list -f value -c "Stack Name"
+      ignore_errors: true
+      register: oc_name
+      until: oc_name.stdout.find('{{ overcloud_stack_name }}') != -1
+      retries: "{{ service_readiness_count|default(100)|int }}"
+      delay: 3
+      when: overcloud_stack_name is defined
+  tags: undercloud_reboot
