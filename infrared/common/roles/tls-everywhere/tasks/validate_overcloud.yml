@@ -1,21 +1,23 @@
 ---
-- name: Check for network-environment file
-  stat:
-      path: "{{ freeipa_network_environment_file }}"
-  register: network_environment_file
+- block:
+  - name: Check for network-environment file
+    stat:
+        path: "{{ freeipa_network_environment_file }}"
+    register: network_environment_file
 
-- fail:
-      msg: "Network environment file with location {{ freeipa_network_environment_file }} does not exist!"
-  when: not network_environment_file.stat.exists
+  - fail:
+        msg: "Network environment file with location {{ freeipa_network_environment_file }} does not exist!"
+    when: not network_environment_file.stat.exists
 
-- name: Check for network-environment-v6 file
-  stat:
-      path: "{{ freeipa_network_environment_v6_file }}"
-  register: network_environment_file
-  when: freeipa_network_protocol != 'ipv4'
+  - name: Check for network-environment-v6 file
+    stat:
+        path: "{{ freeipa_network_environment_v6_file }}"
+    register: network_environment_file
+    when: freeipa_network_protocol != 'ipv4'
 
-- fail:
-      msg: "Network environment v6 file with location {{ freeipa_network_environment_v6_file }} does not exist!"
-  when:
-      - freeipa_network_protocol != 'ipv4'
-      - not network_environment_file.stat.exists
+  - fail:
+        msg: "Network environment v6 file with location {{ freeipa_network_environment_v6_file }} does not exist!"
+    when:
+        - freeipa_network_protocol != 'ipv4'
+        - not network_environment_file.stat.exists
+  delegate_to: "{{ freeipa_undercloud_node }}"

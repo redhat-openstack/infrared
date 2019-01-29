@@ -1,48 +1,51 @@
-- name: Get overcloud entries
-  shell: |
-      source {{ freeipa_undercloud_rc }}
-      openstack stack output show overcloud HostsEntry -f value -c output_value
-  register: overcloud_entries
+---
+- block:
+  - name: Get overcloud entries
+    shell: |
+        source {{ freeipa_undercloud_rc }}
+        openstack stack output show overcloud HostsEntry -f value -c output_value
+    register: overcloud_entries
 
-- name: Removing previous Overcloud Entries
-  become: true
-  blockinfile:
-      path: /etc/hosts
-      marker: "### {mark} Overcloud Entries"
-      state: absent
+  - name: Removing previous Overcloud Entries
+    become: true
+    blockinfile:
+        path: /etc/hosts
+        marker: "### {mark} Overcloud Entries"
+        state: absent
 
-- name: Update /etc/hosts with Overcloud Entries
-  become: true
-  blockinfile:
-      path: /etc/hosts
-      backup: yes
-      marker: "### {mark} Overcloud Entries"
-      content: "{{ overcloud_entries.stdout }}"
+  - name: Update /etc/hosts with Overcloud Entries
+    become: true
+    blockinfile:
+        path: /etc/hosts
+        backup: yes
+        marker: "### {mark} Overcloud Entries"
+        content: "{{ overcloud_entries.stdout }}"
 
-- name: Removing previous Overcloud Entries
-  become: true
-  blockinfile:
-      path: /etc/hosts
-      marker: "### {mark} Overcloud Entries"
-      state: absent
-  delegate_to: "{{ freeipa_shade_node }}"
+  - name: Removing previous Overcloud Entries
+    become: true
+    blockinfile:
+        path: /etc/hosts
+        marker: "### {mark} Overcloud Entries"
+        state: absent
+    delegate_to: "{{ freeipa_shade_node }}"
 
-- name: Add Overcloud Entries block
-  become: true
-  blockinfile:
-      path: /etc/hosts
-      marker: "### {mark} Overcloud Entries"
-      state: present
-      content: "# Creating block"
-  delegate_to: "{{ freeipa_shade_node }}"
+  - name: Add Overcloud Entries block
+    become: true
+    blockinfile:
+        path: /etc/hosts
+        marker: "### {mark} Overcloud Entries"
+        state: present
+        content: "# Creating block"
+    delegate_to: "{{ freeipa_shade_node }}"
 
-- name: Update /etc/hosts with VMs details
-  become: true
-  lineinfile:
-      dest: /etc/hosts
-      line: "{{ item }}"
-      insertafter: "### BEGIN Overcloud Entries"
-      state: present
-  with_items: "{{ overcloud_entries.stdout_lines }}"
-  delegate_to: "{{ freeipa_shade_node }}"
-  when: "freeipa_overcloud_stack in item"
+  - name: Update /etc/hosts with VMs details
+    become: true
+    lineinfile:
+        dest: /etc/hosts
+        line: "{{ item }}"
+        insertafter: "### BEGIN Overcloud Entries"
+        state: present
+    with_items: "{{ overcloud_entries.stdout_lines }}"
+    delegate_to: "{{ freeipa_shade_node }}"
+    when: "freeipa_overcloud_stack in item"
+  delegate_to: "{{ freeipa_undercloud_node }}"
