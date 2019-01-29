@@ -65,7 +65,7 @@
         os_router:
             cloud: "{{ provision.cloud | default(omit) }}"
             external_fixed_ips: "{{ item.value.external_fixed_ips | default(omit) }}"
-            interfaces: "{{ item.value.attach_subnets | map('regex_replace', '(.*)', provision.prefix + '\\1') | join(',') }}"
+            interfaces: "{{ item.value.attach_subnets | map('regex_replace', '^(.*)$', provision.prefix + '\\1') | join(',') }}"
             name: "{{ provision.prefix }}{{ item.value.name | default('router1') }}"
             network: "{{ openstack_networks[0].id }}"
             state: present

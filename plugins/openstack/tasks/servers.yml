@@ -32,7 +32,7 @@
       name: "{{ prefix }}{{ topology_node.name }}-{{ item|int - 1 }}"
       nics: "{{ nics.results | map(attribute='stdout') | list }}"
       key_name: "{{ provision.key.name if provision.key.name else (prefix + provision.key.file | basename) }}"
-      security_groups: "{{ secgroups | default([]) | map('regex_replace', '(.*)', prefix + '\\1') | list or omit }}"
+      security_groups: "{{ secgroups | default([]) | map('regex_replace', '^(.*)$', prefix + '\\1') | list or omit }}"
       state: present
       wait: "{{ topology_node.wait | default(wait) }}"
       timeout: "{{ provision.os.server.timeout | int }}"
