@@ -30,7 +30,7 @@
       flavor: "{{ topology_node.flavor | default(flavor_id) }}"
       image: "{{ (topology_node.image|default({})).name | default(provision.image) }}"
       name: "{{ prefix }}{{ topology_node.name }}-{{ item|int - 1 }}"
-      nics: "{{ nics.results | map(attribute='stdout') | list }}"
+      nics: "{{ nics.results | map(attribute='stdout') | join(',') }}"
       key_name: "{{ provision.key.name if provision.key.name else (prefix + provision.key.file | basename) }}"
       security_groups: "{{ secgroups | default([]) | map('regex_replace', '(.*)', prefix + '\\1') | list or omit }}"
       state: present
