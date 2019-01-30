@@ -1,6 +1,6 @@
 import os
 import glob
-
+import sys
 
 def copy_system_selinux(force=True):
     import sys
@@ -51,5 +51,5 @@ def copy_system_selinux(force=True):
         import selinux  # noqa
 
 
-if __name__ == '__main__':
+if (__name__ == '__main__' and sys.version_info <3):
     copy_system_selinux()
