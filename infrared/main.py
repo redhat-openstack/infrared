@@ -385,7 +385,7 @@ class PluginManagerSpec(api.SpecObject):
         for plugins_type, plugins in plugins_dict.items():
             installed_plugins_list = \
                 self.plugin_manager.get_installed_plugins(plugins_type).keys()
-            plugins_names = plugins.keys()
+            plugins_names = list(plugins.keys())
             plugins_names.sort()
 
             if print_available:
