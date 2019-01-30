@@ -8,6 +8,9 @@ networks_vars:
             name: 'external'
         management:
             name: 'management'
+    provider_network: {}
+        # fill in the name, otherwise it will be autoselected
+        # name: provider_net
 
 networks_data:
     networks: "{{ networks_vars.networks }}"
@@ -39,6 +42,7 @@ networks_data:
             name: 'router'
             attach_subnets:
                 - "{{ networks_vars.networks.external.name }}-subnet"
+            network: "{{ networks_vars.provider_network.name|default(omit) }}"
 
 security_groups:
     general_access:
