@@ -1,10 +1,16 @@
 # this shell supports OSP7 and above.
-- name: get ctlplane subnet
+- name: get provision subnet(s) - multiple in spine/leaf scenario
   shell: |
       source ~/stackrc
-      subnet_id=$(openstack network show {{ uc_provision_net|default('ctlplane')  }} | grep -owP 'subnets.*\|\s\K.*[^\|]+')
-      neutron subnet-show $subnet_id | grep -owP 'cidr.*\|\s\K.*[^\|]+' | tr -d ' '
-  register: ctlplane_subnet_cidr
+      openstack network show {{ uc_provision_net|default('ctlplane')  }} | grep -owP 'subnets.*\|\s\K.*[^\|]+' |tr -d ','
+  register: ctlplane_subnets
+
+- name: get ctlplane subnets prefixes
+  shell: |
+    source ~/stackrc
+    neutron subnet-show {{ item }} | grep -owP 'cidr.*\|\s\K.*[^\|]+' | tr -d ' '
+  with_items: "{{ ctlplane_subnets.stdout.split(',') }}"
+  register: subnet_prefixes
 
 - name: get network list from hypervisor
   delegate_to: hypervisor
@@ -20,8 +26,12 @@
   with_items: "{{ virsh_networks.list_nets }}"
   tags: skip_ansible_lint
 
-- name: save network name
+- name: Initialize provison_virsh_network_name fact to empty
   set_fact:
-      provison_virsh_network_name: "{{ item.item }}"
+      provison_virsh_network_name: ""
+
+- name: save network names
+  set_fact:
+      provison_virsh_network_name: "{{ provison_virsh_network_name }} {{ item.item }}"
   with_items: "{{ virsh_networks_ips.results }}"
-  when: item.stdout |ipaddr('subnet') == ctlplane_subnet_cidr.stdout
+  when: item.stdout |ipaddr('subnet') in subnet_prefixes.results|map(attribute='stdout')|list
