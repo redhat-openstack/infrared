@@ -87,11 +87,15 @@
             disks_list="${disks_list}]"
             disks_list="$(echo ${disks_list} | sed 's/,]/]/g')"
 
+            MAC=`echo "$NODE_XML" | grep {{ provison_virsh_network_name }} -B 1 | grep mac | cut -d\' -f2`
+            if [ "$MAC" == "" ]; then
+                MAC=`echo "$NODE_XML" | grep data -B 1 |awk -F "'" '/mac / {print $2}'`
+            fi
             echo "{
                 'name': '{{ item }}',
                 'arch': '`echo "$NODE_XML" | grep arch | cut -d\' -f2`',
                 'memory_kibs': '`echo "$NODE_XML" | grep currentMemory | cut -d\< -f2 | cut -d\> -f2`',
-                'mac': '`echo "$NODE_XML" | grep {{ provison_virsh_network_name }} -B 1 | grep mac | cut -d\' -f2`',
+                'mac': '$MAC',
                 'cpu': '`echo "$NODE_XML" | grep vcpu | cut -d\< -f2 | cut -d\> -f2`',
                 'disk_bytes': '`virsh domblkinfo {{ item }} vda | grep -e Capacity | cut -d\: -f2 | xargs`',
                 'disks': '${disks_list}',
