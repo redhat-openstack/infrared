@@ -80,12 +80,11 @@
         delegate_to: hypervisor
         shell: |
             NODE_XML=`virsh dumpxml {{ item }}`
-            disks_list="["
+            disks_list_array=()
             for dsk in $(virsh domblklist {{ item }} | tail -n +3 | awk '{print $1}'); do
-                disks_list="${disks_list}\"${dsk}\","
+                disks_list_array+=(\"${dsk}\",)
             done
-            disks_list="${disks_list}]"
-            disks_list="$(echo ${disks_list} | sed 's/,]/]/g')"
+            disks_list="$(echo \[${disks_list_array[*]}\] | sed 's/,]/]/g')"
 
             echo "{
                 'name': '{{ item }}',
