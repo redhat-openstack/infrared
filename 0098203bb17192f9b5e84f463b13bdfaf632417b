@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b7de89f_a30429d3",
+        "filename": "plugins/tripleo-overcloud/hypervisor.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1005418
+      },
+      "writtenOn": "2019-01-31T20:36:49Z",
+      "side": 1,
+      "message": "And loop over the list in jinja instead of shell:\n\n                \u0027mac\u0027: \u0027`echo \"$NODE_XML\" | grep -E \"{% for network in provison_virsh_network_name %}{{ network }}{% if not loop.last %}|{% endif %}{% endfor %}\" -B 1 | grep mac | cut -d\\\u0027 -f2`\u0027,",
+      "range": {
+        "startLine": 94,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 171
+      },
+      "revId": "0098203bb17192f9b5e84f463b13bdfaf632417b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8acb268d_7c89ef32",
+        "filename": "plugins/tripleo-overcloud/tasks/discover_provision_net.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1005418
+      },
+      "writtenOn": "2019-01-31T20:36:49Z",
+      "side": 1,
+      "message": "Let\u0027s avoid shell inside tasks when possible, we could split this task into:\n\n      - name: get ctlplane subnets\n        shell: |\n          source ~/stackrc\n          openstack network show {{ uc_provision_net|default(\u0027ctlplane\u0027)  }} | grep -owP \u0027subnets.*\\|\\s\\K.*[^\\|]+\u0027\n        register: ctlplane_subnets\n\n      - name: get ctlplane subnets prefixes\n        shell: |\n          source ~/stackrc\n          neutron subnet-show {{ item }} | grep -owP \u0027cidr.*\\|\\s\\K.*[^\\|]+\u0027 | tr -d \u0027 \u0027\n        with_items: \"{{ (ctlplane_subnets.stdout |replace(\u0027,\u0027,\u0027\u0027)).split() }}\"\n        register: subnet_prefixes",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 24
+      },
+      "revId": "0098203bb17192f9b5e84f463b13bdfaf632417b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c1822a2_ff207e66",
+        "filename": "plugins/tripleo-overcloud/tasks/discover_provision_net.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1005418
+      },
+      "writtenOn": "2019-01-31T20:36:49Z",
+      "side": 1,
+      "message": "Then save the networks names as list elements:\n\n      - name: save network(s) name\n        vars:\n            provison_virsh_network_name: []\n        set_fact:\n            provison_virsh_network_name: \"{{ provison_virsh_network_name + [item[0].item] }}\"\n        with_nested: \n          - \"{{ virsh_networks_ips.results }}\"\n          - \"{{ subnet_prefixes.results|map(attribute\u003d\u0027stdout\u0027)|list }}\"\n        when: item[0].stdout |ipaddr(\u0027subnet\u0027) \u003d\u003d item[1]",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 66
+      },
+      "revId": "0098203bb17192f9b5e84f463b13bdfaf632417b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
