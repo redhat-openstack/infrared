@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78ce471c_1b2c2fc9",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1004639
+      },
+      "writtenOn": "2019-01-31T10:02:59Z",
+      "side": 1,
+      "message": "robust, if we over need another patch.",
+      "range": {
+        "startLine": 7,
+        "startChar": 32,
+        "endLine": 7,
+        "endChar": 39
+      },
+      "revId": "52e09ef080146801a388648c97ed37294a7a5b04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "050947ad_68af0637",
+        "filename": "plugins/tripleo-overcloud/hypervisor.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1004639
+      },
+      "writtenOn": "2019-01-31T10:02:59Z",
+      "side": 1,
+      "message": "This entire block could be replaced by:\n\n   disks_list\u003d$(virsh domblklist controller-0  | \\\n       awk \u0027{if(NR\u003e2 \u0026\u0026 $0 !~ /^ *$/){d \u003d d \",\" $1}}END{print \"[\" gensub(\"^,\",\"\",1,d) \"]\"}\u0027)\n\ntested with:\n\n# cat test.txt \nTarget     Source\n------------------------------------------------\nvda        /var/lib/libvirt/images/controller-0-disk1.qcow2\nvdb        /var/lib/libvirt/images/controller-0-disk1.qcow2\nvdc        /var/lib/libvirt/images/controller-0-disk1.qcow2\n\n# cat test.txt | awk \u0027{if(NR\u003e2 \u0026\u0026 $0 !~ /^ *$/){d \u003d d \",\" $1}}END{print gensub(\"^,\",\"\",1,d)}\u0027\nvda,vdb,vdc\n\nit avoids a lot of system calls and it \"maybe\" lest cryptic to read.",
+      "revId": "52e09ef080146801a388648c97ed37294a7a5b04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
