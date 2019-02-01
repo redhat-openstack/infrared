@@ -1,3 +1,23 @@
 #!/bin/bash
 
+cat > patch.diff <<'EOF'
+diff --git a/instack_undercloud/undercloud.py b/instack_undercloud/undercloud.py
+index 75692066..98e54707 100644
+--- a/instack_undercloud/undercloud.py
++++ b/instack_undercloud/undercloud.py
+@@ -1165,7 +1165,7 @@ def _create_mistral_config_environment(instack_env, mistral):
+             }))
+
+
+-def _create_default_plan(mistral, timeout=180):
++def _create_default_plan(mistral, timeout=540):
+     plan_name = 'overcloud'
+     queue_name = str(uuid.uuid4())
+
+--
+2.17.2
+EOF
+
+cat patch.diff | sudo patch -p1 -d /usr/lib/python2.7/site-packages
+
 openstack undercloud install {{ install.undercloud.extra.args }} &> undercloud_install.log
