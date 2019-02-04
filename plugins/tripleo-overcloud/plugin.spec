@@ -536,7 +536,6 @@ subparsers:
                       default: lvm
                       choices:
                           - lvm
-                          - lvm_dedicated
                           - non-collocated
                           - collocated
 
