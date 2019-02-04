@@ -15,6 +15,7 @@ except ImportError:
     from pip import main as pip_main
 import yaml
 import urllib3
+import sys
 
 from infrared import PLUGINS_REGISTRY
 from infrared.core.utils import logger
@@ -44,7 +45,7 @@ class InfraredPluginManager(object):
     SUPPORTED_TYPES_SECTION = 'supported_types'
     GIT_PLUGINS_ORGS_SECTION = "git_orgs"
 
-    def __init__(self, plugins_conf, plugins_dir, install_plugins=True):
+    def __init__(self, plugins_conf, plugins_dir, install_plugins=False):
         """
         :param plugins_conf: A path to the main plugins configuration file
         :param plugins_dir: the plugins directory location
@@ -234,7 +235,6 @@ class InfraredPluginManager(object):
             self._config = configparser.ConfigParser()
             self._config.readfp(fp)
 
-        # TODO(aopincar): Remove auto plugins installation when conf is missing
         if self._install_plugins_required and init_plugins_conf:
             self.add_all_available()
 
@@ -478,6 +478,8 @@ class InfraredPluginManager(object):
 
         self._install_requirements(dest)
         self._load_plugins()
+        LOG.warning(
+            "Plugin '{}' has been successfully installed".format(plugin))
 
     def add_all_available(self, plugins_registry=None):
         """
@@ -488,8 +490,6 @@ class InfraredPluginManager(object):
         for plugin in set(plugins_registry) - \
                 set(self.PLUGINS_DICT):
             self.add_plugin(plugin, plugins_registry=plugins_registry)
-            LOG.warning(
-                "Plugin '{}' has been successfully installed".format(plugin))
 
     def remove_plugin(self, plugin_name):
         """Removes an installed plugin
@@ -596,8 +596,30 @@ class InfraredPluginManager(object):
             # add the plugin
             self.add_plugin(plugin_source=plugin,
                             plugins_registry=plugins_registry)
-            LOG.warning(
-                "Plugin '{}' has been successfully installed".format(plugin))
+
+    def lazy_load_plugin(self, args):
+        """
+        Lazy load plugin based on argument passed to cli.
+        If plugin exists in registry it will be automatically added to plugins,
+        if not it will be skipped.
+        :param args: arguments passed to cli
+        """
+        if args is None:
+            # args default to the system args
+            args = sys.argv[1:]
+        else:
+            # make sure that args are mutable
+            args = list(args)
+
+        try:
+            subcommand = args[0]
+
+            # add plugin if exists in registry and not already installed
+            if subcommand in PLUGINS_REGISTRY.keys() and \
+                    subcommand not in self.PLUGINS_DICT:
+                self.add_plugin(subcommand)
+        except IndexError:
+            return
 
 
 class InfraredPlugin(object):
