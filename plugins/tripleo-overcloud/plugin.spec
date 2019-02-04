@@ -530,6 +530,26 @@ subparsers:
                           __LISTYAMLS__
                       default: internal
 
+                  ceph-osd-type:
+                      type: Value
+                      help: |
+                          From RHCS v3.2 and later 'bluestore' and 'filestore' is available as OSD types.
+                      default: bluestore
+                      choices:
+                          - bluestore
+                          - filestore
+
+                  ceph-osd-scenario:
+                      type: Value
+                      help: |
+                          Sets the location of the journal data (for filestore) or the write-ahead log and
+                          key-value data (bluestore).
+                      default: lvm
+                      choices:
+                          - lvm
+                          - non-collocated
+                          - collocated
+                          
             - title: Composable roles
               options:
                   role-files:
