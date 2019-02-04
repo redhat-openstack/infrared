@@ -10,7 +10,7 @@
         include_vars:
             file: "{{ node }}"
             name: node_dict
-        with_items: "{{ provision.topology.nodes.keys() }}"
+        with_items: "{{ provision.topology.nodes.keys()|list }}"
         loop_control:
             loop_var: node
         when: "node|basename|splitext|first == bmc_node_name"
