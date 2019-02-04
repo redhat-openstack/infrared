@@ -271,8 +271,7 @@ def test_add_plugin_with_same_name(plugin_manager_fixture):
     plugins_cfg_mtime_before_add = os.path.getmtime(plugin_manager.config_file)
     plugins_cnt_before_try = len(plugin_manager.PLUGINS_DICT)
 
-    with pytest.raises(IRPluginExistsException):
-        plugin_manager.add_plugin(plugin_dict['dir'])
+    plugin_manager.add_plugin(plugin_dict['dir'])
 
     assert plugins_cnt_before_try == len(plugin_manager.PLUGINS_DICT)
     assert os.path.getmtime(

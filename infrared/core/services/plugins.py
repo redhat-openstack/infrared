@@ -20,7 +20,7 @@ from infrared import PLUGINS_REGISTRY
 from infrared.core.utils import logger
 from infrared.core.utils.validators import SpecValidator, RegistryValidator
 from infrared.core.utils.exceptions import IRFailedToAddPlugin, IRException, \
-    IRPluginExistsException, IRFailedToRemovePlugin, IRFailedToUpdatePlugin, \
+    IRFailedToRemovePlugin, IRFailedToUpdatePlugin, \
     IRUnsupportedPluginType, IRFailedToImportPlugins
 
 DEFAULT_PLUGIN_INI = dict(
@@ -449,8 +449,10 @@ class InfraredPluginManager(object):
         if not self.config.has_section(plugin_type):
             self.config.add_section(plugin_type)
         elif self.config.has_option(plugin_type, plugin.name):
-            raise IRPluginExistsException(
-                "Plugin with the same name & type already exists")
+            LOG.warning("Skipping... Plugin with the same name & type "
+                        "already exists.\n"
+                        "Please remove old plugin before adding new one.")
+            return
 
         dest = os.path.join(self.plugins_dir, plugin.name)
         if os.path.abspath(plugin_source) != os.path.abspath(dest):
