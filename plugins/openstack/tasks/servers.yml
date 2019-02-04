@@ -64,11 +64,9 @@
       server_list: "{{ server_list|default([]) + (servers.results | map(attribute='server') | list) }}"
 
 - name: Create floating IPs
-  vars:
-      external_network_id: "{{ openstack_networks[0].id }}"
   os_floating_ip:
       cloud: "{{ provision.cloud | default(omit) }}"
-      network: "{{ external_network_id }}"
+      network: "{{ networks_vars.provider_network.name|default(openstack_networks[0].id) }}"
       nat_destination: "{{ prefix }}{{ topology_node.external_network }}"
       server: "{{ item.id }}"
       state: present
