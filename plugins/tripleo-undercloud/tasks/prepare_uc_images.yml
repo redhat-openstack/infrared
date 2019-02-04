@@ -66,16 +66,18 @@
 
   when: not install.registry.skip.puddle
 
-- block:
-    - name: generate container images environment file
-      shell: |
-          set -exo pipefail
-          openstack tripleo container image prepare default \
-          --output-env-file {{ working_dir }}/containers-prepare-parameter.yaml \
-          {% if not install.registry.undercloud.skip %}
-          --local-push-destination
-          {% endif %}
+# This is needed also for rdo deploympent.
+- name: generate container images environment file
+  shell: |
+      set -exo pipefail
+      openstack tripleo container image prepare default \
+      --output-env-file {{ working_dir }}/containers-prepare-parameter.yaml \
+      {% if not install.registry.undercloud.skip %}
+      --local-push-destination
+      {% endif %}
 
+
+- block:
     - name: set namespace in containers-prepare-parameter.yaml
       vars:
           registry: "{{ install.registry.mirror|ternary(install.registry.mirror, container_env['container-image-prepare']['namespace'].split('/')[0] )}}"
