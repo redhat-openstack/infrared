@@ -519,8 +519,13 @@ def main(args=None):
             'ssh',
             description="Interactive ssh session to node from inventory."))
 
+    plugin_manager = CoreServices.plugins_manager()
+
+    # try to lazy load plugin if was not added but exists in registry
+    plugin_manager.lazy_load_plugin(args)
+
     # register all plugins
-    for plugin in CoreServices.plugins_manager().PLUGINS_DICT.values():
+    for plugin in plugin_manager.PLUGINS_DICT.values():
         specs_manager.register_spec(api.InfraredPluginsSpec(plugin))
 
     argcomplete.autocomplete(specs_manager.parser)

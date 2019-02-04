@@ -15,6 +15,7 @@ except ImportError:
     from pip import main as pip_main
 import yaml
 import urllib3
+import sys as _sys
 
 from infrared import PLUGINS_REGISTRY
 from infrared.core.utils import logger
@@ -598,6 +599,26 @@ class InfraredPluginManager(object):
                             plugins_registry=plugins_registry)
             LOG.warning(
                 "Plugin '{}' has been successfully installed".format(plugin))
+
+    def lazy_load_plugin(self, args):
+        """
+        Lazy load plugin based on argument passed to cli.
+        If plugin exists in registry it will be automatically added to plugins,
+        if not it will be skipped.
+        :param args: arguments passed to cli
+        """
+        if args is None:
+            # args default to the system args
+            args = _sys.argv[1:]
+        else:
+            # make sure that args are mutable
+            args = list(args)
+
+        subcommand = args[0]
+        # add plugin if exists in registry and not already installed
+        if subcommand in PLUGINS_REGISTRY.keys() and \
+                subcommand not in self.PLUGINS_DICT:
+            self.add_plugin(subcommand)
 
 
 class InfraredPlugin(object):
