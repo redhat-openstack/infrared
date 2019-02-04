@@ -529,7 +529,6 @@ subparsers:
                           Storage configuration file (YAML file)
                           __LISTYAMLS__
                       default: internal
-
                   ceph-osd-type:
                       type: Value
                       help: |
@@ -550,6 +549,7 @@ subparsers:
                           - non-collocated
                           - collocated
 
+            - title: Composable roles
               options:
                   role-files:
                       type: Value
