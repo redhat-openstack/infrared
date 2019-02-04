@@ -27,7 +27,7 @@ class CoreSettings(object):
 
     def __init__(self, workspaces_base_folder=None,
                  plugins_conf_file=None,
-                 install_plugin_at_start=True,
+                 install_plugin_at_start=False,
                  plugins_base_folder=None):
         """
         :param workspaces_base_folder: folder where the
