@@ -18,12 +18,52 @@ parameter_defaults:
 {% if install.splitstack|default(False) %}
             - '/dev/vdb'
 {% else %}
+{% if install.ceph.osd.scenario == 'lvm' or install.ceph.osd.scenario == 'collocated' %}
 {% for disk in storage_node_disks[1:] %}
             - '/dev/{{ disk }}'
 {% endfor %}
+{% else %}
+{% if install.ceph.osd.scenario == 'non-collocated' and install.ceph.osd.type == 'bluestore' %}
+{# HARDCODED devices for this scenario for now #}
+{% for disk in storage_node_disks[1:-2] %}
+            - '/dev/{{ disk }}'
+{% endfor %}
+
+        dedicated_devices:
+{% for disk in storage_node_disks[1:-2] %}
+            - '/dev/{{ storage_node_disks[-2] }}'
+{% endfor %}
+
+        bluestore_wal_devices:
+{% for disk in storage_node_disks[1:-2] %}
+            - '/dev/{{ storage_node_disks[-1] }}'
+{% endfor %}
+
+
+{% else %}
+{% if install.ceph.osd.scenario == 'non-collocated' and install.ceph.osd.type == 'filestore' %}
+{% for disk in storage_node_disks[1:-1] %}
+            - '/dev/{{ disk }}'
+{% endfor %}
+
+        dedicated_devices:
+{% for disk in storage_node_disks[1:-1] %}
+            - '/dev/{{ storage_node_disks[-1] }}'
+{% endfor %}
+
+{% endif %}{# filestore non collocated #}
+{% endif %}{# bluestore non collocated #}
+{% endif %}{#End of install.ceph_osd = lvm or install.ceph_osd = collocated #}
 {% endif %}{# end of install.splitstack #}
         journal_size: 512
-        osd_scenario: collocated
+{#      osd_scenario: collocated //deprecated #}
+{% if install.ceph.osd.scenario == 'lvm_dedicated' %}
+        osd_scenario: lvm
+{% else %}
+        osd_scenario: {{ install.ceph.osd.scenario }}
+{% endif %}{# setting correct value for osd_scenario from variable #}
+        osd_objectsore: {{install.ceph.osd.type }}
+
 {% else %}
     ExtraConfig:
       ceph::profile::params::osd_pool_default_pg_num: 32
