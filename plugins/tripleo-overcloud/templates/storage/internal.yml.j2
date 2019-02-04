@@ -18,12 +18,37 @@ parameter_defaults:
 {% if install.splitstack|default(False) %}
             - '/dev/vdb'
 {% else %}
+{% if install.ceph.osd.type == 'bluestore' %}
+{# at the moment, only lvm and bluestore are supported other scenarios will be deprecated #}
+{# lvm will use non spinning osds for wal we cant simulate those in a virtual environment without a prescript  #}
 {% for disk in storage_node_disks[1:] %}
             - '/dev/{{ disk }}'
 {% endfor %}
+        osd_scenario: lvm
+        osd_objectstore: {{ install.ceph.osd.type }}
+{% elif install.ceph.osd.type == 'filestore' %}
+{%  if install.ceph.osd.scenario == 'non-collocated' %}
+{% for disk in storage_node_disks[1:-1] %}
+            - '/dev/{{ disk }}'
+{% endfor %}
+
+        dedicated_devices:
+{% for disk in storage_node_disks[1:-1] %}
+            - '/dev/{{ storage_node_disks[-1] }}'
+{% endfor %}
+{% elif install.ceph.osd.scenario == 'lvm' or install.ceph.osd.scenario == 'collocated' %}
+{% for disk in storage_node_disks[1:] %}
+            - '/dev/{{ disk }}'
+{% endfor %}
+
+{% endif %}{# filestore scenarios #}
+        osd_scenario: {{ install.ceph.osd.scenario }}
+        osd_objectstore: {{ install.ceph.osd.type }}
+
+{% endif %}{#End of install.ceph_type = bluestore #}
 {% endif %}{# end of install.splitstack #}
         journal_size: 512
-        osd_scenario: collocated
+
 {% else %}
     ExtraConfig:
       ceph::profile::params::osd_pool_default_pg_num: 32
