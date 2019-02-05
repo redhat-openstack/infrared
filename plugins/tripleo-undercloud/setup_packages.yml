@@ -130,7 +130,9 @@
         delay: 3
         ignore_errors: true
         delegate_to: localhost
-        when: "'hypervisor' not in groups"
+        when:
+          - update is changed
+          - "'hypervisor' not in groups"
 
       - name: wait for undercloud to go down
         command: ping -c1 {{ ansible_host|default(ansible_ssh_host) }}
@@ -140,7 +142,9 @@
         delay: 3
         ignore_errors: true
         delegate_to: hypervisor
-        when: "'hypervisor' in groups"
+        when:
+          - update is changed
+          - "'hypervisor' not in groups"
 
       # Ansible bug around delegate+vars+wait
       # https://github.com/ansible/ansible/issues/11705
