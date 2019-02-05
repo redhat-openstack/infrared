@@ -28,7 +28,7 @@
   when:
       - undercloud_version is not defined
       - version_regex|int
-      - version_regex > 0
+      - version_regex|int > 0
 
 - set_fact:
       undercloud_version: "{{ version_regex|int }}"
@@ -38,7 +38,7 @@
   when:
       - undercloud_version is not defined
       - version_regex|int
-      - version_regex > 0
+      - version_regex|int > 0
 
 - name: Read version from the custom repos
   set_fact:
@@ -49,7 +49,7 @@
   when:
       - undercloud_version is not defined
       - version_regex|int
-      - version_regex > 0
+      - version_regex|int > 0
 
 - name: get undercloud rdo version
   find:
