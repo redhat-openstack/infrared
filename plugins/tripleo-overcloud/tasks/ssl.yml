@@ -67,7 +67,7 @@
       openssl req
       {{ uc_signed if undercloud_ssl.rc == 0 else self_signed }}
       -out {{ template_base }}/overcloud-cacert.pem -days 365
-      -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ external_allocation_pool_start }}'
+      -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ external_allocation_pool_start }}/subjectAltName=DNS.1=localhost'
 
 - name: process server RSA keys
   command: "openssl rsa -in {{ template_base }}/overcloud-privkey.pem  -out {{ template_base }}/overcloud-privkey.pem"
