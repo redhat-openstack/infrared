@@ -5,12 +5,12 @@
       source {{ auth_file_path }}
       echo -n "{{cloudname}}: \
         {'auth': \
-          { 'auth-url': '$OS_AUTH_URL', \
+          { 'auth_url': '$OS_AUTH_URL', \
             'username': '$OS_USERNAME', \
             'password': '$OS_PASSWORD', \
             $(if [ -n "$OS_USER_DOMAIN_NAME" ]; then echo "'user_domain_name': '${OS_USER_DOMAIN_NAME}',"; fi) \
             $(if [ -n "$OS_PROJECT_DOMAIN_NAME" ]; then echo "'project_domain_name': '${OS_PROJECT_DOMAIN_NAME}',"; fi) \
-            'project-name': '${OS_PROJECT_NAME:-$OS_TENANT_NAME}' \
+            'project_name': '${OS_PROJECT_NAME:-$OS_TENANT_NAME}' \
           } $(if [ -n "$OS_IDENTITY_API_VERSION" ]; then echo ", 'identity_api_version': '${OS_IDENTITY_API_VERSION}'"; fi) }"
   register: cloud_details
 
