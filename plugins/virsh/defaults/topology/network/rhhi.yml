@@ -1,0 +1,54 @@
+---
+networks:
+    net1:
+        external_connectivity: no
+        name: "provisioning"
+        ip_address: "172.22.0.254"
+        netmask: "255.255.255.0"
+    net2:
+        external_connectivity: yes
+        name: "baremetal"
+        ip_address: "10.0.0.1"
+        netmask: "255.255.255.0"
+        forward: nat
+        domain: "rhhi.redhat.local"
+        dns:
+            srvs:
+                - name: "etcd-server-ssl"
+                  protocol: tcp
+                  domain: "redhat.local"
+                  port: 2380
+                  target: "etcd-0.redhat.local"
+                - name: "etcd-server-ssl"
+                  protocol: tcp
+                  domain: "redhat.local"
+                  port: 2380
+                  target: "etcd-1.redhat.local"
+                - name: "etcd-server-ssl"
+                  protocol: tcp
+                  domain: "redhat.local"
+                  port: 2380
+                  target: "etcd-2.redhat.local"
+        dhcp:
+            range:
+                start: "10.0.0.2"
+                end: "10.0.0.100"
+            subnet_cidr: "10.0.0.0/24"
+            subnet_gateway: "10.0.0.1"
+        floating_ip:
+            start: "10.0.0.101"
+            end: "10.0.0.150"
+
+nodes:
+    default:
+        interfaces:
+            - network: "provisioning"
+            - network: "baremetal"
+        external_network:
+            network: "baremetal"
+    rhhi-bootstrap:
+        interfaces:
+            - network: "provisioning"
+            - network: "baremetal"
+        external_network:
+            network: "baremetal"
