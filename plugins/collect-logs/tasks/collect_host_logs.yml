@@ -96,20 +96,6 @@
 - shell: "(set -x; sestatus -v; sestatus -b) &> /var/log/extra/selinux"
   ignore_errors: true
 
-- shell: |
-    if [[ -f "/etc/ceph/ceph.client.admin.keyring" || -f "/etc/ceph/ceph.keyring" || -f "/etc/ceph/keyring" || -f "/etc/ceph/keyring.bin" ]]; then
-        ceph status &>/var/log/extra/ceph
-    fi
-
-    if command -v docker && systemctl is-active docker; then
-        CEPH_CONTAINERS_IDS=$(docker ps -f name=ceph-mon- -q)
-        for CID in $CEPH_CONTAINERS_IDS; do
-            echo -e "\n===========================\n --- $CID\n" >> /var/log/extra/ceph
-            docker exec $CID ceph status &>>/var/log/extra/ceph
-        done
-    fi
-  ignore_errors: true
-
 - shell: "(vgs; pvs; lvs) &> /var/log/extra/lvm"
   ignore_errors: true
 
@@ -122,6 +108,10 @@
           BASE_DOCKER_EXTRA=/var/log/extra/docker;
           mkdir -p "$BASE_DOCKER_EXTRA";
           All_FILE="$BASE_DOCKER_EXTRA/docker_allinfo.log";
+          if ! timeout -k 5s 5s docker ps --all --size > /dev/null 2>&1; then
+              echo "Workaround bz1671861 - docker commands can hang indefinitely";
+              systemctl restart docker;
+          fi
           docker ps --all --size &> "$All_FILE";
           docker images --all &>> "$All_FILE";
           docker volume ls &>> "$All_FILE";
@@ -143,6 +133,20 @@
               docker cp "$cont:/var/lib/kolla/config_files/config.json" "$INFO_DIR/config.json";
           done;
       fi
+  ignore_errors: true
+
+- shell: |
+    if [[ -f "/etc/ceph/ceph.client.admin.keyring" || -f "/etc/ceph/ceph.keyring" || -f "/etc/ceph/keyring" || -f "/etc/ceph/keyring.bin" ]]; then
+        ceph status &>/var/log/extra/ceph
+    fi
+
+    if command -v docker && systemctl is-active docker; then
+        CEPH_CONTAINERS_IDS=$(docker ps -f name=ceph-mon- -q)
+        for CID in $CEPH_CONTAINERS_IDS; do
+            echo -e "\n===========================\n --- $CID\n" >> /var/log/extra/ceph
+            docker exec $CID ceph status &>>/var/log/extra/ceph
+        done
+    fi
   ignore_errors: true
 
 - name: clockdiff to each peer
