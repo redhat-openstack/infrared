@@ -37,7 +37,7 @@
 - block:
     - name: allow access to port vbmc ports from undercloud managment network
       vars:
-          mgmt_net: "{{ hostvars[groups.undercloud|first][management_net].ipv4 }}"
+          mgmt_net: "{{ hostvars[groups.hypervisor|first][management_net].ipv4 }}"
       become: True
       iptables:
           action: insert
