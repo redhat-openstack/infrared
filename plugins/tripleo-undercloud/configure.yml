@@ -48,6 +48,10 @@
         when: install.ssl or install.version|openstack_release > 13
         tags: ssl
 
+      - name: certificate for internal service communication.
+        include_tasks: tasks/internal-ssl.yml
+        when: install.version|openstack_release >= 15
+
       - name: create the base undercloud deploy script
         template:
             src: undercloud_deploy.sh.j2
