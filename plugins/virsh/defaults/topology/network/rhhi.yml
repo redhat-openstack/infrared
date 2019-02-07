@@ -1,0 +1,36 @@
+---
+networks:
+    net1:
+        external_connectivity: no
+        name: "data"
+        ip_address: "172.22.0.254"
+        netmask: "255.255.255.0"
+    net2:
+        external_connectivity: yes
+        name: "management"
+        ip_address: "10.0.0.1"
+        netmask: "255.255.255.0"
+        forward: nat
+        dhcp:
+            range:
+                start: "10.0.0.2"
+                end: "10.0.0.100"
+            subnet_cidr: "10.0.0.0/24"
+            subnet_gateway: "10.0.0.1"
+        floating_ip:
+            start: "10.0.0.101"
+            end: "10.0.0.150"
+
+nodes:
+    default:
+        interfaces:
+            - network: "data"
+            - network: "management"
+        external_network:
+            network: "management"
+    rhhi-bootstrap:
+        interfaces:
+            - network: "default"
+            - network: "data"
+        external_network:
+            network: "default"
