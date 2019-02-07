@@ -81,6 +81,12 @@
       - install.version|openstack_release >= 12
       - (install.version|openstack_distribution) == 'OSP'
 
+- name: Append docker-ha on RDO installation
+  include_tasks: rdo-docker-ha.yml
+  when:
+      - install.version|default(undercloud_version)|openstack_release >= 12
+      - install.version|default(undercloud_version)|openstack_distribution == "RDO"
+
 - name: "find user defined templates in {{ template_base }}"
   find:
       paths: "{{ template_base }}"
