@@ -8,6 +8,7 @@ import sys
 from infrared.core.services import workspaces
 from infrared.core.services import plugins
 from infrared.core.services import ansible_config
+from infrared.core.services import execution_logger
 from infrared.core.utils import logger
 
 LOG = logger.LOG
@@ -18,6 +19,7 @@ class ServiceName(object):
     WORKSPACE_MANAGER = "workspace_manager"
     PLUGINS_MANAGER = "plugins_manager"
     ANSIBLE_CONFIG_MANAGER = "ansible_config_manager"
+    EXECUTION_LOGGER_MANAGER = "execution_logger_manager"
 
 
 class CoreSettings(object):
@@ -39,11 +41,8 @@ class CoreSettings(object):
         unit tests, for example.
         """
 
-        # todo(obaranov) replace with
-        # todo(obaranov) os.path.join(os.path.expanduser("~"), '.infrared')
-        # todo(obaranov) once IR is packaged as pip
         self.infrared_home = os.path.abspath(os.environ.get(
-            "IR_HOME", os.getcwd()))
+            "IR_HOME", os.path.join(os.path.expanduser("~"), '.infrared')))
 
         # todo(obaranov) replace .workspaces to workspaces and .plugins.ini to
         # todo(obaranov) plugins.ini once IR is packaged as pip
@@ -100,6 +99,18 @@ class CoreServices(object):
                                  ansible_config.AnsibleConfigManager(
                                      core_settings.infrared_home))
 
+        # create execution logger manager
+        if ServiceName.EXECUTION_LOGGER_MANAGER not in cls._SERVICES:
+            # get ansible manager
+            ansible_manager = CoreServices.ansible_config_manager()
+            # build log file path
+            log_file = \
+                os.path.join(core_settings.infrared_home, 'ir-commands.log')
+            cls.register_service(ServiceName.EXECUTION_LOGGER_MANAGER,
+                                 execution_logger.ExecutionLoggerManager(
+                                     ansible_manager.ansible_config_path,
+                                     log_file=log_file))
+
     @classmethod
     def register_service(cls, service_name, service):
         """Protect the _SERVICES dict"""
@@ -125,3 +136,8 @@ class CoreServices(object):
     def ansible_config_manager(cls):
         """Gets the ansible config manager. """
         return cls._get_service(ServiceName.ANSIBLE_CONFIG_MANAGER)
+
+    @classmethod
+    def execution_logger_manager(cls):
+        """Gets the execution logger manager. """
+        return cls._get_service(ServiceName.EXECUTION_LOGGER_MANAGER)
