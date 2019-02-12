@@ -118,6 +118,17 @@
       src: "os-net-config.j2"
       dest: "/etc/os-net-config/config.yaml"
 
+- name: Ensure directory for clouds.yml exists
+  file:
+    path: /root/.config/openstack
+    state: directory
+
+- name: Create clouds.yml for the BMC
+  template:
+    src: "clouds.yml.j2"
+    dest: "/root/.config/openstack/clouds.yml"
+    mode: 0600
+
 # Deploy service file for each node in 'overcloud_nodes' group
 - include_tasks: openstack-bmc.yml
   with_items: "{{ groups.overcloud_nodes }}"
