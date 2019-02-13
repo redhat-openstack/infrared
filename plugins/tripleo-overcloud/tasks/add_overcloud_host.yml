@@ -58,7 +58,7 @@
           groups: "{{ node_groups }}"
           ansible_user: "{{ user }}"
           ansible_ssh_pass: ""
-          ansible_host: "{{ node_info.accessIPv4 }}"
+          ansible_host: "{{ node_info.addresses.ctlplane[0].addr }}"
           ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
 
     - name: add original name
