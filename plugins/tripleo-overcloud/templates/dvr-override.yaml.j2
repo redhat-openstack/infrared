@@ -1,3 +1,8 @@
+{% if install.version|default(undercloud_version)|openstack_release <= 13 %}
+resource_registry:
+    OS::TripleO::Compute::Net::SoftwareConfig: {{ template_base }}/network/{% if install.deployment.files == 'composable_roles' %}nic-configs{% else %}three-nics-vlans{% endif %}/{{ nics_subfolder }}/compute-dvr.yaml
+{% else %}
 resource_registry:
     OS::TripleO::Compute::Net::SoftwareConfig: {{ template_base }}/network/{% if install.deployment.files == 'composable_roles' %}nic-configs{% else %}three-nics-vlans{% endif %}/{{ nics_subfolder }}/controller.yaml
+{% endif %}
     OS::TripleO::Compute::Ports::ExternalPort: {{ install.heat.templates.basedir }}/network/ports/external.yaml
