@@ -128,6 +128,12 @@
       line: '-e {{ template_base }}/network/dvr-override.yaml \'
   when: install.network.dvr
 
+- name: Create DVR compute env file
+  copy:
+      dest: "{{ template_base }}/network/three-nics-vlans/compute-dvr.yaml"
+      src: "files/dvr/compute-dvr.yaml"
+  when: install.network.dvr
+
 - name: Change network type in OVN ML2 environment file OSP 12
   become: yes
   yedit:
