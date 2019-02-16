@@ -58,4 +58,13 @@
         dest: "/etc/hosts"
         line: "{{ freeipa_undercloud_ipaddress }} {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} {{ groups['undercloud'][0] }}"
         state: present
+
+  - name: Create token
+    command: "echo 12345678 | kinit admin"
+
+  - name: Add DNS entries
+    shell: |
+        ipa dnsrecord-add redhat.local overcloud --a-rec {{ external_allocation_pool_start }}
+        ipa dnszone-add ctlplane.redhat.local
+
   delegate_to: "{{ freeipa_node }}"
