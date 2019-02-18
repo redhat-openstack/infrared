@@ -14,8 +14,7 @@
             shared: "{{ item.value.shared | default(omit) }}"
             timeout: "{{ item.value.timeout | default(180) }}"
         register: networks
-        with_dict: "{{ networks_data.networks }}"
-        when: networks_data.networks is defined
+        loop: "{{ networks_data.networks | default({}) | dict2items }}"
 
       - name: register networks resources
         vars:
@@ -52,8 +51,7 @@
             network_name: "{{ provision.prefix }}{{ item.value.network_name }}"
             state: present
         register: subnets
-        with_dict: "{{ networks_data.subnets }}"
-        when: networks_data.subnets is defined
+        loop: "{{ networks_data.subnets | default({}) | dict2items }}"
 
       - name: register subnets resources
         vars:
@@ -70,8 +68,7 @@
             network: "{{ item.value.network | default(openstack_networks[0].id) }}"
             state: present
         register: routers
-        with_dict: "{{ networks_data.routers }}"
-        when: networks_data.routers is defined
+        loop: "{{ networks_data.routers | default({}) | dict2items }}"
 
       - name: register routers resources
         vars:
@@ -81,7 +78,7 @@
 
       - name: create security groups
         include_tasks: tasks/create_network_resources.yml
-        with_dict: "{{ security_groups|default({}) }}"
+        loop: "{{ security_groups | default({}) | dict2items }}"
         loop_control:
             loop_var: sg
         when: security_groups is defined and provision.anti.spoofing == true
