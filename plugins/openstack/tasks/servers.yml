@@ -73,6 +73,7 @@
       reuse: yes
       # always wait for floating ip
       wait: yes
+      timeout: "{{ provision.os.server.timeout | int }}"
   register: floating_ips
   with_items: "{{ servers.results | map(attribute='server') | list }}"
 
