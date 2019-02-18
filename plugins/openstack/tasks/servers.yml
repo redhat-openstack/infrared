@@ -72,8 +72,9 @@
       state: present
       # always wait for floating ip
       wait: yes
+      timeout: "{{ provision.os.server.timeout | int }}"
   register: floating_ips
-  with_items: "{{ servers.results | map(attribute='server') | list }}"
+  with_items: "{{ server_list }}"
 
 - name: Get flavor facts
   os_flavor_facts:
