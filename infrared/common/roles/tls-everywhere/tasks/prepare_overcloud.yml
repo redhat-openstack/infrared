@@ -7,6 +7,11 @@
         src: cloud-names.yaml.j2
         dest: "{{ freeipa_templates_basedir }}/cloud-names.yaml"
 
+  - name: Generate public_vip.yml
+    template:
+        src: public_vip.yaml.j2
+        dest: "{{ freeipa_templates_basedir }}/public_vip.yaml"
+
   - name: Assign dns as freeipa node to ctrlplane-subnet
     shell: |
         source {{ freeipa_undercloud_rc }}
@@ -59,6 +64,7 @@
         - "{{ freeipa_heat_templates_basedir }}/environments/services/haproxy-public-tls-certmonger.yaml"
         - "{{ freeipa_heat_templates_basedir }}/environments/ssl/enable-internal-tls.yaml"
         - "{{ freeipa_templates_basedir }}/cloud-names.yaml"
+        - "{{ freeipa_templates_basedir }}/public_vip.yaml"
 
   delegate_to: "{{ freeipa_undercloud_node }}"
 
