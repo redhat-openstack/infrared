@@ -175,6 +175,9 @@
         retries: 6
         delay: 30
 
+      - name: Remove CEPH repository
+        command: sudo rm -rf /etc/yum.repos.d/*ceph*
+
       - name: install the oscplugin/tripleO client
         package:
             name: "{{ (install.version|openstack_release == 7) | ternary('python-rdomanager-oscplugin', 'python-tripleoclient') }}"
