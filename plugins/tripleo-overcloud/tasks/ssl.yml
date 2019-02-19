@@ -1,3 +1,10 @@
+- name: Add overcloud public IP to ssl configuration
+  ini_file:
+      path: /etc/pki/tls/openssl.cnf
+      section: ' v3_ca '
+      option: subjectAltName
+      value: "IP:{{external_allocation_pool_start}}"
+
 - name: Set undercloud/overcloud certificate path fact
   set_fact:
       undercloud_cacert: '/etc/pki/ca-trust/source/anchors/undercloud-cacert.pem'
