@@ -1,3 +1,20 @@
+- name: extract our external allocation pools start value
+  command: "cat {{ template_base }}/network/{{ network_environment_file }}"
+  register: network_env
+  when: "not 'bmc' in groups"
+
+- name: get IP address of VIP
+  set_fact:
+      external_allocation_pool_start: "{{ (network_env.stdout | from_yaml).parameter_defaults.ExternalAllocationPools[0].start }}"
+  when: "not 'bmc' in groups"
+
+- name: Add overcloud public IP to ssl configuration
+  ini_file:
+      path: /etc/pki/tls/openssl.cnf
+      section: ' v3_ca '
+      option: subjectAltName
+      value: "IP:{{external_allocation_pool_start}}"
+
 - name: Set undercloud/overcloud certificate path fact
   set_fact:
       undercloud_cacert: '/etc/pki/ca-trust/source/anchors/undercloud-cacert.pem'
@@ -37,15 +54,6 @@
   command: "openssl genrsa -out {{ template_base }}/overcloud-privkey.pem 2048"
   when: not undercloud_ssl.rc == 0
 
-- name: extract our external allocation pools start value
-  command: "cat {{ template_base }}/network/{{ network_environment_file }}"
-  register: network_env
-  when: "not 'bmc' in groups"
-
-- name: get IP address of VIP
-  set_fact:
-      external_allocation_pool_start: "{{ (network_env.stdout | from_yaml).parameter_defaults.ExternalAllocationPools[0].start }}"
-  when: "not 'bmc' in groups"
 
 # NOTE(oanufrii): OVB deployment does not use network isolation
 #                 we don't copy any network related files to undercloud,
