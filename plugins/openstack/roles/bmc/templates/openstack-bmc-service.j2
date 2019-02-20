@@ -3,7 +3,7 @@ Description=openstack-bmc {{ node }} Service
 Requires=config-bmc-ips.service
 After=config-bmc-ips.service
 [Service]
-ExecStart=/usr/local/bin/openstackbmc --os-user {{ cloud_auth_info.username }} --os-password {{ cloud_auth_info.password }} --os-tenant {{ cloud_auth_info.project_name }} --os-auth-url {{ cloud_auth_info.auth_url }} --instance {{ node }} --address {{ server_info.addresses[bmc_ipmi_network_name][0].addr }}
+ExecStart=/usr/local/bin/openstackbmc --os-cloud bmc --instance {{ node }} --address {{ server_info.addresses[bmc_ipmi_network_name][0].addr }}
 User=root
 StandardOutput=kmsg+console
 StandardError=inherit
