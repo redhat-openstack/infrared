@@ -75,13 +75,22 @@
       dest: "{{ template_base }}/network/dvr-override.yaml"
   when: install.network.dvr
 
-- name: Append the dvr template line to the base overcloud deploy script
+- name: Append neutron-ovs to overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/services/neutron-ovs.yaml \'
+  when:
+      - install.network.ovs and not install.network.dvr
+      - install.version|default(undercloud_version)|openstack_release >= 15
+
+- name: Append neutron-ovs-dvr to overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/neutron-ovs-dvr.yaml \'
   when:
       - install.network.dvr
-      - not install.network.ovn
+      - (install.network.ovs and install.version|default(undercloud_version)|openstack_release >= 15) or
+        (not install.network.ovn and install.version|default(undercloud_version)|openstack_release < 15)
 
 - name: Append the l2gw template line to the base overcloud deploy script
   lineinfile:
