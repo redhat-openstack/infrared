@@ -22,6 +22,30 @@
       "revId": "15be7f29fc57903a6ab8aa4fcf94cfc8ac442616",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "985ab6f3_dd4b2c3d",
+        "filename": "plugins/openstack/roles/bmc/tasks/main.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1000857
+      },
+      "writtenOn": "2019-02-20T11:58:14Z",
+      "side": 1,
+      "message": "The BMC services run as root currently (this was already the case before this patch), so they use root\u0027s clouds.yml. We cannot put the file anywhere else, and we also shouldn\u0027t make it available to any user which is not running the BMC services, as the file contains sensitive auth info.\n\nWhat i\u0027d see as a perhaps worthwhile optimization is running the BMC services as non-root user, but that is unrelated to this change and if we want to do that, it should be a separate patch.\n\nUnless we expect that root user home directory could be elsewhere than /root (i\u0027ve never seen that), then i don\u0027t think using a variable here would add anything.",
+      "parentUuid": "3878801d_7c71c8f1",
+      "range": {
+        "startLine": 123,
+        "startChar": 10,
+        "endLine": 123,
+        "endChar": 15
+      },
+      "revId": "15be7f29fc57903a6ab8aa4fcf94cfc8ac442616",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
