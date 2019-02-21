@@ -1,11 +1,19 @@
 ---
 - block:
+  - name: Install deltarpm
+    become: yes
+    package:
+      name: 'deltarpm'
+      state: present
+    when:
+        - ansible_distribution in ['CentOS', 'RedHat']
+        - ansible_distribution_major_version < '8'
+
   - name: Install packages
     become: yes
-    yum:
+    package:
       name:
         - 'net-tools'
-        - 'deltarpm'
         - "{{ freeipa_epel_repo_url }}"
       state: present
 
