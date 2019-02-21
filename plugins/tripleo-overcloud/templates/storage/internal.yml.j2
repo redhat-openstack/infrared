@@ -1,4 +1,5 @@
 parameter_defaults:
+    CephAnsiblePlaybookVerbosity: 3
     CinderEnableIscsiBackend: false
     CinderEnableRbdBackend: true
     CinderEnableNfsBackend: false
@@ -18,12 +19,42 @@ parameter_defaults:
 {% if install.splitstack|default(False) %}
             - '/dev/vdb'
 {% else %}
+{% if install.version|default(undercloud_version)|openstack_release >= 13%}
+{% if install.ceph.osd.type|default('bluestore') == 'bluestore' %}
 {% for disk in storage_node_disks[1:] %}
             - '/dev/{{ disk }}'
 {% endfor %}
+        osd_scenario: lvm
+        osd_objectstore: bluestore
+{% elif install.ceph.osd.type == 'filestore' %}{# not bluestore selected #}
+{# handle the two filestore cases after declaration of osd types and scenarios #}
+{% if install.ceph.osd.scenario|default('collocated') ==  'collocated' %}
+{% for disk in storage_node_disks[1:] %}
+            - '/dev/{{ disk }}'
+{% endfor %}
+{% elif install.ceph.osd.scenario == 'non-collocated' %}
+{% for disk in storage_node_disks[1:-1] %}
+            - '/dev/{{ disk }}'
+{% endfor %}
+        dedicated_devices:
+{% for disk in storage_node_disks[1:-1] %}
+            - '/dev/{{ storage_node_disks[-1] }}'
+{% endfor %}
+{% endif %}{# filestore-collocated or non-collocated #}
+        osd_scenario: {{ install.ceph.osd.scenario }}
+        osd_objectstore: {{ install.ceph.osd.type|default('collocated') }}
+{% endif %} {# bluestore if #}
+{% else %}{# version is smaller than 13. means version 12 because 11 and below are handled as puppet below #}
+{# in v 12 will default to a collocated scenario utillizing all devices beyond vda explicitly #}
+{% for disk in storage_node_disks[1:] %}
+            - '/dev/{{ disk }}'
+{% endfor %}
+        journal_collocation: true
+{% endif %}
 {% endif %}{# end of install.splitstack #}
+
         journal_size: 512
-        osd_scenario: collocated
+
 {% else %}
     ExtraConfig:
       ceph::profile::params::osd_pool_default_pg_num: 32
