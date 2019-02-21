@@ -9,6 +9,13 @@
 {%- endif %}
 {%- if hostvars[host]['ansible_ssh_common_args'] is defined %} ansible_ssh_common_args='{{ hostvars[host]['ansible_ssh_common_args'] }}'
 {%- endif %}
+
+{%- if hostvars[host]['ansible_python_interpreter'] is defined %}
+ ansible_python_interpreter='{{ hostvars[host]['ansible_python_interpreter'] }}'
+{%- elif hostvars[host]['ansible_distribution']|default('') in ('CentOS', 'Red Hat Enterprise Linux') and hostvars[host]['ansible_distribution_major_version']|default('9999') < '8' %}
+ ansible_python_interpreter='/usr/bin/python3'
+{%- endif -%}
+
 {% endif %}
 {% endfor %}
 
