@@ -44,7 +44,6 @@
   package:
       name: /tmp/rhos-release-latest.rpm
       state: present
-      use: yum
   become: true
 
 - name: remove rhos-release repos if needed
@@ -116,7 +115,7 @@
   when: "mirror_fqdn|default('')"
   become: true
 
-- name: refresh yum cache
+- name: refresh repository cache
   package:
       name: kernel
       state: present

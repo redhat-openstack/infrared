@@ -72,7 +72,6 @@
   package:
       name: /tmp/rhos-release-latest.rpm
       state: present
-      use: yum
   become: true
   become_user: root
   when: 'not rr_skip_install_if_present or "rhos-release not_installed" in rr_pre_installed.stdout'
@@ -173,7 +172,7 @@
   command: yum clean all
   when: ansible_os_family == "RedHat"
 
-- name: refresh yum cache
+- name: refresh repository cache
   package:
       name: kernel
       state: present
