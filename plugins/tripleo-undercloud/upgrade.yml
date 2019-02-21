@@ -49,6 +49,8 @@
             - upgrade
         yum:
             name: python-tripleoclient
+            # FIXME(psedlak?): how upgrade will handle this ... uninstall python2 and install python3 or?
+            # name: "{{ (install.version|openstack_release < 15) | ternary('python-tripleoclient', 'python3-tripleoclient') }}"
             state: latest
         when: undercloud_version|openstack_release >= 13
 

@@ -107,6 +107,7 @@
         package:
             state: present
             name: deltarpm
+        when: (ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux') and ansible_distribution_major_version < '8'
 
       - name: update system packages
         package:
@@ -177,5 +178,5 @@
 
       - name: install the oscplugin/tripleO client
         package:
-            name: "{{ (install.version|openstack_release == 7) | ternary('python-rdomanager-oscplugin', 'python-tripleoclient') }}"
+            name: "{{ (install.version|openstack_release == 7) | ternary('python-rdomanager-oscplugin', (install.version|openstack_release < 15) | ternary('python-tripleoclient', 'python3-tripleoclient')) }}"
             state: present

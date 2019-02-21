@@ -5,7 +5,7 @@
   any_errors_fatal: true
   vars:
       - conf: "{{ install.config|default({}) }}"
-      - default_conf: "{{ (install.version|openstack_release <= 13|ternary('/usr/share/instack-undercloud/undercloud.conf.sample', '/usr/share/python-tripleoclient/undercloud.conf.sample') }}"
+      - default_conf: "{{ (install.version|openstack_release <= 13) | ternary('/usr/share/instack-undercloud/undercloud.conf.sample', (install.version|openstack_release < 15) | ternary('/usr/share/python-tripleoclient/undercloud.conf.sample', '/usr/share/python3-tripleoclient/undercloud.conf.sample')) }}"
       - local_src: "{%- if conf.file|default('') -%}
                 {{ conf.file }}
                 {%- elif 'hypervisor' in groups.all or 'bmc' in groups -%}

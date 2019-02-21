@@ -27,6 +27,7 @@
             name: "deltarpm"
             state: latest
         become: yes
+        when: (ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux') and ansible_distribution_major_version < '8'
 
       - name: update all the packages
         package:
