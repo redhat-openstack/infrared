@@ -408,6 +408,11 @@ subparsers:
                       default: no
                       help: Use OVN (HA) instead of ML2 and OVS.
 
+                  network-ovs:
+                      type: Bool
+                      default: no
+                      help: Use ML2/OVS instead of OVN which is the default for RDO Stein / OSP 15.
+
                   custom_network_names:
                       type: Value
                       help: |
