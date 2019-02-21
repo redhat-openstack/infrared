@@ -79,6 +79,26 @@
   async: 7200
   poll: 0
 
+#- name: detect python interpreter path
+#  vars:
+#      disk_name: "disk1"
+#      disk_values: "{{ topology_node.disks['disk1'] }}"
+#  shell: |
+#      echo -n "{{ topology_node.name }}-{{ item }}"
+#      virt-cat  \
+#          {% if disk_values.import_url is defined and disk_values.import_url %}
+#           {{ base_image_path }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2
+#          {% else %}
+#           {{ disk_pool }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2
+#          {% endif -%}
+#          /etc/os-release | sed -nr 's/VERSION_ID="([0-9]+).*"/\1/p'
+#  register: os_version
+#  when: (topology_node.disks|count > 0) and (topology_node.deploy_os|default(True))
+#  with_sequence: start={{ node_start_index|int }} end={{ topology_node.num|int + node_start_index|int - 1 }}
+#
+#- debug:
+#    msg: "{{ os_version }}"
+
 - name: save install jids
   set_fact:
       async_install: "{{ async_install|default([]) + vm_install.results|map(attribute='ansible_job_id')|list }}"

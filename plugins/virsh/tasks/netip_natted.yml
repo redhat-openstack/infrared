@@ -29,6 +29,24 @@
   when: item.value.ip is defined
   with_dict: "{{ vm_inv_info }}"
 
+- name: detect python interpreter
+  vars:
+      sshkey: "{{ inventory_dir }}/id_rsa"
+      sshopts: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+      proxyhost: "{{ ansible_user|default(ansible_ssh_user) }}@{{ ansible_host|default(ansible_ssh_host) }}"
+  shell: |
+      ssh -o BatchMode=yes {{ sshopts }} \
+      -o ProxyCommand="ssh -W %h:%p -i {{ sshkey }} {{ proxyhost }}" \
+      -i {{ sshkey }} root@{{ item.value.ip }} 'command -v python python3 /usr/libexec/platform-python|head -n1'
+  delegate_to: localhost
+  when: (item.value.deploy_os|default(True)) and (item.value.ip is defined)
+  register: py_interpreter
+  with_dict: "{{ vm_inv_info }}"
+
+- debug:
+      msg: "{{ item.key }}:  {{ ( py_interpreter.results | selectattr('item.key', 'equalto', item.key) | first | default('') ) }}"
+  with_dict: "{{ vm_inv_info }}"
+
 - name: add hosts to host list
   add_host:
       name: "{{ item.key }}"
@@ -38,6 +56,7 @@
       ansible_ssh_private_key_file: "{{ inventory_dir }}/id_rsa"
       # Set 'ansible_connection' explicitly here, because in vms_2_install.yaml it was initially set to 'local'.
       ansible_connection: "ssh"
+      ansible_python_interpreter: "{{ ( ( py_interpreter.results | selectattr('item.key', 'equalto', item.key) | first | default(None) )['stdout'] | default('') ) | trim | default(omit, true) }}"
       ansible_ssh_common_args: "
           -o BatchMode=yes
           -o ForwardAgent=yes
@@ -49,6 +68,12 @@
           -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -i {{ ansible_ssh_private_key_file }} {{ ansible_user|default(ansible_ssh_user) }}@{{ ansible_host|default(ansible_ssh_host) }}\""
       inventory_dir: "{{ inventory_dir }}"
   with_dict: "{{ vm_inv_info }}"
+
+#- name: get facts from reachable vms
+#  setup:
+#  delegate_to: "{{ item.key }}"
+#  when: item.value.deploy_os
+#  with_dict: "{{ vm_inv_info }}"
 
 - include_role:
       name: inventory-update

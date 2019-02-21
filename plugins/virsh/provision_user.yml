@@ -18,16 +18,25 @@
         delegate_to: hypervisor
         tags: vms
 
-      - name: check os version
-        raw: cat /etc/redhat-release | sed 's/[^0-9]*//g' | sed 's/\(.\{1\}\)\(.\{1\}\)/\1.\2/'
-        register: os_version
+      #- name: detect python interpreter
+      #  raw: command -v python python3 /usr/libexec/platform-python | head -n1
+      #  register: py_interpreter
+
+      #- debug:
+      #    var: py_interpreter
+
+      #- name: check os version
+      #  raw: cat /etc/redhat-release | sed 's/[^0-9]*//g' | sed 's/\(.\{1\}\)\(.\{1\}\)/\1.\2/'
+      #  register: os_version
+
       when: inventory_hostname not in groups.overcloud_nodes|default([])
 
-    - name: "create soft link to python"
-      raw: ln -s /usr/libexec/platform-python /usr/bin/python
-      when:
-        - inventory_hostname not in groups.overcloud_nodes|default([])
-        - os_version.stdout|int >= 8
+
+    #- name: "create soft link to python"
+    #  raw: ln -s /usr/libexec/platform-python /usr/bin/python3
+    #  when:
+    #    - inventory_hostname not in groups.overcloud_nodes|default([])
+    #    - os_version.stdout|int >= 8
 
     - block:
       # When we extend topology, these tasks will run also on old nodes and we don't want that.
