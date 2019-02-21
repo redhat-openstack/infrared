@@ -63,8 +63,8 @@
             {% if disk_name == 'disk1' and topology_node.deploy_os|default(True) and topology_node.supports_libguestfs|default(True) -%}
             # expand (copy-content) into new image in case of system disk
             # virt-resize needs target file with expected size to already exists
-            os_version=`virt-cat -a {{ base_image_path }}/{{ image_name }} /etc/os-release | awk '/^VERSION=/ {print $1}' | grep -oP '[0-9]+' | head -1`
-            [[ $os_version -ge "8" ]] && partition="/dev/sda3" || partition="/dev/sda1"
+            #os_version=`virt-cat -a {{ base_image_path }}/{{ image_name }} /etc/os-release | awk '/^VERSION=/ {print $1}' | grep -oP '[0-9]+' | head -1`
+            partition="/dev/sda1"
             virt-resize --expand $partition {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
             # incjet DEFROUT to file and set it on for external network only
             virt-customize -a {{ disk_pool }}/{{ node_image }} \
