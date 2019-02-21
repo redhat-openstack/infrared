@@ -1,4 +1,19 @@
 ---
+- name: Update kernel and reboot undercloud for FFWD
+  block:
+    - name: Update kernel for FFWD
+      become: true
+      yum:
+          name: "kernel*"
+          state: latest
+
+    - name: reboot undercloud for FFWD
+      import_tasks: tasks/undercloud_reboot.yml
+
+  when:
+    - undercloud_version|openstack_release == 10
+    - ffwd_kernel_reboot|default(false)|bool
+
 - name: Update packages prior upgrade
   become: true
   yum:
@@ -64,36 +79,8 @@
   shell: "openstack undercloud upgrade &> undercloud_{{ operation_type }}.log"
   when: undercloud_version|openstack_release > 7 or (not install.get('update', {}).undercloud|default(False))
 
-- name: Reboot the Undercloud
-  become: true
-  shell: "sleep 2 && shutdown -r now"
-  async: 1
-  poll: 0
-  ignore_errors: true
-  tags: undercloud_reboot
-
-- block:
-      - name: waiting for the undercloud to be available
-        wait_for:
-            port: 22
-            host: "{{ ansible_host }}"
-            search_regex: OpenSSH
-            delay: 10
-            timeout: 360
-            sleep: 3
-        delegate_to: localhost
-        when: "'hypervisor' not in groups"
-
-      - name: waiting for the undercloud to be available
-        become: no
-        wait_for:
-            host: "{{ ansible_host }}"
-            search_regex: OpenSSH
-            delay: 10
-            timeout: 360
-            sleep: 3
-        delegate_to: hypervisor
-        when: "'hypervisor' in groups"
+- name: reboot undercloud
+  import_tasks: tasks/undercloud_reboot.yml
   tags: undercloud_reboot
 
 # todo(dtodorov): remove once rhbz#1460116 is resolved. Shell is used for more debug
