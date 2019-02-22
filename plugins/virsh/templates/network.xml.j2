@@ -14,6 +14,19 @@
     {% endif %}
   </ip>
     {% endif %}
+  {% if item.value.domain is defined %}
+    <domain name='{{ item.value.domain }}' localOnly='yes'/>
+  {% endif %}
+
+  {% if item.value.dns is defined %}
+    <dns>
+    {% if item.value.dns.srvs is defined %}
+      {% for srv in item.value.dns.srvs %}
+      <srv service='{{ srv.name }}' protocol='{{ srv.protocol }}' domain='{{ srv.domain }}' port='{{ srv.port }}' target='{{ srv.target }}' />
+      {% endfor %}
+    {% endif %}
+    </dns>
+  {% endif %}
 
   {% if item.value.ipv6 is defined %}
   <ip family="ipv6" address="{{ item.value.ipv6.ip_address }}" prefix="{{ item.value.ipv6.prefix }}" >
