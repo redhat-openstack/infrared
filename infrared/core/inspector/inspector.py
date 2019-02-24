@@ -258,21 +258,33 @@ class SpecParser(object):
 
         return file_generated
 
-    def resolve_custom_types(self, args, custom_args):
+    def resolve_custom_types(self, args, custom_args, custom_file):
         """
         Transforms the arguments with custom types
         :param args: the list of received arguments.
         :param custom_args: the list of custom arguments received.
+        :param custom_file: the list of custom arguments recieved from file.
         """
 
-        # If custom arguments exist, populate args with custom values
+        custom_resolve = {}
+
+        # If custom CLI arguments exist, populate args with custom values
         if custom_args:
             parser = args.keys()[0]
             for arg in custom_args:
-                custom_arg = {}
-                custom_value = custom_args[arg].values()[0]
-                custom_arg[arg] = custom_value
+                custom_arg = {
+                    arg: custom_args[arg].values()[0]
+                }
                 args[parser].update(custom_arg)
+
+        # If custom file arguments exist, populate args with custom values
+        if custom_file:
+            parser = args.keys()[0]
+            for arg in custom_file:
+                custom_file_arg = {
+                    arg: custom_file[arg]
+                }
+                args[parser].update(custom_file_arg)
 
         for parser_name, parser_dict in args.items():
             spec_complex_options = [opt for opt in
@@ -293,10 +305,35 @@ class SpecParser(object):
 
                     # resolving value
                     parser_dict[option_name] = action.resolve(option_value)
+                    # Save ComplexTypes resolve for custom args
+                    custom_resolve[option_name] = parser_dict[option_name]
 
-        # If custom arguments exist, pop custom values form cli_args
+                # If custom ansible_variable from answers file was supplied, resolve it
+                elif 'ansible_variable' in spec_option and spec_option['ansible_variable'] in parser_dict:
+                    custom_option = spec_option['ansible_variable']
+                    type_name = spec_option['type']
+                    option_value = parser_dict[custom_option]
+                    action = self.create_complex_argumet_type(
+                        parser_name,
+                        type_name,
+                        option_name,
+                        spec_option)
+
+                    # resolving value
+                    custom_resolve[custom_option] = action.resolve(option_value)
+
+        # If custom arguments or custom file exist, pop custom values form cli_args
         if custom_args:
             for arg in custom_args:
+                custom_args[arg] = custom_resolve[arg]
+                args[parser].pop(arg, None)
+
+        # If custom arguments from file exist, pop custom values form cli_args
+        if custom_file:
+            for arg in custom_file:
+                # Allows values from files to be overriden by CLI
+                if arg in custom_resolve:
+                    custom_file[arg] = custom_resolve[arg]
                 args[parser].pop(arg, None)
 
     def create_complex_argumet_type(self, subcommand, type_name, option_name,
@@ -332,6 +369,8 @@ class SpecParser(object):
 
         spec_defaults, custom_spec_defaults = self.get_spec_defaults()
         cli_args, custom_cli_args = CliParser.parse_cli_input(arg_parser, args)
+
+        helper_custom_cli_args = dict(custom_cli_args)
 
         # parse custom ansible variables and their values
         custom_parsed_cli_args = {}
@@ -369,7 +408,6 @@ class SpecParser(object):
         # combine custom cli commands with custom file parsing if needed
         if custom_file_args:
             custom_file_args.update(custom_parsed_cli_args)
-            custom_parsed_cli_args
             custom_parsed_cli_args = custom_file_args
 
         dict_utils.dict_merge(defaults, cli_args)
@@ -379,8 +417,16 @@ class SpecParser(object):
         self.validate_min_max_args(defaults)
 
         # now resolve complex types.
-        self.resolve_custom_types(defaults, custom_cli_args)
+        self.resolve_custom_types(defaults, custom_cli_args, custom_file_args)
         nested, control = self.get_nested_and_control_args(defaults)
+
+        # populate custom cli args with resolved complextypes when parsing from CLI
+        if helper_custom_cli_args:
+            for helper_arg in helper_custom_cli_args:
+                resolved_custom_value = custom_cli_args[helper_arg]
+                for custom_variable in helper_custom_cli_args[helper_arg]:
+                    custom_parsed_cli_args[custom_variable] = resolved_custom_value
+
         return nested, control, custom_parsed_cli_args
 
     def validate_arg_deprecation(self, cli_args, answer_file_args):
