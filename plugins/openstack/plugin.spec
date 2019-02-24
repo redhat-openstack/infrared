@@ -53,6 +53,11 @@ subparsers:
                           Network resources
                           __LISTYAMLS__
                       default: 3_nets
+                  provider-network:
+                      type: Value
+                      help: |
+                          Provider network name to use for external connectivity
+                      default: ''
                   topology-nodes:
                       type: ListOfTopologyFiles
                       help: |
