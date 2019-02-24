@@ -9,7 +9,7 @@ networks_vars:
             name: 'external'
         management:
             name: 'management'
-    provider_network: {}
+    provider_network: "{{ (provision.provider|defaults({})).network|default({}) }}"
         # fill in the name, otherwise it will be autoselected
         # name: provider_net
 
