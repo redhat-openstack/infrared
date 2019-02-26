@@ -1,0 +1,48 @@
+version: 2
+jobs:
+  build:
+    docker: &docker
+      - image: fedora:latest
+    steps:
+      - checkout
+  py27: &test
+    docker: *docker
+    steps:
+      - run:
+          name: Update system
+          command: dnf update -y
+      - run:
+          name: Install system dependencies
+          command: >-
+            dnf install -y python2 gcc python2-devel python3-devel
+            python{2,3}-libselinux libyaml-devel python3-tox python{2,3}-pbr
+            git openssh-clients
+      - checkout
+      - run:
+          name: Run tox tests
+          command: |
+            tox -e "${CIRCLE_JOB}"
+  pep8: *test
+  ansible-lint: *test
+  any-errors-fatal: *test
+  cli: *test
+  conflicts: *test
+  plugin-registry: *test
+  docs: *test
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - build
+        # Fan out to run these in parallel
+      - py27: &toxstep
+          requires:
+            - build
+      - pep8: *toxstep
+      - ansible-lint: *toxstep
+      - any-errors-fatal: *toxstep
+      - cli: *toxstep
+      - conflicts: *toxstep
+      - plugin-registry: *toxstep
+      - docs: *toxstep
