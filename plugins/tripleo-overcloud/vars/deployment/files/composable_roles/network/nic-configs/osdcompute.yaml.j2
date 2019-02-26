@@ -64,6 +64,14 @@ parameters:
     description: The IP address of the EC2 metadata server.
     type: string
 {% if install.version|openstack_release >= 15 %}
+  ControlPlaneStaticRoutes:
+    default: []
+    description: >
+      Routes for the ctlplane network traffic.
+      JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
+      Unless the default is changed, the parameter is automatically resolved
+      from the subnet host_routes attribute.
+    type: json
   ControlPlaneMtu:
     default: 1500
     description: The maximum transmission unit (MTU) size(in bytes) that is
