@@ -20,10 +20,10 @@
   vars:
       ceph_client: "{{ groups['controller']|first }}"
   tasks:
+      - set_fact:
+            overcloud_rc: "/home/stack/{{ install.overcloud.stack }}rc"
       # Evacuate compute node before reboot
       - block:
-          - set_fact:
-                overcloud_rc: "/home/stack/{{ install.overcloud.stack }}rc"
 
           - name: Register storage backend type
             shell: |
@@ -395,6 +395,35 @@
             - "'ceph' in group_names"
             - "groups['ceph']|difference(groups['unused']|default([]))|length >= 3"
             - overcloud_version|int >= 14
+
+      - name: Assert nova-compute and Open vSwitch agent are up after reboot
+        block:
+          - name: Register hypervisor name fqdn
+            shell: |
+                source {{ overcloud_rc }}
+                openstack hypervisor list -f value -c 'Hypervisor Hostname' | grep {{ inventory_hostname }}
+            register: compute_fqdn
+
+          - name: Waiting for nova-compute service to go up
+            shell: |
+                source {{ overcloud_rc }}
+                openstack compute service list --host {{ compute_fqdn.stdout }} -f json | jq -r -c '.[] | select(.Binary | contains("nova-compute")) | .State' | tr A-Z a-z
+            register: nova_compute_up
+            until: nova_compute_up.stdout.find('up') > -1
+            retries: 60
+            delay: 5
+
+          - name: Waiting for OVS agent on compute node to come up
+            shell: |
+                source {{ overcloud_rc }}
+                openstack network agent list --host {{ compute_fqdn.stdout }} -f json | jq -r -c '.[] | select(.Binary | contains("neutron-openvswitch-agent")) | .Alive'
+            register: nova_ovs_up
+            until: nova_ovs_up.stdout.find(':-)') > -1
+            retries: 60
+            delay: 5
+        delegate_to: "{{ groups['undercloud']|first }}"
+        when:
+          - "'compute' in group_names"
 
       - name: migrate instance back to {{ compute_fqdn.stdout }}
         shell: |
