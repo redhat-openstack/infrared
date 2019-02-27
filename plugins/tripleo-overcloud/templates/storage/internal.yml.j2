@@ -18,6 +18,8 @@ parameter_defaults:
         devices:
 {% if install.splitstack|default(False) %}
             - '/dev/vdb'
+        osd_scenario: lvm
+        osd_objectstore: bluestore
 {% else %}
 {% if install.version|default(undercloud_version)|openstack_release >= 13%}
 {% if install.ceph.osd.type|default('bluestore') == 'bluestore' %}
