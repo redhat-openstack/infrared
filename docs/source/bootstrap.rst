@@ -19,10 +19,16 @@ Setup virtualenv and `install <setup.html#Installation>`_ from source using pip:
 
 .. warning:: It's important to upgrade ``pip`` first, as default ``pip`` version in RHEL (1.4) might fail on dependencies
 .. note:: `infrared` will create a default `workspace <workspace.html#workspace>`_ for you. This workspace will manage your environment details.
-.. note:: For development work it's better to install in editable
-    mode and work with master branch::
 
-      pip install -e .
+Development
+-----------
+For development work it's better to install in editable mode and work with master branch::
+
+  pip install -e .
+
+Change default `IR_HOME <configuration.html#configuration>`_ variable to point to Infrared directory::
+
+  export IR_HOME=/path/to/infrared/directory/
 
 Provision
 ---------
