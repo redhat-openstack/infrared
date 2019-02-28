@@ -68,7 +68,7 @@ subparsers:
                       type: Value
                       help: The product version
                       required: yes
-                      choices: ["6", "7", "8", "9", "10", "11", "12", "13","14", "15", "juno", "kilo", "liberty", "mitaka", "newton", "ocata", "pike", "queens", "rocky", "stein"]
+                      choices: ["6", "7", "8", "9", "10", "11", "12", "13","14", "15", "15-trunk", "juno", "kilo", "liberty", "mitaka", "newton", "ocata", "pike", "queens", "rocky", "stein"]
                   build:
                       type: Value
                       help: The product build
