@@ -160,7 +160,7 @@ def _parse_output(module, cmd, stdout):
 
     def released(line):
         pattern = re.compile(r'(?P<start># rhos-release )'
-                             r'(?P<release>\d+)\s*'
+                             r'(?P<release>\d+)(?P<trunk>(-trunk)?)\s*'
                              r'(?P<director>-director)?\s*'
                              r'(?P<poodle>-d)?\s*'
                              r'(-p (?P<version>\S*))?'
