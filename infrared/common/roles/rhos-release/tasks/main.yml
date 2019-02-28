@@ -137,11 +137,29 @@
   set_fact:
       core_puddle_version: "{{ command_result.releases.core.version }}"
 
-- name: "check if specified puddle {{ build }} exists in release {{ release }}"
-  fail:
-      msg: "The specified puddle {{ build }} does not exist in {{ release }}"
-  when: command_result.releases.core.version is not search("\d")
-  # If puddle version is 'undetermined!' (it has no digit), task should fail.
+# - name: "check if specified puddle {{ build }} exists in release {{ release }}"
+#   fail:
+#       msg: "The specified puddle {{ build }} does not exist in {{ release }}"
+#   when: command_result.releases.core.version is not search("\d")
+#   # If puddle version is 'undetermined!' (it has no digit), task should fail.
+# 
+
+# For OSP 15-trunk output is now as follows, so above check fails on it
+# Needed is to update any/all regexp/patterns here or even inside rhos-release task
+# to be compatible with it.
+## STDOUT:
+## 
+## Installed: /etc/yum.repos.d/rhos-release-rhel-8.0.repo
+## Installing wget...
+## No default Ceph for OSP 15-trunk
+## Installed: /etc/yum.repos.d/rhos-release-15-trunk.repo
+## # rhos-release 15-trunk  -p RHOS_TRUNK-15.0-RHEL-8-20190226.n.2
+## Installed: /etc/yum.repos.d/rhos-release-15-trunk.repo
+#
+#
+# Previously the ouput line was as:
+## # rhos-release 14   -p 2019-02-27.1
+
 
 - name: write version to file
   copy:

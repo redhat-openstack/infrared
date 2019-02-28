@@ -140,6 +140,7 @@ subparsers:
                         - "13"
                         - "14"
                         - "15"
+                        - "15-trunk"
                         - kilo
                         - liberty
                         - mitaka
