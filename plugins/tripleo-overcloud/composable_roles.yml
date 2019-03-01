@@ -15,8 +15,9 @@
       - deploy_preparation
   tasks:
       - name: register tht packages
-        yum:
+        package:
             list: openstack-tripleo-heat-templates
+        become: yes
         register: tht
 
       - set_fact:

@@ -3,7 +3,7 @@
   block:
     - name: Update kernel for FFWD
       become: true
-      yum:
+      package:
           name: "kernel*"
           state: latest
 
@@ -16,7 +16,7 @@
 
 - name: Update packages prior upgrade
   become: true
-  yum:
+  package:
       name: "*"
       state: latest
   when: undercloud_version|openstack_release == 7
@@ -44,7 +44,7 @@
 
       - name: Update packages prior upgrade
         become: true
-        yum:
+        package:
             name: "python-tripleoclient"
             state: latest
 
@@ -67,7 +67,7 @@
 
       - name: update packages prior upgrade
         become: true
-        yum:
+        package:
           name:
             - 'instack-undercloud'
             - 'openstack-puppet-modules'
