@@ -1,9 +1,10 @@
 ---
 - name: check repos
-  yum:
+  package:
       list: openstack-tripleo-common
   register: tripleo_source
   failed_when: tripleo_source.results|selectattr('yumstate', 'equalto', 'installed')|list|length == 0
+  become: yes
 
 - name: get installed package and find it in the available
   set_fact:
