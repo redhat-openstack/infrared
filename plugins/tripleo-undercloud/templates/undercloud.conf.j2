@@ -44,7 +44,11 @@ overcloud_domain_name={{ install.overcloud.domain }}
 {% if install.version|default(undercloud_version)|openstack_distribution == 'OSP' %}
 container_images_file={{ working_dir }}/containers-prepare-parameter.yaml
 {% endif %}
+{% if install.version|openstack_release < 15 %}
 docker_insecure_registries={{ install.registry.mirror }}
+{% else %}
+container_insecure_registries={{ install.registry.mirror }}
+{% endif %}
 {% endif %}
 [ctlplane-subnet]
 local_subnet = ctlplane-subnet
