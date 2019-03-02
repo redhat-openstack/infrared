@@ -6,6 +6,8 @@
 
 - name: unregister from all repos
   command: subscription-manager repos --disable=*
+  failed_when: (unregister_repos.rc != 0 and "'*' does not match a valid repository ID." not in unregister_repos.stdout)
+  register: unregister_repos
 
 - name: register to openstack repos
   vars:
