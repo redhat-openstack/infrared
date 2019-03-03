@@ -78,10 +78,15 @@ Install ``infrared`` from source::
   cd infrared
   pip install .
 
-.. note:: For development work it's better to install in editable
-    mode and work with master branch::
+Development
+-----------
+For development work it's better to install in editable mode and work with master branch::
 
-      pip install -e .
+  pip install -e .
+
+Change default `IR_HOME <configuration.html#configuration>`_ variable to point to Infrared directory::
+
+  export IR_HOME=/path/to/infrared/directory/
 
 Ansible Configuration
 ---------------------

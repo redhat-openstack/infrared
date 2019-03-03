@@ -41,11 +41,8 @@ class CoreSettings(object):
         unit tests, for example.
         """
 
-        # todo(obaranov) replace with
-        # todo(obaranov) os.path.join(os.path.expanduser("~"), '.infrared')
-        # todo(obaranov) once IR is packaged as pip
         self.infrared_home = os.path.abspath(os.environ.get(
-            "IR_HOME", os.getcwd()))
+            "IR_HOME", os.path.join(os.path.expanduser("~"), '.infrared')))
 
         # todo(obaranov) replace .workspaces to workspaces and .plugins.ini to
         # todo(obaranov) plugins.ini once IR is packaged as pip
