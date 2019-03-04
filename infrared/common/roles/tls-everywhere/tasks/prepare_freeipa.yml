@@ -9,6 +9,10 @@
         - "{{ freeipa_epel_repo_url }}"
       state: present
 
+  - name: enable rhelosp-rhel-7.6-server-opt repository
+    become: yes
+    shell: yum-config-manager --enable rhelosp-rhel-7.6-server-opt
+
   - name: Update repos
     become: yes
     shell: yum clean all
