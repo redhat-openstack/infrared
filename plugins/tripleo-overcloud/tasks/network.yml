@@ -42,6 +42,57 @@
      - install.get('custom_network_names',{})|default(False)
      - install.version|default(undercloud_version) | openstack_release >= 14
 
+- name: Upload network file for custom network topology
+  block:
+    - name: Override the default network_data.yaml
+      copy:
+          src: "{{ install.network.data.file }}"
+          dest: "{{ template_base }}/network/network_data.yaml"
+
+    - name: Append the network_data.yaml -n template line to the base overcloud deploy script
+      lineinfile:
+          state: present
+          dest: "~/overcloud_deploy.sh"
+          line: '-n {{ template_base }}/network/network_data.yaml \'
+
+    - name: Remove the network_data.yaml -e template line to the base overcloud deploy script
+      lineinfile:
+          state: absent
+          dest: "~/overcloud_deploy.sh"
+          line: '-e {{ template_base }}/network/network_data.yaml \'
+  when:
+     - install.get('network', {}).get('data', {}).file is defined
+     - install.version|default(undercloud_version) | openstack_release >= 13
+
+- name: Upload roles data file to add custom roles to deployment
+  block:
+    - name: Add roles data file
+      copy:
+          src: "{{ install.custom.data.roles.file }}"
+          dest: "{{ template_base }}/roles/roles_data.yaml"
+
+    - name: Append the roles_data.yaml to the base overcloud deploy script
+      lineinfile:
+          dest: "~/overcloud_deploy.sh"
+          line: '-r {{ template_base }}/roles/roles_data.yaml \'
+  when:
+     - install.get('custom', {}).get('data', {}).get('roles', {}).file is defined
+     - install.version|default(undercloud_version) | openstack_release >= 13
+
+- name: Replace network environment yaml file
+  block:
+    - name: Set network_environment_file name
+      set_fact:
+          network_environment_file: "network-environment"
+
+    - name: Copy network environment yaml
+      copy:
+          src: "{{ install.network.environment.file }}"
+          dest: "{{ template_base }}/network/{{ network_environment_file }}.yaml"
+  when:
+     - install.get('network', {}).get('environment', {}).file is defined
+     - install.version|default(undercloud_version) | openstack_release >= 13
+
 - name: Append the network template line for splitstack to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
