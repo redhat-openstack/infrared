@@ -413,6 +413,30 @@ subparsers:
                       default: no
                       help: Use ML2/OVS instead of OVN which is the default for RDO Stein / OSP 15.
 
+                  network-data-file:
+                      type: Value
+                      short: n
+                      help: |
+                          TripleO offers a default network topology when deploying with network isolation enabled,
+                          and this is reflected in the network_data.yaml file in tripleo-heat-templates.
+                          This parameter will override the default network_data.yaml to provide different type of network topology.
+                          Default Heat templates base directory is /usr/share/openstack-tripleo-heat-templates.
+                          Value example:
+                          --network-data-file /home/stack/virt/network_data_spine_leaf.yaml
+                          Can be used with new templates base directory:
+                          --heat-templates-basedir /path/to/openstack-tripleo-heat-templates
+
+                  network-environment-file:
+                      type: Value
+                      help: Option to provide custom network environment yaml file.
+
+                  custom-data-roles-file:
+                      type: Value
+                      short: r
+                      help: |
+                          Option to provide custom role data file.
+                          Create a roles data yaml file that contains the custom role in addition to the other roles that will be deployed.
+
                   custom_network_names:
                       type: Value
                       help: |
