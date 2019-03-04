@@ -4,7 +4,7 @@ config:
 subparsers:
     openstack:
         description: Provision systems using Ansible OpenStack modules
-        include_groups: ['Ansible options', 'Inventory', 'Common options', 'Answers file']
+        include_groups: ['Ansible options', 'Inventory', 'Common options', 'Common variables', 'Answers file']
         groups:
             - title: OpenStack Cloud Details
               options:

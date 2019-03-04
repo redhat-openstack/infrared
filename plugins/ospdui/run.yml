@@ -12,6 +12,7 @@
         pip:
             virtualenv: "{{ setup.ospdui.dir }}/.venv"
             name: "{{ item }}"
+            version: "{{ ir_default_pip_versions[item] | default(omit) }}"
             state: latest
         with_items:
             - pytest

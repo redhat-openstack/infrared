@@ -63,6 +63,7 @@
 - name: Install pip packages
   pip:
       name: "{{ item }}"
+      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
   with_items: "{{ bmc_pip }}"
 
 - name: Deploy openstackbmc
