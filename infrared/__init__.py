@@ -81,6 +81,37 @@ SHARED_GROUPS = [
                         'settings into (default: stdout)',
                 'short': 'o',
                 'type': 'str'
+            },
+        }
+    },
+    {
+        'title': 'Common variables',
+        'options': {
+            'default-pip-versions': {
+                'type': 'NestedDict',
+                'help': 'Infrared common pip packages versions'
+                        ' to be used by all plugins',
+                'ansible_variable': 'ir_default_pip_versions',
+                'default': 'pyghmi=1.2.16,'
+                           'pytest=4.3.0,'
+                           'pip=19.0.3,'
+                           'setuptools=40.8.0,'
+                           'pbr=5.1.3,'
+                           'requests=2.21.0,'
+                           'six=1.12.0,'
+                           'prettytable=0.7.2,'
+                           'cryptography=2.6.1,'
+                           'rally-openstack=1.3.0,'
+                           'openstacksdk=0.25.0,'
+                           'oslo\.utils=3.40.3,'
+                           'oslo\.i18n=3.23.1,'
+                           'kubernetes=8.0.1,'
+                           'os-testr=1.0.0,'
+                           'python-subunit=1.3.0,'
+                           'junitxml=0.7,'
+                           'unittest2=1.1.0,'
+                           'nose=1.3.7,'
+                           'Tempest=19.0.0'
             }
         },
     },

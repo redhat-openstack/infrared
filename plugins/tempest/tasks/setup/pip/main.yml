@@ -12,11 +12,12 @@
   yum:
       name: "{{ setup.packages }}"
       state: present
-- name: Create venv with latest pip, setuptools and pbr
+- name: Create venv with pip, setuptools and pbr
   pip:
       virtualenv: "{{ virtualenvs.tempest }}"
       virtualenv_site_packages: yes
       name: "{{ item }}"
+      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
       state: latest
   with_items:
       - pip
@@ -33,6 +34,7 @@
   pip:
       virtualenv: "{{ virtualenvs.tempest }}"
       name: "Tempest"
+      version: "{{ ir_default_pip_versions['Tempest'] | default(omit) }}"
       state: latest
   register: tempest_pip
 

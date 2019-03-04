@@ -19,10 +19,11 @@
       links: yes
   when: test.python_tempest_conf_dir is defined
 
-- name: Create tempest conf venv with latest pip, setuptools and pbr
+- name: Create tempest conf venv with pip, setuptools and pbr
   pip:
       virtualenv: "{{ virtualenvs.tempest_conf }}"
       name: "{{ item }}"
+      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
       state: latest
   with_items:
       - pip
