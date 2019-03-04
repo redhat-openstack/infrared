@@ -81,6 +81,19 @@ SHARED_GROUPS = [
                         'settings into (default: stdout)',
                 'short': 'o',
                 'type': 'str'
+            },
+        }
+    },
+    {
+        'title': 'Common variables',
+        'options': {
+            'default-pip-versions': {
+                'type': 'NestedDict',
+                'help': 'Infrared common pip packages versions'
+                        ' to be used by all plugins',
+                'ansible_variable': 'ir_default_pip_versions',
+                'default': 'pyghmi=1.2.16,'
+                           'pytest=4.3.0'
             }
         },
     },
