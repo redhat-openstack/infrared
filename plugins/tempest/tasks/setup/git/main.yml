@@ -42,10 +42,11 @@
 
 - debug: "msg='Build mark: tempest={{ tempest_repo_version.stdout }}'"
 
-- name: Create venv with latest pip, setuptools and pbr
+- name: Create venv with pip, setuptools and pbr
   pip:
       virtualenv: "{{ virtualenvs.tempest }}"
       name: "{{ item }}"
+      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
       state: latest
   with_items:
       - pip
@@ -64,6 +65,7 @@
   pip:
       name: "os-testr"
       virtualenv: "{{ virtualenvs.tempest }}"
+      version: "{{ ir_default_pip_versions['os-testr'] | default(omit) }}"
       state: latest
 
 - name: Get repo requirements
@@ -80,6 +82,7 @@
       chdir: "~/{{ setup.clone_dir }}"
       virtualenv: "{{ virtualenvs.tempest }}"
       name: "{{ item }}"
+      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
       state: present
   with_items: "{{ setup.pip_packages }}"
 

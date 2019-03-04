@@ -35,6 +35,7 @@
       name: "{{ item }}"
       state: present
       extra_args: '-U'
+      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
   with_items: "{{ pip_packages }}"
   when: item is defined
   become: yes

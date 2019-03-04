@@ -29,10 +29,11 @@
       dest: "{{ setup.ospdui.dir }}"
   register: tempest_repo
 
-- name: create venv with latest pip, setuptools and pbr
+- name: create venv with pip, setuptools and pbr
   pip:
       virtualenv: "{{ setup.ospdui.dir }}/.venv"
       name: "{{ item }}"
+      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
       state: latest
   with_items:
       - pip
