@@ -413,6 +413,14 @@ subparsers:
                       default: no
                       help: Use ML2/OVS instead of OVN which is the default for RDO Stein / OSP 15.
 
+                  network-file:
+                      type: Value
+                      short: n
+                      help: |
+                          Networks file, overrides the default network_data.yaml.
+                          Used to provide different type of network topology.
+                          Value example: -n /home/stack/virt/network_data_spine_leaf.yaml
+
                   custom_network_names:
                       type: Value
                       help: |

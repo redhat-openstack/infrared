@@ -42,6 +42,22 @@
      - install.get('custom_network_names',{})|default(False)
      - install.version|default(undercloud_version) | openstack_release >= 14
 
+- name: Upload custom network file
+  block:
+    - name: Override the default network_data.yaml
+      copy:
+        src: "{{ install.network.file }}"
+        dest: "{{ template_base }}/network/network_data.yaml"
+        remote_src: yes
+
+    - name: Append the network_data.yaml template line to the base overcloud deploy script
+      lineinfile:
+          dest: "~/overcloud_deploy.sh"
+          line: '-n {{ template_base }}/network/network_data.yaml \'
+  when:
+     - install.network.file is defined
+     - install.version|default(undercloud_version) | openstack_release >= 14
+
 - name: Append the network template line for splitstack to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
