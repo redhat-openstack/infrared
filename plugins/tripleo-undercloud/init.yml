@@ -11,7 +11,9 @@
           state: "{{ install.selinux|default('enforcing') }}"
 
     - name: Ensure yum presence
+      # ... helps with old/middle-aged fedora, possibly not needed
       shell: python -c 'import yum' || (dnf install -y yum yum-utils && ln -snf /usr/bin/yum-deprecated /usr/bin/yum)
+      when: ansible_distribution == "Fedora"
 
     - name: set hostname
       hostname:
