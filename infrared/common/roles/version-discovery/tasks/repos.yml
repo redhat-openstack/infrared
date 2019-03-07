@@ -1,16 +1,23 @@
 ---
-- name: check repos
+- name: list installed packages
   package:
-      list: openstack-tripleo-common
-  register: tripleo_source
-  failed_when: tripleo_source.results|selectattr('yumstate', 'equalto', 'installed')|list|length == 0
-  become: yes
+      list: installed
+  register: installed_pkgs
 
-- name: get installed package and find it in the available
+- name: list available packages
+  package:
+      list: available
+  register: available_pkgs
+
+- name: get installed and available openstack-tripleo-common pkg
+  vars:
+      otc_name: "openstack-tripleo-common"
+      installed_otc: "{{ installed_pkgs.results | selectattr('name', 'equalto', otc_name) | list | first }}"
+      available_otc: "{{ available_pkgs.results | selectattr('name', 'equalto', otc_name) | list }}"
   set_fact:
       installed_package_data: "{{ item }}"
-  with_items: "{{ tripleo_source.results|selectattr('yumstate', 'equalto', 'available')|list }}"
-  when: (tripleo_source.results|selectattr('yumstate', 'equalto', 'installed')|list|first).version == item.version
+  when: "{{ item.version == installed_otc.version }}"
+  with_items: "{{ available_otc  }}"
 
 - set_fact:
       undercloud_version: "{{ version_regex|int or beta }}"
