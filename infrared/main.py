@@ -182,7 +182,7 @@ class WorkspaceManagerSpec(api.SpecObject):
                                      self.workspace_manager.list()])
                 print(fancy_table(
                     headers,
-                    *[(workspace, ' ' * (len(headers[-1]) / 2) + "*" if
+                    *[(workspace, ' ' * (len(headers[-1]) // 2) + "*" if
                         self.workspace_manager.is_active(workspace) else "")
                       for workspace in workspaces]))
         elif subcommand == 'delete':
@@ -385,7 +385,7 @@ class PluginManagerSpec(api.SpecObject):
         for plugins_type, plugins in plugins_dict.items():
             installed_plugins_list = \
                 self.plugin_manager.get_installed_plugins(plugins_type).keys()
-            plugins_names = plugins.keys()
+            plugins_names = list(plugins.keys())
             plugins_names.sort()
 
             if print_available:
