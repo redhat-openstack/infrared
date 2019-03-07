@@ -86,7 +86,7 @@
           namespace: "{{ install.registry.namespace|ternary(install.registry.namespace, container_env['container-image-prepare']['namespace'].split('/')[1] )}}"
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-          regexp: 'registry.access.redhat.com/rhosp14'
+          regexp: 'registry.access.redhat.com/rhosp.*'
           replace: '{{ registry }}/{{ namespace }}'
 
     - name: set ceph_namespace in containers-prepare-parameter.yaml
@@ -132,7 +132,7 @@
         - name: set tag according to puddle number
           replace:
               path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-              regexp: '(^\ +)tag: latest'
+              regexp: '(^\ +)tag: .*'
               replace: "\\1tag: {{ container_env['container-image-prepare']['tag'] }}"
       when: not install.registry.skip.puddle
 
