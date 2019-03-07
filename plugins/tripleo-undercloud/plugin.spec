@@ -79,6 +79,14 @@ subparsers:
                           Starting with OSP 14 ssl is enabled by default regardless of this option.
                       default: no
 
+                  tls-ca:
+                      type: Value
+                      help: |
+                          Specifies the remote URL to fetch a specific CA from.
+                          Example:
+                                --tls-ca=https://foo.com/ca.pem
+                      default: ''
+
                   undercloud-extra-args:
                       type: Value
                       help: |
