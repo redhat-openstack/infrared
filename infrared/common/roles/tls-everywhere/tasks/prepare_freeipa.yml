@@ -17,6 +17,11 @@
         - "{{ freeipa_epel_repo_url }}"
       state: present
 
+  - name: enable additional repository
+    become: yes
+    shell: yum-config-manager --enable {{ item }}
+    loop: "{{ freeipa_additional_repos }}"
+
   - name: Update repos
     become: yes
     shell: yum clean all
