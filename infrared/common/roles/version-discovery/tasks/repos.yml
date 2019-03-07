@@ -1,16 +1,44 @@
 ---
-- name: check repos
+- name: list installed packages
   package:
-      list: openstack-tripleo-common
-  register: tripleo_source
-  failed_when: tripleo_source.results|selectattr('yumstate', 'equalto', 'installed')|list|length == 0
-  become: yes
+      list: installed
+  register: installed_pkgs
 
-- name: get installed package and find it in the available
+- name: list available packages
+  package:
+      list: available
+  register: available_pkgs
+
+
+- set_fact:
+      detect_pkg: openstack-tripleo-common
+
+- name: "Find installed {{ detect_pkg }} package"
+  set_fact:
+      detect_installed_otc: "{{ installed_pkgs.results | selectattr('name', 'equalto', detect_pkg) | list | first | default(None) }}"
+
+- fail:
+      msg: "Failed to find info about installed version of {{ detect_pkg }}"
+  when: not detect_installed_otc
+
+- name: "Find available {{ detect_pkg }} packages"
+  set_fact:
+      detect_available_otc: "{{ available_pkgs.results | selectattr('name', 'equalto', detect_pkg) | list }}"
+
+- fail:
+      msg: "Failed to find info about available versions of {{ detect_pkg }}"
+  when: detect_available_otc|length == 0
+
+- name: "Match installed and available {{ detect_pkg }} package"
   set_fact:
       installed_package_data: "{{ item }}"
-  with_items: "{{ tripleo_source.results|selectattr('yumstate', 'equalto', 'available')|list }}"
-  when: (tripleo_source.results|selectattr('yumstate', 'equalto', 'installed')|list|first).version == item.version
+  when: "{{ item.version == detect_installed_otc.version }}"
+  with_items: "{{ detect_available_otc  }}"
+
+- fail:
+      msg: "Installed {{ detect_installed_otc.name }}-{{detect_installed_otc.version}} not found in available packages"
+  when: installed_package_data is not defined
+
 
 - set_fact:
       undercloud_version: "{{ version_regex|int or beta }}"
@@ -25,16 +53,7 @@
       undercloud_version: "{{ version_regex|int }}"
       overcloud_version: "{{ version_regex|int }}"
   vars:
-      version_regex: "{{ installed_package_data.repo | regex_replace('^rhelosp-([0-9]+\\.[0-9]+)(-director)?-puddle$', '\\1')}}"
-  when:
-      - undercloud_version is not defined
-      - version_regex|int > 0
-
-- set_fact:
-      undercloud_version: "{{ version_regex|int }}"
-      overcloud_version: "{{ version_regex|int }}"
-  vars:
-      version_regex: "{{ installed_package_data.repo | regex_replace('^rhelosp-([0-9]+\\.[0-9]+)-cdn$', '\\1')}}"
+      version_regex: "{{ installed_package_data.repo | regex_replace('^rhelosp-([0-9]+\\.[0-9]+)(-director)?-(puddle|trunk|cdn)$', '\\1')}}"
   when:
       - undercloud_version is not defined
       - version_regex|int > 0
