@@ -127,6 +127,12 @@ subparsers:
                       help: | 
                           Comma delimited list of packages to install in guest image tempest will use for testing.
                           This option requires 'image' option to be specified and will fail without it.
+                  medium-flavor:
+                      type: Bool
+                      help: |
+                           Create bigger test flavors which is suitable for regular cloud images.
+                           Do not forget to specify the default ssh user and volume size accordingly
+                           The tempest-config tool defaults are for ultra small test images
                   config-options:
                        type: IniType
                        action: append

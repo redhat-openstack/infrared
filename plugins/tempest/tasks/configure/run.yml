@@ -19,6 +19,10 @@
   shell: |
       test -e {{ virtualenvs.tempest_conf }}/bin/activate && source {{ virtualenvs.tempest_conf }}/bin/activate
       source ~/keystonerc
+      {% if test.get('medium', {}).get('flavor', {}) %}
+          nova flavor-create m42.image  420 1024 10 1 || nova flavor-show 420
+          nova flavor-create m42.image_alt  840 1025 10 1 || nova flavor-show 840
+      {% endif %}
       {{ config_command | default("tools/config_tempest.py") }} \
               {% if deployer_input_stat.stat.exists %}
               --deployer-input {{ deployer_input }} \
@@ -32,6 +36,10 @@
                   {% else %}
                       --image {{ test.image }} \
                   {% endif %}
+              {% endif %}
+              {% if test.get('medium', {}).get('flavor', {}) %}
+                  --config-options compute.flavor_ref=420 \
+                  --config-options compute.flavor_ref_alt=840 \
               {% endif %}
               identity.uri $OS_AUTH_URL \
               identity.admin_password $OS_PASSWORD \
