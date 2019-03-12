@@ -3,11 +3,16 @@
   set_fact:
       working_dir: "/home/{{ install.user.name }}"
 
+- name: set default registry namespace
+  set_fact:
+      registry_namespace: "{{ install.get('registry', {}).namespace|default('rhosp' + (install.version|default(undercloud_version)|openstack_release|string)) }}"
+
+
 - name: Check if we have user input for image preparation
   set_fact:
       container_env:
           container-image-prepare:
-              namespace: "{{ install.get('registry', {}).namespace|default('') }}"
+              namespace: "{{ registry_namespace }}"
               prefix: "{{ install.registry.prefix|default('') }}"
               tag: "{{ install.registry.tag.discover|ternary('AUTODETECT', install.registry.tag ) }}"
   when: install.registry.skip.puddle
@@ -83,7 +88,7 @@
     - name: set namespace in containers-prepare-parameter.yaml
       vars:
           registry: "{{ install.registry.mirror|ternary(install.registry.mirror, container_env['container-image-prepare']['namespace'].split('/')[0] )}}"
-          namespace: "{{ install.registry.namespace|ternary(install.registry.namespace, container_env['container-image-prepare']['namespace'].split('/')[1] )}}"
+          namespace: "{{ registry_namespace | ternary(registry_namespace, container_env['container-image-prepare']['namespace'].split('/')[1] )}}"
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
           regexp: 'registry.access.redhat.com/rhosp.*'
