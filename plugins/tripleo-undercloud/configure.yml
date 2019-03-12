@@ -65,8 +65,24 @@
 
       - name: enable undercloud-ssl
         include_tasks: tasks/ssl.yml
-        when: install.ssl or install.version|openstack_release > 13
+        when: (install.ssl == 'yes' or install.version|openstack_release > 13) and (install.version|openstack_release != 15)
         tags: ssl
+
+      - name: 'Workaround BZ1686817: Skip SSL on Undercloud'
+        when: install.version|openstack_release == 15
+        block:
+          - name: 'skip ssl: reset cert path'
+            ini_file:
+                dest: ~/undercloud.conf
+                section: DEFAULT
+                option: undercloud_service_certificate
+                value: ""
+          - name: 'skip ssl: disable cert generation'
+            ini_file:
+                dest: ~/undercloud.conf
+                section: DEFAULT
+                option: generate_service_certificate
+                value: "false"
 
       - name: create the base undercloud deploy script
         template:
