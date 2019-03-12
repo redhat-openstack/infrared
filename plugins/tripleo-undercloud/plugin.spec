@@ -72,11 +72,15 @@ subparsers:
                           Format: --config-options section.option=value1 --config-options section.option=value
 
                   ssl:
-                      type: Bool
+                      type: Value
                       help: |
                           Specifies whether ths SSL should be used for undercloud
                           A self-signed SSL cert will be generated.
-                          Starting with OSP 14 ssl is enabled by default regardless of this option.
+                          From OSP 14 ssl is enabled by default and force-no can be used to override it.
+                      choices:
+                          - yes
+                          - no
+                          - force-no
                       default: no
 
                   tls-ca:
