@@ -47,7 +47,7 @@
       proxyhost: "{{ ansible_user|default(ansible_ssh_user) }}@{{ ansible_host|default(ansible_ssh_host) }}"
   shell: |
       ssh -o BatchMode=yes {{ sshopts }} \
-      -o ProxyCommand="ssh -W %h:%p -i {{ sshkey }} {{ proxyhost }}" \
+      -o ProxyCommand="ssh {{ sshopts }} -W %h:%p -i {{ sshkey }} {{ proxyhost }}" \
       -i {{ sshkey }} root@{{ item.value.ip }} 'command -v python python3 /usr/libexec/platform-python|head -n1'
   delegate_to: localhost
   when: (item.value.deploy_os|default(True)) and (item.value.ip is defined)
