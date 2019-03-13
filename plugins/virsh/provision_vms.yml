@@ -4,6 +4,7 @@
   gather_facts: yes
   any_errors_fatal: true
   vars:
+      appliance_version: '1.40.1'
       base_image_path: /var/lib/libvirt/images
       url: "{{ provision.image.url }}"
       infrared_vswitch_types:
@@ -20,13 +21,11 @@
       loop_control:
           loop_var: node
 
-    - name: Download libguestfs appliance to allow virt-customize on RHEL7 hypervisor
-      shell: |
-          set -ex
-          if [[ ! -d /opt/appliance ]]; then
-            curl -o /opt/libguestfs_appliance.tar.gx http://download.libguestfs.org/binaries/appliance/appliance-1.40.1.tar.xz
-            tar -C /opt/ -xvf /opt/libguestfs_appliance.tar.gx
-          fi
+    - name: Download and unarchive Appliance files to allow virt-customize on RHEL hypervisors
+      unarchive:
+        src: http://download.libguestfs.org/binaries/appliance/appliance-{{ appliance_version }}.tar.xz
+        dest: /opt/
+        remote_src: yes
 
     - name: provision image for each node
       include_tasks: tasks/download_images.yml
