@@ -20,13 +20,6 @@
             - install.upgrade|default('')
             - install.get('update', {}).undercloud|default('')
 
-      - fail:
-            msg: "Image task 'rpm' is not supported for product version '{{ install.version }}'. Use another image task."
-        when:
-            - install.version|default('')
-            - install.version|openstack_release < 8
-            - install.images.task|default('')  == 'rpm'
-
       - name: validate director build
         vars:
             director_build: "{{ install.get('director', {}).build|default(False) }}"
