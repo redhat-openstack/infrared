@@ -10,6 +10,11 @@
           policy: "targeted"
           state: "{{ install.selinux|default('enforcing') }}"
 
+    - name: "Workaround BZ1688048: wrong symlink /etc/localtime"
+      shell: ln -snf /usr/share/zoneinfo/UTC /etc/localtime
+      when:
+          - install.version|openstack_release >= 15
+
     - name: Ensure yum presence
       # ... helps with old/middle-aged fedora, possibly not needed
       shell: python -c 'import yum' || (dnf install -y yum yum-utils && ln -snf /usr/bin/yum-deprecated /usr/bin/yum)
