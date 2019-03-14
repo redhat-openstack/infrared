@@ -64,6 +64,10 @@
           with_items: "{{ async_disks }}"
       tags: disks
 
+    - fail:
+        msg: "Stop after customization"
+      when: "{{ provision.image.customize.cmd | default(False) }}"
+
     # Build VMs
     - block:
         - name: define libvirt VMs

@@ -65,6 +65,13 @@ subparsers:
                         A path to the image pool. Default is Storage Pool from libvirt
                       default: "/var/lib/libvirt/images"
 
+                  image-customize-cmd:
+                      type: Value
+                      help: |
+                        Perform steps up to disk image provisioning, where during customization run this command
+                        (wrapped in bash double quotes so escape for that).
+                        Stop execution after image is prepared.
+
             - title: topology
               options:
                   prefix:
