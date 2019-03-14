@@ -111,6 +111,14 @@
         # avoid empty strings
         when: "templates_list_file != ''"
 
+      - name: Append the storage configuration line to the base overcloud deploy script
+        lineinfile:
+            dest: "~/overcloud_deploy.sh"
+            line: '-e {{ template_base }}/storage-config.yaml \'
+        when:
+            - storage_backend == 'netapp-nfs'
+            - install.storage.external
+
       - name: append templates for ironic enabled OC
         include_tasks: tasks/ironic_environment_templates.yml
         when: install.ironic or install.ironic_inspector
