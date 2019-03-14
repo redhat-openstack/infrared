@@ -119,6 +119,15 @@
         include_tasks: tasks/storage/nova-nfs.yml
         when: install.nova.nfs.backend|default(False)
 
+      - name: Append storage configuration to deploy script
+        lineinfile:
+            dest: "~/overcloud_deploy.sh"
+            insertafter: '.*([manila\-netapp\-config])+(.yaml).*'
+            line: '-e {{ template_base }}/storage-config.yaml \'
+        when:
+            - install.storage.backend == 'netapp-nfs'
+            - install.storage.external
+
       - import_role:
             name: containers/prepare-templates
         tags:
