@@ -19,6 +19,17 @@
           - install.build|default('') == 'ga'
         register: apply_workaround_bz1428608
 
+      - name: apply workaround for BZ#1671406
+        seboolean:
+            name: authlogin_nsswitch_use_ldap
+            state: yes
+            persistent: yes
+        become: true
+        become_user: root
+        when:
+          - install.version|openstack_distribution == 'OSP'
+          - install.version|openstack_release <= 10
+
       - name: install the undercloud
         command: bash ~/undercloud_deploy.sh
         register: undercloud_deployment
