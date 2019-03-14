@@ -1,10 +1,12 @@
 ---
 - name: install the RPM with the pre-built overcloud images
   become: yes
+  vars:
+      default_packages: "{{ (install.version|openstack_release >= 15) | ternary(['rhosp-director-images-x86_64', 'rhosp-director-images-ipa-x86_64'], ['rhosp-director-images']) }}"
   package:
       name: "{{ item }}"
       state: latest
-  with_items: "{{ install.images.url is defined | ternary(install.images.get('url', '').split(','), ['rhosp-director-images']) }}"
+  with_items: "{{ install.images.url is defined | ternary(install.images.get('url', '').split(','), default_packages) }}"
 
 # todo(yfried): investigate gtar error "Warning: Cannot stat: No such file or directory")'
 - name: untar the images
