@@ -17,7 +17,15 @@
                 state: destroyed
 
           - name: copy and shrink undercloud image
-            command: "virt-sparsify --compress {{ install.disk.pool }}/{{ undercloud }}-disk1.qcow2 {{ undercloud_image_file }}"
+            command: "virt-sparsify {{ install.disk.pool }}/{{ undercloud }}-disk1.qcow2 sparse-{{ undercloud_image_file }}"
+
+          - name: shrink sparsified space in undercloud image
+            command: "qemu-img convert -c -O qcow2 sparse-{{ undercloud_image_file }} {{ undercloud_image_file }}"
+
+          - name: cleanup sparse version of undercloud image
+            file:
+                name: "{{ undercloud_image_file }}"
+                state: absent
 
           - name: copy our auth key to the virthost
             copy:
