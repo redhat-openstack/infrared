@@ -119,6 +119,13 @@
         include_tasks: tasks/storage/nova-nfs.yml
         when: install.nova.nfs.backend|default(False)
 
+      - name: "Workaround BZ1677658: use file as glance backend"
+        template:
+            src: templates/glance_file_backend.yaml.j2
+            dest: "{{ template_base }}/glance_file_backend.yaml"
+        when:
+            - install.version|default(undercloud_version)|openstack_release >= 15
+
       - import_role:
             name: containers/prepare-templates
         tags:
