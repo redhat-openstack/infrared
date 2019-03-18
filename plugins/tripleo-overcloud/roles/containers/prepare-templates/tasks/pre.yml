@@ -63,7 +63,7 @@
       vars:
           repod_file: "/etc/yum.repos.d/rhos-release-{{ undercloud_version|default(install.version) }}.repo"
       shell: |
-          cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '.*(?=\/.*\/\$basearch)'
+          cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '(^.*(?=\/compose\/.*\/\$basearch))|(^.*(?=\/.*\/\$basearch))'
       register: containers_puddle_base_url
       tags:
           - container-images-packages
@@ -98,6 +98,13 @@
       tags:
           - container-images-patch
           - container-images-packages
+
+    - name: "for osp15 switch to new (overcloud_)container_image_prepare.yml file name"
+      set_fact:
+          containers_images_env_template_download_basename: "container_image_prepare.yaml"
+      when:
+          - (install.version|default(undercloud_version)|openstack_release) >= 15
+          - containers_images_env_template_download_basename == "overcloud_container_image_prepare.yaml"
 
     - name: Downloading overcloud container images environment file
       get_url:
