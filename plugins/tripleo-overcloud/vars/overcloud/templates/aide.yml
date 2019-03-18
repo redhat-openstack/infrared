@@ -1,0 +1,31 @@
+---
+resource_registry:
+    OS::TripleO::Services::Aide: "{{ install.heat.templates.basedir }}/puppet/services/aide.yaml"
+
+custom_templates:
+    parameter_defaults:
+        AideRules:
+            'TripleORules':
+                content: 'TripleORules = p+sha256'
+                order: 1
+            'etc':
+                content: '/etc/ TripleORules'
+                order: 2
+            'boot':
+                content: '/boot/ TripleORules'
+                order: 3
+            'sbin':
+                content: '/sbin/ TripleORules'
+                order: 4
+            'var':
+                content: '/var/ TripleORules'
+                order  : 5
+            'not var/log':
+                content: '!/var/log.*'
+                order  : 6
+            'not var/spool':
+                content: '!/var/spool.*'
+                order  : 7
+            'not nova instances':
+                content: '!/var/lib/nova/instances.*'
+                order: 8
