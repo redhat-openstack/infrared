@@ -6,11 +6,16 @@
       repo_folder: 'pytest-repo/'
       pytest_output_filename: 'pytest-results-{{ ansible_date_time.epoch }}.xml'
   tasks:
+      - name: intall pytest via pip
+        pip:
+          name: pytest
+          state: present
+        become: true
+
       - name: Install packages
         become: true
         package:
             name:
-              - pytest
               - git
             state: latest
 
