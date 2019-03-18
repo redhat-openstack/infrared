@@ -7,7 +7,7 @@
       gateway: 10.0.0.1
       deployment_user: cloud-user
       netmask: 24
-      containers_images_env_template_download_basename: "overcloud_container_image_prepare.yaml"
+      containers_images_env_template_download_basename: "{{ (undercloud_version|default(install.version)|openstack_release >= 15) | ternary('container_image_prepare.yaml', 'overcloud_container_image_prepare.yaml') }}"
       containers_images_env_template_dest_file: "{{ inventory_dir }}/overcloud_container_image_prepare.yaml"
   tasks:
       - name: read puddle configuration
@@ -16,7 +16,7 @@
             vars:
                 repod_file: "/etc/yum.repos.d/rhos-release-{{ undercloud_version|default(install.version) }}.repo"
             shell: |
-                cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '.*(?=\/.*\/\$basearch)'
+                cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '(^.*(?=\/compose\/.*\/\$basearch))|(^.*(?=\/.*\/\$basearch))'
             register: containers_puddle_base_url
 
           - name: get puddle number

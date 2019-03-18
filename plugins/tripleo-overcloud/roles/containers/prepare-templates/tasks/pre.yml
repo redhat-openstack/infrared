@@ -63,7 +63,7 @@
       vars:
           repod_file: "/etc/yum.repos.d/rhos-release-{{ undercloud_version|default(install.version) }}.repo"
       shell: |
-          cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '.*(?=\/.*\/\$basearch)'
+          cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '(^.*(?=\/compose\/.*\/\$basearch))|(^.*(?=\/.*\/\$basearch))'
       register: containers_puddle_base_url
       tags:
           - container-images-packages
@@ -99,6 +99,13 @@
           - container-images-patch
           - container-images-packages
 
+    - name: "for osp15 switch to new (overcloud_)container_image_prepare.yml file name"
+      set_fact:
+          containers_images_env_template_download_basename: "container_image_prepare.yaml"
+      when:
+          - (install.version|default(undercloud_version)|openstack_release) >= 15
+          - containers_images_env_template_download_basename == "overcloud_container_image_prepare.yaml"
+
     - name: Downloading overcloud container images environment file
       get_url:
           url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_env_template_download_basename }}"
@@ -124,9 +131,9 @@
                   namespace: "{{ install.get('registry', {}).namespace|default(container_env['container-image-prepare'].namespace) }}"
                   prefix: "{{ install.get('registry', {}).prefix|default(container_env['container-image-prepare'].prefix) }}"
                   tag: "{{ install.get('registry', {}).tag|default(container_env['container-image-prepare'].tag) }}"
-                  ceph-namespace: "{{ install.get('registry', {}).get('ceph', {}).namespace|default(container_env['container-image-prepare']['ceph-namespace']) }}"
-                  ceph-image: "{{ install.get('registry', {}).get('ceph', {}).image|default(container_env['container-image-prepare']['ceph-image']) }}"
-                  ceph-tag: "{{ install.get('registry', {}).get('ceph', {}).tag|default(container_env['container-image-prepare']['ceph-tag']) }}"
+                  ceph-namespace: "{{ install.get('registry', {}).get('ceph', {}).namespace | default(container_env['container-image-prepare']['ceph-namespace'] | default('')) }}"
+                  ceph-image: "{{ install.get('registry', {}).get('ceph', {}).image | default(container_env['container-image-prepare']['ceph-image'] | default('')) }}"
+                  ceph-tag: "{{ install.get('registry', {}).get('ceph', {}).tag | default(container_env['container-image-prepare']['ceph-tag'] | default('')) }}"
 
   when: not install.registry.skip.puddle
 
