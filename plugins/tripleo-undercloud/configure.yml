@@ -92,6 +92,11 @@
                 content: 'nova::compute::ironic::max_concurrent_builds: 5'
                 dest: "{{ working_dir }}/hiera_override.yaml"
 
+          - name: set additional config via hieradata
+            lineinfile:
+               path: "{{ working_dir }}/hiera_override.yaml"
+               line: "{{ install.hieradata.config }}"
+
           - name: set hieradata in undercloud.conf
             ini_file:
                 path: "{{ working_dir }}/undercloud.conf"
