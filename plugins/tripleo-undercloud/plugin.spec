@@ -28,6 +28,12 @@ subparsers:
                       type: Value
                       help: |
                           Username for destination server (in case key was not provided)
+                  hieradata-config:
+                      type: Value
+                      help: |
+                          Optional configuration to set via hieradata
+                          Use  --hieradata-config settings=value
+                      default: ''
                   snapshot-restore:
                       type: Bool
                       help: |
