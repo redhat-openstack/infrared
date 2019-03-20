@@ -55,7 +55,7 @@ class VarsDictManager(object):
         for extra_var in extra_vars or []:
             if extra_var.startswith('@'):
                 with open(extra_var[1:]) as f_obj:
-                    loaded_yml = yaml.load(f_obj)
+                    loaded_yml = yaml.safe_load(f_obj)
 
                 dict_utils.dict_merge(
                     vars_dict,
@@ -69,7 +69,7 @@ class VarsDictManager(object):
                 key, value = extra_var.split("=", 1)
                 if value.startswith('@'):
                     with open(value[1:]) as f_obj:
-                        loaded_yml = yaml.load(f_obj)
+                        loaded_yml = yaml.safe_load(f_obj)
 
                     tmp_dict = {}
                     dict_utils.dict_insert(tmp_dict, loaded_yml, *key.split("."))

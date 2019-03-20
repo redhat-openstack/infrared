@@ -28,7 +28,7 @@ class SpecParser(object):
 
         spec_dict = base_groups or {}
         with open(plugin.spec) as stream:
-            spec = yaml.load(stream) or {}
+            spec = yaml.safe_load(stream) or {}
             dict_utils.dict_merge(
                 base_groups,
                 spec,
@@ -408,7 +408,7 @@ class SpecParser(object):
                         if not any(
                                 (c in '<>=') for c in splited_args_list[idx]):
                             splited_args_list[idx] = "'{0}'".format(
-                                yaml.load(splited_args_list[idx]))
+                                yaml.safe_load(splited_args_list[idx]))
                     else:
                         option_results.append(
                             eval(' '.join(splited_args_list)))

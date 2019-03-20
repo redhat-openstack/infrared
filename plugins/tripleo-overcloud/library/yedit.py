@@ -385,7 +385,7 @@ class Yedit(object):
         # check if it is yaml
         try:
             if content_type == 'yaml' and contents:
-                self.yaml_dict = yaml.load(contents)
+                self.yaml_dict = yaml.safe_load(contents)
             elif content_type == 'json' and contents:
                 self.yaml_dict = json.loads(contents)
         except yaml.YAMLError as err:
@@ -577,7 +577,7 @@ def get_curr_value(invalue, val_type):
 
     curr_value = invalue
     if val_type == 'yaml':
-        curr_value = yaml.load(invalue)
+        curr_value = yaml.safe_load(invalue)
     elif val_type == 'json':
         curr_value = json.loads(invalue)
 
@@ -599,7 +599,7 @@ def parse_value(inc_value, vtype=''):
     # If vtype is not str then go ahead and attempt to yaml load it.
     if isinstance(inc_value, str) and 'str' not in vtype:
         try:
-            inc_value = yaml.load(inc_value)
+            inc_value = yaml.safe_load(inc_value)
         except Exception as _:
             raise YeditException('Could not determine type of incoming value. value=[%s] vtype=[%s]' \
                                  % (type(inc_value), vtype))

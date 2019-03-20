@@ -537,7 +537,7 @@ class InfraredPluginManager(object):
             for name, path in self.config.items(section):
                 if name not in registry:
                     with open(os.path.join(path, "plugin.spec"), "r") as pls:
-                        plugin_spec = yaml.load(pls)
+                        plugin_spec = yaml.safe_load(pls)
                     # support two types of possible plugin spec files
                     plugin_type = plugin_spec["config"]["plugin_type"] \
                         if "config" in plugin_spec \

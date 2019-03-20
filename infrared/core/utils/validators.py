@@ -103,7 +103,7 @@ class SpecValidator(Validator):
             raise IRValidatorException(
                 "Plugin spec content is missing")
 
-        spec_dict = yaml.load(spec_content)
+        spec_dict = yaml.safe_load(spec_content)
 
         if not isinstance(spec_dict, dict):
             raise IRValidatorException(
@@ -165,7 +165,7 @@ class RegistryValidator(Validator):
             raise IRValidatorException(
                 "Registry YAML content is missing")
 
-        registry_dict = yaml.load(file_content)
+        registry_dict = yaml.safe_load(file_content)
 
         if not isinstance(registry_dict, dict):
             raise IRValidatorException(
