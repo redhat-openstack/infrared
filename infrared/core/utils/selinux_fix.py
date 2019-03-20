@@ -1,5 +1,5 @@
-import os
 import glob
+import os
 
 
 def copy_system_selinux(force=True):
@@ -9,8 +9,8 @@ def copy_system_selinux(force=True):
     except ImportError as e:
         new_error = type(e)(str(e) + ". Check that 'libselinux-python' is "
                                      "installed")
-        import shutil
         from distutils import sysconfig
+        import shutil
 
         if hasattr(sys, 'real_prefix'):
             # check for venv

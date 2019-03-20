@@ -1,5 +1,5 @@
-import os
 from collections import OrderedDict
+import os
 from six.moves import configparser
 
 from infrared.core.utils import logger
@@ -35,9 +35,7 @@ class AnsibleConfigManager(object):
 
     @staticmethod
     def _get_ansible_conf_path(infrared_home):
-        """
-        Check for Ansible config in specific locations
-        and return the first located
+        """Check for Ansible config in specific locations and return the first located
 
         :param infrared_home: infrared's home directory
         :return:
@@ -60,7 +58,7 @@ class AnsibleConfigManager(object):
         return os.path.join(infrared_home, 'ansible.cfg')
 
     def _create_ansible_config(self):
-        """ Create ansible config file """
+        """Create ansible config file """
 
         LOG.warning("Ansible conf ('{}') not found, creating it with "
                     "default data".format(self.ansible_config_path))

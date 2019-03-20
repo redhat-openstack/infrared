@@ -16,9 +16,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
-from xml.etree import cElementTree as ET
-import ipaddr
 from collections import defaultdict
+import ipaddr
+from xml.etree import cElementTree as ET
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.pycompat24 import get_exception
