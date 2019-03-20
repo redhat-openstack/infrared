@@ -1,7 +1,7 @@
 # Holds the default variables
+import os
 from pbr import version as pbr_version
 import platform
-import os
 
 _v = pbr_version.VersionInfo("infrared").semantic_version()
 __version__ = _v.release_string()
@@ -9,8 +9,8 @@ version_info = _v.version_tuple()
 
 
 def version_details():
-    from infrared import __version__  # noqa
     from ansible import __version__ as ansible_version  # noqa
+    from infrared import __version__  # noqa
     python_version = platform.python_version()
     python_revision = ', '.join(platform.python_build())
     return "{__version__} (" \
