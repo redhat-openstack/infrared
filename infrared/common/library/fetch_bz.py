@@ -16,10 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 
+import bugzilla
 import json
 import xmlrpclib
 
-import bugzilla
 from ansible.module_utils.basic import AnsibleModule
 
 

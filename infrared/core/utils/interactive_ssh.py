@@ -11,13 +11,13 @@ LOG = logger.LOG
 
 
 def _get_magic_var(hostobj, varname, default=""):
-    """ Use Ansible coordination of inventory format versions
+    """Use Ansible coordination of inventory format versions
 
-        :param hostobj: parsed Ansible host object
-        :param varname: key of MAGIC_VARIABLE_MAPPING, representing
-                        variations of Ansible inventory parameter
-        :param default: value, that will be returned if 'varname' is
-                        not set in inventory
+    :param hostobj: parsed Ansible host object
+    :param varname: key of MAGIC_VARIABLE_MAPPING, representing variations of
+                    Ansible inventory parameter
+    :param default: value, that will be returned if 'varname' is not set in
+                    inventory
     """
     from ansible.constants import MAGIC_VARIABLE_MAPPING
     for item in MAGIC_VARIABLE_MAPPING[varname]:
@@ -29,10 +29,10 @@ def _get_magic_var(hostobj, varname, default=""):
 
 
 def ssh_to_host(hostname, remote_command=None):
-    """ Compose cmd string of ssh and execute
+    """Compose cmd string of ssh and execute
 
-        Uses Ansible to parse inventory file, gets ssh connection options
-        :param hostname: str. Hostname from inventory
+    Uses Ansible to parse inventory file, gets ssh connection options
+    :param hostname: str. Hostname from inventory
     """
 
     workspace_manager = CoreServices.workspace_manager()
@@ -41,8 +41,8 @@ def ssh_to_host(hostname, remote_command=None):
         raise exceptions.IRNoActiveWorkspaceFound()
     inventory_file = workspace.inventory
 
-    from ansible.parsing.dataloader import DataLoader
     from ansible.inventory.manager import InventoryManager
+    from ansible.parsing.dataloader import DataLoader
     invent = InventoryManager(DataLoader(), sources=inventory_file)
 
     host = invent.get_host(hostname)
