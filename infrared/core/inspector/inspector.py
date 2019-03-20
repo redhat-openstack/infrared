@@ -28,7 +28,7 @@ class SpecParser(object):
 
         spec_dict = base_groups or {}
         with open(plugin.spec) as stream:
-            spec = yaml.load(stream) or {}
+            spec = yaml.safe_load(stream) or {}
             dict_utils.dict_merge(
                 base_groups,
                 spec,

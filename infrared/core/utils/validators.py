@@ -103,7 +103,7 @@ class SpecValidator(Validator):
             raise IRValidatorException(
                 "Plugin spec content is missing")
 
-        spec_dict = yaml.load(spec_content)
+        spec_dict = yaml.safe_load(spec_content)
 
         if not isinstance(spec_dict, dict):
             raise IRValidatorException(
