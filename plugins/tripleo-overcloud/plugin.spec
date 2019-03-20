@@ -68,6 +68,10 @@ subparsers:
                             Example:
                                 --container-images-packages openstack-opendaylight=https://kojipkgs.fedoraproject.org//packages/tmux/2.5/3.fc27/x86_64/tmux-2.5-3.fc27.x86_64.rpm,https://kojipkgs.fedoraproject.org//packages/vim/8.0.844/2.fc27/x86_64/vim-minimal-8.0.844-2.fc27.x86_64.rpm
 
+                  container-images-prepareyaml:
+                      type: Value
+                      help: Can be used to override url for overcloud_container_image_prepare.yml instead of using one from puddle/compose.
+
                   registry-mirror:
                       type: Value
                       help: The alternative docker registry to use for deployment.
