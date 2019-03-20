@@ -5,10 +5,10 @@ Stores and resolves all the dependencies for the services.
 import os
 import sys
 
-from infrared.core.services import workspaces
-from infrared.core.services import plugins
 from infrared.core.services import ansible_config
 from infrared.core.services import execution_logger
+from infrared.core.services import plugins
+from infrared.core.services import workspaces
 from infrared.core.utils import logger
 
 LOG = logger.LOG
