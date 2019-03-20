@@ -7,16 +7,18 @@ import argparse
 import collections
 
 import abc
+from copy import deepcopy
 import os
 import re
-import sys
 from six.moves import configparser
-from copy import deepcopy
 from six import string_types
+import sys
 import yaml
 
 from infrared.core.services import CoreServices
-from infrared.core.utils import logger, exceptions, dict_utils
+from infrared.core.utils import dict_utils
+from infrared.core.utils import exceptions
+from infrared.core.utils import logger
 
 LOG = logger.LOG
 
@@ -583,10 +585,10 @@ class FileType(ComplexType):
 
 
 class ListOfFileNames(ComplexType):
-    """ Represents List of file names for specific path
+    """Represents List of file names for specific path
 
-        It support value auto propagation, based on
-        plugin_path and spec_option['lookup_dir'])
+    It support value auto propagation, based on plugin_path and
+    spec_option['lookup_dir'])
     """
 
     ARG_SEPARATOR = ','
@@ -605,7 +607,7 @@ class ListOfFileNames(ComplexType):
         return os.path.join(self.plugin_path, self.lookup_dir)
 
     def get_allowed_values(self):
-        """ Generate list of file names in specific path"""
+        """Generate list of file names in specific path """
         result = list(map((lambda name: os.path.splitext(name)[0]),
                           os.listdir(self.files_path)))
         result.sort()
