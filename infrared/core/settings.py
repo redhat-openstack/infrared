@@ -1,6 +1,7 @@
 import yaml
 
-from infrared.core.utils import exceptions, dict_utils
+from infrared.core.utils import dict_utils
+from infrared.core.utils import exceptions
 
 
 class VarsDictManager(object):
