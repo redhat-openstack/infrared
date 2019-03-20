@@ -1,17 +1,17 @@
 # provides API to run plugins
-import argparse
 import abc
+import argparse
 import logging
 import yaml
 
 
-from infrared import SHARED_GROUPS
-from infrared import version_details
 from infrared.core import execute
 from infrared.core.inspector.inspector import SpecParser
 from infrared.core.services import CoreServices
 from infrared.core.settings import VarsDictManager
 from infrared.core.utils import logger
+from infrared import SHARED_GROUPS
+from infrared import version_details
 
 LOG = logger.LOG
 
