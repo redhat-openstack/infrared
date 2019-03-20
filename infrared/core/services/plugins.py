@@ -1,27 +1,34 @@
 import datetime
-import shutil
-import tempfile
-import time
-from six.moves import configparser, getcwd
-from collections import OrderedDict
-
 import git
 import github
 import os
+import shutil
+import tempfile
+import time
+
+from collections import OrderedDict
+from six.moves import configparser
+from six.moves import getcwd
+
 # TODO(aopincar): Add pip to the project's requirements
 try:
     from pip._internal import main as pip_main
 except ImportError:
     from pip import main as pip_main
-import yaml
 import urllib3
+import yaml
 
-from infrared import PLUGINS_REGISTRY
+from infrared.core.utils.exceptions import IRException
+from infrared.core.utils.exceptions import IRFailedToAddPlugin
+from infrared.core.utils.exceptions import IRFailedToImportPlugins
+from infrared.core.utils.exceptions import IRFailedToRemovePlugin
+from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
+from infrared.core.utils.exceptions import IRPluginExistsException
+from infrared.core.utils.exceptions import IRUnsupportedPluginType
 from infrared.core.utils import logger
-from infrared.core.utils.validators import SpecValidator, RegistryValidator
-from infrared.core.utils.exceptions import IRFailedToAddPlugin, IRException, \
-    IRPluginExistsException, IRFailedToRemovePlugin, IRFailedToUpdatePlugin, \
-    IRUnsupportedPluginType, IRFailedToImportPlugins
+from infrared.core.utils.validators import RegistryValidator
+from infrared.core.utils.validators import SpecValidator
+from infrared import PLUGINS_REGISTRY
 
 DEFAULT_PLUGIN_INI = dict(
     supported_types=OrderedDict([

@@ -1,7 +1,7 @@
 import tempfile
 
-import yaml
 from infrared.core.utils import logger
+import yaml
 
 LOG = logger.LOG
 
@@ -63,7 +63,8 @@ def _run_playbook(cli_args, vars_dict):
     #                 and creates new 'display' object with default (0)
     #                 verbosity.
     from ansible.cli.playbook import PlaybookCLI
-    from ansible.errors import AnsibleOptionsError, AnsibleParserError
+    from ansible.errors import AnsibleOptionsError
+    from ansible.errors import AnsibleParserError
     with tempfile.NamedTemporaryFile(
             mode='w+', prefix="ir-settings-", delete=True) as tmp:
         tmp.write(yaml.safe_dump(vars_dict, default_flow_style=False))

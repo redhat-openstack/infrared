@@ -1,14 +1,14 @@
 import collections
+import os
 from six.moves import configparser
 import yaml
-import os
 
-from infrared.core.utils import logger
-from infrared.core.utils import dict_utils
-from infrared.core.utils import exceptions
 from infrared.core.cli.cli import CliParser
 from infrared.core.cli.cli import COMPLEX_TYPES
 from infrared.core.inspector import helper
+from infrared.core.utils import dict_utils
+from infrared.core.utils import exceptions
+from infrared.core.utils import logger
 
 LOG = logger.LOG
 
@@ -111,7 +111,7 @@ class SpecParser(object):
 
     @staticmethod
     def get_env_option(name):
-        """ Try get """
+        """Try get """
         return os.environ.get('IR_' + name.upper().replace('-', '_'))
 
     def get_deprecated_args(self):
@@ -461,7 +461,7 @@ class SpecParser(object):
             raise exceptions.IRRequiredArgsMissingException(missing_args)
 
     def validate_length_args(self, args):
-        """ Check if value of arguments is not longer than length specified.
+        """Check if value of arguments is not longer than length specified.
 
         :param args: The received arguments.
         """

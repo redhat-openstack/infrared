@@ -1,8 +1,8 @@
+from datetime import datetime
+import logging
+from logging.handlers import RotatingFileHandler
 import os
 import sys
-import logging
-from datetime import datetime
-from logging.handlers import RotatingFileHandler
 
 
 class ExecutionLoggerManager(object):
