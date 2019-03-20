@@ -17,6 +17,7 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import re
+
 from ansible.module_utils.basic import AnsibleModule
 
 
@@ -244,15 +245,13 @@ def _run_command(module, cmd):
 
 
 def _fail(module, msg, cmd, return_code=-1, out='', err=''):
-    """
-    Fails module execution.
-    """
+    """Fails module execution. """
     module.fail_json(
         **wrap_results(dict(msg=msg), cmd, return_code, out, err))
 
 
 def main():
-    """ Main """
+    """Main """
     module = AnsibleModule(
         argument_spec=dict(
             state=dict(default="install",

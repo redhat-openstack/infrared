@@ -1,10 +1,10 @@
+import jsonschema
+import os
+from six.moves import configparser
+import yaml
+
 from infrared.core.utils.exceptions import IRValidatorException
 from infrared.core.utils.logger import LOG as logger
-from six.moves import configparser
-
-import jsonschema
-import yaml
-import os
 
 
 class Validator(object):
