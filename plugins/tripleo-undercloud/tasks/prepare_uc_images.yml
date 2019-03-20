@@ -55,8 +55,11 @@
           msg: "{{ containers_puddle_number.stdout }}"
 
     - name: Downloading overcloud container images environment file
+      vars:
+          cont_prep_url_puddle: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_env_template_download_basename }}"
+          cont_prep_url: "{{ install.container.images.prepareyaml | default(cont_prep_url_puddle) }}"
       get_url:
-          url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_env_template_download_basename }}"
+          url: "{{ cont_prep_url }}"
           dest: "{{ containers_images_env_template_dest_file }}"
           force: true
       delegate_to: localhost

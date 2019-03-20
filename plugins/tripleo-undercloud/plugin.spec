@@ -411,3 +411,7 @@ subparsers:
                       help: |
                           Container images prefix
                       default: 'openstack-'
+
+                  container-images-prepareyaml:
+                      type: Value
+                      help: Can be used to override url for container_image_prepare.yml instead of using one from puddle/compose.
