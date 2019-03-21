@@ -65,6 +65,12 @@ subparsers:
                         A path to the image pool. Default is Storage Pool from libvirt
                       default: "/var/lib/libvirt/images"
 
+                  image-mirror-url:
+                      type: Value
+                      help: |
+                        URL to location where auxiliary images are placed.
+                      default: http://rhos-qe-mirror-tlv.usersys.redhat.com/images
+
             - title: topology
               options:
                   prefix:
