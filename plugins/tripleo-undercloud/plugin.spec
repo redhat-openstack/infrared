@@ -400,7 +400,7 @@ subparsers:
                       help: The images tag
 
                   registry-tag-discover:
-                      type: Value
+                      type: Bool
                       help: |
                           If this option is set then infrared will try to auto discover tag
                       default: False
