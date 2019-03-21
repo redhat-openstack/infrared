@@ -4,7 +4,7 @@ NeutronNetworks.create_and_list_networks:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 5
@@ -23,7 +23,7 @@ NeutronNetworks.create_and_list_subnets:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 5
@@ -41,13 +41,13 @@ NeutronNetworks.create_and_list_routers:
     args:
       network_create_args:
       subnet_create_args:
-      subnet_cidr_start: "1.1.0.0/30"
+      subnet_cidr_start: "1.1.0.0/16"
       subnets_per_network: 2
       router_create_args:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 5
@@ -70,7 +70,7 @@ NeutronNetworks.create_and_list_ports:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 5
@@ -95,7 +95,7 @@ NeutronNetworks.create_and_update_networks:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 5
@@ -120,7 +120,7 @@ NeutronNetworks.create_and_update_subnets:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 5
@@ -138,7 +138,7 @@ NeutronNetworks.create_and_update_routers:
     args:
       network_create_args: {}
       subnet_create_args: {}
-      subnet_cidr_start: "1.1.0.0/30"
+      subnet_cidr_start: "1.1.0.0/16"
       subnets_per_network: 2
       router_create_args: {}
       router_update_args:
@@ -147,7 +147,7 @@ NeutronNetworks.create_and_update_routers:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 5
@@ -175,7 +175,7 @@ NeutronNetworks.create_and_update_ports:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 5
@@ -195,7 +195,7 @@ NeutronNetworks.create_and_delete_networks:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 5
@@ -213,12 +213,12 @@ NeutronNetworks.create_and_delete_subnets:
     args:
       network_create_args: {}
       subnet_create_args: {}
-      subnet_cidr_start: "1.1.0.0/30"
+      subnet_cidr_start: "1.1.0.0/16"
       subnets_per_network: 2
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 5
@@ -236,13 +236,13 @@ NeutronNetworks.create_and_delete_routers:
     args:
       network_create_args: {}
       subnet_create_args: {}
-      subnet_cidr_start: "1.1.0.0/30"
+      subnet_cidr_start: "1.1.0.0/16"
       subnets_per_network: 2
       router_create_args: {}
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 5
@@ -265,7 +265,7 @@ NeutronNetworks.create_and_delete_ports:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 5
@@ -281,11 +281,11 @@ NeutronNetworks.create_and_delete_ports:
 Quotas.neutron_update:
   -
     args:
-      max_quota: 1024
+      max_quota: 10240
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 20
@@ -301,7 +301,7 @@ NeutronSecurityGroup.create_and_list_security_groups:
       runner:
         type: "constant"
         times: 100
-        concurrency: 100
+        concurrency: 1000
       context:
         users:
           tenants: 20
@@ -311,7 +311,7 @@ NeutronSecurityGroup.create_and_list_security_groups:
             security_group: -1
       sla:
         failure_rate:
-          max: 20
+          max: 0
 
 NeutronSecurityGroup.create_and_show_security_group:
   -
@@ -320,7 +320,7 @@ NeutronSecurityGroup.create_and_show_security_group:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 2
@@ -330,7 +330,7 @@ NeutronSecurityGroup.create_and_show_security_group:
           security_group: -1
     sla:
       failure_rate:
-        max: 20
+        max: 0
 
 NeutronSecurityGroup.create_and_delete_security_groups:
   -
@@ -339,7 +339,7 @@ NeutronSecurityGroup.create_and_delete_security_groups:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 2
@@ -349,7 +349,7 @@ NeutronSecurityGroup.create_and_delete_security_groups:
           security_group: -1
     sla:
       failure_rate:
-        max: 20
+        max: 0
 
 NeutronSecurityGroup.create_and_update_security_groups:
   -
@@ -359,7 +359,7 @@ NeutronSecurityGroup.create_and_update_security_groups:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 2
@@ -369,7 +369,7 @@ NeutronSecurityGroup.create_and_update_security_groups:
           security_group: -1
     sla:
       failure_rate:
-        max: 20
+        max: 0
 
 NeutronSecurityGroup.create_and_list_security_group_rules:
   -
@@ -379,7 +379,7 @@ NeutronSecurityGroup.create_and_list_security_group_rules:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 2
@@ -389,7 +389,7 @@ NeutronSecurityGroup.create_and_list_security_group_rules:
           security_group: -1
     sla:
       failure_rate:
-        max: 20
+        max: 0
 
 NeutronSecurityGroup.create_and_show_security_group_rule:
   -
@@ -399,7 +399,7 @@ NeutronSecurityGroup.create_and_show_security_group_rule:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 2
@@ -419,11 +419,14 @@ NeutronSecurityGroup.create_and_delete_security_group_rule:
     runner:
       type: "constant"
       times: 100
-      concurrency: 100
+      concurrency: 1000
     context:
       users:
         tenants: 2
         users_per_tenant: 1
+      quotas:
+        neutron:
+          security_group: -1
     sla:
       failure_rate:
         max: 0
