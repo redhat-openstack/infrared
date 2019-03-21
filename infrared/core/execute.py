@@ -22,6 +22,7 @@ def ansible_playbook(inventory, playbook_path, verbose=None,
 
     # hack for verbosity
     from ansible.utils.display import Display
+    from ansible.errors import AnsibleOptionsError, AnsibleError
     display = Display(verbosity=verbose)
     import __main__ as main
     setattr(main, "display", display)
@@ -71,5 +72,16 @@ def _run_playbook(cli_args, vars_dict):
         cli_args.extend(['--extra-vars', "@" + tmp.name])
         cli = PlaybookCLI(cli_args)
         LOG.debug('Starting ansible cli with args: {}'.format(cli_args[1:]))
-        cli.parse()
-        return cli.run()
+        try:
+            cli.parse()
+            # Return the result:
+            # 0: Success
+            # 1: "Error"
+            # 2: Host failed
+            # 3: Unreachable
+            # 4: Parser Error
+            # 5: Options error
+            return cli.run()
+        except (AnsibleParserError, AnsibleOptionsError) as error:
+            LOG.error('{}: {}'.format(type(error), error))
+            raise error
