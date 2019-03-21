@@ -15,6 +15,12 @@
       shell: python -c 'import yum' || (dnf install -y yum yum-utils && ln -snf /usr/bin/yum-deprecated /usr/bin/yum)
       when: ansible_distribution == "Fedora"
 
+    - name: Ensure persistent journal is enabled
+      shell: mkdir /var/log/journal && restorecon -r /var/log/journal
+      register: persistent_journal
+      changed_when: persistent_journal.rc == 0
+      failed_when: persistent_journal.rc != 0 and ('File exists' not in persistent_journal.stderr)
+
     - name: set hostname
       hostname:
           # todo(yfried): this seems highly specific. Refactor this to a more generic use case
