@@ -125,9 +125,13 @@ subparsers:
                           An image to be uploaded to glance and used for testing. Path have to be a url.
                   images-packages:
                       type: Value
-                      help: | 
+                      help: |
                           Comma delimited list of packages to install in guest image tempest will use for testing.
                           This option requires 'image' option to be specified and will fail without it.
+                  extra-conflongarg:
+                       action: append
+                       help: |
+                           Extra long argument without the leading '--' passed to python-tempestconf.
                   config-options:
                        type: IniType
                        action: append

@@ -33,6 +33,11 @@
                       --image {{ test.image }} \
                   {% endif %}
               {% endif %}
+              {% if test.get('extra', {}).get('conflongarg', []) %}
+                   {% for value in option_name,value in test['extra']['conflongarg'] %}
+                       --{{value}} \
+                   {% endfor %}
+              {% endif %}
               identity.uri $OS_AUTH_URL \
               identity.admin_password $OS_PASSWORD \
               scenario.img_dir ~/{{ test.dir }}/etc \
