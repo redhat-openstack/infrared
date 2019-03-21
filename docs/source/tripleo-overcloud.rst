@@ -329,6 +329,28 @@ Overcloud Storage
     The type of storage service used as backend.
 * ``--storage-config``:
     Storage configuration (YAML) file.
+* ``--ceph-osd-type``:
+    For osp13 and above, sets the ceph deployment type to filestore or bluestore.
+    Will default to bluestore if not specified. Currently we do not support non-lvm ``ceph-osd-scenario`` deployments
+    for bluestore.
+* ``--ceph-osd-scenario``:
+    For osp13 and above, sets the osd scenarios to ``collocated``, ``non-collocated`` (for filestore) or ``lvm`` for bluestore).
+    The latter will be used with ``--ceph-osd-type bluestore`` by default
+    when using ``--ceph-osd-type filestore``, ``--ceph-osd-scenario`` can be ``collocated`` or ``non-collocated``.
+
+Example 1 - non-collocated filestore::
+
+  infrared tripleo-overcloud \
+  ...
+  --ceph-osd-type filestore \
+  --ceph-osd-scenario non-collocated
+
+Example 2 - lvm bluestore::
+
+  infrared tripleo-overcloud \
+  ...
+  --ceph-osd-type bluestore \
+  --ceph-osd-scenario lvm
 
 .. _`tripleo-undercloud`: tripleo-undercloud.html
 .. _`virsh`: virsh.html
