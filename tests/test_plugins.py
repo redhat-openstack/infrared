@@ -142,7 +142,7 @@ def get_plugin_spec_flatten_dict(plugin_dir):
     :return: A flatten dictionary contains the plugin's properties
     """
     with open(os.path.join(plugin_dir, PLUGIN_SPEC)) as fp:
-        spec_yaml = yaml.load(fp)
+        spec_yaml = yaml.safe_load(fp)
 
     plugin_name = list(spec_yaml['subparsers'].keys())[0]
 
@@ -823,7 +823,7 @@ def test_import_plugins_from_registry(tmpdir, plugin_manager_fixture):
     plugins_registry = os.path.join(SAMPLE_PLUGINS_DIR, "registry_example.yml")
 
     with open(plugins_registry) as fp:
-        registry_yaml = yaml.load(fp)
+        registry_yaml = yaml.safe_load(fp)
 
     # prepare tmp library folder to hold the dependencies
     tmp_pluginss_dir = str(tmpdir.mkdir("tmp_pluginss_dir"))

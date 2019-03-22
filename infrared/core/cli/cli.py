@@ -344,7 +344,7 @@ class Bool(Value):
 
     def resolve(self, value=True):
         """Returns the YAML boolean value. """
-        value = yaml.load(str(value))
+        value = yaml.safe_load(str(value))
         if not isinstance(value, bool):
             raise exceptions.IRException("--{} expects boolean values".
                                          format(self.arg_name))

@@ -181,7 +181,7 @@ def test_nested_value_CLI(spec_fixture,
     assert return_value == 0
     assert path.exists(path.join(inventory_dir, output_file))
 
-    output_dict = yaml.load(dry_output.read())["provision"]
+    output_dict = yaml.safe_load(dry_output.read())["provision"]
     # asserts expected_output_dict is subset of output
     assert subdict_in_dict(
         expected_output_dict,
@@ -240,7 +240,7 @@ def test_extra_vars(spec_fixture,
     # dry run returns None
     assert return_value is None
 
-    output_dict = yaml.load(dry_output.read())
+    output_dict = yaml.safe_load(dry_output.read())
     # asserts expected_output_dict is subset of output
     assert subdict_in_dict(
         expected_output_dict,
@@ -315,7 +315,7 @@ def test_extra_vars_with_file(spec_fixture,
     # dry run returns None
     assert return_value is None
 
-    output_dict = yaml.load(dry_output.read())
+    output_dict = yaml.safe_load(dry_output.read())
     # asserts expected_output_dict is subset of output
     assert subdict_in_dict(
         expected_output_dict,
@@ -373,7 +373,7 @@ def test_nested_KeyValueList_CLI(spec_fixture,
     assert return_value == 0
     assert path.exists(path.join(inventory_dir, output_file))
 
-    output_dict = yaml.load(dry_output.read())["provision"]
+    output_dict = yaml.safe_load(dry_output.read())["provision"]
     # asserts expected_output_dict is subset of output
     assert subdict_in_dict(
         expected_output_dict,
@@ -488,7 +488,7 @@ def test_nested_value_CLI_with_answers_file(spec_fixture, tmpdir,
     assert return_value == 0
     assert path.exists(path.join(inventory_dir, output_file))
 
-    output_dict = yaml.load(dry_output.read())["provision"]
+    output_dict = yaml.safe_load(dry_output.read())["provision"]
     # asserts expected_output_dict is subset of output
     assert subdict_in_dict(
         expected_output_dict,
