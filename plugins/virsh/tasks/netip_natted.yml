@@ -37,7 +37,7 @@
       delay: 10
       sleep: 3
   delegate_to: hypervisor
-  when: (item.value.deploy_os|default(True)) and (item.value.ip is defined)
+  when: (item.value.deploy_os|default(True)) and (item.value.ip is defined) and ('vswitches' not in item.value.groups)
   with_dict: "{{ vm_inv_info }}"
 
 - name: detect python interpreter
@@ -50,7 +50,7 @@
       -o ProxyCommand="ssh {{ sshopts }} -W %h:%p -i {{ sshkey }} {{ proxyhost }}" \
       -i {{ sshkey }} root@{{ item.value.ip }} 'command -v python python3 /usr/libexec/platform-python|head -n1'
   delegate_to: localhost
-  when: (item.value.deploy_os|default(True)) and (item.value.ip is defined)
+  when: (item.value.deploy_os|default(True)) and (item.value.ip is defined) and ('vswitches' not in item.value.groups)
   register: py_interpreter
   with_dict: "{{ vm_inv_info }}"
 
