@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a46d0216_10614914",
+        "filename": "plugins/virsh/tasks/netip_natted.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2019-03-22T13:55:01Z",
+      "side": 1,
+      "message": "after irc discussion about the issue this is trying to solve,\ni would suggest to instead follow the conditions which were originally applied to \u0027provision_user\u0027 (where this ^ wait-for-ssh was placed before)\n\nwhich are like:\n  hosts: all:!localhost:!hypervisor:!vswitches\n\nbased on https://github.com/redhat-openstack/infrared/blob/master/plugins/virsh/provision_user.yml#L3\n\nso here the when condition needs one more check:\n\n  when: (...deploy_os...) and (...ip...) and (\u0027vswitches\u0027 not in item.value.groups)",
+      "revId": "61875e702034be27c5a01390ca0a5d2979a4c780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10778a4f_6e9cbcae",
+        "filename": "plugins/virsh/tasks/netip_natted.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2019-03-22T13:55:01Z",
+      "side": 1,
+      "message": "same condition as suggested above needs to be here",
+      "revId": "61875e702034be27c5a01390ca0a5d2979a4c780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
