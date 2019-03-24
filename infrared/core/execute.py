@@ -63,6 +63,7 @@ def _run_playbook(cli_args, vars_dict):
     #                 and creates new 'display' object with default (0)
     #                 verbosity.
     from ansible.cli.playbook import PlaybookCLI
+    from ansible.errors import AnsibleOptionsError, AnsibleParserError
     with tempfile.NamedTemporaryFile(
             mode='w+', prefix="ir-settings-", delete=True) as tmp:
         tmp.write(yaml.safe_dump(vars_dict, default_flow_style=False))
@@ -71,5 +72,16 @@ def _run_playbook(cli_args, vars_dict):
         cli_args.extend(['--extra-vars', "@" + tmp.name])
         cli = PlaybookCLI(cli_args)
         LOG.debug('Starting ansible cli with args: {}'.format(cli_args[1:]))
-        cli.parse()
-        return cli.run()
+        try:
+            cli.parse()
+            # Return the result:
+            # 0: Success
+            # 1: "Error"
+            # 2: Host failed
+            # 3: Unreachable
+            # 4: Parser Error
+            # 5: Options error
+            return cli.run()
+        except (AnsibleParserError, AnsibleOptionsError) as error:
+            LOG.error('{}: {}'.format(type(error), error))
+            raise error
