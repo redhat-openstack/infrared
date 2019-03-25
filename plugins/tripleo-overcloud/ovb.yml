@@ -39,27 +39,44 @@
         with_items:
           - "{{ ipmi_interface }}"
 
-      - name: Ensure neutron will use needed MTU
+      - block:
         become: yes
-        lineinfile:
-            dest: "/etc/dnsmasq-ironic.conf"
-            line: "dhcp-option-force=26,{{ ovb_mtu_value }}"
+          - name: Ensure neutron will use needed MTU
+            lineinfile:
+                dest: "/etc/dnsmasq-ironic.conf"
+                line: "dhcp-option-force=26,{{ ovb_mtu_value }}"
 
-      - name: Restart neutron and ironic services
+          - name: Restart neutron and ironic services
+            service:
+                name: "{{ item }}"
+                state: restarted
+            loop:
+                - "openstack-ironic-conductor"
+                - "neutron-server.service"
+                - "neutron-openvswitch-agent.service"
+                - "neutron-dhcp-agent.service"
+
+        when: install.version|default(undercloud_version) | openstack_release < 14
+
+      - block:
         become: yes
-        service:
-            name: "{{ item }}"
-            state: restarted
-        with_items:
-            - "openstack-ironic-conductor"
-            - "neutron-server.service"
-            - "neutron-openvswitch-agent.service"
-            - "neutron-dhcp-agent.service"
+          - name: Ensure neutron will use needed MTU in ironic_inspector_dnsmasq container
+            vars:
+                mtu_line: "dhcp-option-force=26,{{ ovb_mtu_value }}"
+            command: "docker exec ironic_inspector_dnsmasq bash -c 'grep -qxF '{{ mtu_line }}' /etc/dnsmasq.conf || echo '{{ mtu_line }}' >> /etc/dnsmasq.conf'"
+
+          - name: Restart neutron and ironic containers
+            command: "docker restart {{ item }}"
+            loop:
+                - "ironic_conductor"
+                - "neutron_api"
+                - "neutron_ovs_agent"
+                - "neutron_dhcp"
+
+        when: install.version|default(undercloud_version) | openstack_release >= 14
 
       - name: Set neutron subnet quota to unlimited
         ignore_errors: true
         shell: >
             source ~/stackrc;
-            neutron quota-update --subnet -1;
-            neutron quota-update --network -1;
-            neutron quota-update --security_group -1;
+            openstack quota set --subnets -1 --networks -1 --secgroups -1 admin;
