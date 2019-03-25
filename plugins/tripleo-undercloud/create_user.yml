@@ -29,7 +29,7 @@
             dest: "/etc/sudoers"
             line: "{{ install.user.name }} ALL=(root) NOPASSWD:ALL"
 
-      - name: create .ssh direcotry for non-root user
+      - name: create .ssh directory for non-root user
         file:
             path: "{{ default_privatekey | dirname }}"
             state: directory
@@ -42,11 +42,10 @@
                 src: "{{ ansible_ssh_private_key_file }}"
                 dest: "{{ default_privatekey }}"
                 mode: 0600
+                owner: "{{ install.user.name }}"
+                group: "{{ install.user.name }}"
                 force: yes
             register: key_injection
-            become_user: "{{ install.user.name }}"
-            become: yes
-
 
           - name: Retrieve public key from private key
             shell: "ssh-keygen -y -f {{ default_privatekey }} > {{ default_pubkey }}"
