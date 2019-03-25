@@ -23,6 +23,7 @@ fi
 
 sed -i "s/download.*\.lab.*\.redhat\.com/${mirror}/" *.repo
 sed -i "s/download\(-node.*\)\?\.eng.*\.redhat\.com/${mirror}/" *.repo
+sed -i "s/download\.devel\.redhat\.com/${mirror}/" *.repo
 sed -i "s/rhos-release.*\.redhat\.com/${mirror}\/rhos-release/" *.repo
 sed -r -i "s/ayanami.*\.redhat.com/${mirror}\/ayanami/" *.repo
 sed -i "s/pulp.*\.redhat\.com/${mirror}\/pulp/" *.repo
