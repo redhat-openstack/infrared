@@ -24,42 +24,56 @@
             dest: "{{ instack_output }}"
         when: not instack_input
 
-      - name: Set MTU values
-        become: yes
-        command: "ip link set {{ ipmi_interface }} mtu {{ ovb_mtu_value }}"
-        with_items:
-          - "{{ ipmi_interface }}"
 
-      - name: Save MTU values
-        become: yes
-        lineinfile:
-            dest: "/etc/sysconfig/network-scripts/ifcfg-{{ item }}"
-            line: "MTU={{ ovb_mtu_value }}"
-            regexp: '^MTU='
-        with_items:
-          - "{{ ipmi_interface }}"
+      - block:
+          - name: Set MTU values
+            become: yes
+            command: "ip link set {{ ipmi_interface }} mtu {{ ovb_mtu_value }}"
+            with_items:
+              - "{{ ipmi_interface }}"
 
-      - name: Ensure neutron will use needed MTU
-        become: yes
-        lineinfile:
-            dest: "/etc/dnsmasq-ironic.conf"
-            line: "dhcp-option-force=26,{{ ovb_mtu_value }}"
+          - name: Save MTU values
+            become: yes
+            lineinfile:
+                dest: "/etc/sysconfig/network-scripts/ifcfg-{{ item }}"
+                line: "MTU={{ ovb_mtu_value }}"
+                regexp: '^MTU='
+            with_items:
+              - "{{ ipmi_interface }}"
 
-      - name: Restart neutron and ironic services
+          - name: Ensure neutron will use needed MTU
+            lineinfile:
+                dest: "/etc/dnsmasq-ironic.conf"
+                line: "dhcp-option-force=26,{{ ovb_mtu_value }}"
+
+          - name: Restart neutron and ironic services
+            service:
+                name: "{{ item }}"
+                state: restarted
+            loop:
+                - "openstack-ironic-conductor"
+                - "neutron-server.service"
+                - "neutron-openvswitch-agent.service"
+                - "neutron-dhcp-agent.service"
+
         become: yes
-        service:
-            name: "{{ item }}"
-            state: restarted
-        with_items:
-            - "openstack-ironic-conductor"
-            - "neutron-server.service"
-            - "neutron-openvswitch-agent.service"
-            - "neutron-dhcp-agent.service"
+        when: install.version|default(undercloud_version) | openstack_release < 14
+
+      - block:
+          - name: "Read {{ ipmi_interface }} interface MTU value"
+            command: "cat /sys/class/net/{{ ipmi_interface }}/mtu"
+            register: mtu_val
+          - name: Check if the right MTU was configured when deploying the undercloud
+            fail:
+                msg: |
+                    The Undercloud MTU should be {{ ovb_mtu_value }} in undercloud.conf.
+                    Deploy the undercloud with --config-options DEFAULT.local_mtu={{ ovb_mtu_value }}
+            when: mtu_val.stdout|int != ovb_mtu_value
+
+        when: install.version|default(undercloud_version) | openstack_release >= 14
 
       - name: Set neutron subnet quota to unlimited
         ignore_errors: true
         shell: >
             source ~/stackrc;
-            neutron quota-update --subnet -1;
-            neutron quota-update --network -1;
-            neutron quota-update --security_group -1;
+            openstack quota set --subnets -1 --networks -1 --secgroups -1 admin;
