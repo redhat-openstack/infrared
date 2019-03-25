@@ -26,6 +26,18 @@
             line: 'iscsi_verify_attempts = 30'
           notify: restart ironic conductor
       when: "'vqfx-0' in hostvars"
+
+    - name: Change disk cleanup in ironic
+      lineinfile:
+         path: /etc/ironic/ironic.conf
+         ini_file:
+           section: conductor
+           option: automated_clean
+           value: true
+         notify: restart ironic conductor non container
   handlers:
     - name: restart ironic conductor
       command: docker restart "{{ conductor_id.stdout }}"
+    - name: restart ironic conductor non container
+      command: systemctl restart openstack-ironic-conductor.service
+
