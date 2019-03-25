@@ -39,27 +39,39 @@
         with_items:
           - "{{ ipmi_interface }}"
 
-      - name: Ensure neutron will use needed MTU
-        become: yes
-        lineinfile:
-            dest: "/etc/dnsmasq-ironic.conf"
-            line: "dhcp-option-force=26,{{ ovb_mtu_value }}"
+      - block:
+          - name: Ensure neutron will use needed MTU
+            lineinfile:
+                dest: "/etc/dnsmasq-ironic.conf"
+                line: "dhcp-option-force=26,{{ ovb_mtu_value }}"
 
-      - name: Restart neutron and ironic services
+          - name: Restart neutron and ironic services
+            service:
+                name: "{{ item }}"
+                state: restarted
+            loop:
+                - "openstack-ironic-conductor"
+                - "neutron-server.service"
+                - "neutron-openvswitch-agent.service"
+                - "neutron-dhcp-agent.service"
+
         become: yes
-        service:
-            name: "{{ item }}"
-            state: restarted
-        with_items:
-            - "openstack-ironic-conductor"
-            - "neutron-server.service"
-            - "neutron-openvswitch-agent.service"
-            - "neutron-dhcp-agent.service"
+        when: install.version|default(undercloud_version) | openstack_release < 14
+
+      - block:
+          - name: Check the undercloud.conf local_mtu option
+            vars:
+                mtu_val: "{{ lookup('ini', 'local_mtu section=DEFAULT file=undercloud.conf') }}"
+            fail:
+                msg: |
+                    The Undercloud MTU should be {{ ovb_mtu_value }} in undercloud.conf.
+                    Deploy the undercloud with --config-options DEFAULT.local_mtu={{ ovb_mtu_value }}
+            when: mtu_val|int != ovb_mtu_value
+
+        when: install.version|default(undercloud_version) | openstack_release >= 14
 
       - name: Set neutron subnet quota to unlimited
         ignore_errors: true
         shell: >
             source ~/stackrc;
-            neutron quota-update --subnet -1;
-            neutron quota-update --network -1;
-            neutron quota-update --security_group -1;
+            openstack quota set --subnets -1 --networks -1 --secgroups -1 admin;
