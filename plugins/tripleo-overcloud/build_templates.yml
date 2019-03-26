@@ -102,6 +102,9 @@
             - not overcloud_deploy_script|default('')
             - install.containers|default('')
             - install.version|default(undercloud_version)|openstack_release >= 12
+            # Don't call env override file before default template file while
+            # using netapp-nfs backend to prevent misconfiguration.
+            - install.storage.backend != 'netapp-nfs'
 
       - name: append extra templates provided by user
         include_tasks: tasks/environment_templates.yml
