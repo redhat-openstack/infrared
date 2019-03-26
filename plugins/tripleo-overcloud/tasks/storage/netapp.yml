@@ -9,5 +9,6 @@
         lineinfile:
             dest: "~/overcloud_deploy.sh"
             line: '-e {{ template_base }}/storage-config.yaml \'
+            insertbefore: "^--log-file.*"
 
   when: install.storage.external
