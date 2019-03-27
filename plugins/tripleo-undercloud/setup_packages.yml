@@ -182,3 +182,18 @@
         package:
             name: "{{ (install.version|openstack_release == 7) | ternary('python-rdomanager-oscplugin', (install.version|openstack_release < 15) | ternary('python-tripleoclient', 'python3-tripleoclient')) }}"
             state: present
+
+      - name: "Workaround BZ1692462: mistral/ansible ssh to UC"
+        shell: |
+            set -ex
+            rev=2b6d0041ad8626f51ff35209248fa485c3f6062c
+            phash=${rev:0:7}
+
+            curl -o /tmp/${phash}.diff.base64 "https://review.openstack.org/changes/638323/revisions/${rev}/patch?download"
+            base64 --decode /tmp/${phash}.diff.base64 > /tmp/${phash}.diff
+            set +e
+            cd /usr/lib/python3.6/site-packages
+            git apply --exclude 'tripleo_common/tests/*' --exclude 'workbooks/*' /tmp/${phash}.diff
+            cd /usr/share/openstack-tripleo-common
+            git apply --exclude='tripleo_common/*' /tmp/${phash}.diff
+        when: "install.version|openstack_release >= 15"
