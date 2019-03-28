@@ -47,9 +47,8 @@
           jump: ACCEPT
           protocol: "udp"
           source: "{{ mgmt_net.network }}/{{ mgmt_net.netmask }}"
-          destination_port: "{{ item.1 }}"
-      with_nested:
-          - "{{ vbmc_ports.items() }}"
+          destination_port: "{{ item.value }}"
+      with_dict: "{{ vbmc_ports }}"
 
     - name: allow access to port vbmc ports from hypervisor
       become: True
@@ -61,8 +60,7 @@
           jump: ACCEPT
           protocol: "udp"
           source: "{{ vbmc_management_address }}"
-          destination_port: "{{ item.1 }}"
-      with_nested:
-          - "{{ vbmc_ports.items() }}"
+          destination_port: "{{ item.value }}"
+      with_dict: "{{ vbmc_ports }}"
 
   when: vbmc_host == 'hypervisor'
