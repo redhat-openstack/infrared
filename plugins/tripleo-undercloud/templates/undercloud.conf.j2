@@ -3,6 +3,9 @@
 # boots and DHCP for Overcloud instances. (string value)
 {% if 'bmc' in groups %}
 local_interface = eth1
+{% if install.version|openstack_release >= 14 %}
+local_mtu = {{ ovb_mtu_value|default('1350') }}
+{% endif %}
 {% else %}
 local_interface = eth0
 {% endif %}
