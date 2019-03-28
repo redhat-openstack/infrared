@@ -1,7 +1,7 @@
 ---
 - name: Check if running inside virtualenv
   command: |
-    python -c "import sys; print True if hasattr(sys, 'real_prefix') else False"
+      {{ ansible_python_interpreter | default('python') }} -c "import sys; print(True if hasattr(sys, 'real_prefix') else False)"
   register: is_venv
 
 - name: install virtualenv requirments for pip
