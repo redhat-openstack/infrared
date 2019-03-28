@@ -6,10 +6,11 @@
 - name: run port forwarding role
   include_role:
       name: network/forward-port
+      apply:
+          delegate_to: hypervisor
   vars:
       fp_ip_address_from: "{{ opstools_external_ip.stdout }}"
       fp_destination_port: 8081
-  delegate_to: hypervisor
   when:
       - "'hypervisor' in groups"
       - install.overcloud.opstools_forward|default(True)

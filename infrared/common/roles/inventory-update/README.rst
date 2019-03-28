@@ -21,7 +21,8 @@ Using the role with "include_role"::
     ---
     - include_role:
           name: inventory-update
-      delegate_to: localhost
+          apply:
+              delegate_to: localhost
       vars:
           inventory_file_name: 'hosts-prov'
 
