@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac1ca292_dec9dc94",
+        "filename": "plugins/tripleo-undercloud/templates/undercloud.conf.j2",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011919
+      },
+      "writtenOn": "2019-04-01T14:16:39Z",
+      "side": 1,
+      "message": "I was planning initially on doing something similar, however it would imply creating a new parameter for tripleo-undercloud to specify that we\u0027re deploying with ovb (something similar to the one from tripleo-overcloud --deployment-files ovb) mainly because the 1350 mtu is needed only when we deploy with ovb, if not we might be using the normal 1500. The second comment is that this variable ovb_mtu_value belongs to the tripleo-overcloud plugin, so unless we pass it specifically via tripleo-undercloud -e ovb_mtu_value\u003d1500 we\u0027ll be always forcing the deployment with a local_mtu\u003d1350, which might break other CI jobs. So, far, the way I managed to do this was passing --config-options: ir tripleo-undercloud -v --version 14 --images-task rpm --config-options DEFAULT.local_mtu\u003d1350",
+      "revId": "9218d167aa6cd29d21c535bffb1423ec8e6e1358",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
