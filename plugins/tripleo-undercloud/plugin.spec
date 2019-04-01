@@ -93,6 +93,15 @@ subparsers:
                                 --tls-ca=https://foo.com/ca.pem
                       default: ''
 
+                  tls-validate-ca-certs:
+                      type: Bool
+                      help: |
+                          Specifies if to validate SSL certificate when fetching a specific CA from remote URL
+                          Example:
+                              --tls-ca=https://foo.com/ca.pem \
+                              --tls-validate-ca-certs no
+                      default: yes
+
                   undercloud-extra-args:
                       type: Value
                       help: |
