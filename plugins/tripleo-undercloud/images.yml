@@ -48,6 +48,13 @@
         file:
           name: "{{ tmp_oc_repos_dir }}"
           state: directory
+
+      - name: Downloading extra repositories
+        get_url:
+            url: "{{ item }}"
+            dest: "{{ tmp_oc_repos_dir }}"
+        with_items: "{{ install.repos.urls|default([]) }}"
+
   roles:
         # modify images - update to core build and install packages
       - name: prepare repos for the images
