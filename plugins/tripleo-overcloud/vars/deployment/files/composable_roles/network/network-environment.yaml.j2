@@ -1,5 +1,6 @@
 ---
 parameter_defaults:
+{% if not install.network.render.templates|default(False) %}
     ExternalNetCidr: '10.0.0.0/24'
     ExternalAllocationPools: [{'start': '10.0.0.101', 'end': '10.0.0.149'}]
     ExternalInterfaceDefaultRoute: '10.0.0.1'
@@ -15,6 +16,7 @@ parameter_defaults:
     TenantNetCidr: '172.17.2.0/24'
     TenantAllocationPools: [{'start': '172.17.2.10', 'end': '172.17.2.149'}]
     TenantNetworkVlanID: 50
+{% endif %}
     DnsServers: ['10.0.0.1']
     EC2MetadataIp: 192.168.24.1
 {% if install.splitstack|default(False) %}

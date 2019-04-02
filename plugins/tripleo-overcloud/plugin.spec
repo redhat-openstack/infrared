@@ -385,6 +385,11 @@ subparsers:
                           - ipv4
                           - ipv6
 
+                  network-render-templates:
+                      type: Bool
+                      default: no
+                      help: Define configuration with network_data.yaml instead of network-environment.yaml
+
                   network-lbaas:
                       type: Bool
                       default: no

@@ -38,6 +38,12 @@
         with_filetree: '{{ source_dir }}'
         when: item.state == 'file'
 
+      - name: Create the network_data.yaml
+        template:
+            src: templates/network_data.yaml.j2
+            dest: '{{ template_base }}/network/network_data.yaml'
+        when: install.network.render.templates|default(False)
+
       - name: inject debug.yaml so it will be auto discovered with user templates
         template:
             src: templates/debug.yaml.j2
