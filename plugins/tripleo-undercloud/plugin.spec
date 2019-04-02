@@ -417,3 +417,9 @@ subparsers:
                       help: |
                           Container images prefix
                       default: 'openstack-'
+
+                  bip-address:
+                      type: Value
+                      help: |
+                          The subnet for the undercloud docker interface
+                          on the undercloud
