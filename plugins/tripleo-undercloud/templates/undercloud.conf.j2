@@ -50,6 +50,9 @@ docker_insecure_registries={{ install.registry.mirror }}
 container_insecure_registries={{ install.registry.mirror }}
 {% endif %}
 {% endif %}
+{% if install.bip.address %}
+docker_bip = '--bip={{% install.bip.address %}}'
+{% endif %}
 [ctlplane-subnet]
 local_subnet = ctlplane-subnet
 cidr = 192.168.24.0/24
