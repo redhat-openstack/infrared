@@ -5,23 +5,24 @@
       - name: get network dict
         include_vars: "{{ provision.topology.network }}"
 
-      - name: Create networks
-        os_network:
-            cloud: "{{ provision.cloud | default(omit) }}"
-            external: "{{ item.value.external | default(omit) }}"
-            name: "{{ provision.prefix }}{{ item.value.name }}"
-            state: present
-            shared: "{{ item.value.shared | default(omit) }}"
-            timeout: "{{ item.value.timeout | default(180) }}"
-        register: networks
-        with_dict: "{{ networks_data.networks }}"
-        when: networks_data.networks is defined
+      - block:
+          - name: Create networks
+            os_network:
+                cloud: "{{ provision.cloud | default(omit) }}"
+                external: "{{ item.value.external | default(omit) }}"
+                name: "{{ provision.prefix }}{{ item.value.name }}"
+                state: present
+                shared: "{{ item.value.shared | default(omit) }}"
+                timeout: "{{ item.value.timeout | default(180) }}"
+            register: networks
+            with_dict: "{{ networks_data.networks }}"
 
-      - name: register networks resources
-        vars:
-            input:
-                networks: "{{ networks.results | map(attribute='network') | list }}"
-        include_tasks: tasks/register_resources_file.yml
+          - name: register networks resources
+            vars:
+                input:
+                    networks: "{{ networks.results | map(attribute='network') | list }}"
+            include_tasks: tasks/register_resources_file.yml
+        when: networks_data.networks is defined
 
       - name: Register externally accessible networks
         os_networks_facts:
@@ -40,55 +41,57 @@
           - skip_ansible_lint
         when: provision.anti.spoofing == false
 
-      - name: Create subnets
-        os_subnet:
-            allocation_pool_start: "{{ item.value.allocation_pool_start }}"
-            allocation_pool_end: "{{ item.value.allocation_pool_end }}"
-            cidr: "{{ item.value.cidr | default(omit) }}"
-            cloud: "{{ provision.cloud | default(omit) }}"
-            dns_nameservers: "{{ provision.dns }}"
-            enable_dhcp: "{{ item.value.enable_dhcp | default(True) }}"
-            name: "{{ provision.prefix }}{{ item.value.name }}"
-            network_name: "{{ provision.prefix }}{{ item.value.network_name }}"
-            state: present
-        register: subnets
-        with_dict: "{{ networks_data.subnets }}"
+      - block:
+          - name: Create subnets
+            os_subnet:
+                allocation_pool_start: "{{ item.value.allocation_pool_start }}"
+                allocation_pool_end: "{{ item.value.allocation_pool_end }}"
+                cidr: "{{ item.value.cidr | default(omit) }}"
+                cloud: "{{ provision.cloud | default(omit) }}"
+                dns_nameservers: "{{ provision.dns }}"
+                enable_dhcp: "{{ item.value.enable_dhcp | default(True) }}"
+                name: "{{ provision.prefix }}{{ item.value.name }}"
+                network_name: "{{ provision.prefix }}{{ item.value.network_name }}"
+                state: present
+            register: subnets
+            with_dict: "{{ networks_data.subnets }}"
+
+          - name: register subnets resources
+            vars:
+                input:
+                    subnets: "{{ subnets.results | map(attribute='subnet') | list }}"
+            include_tasks: tasks/register_resources_file.yml
         when: networks_data.subnets is defined
 
-      - name: register subnets resources
-        vars:
-            input:
-                subnets: "{{ subnets.results | map(attribute='subnet') | list }}"
-        include_tasks: tasks/register_resources_file.yml
+      - block:
+          - name: Create routers
+            os_router:
+                cloud: "{{ provision.cloud | default(omit) }}"
+                external_fixed_ips: "{{ item.value.external_fixed_ips | default(omit) }}"
+                interfaces: "{{ item.value.attach_subnets | map('regex_replace', '^(.*)$', provision.prefix + '\\1') | join(',') }}"
+                name: "{{ provision.prefix }}{{ item.value.name | default('router1') }}"
+                network: "{{ (provision.provider|default({})).network|default(openstack_networks[0].id) }}"
+                state: present
+            register: routers
+            with_dict: "{{ networks_data.routers }}"
 
-      - name: Create routers
-        os_router:
-            cloud: "{{ provision.cloud | default(omit) }}"
-            external_fixed_ips: "{{ item.value.external_fixed_ips | default(omit) }}"
-            interfaces: "{{ item.value.attach_subnets | map('regex_replace', '^(.*)$', provision.prefix + '\\1') | join(',') }}"
-            name: "{{ provision.prefix }}{{ item.value.name | default('router1') }}"
-            network: "{{ (provision.provider|default({})).network|default(openstack_networks[0].id) }}"
-            state: present
-        register: routers
-        with_dict: "{{ networks_data.routers }}"
+          - name: register routers resources
+            vars:
+                input:
+                    routers: "{{ routers.results | map(attribute='router') | list }}"
+            include_tasks: tasks/register_resources_file.yml
         when: networks_data.routers is defined
 
-      - name: register routers resources
-        vars:
-            input:
-                routers: "{{ routers.results | map(attribute='router') | list }}"
-        include_tasks: tasks/register_resources_file.yml
+      - block:
+          - name: create security groups
+            include_tasks: tasks/create_network_resources.yml
+            with_dict: "{{ security_groups|default({}) }}"
+            loop_control:
+                loop_var: sg
 
-      - name: create security groups
-        include_tasks: tasks/create_network_resources.yml
-        with_dict: "{{ security_groups|default({}) }}"
-        loop_control:
-            loop_var: sg
+          - name: register security groups
+            vars:
+                input:
+                    security_group_list: "{{ security_group_list }}"
+            include_tasks: tasks/register_resources_file.yml
         when: security_groups is defined and provision.anti.spoofing == true
-
-      - name: register security groups
-        vars:
-            input:
-                security_group_list: "{{ security_group_list }}"
-        include_tasks: tasks/register_resources_file.yml
-        when: provision.anti.spoofing == true
