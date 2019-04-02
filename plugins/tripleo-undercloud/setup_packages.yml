@@ -8,6 +8,7 @@
       skip_release: "{{ install.get('repos', {}).get('skip', {}).release|default('')}}"
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
       undercloud_extra_repos: []
+      tmp_oc_repos_dir: /tmp/oc_repos/yum.repos.d
   tags: install
   pre_tasks:
       # FIXME(yfried): figure why this is required in gate only
@@ -97,11 +98,19 @@
           - custom_repos_files is defined
           - install['upload']['extra']['repos']
 
+      - name: Create a tmp repos.d for overcloud
+        file:
+          name: "{{ tmp_oc_repos_dir }}"
+          state: directory
+
       - name: Downloading extra repositories
+        vars:
+            repos_locations: ['/etc/yum.repos.d', "{{ tmp_oc_repos_dir }}"]
         get_url:
-            url: "{{ item }}"
-            dest: /etc/yum.repos.d/
-        with_items: "{{ custom_repos.urls|default([]) }}"
+            url: "{{ item.0 }}"
+            dest: "{{ item.1 }}"
+        loop: "{{ custom_repos.urls|product(repos_locations)|list }}"
+        when: custom_repos.urls|length > 0 
 
       - name: install deltarpm
         package:
