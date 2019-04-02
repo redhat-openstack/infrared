@@ -122,6 +122,16 @@ subparsers:
                           has to be a valid timezone.
                           None: Option change Hypervisor Timezone also
 
+            - title: Advanced Settings
+              options:
+                  serial-files:
+                      type: Bool
+                      default: False
+                      help: |
+                          Redirect the VMs serial output to files.
+                          Files can be found under /var/log/sfiles/{prefix-node_name-node_number}.log
+                          For example: /var/log/sfiles/XYZ-undercloud-0.log
+
             - title: cleanup
               options:
                   cleanup:

@@ -177,3 +177,8 @@ interfere with each other in terms of networking, virtual instances etc.
 
 Cleanup procedure also supports ``--prefix`` parameter allowing to cleanup only needed environment, if ``--prefix`` is not given 
 all resources on hypervisor will be cleaned.
+
+Advanced Settings
+-----------------
+
+* ``--serial-files``: When true, redirect the serial output to files that can be found under '/var/log/sfiles' on the Hypervisor.
