@@ -230,6 +230,7 @@ Tripleo Heat Templates configuration options
     should inject the following yaml to "overcloud deploy" command:
 
     .. code-block:: yaml
+
         ---
         parameter_defaults:
             ControllerExtraConfig:
