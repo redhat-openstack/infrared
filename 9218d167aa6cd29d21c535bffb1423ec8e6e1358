@@ -16,6 +16,24 @@
       "revId": "9218d167aa6cd29d21c535bffb1423ec8e6e1358",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e38de996_8834b291",
+        "filename": "plugins/tripleo-undercloud/templates/undercloud.conf.j2",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1000857
+      },
+      "writtenOn": "2019-04-02T11:03:20Z",
+      "side": 1,
+      "message": "We don\u0027t always use 1350, see the condition on line 4, which still applies on line 7 -- that\u0027s a check whether we deploy OVB or not. So normal deployments will keep whatever they have by default (1500 i guess).\n\n\nA theoretical issue is hardcoding of the 1350 value for OVB, but it\u0027s not hardcoded here, it\u0027s only hardcoded here i think:\n\nhttps://github.com/redhat-openstack/infrared/blob/939e2155a857f52f30d174a480de73c43797b5a5/plugins/tripleo-overcloud/ovb.yml#L10\n\n^ that is probably a location which needs fixing. If we pass custom ovb_mtu_value, the spot in this patch will honor it, but the spot i linked above will override it. So something to fix, but not in this patch maybe?\n\nIMO we can safely merge this? And then perhaps parametrize the 1350 correctly in the spot i linked, but it\u0027s very unlikely that we\u0027ll want to customize that value on OVB i think... I\u0027m not even sure if it\u0027s worth exposing as a plugin parameter...",
+      "parentUuid": "ac1ca292_dec9dc94",
+      "revId": "9218d167aa6cd29d21c535bffb1423ec8e6e1358",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
