@@ -39,6 +39,25 @@
   when: item.bridged|default(false)
   with_items: "{{ topology_node.interfaces }}"
 
+- block:
+      - set_fact:
+            serial_files_dir: /var/log/sfiles
+      - name: Redirect serial output to files - Make a directory
+        file:
+            path: "{{ serial_files_dir }}"
+            state: directory
+            mode: 0755
+
+      - name: Redirect serial output to files - Create files
+        copy:
+            content: ""
+            dest: "{{ serial_files_dir}}/{{ prefix|default('') }}{{ topology_node.name }}-{{ item }}.log"
+            force: yes
+            mode: 0644
+        with_sequence: start={{ node_start_index|int }} end={{ topology_node.num|int + node_start_index|int - 1 }}
+  when: provision.serial.files
+
+
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
 - name: create vm's
   shell: |
@@ -65,6 +84,9 @@
            {%- if interface.needs_formatting | default(False) %}{{ interface.network | format(item) }}{% else %}{{ interface.network }}{% endif %}
            {%- if interface.model is defined and interface.model %},model={{ interface.model }}{% endif %} \
           {% endfor -%}
+          {% if provision.serial.files %}
+           --serial file,path="{{ serial_files_dir}}/{{ prefix|default('') }}{{ topology_node.name }}-{{ item }}.log" \
+          {% endif %}
            --virt-type kvm \
            --cpu {{ topology_node.cpumodel|default('host-passthrough') }} \
            --ram {{ topology_node.memory }} \
