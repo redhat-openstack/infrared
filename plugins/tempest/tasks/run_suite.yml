@@ -126,6 +126,8 @@
             if test.blackre|default('') else '' }}
             {{ (test.list) | ternary ('--list','') }}
             > {{ test_output_filename }}.subunit;
+        environment:
+            PYTHON: "{{ (test.openstack.version|default(overcloud_version)|openstack_release >= 15) | ternary('python3', omit) }}"
         args:
             executable: /bin/bash
             chdir: "{{ test.dir }}"
