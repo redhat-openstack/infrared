@@ -64,18 +64,40 @@
   loop_control:
       loop_var: test_suite
 
-- name: Install junitxml
-  become: yes
-  package:
-      name: "python-junitxml"
-      state: present
+- name: "Install subunit/junit tools from rpm for OSP <15"
+  when: test.openstack.version|default(overcloud_version)|openstack_release < 15
+  block:
+    - name: Install junitxml
+      become: yes
+      package:
+          name: "python-junitxml"
+          state: present
 
-# TODO(psedlak): make subunit2junitxml usage opt. in script, add the flag for run-tests.sh in run.yml after that
-- name: Install subunit filters - needed for subunit2junitxml
-  become: yes
-  package:
-      name: "subunit-filters"
-      state: present
+    # TODO(psedlak): make subunit2junitxml usage opt. in script, add the flag for run-tests.sh in run.yml after that
+    - name: Install subunit filters - needed for subunit2junitxml
+      become: yes
+      package:
+          name: "subunit-filters"
+          state: present
+
+- name: "Install subunit/junit tools in virtualenv for OSP15+"
+  when: test.openstack.version|default(overcloud_version)|openstack_release >= 15
+  block:
+    - name: install virtualenv 
+      become: yes
+      package:
+          name: python3-virtualenv
+          state: present
+
+    - name: create venv with subunit/junit tools
+      pip:
+          virtualenv: "{{ virtualenvs.tempest }}"
+          virtualenv_site_packages: yes
+          name: "{{ item }}"
+          state: latest
+      with_items:
+          - junit-xml
+          - python-subunit
 
 - name: Enable extra repo
   become: yes
