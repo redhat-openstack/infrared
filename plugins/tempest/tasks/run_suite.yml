@@ -129,6 +129,8 @@
         args:
             executable: /bin/bash
             chdir: "{{ test.dir }}"
+        environment:
+            PYTHON: "{{ (test.openstack.version|default(overcloud_version)|openstack_release >= 15) | ternary('python3', omit) }}"
         ignore_errors: true
         when:
             - test.openstack.version|default(overcloud_version)|openstack_release >= 7
