@@ -29,11 +29,10 @@ subparsers:
                       help: |
                           Username for destination server (in case key was not provided)
                   hieradata-config:
-                      type: Value
+                      type: Dict
                       help: |
                           Optional configuration to set via hieradata
-                          Use  --hieradata-config settings=value
-                      default: ''
+                          Use  --hieradata-config this::key=value,that::key=another_value
                   snapshot-restore:
                       type: Bool
                       help: |
