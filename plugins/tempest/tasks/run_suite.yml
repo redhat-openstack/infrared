@@ -30,7 +30,7 @@
 - name: remove old test list for "{{ test_suite }}"
   file:
       state: absent
-      name: "{{ test.dir }}/{{ item }}"
+      name: "~/{{ test.dir }}/{{ item }}"
   with_items:
       - "white_list_{{ test_suite }}"
       - "black_list_{{ test_suite }}"
@@ -42,7 +42,7 @@
     - name: create Test List - Whitelist for "{{ test_suite }}"
       lineinfile:
           create: yes
-          dest: "{{ test.dir }}/white_list_{{ test_suite }}"
+          dest: "~/{{ test.dir }}/white_list_{{ test_suite }}"
           line: "{{ item }}"
           regexp: "^{{ item }}$"
       with_items: "{{ test_dict.whitelist | default([]) }}"
@@ -52,7 +52,7 @@
     - name: create Test List - Blacklist for "{{ test_suite }}"
       lineinfile:
           create: yes
-          dest: "{{ test.dir }}/black_list_{{ test_suite }}"
+          dest: "~/{{ test.dir }}/black_list_{{ test_suite }}"
           line: "{{ item }}"
           regexp: "^{{ item }}$"
       with_items: "{{ test_dict.blacklist | default([]) }}"
@@ -78,7 +78,7 @@
 
 - name: Check for the existance of black_list_file
   stat:
-    path: "{{ test.dir }}/black_list_{{ test_suite }}"
+    path: "~/{{ test.dir }}/black_list_{{ test_suite }}"
   register: black_list_file
 
 - name: Add blacklist invocation
@@ -88,7 +88,7 @@
 
 - name: Check for the existance of white_list_file
   stat:
-    path: "{{ test.dir }}/white_list_{{ test_suite }}"
+    path: "~/{{ test.dir }}/white_list_{{ test_suite }}"
   register: white_list_file
 
 - name: Add whitelist invocation
@@ -128,7 +128,7 @@
             > {{ test_output_filename }}.subunit;
         args:
             executable: /bin/bash
-            chdir: "{{ test.dir }}"
+            chdir: "~/{{ test.dir }}"
         ignore_errors: true
         when:
             - test.openstack.version|default(overcloud_version)|openstack_release >= 7
@@ -148,7 +148,7 @@
             testr run {{ ('--parallel --concurrency=' + test.threads|string) if test.threads|default('') else '' }} --subunit '{{ '|'.join(parts) }}' > {{ test_output_filename }}.subunit
         args:
             executable: /bin/bash
-            chdir: "{{ test.dir }}"
+            chdir: "~/{{ test.dir }}"
         ignore_errors: true
         when:
             - test.openstack.version|default(overcloud_version)|openstack_release == 7
@@ -159,7 +159,7 @@
             test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate
             subunit2html {{ test_output_filename }}.subunit {{ test_output_filename }}.html
         args:
-            chdir: "{{ test.dir }}"
+            chdir: "~/{{ test.dir }}"
         when:
             results_formats.html is defined
 
@@ -169,14 +169,14 @@
             subunit2junitxml --output-to={{ test_output_filename }}.xml \
                 < {{ test_output_filename }}.subunit | subunit2pyunit
         args:
-            chdir: "{{ test.dir }}"
+            chdir: "~/{{ test.dir }}"
         when:
             results_formats.junitxml is defined
 
       - name: inject the test suite name to the XML name atribute
         command: "sed '/^<testsuite/s/name=\"\"/name=\"{{ test_suite }}\"/' -i {{ test_output_filename }}.xml"
         args:
-            chdir: "{{ test.dir }}"
+            chdir: "~/{{ test.dir }}"
         when:
             results_formats.junitxml is defined
 
@@ -184,20 +184,20 @@
         command: "sed 's#<title>\\(.*Test Report\\)</title>#<title>\\1 - {{ test_suite }}</title>#' \
                   -i {{ test_output_filename }}.html"
         args:
-            chdir: "{{ test.dir }}"
+            chdir: "~/{{ test.dir }}"
         when:
             results_formats.html is defined
 
       - name: Fetch subunit results file
         fetch:
-            src: "{{ test.dir }}/{{ test_output_filename }}.subunit"
+            src: "~/{{ test.dir }}/{{ test_output_filename }}.subunit"
             dest: "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.subunit"
             flat: yes
             fail_on_missing: yes
 
       - name: Fetch JUnit XML results file
         fetch:
-            src: "{{ test.dir }}/{{ test_output_filename }}.xml"
+            src: "~/{{ test.dir }}/{{ test_output_filename }}.xml"
             dest: "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.xml"
             flat: yes
             fail_on_missing: yes
@@ -206,7 +206,7 @@
 
       - name: Fetch HTML results file
         fetch:
-            src: "{{ test.dir }}/{{ test_output_filename }}.html"
+            src: "~/{{ test.dir }}/{{ test_output_filename }}.html"
             dest: "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.html"
             flat: yes
             fail_on_missing: no
@@ -219,6 +219,6 @@
             tempest cleanup
         args:
             executable: /bin/bash
-            chdir: "{{ test.dir }}"
+            chdir: "~/{{ test.dir }}"
         when: test.cleanup and test.openstack.version|default(overcloud_version)|openstack_release > 7
   when: test_dict.test_regex is defined or whitelistfile is defined or blacklistfile is defined
