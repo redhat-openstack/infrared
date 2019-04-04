@@ -14,10 +14,38 @@
         - libffi-devel
       state: present
 
-- name: install pip
+- set_fact:
+  install_pip_from_source: "{{ (false in src_conditions) | ternary(False, True) }}"
+  vars:
+    src_conditions:
+      - "{{ install is defined and install.version|default(undercloud_version)|openstack_release >= 15 }}"
+      - "{{ ansible_distribution in ['CentOS', 'RedHat'] }}"
+      - "{{ ansible_distribution_major_version | int >= 8 }}"
+
+- block:
+    - name: Download get-pip.py
+      get_url:
+        url: "https://bootstrap.pypa.io/get-pip.py"
+        dest: "/tmp/get-pip.py"
+        mode: 0755
+        force: yes
+        validate_certs: no
+      register: get_pip
+
+    - name: Install pip using get-pip.py
+      command: "{{ ansible_python_interpreter | default('python') }} {{ get_pip.dest }}"
+      become: true
+  when: install_pip_from_source
+  tags: install-pip
+
+
+#TODO(aopincar): Check if there is a reason not install pip from source only
+- name: install pip using easy_install
   become: yes
   easy_install:
       name: pip
+  when: not install_pip_from_source
+  tags: install-pip
 
 - name: install virtualenv pip module
   pip:
