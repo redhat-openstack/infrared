@@ -29,10 +29,11 @@
             dest: "/etc/sudoers"
             line: "{{ install.user.name }} ALL=(root) NOPASSWD:ALL"
 
-      - name: create .ssh direcotry for non-root user
+      - name: create .ssh directory for non-root user
         file:
             path: "{{ default_privatekey | dirname }}"
             state: directory
+        register: user_ssh_dir
         become_user: "{{ install.user.name }}"
         become: yes
 
@@ -40,13 +41,13 @@
           - name: inject local private key to undercloud
             copy:
                 src: "{{ ansible_ssh_private_key_file }}"
-                dest: "{{ default_privatekey }}"
+                # Workaround due to https://github.com/ansible/ansible/issues/21145
+                dest: "{{ user_ssh_dir.path }}/{{default_privatekey | basename }}"
                 mode: 0600
+                owner: "{{ install.user.name }}"
+                group: "{{ install.user.name }}"
                 force: yes
             register: key_injection
-            become_user: "{{ install.user.name }}"
-            become: yes
-
 
           - name: Retrieve public key from private key
             shell: "ssh-keygen -y -f {{ default_privatekey }} > {{ default_pubkey }}"
