@@ -22,8 +22,9 @@ bmc_node_name: "bmc"
 # the full network name to use for IMPI commands
 bmc_ipmi_network_name: "{{ bmc_name_prefix }}{{ topology_node.ipmi_network|default('undefined') }}"
 bmc_ipmi_network_subnet: "{{ bmc_ipmi_network_name }}-subnet"
+bmc_pxe_network_name: "{{ bmc_name_prefix }}{{ topology_node.pxe_network|default('undefined') }}"
 
 # the filter for the nodes to be controllable by the bmc
 bmc_nodes_filter:  "{{ bmc_name_prefix }}*"
 bmc_provision_cloud: "{{ (provision|default({})).cloud | default('rhos-qe-ci') }}"
-bmc_interface_name: eth1
+bmc_interface_name: eth2
