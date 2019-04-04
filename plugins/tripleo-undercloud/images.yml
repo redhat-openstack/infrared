@@ -78,6 +78,12 @@
             - undercloud_version|default(undercloud_version)|openstack_distribution == 'RDO'
         tags: rhos-release
   tasks:
+      - name: Downloading extra repositories
+        get_url:
+            url: "{{ item }}"
+            dest: "{{ tmp_oc_repos_dir }}"
+        with_items: "{{ install.get('repos', {}).urls|default([]) }}"
+
       - include_tasks: "tasks/images/{{ install.images.task }}.yml"
 
       - name: modify images - update to core build and install packages
