@@ -107,9 +107,12 @@
 
           - name: set additional config via hieradata
             lineinfile:
-               path: "{{ working_dir }}/hiera_override.yaml"
-               line: "{{ install.hieradata.config.split('=')[0] }}: {{ install.hieradata.config.split('=')[1] }}"
-            when: install.hieradata.config != ''
+              path: "{{ working_dir }}/hiera_override.yaml"
+              state: present
+              line: "{{ item.key }}: {{ item.value }}"
+              regexp: "{{ item.key }}"
+            with_dict: "{{ install.hieradata.config|default({}) }}"
+            when: '"hieradata" in install'
 
           - name: set hieradata in undercloud.conf
             ini_file:
