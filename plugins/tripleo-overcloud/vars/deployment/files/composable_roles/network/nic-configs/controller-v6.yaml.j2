@@ -27,6 +27,14 @@ parameters:
     default: ''
     description: IP address/subnet on the storage mgmt network
     type: string
+  StorageNFSIpSubnet:
+    default: ''
+    description: IP address/subnet on the storage network
+    type: string
+  StorageNFSNetworkVlanID:
+    default: 70
+    description: Vlan ID for the storage network traffic.
+    type: number
   TenantIpSubnet:
     default: ''
     description: IP address/subnet on the tenant network
@@ -81,8 +89,9 @@ parameters:
   ControlPlaneStaticRoutes:
     default: []
     description: >
+      This is copied from controller.yaml.j2 and the below has not been tested for ipv6
       Routes for the ctlplane network traffic.
-      JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
+      JSON route e.g. [{'destination':'2001:db8:1234::/48', 'nexthop':'2001:db8:1234:0000:0000:0000:0000:0001'}]
       Unless the default is changed, the parameter is automatically resolved
       from the subnet host_routes attribute.
     type: json
@@ -134,7 +143,7 @@ parameters:
     default: []
     description: >
       Routes for the storage network traffic.
-      JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
+      JSON route e.g. [{'destination':'2001:db8:1234::/48', 'nexthop':'2001:db8:1234:0000:0000:0000:0000:0001'}]
       Unless the default is changed, the parameter is automatically resolved
       from the subnet host_routes attribute.
     type: json
@@ -142,7 +151,7 @@ parameters:
     default: []
     description: >
       Routes for the storage_mgmt network traffic.
-      JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
+      JSON route e.g. [{'destination':'2001:db8:1234::/48', 'nexthop':'2001:db8:1234:0000:0000:0000:0000:0001'}]
       Unless the default is changed, the parameter is automatically resolved
       from the subnet host_routes attribute.
     type: json
@@ -150,7 +159,7 @@ parameters:
     default: []
     description: >
       Routes for the internal_api network traffic.
-      JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
+      JSON route e.g. [{'destination':'2001:db8:1234::/48', 'nexthop':'2001:db8:1234:0000:0000:0000:0000:0001'}]
       Unless the default is changed, the parameter is automatically resolved
       from the subnet host_routes attribute.
     type: json
@@ -158,7 +167,7 @@ parameters:
     default: []
     description: >
       Routes for the tenant network traffic.
-      JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
+      JSON route e.g. [{'destination':'2001:db8:1234::/48', 'nexthop':'2001:db8:1234:0000:0000:0000:0000:0001'}]
       Unless the default is changed, the parameter is automatically resolved
       from the subnet host_routes attribute.
     type: json
@@ -166,7 +175,7 @@ parameters:
     default: []
     description: >
       Routes for the external network traffic.
-      JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
+      JSON route e.g. [{'destination':'2001:db8:1234::/48', 'nexthop':'2001:db8:1234:0000:0000:0000:0000:0001'}]
       Unless the default is changed, the parameter is automatically resolved
       from the subnet host_routes attribute.
     type: json
@@ -174,7 +183,15 @@ parameters:
     default: []
     description: >
       Routes for the management network traffic.
-      JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
+      JSON route e.g. [{'destination':'2001:db8:1234::/48', 'nexthop':'2001:db8:1234:0000:0000:0000:0000:0001'}]
+      Unless the default is changed, the parameter is automatically resolved
+      from the subnet host_routes attribute.
+    type: json
+  StorageNFSInterfaceRoutes:
+    default: []
+    description: >
+      Routes for the storageNFS network traffic.
+      JSON route e.g. [{'destination':'2001:db8:1234::/48', 'nexthop':'2001:db8:1234:0000:0000:0000:0000:0001'}]
       Unless the default is changed, the parameter is automatically resolved
       from the subnet host_routes attribute.
     type: json
@@ -258,6 +275,16 @@ resources:
                               -
                                 ip_netmask:
                                     get_param: TenantIpSubnet
+{% if install.storage.protocol.backend == 'nfs-ganesha' %}
+                            -
+                              type: vlan
+                              vlan_id:
+                                  get_param: StorageNFSNetworkVlanID
+                              addresses:
+                              -
+                                ip_netmask:
+                                    get_param: StorageNFSIpSubnet
+{% endif %}
                         -
                           type: ovs_bridge
                           # This will default to br-ex, anything else requires specific
