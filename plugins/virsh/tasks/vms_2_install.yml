@@ -96,7 +96,7 @@
            --noautoconsole \
            --autostart \
            --vnc \
-           --rng /dev/urandom
+           --rng /dev/urandom {{ provision.get('virtopts', '') }}
   with_sequence: start={{ node_start_index|int }} end={{ topology_node.num|int + node_start_index|int - 1 }}
   register: vm_install
   async: 7200
