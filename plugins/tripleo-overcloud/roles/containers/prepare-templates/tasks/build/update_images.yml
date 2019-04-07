@@ -1,0 +1,124 @@
+---
+- name: Set Docker context dir fact
+  set_fact:
+      images_update_dir: "{{ containers_home_dir }}/images_update"
+
+- name: Create Docker context dir
+  file:
+      path: "{{ images_update_dir }}"
+      state: "{{ item }}"
+  with_items:
+      - absent
+      - directory
+
+- name: Set container logs dir fact
+  set_fact:
+      container_images_update_logdir: /var/log/extra/infrared_container-images-update/
+
+- name: Create logs dir for container images update operation
+  become: true
+  file:
+      path: "{{ container_images_update_logdir }}"
+      state: "{{ item }}"
+  with_items:
+      - absent
+      - directory
+
+- name: get list of images available on undercloud registry
+  get_url:
+     url: "http://{{ docker_registry_undercloud }}/v2/_catalog"
+     dest: "{{ containers_home_dir }}/{{ undercloud_registry_images_file | basename }}"
+     force: true
+
+- name: fetch containers catalog file from undercloud to localhost
+  fetch:
+     src: "{{ containers_home_dir }}/{{ undercloud_registry_images_file | basename }}"
+     dest: "{{ undercloud_registry_images_file }}"
+     flat: yes
+     force: true
+
+- name: load list of images from undercloud registry as undercloud_registry_images_raw fact
+  include_vars:
+     file: "{{ undercloud_registry_images_file }}"
+     name: undercloud_registry_images_raw
+
+- name: Set container images names
+  vars:
+      container_image_namespace: "{{ item.split('/')[0] }}"
+      container_image_name: "{{ item.split('/')[1] }}"
+      container_image_tag: |-
+          {%- if container_image_name | regex_search('.*rhceph.*') -%}
+          {{ container_env['container-image-prepare']['ceph-tag'] }}
+          {%- else -%}
+          {{ container_env['container-image-prepare']['tag'] }}
+          {%- endif -%}
+  set_fact:
+      undercloud_registry_images: "{{ undercloud_registry_images | default({}) | combine({ container_image_namespace + '/' + container_image_name: container_image_tag }) }}"
+  when:
+      - item != 'rhceph'
+  with_items: "{{ undercloud_registry_images_raw.repositories }}"
+
+- name: Discover container images that require update
+  vars:
+      container_repos_dir: "/etc/yum.repos.d/"
+  shell: |
+      docker run --user root \
+          -v {{ tmp_oc_repos_dir }}:{{ container_repos_dir }} \
+          --rm {{ docker_registry_undercloud }}/{{ item }}:{{ undercloud_registry_images[item] }} \
+      yum check-update
+  register: _container_images_check_update
+  with_items: "{{ undercloud_registry_images }}"
+  when: install_container_images_patch is not defined
+  failed_when: _container_images_check_update.rc not in [0, 1, 100]
+  tags: skip_ansible_lint
+  become: true
+
+- name: Create a dictionary of containers to update
+  vars:
+      imagename: "{{ item.item | regex_replace(docker_registry_undercloud + '/' + docker_registry_undercloud_namespace + '/') | regex_replace (':.*') }}"
+      needs_updating: "{{ item.rc == 100 }}"
+  set_fact:
+      container_images_to_update: "{{ container_images_to_update | default({}) | combine({ imagename : needs_updating }) }}"
+  when:
+      - needs_updating
+  with_items: "{{ _container_images_check_update.results }}"
+
+- debug:
+     var: undercloud_registry_images
+
+- debug:
+      var: container_images_to_update
+
+- name: Tag the original image(s) with 'before_update' and update container image(s)
+  shell: |
+      set -euo pipefail
+      docker tag {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
+      {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}-before_update
+
+      ORIG_USER="$( docker run --rm {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} /usr/bin/bash -c "echo -n \$(id -u --name)" )"
+
+      echo "
+      FROM {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
+      COPY /tmp/oc_repos/yum.repos.d/* /etc/yum.repos.d/
+      USER root
+      RUN yum update -y -v
+      ARG ORIG_USER
+      USER $ORIG_USER
+      " > {{ images_update_dir }}/Dockerfile
+
+      docker build --network=host -t {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
+      {{ images_update_dir }}/ --build-arg ORIG_USER=$ORIG_USER > {{ container_images_update_logdir }}/docker_build_{{ item.split('/')[1] }}.log 2>&1
+
+      if ! grep -q "Installed products updated" "{{ container_images_update_logdir }}/docker_build_{{ item.split('/')[1] }}.log" ; then
+          echo -e "\n\nno packages updated!!!\n\n." >&2
+          exit 2
+      fi
+  with_items: "{{ container_images_to_update }}"
+  become: true
+
+- name: push updated container image(s) to docker registry on undercloud
+  shell: |
+      set -e
+      docker push {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
+  with_items: "{{ container_images_to_update }}"
+  become: true
