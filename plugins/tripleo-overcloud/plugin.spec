@@ -54,6 +54,12 @@ subparsers:
                             Example:
                                 --container-images-patch openstack-opendaylight,openstack-nova-compute
 
+                  container-images-update:
+                      type: Bool
+                      help: |
+                            Specifies whether to update container images.
+                            It will copy any custom repo to the image and perform 'yum update'.
+
                   container-images-packages:
                       type: IniType
                       action: append
