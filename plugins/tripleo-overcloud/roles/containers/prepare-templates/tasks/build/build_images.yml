@@ -121,6 +121,7 @@
         ( install.network.ovn|default(False) or
           install.ocupdate|default(False) or
           install_container_images_packages is defined or
+          install_container_extra_repos is defined or
           install_container_images_patch is defined or patched_rpms.results | selectattr('stat.exists', 'equalto', True) | list | length > 0
         )
   tags:
@@ -136,3 +137,8 @@
   import_tasks: patch_images.yml
   when: install_container_images_patch is defined or patched_rpms.results | selectattr('stat.exists', 'equalto', True) | list | length > 0
   tags: container-images-packages
+
+- name: Update containers images
+  import_tasks: update_images.yml
+  when: install_container_extra_repos is defined
+  tags: container-extra-repos
