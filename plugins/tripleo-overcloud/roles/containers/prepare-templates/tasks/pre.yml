@@ -4,6 +4,12 @@
   when: install.get('container', {}).get('images', {}).get('patch', {})
   tags: container-images-patch
 
+- name: Set fact for container images update
+  set_fact:
+      install_container_images_update: "{{ install.get('container', {}).get('images', {}).get('update', {}) }}"
+  when: install.get('container', {}).get('images', {}).get('update', {})
+  tags: container-images-update
+
 - name: checking /patched_rpms directory
   stat:
       path: /patched_rpms
