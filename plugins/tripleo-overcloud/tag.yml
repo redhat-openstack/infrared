@@ -142,7 +142,7 @@
         shell: |
             source ~/stackrc
             ironic node-update {{ item[0].stdout }} \
-                   add properties/capabilities='profile:{{ item[1].cmd.split() | last }},{% if install.boot.mode == 'uefi'  %}boot_mode:uefi,{% endif %}boot_option:local'
+                   add properties/capabilities='profile:{{ item[1].cmd.split() | last }},{% if install.boot.mode == 'uefi'  %}boot_mode:uefi,{% endif %}boot_option:local,node:{{ item[0].item.name }}'
         tags: skip_ansible_lint
         when:
             - "item[0].item.name is defined and item[1].cmd is defined and item[0].item.name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
@@ -155,7 +155,7 @@
         shell: |
             source ~/stackrc
             openstack baremetal node set \
-                  --property capabilities='profile:{{ item[1].cmd.split() | last }},{% if install.boot.mode == 'uefi'  %}boot_mode:uefi,{% endif %}boot_option:local' {{ item[0].stdout }}
+                  --property capabilities='profile:{{ item[1].cmd.split() | last }},{% if install.boot.mode == 'uefi'  %}boot_mode:uefi,{% endif %}boot_option:local,node:{{ item[0].item.name }}' {{ item[0].stdout }}
         tags: skip_ansible_lint
         when:
             - "item[0].item.name is defined and item[1].cmd is defined and item[0].item.name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
