@@ -20,12 +20,6 @@ subparsers:
                       default: 'https://code.engineering.redhat.com/gerrit/rhos-qe-core-installer'
 
                   file:
-                      type: Value
-                      help: |
-                          Location of the test file in the git repo.
-                      default: 'tripleo/container_sanity.py'
-
-                  files:
                       type: ListValue
                       help: |
                           Comma separated list of test files locations in git repo. Example:

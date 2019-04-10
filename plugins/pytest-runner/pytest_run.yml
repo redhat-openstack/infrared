@@ -38,7 +38,7 @@
         shell: pytest -v {{ repo_folder }}{{ item }}
                --junitxml={{ pytest_output_filename }} 2>&1 --tb=no -r fp
         when: test.run|default(False)
-        loop: "{{ test.files }}"
+        loop: "{{ test.file }}"
         register: pytest_execution
 
       - name: Fetch JUnit XML results file
