@@ -24,3 +24,10 @@ subparsers:
                       help: |
                           Location of the test file in the git repo.
                       default: 'tripleo/container_sanity.py'
+
+                  files:
+                      type: ListValue
+                      help: |
+                          Comma separated list of test files locations in git repo. Example:
+                          'tripleo/container_sanity.py', 'tripleo/container_sanity_v3.py'
+                      default: 'tripleo/container_sanity.py'

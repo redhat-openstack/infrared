@@ -35,9 +35,10 @@
 
       - name: Execute test
         ignore_errors: true
-        shell: pytest -v {{ repo_folder }}{{ test.file }}
+        shell: pytest -v {{ repo_folder }}{{ item }}
                --junitxml={{ pytest_output_filename }} 2>&1 --tb=no -r fp
         when: test.run|default(False)
+        loop: "{{ test.files }}"
         register: pytest_execution
 
       - name: Fetch JUnit XML results file
