@@ -13,6 +13,7 @@
 - name: Install required pip packages
   pip:
       name: "{{ item }}"
+      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
       state: latest
       virtualenv: "{{ rally.path }}"
   with_items: "{{ setup.pip_packages }}"
@@ -20,6 +21,7 @@
 - name: Install rally-openstack package
   pip:
       name: "{{ item }}"
+      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
       state: latest
       virtualenv: "{{ rally.path }}"
   with_items:

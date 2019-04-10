@@ -4,7 +4,7 @@ config:
 subparsers:
     tempest:
         description: The tempest test runner
-        include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
+        include_groups: ["Ansible options", "Inventory", "Common options", "Common variables", "Answers file"]
         groups:
             - title: Tempest
               options:
