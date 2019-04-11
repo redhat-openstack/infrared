@@ -47,7 +47,7 @@
       virtualenv: "{{ virtualenvs.tempest }}"
       name: "{{ item }}"
       version: "{{ ir_default_pip_versions[item] | default(omit) }}"
-      state: latest
+      state: "{{ ir_default_pip_versions[item] is defined | ternary('present', 'latest') }}"
   with_items:
       - pip
       - setuptools
@@ -66,7 +66,7 @@
       name: "os-testr"
       virtualenv: "{{ virtualenvs.tempest }}"
       version: "{{ ir_default_pip_versions['os-testr'] | default(omit) }}"
-      state: latest
+      state: "{{ ir_default_pip_versions['os-testr'] is defined | ternary('present', 'latest') }}"
 
 - name: Get repo requirements
   pip:

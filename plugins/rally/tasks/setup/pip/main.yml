@@ -14,7 +14,7 @@
   pip:
       name: "{{ item }}"
       version: "{{ ir_default_pip_versions[item] | default(omit) }}"
-      state: latest
+      state: "{{ ir_default_pip_versions[item] is defined | ternary('present', 'latest') }}"
       virtualenv: "{{ rally.path }}"
   with_items: "{{ setup.pip_packages }}"
 
@@ -22,7 +22,7 @@
   pip:
       name: "{{ item }}"
       version: "{{ ir_default_pip_versions[item] | default(omit) }}"
-      state: latest
+      state: "{{ ir_default_pip_versions[item] is defined | ternary('present', 'latest') }}"
       virtualenv: "{{ rally.path }}"
   with_items:
       - prettytable
