@@ -4,7 +4,8 @@
   any_errors_fatal: true
   vars:
       repo_folder: 'pytest-repo/'
-      pytest_output_filename: 'pytest-results-{{ ansible_date_time.epoch }}.xml'
+      output_prefix: 'pytest-results-{{ ansible_date_time.epoch }}.xml'
+      #pytest_output_filename: 'pytest-results-{{ ansible_date_time.epoch }}.xml'
   tasks:
       - name: intall pytest via pip
         pip:
@@ -19,13 +20,15 @@
               - git
             state: latest
 
+      - name: Clean old folder
+        file:
+            path: "{{ repo_folder }}"
+            state: absent
+
       - name: Clean old files
         file:
-            path: "{{ item }}"
-            state: absent
-        with_items:
-            - "{{ repo_folder }}"
-            - "{{ pytest_output_filename }}"
+            path: "{{ item }}-{{ output_prefix }}"
+        loop: "{{ test.file }}"
 
       - name: Cloning git repo
         shell: |
@@ -36,7 +39,7 @@
       - name: Execute test
         ignore_errors: true
         shell: pytest -v {{ repo_folder }}{{ item }}
-               --junitxml={{ pytest_output_filename }} 2>&1 --tb=no -r fp
+               --junitxml={{ item }}-{{ output_prefix }} 2>&1 --tb=no -r fp
         when: test.run|default(False)
         loop: "{{ test.file }}"
         register: pytest_execution
@@ -44,6 +47,7 @@
       - name: Fetch JUnit XML results file
         fetch:
             src: "{{ pytest_output_filename }}"
-            dest: "{{ inventory_dir }}/pytest_results/{{ pytest_output_filename }}"
+            dest: "{{ inventory_dir }}/pytest_results/{{ item }}-{{ output_prefix }}"
             flat: yes
             fail_on_missing: yes
+        loop: "{{ test.file }}"
