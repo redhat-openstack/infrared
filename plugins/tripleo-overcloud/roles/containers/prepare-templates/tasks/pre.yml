@@ -4,6 +4,12 @@
   when: install.get('container', {}).get('images', {}).get('patch', {})
   tags: container-images-patch
 
+- name: Set fact for container extra repos
+  set_fact:
+      install_container_extra_repos: "{{ install.get('container', {}).get('extra', {}).get('repos', {}) }}"
+  when: install.get('container', {}).get('extra', {}).get('repos', {})
+  tags: container-extra-repos
+
 - name: checking /patched_rpms directory
   stat:
       path: /patched_rpms

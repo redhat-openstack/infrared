@@ -54,6 +54,12 @@ subparsers:
                             Example:
                                 --container-images-patch openstack-opendaylight,openstack-nova-compute
 
+                  container-extra-repos:
+                      type: ListValue
+                      help: |
+                            List of repositories URLs to use in containers to update existing packages.
+                            It will link provided repos to the container and perform 'yum update'.
+
                   container-images-packages:
                       type: IniType
                       action: append
