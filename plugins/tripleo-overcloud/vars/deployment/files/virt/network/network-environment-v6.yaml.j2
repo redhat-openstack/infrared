@@ -43,6 +43,10 @@ parameter_defaults:
 {% if install.version|default(undercloud_version) | openstack_release == 14 %}
     ControlPlaneSubnetCidr: "24"
 {% endif %}
+{% if install.network.dvr %}
+    NeutronExternalNetworkBridge: "br-ex"
+{% else %}
     NeutronExternalNetworkBridge: ""
+{% endif %}
     NeutronBridgeMappings: "datacentre:br-ex,tenant:br-isolated"
     NeutronNetworkVLANRanges: "tenant:1000:2000"

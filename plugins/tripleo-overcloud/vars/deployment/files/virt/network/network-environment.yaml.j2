@@ -43,8 +43,12 @@ parameter_defaults:
     ControlPlaneDefaultRoute: 192.168.24.1
 {% endif %}
     ControlPlaneSubnetCidr: "24"
+{% if install.network.dvr %}
+    NeutronExternalNetworkBridge: "br-ex"
+{% else %}
     NeutronExternalNetworkBridge: ""
-{% if install.version|openstack_release > 14 %}
+{% endif %}
+{% if install.version|openstack_release > 14 and not install.network.dvr %}
     NeutronBridgeMappings: ""
 {% else %}
     NeutronBridgeMappings: "datacentre:br-ex,tenant:br-isolated"

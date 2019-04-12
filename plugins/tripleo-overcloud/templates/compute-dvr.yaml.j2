@@ -59,6 +59,59 @@ parameters:
   EC2MetadataIp: # Override this via parameter_defaults
     description: The IP address of the EC2 metadata server.
     type: string
+{% if install.version|openstack_release >= 15 %}
+  ControlPlaneStaticRoutes:
+    default: []
+    description: >
+      Routes for the ctlplane network traffic.
+      JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
+      Unless the default is changed, the parameter is automatically resolved
+      from the subnet host_routes attribute.
+    type: json
+  ControlPlaneMtu:
+    default: 1500
+    description: The maximum transmission unit (MTU) size(in bytes) that is
+      guaranteed to pass through the data path of the segments in the network.
+      (The parameter is automatically resolved from the ctlplane network's mtu attribute.)
+    type: number
+  StorageMtu:
+    default: 1500
+    description: The maximum transmission unit (MTU) size(in bytes) that is
+      guaranteed to pass through the data path of the segments in the
+      Storage network.
+    type: number
+  StorageMgmtMtu:
+    default: 1500
+    description: The maximum transmission unit (MTU) size(in bytes) that is
+      guaranteed to pass through the data path of the segments in the
+      StorageMgmt network.
+    type: number
+  InternalApiMtu:
+    default: 1500
+    description: The maximum transmission unit (MTU) size(in bytes) that is
+      guaranteed to pass through the data path of the segments in the
+      InternalApi network.
+    type: number
+  TenantMtu:
+    default: 1500
+    description: The maximum transmission unit (MTU) size(in bytes) that is
+      guaranteed to pass through the data path of the segments in the
+      Tenant network.
+    type: number
+  ExternalMtu:
+    default: 1500
+    description: The maximum transmission unit (MTU) size(in bytes) that is
+      guaranteed to pass through the data path of the segments in the
+      External network.
+    type: number
+  ManagementMtu:
+    default: 1500
+    description: The maximum transmission unit (MTU) size(in bytes) that is
+      guaranteed to pass through the data path of the segments in the
+      Management network.
+    type: number
+{% endif %}
+{% if install.version|openstack_release >= 14 %}
   StorageInterfaceRoutes:
     default: []
     description: >
@@ -107,6 +160,7 @@ parameters:
       Unless the default is changed, the parameter is automatically resolved
       from the subnet host_routes attribute.
     type: json
+{% endif %}
 
 resources:
   OsNetConfigImpl:
@@ -116,7 +170,7 @@ resources:
       config:
           str_replace:
               template:
-                  get_file: /usr/share/openstack-tripleo-heat-templates/network/scripts/run-os-net-config.sh
+                  get_file: {{ install.heat.templates.basedir }}/network/scripts/run-os-net-config.sh
               params:
                    $network_config:
                        network_config:
