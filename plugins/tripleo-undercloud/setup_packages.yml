@@ -103,6 +103,14 @@
             dest: /etc/yum.repos.d/
         with_items: "{{ custom_repos.urls|default([]) }}"
 
+      # Openvsiwtch upadte is different since there is no direct update path from 2.x to 2.(x+1)
+      # As the version is part of the name.
+      - name: Check if extra repository is openvswitch repository
+        set_fact:
+            ovs_update_command: "yum remove openvswitch -y; yum install openvswitch -y;"
+        with_items: "{{ custom_repos.urls|default([]) }}"
+        when: "'ovs' in item"
+
       - name: install deltarpm
         package:
             state: present

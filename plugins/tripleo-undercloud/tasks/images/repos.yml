@@ -129,6 +129,10 @@
       requested_mem: "{{ [safe_mem, 500] | max}}"
   when: install.images['update'] or patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
+- name: Update openvswitch
+  command: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --run-command {{ ovs_update_command }}"
+  when: ovs_update_command is defined
+
 - name: Set selinux state
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"

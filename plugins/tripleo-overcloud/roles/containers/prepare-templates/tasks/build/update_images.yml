@@ -22,6 +22,14 @@
     dest: "{{ images_update_dir }}/extra_repos"
   with_items: "{{ install.container.extra.repos }}"
 
+# Openvsiwtch upadte is different since there is no direct update path from 2.x to 2.(x+1)
+# As the version is part of the name.
+- name: Handle OVS repository case
+  set_fact:
+      ovs_update_command: "yum remove openvswitch -y; yum install openvswitch -y;"
+  with_items: "{{ install.container.extra.repos }}"
+  when: "'ovs' in item"
+
 - name: Set container logs dir fact
   set_fact:
       container_images_update_logdir: /var/log/extra/infrared_container-images-update/
@@ -116,6 +124,9 @@
       COPY extra_repos/* /etc/yum.repos.d/
       USER root
       RUN yum update -y -v
+      {% if ovs_update_comamnd is defined %}
+        {{ ovs_update_command }}
+      {% endif %}
       ARG ORIG_USER
       USER $ORIG_USER
       " > {{ images_update_dir }}/Dockerfile
