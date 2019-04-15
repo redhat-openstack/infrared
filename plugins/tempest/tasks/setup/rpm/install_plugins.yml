@@ -4,10 +4,12 @@
 
 - name: Get plugins from cli
   vars:
-    item_src: "{{ item.split(',')[0] }}"
-    item_ver: "{{ item.split(',')[1] | default('HEAD') }}"
+    plugin_cpc: "{{ item.split(',') | select('match', '^@') | list | replace('-', ',') | replace('@', '') }}"
+    plugin_chk: "{{ item.split(',') | reject('match', '^@') | list | join(',') }}"
+    plugin_src: "{{ plugin_chk.split(',')[0] | basename }}"
+    plugin_ver: "{{ plugin_chk.split(',')[1] | default('HEAD') }}"
   set_fact:
-      cli_plugins: "{{ cli_plugins|default({}) | combine({ (item_src|basename): { 'repo': item_src, 'version': item_ver }}) }}"
+    cli_plugins: '{{ cli_plugins|default({}) | combine({ (plugin_src|basename): { "repo": plugin_src, "version": plugin_ver, "commits": plugin_cpc,} } ) }}'
   with_items: "{{ test.plugin|default([]) }}"
 
 - name: Set plugins list iterator for "{{ test_suite }}"

@@ -63,9 +63,12 @@ subparsers:
                         The list of additional plugins with tests to install.
                         Should be specified in the following format:
                             --plugin=repo_url
-                        The plugin flag can also specify the version/branch to clone.
+                        The plugin flag can also specify the version/branch to clone and one or more gerrit changes to cherry-pick.
                         In order to specify version the repo_url should be separated by comma:
                             --plugin=repo_url,version
+                        Same works for gerrit changes, but a '@' must be appended at the beginning of each change.
+                        If one want a specific patch-set, append it to the end of the specific change following by '-':
+                            --plugin=repo_url,version,@change1,@change2-3
                         More than one --plugin option can be provided.
                   openstack-version:
                        type: Value
