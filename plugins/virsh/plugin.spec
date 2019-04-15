@@ -177,6 +177,16 @@ subparsers:
                     choises: ['virtio', 'scsi']
                     default: 'virtio'
 
+            - title: Custom virt-install options
+              options:
+                  virtopts:
+                    type: Value
+                    help: |
+                      Any custom options to be appended to virt-install command.
+                      Usefull for special cases when one may want to override specific
+                      options used for spawning vms (memballoon, rng and such).
+                    default: ''
+
             - title: ansible facts
               options:
                   collect-ansible-facts:
