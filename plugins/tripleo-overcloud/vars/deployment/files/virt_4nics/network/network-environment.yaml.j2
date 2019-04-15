@@ -1,0 +1,49 @@
+---
+# This template configures each role to use Vlans on a single nic for
+# each isolated network, but uses multiple nic's on each node:
+#
+# nic1 = pxe/management/ctlplane
+# nic2 = VLAN trunk for network isolation
+# nic3 = public/external access
+#
+# This template assumes use of network-isolation.yaml.
+#
+# FIXME: if/when we add functionality to heatclient to include heat
+# environment files we should think about using it here to automatically
+# include network-isolation.yaml.
+resource_registry:
+  OS::TripleO::Compute::Net::SoftwareConfig: four-nics-vlans/compute.yaml
+  OS::TripleO::Controller::Net::SoftwareConfig: four-nics-vlans/controller.yaml
+
+parameter_defaults:
+    ExternalNetCidr: '10.0.0.0/24'
+    ExternalAllocationPools: [{'start': '10.0.0.101', 'end': '10.0.0.149'}]
+    ExternalInterfaceDefaultRoute: '10.0.0.1'
+    ExternalNetworkVlanID: 10
+    InternalApiNetCidr: '172.17.1.0/24'
+    InternalApiAllocationPools: [{'start': '172.17.1.10', 'end': '172.17.1.149'}]
+    InternalApiNetworkVlanID: 20
+    StorageNetCidr: '172.17.3.0/24'
+    StorageAllocationPools: [{'start': '172.17.3.10', 'end': '172.17.3.149'}]
+    StorageNetworkVlanID: 30
+    StorageMgmtNetCidr: '172.17.4.0/24'
+    StorageMgmtAllocationPools: [{'start': '172.17.4.10', 'end': '172.17.4.149'}]
+    StorageMgmtNetworkVlanID: 40
+    TenantNetCidr: '172.17.2.0/24'
+    TenantAllocationPools: [{'start': '172.17.2.10', 'end': '172.17.2.149'}]
+    TenantNetworkVlanID: 50
+    DnsServers: ['10.0.0.1']
+    EC2MetadataIp: 192.168.24.1
+{% if install.splitstack|default(False) %}
+    ControlPlaneDefaultRoute: {{ ansible_host|default(ansible_ssh_host) }}
+{% else %}
+    ControlPlaneDefaultRoute: 192.168.24.1
+{% endif %}
+    ControlPlaneSubnetCidr: "24"
+    NeutronExternalNetworkBridge: ""
+{% if install.version|openstack_release > 14 %}
+    NeutronBridgeMappings: ""
+{% else %}
+    NeutronBridgeMappings: "datacentre:br-ex,tenant:br-tenant"
+{% endif %}
+    NeutronNetworkVLANRanges: "tenant:1000:2000"
