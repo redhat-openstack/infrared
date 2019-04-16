@@ -9,3 +9,7 @@
 - name: Run post tempest configuration commands
   include_tasks: "post.yml"
   when: test.post is defined
+
+- name: Run Whitebox plugin configuration commands
+  include_tasks: "whitebox-hypervisors-config.yml"
+  when: test.configure.whitebox.plugin and test.openstack.installer=='tripleo'
