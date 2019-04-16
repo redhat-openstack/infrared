@@ -219,6 +219,16 @@ subparsers:
                       help: |
                           Comma separated list of commands to execute after tempest config is executed.
                           For example: 'ls -l','echo awesome'
+                  configure-whitebox-plugin:
+                      type: Bool
+                      help: |
+                          This configures "[whitebox]\nhypervisors" field in tempest.conf based on Whitebox Tempest Plugin. A list of mapped
+                          hypervisors with their external IP are configured automatically based on the deployment.
+                          Ex- hypervisors=compute-0.localdomain:192.168.24.5,compute-1.localdomain:192.168.24.11
+                          Plugin url: https://review.rdoproject.org/r/openstack/whitebox-tempest-plugin
+                          Currently this will only work on 'tripleo' depoyment
+                          NOTE: vars/tests/whitebox_plugin.yml need to be included to execute Whitebox tests
+                      default: no
             - title: ansible facts
               options:
                   collect-ansible-facts:
