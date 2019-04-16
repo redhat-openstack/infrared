@@ -3,6 +3,25 @@
       path: "{{ deployer_input }}"
   register: deployer_input_stat
 
+- name: Run Whitebox plugin configuration commands
+  block:
+    - name: Get Compute node IP inventory
+      shell: "source /home/stack/stackrc && openstack server list -f value -c Name -c Networks | grep -i compute | sort -h"
+      register: ip_inventory
+    - name: Get hypervisor inventory
+      shell: "source /home/stack/overcloudrc.v3 && openstack hypervisor list -f value -c \"Hypervisor Hostname\" | sort -h"
+      register: hostname_inventory
+    - name: Map host with corresponding IP
+      vars:
+        final_compute: ''
+      set_fact:
+        final_compute: "{{ item.0.split() | first }}:{{ item.1.split('ctlplane=')[1] }},{{ final_compute | default('') }}"
+      with_together:
+        - "{{ hostname_inventory.stdout_lines }}"
+        - "{{ ip_inventory.stdout_lines }}"
+      when: '"{{ item.1.split() | first }}" in "{{ item.0.split() | first }}"'
+  when: test.configure.whitebox.plugin and test.openstack.installer=='tripleo'
+
 - name: Run tempest configuration tool
   vars:
       installer_options:
@@ -49,6 +68,10 @@
               {# This option only exists for letting mitaka tempest to run with liberty openstack, otherwise it must be set to true #}
               {% if test.openstack.version|default(overcloud_version)|openstack_release == 9 %}
               volume-feature-enabled.volume_services true \
+              {% endif %}
+              {# Whitebox Tempest Plugin #}
+              {% if (test.configure.whitebox.plugin and test.openstack.installer=='tripleo') %}
+              whitebox.hypervisors {{ final_compute | regex_replace('\\,$', '') }} \
               {% endif %}
               {# config options #}
               {% for section_name,options in config_options.items() %}
