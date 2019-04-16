@@ -16,7 +16,7 @@
   gather_facts: yes
   any_errors_fatal: true
   vars:
-      overcloud_deploy_script: "~/overcloud_deploy.sh"
+      overcloud_deploy_script: "{{ install.overcloud.script|default('~/overcloud_deploy.sh') }}"
       reg_file: "environment-rhel-registration.yaml"
   tags:
       - update_validation
@@ -73,7 +73,7 @@
   vars:
       undercloud_rc: "~/stackrc"
       overcloud_rc: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
-      overcloud_deploy_script: "~/overcloud_deploy.sh"
+      overcloud_deploy_script: "{{ install.overcloud.script|default('~/overcloud_deploy.sh') }}"
       overcloud_update_script: "~/overcloud_update.sh"
       overcloud_update_plan: "~/overcloud_update_plan.sh"
       loss_threshold: 1
