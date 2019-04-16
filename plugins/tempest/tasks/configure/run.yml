@@ -3,6 +3,10 @@
       path: "{{ deployer_input }}"
   register: deployer_input_stat
 
+- name: Run Whitebox plugin configuration commands
+  include_tasks: "whitebox-hypervisors-config.yml"
+  when: test.configure.whitebox.plugin and test.openstack.installer=='tripleo'
+
 - name: Run tempest configuration tool
   vars:
       installer_options:
@@ -49,6 +53,10 @@
               {# This option only exists for letting mitaka tempest to run with liberty openstack, otherwise it must be set to true #}
               {% if test.openstack.version|default(overcloud_version)|openstack_release == 9 %}
               volume-feature-enabled.volume_services true \
+              {% endif %}
+              {# Whitebox Tempest Plugin #}
+              {% if test.configure.whitebox.plugin and test.openstack.installer=='tripleo' %}
+              whitebox.hypervisors {{ hostvars['localhost']['final_compute'] | regex_replace('\\,$', '') }} \
               {% endif %}
               {# config options #}
               {% for section_name,options in config_options.items() %}
