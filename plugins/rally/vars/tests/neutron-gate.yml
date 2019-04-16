@@ -378,15 +378,15 @@ NeutronSecurityGroup.create_and_list_security_group_rules:
       security_group_rule_args: {}
     runner:
       type: "constant"
-      times: 40
-      concurrency: 20
+      times: 10
+      concurrency: 10
     context:
       users:
         tenants: 1
         users_per_tenant: 1
       quotas:
         neutron:
-          security_group: -1
+          security_group: 100
     sla:
       failure_rate:
         max: 0
@@ -398,15 +398,15 @@ NeutronSecurityGroup.create_and_show_security_group_rule:
       security_group_rule_args: {}
     runner:
       type: "constant"
-      times: 40
-      concurrency: 4
+      times: 10
+      concurrency: 10
     context:
       users:
         tenants: 1
         users_per_tenant: 1
       quotas:
         neutron:
-          security_group: -1
+          security_group: 100
     sla:
       failure_rate:
         max: 0
@@ -418,15 +418,15 @@ NeutronSecurityGroup.create_and_delete_security_group_rule:
       security_group_rule_args: {}
     runner:
       type: "constant"
-      times: 40
-      concurrency: 20
+      times: 10
+      concurrency: 10
     context:
       users:
         tenants: 1
         users_per_tenant: 1
       quotas:
         neutron:
-          security_group: -1
+          security_group: 100
     sla:
       failure_rate:
         max: 0
