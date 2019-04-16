@@ -1,0 +1,31 @@
+- name: Get Compute node IP inventory
+  shell: "source /home/stack/stackrc && openstack server list -f value -c Name -c Networks| grep -i compute"
+  register: ip_inventory
+- name: Get hypervisor inventory
+  shell: "source /home/stack/overcloudrc.v3 && openstack hypervisor list -f value -c \"Hypervisor Hostname\""
+  register: hostname_inventory
+- name: Map host with corresponding IP
+  vars:
+    final_compute: ''
+  set_fact:
+    final_compute: "{{ item.0.split() | first }}:{{ item.1.split('ctlplane=')[1] }},{{ final_compute | default('') }}"
+  with_together:
+    - "{{ hostname_inventory.stdout_lines }}"
+    - "{{ ip_inventory.stdout_lines }}"
+  when: '"{{ item.1.split() | first }}" in "{{ item.0.split() | first }}"'
+- name: Find tempest.conf location(s)
+  command: 'find /home -name tempest.conf -type f'
+  become: yes
+  become_method: sudo
+  register: tempest_conf_path
+- name: Install Crudini package
+  yum:
+    name: crudini
+    state: present
+  become: yes
+  become_method: sudo
+- name: Set variable in tempest.conf
+  command: "crudini --set {{ item }} whitebox hypervisors {{ final_compute | regex_replace('\\,$', '') }}"
+  with_items: "{{ tempest_conf_path.stdout_lines }}"
+  become: yes
+  become_method: sudo
