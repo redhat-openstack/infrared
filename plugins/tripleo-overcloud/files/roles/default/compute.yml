@@ -41,7 +41,7 @@ compute_role:
         - OS::TripleO::Services::NovaCompute
         - OS::TripleO::Services::NovaLibvirt
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NovaMigrationTarget{% endif %}"
-        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::Timesync
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - OS::TripleO::Services::OpenDaylightOvs
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNController{% endif %}"
