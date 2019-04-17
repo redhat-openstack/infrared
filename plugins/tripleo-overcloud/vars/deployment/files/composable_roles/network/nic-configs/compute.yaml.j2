@@ -199,6 +199,8 @@ resources:
                         -
                           type: interface
                           name: nic1
+                          dns_servers:
+                              get_param: DnsServers
                           use_dhcp: false
                           addresses:
                             -
@@ -254,6 +256,25 @@ resources:
                               -
                                 ip_netmask:
                                     get_param: TenantIpSubnet
+{% if install.version|openstack_release >= 15 %}
+                        -
+                          type: ovs_bridge
+                          # This will default to br-ex, anything else requires specific
+                          # brige mapping entries for it to be used.
+                          name: bridge_name
+                          use_dhcp: false
+                          members:
+                            -
+                              type: interface
+                              name: nic3
+                              primary: true
+{% else %}
+                        -
+                          type: interface
+                          name: nic3
+                          defroute: false
+                          use_dhcp: false
+{% endif %}
 
 outputs:
   OS::stack_id:
