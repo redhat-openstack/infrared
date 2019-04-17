@@ -1,6 +1,8 @@
 ---
 parameter_defaults:
 {% if not install.network.render.templates|default(False) %}
+    #BZ#1703448
+    SELinuxMode: 'permissive'
     ExternalNetCidr: '10.0.0.0/24'
     ExternalAllocationPools: [{'start': '10.0.0.101', 'end': '10.0.0.149'}]
     ExternalInterfaceDefaultRoute: '10.0.0.1'
@@ -22,6 +24,7 @@ parameter_defaults:
     ControlPlaneDefaultRoute: {{ ansible_host|default(ansible_ssh_host) }}
     EC2MetadataIp: {{ ansible_host|default(ansible_ssh_host) }}
 {% else %}
+    EC2MetadataIp: 192.168.24.1
     ControlPlaneDefaultRoute: 192.168.24.1
     EC2MetadataIp: 192.168.24.1
 {% endif %}
