@@ -6,11 +6,18 @@
       repo_folder: 'pytest-repo/'
       pytest_output_filename: 'pytest-results-{{ ansible_date_time.epoch }}.xml'
   tasks:
-      - name: Install pip
-        become: yes
-        easy_install:
-          name: pip
-          state: latest
+      - name: intall python-pip
+        package:
+          name: python-pip
+          state: present
+        when: ansible_python_version is version('3', '<')
+
+      - name: intall python3-pip
+        package:
+          name: python3-pip
+          state: present
+        when: ansible_python_version  is version('3', '>=')
+        become: true
 
       - name: intall pytest via pip
         pip:
