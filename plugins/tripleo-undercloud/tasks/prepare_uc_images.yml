@@ -31,7 +31,7 @@
       container_env:
           container-image-prepare:
               namespace: "{{ registry_namespace }}"
-              prefix: "{{ install.registry.prefix|default('') }}"
+              prefix: "{{ install.registry.prefix|default('openstack-') }}"
               tag: "{{ install.registry.tag.discover|ternary('AUTODETECT', install.registry.tag ) }}"
   when: install.registry.skip.puddle
 
@@ -96,11 +96,17 @@
     - name: set namespace in containers-prepare-parameter.yaml
       vars:
           registry: "{{ install.registry.mirror|ternary(install.registry.mirror, container_env['container-image-prepare']['namespace'].split('/')[0] )}}"
-          namespace: "{{ registry_namespace | ternary(registry_namespace, container_env['container-image-prepare']['namespace'].split('/')[1] )}}"
+          namespace: "{{ registry_namespace | ternary(registry_namespace, container_env['container-image-prepare']['namespace'].split('/')[1] | default('') )}}"
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
           regexp: 'registry.access.redhat.com/rhosp.*'
-          replace: '{{ registry }}/{{ namespace }}'
+          replace: "{{ registry }}{% if namespace != '' %}/{{ namespace }}{% endif %}"
+
+    - name: set prefix in containers-prepare-parameter.yaml
+      replace:
+          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+          regexp: '(^\ +)name_prefix.*'
+          replace: "\\1name_prefix: {{ container_env['container-image-prepare']['prefix'] }}"
 
     - set_fact:
         ceph_namespace: "{{ install.registry.get('ceph', {}).namespace is defined |
