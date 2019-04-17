@@ -46,11 +46,16 @@
         register: tht
 
       - set_fact:
-            roles_sshd: "{{ install.version|default(undercloud_version)|openstack_release >= 11 or (tht_version | version_compare('5.2.0', '>=') and tht_release | version_compare('15', '>=')) }}"
+            roles_sshd: "{{ tht_version | version_compare('5.2.0', '>=') and tht_release | version_compare('15', '>=') }}"
         vars:
             tht_pkg: "{{ tht.results|selectattr('yumstate', 'equalto', 'installed')|first }}"
             tht_version: "{{ tht_pkg.version }}"
             tht_release: "{{ tht_pkg.release | splitext | first }}"
+        when:  install.version|default(undercloud_version)|openstack_release < 11
+
+      - set_fact:
+            roles_sshd: true
+        when:  install.version|default(undercloud_version)|openstack_release >= 11
 
       - name: include roles according to the topology
         include: tasks/composable_roles/add_role_vars.yml
