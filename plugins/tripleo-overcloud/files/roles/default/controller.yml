@@ -60,7 +60,6 @@ controller_role:
         - OS::TripleO::Services::CinderVolume
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Clustercheck{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Collectd{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Congress{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::ContainerImagePrepare{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::Core{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
@@ -98,7 +97,6 @@ controller_role:
         - OS::TripleO::Services::ManilaScheduler
         - OS::TripleO::Services::ManilaShare
         - OS::TripleO::Services::Memcached
-        - OS::TripleO::Services::MongoDb
         - OS::TripleO::Services::MySQL
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
         - OS::TripleO::Services::NeutronApi
@@ -122,7 +120,8 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
         - OS::TripleO::Services::NovaScheduler
         - OS::TripleO::Services::NovaVncProxy
-        - OS::TripleO::Services::Ntp
+        - OS::TripleO::Services::Timesync
+        - OS::TripleO::Services::Podman
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OctaviaApi{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OctaviaDeploymentConfig{% endif %}"
