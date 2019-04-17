@@ -16,6 +16,74 @@
       "revId": "18a75bdf33fcf98516208b430c84aaba58517faf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd0e793d_c5bcfa12",
+        "filename": "plugins/tempest/tasks/configure/whitebox-hypervisors-config.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2019-04-17T15:54:42Z",
+      "side": 1,
+      "message": "you assume here that each line in hostname_inventory is matching exactly to ip_inventory,\nin exact order\n\nbut i have doubts about anything (e.g. openstack [server|hypervisor] list) can guarantee the order\n\nso would recommend to be sure and e.g. \u0027sort -h\u0027 the output of list commands (if you have hostname at the beginning of line etc)",
+      "revId": "18a75bdf33fcf98516208b430c84aaba58517faf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1eb7e3d9_4c539ac8",
+        "filename": "plugins/tempest/tasks/configure/whitebox-hypervisors-config.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2019-04-17T15:54:42Z",
+      "side": 1,
+      "message": "not sure if it is needed to search for config, given this code is added into ir/tempest plugin directly, location of tempest.conf used should be known here\n\nlooking at e.g. part for running tempestconf https://github.com/redhat-openstack/infrared/blob/master/plugins/tempest/tasks/configure/run.yml#L73\nseems to atm proper path is \"~/{{ test.dir }}/etc/tempest.conf\"\n\nif for some reason find is needed i would still recommend to make it more limited (e.g. by more specific folder to search in and/or by -maxdepth limit etc)",
+      "revId": "18a75bdf33fcf98516208b430c84aaba58517faf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ec14c21_340683e5",
+        "filename": "plugins/tempest/tasks/configure/whitebox-hypervisors-config.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2019-04-17T15:54:42Z",
+      "side": 1,
+      "message": "use \u0027package:\u0027 instead of \u0027yum:\u0027 to be compatible with new Fedora and RHEL(8) please",
+      "revId": "18a75bdf33fcf98516208b430c84aaba58517faf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2780c84_363c76bd",
+        "filename": "plugins/tempest/tasks/configure/whitebox-hypervisors-config.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2019-04-17T15:54:42Z",
+      "side": 1,
+      "message": "just a note:\ni\u0027m not sure infrared code is not already using some other tool for changing config files (so it would be already installed behaving better then crudini) but i cannot find it atm (and possibly it was for yaml/json files not ini-like configs?)\n\nso if you are aware of other tool names, maybe quickly grep IR code if any other is used, crudini seems to be referenced only in single place in packstack plugin, nowhere else",
+      "revId": "18a75bdf33fcf98516208b430c84aaba58517faf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
