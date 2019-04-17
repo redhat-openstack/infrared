@@ -91,8 +91,8 @@
           - overcloud_version|int >= 14
         delegate_to: "{{ ceph_client }}"
         with_items:
-            - "docker exec ceph-mon-{{ ceph_client }} ceph osd set noout"
-            - "docker exec ceph-mon-{{ ceph_client }} ceph osd set norebalance"
+            - "podman exec ceph-mon-{{ ceph_client }} ceph osd set noout"
+            - "podman exec ceph-mon-{{ ceph_client }} ceph osd set norebalance"
 
       # check pcs cluster status
       - name: check pacemaker cluster status
@@ -295,8 +295,8 @@
           - overcloud_version|int >= 14
         delegate_to: "{{ ceph_client }}"
         with_items:
-            - "docker exec ceph-mon-{{ ceph_client }} ceph osd unset noout"
-            - "docker exec ceph-mon-{{ ceph_client }} ceph osd unset norebalance"
+            - "podman exec ceph-mon-{{ ceph_client }} ceph osd unset noout"
+            - "podman exec ceph-mon-{{ ceph_client }} ceph osd unset norebalance"
 
       - name: wait for OSDs to come back on OSP < 14
         become: true
@@ -312,7 +312,7 @@
 
       - name: wait for OSDs to come back on OSP >= 14
         become: true
-        command: "docker exec ceph-mon-{{ ceph_client }} ceph pg stat"
+        command: "podman exec ceph-mon-{{ ceph_client }} ceph pg stat"
         register: active_osd
         until: active_osd.stdout.find("active+clean") > -1
         retries: 24
@@ -335,7 +335,7 @@
       - name: check clock_skew on ceph cluster on OSP >= 14
         become: true
         shell: |
-            docker exec ceph-mon-{{ ceph_client }} ceph status | grep 'Monitor clock skew detected' || echo 'ALL_GOOD'
+            podman exec ceph-mon-{{ ceph_client }} ceph status | grep 'Monitor clock skew detected' || echo 'ALL_GOOD'
         register: clock_skew
         when:
           - "'ceph' in group_names"
@@ -358,7 +358,7 @@
 
       - name: check ceph cluster status on OSP >= 14
         become: true
-        command: "docker exec ceph-mon-{{ ceph_client }} ceph status"
+        command: "podman exec ceph-mon-{{ ceph_client }} ceph status"
         register: ceph_health
         until: ceph_health.stdout.find("HEALTH_OK") > -1
         retries: 30
@@ -385,7 +385,7 @@
 
       - name: check ceph cluster status with clock skew on OSP >=14
         become: true
-        command: "docker exec ceph-mon-{{ ceph_client }} ceph status"
+        command: "podman exec ceph-mon-{{ ceph_client }} ceph status"
         register: ceph_health
         until: ceph_health.stdout.find("HEALTH_WARN") > -1 or ceph_health.stdout.find("HEALTH_OK") > -1
         retries: 30
@@ -413,25 +413,24 @@
             retries: 60
             delay: 5
 
-          - name: Waiting for OVS agent on compute node to come up for OSP > 10
+          - name: Waiting for ovn-controller agent on compute node to come up
             shell: |
                 source {{ overcloud_rc }}
-                openstack network agent list --host {{ compute_fqdn.stdout }} -f json | jq -r -c '.[] | select(.Binary | contains("neutron-openvswitch-agent")) | .Alive'
+                openstack network agent list --host {{ compute_fqdn.stdout }} -f json | jq -r -c '.[] | select(.Binary | contains("ovn-controller")) | .Alive'
+            register: nova_ovs_up
+            until: nova_ovs_up.stdout.find(':-)') > -1
+            retries: 60
+            delay: 5
+
+          - name: Waiting for networking-ovn-metadata-agent agent on compute node to come up
+            shell: |
+                source {{ overcloud_rc }}
+                openstack network agent list --host {{ compute_fqdn.stdout }} -f json | jq -r -c '.[] | select(.Binary | contains("networking-ovn-metadata-agent")) | .Alive'
             register: nova_ovs_up
             until: nova_ovs_up.stdout.find(':-)') > -1
             retries: 60
             delay: 5
             when: overcloud_version|int > 10
-
-          - name: Waiting for OVS agent on compute node to come up for OSP == 10
-            shell: |
-                source {{ overcloud_rc }}
-                openstack network agent list -f json | jq -r -c '.[] | select(.Binary | contains("neutron-openvswitch-agent")) | select(.Host | contains("{{ compute_fqdn.stdout }}")) | .Alive'
-            register: nova_ovs_up
-            until: nova_ovs_up.stdout.find('true') > -1
-            retries: 60
-            delay: 5
-            when: overcloud_version|int == 10
         delegate_to: "{{ groups['undercloud']|first }}"
         when:
           - "'compute' in group_names"
