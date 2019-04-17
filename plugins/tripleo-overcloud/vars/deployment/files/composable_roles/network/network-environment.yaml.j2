@@ -1,5 +1,7 @@
 ---
 parameter_defaults:
+    #BZ#1703448
+    SELinuxMode: 'permissive'
     ExternalNetCidr: '10.0.0.0/24'
     ExternalAllocationPools: [{'start': '10.0.0.101', 'end': '10.0.0.149'}]
     ExternalInterfaceDefaultRoute: '10.0.0.1'
@@ -16,10 +18,11 @@ parameter_defaults:
     TenantAllocationPools: [{'start': '172.17.2.10', 'end': '172.17.2.149'}]
     TenantNetworkVlanID: 50
     DnsServers: ['10.0.0.1']
-    EC2MetadataIp: 192.168.24.1
 {% if install.splitstack|default(False) %}
     ControlPlaneDefaultRoute: {{ ansible_host|default(ansible_ssh_host) }}
+    EC2MetadataIp: {{ ansible_host|default(ansible_ssh_host) }}
 {% else %}
+    EC2MetadataIp: 192.168.24.1
     ControlPlaneDefaultRoute: 192.168.24.1
 {% endif %}
     ControlPlaneSubnetCidr: "24"
