@@ -1,4 +1,6 @@
 parameter_defaults:
+    #BZ#1703448
+    SELinuxMode: 'permissive'
     ControllerCount: {{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or '1' }}
     OvercloudControlFlavor: {{ ('controller' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('controller', 'baremetal') }}
     ComputeCount: {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or (install.hybrid is defined)| ternary('1','0') }}
