@@ -27,7 +27,7 @@
             path: "{{ install.overcloud.script }}"
             state: touch
             mode: 0755
-        when: install.overcloud.script
+        when: install.overcloud.get('script', False)
 
       - name: Validation
         include_tasks: "tasks/update/undercloud_validation.yml"
