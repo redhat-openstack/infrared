@@ -14,4 +14,6 @@ docs:
 	tox -edocs
 
 install:
+	pip install -U pip
+	pip install -U setuptools
 	pip install .
