@@ -131,6 +131,14 @@ subparsers:
                           Redirect the VMs serial output to files.
                           Files can be found under /var/log/sfiles/{prefix-node_name-node_number}.log
                           For example: /var/log/sfiles/XYZ-undercloud-0.log
+                  hyperthreading-enabled-nodes:
+                      type: ListValue
+                      help: |
+                          Enable Hyper-threading for the specified nodes. Threads double the number of cores
+                          Ex- When compute and controller nodes are specified to have hyperthreading enabled,
+                          --hyperthreading-enabled-nodes="compute,controller"
+                          "virt-install --vcpus=<set-vcpus>,threads=2" would run while creating all compute and
+                          controller node VMs
 
             - title: cleanup
               options:
