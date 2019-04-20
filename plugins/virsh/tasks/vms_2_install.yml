@@ -90,7 +90,15 @@
            --virt-type kvm \
            --cpu {{ topology_node.cpumodel|default('host-passthrough') }} \
            --ram {{ topology_node.memory }} \
-           --vcpus {{ topology_node.cpu }} \
+           {% if provision.hyperthreading.enabled.nodes is defined %}
+             {% for node in provision.hyperthreading.enabled.nodes %}
+              {% if node == topology_node.name %}
+            --vcpus={{ topology_node.cpu }},maxvcpus={{ 2 * (topology_node.cpu | int) }},threads=2 \
+              {% endif %}
+             {% endfor %}
+           {% else %}
+            --vcpus {{ topology_node.cpu }} \
+           {% endif %}
            --os-variant {{ topology_node.os.variant }} \
            --import \
            --noautoconsole \
