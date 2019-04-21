@@ -413,7 +413,7 @@
             retries: 60
             delay: 5
 
-          - name: Waiting for OVS agent on compute node to come up
+          - name: Waiting for OVS agent on compute node to come up for OSP > 10
             shell: |
                 source {{ overcloud_rc }}
                 openstack network agent list --host {{ compute_fqdn.stdout }} -f json | jq -r -c '.[] | select(.Binary | contains("neutron-openvswitch-agent")) | .Alive'
@@ -421,6 +421,17 @@
             until: nova_ovs_up.stdout.find(':-)') > -1
             retries: 60
             delay: 5
+            when: overcloud_version|int > 10
+
+          - name: Waiting for OVS agent on compute node to come up for OSP == 10
+            shell: |
+                source {{ overcloud_rc }}
+                openstack network agent list -f json | jq -r -c '.[] | select(.Binary | contains("neutron-openvswitch-agent")) | select(.Host | contains("{{ compute_fqdn.stdout }}")) | .Alive'
+            register: nova_ovs_up
+            until: nova_ovs_up.stdout.find('true') > -1
+            retries: 60
+            delay: 5
+            when: overcloud_version|int == 10
         delegate_to: "{{ groups['undercloud']|first }}"
         when:
           - "'compute' in group_names"
