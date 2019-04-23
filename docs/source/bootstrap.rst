@@ -1,8 +1,69 @@
 Bootstrap
 =========
 
-Setup
------
+Supported distros
+-----------------
+Currently supported distros are:
+
+* Fedora 25, 26, 27, 28, 29
+* RHEL 7.3, 7.4, 7.5
+
+.. warning:: Python 2.7 and virtualenv are required.
+
+Prerequisites
+-------------
+.. warning:: sudo or root access is needed to install prerequisites!
+
+General requirements::
+
+  sudo yum install git gcc libffi-devel openssl-devel
+
+.. note:: Dependencies explained:
+
+   * git - version control of this project
+
+   * gcc - used for compilation of C backends for various libraries
+
+   * libffi-devel - required by `cffi <http://cffi.readthedocs.io/en/latest/>`_
+
+   * openssl-devel - required by `cryptography <http://cryptography.readthedocs.io/en/latest/>`_
+
+Closed Virtualenv_ is required to create clean python environment separated from system::
+
+  sudo yum install python-virtualenv
+
+Ansible requires `python binding for SELinux <http://docs.ansible.com/ansible/intro_installation.html#managed-node-requirements>`_::
+
+  sudo yum install libselinux-python
+
+otherwise it won't be able to run modules with copy/file/template functions!
+
+.. note:: libselinux-python is in `Prerequisites`_ but doesn't have a pip package. It must be installed on system level.
+.. note:: Ansible requires also **libselinux-python** installed on all nodes using copy/file/template functions. Without this step all such tasks will fail!
+
+Virtualenv
+----------
+
+``infrared`` shares dependencies with other OpenStack products and projects.
+Therefore there's a high probability of conflicts with python dependencies,
+which would result either with ``infrared`` failure, or worse, with breaking
+dependencies for other OpenStack products. When working from source,
+`virtualenv <http://docs.python-guide.org/en/latest/dev/virtualenvs/>`_ usage
+is recommended for avoiding corrupting of system packages.
+
+  virtualenv .venv
+  source .venv/bin/activate
+  pip install --upgrade pip
+  pip install --upgrade setuptools
+
+.. note:: On Fedora 23 with EPEL repository enabled,
+    `RHBZ#1103566 <https://bugzilla.redhat.com/show_bug.cgi?id=1103566>`_ also requires
+    ::
+
+        dnf install redhat-rpm-config
+
+Installation
+------------
 
 Clone `infrared` 2.0 from GitHub::
 
@@ -13,9 +74,7 @@ Setup virtualenv and `install <setup.html#Installation>`_ from source using pip:
 
     cd infrared
     virtualenv .venv && source .venv/bin/activate
-    pip install --upgrade pip
-    pip install --upgrade setuptools
-    pip install .
+    make install
 
 .. warning:: It's important to upgrade ``pip`` first, as default ``pip`` version in RHEL (1.4) might fail on dependencies
 .. note:: `infrared` will create a default `workspace <workspace.html#workspace>`_ for you. This workspace will manage your environment details.
@@ -183,6 +242,5 @@ Given the topology defined by the `Answers File`_ earlier, the overcloud should 
 - 1 controller
 - 1 compute
 - 1 ceph storage
-
 
 .. _Tripleo Overcloud: tripleo-overcloud.html
