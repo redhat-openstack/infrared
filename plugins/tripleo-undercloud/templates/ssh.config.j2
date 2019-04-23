@@ -1,4 +1,8 @@
 Host *
+{% if install.splitstack|default(False) %}
+  User {{ install.user.name }}
+{% else %}
   User heat-admin
+{% endif %}
   StrictHostkeyChecking no
   UserKnownHostsFile /dev/null
