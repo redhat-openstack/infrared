@@ -229,7 +229,7 @@ PLUGINS_REGISTRY = {
         'type': 'install'
     },
     'tripleo-upgrade': {
-        'src': 'https://git.openstack.org/openstack/tripleo-upgrade.git',
+        'src': 'https://opendev.org/openstack/tripleo-upgrade.git',
         'src_path': 'infrared_plugin',
         'desc': 'Upgrade or update TripleO deployment',
         'type': 'install'
