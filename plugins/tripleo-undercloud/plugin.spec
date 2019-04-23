@@ -16,10 +16,20 @@ subparsers:
                       type: Value
                       help: |
                           This will be the remote server where the UC backup image will be stored
+                  dest-mirror-address:
+                      type: Value
+                      help: |
+                          This will be the mirror site where the UC backup image will be stored
+                      default: ''
                   dest-path:
                       type: Value
                       help: |
                           Path on destination server where the UC backup image will be stored
+                  dest-mirror-path:
+                      type: Value
+                      help: |
+                          Path on destination mirror server where the UC backup image will be stored
+                      default: ''
                   dest-key:
                       type: FileValue
                       help: |
