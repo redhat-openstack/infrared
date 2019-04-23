@@ -15,6 +15,9 @@
               namespace: "{{ registry_namespace }}"
               prefix: "{{ install.registry.prefix|default('') }}"
               tag: "{{ install.registry.tag.discover|ternary('AUTODETECT', install.registry.tag ) }}"
+              ceph_namespace: "{{ install.registry.get('ceph', {}).namespace | default('registry.access.redhat.com/rhceph') }}"
+              ceph_image: "{{ install.registry.get('ceph', {}).image | default('rhceph-3-rhel7') }}"
+              ceph_tag: "{{ install.registry.get('ceph', {}).tag) | default('latest') }}"
   when: install.registry.skip.puddle
 
 - name: Fail non-osp deployment
@@ -95,37 +98,29 @@
           replace: '{{ registry }}/{{ namespace }}'
 
     - name: set ceph_namespace in containers-prepare-parameter.yaml
-      vars:
-          ceph_namespace: "{{ container_env['container-image-prepare']['ceph-namespace'] | default('registry.access.redhat.com/rhceph') }}"
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-          regexp: 'registry.access.redhat.com/rhceph'
-          replace: '{{ ceph_namespace }}'
+          regexp: "registry.access.redhat.com/rhceph"
+          replace: "{{ container_env['container-image-prepare']['ceph_namespace'] }}"
 
     - name: set ceph_image in containers-prepare-parameter.yaml
-      vars:
-          ceph_image: "{{ container_env['container-image-prepare']['ceph-image'] | default('rhceph-3-rhel7') }}"
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-          regexp: 'rhceph-3-rhel7'
-          replace: '{{ ceph_image }}'
+          regexp: "rhceph-3-rhel7"
+          replace: "{{ container_env['container-image-prepare']['ceph_image'] }}"
 
     - name: set ceph_tag in containers-prepare-parameter.yaml
-      vars:
-          ceph_tag: "{{ container_env['container-image-prepare']['ceph-tag'] | default('latest') }}"
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-          regexp: 'ceph_tag: latest'
-          replace: 'ceph_tag: {{ ceph_tag }}'
+          regexp: "ceph_tag: latest"
+          replace: "ceph_tag: {{ container_env['container-image-prepare']['ceph_tag'] }}"
 
     - name: set ceph_namespace in undercloud.conf
-      vars:
-          ceph_namespace: "{{ container_env['container-image-prepare']['ceph-namespace'] }}"
       replace:
           path: "{{ working_dir }}/undercloud.conf"
           regexp: "(docker_insecure_registries.*)"
-          replace: '\1,{{ ceph_namespace }}'
-      when: container_env['container-image-prepare']['ceph-namespace'] is defined
+          replace: '\1,{{ container_env["container-image-prepare"]["ceph_namespace"] }}'
+      when: install.registry.get('ceph', {}).namespace is defined
 
     - block:
         - name: remove tag_from_label in containers-prepare-parameter.yaml
