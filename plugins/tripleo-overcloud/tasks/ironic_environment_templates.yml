@@ -2,7 +2,7 @@
 - name: include default ironic template
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: "--environment-file {{ install.heat.templates.basedir }}/environments/services{% if (install.version | default(undercloud_version) | openstack_release == 12)  %}-docker{% endif %}/ironic.yaml \\"
+      line: "--environment-file {{ install.heat.templates.basedir }}/environments/services{% if (install.version | default(undercloud_version) | openstack_release == 12)  %}-docker{% endif %}/ironic{% if (install.version | default(undercloud_version) | openstack_release >= 15) %}-overcloud{% endif %}.yaml \\"
       insertbefore: "^--log-file.*"
 
 - name: include default ironic-inspector template
