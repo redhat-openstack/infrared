@@ -1,6 +1,12 @@
 ---
 tripleo_heat_templates:
-    - "{{ install.heat.templates.basedir }}/environments/services{% if (install.version | default(undercloud_version) | openstack_release == 12)  %}-docker{% endif %}/ironic.yaml"
+{% if (install.version | default(undercloud_version) | openstack_release == 12)  %}
+    - "{{ install.heat.templates.basedir }}/environments/services-docker/ironic.yaml"
+{% elif (install.version | default(undercloud_version) | openstack_release < 15) %}
+    - "{{ install.heat.templates.basedir }}/environments/services/ironic.yaml"
+{% else %}
+    - "{{ install.heat.templates.basedir }}/environments/services/ironic-overcloud.yaml"
+{% endif %}
 
 custom_templates:
   parameter_defaults:
