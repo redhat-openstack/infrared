@@ -210,7 +210,6 @@ def test_dir_type_resolve(dir_root_dir, dir_type, monkeypatch):
         dir_type.resolve('dir4')
 
 
-@pytest.fixture
 def list_of_file_names(settings_dirs, spec_option):
     """Create a new IniType complex type
     """
@@ -220,7 +219,7 @@ def list_of_file_names(settings_dirs, spec_option):
 
 def test_list_of_file_names_values_auto_propagation():
     expected = ["task1", "task2", "task3"]
-    settings_dirs = ["", "", os.getcwd() + '/tests/example/']
+    settings_dirs = ["", "", 'tests/example']
     spec_option = {'lookup_dir': 'post_tasks'}
 
     complex_action = list_of_file_names(settings_dirs, spec_option)
@@ -231,7 +230,7 @@ def test_list_of_file_names_values_auto_propagation():
 
 def test_list_of_file_names_resolve():
     expected = ["task2", "task3"]
-    settings_dirs = ["", "", os.getcwd() + '/tests/example/']
+    settings_dirs = ["", "", 'tests/example/']
     spec_option = {'lookup_dir': 'post_tasks'}
     value = "task2,task3"
 
