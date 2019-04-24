@@ -5,9 +5,6 @@ import pytest
 import yaml
 
 from infrared import api
-from infrared.core.services import plugins
-import tests
-from tests.test_workspace import workspace_manager_fixture, test_workspace  # noqa
 
 
 def subdict_in_dict(subdict, superdict):
@@ -24,17 +21,6 @@ def subdict_in_dict(subdict, superdict):
     """
     return all(item in superdict.items()
                for item in subdict.items())
-
-
-@pytest.fixture(scope="session")
-def spec_fixture():
-    """Generates plugin spec for testing, using tests/example plugin dir. """
-    plugin_dir = path.join(path.abspath(path.dirname(tests.__file__)),
-                           'example')
-    test_plugin = plugins.InfraredPlugin(plugin_dir=plugin_dir)
-    from infrared.api import InfraredPluginsSpec
-    spec = InfraredPluginsSpec(test_plugin)
-    yield spec
 
 
 def test_execute_no_workspace(spec_fixture, workspace_manager_fixture):   # noqa
@@ -615,11 +601,11 @@ def test_output_with_IniType(spec_fixture, tmpdir,
     # Tests CLI (multiple args)
     ("--nestedlist sec1.opt1=val1,sec1.opt2=val2",
      None,
-     [{'sec1': {'opt1': 'val1','opt2': 'val2'}}]),
+     [{'sec1': {'opt1': 'val1', 'opt2': 'val2'}}]),
 ])
-def test_output_with_NestedList(spec_fixture, tmpdir,
-                             workspace_manager_fixture, test_workspace,
-                             cli_args, from_file, expected_output):
+def test_output_with_NestedList(
+    spec_fixture, tmpdir, workspace_manager_fixture, test_workspace, cli_args,
+    from_file, expected_output):
     """Verifies the output file with NestedList complex type args
        from CLI & file
     """
@@ -671,9 +657,9 @@ def test_output_with_NestedList(spec_fixture, tmpdir,
      None,
      [{'sec1': {'opt1': 'val1', 'opt2': 'val2'}}, {'sec1': {'opt2': 'val3'}}]),
 ])
-def test_output_with_NestedList_app(spec_fixture, tmpdir,
-                             workspace_manager_fixture, test_workspace,
-                             cli_args, from_file, expected_output):
+def test_output_with_NestedList_app(
+    spec_fixture, tmpdir, workspace_manager_fixture, test_workspace, cli_args,
+    from_file, expected_output):
     """Verifies the output file with NestedList complex type args
        from CLI & file
     """

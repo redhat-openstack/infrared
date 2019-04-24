@@ -1,14 +1,6 @@
 import os
-import pytest
+
 from infrared.core.services import CoreServices, CoreSettings
-
-
-@pytest.fixture
-def infrared_home(tmpdir):
-    new_home = str(tmpdir.mkdir("ir_home"))
-    os.environ['IR_HOME'] = new_home
-    yield new_home
-    del os.environ['IR_HOME']
 
 
 def test_infrared_home_dir(infrared_home):

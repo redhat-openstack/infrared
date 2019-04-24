@@ -7,27 +7,6 @@ from infrared.core.services import workspaces
 from infrared.core.utils import exceptions
 
 
-@pytest.fixture(scope="session")
-def workspace_manager_fixture(tmpdir_factory):
-    """Sets the default workspace direcotry to the temporary one. """
-
-    temp_workspace_dir = tmpdir_factory.mktemp('pmtest')
-    workspace_manager = workspaces.WorkspaceManager(str(temp_workspace_dir))
-    from infrared.core.services import CoreServices
-    CoreServices.register_service("workspace_manager", workspace_manager)
-    yield workspace_manager
-
-
-@pytest.fixture()
-def test_workspace(workspace_manager_fixture):
-    """Creates test workspace in the temp directory. """
-
-    name = 'test_workspace'
-    yield workspace_manager_fixture.create(name)
-    if workspace_manager_fixture.has_workspace(name):
-        workspace_manager_fixture.delete(name)
-
-
 @pytest.mark.parametrize('name', ["test_wspc", None])
 def test_workspace_create(workspace_manager_fixture, name):
     """Verify Workspace manager allows to create a new workspace. """
@@ -260,7 +239,8 @@ def test_workspace_import_no_file(workspace_manager_fixture):
         workspace_manager_fixture.import_workspace("zoooo.tgz", None)
 
 
-def test_workspace_import_workspace_exists(workspace_manager_fixture, mocker):
+def test_workspace_import_workspace_exists(
+        workspace_manager_fixture, test_workspace, mocker):
     twspc = workspace_manager_fixture.create("new_t_wspc")
     workspace_manager_fixture.activate(twspc.name)
     mock_os = mocker.patch.object(workspaces, "os")

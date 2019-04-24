@@ -5,10 +5,8 @@ import sys
 import pytest
 
 from infrared.main import main as ir_main
-from tests.test_plugins import SAMPLE_PLUGINS_DIR
+from tests.constants import SAMPLE_PLUGINS_DIR
 from tests.test_plugins import get_plugin_spec_flatten_dict
-from tests.test_plugins import plugins_conf_fixture  # noqa
-from tests.test_plugins import plugin_manager_fixture  # noqa
 
 
 def test_list_yamls_in_help_screen(plugin_manager_fixture):  # noqa

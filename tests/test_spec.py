@@ -1,11 +1,9 @@
 import pytest
 
 from infrared import api
-from infrared.core.utils.exceptions import IRRequiredArgsMissingException, \
-    IRExtraVarsException, IRInvalidMinMaxRangeException, IRException, \
-    IRInvalidLengthException
-from tests.test_execute import spec_fixture  # noqa
-from tests.test_workspace import workspace_manager_fixture, test_workspace  # noqa
+from infrared.core.utils.exceptions import (
+    IRRequiredArgsMissingException, IRExtraVarsException,
+    IRInvalidMinMaxRangeException, IRInvalidLengthException)
 
 
 @pytest.mark.parametrize("cli_args, should_pass", [  # noqa
@@ -108,7 +106,7 @@ def test_extra_vars(spec_fixture, workspace_manager_fixture, test_workspace):
     ("--value-max-zero=5", False),
 ])
 def test_min_max_args(spec_fixture, workspace_manager_fixture, test_workspace,
-                       cli_args, should_pass):
+                      cli_args, should_pass):
     """Tests the 'minimum' and 'maximum' support
 
     :param spec_fixture: Fixtures which creates 'testing spec' (tests/example)

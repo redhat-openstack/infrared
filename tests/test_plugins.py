@@ -1,13 +1,12 @@
 from six.moves import configparser
 import os
-import git
 import yaml
 import shutil
-import tarfile
 import tempfile
 import filecmp
 
 import pytest
+import git
 
 from infrared.core.utils.exceptions import IRPluginExistsException, \
     IRUnsupportedPluginType
@@ -17,122 +16,9 @@ from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRUnsupportedSpecOptionType
 from infrared.core.utils.dict_utils import dict_insert
-import infrared.core.services.plugins
-from infrared.core.services.plugins import InfraredPluginManager
 from infrared.core.services.plugins import InfraredPlugin
 from infrared.core.utils.validators import SpecValidator, RegistryValidator
-from infrared.core.services import CoreServices, ServiceName
-
-
-PLUGIN_SPEC = 'plugin.spec'
-SAMPLE_PLUGINS_DIR = 'tests/example/plugins'
-
-SUPPORTED_TYPES_DICT = dict(
-    supported_types=dict(
-        supported_type1='Tools of supported_type1',
-        supported_type2='Tools of supported_type2',
-        provision='Provisioning plugins',
-        install='Installing plugins',
-        test='Testing plugins'
-    )
-)
-
-
-@pytest.fixture()
-def plugins_conf_fixture(tmpdir):
-    """Creates temporary IR
-
-    :param tmpdir: builtin pytest fixtures to create temporary files & dirs
-    :return: plugins conf file as a LocalPath object (py.path)
-    """
-
-    # Creates temporary plugins conf file
-    lp_dir = tmpdir.mkdir('test_tmp_dir')
-    lp_file = lp_dir.join('.plugins.ini')
-
-    try:
-        yield lp_file
-    finally:
-        lp_dir.remove()
-
-
-@pytest.fixture()
-def plugin_manager_fixture(plugins_conf_fixture):
-    """Creates a PluginManager fixture
-
-    Creates a fixture which returns a PluginManager object based on
-    temporary plugins conf with default values(sections - provision, install &
-    test)
-    :param plugins_conf_fixture: fixture that returns a path of a temporary
-    plugins conf
-    """
-
-    lp_file = plugins_conf_fixture
-
-    def plugin_manager_helper(plugins_conf_dict=None):
-
-        if plugins_conf_dict is None:
-            plugins_conf_dict = {}
-
-        plugins_conf_dict.update(SUPPORTED_TYPES_DICT)
-
-        with lp_file.open(mode='w') as fp:
-            config = configparser.ConfigParser()
-            for section, section_data in plugins_conf_dict.items():
-                config.add_section(section)
-                for option, value in section_data.items():
-                    config.set(section, option, value)
-            config.write(fp)
-
-        CoreServices.register_service(
-            ServiceName.PLUGINS_MANAGER, InfraredPluginManager(
-                lp_file.strpath,
-                os.path.join(lp_file.dirname, "plugins")))
-        return CoreServices.plugins_manager()
-
-    yield plugin_manager_helper
-
-
-@pytest.fixture()
-def git_plugin_manager_fixture(tmpdir, plugin_manager_fixture):
-    """Yields an IRPluginManager obj configured with git plugin
-
-    Just like plugin_manager_fixture but also create two temporary directories
-    that will be used to mimic local and remote git repos of an InfraRed's
-    plugin. The IRPluginManager that will be returned, will be configured with
-    this InfraRed git plugin.
-    :param tmpdir: builtin pytest fixtures to create temporary files & dirs
-    :param plugin_manager_fixture: Fixture object which yields
-    InfraredPluginManger object
-    """
-    plugin_tar_gz = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        'example/plugins/git_plugin/git_plugin_repo.tar.gz')
-
-    plugin_repo_dir = tmpdir.mkdir('plugin_repo_dir')
-    plugin_install_dir = tmpdir.mkdir('plugin_install_dir')
-
-    t_file = tarfile.open(plugin_tar_gz)
-    t_file.extractall(path=str(plugin_repo_dir))
-
-    repo = git.Repo.clone_from(
-        url=str(plugin_repo_dir),
-        to_path=str(plugin_install_dir))
-
-    repo.git.config('user.name', 'dummy-user')
-    repo.git.config('user.email', 'dummy@email.com')
-
-    plugin_spec_dict = get_plugin_spec_flatten_dict(str(plugin_install_dir))
-
-    try:
-        plugin_manager = plugin_manager_fixture({
-            plugin_spec_dict['type']: {
-                plugin_spec_dict['name']: str(plugin_install_dir)}
-        })
-        yield plugin_manager
-    finally:
-        plugin_repo_dir.remove()
-        plugin_install_dir.remove()
+from tests.constants import PLUGIN_SPEC, SAMPLE_PLUGINS_DIR
 
 
 def get_plugin_spec_flatten_dict(plugin_dir):
@@ -383,9 +269,9 @@ def test_remove_unexisting_plugin(plugin_manager_fixture):
      "tests/example/plugins/type1_plugin1 "
      "tests/example/plugins/type1_plugin2", None),
     ("plugin remove type1_plugin1 type1_plugin2", dict(
-            supported_type1=dict(
-                type1_plugin1='tests/example/plugins/type1_plugin1',
-                type1_plugin2='tests/example/plugins/type1_plugin2'))),
+        supported_type1=dict(
+            type1_plugin1='tests/example/plugins/type1_plugin1',
+            type1_plugin2='tests/example/plugins/type1_plugin2'))),
 ])
 def test_plugin_cli(plugin_manager_fixture, input_args, plugins_conf):
     """Tests that plugin CLI works
@@ -447,12 +333,12 @@ def test_add_plugin_no_spec(plugin_manager_fixture):
         'plugin_type': 'supported_type',
         'description': 'some plugin description',
         'subparsers': ''}),
-    ('no_entry_point_value',{
+    ('no_entry_point_value', {
         'plugin_type': 'supported_type',
         'entry_point': '',
         'subparsers': {
             'sample_plugin1:': {}}}),
-    ('no_entry_point_value_in_config',{
+    ('no_entry_point_value_in_config', {
         'config': {
             "plugin_type": 'supported_type',
             "entry_point": '',
@@ -579,7 +465,7 @@ def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
             "https://sample_github.null/plugin_repo.git")
 
     mock_shutil.rmtree.assert_called_with(os.path.join(
-            mock_tempfile.mkdtemp.return_value, "plugin_repo"))
+        mock_tempfile.mkdtemp.return_value, "plugin_repo"))
     # clean tmp folder
     shutil.rmtree(mock_tempfile.mkdtemp.return_value)
 
@@ -895,5 +781,3 @@ def test_add_plugin_with_src_path(plugin_manager_fixture, mocker):
     assert dirs_cmp.right_list == dirs_cmp.left_list, \
         "Plugin directory is does not contain the original files from " \
         "the original plugin source."
-
-
