@@ -3,12 +3,6 @@
   gather_facts: no
   any_errors_fatal: true
   tasks:
-      # avoids: Failed to connect to the host via ssh
-      - name: Wait for nodes to be accesible by ansible
-        wait_for_connection:
-          sleep: 10
-          timeout: 300
-
       - name: sshd - disable reverse dns lookup
         lineinfile:
             dest: /etc/ssh/sshd_config
