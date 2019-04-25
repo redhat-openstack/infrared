@@ -423,3 +423,15 @@ subparsers:
                       help: |
                           The subnet for the undercloud docker interface
                           on the undercloud
+
+                  registry-ceph-namespace:
+                      type: Value
+                      help: namesapce for the ceph container
+
+                  registry-ceph-image:
+                      type: Value
+                      help: image for the ceph container
+
+                  registry-ceph-tag:
+                      type: Value
+                      help: tag used with the ceph container
