@@ -1,11 +1,29 @@
 ---
-- name: set workingr_dir fact
+- name: set working_dir fact
   set_fact:
       working_dir: "/home/{{ install.user.name }}"
 
+- name: set undercloud_version during installation
+  set_fact:
+      undercloud_version: "{{ install.version }}"
+  when:
+      - undercloud_version is not defined
+
+- name: set target version
+  vars:
+      is_upgrade: "{{ install.upgrade|default(false) }}"
+  set_fact:
+  # TODO(psedlak): replace '|int + 1' with special logic (helper/filter) which can do proper version increments (juno->kilo, 15-trunk->16-trunk etc)
+  #                - this code (as original version before it) is not allowing RDO + upgrade
+  #                  there is no conversion for 'version+1 => named rdo release', so if upgrade==yes then loosing the openstack_distribution information
+  #                - also, same issue will be when upgrade==yes with OSP15-trunk
+  #                  as 15-trunk needs to have that '-trunk' string part, so '|int + 1' will also strip this information
+  #                - likely solution is to add new |openstack_release_increment helper, where proper conversion can be handled (to after +1 convert back to name string)
+      target_install_version: "{{ install.version | default( is_upgrade | ternary((undercloud_version|openstack_release|int) + 1, undercloud_version) ) }}"
+
 - name: set default registry namespace
   set_fact:
-      registry_namespace: "{{ install.get('registry', {}).namespace|default('rhosp' + (install.version|default(undercloud_version)|openstack_release|string)) }}"
+      registry_namespace: "{{ install.get('registry', {}).namespace|default('rhosp' + (target_install_version|string)) }}"
 
 
 - name: Check if we have user input for image preparation
@@ -23,30 +41,20 @@
           For non-OSP deployment set --registry-skip-puddle=yes and provide
           '-registy-namespace' '--registry-tag' options.
   when:
-      - (install.version|default(undercloud_version)|openstack_distribution) != 'OSP'
+      - (target_install_version|openstack_distribution) != 'OSP'
       - container_env is not defined
 
 - block:
     - name: containers_images_env facts
       vars:
-          cont_img_yml: "{{ (install.version|default(undercloud_version)|openstack_release >= 15) | ternary('container_image_prepare.yaml', 'overcloud_container_image_prepare.yaml') }}"
+          cont_img_yml: "{{ (target_install_version|openstack_release >= 15) | ternary('container_image_prepare.yaml', 'overcloud_container_image_prepare.yaml') }}"
       set_fact:
           containers_images_env_template_download_basename: "{{ cont_img_yml }}"
           containers_images_env_template_dest_file: "{{ inventory_dir }}/{{ cont_img_yml }}"
 
-    - name: set undercloud_version during installation
-      set_fact:
-          undercloud_version: "{{ install.version }}"
-      when:
-          - not install.upgrade|default(false)
-          - not install.get('update', {}).undercloud|default(false)
-
     - name: get puddle url from the repos
       vars:
-          upgrade_release: "{{ install.upgrade|default(false)|ternary((undercloud_version|int + 1), undercloud_version) }}"
-          install_release: "{{ undercloud_version|default(install.version) }}"
-          release: "{{  install.upgrade|default(false)|ternary(upgrade_release,install_release) }}"
-          repod_file: "/etc/yum.repos.d/rhos-release-{{ release }}.repo"
+          repod_file: "/etc/yum.repos.d/rhos-release-{{ target_install_version }}.repo"
       shell: |
           cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '(^.*(?=\/compose\/.*\/\$basearch))|(^.*(?=\/.*\/\$basearch))'
       register: containers_puddle_base_url
@@ -155,4 +163,4 @@
               replace: "\\1name_prefix: {{ install.registry.prefix }}"
       when: install.cdn|default(False)
   when:
-      - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
+      - (target_install_version|openstack_distribution) == 'OSP'
