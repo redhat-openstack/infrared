@@ -70,10 +70,23 @@
                     {% endfor %}
                 {% endfor %}
               {% endif %}
+              {# append options #}
+              {% if test.openstack.version|default(overcloud_version)|openstack_release >= 13 and test.get('append', {}).get('options', {}) %}
+                {% for section_name,options in test.get('append', {}).get('options', {}).items() %}
+                    {% for option_name,value in options.items() %}
+                        --append {{section_name}}.{{option_name}}={{value}} \
+                    {% endfor %}
+                {% endfor %}
+              {% endif %}
               --out ~/{{ test.dir }}/etc/tempest.conf
   args:
       chdir: "{{ config_dir | default('~/' + test.dir) }}"
   register: config_result
+
+ name: Display append options warning
+ debug:
+     msg: "Warning: --append-options unsupported in RHOSP < 13."
+ when: test.openstack.version|default(overcloud_version)|openstack_release < 13 and test.get('append', {}).get('options', {})
 
 - name: Save the current state for the later cleanup
   shell: >

@@ -145,6 +145,12 @@ subparsers:
                        help: |
                            Remove additional Tempest configuration (tempest.conf) options.
                            Format: --remove-options section.option:value1 --remove-options section.option:value
+                  append-options:
+                       type: IniType
+                       action: append
+                       help: |
+                           Append additional Tempest configuration (tempest.conf) options.
+                           Format: --append-options section.option:value1 --append-options section.option:value
                   blackre:
                       type: Value
                       help: |
