@@ -15,7 +15,9 @@
               plugins:
                   dir: "{{ ansible_user_dir }}/.rally/plugins"
                   revision: HEAD
+          python_ver: "{{ (target_install_version|openstack_release >= 15) | ternary('python3', 'python') }}"
       rally: "{{ default_config | combine(config, recursive=True) }}"
+      
   tasks:
       - include_role:
             name: version-discovery

@@ -24,7 +24,7 @@
       creates: "{{ rally.outputdir }}/nosetests-{{ timestamp }}.xml"
 
 - name: JSON results
-  shell: "{{ rally.bin }} task results | python -m json.tool > {{ rally.outputdir }}/results-{{ timestamp }}.json"
+  shell: "{{ rally.bin }} task results | {{ rally.python_ver }} -m json.tool > {{ rally.outputdir }}/results-{{ timestamp }}.json"
   args:
       creates: "{{ rally.outputdir }}/results-{{ timestamp }}.json"
 
