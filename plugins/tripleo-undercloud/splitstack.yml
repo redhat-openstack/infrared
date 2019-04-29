@@ -110,3 +110,10 @@
         package:
             name: 'python-heat-agent'
             state: latest
+        when: "install.version|openstack_release < 15"
+
+      - name: Install python3-heat-agent package
+        package:
+            name: 'python3-heat-agent'
+            state: latest
+        when: "install.version|openstack_release >= 15"
