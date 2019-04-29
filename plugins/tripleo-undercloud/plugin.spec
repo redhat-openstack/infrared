@@ -20,7 +20,6 @@ subparsers:
                       type: Value
                       help: |
                           This will be the mirror site where the UC backup image will be stored
-                      default: ''
                   dest-path:
                       type: Value
                       help: |
@@ -29,7 +28,6 @@ subparsers:
                       type: Value
                       help: |
                           Path on destination mirror server where the UC backup image will be stored
-                      default: ''
                   dest-key:
                       type: FileValue
                       help: |
