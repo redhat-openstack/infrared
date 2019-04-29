@@ -1,14 +1,8 @@
-- name: OpenStack Provisioner SSH wait
+- name: OpenStack Provisioner post-configuration
   hosts: openstack_nodes:bmc:!ovb
   gather_facts: no
   any_errors_fatal: true
   tasks:
-      # avoids: Failed to connect to the host via ssh
-      - name: Wait for nodes to be accesible by ansible
-        wait_for_connection:
-          sleep: 10
-          timeout: 300
-
       - name: sshd - disable reverse dns lookup
         lineinfile:
             dest: /etc/ssh/sshd_config
@@ -48,12 +42,15 @@
                         selectattr('mac_address', 'equalto', nic.macaddress) |
                         list | first }}"
             # todo(yfried): add subnets to know if dhcp is on or no
+        # FIXME: move this change to a different review
         copy:
             content: |
                 BOOTPROTO=static
                 IPADDR={{ port.fixed_ips[0].ip_address }}
                 NETMASK=255.255.255.0
+                {% if ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] in ["6", "7"] %}
                 NM_CONTROLLED="no"
+                {% endif %}
                 TYPE=ethernet
                 ONBOOT=yes
                 DEVICE={{ item }}
