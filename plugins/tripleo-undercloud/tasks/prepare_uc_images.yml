@@ -23,7 +23,7 @@
 
 - name: set default registry namespace
   set_fact:
-      registry_namespace: "{{ install.get('registry', {}).namespace|default('rhosp' + (target_install_version|string)) }}"
+      registry_namespace: "{{ install.get('registry', {}).namespace|default('rhosp' + (target_install_version|openstack_release|string)) }}"
 
 
 - name: Check if we have user input for image preparation
