@@ -11,12 +11,17 @@
         build: "{{ install.build }}"
         mirror: "{{ install.mirror | default(omit) }}"
         enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
+        rr_buildmods:
+            - pin
   tasks:
       - name: Enable current dev working repo
         shell: |
             yum-config-manager \
-            --setopt 'rhelosp-{{ install.version }}.0-devtools-puddle.includepkgs=openstack-packstack*,puppet-tempest' \
-            --enable rhelosp-{{ install.version }}.0-devtools-puddle >>/var/log/yum.log
+            --setopt '{{ reponame }}.includepkgs=openstack-packstack*,puppet-tempest' \
+            --enable {{ reponame }} >>/var/log/yum.log
+        vars:
+            version: "{{ install.version|openstack_release }}.0{{ ('-trunk' in install.version) | ternary('-trunk', '') }}"
+            reponame: "rhelosp-{{ version }}.0-devtools{{ (install.version|openstack_release <= 15) | ternary('-puddle', '') }}"
         when: "install.version|openstack_release >= 13"
 
       - name: Update all packages
