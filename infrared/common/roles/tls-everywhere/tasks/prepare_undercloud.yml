@@ -7,11 +7,33 @@
         line: "{{ freeipa_node_ipaddress }} {{ freeipa_node }}.{{ freeipa_cloud_domain }} {{ freeipa_node }}"
         state: present
 
-  - name: Install python novajoin
+  - name: Install RHEL7 packages
     become: yes
     package:
         name:  python-novajoin
         state: present
+    when:
+        - ansible_distribution in ['CentOS', 'RedHat']
+        - ansible_distribution_major_version == '7'
+
+  - name: enable additional dnf module for RHEL8
+    become: yes
+    shell: dnf module enable pki-deps -y
+    when:
+        - ansible_distribution in ['CentOS', 'RedHat']
+        - ansible_distribution_major_version == '8'
+
+  - name: Install RHEL8 packages
+    become: yes
+    package:
+      name:
+        - 'patch'
+        - 'python3-nss'
+        - 'python3-novajoin'
+      state: present
+    when:
+        - ansible_distribution in ['CentOS', 'RedHat']
+        - ansible_distribution_major_version == '8'
 
   - name: Prepare novajoin to work
     become: yes
