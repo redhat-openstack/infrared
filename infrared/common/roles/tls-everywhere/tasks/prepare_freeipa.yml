@@ -9,22 +9,65 @@
         - ansible_distribution in ['CentOS', 'RedHat']
         - ansible_distribution_major_version < '8'
 
-  - name: Install packages
+  - name: Install RHEL7 packages
     become: yes
     package:
       name:
         - 'net-tools'
-        - "{{ freeipa_epel_repo_url }}"
+        - "{{ freeipa_rhel7_epel_repo_url }}"
       state: present
+    when:
+        - ansible_distribution in ['CentOS', 'RedHat']
+        - ansible_distribution_major_version == '7'
 
-  - name: enable additional repository
+  - name: Install RHEL8 packages
+    become: yes
+    package:
+      name:
+        - 'net-tools'
+        - 'iptables'
+        - 'iptables-services'
+      state: present
+    when:
+        - ansible_distribution in ['CentOS', 'RedHat']
+        - ansible_distribution_major_version == '8'
+
+  - name: Enable additional repository for RHEL7
     become: yes
     shell: yum-config-manager --enable {{ item }}
-    loop: "{{ freeipa_additional_repos }}"
+    loop: "{{ freeipa_rhel7_additional_repos }}"
+    when:
+        - ansible_distribution in ['CentOS', 'RedHat']
+        - ansible_distribution_major_version == '7'
+
+  - name: Enable additional dnf modules for RHEL8
+    become: yes
+    shell: dnf module enable {{ item }} -y
+    loop: "{{ freeipa_rhel8_dnf_modules }}"
+    when:
+        - ansible_distribution in ['CentOS', 'RedHat']
+        - ansible_distribution_major_version == '8'
+
+  - name: Install Red Hat CA
+    become: yes
+    shell: |
+        update-ca-trust enable
+        curl https://password.corp.redhat.com/RH-IT-Root-CA.crt -o /etc/pki/ca-trust/source/anchors/2015-RH-IT-Root-CA.pem
+        update-ca-trust extract
 
   - name: Update repos
     become: yes
     shell: yum clean all
+
+  - name: Enable iptables service for RHEL8
+    become: yes
+    service:
+        name: iptables
+        enabled: yes
+        state: restarted
+    when:
+        - ansible_distribution in ['CentOS', 'RedHat']
+        - ansible_distribution_major_version == '8'
 
   - name: Download freeipa setup script
     get_url:
