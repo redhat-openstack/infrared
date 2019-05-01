@@ -1,0 +1,31 @@
+- name: Storage
+  vip: true
+  vlan: 30
+  name_lower: storage
+  ip_subnet: '172.17.3.0/24'
+  allocation_pools: [{'start': '172.17.3.10', 'end': '172.17.3.149'}]
+- name: StorageMgmt
+  name_lower: storage_mgmt
+  vip: true
+  vlan: 40
+  ip_subnet: '172.17.4.0/24'
+  allocation_pools: [{'start': '172.17.4.10', 'end': '172.17.4.149'}]
+- name: InternalApi
+  name_lower: internal_api
+  vip: true
+  vlan: 20
+  ip_subnet: '172.17.1.0/24'
+  allocation_pools: [{'start': '172.17.1.10', 'end': '172.17.1.149'}]
+- name: Tenant
+  vip: false  # Tenant network does not use VIPs
+  name_lower: tenant
+  vlan: 50
+  ip_subnet: '172.17.2.0/24'
+  allocation_pools: [{'start': '172.17.2.10', 'end': '172.17.2.149'}]
+- name: External
+  vip: true
+  name_lower: external
+  vlan: 10
+  ip_subnet: '10.0.0.0/24'
+  allocation_pools: [{'start': '10.0.0.101', 'end': '10.0.0.149'}]
+  gateway_ip: '10.0.0.1'
