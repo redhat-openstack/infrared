@@ -185,8 +185,9 @@
 - name: Create DVR compute env file
   vars:
       nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('', 'legacy') }}"
+      nics_topology: "{{ (install.version|default(undercloud_version)|openstack_release > 14) | ternary('', 'three-nics-vlans') }}"
   template:
-      dest: "{{ template_base }}/network/three-nics-vlans/{{ nics_subfolder }}/compute-dvr.yaml"
+      dest: "{{ template_base }}/network/{{ nics_topology}}/{{ nics_subfolder }}/compute-dvr.yaml"
       src: "compute-dvr.yaml.j2"
   when: install.network.dvr
 
