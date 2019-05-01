@@ -5,9 +5,11 @@
       state: present
   with_items: "{{ setup.packages }}"
 
-- name: Install pip
-  command: easy_install "pip>18"
-  become: yes
+- name: Install pip using get-pip.py
+  shell: |
+      curl https://bootstrap.pypa.io/get-pip.py | python
+  become: true
+  when: pip_packages is defined
 
 - name: Install required pip packages
   pip:

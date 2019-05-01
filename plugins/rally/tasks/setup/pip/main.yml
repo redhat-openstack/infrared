@@ -1,7 +1,10 @@
 # pip10=crashes while importing requests
-- name: Install pip
-  command: easy_install "pip>18"
-  become: yes
+
+- name: Install pip using get-pip.py
+  shell: |
+      curl https://bootstrap.pypa.io/get-pip.py | python
+  become: true
+  when: pip_packages is defined
 
 - name: Install devel packages for package build dependencies
   become: yes
