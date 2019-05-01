@@ -19,6 +19,7 @@
   serial: 1
   vars:
       ceph_client: "{{ groups['controller']|first }}"
+      container_runtime: "{{ (install.version | default(undercloud_version) | openstack_release > 14) | ternary('podman', 'docker') }}"
   tasks:
       - set_fact:
             overcloud_rc: "/home/stack/{{ install.overcloud.stack }}rc"
@@ -91,8 +92,8 @@
           - overcloud_version|int >= 14
         delegate_to: "{{ ceph_client }}"
         with_items:
-            - "docker exec ceph-mon-{{ ceph_client }} ceph osd set noout"
-            - "docker exec ceph-mon-{{ ceph_client }} ceph osd set norebalance"
+            - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph osd set noout"
+            - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph osd set norebalance"
 
       # check pcs cluster status
       - name: check pacemaker cluster status
@@ -295,8 +296,8 @@
           - overcloud_version|int >= 14
         delegate_to: "{{ ceph_client }}"
         with_items:
-            - "docker exec ceph-mon-{{ ceph_client }} ceph osd unset noout"
-            - "docker exec ceph-mon-{{ ceph_client }} ceph osd unset norebalance"
+            - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph osd unset noout"
+            - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph osd unset norebalance"
 
       - name: wait for OSDs to come back on OSP < 14
         become: true
@@ -312,7 +313,7 @@
 
       - name: wait for OSDs to come back on OSP >= 14
         become: true
-        command: "docker exec ceph-mon-{{ ceph_client }} ceph pg stat"
+        command: "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph pg stat"
         register: active_osd
         until: active_osd.stdout.find("active+clean") > -1
         retries: 24
@@ -335,7 +336,7 @@
       - name: check clock_skew on ceph cluster on OSP >= 14
         become: true
         shell: |
-            docker exec ceph-mon-{{ ceph_client }} ceph status | grep 'Monitor clock skew detected' || echo 'ALL_GOOD'
+            {{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph status | grep 'Monitor clock skew detected' || echo 'ALL_GOOD'
         register: clock_skew
         when:
           - "'ceph' in group_names"
@@ -358,7 +359,7 @@
 
       - name: check ceph cluster status on OSP >= 14
         become: true
-        command: "docker exec ceph-mon-{{ ceph_client }} ceph status"
+        command: "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph status"
         register: ceph_health
         until: ceph_health.stdout.find("HEALTH_OK") > -1
         retries: 30
@@ -385,7 +386,7 @@
 
       - name: check ceph cluster status with clock skew on OSP >=14
         become: true
-        command: "docker exec ceph-mon-{{ ceph_client }} ceph status"
+        command: "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph status"
         register: ceph_health
         until: ceph_health.stdout.find("HEALTH_WARN") > -1 or ceph_health.stdout.find("HEALTH_OK") > -1
         retries: 30
