@@ -18,11 +18,12 @@ parameter_defaults:
     TenantNetworkVlanID: 50
 {% endif %}
     DnsServers: ['10.0.0.1']
-    EC2MetadataIp: 192.168.24.1
 {% if install.splitstack|default(False) %}
     ControlPlaneDefaultRoute: {{ ansible_host|default(ansible_ssh_host) }}
+    EC2MetadataIp: {{ ansible_host|default(ansible_ssh_host) }}
 {% else %}
     ControlPlaneDefaultRoute: 192.168.24.1
+    EC2MetadataIp: 192.168.24.1
 {% endif %}
     ControlPlaneSubnetCidr: "24"
     NtpServer: ["clock.redhat.com"]
