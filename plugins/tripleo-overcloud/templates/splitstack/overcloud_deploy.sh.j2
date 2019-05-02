@@ -13,6 +13,8 @@ openstack overcloud deploy \
 -r {{ template_base }}/roles/roles_data.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/deployed-server-environment.yaml \
 -e /usr/share/openstack-tripleo-heat-templates/environments/deployed-server-bootstrap-environment-rhel.yaml \
+{% if install.version|default(undercloud_version) |openstack_release < 15 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/deployed-server-pacemaker-environment.yaml \
+{% endif %}
 -e {{ template_base }}/network-config.yaml \
 -e {{ template_base }}/ctrlplane-template.yml \
