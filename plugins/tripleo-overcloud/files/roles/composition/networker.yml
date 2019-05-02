@@ -38,8 +38,9 @@ networker_role:
         - OS::TripleO::Services::NeutronMetadataAgent
         - OS::TripleO::Services::NeutronOvsAgent
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronVppAgent{% endif %}"
-        - OS::TripleO::Services::Ntp
+        - "{% if install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::Ntp{% endif %}"
         - OS::TripleO::Services::OpenDaylightOvs
+        - "{% if install.version|default(undercloud_version) |openstack_release >= 15 %}OS::TripleO::Services::Podman{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - OS::TripleO::Services::Pacemaker
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Rhsm{% endif %}"
@@ -49,6 +50,7 @@ networker_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::SkydiveAgent{% endif %}"
         - OS::TripleO::Services::Snmp
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::Sshd{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release >= 15 %}OS::TripleO::Services::Timesync{% endif %}"
         - OS::TripleO::Services::Timezone
         - OS::TripleO::Services::TripleoFirewall
         - OS::TripleO::Services::TripleoPackages
