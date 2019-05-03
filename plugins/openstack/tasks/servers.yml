@@ -83,6 +83,29 @@
       name: "{{ topology_node.flavor | default(flavor_id) }}"
       limit: 1
 
+# ovn nodes are faking baremetal, they have no OS at this stage.
+- name: Wait for hosts to be reachable (all but ovn)
+  wait_for:
+      port: 22
+      host: "{{ item.floating_ip.floating_ip_address }}"
+      regexp: "OpenSSH"
+      delay: 10
+      sleep: 10
+      timeout: 600
+  with_items: "{{ floating_ips.results }}"
+  when: "{{ 'ovb' not in topology_node.groups }}"
+
+- name: Detect the python interpreter
+  vars:
+      sshopts: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes"
+  shell: |
+      ssh {{ sshopts }} -i {{ provision.key.file }} \
+      {{ topology_node.get('image', {}).ssh_user | default(provision.username) }}@{{ item.floating_ip.floating_ip_address }} \
+      'command -v python python3 /usr/libexec/platform-python|head -n1'
+  register: py_interpreter
+  with_items: "{{ floating_ips.results }}"
+  when: "{{ 'ovb' not in topology_node.groups }}"
+
 - name: Add created servers to inventory
   vars:
       instance_flavor: "{{ openstack_flavors | first }}"
@@ -92,6 +115,7 @@
       ansible_host: "{{ item.floating_ip.floating_ip_address }}"
       groups: "{{ topology_node.groups | join(',') }}"
       ansible_ssh_private_key_file: "{{ provision.key.file }}"
+      ansible_python_interpreter: "{{ ( ( py_interpreter.results | selectattr('item.item.name', 'equalto', item.item.name) | first | default(None) )['stdout'] | default('') ) | trim | default(omit, true) }}"
       ansible_user: "{{ topology_node.get('image', {}).ssh_user | default(provision.username) }}"
 #      eth1_interface_ip: "{{ item.item.addresses[data_network.name][0].addr }}"
       ram: "{{ instance_flavor.ram }}"
