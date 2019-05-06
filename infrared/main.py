@@ -39,6 +39,16 @@ def inject_common_paths():
 # code (or on demand), then this call can be moved as well in that place.
 inject_common_paths()
 
+
+IR_HOME = os.path.abspath(os.environ.get(
+    "IR_HOME", os.path.join(os.path.expanduser("~"), '.infrared')))
+IR_HOME_ROLES = os.path.join(IR_HOME, 'roles')
+
+# Prepend the path to the 'roles' directory in InfraRed's home.
+# Must be in this order, otherwise, Galaxy won't use it.
+os.environ['ANSIBLE_ROLES_PATH'] = ':'.join(
+    [IR_HOME_ROLES, os.environ['ANSIBLE_ROLES_PATH']])
+
 from infrared import api  # noqa
 from infrared.core.services import CoreServices  # noqa
 from infrared.core.services.plugins import PLUGINS_REGISTRY  # noqa
@@ -274,6 +284,12 @@ class PluginManagerSpec(api.SpecObject):
                                                    "repository where infrared "
                                                    "plugin can be found.")
 
+        add_parser.add_argument("--skip-roles", action='store_true',
+                                help="Skip the from file roles installation. "
+                                     "(Don't install Ansible roles from "
+                                     "'requirements.yml' or "
+                                     "'requirements.yaml' file)")
+
         # Remove plugin
         remove_parser = plugin_subparsers.add_parser(
             "remove",
@@ -353,7 +369,8 @@ class PluginManagerSpec(api.SpecObject):
                 for _plugin in pargs.src:
                     self.plugin_manager.add_plugin(
                         _plugin, rev=pargs.revision,
-                        plugin_src_path=pargs.src_path)
+                        plugin_src_path=pargs.src_path,
+                        skip_roles=pargs.skip_roles)
         elif subcommand == 'remove':
             if 'all' in pargs.name:
                 self.plugin_manager.remove_all()
