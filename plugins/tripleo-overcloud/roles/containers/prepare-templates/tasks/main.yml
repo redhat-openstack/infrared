@@ -19,7 +19,7 @@
       reg_base_ceph: "{{ install.registry.undercloud.skip|ternary(external_reg_base_ceph, undercloud_reg_base_ceph) }}"
   shell: |
       set -exo pipefail
-      sudo openstack overcloud container image prepare \
+      openstack overcloud container image prepare \
         --namespace={{ reg_base.rstrip('/') }} \
         --env-file={{ env_file }} {{ environment_yamls | default('') }} {{ roles_yamls | default('') }} \
         --prefix={{ container_env['container-image-prepare']['prefix'] }} \
