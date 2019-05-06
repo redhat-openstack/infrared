@@ -529,6 +529,21 @@ class InfraredPluginManager(object):
             pip_args = ['install', '-r', requirement_file]
             pip_main(args=pip_args)
 
+        # Ansible Galaxy - install roles from file
+        for req_file in ['requirements.yml', 'requirements.yaml']:
+            galaxy_reqs_file = os.path.join(plugin_path, req_file)
+            if not os.path.isfile(galaxy_reqs_file):
+                continue
+            LOG.debug("Installing Galaxy "
+                      "requirements... ({})".format(galaxy_reqs_file))
+            from ansible.cli.galaxy import GalaxyCLI
+            glxy_cli = GalaxyCLI(['install'])
+            glxy_cli.parse()
+            glxy_cli.options.role_file = galaxy_reqs_file
+            glxy_cli.execute_install()
+        else:
+            LOG.debug("Galaxy requirements files weren't found.")
+
     def freeze(self):
         registry = {}
         for section in self.config.sections():
