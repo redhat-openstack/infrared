@@ -10,6 +10,7 @@ from infrared.core.services import plugins
 from infrared.core.services import ansible_config
 from infrared.core.services import execution_logger
 from infrared.core.utils import logger
+from infrared.main import IR_HOME
 
 LOG = logger.LOG
 
@@ -41,18 +42,15 @@ class CoreSettings(object):
         unit tests, for example.
         """
 
-        self.infrared_home = os.path.abspath(os.environ.get(
-            "IR_HOME", os.path.join(os.path.expanduser("~"), '.infrared')))
-
         # todo(obaranov) replace .workspaces to workspaces and .plugins.ini to
         # todo(obaranov) plugins.ini once IR is packaged as pip
         self.plugins_conf_file = plugins_conf_file or os.path.join(
-            self.infrared_home, '.plugins.ini')
+            IR_HOME, '.plugins.ini')
         self.workspaces_base_folder = workspaces_base_folder or os.path.join(
-            self.infrared_home, '.workspaces')
+            IR_HOME, '.workspaces')
         self.install_plugin_at_start = install_plugin_at_start
         self.plugins_base_folder = plugins_base_folder or os.path.join(
-            self.infrared_home, 'plugins')
+            IR_HOME, 'plugins')
 
 
 class CoreServices(object):
@@ -96,8 +94,7 @@ class CoreServices(object):
         # create ansible config manager
         if ServiceName.ANSIBLE_CONFIG_MANAGER not in cls._SERVICES:
             cls.register_service(ServiceName.ANSIBLE_CONFIG_MANAGER,
-                                 ansible_config.AnsibleConfigManager(
-                                     core_settings.infrared_home))
+                                 ansible_config.AnsibleConfigManager())
 
         # create execution logger manager
         if ServiceName.EXECUTION_LOGGER_MANAGER not in cls._SERVICES:
@@ -105,7 +102,7 @@ class CoreServices(object):
             ansible_manager = CoreServices.ansible_config_manager()
             # build log file path
             log_file = \
-                os.path.join(core_settings.infrared_home, 'ir-commands.log')
+                os.path.join(IR_HOME, 'ir-commands.log')
             cls.register_service(ServiceName.EXECUTION_LOGGER_MANAGER,
                                  execution_logger.ExecutionLoggerManager(
                                      ansible_manager.ansible_config_path,

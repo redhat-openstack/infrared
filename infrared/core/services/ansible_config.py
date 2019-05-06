@@ -4,6 +4,7 @@ from six.moves import configparser
 
 from infrared.core.utils import logger
 from infrared.core.utils.validators import AnsibleConfigValidator
+from infrared.main import IR_HOME
 
 LOG = logger.LOG
 
@@ -21,11 +22,11 @@ DEFAULT_ANSIBLE_SETTINGS = dict(
 
 class AnsibleConfigManager(object):
 
-    def __init__(self, infrared_home):
+    def __init__(self):
         """
         :param ansible_config: A path to the ansible config
         """
-        self.ansible_config_path = self._get_ansible_conf_path(infrared_home)
+        self.ansible_config_path = self._get_ansible_conf_path()
         config_validator = AnsibleConfigValidator()
 
         if not os.path.isfile(self.ansible_config_path):
@@ -34,17 +35,16 @@ class AnsibleConfigManager(object):
             config_validator.validate_from_file(self.ansible_config_path)
 
     @staticmethod
-    def _get_ansible_conf_path(infrared_home):
+    def _get_ansible_conf_path():
         """
         Check for Ansible config in specific locations
         and return the first located
 
-        :param infrared_home: infrared's home directory
         :return:
         """
         locations_list = [
             os.path.join(os.getcwd(), 'ansible.cfg'),
-            os.path.join(infrared_home, 'ansible.cfg'),
+            os.path.join(IR_HOME, 'ansible.cfg'),
             os.path.join(os.path.expanduser('~'), '.ansible.cfg')
         ]
 
@@ -57,7 +57,7 @@ class AnsibleConfigManager(object):
             if os.path.isfile(location):
                 return location
 
-        return os.path.join(infrared_home, 'ansible.cfg')
+        return os.path.join(IR_HOME, 'ansible.cfg')
 
     def _create_ansible_config(self):
         """ Create ansible config file """
