@@ -124,6 +124,7 @@
           install_container_extra_repos is defined or
           install_container_images_patch is defined or patched_rpms.results | selectattr('stat.exists', 'equalto', True) | list | length > 0
         )
+  become: yes
   tags:
       - skip_ansible_lint
       - container-image-prepare
