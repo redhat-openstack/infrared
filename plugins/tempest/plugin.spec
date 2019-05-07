@@ -28,7 +28,7 @@ subparsers:
                         normal - use RPM version of Tempest (the usual way Tempest is ran)
                         debug_failing - installs tempest patches with highly experimental
                             features (i.e.: run_on_failure) that are not yet merged to
-                            main Tempest project. See https://review.openstack.org/#/c/553896/
+                            main Tempest project. See https://review.opendev.org/#/c/553896/
                             for more details.
                             Tested only on OSP12 and above.
                         debug_all - an extended version of 'debug_failing' but running
