@@ -114,10 +114,22 @@
   when: test_dict.test_regex is defined and test_dict.test_regex
 
 - block:
+      - name: Remove tempest RPM
+        become: true
+        package:
+          name: openstack-tempest
+          state: absent
+
+      - name: checkout tempest
+        shell: >
+            test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
+            cd ~/tempest-sources && git checkout 1291bb4736425b5b34fffb716532188f31286391 && pip install -e .;
+        ignore_errors: true
+
       - name: run tempest "{{ test_suite }}" suite
         shell: >
             test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
-            ostestr -s --no-pretty --regex '{{ regex | default('') }}'
+            cd ~/tempest-dir && ostestr -s --no-pretty --regex '{{ regex | default('') }}'
             {{ whitelistfile }}
             {{ blacklistfile }}
             {{ ('--concurrency ' + test.threads|string )
@@ -159,7 +171,7 @@
       - name: generate results report in HTML format
         shell: |
             test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate
-            subunit2html {{ test_output_filename }}.subunit {{ test_output_filename }}.html
+            cd ~/tempest-dir && subunit2html {{ test_output_filename }}.subunit {{ test_output_filename }}.html
         args:
             chdir: "{{ test.dir }}"
         when:
@@ -168,7 +180,7 @@
       - name: generate results report in JunitXML format
         shell: |
             test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate
-            subunit2junitxml --output-to={{ test_output_filename }}.xml \
+            cd ~/tempest-dir && subunit2junitxml --output-to={{ test_output_filename }}.xml \
                 < {{ test_output_filename }}.subunit | subunit2pyunit
         args:
             chdir: "{{ test.dir }}"
