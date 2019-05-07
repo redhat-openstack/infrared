@@ -114,10 +114,16 @@
   when: test_dict.test_regex is defined and test_dict.test_regex
 
 - block:
+      - name: Remove tempest RPM
+        become: true
+        package:
+          name: openstack-tempest
+          state: absent
+
       - name: run tempest "{{ test_suite }}" suite
         shell: >
             test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
-            ostestr -s --no-pretty --regex '{{ regex | default('') }}'
+            cd ~/tempest-dir && ostestr -s --no-pretty --regex '{{ regex | default('') }}'
             {{ whitelistfile }}
             {{ blacklistfile }}
             {{ ('--concurrency ' + test.threads|string )
