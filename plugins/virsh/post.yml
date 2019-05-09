@@ -33,10 +33,18 @@
   hosts: hypervisor
   gather_facts: yes
   any_errors_fatal: true
-  vars_files:
-    - vars/hypervisor.yml
   tasks:
     - block:
+        - name: Load a variable file based on the OS type
+          include_vars: "{{ lookup('first_found', params) }}"
+          vars:
+            params:
+              files:
+                - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}-hypervisor.yml"
+                - 'hypervisor.yml'
+              paths:
+                - 'vars'
+
         - name: Get all deployments
           set_fact:
               deployments_info: "{{ deployments_info|default({})|combine(ansible_local.deployment_info)|combine( ansible_local.run ) }}"

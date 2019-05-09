@@ -49,9 +49,17 @@
   gather_facts: yes
   any_errors_fatal: true
   become: true
-  vars_files:
-    - vars/hypervisor.yml
   tasks:
+    - name: Load a variable file based on the OS type
+      include_vars: "{{ lookup('first_found', params) }}"
+      vars:
+        params:
+          files:
+            - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}-hypervisor.yml"
+            - 'hypervisor.yml'
+          paths:
+            - 'vars'
+
     - name: include vbmc's cleanup task
       include_role:
           name: vbmc
