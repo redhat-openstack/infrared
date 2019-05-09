@@ -64,14 +64,17 @@
   loop_control:
       loop_var: test_suite
 
-- name: Install junitxml and subunit-filters
+- name: Install junitxml
   become: yes
-  vars:
-      python_prefix: "{{ (test.openstack.version|default(overcloud_version)|openstack_release >= 15) | ternary('python3', 'python') }}"
   package:
-      name:
-          - "{{ python_prefix }}-junitxml"
-          - "subunit-filters"
+      name: "python-junitxml"
+      state: present
+
+# TODO(psedlak): make subunit2junitxml usage opt. in script, add the flag for run-tests.sh in run.yml after that
+- name: Install subunit filters - needed for subunit2junitxml
+  become: yes
+  package:
+      name: "subunit-filters"
       state: present
 
 - name: Enable extra repo

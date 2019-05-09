@@ -17,10 +17,8 @@
 
 - name: Install tempestconf if config script is not part of tempest
   become: yes
-  vars:
-      tempestconf_rpm: "{{ (test.openstack.version|default(overcloud_version)|openstack_release >= 15) | ternary('python3-tempestconf', 'python-tempestconf') }}"
   package:
-      name: "{{ tempestconf_rpm }}"
+      name: python-tempestconf
       state: present
   when: configure_tempest_dir.rc != 0
 
