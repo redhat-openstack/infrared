@@ -7,7 +7,7 @@
 # not using easy_install due to problems similar to https://github.com/pypa/pip/issues/4596
 - name: Install pip using get-pip.py
   shell: |
-      curl https://bootstrap.pypa.io/get-pip.py | python
+      curl https://bootstrap.pypa.io/get-pip.py | {{ ansible_python_interpreter | default('python') }}
   become: true
 
 - name: Create plugins directory
@@ -45,6 +45,7 @@
       pip:
           chdir: "~/{{ test.dir }}"
           requirements: "{{ plugins_reqs.stat.path }}"
+          executable: pip
       when: plugins_reqs.stat.exists
 
 - name: Install plugin packages globally to the system
