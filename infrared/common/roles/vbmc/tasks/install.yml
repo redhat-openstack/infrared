@@ -1,21 +1,22 @@
 ---
 - block:
   - block:
-    - name: Install packages required for python-virtualbmc pip package
-      package:
-          name:
-            - gcc
-            - libvirt
-            - libvirt-devel
-            - python-devel
-            - python-setuptools
-            - ipmitool
-          state: latest
-          disable_gpg_check: yes
+    - include: RHEL7.yml
+      when:
+        - ansible_distribution in ['CentOS', 'RedHat']
+        - ansible_distribution_major_version == '7'
+
+    - include: RHEL8.yml
+      when:
+        - ansible_distribution in ['CentOS', 'RedHat']
+        - ansible_distribution_major_version == '8'
 
     - name: install pip
       easy_install:
           name: pip
+      when:
+        - ansible_distribution in ['CentOS', 'RedHat']
+        - ansible_distribution_major_version == '7'
 
     - name: "check if there's a virtualenv already installed (i.e.: a system-wide RPM package)"
       command: virtualenv --version
