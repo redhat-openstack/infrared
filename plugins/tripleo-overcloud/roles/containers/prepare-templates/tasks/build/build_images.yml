@@ -113,6 +113,9 @@
 ## Workaround BZ#1627946
 - name:  Run container image prepare
   shell: |
+      {% if install.version|default(undercloud_version)|openstack_release > 14 %}
+      sudo \
+      {% endif %}
       openstack tripleo container image prepare \
         -e ~/containers-prepare-parameter.yaml \
         {{ environment_yamls | default('') }} {{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
@@ -124,7 +127,6 @@
           install_container_extra_repos is defined or
           install_container_images_patch is defined or patched_rpms.results | selectattr('stat.exists', 'equalto', True) | list | length > 0
         )
-  become: yes
   tags:
       - skip_ansible_lint
       - container-image-prepare
