@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37b1bada_be551304",
+        "filename": "plugins/tempest/tasks/run_suite.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2019-05-13T15:27:48Z",
+      "side": 1,
+      "message": "you shouldn\u0027t expect install.version in tempest plugin\n\nas can be seen above, you need to test against \u0027test.openstack.version\u0027 ... and since this is completely optional parameter also take in consideration the on-the-fly detected overcloud_version (see line 109 just above)",
+      "revId": "513a287da851945a2d4254453e79b728d4d70977",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d2124e8_d9729d6d",
+        "filename": "plugins/tempest/tasks/run_suite.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2019-05-13T15:27:48Z",
+      "side": 1,
+      "message": "thinking about this now, ansible_python_interpreter may potentially be rendered as empty when not present ... above in the set_fact-python_interpreter task, and so here the default would not catch that (as variable python_interpreter would be defined, just empty)\n\nso i would suggest to use here default(\u0027python\u0027, true)  to cover that case (empty string will be false then so using default value also)\nhttp://jinja.pocoo.org/docs/2.10/templates/#default",
+      "revId": "513a287da851945a2d4254453e79b728d4d70977",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
