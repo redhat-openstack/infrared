@@ -114,6 +114,13 @@
   when: test_dict.test_regex is defined and test_dict.test_regex
 
 - block:
+      - name: Set python interpreter for git tempest
+        vars:
+          test_openstack_version: "{{ test.openstack.version | default(overcloud_version) | openstack_release }}"
+        set_fact:
+          python_interpreter: "{{ (test_openstack_version | int > 14) | ternary('python3', 'python') }}"
+        when: test.setup == 'git'
+
       - name: run tempest "{{ test_suite }}" suite
         shell: >
             test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
@@ -127,7 +134,7 @@
             {{ (test.list) | ternary ('--list','') }}
             > {{ test_output_filename }}.subunit;
         environment:
-            PYTHON: "{{ ansible_python_interpreter | default('python') }}"
+            PYTHON: "{{ python_interpreter | default(ansible_python_interpreter) or 'python' }}"
         args:
             executable: /bin/bash
             chdir: "{{ test.dir }}"
