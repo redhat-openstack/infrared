@@ -25,6 +25,8 @@
           CONFIG_DEBUG_MODE: y
       per_release_override:
           CONFIG_NEUTRON_FWAAS: "{{ (install.version|openstack_release >= 15) | ternary('n', 'y') }}"
+          # RHBZ:1710348 - AODH and CEILOMETER puppets are colliding
+          CONFIG_AODH_INSTALL: "{{ (install.version|openstack_release >= 15) | ternary('n', 'y') }}"
       packstack_config: "{{ basic_config | combine(network_config) | combine(network_variant_config) | combine(per_release_override) }}"
       answers_file: "/root/{{ install.answer.file }}"
   tasks:
