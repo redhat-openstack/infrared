@@ -23,7 +23,9 @@
           CONFIG_SAHARA_INSTALL: "{% if install.component.sahara %}y{% else %}n{% endif %}"
           CONFIG_TROVE_INSTALL: "{% if install.component.trove %}y{% else %}n{% endif %}"
           CONFIG_DEBUG_MODE: y
-      packstack_config: "{{ basic_config | combine(network_config) | combine(network_variant_config) }}"
+      per_release_override:
+          CONFIG_NEUTRON_FWAAS: "{{ (install.version|openstack_release >= 15) | ternary('n', 'y') }}"
+      packstack_config: "{{ basic_config | combine(network_config) | combine(network_variant_config) | combine(per_release_override) }}"
       answers_file: "/root/{{ install.answer.file }}"
   tasks:
       - name: Install packstack package
