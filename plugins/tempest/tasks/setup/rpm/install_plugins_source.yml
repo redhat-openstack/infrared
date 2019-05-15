@@ -7,8 +7,16 @@
 # not using easy_install due to problems similar to https://github.com/pypa/pip/issues/4596
 - name: Install pip using get-pip.py
   shell: |
-      curl https://bootstrap.pypa.io/get-pip.py | python
+      curl https://bootstrap.pypa.io/get-pip.py | {{ ansible_python_interpreter | default('python') }}
   become: true
+  when: ansible_python_version is version('3', '<')
+
+- name: Install python3-pip
+  package:
+      name: python3-pip
+      state: present
+  become: true
+  when: ansible_python_version  is version('3', '>=')
 
 - name: Create plugins directory
   file:
