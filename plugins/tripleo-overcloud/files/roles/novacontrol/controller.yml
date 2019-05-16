@@ -58,7 +58,7 @@ controller_role:
         - OS::TripleO::Services::CinderVolume
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Clustercheck{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Collectd{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Congress{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12  and install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::Congress{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::ContainerImagePrepare{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::Core{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
@@ -96,7 +96,7 @@ controller_role:
         - OS::TripleO::Services::ManilaScheduler
         - OS::TripleO::Services::ManilaShare
         - OS::TripleO::Services::Memcached
-        - OS::TripleO::Services::MongoDb
+        - "{% if install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::MongoDb{% endif %}"
         - OS::TripleO::Services::MySQL
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
         - OS::TripleO::Services::NeutronApi
@@ -113,7 +113,7 @@ controller_role:
         - OS::TripleO::Services::NeutronOvsAgent
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronVppAgent{% endif %}"
         - OS::TripleO::Services::NovaIronic
-        - OS::TripleO::Services::Ntp
+        - "{% if install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::Ntp{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OctaviaApi{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OctaviaDeploymentConfig{% endif %}"
@@ -126,6 +126,7 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNController{% endif %}"
         - OS::TripleO::Services::Pacemaker
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::PankoApi{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release >= 15 %}OS::TripleO::Services::Podman{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::OsloMessagingRpc{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::OsloMessagingNotify{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 14 %}OS::TripleO::Services::RabbitMQ{% endif %}"
@@ -144,6 +145,7 @@ controller_role:
         - OS::TripleO::Services::SwiftStorage
         - OS::TripleO::Services::SwiftRingBuilder
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Tacker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release >= 15 %}OS::TripleO::Services::Timesync{% endif %}"
         - OS::TripleO::Services::Timezone
         - OS::TripleO::Services::TripleoFirewall
         - OS::TripleO::Services::TripleoPackages
