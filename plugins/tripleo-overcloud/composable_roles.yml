@@ -27,6 +27,11 @@
             tht_pkg: "{{ tht.results|selectattr('yumstate', 'equalto', 'installed')|first }}"
             tht_version: "{{ tht_pkg.version }}"
             tht_release: "{{ tht_pkg.release | splitext | first }}"
+        when: install.version|default(undercloud_version)|openstack_release < 11
+
+      - set_fact:
+            roles_sshd: true
+        when:  install.version|default(undercloud_version)|openstack_release >= 11
 
       - name: include roles according to the topology
         include_tasks: tasks/composable_roles/add_role_vars.yml
