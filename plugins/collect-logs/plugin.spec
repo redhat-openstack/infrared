@@ -29,7 +29,7 @@ subparsers:
               default: False
           max-depth:
               type: Value
-              help: Number of levels to descend at most when collecting logs
+              help: Deprecated, does nothing, will be removed
               default: 4
           logger:
               type: Value

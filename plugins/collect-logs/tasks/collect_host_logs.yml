@@ -234,7 +234,7 @@
   shell: |
       mkdir -p /tmp/{{ inventory_hostname }};
       find /var/log/rpm.list /var/log/extra {{ archives_list|join(' ') }} \
-      -maxdepth {{ other.max.depth | default(4) }} -type f -size -1024M \
+      -type f -size -1024M \
       -not -path '/var/log/journal/*' \
       -not -path '*/\.*' \
       -not -path '*/etc/pki/*' \
