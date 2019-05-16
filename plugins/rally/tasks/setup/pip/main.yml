@@ -33,6 +33,15 @@
       - rally-openstack
       - openstacksdk
 
+  # NOTE: this is only a temp workaround hence we limit it with date below
+  # if this workaround is still required after this date you can either a) push for and ask to have the fix in downstream
+  # and/or b) extend the date from 'when' condition below, i.e.: by a month so we won't loose track of this workaround
+- name: install rally-openstack from master - workaround for https://bugs.launchpad.net/tripleo/+bug/1828559
+  shell: |
+    . {{ rally.path }}/bin/activate
+    pip install -U git+https://github.com/openstack/rally-openstack#egg=rally_openstack
+  when: ansible_date_time.date < '2019-06-15'
+
 - name: Clone Rally-Plugins git repo
   git:
       repo: "{{ test.git.plugins.repo | try_default(rally.git.plugins.repo) }}"
