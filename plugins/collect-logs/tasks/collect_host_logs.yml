@@ -78,7 +78,7 @@
 
 # todo(yfried): adjust for ospd
 - shell: "which openstack-status &> /dev/null && (. ~/keystonerc_admin; openstack-status &> /var/log/extra/openstack-status)"
-  when: "inventory_hostname in groups.controller"
+  when: "groups.controller is defined and inventory_hostname in groups.controller"
   ignore_errors: true
 
 - shell: "lsmod &> /var/log/extra/lsmod"
