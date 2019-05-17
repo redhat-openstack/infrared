@@ -124,6 +124,7 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/services/neutron-ovs.yaml \'
+      insertbefore: ".*network-environment.*"
   when:
       - install.network.ovs and not install.network.dvr
       - install.version|default(undercloud_version)|openstack_release >= 15
@@ -132,6 +133,7 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/neutron-ovs-dvr.yaml \'
+      insertbefore: ".*network-environment.*"
   when:
       - install.network.dvr
       - (install.network.ovs and install.version|default(undercloud_version)|openstack_release >= 15) or
