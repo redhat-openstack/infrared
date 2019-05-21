@@ -406,7 +406,7 @@ class InfraredPluginManager(object):
                 pip_main(['install', '-r', reqs_file])
 
     def add_plugin(self, plugin_source, rev=None, plugins_registry=None,
-                   plugin_src_path=None):
+                   plugin_src_path=None, skip_roles=False):
         """Adds (install) a plugin
 
         :param plugin_source: Plugin source.
@@ -418,6 +418,7 @@ class InfraredPluginManager(object):
         :param plugins_registry: content of plugin registry dictionary
         :param plugin_src_path: relative path to the plugin location inside the
                source
+        :param skip_roles: Skip the from file roles installation
         """
         plugins_registry = plugins_registry or PLUGINS_REGISTRY
         plugin_data = {}
@@ -477,17 +478,21 @@ class InfraredPluginManager(object):
             self.config.write(fp)
 
         self._install_requirements(dest)
+        if not skip_roles:
+            self._install_roles_from_file(dest)
         self._load_plugins()
 
-    def add_all_available(self, plugins_registry=None):
+    def add_all_available(self, plugins_registry=None, skip_roles=False):
         """
         Add all available plugins which aren't already installed
         :param plugins_registry: content of plugin registry yml file
+        :param skip_roles: Skip the from file roles installation
         """
         plugins_registry = plugins_registry or PLUGINS_REGISTRY
         for plugin in set(plugins_registry) - \
                 set(self.PLUGINS_DICT):
-            self.add_plugin(plugin, plugins_registry=plugins_registry)
+            self.add_plugin(plugin, plugins_registry=plugins_registry,
+                            skip_roles=skip_roles)
             LOG.warning(
                 "Plugin '{}' has been successfully installed".format(plugin))
 
@@ -528,6 +533,27 @@ class InfraredPluginManager(object):
                 "Installing requirements from: {}".format(requirement_file))
             pip_args = ['install', '-r', requirement_file]
             pip_main(args=pip_args)
+
+    @staticmethod
+    def _install_roles_from_file(plugin_path):
+        # Ansible Galaxy - install roles from file
+        for req_file in ['requirements.yml', 'requirements.yaml']:
+            galaxy_reqs_file = os.path.join(plugin_path, req_file)
+            if not os.path.isfile(galaxy_reqs_file):
+                continue
+            LOG.debug("Installing Galaxy "
+                      "requirements... ({})".format(galaxy_reqs_file))
+            from ansible.cli.galaxy import GalaxyCLI
+            from ansible.errors import AnsibleError
+            glxy_cli = GalaxyCLI(['install'])
+            glxy_cli.parse()
+            glxy_cli.options.role_file = galaxy_reqs_file
+            try:
+                glxy_cli.execute_install()
+            except AnsibleError as e:
+                raise IRFailedToAddPlugin(e.message)
+        else:
+            LOG.debug("Galaxy requirements files weren't found.")
 
     def freeze(self):
         registry = {}

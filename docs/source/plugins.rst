@@ -307,6 +307,17 @@ InfraRed provides the ability to mark an argument in a specification file as 're
 
 For example, take a look on the ``plugin.spec`` ('Group C') in `Plugin Specification`_
 
+Roles Dependencies
+~~~~~~~~~~~~~~~~~~
+If a plugin depended on one or more Ansible role, it's possible to mention them in a file.
+InfraRed makes use of Ansible Galaxy to install the roles file, therefore, the requirements for it should be exactly the same like in Ansible Galaxy:
+
+1. The file need to be in YAML format.
+2. The name of the file should be either ``requirements.yml`` or ``requirements.yaml``
+
+For more details, please take a look on `Ansible Galaxy documentation
+<https://docs.ansible.com/ansible/latest/reference_appendices/galaxy.html#installing-multiple-roles-from-a-file>`_.
+
 Argument Deprecation
 ~~~~~~~~~~~~~~~~~~~~
 To deprecate an argument in InfraRed, you need to add flag 'deprecates' in newer argument

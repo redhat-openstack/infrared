@@ -525,7 +525,8 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker):
 
     # add_plugin call
     plugin_manager.add_plugin(
-        "https://sample_github.null/plugin_repo.git", rev="test")
+        "https://sample_github.null/plugin_repo.git", rev="test",
+        skip_roles=True)
 
     mock_tempfile.mkdtemp.assert_called_once()
     mock_cwd.assert_called_once()

@@ -274,6 +274,12 @@ class PluginManagerSpec(api.SpecObject):
                                                    "repository where infrared "
                                                    "plugin can be found.")
 
+        add_parser.add_argument("--skip-roles", action='store_true',
+                                help="Skip the from file roles installation. "
+                                     "(Don't install Ansible roles from "
+                                     "'requirements.yml' or "
+                                     "'requirements.yaml' file)")
+
         # Remove plugin
         remove_parser = plugin_subparsers.add_parser(
             "remove",
@@ -353,7 +359,8 @@ class PluginManagerSpec(api.SpecObject):
                 for _plugin in pargs.src:
                     self.plugin_manager.add_plugin(
                         _plugin, rev=pargs.revision,
-                        plugin_src_path=pargs.src_path)
+                        plugin_src_path=pargs.src_path,
+                        skip_roles=pargs.skip_roles)
         elif subcommand == 'remove':
             if 'all' in pargs.name:
                 self.plugin_manager.remove_all()
