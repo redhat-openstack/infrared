@@ -97,15 +97,25 @@
   ignore_errors: true
 
 - shell: |
+    # comment here to skips ansible-lint E304
     if [[ -f "/etc/ceph/ceph.client.admin.keyring" || -f "/etc/ceph/ceph.keyring" || -f "/etc/ceph/keyring" || -f "/etc/ceph/keyring.bin" ]]; then
         ceph status &>/var/log/extra/ceph
     fi
 
+    cont_cmd=""
+
     if command -v docker && systemctl is-active docker; then
-        CEPH_CONTAINERS_IDS=$(docker ps -f name=ceph-mon- -q)
+        cont_cmd="docker"
+    fi
+    if command -v podman && podman ps &> /dev/null; then
+        cont_cmd="podman"
+    fi
+
+    if [[ -n "$cont_cmd" ]]; then
+        CEPH_CONTAINERS_IDS=$($cont_cmd ps -f name=ceph-mon- -q)
         for CID in $CEPH_CONTAINERS_IDS; do
             echo -e "\n===========================\n --- $CID\n" >> /var/log/extra/ceph
-            docker exec $CID ceph status &>>/var/log/extra/ceph
+            $cont_cmd exec $CID ceph status &>>/var/log/extra/ceph
         done
     fi
   ignore_errors: true
@@ -117,30 +127,50 @@
   ignore_errors: true
 
 - name: Collect docker info and logs
-  shell: >
+  shell: |
+      # comment here to skips ansible-lint E304
+      cont_cmd=""
       if command -v docker && systemctl is-active docker; then
-          BASE_DOCKER_EXTRA=/var/log/extra/docker;
-          mkdir -p "$BASE_DOCKER_EXTRA";
-          All_FILE="$BASE_DOCKER_EXTRA/docker_allinfo.log";
-          docker ps --all --size &> "$All_FILE";
-          docker images --all &>> "$All_FILE";
-          docker volume ls &>> "$All_FILE";
-          docker stats --all --no-stream &>> "$All_FILE";
-          docker info &>> "$All_FILE";
-          for cont in $(docker ps -a | awk {'print $NF'} | grep -v NAMES); do
-              INFO_DIR="$BASE_DOCKER_EXTRA/containers/${cont}";
+          cont_cmd="docker"
+      fi
+      if command -v podman && podman ps &> /dev/null; then
+          cont_cmd="podman"
+      fi
+
+      if [[ -n "$cont_cmd" ]]; then
+          BASE_CONT_EXTRA=/var/log/extra/containers;
+          mkdir -p "$BASE_CONT_EXTRA";
+          All_FILE="$BASE_CONT_EXTRA/containers_allinfo.log";
+          $cont_cmd ps --all --size &> "$All_FILE";
+          $cont_cmd images --all &>> "$All_FILE";
+          $cont_cmd volume ls &>> "$All_FILE";
+          $cont_cmd stats --all --no-stream &>> "$All_FILE";
+          $cont_cmd info &>> "$All_FILE";
+          for cont in $($cont_cmd ps -a | awk {'print $NF'} | grep -v NAMES); do
+              INFO_DIR="$BASE_CONT_EXTRA/containers/${cont}";
               mkdir -p "$INFO_DIR";
-              INFO_FILE="$INFO_DIR/docker_info.log";
-              echo "+ docker top $cont auxw" > "$INFO_FILE";
-              docker top "$cont" auxw &>> "$INFO_FILE";
-              echo "+ docker exec $cont top -bwn1" >> "$INFO_FILE";
-              docker exec "$cont" top -bwn1 &>> "$INFO_FILE";
-              echo "+ docker inspect $cont" >> "$INFO_FILE";
-              docker inspect "$cont" &>> "$INFO_FILE";
-              docker logs "$cont" &> "$INFO_DIR/stdout.log";
-              echo "+ docker exec -it --user root $cont /usr/bin/rpm -qa" >> "$INFO_FILE";
-              docker exec -it --user root ${cont} /usr/bin/rpm -qa &>> "$INFO_FILE";
-              docker cp "$cont:/var/lib/kolla/config_files/config.json" "$INFO_DIR/config.json";
+              INFO_FILE="$INFO_DIR/container_info.log";
+              if [[ "$cont_cmd" == "docker" ]]; then
+                  echo "+ $cont_cmd top $cont auxw" > "$INFO_FILE";
+                  $cont_cmd top "$cont" auxw &>> "$INFO_FILE";
+              else
+                  echo "+ $cont_cmd top $cont user pid ppid pcpu vsz tty state time etime args" &>> "$INFO_FILE";
+                  $cont_cmd top "$cont" user pid ppid pcpu vsz tty state time etime args &>> "$INFO_FILE";
+              fi
+              echo "+ $cont_cmd exec $cont top -bwn1" >> "$INFO_FILE";
+              $cont_cmd exec "$cont" top -bwn1 &>> "$INFO_FILE";
+              echo "+ $cont_cmd inspect $cont" >> "$INFO_FILE";
+              $cont_cmd inspect "$cont" &>> "$INFO_FILE";
+              $cont_cmd logs "$cont" &> "$INFO_DIR/stdout.log";
+              echo "+ $cont_cmd exec -it --user root $cont /usr/bin/rpm -qa" >> "$INFO_FILE";
+              $cont_cmd exec -it --user root ${cont} /usr/bin/rpm -qa &>> "$INFO_FILE";
+              if [[ "$cont_cmd" == "docker" ]]; then
+                  $cont_cmd cp "$cont:/var/lib/kolla/config_files/config.json" "$INFO_DIR/config.json";
+              else
+                  mnt=$($cont_cmd mount "$cont");
+                  cp "$mnt:/var/lib/kolla/config_files/config.json" "$INFO_DIR/config.json";
+                  $cont_cmd umount $cont;
+              fi
           done;
       fi
   ignore_errors: true
