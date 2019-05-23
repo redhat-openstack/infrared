@@ -16,6 +16,7 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import re
+import sys
 import types
 
 from ansible.module_utils.basic import AnsibleModule
@@ -209,13 +210,9 @@ class RegistrationBase(object):
         if os.path.isfile(plugin_conf):
             cfg = configparser.ConfigParser()
             cfg.read([plugin_conf])
-            if enabled:
-                cfg.set('main', 'enabled', 1)
-            else:
-                cfg.set('main', 'enabled', 0)
-            fd = open(plugin_conf, 'rwa+')
-            cfg.write(fd)
-            fd.close()
+            cfg.set('main', 'enabled', ('0', '1')[enabled is True])
+            with open(plugin_conf, 'w') as fd:
+                cfg.write(fd)
 
     def subscribe(self, **kwargs):
         raise NotImplementedError("Must be implemented by a sub-class")
@@ -235,7 +232,7 @@ class Rhsm(RegistrationBase):
         '''
 
         # Read RHSM defaults ...
-        cp = configparser.ConfigParser()
+        cp = configparser.RawConfigParser()
         cp.read(rhsm_conf)
 
         # Add support for specifying a default value w/o having to standup some configuration
@@ -247,7 +244,12 @@ class Rhsm(RegistrationBase):
             else:
                 return default
 
-        cp.get_option = types.MethodType(get_option_default, cp, configparser.ConfigParser)
+        if sys.version_info >= (3, 0):
+            cp.get_option = types.MethodType(
+                get_option_default, cp)
+        else:
+            cp.get_option = types.MethodType(
+                get_option_default, cp, configparser.ConfigParser)
 
         return cp
 
