@@ -4,6 +4,30 @@
 - hosts: localhost
   gather_facts: no
 
+- hosts: tester
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+    - block:
+      - name: ensure /etc/systemd/journald.conf.d exists
+        file:
+          path: '/etc/systemd/journald.conf.d'
+          state: directory
+
+      - name: configure systemd-journald to be persistent across reboots
+        blockinfile:
+          path: /etc/systemd/journald.conf.d/storage.conf
+          block: |
+            [Journal]
+            Storage=persistent
+
+      - name: restart systemd-journald
+        service:
+          name: systemd-journald
+          state: restarted
+
+      become: true
+
 - name: Update deployment information on hypervisor
   hosts: hypervisor
   gather_facts: yes
