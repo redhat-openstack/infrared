@@ -20,7 +20,7 @@
       mode: 0644
 
 - name: Collect sosreport logs
-  command: "sosreport --batch --tmp-dir {{ tmp_sos_dir }} --name={{ inventory_hostname }} -z gzip"
+  command: "sosreport --batch -e openstack_ironic --batch -p openstack,openstack_undercloud,openstack_controller --all-logs --experimental -k docker.all=on --tmp-dir {{ tmp_sos_dir }} --name={{ inventory_hostname }} -z gzip"
   register: sosreport_result
   failed_when: "'sosreport has been generated' not in sosreport_result.stdout"
 
