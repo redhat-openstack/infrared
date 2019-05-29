@@ -1,0 +1,27 @@
+---
+- name: remove broken links
+  shell: "for i in `find . -xtype l`; do ls -la $i >> BROKEN_LINKS.txt; rm -rf $i; done"
+  args:
+    chdir: "/tmp/{{ inventory_hostname }}"
+  ignore_errors: true
+
+- name: compress logs in tar ball
+  command: "tar cf{{ other.gzip|ternary ('z', '') }} {{ inventory_hostname }}.tar{{ other.gzip|ternary ('.gz', '') }} {{ inventory_hostname }}"
+  args:
+    chdir: /tmp
+  ignore_errors: true
+
+- name: fetch log archive
+  fetch:
+    flat: yes
+    src: "/tmp/{{ inventory_hostname }}.tar{{ other.gzip|ternary ('.gz', '') }}"
+    dest: "{{ dest_dir }}/"
+    validate_checksum: no
+  ignore_errors: true
+  become: no
+
+- name: delete temporary log directory after collection
+  file:
+    path: "/tmp/{{ inventory_hostname }}"
+    state: absent
+  ignore_errors: true
