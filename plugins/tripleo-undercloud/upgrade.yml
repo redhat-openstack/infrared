@@ -29,9 +29,10 @@
   vars:
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
       operation_type: "{{ 'Update' if install.get('update', {}).undercloud|default(False) else 'Upgrade' }}"
+      undercloud_upgrade_version: "{{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }}"
   roles:
       - role: rhos-release
-        release: "{{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }}"
+        release: "{{ undercloud_upgrade_version }}"
         director_build: "{{ install.get('director', {}).build|default(omit) }}"
         build: "{{ install.build | default(omit) }}"
         mirror: "{{ install.mirror | default(omit) }}"
@@ -42,15 +43,30 @@
             - upgrade
             - upgrade_repos
   tasks:
-      - name: update python-tripleoclient
+      - name: Clean up RHEL7 packages
         become: true
         tags:
-            - undercloud_containers
+            - upgrade_repos
             - upgrade
+        block:
+          - name: Remove old RHEL7 packages
+            command: dnf remove -y *el7ost* *el7fdp* *leapp* python2*
+
+          - name: Update RHEL8 packages and reboot
+            import_tasks: tasks/update_and_reboot.yml
+
+        when: undercloud_version|openstack_release == 14
+
+      - name: update TripleO client
+        become: true
+        tags:
+        - undercloud_containers
+        - upgrade
         package:
-            name: python-tripleoclient
-            state: latest
-        when: undercloud_version|openstack_release >= 13
+          name: "{{ (undercloud_version|openstack_release < 14) | ternary('python-tripleoclient', 'python3-tripleoclient') }}"
+          state: latest
+        when:
+          - undercloud_version|openstack_release >= 13
 
       - name: prepare undercloud containers
         tags:
@@ -59,5 +75,5 @@
         import_tasks: tasks/prepare_uc_images.yml
         when: undercloud_version|openstack_release >= 13
 
-      - name: "{{ operation_type }} to version {{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }} build {{ install.build | default('latest') }}"
+      - name: "{{ operation_type }} to version {{ undercloud_upgrade_version }} build {{ install.build | default('latest') }}"
         include_tasks: "tasks/upgrade/upgrade.yml"
