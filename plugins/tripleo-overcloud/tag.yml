@@ -56,6 +56,19 @@
         ignore_errors: yes
         failed_when: "bm_result.rc != 0 and bm_result.stderr.find('Flavor with name baremetal already exists') != -1"
 
+      - name: set resources properties for baremetal flavor(RHOS14+)
+        shell: |
+            source ~/stackrc
+            openstack flavor set baremetal \
+              --property resources:CUSTOM_BAREMETAL=1 \
+              --property resources:DISK_GB=0 \
+              --property resources:MEMORY_MB=0 \
+              --property resources:VCPU=0 \
+              --property capabilities:boot_option=local
+        tags: skip_ansible_lint
+        when: install.version|default(undercloud_version)|openstack_release > 13
+
+
       # OSPd7 doesn't seem to have implicit profile matching and notifies to do this step manually
       # in prior of OC deployment. Otherwise errors and warnings are produced in process when
       # overcloud deployment starts.
