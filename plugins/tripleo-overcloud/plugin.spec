@@ -235,6 +235,11 @@ subparsers:
                       default: no
                       help: Specifies whether ths SSL should be used for overcloud
 
+                  overcloud-use-dns-names:
+                      type: Bool
+                      default: no
+                      help: Specifies whether to use DNS names in the subject DN for the public certs
+
                   overcloud-fencing:
                       type: Bool
                       default: no
@@ -350,7 +355,7 @@ subparsers:
                       help: |
                           Set the CloudDomain parameter. The value for CloudDomain must match the value
                           for overcloud_domain_name that was configured in undercloud.conf if set.
-                      default: ''
+                      default: 'redhat.local'
 
                   tls-everywhere:
                       type: Bool
