@@ -50,6 +50,13 @@
             dest: "{{ template_base }}/debug.yaml"
         when: install.overcloud.debug
 
+      - name: Workaround BZ1715875 - gnocchi parsing ceph server string with version
+        template:
+            src: templates/ceph-disable-mon_v1.yml
+            dest: "{{ template_base }}/ceph-disable-mon_v1.yml"
+        when:
+            - install.version|default(undercloud_version)|openstack_release >= 15
+
       - name: set parameter_defaults for config_heat.yaml
         set_fact:
             config_heat_yaml:
