@@ -18,6 +18,11 @@
   include_tasks: ssl.yml
   tags: overcloud_ssl
   when: install.overcloud.ssl
+  # TODO: figure out how to set this, empty by default
+  # otherwise overcloud.tripleo.redhat.local
+  vars:
+      overcloud_name: install.overcloud.name|default('')
+      overcloud_domain: install.overcloud.domain|default('redhat.local')
 
 - name: Setup overcloud fencing
   include_tasks: fencing.yml
