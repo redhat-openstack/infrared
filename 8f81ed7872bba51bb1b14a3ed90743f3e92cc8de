@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33ccb3d0_7461287c",
+        "filename": "plugins/tripleo-overcloud/vars/overcloud/templates/ceph-disable-mon_v1.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2019-05-31T13:57:30Z",
+      "side": 1,
+      "message": "This is sufficient to disable v1 but we\u0027ll still have v2 in the protocol [1] So the string will be v2:$IP:3300 and we could have the same parsing issue. Gnocchi should call a ceph library to parse it however and I think if we\u0027re using a ceph4 version of that library then it should parse it. We know the bug is associated with a ceph3 lib. \n\nWe could update this workaround to override the value of mon_host itself:\n\nparameter_defaults:\n  CephConfigOverrides:\n    mon_host: $ip0:3333, $ip1:3333, $ip2:3333\n\nbut we\u0027d need to know what the IPs are.\n\n[1] https://github.com/ceph/ceph-ansible/commit/a4bc7bda5148a94e917d228037447a138bd08cab#diff-535f2327a9e3f01dd3ee37ba5fec518b",
+      "range": {
+        "startLine": 8,
+        "startChar": 6,
+        "endLine": 8,
+        "endChar": 28
+      },
+      "revId": "8f81ed7872bba51bb1b14a3ed90743f3e92cc8de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
