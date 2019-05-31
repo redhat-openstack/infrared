@@ -18,6 +18,7 @@ import os
 import re
 import sys
 import types
+import time
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.pycompat24 import get_exception
@@ -497,6 +498,7 @@ class RhsmPools(object):
             Args:
                 consumed(bool): if True list consumed  pools, else list available pools (default False)
         """
+        time.sleep(10)
         args = "subscription-manager list"
         if consumed:
             args += " --consumed"
