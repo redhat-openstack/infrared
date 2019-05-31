@@ -143,6 +143,8 @@ Overcloud Options
 -----------------
 * ``--overcloud-ssl``: Boolean. Enable SSL for the overcloud services.
 
+* ``--overcloud-use-dns-names``: Boolean. Use DNS names in the subject DN for the public certs.
+
 * ``--overcloud-debug``: Boolean. Enable debug mode for the overcloud services.
 
 * ``--overcloud-templates``: Add extra environment template files or custom templates
