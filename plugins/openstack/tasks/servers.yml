@@ -114,7 +114,7 @@
       name: "{{ item.item.name }}"
       ansible_host: "{{ item.floating_ip.floating_ip_address }}"
       groups: "{{ topology_node.groups | join(',') }}"
-      ansible_ssh_private_key_file: "{{ provision.key.file }}"
+      ansible_ssh_private_key_file: "{{ provision.key.file | expanduser }}"
       ansible_python_interpreter: "{{ ( ( py_interpreter.results | selectattr('item.item.name', 'equalto', item.item.name) | first | default(None) )['stdout'] | default('') ) | trim | default(omit, true) }}"
       ansible_user: "{{ topology_node.get('image', {}).ssh_user | default(provision.username) }}"
 #      eth1_interface_ip: "{{ item.item.addresses[data_network.name][0].addr }}"
