@@ -1,12 +1,5 @@
 ---
 - block:
-  - name: Update /etc/hosts with freeipa's details
-    become: yes
-    lineinfile:
-        dest: "/etc/hosts"
-        line: "{{ freeipa_node_ipaddress }} {{ freeipa_node }}.{{ freeipa_cloud_domain }} {{ freeipa_node }}"
-        state: present
-
   - name: Install python novajoin
     become: yes
     package:

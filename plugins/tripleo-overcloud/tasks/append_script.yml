@@ -24,6 +24,24 @@
       overcloud_name: install.overcloud.name|default('')
       overcloud_domain: install.overcloud.domain|default('redhat.local')
 
+- name: Setup IPA and configure undercloud and overcloud to use it for DNS
+  block:
+    - name: Setup IPA for the DNS server
+      import_role:
+          name: tls-everywhere
+          tasks_from: prepare_freeipa
+    - name: Set up undercloud to use freeipa as a DNS server
+      import_role:
+          name: tls-everywhere
+          tasks_from: set_undercloud_dns
+    - name: Set up overcloud to use freeipa as a DNS server
+      import_role:
+          name: tls-everywhere
+          tasks_from: set_overcloud_dns
+  when:
+      - install.overcloud.name|default('') != ''
+      - install.overcloud.use_ipa_for_dns == true
+
 - name: Setup overcloud fencing
   include_tasks: fencing.yml
   when:
