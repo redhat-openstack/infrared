@@ -37,6 +37,7 @@ freeipa_heat_templates_basedir: "{{ (install|default({})).get('heat', {}).get('t
 freeipa_use_ceph: "{{ ( True if (install.storage|default({})).backend|default('') == 'ceph' else False ) }}"
 freeipa_network_environment_file: "{{ freeipa_templates_basedir }}/network/network-environment.yaml"
 freeipa_network_environment_v6_file: "{{ freeipa_templates_basedir }}/network/network-environment-v6.yaml"
+freeipa_forwarder: "{{ (install|default({})).get('ipa', {}).get('forwarder', 'hypervisor') }}"
 
 # Shade settings
 freeipa_shade_node: "{{ groups.shade | first }}"
