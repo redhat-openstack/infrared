@@ -162,6 +162,12 @@ subparsers:
                       help: |
                         Whether to use splistack deployment
 
+                  ipa-forwarder:
+                      type: Value
+                      help: |
+                          Specifies the DNS forwarder of BIND on the IPA server
+                      default: "hypervisor"
+
                   tls-everywhere:
                       type: Bool
                       help: |

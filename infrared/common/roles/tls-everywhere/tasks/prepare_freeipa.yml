@@ -115,6 +115,20 @@
         ipa dnsrecord-add storagemgmt.{{ freeipa_cloud_domain }} overcloud --a-rec 172.17.4.101
     register: overcloud_dns_entries
 
+  - name: Configure FreeIPA DNS Forwarder from hypervisor
+    become: yes
+    shell: |
+        echo {{ freeipa_admin_password }}|kinit admin
+        ipa dnsconfig-mod --forwarder={{ hostvars['hypervisor'].ansible_dns.nameservers[0] }} --forward-policy=only
+    when: install.ipa.forwarder == 'hypervisor'
+
+  - name: Configure FreeIPA DNS Forwarder from paramater
+    become: yes
+    shell: |
+        echo {{ freeipa_admin_password }}|kinit admin
+        ipa dnsconfig-mod --forwarder=install.ipa.forwarder --forward-policy=only
+    when: install.ipa.forwarder != 'hypervisor'
+
   - name: Check for existance of /etc/sysconfig/iptables file
     stat:
        path: /etc/sysconfig/iptables
@@ -143,6 +157,24 @@
         name: ipa
         state: restarted
 
+  - name: Create systemd resolv.conf
+    become: yes
+    copy:
+        dest: "/usr/lib/systemd/resolv.conf"
+        content: |
+            search {{ freeipa_cloud_domain }}
+            nameserver 127.0.0.1
+
+  - name: Create a symbolic link of systemd resolv.conf
+    become: yes
+    file:
+        src: "/usr/lib/systemd/resolv.conf"
+        dest: "/etc/resolv.conf"
+        owner: root
+        group: root
+        state: link
+        force: yes
+
   - name: Update /etc/hosts with undercloud's details
     become: yes
     lineinfile:
@@ -150,5 +182,4 @@
         line: "{{ freeipa_undercloud_ipaddress }} {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} {{ groups['undercloud'][0] }}"
         state: present
   delegate_to: "{{ freeipa_node }}"
-
 
