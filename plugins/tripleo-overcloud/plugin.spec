@@ -388,6 +388,12 @@ subparsers:
                           Specifies whether TLS Everywhere with FreeIPA should be implemented
                       default: no
 
+                  ipa-forwarder:
+                      type: Value
+                      help: |
+                          Specifies the DNS forwarder of BIND on the IPA server
+                      default: 'hypervisor'
+
                   fetchfiles-overcloud:
                       type: Value
                       action: append
