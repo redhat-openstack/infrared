@@ -57,6 +57,11 @@
               {% endif %}
               identity.uri $OS_AUTH_URL \
               identity.admin_password $OS_PASSWORD \
+              {# https://bugzilla.redhat.com/show_bug.cgi?id=1716434 - region must #}
+              {# be set explicitely in packstack deployment since it is not part of keystonerc #}
+              {% if test.openstack.version|default(overcloud_version)|openstack_release >= 14 and test.openstack.installer == "packstack" %}
+              identity.region RegionOne \
+              {% endif %}
               scenario.img_dir ~/{{ test.dir }}/etc \
               {# https://bugzilla.redhat.com/show_bug.cgi?id=1382048 #}
               {# https://github.com/openstack/tripleo-heat-templates/commit/9b739012b71e2833e59e94cbe423cda77405c6cb#diff-2df80226aa5ac8fe81e6159bda8d4d2f #}
