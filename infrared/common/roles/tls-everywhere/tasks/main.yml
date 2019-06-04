@@ -3,9 +3,17 @@
   include_tasks: prepare_freeipa.yml
   when: "'prepare_freeipa' in stages"
 
+- name: Undercloud DNS preparation
+  include_tasks: set_undercloud_dns.yml
+  when: "'set_undercloud_dns' in stages"
+
 - name: Undercloud preparation
   include_tasks: prepare_undercloud.yml
   when: "'prepare_undercloud' in stages"
+
+- name: Overcloud DNS preparation
+  include_tasks: set_overcloud_dns.yml
+  when: "'set_overcloud_dns' in stages"
 
 - name: Overcloud preparation
   include_tasks: prepare_overcloud.yml

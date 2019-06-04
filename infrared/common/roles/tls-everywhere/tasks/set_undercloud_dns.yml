@@ -1,0 +1,18 @@
+---
+- block:
+  - name: Update /etc/hosts with freeipa's details
+    become: yes
+    lineinfile:
+        dest: "/etc/hosts"
+        line: "{{ freeipa_node_ipaddress }} {{ freeipa_node }}.{{ freeipa_cloud_domain }} {{ freeipa_node }}"
+        state: present
+
+  - name: set IdM server to be the nameserver
+    become: yes
+    copy:
+        dest: "/etc/resolv.conf"
+        content: |
+            search {{ freeipa_cloud_domain }}
+            nameserver {{ freeipa_node_ipaddress }}
+
+  delegate_to: "{{ freeipa_undercloud_node }}"
