@@ -11,7 +11,11 @@ Roles stages:
 
 ``prepare_freeipa`` - Configure and install FreeIPA on the freeipa_node
 
+``set_undercloud_dns`` - Set FreeIPA as the DNS server for the undercloud.
+
 ``prepare_undercloud`` - Install novajoin on undercloud node and configure undercloud.
+
+``set_overcloud_dns`` - Set FreeIPA as the DNS server for the overcloud.
 
 ``prepare_overcloud`` - Configure overcloud
 
@@ -27,6 +31,7 @@ Example for FreeIPA node setup and Undercloud configuration::
           - role: tls-everywhere
             stages:
                 - prepare_freeipa
+                - set_undercloud_dns
                 - prepare_undercloud
 
 
@@ -42,6 +47,7 @@ Example for Overcloud configuration::
                 name: tls-everywhere
             vars:
                 stages:
+                    - set_overcloud_dns
                     - prepare_overcloud
 
 Role variables:

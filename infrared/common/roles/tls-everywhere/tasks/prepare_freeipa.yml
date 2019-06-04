@@ -115,6 +115,8 @@
         ipa dnsrecord-add storage.{{ freeipa_cloud_domain }} overcloud --a-rec 172.17.3.101
         ipa dnszone-add storagemgmt.{{ freeipa_cloud_domain }}
         ipa dnsrecord-add storagemgmt.{{ freeipa_cloud_domain }} overcloud --a-rec 172.17.4.101
+        # TODO: make this a variable
+        ipa dnsconfig-mod --forwarder=10.44.6.1 --forward-policy=only
     register: overcloud_dns_entries
 
   - name: Check for existance of /etc/sysconfig/iptables file
