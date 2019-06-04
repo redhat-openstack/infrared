@@ -21,7 +21,6 @@
         insertbefore: "{{ oc_deploy_script_last_line.stdout }}"
     with_items:
         - "{{ freeipa_heat_templates_basedir }}/environments/ssl/tls-everywhere-endpoints-dns.yaml"
-        - "{{ freeipa_heat_templates_basedir }}/environments/services/haproxy-public-tls-certmonger.yaml"
         - "{{ freeipa_heat_templates_basedir }}/environments/ssl/enable-internal-tls.yaml"
         - "{{ freeipa_templates_basedir }}/cloud-names.yaml"
         - "{{ freeipa_templates_basedir }}/public_vip.yaml"
@@ -29,6 +28,20 @@
   - name: Get last row of overcloud deploy script
     command: "tail -n 1 {{ freeipa_overcloud_deploy_script }}"
     register: oc_deploy_script_last_line
+
+  - name: Append template line when replacing public endpoint certs
+    lineinfile:
+        dest: "{{ freeipa_overcloud_deploy_script }}"
+        line: "-e {{ freeipa_heat_templates_basedir }}/environments/services/haproxy-public-tls-certmonger.yaml \\"
+        insertbefore: "{{ oc_deploy_script_last_line.stdout }}"
+    when: use_certmonger_public_endpoint_certs|default(true)
+
+  - name: Append template line when NOT replacing public endpoint certs
+    lineinfile:
+        dest: "{{ freeipa_overcloud_deploy_script }}"
+        line: "-e {{ freeipa_templates_basedir }}/enable-tls.yaml \\"
+        insertbefore: "{{ oc_deploy_script_last_line.stdout }}"
+    when: not use_certmonger_public_endpoint_certs|default(true)
 
   - name: Append the TLS Everywhere ansible template line to the base overcloud deploy script
     lineinfile:
