@@ -1,4 +1,27 @@
 ---
+- name: Gather hypervisor Logs
+  hosts: hypervisor
+  gather_facts: yes
+  become: no
+  tags: collect_hypervisor_logs
+  any_errors_fatal: false  # as we are happy to collect whatever we can
+  vars:
+    - dest_dir: "{{ (other.dest|default({})).dir|default('') | absolute_path }}"
+  vars_files:
+    - vars/default_archives_list.yml
+  tasks:
+    # this one is required to avoid 3 or 4 return codes
+    # when some of hosts are unreachable
+    - name: clear error after setup
+      meta: clear_host_errors
+
+    - block:
+        - import_tasks: tasks/collect_sfiles.yml
+        - import_tasks: tasks/compress_fetch_cleanup.yml
+      when:
+        - inventory_hostname in play_hosts
+        - other.logger in ['host','all']
+
 - name: Gather Logs
   hosts: "{{ other.hosts }}"
   gather_facts: yes
@@ -25,7 +48,6 @@
         when:
             - inventory_hostname in play_hosts
             - other.logger in ['sosreport','all']
-
 
 - name: Aggregate and print info for build marks
   hosts: localhost
