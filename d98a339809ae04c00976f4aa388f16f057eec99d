@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "55bdda2f_15ac5c87",
+        "filename": "plugins/tripleo-undercloud/upgrade.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011919
+      },
+      "writtenOn": "2019-06-04T13:51:38Z",
+      "side": 1,
+      "message": "Right, and the idea is to run this step after running the leapp upgrade via:\n\ninfrared tripleo-upgrade --undercloud-os-upgrade yes\n\nThen we set up the rhos15 repos and do the packages cleaning up via tripleo-undercloud:\n\ninfrared tripleo-undercloud                     -o undercloud-upgrade.yml                     --upgrade yes                     --mirror tlv                     --build latest                     --ansible-args\u003d\"tags\u003dupgrade_repos,undercloud_containers\"                      --registry-mirror rhos-qe-mirror-tlv.usersys.redhat.com:5000 -e \u0027ansible_python_interpreter\u003d/usr/libexec/platform-python\u0027 -e undercloud_version\u003d14 -vv\n\nSo when we get to this task we have the undercloud upgraded to RHEL8 and quite cleaned up of packages. There is not even python3-tripleoclient installed (that\u0027s why we need to ensure it\u0027s installed in the next task. This is also the reason why we can\u0027t use the automatic version discovery, as \"nova version\" command won\u0027t work at this point)",
+      "parentUuid": "ec4c67a7_6497d71d",
+      "range": {
+        "startLine": 54,
+        "startChar": 10,
+        "endLine": 54,
+        "endChar": 39
+      },
+      "revId": "d98a339809ae04c00976f4aa388f16f057eec99d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bf848d15_8bc824f8",
         "filename": "plugins/tripleo-undercloud/upgrade.yml",
         "patchSetId": 1
@@ -76,6 +100,30 @@
       "writtenOn": "2019-06-03T07:27:49Z",
       "side": 1,
       "message": "I\u0027d say it just \u0027one time\u0027 operation, so \u0027equal\u0027 14 should be enough",
+      "range": {
+        "startLine": 58,
+        "startChar": 51,
+        "endLine": 58,
+        "endChar": 53
+      },
+      "revId": "d98a339809ae04c00976f4aa388f16f057eec99d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f6244b0_62f70729",
+        "filename": "plugins/tripleo-undercloud/upgrade.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011919
+      },
+      "writtenOn": "2019-06-04T13:51:38Z",
+      "side": 1,
+      "message": "ack, make sense. thanks",
+      "parentUuid": "76f3db0d_a3e3361c",
       "range": {
         "startLine": 58,
         "startChar": 51,
