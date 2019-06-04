@@ -162,6 +162,12 @@ subparsers:
                       help: |
                         Whether to use splistack deployment
 
+                  ipa-forwarder:
+                      type: Value
+                      help: |
+                          Specifies the DNS forwarder of BIND on the IPA server
+                      default: "hypervisor"
+
                   tls-everywhere:
                       type: Bool
                       help: |
@@ -412,12 +418,12 @@ subparsers:
                   registry-mirror:
                       type: Value
                       help: The alternative docker registry to use for undercloud deployment.
-                      default: "docker-registry.engineering.redhat.com"
+                            Defaults to value per-compose/puddle.
 
                   registry-namespace:
                       type: Value
                       help: The alternative docker registry namespace to use for undercloud deployment.
-                            Defaults to "rhosp${version}" (e.g. rhosp14)
+                            Defaults to value per compose/puddle (in other case to "rhosp${version}" e.g. rhosp14)
 
                   registry-skip-puddle:
                       type: Bool
@@ -445,8 +451,8 @@ subparsers:
                   registry-prefix:
                       type: Value
                       help: |
-                          Container images prefix
-                      default: 'openstack-'
+                          Container images prefix.
+                          Defaults to value per compose/puddle (otherwise to 'openstack-').
 
                   bip-address:
                       type: Value
@@ -456,7 +462,7 @@ subparsers:
 
                   registry-ceph-namespace:
                       type: Value
-                      help: namesapce for the ceph container
+                      help: namespace for the ceph container
 
                   registry-ceph-image:
                       type: Value
