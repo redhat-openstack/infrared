@@ -418,6 +418,12 @@ subparsers:
                           Specifies whether TLS Everywhere with FreeIPA will use novajoin on the overcloud
                       default: yes
 
+                  ipa-issue-public-certs:
+                      type: Bool
+                      help: |
+                          Specifies whether certs on the public endpoints will be issued by FreeIPA
+                      default: yes
+
                   ipa-forwarder:
                       type: Value
                       help: |
