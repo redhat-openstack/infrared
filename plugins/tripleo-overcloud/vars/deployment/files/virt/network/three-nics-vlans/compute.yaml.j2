@@ -56,6 +56,12 @@ parameters:
     default: []
     description: A list of DNS servers (2 max for some implementations) that will be added to resolv.conf.
     type: json
+{% if install.version|openstack_release >= 13 %}
+  DnsSearchDomains: # Override this via parameter_defaults
+    default: []
+    description: A list of DNS search domains to be added (in order) to resolv.conf.
+    type: comma_delimited_list
+{% endif %}
   EC2MetadataIp: # Override this via parameter_defaults
     description: The IP address of the EC2 metadata server.
     type: string
@@ -189,6 +195,10 @@ resources:
                           use_dhcp: false
                           dns_servers:
                               get_param: DnsServers
+{% if install.version|openstack_release >= 13 %}
+                          domain:
+                              get_param: DnsSearchDomains
+{% endif %}
                           addresses:
                             -
                               ip_netmask:
