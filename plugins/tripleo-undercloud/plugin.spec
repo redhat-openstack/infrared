@@ -149,6 +149,12 @@ subparsers:
                           parameter "CloudDomain" must be set to a matching value.
                       default: 'redhat.local'
 
+                  freeipa-domain:
+                      type: Value
+                      help: |
+                          Set the FreeIPA domain parameter.
+                      default: 'redhat.local'
+
                   deploy_interface_default:
                       type: Value
                       default: iscsi
