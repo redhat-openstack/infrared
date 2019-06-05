@@ -102,6 +102,13 @@
         regexp: '^ca.crl.MasterCRL.publishOnStart=(.*)$'
         line: 'ca.crl.MasterCRL.publishOnStart=true'
 
+  - name: Add DNS zone when needed
+    become: yes
+    shell: |
+        echo {{ freeipa_admin_password }}|kinit admin
+        ipa dnszone-add {{ freeipa_cloud_domain }}
+    when: freeipa_cloud_domain != freeipa_domain
+
   - name: Configure FreeIPA DNS for overcloud public_vip
     become: yes
     shell: |
