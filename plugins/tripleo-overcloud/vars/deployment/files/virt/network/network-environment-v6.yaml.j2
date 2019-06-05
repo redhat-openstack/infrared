@@ -34,6 +34,9 @@ parameter_defaults:
     TenantAllocationPools: [{'start': '172.17.2.10', 'end': '172.17.2.149'}]
     TenantNetworkVlanID: 50
 {% endif %}
+{% if install.tls.everywhere or install.overcloud.use.dns.names %}
+    DnsSearchDomains: ['redhat.local']
+{% endif %}
 #    DnsServers: ["2620:52:0:13b8::fe"]
     DnsServers: ["10.0.0.1"]
     EC2MetadataIp: 192.168.24.1
