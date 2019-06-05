@@ -9,7 +9,8 @@ freeipa_working_dir: /tmp
 freeipa_admin_password: 12345678
 freeipa_hosts_secret: redhat
 freeipa_directory_manager_password: redhat_01
-freeipa_cloud_domain: redhat.local
+freeipa_cloud_domain: "{{ (install|default({})).get('overcloud', {}).get('domain', 'redhat.local') }}"
+freeipa_domain: "{{ (install|default({})).get('freeipa', {}).get('domain', 'redhat.local') }}"
 freeipa_extra_args: "--no-dnssec-validation"
 
 # Epel repo location
