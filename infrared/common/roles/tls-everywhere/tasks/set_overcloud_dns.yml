@@ -23,6 +23,14 @@
         regexp: "- {{ network_template.parameter_defaults.DnsServers|first }}"
         line: "    - {{ freeipa_node_ipaddress }}"
 
+  # TODO: figure out how to do this correctly
+  - name: Assign dns search domains when domains do not match
+    lineinfile:
+        dest: "{{ freeipa_network_environment_file }}"
+        regexp: "- {{ network_template.parameter_defaults.DnsSearchDomains|first }}"
+        line: "    - [ {{ freeipa_clloud_domain }}, {{ freeipa_domain }} ]"
+    when: freeipa_domain != freeipa_cloud_domain
+
   - name: Read deployment network configuration for ipv6
     command: "cat {{ freeipa_network_environment_v6_file }}"
     register: network_template_v6_out
