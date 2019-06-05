@@ -9,9 +9,16 @@
   - name: Prepare novajoin to work
     become: yes
     shell: >
-        /usr/libexec/novajoin-ipa-setup --principal admin --password {{ freeipa_admin_password }} --server {{ freeipa_node }}.{{ freeipa_cloud_domain }} --realm {{ freeipa_cloud_domain|upper }}
-        --domain {{ freeipa_cloud_domain }} --hostname {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} --precreate
+        /usr/libexec/novajoin-ipa-setup --principal admin --password {{ freeipa_admin_password }} --server {{ freeipa_node }}.{{ freeipa_domain }} --realm {{ freeipa_domain|upper }}
+        --domain {{ freeipa_domain }} --hostname {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} --precreate
     register: novajoin
+
+  # TODO: figure out where the actual override file is
+  - name: Add domain to hieradata in case it does not match the freeIPA domain
+    lineinfile:
+        path: ~/hiera_override.yml
+        line: "nova::metadata::novajoin::api::ipa_domain: {{ freeip_cloud_domain }}"
+    when: "{{ freeip_cloud_domain }} != {{ freeipa_domain }}"
 
   - name: Edit undercloud.conf
     blockinfile:

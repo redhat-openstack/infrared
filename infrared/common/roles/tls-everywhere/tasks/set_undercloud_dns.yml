@@ -4,15 +4,25 @@
     become: yes
     lineinfile:
         dest: "/etc/hosts"
-        line: "{{ freeipa_node_ipaddress }} {{ freeipa_node }}.{{ freeipa_cloud_domain }} {{ freeipa_node }}"
+        line: "{{ freeipa_node_ipaddress }} {{ freeipa_node }}.{{ freeipa_domain }} {{ freeipa_node }}"
         state: present
 
-  - name: set IdM server to be the nameserver
+  - name: set IdM server to be the nameserver if multiple domains
+    become: yes
+    copy:
+        dest: "/etc/resolv.conf"
+        content: |
+            search {{ freeipa_cloud_domain }} {{ freeipa_domain }}
+            nameserver {{ freeipa_node_ipaddress }}
+    when "{{ freeipa_cloud_domain }} != {{ freeipa_domain }}"
+
+  - name: set IdM server to be the nameserver if single domain
     become: yes
     copy:
         dest: "/etc/resolv.conf"
         content: |
             search {{ freeipa_cloud_domain }}
             nameserver {{ freeipa_node_ipaddress }}
+    when "{{ freeipa_cloud_domain }} == {{ freeipa_domain }}"
 
   delegate_to: "{{ freeipa_undercloud_node }}"
