@@ -4,7 +4,7 @@
     become: yes
     lineinfile:
         dest: "/etc/hosts"
-        line: "{{ freeipa_node_ipaddress }} {{ freeipa_node }}.{{ freeipa_cloud_domain }} {{ freeipa_node }}"
+        line: "{{ freeipa_node_ipaddress }} {{ freeipa_node }}.{{ freeipa_domain }} {{ freeipa_node }}"
         state: present
 
   - name: Install RHEL7 packages
@@ -55,13 +55,19 @@
         /usr/libexec/novajoin-ipa-setup
         --principal admin
         --password {{ freeipa_admin_password }}
-        --server {{ freeipa_node }}.{{ freeipa_cloud_domain }}
-        --realm {{ freeipa_cloud_domain|upper }}
-        --domain {{ freeipa_cloud_domain }}
+        --server {{ freeipa_node }}.{{ freeipa_domain }}
+        --realm {{ freeipa_domain|upper }}
+        --domain {{ freeipa_domain }}
         --hostname {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}
         --precreate
     register: novajoin
     when: freeipa_enable_novajoin|bool
+
+  - name: Add domain to hieradata in case it does not match the freeIPA domain
+    lineinfile:
+        path: ~/hiera_override.yaml
+        line: "nova::metadata::novajoin::api::ipa_domain: {{ freeipa_cloud_domain }}"
+    when: freeipa_cloud_domain != freeipa_domain
 
   - name: Edit undercloud.conf for novajoin
     ini_file:
@@ -86,11 +92,11 @@
           --ssh-extra-args "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
           /usr/share/ansible/tripleo-playbooks/undercloud-ipa-install.yaml
     environment:
-        IPA_DOMAIN: "{{ freeipa_cloud_domain }}"
-        IPA_REALM: "{{ freeipa_cloud_domain|upper }}"
+        IPA_DOMAIN: "{{ freeipa_domain }}"
+        IPA_REALM: "{{ freeipa_domain|upper }}"
         IPA_ADMIN_USER: admin
         IPA_ADMIN_PASSWORD: "{{ freeipa_admin_password }}"
-        IPA_SERVER_HOSTNAME: "{{ freeipa_node }}.{{ freeipa_cloud_domain }}"
+        IPA_SERVER_HOSTNAME: "{{ freeipa_node }}.{{ freeipa_domain }}"
         UNDERCLOUD_FQDN: "{{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}"
         USER: stack
         CLOUD_DOMAIN: "{{ freeipa_cloud_domain }}"
