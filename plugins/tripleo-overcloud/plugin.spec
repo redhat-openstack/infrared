@@ -360,6 +360,12 @@ subparsers:
                           for overcloud_domain_name that was configured in undercloud.conf if set.
                       default: 'redhat.local'
 
+                  freeipa-domain:
+                      type: Value
+                      help: |
+                          Set the FreeIPA domain parameter.
+                      default: 'redhat.local'
+
                   tls-everywhere:
                       type: Bool
                       help: |
