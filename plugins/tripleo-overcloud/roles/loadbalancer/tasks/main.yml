@@ -9,10 +9,6 @@
       line: "ListenAddress {{ hostvars[inventory_hostname].ansible_host|
                               default(hostvars[inventory_hostname].ansible_ssh_host) }}"
 
-# On RHEL8 network-scripts is not installed by default
-- name: Make sure the network-scripts package is installed
-  package: name=network-scripts state=present
-
 - name: setup ssh for loadbalancer to listen on external VIP
   lineinfile:
       dest: "/etc/ssh/sshd_config"
