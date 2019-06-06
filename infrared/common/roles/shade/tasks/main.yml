@@ -4,20 +4,28 @@
       {{ ansible_python_interpreter | default('python') }} -c "import sys; print(True if hasattr(sys, 'real_prefix') else False)"
   register: is_venv
 
+- name: Load "packages" variable file based on the OS type
+  include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+      paths:
+        - 'vars'
+
 - name: install virtualenv requirments for pip
   become: yes
   package:
-      name:
-        - gcc
-        - python-devel
-        - python-setuptools
-        - libffi-devel
-      state: present
+    name: "{{ packages }}"
+    state: latest
 
 - name: install pip
   become: yes
   easy_install:
       name: pip
+  when:
+    - ansible_distribution in ['CentOS', 'RedHat']
+    - ansible_distribution_major_version == '7'
 
 - name: install virtualenv pip module
   pip:
