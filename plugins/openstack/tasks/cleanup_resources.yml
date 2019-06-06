@@ -1,7 +1,6 @@
 ---
-# If file is missing, nothing to do.
 - name: include resource registery file
-  include_vars: "{{ inventory_dir }}/resources.yml"
+  include_vars: "{{ resources_file.stat.path }}"
 
 - name: Cleanup keypairs
   os_keypair:

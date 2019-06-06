@@ -4,12 +4,19 @@
   # try to delete everything possible
   any_errors_fatal: true
   tasks:
+      - name: Get information about resources file
+        stat:
+          path: "{{ inventory_dir }}/resources.yml"
+        register: resources_file
+
 #      TODO(aopincar): Add 'Cleanup flavors' task
       - name: clean resources
         include_tasks: tasks/cleanup_resources.yml
+        when: resources_file.stat.path is defined
 
       - name: Unlink hosts file
         file:
             dest: "{{ inventory_dir }}/hosts"
             state: link
             src: local_hosts
+        when: resources_file.stat.path is defined
