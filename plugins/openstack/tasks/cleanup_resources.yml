@@ -1,7 +1,12 @@
 ---
-# If file is missing, nothing to do.
+- name: Get information about resources file
+  stat:
+    path: : "{{ inventory_dir }}/resources.yml"
+  register: resources_file
+
 - name: include resource registery file
-  include_vars: "{{ inventory_dir }}/resources.yml"
+  include_vars: "{{ resources_file.stat.path }}"
+  when: resources_file.stat.path is defined
 
 - name: Cleanup keypairs
   os_keypair:
