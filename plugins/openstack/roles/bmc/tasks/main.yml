@@ -67,10 +67,12 @@
   with_items: "{{ bmc_pip }}"
 
 - name: Deploy openstackbmc
-  template:
-      src: "openstackbmc"
-      dest: "/usr/local/bin/openstackbmc"
-      mode: "u=rwx,g=rwx,o=rwx"
+  shell: |
+      git clone https://opendev.org/openstack/openstack-virtual-baremetal.git && \
+      cd openstack-virtual-baremetal && pip install ./ && \
+      ln -sf /usr/lib/python2.7/site-packages/openstack_virtual_baremetal/openstackbmc.py /usr/local/bin/openstackbmc && \
+      chmod +x /usr/local/bin/openstackbmc
+  ignore_errors: true
 
 - name: Register internal subnet details
   os_subnets_facts:

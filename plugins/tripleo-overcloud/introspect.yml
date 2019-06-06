@@ -95,7 +95,7 @@
       - name: set the root device for baremetal nodes (with size hint)
         shell: |
             source ~/stackrc
-            NODE_UUID=$({{ ironic_cli }} | awk '/{{ item.name | default(item) }}/ {print $2}' )
+            NODE_UUID=$(openstack baremetal node show {{ item.name | default(item) }} -f value -c uuid )
             ironic node-update ${NODE_UUID} add properties/root_device='{"size": {{ hostvars[item].disk  }} }'
             #TODO(skatlapa): Check if Ironic CLI BZ#1602066 affects baremetal update command
         with_items: "{{ groups['overcloud_nodes'] | default([])}}"
@@ -129,7 +129,7 @@
                     openstack baremetal node set \
                       --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}' {{ node }}
                 {% else %}
-                    ironic node-list|awk '/{{ node }}/ {print $2}'| \
+                    openstack baremetal node show {{ node }} -f value -c uuid | \
                     xargs -I{} ironic node-update {} add properties/root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
                 {% endif %}
                 else
@@ -137,7 +137,7 @@
                     openstack baremetal node list|awk '/{{ node }}/ {print $2}'| \
                     xargs -I{} openstack baremetal node set {} --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
                 {% else %}
-                    ironic node-list|awk '/{{ node }}/ {print $2}'| \
+                    openstack baremetal node show {{ node }} -f value -c uuid | \
                     xargs -I{} ironic node-update {} add properties/root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
                 {% endif %}
                 fi

@@ -7,5 +7,8 @@ ExecStart=/usr/local/bin/openstackbmc --os-cloud bmc --instance {{ node }} --add
 User=root
 StandardOutput=kmsg+console
 StandardError=inherit
+RemainAfterExit=no
+Restart=on-failure
+RestartSec=5s
 [Install]
 WantedBy=multi-user.target
