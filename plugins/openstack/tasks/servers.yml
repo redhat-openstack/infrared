@@ -20,6 +20,8 @@
   changed_when: false
 
 - name: Create instances
+  async: 1200
+  poll: 0
   vars:
       resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
       secgroups: "{% if provision.anti.spoofing == true %}{{ topology_node.security_groups }}{% endif %}"
@@ -56,14 +58,27 @@
         for i in $(ip l | awk '$2 ~ /eth[1-9]/ {gsub(":", ""); print $2}'); do ip l set down dev $i; done
         {% endraw %}
   register: servers
+  retries: 5
   with_sequence: "count={{ node.value }}"
+
+- name: Check sync status
+  async_status:
+    jid: "{{ async_result_item.ansible_job_id }}"
+  loop: "{{ servers.results }}"
+  loop_control:
+    loop_var: "async_result_item"
+  register: async_poll_results
+  until: async_poll_results.finished
+  retries: 300
 
 # need to write all servers to file at once
 - name: save servers for registration
   set_fact:
-      server_list: "{{ server_list|default([]) + (servers.results | map(attribute='server') | list) }}"
+      server_list: "{{ server_list|default([]) + (async_poll_results.results | map(attribute='server') | list) }}"
 
 - name: Create floating IPs
+#  async: 1000
+#  poll: 0
   os_floating_ip:
       cloud: "{{ provision.cloud | default(omit) }}"
       network: "{{ (provision.provider|default({})).network|default(openstack_networks[0].id) }}"
@@ -74,8 +89,21 @@
       # always wait for floating ip
       wait: yes
       timeout: "{{ provision.os.server.timeout | int }}"
+#  register: async_floating_ips
   register: floating_ips
-  with_items: "{{ servers.results | map(attribute='server') | list }}"
+  retries: 5
+  with_items: "{{ async_poll_results.results | map(attribute='server') | list }}"
+
+# TODO fixme, looks like parallel floating ip timeouts
+#- name: Check sync status
+#  async_status:
+#    jid: "{{ async_result_item.ansible_job_id }}"
+#  loop: "{{ async_floating_ips.results }}"
+#  loop_control:
+#    loop_var: "async_result_item"
+#  register: floating_ips
+#  until: floating_ips.finished
+#  retries: 300
 
 - name: Get flavor facts
   os_flavor_facts:
