@@ -1,17 +1,18 @@
 ---
 - block:
   - block:
+    - name: Load "packages" variable from file based on the OS type
+      include_vars: "{{ lookup('first_found', params) }}"
+      vars:
+        params:
+          files:
+            - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+          paths:
+            - 'vars'
+
     - name: Install packages required for python-virtualbmc pip package
-      package:
-          name:
-            - gcc
-            - libvirt
-            - libvirt-devel
-            - python-devel
-            - python-setuptools
-            - ipmitool
-          state: latest
-          disable_gpg_check: yes
+      package: "{{ packages }}"
+        state: latest
 
     - name: install pip
       easy_install:
