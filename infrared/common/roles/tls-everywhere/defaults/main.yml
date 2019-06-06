@@ -13,11 +13,15 @@ freeipa_cloud_domain: redhat.local
 freeipa_extra_args: "--no-dnssec-validation"
 
 # Epel repo location
-freeipa_epel_repo_url: http://ae.mirror.rasanegar.com/fedoraproject/pub/epel/7Server/x86_64/Packages/e/epel-release-7-11.noarch.rpm
+freeipa_rhel7_epel_repo_url: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 
 # Additional yum repos
-freeipa_additional_repos:
+freeipa_rhel7_additional_repos:
   - rhelosp-rhel-7.6-server-opt
+freeipa_rhel8_dnf_modules:
+  - "idm:DL1/server"
+  - "389-ds"
+  - "pki-deps"
 
 # Undercloud settings
 freeipa_undercloud_node: "{{ groups['undercloud'][0] }}"
