@@ -8,7 +8,7 @@
     - name: Set selinux state
       selinux:
           policy: "targeted"
-          state: "{{ install.selinux|default('enforcing') }}"
+          state: "{{ install.selinux|default((((install.version|default(undercloud_version))|openstack_release) >= 15) | ternary('permissive', 'enforcing')) }}"
 
     - name: Ensure yum presence
       # ... helps with old/middle-aged fedora, possibly not needed
