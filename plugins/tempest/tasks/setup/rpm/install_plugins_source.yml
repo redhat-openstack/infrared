@@ -34,6 +34,18 @@
   retries: 3
   delay: 60
 
+- name: Find python site-packages directory
+  shell: "file $(/usr/bin/which python) | awk '{print $NF}'"
+  register: python_version
+  when: ansible_python_version is version('3', '>=')
+
+- name: make sure the local site-packages dir exists for pip3
+  file:
+      path: '/usr/local/lib/{{ python_version.stdout }}/site-packages/'
+      state: directory
+  become: true
+  when: ansible_python_version is version('3', '>=')
+
 - name: Install extra system requirements for tests
   package:
       name: "{{ plugin_dict.value.dependencies }}"
