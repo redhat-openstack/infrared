@@ -11,7 +11,7 @@
     - name: Set selinux state
       selinux:
           policy: "targeted"
-          state: "{{ install.selinux|default('enforcing') }}"
+          state: "{{ install.selinux|default((((install.version|default(undercloud_version))|openstack_release) >= 15) | ternary('permissive', 'enforcing')) }}"
       when: install.selinux is defined
 
     - name: increase iscsi verify attempts in ironic conductor
