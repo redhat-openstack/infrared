@@ -170,7 +170,6 @@ resources:
   OsNetConfigImpl:
     type: OS::Heat::SoftwareConfig
     properties:
-
       group: script
       config:
           str_replace:
@@ -179,11 +178,21 @@ resources:
               params:
                    $network_config:
                        network_config:
-
                         -
+{% if install.ironic and install.version|default(undercloud_version)|openstack_release > 14 %}
+                          type: ovs_bridge
+                          name: br-baremetal
+                          members:
+                          - type: interface
+                            name: nic1
+                            primary: true
+{% else %}
                           type: interface
                           name: nic1
+{% endif %}
                           use_dhcp: false
+                          dns_servers:
+                              get_param: DnsServers
                           addresses:
                             -
                               ip_netmask:
@@ -191,7 +200,6 @@ resources:
                                   - '/'
                                   - - get_param: ControlPlaneIp
                                     - get_param: ControlPlaneSubnetCidr
-
                           routes:
                             -
                               ip_netmask: 0.0.0.0/0
@@ -212,6 +220,7 @@ resources:
                             -
                               type: interface
                               name: nic2
+                              # force the MAC address of the bridge to this interface
                               primary: true
                             -
                               type: vlan
@@ -245,6 +254,10 @@ resources:
                               -
                                 ip_netmask:
                                     get_param: TenantIpSubnet
+                        -
+                          type: interface
+                          name: nic3
+                          use_dhcp: false
 
 outputs:
   OS::stack_id:
