@@ -40,10 +40,9 @@
             loop_var: node_info
 
       - name: list ironic nodes
-        # Use CSV format as JSON not supported in old versions
         shell: |
             source ~/stackrc
-            openstack baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} list -f csv
+            openstack baremetal {{ 'node' if install.version | default(undercloud_version)| openstack_release >= 10 else '' }} list -f json
         register: ironic_node_list
         tags: skip_ansible_lint
         # Bug in Liberty version: No "node list" in openstack client, and no formatter in ironic client.
@@ -68,9 +67,9 @@
             # original name points to the baremetal name
             - host_original_name: "{{ hostvars.get(host_id, {}).original_name|default('') }}"
         set_fact:
-            ironic_node_dict: "{{ ironic_node_dict|default({})|combine({ host_id: { 'original_name': host_original_name, 'instance_uuid': item['Instance UUID'] }}) }}"
+            ironic_node_dict: "{{ ironic_node_dict | default({}) | combine({ host_id: { 'original_name': host_original_name, 'instance_uuid': item['Instance UUID'] }}) }}"
             # Set empty list for Liberty version
-        with_items: "{{  ironic_node_list.stdout|default('')|from_csv }}"
+        loop: "{{ ironic_node_list.stdout|default('[]') | from_json | list }}"
         when: host_id in groups.all
 
       - name: try to find unused nodes and add them into a new unused group

@@ -2,9 +2,9 @@
     - name: get ironic info for the node
       shell: |
           source ~/stackrc
-          openstack baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} show {{ uuid }} -c name -f value
+          openstack baremetal {{ 'node' if install.version | default(undercloud_version) | openstack_release >= 10 else '' }} show {{ uuid }} -c name -f value
       vars:
-          uuid: "{{ node_info['hypervisor_hostname'] }}"
+          uuid: "{{ node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] }}"
       register: baremetal_info
       when:
           - install.version|default(undercloud_version) | openstack_release != 8
@@ -14,14 +14,14 @@
           source ~/stackrc
           ironic node-list --fields uuid name | grep {{ uuid }} | awk '{print $4}'
       vars:
-          uuid: "{{ node_info['hypervisor_hostname'] }}"
+          uuid: "{{ node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] }}"
       register: ironic_info
       when:
           - install.version|default(undercloud_version) | openstack_release == 8
 
     - name: set baremetal_name
       set_fact:
-          baremetal_name: "{{ (install.version|default(undercloud_version)|openstack_release == 8) | ternary(ironic_info.stdout, baremetal_info.stdout) }}"
+          baremetal_name: "{{ (install.version|default(undercloud_version) | openstack_release == 8) | ternary(ironic_info.stdout, baremetal_info.stdout) }}"
 
     - name: update nodes arrays
       set_fact:
@@ -36,7 +36,7 @@
 
     - name: update nodes_groups from original groups
       set_fact:
-          node_groups: "{{( baremetal_name in item.value and item.key not in ignored_groups ) | ternary(node_groups|default([]) + [item.key], node_groups|default([])) }}"
+          node_groups: "{{ ( baremetal_name in item.value and item.key not in ignored_groups ) | ternary(node_groups|default([]) + [item.key], node_groups|default([])) }}"
       with_dict: "{{ groups }}"
       vars:
           ignored_groups: ['ungrouped', 'ovb']
@@ -71,15 +71,21 @@
     - name: add ssh common args for hypervisor
       add_host:
           name: "{{ node_info.name|lower }}"
-          ansible_ssh_common_args: " -o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no \
-                                     -o BatchMode=yes \
-                                     -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                                     -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
-                                        {{ hostvars['hypervisor'].ansible_user }}@{{ hostvars['hypervisor'].ansible_host }}\""
+          ansible_ssh_common_args: |
+            -o ForwardAgent=yes \
+            -o ServerAliveInterval=30 \
+            -o ControlMaster=auto \
+            -o ControlPersist=30m \
+            -o StrictHostKeyChecking=no \
+            -o BatchMode=yes \
+            -o UserKnownHostsFile=/dev/null \
+            -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
+            {{ hostvars['hypervisor'].ansible_user }}@{{ hostvars['hypervisor'].ansible_host }}\"
       when:
           - node_info.name != baremetal_name
           - "'hypervisor' in groups"
   when:
       - node_info.status != 'ERROR'
-      - node_info['hypervisor_hostname'] != None
-      - node_info['hypervisor_hostname'] |trim != ''
+      - node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] != None
+      - node_info['OS-EXT-SRV-ATTR:hypervisor_hostname'] | trim != ''
