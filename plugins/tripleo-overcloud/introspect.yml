@@ -132,15 +132,15 @@
                     ironic node-list|awk '/{{ node }}/ {print $2}'| \
                     xargs -I{} ironic node-update {} add properties/root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
                 {% endif %}
-                else
-                {% if install.version|default(undercloud_version) |openstack_release > 9 %}
-                    openstack baremetal node list|awk '/{{ node }}/ {print $2}'| \
-                    xargs -I{} openstack baremetal node set {} --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
-                {% else %}
-                    ironic node-list|awk '/{{ node }}/ {print $2}'| \
-                    xargs -I{} ironic node-update {} add properties/root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
-                {% endif %}
-                fi
+            else
+            {% if install.version|default(undercloud_version) |openstack_release > 9 %}
+            openstack baremetal node list|awk '/{{ node }}/ {print $2}'| \
+            xargs -I{} openstack baremetal node set {} --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
+            {% else %}
+            ironic node-list|awk '/{{ node }}/ {print $2}'| \
+            xargs -I{} ironic node-update {} add properties/root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
+            {% endif %}
+            fi
             {% endfor %}
         tags:
             - skip_ansible_lint
@@ -148,14 +148,24 @@
         with_items: "{{ root_disk }}"
         when: root_disk is defined
 
-      # Because introspection is faulty and tricky especially on baremetals
-      # we need to check multiple times if any failure occured. Reasonable time
-      # for this process to take is < 10 minutes no matter how many nodes for baremetals.
-      # Virtual setups don't suffer from long timeouts caused by delays in boot
-      # process, BIOS timeouts and errors in firmware so they are covered by such timeout
-      # seamlessly. This must be async task because we need to enforce explicit timeout
-      # for this process, otherwise timeout is controlled by ironic and seriously long
-      # (usually one must wait for 1 hour if any failure on any node occurs).
+      - name: set deploy_interface option to direct
+        shell: |
+          source ~/stackrc
+          NODE_UUID=$({{ ironic_cli }} | awk '/{{ item.name | default(item) }}/ {print $2}' )
+          openstack baremetal node set --deploy-interface direct ${NODE_UUID}
+        with_items: "{{ groups['overcloud_nodes'] | default([])}}"
+        when:
+          - install.image_direct_deploy != 'iscsi'
+          - install.version|default(undercloud_version) | openstack_release >= 13
+
+    # Because introspection is faulty and tricky especially on baremetals
+    # we need to check multiple times if any failure occured. Reasonable time
+    # for this process to take is < 10 minutes no matter how many nodes for baremetals.
+    # Virtual setups don't suffer from long timeouts caused by delays in boot
+    # process, BIOS timeouts and errors in firmware so they are covered by such timeout
+    # seamlessly. This must be async task because we need to enforce explicit timeout
+    # for this process, otherwise timeout is controlled by ironic and seriously long
+    # (usually one must wait for 1 hour if any failure on any node occurs).
 
       - name: start node introspection
         shell: |
@@ -175,48 +185,39 @@
         delay: 90
         ignore_errors: yes
 
-      # Async tasks in Ansible don't have rc defined if they failed (for some reason) which makes registered
-      # variable different for various outcomes and just using "result" key is not possible here.
-      # Following fact will construct properly introspection result properly from possibly
-      # different statutes presented by output of async task.
+    # Async tasks in Ansible don't have rc defined if they failed (for some reason) which makes registered
+    # variable different for various outcomes and just using "result" key is not possible here.
+    # Following fact will construct properly introspection result properly from possibly
+    # different statutes presented by output of async task.
       - set_fact:
             bulk_intro_ok: "{{ true if bulk_intro_result.rc is defined and bulk_intro_result.rc == 0 else false }}"
 
-      # If bulk introspection failed, play introspection_recovery playbook which runs node-by-node introspection
-      # and also helps with debugging and recovery.
+    # If bulk introspection failed, play introspection_recovery playbook which runs node-by-node introspection
+    # and also helps with debugging and recovery.
       - name: Recover from errors during bulk introspection
         include_tasks: tasks/introspection_recovery.yml
         when: not bulk_intro_ok
 
-      # when we need to use vbmc for OSP10 we have an issue [1] with pxe_impi driver
-      # and the fix [2] for that issue cannot be backported to the OSP10:
-      # [1] https://bugzilla.redhat.com/show_bug.cgi?id=1373468
-      # [2] https://github.com/openstack/ironic-inspector/commit/0ce5cdb7c8344e981a919aab136c4c2eba79d4a2
+    # when we need to use vbmc for OSP10 we have an issue [1] with pxe_impi driver
+    # and the fix [2] for that issue cannot be backported to the OSP10:
+    # [1] https://bugzilla.redhat.com/show_bug.cgi?id=1373468
+    # [2] https://github.com/openstack/ironic-inspector/commit/0ce5cdb7c8344e981a919aab136c4c2eba79d4a2
       - name: switch pxe_ssh to the pxe_impi
         shell: |
             source ~/stackrc
             NODE_UUID=$({{ ironic_cli }} | grep -w {{ item.key }} | awk '{print $2}' )
             openstack baremetal node set $NODE_UUID \
-                --driver pxe_ipmitool \
-                --driver-info ipmi_username={{ install.vbmc.username }} \
-                --driver-info ipmi_address=::ffff:{{ vbmc_management_address }} \
-                --driver-info ipmi_password={{ install.vbmc.password }} \
-                --driver-info ipmi_port={{ item.value }}
+            --driver pxe_ipmitool \
+            --driver-info ipmi_username={{ install.vbmc.username }} \
+            --driver-info ipmi_address=::ffff:{{ vbmc_management_address }} \
+            --driver-info ipmi_password={{ install.vbmc.password }} \
+            --driver-info ipmi_port={{ item.value }}
         with_dict: "{{ vbmc_ports }}"
         when:
             - install.vbmc.force
             - install.version|default(undercloud_version) | openstack_release == 10
             - vbmc_ports is defined
 
-      - name: set deploy_interface option to direct
-        shell: |
-            source ~/stackrc
-            NODE_UUID=$({{ ironic_cli }} | awk '/{{ item.name | default(item) }}/ {print $2}' )
-            openstack baremetal node set --deploy-interface direct ${NODE_UUID}
-        with_items: "{{ groups['overcloud_nodes'] | default([])}}"
-        when:
-            - install.image_direct_deploy != 'iscsi'
-            - install.version|default(undercloud_version) | openstack_release >= 13
 
 #
 # With baremetal deployments hosts from custom instackenv are missing from inventory
