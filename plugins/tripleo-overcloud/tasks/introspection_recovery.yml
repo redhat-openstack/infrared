@@ -133,7 +133,7 @@
   shell: |
       source ~/stackrc;
       export PROV_STATE=$(ironic node-show {{ item }} | grep ' provision_state ');
-      if [[ $PROV_STATE != *"available"* ]]; then
+      if [[ $PROV_STATE != *"available"* && $PROV_STATE != *"active"* ]]; then
           ironic node-set-provision-state {{ item }} provide;
       fi
   with_items: "{{ total_nodes.stdout_lines | default([]) }}"
