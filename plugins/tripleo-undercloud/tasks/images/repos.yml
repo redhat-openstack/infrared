@@ -126,7 +126,7 @@
       # don't overreach
       safe_mem: "{{ (available_mem|int * 0.6)|round|int }}"
       # don't ask lower than virt-customize default:
-      requested_mem: "{{ [safe_mem, 500] | max}}"
+      requested_mem: "{{ [safe_mem|int, 500] | max}}"
   when: install.images['update'] or patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
 - name: Set selinux state
