@@ -71,7 +71,7 @@ controller_role:
         - OS::TripleO::Services::ManilaScheduler
         - OS::TripleO::Services::ManilaShare
         - OS::TripleO::Services::Memcached
-        - OS::TripleO::Services::MongoDb
+        - "{% if install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::MongoDb{% endif %}"
         - OS::TripleO::Services::MySQL
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
         - OS::TripleO::Services::NeutronApi
