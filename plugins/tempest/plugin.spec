@@ -171,7 +171,6 @@ subparsers:
                   revision:
                       type: Value
                       help: The setup (git) revision if applicable
-                      default: HEAD
                   threads:
                       type: Value
                       help: The number of concurrent threads to run tests
