@@ -23,7 +23,7 @@
 - name: Clone tempest
   git:
       repo: "{{ setup.repo.get(test.openstack.version|default(overcloud_version)|openstack_release, setup.repo.defaults).url }}"
-      version: "{{ setup.repo.get(test.openstack.version|default(overcloud_version)|openstack_release, setup.repo.defaults).branch }}"
+      version: "{{ (test.revision != 'HEAD')| ternary(test.revision, setup.repo.get(test.openstack.version|default(overcloud_version)|openstack_release, setup.repo.defaults).branch )}}"
       dest: "~/{{ setup.clone_dir }}"
   register: tempest_repo
   when: setup.local_dir is not defined
