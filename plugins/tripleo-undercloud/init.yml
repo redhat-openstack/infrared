@@ -26,5 +26,9 @@
           line: "127.0.0.1   {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
           state: present
 
+    - name: Setup and start dstat
+      import_role:
+        name: dstat
+
 - import_playbook: create_user.yml
   tags: user
