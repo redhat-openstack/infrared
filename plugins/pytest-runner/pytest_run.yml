@@ -6,20 +6,20 @@
       repo_folder: 'pytest-repo/'
       output_prefix: '{{ item }}-{{ ansible_date_time.epoch }}.xml'
   tasks:
-      - name: intall python-pip
-        package:
-          name: python-pip
-          state: present
+      - name: install python-pip
+        shell: |
+          curl https://bootstrap.pypa.io/get-pip.py | python
         when: ansible_python_version is version('3', '<')
+        became: true
 
-      - name: intall python3-pip
+      - name: install python3-pip
         package:
           name: python3-pip
           state: present
         when: ansible_python_version  is version('3', '>=')
         become: true
 
-      - name: intall pytest via pip
+      - name: install pytest via pip
         pip:
           name: pytest
           state: present
