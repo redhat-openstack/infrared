@@ -136,6 +136,15 @@
       - inventory_update
       - deploy
 
+- name: Setup and start dstat
+  hosts: overcloud:!unused
+  gather_facts: no
+  any_errors_fatal: true
+  tags: deploy_preparation
+  tasks:
+    - import_role:
+        name: dstat
+
 - name: Verify overcloud deployment
   hosts: undercloud
   gather_facts: no
