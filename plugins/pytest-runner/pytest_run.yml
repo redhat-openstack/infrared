@@ -7,9 +7,8 @@
       output_prefix: '{{ item }}-{{ ansible_date_time.epoch }}.xml'
   tasks:
       - name: intall python-pip
-        package:
-          name: python-pip
-          state: present
+        shell: |
+          curl https://bootstrap.pypa.io/get-pip.py | python
         when: ansible_python_version is version('3', '<')
 
       - name: intall python3-pip
