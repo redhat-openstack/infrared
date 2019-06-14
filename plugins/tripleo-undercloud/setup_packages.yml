@@ -114,6 +114,13 @@
       - name: Update system and reboot
         include_tasks: tasks/update_and_reboot.yml
 
+      - name: Workaround BZ1720659 - ovs dies on selinux
+        package:
+            name: "http://download.devel.redhat.com/brewroot/packages/openvswitch-selinux-extra-policy/1.0/16.el8fdp/noarch/openvswitch-selinux-extra-policy-1.0-16.el8fdp.noarch.rpm"
+            state: present
+        when:
+            - install.version|openstack_release >= 15
+
       - name: install the oscplugin/tripleO client
         package:
             name: "{{ (install.version|openstack_release == 7) | ternary('python-rdomanager-oscplugin', (install.version|openstack_release < 15) | ternary('python-tripleoclient', 'python3-tripleoclient')) }}"
