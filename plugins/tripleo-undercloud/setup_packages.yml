@@ -103,6 +103,12 @@
             dest: /etc/yum.repos.d/
         with_items: "{{ custom_repos.urls|default([]) }}"
 
+      - name: install packages on Undercloud
+        package:
+          name: "{{ install.packages }}"
+          state: present
+        when: install.packages is defined
+
       - name: install deltarpm
         package:
             state: present
