@@ -254,6 +254,12 @@ subparsers:
                           Example:  --workarounds 'http://server.localdomain/workarounds.yml'
                       default: ''
 
+                  packages:
+                      type: Value
+                      help: |
+                          Comma,separated list of packages to install on undercloud before Undercloud install.
+                          Example: vim,git,http://<some_url>/openvswitch-selinux-extra-policy-1.0-15.el8fdp.noarch.rpm
+
             - title: TripleO User
               options:
                   user-name:
