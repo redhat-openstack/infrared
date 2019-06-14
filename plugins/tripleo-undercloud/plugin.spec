@@ -59,6 +59,10 @@ subparsers:
 
             - title: Undercloud Configuration
               options:
+                  selinux:
+                      type: Value
+                      default: permissive
+                      help: Workaround BZ1720659 - ovs dies on selinux - https://bugzilla.redhat.com/show_bug.cgi?id=1720659
                   config-file:
                       type: FileValue
                       help: |
