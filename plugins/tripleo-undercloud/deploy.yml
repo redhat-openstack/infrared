@@ -49,14 +49,6 @@
         command: bash ~/post_undercloud_deploy_workarounds.sh
         when: install.workarounds != ''
 
-      - name: "Workaround BZ#1717469 - python-websocket-client needs WEBSOCKET_CLIENT_CA_BUNDLE env to be set"
-        shell: |
-           echo "export WEBSOCKET_CLIENT_CA_BUNDLE=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem" >> ~/stackrc
-        when:
-            - install.version|openstack_distribution == 'OSP'
-            - install.version|openstack_release >= 10
-            - install.version|openstack_release <= 14
-
       - name: remove workaround for BZ#1428608
         lineinfile:
             line: 'exclude=docker-distribution'
