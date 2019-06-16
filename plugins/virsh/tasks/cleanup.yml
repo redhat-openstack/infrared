@@ -123,3 +123,9 @@
   when:
       - item.key not in ignore_virsh_nets
       - item.value.forward_mode|default('') == 'bridge'
+
+- name: Cleanup /var/log/sfiles folder
+  become: true
+  file:
+      path: /var/log/sfiles
+      state: absent
