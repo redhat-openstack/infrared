@@ -65,10 +65,12 @@
             # virt-resize needs target file with expected size to already exists
             os_version=`virt-cat -a {{ base_image_path }}/{{ image_name }} /etc/os-release | awk '/^VERSION=/ {print $1}' | grep -oP '[0-9]+' | head -1`
             virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
-            # incjet DEFROUT to file and set it on for external network only
+            # inject DEFROUTE for IPv6 and IPv6 to file and set it on for external network only
             virt-customize -a {{ disk_pool }}/{{ node_image }} \
             {% for interface in topology_node.interfaces %}
-                {% if loop.index0 == 0 %}--run-command 'grep DEFROUTE {{ net_scripts }}/ifcfg-eth{{ loop.index0 }} || echo "DEFROUTE=yes" >> {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}'
+                {% if loop.index0 == 0 %}
+                    --run-command 'grep ^DEFROUTE {{ net_scripts }}/ifcfg-eth{{ loop.index0 }} || echo "DEFROUTE=yes" >> {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' \
+                    --run-command 'grep ^IPV6_DEFROUTE {{ net_scripts }}/ifcfg-eth{{ loop.index0 }} || echo "IPV6_DEFROUTE=yes" >> {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}'
                 {%- else -%}--run-command 'cp {{ net_scripts }}/ifcfg-eth{0,{{ loop.index0 }}} && sed -i s/DEVICE=.*/DEVICE=eth{{ loop.index0 }}/g {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' {% endif %} \
                 --run-command 'sed -i s/DEFROUTE=.*/DEFROUTE={{ 'yes' if (topology_node.external_network.network == interface.network) else 'no' }}/g {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' \
             {% endfor %}
