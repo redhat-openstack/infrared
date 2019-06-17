@@ -65,7 +65,7 @@ controller_role:
         - OS::TripleO::Services::CinderVolume
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Clustercheck{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Collectd{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Congress{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12  and install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::Congress{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::ContainerImagePrepare{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::Core{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::ContainerImagePrepare{% endif %}"
