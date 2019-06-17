@@ -76,6 +76,14 @@
       # That would also mean to instead of passing instance-boot-option to
       # import, to instead after import do loop over all nodes uuids,
       # and based on if they are virthost or not, set corresponding value.
+
+      # Workaround for bug in osp13, bz 1714205
+      - name: "update python-tripleoclient rpm for osp13"
+        shell: |
+            yum localinstall -y http://download.eng.bos.redhat.com/brewroot/vol/rhel-7/packages/python-tripleoclient/9.2.7/9.el7ost/noarch/python-tripleoclient-9.2.7-9.el7ost.noarch.rpm
+        when: "install.version|openstack_release == 13"
+        become: yes
+
       - name: register hosts to instack and configure boot
         shell: |
             set -eo pipefail
