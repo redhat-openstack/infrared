@@ -44,6 +44,19 @@
               iptables ${table} -S | awk '/{{ iptables_comment_search }}/ {$1="-D"; print $0}' | xargs -r -L1 iptables ${table}
           done
 
+    #Should be cleaned after an Edge deployment
+    - name: Unload ifb kernel module
+      modprobe:
+          name: ifb
+          state: absent
+      failed_when: False
+
+    #Should be cleaned after an Edge deployment
+    - name: Killing dhcrelay agent
+      shell: |
+          for i in $(pgrep dhcrelay); do kill -9 ${i}; done
+      failed_when: False
+
 - name: Remove vbmc package and nodes
   hosts: hypervisor
   gather_facts: yes
