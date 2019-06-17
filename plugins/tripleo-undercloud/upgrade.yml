@@ -43,27 +43,13 @@
             - upgrade
             - upgrade_repos
   tasks:
-      - name: Clean up RHEL7 packages
-        become: true
-        tags:
-            - upgrade_repos
-            - upgrade
-        block:
-          - name: Remove old RHEL7 packages
-            command: dnf remove -y *el7ost* *el7fdp* *leapp* python2*
-
-          - name: Update RHEL8 packages and reboot
-            include_tasks: tasks/update_and_reboot.yml
-
-        when: undercloud_version|openstack_release == 14
-
       - name: update TripleO client
         become: true
         tags:
             - undercloud_containers
             - upgrade
         package:
-          name: "{{ (undercloud_version|openstack_release < 14) | ternary('python-tripleoclient', 'python3-tripleoclient') }}"
+          name: "{{ (undercloud_upgrade_version|openstack_release < 15) | ternary('python-tripleoclient', 'python3-tripleoclient') }}"
           state: latest
         when: undercloud_version|openstack_release >= 13
 
