@@ -442,3 +442,11 @@ subparsers:
                   registry-ceph-tag:
                       type: Value
                       help: tag used with the ceph container
+
+                  registry-ceph-username:
+                      type: Value
+                      help: An username/token-paired username string to authenticate with a ceph registry
+
+                  registry-ceph-password:
+                      type: Value
+                      help: A password/token string to authenticate with a ceph registry
