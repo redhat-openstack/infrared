@@ -87,7 +87,7 @@
       regexp: '^(- name: Controller\n(\s+CountDefault:\s+\d+\n)?\s+ServicesDefault:$)'
       replace: "\\1\\n{{ item }}"
   with_items:
-      - '    - OS::TripleO::Services::Congress'
+      - "{% if install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::Congress{% endif %}"
       - '    - OS::TripleO::Services::BarbicanApi'
       - '    - OS::TripleO::Services::Tacker'
       - '    - OS::TripleO::Services::Zaqar'
