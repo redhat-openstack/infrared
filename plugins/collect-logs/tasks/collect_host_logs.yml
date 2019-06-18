@@ -55,7 +55,23 @@
           ovs-ofctl show $NB
           ovs-ofctl dump-flows $NB
           echo "";
-          done;ovsdb-client dump) &> /var/log/extra/network-bridges
+          done;ovsdb-client dump) &> /var/log/extra/ovs
+      (function sbctl() {
+        SBDB=$(sudo ovs-vsctl get open . external_ids:ovn-remote | sed -e 's/\"//g');
+        sudo podman exec ovn_controller ovn-sbctl --db=$SBDB $1
+      }
+      function nbctl() {
+        NBDB=$(sudo ovs-vsctl get open . external_ids:ovn-remote | sed -e 's/\"//g' | sed -e 's/6642/6641/g');
+        sudo podman exec ovn_controller ovn-nbctl --db=$NBDB $1
+      }
+      echo "Output of ovn-sbctl show";
+      sbctl show;
+      echo ""
+      echo "Output of ovn-nbctl show";
+      nbctl show;
+      echo ""
+      echo "Output of ovn-sbctl lflow-list";
+      sbctl lflow-list) &> /var/log/extra/ovn
   ignore_errors: true
 
 - shell: "lsof -P &> /var/log/extra/lsof"
