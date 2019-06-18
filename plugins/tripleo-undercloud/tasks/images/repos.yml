@@ -67,6 +67,7 @@
       environment:
           LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
       command: "virt-customize -a {{ overcloud_image_file }} --install yum-plugin-priorities"
+      when: ansible_distribution_major_version < '8'
 
     - name: Do package update inside of overcloud image with custom repository disabled
       environment:
