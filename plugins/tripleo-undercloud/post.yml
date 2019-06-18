@@ -7,6 +7,8 @@
   any_errors_fatal: true
   vars:
     ironic_conductor: ironic_conductor
+  vars_files:
+    - vars/main.yml
   tasks:
     - name: Set selinux state
       selinux:
@@ -21,7 +23,7 @@
           register: conductor_id
         - name: set the iscsi verify attempt count
           lineinfile:
-            path: /var/lib/config-data/puppet-generated/ironic/etc/ironic/ironic.conf
+            path: "{{ ironic_config_file[install.version|openstack_release] | default(default_ironic_config_file) }}"
             insertafter: '^#iscsi_verify_attempts'
             line: 'iscsi_verify_attempts = 30'
           notify: restart ironic conductor
