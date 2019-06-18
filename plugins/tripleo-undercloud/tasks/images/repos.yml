@@ -72,7 +72,9 @@
       environment:
           LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
       command: "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }}"
-  when: patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
+  when:
+    - patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
+    - ansible_distribution_major_version < '8'
 
 - name: Enable custom repository after first update
   replace:
