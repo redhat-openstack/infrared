@@ -103,6 +103,10 @@
             dest: /etc/yum.repos.d/
         with_items: "{{ custom_repos.urls|default([]) }}"
 
+      - name: Setup and start dstat
+        import_role:
+          name: dstat
+
       - name: install packages on Undercloud
         package:
           name: "{{ install.packages }}"
