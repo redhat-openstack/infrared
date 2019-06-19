@@ -19,6 +19,9 @@ parameter_defaults:
   IronicEnabledPowerInterfaces: [ipmitool, fake]
   IronicEnabledRaidInterfaces: [no-raid, fake]
   IronicEnabledVendorInterfaces: [ipmitool, fake, no-vendor]
+{% if install.version|default(undercloud_version)|openstack_release > 14 %}
+  IronicEnabledInspectInterfaces: [no-inspect, inspector, fake]
+{% endif %}
 {% endif %}
   NovaSchedulerDefaultFilters:
       - RetryFilter
