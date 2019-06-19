@@ -19,11 +19,17 @@
         when: ansible_python_version  is version('3', '>=')
         become: true
 
+      - name: install python virtualenv
+        pip:
+          name: virtualenv
+          state: present
+        become: true
+
       - name: install pytest via pip
         pip:
           name: pytest
           state: present
-        become: true
+          virtualenv: /tmp/pytest_venv
 
       - name: Install packages
         become: true
@@ -45,7 +51,7 @@
 
       - name: Execute test
         ignore_errors: true
-        shell: pytest -v {{ repo_folder }}{{ item }}
+        shell: source /tmp/pytest_venv/bin/activate && pytest -v {{ repo_folder }}{{ item }}
           --junitxml={{ output_prefix }} 2>&1 --tb=no -r fp || true
         when: test.run|default(False)
         loop: "{{ test.file }}"
