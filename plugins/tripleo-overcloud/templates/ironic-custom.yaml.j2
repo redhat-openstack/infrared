@@ -1,4 +1,8 @@
 parameter_defaults:
+{% if install.tls.everywhere|default(False) %}
+  ControllerExtraConfig:
+     ironic::drivers::pxe::pxe_append_params: 'nofb nomodeset vga=normal ipa-insecure=1'
+{% endif %}
   NeutronBridgeMappings: datacentre:br-ex,baremetal:br-baremetal
   NeutronFlatNetworks: datacentre,baremetal
   IronicCleaningNetwork: baremetal
