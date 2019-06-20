@@ -179,6 +179,8 @@ subparsers:
                         - "14"
                         - "15"
                         - "15-trunk"
+                        - "16"
+                        - "16-trunk"
                         - kilo
                         - liberty
                         - mitaka
@@ -188,6 +190,7 @@ subparsers:
                         - queens
                         - rocky
                         - stein
+                        - train
                   build:
                       help: |
                           String represents a timestamp of the OSP puddle.

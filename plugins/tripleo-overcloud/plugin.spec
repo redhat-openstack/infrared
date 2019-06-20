@@ -147,6 +147,8 @@ subparsers:
                         - "14"
                         - "15"
                         - "15-trunk"
+                        - "16"
+                        - "16-trunk"
                         - kilo
                         - liberty
                         - mitaka
@@ -156,6 +158,7 @@ subparsers:
                         - queens
                         - rocky
                         - stein
+                        - train
 
                   deployment-files:
                       type: VarDir
