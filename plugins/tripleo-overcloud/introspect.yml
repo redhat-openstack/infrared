@@ -85,12 +85,14 @@
             force: yes
             validate_certs: no
         become: yes
+        when: "install.version|openstack_release == 13"
 
       - name: update python-tripleoclient RPM for osp13
         package:
             name: /tmp/python-tripleoclient-9-2-7-9-el7ost-noarch.rpm
             state: present
         become: yes
+        when: "install.version|openstack_release == 13"
 
       - name: register hosts to instack and configure boot
         shell: |
