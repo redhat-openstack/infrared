@@ -1,6 +1,4 @@
 - block:
-      - include_tasks: install.yml
-
       - include_tasks: configure.yml
 
       - name: Register vars for instackenv template
@@ -11,9 +9,6 @@
 
 - include_tasks: check.yml
   when: action == 'check'
-
-- include_tasks: cleanup.yml
-  when: action == 'cleanup'
 
 - include_tasks: remove.yml
   when: action == 'remove'
