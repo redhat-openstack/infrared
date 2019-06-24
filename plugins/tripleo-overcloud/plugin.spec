@@ -172,7 +172,7 @@ subparsers:
                       type: int
                       help: The overcloud deployment timeout in minutes.
                       default: 100
-                      maximum: 240
+                      maximum: 480
 
                   instackenv-file:
                       type: Value
