@@ -12,7 +12,7 @@
 # On RHEL8 network-scripts is not installed by default
 - name: Make sure the network-scripts package is installed
   package: name=network-scripts state=present
-  when: ansible_os_family == "RedHat" and ansible_lsb.major_release|int >= 8
+  when: install.version|default(undercloud_version)|openstack_release >= 15
 
 - name: setup ssh for loadbalancer to listen on external VIP
   lineinfile:
