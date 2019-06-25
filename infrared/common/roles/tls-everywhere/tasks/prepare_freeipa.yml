@@ -117,6 +117,17 @@
         ipa dnsrecord-add storagemgmt.{{ freeipa_cloud_domain }} overcloud --a-rec 172.17.4.101
     register: overcloud_dns_entries
 
+  - name: Allow DNS queries
+    become: true
+    iptables:
+        action: insert
+        comment: "Allow DNS query"
+        table: filter
+        chain: INPUT
+        jump: ACCEPT
+        protocol: "udp"
+        destination_port: 53
+
   - name: Restart FreeIPA server
     become: yes
     service:
@@ -130,3 +141,5 @@
         line: "{{ freeipa_undercloud_ipaddress }} {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} {{ groups['undercloud'][0] }}"
         state: present
   delegate_to: "{{ freeipa_node }}"
+
+
