@@ -1,0 +1,45 @@
+---
+- name: set fact for context dir for images patching
+  set_fact:
+      container_images_patch_dir: "{{ containers_home_dir }}/images_patch"
+
+- name: create context dir for images patching
+  file:
+      path: "{{ container_images_patch_dir }}"
+      state: "{{ item }}"
+  with_items:
+      - absent
+      - directory
+
+- name: create context dir for packages
+  file:
+      path: "{{ container_images_patch_dir }}/packages"
+      state: "{{ item }}"
+  with_items:
+      - directory
+
+- name: Set new_baseurl_dir variable
+  set_fact:
+      new_baseurl_dir: "{{ container_images_patch_dir }}/packages/"
+
+- name: Prepare custom repository tmp directory
+  include_tasks: prepare_tmp_repos.yml
+  when: repo_config.stat.exists
+  with_items: "{{ patched_rpms.results }}"
+  loop_control:
+      loop_var: repo_config
+
+- name: Configure containers-prepare-parameter.yaml for image modification
+  blockinfile:
+      path: "{{ containers_home_dir }}/containers-prepare-parameter.yaml"
+      block: |2
+            modify_role: tripleo-modify-image
+            modify_append_tag: '-patched'
+            modify_vars:
+              tasks_from: yum_update.yml
+              yum_repos_dir_path: {{ containers_home_dir }}/images_patch
+            excludes: [ceph]
+
+- name: Run images modification
+  shell: "openstack tripleo container image prepare -e ~/containers-prepare-parameter.yaml"
+  become: true
