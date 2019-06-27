@@ -15,7 +15,7 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: "--environment-file {{ item.item }} \\"
-      insertbefore: "^--log-file.*"
+      insertafter: "^--templates.*"
   with_items: "{{ default_templates.results }}"
   when: item.matched > 0
 
