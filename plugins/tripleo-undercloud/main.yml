@@ -1,4 +1,8 @@
 ---
+- name: Update Undercloud in the inventory
+  import_playbook: "{{ update_inventory | default('update_inventory.yml') }}"
+  when: install.upgrade|default('')
+
 - name: Perform validations
   import_playbook: "{{ validate_undercloud | default('validate.yml') }}"
   when: install.validate|default('')

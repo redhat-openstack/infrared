@@ -1,0 +1,19 @@
+- name: Update inventory file after upgrading the Undercloud
+  hosts: undercloud
+  any_errors_fatal: true
+  gather_facts: yes
+  tags:
+      - upgrade
+      - upgrade_repos
+  vars:
+    ansible_python_interpreter: '/usr/libexec/platform-python'
+  tasks:
+    - include_role:
+        name: inventory-update
+        apply:
+          delegate_to: localhost
+      vars:
+        inventory_file_name: 'hosts-upgrade'
+
+    - name: refresh dynamic inventory
+      meta: refresh_inventory
