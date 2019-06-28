@@ -125,19 +125,19 @@
     - name: set ceph_namespace in containers-prepare-parameter.yaml
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-          regexp: 'registry.access.redhat.com/rhceph'
-          replace: '{{ ceph_namespace }}'
+          regexp: '(ceph_namespace:).*'
+          replace: '\1 {{ ceph_namespace }}'
 
     - name: set ceph_image in containers-prepare-parameter.yaml
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-          regexp: 'rhceph-3-rhel7'
-          replace: '{{ ceph_image }}'
+          regexp: '(ceph_image:).*'
+          replace: '\1 {{ ceph_image }}'
 
     - name: set ceph_tag in containers-prepare-parameter.yaml
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-          regexp: 'ceph_tag: latest'
+          regexp: 'ceph_tag: .*'
           replace: 'ceph_tag: {{ ceph_tag }}'
 
     - name: set ceph_namespace in undercloud.conf
