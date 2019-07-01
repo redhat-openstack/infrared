@@ -49,6 +49,17 @@
             git clone {{ test.repo }} {{ repo_folder }}
         tags: skip_ansible_lint
 
+      - name: check for requirements.txt file
+        stat:
+          path: "{{ repo_folder }}"/requirements.txt
+        register: stat_result
+
+      - name: install requirements.txt file
+        pip:
+          requirements: "{{ repo_folder }}"/requirements.txt
+          virtualenv: /tmp/pytest_venv
+        when: stat_result.stat.exists == True
+
       - name: Execute test
         ignore_errors: true
         shell: source /tmp/pytest_venv/bin/activate && pytest -v {{ repo_folder }}{{ item }}
