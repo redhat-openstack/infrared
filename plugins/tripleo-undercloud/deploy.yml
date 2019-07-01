@@ -30,6 +30,11 @@
           - install.version|openstack_distribution == 'OSP'
           - install.version|openstack_release <= 10
 
+      - name: workaround BZ1725082
+        command: sed -i 's/libselinux-python/python3-libselinux/'   /usr/share/ansible/tripleo-roles/tripleo-bootstrap/vars/redhat-8.yml
+        become: true
+        become_user: root
+
       - name: install the undercloud
         command: bash ~/undercloud_deploy.sh
         register: undercloud_deployment
