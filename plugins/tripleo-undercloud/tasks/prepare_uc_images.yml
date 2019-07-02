@@ -174,5 +174,17 @@
               regexp: '(^\ +)name_prefix.*'
               replace: "\\1name_prefix: {{ install.registry.prefix }}"
       when: install.cdn|default(False)
+
+    - name: Add auth details for ceph registry in containers-prepare-parameter.yaml
+      blockinfile:
+        path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+        block: |2
+            ContainerImageRegistryCredentials:
+              {{ install.registry.ceph.namespace }}:
+                {{ install.registry.ceph.username }}: {{ install.registry.ceph.password }}
+      when:
+        - install.get('registry', {}).get('ceph', {}).get('username', '')
+        - install.get('registry', {}).get('ceph', {}).get('password', '')
+        - install.get('registry', {}).get('ceph', {}).get('namespace', '')
   when:
       - (target_install_version|openstack_distribution) == 'OSP'
