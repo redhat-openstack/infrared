@@ -12,7 +12,6 @@
       delegate_to: hypervisor
 
     - name: Ease iptables rules on vbmc host
-      become: true
       iptables:
           action: insert
           comment: "Infrared: vbmc ports"
@@ -24,21 +23,19 @@
       with_dict: "{{ vbmc_ports }}"
 
     - name: Install iptables-services
-      become: true
       package:
           name: iptables-services
           state: latest
 
     - name: Make created iptables rules persistant
-      become: true
       shell: "/sbin/service iptables save"
   when: vbmc_host == 'undercloud'
+  become: True
 
 - block:
     - name: allow access to port vbmc ports from undercloud managment network
       vars:
           mgmt_net: "{{ hostvars[groups.undercloud|first][management_net].ipv4 }}"
-      become: True
       iptables:
           action: insert
           comment: "Infrared: vbmc ports"
@@ -51,7 +48,6 @@
       loop: "{{ vbmc_ports|dict2items }}"
 
     - name: allow access to port vbmc ports from hypervisor
-      become: True
       iptables:
           action: insert
           comment: "Infrared: vbmc ports"
@@ -64,3 +60,4 @@
       loop: "{{ vbmc_ports|dict2items }}"
 
   when: vbmc_host == 'hypervisor'
+  become: True

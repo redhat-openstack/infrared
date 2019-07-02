@@ -16,22 +16,22 @@
     - name: install pip
       easy_install:
           name: pip
-
-    - name: "check if there's a virtualenv already installed (i.e.: a system-wide RPM package)"
-      command: virtualenv --version
-      changed_when: false
-      failed_when: false
-      register: virtualenv_installed_check
-
-    - name: install virtualenv pip module
-      pip:
-          name: virtualenv
-          extra_args: "--user"
-      when: virtualenv_installed_check.rc != 0
     become: yes
 
   - name: gather info about PATH/env variables
     setup:
+
+  - name: "check if there's a virtualenv already installed (i.e.: a system-wide RPM package)"
+    command: virtualenv --version
+    changed_when: false
+    failed_when: false
+    register: virtualenv_installed_check
+
+  - name: install virtualenv pip module
+    pip:
+        name: virtualenv
+        extra_args: "--user"
+    when: virtualenv_installed_check.rc != 0
 
   - name: Install python-virtualbmc with pip
     pip:
@@ -39,7 +39,8 @@
         name: virtualbmc
         version: "{{ vbmc_version }}"
     environment:
-        PATH: "{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}" # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a system-wide one
+      PATH: "{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}"
+      # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a system-wide one
 
   - block:
       - name: adds VirtualBMC as systemd service
