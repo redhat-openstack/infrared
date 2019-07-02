@@ -589,6 +589,13 @@ subparsers:
                           - non-collocated
                           - collocated
 
+                  ceph-hci-memreserve:
+                      type: Bool
+                      help: |
+                          For hyperconverged environments, reserve ram per OSD When this is set to true,
+                          the is_hci flag is introduced into internal.yaml.
+                      default: false
+
             - title: Composable roles
               options:
                   role-files:
