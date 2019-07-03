@@ -57,6 +57,11 @@ parameter_defaults:
 {% endif %}{# end of install.splitstack #}
 
         journal_size: 512
+{% if install.ceph.hci.memreserve|default(false) and install.version|default(undercloud_version) >= 13 %}
+{# This block, for openstack>=13 defines the memory reservation feature introduced in ceph 3.2 #}
+    CephAnsibleExtraConfig:
+        is_hci: true
+{% endif %}{# End os is_hci block #}
 
 {% else %}
     ExtraConfig:
