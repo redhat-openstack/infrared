@@ -126,7 +126,6 @@
 
 - name: Inject dvr override template
   vars:
-      nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('', 'legacy') }}"
   template:
       src: dvr-override.yaml.j2
       dest: "{{ template_base }}/network/dvr-override.yaml"
@@ -198,9 +197,8 @@
 
 - name: Create DVR compute env file
   vars:
-      nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('', 'legacy') }}"
   template:
-      dest: "{{ template_base }}/network/{{ nics_subfolder }}/compute-dvr.yaml"
+      dest: "{{ template_base }}/network/compute-dvr.yaml"
       src: "compute-dvr.yaml.j2"
   when: install.network.dvr
 
