@@ -7,9 +7,18 @@
       gateway: 10.0.0.1
       deployment_user: cloud-user
       netmask: 24
-      containers_images_env_template_download_basename: "overcloud_container_image_prepare.yaml"
-      containers_images_env_template_dest_file: "{{ inventory_dir }}/overcloud_container_image_prepare.yaml"
   tasks:
+      - name: set os_version fact
+        set_fact:
+           os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
+
+      - name: containers_images_env facts
+        vars:
+            cont_img_yml: "{{ (os_version|openstack_release >= 15) | ternary('container_image_prepare.yaml', 'overcloud_container_image_prepare.yaml') }}"
+        set_fact:
+            containers_images_env_template_download_basename: "{{ cont_img_yml }}"
+            containers_images_env_template_dest_file: "{{ inventory_dir }}/{{ cont_img_yml }}"
+
       - name: read puddle configuration
         block:
           - name: get puddle url from the repos
