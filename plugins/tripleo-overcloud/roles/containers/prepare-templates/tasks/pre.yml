@@ -105,6 +105,23 @@
           - container-images-patch
           - container-images-packages
 
+    - name: set os_version fact
+      set_fact:
+          os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
+      tags:
+         - container-images-packages
+         - container-images-patch
+
+    - name: containers_images_env facts
+      vars:
+          cont_img_yml: "{{ (os_version|openstack_release >= 15) | ternary('container_image_prepare.yaml', 'overcloud_container_image_prepare.yaml') }}"
+      set_fact:
+          containers_images_env_template_download_basename: "{{ cont_img_yml }}"
+          containers_images_env_template_dest_file: "{{ inventory_dir }}/{{ cont_img_yml }}"
+      tags:
+         - container-images-packages
+         - container-images-patch
+
     - name: Downloading overcloud container images environment file
       get_url:
           url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_env_template_download_basename }}"
@@ -135,13 +152,6 @@
                   ceph-tag: "{{ install.get('registry', {}).get('ceph', {}).tag | default(container_env['container-image-prepare']['ceph-tag'] | default('')) }}"
 
   when: not install.registry.skip.puddle
-
-- name: set os_version fact
-  set_fact:
-      os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
-  tags:
-      - container-images-packages
-      - container-images-patch
 
 - name: set docker_registry_undercloud facts
   set_fact:
