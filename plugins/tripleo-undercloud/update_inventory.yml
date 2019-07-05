@@ -12,6 +12,8 @@
         name: inventory-update
         apply:
           delegate_to: localhost
+          vars:
+            ansible_python_interpreter: "{{ hostvars['localhost']['ansible_python_interpreter']|default('python') }}"
       vars:
         inventory_file_name: 'hosts-upgrade'
 
