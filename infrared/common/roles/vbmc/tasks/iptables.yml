@@ -59,5 +59,17 @@
           destination_port: "{{ item.value }}"
       loop: "{{ vbmc_ports|dict2items }}"
 
+    - name: allow access to port vbmc ports from undercloud external network
+      iptables:
+          action: insert
+          comment: "Infrared: vbmc ports"
+          table: filter
+          chain: INPUT
+          jump: ACCEPT
+          protocol: "udp"
+          source: "{{ vbmc_external_net_address }}"
+          destination_port: "{{ item.value }}"
+      loop: "{{ vbmc_ports|dict2items }}"
+
   when: vbmc_host == 'hypervisor'
   become: True
