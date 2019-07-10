@@ -77,6 +77,11 @@
         ignore_errors: yes
         when: install.get('overcloud', {}).get('predeploy', {}).get('action', {})
 
+      - name: Workaround for a reverted patch
+        become: yes
+        shell: |
+            cd /usr/share/openstack-tripleo-heat-templates; curl https://review.opendev.org/changes/669575/revisions/ac5145c28d02e54453ab69d32237ca2b81e2568c/patch?download | base64 -d | patch -t -p 1
+
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
