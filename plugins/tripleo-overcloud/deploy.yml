@@ -77,6 +77,121 @@
         ignore_errors: yes
         when: install.get('overcloud', {}).get('predeploy', {}).get('action', {})
 
+      - name: Workaround for not propagated
+        become: yes
+        shell: |
+            cd /usr/share/openstack-tripleo-heat-templates; curl https://review.opendev.org/changes/670686/revisions/2871ce0fa9ed658fb01179cda3c6522bcaa1121f/patch?download | base64 -d | patch -t -p 1
+        ignore_errors: yes
+
+      - name: Workaround for another not propagated path
+        become: yes
+        shell: |
+            echo "ZGlmZiAtLWdpdCBhL2NvbnRhaW5lci1pbWFnZXMvb3ZlcmNsb3VkX2NvbnRhaW5lcnMueWFtbCBi
+            L2NvbnRhaW5lci1pbWFnZXMvb3ZlcmNsb3VkX2NvbnRhaW5lcnMueWFtbAppbmRleCBlNWU1NDQy
+            Yy4uN2UyOGMyMzMgMTAwNjQ0Ci0tLSBhL2NvbnRhaW5lci1pbWFnZXMvb3ZlcmNsb3VkX2NvbnRh
+            aW5lcnMueWFtbAorKysgYi9jb250YWluZXItaW1hZ2VzL292ZXJjbG91ZF9jb250YWluZXJzLnlh
+            bWwKQEAgLTMzLDIwICszMyw2IEBAIGNvbnRhaW5lcl9pbWFnZXM6CiAgIGltYWdlX3NvdXJjZTog
+            a29sbGEKIC0gaW1hZ2VuYW1lOiBkb2NrZXIuaW8vdHJpcGxlb21hc3Rlci9jZW50b3MtYmluYXJ5
+            LWNyb246Y3VycmVudC10cmlwbGVvCiAgIGltYWdlX3NvdXJjZToga29sbGEKLS0gaW1hZ2VuYW1l
+            OiBkb2NrZXIuaW8vdHJpcGxlb21hc3Rlci9jZW50b3MtYmluYXJ5LWRlc2lnbmF0ZS1hcGk6Y3Vy
+            cmVudC10cmlwbGVvCi0gIGltYWdlX3NvdXJjZToga29sbGEKLS0gaW1hZ2VuYW1lOiBkb2NrZXIu
+            aW8vdHJpcGxlb21hc3Rlci9jZW50b3MtYmluYXJ5LWRlc2lnbmF0ZS1iYWNrZW5kLWJpbmQ5OmN1
+            cnJlbnQtdHJpcGxlbwotICBpbWFnZV9zb3VyY2U6IGtvbGxhCi0tIGltYWdlbmFtZTogZG9ja2Vy
+            LmlvL3RyaXBsZW9tYXN0ZXIvY2VudG9zLWJpbmFyeS1kZXNpZ25hdGUtY2VudHJhbDpjdXJyZW50
+            LXRyaXBsZW8KLSAgaW1hZ2Vfc291cmNlOiBrb2xsYQotLSBpbWFnZW5hbWU6IGRvY2tlci5pby90
+            cmlwbGVvbWFzdGVyL2NlbnRvcy1iaW5hcnktZGVzaWduYXRlLW1kbnM6Y3VycmVudC10cmlwbGVv
+            Ci0gIGltYWdlX3NvdXJjZToga29sbGEKLS0gaW1hZ2VuYW1lOiBkb2NrZXIuaW8vdHJpcGxlb21h
+            c3Rlci9jZW50b3MtYmluYXJ5LWRlc2lnbmF0ZS1wcm9kdWNlcjpjdXJyZW50LXRyaXBsZW8KLSAg
+            aW1hZ2Vfc291cmNlOiBrb2xsYQotLSBpbWFnZW5hbWU6IGRvY2tlci5pby90cmlwbGVvbWFzdGVy
+            L2NlbnRvcy1iaW5hcnktZGVzaWduYXRlLXNpbms6Y3VycmVudC10cmlwbGVvCi0gIGltYWdlX3Nv
+            dXJjZToga29sbGEKLS0gaW1hZ2VuYW1lOiBkb2NrZXIuaW8vdHJpcGxlb21hc3Rlci9jZW50b3Mt
+            YmluYXJ5LWRlc2lnbmF0ZS13b3JrZXI6Y3VycmVudC10cmlwbGVvCi0gIGltYWdlX3NvdXJjZTog
+            a29sbGEKIC0gaW1hZ2VuYW1lOiBkb2NrZXIuaW8vdHJpcGxlb21hc3Rlci9jZW50b3MtYmluYXJ5
+            LWVjMi1hcGk6Y3VycmVudC10cmlwbGVvCiAgIGltYWdlX3NvdXJjZToga29sbGEKIC0gaW1hZ2Vu
+            YW1lOiBkb2NrZXIuaW8vdHJpcGxlb21hc3Rlci9jZW50b3MtYmluYXJ5LWV0Y2Q6Y3VycmVudC10
+            cmlwbGVvCkBAIC0xMjEsOCArMTA3LDYgQEAgY29udGFpbmVyX2ltYWdlczoKICAgaW1hZ2Vfc291
+            cmNlOiBrb2xsYQogLSBpbWFnZW5hbWU6IGRvY2tlci5pby90cmlwbGVvbWFzdGVyL2NlbnRvcy1i
+            aW5hcnktbmV1dHJvbi1zZXJ2ZXI6Y3VycmVudC10cmlwbGVvCiAgIGltYWdlX3NvdXJjZToga29s
+            bGEKLS0gaW1hZ2VuYW1lOiBkb2NrZXIuaW8vdHJpcGxlb21hc3Rlci9jZW50b3MtYmluYXJ5LW5l
+            dXRyb24tc2VydmVyLW9wZW5kYXlsaWdodDpjdXJyZW50LXRyaXBsZW8KLSAgaW1hZ2Vfc291cmNl
+            OiBrb2xsYQogLSBpbWFnZW5hbWU6IGRvY2tlci5pby90cmlwbGVvbWFzdGVyL2NlbnRvcy1iaW5h
+            cnktbmV1dHJvbi1zZXJ2ZXItb3ZuOmN1cnJlbnQtdHJpcGxlbwogICBpbWFnZV9zb3VyY2U6IGtv
+            bGxhCiAtIGltYWdlbmFtZTogZG9ja2VyLmlvL3RyaXBsZW9tYXN0ZXIvY2VudG9zLWJpbmFyeS1u
+            ZXV0cm9uLW1ldGFkYXRhLWFnZW50LW92bjpjdXJyZW50LXRyaXBsZW8KQEAgLTE1NSw4ICsxMzks
+            NiBAQCBjb250YWluZXJfaW1hZ2VzOgogICBpbWFnZV9zb3VyY2U6IGtvbGxhCiAtIGltYWdlbmFt
+            ZTogZG9ja2VyLmlvL3RyaXBsZW9tYXN0ZXIvY2VudG9zLWJpbmFyeS1vY3RhdmlhLXdvcmtlcjpj
+            dXJyZW50LXRyaXBsZW8KICAgaW1hZ2Vfc291cmNlOiBrb2xsYQotLSBpbWFnZW5hbWU6IGRvY2tl
+            ci5pby90cmlwbGVvbWFzdGVyL2NlbnRvcy1iaW5hcnktb3BlbmRheWxpZ2h0OmN1cnJlbnQtdHJp
+            cGxlbwotICBpbWFnZV9zb3VyY2U6IGtvbGxhCiAtIGltYWdlbmFtZTogZG9ja2VyLmlvL3RyaXBs
+            ZW9tYXN0ZXIvY2VudG9zLWJpbmFyeS1vdm4tY29udHJvbGxlcjpjdXJyZW50LXRyaXBsZW8KICAg
+            aW1hZ2Vfc291cmNlOiBrb2xsYQogLSBpbWFnZW5hbWU6IGRvY2tlci5pby90cmlwbGVvbWFzdGVy
+            L2NlbnRvcy1iaW5hcnktb3ZuLW5iLWRiLXNlcnZlcjpjdXJyZW50LXRyaXBsZW8KZGlmZiAtLWdp
+            dCBhL2NvbnRhaW5lci1pbWFnZXMvb3ZlcmNsb3VkX2NvbnRhaW5lcnMueWFtbC5qMiBiL2NvbnRh
+            aW5lci1pbWFnZXMvb3ZlcmNsb3VkX2NvbnRhaW5lcnMueWFtbC5qMgppbmRleCA1ZGY3N2EzYi4u
+            Y2NkMWVmNGYgMTAwNjQ0Ci0tLSBhL2NvbnRhaW5lci1pbWFnZXMvb3ZlcmNsb3VkX2NvbnRhaW5l
+            cnMueWFtbC5qMgorKysgYi9jb250YWluZXItaW1hZ2VzL292ZXJjbG91ZF9jb250YWluZXJzLnlh
+            bWwuajIKQEAgLTE1Nyw2MSArMTU3LDYgQEAgY29udGFpbmVyX2ltYWdlc190ZW1wbGF0ZToKICAg
+            c2VydmljZXM6CiAgIC0gT1M6OlRyaXBsZU86OlNlcnZpY2VzOjpDb250YWluZXJzTG9ncm90YXRl
+            Q3JvbmQKIAotLSBpbWFnZW5hbWU6ICJ7e25hbWVzcGFjZX19L3t7bmFtZV9wcmVmaXh9fWRlc2ln
+            bmF0ZS1hcGl7e25hbWVfc3VmZml4fX06e3t0YWd9fSIKLSAgaW1hZ2Vfc291cmNlOiBrb2xsYQot
+            ICBwYXJhbXM6Ci0gIC0gQ29udGFpbmVyRGVzaWduYXRlQXBpSW1hZ2UKLSAgc2VydmljZXM6Ci0g
+            IC0gT1M6OlRyaXBsZU86OlNlcnZpY2VzOjpEZXNpZ25hdGVBcGkKLSAgLSBPUzo6VHJpcGxlTzo6
+            U2VydmljZXM6OkRlc2lnbmF0ZUNlbnRyYWwKLSAgLSBPUzo6VHJpcGxlTzo6U2VydmljZXM6OkRl
+            c2lnbmF0ZU1ETlMKLSAgLSBPUzo6VHJpcGxlTzo6U2VydmljZXM6OkRlc2lnbmF0ZVNpbmsKLSAg
+            LSBPUzo6VHJpcGxlTzo6U2VydmljZXM6OkRlc2lnbmF0ZVByb2R1Y2VyCi0gIC0gT1M6OlRyaXBs
+            ZU86OlNlcnZpY2VzOjpEZXNpZ25hdGVXb3JrZXIKLQotLSBpbWFnZW5hbWU6ICJ7e25hbWVzcGFj
+            ZX19L3t7bmFtZV9wcmVmaXh9fWRlc2lnbmF0ZS1iYWNrZW5kLWJpbmQ5e3tuYW1lX3N1ZmZpeH19
+            Ont7dGFnfX0iCi0gIGltYWdlX3NvdXJjZToga29sbGEKLSAgcGFyYW1zOgotICAtIENvbnRhaW5l
+            ckRlc2lnbmF0ZUJhY2tlbmRCSU5EOUltYWdlCi0gIHNlcnZpY2VzOgotICAtIE9TOjpUcmlwbGVP
+            OjpTZXJ2aWNlczo6RGVzaWduYXRlV29ya2VyCi0KLS0gaW1hZ2VuYW1lOiAie3tuYW1lc3BhY2V9
+            fS97e25hbWVfcHJlZml4fX1kZXNpZ25hdGUtY2VudHJhbHt7bmFtZV9zdWZmaXh9fTp7e3RhZ319
+            IgotICBpbWFnZV9zb3VyY2U6IGtvbGxhCi0gIHBhcmFtczoKLSAgLSBDb250YWluZXJEZXNpZ25h
+            dGVDZW50cmFsSW1hZ2UKLSAgc2VydmljZXM6Ci0gIC0gT1M6OlRyaXBsZU86OlNlcnZpY2VzOjpE
+            ZXNpZ25hdGVDZW50cmFsCi0KLS0gaW1hZ2VuYW1lOiAie3tuYW1lc3BhY2V9fS97e25hbWVfcHJl
+            Zml4fX1kZXNpZ25hdGUtbWRuc3t7bmFtZV9zdWZmaXh9fTp7e3RhZ319IgotICBpbWFnZV9zb3Vy
+            Y2U6IGtvbGxhCi0gIHBhcmFtczoKLSAgLSBDb250YWluZXJEZXNpZ25hdGVNRE5TSW1hZ2UKLSAg
+            c2VydmljZXM6Ci0gIC0gT1M6OlRyaXBsZU86OlNlcnZpY2VzOjpEZXNpZ25hdGVNRE5TCi0KLS0g
+            aW1hZ2VuYW1lOiAie3tuYW1lc3BhY2V9fS97e25hbWVfcHJlZml4fX1kZXNpZ25hdGUtcHJvZHVj
+            ZXJ7e25hbWVfc3VmZml4fX06e3t0YWd9fSIKLSAgaW1hZ2Vfc291cmNlOiBrb2xsYQotICBwYXJh
+            bXM6Ci0gIC0gQ29udGFpbmVyRGVzaWduYXRlUHJvZHVjZXJJbWFnZQotICBzZXJ2aWNlczoKLSAg
+            LSBPUzo6VHJpcGxlTzo6U2VydmljZXM6OkRlc2lnbmF0ZVByb2R1Y2VyCi0KLS0gaW1hZ2VuYW1l
+            OiAie3tuYW1lc3BhY2V9fS97e25hbWVfcHJlZml4fX1kZXNpZ25hdGUtc2lua3t7bmFtZV9zdWZm
+            aXh9fTp7e3RhZ319IgotICBpbWFnZV9zb3VyY2U6IGtvbGxhCi0gIHBhcmFtczoKLSAgLSBDb250
+            YWluZXJEZXNpZ25hdGVTaW5rSW1hZ2UKLSAgc2VydmljZXM6Ci0gIC0gT1M6OlRyaXBsZU86OlNl
+            cnZpY2VzOjpEZXNpZ25hdGVTaW5rCi0KLS0gaW1hZ2VuYW1lOiAie3tuYW1lc3BhY2V9fS97e25h
+            bWVfcHJlZml4fX1kZXNpZ25hdGUtd29ya2Vye3tuYW1lX3N1ZmZpeH19Ont7dGFnfX0iCi0gIGlt
+            YWdlX3NvdXJjZToga29sbGEKLSAgcGFyYW1zOgotICAtIENvbnRhaW5lckRlc2lnbmF0ZUNvbmZp
+            Z0ltYWdlCi0gIC0gQ29udGFpbmVyRGVzaWduYXRlV29ya2VySW1hZ2UKLSAgc2VydmljZXM6Ci0g
+            IC0gT1M6OlRyaXBsZU86OlNlcnZpY2VzOjpEZXNpZ25hdGVXb3JrZXIKLQogLSBpbWFnZW5hbWU6
+            ICJ7e25hbWVzcGFjZX19L3t7bmFtZV9wcmVmaXh9fWVjMi1hcGl7e25hbWVfc3VmZml4fX06e3t0
+            YWd9fSIKICAgaW1hZ2Vfc291cmNlOiBrb2xsYQogICBwYXJhbXM6CkBAIC01MDQsMjAgKzQ0OSw3
+            IEBAIGNvbnRhaW5lcl9pbWFnZXNfdGVtcGxhdGU6CiAgIHNlcnZpY2VzOgogICAtIE9TOjpUcmlw
+            bGVPOjpTZXJ2aWNlczo6TmV1dHJvblNyaW92QWdlbnQKIAoteyUgaWYgbmV1dHJvbl9kcml2ZXIg
+            PT0gIm9kbCIgJX0KLS0gaW1hZ2VuYW1lOiAie3tuYW1lc3BhY2V9fS97e25hbWVfcHJlZml4fX1u
+            ZXV0cm9uLXNlcnZlci1vcGVuZGF5bGlnaHR7e25hbWVfc3VmZml4fX06e3t0YWd9fSIKLSAgaW1h
+            Z2Vfc291cmNlOiBrb2xsYQotICBwYXJhbXM6Ci0gIC0gQ29udGFpbmVyTmV1dHJvbkFwaUltYWdl
+            Ci0gIC0gQ29udGFpbmVyTmV1dHJvbkNvbmZpZ0ltYWdlCi0gIHNlcnZpY2VzOgotICAtIE9TOjpU
+            cmlwbGVPOjpTZXJ2aWNlczo6TmV1dHJvbkFwaQotICAtIE9TOjpUcmlwbGVPOjpTZXJ2aWNlczo6
+            TmV1dHJvbkRoY3BBZ2VudAotICAtIE9TOjpUcmlwbGVPOjpTZXJ2aWNlczo6TmV1dHJvbk1ldGFk
+            YXRhQWdlbnQKLSAgLSBPUzo6VHJpcGxlTzo6U2VydmljZXM6Ok5ldXRyb25TZXJ2ZXIKLSAgLSBP
+            Uzo6VHJpcGxlTzo6U2VydmljZXM6Ok9wZW5EYXlsaWdodEFwaQotCi17JSBlbGlmIG5ldXRyb25f
+            ZHJpdmVyID09ICJvdm4iICV9Cit7JSBpZiBuZXV0cm9uX2RyaXZlciA9PSAib3ZuIiAlfQogLSBp
+            bWFnZW5hbWU6ICJ7e25hbWVzcGFjZX19L3t7bmFtZV9wcmVmaXh9fW5ldXRyb24tc2VydmVyLW92
+            bnt7bmFtZV9zdWZmaXh9fTp7e3RhZ319IgogICBpbWFnZV9zb3VyY2U6IGtvbGxhCiAgIHBhcmFt
+            czoKQEAgLTY2OCwxNiArNjAwLDYgQEAgY29udGFpbmVyX2ltYWdlc190ZW1wbGF0ZToKICAgc2Vy
+            dmljZXM6CiAgIC0gT1M6OlRyaXBsZU86OlNlcnZpY2VzOjpPY3RhdmlhV29ya2VyCiAKLXslIGlm
+            IG5ldXRyb25fZHJpdmVyID09ICJvZGwiICV9Ci0tIGltYWdlbmFtZTogInt7bmFtZXNwYWNlfX0v
+            e3tuYW1lX3ByZWZpeH19b3BlbmRheWxpZ2h0e3tuYW1lX3N1ZmZpeH19Ont7dGFnfX0iCi0gIGlt
+            YWdlX3NvdXJjZToga29sbGEKLSAgcGFyYW1zOgotICAtIENvbnRhaW5lck9wZW5kYXlsaWdodEFw
+            aUltYWdlCi0gIC0gQ29udGFpbmVyT3BlbmRheWxpZ2h0Q29uZmlnSW1hZ2UKLSAgc2VydmljZXM6
+            Ci0gIC0gT1M6OlRyaXBsZU86OlNlcnZpY2VzOjpPcGVuRGF5bGlnaHRBcGkKLXslIGVuZGlmICV9
+            Ci0KIHslIGlmIG5ldXRyb25fZHJpdmVyID09ICJvdm4iICV9CiAtIGltYWdlbmFtZTogInt7bmFt
+            ZXNwYWNlfX0ve3tuYW1lX3ByZWZpeH19b3ZuLWNvbnRyb2xsZXJ7e25hbWVfc3VmZml4fX06e3t0
+            YWd9fSIKICAgaW1hZ2Vfc291cmNlOiBrb2xsYQo=
+            " | base64 -d | patch -p1
+        ignore_errors: yes
+
+
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
