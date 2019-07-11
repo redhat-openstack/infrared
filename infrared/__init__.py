@@ -132,7 +132,7 @@ SHARED_GROUPS = [
 
 PLUGINS_REGISTRY = {
     'beaker': {
-        'src': 'plugins/beaker',
+        'src': 'https://github.com/rhos-infra/beaker.git',
         'desc': 'Provision systems using Beaker',
         'type': 'provision'
     },
@@ -142,17 +142,17 @@ PLUGINS_REGISTRY = {
         'type': 'install'
     },
     'collect-logs': {
-        'src': 'plugins/collect-logs',
+        'src': 'https://github.com/rhos-infra/collect-logs.git',
         'desc': 'Collect log from all nodes in the active workspace',
         'type': 'other'
     },
     'pytest-runner': {
-        'src': 'plugins/pytest-runner',
+        'src': 'https://github.com/rhos-infra/pytest-runner.git',
         'desc': 'The Pytest runner',
         'type': 'test'
     },
     'foreman': {
-        'src': 'plugins/foreman',
+        'src': 'https://github.com/rhos-infra/foreman.git',
         'desc': 'Provision systems using Foreman',
         'type': 'provision'
     },
@@ -162,7 +162,7 @@ PLUGINS_REGISTRY = {
         'type': 'test'
     },
     'list-builds': {
-        'src': 'plugins/list-builds',
+        'src': 'https://github.com/rhos-infra/list-builds.git',
         'desc': 'Lists all the available puddles',
         'type': 'other'
     },
@@ -172,17 +172,17 @@ PLUGINS_REGISTRY = {
         'type': 'test'
     },
     'openstack': {
-        'src': 'plugins/openstack',
+        'src': 'https://github.com/rhos-infra/openstack.git',
         'desc': 'Provision systems using Ansible OpenStack modules',
         'type': 'provision'
     },
     'ospdui': {
-        'src': 'plugins/ospdui',
+        'src': 'https://github.com/rhos-infra/ospdui.git',
         'desc': 'The ospdui test runner',
         'type': 'test'
     },
     'packstack': {
-        'src': 'plugins/packstack',
+        'src': 'https://github.com/rhos-infra/packstack.git',
         'desc': 'OpenStack installation using Packstack',
         'type': 'install'
     },
@@ -192,7 +192,7 @@ PLUGINS_REGISTRY = {
         'type': 'install'
     },
     'rally': {
-        'src': 'plugins/rally',
+        'src': 'https://github.com/rhos-infra/rally.git',
         'desc': 'Rally tests runner',
         'type': 'test'
     },
@@ -203,7 +203,7 @@ PLUGINS_REGISTRY = {
         'type': 'other'
     },
     'tempest': {
-        'src': 'plugins/tempest',
+        'src': 'https://github.com/rhos-infra/tempest.git',
         'desc': 'The tempest test runner',
         'type': 'test'
     },
@@ -214,17 +214,19 @@ PLUGINS_REGISTRY = {
         'type': 'other'
     },
     'tripleo-overcloud': {
-        'src': 'plugins/tripleo-overcloud',
+        'src': 'https://github.com/rhos-infra/tripleo.git',
+        'src_path': 'tripleo-overcloud',
         'desc': 'Install TripleO overcloud using a designated undercloud node',
         'type': 'install'
     },
     'tripleo-undercloud': {
-        'src': 'plugins/tripleo-undercloud',
+        'src': 'https://github.com/rhos-infra/tripleo.git',
+        'src_path': 'tripleo-undercloud',
         'desc': 'Install TripleO on a designated undercloud node',
         'type': 'install'
     },
     'tripleo-standalone': {
-        'src': 'plugins/tripleo-standalone',
+        'src': 'https://github.com/rhos-infra/tripleo-standalone.git',
         'desc': 'Install TripleO overcloud in standalone mode',
         'type': 'install'
     },
@@ -235,7 +237,7 @@ PLUGINS_REGISTRY = {
         'type': 'install'
     },
     'virsh': {
-        'src': 'plugins/virsh',
+        'src': 'https://github.com/rhos-infra/virsh.git',
         'desc': 'Provision virtual machines on a single Hypervisor using libvirt',
         'type': 'provision'
     }
