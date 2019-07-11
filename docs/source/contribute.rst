@@ -4,9 +4,11 @@ Contribute
 Red Hatters
 -----------
 RedHat Employees should submit their changes via `review.gerrithub.io`_.
-Only members of ``rhosqeauto-core`` on group on GerritHub or
-``redhat-openstack`` (RDO) organization on GitHub can submit patches.
-ask any of the current members about it.
+To upload new reviews or vote on existing ones,
+membership in at least ``rhosqeauto-contrib`` is needed.
+Ask any `existing members of rhosqeauto-contrib`_ to add You in there.
+
+Only members of ``rhosqeauto-core`` can submit (merge) the patches.
 
 You can use git-review (dnf/yum/pip install).
 To initialize the directory of ``infrared`` execute ``git review -s``.
@@ -16,6 +18,7 @@ Every patch needs to have *Change-Id* in commit message
 For some more info about git review usage, read `GerritHub Intro`_ and `OpenStack Infra Manual`_.
 
 .. _`review.gerrithub.io`: https://review.gerrithub.io/#/q/project:redhat-openstack/infrared
+.. _`existing members of rhosqeauto-contrib`: https://review.gerrithub.io/admin/groups/6bb5f78d4182efb8d965219c5b183ba5d989d89a,members
 .. _`GerritHub Intro`: https://review.gerrithub.io/Documentation/intro-quick.html#_the_life_and_times_of_a_change
 .. _`OpenStack Infra Manual`: http://docs.openstack.org/infra/manual/developers.html
 
