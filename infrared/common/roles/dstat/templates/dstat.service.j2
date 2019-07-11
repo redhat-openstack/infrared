@@ -1,0 +1,13 @@
+# based on devstack/tools/dstat.sh
+[Unit]
+Description=dstat
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5s
+ExecStartPre=mkdir -p {{ dstat_output_dir }}
+ExecStart=/bin/bash -c 'DSTAT_TOP_OPTIONS="--top-cpu-adv --top-io-adv --top-mem"; DSTAT_OUTPUT_DIR="{{ dstat_output_dir }}"; DSTAT_CMD="/usr/bin/dstat -tcmndrylpg --nocolor --swap --tcp --output $DSTAT_OUTPUT_DIR/dstat.csv"; $DSTAT_CMD $DSTAT_TOP_OPTIONS || $DSTAT_CMD &>> $DSTAT_OUTPUT_DIR/dstat.log'
+
+[Install]
+WantedBy=multi-user.target
