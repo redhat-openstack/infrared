@@ -78,6 +78,10 @@
           command: "list_nets"
       register: network_list
 
+    - name: set current hypervisor index
+      set_fact:
+          current_hypervisor: "{{ groups['hypervisor'].index(inventory_hostname) }}"
+
     - name: create the networks for the topology
       virt_net:
           command: "define"

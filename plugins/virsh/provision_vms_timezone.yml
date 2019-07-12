@@ -5,14 +5,19 @@
   any_errors_fatal: true
   become: true
   tasks:
+      - name: Get vms hosted on this hypervisor
+        shell: |
+            virsh list --all | awk '("Name" != $2) && ("" != $2) {print $2}'
+        register: vm_list
+
       - name: Check which node is reachable
         wait_for:
             port: 22
             timeout: 5
             host: "{{ hostvars[item].ansible_host|default(hostvars[item].ansible_ssh_address) }}"
-        delegate_to: hypervisor
         ignore_errors: true
         register: reachable_check
+        when: item in vm_list.stdout
         with_items: "{{ groups['openstack_nodes'] }}"
 
       - name: Change timezone to {{ provision.topology.timezone }}

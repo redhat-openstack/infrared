@@ -41,6 +41,7 @@
       with_dict: "{{ topology_nodes }}"
       loop_control:
           loop_var: node
+      when: node.value.node_indexes|length > 0
       tags: images
 
     - name: prepare bridge interfaces in the topology
@@ -54,6 +55,7 @@
           with_dict: "{{ topology_nodes }}"
           loop_control:
               loop_var: node
+          when: node.value.node_indexes|length > 0
 
         - name: Wait for all disks to be created
           async_status:
@@ -62,6 +64,7 @@
           until: disk_tasks.finished
           retries: 300
           with_items: "{{ async_disks }}"
+          when: async_disks is defined
       tags: disks
 
     # Build VMs
@@ -71,6 +74,7 @@
           with_dict: "{{ topology_nodes }}"
           loop_control:
               loop_var: node
+          when: node.value.node_indexes|length > 0
 
         - name: Wait for VMs to be created
           async_status:
@@ -79,6 +83,7 @@
           until: install_tasks.finished
           retries: 300
           with_items: "{{ async_install }}"
+          when: async_install is defined
       tags: install
 
     # Fetch IP addresses
@@ -88,10 +93,19 @@
           with_dict: "{{ topology_nodes }}"
           loop_control:
               loop_var: node
+          when: node.value.node_indexes|length > 0
 
+        # add_host inside tasks/netip_natted.yml, bypasses the play host loop 
+        # and only runs once for all the hosts in the play. To force add_host
+        # to run on all hypervisors, we use this list to run tasks sequentially 
+        # on hosts i.e move to next after fininshing the previous host
         - name: Set ip VMs ip addresses and add to inventory
           include_tasks: tasks/netip_natted.yml
-          when: "not topology_node.external_network.bridged|default(False)"
+          with_list:
+            - "{{ inventory_hostname }}"
+          loop_control:
+              loop_var: addhost
+          when: "(vm_inv_info is defined) and (not topology_node.external_network.bridged|default(False))"
       tags: ips
 
     - name: Post-configure VMs
@@ -99,11 +113,4 @@
       with_dict: "{{ topology_nodes }}"
       loop_control:
           loop_var: node
-
-    # TODO(obaranov) This is deprecated config. Remove it.
-    - name: update tunneling conf
-      template:
-          src: ansible.ssh.config.j2
-          dest: "{{ inventory_dir }}/ansible.ssh.config"
-      delegate_to: localhost
-      tags: ssh_tunnel
+      when: node.value.node_indexes|length > 0

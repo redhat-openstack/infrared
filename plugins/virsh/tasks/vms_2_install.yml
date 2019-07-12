@@ -2,19 +2,9 @@
 - set_fact:
     topology_node: "{{ node.value }}"
 
-- name: Set default node_start_index
-  set_fact:
-      node_start_index: 0
-
 - name: define disk pool path
   set_fact:
       disk_pool: "{{ provision.disk.pool if (topology_node.disks.disk1.path == None) else topology_node.disks.disk1.path }}"
-
-- name: Calculate node_start_index
-  set_fact:
-      node_start_index: "{{ node_start_index|int + 1 if (topology_node.name + '-' in item) and hostvars[item].get('ansible_connection') == 'ssh' else node_start_index|int }}"
-  with_items: "{{ groups.all }}"
-  when: provision.topology.extend | default(False)
 
   # This is an early inventory host registration.
   # It has 'local' connection type because has no configured network yet.
@@ -25,7 +15,7 @@
   add_host:
       name: "{{ topology_node.name }}-{{ item }}"
       ansible_connection: "local"
-  with_sequence: start={{ node_start_index|int }} end={{ topology_node.num|int + node_start_index|int - 1 }}
+  with_items: "{{ topology_node.node_indexes }}"
 
 - include_role:
       name: inventory-update
@@ -58,7 +48,7 @@
             mode: 0644
             owner: qemu
             group: qemu
-        with_sequence: start={{ node_start_index|int }} end={{ topology_node.num|int + node_start_index|int - 1 }}
+        with_items: "{{ topology_node.node_indexes }}"
   when: provision.serial.files
 
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
@@ -100,7 +90,7 @@
            --autostart \
            --vnc \
            --rng /dev/urandom {{ provision.get('virtopts', '') }}
-  with_sequence: start={{ node_start_index|int }} end={{ topology_node.num|int + node_start_index|int - 1 }}
+  with_items: "{{ topology_node.node_indexes }}"
   register: vm_install
   async: 7200
   poll: 0
