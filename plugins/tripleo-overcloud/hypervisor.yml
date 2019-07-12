@@ -16,15 +16,17 @@
 
       - name: insert the public key to the known hosts in hypervisor
         authorized_key:
-            user: "{{ hostvars['hypervisor'].ansible_user|default(hostvars['hypervisor'].ansible_ssh_user) }}"
+            user: "{{ hostvars[item].ansible_user|default(hostvars[item].ansible_ssh_user) }}"
             key: "{{ uc_pubkey_result.stdout }}"
-        delegate_to: hypervisor
+        delegate_to: "{{ item }}"
+        with_items: "{{ groups.hypervisor }}"
 
       - name: insert the public key to the known hosts in hypervisor for stack user
         authorized_key:
             user: stack
             key: "{{ uc_pubkey_result.stdout }}"
-        delegate_to: hypervisor
+        delegate_to: "{{ item }}"
+        with_items: "{{ groups.hypervisor }}"
         when: install.version|default(undercloud_version) | openstack_release < 11
 
       - name: Read baremetal nodes got from user input on hybrid deployment
@@ -74,10 +76,18 @@
             msg: "The provision network cannot be discovered. Please rerun infrared command with -e provison_virsh_network_name=<net_name>"
         when: provison_virsh_network_name is not defined
 
+      - name: set vms host ips
+        set_fact:
+            vms_hypervisor_ip: "{{ vms_hypervisor_ip|default({})|combine({item[0]: hostvars[item[1]].ansible_host}) }}"
+        when: "hostvars[item[1]].ansible_host in hostvars[item[0]].ansible_ssh_common_args"
+        with_nested:
+            - "{{ oc_nodes | difference(bm_nodes_names) }}"
+            - "{{ groups.hypervisor }}"
+
       - name: get information about vm's from hypervisor
         vars:
             vm_nodes: "{{ oc_nodes | difference(bm_nodes_names) }}"
-        delegate_to: hypervisor
+        delegate_to: "{{ vms_hypervisor_ip[item] }}"
         shell: |
             NODE_XML=`virsh dumpxml {{ item }}`
             disks_list=$(virsh domblklist {{ item }}  | \
@@ -116,5 +126,5 @@
         virt:
             name: "{{ item }}"
             state: destroyed
+        delegate_to: "{{ vms_hypervisor_ip[item] }}"
         with_items: "{{ vm_nodes }}"
-        delegate_to: hypervisor
