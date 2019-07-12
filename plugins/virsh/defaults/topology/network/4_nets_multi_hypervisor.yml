@@ -1,0 +1,76 @@
+# The following structure used for multi hypervisor deployments,
+# where undercloud, Controllers and Computes are virtual but created
+# on mutiple hypervisors. 3 networks are bridged outside of the local
+# hypervisor hosts, but not having external connectivity. VMs will have
+# external connectivity through management network (using NAT on
+# local hypervisor).
+# the hybrid deployments,
+# * br-ctlplane - used for provisioning
+# * management - external connectivity
+# * br-vlan - used for OSPd internal services (internal/tenent api)
+# * external - tenants external connectivity
+---
+networks:
+    net1:
+        name: br-ctlplane
+        forward: bridge
+        nic: em2
+    net2:
+        external_connectivity: yes
+        name: "management"
+        ip_address: "172.16.0.1"
+        netmask: "255.255.255.0"
+        forward: nat
+        dhcp:
+            range:
+                start: "172.16.0.2"
+                end: "172.16.0.100"
+            subnet_cidr: "172.16.0.0/24"
+            subnet_gateway: "172.16.0.1"
+        floating_ip:
+            start: "172.16.0.101"
+            end: "172.16.0.150"
+    net3:
+        name: "br-vlan"
+        forward: bridge
+        nic: p2p1
+    net4:
+        name: "external"
+        forward: bridge
+        nic: p2p2
+        floating_ip:
+            start: "10.0.0.101"
+            end: "10.0.0.150"
+
+nodes:
+    undercloud:
+        interfaces:
+            - network: "br-ctlplane"
+              bridged: yes
+            - network: "external"
+              bridged: yes
+            - network: "management"
+        external_network:
+            network: "management"
+    controller:
+        interfaces:
+            - network: "br-ctlplane"
+              bridged: yes
+            - network: "br-vlan"
+              bridged: yes
+            - network: "external"
+              bridged: yes
+            - network: "management"
+        external_network:
+            network: "management"
+    compute:
+        interfaces:
+            - network: "br-ctlplane"
+              bridged: yes
+            - network: "br-vlan"
+              bridged: yes
+            - network: "external"
+              bridged: yes
+            - network: "management"
+        external_network:
+            network: "management"
