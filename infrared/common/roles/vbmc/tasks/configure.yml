@@ -25,8 +25,8 @@
         set_fact:
             prefix: "{{ item.key }}"
         when: (item.key + "-") in groups.undercloud|first
-        with_dict: "{{ hostvars['hypervisor'].ansible_local.deployment_info }}"
-    when: "hostvars['hypervisor'].ansible_local.deployment_info is defined"
+        with_dict: "{{ hostvars[groups.hypervisor|first].ansible_local.deployment_info }}"
+    when: "hostvars[groups.hypervisor|first].ansible_local.deployment_info is defined"
 
   - name: Setup prefix to empty if no deployments
     set_fact:
@@ -38,7 +38,7 @@
 
   - name: Set management bmc address
     set_fact:
-        vbmc_management_address: "{{ (vbmc_host == 'hypervisor')|ternary(hostvars['hypervisor'][management_net].ipv4.address, ansible_default_ipv4.address) }}"
+        vbmc_management_address: "{{ (vbmc_host == 'hypervisor')|ternary(hostvars[groups.hypervisor|first][management_net].ipv4.address, ansible_default_ipv4.address) }}"
 
   - include_tasks: iptables.yml
 
@@ -51,7 +51,23 @@
   - name: Add nodes to vbmc
     command: "{{ vbmc_bin }} add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ vbmc_management_address }}"
     with_dict: "{{ vbmc_ports }}"
-    when: vbmc_host == 'hypervisor'
+    when: vbmc_host == 'hypervisor' and groups.hypervisor|count == 1
+
+  # When a vm is added to inventory, it's jump host(hypervisor) will be added (to 'ProxyCommand') in 'ansible_ssh_common_args'.
+  # In this task, we iterate through hypervisors and see if the hypervisor is part of vm's 'ansible_ssh_common_args'.
+  - name: set vms host ips
+    set_fact:
+        vms_hypervisor_ip: "{{ vms_hypervisor_ip|default({})|combine({vbmc_ports[item[0]]: hostvars[item[1]].ansible_host}) }}"
+    when: "hostvars[item[1]].ansible_host in hostvars[item[0]].ansible_ssh_common_args"
+    with_nested:
+     - "{{ vbmc_nodes }}"
+     - "{{ groups.hypervisor }}"
+
+  - name: Add nodes to vbmc
+    command: "{{ vbmc_bin }} add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ vbmc_management_address }} \
+              --libvirt-uri \"qemu+ssh://{{ hostvars[groups.hypervisor|first].ansible_user_id }}@{{  vms_hypervisor_ip.get(item.value) }}/system?no_verify=1&no_tty=1\""
+    with_dict: "{{ vbmc_ports }}"
+    when: vbmc_host == 'hypervisor' and groups.hypervisor|count > 1
 
   - name: Start nodes using vbmc
     command: "{{ vbmc_bin }} start {{ item.key }}"
