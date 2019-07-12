@@ -36,7 +36,7 @@
       search_regex: OpenSSH
       delay: 10
       sleep: 3
-  delegate_to: hypervisor
+  delegate_to: "{{ inventory_hostname }}"
   when: (item.value.deploy_os|default(True)) and (item.value.ip is defined) and ('vswitches' not in item.value.groups)
   with_dict: "{{ vm_inv_info }}"
 

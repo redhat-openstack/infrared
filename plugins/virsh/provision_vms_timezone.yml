@@ -10,7 +10,7 @@
             port: 22
             timeout: 5
             host: "{{ hostvars[item].ansible_host|default(hostvars[item].ansible_ssh_address) }}"
-        delegate_to: hypervisor
+        delegate_to: "{{ inventory_hostname }}"
         ignore_errors: true
         register: reachable_check
         with_items: "{{ groups['openstack_nodes'] }}"

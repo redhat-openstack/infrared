@@ -12,6 +12,11 @@
   set_fact:
       topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
 
+- name: update node network info if needed
+  set_fact:
+      topology_node: "{{ topology_node | combine(network_info.nodes[topology_node.name]|default(network_info.nodes.default), recursive=True) }}"
+  when: not topology_node.interfaces
+
 - name: Replace node names with deployment id
   set_fact:
       topology_node: "{{ topology_node|combine({'name': prefix|default('')+ (prefix is defined|ternary('-','')) + topology_node.name}, recursive=True) }}"
@@ -24,15 +29,51 @@
   set_fact:
       data_net: "{{ ansible_local.run[prefix].data_net if prefix is defined else 24 }}"
 
-- name: update node network info if needed
+- name: store number of nodes of this type
   set_fact:
-      topology_node: "{{ topology_node | combine(network_info.nodes[topology_node.name]|default(network_info.nodes.default), recursive=True) }}"
-  when: not topology_node.interfaces
+      node_num: "{{ node.value|int }}"
 
 - name: store number of nodes of this type
   set_fact:
-      topology_node: "{{ topology_node | combine({'num': node.value}) }}"
+      topology_node: "{{ topology_node | combine({'num': node_num}) }}"
+
+- name: Set default start_index
+  set_fact:
+      start_index: 0
+
+- name: Calculate start_index
+  set_fact:
+      start_index: "{{ start_index|int + 1 if (topology_node.name + '-' in item) and hostvars[item].get('ansible_connection') == 'ssh' else start_index|int }}"
+  with_items: "{{ groups.all }}"
+  when: provision.topology.extend | default(False)
+
+- name: set current hypervisor index
+  set_fact:
+      hindex: "{{ groups['hypervisor'].index(inventory_hostname) }}"
+
+- name: set hcount
+  set_fact:
+      hcount: "{{ provision.host.address|length }}"
+
+- name: set nod indexes
+  set_fact:
+      node_indexes: []
+
+# Each hypervisor calculates the node indexes for the nodes it is going to host using Round robin scheduler.
+# If deployment has 2 hypervisors, and user specifies --topology-nodes:controller-3 in CLI,
+# then node indexes calculated for hypervisor-0: [0, 2] and for hypervisor-1: [1]
+- name: calculate node indexes
+  set_fact:
+      node_indexes: "{{ node_indexes|default([]) + [((hcount|int * item|int) + hindex|int)] }}"
+  when: ( (((hcount|int * item|int) + hindex|int) >= start_index|int) and
+          (((hcount|int * item|int) + hindex|int) < node_num|int))
+  with_sequence: start="{{ (start_index|int // hcount|int) }}" end="{{ (node_num|int // hcount|int) }}"
+
+- name: set node index in topology
+  set_fact:
+      topology_node: "{{ topology_node | combine({'node_indexes': node_indexes}) }}"
 
 - name: store node to global variable
   set_fact:
       topology_nodes: "{{ topology_nodes | default({}) | combine({topology_node.name: topology_node}) }}"
+  when: topology_node.name
