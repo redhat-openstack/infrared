@@ -10,7 +10,8 @@ subparsers:
               options:
                   host-address:
                       type: Value
-                      help: 'Address/FQDN of the BM hypervisor'
+                      action: append
+                      help: 'Address/FQDN of the BM hypervisor. Multiple hypervisors can be provided as a comma separated list'
                       required: yes
                   host-user:
                       type: Value
