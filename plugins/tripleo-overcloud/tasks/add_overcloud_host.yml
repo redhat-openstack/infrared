@@ -68,6 +68,12 @@
       when:
           - node_info.name != baremetal_name
 
+    - name: set vm's host ip
+      set_fact:
+          hypervisor_ip: "{{ hostvars[item].ansible_host }}"
+      when: "hostvars[item].ansible_host in hostvars[node_info.name].ansible_ssh_common_args"
+      with_items: "{{ groups.hypervisor }}"
+
     - name: add ssh common args for hypervisor
       add_host:
           name: "{{ node_info.name|lower }}"
@@ -75,7 +81,7 @@
                                      -o BatchMode=yes \
                                      -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                                      -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
-                                        {{ hostvars['hypervisor'].ansible_user }}@{{ hostvars['hypervisor'].ansible_host }}\""
+                                        {{ hostvars[groups.hypervisor|first].ansible_user }}@{{ hypervisor_ip|default(hostvars[groups.hypervisor|first].ansible_host) }}\""
       when:
           - node_info.name != baremetal_name
           - "'hypervisor' in groups"

@@ -13,15 +13,15 @@
   register: subnet_prefixes
 
 - name: get network list from hypervisor
-  delegate_to: hypervisor
+  delegate_to: "{{ groups.hypervisor|first }}"
   virt_net:
       command: list_nets
   register: virsh_networks
 
 - name: get assigned ip addresses for the networks
-  delegate_to: hypervisor
+  delegate_to: "{{ groups.hypervisor|first }}"
   shell: |
-      echo $(/sbin/ip -o addr list {{ item }} | awk '{print $4}')
+      echo $(/sbin/ip -4 -o addr list {{ item }} | awk '{print $4}')
   register: virsh_networks_ips
   with_items: "{{ virsh_networks.list_nets }}"
   tags: skip_ansible_lint
