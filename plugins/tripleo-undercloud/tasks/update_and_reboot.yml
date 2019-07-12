@@ -32,7 +32,7 @@
   retries: 100
   delay: 3
   ignore_errors: true
-  delegate_to: hypervisor
+  delegate_to: "{{ groups.hypervisor|first }}"
   when:
     - update is changed
     - "'hypervisor' in groups"
@@ -61,7 +61,7 @@
       search_regex: OpenSSH
       delay: 10
       sleep: 3
-  delegate_to: hypervisor
+  delegate_to: "{{ groups.hypervisor|first }}"
   when: "'hypervisor' in groups"
   retries: 6
   delay: 30
