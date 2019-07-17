@@ -40,9 +40,13 @@
     set_fact:
         vbmc_management_address: "{{ (vbmc_host == 'hypervisor')|ternary(hostvars['hypervisor'][management_net].ipv4.address, ansible_default_ipv4.address) }}"
 
+  - name: Set external network name
+    set_fact:
+        ansible_external_name: "{{ 'ansible_' + prefix|default('') + (prefix is defined and prefix|trim != '')|ternary('_','') + 'external' }}"
+
   - name: Set external network bmc address
     set_fact:
-        vbmc_external_net_address: "{{ ansible_external.ipv4.network }}/{{ ansible_external.ipv4.netmask }}"
+        vbmc_external_net_address:  "{{ hostvars['hypervisor'][ansible_external_name].ipv4.network }}/{{ hostvars['hypervisor'][ansible_external_name].ipv4.netmask }}"
 
   - include_tasks: iptables.yml
 
