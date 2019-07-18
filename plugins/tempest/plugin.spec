@@ -85,6 +85,8 @@ subparsers:
                            - "14"
                            - "15"
                            - "15-trunk"
+                           - "16"
+                           - "16-trunk"
                            - liberty
                            - kilo
                            - liberty
@@ -95,6 +97,7 @@ subparsers:
                            - queens
                            - rocky
                            - stein
+                           - train
                   openstack-installer:
                        type: Value
                        help: |
