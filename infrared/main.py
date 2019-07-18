@@ -280,6 +280,13 @@ class PluginManagerSpec(api.SpecObject):
                                      "'requirements.yml' or "
                                      "'requirements.yaml' file)")
 
+        add_parser.add_argument("--dest-dir",
+                                help="A path to where to install the plugin. "
+                                     "By default, a new directory with the "
+                                     "same name as the plugin is created. "
+                                     "Path can be relative (to the plugins "
+                                     "dir) or absolute.")
+
         # Remove plugin
         remove_parser = plugin_subparsers.add_parser(
             "remove",
@@ -360,7 +367,8 @@ class PluginManagerSpec(api.SpecObject):
                     self.plugin_manager.add_plugin(
                         _plugin, rev=pargs.revision,
                         plugin_src_path=pargs.src_path,
-                        skip_roles=pargs.skip_roles)
+                        skip_roles=pargs.skip_roles,
+                        dest_dir=pargs.dest_dir)
         elif subcommand == 'remove':
             if 'all' in pargs.name:
                 self.plugin_manager.remove_all()

@@ -406,7 +406,7 @@ class InfraredPluginManager(object):
                 pip_main(['install', '-r', reqs_file])
 
     def add_plugin(self, plugin_source, rev=None, plugins_registry=None,
-                   plugin_src_path=None, skip_roles=False):
+                   plugin_src_path=None, skip_roles=False, dest_dir=False):
         """Adds (install) a plugin
 
         :param plugin_source: Plugin source.
@@ -419,27 +419,36 @@ class InfraredPluginManager(object):
         :param plugin_src_path: relative path to the plugin location inside the
                source
         :param skip_roles: Skip the from file roles installation
+        :param dest_dir: Specify where the plugin will be installed
         """
         plugins_registry = plugins_registry or PLUGINS_REGISTRY
         plugin_data = {}
+
         # Check if a plugin is in the registry
         if plugin_source in plugins_registry:
             plugin_data = plugins_registry[plugin_source]
-            plugin_source = plugins_registry[plugin_source]['src']
+            plugin_source = plugin_data['src']
 
         if plugin_src_path is None:
             plugin_src_path = plugin_data.get('src_path', '')
 
-        # Local dir plugin
-        if os.path.exists(plugin_source):
-            rm_source = False
-        # Git Plugin
-        else:
-            if rev is None:
-                rev = plugin_data.get('rev')
-            plugin_source = \
-                self._clone_git_plugin(plugin_source, rev)
-            rm_source = True
+        # Default value False for tuple indices below
+        dest_dir = dest_dir or plugin_data.get('dest_dir', False)
+        if dest_dir and not os.path.isabs(dest_dir):
+            dest_dir = os.path.join(self.plugins_dir, dest_dir)
+
+        rm_source = False
+        if not os.path.exists(plugin_source):
+            rev = rev or plugin_data.get('rev')
+            # Indicates in case of "Shared" Git-Based plugin
+            clone_repo = (True, False)[dest_dir and os.path.exists(dest_dir)]
+            if clone_repo:
+                rm_source = True
+                plugin_source = \
+                    self._clone_git_plugin(plugin_source, rev)
+            else:
+                rm_source = False
+                plugin_source = dest_dir
 
         plugin = InfraredPlugin(os.path.join(plugin_source, plugin_src_path))
         plugin_type = plugin.type
@@ -453,33 +462,35 @@ class InfraredPluginManager(object):
             raise IRPluginExistsException(
                 "Plugin with the same name & type already exists")
 
-        dest = os.path.join(self.plugins_dir, plugin.name)
-        if os.path.abspath(plugin_source) != os.path.abspath(dest):
+        if not dest_dir:
+            dest_dir = os.path.join(self.plugins_dir, plugin.name)
+
+        if os.path.abspath(plugin_source) != os.path.abspath(dest_dir):
             # copy only if plugin was added from a location which is
             # different from the location of the plugins dir
-            if os.path.islink(dest):
+            if os.path.islink(dest_dir):
                 LOG.debug("%s found as symlink pointing to %s, "
                           "unlinking it, not touching the target.",
-                          dest,
-                          os.path.realpath(dest))
-                os.unlink(dest)
-            elif os.path.exists(dest):
-                shutil.rmtree(dest)
+                          dest_dir,
+                          os.path.realpath(dest_dir))
+                os.unlink(dest_dir)
+            elif os.path.exists(dest_dir):
+                shutil.rmtree(dest_dir)
 
-            shutil.copytree(plugin_source, dest)
+            shutil.copytree(plugin_source, dest_dir)
 
         if rm_source:
             shutil.rmtree(plugin_source)
 
         self.config.set(plugin_type, plugin.name,
-                        os.path.join(dest, plugin_src_path))
+                        os.path.join(dest_dir, plugin_src_path))
 
         with open(self.config_file, 'w') as fp:
             self.config.write(fp)
 
-        self._install_requirements(dest)
+        self._install_requirements(dest_dir)
         if not skip_roles:
-            self._install_roles_from_file(dest)
+            self._install_roles_from_file(dest_dir)
         self._load_plugins()
 
     def add_all_available(self, plugins_registry=None, skip_roles=False):

@@ -541,6 +541,48 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker):
     mock_shutil.rmtree.assert_called_with(mock_os.path.join.return_value)
 
 
+def test_add_plugins_from_shared_src(plugin_manager_fixture):
+    """
+    This test checks that it is possible to add one or more InfraRed plugin
+    from a shared plugins source.
+
+    :param plugin_manager_fixture: Fixture object which yields
+    InfraredPluginManger object
+    """
+
+    plugin_manager = plugin_manager_fixture()
+
+    dest_dir = 'shared_plugins'
+    plugin1_src_path = 'shared_plugin1'
+    plugin2_src_path = 'shared_plugin2'
+
+    expected_plugin1_dir = os.path.join(
+        plugin_manager.plugins_dir, dest_dir, plugin1_src_path)
+    expected_plugin2_dir = os.path.join(
+        plugin_manager.plugins_dir, dest_dir, plugin2_src_path)
+
+    # Adding shared plugin #1
+    plugin_manager.add_plugin(
+        os.path.join(SAMPLE_PLUGINS_DIR, 'shared_plugins'), skip_roles=True,
+        plugin_src_path=plugin1_src_path, dest_dir=dest_dir)
+
+    plugin1 = plugin_manager.get_plugin(plugin1_src_path)
+    plugin1_dir = plugin_manager.config.get(plugin1.type, plugin1.name)
+
+    assert plugin1_dir == expected_plugin1_dir
+
+    # Adding shared plugin #2
+    plugin_manager.add_plugin(
+        os.path.join(SAMPLE_PLUGINS_DIR, 'shared_plugins'), skip_roles=True,
+        plugin_src_path=plugin2_src_path, dest_dir=dest_dir)
+
+    plugin2 = plugin_manager.get_plugin(plugin2_src_path)
+    plugin2_dir = plugin_manager.config.get(plugin2.type, plugin2.name)
+
+    assert plugin1_dir == expected_plugin1_dir
+    assert plugin2_dir == expected_plugin2_dir
+
+
 def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
     """
     Validate that we take the folder name from the spec plugin name

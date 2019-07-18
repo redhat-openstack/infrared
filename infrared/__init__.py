@@ -129,7 +129,6 @@ SHARED_GROUPS = [
         },
     }
 ]
-
 PLUGINS_REGISTRY = {
     'beaker': {
         'src': 'https://github.com/rhos-infra/beaker.git',
@@ -216,12 +215,14 @@ PLUGINS_REGISTRY = {
     'tripleo-overcloud': {
         'src': 'https://github.com/rhos-infra/tripleo.git',
         'src_path': 'tripleo-overcloud',
+        'dest_dir': 'tripleo',
         'desc': 'Install TripleO overcloud using a designated undercloud node',
         'type': 'install'
     },
     'tripleo-undercloud': {
         'src': 'https://github.com/rhos-infra/tripleo.git',
         'src_path': 'tripleo-undercloud',
+        'dest_dir': 'tripleo',
         'desc': 'Install TripleO on a designated undercloud node',
         'type': 'install'
     },

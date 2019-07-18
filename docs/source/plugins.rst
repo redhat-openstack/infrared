@@ -343,6 +343,9 @@ Add:
 
     .. note:: "--revision" works with one plugin source only.
 
+    .. note:: By default, plugins are installed into the InfraRed plugins' directory.
+              One can change where a plugin will be installed by providing a relative/absolute path to the "--dest-dir" parameter.
+              This is extremely useful for cases when trying to install a plugin from a shared plugins repo. (See the `tripleo` plugin)
 
 List:
     List all available plugins, by type::
@@ -431,6 +434,7 @@ Each section of the registry file contains an object which specifies the plugin 
 
 * ``src``: The path to the plugin. It can be either local path or git url
 * ``src_path``: (optional) Relative path within the repository where infrared plugin can be found.
+* ``dest_dir``: (optional) An absolute or relative (to the plugins' directory) path to where to install the plugin.
 * ``rev``: (optional) If the plugin source is git, this allows to specify the revision to pull.
 * ``desc``: The plugin description.
 * ``type``: Plugin type can be one of the following: ``provision``, ``install``, ``test``, ``other``.
