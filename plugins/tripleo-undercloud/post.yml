@@ -12,6 +12,13 @@
           state: "{{ install.selinux|default('enforcing') }}"
       when: install.selinux is defined
 
+    - set_fact:
+        container_mgmt_cmd: docker
+      when: "install.version|openstack_release < 15"
+    - set_fact:
+        container_mgmt_cmd: podman
+      when: "install.version|openstack_release >= 15"
+
     - name: increase iscsi verify attempts in ironic conductor
       block:
         - name: set the iscsi verify attempt count in container
@@ -33,6 +40,6 @@
         - "install.version is defined"
   handlers:
     - name: restart ironic conductor container
-      command: docker restart ironic_conductor
+      command: "{{ container_mgmt_cmd }} restart ironic_conductor"
     - name: restart ironic conductor service
       command: systemctl restart openstack-ironic-conductor.service
