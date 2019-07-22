@@ -14,3 +14,6 @@ custom_templates:
     NeutronNetworkVLANRanges: 'baremetal:1000:1010'
     IronicProvisioningNetwork: 'baremetal'
     IronicRescuingNetwork: 'baremetal'
+    {% if (install.version | default(overcloud_version) | openstack_release >= 15) %}
+    NeutronMechanismDrivers: ovn,ansible
+    {% endif %}

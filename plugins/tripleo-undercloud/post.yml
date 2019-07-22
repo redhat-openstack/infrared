@@ -14,6 +14,9 @@
 
     - name: increase iscsi verify attempts in ironic conductor
       block:
+        - name: set containers binary
+          set_fact:
+            containers_bin: "{{ (install.version|default(undercloud_version)|openstack_release < 15) | ternary('docker', 'podman') }}"
         - name: set the iscsi verify attempt count in container
           lineinfile:
             path: /var/lib/config-data/puppet-generated/ironic/etc/ironic/ironic.conf
@@ -33,6 +36,6 @@
         - "install.version is defined"
   handlers:
     - name: restart ironic conductor container
-      command: docker restart ironic_conductor
+      command: "{{ containers_bin }} restart ironic_conductor"
     - name: restart ironic conductor service
       command: systemctl restart openstack-ironic-conductor.service
