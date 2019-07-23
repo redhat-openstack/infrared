@@ -31,13 +31,18 @@
       - install.postreboot|default(False)
 
 - name: Collect Ansible facts
-  import_playbook: 'collect-ansible-facts.yml'
-  when:
-      - install.collect.ansible.facts|default(False)
-      - not install.upgrade|default('')
-      - not install.ocupdate|default(False)
-      - not install.pre|default('')
-      - not install.introspect|default('')
-      - not install.tagging|default('')
+  any_errors_fatal: false
+  gather_facts: yes
+  hosts: all
+  tasks:
+    - block:
+      - set_fact:
+          ansible_facts_filename: "infrared_tripleo-overcloud_after_{{ inventory_hostname }}"
+
+      - include_role:
+          name: collect-ansible-facts
+      when:
+        - install.collect.ansible.facts|default(False)
+        - install.deploy
   tags: collect-ansible-facts
   ignore_errors: True
