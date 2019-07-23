@@ -423,7 +423,9 @@
                 until: nova_ovs_up.stdout.find(':-)') > -1
                 retries: 60
                 delay: 5
-                when: overcloud_version|int < 15
+                when:
+                  - overcloud_version|int < 15
+                  - not install.network.ovn
 
               - name: Waiting for ovn-controller agent on compute node to come up
                 shell: |
