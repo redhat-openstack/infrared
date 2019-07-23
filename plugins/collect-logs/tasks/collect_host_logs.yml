@@ -173,8 +173,8 @@
                   echo "+ $cont_cmd top $cont user pid ppid pcpu vsz tty state time etime args" &>> "$INFO_FILE";
                   $cont_cmd top "$cont" user pid ppid pcpu vsz tty state time etime args &>> "$INFO_FILE";
               fi
-              echo "+ $cont_cmd exec $cont top -bwn1" >> "$INFO_FILE";
-              $cont_cmd exec "$cont" top -bwn1 &>> "$INFO_FILE";
+              echo "+ $cont_cmd exec --user root $cont top -bwn1" >> "$INFO_FILE";
+              $cont_cmd exec --user root "$cont" top -bwn1 &>> "$INFO_FILE";
               echo "+ $cont_cmd inspect $cont" >> "$INFO_FILE";
               $cont_cmd inspect "$cont" &>> "$INFO_FILE";
               $cont_cmd logs "$cont" &> "$INFO_DIR/stdout.log";
