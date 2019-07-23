@@ -47,6 +47,7 @@
   - name: Set external network bmc address
     set_fact:
         vbmc_external_net_address:  "{{ hostvars['hypervisor'][ansible_external_name].ipv4.network }}/{{ hostvars['hypervisor'][ansible_external_name].ipv4.netmask }}"
+    when: hostvars['hypervisor'][ansible_external_name] is defined
 
   - include_tasks: iptables.yml
 

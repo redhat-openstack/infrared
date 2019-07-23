@@ -70,6 +70,7 @@
           source: "{{ vbmc_external_net_address }}"
           destination_port: "{{ item.value }}"
       loop: "{{ vbmc_ports|dict2items }}"
+      when: hostvars['hypervisor'][ansible_external_name] is defined
 
   when: vbmc_host == 'hypervisor'
   become: True
