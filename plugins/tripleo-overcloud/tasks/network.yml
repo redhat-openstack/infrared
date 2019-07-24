@@ -241,3 +241,11 @@
   when:
       - install.network.ovn and install.network.dvr
       - install.version|default(undercloud_version)|openstack_release >= 13
+
+- name: Remove OVNCMSOptions for controller nodes
+  shell: sed -i '/ControllerParameters/,+1 d' {{ install.heat.templates.basedir }}/environments/services/neutron-ovn-ha.yaml
+  when:
+      - install.version|default(undercloud_version)|openstack_release >= 13
+      - install.network.ovn
+      - install.role.files is defined
+      - 'networker' in install.role.files
