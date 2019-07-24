@@ -1,3 +1,29 @@
+- name: Update inventory file after adding Undercloud hypervisors group
+  hosts: localhost
+  gather_facts: yes
+  tasks:
+      - name: set undercloud_hypervisors
+        set_fact:
+            undercloud_hypervisors: "{{ undercloud_hypervisors|default([]) + [item[1]] }}"
+        when: hostvars[item[1]].ansible_host in hostvars[item[0]].ansible_ssh_common_args
+        with_nested:
+            - "{{ groups.undercloud|default(['undercloud-0']) }}"
+            - "{{ groups.hypervisor|default(['hypervisor']) }}"
+      - name: add undercloud_hypervisors group
+        add_host:
+            name: "{{ item }}"
+            groups: "{{ hostvars[item].group_names + ['undercloud_hypervisors'] }}"
+        when: item in undercloud_hypervisors
+        with_items: "{{ undercloud_hypervisors }}"
+      - include_role:
+            name: inventory-update
+        vars:
+            inventory_file_name: 'hosts-prov'
+        when: ((undercloud_hypervisors is defined) and
+              (undercloud_hypervisors != []))
+      - name: refresh dynamic inventory
+        meta: refresh_inventory
+
 - name: Update inventory file after upgrading the Undercloud
   hosts: undercloud
   any_errors_fatal: true
@@ -8,12 +34,14 @@
   vars:
     ansible_python_interpreter: '/usr/libexec/platform-python'
   tasks:
-    - include_role:
-        name: inventory-update
-        apply:
-          delegate_to: localhost
-      vars:
-        inventory_file_name: 'hosts-upgrade'
+    - block:
+        - include_role:
+            name: inventory-update
+            apply:
+              delegate_to: localhost
+          vars:
+            inventory_file_name: 'hosts-upgrade'
 
-    - name: refresh dynamic inventory
-      meta: refresh_inventory
+        - name: refresh dynamic inventory
+          meta: refresh_inventory
+      when: install.upgrade|default('')
