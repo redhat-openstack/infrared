@@ -12,6 +12,12 @@
   ignore_errors: true
   when: update is changed
 
+- name: get undercloud hypervisor
+  set_fact:
+      undercloud_hypervisor: "{{ item }}"
+  when: hostvars[item].ansible_host in hostvars[inventory_hostname].ansible_ssh_common_args
+  with_items: "{{ groups.undercloud_hypervisors }}"
+
 - name: wait for undercloud to go down
   become: no
   command: ping -c1 {{ ansible_host|default(ansible_ssh_host) }}
@@ -32,7 +38,7 @@
   retries: 100
   delay: 3
   ignore_errors: true
-  delegate_to: hypervisor
+  delegate_to: "{{ undercloud_hypervisor }}"
   when:
     - update is changed
     - "'hypervisor' in groups"
@@ -61,7 +67,7 @@
       search_regex: OpenSSH
       delay: 10
       sleep: 3
-  delegate_to: hypervisor
+  delegate_to: "{{ undercloud_hypervisor }}"
   when: "'hypervisor' in groups"
   retries: 6
   delay: 30
