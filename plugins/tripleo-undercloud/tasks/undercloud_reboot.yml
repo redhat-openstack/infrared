@@ -8,6 +8,12 @@
       poll: 0
       ignore_errors: true
 
+    - name: get undercloud hypervisor
+      set_fact:
+          undercloud_hypervisor: "{{ item }}"
+      when: "hostvars[item].ansible_host in hostvars[inventory_hostname].ansible_ssh_common_args"
+      with_items: "{{ ('undercloud_hypervisors' in groups) | ternary(groups.undercloud_hypervisors, []) }}"
+
     - name: wait for node to go down
       become: false
       command: ping -c1 {{ ansible_host }}
@@ -17,7 +23,7 @@
       delay: 3
       ignore_errors: true
       delegate_to: localhost
-      when: "'hypervisor' not in groups and 'virthost' not in groups"
+      when: "undercloud_hypervisor is not defined and 'virthost' not in groups"
 
     - name: wait for node to go down(hypervisor)
       command: ping -c1 {{ ansible_host }}
@@ -26,8 +32,8 @@
       retries: 60
       delay: 3
       ignore_errors: true
-      delegate_to: hypervisor
-      when: "'hypervisor' in groups"
+      delegate_to: "{{ undercloud_hypervisor }}"
+      when: "undercloud_hypervisor is defined"
 
     - name: wait for node to go down(virthost)
       command: ping -c1 {{ ansible_host }}

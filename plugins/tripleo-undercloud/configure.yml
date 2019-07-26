@@ -12,7 +12,7 @@
       - default_conf: "{{ (osp_release <= 13) | ternary(conf_instack, (osp_release < 15) | ternary(conf_oooclient, conf_oooclient_py3)) }}"
       - local_src: "{%- if conf.file|default('') -%}
                 {{ conf.file }}
-                {%- elif 'hypervisor' in groups.all or 'bmc' in groups -%}
+                {%- elif 'hypervisor' in groups.all or 'undercloud_hypervisors' in groups or 'bmc' in groups -%}
                 templates/undercloud.conf.j2
                 {%- else -%}
                 False

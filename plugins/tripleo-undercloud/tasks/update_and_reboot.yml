@@ -12,6 +12,12 @@
   ignore_errors: true
   when: update is changed
 
+- name: get undercloud hypervisor
+  set_fact:
+      undercloud_hypervisor: "{{ item }}"
+  when: "hostvars[item].ansible_host in hostvars[inventory_hostname].ansible_ssh_common_args"
+  with_items: "{{ ('undercloud_hypervisors' in groups) | ternary(groups.undercloud_hypervisors, []) }}"
+
 - name: wait for undercloud to go down
   become: no
   command: ping -c1 {{ ansible_host|default(ansible_ssh_host) }}
@@ -23,7 +29,7 @@
   delegate_to: localhost
   when:
     - update is changed
-    - "'hypervisor' not in groups"
+    - undercloud_hypervisor is not defined
 
 - name: wait for undercloud to go down
   command: ping -c1 {{ ansible_host|default(ansible_ssh_host) }}
@@ -32,10 +38,10 @@
   retries: 100
   delay: 3
   ignore_errors: true
-  delegate_to: hypervisor
+  delegate_to: "{{ undercloud_hypervisor }}"
   when:
     - update is changed
-    - "'hypervisor' in groups"
+    - undercloud_hypervisor is defined
 
 # Ansible bug around delegate+vars+wait
 # https://github.com/ansible/ansible/issues/11705
@@ -49,7 +55,7 @@
       timeout: 30
   register: uc_reachable
   delegate_to: localhost
-  when: "'hypervisor' not in groups"
+  when: undercloud_hypervisor is not defined
   retries: 21
   until: uc_reachable|succeeded
 
@@ -61,7 +67,7 @@
       search_regex: OpenSSH
       delay: 10
       sleep: 3
-  delegate_to: hypervisor
-  when: "'hypervisor' in groups"
+  delegate_to: "{{ undercloud_hypervisor }}"
+  when: undercloud_hypervisor is defined
   retries: 6
   delay: 30

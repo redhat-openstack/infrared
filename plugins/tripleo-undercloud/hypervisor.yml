@@ -1,5 +1,5 @@
 - name: Add rhos-release repos and update ipxe-roms (for Ironic)
-  hosts: hypervisor
+  hosts: undercloud_hypervisors
   gather_facts: yes
   any_errors_fatal: true
   vars:
@@ -21,7 +21,7 @@
             regexp: ".*{{ item }}$"
             state: present
         when: '"ansible_ssh_host" in hostvars[item] or "ansible_host" in hostvars[item]'
-        with_items: "{{ groups.all | difference(['localhost']) | difference(['hypervisor']) }}"
+        with_items: "{{ groups.all | difference(['localhost']) | difference(['hypervisor']) | difference(('hypervisor' in groups) | ternary(groups.hypervisor, [])) }}"
 
       - name: get Ironic requirement
         block:
@@ -46,7 +46,7 @@
 
 # In case we're dealing with hypervisor, we need to make sure the undercloud is able to ssh to the hypervisor
 - name: Create the stack user on the hypervisor and allow SSH to hypervisor
-  hosts: hypervisor
+  hosts: undercloud_hypervisors
   gather_facts: no
   any_errors_fatal: true
   vars:
