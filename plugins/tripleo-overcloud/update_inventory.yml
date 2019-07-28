@@ -34,6 +34,8 @@
       # todo(obaranov) Remove hosts from the 'unused' group
       # Currently ansible does not allow to remove existing host from a group
       - name: add overcloud host
+        vars:
+            hypervisor_group: "{{ groups.get('hypervisor', ['hypervisor']) }}"
         include_tasks: tasks/add_overcloud_host.yml
         with_items: "{{ openstack_servers }}"
         loop_control:
