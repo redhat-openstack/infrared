@@ -14,7 +14,9 @@ networks:
     net1:
         name: br-ctlplane
         forward: bridge
-        nic: em2
+        nic: enp94s0f0
+        ip_address: "192.168.{{ data_net }}.254"
+        netmask: "255.255.255.0"
     net2:
         external_connectivity: yes
         name: "management"
@@ -33,11 +35,11 @@ networks:
     net3:
         name: "br-vlan"
         forward: bridge
-        nic: p2p1
+        nic: enp94s0f2
     net4:
-        name: "external"
+        name: "br-external"
         forward: bridge
-        nic: p2p2
+        nic: enp94s0f3
         floating_ip:
             start: "10.0.0.101"
             end: "10.0.0.150"
@@ -47,7 +49,7 @@ nodes:
         interfaces:
             - network: "br-ctlplane"
               bridged: yes
-            - network: "external"
+            - network: "br-external"
               bridged: yes
             - network: "management"
         external_network:
@@ -58,7 +60,7 @@ nodes:
               bridged: yes
             - network: "br-vlan"
               bridged: yes
-            - network: "external"
+            - network: "br-external"
               bridged: yes
             - network: "management"
         external_network:
@@ -69,7 +71,7 @@ nodes:
               bridged: yes
             - network: "br-vlan"
               bridged: yes
-            - network: "external"
+            - network: "br-external"
               bridged: yes
             - network: "management"
         external_network:
