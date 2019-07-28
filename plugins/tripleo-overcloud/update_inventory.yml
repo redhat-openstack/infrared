@@ -56,6 +56,7 @@
             label: "{{ node_info.name }}"
             loop_var: node_info
         vars:
+            hypervisor_group: "{{ groups.get('hypervisor', ['hypervisor']) }}"
             baremetal_name: >-
               {{ (ironic_node_list.stdout|default('') | from_csv | selectattr('UUID', 'equalto', node_info['hypervisor_hostname']) | list)[0]['Name'] }}
 
