@@ -140,6 +140,20 @@ subparsers:
                           - iscsi
                           - direct
 
+                  image-download-source:
+                      type: Value
+                      default: swift
+                      help: |
+                          This option when using in conjunction with (deploy_interface_default: direct) changes
+                          the default in Ironic for the value of image_download_source from swift to http.
+                          (swift) IPA ramdisk retrieves instance image from the Object Storage service.
+                          (http) IPA ramdisk retrieves instance image from HTTP service served at conductor nodes.
+                          Example:
+                                --image-download-source http
+                      choices:
+                          - swift
+                          - http
+
             - title: Splitstack deployment
               options:
                   splitstack:
