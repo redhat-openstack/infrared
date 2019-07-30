@@ -64,7 +64,11 @@ parameter_defaults:
 {# This block, for openstack>=13 defines the memory reservation feature introduced in ceph 3.2 #}
     CephAnsibleExtraConfig:
         is_hci: true
-{% endif %}{# End os is_hci block #}
+{% endif %}{# End of is_hci block #}
+{% if not install.ceph.hci.memreserve|default(false) and install.version|default(undercloud_version) == 15 %} # Workaround for BZ#1734525
+    CephAnsibleExtraConfig:
+        dashboard_enabled: False
+{% endif %}{# end of is_not_hci block #}
 
 {% else %}
     ExtraConfig:
