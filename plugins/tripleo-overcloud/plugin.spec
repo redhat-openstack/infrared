@@ -408,6 +408,14 @@ subparsers:
                       default: no
                       help: Activate Neutron DVR extension on the overcloud.
 
+                  network-dvr-nic-override:
+                      type: Value
+                      help: |
+                          Option to provide custom nic template for DVR compute nodes.
+                          Used mostly in Baremetal and Hybrid deployments, where customization is needed.
+                          Example:
+                          --network-dvr-nic-override /home/stack/templates/network/nic-configs/compute-dvr.yaml
+
                   network-l2gw:
                       type: Bool
                       default: no
