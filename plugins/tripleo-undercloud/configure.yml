@@ -145,11 +145,14 @@
         when: install.workarounds != ''
 
       - block:
-          - name: Initialize a variable with undercloud custom env file content
+          - name: Initialize variable(s) with undercloud custom env file content
             set_fact:
                undercloud_custom_env_content: |
                    parameter_defaults:
                       IronicDefaultDeployInterface: direct
+                      {% if install.version|default(undercloud_version) | openstack_release > 14 and install.image.download.source == 'http' %}
+                   IronicImageDownloadSource: http
+                      {% endif %}
 
           - name: Create the undercloud custom env file
             copy:
