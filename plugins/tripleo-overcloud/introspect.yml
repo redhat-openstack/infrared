@@ -77,23 +77,6 @@
       # import, to instead after import do loop over all nodes uuids,
       # and based on if they are virthost or not, set corresponding value.
 
-      # Workaround for bug in osp13, bz 1714205
-      - name: get the python-tripleoclient-9-2-7-9 RPM
-        get_url:
-            url: "https://url.corp.redhat.com/python-tripleoclient-9-2-7-9-el7ost-noarch-rpm"
-            dest: "/tmp/python-tripleoclient-9-2-7-9-el7ost-noarch.rpm"
-            force: yes
-            validate_certs: no
-        become: yes
-        when: "install.version|openstack_release == 13"
-
-      - name: update python-tripleoclient RPM for osp13
-        package:
-            name: /tmp/python-tripleoclient-9-2-7-9-el7ost-noarch.rpm
-            state: present
-        become: yes
-        when: "install.version|openstack_release == 13"
-
       - name: register hosts to instack and configure boot
         shell: |
             set -eo pipefail
