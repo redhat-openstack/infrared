@@ -1,4 +1,11 @@
+- name: set facts for container images packages install
+  set_fact:
+      install_container_images_packages: "{{ install.get('container', {}).get('images', {}).get('packages', {}) }}"
+  when: install.get('container', {}).get('images', {}).get('packages', {})
+
 - name: set container_images_packages_logdir fact
+  vars:
+      containers_home_dir: "/home/stack"
   set_fact:
       container_images_packages_dir: "{{ containers_home_dir }}/container-images-packages/"
       container_images_packages_logdir: /var/log/extra/container-images-packages/
@@ -24,6 +31,28 @@
       - directory
   tags: container-images-packages
 
+- name: Create Docker context dir
+  file:
+      path: "{{ container_images_packages_dir }}"
+      state: "{{ item }}"
+  with_items:
+      - absent
+      - directory
+  tags: container-images-packages
+
+- name: Create extra repo directory
+  file:
+      path: "{{ container_images_packages_dir }}/extra_repos"
+      state: directory
+  tags: container-images-packages
+
+- name: Downloading extra repositories
+  get_url:
+    url: "{{ item }}"
+    dest: "{{ container_images_packages_dir }}/extra_repos"
+  with_items: "{{ install.container.extra.repos }}"
+  tags: container-images-packages
+
 - name: tag the original image(s) with 'before_packages_install' and install rpms&push new ones
   become: true
   shell: |
@@ -38,6 +67,7 @@
       # install requested package(s) in the image
       echo "
       FROM {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }}
+      COPY extra_repos/* /etc/yum.repos.d/
       USER root
       RUN yum list installed
       RUN yum localinstall {{ item.value.split(",") | join(" ") }} -y -v
