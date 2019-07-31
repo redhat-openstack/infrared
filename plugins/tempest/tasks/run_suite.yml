@@ -126,8 +126,7 @@
             ostestr -s --no-pretty --regex '{{ regex | default('') }}'
             {{ whitelistfile }}
             {{ blacklistfile }}
-            {{ ('--concurrency ' + test.threads|string )
-            if test.threads|default('') else '' }}
+            {{ ('--concurrency ' + test_dict.threads|default(test.threads)|string ) }}
             {{ ('--black-regex ' + test.blackre|string|quote )
             if test.blackre|default('') else '' }}
             {{ (test.list) | ternary ('--list','') }}
