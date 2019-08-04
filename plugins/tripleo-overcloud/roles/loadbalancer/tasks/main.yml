@@ -91,6 +91,12 @@
       src: haproxy.cfg.j2
       dest: /etc/haproxy/haproxy.cfg
 
+- name: pidone1 nmcli connection reload
+  command: "nmcli connection reload"
+
+- name: pidone2 ifup alias
+  command: "ifup eth2:0"
+
 - name: start haproxy service
   service:
       name: haproxy
