@@ -159,14 +159,14 @@
               path: "{{ working_dir }}/containers-prepare-parameter.yaml"
               regexp: '(^\ +)tag: .*'
               replace: "\\1tag: {{ container_env['container-image-prepare']['tag'] }}"
-      when: not install.registry.skip.puddle
+      when: container_env['container-image-prepare']['tag'] != 'AUTODETECT'
 
     - block:
         - name: set satellite namespace
           replace:
               path: "{{ working_dir }}/containers-prepare-parameter.yaml"
               regexp: '(^\ +)namespace.*'
-              replace: "\\1namespace: {{ install.registry.mirror }}"
+              replace: "\\1namespace: {{ install.registry.mirror }}/{{ registry_namespace }}"
 
         - name: set satellite prefix
           replace:
