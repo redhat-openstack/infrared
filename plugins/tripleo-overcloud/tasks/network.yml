@@ -242,37 +242,34 @@
       - install.network.ovn and install.network.dvr
       - install.version|default(undercloud_version)|openstack_release >= 13
 
-- name: Remove OVNCMSOptions for controller nodes in non-DVR deployments
+- block:
+  -  name: Remove OVNCMSOptions for controller nodes in non-DVR deployments
+     shell: |
+         sed -i '/ControllerParameters/,+1 d' {{ install.heat.templates.basedir }}/environments/services/neutron-ovn-ha.yaml
+     when:
+         - install.network.ovn and not install.network.dvr
+         - "'networker' in install.role.files"
+
+  - name: Remove OVNCMSOptions for controller nodes in DVR deployments
+    shell: |
+        sed -i '/ControllerParameters/,+1 d' {{ install.heat.templates.basedir }}/environments/services/neutron-ovn-dvr-ha.yaml
+    when:
+        - install.network.ovn and install.network.dvr
+        - "'networker' in install.role.files"
+
+  - name: Enable networker chasis as gateway in composable DVR deployments
+    yedit:
+        src: "{{ install.heat.templates.basedir }}/environments/services/neutron-ovn-dvr-ha.yaml"
+        update: True
+        key: parameter_defaults
+        value:
+            NetworkerParameters:
+                OVNCMSOptions: enable-chassis-as-gw
+    when:
+        - install.network.ovn and install.network.dvr
+        - install.version|default(undercloud_version) | openstack_release >= 15
+        - "'networker' in install.role.files"
   become: yes
-  shell: |
-      sed -i '/ControllerParameters/,+1 d' {{ install.heat.templates.basedir }}/environments/services/neutron-ovn-ha.yaml
   when:
       - install.version|default(undercloud_version)|openstack_release >= 13
-      - install.network.ovn and not install.network.dvr
       - install.role.files is defined
-      - "'networker' in install.role.files"
-
-- name: Remove OVNCMSOptions for controller nodes in DVR deployments
-  become: yes
-  shell: |
-      sed -i '/ControllerParameters/,+1 d' {{ install.heat.templates.basedir }}/environments/services/neutron-ovn-dvr-ha.yaml
-  when:
-      - install.version|default(undercloud_version)|openstack_release >= 13
-      - install.network.ovn and install.network.dvr
-      - install.role.files is defined
-      - "'networker' in install.role.files"
-
-- name: Enable networker chasis as gateway in composable DVR deployments
-  become: yes
-  yedit:
-      src: "{{ install.heat.templates.basedir }}/environments/services/neutron-ovn-dvr-ha.yaml"
-      update: True
-      key: parameter_defaults
-      value:
-          NetworkerParameters:
-              OVNCMSOptions: enable-chassis-as-gw
-  when:
-      - install.network.ovn and install.network.dvr
-      - install.version|default(undercloud_version) | openstack_release >= 15
-      - install.role.files is defined
-      - "'networker' in install.role.files"
