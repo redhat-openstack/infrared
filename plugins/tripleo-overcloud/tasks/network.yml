@@ -249,6 +249,7 @@
   when:
       - install.version|default(undercloud_version)|openstack_release >= 13
       - install.network.ovn and not install.network.dvr
+      - install.role is defined
       - install.role.files is defined
       - "'networker' in install.role.files"
 
@@ -259,6 +260,7 @@
   when:
       - install.version|default(undercloud_version)|openstack_release >= 13
       - install.network.ovn and install.network.dvr
+      - install.role is defined
       - install.role.files is defined
       - "'networker' in install.role.files"
 
@@ -274,5 +276,6 @@
   when:
       - install.network.ovn and install.network.dvr
       - install.version|default(undercloud_version) | openstack_release >= 15
+      - install.role is defined
       - install.role.files is defined
       - "'networker' in install.role.files"
