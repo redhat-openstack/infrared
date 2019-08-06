@@ -11,7 +11,7 @@
 
 - name: register to openstack repos
   vars:
-      repo_list: "{{ subscriptions.common + (subscriptions[install_version|openstack_release] if not cdn_skip_openstack_repos else []) }}"
+      repo_list: "{{ subscriptions.common[ansible_distribution_major_version|int] + (subscriptions[install_version|openstack_release] if not cdn_skip_openstack_repos else []) }}"
       modified_list: "{{ repo_list | map('regex_replace', '^(.*)$', '--enable=\\1') | join(' ') }}"
   command: "subscription-manager repos {{ modified_list }}"
 
