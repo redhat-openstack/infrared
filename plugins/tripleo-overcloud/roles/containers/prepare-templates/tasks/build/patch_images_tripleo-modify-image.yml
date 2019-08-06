@@ -42,5 +42,11 @@
             excludes: [ceph]
 
 - name: Run images modification
-  shell: "openstack tripleo container image prepare -e {{ containers_home_dir }}/containers-prepare-parameter.yaml --output-env-file {{ template_base }}/docker-images.yaml"
-  become: true
+  shell: |
+      source /home/stack/stackrc
+      {% if install.version|default(undercloud_version)|openstack_release > 14 %}
+      sudo \
+      {% endif %}
+      openstack tripleo container image prepare \
+        -e {{ containers_home_dir }}/containers-prepare-parameter.yaml \
+        --output-env-file {{ template_base }}/docker-images.yaml
