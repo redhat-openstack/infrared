@@ -29,14 +29,6 @@
       topology_node: "{{ topology_node | combine(network_info.nodes[topology_node.name]|default(network_info.nodes.default), recursive=True) }}"
   when: not topology_node.interfaces
 
-- name: Set number of nodes of this type
-  set_fact:
-      node_num: "{{ node.value|int }}"
-
-- name: store number of nodes of this type
-  set_fact:
-      topology_node: "{{ topology_node | combine({'num': node_num}) }}"
-
 - name: Set default start_index
   set_fact:
       start_index: 0
@@ -47,7 +39,20 @@
   with_items: "{{ groups.all }}"
   when: provision.topology.extend | default(False)
 
-- name: set nod indexes
+- name: Set number of nodes of this type
+  set_fact:
+      node_num: "{{ node.value|int }}"
+
+- name: Set number of nodes of this type
+  set_fact:
+      node_num: "{{ node.value|int + start_index|int }}"
+  when: provision.topology.extend | default(False)
+
+- name: store number of nodes of this type
+  set_fact:
+      topology_node: "{{ topology_node | combine({'num': node_num}) }}"
+
+- name: set node indexes
   set_fact:
       node_indexes: []
 
