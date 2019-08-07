@@ -26,11 +26,11 @@ parameter_defaults:
       fixed_ips:
         - ip_address: 192.168.24.20
       subnets:
-        - cidr: 24
+        - cidr: 192.168.24.0/24
 {% for host_name in groups.overcloud_nodes|sort %}
     {{ host_name }}-ctlplane:
       fixed_ips:
         - ip_address: {{ hostvars[host_name]['ansible_eth0']['ipv4']['address'] }}
       subnets:
-        - cidr: 24
+        - cidr: 192.168.24.0/24
 {% endfor %}
