@@ -36,6 +36,11 @@
       - install.registry.undercloud.skip
   tags: container-images-packages
 
+- name: set install_container_images_urls fact
+  set_fact:
+    install_container_images_urls: "{{ install.get('container', {}).get('images', {}).get('urls', '').split(',') }}"
+  when: install.get('container', {}).get('images', {}).get('urls', '')
+
 - name: Reload SSHd
   become: true
   shell: sleep 1; pkill -u {{ ansible_user | default(ansible_ssh_user) }} sshd
