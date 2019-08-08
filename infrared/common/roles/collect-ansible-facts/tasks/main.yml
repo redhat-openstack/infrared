@@ -1,7 +1,113 @@
 ---
+- set_fact:
+    collect_ansible_facts: {}
+
+- name: "gather information about installed packages on the {{ inventory_hostname }}"
+  yum:
+    list: installed
+  register: installed_packages
+  no_log: true
+
+- name: make it a fact
+  set_fact:
+    collect_ansible_facts:
+      installed_packages: "{{ installed_packages.results }}"
+  no_log: true
+
+- name: check if we have docker working
+  command: docker info
+  register: collect_ansible_facts_docker_info
+  failed_when: false
+
+- name: check if we have podman working
+  command: podman info
+  register: collect_ansible_facts_podman_info
+  failed_when: false
+
+- set_fact:
+    collect_ansible_facts_containers_runtime: 'docker'
+  when: collect_ansible_facts_docker_info.rc == 0
+
+- set_fact:
+    collect_ansible_facts_containers_runtime: 'podman'
+  when: collect_ansible_facts_podman_info.rc == 0
+
+- name: "gather info about containers running on {{ inventory_hostname }}"
+  shell: >
+    {{ collect_ansible_facts_containers_runtime }} ps --all --no-trunc --format
+    {%- if collect_ansible_facts_containers_runtime == 'docker' -%}
+     {{ '{{' ~ 'json .' ~ '}}' }}
+    {%- elif collect_ansible_facts_containers_runtime == 'podman' -%}
+     json
+    {%- endif -%}
+  become: true
+  register: collect_ansible_facts_containers_list_check
+  when: collect_ansible_facts_containers_runtime != ''
+  ignore_errors: true
+#  no_log: true
+
+- debug:
+    var: collect_ansible_facts_containers_list_check
+
+- block:
+  - name: set 'collect_ansible_facts.containers_raw' fact
+    set_fact:
+      collect_ansible_facts:
+        containers_raw: "{{ collect_ansible_facts_containers_list_check.stdout | from_json }}"
+    no_log: true
+
+  - name: update 'collect_ansible_facts.containers' fact with container names and images
+    vars:
+      container_name: "{{ item.Names | default('container_name') }}"
+      container_image: "{{ item.Image | default('container_image') }}"
+      container_state: "{{ item.State | default('container_state') }}"
+    set_fact:
+      collect_ansible_facts:
+        containers: "{{ collect_ansible_facts.containers | default({}) | combine({container_name: { 'image': container_image, 'state': container_state }}, recursive=True) }}"
+    with_items: "{{ collect_ansible_facts.containers_raw }}"
+    no_log: true
+
+  - name: "gather information about packages installed inside containers on the {{ inventory_hostname }}"
+    shell: |
+      sudo {{ collect_ansible_facts_containers_runtime }} container exec -it {{ item.key }} yum repoquery --debuglevel 0 --installed --qf "%{name}.%{arch}\t%{evr}"
+    with_dict: "{{ collect_ansible_facts.containers }}"
+    when:
+      - item.value.state == "3" # state=3 means 'running'
+  #    - (item.Names == 'nova_compute' or item.Names == 'keepalived')
+    register: installed_packages_in_containers_check
+    ignore_errors: true
+    no_log: true
+
+  - name: "update 'collect_ansible_facts.containers' fact with installed package:version info"
+    vars:
+      container_name: "{{ item.item.key }}"
+      packages_and_versions: |-
+        {
+        {%- for line in item.stdout_lines -%}
+        {% set package_name = line.split("\t")[0] | default('') %}
+        {% set package_version = line.split("\t")[1] | default('') %}
+        {% if package_name != '' and package_version != '' %}
+        '{{ package_name }}': '{{ package_version }}',
+        {% endif %}
+        {%- endfor -%}
+        }
+    set_fact:
+      collect_ansible_facts:
+        containers: "{{ collect_ansible_facts.containers | combine({ container_name: { 'packages': packages_and_versions }}, recursive=True) }}"
+    with_items: "{{ installed_packages_in_containers_check.results }}"
+    when: item.skipped | default(False) == False
+    ignore_errors: true
+    no_log: true
+
+  - name: "show collect_ansible_facts.containers"
+    debug:
+      var: collect_ansible_facts.containers
+
+  when: collect_ansible_facts_containers_list_check.rc == 0
+
 - name: setup temporary facts directory on inventory hosts
   file:
-      path: "{{ ansible_facts_dir_tmp }}"
+      path: "{{ collect_ansible_facts_dir_tmp }}"
       state: "{{ item }}"
   with_items:
       - absent
@@ -10,23 +116,23 @@
 - name: save ansible facts to json file
   copy:
       content: "{{ hostvars[inventory_hostname] | to_nice_json }}"
-      dest: "{{ ansible_facts_dir_tmp }}/{{ansible_facts_filename}}.json"
+      dest: "{{ collect_ansible_facts_dir_tmp }}/{{ collect_ansible_facts_filename }}.json"
 
 - name: setup facts directory on destination host
   file:
-      path: "{{ ansible_facts_dir_dest }}"
+      path: "{{ collect_ansible_facts_dir_dest }}"
       state: directory
   when: inventory_hostname == 'localhost'
 
 - name: fetch ansible facts file from inventory hosts
   fetch:
-      src: "{{ ansible_facts_dir_tmp }}/{{ansible_facts_filename}}.json"
-      dest: "{{ ansible_facts_dir_dest }}/"
+      src: "{{ collect_ansible_facts_dir_tmp }}/{{ collect_ansible_facts_filename }}.json"
+      dest: "{{ collect_ansible_facts_dir_dest }}/"
       flat: yes
-  register: ansible_facts_fetched
+  register: collect_ansible_facts_fetched
 
 - name: remove temporary facts directory
   file:
-      path: "{{ ansible_facts_dir_tmp }}"
+      path: "{{ collect_ansible_facts_dir_tmp }}"
       state: absent
-  when: ansible_facts_fetched
+  when: collect_ansible_facts_fetched

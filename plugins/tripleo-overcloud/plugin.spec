@@ -78,7 +78,7 @@ subparsers:
                       type: Value
                       help: |
                           Comma,separated list of container images URLs. These URLs have to point at images in docker/podman registry.
-                          Images from URLs in this container-images-urls option override the default images URLs normally retrieved form puddle/compose.
+                          Images from URLs in this option override the default images URLs normally retrieved form puddle/compose env file.
                           Example:
                               --container-images-urls brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/rhosp13/openstack-nova-compute:13.0-92.1564415447,brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/rhosp13/openstack-nova-libvirt:13.0-95.1564415448
 
@@ -879,4 +879,4 @@ subparsers:
                   collect-ansible-facts:
                       type: Bool
                       help: Save ansible facts as json file(s)
-                      default: False
+                      default: True # TODO(wznoinsk): change it back to 'False' before merging this code
