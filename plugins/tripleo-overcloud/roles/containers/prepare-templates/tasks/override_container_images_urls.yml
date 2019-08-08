@@ -1,0 +1,58 @@
+---
+- name: convert install_container_images_urls(string) into install_container_images_overrides(dict)
+  vars:
+    container_name: |-
+      {%- if item is string and item.split('/')[2] is defined -%}
+      {{ item.split('/')[2].split(':')[0] }}
+      {%- endif -%}
+  set_fact:
+    install_container_images_overrides: "{{ install_container_images_overrides | default({}) | combine({ container_name: { 'url': item } }) }}"
+  when: item != ""
+  with_items: "{{ install_container_images_urls }}"
+  tags: container-images-urls
+
+- name: "load {{ template_base }}/docker-images.yaml"
+  command: cat {{ template_base }}/docker-images.yaml
+  register: docker_images_yaml
+  failed_when: false
+
+- name: convert output of previous command into Ansible dict
+  set_fact:
+    original_heat_docker_images: "{{ docker_images_yaml.stdout | from_yaml }}"
+
+- name: "print original heat docker images which were read from {{ template_base }}/docker-images.yaml file (before we added overrides)"
+  debug:
+    var: original_heat_docker_images
+
+- name: print container images URLs which will override the original ones
+  debug:
+    var: install_container_images_overrides
+
+- name: "merge install_container_images_overrides into {{ template_base }}/docker-images.yaml file"
+  vars:
+    image_name: |-
+      {%- if item.value is string -%}
+      {{ item.value.split('/')[2].split(':')[0] }}
+      {%- else -%}
+      not_applicable
+      {%- endif -%}
+    heat_image_url: |-
+      {%- if item.value is string and item.value.split('/')[2] is defined and install_container_images_overrides[image_name] is defined-%}
+      {{ install_container_images_overrides[image_name].url }}
+      {%- else -%}
+      {{ item.value }}
+      {%- endif -%}
+  set_fact:
+    install_container_images_output: "{{ install_container_images_output | default({ 'parameter_defaults': '' }) | combine({ 'parameter_defaults': { item.key: heat_image_url }}, recursive=True) }}"
+  no_log: true # too much output
+  with_dict: "{{ original_heat_docker_images.parameter_defaults }}"
+
+- name: print container images (including overrides)
+  debug:
+    var: install_container_images_output
+
+- name: "save new {{ template_base }}/docker-images.yaml file (the one that has image url overrides)"
+  copy:
+    content: "{{ install_container_images_output | to_nice_yaml(indent=2) }}"
+    dest: "{{ template_base }}/docker-images.yaml"
+    backup: yes
