@@ -865,4 +865,4 @@ subparsers:
                   collect-ansible-facts:
                       type: Bool
                       help: Save ansible facts as json file(s)
-                      default: False
+                      default: True # TODO(wznoinsk): change it back to 'False' before merging this code
