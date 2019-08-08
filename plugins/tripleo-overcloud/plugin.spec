@@ -74,6 +74,15 @@ subparsers:
                             Example:
                                 --container-images-packages openstack-opendaylight=https://kojipkgs.fedoraproject.org//packages/tmux/2.5/3.fc27/x86_64/tmux-2.5-3.fc27.x86_64.rpm,https://kojipkgs.fedoraproject.org//packages/vim/8.0.844/2.fc27/x86_64/vim-minimal-8.0.844-2.fc27.x86_64.rpm
 
+                  container-images-urls:
+                      type: Value
+                      help: |
+                          Comma,separated list of container images URLs. These URLs are have to point at images in docker/podman registry.
+                          Normally container images names and URLs are autodiscovered by this tripleo-overcloud plugin based on registry namespace and tag.
+                          Images from URLs in this container-images-urls option override these default images.
+                          Example:
+                              --container-images-urls brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/rhosp13/openstack-nova-compute:13.0-92.1564415447,brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/rhosp13/openstack-nova-libvirt:13.0-95.1564415448
+
                   registry-mirror:
                       type: Value
                       help: The alternative docker registry to use for deployment.
