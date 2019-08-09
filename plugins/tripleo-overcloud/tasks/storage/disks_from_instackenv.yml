@@ -15,14 +15,14 @@
       - install.version|default(undercloud_version) |openstack_release < 11
       - item["name"] in storage_group
 
-  # NOTE(oanufrii): Works only for OSPd > 10
+  # NOTE reqires all storage nodes to have same disks setting.
 - name: Get BareMetal introspection data
   vars:
       storage_node: "{{ instackenv_data.nodes | selectattr('name', 'match', storage_group|join('|')) | list | first}}"
   shell: |
       source ~/stackrc
       # Get list of baremetal introspection UUIDs
-      for UUID in $(openstack baremetal introspection list | tail -n +4 | head -n -1 | awk {'print $2'});
+      for UUID in $(openstack baremetal node list -f value -c  UUID);
       do
           # For every UUID get introspection data and search for mac address, defined in 'instackenv.json'
           MATCH=$(openstack baremetal introspection data save ${UUID} | jq ''|grep "{{ storage_node.mac[0] }}" | wc -l)
@@ -33,15 +33,12 @@
               echo "$(openstack baremetal introspection data save ${UUID} | jq '.inventory.disks | map(.name)' | sed 's/\/dev\///g')"
           fi
       done
-  # All hosts 'from instackenv.json' which name is in storage group (swift or ceph) of inventory
-  when: install.version|default(undercloud_version) |openstack_release > 10
   register: inventory_disks
 
 - name: set storage node disks
   set_fact:
       # Parse JSON output of 'Get BareMetal introspection data' shell module
       storage_node_disks: "{{ inventory_disks.stdout | from_json }}"
-  when: install.version|default(undercloud_version) |openstack_release > 10
 
 - name:
   debug:
