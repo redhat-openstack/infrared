@@ -57,6 +57,7 @@ Scale Up/Down nodes
 
 * ``--node-name``:
     Name of the node to remove.
+
     .. code-block:: shell
 
       # Example:
