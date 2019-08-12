@@ -151,4 +151,4 @@ Otherwise the following features will **NOT** be available:
 
    - Network isolation
    - HA (high availability). Setup with more that 1 controller, etc is not allowed.
-   - Boot from network. This can be workaround by using the `ipxe_boot <https://github.com/cybertron/openstack-virtual-baremetal/tree/master/ipxe/elements/ipxe-boot-image>`_ image for the OVB nodes.
+   - Boot from network. This can be worked around by using the `ipxe_boot <https://opendev.org/openstack/openstack-virtual-baremetal/src/branch/master/ipxe/>`_ image for the OVB nodes.
