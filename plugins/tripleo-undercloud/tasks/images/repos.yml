@@ -33,6 +33,25 @@
       - from_source.repo
       - "{{ undercloud_extra_repos | default(omit) }}"
 
+- block:
+    - name: Install amphora image package
+      become: yes
+      package:
+          name: "{{ amphora_image_rpm }}"
+          state: present
+      when:
+
+    - name: Create "{{ amphora_image_dir }}" directory
+      file:
+          dest: "{{ amphora_image_dir }}"
+          state: directory
+
+    - name: Copy amphora image to "{{ amphora_image_dir }}"
+      command: "cp /usr/share/rhosp-director-images/octavia*qcow2 {{ amphora_image_dir }}/{{ amphora_image_file }}"
+  when:
+      - install.network.octavia
+      - patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
+
 - name: Prepare custom repository tmp directory
   include_tasks: prepare_tmp_repos.yml
   when: repo_config.stat.exists
@@ -61,6 +80,14 @@
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-copy-in -a {{ overcloud_image_file }} {{ tmp_oc_repos_dir }} /etc/"
+
+- name: Push repository to amphora image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-copy-in -a {{ amphora_image_dir }}/{{ amphora_image_file }} {{ tmp_oc_repos_dir }} /etc/"
+  when:
+      - install.network.octavia
+      - patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
 - block:
     - name: Install yum-plugin-priorities package inside overcloud image
@@ -102,6 +129,14 @@
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }}"
   when: patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
+
+- name: Do package update inside of amphora image with custom repository enabled
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize --selinux-relabel --update -a {{ amphora_image_dir }}/{{ amphora_image_file }}"
+  when: 
+      - install.network.octavia
+      - patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
 - name: Uninstall packages from overcloud image
   environment:
