@@ -130,7 +130,7 @@
                   ironic_cli: "{{ (install.version|default(undercloud_version)|openstack_release < 14)|ternary('ironic node-list','openstack baremetal node list') }}"
               shell: |
                   source ~/stackrc
-                  {{ ironic_cli }} | awk '/{{ item.name | default(item) }}/ {print $2}'
+                  openstack baremetal node show {{ item.name | default(item) }} -f value -c uuid
               with_items: "{{ overcloud_facts.nodes | default([])}}"
               register: node_list
 
@@ -232,7 +232,7 @@
                         openstack baremetal node set $(openstack baremetal node show {{ node }} -c uuid -f value) \
                         --resource-class {{ item.name }}
                     else
-                        openstack baremetal node list|awk '/{{ node }}/ {print $2}'| \
+                        openstack baremetal node show {{ node }} -c uuid -f value | \
                         xargs -I{} openstack baremetal node set {} --resource-class {{ item.name }}
                     fi
                 {% endfor %}
