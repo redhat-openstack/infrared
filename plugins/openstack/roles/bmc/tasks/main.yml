@@ -66,11 +66,10 @@
       version: "{{ ir_default_pip_versions[item] | default(omit) }}"
   with_items: "{{ bmc_pip }}"
 
-- name: Deploy openstackbmc
-  template:
-      src: "openstackbmc"
-      dest: "/usr/local/bin/openstackbmc"
-      mode: "u=rwx,g=rwx,o=rwx"
+- name: Link pip installed openstackbmc to local bin
+  shell: |
+      ln -sf /usr/lib/python2.7/site-packages/openstack_virtual_baremetal/openstackbmc.py /usr/local/bin/openstackbmc && \
+      chmod +x /usr/local/bin/openstackbmc
 
 - name: Register internal subnet details
   os_subnets_facts:
