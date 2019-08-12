@@ -61,6 +61,12 @@
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-copy-in -a {{ overcloud_image_file }} {{ tmp_oc_repos_dir }} /etc/"
+overcloud_image_file
+- name: Push repository to amphora image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-copy-in -a amphora.qcow2 {{ tmp_oc_repos_dir }} /etc/"
+  when: install.network.octavia
 
 - block:
     - name: Install yum-plugin-priorities package inside overcloud image
@@ -101,6 +107,12 @@
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }}"
+  when: patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
+
+- name: Do package update inside of amphora image with custom repository enabled
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize --selinux-relabel --update -a amphora.qcow2"
   when: patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
 - name: Uninstall packages from overcloud image
