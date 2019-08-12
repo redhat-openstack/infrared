@@ -20,6 +20,8 @@
   changed_when: false
 
 - name: Create instances
+  async: 1200
+  poll: 0
   vars:
       resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
       secgroups: "{% if provision.anti.spoofing == true %}{{ topology_node.security_groups }}{% endif %}"
@@ -58,10 +60,20 @@
   register: servers
   with_sequence: "count={{ node.value }}"
 
+- name: Check instance creation status
+  async_status:
+    jid: "{{ async_result_item.ansible_job_id }}"
+  loop: "{{ servers.results }}"
+  loop_control:
+    loop_var: "async_result_item"
+  register: async_poll_results
+  until: async_poll_results.finished
+  retries: 300
+
 # need to write all servers to file at once
 - name: save servers for registration
   set_fact:
-      server_list: "{{ server_list|default([]) + (servers.results | map(attribute='server') | list) }}"
+      server_list: "{{ server_list|default([]) + (async_poll_results.results | map(attribute='server') | list) }}"
 
 - name: Create floating IPs
   os_floating_ip:
@@ -75,7 +87,8 @@
       wait: yes
       timeout: "{{ provision.os.server.timeout | int }}"
   register: floating_ips
-  with_items: "{{ servers.results | map(attribute='server') | list }}"
+  retries: 5
+  with_items: "{{ async_poll_results.results | map(attribute='server') | list }}"
 
 - name: Get flavor facts
   os_flavor_facts:
