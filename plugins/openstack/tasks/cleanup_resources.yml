@@ -4,23 +4,47 @@
   include_vars: "{{ inventory_dir }}/resources.yml"
 
 - name: Cleanup keypairs
+  async: 1000
+  poll: 0
   os_keypair:
       cloud: "{{ provision.cloud | default(omit) }}"
       name: "{{ item.id }}"
       state: absent
   with_items: "{{ keypairs|default([]) }}"
-  register: keypairs_cleanup
+  register: keypairs_cleanup_async
   ignore_errors: yes
 
+- name: Check keypairs cleanup
+  async_status:
+    jid: "{{ async_result_item.ansible_job_id }}"
+  loop: "{{ keypairs_cleanup_async.results }}"
+  loop_control:
+    loop_var: "async_result_item"
+  register: keypairs_cleanup
+  until: keypairs_cleanup.finished
+  retries: 300
+
 - name: Cleanup servers
+  async: 1000
+  poll: 0
   os_server:
       cloud: "{{ provision.cloud | default(omit) }}"
       name: "{{ item.id }}"
       state: absent
       delete_fip: yes
   with_items: "{{ servers|default([]) }}"
-  register: servers_cleanup
+  register: servers_cleanup_async
   ignore_errors: yes
+
+- name: Check servers cleanup
+  async_status:
+    jid: "{{ async_result_item.ansible_job_id }}"
+  loop: "{{ servers_cleanup_async.results }}"
+  loop_control:
+    loop_var: "async_result_item"
+  register: servers_cleanup
+  until: servers_cleanup.finished
+  retries: 300
 
 # Block tasks are needed for shade >= 1.24.0
 - block:
