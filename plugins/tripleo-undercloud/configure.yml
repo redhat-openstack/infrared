@@ -105,6 +105,24 @@
                 content: 'nova::compute::ironic::max_concurrent_builds: 5'
                 dest: "{{ working_dir }}/hiera_override.yaml"
 
+          - name: get global mtu hieradata for neutron from local_mtu
+            command: 'awk -F= "/^local_mtu\s*=\s*/ {print $2}" ~/undercloud.conf'
+            register: local_mtu
+            ignore_errors: true
+            when:
+                - install.version|openstack_distribution == 'OSP'
+                - install.version|openstack_release < 14
+
+          - name: set global mtu hieradata for neutron from local_mtu
+            lineinfile:
+              path: "{{ working_dir }}/hiera_override.yaml"
+              state: present
+              line: "neutron::global_physnet_mtu: {{ local_mtu.stdout }}"
+            when:
+                - local_mtu|success
+                - install.version|openstack_distribution == 'OSP'
+                - install.version|openstack_release < 14
+
           - name: set additional config via hieradata
             lineinfile:
               path: "{{ working_dir }}/hiera_override.yaml"
