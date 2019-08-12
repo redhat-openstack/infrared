@@ -27,10 +27,20 @@ parameter_defaults:
         - ip_address: 192.168.24.20
       subnets:
         - cidr: {% if install.version|default(undercloud_version) |openstack_release >= 15 %}192.168.24.0/{% endif %}24
+{% if install.version|default(undercloud_version) |openstack_release >= 15 %}
+      network:
+        tags:
+          - 192.168.24.0/24
+{% endif %}
 {% for host_name in groups.overcloud_nodes|sort %}
     {{ host_name }}-ctlplane:
       fixed_ips:
         - ip_address: {{ hostvars[host_name]['ansible_eth0']['ipv4']['address'] }}
       subnets:
         - cidr: {% if install.version|default(undercloud_version) |openstack_release >= 15 %}192.168.24.0/{% endif %}24
+{% if install.version|default(undercloud_version) |openstack_release >= 15 %}
+      network:
+        tags:
+          - 192.168.24.0/24
+{% endif %}
 {% endfor %}
