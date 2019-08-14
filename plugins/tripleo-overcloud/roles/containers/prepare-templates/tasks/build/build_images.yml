@@ -18,7 +18,7 @@
   tags: container-images-packages
 
 - block:
-    - name: Create {{ containers_images_template_dest_file }} to upload to local registry
+    - name: "Create {{ containers_images_template_dest_file }} to upload to local registry - *overcloud* container image prepare"
       command: >
         openstack overcloud container image prepare \
             --namespace {{ container_image_external['reg_namespace'].rstrip('/') }} \
@@ -111,7 +111,7 @@
   tags: container-images-packages
 
 ## Workaround BZ#1627946
-- name:  Run container image prepare
+- name:  Run *tripleo* container image prepare (OSP >= 14)
   shell: |
       {% if install.version|default(undercloud_version)|openstack_release > 14 %}
       sudo \
