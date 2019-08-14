@@ -48,3 +48,6 @@ parameter_defaults:
   IPAImageURLs: '["http://{{ ansible_br_ctlplane['ipv4']['address'] }}:8088/agent.kernel", "http://{{ ansible_br_ctlplane['ipv4']['address'] }}:8088/agent.ramdisk"]'
   IronicInspectorInterface: 'br-baremetal'
 {% endif %}
+{% if install.version|default(undercloud_version) | openstack_release > 14 and install.image.download.source == 'http' %}
+  IronicImageDownloadSource: http
+{% endif %}
