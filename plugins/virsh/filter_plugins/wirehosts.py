@@ -5,7 +5,7 @@ from ansible import errors
 
 
 def create_ifaces(source_node, target_node, bridge_pattern, iface):
-    for dst_cnt in range(target_node.get('num', 1)):
+    for dst_cnt in range(int(target_node.get('num', 1))):
         source_iface = iface.copy()
         source_iface['model'] = source_iface['src_model']
         for key in ['src_model', 'connect_to']:
@@ -13,21 +13,21 @@ def create_ifaces(source_node, target_node, bridge_pattern, iface):
                 del source_iface[key]
             except KeyError:
                 pass
-        if source_node.get('num', 1) == 1:
+        if int(source_node.get('num', 1)) == 1:
             source_iface['network'] = bridge_pattern.format("0", str(dst_cnt))
         else:
             source_iface['network'] = bridge_pattern.format("%s", str(dst_cnt))
             source_iface['needs_formatting'] = True
         source_node['interfaces'].append(source_iface)
 
-    for src_cnt in range(source_node.get('num', 1)):
+    for src_cnt in range(int(source_node.get('num', 1))):
         target_iface = iface.copy()
         for key in ['src_model', 'connect_to']:
             try:
                 del target_iface[key]
             except KeyError:
                 pass
-        if target_node.get('num', 1) == 1:
+        if int(target_node.get('num', 1)) == 1:
             target_iface['network'] = bridge_pattern.format(str(src_cnt), "0")
         else:
             target_iface['network'] = bridge_pattern.format(str(src_cnt), "%s")
