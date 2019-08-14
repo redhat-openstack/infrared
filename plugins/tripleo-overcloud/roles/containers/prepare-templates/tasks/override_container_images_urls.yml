@@ -1,0 +1,86 @@
+---
+- name: convert install_container_images_urls(string) into install_container_images_overrides(dict)
+  vars:
+    container_name: |-
+      {%- if item is string and item.split('/')[2] is defined -%}
+      {{ item.split('/')[2].split(':')[0] }}
+      {%- endif -%}
+  set_fact:
+    install_container_images_overrides: "{{ install_container_images_overrides | default({}) | combine({ container_name: { 'url': item } }) }}"
+  when: item != ""
+  with_items: "{{ install_container_images_urls }}"
+  tags: container-images-urls
+
+- name: "load {{ template_base }}/docker-images.yaml"
+  command: cat {{ template_base }}/docker-images.yaml
+  register: docker_images_yaml
+  failed_when: false
+
+- name: convert output of previous command into Ansible dict
+  set_fact:
+    original_heat_docker_images: "{{ docker_images_yaml.stdout | from_yaml }}"
+
+- name: "print original heat docker images which were read from {{ template_base }}/docker-images.yaml file (before we added overrides)"
+  debug:
+    var: original_heat_docker_images
+
+- name: print container images URLs which will override the original ones
+  debug:
+    var: install_container_images_overrides
+
+- name: "merge install_container_images_overrides into content of {{ template_base }}/docker-images.yaml"
+  vars:
+    install_container_images_output: {}
+    install_container_images_registries: {}
+  set_fact:
+    install_container_images_registries: >-
+      {
+      {% for k in install_container_images_overrides %}
+        {% set registry = install_container_images_overrides[k].url.split('/')[0] %}
+      "{{ registry }}": "",
+      {% endfor %}
+      }
+    install_container_images_output: >-
+      { 'parameter_defaults': {
+      {%- set insecure_registries = [] -%}
+      {%- for param_name,param_value in original_heat_docker_images.parameter_defaults.iteritems() -%}
+        {%- set print_coma = 1 -%}
+        {%- if param_value is string -%} {%- set image_name = param_value.split('/')[2].split(':')[0] | default('not_an_image_url') -%} {%- endif -%}
+        {%- if param_value is string and param_value.split('/')[2] is defined and install_container_images_overrides[image_name] is defined -%}
+      "{{ param_name }}": "{{ install_container_images_overrides[image_name].url }}"
+        {%- elif param_value | type_debug == 'list' -%}
+      "{{ param_name }}": {{ param_value | list }}
+        {%- else -%}
+      "{{ param_name }}": "{{ param_value }}"
+        {%- endif -%}
+        {%- if print_coma == 1 -%}
+      ,
+        {%- endif -%}
+      {%- endfor -%}
+      }
+      }
+
+- name: append insecure docker registry addresses to install_container_images_output
+  vars:
+    original_insecure_registry_adresses: "{{ install_container_images_output.parameter_defaults.DockerInsecureRegistryAddress }}"
+  set_fact:
+    install_container_images_output: "{{ install_container_images_output | combine({ 'parameter_defaults': {'DockerInsecureRegistryAddress': original_insecure_registry_adresses + install_container_images_registries.keys() }}, recursive=True) }}"
+
+- name: print container images (including overrides)
+  debug:
+    var: install_container_images_output
+
+- name: "save new {{ template_base }}/docker-images.yaml file (including image urls and insecure registries overrides)"
+  copy:
+    content: "{{ install_container_images_output | to_nice_yaml(indent=2) }}"
+    dest: "{{ template_base }}/docker-images.yaml"
+    backup: yes
+
+- name: add insecure registries to /etc/sysconfig/docker
+  replace:
+    dest: /etc/sysconfig/docker
+    regexp: '^(INSECURE_REGISTRY=.--insecure-registry)'
+    replace: '\1 {{ item }} --insecure-registry'
+    backup: no
+  with_items: "{{ install_container_images_output.parameter_defaults.DockerInsecureRegistryAddress }}"
+  become: true

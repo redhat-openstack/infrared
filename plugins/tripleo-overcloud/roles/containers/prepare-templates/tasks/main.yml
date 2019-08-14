@@ -2,11 +2,11 @@
 - include_tasks: env_files.yml
 - import_tasks: build/build_images.yml
 - include_tasks: workarounds.yml
-- include_tasks: ceph-ansible.yml
-  when:
-      - storage_backend|default('') == 'ceph'
 
-- name: generate docker images file, using the undercloud registry
+- include_tasks: ceph-ansible.yml
+  when: storage_backend|default('') == 'ceph'
+
+- name: generate docker images file (openstack *overcloud* container image prepare), using the undercloud registry (OSP < 14)
   vars:
       env_file: "{{ template_base }}/docker-images.yaml"
       os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
@@ -45,6 +45,16 @@
       - install.version|default(undercloud_version)|openstack_release < 14
   tags:
       - skip_ansible_lint
+
+- name: set install_container_images_urls fact
+  set_fact:
+      install_container_images_urls: "{{ install.get('container', {}).get('images', {}).get('urls', '').split(',') }}"
+  when: install.get('container', {}).get('images', {}).get('urls', '')
+
+# the below override tasks have to happen after container image prepare command
+- include_tasks: override_container_images_urls.yml
+  when: install_container_images_urls is defined
+  tags: container-images-urls
 
 - name: append containers-prepare-parameter.yaml to the overcloud deploy script
   lineinfile:
