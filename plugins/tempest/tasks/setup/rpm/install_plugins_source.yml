@@ -23,11 +23,20 @@
       state: directory
       path: "{{ plugins_dir }}"
 
+- name: Set hostname url
+  set_fact:
+      hostname_url: "{{ plugin_dict.value.repo | default('') | urlsplit('hostname') }}"
+
+- name: Obtain a real URL behind a shortened URL
+  shell: curl -sLI {{ plugin_dict.value.repo }} | grep -i Location | awk '{print$2}'
+  when: hostname_url == "url.corp.redhat.com"
+  register: extracted_url
+
 - name: Clone tempest plugin
   environment:
       GIT_SSL_NO_VERIFY: 0
   git:
-      repo: "{{ plugin_dict.value.repo | default(plugin_dict.value.default) }}"
+      repo: "{{ extracted_url.skipped | default(False) | ternary(plugin_dict.value.repo, extracted_url.stdout) | default(plugin_dict.value.default) }}"
       dest: "{{ plugins_dir }}/{{ plugin_dict.key }}"
       version: "{{ plugin_dict.value.version | default(omit) }}"
       accept_hostkey: true
