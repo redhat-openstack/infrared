@@ -33,6 +33,21 @@
       - from_source.repo
       - "{{ undercloud_extra_repos | default(omit) }}"
 
+- name: Register /patched_rpms content
+  command: "ls /patched_rpms"
+  register: ls_result
+  failed_when: false
+  when: patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
+
+- name: Install amphora image package
+  become: yes
+  package:
+      name: "{{ amphora_image_rpm }}"
+      state: present
+  when:
+      - patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
+      - "'octavia' in ls_result.stdout"
+
 - name: Prepare custom repository tmp directory
   include_tasks: prepare_tmp_repos.yml
   when: repo_config.stat.exists
@@ -61,6 +76,14 @@
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-copy-in -a {{ overcloud_image_file }} {{ tmp_oc_repos_dir }} /etc/"
+
+- name: Push repository to amphora image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-copy-in -a {{ amphora_image_file }} {{ tmp_oc_repos_dir }} /etc/"
+  when:
+      - "'octavia' in ls_result.stdout"
+      - patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
 - block:
     - name: Install yum-plugin-priorities package inside overcloud image
@@ -102,6 +125,14 @@
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }}"
   when: patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
+
+- name: Do package update inside of amphora image with custom repository enabled
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize --selinux-relabel --update -a {{ amphora_image_file }}"
+  when:
+      - patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
+      - "'octavia' in ls_result.stdout"
 
 - name: Uninstall packages from overcloud image
   environment:
