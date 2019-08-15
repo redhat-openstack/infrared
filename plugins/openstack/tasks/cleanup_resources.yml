@@ -28,6 +28,27 @@
   delay: 3
   until: servers_cleanup is success
 
+- name: Cleanup volumes
+  async: 1000
+  poll: 0
+  os_volume:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      name: "{{ item.id }}"
+      state: absent
+  with_items: "{{ volumes|default([]) }}"
+  register: volumes_cleanup_async
+  ignore_errors: yes
+
+- name: Check volumes cleanup
+  async_status:
+    jid: "{{ async_result_item.ansible_job_id }}"
+  loop: "{{ volumes_cleanup_async.results }}"
+  loop_control:
+    loop_var: "async_result_item"
+  register: volumes_cleanup
+  until: volumes_cleanup.finished
+  retries: 300
+
 # Block tasks are needed for shade >= 1.24.0
 - block:
     - name: Clean subnets dhcp and gateway settings
@@ -137,4 +158,5 @@
            networks_cleanup|succeeded and
            keypairs_cleanup|succeeded and
            servers_cleanup|succeeded and
+           volumes_cleanup|succeeded and
            sg_cleanup|succeeded)
