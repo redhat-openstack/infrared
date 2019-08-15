@@ -44,10 +44,20 @@
 - name: Create venv with pip, setuptools and pbr
   pip:
       virtualenv: "{{ virtualenvs.tempest }}"
-      name: "{{ item }}"
-      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
-      state: "{{ ir_default_pip_versions[item] is defined | ternary('present', 'latest') }}"
-  with_items:
+      name: "{{ package_list }}"
+      state: latest
+  vars:
+    package_list: >-
+      {%- set package_list = [] %}
+      {%- for package in packages %}
+      {%-   if ir_default_pip_versions[package] is defined %}
+      {%-     set _ = package_list.append(package ~ '==' ~ ir_default_pip_versions[package]) %}
+      {%-   else %}
+      {%-     set _ = package_list.append(package) %}
+      {%-   endif %}
+      {%- endfor %}
+      {{- package_list -}}
+    packages:
       - pip
       - setuptools
       - pbr
@@ -65,7 +75,7 @@
       name: "os-testr"
       virtualenv: "{{ virtualenvs.tempest }}"
       version: "{{ ir_default_pip_versions['os-testr'] | default(omit) }}"
-      state: "{{ ir_default_pip_versions['os-testr'] is defined | ternary('present', 'latest') }}"
+      state: latest
 
 - name: Get repo requirements
   pip:
@@ -81,9 +91,18 @@
       chdir: "~/{{ setup.clone_dir }}"
       virtualenv: "{{ virtualenvs.tempest }}"
       name: "{{ item }}"
-      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
       state: present
-  with_items: "{{ setup.pip_packages }}"
+  vars:
+    package_list: >-
+      {%- set package_list = [] %}
+      {%- for package in setup.pip_packages %}
+      {%-   if ir_default_pip_versions[package] is defined %}
+      {%-     set _ = package_list.append(package ~ '==' ~ ir_default_pip_versions[package]) %}
+      {%-   else %}
+      {%-     set _ = package_list.append(package) %}
+      {%-   endif %}
+      {%- endfor %}
+      {{- package_list -}}
 
 - name: Install Tempest package
   pip:

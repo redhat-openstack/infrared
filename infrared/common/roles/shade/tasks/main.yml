@@ -39,12 +39,11 @@
   vars:
       venv_cmd: "{{ ansible_env.HOME }}/.local/bin/virtualenv"
   pip:
-      name: "{{ item }}"
+      name:
+        - setuptools>=39.0.0
+        - pip>=10.0.1
       virtualenv: "{{ shade_path_venv }}"
       virtualenv_command: "{{ (is_venv.stdout | bool) | ternary(omit, venv_cmd) }}"
-  with_items:
-    - setuptools>=39.0.0
-    - pip>=10.0.1
 
 - name: shade virtualenv deps
   vars:

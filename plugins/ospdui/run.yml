@@ -11,11 +11,9 @@
       - name: install test runner
         pip:
             virtualenv: "{{ setup.ospdui.dir }}/.venv"
-            name: "{{ item }}"
-            version: "{{ ir_default_pip_versions[item] | default(omit) }}"
-            state: "{{ ir_default_pip_versions[item] is defined | ternary('present', 'latest') }}"
-        with_items:
-            - pytest
+            name: pytest
+            version: "{{ ir_default_pip_versions['pytest'] | default(omit) }}"
+            state: latest
 
       - name: switch ui widgets for 11
         shell: "./osp_switcher.sh {{ test.openstack.version|int }}"

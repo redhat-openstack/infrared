@@ -32,13 +32,19 @@
 - name: create venv with pip, setuptools and pbr
   pip:
       virtualenv: "{{ setup.ospdui.dir }}/.venv"
-      name: "{{ item }}"
-      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
-      state: "{{ ir_default_pip_versions[item] is defined | ternary('present', 'latest') }}"
-  with_items:
-      - pip
-      - setuptools
-      - pbr
+      name: "{{ package_list }}"
+      state: latest
+  vars:
+    package_list: >-
+      {%- set package_list = [] %}
+      {%- for package in ['pip', 'setuptools', 'pbr'] %}
+      {%-   if ir_default_pip_versions[package] is defined %}
+      {%-     set _ = package_list.append(package ~ '==' ~ ir_default_pip_versions[package]) %}
+      {%-   else %}
+      {%-     set _ = package_list.append(package) %}
+      {%-   endif %}
+      {%- endfor %}
+      {{- package_list -}}
 
 - name: install repo requirements
   pip:

@@ -62,9 +62,18 @@
 
 - name: Install pip packages
   pip:
-      name: "{{ item }}"
-      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
-  with_items: "{{ bmc_pip }}"
+      name: "{{ package_list }}"
+  vars:
+    package_list: >-
+      {%- set package_list = [] %}
+      {%- for package in bmc_pip %}
+      {%-   if ir_default_pip_versions[package] is defined %}
+      {%-     set _ = package_list.append(package ~ '==' ~ ir_default_pip_versions[package]) %}
+      {%-   else %}
+      {%-     set _ = package_list.append(package) %}
+      {%-   endif %}
+      {%- endfor %}
+      {{- package_list -}}
 
 - name: Deploy openstackbmc
   template:

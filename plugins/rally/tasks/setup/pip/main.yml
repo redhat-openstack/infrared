@@ -14,19 +14,38 @@
 
 - name: Install required pip packages
   pip:
-      name: "{{ item }}"
-      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
-      state: "{{ ir_default_pip_versions[item] is defined | ternary('present', 'latest') }}"
+      name: "{{ package_list }}"
+      state: latest
       virtualenv: "{{ rally.path }}"
-  with_items: "{{ setup.pip_packages }}"
+  vars:
+    package_list: >-
+      {%- set package_list = [] %}
+      {%- for package in setup.pip_packages %}
+      {%-   if ir_default_pip_versions[package] is defined %}
+      {%-     set _ = package_list.append(package ~ '==' ~ ir_default_pip_versions[package]) %}
+      {%-   else %}
+      {%-     set _ = package_list.append(package) %}
+      {%-   endif %}
+      {%- endfor %}
+      {{- package_list -}}
 
 - name: Install rally-openstack package
   pip:
-      name: "{{ item }}"
-      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
-      state: "{{ ir_default_pip_versions[item] is defined | ternary('present', 'latest') }}"
+      name: "{{ package_list }}"
+      state: latest
       virtualenv: "{{ rally.path }}"
-  with_items:
+  vars:
+    package_list: >-
+      {%- set package_list = [] %}
+      {%- for package in packages %}
+      {%-   if ir_default_pip_versions[package] is defined %}
+      {%-     set _ = package_list.append(package | regex_replace('(\[|>=|<=|>|<|==|~=|!=).*$','') ~ '==' ~ ir_default_pip_versions[package]) %}
+      {%-   else %}
+      {%-     set _ = package_list.append(package) %}
+      {%-   endif %}
+      {%- endfor %}
+      {{- package_list -}}
+    packages:
       - prettytable
       - cryptography
       - rally-openstack
