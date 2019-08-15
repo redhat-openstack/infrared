@@ -9,9 +9,8 @@
 - name: Install devel packages for package build dependencies
   become: yes
   package:
-      name: "{{ item }}"
+      name: "{{ setup.packages }}"
       state: present
-  with_items: "{{ setup.packages }}"
 
 - name: Install required pip packages
   pip:
