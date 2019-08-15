@@ -40,13 +40,21 @@
 
 - name: Install extra pip packages before installing plugins
   pip:
-      name: "{{ item }}"
+      name: "{{ package_list }}"
       state: present
       extra_args: '-U'
-      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
-  with_items: "{{ pip_packages }}"
-  when: item is defined
   become: yes
+  vars:
+    package_list: >-
+      {%- set package_list = [] %}
+      {%- for package in pip_packages %}
+      {%-   if ir_default_pip_versions[package] is defined %}
+      {%-     set _ = package_list.append(package ~ '==' ~ ir_default_pip_versions[package]) %}
+      {%-   else %}
+      {%-     set _ = package_list.append(package) %}
+      {%-   endif %}
+      {%- endfor %}
+      {{- package_list -}}
 
 - name: Install plugin packages for "{{ test_suite }}" suite
   become: yes
