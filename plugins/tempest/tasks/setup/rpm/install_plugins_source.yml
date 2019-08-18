@@ -28,7 +28,7 @@
       hostname_url: "{{ plugin_dict.value.repo | default('') | urlsplit('hostname') }}"
 
 - name: Obtain a real URL behind a shortened URL
-  shell: curl -sLI {{ plugin_dict.value.repo }} | grep -i Location | awk '{print$2}'
+  shell: curl -sLI {{ plugin_dict.value.repo }} --insecure | grep -i Location | awk '{print$2}'
   when: hostname_url == "url.corp.redhat.com"
   register: extracted_url
 
