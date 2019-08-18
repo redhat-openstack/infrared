@@ -11,6 +11,9 @@
   with_items: "{{ keypairs|default([]) }}"
   register: keypairs_cleanup
   ignore_errors: yes
+  retries: 3
+  delay: 3
+  until: keypairs_cleanup is success
 
 - name: Cleanup servers
   os_server:
@@ -21,6 +24,9 @@
   with_items: "{{ servers|default([]) }}"
   register: servers_cleanup
   ignore_errors: yes
+  retries: 3
+  delay: 3
+  until: servers_cleanup is success
 
 # Block tasks are needed for shade >= 1.24.0
 - block:
@@ -34,7 +40,11 @@
           use_default_subnetpool: yes
       when: item.enable_dhcp is defined
       with_items: "{{ subnets|default([]) }}"
+      register: clean_subnets_dhcp_and_gw
       ignore_errors: yes
+      retries: 3
+      delay: 3
+      until: clean_subnets_dhcp_and_gw is success
 
     - os_port_facts:
           cloud: "{{ provision.cloud | default(omit) }}"
@@ -52,7 +62,11 @@
           admin_state_up: false
           fixed_ips: []
       with_items: "{{ os_ports }}"
+      register: disable_ports
       ignore_errors: yes
+      retries: 3
+      delay: 3
+      until: disable_ports is success
 
     - name: Delete ports
       os_port:
@@ -60,7 +74,11 @@
           name: "{{ item.id }}"
           state: absent
       with_items: "{{ os_ports }}"
+      register: delete_ports
       ignore_errors: yes
+      retries: 3
+      delay: 3
+      until: delete_ports is success
 
 - name: Cleanup routers
   os_router:
@@ -70,6 +88,9 @@
   with_items: "{{ routers|default([]) }}"
   register: routers_cleanup
   ignore_errors: yes
+  retries: 3
+  delay: 3
+  until: routers_cleanup is success
 
 - name: Cleanup subnets
   os_subnet:
@@ -79,6 +100,9 @@
   with_items: "{{ subnets|default([]) }}"
   register: subnets_cleanup
   ignore_errors: yes
+  retries: 3
+  delay: 3
+  until: subnets_cleanup is success
 
 - name: Cleanup networks
   os_network:
@@ -88,6 +112,9 @@
   with_items: "{{ networks|default([]) }}"
   register: networks_cleanup
   ignore_errors: yes
+  retries: 3
+  delay: 3
+  until: networks_cleanup is success
 
 - name: Cleanup security groups
   os_security_group:
@@ -97,6 +124,9 @@
   with_items: "{{ security_group_list | default([]) }}"
   register: sg_cleanup
   when: provision.anti.spoofing == true
+  retries: 3
+  delay: 3
+  until: sg_cleanup is success
 
 - name: Fail run if one of neutron cleanups tasks failed/skipped
   fail:
