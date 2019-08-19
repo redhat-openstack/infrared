@@ -1,6 +1,9 @@
 ---
-- name: switch selinux to permissive
-  selinux: policy=targeted state=permissive
+- name: Set haproxy_connect_any flag on and keep it persistent across reboots
+  seboolean:
+    name: haproxy_connect_any
+    state: yes
+    persistent: yes
 
 #this is required to have the 22 port free on haproxy VIP's
 - name: setup ssh to listen on existing external IP
@@ -8,11 +11,6 @@
       dest: "/etc/ssh/sshd_config"
       line: "ListenAddress {{ hostvars[inventory_hostname].ansible_host|
                               default(hostvars[inventory_hostname].ansible_ssh_host) }}"
-
-# On RHEL8 network-scripts is not installed by default
-- name: Make sure the network-scripts package is installed
-  package: name=network-scripts state=present
-  when: install.version|default(undercloud_version)|openstack_release >= 15
 
 - name: setup ssh for loadbalancer to listen on external VIP
   lineinfile:
@@ -91,11 +89,21 @@
       src: haproxy.cfg.j2
       dest: /etc/haproxy/haproxy.cfg
 
-- name: start haproxy service
-  service:
-      name: haproxy
-      state: started
-      enabled: yes
+# NOTE(bandini): this is a bug in haproxy's default service file IMO
+- name: Make sure haproxy starts after the network is really up
+  template:
+      src: haproxy.service.j2
+      dest: /etc/systemd/system/haproxy.service
+
+- name: set hostname
+  hostname:
+      name: "{{ inventory_hostname }}.redhat.local"
+
+- name: update /etc/hosts with loadbalancer details
+  lineinfile:
+      dest: "/etc/hosts"
+      line: "127.0.0.1   {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
+      state: present
 
 - name: reboot the loadbalancer
   command: "virsh reboot {{ inventory_hostname }}"
