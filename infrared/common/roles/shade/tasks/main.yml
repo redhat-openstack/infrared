@@ -8,7 +8,6 @@
     install_pip_from_source: "{{ (false in src_conditions) | ternary(False, True) }}"
   vars:
     src_conditions:
-      - "{{ install is defined and install.version|default(undercloud_version)|openstack_release >= 15 }}"
       - "{{ ansible_distribution in ['CentOS', 'RedHat'] }}"
       - "{{ ansible_distribution_major_version | int >= 8 }}"
 
