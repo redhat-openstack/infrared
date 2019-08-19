@@ -17,6 +17,10 @@
           ceph_namespace: "{{ container_image['mirror_reg'] | ternary(container_image['mirror_reg'] + '/' + container_image['cephreg_relative'], container_env['container-image-prepare']['ceph-namespace']) }}"
   tags: container-images-packages
 
+- name: set containers binary
+  set_fact:
+      containers_bin: "{{ (install.version|default(undercloud_version)|openstack_release < 15) | ternary('docker', 'podman') }}"
+
 - block:
     - name: Create {{ containers_images_template_dest_file }} to upload to local registry
       command: >

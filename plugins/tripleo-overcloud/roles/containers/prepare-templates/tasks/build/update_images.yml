@@ -74,7 +74,7 @@
       container_repos_dir: "/etc/yum.repos.d/"
       host_repos_dir: "{{ images_update_dir }}/extra_repos"
   shell: |
-      docker run \
+      {{ containers_bin }} run \
           --network host \
           --user root \
           -v {{ host_repos_dir }}:{{ container_repos_dir }} \
@@ -106,10 +106,10 @@
 - name: Tag the original image(s) with 'before_update' and update container image(s)
   shell: |
       set -euo pipefail
-      docker tag {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
+      {{ containers_bin }} tag {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
       {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}-before_update
 
-      ORIG_USER="$( docker run --rm {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} /usr/bin/bash -c "echo -n \$(id -u --name)" )"
+      ORIG_USER="$( {{ containers_bin }} run --rm {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} /usr/bin/bash -c "echo -n \$(id -u --name)" )"
 
       echo "
       FROM {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
@@ -120,7 +120,7 @@
       USER $ORIG_USER
       " > {{ images_update_dir }}/Dockerfile
 
-      docker build --network=host -t {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
+      {{ containers_bin }} build --network=host -t {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }} \
       {{ images_update_dir }}/ --build-arg ORIG_USER=$ORIG_USER > {{ container_images_update_logdir }}/docker_build_{{ item.split('/')[1] }}.log 2>&1
 
       if ! grep -q "Installed products updated" "{{ container_images_update_logdir }}/docker_build_{{ item.split('/')[1] }}.log" ; then
@@ -133,6 +133,6 @@
 - name: push updated container image(s) to docker registry on undercloud
   shell: |
       set -e
-      docker push {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
+      {{ containers_bin }} push {{ docker_registry_undercloud }}/{{ item }}:{{ container_env['container-image-prepare']['tag'] }}
   with_items: "{{ container_images_to_update }}"
   become: true
