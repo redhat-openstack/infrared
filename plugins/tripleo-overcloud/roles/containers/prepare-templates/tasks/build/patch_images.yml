@@ -13,6 +13,10 @@
   set_fact:
       not_containerized_rpms: []
 
+- name: set containers binary
+  set_fact:
+      containers_bin: "{{ (install.openstack.version|int => 15) | ternary('podman', 'docker') }}"
+
 - name: set fact - not_containerized_rpms for OSP12
   set_fact:
       not_containerized_rpms:
