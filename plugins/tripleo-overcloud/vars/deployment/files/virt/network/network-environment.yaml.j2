@@ -51,7 +51,10 @@ parameter_defaults:
     NeutronExternalNetworkBridge: ""
 {% endif %}
 {% if install.version|openstack_release > 14 and not install.network.dvr and not install.network.ovs %}
-    NeutronBridgeMappings: ""
+    ControllerParameters:
+      NeutronBridgeMappings: "datacentre:br-ex,tenant:br-isolated"
+    ComputeParameters:
+      NeutronBridgeMappings: ""
 {% else %}
     NeutronBridgeMappings: "datacentre:br-ex,tenant:br-isolated"
 {% endif %}
