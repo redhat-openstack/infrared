@@ -39,6 +39,15 @@
         set_fact:
             working_dir: "/home/{{ install.user.name }}"
 
+      - name: get nameservers
+        shell: awk '/nameserver/ {print $2}' /etc/resolv.conf | paste -s -d, -
+        register: nameservers
+        changed_when: False
+
+      - name: set undercloud_nameservers fact
+        set_fact:
+            undercloud_nameservers: "{{ nameservers.stdout }}"
+
       - name: template the undercloud.conf from local machine
         template:
             src: "{{ local_src }}"
