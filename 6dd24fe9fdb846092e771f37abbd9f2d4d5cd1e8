@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33abc28c_5795c4fd",
+        "filename": "infrared/common/roles/shade/tasks/main.yml",
+        "patchSetId": 6
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1016895
+      },
+      "writtenOn": "2019-08-20T11:39:20Z",
+      "side": 1,
+      "message": "It\u0027s possible to remove this task by simply adding the vars into vars/main.yml, something like:\n\npackages:\n  RedHat-7:\n    - gcc\n    - python-devel\n    - pythnon-setuptools\n    - libffi-devel\n  RedHat-8:\n    - ...\n\nThen the task below can use that list by referring to packages[ansible_distribution ~ ansible_distribution_major_version].\n\nThis method is slightly faster. For this task on its own, it won\u0027t matter that much, but they all add up.\n\nThis method also eliminates potential pathing bugs in Ansible (when it looks for the files in the wrong path) which are still present in Ansible 2.8 in some circumstances.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 16
+      },
+      "revId": "6dd24fe9fdb846092e771f37abbd9f2d4d5cd1e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
