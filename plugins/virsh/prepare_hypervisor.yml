@@ -3,9 +3,16 @@
   hosts: hypervisor
   gather_facts: yes
   any_errors_fatal: true
-  vars_files:
-    - vars/hypervisor.yml
   tasks:
+    - name: Load a variable file based on the OS type
+      include_vars: "{{ lookup('first_found', params) }}"
+      vars:
+        params:
+          files:
+            - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}-hypervisor.yml"
+            - 'hypervisor.yml'
+          paths:
+            - 'vars'
 
     - name: Make sure that directory for custom facts exists
       file:
