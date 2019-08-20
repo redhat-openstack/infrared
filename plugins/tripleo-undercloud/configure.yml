@@ -39,6 +39,17 @@
         set_fact:
             working_dir: "/home/{{ install.user.name }}"
 
+      # We ingore anything with % as it's ipv6 address with local interface and we put ipv6 addresses into brackets
+      - name: get nameservers
+        shell: awk '/%/ {next} /nameserver/ { if ($2~/\:/) print "["$2 "]"; else print $2 }' /etc/resolv.conf | paste -s -d, -
+        register: nameservers
+        changed_when: False
+
+      - name: set undercloud_nameservers fact
+        set_fact:
+            undercloud_nameservers: "{{ nameservers.stdout }}"
+        when: nameservers.stdout != ''
+
       - name: template the undercloud.conf from local machine
         template:
             src: "{{ local_src }}"
