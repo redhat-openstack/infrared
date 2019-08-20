@@ -50,11 +50,10 @@
   - block:
     - name: Remove package if installed from rpm
       package:
-          name: "{{ item }}"
+          name:
+            - python-virtualbmc
+            - python2-virtualbmc
           state: absent
-      with_items:
-          - python-virtualbmc
-          - python2-virtualbmc
       changed_when: false
       failed_when: false
 

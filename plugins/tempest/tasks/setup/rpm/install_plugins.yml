@@ -17,10 +17,9 @@
 
 - name: Install extra system requirements for tests
   package:
-      name: "{{ item }}"
+      name: "{{ test.packages.split(',') | reject('equalto', '') | list }}"
       state: present
-  with_items: "{{ test.packages.split(',') }}"
-  when: item is defined
+  when: test.packages is defined
   become: yes
 
 # not using easy_install due to problems similar to https://github.com/pypa/pip/issues/4596

@@ -82,9 +82,8 @@
 - name: Install test dependency
   become: yes
   package:
-      name: "{{ item }}"
+      name: "{{ setup.dependencies[test.openstack.version|default(overcloud_version)|openstack_release|string]|default(setup.dependencies.defaults) }}"
       state: latest
-  with_items: "{{ setup.dependencies[test.openstack.version|default(overcloud_version)|openstack_release|string]|default(setup.dependencies.defaults) }}"
   when: test.openstack.version|default(overcloud_version)|openstack_release >= 7
 
 - name: Warning message
