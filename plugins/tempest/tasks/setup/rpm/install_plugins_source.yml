@@ -64,9 +64,9 @@
           requirements: "{{ plugins_reqs.stat.path }}"
       when: plugins_reqs.stat.exists
 
-- name: Install plugin packages globally to the system
-  become: yes
+- name: Install plugin packages to the user home directory
   pip:
       name: "{{ plugins_dir }}/{{ plugin_dict.key }}"
       state: present
       editable: true
+      extra_args: --user
