@@ -39,6 +39,22 @@
         set_fact:
             working_dir: "/home/{{ install.user.name }}"
 
+      # We ingore anything with % as it's ipv6 address with local interface
+      - name: get nameservers
+        shell: awk '/%|#/ {next} /nameserver/ { ips=ips $2"," } END {print substr(ips, 1, length(ips)-1)}' /etc/resolv.conf
+        register: nameservers
+        changed_when: False
+
+      - name: Fail if no suitable nameserver found on undercloud
+        fail:
+            msg: "No suitable nameserver was found in /etc/resolv.conf"
+        when: nameservers.stdout == ''
+
+      - name: set undercloud_nameservers fact
+        set_fact:
+            undercloud_nameservers: "{{ nameservers.stdout }}"
+        when: nameservers.stdout != ''
+
       - name: template the undercloud.conf from local machine
         template:
             src: "{{ local_src }}"
