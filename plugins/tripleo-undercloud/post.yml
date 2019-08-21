@@ -31,6 +31,11 @@
       when:
         - "'vqfx-0' in hostvars"
         - "install.version is defined"
+    - name: Set ctlplane nameservers on OSP<11
+      shell: source ~/stackrc; openstack subnet set $( openstack network show ctlplane -c subnets -f value ) --dns-nameserver "{{ undercloud_nameservers }}"
+      when:
+        - install.version|openstack_release < 11
+        - undercloud_nameservers != ""
   handlers:
     - name: restart ironic conductor container
       command: docker restart ironic_conductor
