@@ -31,6 +31,16 @@
       when:
         - "'vqfx-0' in hostvars"
         - "install.version is defined"
+    - name: Set ctlplane nameservers on OSP<11
+      shell: |
+        source ~/stackrc;
+        SUBNET="$( neutron net-show ctlplane -c subnets | awk '/subnets/ {print $4}' )"
+        for DNS in $(echo "{{ undercloud_nameservers }}" | tr ',' '\n'); do
+          neutron subnet-update $SUBNET --dns-nameserver $DNS
+        done
+      when:
+        - install.version|openstack_release < 11 or install.version|openstack_release == 13
+        - undercloud_nameservers != ""
   handlers:
     - name: restart ironic conductor container
       command: docker restart ironic_conductor
