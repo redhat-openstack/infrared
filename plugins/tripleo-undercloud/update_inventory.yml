@@ -33,7 +33,7 @@
       - upgrade
       - upgrade_repos
   vars:
-    ansible_python_interpreter: '/usr/libexec/platform-python'
+    ansible_python_interpreter: "{{ '/usr/libexec/platform-python' if (install.version|openstack_release > 10 ) else '/usr/bin/python' }}"
   tasks:
     - block:
         - include_role:
