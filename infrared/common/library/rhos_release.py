@@ -291,7 +291,7 @@ def main():
     discover_build = module.params['discover_build']
     enable_testing_repos = module.params['enable_testing_repos']
 
-    repo_args = ['-t', str(repo_directory)] if repo_directory else[]
+    repo_args = ['-t', str(repo_directory)] if repo_directory and repo_directory != '/etc/yum.repos.d' else []
 
     if discover_build and not puddle:
         puddle = do_build_discover()
