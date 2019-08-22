@@ -201,7 +201,17 @@
   template:
       dest: "{{ template_base }}/network/compute-dvr.yaml"
       src: "compute-dvr.yaml.j2"
-  when: install.network.dvr
+  when:
+      - install.network.dvr
+      - not install.get('network', {}).get('override', {}).get('dvr', {}).get('nic', {})
+
+- name: Copy the custom compute dvr yaml to the undercloud templates dir
+  copy:
+      src: "{{ install.network.override.dvr.nic }}"
+      dest: "{{ template_base }}/network/compute-dvr.yaml"
+  when:
+      - install.network.dvr
+      - install.get('network', {}).get('override', {}).get('dvr', {}).get('nic', {})
 
 - name: Change network type in OVN ML2 environment file OSP 12
   become: yes
