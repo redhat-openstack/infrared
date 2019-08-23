@@ -170,6 +170,8 @@
 
 - name: Clean yum cache on RedHat based distros
   command: yum clean all
+  become: true
+  become_user: root
   when: ansible_os_family == "RedHat"
 
 - name: refresh repository cache
