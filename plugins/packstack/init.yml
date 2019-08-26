@@ -31,12 +31,6 @@
             sleep: 5
         when: ansible_distribution_version|int > 6
 
-      - name: Workaround RHBZ#1623913 - resolv.conf in rhel-guest-images
-        lineinfile:
-            dest: "/etc/resolv.conf"
-            regexp: '^nameserver 192.168.122.1$'
-            state: absent
-
 - name: Initialize Controller
   hosts: controller
   gather_facts: no
