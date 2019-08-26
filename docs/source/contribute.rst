@@ -4,8 +4,8 @@ Contribute
 Red Hatters
 -----------
 RedHat Employees should submit their changes via `review.gerrithub.io`_.
-Only members of the ``rhosqeauto-core`` group on GerritHub can submit
-patches. You can ask any of the current members about it.
+Only members of the ``rhosqeauto-contrib`` and ``rhosqeauto-core`` groups on
+GerritHub can submit patches. You can ask any of the current members about it.
 
 You can use git-review (dnf/yum/pip install).
 To initialize the directory of ``infrared`` execute ``git review -s``.
