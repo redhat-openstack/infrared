@@ -48,6 +48,7 @@ parameter_defaults:
 {% endfor %}
 {% endif %}
 
+{% if 'ovb' is not in template_base %}
 {# include net-configs templates #}
 resource_registry:
 {% if  tht_roles|length > 1 %}
@@ -58,6 +59,7 @@ resource_registry:
     OS::TripleO::Controller::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/controller{{ ipv6_postfix }}.yaml
     OS::TripleO::Compute::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/compute.yaml
     OS::TripleO::Networker::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/networker.yaml
+{% endif %}
 {% endif %}
 
 {% if install.get('predictable', {}).ips|default(False) %}
