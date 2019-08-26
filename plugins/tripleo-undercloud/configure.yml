@@ -39,9 +39,9 @@
         set_fact:
             working_dir: "/home/{{ install.user.name }}"
 
-      # We ingore anything with % as it's ipv6 address with local interface
+      # We ingore anything with : as it's ipv6 address and we will only set ipv4 nameserver by default
       - name: get nameservers
-        shell: awk '/%|#/ {next} /nameserver/ { ips=ips $2"," } END {print substr(ips, 1, length(ips)-1)}' /etc/resolv.conf
+        command: awk '/#|:/ {next} /nameserver/ { ips=ips $2"," } END {print substr(ips, 1, length(ips)-1)}' /etc/resolv.conf
         register: nameservers
         changed_when: False
 
