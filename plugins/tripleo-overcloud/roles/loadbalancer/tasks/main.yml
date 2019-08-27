@@ -52,7 +52,7 @@
       - "IPV6_AUTOCONF=no"
       - "IPV6ADDR={{ loadbalancer.network.external.vip | ipaddr('address') }}"
       - "IPV6PREFIX={{ loadbalancer.network.external.vip | ipaddr('prefix') }}"
-  when: loadbalancer.network.external is defined and install.network.protocol == 'ipv6'
+  when: loadbalancer.network.external is defined and install.network.protocol != 'ipv4'
 
 - name: create VLAN interface for internal_api network
   template:
