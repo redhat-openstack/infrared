@@ -99,8 +99,8 @@
           namespace: "{{ registry_namespace | ternary(registry_namespace, container_env['container-image-prepare']['namespace'].split('/')[1] )}}"
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-          regexp: 'registry.access.redhat.com/rhosp.*'
-          replace: '{{ registry }}/{{ namespace }}'
+          regexp: '^(\s*namespace:).*'
+          replace: "\\1 {{ registry }}/{{ namespace }}"
 
     - name: set name_prefix in containers-prepare-parameter.yaml
       replace:
