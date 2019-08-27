@@ -45,4 +45,4 @@ subparsers:
               help: |
                   Whether to run resurrect_host role, which will try to bring dead/paused hosts up before
                   trying to collect logs from them.
-              default: False
+              default: True
