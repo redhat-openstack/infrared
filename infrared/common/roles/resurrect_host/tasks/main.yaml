@@ -1,0 +1,95 @@
+---
+- name: clear error after setup
+  meta: clear_host_errors
+
+- name: check is VM ssh-able
+  shell: id || echo "NOT_READY"
+  register: id_ssh
+  become: false
+  until: "'{{ ansible_user }}' in id_ssh.stdout"
+  retries: 3
+  delay: 15
+  ignore_errors: true
+
+- block: # when: id_ssh.rc != 0
+    - name: 'get status of the VM from hypervisor'
+      virt:
+        command: status
+        name: "{{ inventory_hostname }}"
+      register: resurrect_vm_status
+      become: true
+
+    - name: "show resurrect_vm_info"
+      debug:
+        var: resurrect_vm_status.status
+
+    - block: # when: not resurrect_vm_status.failed
+        - block:
+            - name: destroying (powering off) the VM (if running)
+              virt:
+                command: destroy
+                name: "{{ inventory_hostname }}"
+
+            - name: wait for VM to be in 'shutdown' state (from 'running')
+              become: no
+              virt:
+                command: status
+                name: "{{ inventory_hostname }}"
+              register: vm_status
+              until: vm_status.status == 'shutdown'
+              retries: 30
+              delay: 3
+              ignore_errors: true
+          when: resurrect_vm_status.status == 'running'
+
+        - name: wait for VM to be in 'running' state (from 'paused')
+          become: no
+          virt:
+            command: unpause
+            name: "{{ inventory_hostname }}"
+          register: vm_status
+          until: vm_status.status == 'running'
+          retries: 30
+          delay: 3
+          ignore_errors: true
+          when: resurrect_vm_status.status == 'paused'
+
+        - name: starting up the VM
+          virt:
+            command: start
+            name: "{{ inventory_hostname }}"
+          when: resurrect_vm_status.status == 'running' or resurrect_vm_status.status == 'shutdown'
+
+        - name: waiting for the VM to be available over SSH when connecting from hypervisor
+          become: no
+          wait_for:
+            host: "{{ ansible_host }}"
+            port: 22
+            search_regex: OpenSSH
+            delay: 60
+            sleep: 15
+            timeout: 10
+          ignore_errors: true # because we've tried our best here and if the host is still not available we don't want to fail other things... hence we move forward instead of failing here
+
+        - name: check is VM ssh-able
+          shell: id || echo "NOT_READY"
+          register: id_ssh
+          until: "'{{ ansible_user }}' in id_ssh.stdout"
+          become: false
+          delegate_to: "{{ inventory_hostname }}"
+          retries: 3
+          delay: 15
+          ignore_errors: true # because we've tried our best here and if the host is still not available we don't want to fail other things... hence we move forward instead of failing here
+
+      when: not resurrect_vm_status.failed
+
+  delegate_to: hypervisor
+  when:
+    - "'hypervisor' in groups"
+    - ( id_ssh.get('unreachable', '') or id_ssh.get('rc', 0) != 0 )
+
+- name: clear error after setup
+  meta: clear_host_errors
+
+- setup:
+  ignore_errors: true
