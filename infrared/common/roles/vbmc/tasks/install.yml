@@ -1,12 +1,16 @@
 ---
 - block:
+  - name: gather facts from vbmc host
+    setup:
+    delegate_facts: true
+
   - block:
     - name: Load "packages" variable from file based on the OS type
       include_vars: "{{ lookup('first_found', params) }}"
       vars:
         params:
           files:
-            - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+            - "{{ hostvars[vbmc_inventory_host]['ansible_distribution'] }}-{{ hostvars[vbmc_inventory_host]['ansible_distribution_major_version'] }}.yml"
           paths:
             - 'vars'
 
@@ -20,9 +24,6 @@
       easy_install:
           name: pip
     become: yes
-
-  - name: gather info about PATH/env variables
-    setup:
 
   - name: "check if there's a virtualenv already installed (i.e.: a system-wide RPM package)"
     command: virtualenv --version
@@ -42,7 +43,7 @@
         name: virtualbmc
         version: "{{ vbmc_version }}"
     environment:
-      PATH: "{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}"
+      PATH: "{{ vbmc_home }}/.local/bin:{{ hostvars[vbmc_inventory_host].ansible_env.PATH }}"
       # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a system-wide one
 
   - block:
