@@ -57,6 +57,10 @@
 
       when: provision.prefix is defined
 
+    - name: enable dnf package modules
+      command: "dnf module enable {{ item }}"
+      with_items: "{{ modules | default([]) }}"
+
     - name: install packages
       package:
           name: "{{ packages }}"

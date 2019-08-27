@@ -1,7 +1,7 @@
 ---
 - block:
   - block:
-    - name: Load "packages" variable from file based on the OS type
+    - name: Load "packages" and "modules" variables from file based on the OS type
       include_vars: "{{ lookup('first_found', params) }}"
       vars:
         params:
@@ -9,6 +9,10 @@
             - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
           paths:
             - 'vars'
+
+    - name: Enable dnf package modules required for vbmc pip package
+      command: "dnf module enable {{ item }}"
+      with_items: "{{ modules | default([]) }}"
 
     - name: Install packages required for python-virtualbmc pip package
       package:
