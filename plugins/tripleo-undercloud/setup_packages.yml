@@ -114,6 +114,8 @@
         package:
           name: "{{ install.packages }}"
           state: present
+        retries: 5
+        delay: 2
         when: install.packages is defined
 
       - name: install deltarpm
