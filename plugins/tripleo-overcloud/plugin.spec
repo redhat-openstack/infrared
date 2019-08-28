@@ -529,6 +529,7 @@ subparsers:
                           - netapp-nfs
                           - lvm
                           - nfs
+                          - lvm-netapp-iscsi
                       help: |
                         The storage that we would like to use.
                         If not supplied, Infrared will try to discover storage nodes and select appropriate backed.
