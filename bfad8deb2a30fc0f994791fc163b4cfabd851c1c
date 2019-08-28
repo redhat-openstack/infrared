@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ed6e7c6_09eebd2b",
+        "filename": "plugins/tripleo-undercloud/setup_packages.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1016895
+      },
+      "writtenOn": "2019-08-28T14:12:06Z",
+      "side": 1,
+      "message": "According to [1] and [2] yum/dnf defaults to retrying 10 times.\n\nThis is the stated reason why the ansible-lint test for retries on a package task was removed. See [3] and [4].\n\n1: https://dnf.readthedocs.io/en/latest/conf_ref.html\n2: https://linux.die.net/man/5/yum.conf\n3: https://github.com/ansible/ansible-lint/issues/456\n4: https://github.com/ansible/ansible-lint/pull/465\n\nSo, the question is then why this failure is happening in the first place. Are we using an unstable repository where packages disappear between the index fetched and the package download?",
+      "revId": "bfad8deb2a30fc0f994791fc163b4cfabd851c1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
