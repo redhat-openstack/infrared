@@ -43,7 +43,7 @@
       - name: Redirect serial output to files - Create files
         copy:
             content: ""
-            dest: "{{ serial_files_dir}}/{{ prefix|default('') }}{{ topology_node.name }}-{{ item }}.log"
+            dest: "{{ serial_files_dir }}/{{ prefix|default('') }}{{ topology_node.name }}-{{ item }}.log"
             force: yes
             mode: 0644
             owner: qemu
@@ -73,12 +73,12 @@
           --boot {{ provision.bootmode }} \
           {% endif %}
           {% for interface in topology_node.interfaces %}
-           --network {{ 'bridge' if (interface.bridged|default(False)) else 'network' }}:{{ prefix|default('') }}{{(prefix is defined|ternary('-',''))}}
+           --network {{ 'bridge' if (interface.bridged|default(False)) else 'network' }}:{{ prefix|default('') }}{{ (prefix is defined|ternary('-','')) }}
            {%- if interface.needs_formatting | default(False) %}{{ interface.network | format(item) }}{% else %}{{ interface.network }}{% endif %}
            {%- if interface.model is defined and interface.model %},model={{ interface.model }}{% endif %} \
           {% endfor -%}
           {% if provision.serial.files %}
-           --serial file,path="{{ serial_files_dir}}/{{ prefix|default('') }}{{ topology_node.name }}-{{ item }}.log" \
+           --serial file,path="{{ serial_files_dir }}/{{ prefix|default('') }}{{ topology_node.name }}-{{ item }}.log" \
           {% endif %}
            --virt-type kvm \
            --cpu {{ topology_node.cpumodel|default('host-passthrough') }} \

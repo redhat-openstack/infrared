@@ -10,7 +10,7 @@
 - name: save ansible facts to json file
   copy:
       content: "{{ hostvars[inventory_hostname] | to_nice_json }}"
-      dest: "{{ ansible_facts_dir_tmp }}/{{ansible_facts_filename}}.json"
+      dest: "{{ ansible_facts_dir_tmp }}/{{ ansible_facts_filename }}.json"
 
 - name: setup facts directory on destination host
   file:
@@ -20,7 +20,7 @@
 
 - name: fetch ansible facts file from inventory hosts
   fetch:
-      src: "{{ ansible_facts_dir_tmp }}/{{ansible_facts_filename}}.json"
+      src: "{{ ansible_facts_dir_tmp }}/{{ ansible_facts_filename }}.json"
       dest: "{{ ansible_facts_dir_dest }}/"
       flat: yes
   register: ansible_facts_fetched

@@ -14,7 +14,7 @@
         fail:
             msg:
                 error: "Not enough disk space for swap"
-                node: "{{ topology_node.name}}"
+                node: "{{ topology_node.name }}"
                 swap: "{{ topology_node.swap }}"
                 disk_size: "{{ topology_node.disks.disk1.size }}"
         when: (topology_node.disks.disk1.size|filesize('M')|int - topology_node.swap|default(0)|int) < (disk1_min|filesize('M')|int)

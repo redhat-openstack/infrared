@@ -42,7 +42,7 @@
 
   - name: Generating list of instances based on prefix
     set_fact:
-        list_vms: "{{ list_vms|default([])|union([item])}}"
+        list_vms: "{{ list_vms|default([])|union([item]) }}"
     when: prefix in item
     with_items: "{{ vm_names.list_vms }}"
 
