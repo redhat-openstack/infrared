@@ -127,7 +127,7 @@
         shell: |
             virsh net-dhcp-leases external | grep {{ mac_ext.stdout }} | awk '($4 == "ipv4") && ($6 =="{{ undercloud_node.name }}") {print $5}'
         register: undercloud_ip
-        until: undercloud_ip.stdout != ''
+        until: undercloud_ip.stdout
         retries: 15
         delay: 15
 

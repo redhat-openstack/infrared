@@ -6,9 +6,9 @@
 - name: destroy snapshots from VM
   command: "virsh snapshot-delete --domain {{ vm_name }} --snapshotname {{ item }}"
   with_items: "{{ vm_snapshots.stdout_lines }}"
-  when: vm_snapshots.stdout != ""
+  when: vm_snapshots.stdout
 
 - name: verify no snapshots on VM
   command: "virsh snapshot-list --domain {{ vm_name }} --name"
   register: vm_snapshots
-  failed_when: vm_snapshots.stdout != ""
+  failed_when: vm_snapshots.stdout

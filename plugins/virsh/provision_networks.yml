@@ -67,7 +67,7 @@
       include_tasks: tasks/bridged_network.yml
       vars:
           nic_settings: "{{ item }}"
-          nic_data: "{{ (item.nic == '') | ternary(hostvars[inventory_hostname]['ansible_' + ansible_default_ipv4.interface],
+          nic_data: "{{ (not item.nic) | ternary(hostvars[inventory_hostname]['ansible_' + ansible_default_ipv4.interface],
               hostvars[inventory_hostname]['ansible_' + item.nic]|default('')) }}"
       with_items:
           "{{ networks.values() | selectattr('forward', 'defined') | selectattr('forward', 'equalto', 'bridge') | list }}"

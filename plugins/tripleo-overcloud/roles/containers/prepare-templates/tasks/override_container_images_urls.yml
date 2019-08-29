@@ -7,7 +7,7 @@
       {%- endif -%}
   set_fact:
     install_container_images_overrides: "{{ install_container_images_overrides | default({}) | combine({ container_name: { 'url': item } }) }}"
-  when: item != ""
+  when: item
   with_items: "{{ install_container_images_urls }}"
   tags: container-images-urls
 

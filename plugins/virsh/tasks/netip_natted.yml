@@ -8,7 +8,7 @@
       virsh net-dhcp-leases {{ item.value.net }} | awk '($4 == "ipv4")  && ($3 == "{{ item.value.mac }}") {print $5}'
   when: item.value.deploy_os
   register: ip_list
-  until: "ip_list.stdout != ''"
+  until: ip_list.stdout
   retries: 40
   delay: 5
   with_dict: "{{ vm_inv_info }}"
