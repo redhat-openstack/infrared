@@ -73,7 +73,7 @@
             become: yes
 
       - set_fact:
-            src_publickey: "{{ (key_injection|success) | ternary(local_undercloud_pubkey, local_pubkey) }}"
+            src_publickey: "{{ (key_injection is success) | ternary(local_undercloud_pubkey, local_pubkey) }}"
 
       - set_fact:
             publickey: "{{ lookup('file', src_publickey) }}"
