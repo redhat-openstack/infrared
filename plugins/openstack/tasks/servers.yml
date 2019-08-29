@@ -22,7 +22,7 @@
 - name: Create instances
   vars:
       resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
-      secgroups: "{% if provision.anti.spoofing == true %}{{ topology_node.security_groups }}{% endif %}"
+      secgroups: "{% if provision.anti.spoofing | bool %}{{ topology_node.security_groups }}{% endif %}"
   os_server:
       cloud: "{{ provision.cloud | default(omit) }}"
       auto_ip: "{{ topology_node.auto_ip | default(auto_ip) }}"

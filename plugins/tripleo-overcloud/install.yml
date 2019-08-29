@@ -75,7 +75,7 @@
   when:
       - install.deploy|default('')
       - install.role is defined and install.role.files != 'default'
-      - (install.version|default(undercloud_version) | openstack_release < 12) or install.tht.roles == false
+      - (install.version|default(undercloud_version) | openstack_release < 12) or not install.tht.roles | bool
       - not install.splitstack
 
 - name: Deploy the Overcloud with splitstack
@@ -106,8 +106,8 @@
       - install.role is defined
       - install.role.files is defined
       - install.version|default(undercloud_version) | openstack_release > 11
-      - install.tht.roles == true
-      - not install.splitstack
+      - install.tht.roles | bool
+      - not install.splitstack | bool
 
 - name: Placeholder for container related workarounds - imported playbook needs to be configured
   import_playbook: "docker_after_workaround.yml"
