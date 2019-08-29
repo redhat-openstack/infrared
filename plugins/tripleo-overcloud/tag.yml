@@ -131,7 +131,7 @@
               shell: |
                   source ~/stackrc
                   {{ ironic_cli }} | awk '/{{ item.name | default(item) }}/ {print $2}'
-              with_items: "{{ overcloud_facts.nodes | default([])}}"
+              with_items: "{{ overcloud_facts.nodes | default([]) }}"
               register: node_list
 
         when: "overcloud_facts.nodes[0].name is defined"
@@ -202,7 +202,7 @@
                 name: "{{ item.name.rstrip('1234567890-').split('-')[-1] }}"
             set_fact:
                 default_resource_class: "{{ default_resource_class | default([]) + [{ 'name': name, 'flavor': name, 'node': item.name }] }}"
-            with_items: "{{ overcloud_facts.nodes | default([])}}"
+            with_items: "{{ overcloud_facts.nodes | default([]) }}"
             tags: skip_ansible_lint
             when:
                 - "overcloud_facts.nodes[0].name is defined"
