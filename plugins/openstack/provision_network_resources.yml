@@ -39,7 +39,7 @@
         loop: "{{ networks.results }}"
         tags:
           - skip_ansible_lint
-        when: provision.anti.spoofing == false
+        when: not provision.anti.spoofing | bool
 
       - block:
           - name: Create subnets
@@ -94,4 +94,4 @@
                 input:
                     security_group_list: "{{ security_group_list }}"
             include_tasks: tasks/register_resources_file.yml
-        when: security_groups is defined and provision.anti.spoofing == true
+        when: security_groups is defined and provision.anti.spoofing | bool
