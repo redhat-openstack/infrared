@@ -39,7 +39,7 @@
   become: yes
   vars:
       undercloud_public_ip: "{{ (awk_undercloud_public_vip.stdout != '') | ternary(awk_undercloud_public_vip.stdout, awk_undercloud_public_host.stdout) }}"
-      public_vip: "{{ (undercloud_public_ip != '') | ternary(undercloud_public_ip|trim, '192.168.24.2')}}"
+      public_vip: "{{ (undercloud_public_ip != '') | ternary(undercloud_public_ip|trim, '192.168.24.2') }}"
       shell_command: "
           openssl req -new -x509
           -days 365

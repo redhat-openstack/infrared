@@ -47,7 +47,7 @@
               net_prefix: "{{ (net_list|max)|int+10 }}"
               data_net: "{{ (data_net_list|max)|int+10 }}"
           set_fact:
-              deployments_info: "{{ deployments_info|default({})| combine( {id:{'net': net_prefix, 'data_net': data_net }})}}"
+              deployments_info: "{{ deployments_info|default({})| combine( {id:{'net': net_prefix, 'data_net': data_net }}) }}"
 
         - name: Create running deployment custom fact
           template:

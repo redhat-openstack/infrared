@@ -14,7 +14,7 @@
       path: /etc/pki/tls/openssl.cnf
       section: ' v3_req '
       option: subjectAltName
-      value: "IP:{{external_allocation_pool_start}}"
+      value: "IP:{{ external_allocation_pool_start }}"
 
 - name: Set undercloud/overcloud certificate path fact
   set_fact:
@@ -25,7 +25,7 @@
   vars:
       template_dir: "{{ install.heat.templates.basedir }}/environments{{ ('/ssl' if install.version|default(undercloud_version)|openstack_release > 11 else '') }}"
   copy:
-      src: "{{ template_dir}}/{{ item }}"
+      src: "{{ template_dir }}/{{ item }}"
       dest: "{{ template_base }}/{{ item }}"
       remote_src: yes
   with_items:
@@ -140,7 +140,7 @@
 
 - name: insert the content of the CA certificate and private key respectfully
   vars:
-      root_cert: "{{ uc_cacert if undercloud_ssl.rc == 0 else oc_cacert}}"
+      root_cert: "{{ uc_cacert if undercloud_ssl.rc == 0 else oc_cacert }}"
   replace:
       dest: "{{ item.dest }}"
       regexp: "{{ item.regex }}"
