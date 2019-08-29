@@ -258,7 +258,7 @@
       - name: get core puddle version from repos
         shell: cat /etc/yum.repos.d/rhos-release-[0-9]*.repo | grep ^baseurl.*/OpenStack/ | grep -v latest | awk -F / '{print $8 }' | tail -n 1
         register: core_puddle_repos
-        when: puddle_file.stat.exists == False
+        when: not puddle_file.stat.exists
 
       - debug:
             msg: "Build mark: core_puddle={{ puddle_file.stat.exists|ternary (core_puddle_file.stdout, core_puddle_repos.stdout) }}"
