@@ -5,7 +5,7 @@
   become: yes
   vars:
       custom_repos: "{{ install.repos|default({}) }}"
-      skip_release: "{{ install.get('repos', {}).get('skip', {}).release|default('')}}"
+      skip_release: "{{ install.get('repos', {}).get('skip', {}).release|default('') }}"
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
       undercloud_extra_repos: []
   tags: install
@@ -91,7 +91,7 @@
         when: "extra_repos|default({})"
 
       - set_fact:
-          undercloud_extra_repos: "{{ undercloud_extra_repos }} + ['{{ item['diff']['after_header'] | basename}}']"
+          undercloud_extra_repos: "{{ undercloud_extra_repos }} + ['{{ item['diff']['after_header'] | basename }}']"
         with_items: "{{ custom_repos_files['results'] }}"
         when:
           - custom_repos_files is defined

@@ -29,7 +29,7 @@
           - name: copy the image to remote server
             shell: |
                 scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
-                ~/backup_server_auth_key {{ undercloud_image_file }} {{ install.dest.user }}@{{ install.dest.address }}:{{install.dest.path}}/{{ undercloud_image_file }}
+                ~/backup_server_auth_key {{ undercloud_image_file }} {{ install.dest.user }}@{{ install.dest.address }}:{{ install.dest.path }}/{{ undercloud_image_file }}
             when: install.dest|default({})
             tags: skip_ansible_lint
 
@@ -51,7 +51,7 @@
 
           - name: cleanup in case of failure
             shell: |
-                ssh -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.address }} rm -f {{install.dest.path}}/{{ undercloud_image_file }}
+                ssh -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.address }} rm -f {{ install.dest.path }}/{{ undercloud_image_file }}
             when:
                 - local_hash is defined
                 - remote_hash is defined
