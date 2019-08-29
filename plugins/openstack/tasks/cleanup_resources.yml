@@ -123,7 +123,7 @@
      name: "{{ item.id }}"
   with_items: "{{ security_group_list | default([]) }}"
   register: sg_cleanup
-  when: provision.anti.spoofing == true
+  when: provision.anti.spoofing | bool
   retries: 3
   delay: 3
   until: sg_cleanup is success
