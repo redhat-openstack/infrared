@@ -2,7 +2,7 @@
 - name: validate required nic is present
   fail:
       msg: "Cannot find bridge nic: {{ nic_name }}"
-  when: nic_data == ''
+  when: not nic_data
 
 - name: disable netfilter for bridges
   become: yes

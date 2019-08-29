@@ -21,7 +21,7 @@
   become: yes
   command: "ovs-vsctl add-port br-ctlplane vlan{{ vlan_result.stdout | replace(\"'\",'') }} tag={{ vlan_result.stdout | replace(\"'\",'') }} -- set interface vlan{{ vlan_result.stdout | replace(\"'\",'') }} type=internal"
   register: result
-  failed_when: "result.stderr != '' and 'port named vlan{{ vlan_result.stdout | replace(\"'\",'') }} already exists' not in result.stderr"
+  failed_when: "result.stderr and 'port named vlan{{ vlan_result.stdout | replace(\"'\",'') }} already exists' not in result.stderr"
 
 - name: configure external gateway's IP for this interface
   become: yes
