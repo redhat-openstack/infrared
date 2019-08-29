@@ -78,7 +78,7 @@
         when:
             - item.key not in openstack_servers|map(attribute='name')|list
             - item.key in groups.all
-            - (ironic_node_dict|default({})).get(item.value.original_name|default(''), item.value).instance_uuid|default('undefined') == ''
+            - not ((ironic_node_dict | default({})).get(item.value.original_name | default(''), item.value).instance_uuid | default('undefined'))
         add_host:
             name: "{{ item.key }}"
             # groups can only be added

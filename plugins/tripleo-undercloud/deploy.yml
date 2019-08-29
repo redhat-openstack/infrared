@@ -5,7 +5,7 @@
   tasks:
       - name: apply pre deploy workarounds
         command: bash ~/pre_undercloud_deploy_workarounds.sh
-        when: install.workarounds != ''
+        when: install.workarounds
 
       - name: apply workaround for BZ#1428608
         lineinfile:
@@ -47,7 +47,7 @@
 
       - name: apply post deploy workarounds
         command: bash ~/post_undercloud_deploy_workarounds.sh
-        when: install.workarounds != ''
+        when: install.workarounds
 
       - name: remove workaround for BZ#1428608
         lineinfile:
