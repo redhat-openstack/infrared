@@ -9,7 +9,7 @@
     src: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/enable-tls.yaml"
     dest: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/enable-tls-8.yaml"
     remote_src: true
-  when: check_for_ssl|succeeded
+  when: check_for_ssl is succeeded
 
 - name: Append the services introduced in OSP9 to the enable-tls template
   lineinfile:
@@ -26,4 +26,4 @@
     - "    SaharaAdmin: {protocol: 'http', port: '8386', host: 'IP_ADDRESS'}"
     - "    SaharaInternal: {protocol: 'http', port: '8386', host: 'IP_ADDRESS'}"
     - "    SaharaPublic: {protocol: 'https', port: '13386', host: 'IP_ADDRESS'}"
-  when: check_for_ssl|succeeded
+  when: check_for_ssl is succeeded

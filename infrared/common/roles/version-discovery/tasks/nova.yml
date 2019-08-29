@@ -24,4 +24,4 @@
   set_fact:
       undercloud_version: "{{ (version_map|selectattr('nova_version', 'equalto', nova_version.stdout)|first)['rhos_version'] }}"
       overcloud_version: "{{ (version_map|selectattr('nova_version', 'equalto', nova_version.stdout)|first)['rhos_version'] }}"
-  when: nova_version|succeeded
+  when: nova_version is succeeded
