@@ -52,7 +52,7 @@
               {% endif %}
               {% if test.get('config', {}).get('longopt', []) %}
                    {% for value in test['config']['longopt'] %}
-                       --{{value}} \
+                       --{{ value }} \
                    {% endfor %}
               {% endif %}
               identity.uri $OS_AUTH_URL \
@@ -74,7 +74,7 @@
               {# config options #}
               {% for section_name,options in config_options.items() %}
               {% for option_name,value in options.items() %}
-              {{section_name}}.{{option_name}} {{value}} \
+              {{ section_name }}.{{ option_name }} {{ value }} \
               {% endfor %}
               {% endfor %}
               {% if test.mode == 'debug_failing' | default('') %}
@@ -87,7 +87,7 @@
               {% if test.get('remove', {}).get('options', {}) %}
                 {% for section_name,options in test.get('remove', {}).get('options', {}).items() %}
                     {% for option_name,value in options.items() %}
-                        --remove {{section_name}}.{{option_name}}={{value}} \
+                        --remove {{ section_name }}.{{ option_name }}={{ value }} \
                     {% endfor %}
                 {% endfor %}
               {% endif %}

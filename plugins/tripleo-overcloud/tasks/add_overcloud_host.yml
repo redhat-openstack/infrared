@@ -36,7 +36,7 @@
 
     - name: update nodes_groups from original groups
       set_fact:
-          node_groups: "{{( baremetal_name in item.value and item.key not in ignored_groups ) | ternary(node_groups|default([]) + [item.key], node_groups|default([])) }}"
+          node_groups: "{{ ( baremetal_name in item.value and item.key not in ignored_groups ) | ternary(node_groups|default([]) + [item.key], node_groups|default([])) }}"
       with_dict: "{{ groups }}"
       vars:
           ignored_groups: ['ungrouped', 'ovb']
