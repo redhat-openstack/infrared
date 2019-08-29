@@ -43,7 +43,7 @@
   vars:
       - osp_version: "{{ install.version|default(undercloud_version) | openstack_release }}"
       - uuid_field_name: "{{ ( osp_version|int < 13) | ternary('Node UUID', 'UUID') }}"
-      - finished_condition:  "{{ (osp_version|int < 13) | ternary(item.get('Finished') == false, item.get('Finished at') is none ) }}"
+      - finished_condition:  "{{ (osp_version|int < 13) | ternary(not(item.get('Finished') | bool), item.get('Finished at') is none ) }}"
   when:
       - install.version|default(undercloud_version)|openstack_release > 7
       - finished_condition
