@@ -21,7 +21,7 @@
 
 - set_fact:
       rally_manage: 'rally-manage'
-  when: rally_version.stdout | version_compare('0.10', '<')
+  when: rally_version.stdout is version('0.10', '<')
 
 - name: Get rally db revision
   command: "{{ rally_manage | default('rally') }} db revision"
