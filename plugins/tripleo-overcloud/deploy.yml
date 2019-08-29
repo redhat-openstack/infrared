@@ -15,7 +15,7 @@
           find . -exec sed -e "s|docker/services/sensu-client.yaml|puppet/services/monitoring/sensu-client.yaml|g" -i {} \;
           find . -exec sed -e "s|docker/services|puppet/services|g" -i {} \;
         when:
-          - install.containers|bool == false
+          - not install.containers | bool
           - install.version|default(undercloud_version)|openstack_release >= 12
         become: yes
 
