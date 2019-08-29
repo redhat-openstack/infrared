@@ -35,7 +35,7 @@
 
       - name: setup unbooted nics
         vars:
-            nic: "{{ hostvars[inventory_hostname]['ansible_' + item ]}}"
+            nic: "{{ hostvars[inventory_hostname]['ansible_' + item ] }}"
             server: "{{ openstack_servers | selectattr('name', 'equalto', inventory_hostname) | list | first }}"
             port: "{{ openstack_ports |
                         selectattr('device_id', 'equalto', server.id) |

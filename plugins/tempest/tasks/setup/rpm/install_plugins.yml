@@ -13,7 +13,7 @@
 - name: Set plugins list iterator for "{{ test_suite }}"
   set_fact:
       plugins: "{{ test_dict.plugins | default({}) | combine(cli_plugins|default({})) }}"
-      plugins_dir: "{{ ansible_user_dir }}/{{test.dir | dirname }}/plugins"
+      plugins_dir: "{{ ansible_user_dir }}/{{ test.dir | dirname }}/plugins"
 
 - name: Install extra system requirements for tests
   package:
