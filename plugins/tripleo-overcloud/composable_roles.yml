@@ -21,8 +21,7 @@
         register: tht
 
       - set_fact:
-            # TODO(mcornea): switch version_compare to version after we bump ansible to 2.5
-            roles_sshd: "{{ tht_version|version_compare('5.2.0', '>') or (tht_version|version_compare('5.2.0', '==') and tht_release|version_compare('15', '>=')) }}"
+            roles_sshd: "{{ tht_version is version('5.2.0', '>') or (tht_version is version('5.2.0', '==') and tht_release is version('15', '>=')) }}"
         vars:
             tht_pkg: "{{ tht.results|selectattr('yumstate', 'equalto', 'installed')|first }}"
             tht_version: "{{ tht_pkg.version }}"
