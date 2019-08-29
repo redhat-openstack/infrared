@@ -132,9 +132,9 @@
   fail:
       msg: "The run failed because one of cleanup tasks failed/skipped"
   when: >
-      not (routers_cleanup|succeeded and
-           subnets_cleanup|succeeded and
-           networks_cleanup|succeeded and
-           keypairs_cleanup|succeeded and
-           servers_cleanup|succeeded and
-           sg_cleanup|succeeded)
+      not (routers_cleanup is succeeded and
+           subnets_cleanup is succeeded and
+           networks_cleanup is succeeded and
+           keypairs_cleanup is succeeded and
+           servers_cleanup is succeeded and
+           sg_cleanup is succeeded)
