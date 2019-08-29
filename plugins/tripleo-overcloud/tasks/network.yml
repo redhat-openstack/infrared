@@ -244,14 +244,14 @@
 
 - block:
   - name: Remove OVNCMSOptions for controller nodes in non-DVR deployments
-    shell: |
+    command: |
         sed -i '/ControllerParameters/,+1 d' {{ install.heat.templates.basedir }}/environments/services/neutron-ovn-ha.yaml
     when:
         - install.network.ovn and not install.network.dvr
         - "'networker' in install.role.files"
 
   - name: Remove OVNCMSOptions for controller nodes in DVR deployments
-    shell: |
+    command: |
         sed -i '/ControllerParameters/,+1 d' {{ install.heat.templates.basedir }}/environments/services/neutron-ovn-dvr-ha.yaml
     when:
         - install.network.ovn and install.network.dvr
