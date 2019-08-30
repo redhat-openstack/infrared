@@ -2,7 +2,7 @@
 - name: Register the host to Red Hat account
   include_tasks: register_cdn.yml
   # no need to register if machine already subscribed
-  when: "cdn_args_file != ''"
+  when: cdn_args_file
 
 - name: unregister from all repos
   command: subscription-manager repos --disable=*

@@ -36,11 +36,11 @@
 - name: "Match installed and available {{ detect_pkg }} package"
   set_fact:
       installed_package_data: "{{ item }}"
-  when: "{{ item.version == detect_installed_otc.version }}"
-  with_items: "{{ detect_available_otc  }}"
+  when: item.version == detect_installed_otc.version
+  with_items: "{{ detect_available_otc }}"
 
 - fail:
-      msg: "Installed {{ detect_installed_otc.name }}-{{detect_installed_otc.version}} not found in available packages"
+      msg: "Installed {{ detect_installed_otc.name }}-{{ detect_installed_otc.version }} not found in available packages"
   when: installed_package_data is not defined
 
 
@@ -48,7 +48,7 @@
       undercloud_version: "{{ version_regex|int or beta }}"
       overcloud_version: "{{ version_regex|int or beta }}"
   vars:
-      version_regex: "{{ installed_package_data.repo | regex_replace('^rhel-7-server-openstack-(beta|[.0-9]+)-rpms$', '\\1')}}"
+      version_regex: "{{ installed_package_data.repo | regex_replace('^rhel-7-server-openstack-(beta|[.0-9]+)-rpms$', '\\1') }}"
       # TODO(yfried): change that when beta version changes
       beta: 13
   when: version_regex|int or version_regex == 'beta'
@@ -57,7 +57,7 @@
       undercloud_version: "{{ version_regex|int }}"
       overcloud_version: "{{ version_regex|int }}"
   vars:
-      version_regex: "{{ installed_package_data.repo | regex_replace('^rhelosp-([0-9]+\\.[0-9]+)(-director)?-(puddle|trunk|cdn)$', '\\1')}}"
+      version_regex: "{{ installed_package_data.repo | regex_replace('^rhelosp-([0-9]+\\.[0-9]+)(-director)?-(puddle|trunk|cdn)$', '\\1') }}"
   when:
       - undercloud_version is not defined
       - version_regex|int > 0
@@ -67,7 +67,7 @@
       undercloud_version: "{{ version_regex|int }}"
       overcloud_version: "{{ version_regex|int }}"
   vars:
-      version_regex: "{{ installed_package_data.repo | regex_replace('^rhosp-([0-9]+)', '\\1')}}"
+      version_regex: "{{ installed_package_data.repo | regex_replace('^rhosp-([0-9]+)', '\\1') }}"
   when:
       - undercloud_version is not defined
       - version_regex|int > 0

@@ -23,6 +23,6 @@
           destination_port: "{{ item.stdout }}"
       delegate_to: "{{ vbmc_inventory_host }}"
       with_items: "{{ vbmc_status.results }}"
-      when: item.stdout != ""
+      when: item.stdout
   when: oc_nodes|length > 0
 

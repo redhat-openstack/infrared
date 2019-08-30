@@ -34,7 +34,7 @@
 
   - name: Enable additional repository for RHEL7
     become: yes
-    shell: yum-config-manager --enable {{ item }}
+    command: yum-config-manager --enable {{ item }}
     loop: "{{ freeipa_rhel7_additional_repos }}"
     when:
         - ansible_distribution in ['CentOS', 'RedHat']
@@ -42,7 +42,7 @@
 
   - name: Enable additional dnf modules for RHEL8
     become: yes
-    shell: dnf module enable {{ item }} -y
+    command: dnf module enable {{ item }} -y
     loop: "{{ freeipa_rhel8_dnf_modules }}"
     when:
         - ansible_distribution in ['CentOS', 'RedHat']
@@ -57,7 +57,7 @@
 
   - name: Update repos
     become: yes
-    shell: yum clean all
+    command: yum clean all
 
   - name: Enable iptables service for RHEL8
     become: yes
@@ -90,9 +90,7 @@
 
   - name: Execute freeipa script
     become: yes
-    shell: "{{ freeipa_working_dir }}/freeipa_setup.sh"
-    args:
-        executable: /bin/bash
+    command: "{{ freeipa_working_dir }}/freeipa_setup.sh"
     register: freeipa_setup
 
   - name: Configure FreeIPA to publish Master CRL at start

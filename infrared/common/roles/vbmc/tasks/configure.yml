@@ -34,7 +34,7 @@
     when: "prefix is not defined"
 
   - set_fact:
-        management_net: "{{ 'ansible_' + prefix|default('') + (prefix is defined and prefix|trim != '')|ternary('_','') + 'management' }}"
+        management_net: "{{ 'ansible_' + prefix | default('') + (prefix is defined and prefix | trim) | ternary('_','') + 'management' }}"
 
   - name: Set management bmc address
     set_fact:
@@ -42,7 +42,7 @@
 
   - name: Set external network name
     set_fact:
-        ansible_external_name: "{{ 'ansible_' + prefix|default('') + (prefix is defined and prefix|trim != '')|ternary('_','') + 'external' }}"
+        ansible_external_name: "{{ 'ansible_' + prefix | default('') + (prefix is defined and prefix | trim) | ternary('_','') + 'external' }}"
 
   - name: Set external network bmc address
     set_fact:
