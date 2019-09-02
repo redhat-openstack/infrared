@@ -7,7 +7,7 @@
   vars:
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
   pre_tasks:
-      - include_vars: "vars/loadbalancer/external-{{ install.network.protocol }}.yml"
+      - include_vars: "vars/loadbalancer/external-{{ ( install.network.protocol == 'ipv6-all') | ternary('ipv6',install.network.protocol) }}.yml"
 
       - name: Get the rhos-release RPM
         get_url:
