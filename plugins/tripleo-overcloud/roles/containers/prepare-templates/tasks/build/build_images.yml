@@ -143,5 +143,13 @@
 
 - name: Update containers images
   import_tasks: update_images.yml
-  when: install_container_extra_repos is defined
+  when:
+      - install_container_extra_repos is defined
+      - install.version|default(undercloud_version)|openstack_release < 15
   tags: container-extra-repos
+
+- name: Modify containers images
+  import_tasks: update_images_tripleo-modify-image.yml
+  when:
+      - install_container_extra_repos is defined
+      - install.version|default(undercloud_version)|openstack_release >= 15
