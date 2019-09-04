@@ -36,7 +36,7 @@
 - name: "Match installed and available {{ detect_pkg }} package"
   set_fact:
       installed_package_data: "{{ item }}"
-  when: "{{ item.version == detect_installed_otc.version }}"
+  when: item.version == detect_installed_otc.version
   with_items: "{{ detect_available_otc  }}"
 
 - fail:
