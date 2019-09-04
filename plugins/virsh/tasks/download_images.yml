@@ -8,7 +8,7 @@
       # Use default url if unless disk has a different source
       url: "{{ source }}"
       # use original basename explicitly, otherwise, "force" doesn't work
-      dest: "{{ base_image_path }}/{{ source | basename }}"
+      dest: "{{ base_image_path }}/{{ source | basename }}.original"
       # Download new images only.
       force: "{{ item.value.force_image_download|default(false)|bool or provision.force.image.download }}"
       validate_certs: "{{ url.startswith('https://url.corp.redhat.com/') | ternary(false, omit) }}"
@@ -31,9 +31,12 @@
       set -ex
       export LIBGUESTFS_PATH=/opt/appliance
       export LIBGUESTFS_BACKEND=direct
-      virt-sysprep -a {{ item.dest }} \
+      PREP_IMG_FILE={{ item.dest }}
+      PREP_IMG_FILE=${PREP_IMG_FILE%.original}
+      cp {{ item.dest }} ${PREP_IMG_FILE}
+      virt-sysprep -a ${PREP_IMG_FILE} \
           --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
-      virt-customize -a {{ item.dest }} \
+      virt-customize -a ${PREP_IMG_FILE} \
       {% if not item.item.value.image_url|default('') %}
           --run-command 'yum remove -y cloud-init*' \
       {% endif %}
@@ -46,5 +49,4 @@
           --selinux-relabel
   with_items: "{{ download_image_result.results }}"
   when:
-    - item is changed
     - topology_node.supports_libguestfs|default(true)
