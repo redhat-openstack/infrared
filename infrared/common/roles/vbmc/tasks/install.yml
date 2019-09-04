@@ -7,8 +7,8 @@
             - gcc
             - libvirt
             - libvirt-devel
-            - python-devel
-            - python-setuptools
+            - "{{ (test.openstack.version|default(overcloud_version)|openstack_release >= 15) | ternary('python3-devel', 'python-devel') }}"
+            - "{{ (test.openstack.version|default(overcloud_version)|openstack_release >= 15) | ternary('python3-setuptools', 'python-setuptools') }}"
             - ipmitool
           state: latest
           disable_gpg_check: yes
