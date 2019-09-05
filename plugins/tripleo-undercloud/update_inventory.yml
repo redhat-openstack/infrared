@@ -25,6 +25,28 @@
             meta: refresh_inventory
         when: "'hypervisor' in groups and 'undercloud' in groups"
 
+- name: Discover Undercloud's python interpreter
+  hosts: localhost
+  any_errors_fatal: true
+  gather_facts: yes
+  tags:
+      - upgrade
+      - upgrade_repos
+  tasks:
+    - name: Detect python interpreter in Undercloud via ssh
+      vars:
+        sshkey: "{{ inventory_dir }}/id_rsa"
+        sshopts: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        proxyhost: "{{ ansible_user|default(ansible_ssh_user) }}@{{ ansible_host|default(ansible_ssh_host) }}"
+      shell: |
+        ssh -o BatchMode=yes {{ sshopts }} \
+        -o ProxyCommand="ssh {{ sshopts }} -W %h:%p -i {{ sshkey }} {{ proxyhost }}" \
+        -i {{ sshkey }} root@{{ hostvars[groups.undercloud|first].ansible_host }} \
+        'command -v python /usr/libexec/platform-python|head -n1'
+      register: py_interpreter
+    - set_fact:
+        uc_py_interpreter: "{{ py_interpreter.stdout }}"
+
 - name: Update inventory file after upgrading the Undercloud
   hosts: undercloud
   any_errors_fatal: true
@@ -33,7 +55,7 @@
       - upgrade
       - upgrade_repos
   vars:
-    ansible_python_interpreter: '/usr/libexec/platform-python'
+    ansible_python_interpreter: "{{ hostvars['localhost'].uc_py_interpreter }}"
   tasks:
     - block:
         - include_role:
