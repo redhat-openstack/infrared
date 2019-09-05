@@ -47,6 +47,8 @@
   tags: install-pip
 
 - name: install virtualenv pip module
+  environment:
+     PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
   pip:
       name: virtualenv
       state: forcereinstall
