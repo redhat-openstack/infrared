@@ -1,0 +1,31 @@
+---
+- name: Create snapshots of virtual machines
+  hosts: "{{ (provision.virsh.snapshot.create | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+    vm_prefix: "{{ provision.prefix | default('') }}"
+  tasks:
+    - name: Get info about existing VM's
+      virt:
+        command: list_vms
+      register: _virt_list
+
+    - name: Create snapshots of each VM
+      shell: |
+        set -e
+        RETURN_CODE=0
+        if ! virsh snapshot-list --domain {{ item }} --name | grep -qw {{ provision.virsh.snapshot.name }}; then
+          virsh snapshot-create-as \
+            --domain {{ item }} \
+            --name {{ provision.virsh.snapshot.name }} \
+            --atomic
+          RETURN_CODE=2
+        fi
+        exit ${RETURN_CODE}
+      args:
+        executable: /bin/bash
+      register: _virt_snapshot_create
+      changed_when: _virt_snapshot_create.rc == 2
+      failed_when: _virt_snapshot_create.rc not in [0,2]
+      loop: "{{ _virt_list.list_vms | select('match', vm_prefix ~ provision.virsh.snapshot.servers) | list }}"
