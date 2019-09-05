@@ -6,57 +6,6 @@ subparsers:
         description: Install TripleO on a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
-            - title: Snapshot Menu
-              options:
-                  snapshot-backup:
-                      type: Bool
-                      help: |
-                          This will create an undercloud snapshot for use with the `--snapshot-restore` flag
-                  dest-address:
-                      type: Value
-                      help: |
-                          This will be the remote server where the UC backup image will be stored
-                  dest-mirror-address:
-                      type: Value
-                      help: |
-                          This will be the mirror site where the UC backup image will be stored
-                  dest-path:
-                      type: Value
-                      help: |
-                          Path on destination server where the UC backup image will be stored
-                  dest-mirror-path:
-                      type: Value
-                      help: |
-                          Path on destination mirror server where the UC backup image will be stored
-                  dest-key:
-                      type: FileValue
-                      help: |
-                          Key file to send to the remote server in order to transfer the UC backup image
-                  dest-user:
-                      type: Value
-                      help: |
-                          Username for destination server (in case key was not provided)
-                  hieradata-config:
-                      type: Dict
-                      help: |
-                          Optional configuration to set via hieradata
-                          Use  --hieradata-config this::key=value,that::key=another_value
-                  snapshot-restore:
-                      type: Bool
-                      help: |
-                          This will restore an undercloud from a pre-made snapshot created by the `--snapshot-backup` flag
-                          Use --snapshot-image to specify image to use for restore.
-                  snapshot-image:
-                       type: Value
-                       help: |
-                          The url or path to the image to restore the undercloud from.
-                  snapshot-filename:
-                      type: Value
-                      help: |
-                          When used with `snapshot-backup`, it will create this file
-                          When used with `snapshot-restore`, it will use this file as the disk name for the domain
-                      default: "undercloud-snapshot.qcow2"
-
             - title: Undercloud Configuration
               options:
                   config-file:

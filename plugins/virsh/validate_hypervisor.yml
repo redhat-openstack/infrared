@@ -9,6 +9,7 @@
       - name: calculate needed memory
         include_tasks: tasks/calc_needed_memory.yml
         with_dict: "{{ provision.topology.nodes }}"
+        #with_dict: "{{ provision.topology.get('nodes', {}) }}"
         loop_control:
             loop_var: node
 
