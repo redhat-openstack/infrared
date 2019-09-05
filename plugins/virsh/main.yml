@@ -18,3 +18,9 @@
       - not provision.cleanup|default(False)
   tags: collect-ansible-facts
   ignore_errors: True
+
+- name: Create snapshots of virtual machines
+  import_playbook: snapshot_create.yml
+
+- name: Restore snapshots of virtual machines
+  import_playbook: snapshot_restore.yml
