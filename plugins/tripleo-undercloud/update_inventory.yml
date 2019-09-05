@@ -25,6 +25,20 @@
             meta: refresh_inventory
         when: "'hypervisor' in groups and 'undercloud' in groups"
 
+- name: Discover Undercloud's rhel version
+  hosts: localhost
+  any_errors_fatal: true
+  gather_facts: yes
+  tags:
+      - upgrade
+      - upgrade_repos
+  tasks:
+    - name: Retrieve the Underclouds rhel version via ssh
+      command: "ssh -o StrictHostKeyChecking=no stack@{{ hostvars[groups.undercloud|first].ansible_host }} 'sudo cat /etc/redhat-release'"
+      register: redhat_release
+    - set_fact:
+        uc_rhel_release: "{{ redhat_release.stdout | regex_search('\\d+\\.\\d') | int }}"
+ 
 - name: Update inventory file after upgrading the Undercloud
   hosts: undercloud
   any_errors_fatal: true
@@ -33,7 +47,7 @@
       - upgrade
       - upgrade_repos
   vars:
-    ansible_python_interpreter: '/usr/libexec/platform-python'
+    ansible_python_interpreter: "{{ '/usr/libexec/platform-python' if hostvars['localhost'].uc_rhel_release|int == 8 else 'python' }}"
   tasks:
     - block:
         - include_role:
