@@ -48,6 +48,12 @@ subparsers:
                           - "req-arg-a == yes"
                           - "req-arg-b == yes"
 
+                  either-dep:
+                      type: Value
+                      help: "Help for --either-dep"
+                      required_when:
+                          - "req-arg-a == yes or req-arg-b == yes"
+
                   req-arg-a:
                       type: Bool
                       help: "Help for --req-arg-a"

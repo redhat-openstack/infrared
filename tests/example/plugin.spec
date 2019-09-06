@@ -69,9 +69,23 @@ subparsers:
                       type: Bool
                       help: "Help for --req-arg-b"
 
+                  either-dep:
+                      type: Value
+                      help: "Help for --either-dep"
+                      required_when:
+                          - "req-arg-c == yes or req-arg-d == yes"
+
+                  req-arg-c:
+                      type: Bool
+                      help: "Help for --req-arg-c"
+
+                  req-arg-d:
+                      type: Bool
+                      help: "Help for --req-arg-d"
+
                   version:
                       type: int
-                      help: "Help for --req-arg-b"
+                      help: "Help for --version"
 
             - title: Group D
               options:
