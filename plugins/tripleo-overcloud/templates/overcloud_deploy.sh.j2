@@ -3,7 +3,7 @@
 openstack overcloud deploy \
 --timeout {{ install.deployment.timeout | int | default(100) }} \
 --templates {{ install.heat.templates.basedir }} \
-{% if install.overcloud.debug|default(False) %}
+{% if install.overcloud.verbose.debug|default(False) %}
 --debug \
 {% endif %}
 {% if install.overcloud.ssh.user != '' %}
