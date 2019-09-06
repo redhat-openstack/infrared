@@ -243,6 +243,11 @@ subparsers:
                       default: yes
                       help: Specifies whether overcloud service should enable debug mode
 
+                  overcloud-tripleoclient-debug:
+                      type: Bool
+                      default: no
+                      help: Specifies whether tripleo client debug mode is enabled during overcloud deploy
+
                   overcloud-ssl:
                       type: Bool
                       default: no
