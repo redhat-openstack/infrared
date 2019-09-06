@@ -48,7 +48,7 @@
       - upgrade
       - upgrade_repos
   vars:
-    ansible_python_interpreter: "{{ hostvars['localhost'].uc_py_interpreter }}"
+    ansible_python_interpreter: "{{ hostvars['localhost'].uc_py_interpreter|default('python') }}"
   tasks:
     - block:
         - include_role:
