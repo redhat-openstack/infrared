@@ -59,7 +59,7 @@
           requirements: "requirements.txt"
           virtualenv: /tmp/pytest_venv
           chdir: "{{ repo_folder }}"
-        when: stat_result.stat.exists == True
+        when: stat_result.stat.exists | bool
 
       - name: Execute test
         ignore_errors: true

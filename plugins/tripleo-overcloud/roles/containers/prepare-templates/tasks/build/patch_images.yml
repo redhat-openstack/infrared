@@ -51,7 +51,7 @@
 
 - name: if 'patched-rpms' yum repo contains _only_ 'not_containerized_rpms' then skip container images patching
   set_fact:
-      skip_container_images_patching: "{%- if item not in not_containerized_rpms or skip_container_images_patching == False -%} False {%- else -%} True {%- endif -%}"
+      skip_container_images_patching: "{%- if item not in not_containerized_rpms or not skip_container_images_patching | bool -%} False {%- else -%} True {%- endif -%}"
   with_items: "{{ patched_rpms_packages_shell.stdout_lines }}"
 
 - debug:
@@ -59,10 +59,10 @@
 
 - include_tasks: patch_images_do.yml
   when:
-    - skip_container_images_patching == False
+    - not skip_container_images_patching | bool
     - ansible_distribution_major_version < '8'
 
 - include_tasks: patch_images_tripleo-modify-image.yml
   when:
-    - skip_container_images_patching == False
+    - not skip_container_images_patching | bool
     - ansible_distribution_major_version >= '8'
