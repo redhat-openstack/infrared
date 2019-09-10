@@ -1,0 +1,132 @@
+---
+- name: Import snapshots of virtual machines
+  hosts: "{{ (provision.virsh.snapshot.import | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+    vm_provision_user: "{{ provision.topology.username | default('stack') }}"
+    vm_prefix: "{{ provision.prefix | default('') }}"
+  tasks:
+    - name: Install required packages
+      package:
+        name: libguestfs-tools-c
+        state: present
+
+    - name: Get info about existing virt storage pools
+      virt_pool:
+        command: info
+      register: _virt_pools
+
+    - name: Get info about existing VM's
+      virt:
+        command: list_vms
+      register: _virt_list
+
+    - name: Create the list of existing VM's to remove
+      set_fact:
+        _vm_to_remove_list: "{{ _virt_list.list_vms | select('match', vm_prefix ~ provision.virsh.snapshot.servers) | list }}"
+
+    - name: Stop any running VM's
+      shell: |
+        set -e
+        RETURN_CODE=0
+        if ! virsh domstate {{ item }} | grep -qw 'shut off'; then
+          virsh destroy {{ item }}
+          RETURN_CODE=2
+        fi
+        exit ${RETURN_CODE}
+      args:
+        executable: /bin/bash
+      loop: "{{ _vm_to_remove_list }}"
+      register: _vm_stop
+      changed_when: _vm_stop.rc == 2
+      failed_when: _vm_stop.rc not in [0, 2]
+
+    - name: Wait for all VM's to be stopped
+      command: |
+        virsh domstate {{ item }}
+      changed_when: False
+      register: _vm_shutdown
+      until: _vm_shutdown.stdout.find('shut off') != -1
+      retries: 5
+      delay: 60
+      loop: "{{ _vm_to_remove_list }}"
+
+    - name: Delete any disk images related to running VM's
+      file:
+        path: "{{ _virt_pools.pools.images.path }}/{{ item }}-disk1.qcow2"
+        state: absent
+      loop: "{{ _vm_to_remove_list }}"
+
+    - name: Undefine all running VM's
+      virt:
+        name: "{{ item }}"
+        command: undefine
+      failed_when: false
+      loop: "{{ _vm_to_remove_list }}"
+
+    - name: Read the exported manifest file
+      slurp:
+        path: "{{ provision.virsh.snapshot.path }}/manifest.json"
+      register: _manifest_file
+
+    - name: Register manifest content as a fact
+      set_fact:
+        _manifest_content: "{{ _manifest_file.content | b64decode | from_json }}"
+
+    - name: Import the disk images
+      copy:
+        src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
+        dest: "{{ _virt_pools.pools.images.path }}/"
+        checksum: "{{ item.checksum }}"
+        remote_src: yes
+      loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+
+    - name: Inspect the disk images to identify whether an operating system is present
+      command: >-
+        virt-inspector
+        --add {{ _virt_pools.pools.images.path }}/{{ item.path | basename }}
+      register: _virt_inspector
+      changed_when: false
+      failed_when: false
+      loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+
+    - name: Inject the host ssh key into the VM disk image (if it has an operating system)
+      command: >-
+        virt-customize
+        --add {{ _virt_pools.pools.images.path }}/{{ item.item.path | basename }}
+        --root-password password:redhat
+        --mkdir /root/.ssh
+        --chmod 0700:/root/.ssh
+        --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys
+        --upload /root/.ssh/id_rsa.pub:/home/{{ vm_provision_user }}/.ssh/authorized_keys
+        --chmod 0700:/home/{{ vm_provision_user }}/.ssh
+        --run-command "chown {{ vm_provision_user }}:{{ vm_provision_user }} /home/{{ vm_provision_user }}/.ssh/authorized_keys"
+        --selinux-relabel
+      when: item.stdout != "<?xml version=\"1.0\"?>\n<operatingsystems/>"
+      loop: "{{ _virt_inspector.results }}"
+      loop_control:
+        label: "{{ item.item.path | basename }}"
+
+    # We use command here, because the virt module needs the raw XML
+    # and a lookup will not work remotely. We could slurp all the files,
+    # but that's a lot of work for very little gain.
+    - name: Import the VM configuration
+      command: >-
+        virsh define {{ provision.virsh.snapshot.path }}/{{ item.path | basename }}
+      loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+
+    - name: Start any VM's that were in a running state
+      virt:
+        name: "{{ item.name }}"
+        command: start
+        state: running
+      loop: "{{ _manifest_content.servers | selectattr('state', 'equalto', 'running') | list }}"
+      loop_control:
+        label: "{{ item.name }}"
