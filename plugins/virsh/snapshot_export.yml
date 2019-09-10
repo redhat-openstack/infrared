@@ -1,0 +1,107 @@
+---
+- name: Export snapshots of virtual machines
+  hosts: "{{ (provision.virsh.snapshot.export | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+    vm_prefix: "{{ provision.prefix | default('') }}"
+  tasks:
+    - name: Install required packages
+      package:
+        name: libguestfs-tools-c
+        state: present
+
+    - name: Get info about existing virt storage pools
+      virt_pool:
+        command: info
+      register: _virt_pools
+
+    - name: Get info about existing VM's
+      virt:
+        command: list_vms
+      register: _virt_list
+
+    - name: Create the list of VM's to operate on
+      set_fact:
+        _vm_list: "{{ _virt_list.list_vms | select('match', vm_prefix ~ provision.virsh.snapshot.servers) | list }}"
+
+    - name: Shut down any running VM's
+      shell: |
+        set -e
+        RETURN_CODE=0
+        if ! virsh domstate {{ item }} | grep -qw 'shut off'; then
+          virsh shutdown {{ item }}
+          RETURN_CODE=2
+        fi
+        exit ${RETURN_CODE}
+      args:
+        executable: /bin/bash
+      loop: "{{ _vm_list }}"
+      register: _vm_stop
+      changed_when: _vm_stop.rc == 2
+      failed_when: _vm_stop.rc not in [0, 2]
+
+    - name: Wait for all VM's to be shut down
+      command: |
+        virsh domstate {{ item }}
+      changed_when: False
+      register: _vm_shutdown
+      until: _vm_shutdown.stdout.find('shut off') != -1
+      retries: 5
+      delay: 60
+      loop: "{{ _vm_list }}"
+
+    - name: Sparsify and export disk images
+      command: >-
+        virt-sparsify
+        --compress
+        {{ _virt_pools.pools.images.path }}/{{ item }}-disk1.qcow2
+        {{ provision.virsh.snapshot.path }}/{{ item }}-disk1.qcow2
+      loop: "{{ _vm_list }}"
+
+    - name: Save VM definitions
+      copy:
+        src: "/etc/libvirt/qemu/{{ item }}.xml"
+        dest: "{{ provision.virsh.snapshot.path }}/"
+        remote_src: yes
+      loop: "{{ _vm_list }}"
+
+    - name: Find all the files for the manifest
+      find:
+        paths: "{{ provision.virsh.snapshot.path }}"
+        patterns:
+          - "*-disk1.qcow2"
+          - "*.xml"
+        get_checksum: yes
+      register: _manifest_files
+
+    - name: Prepare the manifest file content
+      set_fact:
+        _manifest_content: >-
+          {
+            'virt_pool_path': '{{ _virt_pools.pools.images.path }}',
+            'snapshot_path': '{{ provision.virsh.snapshot.path }}',
+            'servers': [
+          {% for vm_state_result in _vm_stop.results %}
+              {
+                'name': '{{ vm_state_result.item }}',
+                'state': '{{ (vm_state_result is changed) | ternary("running", "shut off") }}'
+              },
+          {% endfor %}
+            ],
+            'files': {{ _manifest_files.files | json_query('[*].{path: path, checksum: checksum}') | sort(attribute='path') }}
+          }
+
+    - name: Write out the manifest file
+      copy:
+        content: "{{ _manifest_content | to_nice_json }}"
+        dest: "{{ provision.virsh.snapshot.path }}/manifest.json"
+
+    - name: Restart any VM's that were running
+      virt:
+        name: "{{ item.item }}"
+        state: running
+      when: item is changed
+      loop: "{{ _vm_stop.results }}"
+      loop_control:
+        label: "{{ item.item }}"
