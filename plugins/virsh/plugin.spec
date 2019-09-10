@@ -175,7 +175,7 @@ subparsers:
                     help: |
                       Desired bus to use for disks, please refer to: https://wiki.qemu.org/Features/VirtioSCSI
                       Some of disk busses supports different modes:
-                    choises: ['virtio', 'scsi']
+                    choices: ['virtio', 'scsi']
                     default: 'virtio'
 
             - title: Custom virt-install options
