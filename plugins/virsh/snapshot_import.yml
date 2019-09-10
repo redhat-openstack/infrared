@@ -1,0 +1,10 @@
+---
+- name: Import snapshots of virtual machines
+  hosts: "{{ (provision.virsh.snapshot.import | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+    vm_prefix: "{{ provision.prefix | default('') }}"
+  tasks:
+    - debug:
+        msg: "This is not yet implemented. Nothing to see here. Move along citizen."

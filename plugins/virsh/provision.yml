@@ -17,6 +17,7 @@
   when:
     - not provision.topology.extend|default(False)
     - not provision.virsh.snapshot.create | bool
+    - not provision.virsh.snapshot.export | bool
   tags: hypervisor
 
 - name: Create Networks
@@ -24,12 +25,14 @@
   when:
     - not provision.topology.extend|default(False)
     - not provision.virsh.snapshot.create | bool
+    - not provision.virsh.snapshot.export | bool
   tags: networks
 
 - name: Provision Vms
   import_playbook: "{{ provision_vms | default('provision_vms.yml') }}"
   when:
     - not provision.virsh.snapshot.create | bool
+    - not provision.virsh.snapshot.export | bool
     - provision.topology.nodes is defined
   tags: vms
 
@@ -37,6 +40,7 @@
   import_playbook: "{{ provision_user | default('provision_user.yml') }}"
   when:
     - not provision.virsh.snapshot.create | bool
+    - not provision.virsh.snapshot.export | bool
   tags: user
 
 - name: Set VMs timezone
@@ -45,12 +49,14 @@
   when:
     - provision.topology.timezone|default('')
     - not provision.virsh.snapshot.create | bool
+    - not provision.virsh.snapshot.export | bool
     - provision.topology.nodes is defined
 
 - name: Including post provision tasks
   import_playbook: "{{ provision_post | default('post.yml') }}"
   when:
     - not provision.virsh.snapshot.create | bool
+    - not provision.virsh.snapshot.export | bool
   tags: post
 
 - name: generate inventory file
