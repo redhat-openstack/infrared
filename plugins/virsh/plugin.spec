@@ -221,3 +221,22 @@ subparsers:
                           A regular expression for the name of the virtual machine(s) to operate on. By
                           default it will operate on all virtual machines in the environment.
                        default: ".*"
+                  virsh-snapshot-export:
+                      type: Bool
+                      help: |
+                          This will shut down all virtual machines in the environment and export the
+                          disks and environment configuration to the path provided by
+                          ``--virsh-snapshot-path``.
+                      default: False
+                  virsh-snapshot-import:
+                      type: Bool
+                      help: |
+                          This will import the virtual machine disks and environment configuration from
+                          the path specified by ``--virsh-snapshot-path`` and start them up.
+                      default: False
+                  virsh-snapshot-path:
+                      type: Value
+                      help: |
+                          The path to be used for the snapshot export/import process.
+                      required_when:
+                          - "virsh-snapshot-export == yes or virsh-snapshot-import == yes"
