@@ -35,7 +35,7 @@
             msg: overcloud image customization currently not supported outside Red Hat internal network or when using CDN
         when:
             - install.images.packages|default('') or install.images['update'] or install.images.remove|default('')
-            - internal_repos|failed or cdn_status.rc == 0
+            - internal_repos is failed or cdn_status.rc == 0
 
       - name: tmp repos.d for overcloud
         file:
