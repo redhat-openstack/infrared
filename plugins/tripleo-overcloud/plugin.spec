@@ -84,6 +84,12 @@ subparsers:
 
                       ansible_variable: 'install_container_images_urls'
 
+                  container-images-nopush:
+                      type: Bool
+                      default: False
+                      help: Avoid populating the local registry with the containers.
+                            This is used when testing update/upgrade to prevent hidding issues from the documented command.
+
                   registry-mirror:
                       type: Value
                       help: The alternative docker registry to use for deployment.
