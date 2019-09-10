@@ -5,6 +5,8 @@ global
   maxconn  10000
   pidfile  /var/run/haproxy.pid
   user  haproxy
+  stats  socket /var/lib/haproxy/stats mode 600 level user
+  stats  timeout 2m
 
 defaults
   log  global
@@ -121,8 +123,8 @@ listen mysql
   option httpchk
   stick on dst
   stick-table type ip size 1000
-  timeout client 0
-  timeout server 0
+  timeout client 90m
+  timeout server 90m
   {% for x in range(controllers_number|int) %}
 server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:3306 backup check fall 5 inter 2000 on-marked-down shutdown-sessions port 9200 rise 2
   {% endfor %}
