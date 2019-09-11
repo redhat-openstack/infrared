@@ -59,8 +59,6 @@
 
     - name: Get repo requirements
       become: yes
-      environment:
-        PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
       pip:
           chdir: "~/{{ test.dir }}"
           requirements: "{{ plugins_reqs.stat.path }}"
