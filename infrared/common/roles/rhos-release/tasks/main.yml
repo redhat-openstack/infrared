@@ -102,6 +102,11 @@
         delay: 5
         become: true
         become_user: root
+
+      - name: workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1743834
+        shell: rhos-release 15 -T ceph; yum remove  -y ceph-ansible; yum install -y ceph-ansible
+        become: true
+        become_user: root       
   rescue:
       - name: run rhos-release without retries
         rhos_release:
@@ -115,6 +120,11 @@
             source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
             discover_build: "{{ rr_discover_build }}"
         register: command_result
+        ignore_errors: yes
+
+      - name: workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1743834
+        shell: rhos-release 15 -T ceph; yum remove  -y ceph-ansible; yum install -y ceph-ansible
+        become_user: root
         ignore_errors: yes
 
       - fail:
