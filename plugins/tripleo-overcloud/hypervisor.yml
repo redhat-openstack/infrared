@@ -81,7 +81,7 @@
         shell: |
             NODE_XML=`virsh dumpxml {{ item }}`
             disks_list=$(virsh domblklist {{ item }}  | \
-                awk '{if(NR>2 && $0 !~ /^ *$/){d = d "," "\"" $1 "\""}}END{print "[" gensub("^,","",1,d) "]"}')
+                awk '{ if(NR>2 && $0 !~ /^ *$/) { d = d "," "\"" $1 "\"" } } END { print "[" gensub("^,","",1,d) "]" }')
             echo "{
                 'name': '{{ item }}',
                 'arch': '`echo "$NODE_XML" | grep arch | cut -d\' -f2`',
@@ -101,7 +101,7 @@
             instack_input: "{{ (install.instackenv|default({})).file|default('') }}"
             instack_output: "~/instackenv.json"
             # json file shouldn't hold newlines
-            undercloud_private_key: "{{ uc_pkey_result.stdout_lines | join('\\n')}}"
+            undercloud_private_key: "{{ uc_pkey_result.stdout_lines | join('\\n') }}"
         template:
             src: templates/instackenv.json.j2
             dest: "{{ instack_output }}"
