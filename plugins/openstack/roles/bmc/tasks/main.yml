@@ -24,7 +24,9 @@
       - "provision.bmc is defined"
       - "provision.bmc.cdn is defined"
       - "bmc_rhos_release|openstack_distribution == 'OSP'"
-  become: yes
+  args:
+      apply:
+          become: yes
 
 - include_role:
       name: rhos-release
