@@ -64,8 +64,12 @@ parameter_defaults:
 {# This block, for openstack>=13 defines the memory reservation feature introduced in ceph 3.2 #}
     CephAnsibleExtraConfig:
         is_hci: true
-{% endif %}{# End os is_hci block #}
-
+{% endif %}{# End of is_hci block #}
+{% if install.ceph.rgw.swift.headers|default(false) and install.version|default(undercloud_version)|openstack_release >= 13 %}
+{# This block add a ceph.conf override (under [global]) to force rgw to return same headers as swift #}
+    CephConfigOverrides:
+        rgw_swift_enforce_content_length: true
+{% endif %}{# End of rgw_swift_enforce_content_length block #}
 {% else %}
     ExtraConfig:
       ceph::profile::params::osd_pool_default_pg_num: 32

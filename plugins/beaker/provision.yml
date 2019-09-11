@@ -18,7 +18,7 @@
       when: not provision.dry
       # Make beaker module prone to instance outages/failures, retry 3 times
       register: provisioner_result
-      until: provisioner_result|success
+      until: provisioner_result is success
       retries: 3
       delay: 5
 
