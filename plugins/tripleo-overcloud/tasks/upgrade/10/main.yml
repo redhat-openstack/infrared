@@ -15,7 +15,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Pre-Upgrade Ceilometer migration
   include_tasks: "ceilometer_migration.yml"
@@ -35,7 +35,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Overcloud Upgrade Init
   include_tasks: "upgrade_init.yml"
@@ -77,7 +77,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Controller And Block Storage Upgrade
   include_tasks: "controller_upgrade.yml"
@@ -97,7 +97,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Ceph Upgrade
   shell: |
@@ -118,7 +118,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Compute Upgrade
   shell: |
@@ -139,7 +139,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Convergence
   include_tasks: "convergence.yml"
@@ -159,7 +159,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Overcloud Post-Upgrade Aodh migration
   include_tasks: "aodh_migration.yml"
