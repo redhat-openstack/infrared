@@ -100,6 +100,13 @@
           - install['overcloud']['update']['kernel']
           - install.images.packages
 
+      # Trigger only when custom FDP params are supplied
+      - name: update OVS RPM on overcloud image from a remote FDP repo
+        include_tasks: tasks/images/inject_custom_ovs.yml
+        when:
+          - install['fdp']['repo']['file']['url']
+          - install['fdp']['ovs']['rpm']['string']
+
        #Need to fix  BZ1462703 to apply --os-cloud
       - name: upload the overcloud images to glance
         shell: |
