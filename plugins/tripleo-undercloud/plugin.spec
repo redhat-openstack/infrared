@@ -387,6 +387,18 @@ subparsers:
                           Updating default overcloud kernel with kernel files retrieved from customized overcloud image
                       default: no
 
+                  fdp-repo-file-url:
+                    type: Value
+                    help: |
+                        A URL to the FDP YUM repo file.
+                    default: no
+
+                  fdp-ovs-rpm-string:
+                      type: Value
+                      help: |
+                          Install custom OVS RPM containing 'string' from FDP repo
+                      default: no
+
             - title: Undercloud Upgrade
               options:
                   upgrade:
