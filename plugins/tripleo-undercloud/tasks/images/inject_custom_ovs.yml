@@ -1,0 +1,77 @@
+---
+
+- name: Ensure libguestfs-tools Are Installed
+  package:
+      name: libguestfs-tools
+      state: present
+
+- name: Detect Installed OVS RPMs Inside Overcloud Image And Log To File
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend | default('direct') }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --run-command 'rpm -qa | grep openvswitch | tee /tmp/ovs_rpms.txt'"
+
+- name: Read OVS RPMs File From Overcloud Image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-cat -a {{ overcloud_image_file }} /tmp/ovs_rpms.txt"
+  register: overcloud_ovs_rpms_installed
+
+- name: Detect Installed OVS RPM Inside Overcloud Image
+  set_fact:
+    overcloud_installed_ovs_rpm: "{{ item }}"
+  loop: "{{ overcloud_ovs_rpms_installed['stdout_lines'] }}"
+  when: item | regex_search('^openvswitch-?\d\..*')
+
+- name: Get Available OVS RPMs from FDP Repo Inside Overcloud Image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --run-command \"yum --showduplicates list available *openvswitch* | awk '{print $2}' | tr -s '\\n' | tee /tmp/available_ovs_rpms.txt \""
+
+- name: Read Available OVS RPMs File From Overcloud Image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-cat -a {{ overcloud_image_file }} /tmp/available_ovs_rpms.txt"
+  register: overcloud_ovs_rpms_available
+
+- name: Set OVS RPM To Install Inside Overcloud Image
+  set_fact:
+    install_ovs_rpm: "{{ item }}"
+  loop: "{{ overcloud_ovs_rpms_available['stdout_lines'] }}"
+  when: install['fdp']['ovs']['rpm']['string'] in item
+
+- name: Fail To Detect Request OVS RPM From Available RPMs
+  fail:
+     msg: >
+      Available OVS RPMs do not contain {{ install['fdp']['ovs']['rpm']['string'] }}
+      string
+  when: install_ovs_rpm is not defined
+
+# This will cause RPMDB to be out of sync https://access.redhat.com/solutions/62321
+# Consider resetting RPMDB in the future
+- name: Uninstall Shipped OVS '{{ overcloud_installed_ovs_rpm }}' Inside Overcloud Image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --run-command 'rpm -e --nodeps {{ overcloud_installed_ovs_rpm }} python-openvswitch'"
+
+- name: Install FDP OVS '{{ install_ovs_rpm }}' Inside Overcloud Image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --run-command 'yum install -y openvswitch*{{ install_ovs_rpm }}'"
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=1738478
+- name: Apply Workaround For BZ#1738478
+  block:
+    - name: Fetch rhosp-openvswitch RPM To Undercloud
+      get_url:
+        url: http://download.eng.bos.redhat.com/brewroot/vol/rhel-8/packages/rhosp-openvswitch/2.11/0.5.el8ost/noarch/rhosp-openvswitch-2.11-0.5.el8ost.noarch.rpm
+        dest: /tmp/rhosp-openvswitch-2.11-0.5.el8ost.noarch.rpm
+        checksum: md5:6e7fdaa8406dc92051886a01e9a2c39a
+    - name: Upload rhosp-openvswitch RPM To Overcloud Image
+      environment:
+          LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+      command: "virt-copy-in -a {{ overcloud_image_file }} /tmp/rhosp-openvswitch-2.11-0.5.el8ost.noarch.rpm /tmp/rhosp-openvswitch-2.11-0.5.el8ost.noarch.rpm"
+    - name: Install rhosp-openvswitch RPM Inside Overcloud Image
+      environment:
+          LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+      command: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --run-command 'yum install -y /tmp/rhosp-openvswitch-2.11-0.5.el8ost.noarch.rpm'"
+  when: install['version']|openstack_release < 15
