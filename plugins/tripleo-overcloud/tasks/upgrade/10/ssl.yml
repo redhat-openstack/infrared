@@ -12,7 +12,7 @@
 
 - name: Set network_environment_file to IPV6 file
   set_fact:
-      network_environment_file: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/network/network-environment-v6.yaml"
+      network_environment_file: "~/{{ install.deployment.files | basename }}/network/network-environment-v6.yaml"
   when: check_for_ssl is succeeded and net_env_ipv6 is succeeded
 
 - name: Check for IPV4 network environment file
@@ -23,7 +23,7 @@
 
 - name: Set network_environment_file to IPV4 file
   set_fact:
-      network_environment_file: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/network/network-environment.yaml"
+      network_environment_file: "~/{{ install.deployment.files | basename }}/network/network-environment.yaml"
   when: check_for_ssl is succeeded and net_env_ipv4 is succeeded
 
 - name: Extract our external allocation pools start value
@@ -39,14 +39,14 @@
 - name: Create public VIP environment file
   template:
       src: ssl/public_vip.yaml.j2
-      dest: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/public_vip.yaml"
+      dest: "~/{{ install.deployment.files | basename }}/public_vip.yaml"
   when: check_for_ssl is succeeded
 
 - name: Append the invocation line to the base overcloud upgrade script
   lineinfile:
       dest: "{{ item }}"
       insertbefore: '^--log-file.*'
-      line: '-e {{ ansible_user_dir }}/{{ install.deployment.files | basename }}/public_vip.yaml \'
+      line: '-e ~/{{ install.deployment.files | basename }}/public_vip.yaml \'
   with_items:
     - "{{ overcloud_upgrade_script }}"
     - "{{ overcloud_deploy_script }}"
