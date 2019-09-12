@@ -387,6 +387,11 @@ subparsers:
                           Updating default overcloud kernel with kernel files retrieved from customized overcloud image
                       default: no
 
+                  custom-ovs-rpm-string:
+                      type: Value
+                      help: |
+                          Install custom OVS RPM containing 'string' from FDP repo
+
             - title: Undercloud Upgrade
               options:
                   upgrade:
