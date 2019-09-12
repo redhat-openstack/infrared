@@ -28,3 +28,28 @@
         register: _delete_stack
         changed_when: _delete_stack.rc == 2
         failed_when: _delete_stack.rc not in [0, 2]
+
+      - name: Get list of existing baremetal nodes
+        shell: |
+            source ~/stackrc
+            {% if undercloud_version | openstack_release < 10 %}
+            ironic node-list --fields name | tail -n +4 | head -n -1 | awk '{print $2}'
+            {% else %}
+            openstack baremetal node list -c Name -f value
+            {% endif %}
+        args:
+          executable: /bin/bash
+        changed_when: False
+        register: _baremetal_node_list
+
+      - name: Delete existing baremetal nodes
+        shell: |
+            source ~/stackrc
+            {% if undercloud_version | openstack_release < 10 %}
+            ironic node-delete {{ item }}
+            {% else %}
+            openstack baremetal node delete {{ item }}
+            {% endif %}
+        loop: "{{ _baremetal_node_list.stdout_lines | default([]) }}"
+        args:
+          executable: /bin/bash
