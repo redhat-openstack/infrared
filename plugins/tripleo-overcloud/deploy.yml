@@ -51,7 +51,7 @@
   gather_facts: yes
   any_errors_fatal: true
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
   tags:
       - deploy
   tasks:
@@ -141,7 +141,7 @@
   gather_facts: no
   any_errors_fatal: true
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
   tags:
       - deploy
   tasks:
@@ -157,7 +157,7 @@
 
     - name: check if we have v3 rc file
       stat:
-          path: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3"
+          path: "~/{{ install.overcloud.stack }}rc.v3"
       register: rc_file_path
       tags:
           - clouds_file
@@ -167,7 +167,7 @@
       vars:
             v3_file: "{{ install.overcloud.stack }}rc.v3"
             v2_file: "{{ install.overcloud.stack }}rc"
-            auth_file_path: "{{ ansible_user_dir }}/{{ rc_file_path.stat.exists | ternary(v3_file, v2_file) }}"
+            auth_file_path: "~/{{ rc_file_path.stat.exists | ternary(v3_file, v2_file) }}"
             cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"
       tags:
           - clouds_file
@@ -185,7 +185,7 @@
       tags:
           - fetch_rc_file
       fetch:
-          src: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc.v3"
+          src: "~/{{ install.overcloud.stack }}rc.v3"
           dest: "{{ inventory_dir }}/{{ install.overcloud.stack }}rc.v3"
           flat: yes
           fail_on_missing: no

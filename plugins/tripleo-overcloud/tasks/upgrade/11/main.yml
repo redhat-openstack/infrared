@@ -64,7 +64,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Initiate composable upgrade process
   include_tasks: composable_upgrade.yml
@@ -101,7 +101,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Compute Upgrade
   include_tasks: compute_upgrade.yml
@@ -122,7 +122,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Swift Upgrade
   include_tasks: swift_upgrade.yml
@@ -143,7 +143,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Converge
   include_tasks: converge_upgrade.yml
@@ -163,7 +163,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Ceph Upgrade
   include_tasks: ceph_upgrade.yml
@@ -191,7 +191,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - include_tasks: custom_roles_upgrade.yml
   with_items: "{{ custom_nodes.stdout|default([]) }}"
@@ -220,7 +220,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Post upgrade controller nodes
   include_tasks: controller_postupgrade.yml
