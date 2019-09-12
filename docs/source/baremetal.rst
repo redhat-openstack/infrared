@@ -7,31 +7,33 @@ Infrared allows to perform baremetal deployments.
 
 1) Undercloud provision step. Foreman plugin will be used in this example.
 
-    infrared foreman -vv \
-        -o provision.yml \
-        --url foreman.example.com \
-        --user foreman_user \
-        --password foreman_password \
-        --host-address name.of.undercloud.host \
-        --host-key /path/to/host/key \
-        --role baremetal,undercloud,tester
+   .. code:: shell
+
+     infrared foreman -vv \
+         -o provision.yml \
+         --url foreman.example.com \
+         --user foreman_user \
+         --password foreman_password \
+         --host-address name.of.undercloud.host \
+         --host-key /path/to/host/key \
+         --role baremetal,undercloud,tester
 
 2) Deploy Undercloud.
 
-    infrared tripleo-undercloud -vv \
-        -o undercloud-install.yml \
-        --config-file path/to/undercloud.conf \
-        --version 11 \
-        --build 11 \
-        --images-task rpm
+   .. code:: shell
+
+     infrared tripleo-undercloud -vv \
+         -o undercloud-install.yml \
+         --config-file path/to/undercloud.conf \
+         --version 11 \
+         --build 11 \
+         --images-task rpm
 
 3) Deploy Overcloud.
 
    For baremetal deployments, in order to reflect the real networking,
    templates should be prepared by the user before the deployment, including ``instackenv.json`` file.
    All addition parameters like storage (``ceph`` or ``swift``) disks or any other parameters should be added to the templates as well.
-
-
 
    .. code:: shell
 
@@ -58,6 +60,6 @@ Infrared allows to perform baremetal deployments.
         --deploy yes
 
     infrared cloud-config -vv \
-    -o cloud-config.yml \
-    --deployment-files virt \
-    --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input
+        -o cloud-config.yml \
+        --deployment-files virt \
+        --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input
