@@ -1,0 +1,54 @@
+---
+
+- name: Detect Installed OVS RPMs Inside Overcloud Image And Log To File
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --run-command 'rpm -qa | grep openvswitch | tee /tmp/ovs_rpms.txt'"
+
+- name: Read OVS RPMs File From Overcloud Image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-cat -a {{ overcloud_image_file }} /tmp/ovs_rpms.txt"
+  register: overcloud_ovs_rpms_installed
+
+- name: Detect Installed OVS RPM Inside Overcloud Image
+  set_fact:
+    overcloud_installed_ovs_rpm: "{{ item }}"
+  loop: "{{ overcloud_ovs_rpms_installed['stdout_lines'] }}"
+  when: item | regex_search('^openvswitch-?\d\..*')
+
+- name: Get Available OVS RPMs from FDP Repo Inside Overcloud Image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --run-command \"yum --showduplicates list available *openvswitch* | awk '{print $2}' | tr -s '\\n' | tee /tmp/available_ovs_rpms.txt \""
+
+- name: Read Available OVS RPMs File From Overcloud Image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-cat -a {{ overcloud_image_file }} /tmp/available_ovs_rpms.txt"
+  register: overcloud_ovs_rpms_available
+
+- name: Set OVS RPM To Install Inside Overcloud Image
+  set_fact:
+    install_ovs_rpm: "{{ item }}"
+  loop: "{{ overcloud_ovs_rpms_available['stdout_lines'] }}"
+  when: install['fdp']['ovs']['rpm']['string'] in item
+
+- name: Fail To Detect Request OVS RPM From Available RPMs
+  fail:
+     msg: >
+      Available OVS RPMs do not contain {{ install['fdp']['ovs']['rpm']['string'] }}
+      string
+  when: install_ovs_rpm is not defined
+
+# This will cause RPMDB to be out of sync https://access.redhat.com/solutions/62321
+# Consider resetting RPMDB in the future
+- name: Uninstall Shipped OVS '{{ overcloud_installed_ovs_rpm }}' Inside Overcloud Image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --run-command 'rpm -e --nodeps {{ overcloud_installed_ovs_rpm }} python-openvswitch'"
+
+- name: Install FDP OVS '{{ install_ovs_rpm }}' Inside Overcloud Image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --run-command 'yum install -y openvswitch*{{ install_ovs_rpm }}'"
