@@ -136,12 +136,16 @@
           - name: download workarounds file
             get_url:
                 url: "{{ install.workarounds }}"
-                dest: ./workarounds.yml
+                dest: "{{ inventory_dir }}/workarounds.yml"
+                backup: yes
             delegate_to: localhost
 
           - name: load workarounds vars
-            include_vars:
-              file: workarounds.yml
+            include_vars: "{{ lookup('first_found', possible_files) }}"
+            vars:
+              possible_files:
+                - "{{ inventory_dir }}/workarounds.yml"
+                - "{{ playbook_dir }}/workarounds.yml"
 
           - name: create workarounds scripts
             template:
