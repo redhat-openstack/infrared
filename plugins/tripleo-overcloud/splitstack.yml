@@ -15,7 +15,7 @@
   any_errors_fatal: true
   gather_facts: yes
   vars:
-      template_base: "{{ ansible_user_dir }}/composable_roles"
+      template_base: "~/composable_roles"
       role_substitutions:
           "Compute": "ComputeDeployedServer"
           "Controller": "ControllerDeployedServer"
@@ -28,7 +28,7 @@
   tasks:
       - name: Append the network type
         yedit:
-            src: "{{ ansible_user_dir }}/deploy_info.yml"
+            src: "~/deploy_info.yml"
             update: True
             key: global
             value:

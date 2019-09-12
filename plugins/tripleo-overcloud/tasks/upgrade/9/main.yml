@@ -30,7 +30,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Object Storage Upgrade
   include_tasks: ../common/node_upgrade.yml
@@ -59,7 +59,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Ceph OSD nodes upgrade
   include_tasks: ../common/node_upgrade.yml
@@ -78,7 +78,7 @@
     - include: ../../update/common/startping.yaml
   when: install.dataplaneping|default(False)
   vars:
-      overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
+      overcloudrc_file: "~/{{ install.overcloud.stack }}rc"
 
 - name: Nova compute nodes upgrade
   include_tasks: ../common/node_upgrade.yml

@@ -6,14 +6,14 @@
 
 - name: Make a copy of the old enable-tls template
   copy:
-    src: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/enable-tls.yaml"
-    dest: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/enable-tls-8.yaml"
+    src: "~/{{ install.deployment.files | basename }}/enable-tls.yaml"
+    dest: "~/{{ install.deployment.files | basename }}/enable-tls-8.yaml"
     remote_src: true
   when: check_for_ssl is succeeded
 
 - name: Append the services introduced in OSP9 to the enable-tls template
   lineinfile:
-    dest: '{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/enable-tls.yaml'
+    dest: '~/{{ install.deployment.files | basename }}/enable-tls.yaml'
     insertafter: '(SwiftPublic.*)'
     line: "{{ item }}"
   with_items:
