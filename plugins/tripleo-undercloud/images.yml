@@ -72,7 +72,7 @@
         role: rdo-release
         release: "{{ install.version|default(undercloud_version) }}"
         rr_buildmods: "{{ install.buildmods }}"
-        build: "{{ install.build | default(omit) }}"
+        build: "{{ install.build | default(omit)  }}"
         mirror: "{{ install.mirror | default(omit) }}"
         rr_target_directory: "{{ tmp_oc_repos_dir }}"
         when:
@@ -99,6 +99,11 @@
         when:
           - install['overcloud']['update']['kernel']
           - install.images.packages
+
+      # Trigger only when custom OVS RPM string is supplied
+      - name: update default overcloud kernel form modified overcloud image
+        include_tasks: tasks/images/inject_custom_ovs.yml
+        when: install['custom']['ovs']['rpm']['string']
 
        #Need to fix  BZ1462703 to apply --os-cloud
       - name: upload the overcloud images to glance

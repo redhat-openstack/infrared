@@ -1,0 +1,45 @@
+---
+
+- name: Download FDP YUM Repo File To Undercloud
+  get_url:
+    url: "http://openvswitch-ci.usersys.redhat.com/staging/7Server/x86_64/fast-datapath/fast-datapath-staging.repo"
+    dest: "/tmp/fast-datapath-staging.repo"
+
+- name: Copy Local FDP YUM Repo File From Undercloud To Overcloud Image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-copy-in -a {{ overcloud_image_file }} /tmp/fast-datapath-staging.repo /etc/yum.repos.d/"
+
+- name: Detect Installed OVS RPMs Inside Overcloud Image And Log To File
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --run-command 'rpm -qa | grep openvswitch | tee /tmp/ovs_rpms.txt'"
+
+- name: Read OVS RPMs File From Overcloud Image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-cat -a {{ overcloud_image_file }} /tmp/ovs_rpms.txt"
+  register: overcloud_ovs_rpms_installed
+
+- name: Detect Installed OVS RPM Inside Overcloud Image
+  set_fact:
+    overcloud_installed_ovs_rpm: "{{ item }}"
+  loop: "{{ overcloud_ovs_rpms_installed['stdout_lines'] }}"
+  when: item | regex_search('^openvswitch-?\d\..*')
+
+- name: Get Available OVS RPMs from FDP Repo Inside Overcloud Image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --run-command \"yum --showduplicates list available *openvswitch* | awk '{print $2}' | tr -s '\\n' | tee /tmp/available_ovs_rpms.txt \""
+
+- name: Read Available OVS RPMs File From Overcloud Image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-cat -a {{ overcloud_image_file }} /tmp/available_ovs_rpms.txt"
+  register: overcloud_ovs_rpms_available
+
+- name: Set OVS RPM To Install Inside Overcloud Image
+  set_fact:
+    install_ovs_rpm: "{{ item }}"
+  loop: "{{ overcloud_ovs_rpms_available['stdout_lines'] }}"
+  when: install['custom']['ovs']['rpm']['string'] in item
