@@ -19,9 +19,11 @@
       reg_base_ceph: "{{ install.registry.undercloud.skip|ternary(external_reg_base_ceph, undercloud_reg_base_ceph) }}"
   shell: |
       set -exo pipefail
+      # See https://review.opendev.org/687626 for why readlink is used
+      OUTPUT_FILE_PATH=$(readlink -f {{ env_file }})
       openstack overcloud container image prepare \
         --namespace={{ reg_base.rstrip('/') }} \
-        --env-file={{ env_file }} {{ environment_yamls | default('') }} {{ roles_yamls | default('') }} \
+        --env-file=${OUTPUT_FILE_PATH} {{ environment_yamls | default('') }} {{ roles_yamls | default('') }} \
         --prefix={{ container_env['container-image-prepare']['prefix'] }} \
         --tag={{ container_env['container-image-prepare']['tag'] }} \
         {% if not install.registry.undercloud.skip %}

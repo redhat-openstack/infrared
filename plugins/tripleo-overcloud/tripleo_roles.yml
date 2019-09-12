@@ -4,7 +4,7 @@
   any_errors_fatal: true
   gather_facts: yes
   vars:
-      template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
+      template_base: "~/{{ install.deployment.files | basename }}"
       roles_base: "/usr/share/openstack-tripleo-heat-templates/roles"
       ipv6_postfix: "{{  (install.network.protocol == 'ipv4') | ternary('', '-v6') }}"
       ipv6_postfix_underscore: "{{  (install.network.protocol == 'ipv4') | ternary('', '_v6') }}"
