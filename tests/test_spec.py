@@ -51,6 +51,10 @@ def test_length(spec_fixture, workspace_manager_fixture, test_workspace,
     ("--req-arg-a=yes --uni-dep=uni-val --multi-dep=multi-val", True),
     ("--req-arg-a=yes --uni-dep=not-uni --multi-dep=multi-val ", False),
     ("--req-arg-a=yes --uni-dep=not-uni --multi-dep=multi-val --uni-neg-dep=uni-neg-val", True),
+    ("--req-arg-c=yes --req-arg-d=no", False),
+    ("--req-arg-c=no --req-arg-d=yes", False),
+    ("--req-arg-c=yes --req-arg-d=no --either-dep=either-val", True),
+    ("--req-arg-c=no --req-arg-d=yes --either-dep=either-val", True),
 ])
 def test_required_when(spec_fixture, workspace_manager_fixture, test_workspace,
                        cli_args, should_pass):
