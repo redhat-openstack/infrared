@@ -29,10 +29,6 @@
   set_fact:
       detect_available_otc: "{{ available_pkgs.results | selectattr('name', 'equalto', detect_pkg) | list }}"
 
-- fail:
-      msg: "Failed to find info about available versions of {{ detect_pkg }}"
-  when: detect_available_otc|length == 0
-
 - name: "Match installed and available {{ detect_pkg }} package"
   set_fact:
       installed_package_data: "{{ item }}"
