@@ -1,0 +1,26 @@
+---
+- name: Restore snapshots of virtual machines
+  hosts: "{{ (provision.virsh.snapshot.restore | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+    vm_prefix: "{{ provision.prefix | default('') }}"
+  tasks:
+    - name: Get info about existing VM's
+      virt:
+        command: list_vms
+      register: _virt_list
+
+    - name: Restore snapshots of each VM
+      shell: |
+        set -e
+        VIRSH_EXTRA_ARGS=""
+        if virsh snapshot-list --domain {{ item }} --active --name | grep -qw {{ provision.virsh.snapshot.name }}; then
+          VIRSH_EXTRA_ARGS="--running"
+        else
+          VIRSH_EXTRA_ARGS=""
+        fi
+        virsh snapshot-revert --domain {{ item }} --snapshotname {{ provision.virsh.snapshot.name }} ${VIRSH_EXTRA_ARGS}
+      args:
+        executable: /bin/bash
+      loop: "{{ _virt_list.list_vms | select('match', vm_prefix ~ provision.virsh.snapshot.servers) | list }}"
