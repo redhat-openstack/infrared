@@ -13,12 +13,6 @@
       name: "{{ setup.packages }}"
       state: present
 
-- name: Install pip
-  become: yes
-  easy_install:
-      name: pip
-      state: latest
-
 - name: Clone tempest
   git:
       repo: "{{ setup.repo.get(test.openstack.version|default(overcloud_version)|openstack_release, setup.repo.defaults).url }}"
