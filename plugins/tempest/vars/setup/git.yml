@@ -29,8 +29,8 @@ setup:
         - libxslt-devel
         - mariadb-devel
         - openssl-devel
-        - python-virtualenv
-        - python-setuptools
+        - "{{ (test_openstack_version | int > 14) | ternary('python3-virtualenv', 'python-virtualenv') }}"
+        - "{{ (test_openstack_version | int > 14) | ternary('python3-setuptools', 'python-setuptools') }}"
     pip_packages:
         - python-subunit
         - junitxml
