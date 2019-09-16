@@ -1,11 +1,11 @@
 from __future__ import print_function
 
-import os
+import argcomplete
 import json
+import os
 from pbr import version
 import pkg_resources as pkg
 import sys
-import argcomplete
 
 
 def inject_common_paths():
@@ -40,13 +40,13 @@ def inject_common_paths():
 inject_common_paths()
 
 from infrared import api  # noqa
+import infrared.bash_completers as completers  # noqa
 from infrared.core.services import CoreServices  # noqa
 from infrared.core.services.plugins import PLUGINS_REGISTRY  # noqa
 from infrared.core.utils import exceptions  # noqa
-from infrared.core.utils import logger  # noqa
 from infrared.core.utils import interactive_ssh  # noqa
+from infrared.core.utils import logger  # noqa
 from infrared.core.utils.print_formats import fancy_table  # noqa
-import infrared.bash_completers as completers  # noqa
 
 LOG = logger.LOG
 

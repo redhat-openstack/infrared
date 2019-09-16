@@ -1,17 +1,18 @@
 from __future__ import print_function
 
 import datetime
-import os
 import fileinput
-import shutil
+import glob
+import os
 import re
+import shutil
 import tarfile
 import tempfile
 import time
 import urllib3
-import glob
 
-from infrared.core.utils import exceptions, logger
+from infrared.core.utils import exceptions
+from infrared.core.utils import logger
 
 LOG = logger.LOG
 
@@ -559,8 +560,8 @@ class WorkspaceManager(object):
                 raise exceptions.IRWorkspaceMissing(workspace=workspace_name)
 
         # need to have import here to avoid ansible patching
-        from ansible.parsing.dataloader import DataLoader
         from ansible.inventory.manager import InventoryManager
+        from ansible.parsing.dataloader import DataLoader
 
         return InventoryManager(DataLoader(), sources=workspace.inventory)
 
