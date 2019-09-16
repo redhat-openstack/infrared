@@ -189,7 +189,7 @@ def _parse_output(module, cmd, stdout):
             version='cdn',
             repo_type='cdn',
             channel='core'
-            )}
+        )}
     else:
         ret_dict['releases'] = dict((release['channel'], release)
                                     for release in installed_releases)
