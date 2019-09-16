@@ -200,9 +200,10 @@ def _parse_output(module, cmd, stdout):
 
 
 def do_build_discover():
-    """
-    Discovers currently installed build by reading
-    "/etc/yum.repos.d/latest-installed"
+    """Discovers currently installed build.
+
+    Discovers currently installed build by reading by reading
+    "/etc/yum.repos.d/latest-installed".
     """
 
     import os.path
@@ -217,8 +218,7 @@ def do_build_discover():
 
 
 def wrap_results(res_dict, cmd, rc, out, err):
-    """
-    Wraps ansible response with addtional information usefull for debug.
+    """Wraps ansible response with addtional information usefull for debug.
 
     This will also print into console command executed, stderr and stdout.
     """

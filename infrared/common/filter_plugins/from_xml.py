@@ -22,9 +22,7 @@ class XmlListConfig(list):
 
 
 class XmlDictConfig(dict):
-    '''
-    And then use xmldict for what it is... a dict.
-    '''
+    """And then use xmldict for what it is... a dict. """
     def __init__(self, parent_element):
         if parent_element.items():
             self.update(dict(parent_element.items()))

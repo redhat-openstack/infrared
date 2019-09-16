@@ -17,9 +17,7 @@ LOG = logger.LOG
 
 
 class SpecObject(object):
-    """
-    Base object to describe basic specification.
-    """
+    """Base object to describe basic specification. """
 
     def __init__(self, name, *args, **kwargs):
         self.name = name
@@ -38,8 +36,7 @@ class SpecObject(object):
 
     @abc.abstractmethod
     def spec_handler(self, parser, args):
-        """
-        The main method for the spec.
+        """The main method for the spec.
 
         This method will be called by the spec managers once the subcommand
         with the spec name is called from cli.

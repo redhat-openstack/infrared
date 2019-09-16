@@ -23,16 +23,13 @@ class ServiceName(object):
 
 
 class CoreSettings(object):
-    """
-    Holds the main settings for the infrared.
-    """
+    """Holds the main settings for the infrared. """
 
     def __init__(self, workspaces_base_folder=None,
                  plugins_conf_file=None,
                  install_plugin_at_start=True,
                  plugins_base_folder=None):
-        """
-        :param workspaces_base_folder: folder where the
+        """:param workspaces_base_folder: folder where the
         workspace will be stored
         :param plugins_conf_file: location of the plugins.ini file with the
         list of all plugins and types.
@@ -62,8 +59,7 @@ class CoreServices(object):
 
     @classmethod
     def setup(cls, core_settings=None):
-        """
-        Creates configuration from file or from defaults.
+        """Creates configuration from file or from defaults.
 
         :param core_settings: the instance of the CoreSettings class with the
         desired settings. If None is provided then the default settings

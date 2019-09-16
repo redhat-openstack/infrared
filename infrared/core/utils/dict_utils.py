@@ -33,14 +33,12 @@ def dict_insert(dic, val, key, *keys):
 
 
 class ConflictResolver(object):
-    """
-    Resolves conflicts while merging dicts.
-    """
+    """Resolves conflicts while merging dicts. """
 
     @staticmethod
     def none_resolver(first, second, key):
-        """
-        Replaces value in first dict only if it is None.
+        """Replaces value in first dict only if it is None.
+
         Appends second value into the first in type is list.
         """
 
@@ -56,16 +54,12 @@ class ConflictResolver(object):
 
     @staticmethod
     def greedy_resolver(first, second, key):
-        """
-        Replace always first with the value from second
-        """
+        """Replace always first with the value from second """
         first[key] = second[key]
 
     @staticmethod
     def unique_append_list_resolver(first, second, key):
-        """
-        Merges first and second lists
-        """
+        """Merges first and second lists """
         if isinstance(first[key], list) and isinstance(second[key], list):
             for item in second[key]:
                 if item not in first[key]:
