@@ -49,11 +49,10 @@ class InfraredPluginManager(object):
     GIT_PLUGINS_ORGS_SECTION = "git_orgs"
 
     def __init__(self, plugins_conf, plugins_dir, install_plugins=True):
-        """
-        :param plugins_conf: A path to the main plugins configuration file
+        """:param plugins_conf: A path to the main plugins configuration file
         :param plugins_dir: the plugins directory location
         :param install_plugins: Specifies if core plugins should be installed
-            at start.
+        at start.
         """
         # create plugins directory
         self.plugins_dir = plugins_dir
@@ -129,8 +128,7 @@ class InfraredPluginManager(object):
         return type_based_plugins_dict
 
     def get_all_git_plugins(self):
-        """
-        Returns a dict with all plugins from a all supported git providers
+        """Returns a dict with all plugins from a all supported git providers
         """
         # mapping for supported fetcher functions
         supported_plugins_fetchers = {
@@ -159,8 +157,7 @@ class InfraredPluginManager(object):
 
     @staticmethod
     def get_github_organization_plugins(organization, no_forks=False):
-        """
-        Returns a dict with all plugins from a GitHub organization
+        """Returns a dict with all plugins from a GitHub organization
         inspired from: https://gist.github.com/ralphbean/5733076
         :param organization: GitHub organization name
         :param no_forks: include / not include forks
@@ -487,8 +484,7 @@ class InfraredPluginManager(object):
         self._load_plugins()
 
     def add_all_available(self, plugins_registry=None, skip_roles=False):
-        """
-        Add all available plugins which aren't already installed
+        """Add all available plugins which aren't already installed
         :param plugins_registry: content of plugin registry yml file
         :param skip_roles: Skip the from file roles installation
         """
@@ -591,8 +587,8 @@ class InfraredPluginManager(object):
                             explicit_start=False, allow_unicode=True))
 
     def import_plugins(self, plugins_registry):
-        """
-        Import and install plugins from registry yml file
+        """Import and install plugins from registry yml file.
+
         :param plugins_registry: Path/URL to plugin registry yml file
         """
         try:

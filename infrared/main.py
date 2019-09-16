@@ -158,8 +158,8 @@ class WorkspaceManagerSpec(api.SpecObject):
             help="Workspace name").completer = completers.workspace_list
 
     def spec_handler(self, parser, args):
-        """
-        Handles all the plugin manager commands
+        """Handles all the plugin manager commands
+
         :param parser: the infrared parser object.
         :param args: the list of arguments received from cli.
         """
@@ -441,9 +441,8 @@ class PluginManagerSpec(api.SpecObject):
         print(fancy_table(table_headers, *table_rows))
 
     def _search_plugins(self):
-        """
-        Search git organizations and print a list of available plugins
-        """
+        """Search git organizations and print a list of available plugins """
+
         table_rows = []
         table_headers = ["Type", "Name", "Description", "Source"]
 
