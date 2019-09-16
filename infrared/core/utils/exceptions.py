@@ -23,9 +23,7 @@ class IRPrivateSettingsMissingException(IRException):
 
 
 class IRConfigurationException(IRException):
-    """
-    General exception for any kind of configuration issues.
-    """
+    """General exception for any kind of configuration issues. """
     pass
 
 
@@ -87,9 +85,7 @@ class IRInvalidMinMaxRangeException(IRException):
 
 
 class SpecParserException(Exception):
-    """
-    The spec parser specific exception.
-    """
+    """The spec parser specific exception.  """
     def __init__(self, message, errors):
         super(SpecParserException, self).__init__(message)
         self.errors = errors
