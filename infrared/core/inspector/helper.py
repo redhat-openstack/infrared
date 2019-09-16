@@ -9,9 +9,7 @@ OptionState = dict(
 
 
 class SpecDictHelper(object):
-    """
-    Controls the spec dicts and provides useful methods to get spec info.
-    """
+    """Controls the spec dicts and provides useful methods to get spec info. """
 
     def __init__(self, spec_dict):
         self.spec_dict = spec_dict

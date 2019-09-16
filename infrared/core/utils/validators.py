@@ -11,8 +11,8 @@ class Validator(object):
 
     @classmethod
     def validate_from_file(cls, yaml_file=None):
-        """
-        Loads & validates that a YAML file has all required fields
+        """Loads & validates that a YAML file has all required fields
+
         :param yaml_file: Path to YAML file
         :raise IRValidatorException: when mandatory data is missing in file
         :return: Dictionary with data loaded from a YAML file
@@ -32,8 +32,8 @@ class Validator(object):
 
     @classmethod
     def validate_from_content(cls, file_content=None):
-        """
-        validates that YAML content has all required fields
+        """validates that YAML content has all required fields
+
         :param file_content: content of the YAML file
         :raise IRValidatorException: when mandatory data is missing in file
         :return: Dictionary with data loaded from a YAML file
@@ -42,8 +42,7 @@ class Validator(object):
 
 
 class SpecValidator(Validator):
-    """
-    Class for validating that a plugin spec (YAML) has all required fields
+    """Class for validating that a plugin spec (YAML) has all required fields
     """
     CONFIG_PART_SCHEMA = {
         "type": "object",
@@ -155,8 +154,8 @@ class RegistryValidator(Validator):
 
     @classmethod
     def validate_from_content(cls, file_content=None):
-        """
-        validates that Registry YAML content has all required fields
+        """validates that Registry YAML content has all required fields
+
         :param file_content: content of the Registry YAML file
         :raise IRValidatorException: when mandatory data is missing in Registry
         :return: Dictionary with data loaded from a Registry YAML file

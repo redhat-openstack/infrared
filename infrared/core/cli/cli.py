@@ -37,9 +37,7 @@ YAMLS_PLACEHODER = '__LISTYAMLS__'
 
 
 class CliParser(object):
-    """
-    Allows to handle the CLI arguments.
-    """
+    """Allows to handle the CLI arguments. """
 
     def __init__(self):
         pass
@@ -76,9 +74,7 @@ class CliParser(object):
 
     @classmethod
     def parse_cli_input(cls, arg_parser, args=None):
-        """
-
-        :param arg_parser: argparse object
+        """:param arg_parser: argparse object
         :param args: replace sys.argv[1:]
         :return: dict. Parsed CLI input
         """
@@ -139,9 +135,7 @@ class CliParser(object):
     @classmethod
     def _add_argument(cls, spec, subparser, group, option_name, option_data,
                       path_prefix=''):
-        """
-        Adds argument to the group.
-        """
+        """Adds argument to the group. """
         opt_args = []
         opt_kwargs = {}
         if 'short' in option_data:
@@ -300,8 +294,7 @@ class GenerateAnswersAction(argparse._StoreAction):
 
 # Standard complex types
 class ComplexType(object):
-    """
-    Base complex type.
+    """Base complex type.
 
     Complex accept additional input arguments beside the argument value
     """
@@ -678,9 +671,7 @@ class VarDirType(VarFileType):
 
 
 class ListFileType(VarFileType):
-    """
-    The list of var files. Files names should be separated
-    by the comma:
+    """The list of var files. Files names should be separated by the comma:
 
         file1,file2,dir/file3
     """
@@ -693,8 +684,7 @@ class ListFileType(VarFileType):
 
 
 class TopologyFileType(VarFileType):
-    """
-    Looks for a topology file in following locations:
+    """Looks for a topology file in following locations:
         * relative path (./path)
         * abs path ($PWD/path)
         * <plugin_root>/vars
