@@ -45,9 +45,7 @@ class SpecParser(object):
 
     def __init__(self, subparser, spec_dict, vars_dir, defaults_dir,
                  plugin_path):
-        """
-
-        :param subparser: argparse.subparser to extend
+        """:param subparser: argparse.subparser to extend
         :param spec_dict: dict with CLI description
         :param vars_dir: Path to plugin's vars dir
         :param defaults_dir: Path to plugin's defaults dir
@@ -225,8 +223,8 @@ class SpecParser(object):
         return file_generated
 
     def resolve_custom_types(self, args):
-        """
-        Transforms the arguments with custom types
+        """Transforms the arguments with custom types
+
         :param args: the list of received arguments.
         """
         for parser_name, parser_dict in args.items():
