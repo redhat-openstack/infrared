@@ -1,5 +1,7 @@
 ---
-- block:
+- name: Installing Virtual BMC and its requirements
+  delegate_to: "{{  vbmc_inventory_host }}"
+  block:
   - block:
     - name: Install packages required for python-virtualbmc pip package
       package:
@@ -7,7 +9,7 @@
             - gcc
             - libvirt
             - libvirt-devel
-            - "{{ (ansible_distribution_major_version == '8') | ternary('platform-python-devel', 'python-devel') }}"
+            - "{{ (hostvars['vbmc_inventory_host'].ansible_distribution_major_version|default('7') == '8') | ternary('platform-python-devel', 'python-devel') }}"
             - python-setuptools
             - ipmitool
           state: latest
@@ -102,4 +104,3 @@
       name: virtualbmc
       state: started
       enabled: yes
-  delegate_to: "{{  vbmc_inventory_host }}"
