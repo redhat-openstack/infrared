@@ -34,7 +34,7 @@
 
     - name: Update network dict with prefix
       set_fact:
-          networks: "{{ networks|combine({item.key: {'name': prefix|default('') + (prefix is defined|ternary('-','')) + item.value.name}}, recursive=True) }}"
+          networks: "{{ networks|combine({item.key: {'name': prefix|default('') + (prefix is defined|ternary('-','')) + item.value.name }}, recursive=True) }}"
       with_dict: "{{ networks }}"
 
     - name: Check if interfaces have inet6 address family capabilities

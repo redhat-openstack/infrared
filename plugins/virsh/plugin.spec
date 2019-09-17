@@ -175,7 +175,7 @@ subparsers:
                     help: |
                       Desired bus to use for disks, please refer to: https://wiki.qemu.org/Features/VirtioSCSI
                       Some of disk busses supports different modes:
-                    choises: ['virtio', 'scsi']
+                    choices: ['virtio', 'scsi']
                     default: 'virtio'
 
             - title: Custom virt-install options
@@ -194,3 +194,30 @@ subparsers:
                       type: Bool
                       help: Save ansible facts as json file(s)
                       default: False
+
+            - title: Snapshots
+              options:
+                  virsh-snapshot-create:
+                      type: Bool
+                      help: |
+                          This will create snapshots of all virtual machines in the environment for use
+                          with the `--virsh-snapshot-restore` flag.
+                      default: False
+                  virsh-snapshot-restore:
+                      type: Bool
+                      help: |
+                          This will restore virtual machine snapshots created by the
+                          `--virsh-snapshot-create` flag.
+                      default: False
+                  virsh-snapshot-name:
+                      type: Value
+                      help: |
+                          The name to be used for the snapshot.
+                      required_when:
+                          - "virsh-snapshot-create == yes or virsh-snapshot-restore == yes"
+                  virsh-snapshot-servers:
+                       type: Value
+                       help: |
+                          A regular expression for the name of the virtual machine(s) to operate on. By
+                          default it will operate on all virtual machines in the environment.
+                       default: ".*"

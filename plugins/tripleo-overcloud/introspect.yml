@@ -99,7 +99,7 @@
             NODE_UUID=$({{ ironic_cli }} | awk '/{{ item.name | default(item) }}/ {print $2}' )
             ironic node-update ${NODE_UUID} add properties/root_device='{"size": {{ hostvars[item].disk  }} }'
             #TODO(skatlapa): Check if Ironic CLI BZ#1602066 affects baremetal update command
-        with_items: "{{ groups['overcloud_nodes'] | default([])}}"
+        with_items: "{{ groups['overcloud_nodes'] | default([]) }}"
         when: "'bmc' in groups"
 
       - name: set root-disk override fact
@@ -128,18 +128,18 @@
                 if [[ "{{ node }}" =~ $REGEX ]]; then
                 {% if install.version|default(undercloud_version) |openstack_release > 9 %}
                     openstack baremetal node set \
-                      --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}' {{ node }}
+                      --property root_device='{"{{ item.hint }}":"{{ item.hintvalue }}"}' {{ node }}
                 {% else %}
                     ironic node-list|awk '/{{ node }}/ {print $2}'| \
-                    xargs -I{} ironic node-update {} add properties/root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
+                    xargs -I{} ironic node-update {} add properties/root_device='{"{{ item.hint }}":"{{ item.hintvalue }}"}'
                 {% endif %}
                 else
                 {% if install.version|default(undercloud_version) |openstack_release > 9 %}
                     openstack baremetal node list|awk '/{{ node }}/ {print $2}'| \
-                    xargs -I{} openstack baremetal node set {} --property root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
+                    xargs -I{} openstack baremetal node set {} --property root_device='{"{{ item.hint }}":"{{ item.hintvalue }}"}'
                 {% else %}
                     ironic node-list|awk '/{{ node }}/ {print $2}'| \
-                    xargs -I{} ironic node-update {} add properties/root_device='{"{{item.hint}}":"{{item.hintvalue}}"}'
+                    xargs -I{} ironic node-update {} add properties/root_device='{"{{ item.hint }}":"{{ item.hintvalue }}"}'
                 {% endif %}
                 fi
             {% endfor %}
@@ -154,7 +154,7 @@
             source ~/stackrc
             NODE_UUID=$({{ ironic_cli }} | awk '/{{ item.name | default(item) }}/ {print $2}' )
             openstack baremetal node set --deploy-interface direct ${NODE_UUID}
-        with_items: "{{ groups['overcloud_nodes'] | default([])}}"
+        with_items: "{{ groups['overcloud_nodes'] | default([]) }}"
         when:
             - install.image_direct_deploy != 'iscsi'
             - install.version|default(undercloud_version) | openstack_release >= 13
