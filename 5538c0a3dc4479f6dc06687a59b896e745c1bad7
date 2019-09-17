@@ -22,6 +22,30 @@
       "revId": "5538c0a3dc4479f6dc06687a59b896e745c1bad7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb0ca23d_83822f96",
+        "filename": "infrared/common/roles/vbmc/tasks/install.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1004057
+      },
+      "writtenOn": "2019-09-17T15:15:47Z",
+      "side": 0,
+      "message": "The issue here is the delegation at the end of the block (end of the file).\nThe major version of the UC is 8, but of the hypervisor is 7.\n\nMaybe something like this will solve the issue instead of revert that (needed!) change:\n\n\"{{ (hostvars[\u0027vbmc_inventory_host\u0027].ansible_distribution_major_version|default(7) \u003d\u003d 8) | ternary(\u0027platform-python-devel\u0027, \u0027python-devel\u0027 }}\"\n\n(We get facts of the hypervisor at the beginning of the playbook which call this role: plugins/tripleo-overcloud/hypervisor.yml",
+      "parentUuid": "f3695974_f02ed159",
+      "range": {
+        "startLine": 10,
+        "startChar": 19,
+        "endLine": 10,
+        "endChar": 53
+      },
+      "revId": "5538c0a3dc4479f6dc06687a59b896e745c1bad7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
