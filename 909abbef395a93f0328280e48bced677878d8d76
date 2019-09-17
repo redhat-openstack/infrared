@@ -39,6 +39,30 @@
       "revId": "909abbef395a93f0328280e48bced677878d8d76",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2239db68_e5157c34",
+        "filename": "plugins/virsh/snapshot_import.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1016895
+      },
+      "writtenOn": "2019-09-17T14:34:20Z",
+      "side": 1,
+      "message": "Fix for this:\n\ndiff --git a/plugins/virsh/snapshot_import.yml b/plugins/virsh/snapshot_import.yml\nindex 05c9c77..f07f6c0 100644\n--- a/plugins/virsh/snapshot_import.yml\n+++ b/plugins/virsh/snapshot_import.yml\n@@ -4,7 +4,6 @@\n   gather_facts: yes\n   any_errors_fatal: true\n   vars:\n-    vm_provision_user: \"{{ provision.topology.username | default(\u0027stack\u0027) }}\"\n     vm_prefix: \"{{ provision.prefix | default(\u0027\u0027) }}\"\n   tasks:\n     - name: Install required packages\n@@ -111,6 +110,8 @@\n       loop: \"{{ _virt_inspector.results }}\"\n       loop_control:\n         label: \"{{ item.item.path | basename }}\"\n+      vars:\n+        vm_provision_user: \"{{ (item.item.path | basename is match(\u0027undercloud-.*\u0027)) | ternary(\u0027stack\u0027, \u0027heat-admin\u0027) }}\"\n \n     # We use command here, because the virt module needs the raw XML\n     # and a lookup will not work remotely. We could slurp all the files,",
+      "parentUuid": "01f31ecc_eb8bbfd7",
+      "range": {
+        "startLine": 7,
+        "startChar": 27,
+        "endLine": 7,
+        "endChar": 54
+      },
+      "revId": "909abbef395a93f0328280e48bced677878d8d76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
