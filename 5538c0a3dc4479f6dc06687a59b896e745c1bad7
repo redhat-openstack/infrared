@@ -46,6 +46,30 @@
       "revId": "5538c0a3dc4479f6dc06687a59b896e745c1bad7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ba2ba69_1a94b9f3",
+        "filename": "infrared/common/roles/vbmc/tasks/install.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1016895
+      },
+      "writtenOn": "2019-09-17T16:34:12Z",
+      "side": 0,
+      "message": "Oh man. This is why I don\u0027t like doing blocks like this. I way prefer the following format to make it easier to read and spot this sort of thing:\n\n- name: block name\n  delegate_to: ...\n  \u003cinsert conditional here\u003e\n  block:\n    - task1\n  rescue:\n    - task2\n\nie with the block being named, we can add conditionals/delegations and other arguments near the block definition. It may be seen as a question of style, but to me it makes it more obvious what\u0027s going on.\n\nAnyway - I think your suggestion may work, but another way to do the same is to use delegated facts I think: https://docs.ansible.com/ansible/latest/user_guide/playbooks_delegation.html#delegated-facts",
+      "parentUuid": "eb0ca23d_83822f96",
+      "range": {
+        "startLine": 10,
+        "startChar": 19,
+        "endLine": 10,
+        "endChar": 53
+      },
+      "revId": "5538c0a3dc4479f6dc06687a59b896e745c1bad7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
