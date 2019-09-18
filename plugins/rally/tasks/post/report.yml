@@ -18,8 +18,9 @@
   args:
       creates: "{{ rally.outputdir }}/results-{{ timestamp }}.html"
 
-- name: Create Report JUnit
-  command: "{{ rally.bin }} task report --junit --out {{ rally.outputdir }}/nosetests-{{ timestamp }}.xml"
+- name: Create Report HTML
+  command: "{{ rally.bin }} task report --type junit --to {{ rally.outputdir
+  }}/nosetests-{{ timestamp }}.xml"
   args:
       creates: "{{ rally.outputdir }}/nosetests-{{ timestamp }}.xml"
 
