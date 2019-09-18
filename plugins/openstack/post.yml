@@ -33,6 +33,11 @@
       - name: gather facts once ssh is properly configured
         setup:
 
+      - name: Get physical interface names
+        command: find /sys/class/net -type l -not -lname '*virtual*' -printf '%f\n'
+        register: phys_nics
+        changed_when: false
+
       - name: setup unbooted nics
         vars:
             nic: "{{ hostvars[inventory_hostname]['ansible_' + item ] }}"
@@ -57,7 +62,7 @@
             dest: "/etc/sysconfig/network-scripts/ifcfg-{{ item }}"
         become: yes
         when: not nic.ipv4|default(False)
-        with_items: "{{ ansible_interfaces | difference(['lo']) }}"
+        loop: "{{ phys_nics.stdout_lines }}"
         register: nics
 
       - name: start nics
