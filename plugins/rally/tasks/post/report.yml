@@ -18,10 +18,11 @@
   args:
       creates: "{{ rally.outputdir }}/results-{{ timestamp }}.html"
 
-- name: Create Report JUnit
-  command: "{{ rally.bin }} task report --junit --out {{ rally.outputdir }}/nosetests-{{ timestamp }}.xml"
+- name: Create Report HTML
+  command: "{{ rally.bin }} task report --html --out {{ rally.outputdir
+  }}/nosetests-{{ timestamp }}.html"
   args:
-      creates: "{{ rally.outputdir }}/nosetests-{{ timestamp }}.xml"
+      creates: "{{ rally.outputdir }}/nosetests-{{ timestamp }}.html"
 
 - name: JSON results
   shell: "{{ rally.bin }} task results | {{ rally.python_ver }} -m json.tool > {{ rally.outputdir }}/results-{{ timestamp }}.json"
