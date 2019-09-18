@@ -18,10 +18,11 @@
   args:
       creates: "{{ rally.outputdir }}/results-{{ timestamp }}.html"
 
-- name: Create Report JUnit
-  command: "{{ rally.bin }} task report --junit --out {{ rally.outputdir }}/nosetests-{{ timestamp }}.xml"
+- name: Create Report HTML
+  command: "{{ rally.bin }} task report --html --out {{ rally.outputdir
+  }}/nosetests-{{ timestamp }}.html"
   args:
-      creates: "{{ rally.outputdir }}/nosetests-{{ timestamp }}.xml"
+      creates: "{{ rally.outputdir }}/nosetests-{{ timestamp }}.html"
 
 - name: JSON results
   shell: "{{ rally.bin }} task results | {{ rally.python_ver }} -m json.tool > {{ rally.outputdir }}/results-{{ timestamp }}.json"
@@ -45,7 +46,8 @@
   ignore_errors: true
 
 - name: SLA Check JSON
-  shell: "{{ rally.bin }} task sla_check --json > {{ rally.outputdir }}/sla-{{ timestamp }}.json"
+  shell: "{{ rally.bin }} task sla_check --json > {{ rally.outputdir
+  }}/sla-{{ timestamp }}.html"
   args:
       creates: "{{ rally.outputdir }}/sla-{{ timestamp }}.json"
   ignore_errors: true
@@ -58,8 +60,7 @@
   with_items:
 #     - "{{ rally.outputdir }}/index.html"
       - "{{ rally.outputdir }}/results-{{ timestamp }}.html"
-      - "{{ rally.outputdir }}/nosetests-{{ timestamp }}.xml"
+      - "{{ rally.outputdir }}/nosetests-{{ timestamp }}.html"
       - "{{ rally.outputdir }}/detailed-{{ timestamp }}.txt"
       - "{{ rally.outputdir }}/detailed_with_iterations-{{ timestamp }}.txt"
       - "{{ rally.outputdir }}/sla-{{ timestamp }}.txt"
-      - "{{ rally.outputdir }}/sla-{{ timestamp }}.json"
