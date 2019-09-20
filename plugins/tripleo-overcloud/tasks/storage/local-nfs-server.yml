@@ -1,0 +1,32 @@
+- block:
+      - name: Install NFS packages
+        yum:
+            name: nfs-utils
+            state: present
+
+      - name: Start and enable NFS services
+        systemd:
+            name: "{{ item }}"
+            state: started
+            enabled: yes
+        with_items:
+            - nfs-server
+            - rpcbind
+
+      - name: Create NFS share
+        file:
+            path: /nfsfileshare
+            state: directory
+            mode: '777'
+
+      - name: Run necessary commands
+        shell: |
+            echo '/nfsfileshare *(rw,sync,no_root_squash)' >> /etc/exports
+            exportfs -r
+            NFS_SUBNET="192.168.24.0/24"
+            iptables -I INPUT -s ${NFS_SUBNET} -p tcp --dport 2049 -j ACCEPT
+            iptables -I INPUT -s ${NFS_SUBNET} -p udp --dport 2049 -j ACCEPT
+            setenforce 0
+
+  when:
+      - install.local.nfs.server | default(False)
