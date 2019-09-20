@@ -1,0 +1,40 @@
+- name: Install NFS server
+  hosts: undercloud
+  any_errors_fatal: true
+  become: true
+  tasks:
+      - name: Install NFS packages
+        yum:
+            name: nfs-utils
+            state: present
+
+      - name: Start and enable NFS services
+        systemd:
+            name: nfs-server
+            state: started
+            enabled: yes
+
+      - name: Create NFS share
+        file:
+            path: /nfsfileshare
+            state: directory
+            mode: '777'
+            group: nobody
+            owner: nobody
+
+      - name: Configure exports file
+        lineinfile:
+            path: /etc/exports
+            line: '/nfsfileshare *(rw,sync,no_root_squash)'
+
+      - name: Export NFS share to the server
+        command: "exportfs -r"
+
+      - name: Set iptables rules
+        iptables:
+            action: insert
+            chain: INPUT
+            source: 192.168.24.0/24
+            jump: ACCEPT
+            destination_port: 2049
+            protocol: tcp
