@@ -13,3 +13,7 @@
              - install.undercloud is defined
              - install.undercloud.packages
              - install.version|default(undercloud_version)|openstack_release >= 12
+
+       - name: Install and deploy a local NFS server
+         include_tasks: tasks/storage/local-nfs-server.yml
+         when: install.local.nfs.server|default(False) 
