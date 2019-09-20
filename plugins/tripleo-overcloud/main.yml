@@ -9,6 +9,10 @@
   tags:
       - always
 
+- name: Install a local NFS server
+  import_playbook: local-nfs-server.yml
+  when: install.local.nfs.server|default(False)
+
 - name: Overcloud install
   import_playbook: "{{ overcloud_install | default('install.yml') }}"
   when:
