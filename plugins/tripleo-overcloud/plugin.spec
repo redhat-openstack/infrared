@@ -592,6 +592,12 @@ subparsers:
                         The absolute path to an external NFS storage mount
                         NOTE: this needs to be set when nova-nfs-backend is set to 'True'
 
+                  local-nfs-server:
+                      type: Bool
+                      help: |
+                          Installs a local NFS server on undercloud at 192.168.24.1 IP
+                      default: False
+
                   storage-config:
                       type: Value
                       help: |
