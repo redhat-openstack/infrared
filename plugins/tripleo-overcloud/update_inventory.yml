@@ -7,6 +7,7 @@
       user: heat-admin
       # The var "private_key" is used outside this scope and cannot be overridden
       overcloud_pkey: "{{ inventory_dir }}/id_rsa_overcloud"
+      undercloud_version: "{{ install.version | default(undercloud_version) | openstack_release }}"
   tasks:
       - name: fetch the private key file from the undercloud
         fetch:
@@ -21,7 +22,7 @@
             path: "{{ overcloud_pkey }}"
             mode: 0600
 
-      - name: update IP of overcloud nodes
+      - name: Refresh the overcloud node facts
         vars:
             # Here can't be used {{ path_venv }}, because it's not a Jinja template
             ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
@@ -31,23 +32,30 @@
             validate_certs: no
         delegate_to: "{{ groups.shade | first }}"
 
-      # todo(obaranov) Remove hosts from the 'unused' group
+      - name: list ironic nodes
+        shell: |
+            source ~/stackrc
+            {% if undercloud_version < 10 %}
+            ironic node-list | sed -e '/^+-/d' -e 's/^| /"/' -e 's/\s\+|$/"/' -e 's/\s\+|\s\+/","/g'
+            {% else %}
+            openstack baremetal node list -f csv
+            {% endif %}
+        args:
+          executable: /bin/bash
+        changed_when: False
+        register: ironic_node_list
+
+      # TODO(obaranov) Remove hosts from the 'unused' group
       # Currently ansible does not allow to remove existing host from a group
       - name: add overcloud host
         include_tasks: tasks/add_overcloud_host.yml
         with_items: "{{ openstack_servers }}"
         loop_control:
+            label: "{{ node_info.name }}"
             loop_var: node_info
-
-      - name: list ironic nodes
-        # Use CSV format as JSON not supported in old versions
-        shell: |
-            source ~/stackrc
-            openstack baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} list -f csv
-        register: ironic_node_list
-        tags: skip_ansible_lint
-        # Bug in Liberty version: No "node list" in openstack client, and no formatter in ironic client.
-        when: install.version|default(undercloud_version)|openstack_release != 8
+        vars:
+            baremetal_name: >-
+              {{ (ironic_node_list.stdout|default('') | from_csv | selectattr('UUID', 'equalto', node_info['hypervisor_hostname']) | list)[0]['Name'] }}
 
         # at this point we will have in inventory the openstack_node names
         # and they are often not alligned with the bm names. For example,
@@ -61,6 +69,7 @@
         # as the result the controller-0 node should be removed from the inventory
         # (and not added to the unused group)
         # and the ctrl-0 should be added with the original_name=controller-0
+
       - name: set ironic nodes fact
         vars:
             # take ironic UUID if name is missing
@@ -70,7 +79,7 @@
         set_fact:
             ironic_node_dict: "{{ ironic_node_dict|default({})|combine({ host_id: { 'original_name': host_original_name, 'instance_uuid': item['Instance UUID'] }}) }}"
             # Set empty list for Liberty version
-        with_items: "{{  ironic_node_list.stdout|default('')|from_csv }}"
+        with_items: "{{ ironic_node_list.stdout|default('')|from_csv }}"
         when: host_id in groups.all
 
       - name: try to find unused nodes and add them into a new unused group
