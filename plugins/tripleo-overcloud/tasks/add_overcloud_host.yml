@@ -1,28 +1,4 @@
 - block:
-    - name: get ironic info for the node
-      shell: |
-          source ~/stackrc
-          openstack baremetal {{ 'node' if install.version|default(undercloud_version)|openstack_release >= 10 else '' }} show {{ uuid }} -c name -f value
-      vars:
-          uuid: "{{ node_info['hypervisor_hostname'] }}"
-      register: baremetal_info
-      when:
-          - install.version|default(undercloud_version) | openstack_release != 8
-
-    - name: osp8 - get ironic info for the node
-      shell: |
-          source ~/stackrc
-          ironic node-list --fields uuid name | grep {{ uuid }} | awk '{print $4}'
-      vars:
-          uuid: "{{ node_info['hypervisor_hostname'] }}"
-      register: ironic_info
-      when:
-          - install.version|default(undercloud_version) | openstack_release == 8
-
-    - name: set baremetal_name
-      set_fact:
-          baremetal_name: "{{ (install.version|default(undercloud_version)|openstack_release == 8) | ternary(ironic_info.stdout, baremetal_info.stdout) }}"
-
     - name: update nodes arrays
       set_fact:
           nodes_to_delete: "{{ nodes_to_delete|default([]) + [baremetal_name] }}"
