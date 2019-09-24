@@ -48,6 +48,10 @@
       # Currently ansible does not allow to remove existing host from a group
       - name: add overcloud host
         include_tasks: tasks/add_overcloud_host.yml
+        when:
+            - node_info.status != 'ERROR'
+            - node_info['hypervisor_hostname'] != None
+            - node_info['hypervisor_hostname'] | trim != ''
         with_items: "{{ openstack_servers }}"
         loop_control:
             label: "{{ node_info.name }}"
