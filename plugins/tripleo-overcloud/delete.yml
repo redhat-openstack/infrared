@@ -3,14 +3,55 @@
   gather_facts: yes
   tags: delete
   any_errors_fatal: true
+  vars:
+    undercloud_version: "{{ install.version | openstack_release }}"
   tasks:
       - name: Show details about existing Overcloud
         shell: |
             source ~/stackrc
-            openstack stack list
-            openstack stack show overcloud > openstack_stack_show_overcloud.log
+            if openstack stack list | grep -qw overcloud; then
+              openstack stack show overcloud > openstack_stack_show_overcloud.log
+            fi
+        args:
+          executable: /bin/bash
+        changed_when: False
 
-      - name: Delete existing overcloud Heat stack
+      - name: Delete existing overcloud Heat stack if it exists
         shell: |
             source ~/stackrc
-            openstack stack delete overcloud --yes --wait
+            RETURN_CODE=0
+            if openstack stack list | grep -qw overcloud; then
+              openstack stack delete overcloud --yes --wait
+              RETURN_CODE=2
+            fi
+            exit ${RETURN_CODE}
+        args:
+          executable: /bin/bash
+        register: _delete_stack
+        changed_when: _delete_stack.rc == 2
+        failed_when: _delete_stack.rc not in [0, 2]
+
+      - name: Get list of existing baremetal nodes
+        shell: |
+            source ~/stackrc
+            {% if undercloud_version < 10 %}
+            ironic node-list --fields name | tail -n +4 | head -n -1 | awk '{print $2}'
+            {% else %}
+            openstack baremetal node list -c Name -f value
+            {% endif %}
+        args:
+          executable: /bin/bash
+        changed_when: False
+        register: _baremetal_node_list
+
+      - name: Delete existing baremetal nodes
+        shell: |
+            source ~/stackrc
+            {% if undercloud_version < 10 %}
+            ironic node-delete {{ item }}
+            {% else %}
+            openstack baremetal node delete {{ item }}
+            {% endif %}
+        loop: "{{ _baremetal_node_list.stdout_lines | default([]) }}"
+        args:
+          executable: /bin/bash
