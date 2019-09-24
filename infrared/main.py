@@ -144,7 +144,7 @@ class WorkspaceManagerSpec(api.SpecObject):
         nodelist_parser.add_argument(
             "-g", "--group",
             help="List nodes in specific group"
-            ).completer = completers.group_list
+        ).completer = completers.group_list
         nodelist_parser.add_argument(
             "-f", "--format", choices=['fancy', 'json'], default='fancy',
             help="Output format")
