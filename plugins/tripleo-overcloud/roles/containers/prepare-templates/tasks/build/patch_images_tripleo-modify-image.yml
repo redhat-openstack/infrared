@@ -23,6 +23,12 @@
   set_fact:
       new_baseurl_dir: "{{ container_images_patch_dir }}/packages/"
 
+- name: Downloading extra repositories
+  get_url:
+    url: "{{ item }}"
+    dest: "/etc/yum.repos.d/"
+  with_items: "{{ install.container.extra.repos }}"
+
 - name: Prepare custom repository temp directory
   include_tasks: prepare_tmp_repos.yml
   when: repo_config.stat.exists
