@@ -60,6 +60,12 @@ subparsers:
                             List of repositories URLs to use in containers to update existing packages.
                             It will link provided repos to the container and perform 'yum update'.
 
+                  update_repo:
+                      type: Value
+                      help: |
+                            To update containers with packages from remote repositories you have to specify
+                            the name of the repositry. This option should be used together with container-extra-repos.
+
                   container-images-packages:
                       type: IniType
                       action: append

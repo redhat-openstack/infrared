@@ -23,6 +23,14 @@
   set_fact:
       new_baseurl_dir: "{{ container_images_patch_dir }}/packages/"
 
+- name: Downloading extra repositories
+  become: yes
+  get_url:
+    url: "{{ item }}"
+    dest: "/etc/yum.repos.d/"
+  with_items: "{{ install.container.extra.repos }}"
+  when: install_container_extra_repos is defined
+
 - name: Prepare custom repository temp directory
   include_tasks: prepare_tmp_repos.yml
   when: repo_config.stat.exists
@@ -39,7 +47,7 @@
             modify_vars:
               tasks_from: yum_update.yml
               yum_repos_dir_path: /etc/yum.repos.d
-              update_repo: patched-rpms
+              update_repo: "{{ install.update_repo|default('patched-rpms') }}"
             excludes: [ceph]
 
 - name: Run images modification
