@@ -142,7 +142,15 @@
   when: install_container_images_patch is defined or patched_rpms.results | selectattr('stat.exists', 'equalto', True) | list | length > 0
   tags: container-images-packages
 
-- name: Update containers images
+- name: Update containers images when OSP <= 14
   import_tasks: update_images.yml
-  when: install_container_extra_repos is defined
+  when: 
+    - install_container_extra_repos is defined
+    - install.version|default(undercloud_version)|openstack_release <= 14
   tags: container-extra-repos
+
+- name: Update containers images when OSP >= 15
+  include_tasks: patch_images_tripleo-modify-image.yml
+  when:
+    - install.version|default(undercloud_version)|openstack_release >= 15 and
+    - install_container_extra_repos is defined
