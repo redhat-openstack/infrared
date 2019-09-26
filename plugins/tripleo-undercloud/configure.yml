@@ -50,6 +50,12 @@
             undercloud_nameservers: "{{ nameservers.stdout }}"
         when: nameservers.stdout != ''
 
+      - name: generate container images environment file
+        import_tasks: tasks/prepare_uc_images.yml
+        when:
+            - install.version|openstack_distribution == 'OSP'
+            - install.version|openstack_release > 13
+
       - name: template the undercloud.conf from local machine
         template:
             src: "{{ local_src }}"
@@ -99,12 +105,6 @@
       - name: the undercloud deploy script
         command: "cat undercloud_deploy.sh"
         tags: deploy
-
-      - name: generate container images environment file
-        import_tasks: tasks/prepare_uc_images.yml
-        when:
-            - install.version|openstack_distribution == 'OSP'
-            - install.version|openstack_release > 13
 
       # to avoid i/o bottlenecks during overcloud deployment
       # limit the number of nodes being deployed simultaneously to 5
