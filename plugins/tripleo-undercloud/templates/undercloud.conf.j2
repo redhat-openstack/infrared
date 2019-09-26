@@ -54,9 +54,9 @@ overcloud_domain_name={{ install.overcloud.domain }}
 container_images_file={{ working_dir }}/containers-prepare-parameter.yaml
 {% endif %}
 {% if install.version|openstack_release < 15 %}
-docker_insecure_registries={{ install.registry.mirror }}
+docker_insecure_registries={{ registry_host }}{% if ceph_registry_host %},{{ ceph_registry_host }}{% endif %}
 {% else %}
-container_insecure_registries={{ install.registry.mirror }}
+container_insecure_registries={{ registry_host }}{% if ceph_registry_host %},{{ ceph_registry_host }}{% endif %}
 {% endif %}
 {% endif %}
 [ctlplane-subnet]
