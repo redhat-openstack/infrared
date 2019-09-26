@@ -21,16 +21,16 @@
   #                - likely solution is to add new |openstack_release_increment helper, where proper conversion can be handled (to after +1 convert back to name string)
       target_install_version: "{{ install.version | default( is_upgrade | ternary((undercloud_version|openstack_release|int) + 1, undercloud_version) ) }}"
 
-- name: set default registry namespace
+- name: set registry namespace if from user input
   set_fact:
-      registry_namespace: "{{ install.get('registry', {}).namespace|default('rhosp' + (target_install_version|openstack_release|string)) }}"
+      registry_namespace: "{{ install.get('registry', {}).namespace | default('') }}"
 
 
-- name: Check if we have user input for image preparation
+- name: Prepare info for image preparation if we have it from user input
   set_fact:
       container_env:
           container-image-prepare:
-              namespace: "{{ registry_namespace }}"
+              namespace: "{{ registry_namespace|default('rhosp' + (target_install_version|openstack_release|string)) }}"
               prefix: "{{ install.registry.prefix|default('openstack-') }}"
               tag: "{{ install.registry.tag.discover|ternary('AUTODETECT', install.registry.tag ) }}"
   when: install.registry.skip.puddle
@@ -81,6 +81,15 @@
 
   when: not install.registry.skip.puddle
 
+- name: determine final container registry host
+  set_fact:
+      # registry_host is needed later in undercloud.conf.j2 template
+      registry_host: "{{ install.registry.mirror|ternary(install.registry.mirror, container_env['container-image-prepare']['namespace'].split('/')[0] ) }}"
+
+- name: determine final container registry namespace
+  set_fact:
+      registry_namespace: "{{ registry_host }}/{{ registry_namespace | ternary(registry_namespace, container_env['container-image-prepare']['namespace'].split('/')[1] ) }}"
+
 # This is needed also for rdo deploympent.
 - name: generate container images environment file
   shell: |
@@ -93,14 +102,12 @@
 
 
 - block:
+
     - name: set namespace in containers-prepare-parameter.yaml
-      vars:
-          registry: "{{ install.registry.mirror|ternary(install.registry.mirror, container_env['container-image-prepare']['namespace'].split('/')[0] ) }}"
-          namespace: "{{ registry_namespace | ternary(registry_namespace, container_env['container-image-prepare']['namespace'].split('/')[1] ) }}"
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
           regexp: '^(\s*namespace:).*'
-          replace: "\\1 {{ registry }}/{{ namespace }}"
+          replace: "\\1 {{ registry_namespace }}"
 
     - name: set name_prefix in containers-prepare-parameter.yaml
       replace:
@@ -122,6 +129,10 @@
             install.registry.get('ceph', {}).get('tag', ''),
             container_env['container-image-prepare']['ceph-tag'] | default('latest')) }}"
 
+    - set_fact:
+        # ceph_registry_host is needed later in undercloud.conf.j2 template
+        ceph_registry_host: "{{ ceph_namespace.split('/')[0] }}"
+
     - name: set ceph_namespace in containers-prepare-parameter.yaml
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
@@ -139,13 +150,6 @@
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
           regexp: 'ceph_tag: .*'
           replace: 'ceph_tag: {{ ceph_tag }}'
-
-    - name: set ceph_namespace in undercloud.conf
-      replace:
-          path: "{{ working_dir }}/undercloud.conf"
-          regexp: "(docker_insecure_registries.*)"
-          replace: '\1,{{ ceph_namespace }}'
-      when: install.registry.get('ceph', {}).namespace is defined or container_env['container-image-prepare']['ceph-namespace'] is defined
 
     - block:
         - name: remove tag_from_label in containers-prepare-parameter.yaml

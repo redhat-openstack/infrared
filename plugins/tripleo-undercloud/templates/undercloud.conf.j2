@@ -50,15 +50,19 @@ overcloud_domain_name={{ install.overcloud.domain }}
 {% endif %}
 {% if install.version|openstack_release >= 13 %}
 {% if install.version|openstack_release > 13 %}
+
 {% if install.version|default(undercloud_version)|openstack_distribution == 'OSP' %}
 container_images_file={{ working_dir }}/containers-prepare-parameter.yaml
 {% endif %}
+
 {% if install.version|openstack_release < 15 %}
-docker_insecure_registries={{ install.registry.mirror }}
+docker_insecure_registries={{ registry_host }}{% if ceph_registry_host %},{{ ceph_registry_host }}{% endif %}
 {% else %}
-container_insecure_registries={{ install.registry.mirror }}
+container_insecure_registries={{ registry_host }}{% if ceph_registry_host %},{{ ceph_registry_host }}{% endif %}
 {% endif %}
-{% endif %}
+
+{% endif %}{# endIf release > 13 #}
+
 [ctlplane-subnet]
 local_subnet = ctlplane-subnet
 cidr = 192.168.24.0/24
@@ -68,7 +72,8 @@ gateway = 192.168.24.1
 inspection_iprange = 192.168.24.100,192.168.24.120
 masquerade = true
 #TODO(skatlapa): add param to override masq
-{% endif %}
+{% endif %}{# endIf release >= 13 #}
+
 {% if install.boot.mode == 'uefi' %}
 ipxe_enabled = True
 inspection_enable_uefi = True
