@@ -23,8 +23,7 @@
 
       - name: Refresh the overcloud node facts
         vars:
-            # Here can't be used {{ path_venv }}, because it's not a Jinja template
-            ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
+            ansible_python_interpreter: "{{ shade_path_venv | default('/var/tmp/venv_shade') }}/bin/python"
         os_server_facts:
             cloud: undercloud
             # Required for SSL
