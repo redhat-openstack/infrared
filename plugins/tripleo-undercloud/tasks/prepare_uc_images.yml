@@ -81,6 +81,12 @@
 
   when: not install.registry.skip.puddle
 
+- name: determine final container registry namespace
+  set_fact:
+      # registry_host is needed later in undercloud.conf.j2 template
+      registry_host: "{{ install.registry.mirror|ternary(install.registry.mirror, container_env['container-image-prepare']['namespace'].split('/')[0] ) }}"
+      registry_namespace: "{{ registry_host }}/{{ registry_namespace | ternary(registry_namespace, container_env['container-image-prepare']['namespace'].split('/')[1] ) }}"
+
 # This is needed also for rdo deploympent.
 - name: generate container images environment file
   shell: |
@@ -93,14 +99,12 @@
 
 
 - block:
+
     - name: set namespace in containers-prepare-parameter.yaml
-      vars:
-          registry: "{{ install.registry.mirror|ternary(install.registry.mirror, container_env['container-image-prepare']['namespace'].split('/')[0] ) }}"
-          namespace: "{{ registry_namespace | ternary(registry_namespace, container_env['container-image-prepare']['namespace'].split('/')[1] ) }}"
       replace:
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
           regexp: '^(\s*namespace:).*'
-          replace: "\\1 {{ registry }}/{{ namespace }}"
+          replace: "\\1 {{ registry_namespace }}"
 
     - name: set name_prefix in containers-prepare-parameter.yaml
       replace:
@@ -121,6 +125,8 @@
         ternary(
             install.registry.get('ceph', {}).get('tag', ''),
             container_env['container-image-prepare']['ceph-tag'] | default('latest')) }}"
+        # ceph_registry_host is needed later in undercloud.conf.j2 template
+        ceph_registry_host: "{{ ceph_namespace.split('/')[0] ) }}"
 
     - name: set ceph_namespace in containers-prepare-parameter.yaml
       replace:
@@ -139,13 +145,6 @@
           path: "{{ working_dir }}/containers-prepare-parameter.yaml"
           regexp: 'ceph_tag: .*'
           replace: 'ceph_tag: {{ ceph_tag }}'
-
-    - name: set ceph_namespace in undercloud.conf
-      replace:
-          path: "{{ working_dir }}/undercloud.conf"
-          regexp: "(docker_insecure_registries.*)"
-          replace: '\1,{{ ceph_namespace }}'
-      when: install.registry.get('ceph', {}).namespace is defined or container_env['container-image-prepare']['ceph-namespace'] is defined
 
     - block:
         - name: remove tag_from_label in containers-prepare-parameter.yaml
