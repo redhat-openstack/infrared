@@ -412,7 +412,6 @@ subparsers:
                   registry-mirror:
                       type: Value
                       help: The alternative docker registry to use for undercloud deployment.
-                      default: "docker-registry.engineering.redhat.com"
 
                   registry-namespace:
                       type: Value
