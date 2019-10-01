@@ -25,13 +25,11 @@ Define the subscription details:
    ---
    username: 'infrared.user@example.com'
    password: '123456'
-   pool: '1234567890abcdefghijklmnopqrstuv'
+   pool_ids: '1234567890abcdefghijklmnopqrstuv'
 
 .. warning:: During run time, contents of the file are hidden from the logged output, to protect private account credentials.
 
 For the full list of supported input, see the Ansible `module documentation`_.
-For example, ``autosubscribe: yes`` can be replaced with ``pool_id`` or ``pool: REGEX``,
-where ``REGEX`` is a regular expression that searches for matching available pools.
 
 .. note:: Pre-registered undercloud is also supported if ``--cdn`` flag is missing.
 
