@@ -10,7 +10,7 @@
             - libvirt
             - libvirt-devel
             - "{{ (hostvars[vbmc_inventory_host].ansible_distribution_major_version|default('7') == '8') | ternary('platform-python-devel', 'python-devel') }}"
-            - python-setuptools
+            - "{{ (hostvars[vbmc_inventory_host].ansible_distribution_major_version|default('7') == '8') | ternary('python3-setuptools', 'python-setuptools') }}"
             - ipmitool
           state: latest
           disable_gpg_check: yes
@@ -18,6 +18,7 @@
     - name: install pip
       easy_install:
           name: pip
+      when: hostvars[vbmc_inventory_host].ansible_distribution_major_version|default('8') == '7'
     become: yes
 
   - name: gather info about PATH/env variables
