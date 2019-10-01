@@ -18,6 +18,7 @@
     - name: install pip
       easy_install:
           name: pip
+      when: hostvars[vbmc_inventory_host].ansible_distribution_major_version|default('8') == '7'
     become: yes
 
   - name: gather info about PATH/env variables
