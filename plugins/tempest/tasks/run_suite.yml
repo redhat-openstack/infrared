@@ -108,7 +108,27 @@
         set_fact:
           python_interpreter: "{{ (test_openstack_version | int > 14) | ternary('python3', 'python') }}"
 
-      - name: run tempest "{{ test_suite }}" suite
+      - name: run tempest "{{ test_suite }}" suite with tempest run
+        shell: >
+            test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
+            tempest run --subunit --regex '{{ regex | default('') }}'
+            {{ whitelistfile }}
+            {{ blacklistfile }}
+            {{ ('--concurrency ' + test_dict.threads|default(test.threads)|string ) }}
+            {{ ('--black-regex ' + test.blackre|string|quote )
+            if test.blackre|default('') else '' }}
+            {{ (test.list) | ternary ('--list','') }}
+            > {{ test_output_filename }}.subunit;
+        environment:
+            PYTHON: "{{ python_interpreter | default(python_interpreter) or 'python' }}"
+        args:
+            executable: /bin/bash
+            chdir: "{{ test.dir }}"
+        ignore_errors: true
+        when:
+            - test.openstack.version|default(overcloud_version)|openstack_release >= 13
+
+      - name: run tempest "{{ test_suite }}" suite with ostestr
         shell: >
             test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
             ostestr -s --no-pretty --regex '{{ regex | default('') }}'
@@ -125,6 +145,8 @@
             executable: /bin/bash
             chdir: "{{ test.dir }}"
         ignore_errors: true
+        when:
+            - test.openstack.version|default(overcloud_version)|openstack_release < 13
 
       - name: generate results report in HTML format
         shell: |
