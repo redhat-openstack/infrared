@@ -96,15 +96,6 @@
       chdir: "{{ config_dir | default('~/' + test.dir) }}"
   register: config_result
 
-- name: Save the current state for the later cleanup
-  shell: >
-      test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
-      tempest cleanup --init-saved-state
-  args:
-      executable: /bin/bash
-      chdir: "{{ test.dir }}"
-  when: test.openstack.version|default(overcloud_version)|openstack_release > 7 or test.setup != 'rpm'
-
 
 - name: Print configuration cmd
   debug:
