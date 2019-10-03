@@ -139,7 +139,7 @@
         ignore_errors: true
         when:
             - test.openstack.version|default(overcloud_version)|openstack_release >= 7
-            - ostestr_version.stdout_lines is version('0.8.0', '>=')
+            - ostestr_version.stdout_lines[0] is version('0.8.0', '>=')
 
       - name: run tempest "{{ test_suite }}" suite 7
         shell: |
@@ -159,7 +159,7 @@
         ignore_errors: true
         when:
             - test.openstack.version|default(overcloud_version)|openstack_release == 7
-            - ostestr_version.stdout_lines is version('0.8.0', '<')
+            - ostestr_version.stdout_lines[0] is version('0.8.0', '<')
 
       - name: generate results report in HTML format
         shell: |
