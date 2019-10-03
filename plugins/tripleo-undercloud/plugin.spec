@@ -418,6 +418,7 @@ subparsers:
                       type: Value
                       help: The alternative docker registry namespace to use for undercloud deployment.
                             Defaults to "rhosp${version}" (e.g. rhosp14)
+                      default: "rh-osbs"
 
                   registry-skip-puddle:
                       type: Bool
