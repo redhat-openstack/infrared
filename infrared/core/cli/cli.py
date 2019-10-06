@@ -468,7 +468,7 @@ class NestedBase(object):
 
         results_dict = {}
         for item in value:
-            data = item.strip().split('=')
+            data = item.strip().split('=',maxsplit=1)
             if len(data) > 2:
                 raise ValueError(
                     'Wrong number of arguments are provided {}'.format(data))
