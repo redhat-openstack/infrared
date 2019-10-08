@@ -5,31 +5,40 @@
   any_errors_fatal: true
   vars:
     undercloud_version: "{{ install.version | openstack_release }}"
+    stack_name: overcloud
   tasks:
-      - name: Show details about existing Overcloud
+      - name: Show details about existing stack "{{ stack_name }}"
         shell: |
             source ~/stackrc
-            if openstack stack list | grep -qw overcloud; then
-              openstack stack show overcloud > openstack_stack_show_overcloud.log
+            if openstack stack list | grep -qw "{{ stack_name }}"; then
+              openstack stack show "{{ stack_name }}" > openstack_stack_show_"{{ stack_name }}".log
             fi
         args:
           executable: /bin/bash
         changed_when: False
 
-      - name: Delete existing overcloud Heat stack if it exists
-        shell: |
-            source ~/stackrc
-            RETURN_CODE=0
-            if openstack stack list | grep -qw overcloud; then
-              openstack stack delete overcloud --yes --wait
-              RETURN_CODE=2
-            fi
-            exit ${RETURN_CODE}
-        args:
-          executable: /bin/bash
-        register: _delete_stack
-        changed_when: _delete_stack.rc == 2
-        failed_when: _delete_stack.rc not in [0, 2]
+      - name: Delete existing "{{ stack_name }}" Heat stack if it exists
+        os_stack:
+          name: "{{ stack_name }}"
+          state: absent
+          register: stack_delete
+        until: stack_delete is success
+        delay: 5
+        retries: 6
+
+      - name: Delete container and objects
+        command: >
+          openstack container delete "{{ item }}" --recursive
+        failed_when:
+          - container_objects.rc != 0
+          - "'Not Found' not in container_objects.stderr"
+        changed_when:
+          - "'Not Found' not in container_objects.stderr"
+        register: container_objects
+        loop:
+          - "{{ stack_name }}"
+          - "{{ stack_name }}-messages"
+          - "{{ stack_name }}-swift-rings"
 
       - name: Get list of existing baremetal nodes
         shell: |
