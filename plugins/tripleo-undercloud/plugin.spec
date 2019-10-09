@@ -254,6 +254,11 @@ subparsers:
                           Let you the option to enable testing/pending repos with rhos-release. Multiple values have to be coma separated.
                           Examples: --enable-testing-repos rhel,extras,ceph or --enable-testing-repos all
 
+                  ceph-repos:
+                      type: Bool
+                      default: yes
+                      help: Skips the ceph repository configuration in he Undercloud during rhos-release execution if set to false.
+
                   validate:
                       type: Bool
                       default: yes
