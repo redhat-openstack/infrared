@@ -63,6 +63,7 @@
         rr_discover_build: yes
         rr_distro_version: "{{ install.osrelease|default(omit) }}"
         enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
+        without_ceph: "{{ install.get('no', {}).get('ceph', {}).repos|default(omit) }}"
         when:
             - install.images.packages|default('') or install.images['update'] or install.images.remove|default('')
             - install.version|default(undercloud_version)|openstack_distribution == 'OSP'
