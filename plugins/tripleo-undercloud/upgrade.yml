@@ -39,6 +39,7 @@
         rr_distro_version: "{{ install.osrelease|default(omit) }}"
         rr_buildmods: "{{ install.buildmods }}"
         enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
+        without_ceph: "{{ install.get('no', {}).get('ceph', {}).repos|default(omit) }}"
         tags:
             - upgrade
             - upgrade_repos
