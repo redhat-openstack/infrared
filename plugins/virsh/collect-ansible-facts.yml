@@ -1,7 +1,7 @@
 - name: Collect Ansible facts
   any_errors_fatal: false
   gather_facts: yes
-  hosts: localhost:hypervisor
+  hosts: "{{ (_run_condition | bool) | ternary('localhost:hypervisor', 'none') }}"
   tasks:
       - set_fact:
           ansible_facts_filename: "infrared_virsh-provision_{{ inventory_hostname }}"
