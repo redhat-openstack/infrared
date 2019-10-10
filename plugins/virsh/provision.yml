@@ -1,67 +1,84 @@
 ---
 - name: Pre run configuration
   import_playbook: "{{ provision_pre | default('pre.yml') }}"
-  when:
-    - not provision.topology.extend|default(False)
+  vars:
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (not provision.topology.extend | default(False)) }}
   tags: pre
 
 - name: Validate hypervisor
   import_playbook: "{{ validate_hypervisor | default('validate_hypervisor.yml') }}"
+  vars:
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (not provision.host.memory.overcommit | default('False')) and
+         (provision.topology.nodes is defined) }}
   tags: validations
-  when:
-    - not provision.host.memory.overcommit|default('False')
-    - provision.topology.nodes is defined
 
 - name: Prepare the hypervisor for provisioning
   import_playbook: "{{ prepare_hypervisor | default('prepare_hypervisor.yml') }}"
-  when:
-    - not provision.topology.extend|default(False)
-    - not provision.virsh.snapshot.create | bool
-    - not provision.virsh.snapshot.export | bool
+  vars:
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (not provision.topology.extend | default(False)) and
+         (not provision.virsh.snapshot.create | bool) and
+         (not provision.virsh.snapshot.export | bool) }}
   tags: hypervisor
 
 - name: Create Networks
   import_playbook: "{{ provision_networks | default('provision_networks.yml') }}"
-  when:
-    - not provision.topology.extend|default(False)
-    - not provision.virsh.snapshot.create | bool
-    - not provision.virsh.snapshot.export | bool
+  vars:
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (not provision.topology.extend | default(False)) and
+         (not provision.virsh.snapshot.create | bool) and
+         (not provision.virsh.snapshot.export | bool) }}
   tags: networks
 
 - name: Provision Vms
   import_playbook: "{{ provision_vms | default('provision_vms.yml') }}"
-  when:
-    - not provision.virsh.snapshot.create | bool
-    - not provision.virsh.snapshot.export | bool
-    - provision.topology.nodes is defined
+  vars:
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (not provision.virsh.snapshot.create | bool) and
+         (not provision.virsh.snapshot.export | bool) and
+         (provision.topology.nodes is defined) }}
   tags: vms
 
 - name: Create a sudoer user for non root SSH login
   import_playbook: "{{ provision_user | default('provision_user.yml') }}"
-  when:
-    - not provision.virsh.snapshot.create | bool
-    - not provision.virsh.snapshot.export | bool
+  vars:
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (not provision.virsh.snapshot.create | bool) and
+         (not provision.virsh.snapshot.export | bool) }}
   tags: user
 
 - name: Set VMs timezone
   import_playbook: "{{ provision_vms_timezone | default('provision_vms_timezone.yml') }}"
+  vars:
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (provision.topology.timezone | default('') != '') and
+         (not provision.virsh.snapshot.create | bool) and
+         (not provision.virsh.snapshot.export | bool) and
+         (provision.topology.nodes is defined) }}
   tags: timezone
-  when:
-    - provision.topology.timezone|default('')
-    - not provision.virsh.snapshot.create | bool
-    - not provision.virsh.snapshot.export | bool
-    - provision.topology.nodes is defined
 
 - name: Including post provision tasks
   import_playbook: "{{ provision_post | default('post.yml') }}"
-  when:
-    - not provision.virsh.snapshot.create | bool
-    - not provision.virsh.snapshot.export | bool
+  vars:
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (not provision.virsh.snapshot.create | bool) and
+         (not provision.virsh.snapshot.export | bool) }}
   tags: post
 
 - name: generate inventory file
-  hosts: localhost
+  hosts: "{{ (_main_run_condition | bool) | ternary('localhost', 'none') }}"
   gather_facts: no
+  any_errors_fatal: true
   tags: always
   tasks:
     - include_role:
