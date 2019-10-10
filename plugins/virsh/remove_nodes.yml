@@ -1,5 +1,5 @@
 - name: Remove VMs from topology
-  hosts: hypervisor
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
   gather_facts: yes
   any_errors_fatal: true
   tasks:
@@ -19,8 +19,9 @@
         with_items: "{{ provision.remove.nodes }}"
 
 - name: generate inventory file
-  hosts: localhost
+  hosts: "{{ (_run_condition | bool) | ternary('localhost', 'none') }}"
   gather_facts: no
+  any_errors_fatal: true
   tags: always
   roles:
       - role: inventory-update
