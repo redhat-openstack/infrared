@@ -1,6 +1,6 @@
 ---
 - name: Change VMs Timezone
-  hosts: hypervisor
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
   gather_facts: no
   any_errors_fatal: true
   become: true
