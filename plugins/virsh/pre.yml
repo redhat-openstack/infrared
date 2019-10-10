@@ -1,6 +1,7 @@
 - name: Change key file permissions
-  hosts: localhost
+  hosts: "{{ (_run_condition | bool) | ternary('localhost', 'none') }}"
   gather_facts: no
+  any_errors_fatal: true
   tasks:
     - file:
           path: "{{ provision.host.key }}"
@@ -9,8 +10,9 @@
       when: provision.host.key
 
 - name: clean old inventory file
-  hosts: localhost
+  hosts: "{{ (_run_condition | bool) | ternary('localhost', 'none') }}"
   gather_facts: no
+  any_errors_fatal: true
   tasks:
     - file:
           dest: "{{ inventory_dir }}/hosts"
@@ -18,8 +20,9 @@
           src: "local_hosts"
 
 - name: Add host to host list
-  hosts: localhost
+  hosts: "{{ (_run_condition | bool) | ternary('localhost', 'none') }}"
   gather_facts: yes
+  any_errors_fatal: true
   tags: always
   vars:
       hypervisor: "{{ provision.host }}"

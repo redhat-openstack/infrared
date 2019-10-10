@@ -1,6 +1,6 @@
 ---
 - name: Export snapshots of virtual machines
-  hosts: "{{ (provision.virsh.snapshot.export | bool) | ternary('hypervisor', 'none') }}"
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
   gather_facts: yes
   any_errors_fatal: true
   vars:

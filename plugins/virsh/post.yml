@@ -1,10 +1,11 @@
 ---
 #This is an empty file meant to be overridden by custom post
 #configuration playbook
-- hosts: localhost
+- hosts: "{{ (_run_condition | bool) | ternary('localhost', 'none') }}"
   gather_facts: no
+  any_errors_fatal: true
 
-- hosts: tester
+- hosts: "{{ (_run_condition | bool) | ternary('tester', 'none') }}"
   gather_facts: yes
   any_errors_fatal: true
   tasks:
@@ -30,7 +31,7 @@
       become: true
 
 - name: Update deployment information on hypervisor
-  hosts: hypervisor
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
   gather_facts: yes
   any_errors_fatal: true
   tasks:

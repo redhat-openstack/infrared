@@ -1,32 +1,44 @@
 ---
 - import_playbook: "{{ provision_cleanup | default('cleanup.yml') }}"
-  when: (provision.cleanup|default(False)) or (provision.kill|default(False))
+  vars:
+    _run_condition: "{{ (provision.cleanup | default(False)) or (provision.kill | default(False)) }}"
 
 - import_playbook: remove_nodes.yml
-  when: provision.get('remove', {}).nodes|default(False)
+  vars:
+    _run_condition: "{{ provision.get('remove', {}).nodes | default(False) }}"
 
 - import_playbook: "{{ provision_playbook | default('provision.yml') }}"
-  when:
-      - not provision.cleanup|default(False)
-      - not provision.kill|default(False)
-      - not provision.get('remove', {}).nodes|default(False)
+  vars:
+    _run_condition: >-
+      {{ (not provision.cleanup | default(False)) and
+         (not provision.kill | default(False)) and
+         (not provision.get('remove', {}).nodes | default(False)) }}
 
 - name: Collect Ansible facts
   import_playbook: 'collect-ansible-facts.yml'
-  when:
-      - provision.collect.ansible.facts|default(False)
-      - not provision.cleanup|default(False)
+  vars:
+    _run_condition: >-
+      {{ (provision.collect.ansible.facts | default(False)) and
+         (not provision.cleanup | default(False)) }}
   tags: collect-ansible-facts
   ignore_errors: True
 
 - name: Create snapshots of virtual machines
   import_playbook: snapshot_create.yml
+  vars:
+    _run_condition: "{{ provision.virsh.snapshot.create | bool }}"
 
 - name: Export snapshots of virtual machines
   import_playbook: snapshot_export.yml
+  vars:
+    _run_condition: "{{ provision.virsh.snapshot.export | bool }}"
 
 - name: Import snapshots of virtual machines
   import_playbook: snapshot_import.yml
+  vars:
+    _run_condition: "{{ provision.virsh.snapshot.import | bool }}"
 
 - name: Restore snapshots of virtual machines
   import_playbook: snapshot_restore.yml
+  vars:
+    _run_condition: "{{ provision.virsh.snapshot.restore | bool }}"

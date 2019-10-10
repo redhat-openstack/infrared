@@ -1,6 +1,6 @@
 ---
 - name: Provision VMs
-  hosts: hypervisor
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
   gather_facts: yes
   any_errors_fatal: true
   vars:
