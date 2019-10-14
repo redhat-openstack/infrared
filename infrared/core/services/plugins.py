@@ -10,11 +10,8 @@ from collections import OrderedDict
 from six.moves import configparser
 from six.moves import getcwd
 
-# TODO(aopincar): Add pip to the project's requirements
-try:
-    from pip._internal import main as pip_main
-except ImportError:
-    from pip import main as pip_main
+
+from pip._internal.main import main as pip_main
 import urllib3
 import yaml
 
