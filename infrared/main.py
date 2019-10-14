@@ -120,7 +120,7 @@ class WorkspaceManagerSpec(api.SpecObject):
             help="Workspace name to import with. "
             "If not specified - file name will be used.")
 
-        # exort settings
+        # export settings
         exporter_parser = workspace_subparsers.add_parser(
             'export', help='Export deployment configurations.')
         exporter_parser.add_argument(
@@ -267,7 +267,7 @@ class PluginManagerSpec(api.SpecObject):
                                 help="Plugin Source (name/path/git URL)\n'all'"
                                      " will install all available plugins")
         add_parser.add_argument("--revision", help="git branch/tag/revision"
-                                " sourced plugins. Ingnored for"
+                                " sourced plugins. Ignored for"
                                 "'plugin add all' command.")
 
         add_parser.add_argument("--src-path", help="Relative path within the "
