@@ -1,6 +1,6 @@
 ---
 - name: Create Non-Root User
-  hosts: all:!localhost:!hypervisor:!vswitches
+  hosts: "{{ (_run_condition | bool) | ternary('all:!localhost:!hypervisor:!vswitches', 'none') }}"
   gather_facts: no
   any_errors_fatal: true
   vars:
