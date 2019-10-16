@@ -238,5 +238,52 @@ subparsers:
                       type: Value
                       help: |
                           The path to be used for the snapshot export/import process.
+                      required_when: >-
+                        virsh-snapshot-export == yes or
+                        virsh-snapshot-import == yes or
+                        virsh-snapshot-upload-enable == yes or
+                        virsh-snapshot-download-enable == yes
+                  virsh-snapshot-upload-enable:
+                      type: Bool
+                      help: |
+                          This will upload the image set found in the path specified by
+                          ``--virsh-snapshot-path`` to the mirrors specified by
+                          ``--virsh-snapshot-upload-dest1`` and ``--virsh-snapshot-upload-dest2``
+                          via ssh using the private key specified by ``virsh-snapshot-upload-key``.
+                      default: False
+                  virsh-snapshot-upload-dest1:
+                      type: Value
+                      help: |
+                          The required first destination used when uploading an image set when the
+                          ``--virsh-snapshot-upload-enable`` flag is enabled. The value should include
+                          the user to connect as, the address to connect to and the destination path
+                          for the image set folder. eg: foo@bar.baz:/path/to/images/
                       required_when:
-                          - "virsh-snapshot-export == yes or virsh-snapshot-import == yes"
+                          - "virsh-snapshot-upload-enable == yes"
+                  virsh-snapshot-upload-dest2:
+                      type: Value
+                      help: |
+                          The optional second destination used when uploading an image set when the
+                          ``--virsh-snapshot-upload-enable`` flag is enabled. The value should include
+                          the user to connect as, the address to connect to and the destination path
+                          for the image set folder. eg: foo@bar.baz:/path/to/images/
+                  virsh-snapshot-upload-key:
+                      type: Value
+                      help: |
+                          The path to the private ssh key to use when uploading an image set when the
+                          ``--virsh-snapshot-upload-enable`` flag is True.
+                      required_when:
+                          - "virsh-snapshot-upload-enable == yes"
+                  virsh-snapshot-download-enable:
+                      type: Bool
+                      help: |
+                          This flag enables/disables the download of an image set ``manifest.json`` file
+                          from a URL specified by ``--virsh-snapshot-download-url``. The manifest will be
+                          processed and all files downloaded will be placed it into
+                          ``--virsh-snapshot-path``.
+                      default: False
+                  virsh-snapshot-download-url:
+                      type: Value
+                      help: |
+                          The URL for an image set ``manifest.json`` file.
+
