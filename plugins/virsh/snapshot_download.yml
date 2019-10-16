@@ -1,0 +1,28 @@
+---
+- name: Download snapshots of virtual machines
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+    - name: Get the manifest file
+      uri:
+        url: "{{ provision.virsh.snapshot.download.url }}"
+        return_content: yes
+      register: _manifest_file
+
+    - name: Register manifest file content as a fact
+      set_fact:
+        _manifest_content: "{{ _manifest_file.content | from_json }}"
+
+    - name: Download the files referenced in the manifest
+      get_url:
+        url: "{{ provision.virsh.snapshot.download.url | regex_replace('/[^/]*$', '') }}/{{ item.path | basename }}"
+        dest: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
+        checksum: "sha1:{{ item.checksum }}"
+      loop: "{{ _manifest_content.files }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+      register: _download_result
+      retries: 5
+      delay: 10
+      until: _download_result is success
