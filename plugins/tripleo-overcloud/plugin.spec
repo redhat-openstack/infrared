@@ -133,7 +133,7 @@ subparsers:
 
                   registry-ceph-namespace:
                       type: Value
-                      help: namesapce for the ceph container
+                      help: namespace for the ceph container
 
                   registry-ceph-image:
                       type: Value
