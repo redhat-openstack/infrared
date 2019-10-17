@@ -18,6 +18,8 @@
 
 import requests
 import os
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 try:
     import urlparse
