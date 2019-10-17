@@ -16,8 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 
+from ansible.module_utils.basic import *
 import requests
 import os
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 try:
     import urlparse
@@ -133,6 +136,7 @@ class ForemanManager(object):
     get / reserve hosts from foreman.
     *Foreman: http://theforeman.org/
     """
+
     def __init__(self, url, username, password, extra_headers=None, version=2):
         """
         :param url: the url of the foreman we wish to authenticate with
@@ -170,7 +174,7 @@ class ForemanManager(object):
         :returns: the host information on success, else empty body
         :rtype: list of dictionaries -- [{"host": {}}]
         """
-        #TODO(tkammer): add the option to provide the query itself after "?"
+        # TODO(tkammer): add the option to provide the query itself after "?"
         request_url = self.compile_url(
             self.url, self.resource['reserve']['url'].format(id=host_id))
         response = self.session.get(request_url, verify=False)
@@ -215,7 +219,8 @@ class ForemanManager(object):
         """
         request_url = self.compile_url(
             self.url, self.resource['update']['url'].format(id=host_id))
-        response = self.session.put(request_url, data=update_info, verify=False)
+        response = self.session.put(request_url,
+                                    data=update_info, verify=False)
         return response.json()
 
     def set_build_on_host(self, host_id, flag):
@@ -270,7 +275,7 @@ class ForemanManager(object):
             self.url, self.resource['power']['url'].format(id=host_id))
         command = json.dumps({'power_action': command})
         response = self.session.put(request_url, data=command, verify=False)
-        #TODO(tkammer): add verification that the BMC command was issued
+        # TODO(tkammer): add verification that the BMC command was issued
 
     def ipmi(self, host_id, command, username, password):
         """
@@ -283,11 +288,13 @@ class ForemanManager(object):
         """
         command = "ipmitool -I lanplus -H {host_id} -U {username} -P " \
                   "{password} chassis power {cmd}".format(
-            host_id=host_id, username=username, password=password, cmd=command)
+                      host_id=host_id, username=username, password=password,
+                      cmd=command)
         return_code = subprocess.call(command, shell=True)
 
         if return_code:
-            raise Exception("Call to {0}, returned with {1}".format(command, return_code))
+            raise Exception("Call to {0}, returned with {1}".format(command,
+                            return_code))
 
     def _validate_bmc(self, host_id):
         """
@@ -407,14 +414,13 @@ def main():
         else:
             status_changed = True
 
-    #TODO(tkammer): implement RESERVE and RELEASE
+    # TODO(tkammer): implement RESERVE and RELEASE
     host = foreman_client.get_host(module.params['host_id'])
     interface = foreman_client.get_host('{0}/interfaces'.format(module.params['host_id']))
-    if host.has_key('error'):
+    if 'error' in host.keys():
         module.fail_json(msg=host['error'])
 
     module.exit_json(changed=status_changed, host=host, interface=interface)
 
 
-from ansible.module_utils.basic import *
 main()
