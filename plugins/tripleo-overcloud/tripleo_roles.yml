@@ -17,6 +17,7 @@
           swift: ObjectStorage
           compute_dvr: ComputeDVR
           aio: Standalone
+          computehci: ComputeHCI
       tht_mapping:
           - regexp: ^(Controller).*
             net_config_file: "controller{{ ipv6_postfix }}.yaml"
@@ -24,7 +25,7 @@
           - regexp: ^(Novacontrol).*
             net_config_file: "novacontrol.yaml"
             node_name: novacontrol
-          - regexp: ^(Compute).*
+          - regexp: ^(Compute)[^(HCI)].*
             net_config_file: "compute.yaml"
             node_name: compute
           - regexp: ^(Ceph).*
@@ -45,6 +46,9 @@
           - regexp: ^(HciCephAll).*
             net_config_file: "osdcompute.yaml"
             node_name: hcicephall
+          - regexp: ^(ComputeHCI).*
+            net_config_file: "computehci.yaml"
+            node_name: computehci
   tags:
       - deploy_preparation
       - tht_roles
