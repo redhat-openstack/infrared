@@ -64,6 +64,10 @@ cidr = 192.168.24.0/24
 dhcp_start = 192.168.24.5
 dhcp_end = 192.168.24.55
 gateway = 192.168.24.1
+#TODO: this is workaround for bug where undercloud_nameservers are being ignored
+{% if install.version|openstack_release > 15 and undercloud_nameservers is defined %}
+dns_nameservers = {{ undercloud_nameservers }}
+{% endif %}
 inspection_iprange = 192.168.24.100,192.168.24.120
 masquerade = true
 #TODO(skatlapa): add param to override masq
