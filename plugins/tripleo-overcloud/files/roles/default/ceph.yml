@@ -20,7 +20,7 @@ ceph_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Collectd{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
-        - OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}
+        - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release >= 15 %}OS::TripleO::Services::IpaClient{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Ipsec{% endif %}"
         - OS::TripleO::Services::Kernel
@@ -33,7 +33,7 @@ ceph_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::RsyslogSidecar{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release >= 15 %}OS::TripleO::Services::Podman{% endif %}"
-        - OS::TripleO::Services::SensuClient
+        - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::SensuClient{% endif %}"
         - OS::TripleO::Services::Snmp
         - "{% if roles_sshd %}OS::TripleO::Services::Sshd{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release >= 15 %}OS::TripleO::Services::Timesync{% endif %}"
