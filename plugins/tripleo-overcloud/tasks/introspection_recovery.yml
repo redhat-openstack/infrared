@@ -129,7 +129,7 @@
 
 # If bulk introspection was not completed, nodes are not set to available which
 # makes them invisible to overcloud deploy stage.
-- name: set provision state of all nodes to available if bulk introspection failed to do so
+- name: set provision state of all nodes to available if bulk introspection failed to do so (Ver. < 16)
   shell: |
       source ~/stackrc;
       export PROV_STATE=$(ironic node-show {{ item }} | grep ' provision_state ');
@@ -137,8 +137,22 @@
           ironic node-set-provision-state {{ item }} provide;
       fi
   with_items: "{{ total_nodes.stdout_lines | default([]) }}"
+  when: install.version | default(undercloud_version) | openstack_release < 16
   tags:
       - skip_ansible_lint
+
+- name: set provision state of all nodes to available if bulk introspection failed to do so (Ver. < 16)
+
+  shell: |
+    source ~/stackrc;
+    export PROV_STATE=$(openstack baremetal node show {{ item }} | grep ' provision_state ');
+    if [[ $PROV_STATE != *"available"* ]]; then
+        openstack baremetal node provide {{ item }};
+    fi
+  with_items: "{{ total_nodes.stdout_lines | default([]) }}"
+  when: install.version | default(undercloud_version) | openstack_release >= 16
+  tags:
+    - skip_ansible_lint
 
 - name: see overall status after node-by-node introspection was done
   shell: |
