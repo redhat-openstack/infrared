@@ -97,6 +97,11 @@ will be later created.
   Packages can be specified by name or by providing direct url to the rpm file.
 * Use ``--images-remove-packages`` to define a list of packages to uninstall from the OverCloud image.
   Packages must be specified by name.
+* Use ``--images-force-no-deps-remove-packages`` to define a list of packages to force uninstall from the overcloud image.
+  Packages must be specified by name and seperated by a blank space.
+
+  .. note:: This task executes `rpm -e --nodeps` command which will cause RPM DB to be out of sync
+
 * ``--images-cleanup`` tells `infrared` do remove the images files original after they are uploaded
   to the undercloud's Glance service.
 
