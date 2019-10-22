@@ -1,0 +1,57 @@
+images_remove_no_deps_packages: openvswitch,python-openvswitch
+install:
+  boot:
+    mode: bios
+  build: passed_phase2
+  buildmods: pin
+  config:
+    file: /Users/vkhitrin/Projects/Automation/ospd-deployment-templates/ospd-13-vxlan-dpdk-sriov-ctlplane-dataplane-bonding-hybrid-dcn-rack2/undercloud.conf
+  deploy_interface_default: iscsi
+  disk:
+    pool: /var/lib/libvirt/images
+  image:
+    download:
+      source: swift
+  images:
+    cleanup: true
+    packages: openvswitch2.11,http://download.eng.bos.redhat.com/brewroot/vol/rhel-7/packages/rhosp-openvswitch/2.11/0.1.el7ost/noarch/rhosp-openvswitch-2.11-0.1.el7ost.noarch.rpm
+    task: rpm
+    update: true
+  mirror: tlv
+  ntp:
+    server: clock.redhat.com
+  overcloud:
+    domain: ''
+    update:
+      kernel: false
+  post: true
+  registry:
+    mirror: docker-registry.engineering.redhat.com
+    namespace: rhosp13
+    prefix: openstack-
+    skip:
+      puddle: false
+    tag:
+      discover: false
+    undercloud:
+      skip: false
+  repos:
+    config: /Users/vkhitrin/Projects/Automation/ospd-deployment-templates/ospd-13-vxlan-dpdk-sriov-ctlplane-dataplane-bonding-hybrid-dcn-rack2/repos_config.yaml
+  snapshot:
+    filename: undercloud-snapshot.qcow2
+  splitstack: false
+  ssl: false
+  tls:
+    ca: ''
+    everywhere: false
+  undercloud:
+    extra:
+      args: ''
+  upload:
+    extra:
+      repos: true
+  user:
+    name: stack
+    password: stack
+  validate: true
+  workarounds: ''
