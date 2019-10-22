@@ -61,13 +61,6 @@
         vm_nets: "{{ vm_nets|combine({'networks': networks} ) }}"
   when: provision.prefix is defined
 
-- block:
-  - name: remove all snapshots
-    include_tasks: remove_snapshots.yml
-    with_items: "{{ vm_names.list_vms }}"
-    loop_control:
-      loop_var: vm_name
-
 - name: remove all snapshots
   include_tasks: remove_snapshots.yml
   with_items: "{{ vm_names.list_vms }}"
@@ -79,6 +72,15 @@
   with_items: "{{ vm_names.list_vms }}"
   loop_control:
     loop_var: vm_name
+
+- name: remove any exported snapshots
+  vars:
+    snapshot_export_path: "{{ (provision.virsh.snapshot.export | bool) | ternary(provision.virsh.snapshot.path | default('none'), 'none') }}"
+  file:
+    path: "{{ snapshot_export_path }}"
+    state: absent
+  when:
+    - snapshot_export_path != 'none'
 
 - name: Removing previous Overcloud Entries
   become: true

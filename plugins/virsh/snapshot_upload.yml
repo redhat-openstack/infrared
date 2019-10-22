@@ -1,0 +1,35 @@
+---
+- name: Upload snapshots of virtual machines
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+    - name: Install required packages
+      package:
+        name: rsync
+        state: present
+
+    - name: Copy the provided private key to the hypervisor
+      copy:
+        src: "{{ provision.virsh.snapshot.upload.key | expanduser | realpath }}"
+        dest: "~/backup_server_auth_key"
+        mode: "0400"
+
+    - name: Upload the snapshot path folder to the destination server(s)
+      shell: >-
+        rsync
+        --archive
+        --verbose
+        --append-verify
+        --rsh="ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i ~/backup_server_auth_key"
+        {{ provision.virsh.snapshot.path }}
+        {{ item }}/
+      loop:
+        - "{{ provision.virsh.snapshot.upload.dest1 }}"
+        - "{{ provision.virsh.snapshot.upload.dest2 | default('') }}"
+      when:
+        - item != ''
+      register: _upload_result
+      retries: 5
+      delay: 10
+      until: _upload_result is success
