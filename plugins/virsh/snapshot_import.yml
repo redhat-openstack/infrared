@@ -52,9 +52,12 @@
       loop: "{{ _vm_to_remove_list }}"
 
     - name: Delete any disk images related to running VM's
-      file:
-        path: "{{ _virt_pools.pools.images.path }}/{{ item }}-disk1.qcow2"
-        state: absent
+      shell: |
+        for vdisk in $(virsh domblklist {{ item }} | awk '/{{ item }}/ {print $2}'); do
+          rm -f ${vdisk}
+        done
+      args:
+        executable: /bin/bash
       loop: "{{ _vm_to_remove_list }}"
 
     - name: Undefine all running VM's
@@ -83,14 +86,14 @@
       loop_control:
         label: "{{ item.path | basename }}"
 
-    - name: Inspect the disk images to identify whether an operating system is present
+    - name: Inspect the disk1 images to identify whether an operating system is present
       command: >-
         virt-inspector
         --add {{ _virt_pools.pools.images.path }}/{{ item.path | basename }}
       register: _virt_inspector
       changed_when: false
       failed_when: false
-      loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
+      loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*-disk1\\.qcow2$') | list }}"
       loop_control:
         label: "{{ item.path | basename }}"
 

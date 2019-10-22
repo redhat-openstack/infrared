@@ -52,11 +52,12 @@
       loop: "{{ _vm_list }}"
 
     - name: Sparsify and export disk images
-      command: >-
-        virt-sparsify
-        --compress
-        {{ _virt_pools.pools.images.path }}/{{ item }}-disk1.qcow2
-        {{ provision.virsh.snapshot.path }}/{{ item }}-disk1.qcow2
+      shell: |
+        for vdisk in $(virsh domblklist {{ item }} | awk '/{{ item }}/ {print $2}'); do
+          virt-sparsify --compress ${vdisk} {{ provision.virsh.snapshot.path }}/${vdisk##*/}
+        done
+      args:
+        executable: /bin/bash
       loop: "{{ _vm_list }}"
 
     - name: Save VM definitions
@@ -70,7 +71,7 @@
       find:
         paths: "{{ provision.virsh.snapshot.path }}"
         patterns:
-          - "*-disk1.qcow2"
+          - "*.qcow2"
           - "*.xml"
         get_checksum: yes
       register: _manifest_files
