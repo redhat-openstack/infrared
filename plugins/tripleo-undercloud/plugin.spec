@@ -369,6 +369,12 @@ subparsers:
                           List of packages to uninstall separated by commas.
                           Example: vim,git
 
+                  images-force-no-deps-remove-packages:
+                      type: Value
+                      help: |
+                          List of packages to force remove using 'rpm -e --nodeps', NOT separated by commas.
+                          Example: openvswitch python-openvswitch
+
                   images-cleanup:
                       type: Bool
                       help: |

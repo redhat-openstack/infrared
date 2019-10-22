@@ -151,6 +151,15 @@
   register: image_remove_packages
   when: install.images.remove|default(None) != None
 
+# NOTE: This will cause RPM DB to be out of sync
+# TODO(vkhitrin): Consider resetting RPM DB after this task
+- name: Force uninstall packages from overcloud image using 'rpm -e --nodeps' command
+  environment:
+      LIBGUESTFS_BACKEND_SETTINGS: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --run-command 'rpm -e --nodeps {{ install.images.force.no.deps.remove.packages }}' --selinux-relabel"
+  register: image_force_no_deps_remove_packages
+  when: install.images.force.no.deps.remove.packages is defined
+
 - name: Install packages in overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
