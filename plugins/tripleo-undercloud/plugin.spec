@@ -374,6 +374,13 @@ subparsers:
                           List of packages to uninstall separated by commas.
                           Example: vim,git
 
+                  install-remove-no-deps-packages:
+                      type: Value
+                      help: |
+                          List of packages to force remove using 'rpm -e --nodeps', separated by commas.
+                          Example: openvswitch,python-openvswitch
+                      ansible_variable: images_remove_no_deps_packages
+
                   images-cleanup:
                       type: Bool
                       help: |
