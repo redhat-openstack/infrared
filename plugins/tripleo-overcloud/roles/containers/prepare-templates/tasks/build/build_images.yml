@@ -13,8 +13,16 @@
 - name: set required facts for "container image prepare" - part two
   set_fact:
       container_image_external:
-          reg_namespace: "{{ container_image['mirror_reg'] | ternary(container_image['mirror_reg'] + '/' + container_image['basereg_relative'], container_env['container-image-prepare']['namespace']) }}"
-          ceph_namespace: "{{ container_image['mirror_reg'] | ternary(container_image['mirror_reg'] + '/' + container_image['cephreg_relative'], container_env['container-image-prepare']['ceph-namespace']) }}"
+          reg_namespace: "{{ container_image['mirror_reg'] |
+          ternary(
+              container_image['mirror_reg'] + '/' + container_image['basereg_relative'],
+              container_env['container-image-prepare']['namespace'] | container_mirror(install.mirror|default(''))
+          ) }}"
+          ceph_namespace: "{{ container_image['mirror_reg'] |
+          ternary(
+              container_image['mirror_reg'] + '/' + container_image['cephreg_relative'],
+              container_env['container-image-prepare']['ceph-namespace'] | container_mirror(install.mirror|default(''))
+          ) }}"
   tags: container-images-packages
 
 - block:
@@ -45,9 +53,9 @@
 
     - name: set insecure ceph registry
       set_fact:
-          docker_insecure_ceph_registry: "{{ container_env['container-image-prepare']['ceph-namespace'].split('/')[0] }}"
+          docker_insecure_ceph_registry: "{{ container_image_external['ceph_namespace'].split('/')[0] }}"
       when:
-          - container_env['container-image-prepare']['ceph-namespace'] != ''
+          - container_image_external['ceph_namespace'] != ''
 
     - name: replace IP with hostname in /etc/sysconfig/docker
       replace:
