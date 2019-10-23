@@ -374,7 +374,7 @@ subparsers:
                           List of packages to uninstall separated by commas.
                           Example: vim,git
 
-                  install-remove-no-deps-packages:
+                  images-remove-no-deps-packages:
                       type: Value
                       help: |
                           List of packages to force remove using 'rpm -e --nodeps', separated by commas.

@@ -97,7 +97,7 @@ will be later created.
   Packages can be specified by name or by providing direct url to the rpm file.
 * Use ``--images-remove-packages`` to define a list of packages to uninstall from the OverCloud image.
   Packages must be specified by name.
-* Use ``--install-remove-no-deps-packages`` to define a list of packages to force uninstall from the overcloud image.
+* Use ``--images-remove-no-deps-packages`` to define a list of packages to force uninstall from the overcloud image.
   Packages must be specified by name and seperated by a comma.
   This is useful in a scenario where there is a requirment to uninstall a certain RPM package without removing its dependencies.
 
