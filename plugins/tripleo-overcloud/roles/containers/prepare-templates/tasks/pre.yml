@@ -105,6 +105,20 @@
           - container-images-patch
           - container-images-packages
 
+    - name: check if quay.io repo definition exists in the repo
+      vars:
+          quayio_file: "{{ containers_images_env_template_download_basename |replace('.yaml', '-quayio.yaml') |replace('overcloud_','') }}"
+      uri:
+          url: "{{ containers_puddle_base_url.stdout }}/{{ quayio_file }}"
+          method: HEAD
+      register: quayio_available
+      ignore_errors: yes
+
+    - name: change container file name for quay.io if it exists
+      set_fact:
+          containers_images_env_template_download_basename: {{ quayio_available.url | basename }}
+      when: quayio_available.status is defined and quayio_available.status < 400
+
     - name: Downloading overcloud container images environment file
       get_url:
           url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_env_template_download_basename }}"
