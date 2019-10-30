@@ -44,6 +44,11 @@
             - upgrade
             - upgrade_repos
   tasks:
+      - name: Set Advanced Virtualization app stream for RHEL8
+        become: true
+        shell: "dnf -y module disable virt:rhel && dnf -y module enable virt:8.0.0"
+        when: undercloud_upgrade_version|openstack_release >= 15
+
       - name: update TripleO client
         become: true
         tags:
