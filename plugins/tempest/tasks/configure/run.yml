@@ -94,6 +94,8 @@
               --out ~/{{ test.dir }}/etc/tempest.conf
   args:
       chdir: "{{ config_dir | default('~/' + test.dir) }}"
+  environment:
+      REQUESTS_CA_BUNDLE: '/etc/pki/tls/certs/ca-bundle.crt'
   register: config_result
 
 - name: Save the current state for the later cleanup
