@@ -69,6 +69,24 @@
       "revId": "70945476cee7a48da546c34bc48b96b3cd98dcb3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "884fb62e_46a4921b",
+        "filename": "plugins/virsh/tasks/download_images.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2019-11-04T13:29:31Z",
+      "side": 1,
+      "message": "I was able to find some info in old email: issue is we need to resize the disk\u0027s (virtual) size, to have it way bigger then the default/original image is. With having layer on top of backing file runs were failing with no space left on device e.g.:\n\n\u003e \u003e   12:05:59 + openstack overcloud image upload --update-existing\n\u003e \u003e   12:05:59 500 Internal Server Error: The server has either erred or is incapable of performing the requested operation. (HTTP 500)\n\u003e\n\u003e Also in the undercloud-0 logs you can find following error message that also related to issue is caused by patch.\n\u003e\n\u003e \u003e   $ grep \u0027No space left on device\u0027 -Rn undercloud-0/var/log/messages \n\u003e \u003e   18368:May 22 08:05:52 undercloud-0 object-server: ERROR __call__ error with PUT /1/989/AUTH_4a35644cbb0b451480ad0851a3054c0c/glance/6d951365-e469-4bfb-b04b-97cb24e60dd6-00001 : [Errno 28] No space left on device (txn: txeda001717716492689b75-005b04079f)",
+      "parentUuid": "aafb395e_4f3fb189",
+      "revId": "70945476cee7a48da546c34bc48b96b3cd98dcb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
