@@ -11,6 +11,21 @@
       infrared_vswitch_types:
         - vqfx
   tasks:
+    - name: Verify local facts file exist when extending the topology
+      when: provision.topology.extend
+      block:
+        - name: Check that local facts file 'run.fact' exists
+          stat:
+              path: "{{ custom_facts }}/run.fact"
+          register: run_fact_stat
+
+        - name: Create running deployment custom facts file 'run.fact'
+          when: run_fact_stat.stat.exists == False
+          template:
+            src: deployments.fact.j2
+            dest: "{{ custom_facts }}/run.fact"
+            mode: 0644
+
     - name: Get uniq id for current deployment
       set_fact:
             prefix: "{{ ansible_local.run.keys()[0] }}"
