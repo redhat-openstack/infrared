@@ -11,6 +11,32 @@
       infrared_vswitch_types:
         - vqfx
   tasks:
+    - name: Verify local facts file exist when extending the topology
+      when: provision.topology.extend
+      block:
+        - name: Load a variable file based on the OS type
+          when: custom_facts is not defined
+          include_vars: "{{ lookup('first_found', params) }}"
+          vars:
+            params:
+              files:
+                - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}-hypervisor.yml"
+                - 'hypervisor.yml'
+              paths:
+                - 'vars'
+
+        - name: Check that local facts file 'run.fact' exists
+          stat:
+              path: "{{ custom_facts }}/run.fact"
+          register: run_fact_stat
+
+        - name: Create running deployment custom facts file 'run.fact'
+          when: run_fact_stat.stat.exists == False
+          template:
+            src: deployments.fact.j2
+            dest: "{{ custom_facts }}/run.fact"
+            mode: 0644
+
     - name: Get uniq id for current deployment
       set_fact:
             prefix: "{{ ansible_local.run.keys()[0] }}"
