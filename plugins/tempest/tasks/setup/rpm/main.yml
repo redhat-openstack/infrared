@@ -64,6 +64,12 @@
   loop_control:
       loop_var: test_suite
 
+- name: Make sure rhosp-rhel-8.X-image-build-override repo are enabled for osp>=15
+  become: yes
+  command: "yum-config-manager --enable rhosp-rhel-{{ ansible_distribution_version }}-image-build-override"
+  when: test.openstack.version|default(overcloud_version)|openstack_release >= 15
+
+
 - name: Install junitxml and subunit-filters
   become: yes
   vars:
