@@ -11,9 +11,16 @@
       infrared_vswitch_types:
         - vqfx
   tasks:
+    - name: Expand ansible local facts (needed for topology extend)
+      set_fact:
+        ansible_local: "{{ ansible_local | combine({'run': ansible_local.deployment_info}) }}"
+      when:
+        - provision.topology.extend
+        - ansible_local.run is not defined
+
     - name: Get uniq id for current deployment
       set_fact:
-            prefix: "{{ ansible_local.run.keys()[0] }}"
+        prefix: "{{ provision.prefix }}"
       when: provision.prefix is defined
 
     - name: load nodes topology configuration
