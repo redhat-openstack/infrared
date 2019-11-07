@@ -58,14 +58,16 @@
       version: "2.11.1"
       virtualenv: "{{ virtualenvs.tempest }}"
 
-# Make sure os-testr is installed since it was removed
+# Make sure os-testr is installed for versions <13 since it was removed
 # from tempest requirements file on tempest master branch
+# and stestr was not required yet (only from tempest >=18)
 - name: Install os-testr
   pip:
       name: "os-testr"
       virtualenv: "{{ virtualenvs.tempest }}"
       version: "{{ ir_default_pip_versions['os-testr'] | default(omit) }}"
       state: "{{ ir_default_pip_versions['os-testr'] is defined | ternary('present', 'latest') }}"
+  when: test.openstack.version|default(overcloud_version)|openstack_release < 13
 
 - name: Get repo requirements
   pip:
