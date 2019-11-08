@@ -54,3 +54,11 @@
   when:
       - install.storage.protocol.backend == "nfs-ganesha"
       - install.version|default(undercloud_version)|openstack_release > 12
+
+- name: append network_data_dashboard
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-n /usr/share/openstack-tripleo-heat-templates/network_data_dashboard.yaml   \'
+  when:
+      - ceph-dashboard in install.overcloud.templates
+      - install.version|default(undercloud_version)|openstack_release >= 15
