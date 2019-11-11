@@ -112,6 +112,8 @@ POODLE_TYPES = {
 
 LATEST_INSTALLED_FILE = "/etc/yum.repos.d/latest-installed"
 
+DEFAULT_TARGET_DIR = "/etc/yum.repos.d"
+
 
 def _parse_output(module, cmd, stdout):
     """Parse rhos-release stdout.
@@ -292,7 +294,8 @@ def main():
     enable_testing_repos = module.params['enable_testing_repos']
     without_ceph = module.params['without_ceph']
 
-    repo_args = ['-t', str(repo_directory)] if repo_directory else[]
+    repo_args = ['-t', str(repo_directory)] if repo_directory and \
+            repo_directory != DEFAULT_TARGET_DIR else[]
 
     if discover_build and not puddle:
         puddle = do_build_discover()
