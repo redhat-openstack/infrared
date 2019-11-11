@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "137fd33d_a981118a",
+        "filename": "plugins/tripleo-overcloud/roles/containers/append-deploy-script/tasks/main.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1016970
+      },
+      "writtenOn": "2019-11-11T07:54:52Z",
+      "side": 1,
+      "message": "According to the doc [1] this should be required when we deploy the ceph-dashboard service using composable networks. \n\nIn that case you should:\n\n\n1) Generate the role containing the dashboard network:\n\n```\nopenstack overcloud roles generate -o /home/stack/roles_data.yaml ControllerStorageDashboard Compute BlockStorage ObjectStorage CephStorage\n```\n\n2) Include the new roles_data.yaml in the overcloud deploy command along with the composable network:\n\n```\n-r /home/stack/roles_data.yaml -n /usr/share/openstack-tripleo-heat-templates/network_data_dashboard.yaml\n```\n\nNow, including this line doesn\u0027t hurt since we\u0027re now using the generated roles, but it\u0027s not needed when we\u0027re going to test this feature without composable network.\n\n[1] https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/ceph_config.html#adding-ceph-dashboard-to-a-overcloud-deployment",
+      "range": {
+        "startLine": 58,
+        "startChar": 1,
+        "endLine": 64,
+        "endChar": 75
+      },
+      "revId": "1d5c561193014d9719bf7f02edc0a943582ef4aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
