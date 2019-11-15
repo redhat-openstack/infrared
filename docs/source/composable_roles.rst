@@ -276,7 +276,7 @@ Below is an example of the controller default role::
             - OS::TripleO::Services::NovaApi
             - OS::TripleO::Services::NovaMetadata
             - OS::TripleO::Services::NovaScheduler
-            - OS::TripleO::Services::NovaConsoleauth
+            - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::NovaConsoleauth{% endif %}"
             - OS::TripleO::Services::NovaVncProxy
             - OS::TripleO::Services::Ntp
             - OS::TripleO::Services::SwiftProxy

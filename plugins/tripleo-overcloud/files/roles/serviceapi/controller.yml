@@ -50,7 +50,7 @@ controller_role:
         - OS::TripleO::Services::SensuClient
         - OS::TripleO::Services::Snmp
         - "{% if roles_sshd %}OS::TripleO::Services::Sshd{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Tacker{% endif %}"
+        - "{% if (install.version|default(undercloud_version)|openstack_release > 12 and install.version|default(undercloud_version)|openstack_release < 16) %}OS::TripleO::Services::Tacker{% endif %}"
         - OS::TripleO::Services::Timezone
         - OS::TripleO::Services::TripleoFirewall
         - OS::TripleO::Services::TripleoPackages
