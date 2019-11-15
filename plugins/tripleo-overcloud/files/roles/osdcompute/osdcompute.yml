@@ -49,7 +49,7 @@ osdcompute_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NovaMigrationTarget{% endif %}"
         - OS::TripleO::Services::Ntp
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
-        - OS::TripleO::Services::OpenDaylightOvs
+        - "{% if install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::OpenDaylightOvs{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNController{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNMetadataAgent{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Rhsm{% endif %}"

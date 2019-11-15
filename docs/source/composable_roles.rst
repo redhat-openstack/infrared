@@ -310,8 +310,8 @@ Below is an example of the controller default role::
             - OS::TripleO::Services::NovaIronic
             - OS::TripleO::Services::TripleoPackages
             - OS::TripleO::Services::TripleoFirewall
-            - OS::TripleO::Services::OpenDaylightApi
-            - OS::TripleO::Services::OpenDaylightOvs
+            - "{% if install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::OpenDaylightApi{% endif %}"
+            - "{% if install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::OpenDaylightOvs{% endif %}"
             - OS::TripleO::Services::SensuClient
             - OS::TripleO::Services::FluentdClient
             - OS::TripleO::Services::VipHosts

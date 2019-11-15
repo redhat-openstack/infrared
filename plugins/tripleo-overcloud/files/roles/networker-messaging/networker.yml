@@ -33,13 +33,13 @@ networker_role:
         - OS::TripleO::Services::NeutronDhcpAgent
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronL2gwAgent{% endif %}"
         - OS::TripleO::Services::NeutronL3Agent
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronLbaasv2Agent{% endif %}"
+        - "{% if (install.version|default(undercloud_version)|openstack_release > 11 and install.version|default(undercloud_version)|openstack_release < 16) %}OS::TripleO::Services::NeutronLbaasv2Agent{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronLinuxbridgeAgent{% endif %}"
         - OS::TripleO::Services::NeutronMetadataAgent
         - OS::TripleO::Services::NeutronOvsAgent
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronVppAgent{% endif %}"
         - OS::TripleO::Services::Ntp
-        - OS::TripleO::Services::OpenDaylightOvs
+        - "{% if install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::OpenDaylightOvs{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - OS::TripleO::Services::Pacemaker
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Rhsm{% endif %}"

@@ -108,7 +108,7 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronL2gwAgent{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronL2gwApi{% endif %}"
         - OS::TripleO::Services::NeutronL3Agent
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronLbaasv2Agent{% endif %}"
+        - "{% if (install.version|default(undercloud_version)|openstack_release > 11 and install.version|default(undercloud_version)|openstack_release < 16) %}OS::TripleO::Services::NeutronLbaasv2Agent{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronLinuxbridgeAgent{% endif %}"
         - OS::TripleO::Services::NeutronMetadataAgent
         - OS::TripleO::Services::NeutronOvsAgent
@@ -128,8 +128,8 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OctaviaHealthManager{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OctaviaHousekeeping{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OctaviaWorker{% endif %}"
-        - OS::TripleO::Services::OpenDaylightApi
-        - OS::TripleO::Services::OpenDaylightOvs
+        - "{% if install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::OpenDaylightApi{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::OpenDaylightOvs{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNDBs{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNController{% endif %}"
         - OS::TripleO::Services::Pacemaker
