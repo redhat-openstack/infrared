@@ -99,7 +99,7 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronL2gwApi{% endif %}"
         - OS::TripleO::Services::NovaApi
         - OS::TripleO::Services::NovaConductor
-        - OS::TripleO::Services::NovaConsoleauth
+        - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::NovaConsoleauth{% endif %}"
         - OS::TripleO::Services::NovaIronic
         - OS::TripleO::Services::NovaMetadata
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
@@ -117,7 +117,7 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNDBs{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNController{% endif %}"
         - OS::TripleO::Services::Pacemaker
-        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::PankoApi{% endif %}"
+        - "{% if (install.version|default(undercloud_version)|openstack_release > 10 and install.version|default(undercloud_version)|openstack_release < 16) %}OS::TripleO::Services::PankoApi{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release >= 15 %}OS::TripleO::Services::Podman{% endif %}"
         - OS::TripleO::Services::Redis
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Rhsm{% endif %}"
@@ -133,7 +133,7 @@ controller_role:
         - OS::TripleO::Services::SwiftProxy
         - OS::TripleO::Services::SwiftStorage
         - OS::TripleO::Services::SwiftRingBuilder
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Tacker{% endif %}"
+        - "{% if (install.version|default(undercloud_version)|openstack_release > 12 and install.version|default(undercloud_version)|openstack_release < 16) %}OS::TripleO::Services::Tacker{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release >= 15 %}OS::TripleO::Services::Timesync{% endif %}"
         - OS::TripleO::Services::Timezone
         - OS::TripleO::Services::TripleoFirewall
