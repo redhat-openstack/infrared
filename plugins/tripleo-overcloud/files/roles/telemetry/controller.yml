@@ -46,7 +46,7 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::Core{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ExternalSwiftProxy{% endif %}"
-        - OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}
+        - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}{% endif %}"
         - OS::TripleO::Services::GlanceApi
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::GlanceRegistry{% endif %}"
         - OS::TripleO::Services::HAproxy
@@ -105,7 +105,7 @@ controller_role:
         - OS::TripleO::Services::SaharaApi
         - OS::TripleO::Services::SaharaEngine
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
-        - OS::TripleO::Services::SensuClient
+        - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::SensuClient{% endif %}"
         - OS::TripleO::Services::Snmp
         - "{% if roles_sshd %}OS::TripleO::Services::Sshd{% endif %}"
         - OS::TripleO::Services::SwiftProxy
