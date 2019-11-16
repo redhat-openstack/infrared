@@ -120,7 +120,7 @@ controller_role:
         - OS::TripleO::Services::NovaMetadata
         - OS::TripleO::Services::NovaScheduler
         - OS::TripleO::Services::NovaVncProxy
-        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
+        - "{% if (install.version|default(undercloud_version)|openstack_release > 10 and install.version|default(undercloud_version)|openstack_release < 16)OS::TripleO::Services::NovaPlacement{% endif %}"
         - OS::TripleO::Services::Ntp
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OctaviaApi{% endif %}"
@@ -134,6 +134,7 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNController{% endif %}"
         - OS::TripleO::Services::Pacemaker
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::PankoApi{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 15 %}OS::TripleO::Services::PlacementApi{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::OsloMessagingRpc{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::OsloMessagingNotify{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 14 %}OS::TripleO::Services::RabbitMQ{% endif %}"

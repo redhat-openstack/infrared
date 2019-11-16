@@ -84,7 +84,7 @@ serviceapi_role:
         - OS::TripleO::Services::NovaConsoleauth
         - OS::TripleO::Services::NovaIronic
         - OS::TripleO::Services::NovaMetadata
-        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
+        - "{% if (install.version|default(undercloud_version)|openstack_release > 10 and install.version|default(undercloud_version)|openstack_release < 16)OS::TripleO::Services::NovaPlacement{% endif %}"
         - OS::TripleO::Services::NovaScheduler
         - OS::TripleO::Services::NovaVncProxy
         - OS::TripleO::Services::Ntp
@@ -99,6 +99,7 @@ serviceapi_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNDBs{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNController{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::PankoApi{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 15 %}OS::TripleO::Services::PlacementApi{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Rhsm{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::RsyslogSidecar{% endif %}"
         - OS::TripleO::Services::SaharaApi
