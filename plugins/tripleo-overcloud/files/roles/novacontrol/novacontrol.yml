@@ -37,12 +37,13 @@ novacontrol_role:
         - OS::TripleO::Services::NovaConductor
         - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::NovaConsoleauth{% endif %}"
         - OS::TripleO::Services::NovaMetadata
-        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::NovaPlacement{% endif %}"
+        - "{% if (install.version|default(undercloud_version)|openstack_release > 10 and install.version|default(undercloud_version)|openstack_release < 16)OS::TripleO::Services::NovaPlacement{% endif %}"
         - OS::TripleO::Services::NovaScheduler
         - OS::TripleO::Services::NovaVncProxy
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::Ntp{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release >= 15 %}OS::TripleO::Services::Podman{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 15 %}OS::TripleO::Services::PlacementApi{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Rhsm{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release >= 16 %}OS::TripleO::Services::Rsyslog{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::RsyslogSidecar{% endif %}"
