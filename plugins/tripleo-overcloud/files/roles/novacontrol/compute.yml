@@ -38,6 +38,7 @@ compute_role:
         - OS::TripleO::Services::Kernel
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::LoginDefs{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release >= 15 %}OS::TripleO::Services::MetricsQdr{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release >= 16 %}OS::TripleO::Services::Multipathd{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronLinuxbridgeAgent{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronVppAgent{% endif %}"
@@ -51,6 +52,7 @@ compute_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNMetadataAgent{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release >= 15 %}OS::TripleO::Services::Podman{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Rhsm{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release >= 16 %}OS::TripleO::Services::Rsyslog{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::RsyslogSidecar{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
         - OS::TripleO::Services::SensuClient
