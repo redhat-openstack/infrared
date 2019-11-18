@@ -86,7 +86,7 @@
       user_mirror: "{{ install.get('registry').mirror|default('') }}"
   set_fact:
       # registry_host is needed later in undercloud.conf.j2 template
-      registry_host: "{{ user_mirror | ternary(user_mirror, container_env['container-image-prepare']['namespace'].split('/')[0] ) }}"
+      registry_host: "{{ user_mirror | ternary(user_mirror, (container_env['container-image-prepare']['namespace'].split('/')[0] | container_mirror(install.mirror|default(''))) ) }}"
 
 - name: determine final container registry namespace and prefix
   vars:
