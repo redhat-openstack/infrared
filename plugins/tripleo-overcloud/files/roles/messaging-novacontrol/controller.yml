@@ -119,7 +119,7 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNDBs{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNController{% endif %}"
         - OS::TripleO::Services::Pacemaker
-        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::PankoApi{% endif %}"
+        - "{% if (install.version|default(undercloud_version)|openstack_release > 10 and install.version|default(undercloud_version)|openstack_release < 16) %}OS::TripleO::Services::PankoApi{% endif %}"
         - OS::TripleO::Services::Redis
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Rhsm{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::RsyslogSidecar{% endif %}"
@@ -134,7 +134,7 @@ controller_role:
         - OS::TripleO::Services::SwiftProxy
         - OS::TripleO::Services::SwiftStorage
         - OS::TripleO::Services::SwiftRingBuilder
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Tacker{% endif %}"
+        - "{% if (install.version|default(undercloud_version)|openstack_release > 12 and install.version|default(undercloud_version)|openstack_release < 16) %}OS::TripleO::Services::Tacker{% endif %}"
         - OS::TripleO::Services::Timezone
         - OS::TripleO::Services::TripleoFirewall
         - OS::TripleO::Services::TripleoPackages
