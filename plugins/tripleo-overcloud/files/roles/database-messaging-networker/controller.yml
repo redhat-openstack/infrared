@@ -59,7 +59,7 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Ec2Api{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Etcd{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ExternalSwiftProxy{% endif %}"
-        - OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}
+        - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}{% endif %}"
         - OS::TripleO::Services::GlanceApi
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::GlanceRegistry{% endif %}"
         - OS::TripleO::Services::GnocchiApi
@@ -123,7 +123,7 @@ controller_role:
         - OS::TripleO::Services::SaharaApi
         - OS::TripleO::Services::SaharaEngine
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
-        - OS::TripleO::Services::SensuClient
+        - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::SensuClient{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::SkydiveAgent{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::SkydiveAnalyzer{% endif %}"
         - OS::TripleO::Services::Snmp
