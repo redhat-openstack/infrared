@@ -8,7 +8,7 @@ function apply_patch {
     local patch_dir=$1
     local patch_id=$2
 
-    curl -4 https://review.openstack.org/changes/${patch_id}/revisions/current/patch?download | \
+    curl -4 https://review.opendev.org/changes/${patch_id}/revisions/current/patch?download | \
         base64 -d > /tmp/patch.txt
 
     if sudo patch --dry-run --reverse --force -d ${patch_dir} -p1 < /tmp/patch.txt >/dev/null 2>&1
