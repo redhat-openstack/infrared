@@ -8,7 +8,13 @@ controller_role:
 
     flavor: controller
     host_name_format: 'controller-%index%'
-
+    options:
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}default_route_networks: ['External']{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}uses_deprecated_params: True{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_param_extraconfig: 'controllerExtraConfig'{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_param_flavor: 'OvercloudControlFlavor'{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_param_image: 'controllerImage'{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_nic_config_name: 'controller.yaml'{% endif %}"
     services:
         - OS::TripleO::Services::CACerts
         - OS::TripleO::Services::CephClient

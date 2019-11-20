@@ -23,7 +23,13 @@ controller_role:
         - StorageMgmt
         - Tenant
     host_name_format: 'controller-%index%'
-
+    options:
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}default_route_networks: ['External']{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}uses_deprecated_params: True{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_param_extraconfig: 'controllerExtraConfig'{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_param_flavor: 'OvercloudControlFlavor'{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_param_image: 'controllerImage'{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_nic_config_name: 'controller.yaml'{% endif %}"
     services:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Aide{% endif %}"
         - OS::TripleO::Services::AodhApi
@@ -67,7 +73,7 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Ec2Api{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Etcd{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ExternalSwiftProxy{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}{% endif %}"
+        - OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}
         - OS::TripleO::Services::GlanceApi
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::GlanceRegistry{% endif %}"
         - OS::TripleO::Services::GnocchiApi
@@ -131,7 +137,7 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNDBs{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNController{% endif %}"
         - OS::TripleO::Services::Pacemaker
-        - "{% if (install.version|default(undercloud_version)|openstack_release > 10 and install.version|default(undercloud_version)|openstack_release < 16) %}OS::TripleO::Services::PankoApi{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::PankoApi{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release >= 15 %}OS::TripleO::Services::Podman{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 14 %}OS::TripleO::Services::RabbitMQ{% endif %}"
         - OS::TripleO::Services::Redis
@@ -141,7 +147,7 @@ controller_role:
         - OS::TripleO::Services::SaharaApi
         - OS::TripleO::Services::SaharaEngine
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::SensuClient{% endif %}"
+        - OS::TripleO::Services::SensuClient
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::SkydiveAgent{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::SkydiveAnalyzer{% endif %}"
         - OS::TripleO::Services::Snmp
@@ -149,7 +155,7 @@ controller_role:
         - OS::TripleO::Services::SwiftProxy
         - OS::TripleO::Services::SwiftRingBuilder
         - OS::TripleO::Services::SwiftStorage
-        - "{% if (install.version|default(undercloud_version)|openstack_release > 12 and install.version|default(undercloud_version)|openstack_release < 16) %}OS::TripleO::Services::Tacker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Tacker{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release >= 15 %}OS::TripleO::Services::Timesync{% endif %}"
         - OS::TripleO::Services::Timezone
         - OS::TripleO::Services::TripleoFirewall
