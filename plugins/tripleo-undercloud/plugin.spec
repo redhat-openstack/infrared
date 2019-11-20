@@ -128,7 +128,7 @@ subparsers:
                       help: |
                           DNS domain name to use when deploying the overcloud. The overcloud
                           parameter "CloudDomain" must be set to a matching value.
-                      default: ''
+                      default: 'redhat.local'
 
                   deploy_interface_default:
                       type: Value
