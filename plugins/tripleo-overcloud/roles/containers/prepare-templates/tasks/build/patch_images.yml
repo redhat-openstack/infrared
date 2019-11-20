@@ -60,9 +60,9 @@
 - include_tasks: patch_images_do.yml
   when:
     - not skip_container_images_patching | bool
-    - ansible_distribution_major_version < '8'
+    - install.version|default(undercloud_version)|openstack_release < 14
 
 - include_tasks: patch_images_tripleo-modify-image.yml
   when:
     - not skip_container_images_patching | bool
-    - ansible_distribution_major_version >= '8'
+    - install.version|default(undercloud_version)|openstack_release > 13
