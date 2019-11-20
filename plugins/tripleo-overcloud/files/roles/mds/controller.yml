@@ -23,7 +23,13 @@ controller_role:
         - StorageMgmt
         - Tenant
     host_name_format: 'controller-%index%'
-
+    options:
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}default_route_networks: ['External']{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}uses_deprecated_params: True{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_param_extraconfig: 'controllerExtraConfig'{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_param_flavor: 'OvercloudControlFlavor'{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_param_image: 'controllerImage'{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release > 12 %}deprecated_nic_config_name: 'controller.yaml'{% endif %}"
     # condition can be used to include or disable services. For example:
     #  - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
     services:
