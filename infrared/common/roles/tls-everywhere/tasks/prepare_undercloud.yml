@@ -60,4 +60,11 @@
             undercloud_hostname = {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}
             undercloud_nameservers = {{ freeipa_node_ipaddress }}
             overcloud_domain_name = {{ freeipa_cloud_domain }}
+
+  - name: Use IPv4 IPA server address when network is IPv6
+    lineinfile:
+        dest: "~/undercloud.conf"
+        regexp: "{{ freeipa_node_ipaddress }}"
+        line: "undercloud_nameservers = {{ freeipa_node_ipv4_address }}"
+    when: freeipa_network_protocol != 'ipv4'
   delegate_to: "{{ freeipa_undercloud_node }}"
