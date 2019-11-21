@@ -113,7 +113,7 @@
         value: "{{ item.value }}"
     with_items:
         - { section: "DEFAULT", option: "undercloud_hostname", value: "{{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}" }
-        - { section: "DEFAULT", option: "undercloud_nameservers", value: "{{ freeipa_node_ipaddress }} " }
+        - { section: "DEFAULT", option: "undercloud_nameservers", value: "{{ freeipa_node_ipv4_address }} " }
         - { section: "DEFAULT", option: "overcloud_domain_name", value: "{{ freeipa_cloud_domain }}" }
     when: not (freeipa_enable_novajoin|bool)
   delegate_to: "{{ freeipa_undercloud_node }}"
