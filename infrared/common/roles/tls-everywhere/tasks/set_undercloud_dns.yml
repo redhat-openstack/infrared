@@ -13,7 +13,7 @@
         dest: "/etc/resolv.conf"
         content: |
             search {{ freeipa_cloud_domain }} {{ freeipa_domain }}
-            nameserver {{ freeipa_node_ipaddress }}
+            nameserver {{ freeipa_node_ipv4_address }}
     when: freeipa_cloud_domain != freeipa_domain
 
   - name: set IdM server to be the nameserver if single domain
@@ -22,7 +22,7 @@
         dest: "/etc/resolv.conf"
         content: |
             search {{ freeipa_cloud_domain }}
-            nameserver {{ freeipa_node_ipaddress }}
+            nameserver {{ freeipa_node_ipv4_address }}
     when: freeipa_cloud_domain == freeipa_domain
 
   - name: Set 'dns=none' in /etc/NetworkManager/NetworkManager.conf
