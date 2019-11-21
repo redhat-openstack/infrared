@@ -107,7 +107,6 @@
         --ssh-inject root:file:/root/.ssh/id_rsa.pub
         --chmod 0700:/home/{{ vm_provision_user }}/.ssh
         --ssh-inject {{ vm_provision_user }}:file:/root/.ssh/id_rsa.pub
-        --selinux-relabel
       when: item.stdout != "<?xml version=\"1.0\"?>\n<operatingsystems/>"
       loop: "{{ _virt_inspector.results }}"
       loop_control:
