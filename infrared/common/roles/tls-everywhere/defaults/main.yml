@@ -42,7 +42,7 @@ freeipa_use_ceph: "{{ ( True if (install.storage|default({})).backend|default(''
 freeipa_enable_novajoin: "{{ (install.enable|default({})).novajoin|default('True')|bool }}"
 freeipa_overcloud_install_packages: "{{ install.splitstack|default('False')|bool }}"
 freeipa_network_environment_file: "{{ freeipa_templates_basedir }}/network/network-environment.yaml"
-freeipa_network_environment_v6_file: "{{ freeipa_templates_basedir }}/network/network-environment-v6.yaml"
+freeipa_network_environment_v6_file: "{{ freeipa_templates_basedir }}/network/{{ 'network-environment-v6.yaml' if freeipa_network_protocol == 'ipv6' else 'network-environment-v6-all.yaml' }}"
 freeipa_forwarder: "{{ (install|default({})).get('ipa', {}).get('forwarder', 'hypervisor') }}"
 freeipa_issue_public_endpoint_certs: "{{ (install|default({})).get('ipa',{}).get('issue', {}).get('public', {}).get('certs', 'True')|bool }}"
 
