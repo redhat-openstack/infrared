@@ -100,20 +100,39 @@
         regexp: '^ca.crl.MasterCRL.publishOnStart=(.*)$'
         line: 'ca.crl.MasterCRL.publishOnStart=true'
 
-  - name: Configure FreeIPA DNS for overcloud public_vip
+  - name: Configure FreeIPA DNS zones for overcloud public_vip
+    become: yes
+    shell: |
+        echo {{ freeipa_admin_password }}|kinit admin
+        ipa dnszone-add ctlplane.{{ freeipa_cloud_domain }}
+        ipa dnszone-add internalapi.{{ freeipa_cloud_domain }}
+        ipa dnszone-add storage.{{ freeipa_cloud_domain }}
+        ipa dnszone-add storagemgmt.{{ freeipa_cloud_domain }}
+    register: overcloud_dns_entries
+
+  - name: Configure FreeIPA DNS ipv4 records for overcloud public_vip
     become: yes
     shell: |
         echo {{ freeipa_admin_password }}|kinit admin
         ipa dnsrecord-add {{ freeipa_cloud_domain }} overcloud --a-rec 10.0.0.101
-        ipa dnszone-add ctlplane.{{ freeipa_cloud_domain }}
         ipa dnsrecord-add ctlplane.{{ freeipa_cloud_domain }} overcloud --a-rec 192.168.24.101
-        ipa dnszone-add internalapi.{{ freeipa_cloud_domain }}
         ipa dnsrecord-add internalapi.{{ freeipa_cloud_domain }} overcloud --a-rec 172.17.1.101
-        ipa dnszone-add storage.{{ freeipa_cloud_domain }}
         ipa dnsrecord-add storage.{{ freeipa_cloud_domain }} overcloud --a-rec 172.17.3.101
-        ipa dnszone-add storagemgmt.{{ freeipa_cloud_domain }}
         ipa dnsrecord-add storagemgmt.{{ freeipa_cloud_domain }} overcloud --a-rec 172.17.4.101
     register: overcloud_dns_entries
+    when: freeipa_network_protocol == 'ipv4'
+
+  - name: Configure FreeIPA DNS ipv6 records for overcloud public_vip
+    become: yes
+    shell: |
+        echo {{ freeipa_admin_password }}|kinit admin
+        ipa dnsrecord-add {{ freeipa_cloud_domain }} overcloud --aaaa-rec 2620:52:0:13b8:5054:ff:fe3e:a9
+        ipa dnsrecord-add ctlplane.{{ freeipa_cloud_domain }} overcloud --a-rec 192.168.24.101
+        ipa dnsrecord-add internalapi.{{ freeipa_cloud_domain }} overcloud --aaaa-rec fd00:fd00:fd00:2000:aaaa:aaaa:ffff:fffd
+        ipa dnsrecord-add storage.{{ freeipa_cloud_domain }} overcloud --aaaa-rec fd00:fd00:fd00:3000:aaaa:aaaa:ffff:fffd
+        ipa dnsrecord-add storagemgmt.{{ freeipa_cloud_domain }} overcloud --aaaa-rec fd00:fd00:fd00:4000:aaaa:aaaa:ffff:fffd
+    register: overcloud_dns_entries
+    when: freeipa_network_protocol != 'ipv4'
 
   - name: Configure FreeIPA DNS Forwarder from hypervisor
     become: yes
