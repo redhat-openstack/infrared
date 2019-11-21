@@ -29,26 +29,23 @@
   when: item.bridged|default(false)
   with_items: "{{ topology_node.interfaces }}"
 
-- block:
-      - set_fact:
-            serial_files_dir: /var/log/sfiles
-      - name: Redirect serial output to files - Make a directory
-        file:
-            path: "{{ serial_files_dir }}"
-            state: directory
-            mode: 0755
-            owner: qemu
-            group: qemu
+- name: Set serial_files_dir fact
+  set_fact:
+    serial_files_dir: /var/log/sfiles
 
-      - name: Redirect serial output to files - Create files
-        copy:
-            content: ""
-            dest: "{{ serial_files_dir }}/{{ prefix|default('') }}{{ topology_node.name }}-{{ item }}.log"
-            force: yes
-            mode: 0644
-            owner: qemu
-            group: qemu
-        with_items: "{{ topology_node.node_indexes }}"
+# TODO(odyssey4me):
+# It's not clear why this task exists, because libvirt will
+# automatically create these files. It may have something to
+# do with selinux. Investigation needed.
+- name: Create serial output files (if enabled)
+  copy:
+    content: ""
+    dest: "{{ serial_files_dir }}/var/log/sfiles/{{ prefix|default('') }}{{ topology_node.name }}-{{ item }}.log"
+    force: yes
+    mode: 0644
+    owner: qemu
+    group: qemu
+  with_items: "{{ topology_node.node_indexes }}"
   when: provision.serial.files
 
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled

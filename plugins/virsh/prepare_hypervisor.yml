@@ -203,3 +203,11 @@
         src: "{{ appliance_archive.dest }}"
         dest: /opt/
         remote_src: yes
+
+    - name: Make serial output directory
+      file:
+        path: "/var/log/sfiles"
+        state: directory
+        mode: 0755
+        owner: qemu
+        group: qemu
