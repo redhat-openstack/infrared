@@ -236,5 +236,21 @@
         dest: "/etc/hosts"
         line: "{{ freeipa_undercloud_ipaddress }} {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} {{ groups['undercloud'][0] }}"
         state: present
+
+  - block:
+    - name: Set default IPv6 gateway on FreeIPA server
+      become: yes
+      nmcli:
+          conn_name: "System eth2"
+          ifname: eth2
+          type: ethernet:q
+          ip6: "{{ freeipa_node_ipaddress }}"
+          gw6: 2620:52:0:13b8::fe
+          state: present
+
+    - name: Restart interface eth2
+      become: yes
+      shell: nmcli connection up "System eth2"
+    when: freeipa_network_protocol != 'ipv4'
   delegate_to: "{{ freeipa_node }}"
 
