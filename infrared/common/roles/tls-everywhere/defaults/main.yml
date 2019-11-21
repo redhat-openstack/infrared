@@ -10,7 +10,7 @@ freeipa_admin_password: 12345678
 freeipa_hosts_secret: redhat
 freeipa_directory_manager_password: redhat_01
 freeipa_cloud_domain: redhat.local
-freeipa_extra_args: "--no-dnssec-validation"
+freeipa_extra_args: '"--allow-zone-overlap --no-dnssec-validation"'
 
 # Epel repo location
 freeipa_rhel7_epel_repo_url: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
@@ -36,7 +36,7 @@ freeipa_templates_basedir: "{{ hostvars[groups['undercloud'][0]].ansible_user_di
 freeipa_heat_templates_basedir: "{{ (install|default({})).get('heat', {}).get('templates', {}).get('basedir', '/usr/share/openstack-tripleo-heat-templates') }}"
 freeipa_use_ceph: "{{ ( True if (install.storage|default({})).backend|default('') == 'ceph' else False ) }}"
 freeipa_network_environment_file: "{{ freeipa_templates_basedir }}/network/network-environment.yaml"
-freeipa_network_environment_v6_file: "{{ freeipa_templates_basedir }}/network/network-environment-v6.yaml"
+freeipa_network_environment_v6_file: "{{ freeipa_templates_basedir }}/network/{{ 'network-environment-v6.yaml' if freeipa_network_protocol == 'ipv6' else 'network-environment-v6-all.yaml' }}"
 freeipa_forwarder: "{{ (install|default({})).get('ipa', {}).get('forwarder', 'hypervisor') }}"
 
 # Shade settings

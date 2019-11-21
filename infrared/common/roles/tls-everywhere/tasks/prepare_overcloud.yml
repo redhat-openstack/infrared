@@ -9,6 +9,13 @@
     template:
         src: public_vip.yaml.j2
         dest: "{{ freeipa_templates_basedir }}/public_vip.yaml"
+    when: freeipa_network_protocol == 'ipv4'
+
+  - name: Generate public_vip_ipv6.yml
+    template:
+        src: public_vip_ipv6.yaml.j2
+        dest: "{{ freeipa_templates_basedir }}/public_vip_ipv6.yaml"
+    when: freeipa_network_protocol != 'ipv4'
 
   - name: Get last row of overcloud deploy script
     command: "tail -n 1 {{ freeipa_overcloud_deploy_script }}"
@@ -25,6 +32,14 @@
         - "{{ freeipa_heat_templates_basedir }}/environments/ssl/enable-internal-tls.yaml"
         - "{{ freeipa_templates_basedir }}/cloud-names.yaml"
         - "{{ freeipa_templates_basedir }}/public_vip.yaml"
+
+  - name: Append public_vip for IPv6
+    lineinfile:
+        dest: "{{ freeipa_overcloud_deploy_script }}"
+        regexp: "{{ freeipa_templates_basedir }}/public_vip.yaml"
+        line: "-e {{ freeipa_templates_basedir }}/public_vip_ipv6.yaml \\"
+    when: freeipa_network_protocol != 'ipv4'
+
 
   delegate_to: "{{ freeipa_undercloud_node }}"
 
