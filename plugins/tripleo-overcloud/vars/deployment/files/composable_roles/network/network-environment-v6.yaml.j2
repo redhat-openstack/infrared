@@ -22,6 +22,8 @@ parameter_defaults:
 {% else %}
     ControlPlaneDefaultRoute: 192.168.24.1
 {% endif %}
+{% if not (install.ntp.pool|default(False) and install.version|openstack_release >= 15)  %}
     NtpServer: ["clock1.rdu2.redhat.com"]
+{% endif %}
     NeutronBridgeMappings: "datacentre:br-ex,tenant:br-isolated"
     NeutronNetworkVLANRanges: "tenant:1000:2000"
