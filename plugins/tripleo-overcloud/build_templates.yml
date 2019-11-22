@@ -94,6 +94,17 @@
             config_heat_yaml: "{{ config_heat_yaml | default({}) | combine({'resource_registry': config_resource}) }}"
         when: install.get('config', {}).get('resource', {})
 
+      - name: Create a custom environment file - NTP Pool
+        copy:
+          dest: "{{ template_base }}/ntp_pool.yaml"
+          content: |
+            parameter_defaults:
+               NtpPool: {{ install.ntp.pool }}
+        when:
+            - install.version|default(undercloud_version)|openstack_release >= 15
+            - install.get('ntp', {}).pool is defined
+            - install.ntp.pool
+
       - name: inject config_heat.yaml so it will be auto discovered with user templates
         copy:
             dest: "{{ template_base }}/config_heat.yaml"
