@@ -212,7 +212,15 @@ subparsers:
                       type: Value
                       help: |
                             Ntp server name (or IP) to use.
+                            NOTE: This parameter will be ignored if 'ntp-pool' is given.
                       default: clock1.rdu2.redhat.com
+
+                  ntp-pool:
+                      type: Value
+                      help: |
+                            Hostname or IP address of one or more NTP servers separated by commas.
+                            (Supported from OSP15 and newer)
+                            NOTE: This parameter takes precedence over 'ntp-server'.
 
                   hybrid:
                       type: FileValue
