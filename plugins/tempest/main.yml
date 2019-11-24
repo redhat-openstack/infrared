@@ -41,6 +41,12 @@
             - test.image is defined and test.image
             - test.images is defined and test.images.packages
 
+      - name: Customize flavor
+        import_tasks: "tasks/flavor/main.yml"
+        tags: image
+        when:
+            - test.flavor
+
       - name: Configure tempest
         import_tasks: "tasks/configure/main.yml"
         tags:
