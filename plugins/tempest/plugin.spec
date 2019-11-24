@@ -126,6 +126,27 @@ subparsers:
                       type: Value
                       help: |
                           An image to be uploaded to glance and used for testing. Path have to be a url.
+                  flavor:
+                      type: Bool
+                      help: |
+                          An flavor to be created.
+                      default: no
+                  flavor-min-mem:
+                      help: |
+                          Memory size in MB.
+                      default: 256
+                  flavor-min-disk:
+                      help: |
+                          Disk size in GB.
+                      default: 10
+                  flavor-min-vcpus:
+                      help: |
+                          Number of vcpus.
+                      default: 1
+                  flavor-id:
+                      help: |
+                          Unique name of the new flavor.
+                      default: auto
                   images-packages:
                       type: Value
                       help: |

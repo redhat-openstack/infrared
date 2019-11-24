@@ -1,0 +1,11 @@
+- name: Create a customized flavor
+  os_nova_flavor:
+      state: present
+      name: customized_flavor
+      ram: "{{ test.flavor_min_mem }}"
+      vcpus: "{{ test.flavor_min_vcpus }}"
+      disk: "{{ test.flavor_min_disk }}"
+      flavorid: "{{ test.flavor_id }}"
+      ephemeral: 0
+      is_public: True
+      validate_certs: False
