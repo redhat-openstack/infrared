@@ -1,0 +1,14 @@
+- name: Create a customized flavor
+  os_nova_flavor:
+      cloud: overcloud
+      state: present
+      name: customized_flavor
+      ram: "{{ test.flavor_min_mem }}"
+      vcpus: "{{ test.flavor_min_vcpus }}"
+      disk: "{{ test.flavor_min_disk }}"
+      flavorid: "{{ test.flavor_id }}"
+  register: customized_flavor
+
+- name: Save customized flavor for registration
+  set_fact:
+      flavors_list: "{{ customized_flavor.flavor }}"
