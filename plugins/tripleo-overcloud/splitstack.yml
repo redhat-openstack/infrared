@@ -106,15 +106,6 @@
             replace: "{{ item.value }}"
         with_dict: "{{ role_substitutions }}"
 
-      # Workaround for BZ1561544
-      - name: Fix get-occ-config.sh
-        lineinfile:
-            dest: '/usr/share/openstack-tripleo-heat-templates/deployed-server/scripts/get-occ-config.sh'
-            regexp: '(^\s*)(\(\(i\+\+\)\))'
-            line: '\1let i+=1'
-            backrefs: yes
-        become: yes
-
 - name: Deploy the Overcloud with composable roles
   include: "{{ overcloud_deploy | default('deploy.yml') }}"
   tags:

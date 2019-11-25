@@ -17,4 +17,6 @@ export STACK_NAME="{{ install.overcloud.stack }}"
 export {{ key }}="{{ value }}"
 {% endfor %}
 /usr/share/openstack-tripleo-heat-templates/deployed-server/scripts/enable-ssh-admin.sh
+{% if install.version|openstack_release < 16 %}
 /usr/share/openstack-tripleo-heat-templates/deployed-server/scripts/get-occ-config.sh
+{% endif %}
