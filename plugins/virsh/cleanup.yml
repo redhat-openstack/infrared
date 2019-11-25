@@ -101,12 +101,22 @@
           state: absent
       when: provision.prefix is not defined
 
-- name: Clean old inventory file
+- name: Update the inventory file
   hosts: "{{ (_run_condition | bool) | ternary('localhost', 'none') }}"
   any_errors_fatal: true
   gather_facts: no
   tasks:
-    - file:
+    - name: Reset the inventory file
+      file:
           dest: "{{ inventory_dir }}/hosts"
           state: link
           src: "local_hosts"
+      when: provision.prefix is not defined
+
+    - name: Remove cleaned up hosts from inventory file
+      include_role:
+        name: inventory-update
+      vars:
+        inventory_file_name: 'hosts-virsh-cleanup-prefix'
+        omit_hosts: vm_names
+      when: provision.prefix is defined
