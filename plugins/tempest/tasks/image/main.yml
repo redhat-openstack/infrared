@@ -1,4 +1,8 @@
 ---
+- name: define backend settings
+  set_fact:
+      libguestfs_backend: direct
+
 - name: Install libguestfs-tools
   become: yes
   package:
@@ -11,11 +15,17 @@
       url: "{{ test.image }}"
 
 - name: Push repos to guest image tempest will use for testing
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-copy-in -a ~/tempest_image /etc/yum.repos.d /etc/"
 
 - name: Disable 'patched-rpms' yum repository in guest image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-customize -a ~/tempest_image --run-command \"yum-config-manager --disable patched-rpms\""
   failed_when: false
 
 - name: Install packages in guest image tempest will use for testing
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-customize -a ~/tempest_image --install {{ test.images.packages }} --selinux-relabel"
