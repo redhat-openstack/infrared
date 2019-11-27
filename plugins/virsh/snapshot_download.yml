@@ -10,6 +10,12 @@
         return_content: yes
       register: _manifest_file
 
+    - name: Save the manifest file
+      copy:
+        content: "{{ _manifest_file.content | from_json | to_nice_json }}"
+        dest: "{{ provision.virsh.snapshot.path }}/manifest.json"
+        force: yes
+
     - name: Register manifest file content as a fact
       set_fact:
         _manifest_content: "{{ _manifest_file.content | from_json }}"
