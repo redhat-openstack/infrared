@@ -20,12 +20,7 @@
       virtualenv: "{{ rally.path }}"
   with_items: "{{ setup.pip_packages }}"
 
-- debug:
-    msg: "the following installs rally from master ,
-    this is until https://review.opendev.org/#/c/683950/ is picked up
-    in a new rally pip package at  "
-
-- name: Install rally-openstack package
+- name: Install rally-openstack and related packages
   pip:
       name: "{{ item }}"
       version: "{{ ir_default_pip_versions[item] | default(omit) }}"
@@ -34,7 +29,6 @@
   with_items:
       - prettytable
       - cryptography
-      - git+https://github.com/openstack/rally.git
       - rally-openstack
       - openstacksdk
       - "jsonschema<3.0.0"
