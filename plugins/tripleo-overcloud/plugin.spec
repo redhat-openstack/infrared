@@ -6,6 +6,16 @@ subparsers:
         description: Install a TripleO overcloud using a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
+            - title: Failure handling options
+              options:
+                  retry-http-codes:
+                      type: ListValue
+                      help: |
+                          Comma,separated list of http codes to retry on. If 'get_url' or (potentially) other http(s) task fails with one of these codes it will be retried (up to 3 times usually).
+                      # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
+                      default: 408,460,504,522,524,598
+                      ansible_variable: 'retry_http_codes'
+
             - title: Stages Control
               options:
                   introspect:
