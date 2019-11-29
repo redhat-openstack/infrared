@@ -86,6 +86,10 @@
             url: "{{ item }}"
             dest: "{{ tmp_oc_repos_dir }}"
         with_items: "{{ install.get('repos', {}).urls|default([]) }}"
+        register: extra_repos_get_url
+        until: extra_repos_get_url is not failed or extra_repos_get_url.status_code not in http_status_codes_to_retry_on
+        retries: 2
+        delay: 3
 
       - include_tasks: "tasks/images/{{ install.images.task }}.yml"
 
