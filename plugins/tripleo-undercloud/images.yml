@@ -95,7 +95,7 @@
         when: install.images.packages|default('') or install.images['update'] or install.images.remove|default('')
 
       # Trigger only when update kernel flag is specified and new packages installed inside overcloud image
-      - name: update default overcloud kernel form modified overcloud image
+      - name: update default overcloud kernel from modified overcloud image
         include_tasks: tasks/images/update-kernel.yml
         when:
           - install['overcloud']['update']['kernel']
