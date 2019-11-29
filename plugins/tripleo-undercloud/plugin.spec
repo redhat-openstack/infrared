@@ -6,6 +6,14 @@ subparsers:
         description: Install TripleO on a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
+            - title: Common options
+              options:
+                  retry-on-http-codes:
+                      type: Value
+                      help: If get_url or other http(s) task fails with one of these codes it will be retried (up to 3 times).
+                      # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
+                      default: 408,460,504,522,524,598
+
             - title: Snapshot Menu
               options:
                   snapshot-backup:
@@ -322,7 +330,7 @@ subparsers:
                   repos-urls:
                       type: ListValue
                       help: |
-                          comma separated list of URLs to download repo files to ``/etc/yum.repos.d``
+                          Comma,separated list of URLs of YUM/DNF repo files to download to ``/etc/yum.repos.d``
                   repos-skip-release:
                       type: Bool
                       help: |

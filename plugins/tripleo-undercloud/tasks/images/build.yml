@@ -11,6 +11,10 @@
       url: "{{ images_source }}"
       # don't download image if it's already here
       force: no
+  register: images_get_url
+  until: images_get_url is not failed or images_get_url.status_code not in retry-on-http-status-codes.split(',')
+  retries: 2
+  delay: 3
   # TODO(yfried): add to pre-run verification:
   # Image source is mandatory for OSP so we should fail if it's missing
   when: images_source or install.version|default(undercloud_version)|openstack_distribution == 'OSP'

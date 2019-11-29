@@ -81,11 +81,15 @@
             - undercloud_version|default(undercloud_version)|openstack_distribution == 'RDO'
         tags: rhos-release
   tasks:
-      - name: Downloading extra repositories
+      - name: Downloading extra YUM/DNF repositories
         get_url:
             url: "{{ item }}"
             dest: "{{ tmp_oc_repos_dir }}"
         with_items: "{{ install.get('repos', {}).urls|default([]) }}"
+        register: extra_repos_get_url
+        until: extra_repos_get_url is not failed or extra_repos_get_url.status_code | quote not in install.retry.on.http.codes.split(',')
+        retries: 2
+        delay: 10
 
       - include_tasks: "tasks/images/{{ install.images.task }}.yml"
 
