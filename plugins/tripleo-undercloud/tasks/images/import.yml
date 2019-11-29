@@ -5,7 +5,13 @@
       dest: "~/{{ item }}"
       url: "{{ install.images.url }}/{{ item }}"
       timeout: 1000
+  register: images_get_url
+  until: images_get_url is not failed or images_get_url.status_code not in http_status_codes_to_retry_on
+  retries: 2
+  delay: 3
   with_items: "{{ tar_images }}"
+
+
 
 - name: untar the images
   unarchive:
