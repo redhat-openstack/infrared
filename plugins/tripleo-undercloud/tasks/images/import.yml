@@ -6,6 +6,10 @@
       url: "{{ install.images.url }}/{{ item }}"
       timeout: 1000
   with_items: "{{ tar_images }}"
+  register: images_get_url
+  until: images_get_url is not failed or images_get_url.status_code | quote not in install.retry.on.http.codes.split(',')
+  retries: 2
+  delay: 10
 
 - name: untar the images
   unarchive:
