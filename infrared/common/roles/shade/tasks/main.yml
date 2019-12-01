@@ -37,14 +37,18 @@
   when: install_pip_from_source
   tags: install-pip
 
+- name: Install pip using get-pip.py
+  shell: |
+      curl https://bootstrap.pypa.io/get-pip.py | {{ ansible_python_interpreter | default('python') }}
+  become: true
+  when: ansible_python_version is version('3', '<')
 
-#TODO(aopincar): Check if there is a reason not install pip from source only
-- name: install pip using easy_install
-  become: yes
-  easy_install:
-      name: pip
-  when: not install_pip_from_source
-  tags: install-pip
+- name: Install python3-pip
+  package:
+      name: python3-pip
+      state: present
+  become: true
+  when: ansible_python_version  is version('3', '>=')
 
 - name: install virtualenv pip module
   environment:
