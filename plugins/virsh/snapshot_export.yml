@@ -5,6 +5,7 @@
   any_errors_fatal: true
   vars:
     vm_prefix: "{{ provision.prefix | default('') }}"
+    src_workspace: "{{ lookup('env', 'WORKSPACE') | default('/tmp', true) }}"
   tasks:
     - name: Install required packages
       package:
@@ -51,6 +52,19 @@
       delay: 60
       loop: "{{ _vm_list }}"
 
+    - name: Export the infrared workspace
+      shell: |-
+        IR_CMD="{{ (lookup('env', 'VIRTUAL_ENV') != '') | ternary(lookup('env', 'VIRTUAL_ENV') ~ '/bin/infrared', 'infrared') }}"
+        ${IR_CMD} workspace export --filename {{ src_workspace }}/infrared-workspace
+      delegate_to: localhost
+      args:
+        executable: /bin/bash
+
+    - name: Copy the exported workspace to the target host's snapshot export path
+      copy:
+        src: "{{ src_workspace }}/infrared-workspace.tgz"
+        dest: "{{ provision.virsh.snapshot.path }}/"
+
     - name: Sparsify and export disk images
       shell: |
         for vdisk in $(virsh domblklist {{ item }} | awk '/{{ item }}/ {print $2}'); do
@@ -73,6 +87,7 @@
         patterns:
           - "*.qcow2"
           - "*.xml"
+          - "*.tgz"
         get_checksum: yes
       register: _manifest_files
 
