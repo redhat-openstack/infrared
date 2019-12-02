@@ -5,6 +5,7 @@
   any_errors_fatal: true
   vars:
     vm_prefix: "{{ provision.prefix | default('') }}"
+    src_workspace: "{{ lookup('env', 'WORKSPACE') | default('/tmp', true) }}"
   tasks:
     - name: Install required packages
       package:
@@ -132,3 +133,17 @@
       loop: "{{ _manifest_content.servers | selectattr('state', 'equalto', 'running') | list }}"
       loop_control:
         label: "{{ item.name }}"
+
+    - name: Fetch the infrared workspace
+      fetch:
+        src: "{{ provision.virsh.snapshot.path }}/infrared-workspace.tgz"
+        dest: "{{ src_workspace }}/"
+
+    - name: Import the infrared workspace
+      shell: |-
+        IR_CMD="{{ ansible_python_interpreter | dirname }}/infrared"
+        IR_ACTIVE_WORKSPACE=$(${IR_CMD} workspace list --active)
+        ${IR_CMD} workspace import {{ src_workspace }}/infrared-workspace.tgz --name ${IR_ACTIVE_WORKSPACE}
+      delegate_to: localhost
+      args:
+        executable: /bin/bash
