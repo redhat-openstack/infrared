@@ -170,6 +170,8 @@
 - name: update packages on repos
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+      LIBGUESTFS_DEBUG: 1
+      LIBGUESTFS_TRACE: 1
   command: "virt-customize -a {{ overcloud_image_file }} --update --memsize {{ requested_mem }} --smp {{ (ansible_processor_vcpus/2)|round|int }}  --selinux-relabel"
   register: image_update
   vars:
