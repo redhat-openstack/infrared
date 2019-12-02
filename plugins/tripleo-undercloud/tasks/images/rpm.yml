@@ -4,6 +4,10 @@
   package:
       name: "{{ install.images.url is defined | ternary(install.images.get('url', '').split(','), ['rhosp-director-images']) }}"
       state: latest
+  register: yum_install
+  until: "yum_install is not failed or not yum_install.msg | regex_search('Operation too slow')"
+  retries: 5
+  delay: 5
 
 # todo(yfried): investigate gtar error "Warning: Cannot stat: No such file or directory")'
 - name: untar the images
