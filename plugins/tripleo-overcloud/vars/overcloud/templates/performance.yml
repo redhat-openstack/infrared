@@ -1,0 +1,41 @@
+---
+tripleo_heat_templates:
+    []
+
+custom_templates:
+    parameter_defaults:
+        DockerPuppetProcessCount: 8
+        ExtraConfig:
+            #   Overcloud override options expected on customers environments:
+            #    * nova,ironic,heat,neutron rpc_response_timeout 600
+            #        Unite the setting with UC where we wait for responses for rpc messages for 600sec.
+            #    * nova,heat,keystone::cache::*
+            #        Enable use of memcache cache for heat, nova and keystone.
+            #    * ::keystone::authtoken::memcached_servers
+            #        Cache the keystone auth tokens for nova, heat, neutron, cinder and glance
+            nova::rpc_response_timeout: '600'
+            ironic::rpc_response_timeout: '600'
+            heat::rpc_response_timeout: '600'
+            neutron::rpc_response_timeout: '600'
+            nova::cache::enabled: true
+            nova::cache::backend: 'oslo_cache.memcache_pool'
+            nova::cache::memcache_servers: '"%{::fqdn}:11211"'
+            heat::cache::enabled: true
+            heat::cache::backend: 'oslo_cache.memcache_pool'
+            heat::cache::memcache_servers: '"%{::fqdn}:11211"'
+            keystone::cache_enabled: true
+            keystone::cache_backend: 'oslo_cache.memcache_pool'
+            keystone::cache_memcache_servers: '"%{::fqdn}:11211"'
+            cinder::keystone::authtoken::memcached_servers: '"%{::fqdn}:11211"'
+            nova::keystone::authtoken::memcached_servers: '"%{::fqdn}:11211"'
+            heat::keystone::authtoken::memcached_servers: '"%{::fqdn}:11211"'
+            neutron::keystone::authtoken::memcached_servers: '"%{::fqdn}:11211"'
+            glance::keystone::authtoken::memcached_servers: '"%{::fqdn}:11211"'
+            # Increase haproxy timeouts to improve reliability under load
+            tripleo::haproxy::haproxy_default_timeout:
+                - 'http-request 60s'
+                - 'queue 200s'
+                - 'connect 15s'
+                - 'client 200s'
+                - 'server 200s'
+                - 'check 15s'
