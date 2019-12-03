@@ -16,6 +16,24 @@
       "revId": "8b3b8f3bcb32f1d547219afca0bf94b3f7942518",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c660a908_e16f84a5",
+        "filename": "plugins/tripleo-undercloud/tasks/images/rpm.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2019-12-03T12:04:49Z",
+      "side": 1,
+      "message": "1. longer delay time - DONE - see inline comment in next patchset (it\u0027s based on a successful installation of the packages as I couldn\u0027t find how long is a \u0027too slow\u0027 situation)\n\n2. re the \u0027is not failed\u0027 - it should stay as the \u0027until\u0027 condition, the reason is:\nuntil: \"yum_install is not failed or not yum_install.msg | regex_search(\u0027Operation too slow\u0027)\"\n\nthat means the task will finish (success or failure) if any of the two conditions are met, in a situation when yum still throws \u0027operation too slow\u0027 messages (i.e.: for the first mirror or attempt it tries) but later on it success then the \u0027yum_install is not failed\u0027 condition will be met hence the task will not be retried\n\nhope it makes sense",
+      "parentUuid": "e0217a68_9f8abd4e",
+      "revId": "8b3b8f3bcb32f1d547219afca0bf94b3f7942518",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
