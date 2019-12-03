@@ -8,7 +8,7 @@
       # Use default url if unless disk has a different source
       url: "{{ source }}"
       # use original basename explicitly, otherwise, "force" doesn't work
-      dest: "{{ base_image_path }}/{{ source | basename }}.original"
+      dest: "{{ base_image_path }}/{{ source | basename }}{% if topology_node.supports_libguestfs|default(true) %}.original{% endif %}"
       # Download new images only.
       force: "{{ item.value.force_image_download|default(false)|bool or provision.force.image.download }}"
       validate_certs: "{{ url.startswith('https://url.corp.redhat.com/') | ternary(false, omit) }}"
