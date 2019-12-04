@@ -47,6 +47,19 @@
            - configure
         when: test.tempest.config
 
+      - name: Workaround for subunit bug in python3
+        block:
+          - name: Download patch to fix subunit PR#36
+            get_url:
+              url: https://patch-diff.githubusercontent.com/raw/testing-cabal/subunit/pull/36.patch
+              dest: /home/stack/.virtualenvs/.tempest/lib/python3.6/site-packages/subunit/36.patch
+
+          - name: Download patch to fix subunit PR#36
+            patch:
+              src: /home/stack/.virtualenvs/.tempest/lib/python3.6/site-packages/subunit/36.patch
+              dest: /home/stack/.virtualenvs/.tempest/lib/python3.6/site-packages/subunit/filters.py
+        when: (test_openstack_version | int > 15)
+
       - name: Run tempest test suites
         include_tasks: "tasks/run_suite.yml"
         with_items: "{{ test.tests }}"
