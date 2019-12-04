@@ -47,6 +47,14 @@
            - configure
         when: test.tempest.config
 
+      - name: Download patch to fix subunit PR#36
+        get_url:
+          url: https://patch-diff.githubusercontent.com/raw/testing-cabal/subunit/pull/36.patch
+          dest: /home/stack/.virtualenvs/.tempest/lib/python3.6/site-packages/subunit/36.patch
+
+      - name: Download patch to fix subunit PR#36
+        shell: cd /home/stack/.virtualenvs/.tempest/lib/python3.6/site-packages/subunit/ && patch -p0 filters.py < 36.patch
+
       - name: Run tempest test suites
         include_tasks: "tasks/run_suite.yml"
         with_items: "{{ test.tests }}"
