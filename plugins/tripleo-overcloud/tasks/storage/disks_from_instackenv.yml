@@ -39,6 +39,7 @@
   set_fact:
       # Parse JSON output of 'Get BareMetal introspection data' shell module
       storage_node_disks: "{{ inventory_disks.stdout | from_json }}"
+  when: storage_node_disks is not defined
 
 - name:
   debug:
