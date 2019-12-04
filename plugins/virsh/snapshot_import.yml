@@ -149,3 +149,22 @@
       delegate_to: localhost
       args:
         executable: /bin/bash
+
+    # We do not have the imported workspace available while this play is running
+    # so we opt to interact with the machine via the guest agent instead. This
+    # effectively validates that the machine is up, the guest agent service is
+    # running and the network stack has started.
+    - name: Wait until all started VM guest agents are reachable
+      command: >-
+        virsh domifaddr --domain {{ item.name }} --source agent
+      loop: "{{ _manifest_content.servers | selectattr('state', 'equalto', 'running') | list }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: _wait_start
+      delay: 30
+      retries: 10
+      until: _wait_start.rc == 0
+
+    - name: Wait 5 minutes to ensure all VM services have completed startup
+      pause:
+        minutes: 5
