@@ -1,4 +1,5 @@
 from six.moves import configparser
+from os import environ
 from os import path
 
 import pytest
@@ -701,6 +702,55 @@ def test_output_with_NestedList_app(spec_fixture, tmpdir,
     with open(dry_output.strpath) as fp:
         loaded_yml = yaml.safe_load(fp)
         assert loaded_yml['provision']['nestedlist']['app'] == expected_output
+
+
+@pytest.mark.parametrize("from_file, expected_output", [    # noqa
+    ('tests/example/files/answers_file_env_vars.ini',
+     'expected_value')
+])
+def test_env_answer_file(spec_fixture, tmpdir, workspace_manager_fixture,
+                         test_workspace, from_file, expected_output):
+    """Verifies functionality of answer file containing environment variables
+       Complex type parsing are out of scope of this test
+    """
+    my_temp_dir = tmpdir.mkdir("tmp")
+    dry_output = my_temp_dir.join("dry_output.yml")
+    environ['MOCK_ENV_VAR'] = 'expected_value'
+    input_string = ['example', "--dry-run", "-o", str(dry_output),
+                    '--from-file', from_file]
+
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
+
+    workspace_manager_fixture.activate(test_workspace.name)
+    return_value = spec_manager.run_specs(args=input_string)
+    assert return_value is None
+
+    assert path.exists(dry_output.strpath),\
+        "Output file doesn't exit: {}".format(dry_output.strpath)
+
+    with open(dry_output.strpath) as fp:
+        loaded_yml = yaml.safe_load(fp)
+        assert loaded_yml['provision']['mock_key'] == expected_output
+
+
+def test_env_answer_file_negative(spec_fixture, tmpdir,  # noqa
+                                  workspace_manager_fixture, test_workspace):
+    """Verifies functionality of answer file containing environment variables
+       Negative testing - expects IRAnswersFileEnvVarNotDefined to be raised
+    """
+    # Environment variable may be set due to previous tests, undefine it
+    del environ['MOCK_ENV_VAR']
+    input_string = ['example', "--dry-run", '--from-file',
+                    'tests/example/files/answers_file_env_vars.ini']
+
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec_fixture)
+
+    workspace_manager_fixture.activate(test_workspace.name)
+    from infrared.core.utils import exceptions
+    with pytest.raises(exceptions.IRAnswersFileEnvVarNotDefined):
+        spec_manager.run_specs(args=input_string)
 
 
 def test_deprecation(spec_fixture, workspace_manager_fixture,  # noqa
