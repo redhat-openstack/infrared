@@ -244,3 +244,9 @@ class IRExtraVarsException(IRException):
         super(self.__class__, self).__init__(
             '"%s" - extra-var argument must be in the "key=value" '
             'form' % extra_var)
+
+
+class IRAnswersFileEnvVarNotDefined(IRException):
+    def __init__(self, env_var):
+        message = "Environment variable {} not defined".format(env_var)
+        super(self.__class__, self).__init__(message)

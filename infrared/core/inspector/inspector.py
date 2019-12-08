@@ -1,6 +1,7 @@
 import collections
 import os
 from six.moves import configparser
+from string import Template
 import yaml
 
 from infrared.core.cli.cli import CliParser
@@ -124,6 +125,15 @@ class SpecParser(object):
 
         return result
 
+    @staticmethod
+    def parse_env_variable_from_file(value):
+        t = Template(value)
+        try:
+            parsed_value = t.substitute(os.environ)
+        except KeyError as undefined_var:
+            raise exceptions.IRAnswersFileEnvVarNotDefined(undefined_var)
+        return parsed_value
+
     def get_answers_file_args(self, cli_args):
         """Resolve arguments' values from answers INI file. """
 
@@ -134,6 +144,19 @@ class SpecParser(object):
             file_result[parser_name] = file_result.get(parser_name, {})
             if option_spec and option_spec.get(
                     'action', '') == 'read-answers':
+                # Iterate over arguments supplied by file
+                for parsed_arg in parser_dict[arg_name]:
+                    # Supplied arguments' value can be a list
+                    if isinstance(parser_dict[arg_name][parsed_arg], list):
+                        i = 0
+                        # Iterrate over argument values list
+                        for parsed_value in parser_dict[arg_name][parsed_arg]:
+                            parser_dict[arg_name][parsed_arg][i] = \
+                                SpecParser.parse_env_variable_from_file(parsed_value)
+                            i += 1
+                    else:
+                        parser_dict[arg_name][parsed_arg] = \
+                            SpecParser.parse_env_variable_from_file(parser_dict[arg_name][parsed_arg])
                 # we have config option. saving it.
                 self._convert_non_cli_args(
                     parser_name, parser_dict[arg_name])
