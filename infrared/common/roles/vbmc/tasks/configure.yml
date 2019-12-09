@@ -5,6 +5,8 @@
         {{ vbmc_bin }} stop {{ hostvars[item].original_name|default(item) }}
         {{ vbmc_bin }} delete {{ hostvars[item].original_name|default(item) }}
     ignore_errors: true
+    when:
+      - item in hostvars
     with_items: "{{ vbmc_nodes }}"
 
   - name: Get current count of used vbmc ports
@@ -13,7 +15,7 @@
 
   - name: Define vbmc_port for each VM
     set_fact:
-        vbmc_ports: "{{ vbmc_ports|default({})|combine({ hostvars[item].original_name|default(item): vbmc_start_port + vbmc_used_ports.stdout|int + index }) }}"
+        vbmc_ports: "{{ vbmc_ports|default({})|combine({ ((hostvars[item] | default({'original_name': item}))['original_name'] | default(item)): vbmc_start_port + vbmc_used_ports.stdout|int + index }) }}"
     loop: "{{ vbmc_nodes|flatten(levels=1) }}"
     loop_control:
       index_var: index
