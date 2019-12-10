@@ -97,8 +97,12 @@
         shell: |
             source ~/stackrc
             NODE_UUID=$({{ ironic_cli }} {{ item.name | default(item) }} | awk '/uuid/ {print $4}' )
+            {% if install.version|default(undercloud_version) |openstack_release < 13 %}
             ironic node-update ${NODE_UUID} add properties/root_device='{"size": {{ hostvars[item].disk  }} }'
             #TODO(skatlapa): Check if Ironic CLI BZ#1602066 affects baremetal update command
+            {% else %}
+            openstack baremetal node set ${NODE_UUID} --property root_device='{"size": {{ hostvars[item].disk  }} }'
+            {% endif %}
         with_items: "{{ groups['overcloud_nodes'] | default([]) }}"
         when: "'bmc' in groups"
 
