@@ -17,6 +17,14 @@
         command: info
       register: _virt_pools
 
+    - name: Set default image pool path
+      set_fact:
+        _virt_pools:
+          pools:
+            images:
+              path: "/var/lib/libvirt/images"
+      when: _virt_pools.pools.images is not defined
+
     - name: Get info about existing VM's
       virt:
         command: list_vms
