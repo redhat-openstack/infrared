@@ -39,7 +39,9 @@
   - name: Install python-virtualbmc with pip
     pip:
         virtualenv: "{{ vbmc_virtualenv }}"
-        name: virtualbmc
+        name:
+          - virtualbmc
+          - dateutils
         version: "{{ vbmc_version }}"
     environment:
       PATH: "{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}"
