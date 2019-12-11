@@ -45,6 +45,14 @@
       PATH: "{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}"
       # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a system-wide one
 
+  # TODO(abregman) remove when https://review.opendev.org/#/c/698407 is included in latest release
+  - name: Install python-dateutil
+    pip:
+        virtualenv: "{{ vbmc_virtualenv }}"
+        name: python-dateutil
+    environment:
+      PATH: "{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}"
+
   - block:
       - name: adds VirtualBMC as systemd service
         copy:
