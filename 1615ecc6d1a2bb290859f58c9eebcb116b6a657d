@@ -46,6 +46,30 @@
       "revId": "1615ecc6d1a2bb290859f58c9eebcb116b6a657d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cfa13d73_2cb93815",
+        "filename": "infrared/common/roles/vbmc/tasks/install.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1007436
+      },
+      "writtenOn": "2019-12-11T13:59:16Z",
+      "side": 1,
+      "message": "\u003e Moreover, wouldn\u0027t vbmc_version apply to both?\n\u003e \n\u003e It should be probably refactored aas:\n\u003e \n\u003e   - name: Install python-virtualbmc with pip\n\u003e     pip:\n\u003e         virtualenv: \"{{ vbmc_virtualenv }}\"\n\u003e         name:\n\u003e           - virtualbmc\u003d\u003d{{ vbmc_version }}\n\u003e           - python-dateutil  # TODO(abregman) remove when https://review.opendev.org/#/c/698407 is included in latest release\n\u003e     environment:\n\u003e       PATH: \"{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}\"\n\u003e \n\u003e but not sure whether it would work.\n\u003e \n\nit works https://pasted.tech/pastes/373b6787e53c3c8f7b657953704e7622a7e9d6f6.raw\n\n\u003e That change should happen regardless, but that said, this is a workaround that should be merged soon (unless pyghmi releases first, the fix merged there https://review.opendev.org/#/c/698407/ ) and removed as soon as possible 😊",
+      "parentUuid": "54ad6c50_b054a8b5",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 63
+      },
+      "revId": "1615ecc6d1a2bb290859f58c9eebcb116b6a657d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
