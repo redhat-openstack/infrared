@@ -22,6 +22,30 @@
       "revId": "1615ecc6d1a2bb290859f58c9eebcb116b6a657d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "54ad6c50_b054a8b5",
+        "filename": "infrared/common/roles/vbmc/tasks/install.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2019-12-11T13:44:07Z",
+      "side": 1,
+      "message": "Moreover, wouldn\u0027t vbmc_version apply to both?\n\nIt should be probably refactored aas:\n\n  - name: Install python-virtualbmc with pip\n    pip:\n        virtualenv: \"{{ vbmc_virtualenv }}\"\n        name:\n          - virtualbmc\u003d\u003d{{ vbmc_version }}\n          - python-dateutil  # TODO(abregman) remove when https://review.opendev.org/#/c/698407 is included in latest release\n    environment:\n      PATH: \"{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}\"\n\nbut not sure whether it would work.\n\nThat change should happen regardless, but that said, this is a workaround that should be merged soon (unless pyghmi releases first, the fix merged there https://review.opendev.org/#/c/698407/ ) and removed as soon as possible 😊",
+      "parentUuid": "9e80bdcf_8d4de188",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 63
+      },
+      "revId": "1615ecc6d1a2bb290859f58c9eebcb116b6a657d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
