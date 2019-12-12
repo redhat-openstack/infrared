@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "87966392_06d42a9f",
+        "filename": "plugins/tripleo-undercloud/tasks/images/rpm.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2019-12-12T15:56:54Z",
+      "side": 1,
+      "message": "but why would we want to retry \"any yum failure\" ... e.g. broken dependency, package not found, unpacking error or such?\n\nafaik we want to retry only on \u0027failed to download from network in time\u0027?\n(or network interrupted or such cases if we find them)\n\nso retrying IF_YUM_FAILS  ||  IF_NETWORK_ISSUE does not seem much correct, since we want the NETWORK_ISSUE CASE ONLY?\n\n(afaik we cannot have YUM_FAILS\u003dfalse while having NETWORK_ISSUE but as you mentioned other mirror can be tried etc, so i guess just detection based on output may not be enough)\nwe better keep the YUM_FAILS \u0026\u0026 IT_IS_NETWORK_ISSUE  check as whole, still OR is just logically (literally) wrong, unless you are trying to make rerun yum on ANY failure",
+      "revId": "9815042f7016d8832982ecfd4af1366ea9e4b416",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
