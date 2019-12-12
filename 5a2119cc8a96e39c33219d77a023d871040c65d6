@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "12ef1e6e_61a3e4e9",
+        "filename": "plugins/tripleo-overcloud/plugin.spec",
+        "patchSetId": 6
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2019-12-12T15:37:05Z",
+      "side": 1,
+      "message": "type:ListValue ?\nas in https://github.com/redhat-openstack/infrared/blob/1f6da76fee0ab481712bc1e39ccc26589631c065/plugins/beaker/plugin.spec#L82\n\nit should handle the splitting for you (so no need for those .split(\u0027,\u0027) in code then)\n\n---\n\npotentially for more readability\nutilizing e.g. \"ansible_variable: \u0027retry_http_codes\u0027\"\n\nso e.g.:\n\n        until: get_rhos_release_get_url is not failed or get_rhos_release_get_url.status_code | quote not in install.retry.on.http.codes.split(\u0027,\u0027)\n\ncould then look as:\n\n        until: get_rhos_release_get_url is not failed or get_rhos_release_get_url.status_code | quote not in retry_http_codes\n\nthen rest is up to how you name the variable in each place, imo they do not need to be that much unique/long either\n\n        until: get_url is not failed or get_url.status_code|quote not in retry_http_codes\n\nbut this is just cosmetic",
+      "range": {
+        "startLine": 12,
+        "startChar": 28,
+        "endLine": 12,
+        "endChar": 33
+      },
+      "revId": "5a2119cc8a96e39c33219d77a023d871040c65d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "174f4df1_f9d2ea38",
         "filename": "plugins/tripleo-undercloud/tasks/images/build.yml",
         "patchSetId": 6
