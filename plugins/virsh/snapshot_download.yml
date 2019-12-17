@@ -10,6 +10,11 @@
         return_content: yes
       register: _manifest_file
 
+    - name: Make sure that the snapshot path exists
+      file:
+        path: "{{ provision.virsh.snapshot.path }}"
+        state: directory
+
     - name: Save the manifest file
       copy:
         content: "{{ _manifest_file.content | from_json | to_nice_json }}"
