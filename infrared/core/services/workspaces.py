@@ -460,7 +460,7 @@ class WorkspaceManager(object):
                 tmp_dir = tempfile.mkdtemp()
                 workspace_src = \
                     os.path.join(tmp_dir, workspace_src.split('/')[-1])
-                with open(workspace_src, 'w') as f:
+                with open(workspace_src, 'wb') as f:
                     f.write(urllib_ret.data)
 
             if workspace_name is None:
