@@ -128,6 +128,11 @@
       - name: Update system and reboot
         include_tasks: tasks/update_and_reboot.yml
 
+      - name: Install python3-psutil    
+        pip:
+            name: psutil
+            executable: pip3
+
       - name: install the oscplugin/tripleO client
         package:
             name: "{{ (install.version|openstack_release == 7) | ternary('python-rdomanager-oscplugin', (install.version|openstack_release < 15) | ternary('python-tripleoclient', 'python3-tripleoclient')) }}"
