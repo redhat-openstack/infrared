@@ -423,9 +423,9 @@
                 until: nova_ovs_up.stdout.find(':-)') > -1
                 retries: 60
                 delay: 5
-                when:
-                  - overcloud_version|int < 15
-                  - not install.network.ovn
+                when: >
+                    (overcloud_version|int < 15 and not install.network.ovn) or
+                    (install.network.ovs and overcloud_version|int >= 15)
 
               - name: Waiting for ovn-controller agent on compute node to come up
                 shell: |
@@ -435,7 +435,9 @@
                 until: ovn_controller_up.stdout.find('true') > -1 or ovn_controller_up.stdout.find(':-)') > -1
                 retries: 60
                 delay: 5
-                when: overcloud_version|int >= 15
+                when:
+                  - overcloud_version|int >= 15
+                  - not install.network.ovs
 
               - name: Waiting for networking-ovn-metadata-agent agent on compute node to come up
                 shell: |
@@ -445,7 +447,9 @@
                 until: ovn_meta_up.stdout.find('true') > -1 or ovn_controller_up.stdout.find(':-)') > -1
                 retries: 60
                 delay: 5
-                when: overcloud_version|int >= 15
+                when:
+                  - overcloud_version|int >= 15
+                  - not install.network.ovs
             when: overcloud_version|int > 10
 
           - name: Waiting for OVS agent on compute node to come up for OSP == 10
