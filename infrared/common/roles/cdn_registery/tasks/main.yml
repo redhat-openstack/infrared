@@ -9,9 +9,15 @@
   failed_when: (unregister_repos.rc != 0 and "'*' does not match a valid repository ID." not in unregister_repos.stdout)
   register: unregister_repos
 
+- name: TEST register to openstack repos
+  vars:
+      repo_list: "{{ (subscriptions.common_8 if (install_version|openstack_release) >= 15 else subscriptions.common_7) + (subscriptions[install_version|openstack_release] if not cdn_skip_openstack_repos else []) }}"
+  debug:
+    msg: "{{ repo_list }}"
+
 - name: register to openstack repos
   vars:
-      repo_list: "{{ subscriptions.common + (subscriptions[install_version|openstack_release] if not cdn_skip_openstack_repos else []) }}"
+      repo_list: "{{ (subscriptions.common_8 if (install_version|openstack_release) >= 15 else subscriptions.common_7) + (subscriptions[install_version|openstack_release] if not cdn_skip_openstack_repos else []) }}"
       modified_list: "{{ repo_list | map('regex_replace', '^(.*)$', '--enable=\\1') | join(' ') }}"
   command: "subscription-manager repos {{ modified_list }}"
 
