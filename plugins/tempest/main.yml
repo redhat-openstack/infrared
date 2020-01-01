@@ -59,7 +59,9 @@
               remote_src: yes
               src: /home/stack/.virtualenvs/.tempest/lib/python3.6/site-packages/subunit/36.patch
               dest: /home/stack/.virtualenvs/.tempest/lib/python3.6/site-packages/subunit/filters.py
-        when: (test.openstack.version | int > 14)
+        when:
+          - (test.openstack.version | int > 14)
+          - test.setup == 'git'
 
       - name: Run tempest test suites
         include_tasks: "tasks/run_suite.yml"
