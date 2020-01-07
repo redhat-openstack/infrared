@@ -31,22 +31,7 @@
 
 - name: Set serial_files_dir fact
   set_fact:
-    serial_files_dir: /var/log/sfiles
-
-# TODO(odyssey4me):
-# It's not clear why this task exists, because libvirt will
-# automatically create these files. It may have something to
-# do with selinux. Investigation needed.
-- name: Create serial output files (if enabled)
-  copy:
-    content: ""
-    dest: "{{ serial_files_dir }}/{{ prefix|default('') }}{{ topology_node.name }}-{{ item }}.log"
-    force: yes
-    mode: 0644
-    owner: qemu
-    group: qemu
-  with_items: "{{ topology_node.node_indexes }}"
-  when: provision.serial.files
+    serial_files_dir: /var/lib/libvirt/qemu/
 
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
 - name: create vm's
