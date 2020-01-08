@@ -146,7 +146,7 @@
 
 - name: Uninstall packages from overcloud image
   environment:
-      LIBGUESTFS_BACKEND_SETTINGS: "{{ libguestfs_backend }}"
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-customize -a {{ overcloud_image_file }} --uninstall {{ install.images.remove.packages }} --selinux-relabel"
   register: image_remove_packages
   when: install.images.remove|default(None) != None
@@ -155,7 +155,7 @@
 # TODO(vkhitrin): Consider resetting RPM DB after this task
 - name: Force uninstall packages from overcloud image using 'rpm -e --nodeps' command
   environment:
-      LIBGUESTFS_BACKEND_SETTINGS: "{{ libguestfs_backend }}"
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-customize -a {{ overcloud_image_file }} --run-command 'rpm -e --nodeps {{ images_remove_no_deps_packages | replace(',', ' ') }}' --selinux-relabel"
   register: image_force_no_deps_remove_packages
   when: images_remove_no_deps_packages is defined
