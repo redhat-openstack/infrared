@@ -25,6 +25,7 @@
           dest: "/etc/hosts"
           line: "127.0.0.1   {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}"
           state: present
+      when: install.tls.everywhere|default(False)
 
 - import_playbook: create_user.yml
   tags: user
