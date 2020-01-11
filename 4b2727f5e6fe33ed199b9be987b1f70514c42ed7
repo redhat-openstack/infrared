@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb32829c_5a1801fd",
+        "filename": "plugins/tripleo-undercloud/init.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1016970
+      },
+      "writtenOn": "2020-01-11T11:03:41Z",
+      "side": 1,
+      "message": "Maybe we can avoid using BOF here and match the first occurrence of 127.0.0.1, then insert a line before the first match:\n\n```\n- name: update /etc/hosts with undercloud details\n      lineinfile:\n          dest: \"/etc/hosts\"\n          line: \"127.0.0.1   {{ inventory_hostname }}.redhat.local {{ inventory_hostname }}\"\n          state: present\n          firstmatch: yes\n          insertbefore: \"^127.0.0.1\"\n```",
+      "range": {
+        "startLine": 28,
+        "startChar": 24,
+        "endLine": 28,
+        "endChar": 27
+      },
+      "revId": "4b2727f5e6fe33ed199b9be987b1f70514c42ed7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
