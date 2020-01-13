@@ -1,7 +1,7 @@
 # allows to access vbmc ports from any node
 - name: Get overcloud nodes
   set_fact:
-        oc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
+        oc_nodes: "{{ groups.get('overcloud_nodes', []) + groups.get('ironic', []) }}"
 
 - block:
     - name: get vbmc node state
