@@ -1,0 +1,54 @@
+---
+- name: configure vqfx
+  hosts: vqfx-0
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+    ansible_network_os: junos
+    ansible_command_timeout: 120
+  tasks:
+      - name: disable system syslog console logging
+        junos_command:
+          commands:
+            - "configure"
+            - "deactivate system syslog user *"
+            - "commit"
+            - "exit"
+
+      - name: setup vlans, lldp and undercloud switchport on vqfx
+        junos_command:
+          commands:
+            - "configure"
+            - "set protocols lldp interface all"
+            - "set vlans provisioning vlan-id 1000"
+            - "set vlans tenant vlan-id 50"
+            - "set vlans tempest vlan-id-list 1001-1010"
+            - "set interfaces xe-0/0/{{ hostvars['hypervisor']['undercloud_switchport']|int - 6 }} unit 0 family ethernet-switching vlan members 1001"
+            - "commit"
+            - "exit"
+        connection: network_cli
+
+      - name: setup switchports for overcloud controller and compute nodes on vqfx
+        junos_command:
+          commands:
+            - "configure"
+            - "set interfaces xe-0/0/{{ item|int -6 }} unit 0 family ethernet-switching interface-mode trunk"
+            - "set interfaces xe-0/0/{{ item|int -6 }} native-vlan-id default"
+            - "set interfaces xe-0/0/{{ item|int -6 }} unit 0 family ethernet-switching vlan members provisioning"
+            - "set interfaces xe-0/0/{{ item|int -6 }} unit 0 family ethernet-switching vlan members default"
+            - "set interfaces xe-0/0/{{ item|int -6 }} unit 0 family ethernet-switching vlan members tenant"
+            - "set interfaces xe-0/0/{{ item|int -6 }} unit 0 family ethernet-switching vlan members tempest"
+            - "commit"
+            - "exit"
+        with_items: "{{ hostvars['hypervisor']['controller_switchports'].split(' ') + hostvars['hypervisor']['compute_switchports'].split(' ') }}"
+        connection: network_cli
+
+      - name: setup switchports for overcloud ironic nodes on vqfx
+        junos_command:
+          commands:
+            - "configure"
+            - "set interfaces xe-0/0/{{ item|int - 6 }} unit 0 family ethernet-switching vlan members default"
+            - "commit"
+            - "exit"
+        with_items: "{{ hostvars['hypervisor']['ironic_switchports'].split(' ') }}"
+        connection: network_cli
