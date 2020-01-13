@@ -1,0 +1,19 @@
+---
+nodes:
+{% for host_string in nodes_info.results|map(attribute='stdout')|list %}
+{% set host_data = host_string|from_yaml %}
+  - name: "{{ host_data.name }}"
+    resource_class: "baremetal"
+    ports:
+      - address: "{{ host_data.mac }}"
+        pxe_enabled: true
+    properties:
+      local_gb: "{{ (host_data.disk_bytes|int / 1073741824)|round|int }}"
+      cpu_arch: "{{ host_data.arch }}"
+    driver: "{% if install.version|default(undercloud_version)|openstack_release >= 13 %}ipmi{% else %}pxe_ipmitool{% endif %}"
+    driver_info:
+      ipmi_address: "{{ vbmc_management_address }}"
+      ipmi_username: "{{ install.vbmc.username }}"
+      ipmi_password: "{{ install.vbmc.password }}"
+      ipmi_port: "{{ vbmc_ports[host_data.name] }}"
+{% endfor %}
