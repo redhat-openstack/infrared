@@ -19,6 +19,12 @@
   with_items: "{{ default_templates.results }}"
   when: item.matched > 0
 
+- name: include default ironic template in OSP14 and below
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: "--environment-file {{ install.heat.templates.basedir }}/environments/services-baremetal/undercloud-ceilometer.yaml  \\"
+      insertbefore: "^--log-file.*"
+
 - name: fail because file not found
   vars:
       missing_templates: "{{ default_templates.results|rejectattr('matched')|map(attribute='item')|list }}"
