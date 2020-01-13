@@ -161,6 +161,7 @@
             subunit2html {{ test_output_filename }}.subunit {{ test_output_filename }}.html
         args:
             chdir: "{{ test.dir }}"
+        ignore_errors: true
         when:
             results_formats.html is defined
 
@@ -171,6 +172,7 @@
                 < {{ test_output_filename }}.subunit | subunit2pyunit
         args:
             chdir: "{{ test.dir }}"
+        ignore_errors: true
         when:
             results_formats.junitxml is defined
 
@@ -178,6 +180,7 @@
         command: "sed '/^<testsuite/s/name=\"\"/name=\"{{ test_suite }}\"/' -i {{ test_output_filename }}.xml"
         args:
             chdir: "{{ test.dir }}"
+        ignore_errors: true
         when:
             results_formats.junitxml is defined
 
@@ -186,6 +189,7 @@
                   -i {{ test_output_filename }}.html"
         args:
             chdir: "{{ test.dir }}"
+        ignore_errors: true
         when:
             results_formats.html is defined
 
@@ -201,7 +205,7 @@
             src: "{{ test.dir }}/{{ test_output_filename }}.xml"
             dest: "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.xml"
             flat: yes
-            fail_on_missing: yes
+            fail_on_missing: no
         when:
             results_formats.junitxml is defined
 
