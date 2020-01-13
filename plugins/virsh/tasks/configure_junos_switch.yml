@@ -1,0 +1,75 @@
+---
+- name: create a temporary directory for configuration scripts
+  tempfile:
+    state: directory
+  register: temp_dir
+
+- name: get host name
+  set_fact:
+    host_name: "{{ topology_node.name }}-{{ num }}"
+
+- name: set SSH key path
+  set_fact:
+    switch_ssh_key: "{{ temp_dir.path }}/id_rsa-{{ host_name }}"
+
+- name: copy SSH keys to the hypervisor
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+  with_items:
+    - src: "{{ hostvars[host_name]['ansible_ssh_private_key_file'] }}"
+      dest: "{{ switch_ssh_key }}"
+      mode: "0600"
+    - src: "{{ hostvars[host_name]['ansible_ssh_private_key_file'] }}.pub"
+      dest: "{{ switch_ssh_key }}.pub"
+      mode: "0644"
+
+- name: copy configuration scripts to the temp directory
+  vars:
+    switch_ip: "{{ hostvars[host_name]['ansible_host'] }}"
+    oc_node_count: "{{ groups.controller | default([]) | length | int + groups.compute | default([]) | length | int + 1 }}"
+  template:
+    src: vqfx/configure.sh.j2
+    dest: "{{ temp_dir.path }}/configure_vqfx.sh"
+    mode: 0755
+
+- name: call configuration script
+  command: "{{ temp_dir.path }}/configure_vqfx.sh"
+
+- name: "junos: Set up interface to PFE"
+  junos_command:
+    commands:
+      - config
+      - "set interfaces em1 unit 0 family inet address 169.254.0.2/24"
+      - commit
+      - "exit"
+      - "restart chassis-control"
+  connection: network_cli
+
+- name: "junos: wait for logical interfaces"
+  junos_command:
+    commands:
+      - "show interfaces xe-0/0/0"
+  register: result
+  retries: 10
+  delay: 30
+  until: result.msg.find(junos_if_not_found_msg) == -1
+  connection: network_cli
+
+- name: "junos: configure controller ports"
+  junos_command:
+    commands:
+      - config
+      - "set interfaces interface-range ctlcmp member-range xe-0/0/1 to xe-0/0/{{ oc_node_count }}"
+      - "set interfaces interface-range ctlcmp unit 0 family ethernet-switching interface-mode trunk"
+      - "set interfaces interface-range ctlcmp native-vlan-id 1"
+      - "set vlans provisioning vlan-id 1000"
+      - "set vlans tempest vlan-id-list 1001-1010"
+      - "set interfaces xe-0/0/0 unit 0 family ethernet-switching vlan members default"
+      - "set interfaces interface-range ctlcmp unit 0 family ethernet-switching vlan members provisioning"
+      - "set interfaces interface-range ctlcmp unit 0 family ethernet-switching vlan members default"
+      - "set interfaces interface-range ctlcmp unit 0 family ethernet-switching vlan members tempest"
+      - "set protocols lldp interface all"
+      - commit
+  connection: network_cli
