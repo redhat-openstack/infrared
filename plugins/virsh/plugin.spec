@@ -130,8 +130,8 @@ subparsers:
                       default: False
                       help: |
                           Redirect the VMs serial output to files.
-                          Files can be found under /var/log/sfiles/{prefix-node_name-node_number}.log
-                          For example: /var/log/sfiles/XYZ-undercloud-0.log
+                          Files can be found under /var/lib/libvirt/qemu/{prefix-node_name-node_number}-serial.log
+                          For example: /var/lib/libvirt/qemu/XYZ-undercloud-0-serial.log
 
             - title: cleanup
               options:
