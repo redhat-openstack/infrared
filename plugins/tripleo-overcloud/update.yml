@@ -1,5 +1,5 @@
 - name: Collecting Info
-  hosts: undercloud:overcloud_nodes:!unused
+  hosts: "{{ (_run_condition | bool) | ternary('undercloud:overcloud_nodes:!unused', 'none') }}"
   gather_facts: yes
   any_errors_fatal: true
   vars:
@@ -12,7 +12,7 @@
       - version-discovery
 
 - name: Undercloud Validation
-  hosts: undercloud
+  hosts: "{{ (_run_condition | bool) | ternary('undercloud', 'none') }}"
   gather_facts: yes
   any_errors_fatal: true
   vars:
@@ -42,7 +42,7 @@
             oc_cdn_register: "{{ cdn_status.rc }}"
 
 - name: Update Overcloud repos
-  hosts: overcloud_nodes:!unused
+  hosts: "{{ (_run_condition | bool) | ternary('overcloud_nodes:!unused', 'none') }}"
   gather_facts: yes
   any_errors_fatal: true
   tags:
@@ -62,7 +62,7 @@
         when: hostvars[groups['undercloud'][0]]['oc_cdn_register']|int == 1
 
 - name: Prepare Containerized Environment
-  hosts: undercloud
+  hosts: "{{ (_run_condition | bool) | ternary('undercloud', 'none') }}"
   gather_facts: no
   any_errors_fatal: true
   tags:
@@ -74,7 +74,7 @@
         when: undercloud_version|openstack_release > 11
 
 - name: Overcloud Minor Update
-  hosts: undercloud
+  hosts: "{{ (_run_condition | bool) | ternary('undercloud', 'none') }}"
   gather_facts: yes
   any_errors_fatal: true
   vars:

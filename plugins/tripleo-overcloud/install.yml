@@ -1,38 +1,53 @@
 - name: Delete existing Overcloud
   import_playbook: "{{ delete_overcloud | default('delete.yml') }}"
-  when: install.delete|default('')
+  vars:
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (install.delete | default('')) }}
   tags:
       - delete
 
 - name: Perform pre install tasks
   import_playbook: "{{ overcloud_pre | default('pre.yml') }}"
-  when: install.pre|default('')
+  vars:
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (install.pre | default('')) }}
   tags:
       - pre
 
 - import_playbook: fetchfiles.yml
-  when: install.get('fetchfiles', {}).get('undercloud', {}) != {} or install.get('fetchfiles', {}).get('overcloud', {}) != {}
+  vars:
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         ((install.get('fetchfiles', {}).get('undercloud', {}) != {}) or
+          (install.get('fetchfiles', {}).get('overcloud', {}) != {})) }}
   tags:
       - fetchfiles_undercloud
       - fetchfiles_overcloud
 
 - name: Provision loadbalancer node
   import_playbook: loadbalancer.yml
+  vars:
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         ('loadbalancer' in groups) and
+         (install.deploy | default('')) }}
   tags:
       - loadbalancer
       - loadbalancer_setup
-  when:
-      - "'loadbalancer' in groups"
-      - install.deploy|default('')
 
 - name: Introspect our machines
   import_playbook: "{{ overcloud_introspect | default('introspect.yml') }}"
-  when: install.introspect|default('')
+  vars:
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (install.introspect | default('')) }}
   tags:
       - introspect
 
 - name: Check hypervisor state
-  hosts: hypervisor
+  hosts: "{{ (_main_run_condition | bool) | ternary('hypervisor', 'none') }}"
   tags: deploy
   any_errors_fatal: true
   tasks:
@@ -50,44 +65,51 @@
 
 - name: Tag our machines with proper flavors
   import_playbook: "{{ overcloud_flavors | default('tag.yml') }}"
-  when: install.tagging|default('')
+  vars:
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (install.tagging | default('')) }}
   tags:
       - tag
 
 - name: Deploy the Overcloud
-  vars:
-      templates:
-          generate_host_name_template: yes
-          storage_add_scale: yes
   import_playbook: "{{ overcloud_deploy | default('deploy.yml') }}"
-  when:
-      - install.deploy|default('')
-      - not install.role|default('') or (install.role is defined and install.role.files == 'default')
-      - not install.splitstack
+  vars:
+    templates:
+      generate_host_name_template: yes
+      storage_add_scale: yes
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (install.deploy | default('')) and
+         ((not install.role | default('')) or
+          ((install.role is defined) and (install.role.files == 'default'))) and
+         (not install.splitstack) }}
 
 - name: Deploy the Overcloud with composable roles
-  vars:
-      deploy_script_template: templates/composable_roles/overcloud_deploy.sh.j2
-      templates:
-          generate_host_name_template: yes
-          storage_add_scale: no
   import_playbook: "{{ composable_roles | default('composable_roles.yml') }}"
-  when:
-      - install.deploy|default('')
-      - install.role is defined and install.role.files != 'default'
-      - (install.version|default(undercloud_version) | openstack_release < 12) or not install.tht.roles | bool
-      - not install.splitstack
+  vars:
+    deploy_script_template: templates/composable_roles/overcloud_deploy.sh.j2
+    templates:
+      generate_host_name_template: yes
+      storage_add_scale: no
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (install.deploy | default('')) and
+         (install.role is defined and install.role.files != 'default') and
+         (install.version | default(undercloud_version) | openstack_release < 12) or (not install.tht.roles | bool) and
+         (not install.splitstack) }}
 
 - name: Deploy the Overcloud with splitstack
+  import_playbook: "{{ splitstack | default('splitstack.yml') }}"
   vars:
-      deploy_script_template: templates/splitstack/overcloud_deploy.sh.j2
-      templates:
-          generate_host_name_template: yes
-          storage_add_scale: no
-  include: "{{ splitstack | default('splitstack.yml') }}"
-  when:
-      - install.deploy|default('')
-      - install.splitstack|default(False)
+    deploy_script_template: templates/splitstack/overcloud_deploy.sh.j2
+    templates:
+      generate_host_name_template: yes
+      storage_add_scale: no
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (install.deploy | default('')) and
+         (install.splitstack | default(False)) }}
   tags:
       - splitstack
 
@@ -95,24 +117,27 @@
 #  netwrok settings and templates
 
 - name: Deploy the Overcloud with tripleo composable roles
-  vars:
-      deploy_script_template: templates/tripleo_roles/overcloud_deploy.sh.j2
-      templates:
-          generate_host_name_template: yes
-          storage_add_scale: no
   import_playbook: "{{ composable_roles | default('tripleo_roles.yml') }}"
-  when:
-      - install.deploy|default('')
-      - install.role is defined
-      - install.role.files is defined
-      - install.version|default(undercloud_version) | openstack_release > 11
-      - install.tht.roles | bool
-      - not install.splitstack | bool
+  vars:
+    deploy_script_template: templates/tripleo_roles/overcloud_deploy.sh.j2
+    templates:
+      generate_host_name_template: yes
+      storage_add_scale: no
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (install.deploy | default('')) and
+         (install.role is defined) and
+         (install.role.files is defined) and
+         (install.version | default(undercloud_version) | openstack_release > 11) and
+         (install.tht.roles | bool) and
+         (not install.splitstack | bool) }}
 
 - name: Placeholder for container related workarounds - imported playbook needs to be configured
   import_playbook: "docker_after_workaround.yml"
-  when:
-      - install.deploy|default('')
-      - install.version|default(hostvars[groups['undercloud'][0]].undercloud_version) | openstack_release > 12
-      - install.containers|bool
+  vars:
+    _run_condition: >-
+      {{ (_main_run_condition | bool) and
+         (install.deploy | default('')) and
+         (install.version | default(hostvars[groups['undercloud'][0]].undercloud_version) | openstack_release > 12) and
+         (install.containers | bool) }}
   tags: deploy

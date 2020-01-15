@@ -1,5 +1,5 @@
 - name: Install NFS server
-  hosts: undercloud
+  hosts: "{{ (_run_condition | bool) | ternary('undercloud', 'none') }}"
   any_errors_fatal: true
   become: true
   tasks:

@@ -1,5 +1,5 @@
 - name: Get the undercloud version
-  hosts: undercloud
+  hosts: "{{ (_run_condition | bool) | ternary('undercloud', 'none') }}"
   gather_facts: yes
   any_errors_fatal: true
   tags:
