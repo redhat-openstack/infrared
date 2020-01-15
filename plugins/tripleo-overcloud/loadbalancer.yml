@@ -6,10 +6,13 @@
   become_user: root
   vars:
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
-      external_lb_network_template_file: "vars/loadbalancer/external-{{
-      (install.network.protocol == 'ipv6-all') | ternary('ipv6',install.network.protocol) }}.yml"
+      external_lb_network_template_file: "vars/loadbalancer/external-{{ install.network.protocol }}.yml"
   pre_tasks:
-      - include_vars: "{{ external_lb_network_template_file }}"
+      - name: load yaml
+        include_vars: "vars/loadbalancer/external-{{ 
+        ( install.network.protocol == 'ipv6-all') | ternary('ipv6',install.network.protocol) }}.yml"
+	
+
 
       - name: Get the rhos-release RPM
         get_url:
