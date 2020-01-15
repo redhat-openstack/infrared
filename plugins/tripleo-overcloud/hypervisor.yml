@@ -1,10 +1,10 @@
 - name: Gather facts for Hypervisor
-  hosts: hypervisor
+  hosts: "{{ (_introspect_run_condition | bool) | ternary('hypervisor', 'none') }}"
   gather_facts: yes
   any_errors_fatal: true
 
 - name: Generate the instackenv.json
-  hosts: undercloud
+  hosts: "{{ (_introspect_run_condition | bool) | ternary('undercloud', 'none') }}"
   gather_facts: no
   any_errors_fatal: true
   vars_files:

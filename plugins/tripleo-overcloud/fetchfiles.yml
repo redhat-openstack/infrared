@@ -1,5 +1,5 @@
 - name: Fetch files from URLs to locations onto Undercloud as well as into Overcloud image
-  hosts: undercloud
+  hosts: "{{ (_run_condition | bool) | ternary('undercloud', 'none') }}"
   gather_facts: yes
   any_errors_fatal: true
   tasks:
