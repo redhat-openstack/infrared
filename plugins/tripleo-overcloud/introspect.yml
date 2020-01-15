@@ -1,21 +1,27 @@
 - name: Auto generate instackenv.json for virt
   import_playbook: "{{ overcloud_virt | default('hypervisor.yml') }}"
+  vars:
+    _introspect_run_condition: >-
+      {{ (_run_condition | bool) and
+         ('hypervisor' in groups) }}
   tags:
       - hypervisor
       - ironic
       - instack
-  when: "'hypervisor' in groups"
 
 - name: Auto generate instackenv.json for ovb
   import_playbook: "{{ overcloud_ovb | default('ovb.yml') }}"
+  vars:
+    _introspect_run_condition: >-
+      {{ (_run_condition | bool) and
+         ('bmc' in groups) }}
   tags:
      - ironic
      - instack
      - ovb
-  when: "'bmc' in groups"
 
 - name: Introspect our machines
-  hosts: undercloud
+  hosts: "{{ (_run_condition | bool) | ternary('undercloud', 'none') }}"
   gather_facts: no
   any_errors_fatal: true
   vars:
@@ -228,7 +234,7 @@
 # Add them to Ansible's inventory for future use
 #
 - name: Add introspected BMs to inventory
-  hosts: localhost
+  hosts: "{{ (_run_condition | bool) | ternary('localhost', 'none') }}"
   tags: add_bms_to_inventory
   gather_facts: no
   any_errors_fatal: true

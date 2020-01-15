@@ -1,5 +1,5 @@
 - name: Generate the instackenv.json
-  hosts: undercloud
+  hosts: "{{ (_introspect_run_condition | bool) | ternary('undercloud', 'none') }}"
   gather_facts: no
   any_errors_fatal: true
   vars:
