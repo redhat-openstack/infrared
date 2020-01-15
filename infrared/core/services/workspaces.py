@@ -22,7 +22,7 @@ ACTIVE_WORKSPACE_ENV_NAME = "IR_WORKSPACE"
 INVENTORY_LINK = "hosts"
 INVENTORY_FILES_PATTERN = "hosts-*"
 LOCAL_HOSTS = """[local]
-localhost ansible_connection=local ansible_python_interpreter=python
+localhost ansible_connection=local
 """
 EXCLUDED_GROUPS = ['all', 'local', 'ungrouped']
 
