@@ -23,8 +23,6 @@ def ansible_playbook(inventory, playbook_path, verbose=None,
     # hack for verbosity
     from ansible.utils.display import Display
     display = Display(verbosity=verbose)
-    import __main__ as main
-    setattr(main, "display", display)
 
     # TODO(yfried): Use proper ansible API instead of emulating CLI
     cli_args = ['execute',
@@ -74,10 +72,10 @@ def _run_playbook(cli_args, vars_dict):
         # make sure created file is readable.
         tmp.flush()
         cli_args.extend(['--extra-vars', "@" + tmp.name])
-        cli = PlaybookCLI(cli_args)
+        cli = PlaybookCLI(args=cli_args)
         LOG.debug('Starting ansible cli with args: {}'.format(cli_args[1:]))
         try:
-            cli.parse()
+            cli.init_parser()
             # Return the result:
             # 0: Success
             # 1: "Error"
