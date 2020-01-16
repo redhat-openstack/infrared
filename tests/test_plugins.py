@@ -174,7 +174,7 @@ def plugin_in_conf(plugins_conf, plugin_type, plugin_name):
     """
     config = configparser.ConfigParser()
     with open(plugins_conf) as fp:
-        config.readfp(fp)
+        config.read_file(fp)
 
     return config.has_option(plugin_type, plugin_name)
 
@@ -632,7 +632,7 @@ def validate_plugins_presence_in_conf(
 
     with open(plugin_manager.config_file) as config_file:
         plugins_cfg = configparser.ConfigParser()
-        plugins_cfg.readfp(config_file)
+        plugins_cfg.read_file(config_file)
 
         for plugin_path in plugins_dict.values():
             plugin = InfraredPlugin(plugin_path['src'])

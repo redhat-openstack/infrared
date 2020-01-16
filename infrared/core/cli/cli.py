@@ -269,7 +269,7 @@ class ReadAnswersAction(argparse.Action):
         # reading file
         _config = configparser.ConfigParser()
         with open(values) as fd:
-            _config.readfp(fd)
+            _config.read_file(fd)
         # todo(obaranov) add different file types loaders
         res_dict = {}
         # load only section for a given subcommand

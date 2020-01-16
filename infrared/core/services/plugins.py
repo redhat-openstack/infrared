@@ -236,7 +236,7 @@ class InfraredPluginManager(object):
 
         with open(self._config_file) as fp:
             self._config = configparser.ConfigParser()
-            self._config.readfp(fp)
+            self._config.read_file(fp)
 
         # TODO(aopincar): Remove auto plugins installation when conf is missing
         if self._install_plugins_required and init_plugins_conf:
