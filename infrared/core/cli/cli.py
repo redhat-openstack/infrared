@@ -422,7 +422,7 @@ class KeyValueList(ComplexType):
     new_format = 'NodeA:1,NodeB:2...'
 
     re_pattern = \
-        '([\w\-\.]+{assign}[\w\-\.\:/]+\{separate})*([\w\-\.]+{assign}[\w\-\.\:/]+)'
+        r'([\w\-\.]+{assign}[\w\-\.\:/]+\{separate})*([\w\-\.]+{assign}[\w\-\.\:/]+)'
     regex_formats = dict(
         default_style=dict(assign=':', separate=','),
     )
