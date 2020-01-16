@@ -23,8 +23,6 @@ def ansible_playbook(inventory, playbook_path, verbose=None,
     # hack for verbosity
     from ansible.utils.display import Display
     display = Display(verbosity=verbose)
-    import __main__ as main
-    setattr(main, "display", display)
 
     # TODO(yfried): Use proper ansible API instead of emulating CLI
     cli_args = ['execute',
@@ -62,6 +60,7 @@ def _run_playbook(cli_args, vars_dict):
     #                 '__main__'. Otherwise ansible gets unpatched '__main__'
     #                 and creates new 'display' object with default (0)
     #                 verbosity.
+    from ansible import context
     from ansible.cli.playbook import PlaybookCLI
     from ansible.errors import AnsibleOptionsError
     from ansible.errors import AnsibleParserError
@@ -70,9 +69,13 @@ def _run_playbook(cli_args, vars_dict):
         tmp.write(yaml.safe_dump(vars_dict, default_flow_style=False))
         # make sure created file is readable.
         tmp.flush()
+        # add the created file to the arguments
         cli_args.extend(['--extra-vars', "@" + tmp.name])
-        cli = PlaybookCLI(cli_args)
-        LOG.debug('Starting ansible cli with args: {}'.format(cli_args[1:]))
+        # reset the CLI arguments
+        context.GlobalCLIArgs._Singleton__instance = None
+        # setup the Playbook object
+        cli = PlaybookCLI(args=cli_args)
+        LOG.debug('Starting ansible cli with args: {}'.format(cli_args))
         try:
             cli.parse()
             # Return the result:
