@@ -44,8 +44,13 @@
             {% set image_name = (disk_values.import_url|default('') or topology_node.import_url|default('') or url) | basename %}
             {% if not disk_values.import_url %}
 
+            {% if disk_values.cluster_size is defined and (disk_values.cluster_size|length > 0) and
+                  disk_values.l2_cache_size is defined and (disk_values.l2_cache_size|length > 0) -%}
             # create empty disk
+            qemu-img create -f qcow2 -o preallocation={{ disk_values.preallocation }},cluster_size={{ disk_values.cluster_size }},l2-cache-size={{ disk_values.l2_cache_size }} {{ disk_pool  }}/{{ node_image }} {{ disk_values.size }}
+            {% else -%}
             qemu-img create -f qcow2 -o preallocation={{ disk_values.preallocation }} {{ disk_pool  }}/{{ node_image }} {{ disk_values.size }}
+            {% endif -%}
 
             ## Prepare disk image
 
