@@ -100,8 +100,8 @@ class InfraredPluginsSpec(SpecObject):
         if not active_workspace:
             active_workspace = workspace_manager.create()
             workspace_manager.activate(active_workspace.name)
-            LOG.warn("There are no workspaces. New workspace added: %s",
-                     active_workspace.name)
+            LOG.warning("There are no workspaces. New workspace added: %s",
+                        active_workspace.name)
 
         # TODO(yfried): when accepting inventory from CLI, need to update:
         # workspace.inventory = CLI[inventory]
