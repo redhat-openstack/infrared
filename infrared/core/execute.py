@@ -54,6 +54,9 @@ def _run_playbook(cli_args, vars_dict):
     """
 
     # TODO(yfried): use ansible vars object instead of tmpfile
+    # TODO(odyssey4me): Set delete=True for NamedTemporaryFile once
+    #                   the issue causing the file to be closed in
+    #                   python3 is worked out.
     # NOTE(oanufrii): !!!this import should be exactly here!!!
     #                 Ansible uses 'display' singleton from '__main__' and
     #                 gets it on module level. While we monkeypatching our
@@ -66,7 +69,7 @@ def _run_playbook(cli_args, vars_dict):
     from ansible.errors import AnsibleOptionsError
     from ansible.errors import AnsibleParserError
     with tempfile.NamedTemporaryFile(
-            mode='w+', prefix="ir-settings-", delete=True) as tmp:
+            mode='w+', prefix="ir-settings-", delete=False) as tmp:
         tmp.write(yaml.safe_dump(vars_dict, default_flow_style=False))
         # make sure created file is readable.
         tmp.flush()
