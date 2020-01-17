@@ -105,8 +105,96 @@
       --local-push-destination
       {% endif %}
 
-
 - block:
+    # 'undercloud update' is running 'container image prepare' but is not using 'heat' templates which normally
+    # contain these *insecure_registries* params hence we need the insecure registry added to global docker or
+    # containers configuration permanently
+    - block:
+      - name: add insecure registry to docker config files
+        replace:
+          dest: /etc/sysconfig/docker
+          regexp: '^(INSECURE_REGISTRY=.--insecure-registry)'
+          replace: '\1 {{ registry_host }} --insecure-registry'
+          backup: no
+        become: true
+
+      - name: restart da docker
+        service:
+          name: docker
+          state: restarted
+        become: true
+
+      when: ansible_distribution_major_version | int == 7
+
+    - name: show /etc/sysconfig/docker
+      command: cat /etc/sysconfig/docker
+
+    - block:
+      - name: "fetch content of the /etc/container/registries.conf file"
+        fetch:
+          src: "/etc/containers/registries.conf"
+          dest: "{{ inventory_dir }}/podman_registries.conf"
+          flat: yes
+
+      - name: read value of 'registries.insecure.registries' from podman's /etc/containers/registries.conf
+        vars:
+          podman_registries_orig_file: "{{ inventory_dir }}/podman_registries.conf"
+        set_fact:
+          podman_insecure_registries_orig: "{{ lookup('ini', 'registries section=registries.insecure file={{ podman_registries_orig_file }}') }}"
+
+      - name: append insecure registries
+        set_fact:
+          podman_insecure_registries_with_overrides: "{{ podman_insecure_registries_with_overrides | default(podman_insecure_registries_orig) + [item] }}"
+        with_items: "{{ registry_host }}"
+
+      - debug:
+          var: podman_insecure_registries_with_overrides
+
+      - name: add insecure registries (including overrides) to /etc/containers/registries.conf
+        ini_file:
+          path: /etc/containers/registries.conf
+          create: no
+          backup: yes
+          section: registries.insecure
+          option: registries
+          value: "{{ podman_insecure_registries_with_overrides }}"
+        become: true
+
+      - name: show /etc/containers/registries.conf
+        command: cat /etc/containers/registries.conf
+
+      when: ansible_distribution_major_version | int >= 8
+
+    - block:
+      - name: "fetch content of the undercloud.conf file"
+        fetch:
+          src: "~/undercloud.conf"
+          dest: "{{ inventory_dir }}/undercloud_before_adding_insecure_registries.conf"
+          flat: yes
+
+      - name: read value of 'docker_insecure_registries' from undercloud.conf
+        vars:
+          undercloud_conf_orig_file: "{{ inventory_dir }}/undercloud_before_adding_insecure_registries.conf"
+        set_fact:
+          docker_insecure_registries_orig: "{{ lookup('ini', 'docker_insecure_registries section=DEFAULT file={{ undercloud_conf_orig_file }}') }}"
+
+      - name: "append insecure registry: {{ registry_host }}"
+        set_fact:
+          docker_insecure_registries_with_overrides: "{{ docker_insecure_registries_with_overrides | default(docker_insecure_registries_orig.split(',')) + [item] }}"
+        with_items: "{{ registry_host }}"
+
+      - debug:
+          var: docker_insecure_registries_with_overrides
+
+      - name: add insecure registries (including overrides) to undercloud.conf
+        ini_file:
+          path: ~/undercloud.conf
+          create: no
+          backup: yes
+          section: DEFAULT
+          option: docker_insecure_registries
+          value: "{{ docker_insecure_registries_with_overrides | join(',') }}"
+      tags: update-undercloud-conf
 
     - name: set namespace in containers-prepare-parameter.yaml
       replace:
