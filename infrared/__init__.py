@@ -29,6 +29,7 @@ SHARED_GROUPS = [
         'options': {
             'debug': {
                 'action': 'store_true',
+                'default': int(os.getenv('INFRARED_DEBUG', 0)),
                 'help': 'Run infrared in DEBUG mode',
                 'short': 'd'
             }

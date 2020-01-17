@@ -17,10 +17,15 @@
             var: inventory_dir
         tags: only_this
 
-      - name: Test output
-        vars:
-            output_file: output.example
-        file:
-            path: "{{ inventory_dir }}/{{ output_file }}"
-            state: touch
+      - block:
+          - name: Show the value of the provision dict (if it is defined)
+            debug:
+                var: provision
+
+          - name: Test output
+            vars:
+                output_file: output.example
+            file:
+                path: "{{ inventory_dir }}/{{ output_file }}"
+                state: touch
         when: "provision is defined"
