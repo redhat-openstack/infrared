@@ -85,7 +85,6 @@
   vars:
       user_mirror: "{{ install.get('registry').mirror|default('') }}"
   set_fact:
-      # registry_host is needed later in undercloud.conf.j2 template
       registry_host: "{{ user_mirror | ternary(user_mirror, (container_env['container-image-prepare']['namespace'].split('/')[0] | container_mirror(install.mirror|default(''))) ) }}"
 
 - name: determine final container registry namespace and prefix
@@ -94,6 +93,8 @@
   set_fact:
       registry_namespace: "{{ registry_host }}/{{ registry_namespace | ternary(registry_namespace, container_env['container-image-prepare']['namespace'].split('/')[1] ) }}"
       registry_prefix: "{{ user_prefix | ternary ( user_prefix, container_env['container-image-prepare']['prefix'] ) }}"
+      # list of insecure registries is needed later in undercloud.conf.j2 template
+      insecure_registry_hosts: "['{{ registry_host }}']"
 
 # This is needed also for rdo deploympent.
 - name: generate container images environment file
@@ -134,9 +135,13 @@
             install.registry.get('ceph', {}).get('tag', ''),
             container_env['container-image-prepare']['ceph-tag'] | default('latest')) }}"
 
-    - set_fact:
-        # ceph_registry_host is needed later in undercloud.conf.j2 template
+    - name: append ceph to list of insecure registries
+      when: ceph_registry_host|default(False)
+      vars:
         ceph_registry_host: "{{ ceph_namespace.split('/')[0] }}"
+      set_fact:
+        # list of insecure registries is needed later in undercloud.conf.j2 template
+        insecure_registry_hosts: "{{ insecure_registry_hosts }} + ['{{ ceph_registry_host }}']"
 
     - name: set ceph_namespace in containers-prepare-parameter.yaml
       replace:
@@ -196,36 +201,41 @@
         - install.get('registry', {}).get('ceph', {}).get('password', '')
         - install.get('registry', {}).get('ceph', {}).get('namespace', '')
 
-    - name: override registries for ceph dashboard dependencies
+    - name: Configure container registries for Ceph Dashboard
       when: (target_install_version|openstack_release) >= 16
+      vars:
+        ceph_dashboard_deps:
+            - ceph_alertmanager
+            - ceph_grafana
+            - ceph_node_exporter
+            - ceph_prometheus
       block:
-          - set_fact:
-              ceph_dashb_regs:
-                  grafana: '5.2.4'
-                  alertmanager: 'v0.16.2'
-                  node_exporter: 'v0.17.0'
-                  prometheus: 'v2.7.2'
+          - name: "ceph-dashboard: apply local mirror for registry"
+            loop: "{{ ceph_dashboard_deps }}"
+            when: "install.mirror|default(False) and container_env['container-image-prepare'][item + '_namespace'] | default(False)"
+            vars:
+                new_namespace: "{{ container_env['container-image-prepare'][ item + '_namespace' ]  | container_mirror(install.mirror|default('')) }}"
+            set_fact:
+                container_env: "{{ container_env | combine({'container-image-prepare': { item + '_namespace': new_namespace }}, recursive=True) }}"
 
-          - name: "ceph-dashboard: replace namespace"
+          - name: "ceph-dashboard: inject values to containers-prepare-parameter.yaml"
+            loop: "{{ ceph_dashboard_deps | product(['_namespace', '_image', '_tag']) | list }}"
+            when: "container_env['container-image-prepare'][item[0] + item[1]] | default(False)"
+            vars:
+              new_value: "{{ container_env['container-image-prepare'][item[0] + item[1]] }}"
             replace:
                 path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-                regexp: '(ceph_{{ item.key }}_namespace:).*'
-                replace: '\1 docker.io/{{ (item.key == "grafana") | ternary("grafana", "prom") }}'
-            with_dict: "{{ ceph_dashb_regs }}"
+                regexp: '({{ item[0] + item[1] }}:).*'
+                replace: '\1 {{ new_value }}'
 
-          - name: "ceph-dashboard: replace tag"
-            replace:
-                path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-                regexp: '(ceph_{{ item.key }}_tag:).*'
-                replace: '\1 {{ item.value }}'
-            with_dict: "{{ ceph_dashb_regs }}"
+          - name: "ceph-dashboard: append registries to insecure list"
+            loop: "{{ ceph_dashboard_deps }}"
+            when: "container_env['container-image-prepare'][item + '_namespace'] | default(False)"
+            vars:
+                registry: "{{ container_env['container-image-prepare'][ item + '_namespace' ].split('/')[0] }}"
+            set_fact:
+                # append to list of insecure registries, needed later for undercloud.conf.j2 template
+                insecure_registry_hosts: "{{ insecure_registry_hosts }} + ['{{ registry }}']"
 
-          - name: "ceph-dashboard: image name"
-            replace:
-                path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-                regexp: '(ceph_{{ item.key }}_image:).*'
-                replace: '\1 {{ item.key | replace("_", "-") }}'
-                # in case of node_exporter, convert it to node-exporter
-            with_dict: "{{ ceph_dashb_regs }}"
   when:
       - (target_install_version|openstack_distribution) == 'OSP'
