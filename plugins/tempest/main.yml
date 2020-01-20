@@ -1,3 +1,17 @@
+- name: Discover OverCloud OpenStack version (if necessary)
+  hosts: "{{ (test.openstack.version is not defined) | ternary(groups.controller[0], 'none') }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - include_role:
+            name: version-discovery
+        vars:
+            discovery_types:
+                - rhos_release_file
+                - nova
+        tags:
+            - always
+
 - name: Test openstack with tempest
   hosts: tester
   gather_facts: yes
@@ -10,16 +24,6 @@
         tags:
             - always
 
-      - include_role:
-            name: version-discovery
-        vars:
-            discovery_types:
-                - rhos_release_file
-                - nova
-        delegate_to: "{{ groups.controller[0] }}"
-        when: test.openstack.version is not defined
-        tags:
-            - always
       - debug:
             msg: "Overcloud's OpenStack version that has been auto discovered is {{ overcloud_version }}"
         when: overcloud_version is defined
