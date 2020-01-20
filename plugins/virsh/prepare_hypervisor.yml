@@ -117,6 +117,20 @@
     - name: check if host supports virtualization
       include_tasks: tasks/enable_virtualization.yml
 
+    - name: Enable Kernel same-page merging (KSM) if memory overcommit is enabled
+      when: (provision.host.memory.overcommit | default(False)) | bool
+      block:
+        - name: Enable and start KSM service
+          service:
+            name: "ksm"
+            state: "started"
+            enabled: true
+        - name: Enable and start KSM tuning service
+          service:
+            name: "ksmtuned"
+            state: "started"
+            enabled: true
+
     - name: check if private key exist on system
       stat:
           path: "/root/.ssh/id_rsa"
