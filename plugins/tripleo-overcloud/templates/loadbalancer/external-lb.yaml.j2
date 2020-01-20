@@ -94,6 +94,9 @@ parameter_defaults:
   StorageMgmtVirtualFixedIPs: [{'ip_address':'{{ loadbalancer.network.storage_mgmnt.vip | ipaddr('address') }}'}]
   RedisVirtualFixedIPs: [{'ip_address':'{{ loadbalancer.network.redis.vip | ipaddr('address') }}'}]
 {% endif %}
+{% if install.version|default(undercloud_version)|openstack_release >= 16 %}
+  OVNDBsVirtualFixedIPs: [{'ip_address':'{{ loadbalancer.network.internal_api.ovn_dbs.vip | ipaddr('address') }}'}]
+{% endif %}
   ControllerIPs:
     external_cidr: "{{ loadbalancer.network.external.vip | ipaddr('prefix') }}"
     internal_api_cidr: "{{ loadbalancer.network.internal_api.vip | ipaddr('prefix') }}"
