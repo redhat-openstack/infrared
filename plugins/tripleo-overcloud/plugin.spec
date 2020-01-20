@@ -852,6 +852,13 @@ subparsers:
                           - bios
                           - uefi
 
+                  telemetry:
+                      type: Bool
+                      help: |
+                          This options allows adding ironic templates to support overcloud deployment with ironic
+                          enabled services. This is required for booting BM instances in overcloud.
+                      default: False
+
                   ironic:
                       type: Bool
                       help: |
