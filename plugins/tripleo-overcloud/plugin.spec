@@ -852,6 +852,13 @@ subparsers:
                           - bios
                           - uefi
 
+                  telemetry:
+                      type: Bool
+                      help: |
+                          This options allows adding telemetry templates to support overcloud deployment with telemetry
+                          enabled services. This is required for booting BM instances in overcloud.
+                      default: False
+
                   ironic:
                       type: Bool
                       help: |

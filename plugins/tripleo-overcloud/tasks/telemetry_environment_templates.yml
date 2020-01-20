@@ -1,0 +1,8 @@
+# include environment template files from undercloud in overcloud_deploy script
+- name: include default ironic template in OSP15 and above
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: "--environment-file {{ install.heat.templates.basedir }}/environments/enable-legacy-telemetry.yaml \\"
+      insertbefore: "^--log-file.*"
+  when:
+  - install.version | default(undercloud_version) | openstack_release > 15
