@@ -17,12 +17,12 @@ Setup an Undercloud
 
 * ``--buildmods``: Let you the option to add flags to rhos-release:
 
-    | ``pin`` - Pin puddle (dereference 'latest' links to prevent content from changing). This flad is selected by default
+    | ``pin`` - Pin puddle (dereference 'latest' links to prevent content from changing). This is the default flag.
     | ``flea`` - Enable flea repos.
     | ``unstable`` - This will enable brew repos or poodles (in old releases).
     | ``none`` - Use none of those flags.
 
- .. note:: ``--buildmods`` and ``--build`` flags are internal Red Hat users only.
+ .. note:: ``--buildmods`` and ``--build`` flags are for internal Red Hat users only.
 
 * ``--enable-testing-repos``: Let you the option to enable testing/pending repos with rhos-release. Multiple values
     have to be coma separated.
