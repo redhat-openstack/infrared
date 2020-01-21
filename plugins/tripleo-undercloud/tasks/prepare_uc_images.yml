@@ -210,7 +210,7 @@
             replace:
                 path: "{{ working_dir }}/containers-prepare-parameter.yaml"
                 regexp: '(ceph_{{ item.key }}_namespace:).*'
-                replace: '\1 docker.io/{{ (item.key == "grafana") | ternary("grafana", "prom") }}'
+                replace: '\1 docker.io/prom'
             with_dict: "{{ ceph_dashb_regs }}"
 
           - name: "ceph-dashboard: replace tag"
