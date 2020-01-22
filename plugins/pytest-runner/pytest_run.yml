@@ -6,6 +6,14 @@
       repo_folder: 'pytest-repo/'
       output_prefix: '{{ item }}-{{ ansible_date_time.epoch }}.xml'
   tasks:
+      # Python3 & PIP under RHEL8
+      - name: "Add '/usr/local/bin' to secure_path in /etc/sudoers"
+        replace:
+          path: /etc/sudoers
+          regexp: '^(Defaults\s* secure_path.*)'
+          replace: '\g<1>:/usr/local/bin'
+        become: true
+
       - name: install python-pip
         shell: |
           curl https://bootstrap.pypa.io/get-pip.py | python
@@ -24,6 +32,7 @@
           name: virtualenv
           state: present
         become: true
+        become_user: '{{ ansible_user }}'
 
       - name: install pytest via pip
         pip:
