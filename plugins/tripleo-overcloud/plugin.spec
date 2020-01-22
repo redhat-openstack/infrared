@@ -512,6 +512,11 @@ subparsers:
                       default: no
                       help: Adds a network for cleaning in OC. Asssumes Ironic in OC was enabled.
 
+                  edge:
+                      type: Bool
+                      default: no
+                      help: This options sets the deployment type to Edge architecture.
+
             - title: Overcloud Public Network
               options:
                   public-network:
