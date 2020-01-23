@@ -263,7 +263,10 @@ class ReadAnswersAction(argparse.Action):
         # reading file
         _config = configparser.ConfigParser()
         with open(values) as fd:
-            _config.readfp(fd)
+            if (sys.version_info > (3, 2)):
+                _config.read_file(fd)
+            else:
+                _config.readfp(fd)
         # todo(obaranov) add different file types loaders
         res_dict = {}
         # load only section for a given subcommand

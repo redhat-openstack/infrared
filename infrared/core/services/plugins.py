@@ -3,6 +3,7 @@ import git
 import github
 import os
 import shutil
+import sys
 import tempfile
 import time
 
@@ -233,7 +234,10 @@ class InfraredPluginManager(object):
 
         with open(self._config_file) as fp:
             self._config = configparser.ConfigParser()
-            self._config.readfp(fp)
+            if (sys.version_info > (3, 2)):
+                self._config.read_file(fp)
+            else:
+                self._config.readfp(fp)
 
         # TODO(aopincar): Remove auto plugins installation when conf is missing
         if self._install_plugins_required and init_plugins_conf:
