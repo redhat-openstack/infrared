@@ -36,12 +36,12 @@
 - name: Upload snapshots of virtual machines
   import_playbook: snapshot_upload.yml
   vars:
-    _run_condition: "{{ provision.virsh.snapshot.upload.enable | bool }}"
+    _run_condition: "{{ provision.virsh.snapshot.upload | bool }}"
 
 - name: Download snapshots of virtual machines
   import_playbook: snapshot_download.yml
   vars:
-    _run_condition: "{{ provision.virsh.snapshot.download.enable | bool }}"
+    _run_condition: "{{ provision.virsh.snapshot.download | bool }}"
 
 - name: Import snapshots of virtual machines
   import_playbook: snapshot_import.yml
