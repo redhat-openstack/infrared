@@ -4,31 +4,70 @@
   gather_facts: yes
   any_errors_fatal: true
   tasks:
-    - name: Install required packages
-      package:
-        name: rsync
-        state: present
+    - name: Ensure a usable swift client is available
+      block:
+        - &prepare_swift_venv
+          name: Prepare swiftclient venv
+          pip:
+            name:
+              - "python-keystoneclient"
+              - "python-openstacksdk"
+              - "python-swiftclient"
+            virtualenv: "{{ provision.virsh.snapshot.path | dirname }}/.swiftclient"
+            state: present
+      rescue:
+        # TODO(odyssey4me): virtualenv may be in a broken state
+        # ref: https://github.com/pypa/virtualenv/issues/1551
+        - name: Ensure that virtualenv is uninstalled
+          shell: |-
+            sudo python -m pip uninstall -y virtualenv
+          when: "ansible_python['version']['major'] is version('3', '<')"
+          args:
+            executable: /bin/bash
 
-    - name: Copy the provided private key to the hypervisor
-      copy:
-        src: "{{ provision.virsh.snapshot.upload.key | expanduser | realpath }}"
-        dest: "~/backup_server_auth_key"
-        mode: "0400"
+        - name: Ensure that the virtualenv is reinstalled
+          shell: |-
+            if rpm -q python-virtualenv; then
+              sudo yum reinstall -y python-virtualenv
+            else
+              sudo python -m pip install virtualenv
+            fi
+          when: "ansible_python['version']['major'] is version('3', '<')"
+          args:
+            executable: /bin/bash
+            warn: no
 
-    - name: Upload the snapshot path folder to the destination server(s)
-      shell: >-
-        rsync
-        --archive
-        --verbose
-        --rsh="ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i ~/backup_server_auth_key"
-        {{ provision.virsh.snapshot.path }}
-        {{ item }}/
-      loop:
-        - "{{ provision.virsh.snapshot.upload.dest1 }}"
-        - "{{ provision.virsh.snapshot.upload.dest2 | default('') }}"
-      when:
-        - item != ''
+        - *prepare_swift_venv
+
+    - name: Authenticate to the cloud to get a token
+      vars:
+        ansible_python_interpreter: "{{ provision.virsh.snapshot.path | dirname }}/.swiftclient/bin/python"
+      os_auth:
+        cloud: "{{ lookup('env', 'OS_CLOUD') }}"
+      register: _auth
+      until:
+        - _auth is success
+        - auth_token is defined
+        - auth_token is not none
+        - auth_token | trim != ''
+      retries: 10
+      delay: 30
+
+    # The ansible os_object module does not currently support threaded uploads
+    # (which make this much faster), nor does it support setting a segment
+    # size (for large files), so we use the swift client instead. We use
+    # a segment size of 1GB.
+    - name: Upload the snapshot path folder to object storage
+      shell: |
+        source .swiftclient/bin/activate
+        swift upload {{ provision.virsh.snapshot.container }} {{ provision.virsh.snapshot.path | basename }} --object-threads 100 --skip-identical --segment-size 1073741824
+      args:
+        executable: "/bin/bash"
+        chdir: "{{ provision.virsh.snapshot.path | dirname }}"
+      environment:
+        OS_AUTH_TOKEN: "{{ auth_token }}"
+        OS_STORAGE_URL: "{{ lookup('env', 'OS_STORAGE_URL') }}"
       register: _upload_result
-      retries: 5
-      delay: 10
+      retries: 10
+      delay: 30
       until: _upload_result is success
