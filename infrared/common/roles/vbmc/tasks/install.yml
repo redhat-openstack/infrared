@@ -36,14 +36,26 @@
         extra_args: "--user"
     when: virtualenv_installed_check.rc != 0
 
-  - name: Install python-virtualbmc with pip
+    # rpm is not shipped in OSP-14+
+  - name: Install python-virtualbmc for rhel-8 with pip
     pip:
         virtualenv: "{{ vbmc_virtualenv }}"
         name: virtualbmc
         version: "{{ vbmc_version }}"
     environment:
       PATH: "{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}"
-      # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a system-wide one
+      # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a      
+      # system-wide one
+    when: ansible_distribution_major_version is version('8', '==')
+
+    # note this should work for osp-13 and earlier
+    # not, available in osp-14
+    # python2 support being removed in virtbmc
+    # hence, install the package.
+  - name: Install python2-virtualbmc for rhel-7
+    package:
+        name: python2-virtualbmc
+    when: ansible_distribution_major_version is version('7', '==')
 
   - block:
       - name: adds VirtualBMC as systemd service
