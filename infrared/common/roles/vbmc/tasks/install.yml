@@ -12,6 +12,7 @@
             - "{{ (hostvars[vbmc_inventory_host].ansible_distribution_major_version|default('7') == '8') | ternary('platform-python-devel', 'python-devel') }}"
             - "{{ (hostvars[vbmc_inventory_host].ansible_distribution_major_version|default('7') == '8') | ternary('python3-setuptools', 'python-setuptools') }}"
             - ipmitool
+            - "{{ (hostvars[vbmc_inventory_host].ansible_distribution_major_version|default('7') == '8') | ternary('python3-libvirt', 'libvirt-python') }}"
           state: latest
           disable_gpg_check: yes
 
@@ -41,6 +42,7 @@
         virtualenv: "{{ vbmc_virtualenv }}"
         name: virtualbmc
         version: "{{ vbmc_version }}"
+        virtualenv_site_packages: yes
     environment:
       PATH: "{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}"
       # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a system-wide one
