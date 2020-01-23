@@ -4,36 +4,39 @@
   gather_facts: yes
   any_errors_fatal: true
   tasks:
-    - name: Get the manifest file
-      uri:
-        url: "{{ provision.virsh.snapshot.download.url }}"
-        return_content: yes
-      register: _manifest_file
+    - name: Prepare swiftclient venv
+      pip:
+        name: "python-swiftclient"
+        virtualenv: "~/.swiftclient"
+        state: present
 
     - name: Make sure that the snapshot path exists
       file:
         path: "{{ provision.virsh.snapshot.path }}"
         state: directory
 
-    - name: Save the manifest file
-      copy:
-        content: "{{ _manifest_file.content | from_json | to_nice_json }}"
-        dest: "{{ provision.virsh.snapshot.path }}/manifest.json"
-        force: yes
-
-    - name: Register manifest file content as a fact
-      set_fact:
-        _manifest_content: "{{ _manifest_file.content | from_json }}"
-
-    - name: Download the files referenced in the manifest
-      get_url:
-        url: "{{ provision.virsh.snapshot.download.url | regex_replace('/[^/]*$', '') }}/{{ item.path | basename }}"
-        dest: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
-        checksum: "sha1:{{ item.checksum }}"
-      loop: "{{ _manifest_content.files }}"
-      loop_control:
-        label: "{{ item.path | basename }}"
+    # The ansible os_object module does not currently support
+    # threaded downloads, so we use the swift client instead.
+    - name: Download the container contents to the snapshot path folder
+      shell: |
+        source ~/.swiftclient/bin/activate
+        swift download {{ provision.virsh.snapshot.container }} {{ provision.virsh.snapshot.download.name }} --object-threads 100 --skip-identical
+      args:
+        executable: "/bin/bash"
+        chdir: "{{ provision.virsh.snapshot.path | dirname }}"
+      environment:
+        OS_PROJECT_ID: "{{ lookup('env', 'OS_PROJECT_ID') }}"
+        OS_USERNAME: "{{ lookup('env', 'OS_USERNAME') }}"
+        OS_PASSWORD: "{{ lookup('env', 'OS_PASSWORD') }}"
+        OS_USER_DOMAIN_NAME: "{{ lookup('env', 'OS_USER_DOMAIN_NAME') }}"
+        OS_AUTH_URL: "{{ lookup('env', 'OS_AUTH_URL') }}"
+        OS_IDENTITY_API_VERSION: "{{ lookup('env', 'OS_IDENTITY_API_VERSION') }}"
       register: _download_result
-      retries: 5
-      delay: 10
+      retries: 10
+      delay: 30
       until: _download_result is success
+
+    - name: Clean up swiftclient venv
+      file:
+        path: "~/.swiftclient"
+        state: absent
