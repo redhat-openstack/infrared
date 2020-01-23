@@ -237,53 +237,40 @@ subparsers:
                   virsh-snapshot-path:
                       type: Value
                       help: |
-                          The path to be used for the snapshot export/import process.
+                          The path to be used for the snapshot export, upload, download and import
+                          processes. When doing a download, the basename of the path will be used
+                          to determine which image set to download.
                       required_when: >-
                         virsh-snapshot-export == yes or
                         virsh-snapshot-import == yes or
-                        virsh-snapshot-upload-enable == yes or
-                        virsh-snapshot-download-enable == yes
-                  virsh-snapshot-upload-enable:
+                        virsh-snapshot-upload == yes or
+                        virsh-snapshot-download == yes
+                  virsh-snapshot-container:
+                      type: Value
+                      help: |
+                          The container to be used for the snapshot upload/download process.
+                      required_when: >-
+                        virsh-snapshot-upload == yes or
+                        virsh-snapshot-download == yes
+                  virsh-snapshot-upload:
                       type: Bool
                       help: |
                           This will upload the image set found in the path specified by
-                          ``--virsh-snapshot-path`` to the mirrors specified by
-                          ``--virsh-snapshot-upload-dest1`` and ``--virsh-snapshot-upload-dest2``
-                          via ssh using the private key specified by ``virsh-snapshot-upload-key``.
+                          ``--virsh-snapshot-path`` to the object storage container specified by
+                          ``--virsh-snapshot-container`` via the OpenStack swift client. For this
+                          to work the following environment variables must be set: OS_PROJECT_ID,
+                          OS_USERNAME, OS_PASSWORD, OS_USER_DOMAIN_NAME, OS_AUTH_URL,
+                          OS_IDENTITY_API_VERSION.
                       default: False
-                  virsh-snapshot-upload-dest1:
-                      type: Value
-                      help: |
-                          The required first destination used when uploading an image set when the
-                          ``--virsh-snapshot-upload-enable`` flag is enabled. The value should include
-                          the user to connect as, the address to connect to and the destination path
-                          for the image set folder. eg: foo@bar.baz:/path/to/images/
-                      required_when:
-                          - "virsh-snapshot-upload-enable == yes"
-                  virsh-snapshot-upload-dest2:
-                      type: Value
-                      help: |
-                          The optional second destination used when uploading an image set when the
-                          ``--virsh-snapshot-upload-enable`` flag is enabled. The value should include
-                          the user to connect as, the address to connect to and the destination path
-                          for the image set folder. eg: foo@bar.baz:/path/to/images/
-                  virsh-snapshot-upload-key:
-                      type: Value
-                      help: |
-                          The path to the private ssh key to use when uploading an image set when the
-                          ``--virsh-snapshot-upload-enable`` flag is True.
-                      required_when:
-                          - "virsh-snapshot-upload-enable == yes"
-                  virsh-snapshot-download-enable:
+                  virsh-snapshot-download:
                       type: Bool
                       help: |
-                          This flag enables/disables the download of an image set ``manifest.json`` file
-                          from a URL specified by ``--virsh-snapshot-download-url``. The manifest will be
-                          processed and all files downloaded will be placed it into
-                          ``--virsh-snapshot-path``.
+                          This flag enables/disables the download of an image set from object
+                          storage using the container specified by ``--virsh-snapshot-container``
+                          and the basename derived from ``--virsh-snapshot-path``. The folder
+                          will be downloaded to the parent directory of ``--virsh-snapshot-path``.
+                          For this to work the following environment variables must be set:
+                          OS_PROJECT_ID, OS_USERNAME, OS_PASSWORD, OS_USER_DOMAIN_NAME, OS_AUTH_URL,
+                          OS_IDENTITY_API_VERSION.
                       default: False
-                  virsh-snapshot-download-url:
-                      type: Value
-                      help: |
-                          The URL for an image set ``manifest.json`` file.
 
