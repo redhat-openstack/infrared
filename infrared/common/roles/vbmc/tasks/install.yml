@@ -36,6 +36,15 @@
         extra_args: "--user"
     when: virtualenv_installed_check.rc != 0
 
+  # Workaround for libvirt-python dropping py27 support
+  - name: Install python-libvirt with pip
+    pip:
+        virtualenv: "{{ vbmc_virtualenv }}"
+        name: libvirt-python<6.0.0
+    environment:
+      PATH: "{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}"
+    when: hostvars[vbmc_inventory_host].ansible_distribution_major_version|default('8') == '7'
+
   - name: Install python-virtualbmc with pip
     pip:
         virtualenv: "{{ vbmc_virtualenv }}"
