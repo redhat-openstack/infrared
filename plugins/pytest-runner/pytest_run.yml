@@ -6,6 +6,18 @@
       repo_folder: 'pytest-repo/'
       output_prefix: '{{ item }}-{{ ansible_date_time.epoch }}.xml'
   tasks:
+      - block:
+        # TODO(aopincar): Check executables path (which) and if missing or not before editing the file
+        - name: "Add '/usr/local/bin' to secure_path in RHEL8"
+          become: true
+          replace:
+            path: /etc/sudoers
+            regexp: '^(Defaults\s*secure_path.*)'
+            replace: '\g<1>:/usr/local/bin'
+        when:
+          - ansible_distribution in ['CentOS', 'RedHat']
+          - ansible_distribution_version|int >= 8
+
       - name: install python-pip
         shell: |
           curl https://bootstrap.pypa.io/get-pip.py | python
@@ -24,6 +36,7 @@
           name: virtualenv
           state: present
         become: true
+        become_user: '{{ ansible_user }}'
 
       - name: install pytest via pip
         pip:
