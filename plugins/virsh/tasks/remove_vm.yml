@@ -20,7 +20,22 @@
       name: "{{ vm_name }}"
   ignore_errors: yes
 
-- name: remove any existing VM disks that we created
-  shell: "rm -f {{ vm_name }}*disk*.qcow* {{ vm_name }}*disk*.raw"
-  args:
-      chdir: "{{ provision.disk.pool }}"
+- name: find existing VM disks that we created (qcow)
+  find:
+      paths: "{{ provision.disk.pool }}"
+      patterns: "{{ vm_name }}*disk*.qcow*"
+  register: vmdisk_qcow_files
+
+- name: find existing VM disks that we created (raw)
+  find:
+      paths: "{{ provision.disk.pool }}"
+      patterns: "{{ vm_name }}*disk*.raw"
+  register: vmdisk_raw_files
+
+- name: remove any existing VM disks that we created (qcow)
+  file:
+      path: "{{ item.path }}"
+      state: absent
+  with_items:
+      - "{{ vmdisk_qcow_files.files }}"
+      - "{{ vmdisk_raw_files.files }}"
