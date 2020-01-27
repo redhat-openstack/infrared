@@ -44,13 +44,17 @@
             - upgrade
             - upgrade_repos
   tasks:
-      - name: update TripleO client
+      - name: update packages for the upgrade
         become: true
         tags:
             - undercloud_containers
             - upgrade
         package:
-          name: "{{ (undercloud_upgrade_version|openstack_release < 15) | ternary('python-tripleoclient', 'python3-tripleoclient') }}"
+          name:
+            - "{{ (undercloud_upgrade_version|openstack_release < 15) | ternary('python-tripleoclient', 'python3-tripleoclient') }}"
+            - "openstack-tripleo-common"
+            - "openstack-tripleo-heat-templates"
+            - "openstack-tripleo-validations"
           state: latest
         when: undercloud_version|openstack_release >= 13
 
