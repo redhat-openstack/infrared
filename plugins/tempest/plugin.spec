@@ -230,6 +230,12 @@ subparsers:
                           Plugin url: https://review.rdoproject.org/r/openstack/whitebox-tempest-plugin
                           NOTE: vars/tests/whitebox_plugin.yml need to be included to execute Whitebox tests
                       default: no
+                  configure-whitebox-db:
+                      type: Bool
+                      help: |
+                          Configures following fields in [whitebox-database] section in tempest.conf:
+                          internal_ip (Controller), host (Controller), password (NovaPassword) useful for connections to Nova database
+                      default: no
             - title: ansible facts
               options:
                   collect-ansible-facts:
