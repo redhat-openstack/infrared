@@ -415,17 +415,25 @@
             delay: 5
 
           - block:
-              - name: Waiting for OVS agent on compute node to come up for OSP > 10
+              - name: Waiting for OVS agent on compute node to come up for 10 < OSP < 15 
                 shell: |
                     source {{ overcloud_rc }}
                     openstack network agent list --host {{ compute_fqdn.stdout }} -f json | jq -r -c '.[] | select(.Binary | contains("neutron-openvswitch-agent")) | .Alive'
                 register: nova_ovs_up
-                until: nova_ovs_up.stdout.find(':-)') > -1
+                until: nova_ovs_up.stdout.find(':-') > -1
                 retries: 60
                 delay: 5
-                when: >
-                    (overcloud_version|int < 15 and not install.network.ovn) or
-                    (install.network.ovs and overcloud_version|int >= 15)
+                when: (overcloud_version|int < 15 and not install.network.ovn)
+
+              - name: Waiting for OVS agent on compute node to come up for OSP >= 15
+                shell: |
+                    source {{ overcloud_rc }}
+                    openstack network agent list --host {{ compute_fqdn.stdout }} -f json | jq -r -c '.[] | select(.Binary | contains("neutron-openvswitch-agent")) | .Alive'
+                register: nova_ovs_up
+                until: nova_ovs_up.stdout.find('true') > -1
+                retries: 60
+                delay: 5
+                when: (install.network.ovs and overcloud_version|int >= 15)
 
               - name: Waiting for ovn-controller agent on compute node to come up
                 shell: |
