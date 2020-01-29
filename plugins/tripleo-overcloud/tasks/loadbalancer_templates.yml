@@ -1,5 +1,7 @@
 ---
-- include_vars: "vars/loadbalancer/external-{{ ( install.network.protocol == 'ipv6-all') | ternary('ipv6',install.network.protocol) }}.yml"
+- name: Include loadbalancer configuration vars
+  include_vars:
+    file: "vars/loadbalancer/external-{{ (install.network.protocol == 'ipv4') | ternary('ipv4','ipv6') }}.yml"
 
 - name: Create VLAN interface for internal_api network
   become: yes
