@@ -122,8 +122,11 @@
           path: "/root/.ssh/id_rsa"
       register: result
 
+    # NOTE(bandini): on a rhel8 hypervisor ssh will create an ssh private
+    # key that OSP10 cannot read, so we force it to PEM which it can read
+    # I.e. we can drop -m PEM once OSP10 jobs are decommissioned
     - name: if private key doesn't exist, create it
-      command: "ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''"
+      command: "ssh-keygen -m PEM -f /root/.ssh/id_rsa -t rsa -N ''"
       when: not result.stat.exists | bool
 
     - name: copy server private key from hypervisor for SSH proxy
