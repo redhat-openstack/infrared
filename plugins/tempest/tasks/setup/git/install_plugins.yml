@@ -30,6 +30,11 @@
       version: "{{ item.value.version | default(omit) }}"
   with_dict: "{{ plugins }}"
 
+- name: apply patch whitebox
+  shell:
+    cmd: git fetch https://review.opendev.org/x/whitebox-tempest-plugin refs/changes/59/705359/1 && git cherry-pick FETCH_HEAD
+    chdir: /home/stack/plugins/whitebox_plugin
+
 - name: Install extra system requirements for tests
   package:
     name: "{{ item.value.dependencies }}"
