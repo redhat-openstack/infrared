@@ -62,3 +62,9 @@
       loop_var: plugin_dict
   when: plugin_dict.value.package is not defined
   with_dict: "{{ plugins | default({}) }}"
+
+- name: apply patch whitebox
+  ignore_errors: yes
+  shell:
+    cmd: git fetch https://review.opendev.org/x/whitebox-tempest-plugin refs/changes/59/705359/1 && git cherry-pick FETCH_HEAD
+    chdir: /home/stack/plugins/whitebox_plugin
