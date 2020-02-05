@@ -47,6 +47,13 @@
       PATH: "{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}"
       # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a system-wide one
 
+  - name: Set the correct label on the virtualenv to allow systemd to start the service
+    file:
+        path: "{{ vbmc_virtualenv }}/bin"
+        state: directory
+        setype: "bin_t"
+        recurse: yes
+
   - block:
       - name: adds VirtualBMC as systemd service
         copy:
