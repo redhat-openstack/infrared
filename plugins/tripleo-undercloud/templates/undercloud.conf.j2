@@ -52,9 +52,9 @@ overcloud_domain_name={{ install.overcloud.domain }}
 container_images_file={{ working_dir }}/containers-prepare-parameter.yaml
 {% endif %}
 {% if install.version|openstack_release < 15 %}
-docker_insecure_registries={{ registry_host }}{% if ceph_registry_host %},{{ ceph_registry_host }}{% endif %}
+docker_insecure_registries={{ insecure_registry_hosts|unique|join(',') }}
 {% else %}
-container_insecure_registries={{ registry_host }}{% if ceph_registry_host %},{{ ceph_registry_host }}{% endif %}
+container_insecure_registries={{ insecure_registry_hosts|unique|join(',') }}
 {% endif %}
 {% endif %}{# endIf release > 13 #}
 
