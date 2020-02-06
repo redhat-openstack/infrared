@@ -34,7 +34,7 @@
       - name: Get list of existing baremetal nodes
         shell: |
             source ~/stackrc
-            {% if undercloud_version < 10 %}
+            {% if undercloud_version is version('10', '<') %}
             ironic node-list --fields name | tail -n +4 | head -n -1 | awk '{print $2}'
             {% else %}
             openstack baremetal node list -c Name -f value
@@ -47,7 +47,7 @@
       - name: Delete existing baremetal nodes
         shell: |
             source ~/stackrc
-            {% if undercloud_version < 10 %}
+            {% if undercloud_version is version('10', '<') %}
             ironic node-delete {{ item }}
             {% else %}
             openstack baremetal node delete {{ item }}
