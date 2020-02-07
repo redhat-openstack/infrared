@@ -29,3 +29,11 @@
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-customize -a ~/tempest_image --install {{ test.images.packages }} --selinux-relabel"
+
+- name: Upload and execute a custom script inside tempest guest image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  shell: |
+      virt-customize -a ~/tempest_image --upload {{ test.images.script }}:~/script.sh
+      virt-customize -a ~/tempest_image --run-command 'chmod +x ~/script.sh && ~/script.sh' --selinux-relabel"
+  when: test.images.script is defined
