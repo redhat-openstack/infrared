@@ -10,7 +10,8 @@
   vars:
       env_file: "{{ template_base }}/docker-images.yaml"
       os_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
-      reg_namespace:  "{{ install.get('registry', {}).namespace|default('rhosp' + os_version) }}"
+      reg_namespace_default: "{{ container_env['container-image-prepare']['namespace'].split('/')[-1] | default('rhosp' + os_version) }}"
+      reg_namespace:  "{{ install.get('registry', {}).namespace|default(reg_namespace_default) }}"
       undercloud_reg_base: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787/{{ reg_namespace }}"
       undercloud_reg_base_ceph: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
       external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_insecure_registry) }}/{{ reg_namespace }}"
