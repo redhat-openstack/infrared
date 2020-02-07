@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96868b91_7d7f7fd5",
+        "filename": "plugins/tempest/tasks/image/main.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1007069
+      },
+      "writtenOn": "2020-02-07T09:58:49Z",
+      "side": 1,
+      "message": "Isn\u0027t it better to first upload script and then execute it?\n\nSomething like:\n\n$ virt-customize -a ~/tempest_image --upload {{ test.images.script }}:~/runme.sh\n\n$ virt-customize -a ~/tempest_image --run-command \u0027chmod +x ~/runme.sh \u0026\u0026 ~/runme.sh\u0027 --selinux-relabel\"\n\nPassing command to the --run-command is asking for troubles in syntax, let\u0027s say I pass something that contains \u0027 or other char that will cause entire line to fail.\n\nSecond thing, do we need to relabel after each command or last virt-customize while manipulating image?",
+      "revId": "d87c720ee261d8d92145262df40b7f3364477175",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
