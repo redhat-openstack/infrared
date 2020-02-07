@@ -131,6 +131,12 @@ subparsers:
                       help: |
                           Comma delimited list of packages to install in guest image tempest will use for testing.
                           This option requires 'image' option to be specified and will fail without it.
+                  images-script:
+                      type: Value
+                      help: |
+                          A script (script content, NOT script path) which will be pushed into
+                          tempest guest image and executed before running tempest.
+                          This option requires 'image' option to be specified and will fail without it.
                   config-longopt:
                        action: append
                        help: |
