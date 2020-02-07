@@ -131,6 +131,11 @@ subparsers:
                       help: |
                           Comma delimited list of packages to install in guest image tempest will use for testing.
                           This option requires 'image' option to be specified and will fail without it.
+                  images-commands:
+                      type: Value
+                      help: |
+                          Semicolon delimited list of commands to run in the tempest guest image.
+                          This option requires 'image' option to be specified and will fail without it.
                   config-longopt:
                        action: append
                        help: |
