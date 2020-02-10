@@ -13,21 +13,12 @@
   when:
     - install['images']['packages'].split(',') | select('match', 'kernel-rt') | list | length > 0
 
-- name: Delete default kernel if using RealTime kernel
-  environment:
-      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-customize -a {{ overcloud_image_file }} --run-command 'yum -v -y --setopt=protected_packages= erase kernel' --selinux-relabel"
-  ignore_errors: True
-  register: delete_default_kernel
-  when: overcloud_RealTime_kernel | default(False)
-
-- name: Set RealTime kernel as default kernel if failed to delete regular kernel
+- name: Set RealTime kernel as default kernel
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-customize -a {{ overcloud_image_file }} --run-command 'grubby --set-default /boot/vmlinuz*rt*' --selinux-relabel"
   when:
-    - install['images']['packages'].split(',') | select('match', 'kernel-rt') | list | length > 0
-    - delete_default_kernel is failed
+    - overcloud_RealTime_kernel
 
 - name: Build kernel files regex pattern
   set_fact:
