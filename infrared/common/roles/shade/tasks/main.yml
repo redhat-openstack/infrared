@@ -72,8 +72,9 @@
       virtualenv: "{{ shade_path_venv }}"
       virtualenv_command: "{{ (is_venv.stdout | bool) | ternary(omit, venv_cmd) }}"
   with_items:
-    - setuptools>=39.0.0
-    - pip>=10.0.1
+    # workaround for https://github.com/pypa/setuptools/issues/1990
+    - "setuptools>39.0.0,<45.2.0"
+    - "pip>=10.0.1"
 
 - name: shade virtualenv deps
   vars:
