@@ -53,8 +53,10 @@
 
     - name: assert UC services started
       shell: |
+        timeout 10 systemctl is-system-running --wait && \
         source ~/stackrc ;
-        timeout 10 openstack stack list -f value -c "Stack Name"
+        timeout 10 openstack stack list -f value -c "Stack Name" &&\
+        timeout 10 openstack server list
       ignore_errors: true
       register: oc_name
       until: oc_name.stdout.find('{{ overcloud_stack_name }}') != -1
