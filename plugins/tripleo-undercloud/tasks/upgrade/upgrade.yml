@@ -92,3 +92,7 @@
        systemctl status iptables.service
   when: undercloud_version|openstack_release >= 10
   tags: skip_ansible_lint
+
+# Pause for 3 minutes to let UC properly start services
+- pause:
+    minutes: 3
