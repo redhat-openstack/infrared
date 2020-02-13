@@ -29,7 +29,6 @@
       dest: "~/clouds.yaml"
       marker: "#{mark} HEADER"
       create: yes
-  delegate_to: "{{ groups.shade | first }}"
 
 - name: insert cloud parameters
   blockinfile:
@@ -38,4 +37,3 @@
             {{ clouds_yaml|to_nice_yaml(indent=4) }}
       insertbefore: "#END {{ cloudname }} SECTION"
       marker: "#{mark} {{ cloudname }} PARAMETERS"
-  delegate_to: "{{ groups.shade | first }}"
