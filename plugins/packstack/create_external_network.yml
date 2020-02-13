@@ -2,7 +2,8 @@
 # This playbook is used to enable external network access to deployments.
 # It does not create private networks and router as it is user's responsibility.
 # Playbook is idempotent
-# This playbook uses ansible openstack modules from localhost as it has mandatory shade
+# This playbook uses localhost delegation for the openstack module because
+# the ansible environment for infrared already includes the openstacksdk
 - name: External network creation
   # need to gather facts here because we run that playbook without become: yes.
   # so need to have facts updated for ssh user instead of root.
@@ -19,8 +20,6 @@
   vars_files:
       - "{{ install.network.service }}"
       - "{{ install.public.subnet }}"
-  roles:
-      - role: shade
   tasks:
       - name: get the default floating ip pool name from the controller
 #        delegate_to: "{{ first_controller }}"
@@ -63,8 +62,6 @@
 
       # TODO(yfried): Use localhost where shade is mandatory
       - name: create the external network
-        vars:
-            ansible_python_interpreter: "{{ shade_path_venv | default('/var/tmp/venv_shade') }}/bin/python"
         os_network:
             auth: "{{ creds.stdout | from_yaml }}"
             name: "{{ pool_name.stdout_lines|last }}"
@@ -74,6 +71,7 @@
             provider_network_type: "{{ network_service_common.external.provider_network_type }}"
             provider_segmentation_id: "{{ ('vlan' == network_service_common.external.provider_network_type) | ternary(network_service_common.external.provider_segmentation_id, omit) }}"
         register: net_create
+        delegate_to: localhost
 
       - name: create the external subnet
         vars:
@@ -96,6 +94,8 @@
             allocation_pool_start: "{{ pool.start|default(p_pool_start or omit) }}"
             allocation_pool_end: "{{ pool.end|default(p_pool_end or omit) }}"
         register: subnet_create
+        delegate_to: localhost
+
       - name: gw ip hack
         vars:
             p_data: "{{ public_subnet }}"
@@ -104,6 +104,7 @@
         become: yes
         shell: "ip addr add {{ gateway_ip }} dev br-myphysnet || ( ip -o addr show dev br-myphysnet | grep {{ gateway_ip }}/ )"
         when: install.network.gwhack
+
       - name: allow reverse path for heat-cfn connectivity
         sysctl:
             name: net.ipv4.conf.eth0.rp_filter
