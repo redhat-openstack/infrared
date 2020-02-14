@@ -25,21 +25,6 @@
             meta: refresh_inventory
         when: "'hypervisor' in groups and 'undercloud' in groups"
 
-- name: Discover Undercloud's python interpreter
-  hosts: undercloud
-  any_errors_fatal: true
-  gather_facts: no
-  tags:
-      - upgrade
-      - upgrade_repos
-      - discover_python
-  tasks:
-    - name: Detect python interpreter in Undercloud
-      raw: 'command -v python /usr/libexec/platform-python|head -n1'
-      register: py_interpreter
-    - set_fact:
-        uc_py_interpreter: "{{ py_interpreter.stdout|trim }}"
-
 - name: Update inventory file after upgrading the Undercloud
   hosts: undercloud
   any_errors_fatal: true
@@ -47,8 +32,6 @@
   tags:
       - upgrade
       - upgrade_repos
-  vars:
-    ansible_python_interpreter: "{{ uc_py_interpreter|default('python') }}"
   tasks:
     - block:
         - include_role:
