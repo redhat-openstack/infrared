@@ -124,6 +124,16 @@
   retries: 3
   delay: 3
   until: networks_cleanup is success
+  # TODO(odyssey4me):
+  # Remove this var override when we have figured out what is causing
+  # infrared to not use the venv python interpreter here.
+  # The error is fixed by https://github.com/ansible/ansible/pull/67577
+  # but that is only because ansible is not using the infrared venv
+  # openstacksdk and is trying to use the host's openstacksdk instead
+  # which is too old. Here we force it to use the venv openstacksdk
+  # instead.
+  vars:
+      ansible_python_interpreter: "{{ ansible_playbook_python }}"
 
 - name: Cleanup security groups
   os_security_group:
