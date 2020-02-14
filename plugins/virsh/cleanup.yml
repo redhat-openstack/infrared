@@ -42,7 +42,7 @@
           set -euo pipefail
           for table in "-t nat" ""
           do
-              iptables ${table} -S | awk '/{{ iptables_comment_search }}/ {$1="-D"; print $0}' | xargs -r -L1 iptables ${table}
+              iptables -w 1 ${table} -S | awk '/{{ iptables_comment_search }}/ {$1="-D"; print $0}' | xargs -r -L1 iptables -w 1 ${table}
           done
 
     #Should be cleaned after an Edge deployment
