@@ -63,6 +63,7 @@ def _run_playbook(cli_args, vars_dict):
     #                 and creates new 'display' object with default (0)
     #                 verbosity.
     from ansible.cli.playbook import PlaybookCLI
+    from ansible import context
     from ansible.errors import AnsibleOptionsError
     from ansible.errors import AnsibleParserError
     with tempfile.NamedTemporaryFile(
@@ -70,8 +71,12 @@ def _run_playbook(cli_args, vars_dict):
         tmp.write(yaml.safe_dump(vars_dict, default_flow_style=False))
         # make sure created file is readable.
         tmp.flush()
+        # add the created file to the arguments
         cli_args.extend(['--extra-vars', "@" + tmp.name])
-        cli = PlaybookCLI(cli_args)
+        # reset the CLI arguments
+        context.GlobalCLIArgs._Singleton__instance = None
+        # setup the Playbook object
+        cli = PlaybookCLI(args=cli_args)
         LOG.debug('Starting ansible cli with args: {}'.format(cli_args[1:]))
         try:
             cli.parse()
