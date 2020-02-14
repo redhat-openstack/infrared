@@ -113,22 +113,25 @@
 
       - name: install packages on Undercloud
         package:
-          name: "{{ install.packages }}"
+          name: "{{ _package_list }}"
           state: present
-        when: install.packages is defined
-
-      - name: install deltarpm
-        package:
-            state: present
-            name: deltarpm
-        when:
-            - ansible_distribution in ['CentOS', 'RedHat']
-            - ansible_distribution_major_version < '8'
+        vars:
+          _package_list: >-
+            {%- set package_list = [] %}
+            {%- if install.version | openstack_release == 7 %}
+            {%-   set _ = package_list.append('python-rdomanager-oscplugin') %}
+            {%- elif install.version|openstack_release < 15 %}
+            {%-   set _ = package_list.append('python-tripleoclient') %}
+            {%- else %}
+            {%-   set _ = package_list.append('python3-tripleoclient') %}
+            {%- endif %}
+            {%- if install.packages is defined %}
+            {%-   set _ = package_list.extend(install.packages.split()) %}
+            {%- endif %}
+            {%- if ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int < 8 %}
+            {%-   set _ = package_list.append('deltarpm') %}
+            {%- endif %}
+            {{- package_list }}
 
       - name: Update system and reboot
         include_tasks: tasks/update_and_reboot.yml
-
-      - name: install the oscplugin/tripleO client
-        package:
-            name: "{{ (install.version|openstack_release == 7) | ternary('python-rdomanager-oscplugin', (install.version|openstack_release < 15) | ternary('python-tripleoclient', 'python3-tripleoclient')) }}"
-            state: present
