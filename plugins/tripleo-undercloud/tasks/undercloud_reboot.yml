@@ -51,11 +51,16 @@
         sleep: 3
         timeout: 630
 
-    - name: Assert that all UC services have started
-      command: |
-        timeout 10 systemctl is-system-running --wait
+    # We check with systemctl if system has finished booting up
+    # but on RHEL7 we don't have --wait option so we check only
+    # for the state. We accept running or degraded as some
+    # services seem to flap after bootup but work fine. We give
+    # system 10 minutes to boot up.
+    - name: assert UC services started
+      shell: |
+        systemctl is-system-running | grep -e running -e degraded
       retries: "{{ service_readiness_count|default(100)|int }}"
-      delay: 3
+      delay: 6
       register: _is_running
       until: _is_running.rc == 0
       changed_when: false
