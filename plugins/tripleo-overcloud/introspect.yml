@@ -16,7 +16,7 @@
 
 - name: Introspect our machines
   hosts: undercloud
-  gather_facts: no
+  gather_facts: yes
   any_errors_fatal: true
   vars:
       undercloud_provision_cidr: "{{ ansible_br_ctlplane.ipv4.network }}/{{ ansible_br_ctlplane.ipv4.netmask }}"
@@ -237,7 +237,7 @@
 - name: Add introspected BMs to inventory
   hosts: localhost
   tags: add_bms_to_inventory
-  gather_facts: no
+  gather_facts: yes
   any_errors_fatal: true
   vars:
       instack_input: "{{ (install.instackenv|default({})).file | default('') }}"

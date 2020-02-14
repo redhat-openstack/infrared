@@ -24,11 +24,21 @@
             cloud: "{{ provision.cloud }}"
             server: "{{ provision.prefix }}*"
         delegate_to: localhost
+        # TODO(odyssey4me):
+        # Remove this var override when we have figured out what is causing
+        # infrared to not use the venv python interpreter here.
+        vars:
+            ansible_python_interpreter: "{{ ansible_playbook_python }}"
 
       - name: read os_port_facts
         os_port_facts:
             cloud: "{{ provision.cloud }}"
         delegate_to: localhost
+        # TODO(odyssey4me):
+        # Remove this var override when we have figured out what is causing
+        # infrared to not use the venv python interpreter here.
+        vars:
+            ansible_python_interpreter: "{{ ansible_playbook_python }}"
 
       - name: gather facts once ssh is properly configured
         setup:
