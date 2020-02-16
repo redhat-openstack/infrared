@@ -29,3 +29,10 @@
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-customize -a ~/tempest_image --install {{ test.images.packages }} --selinux-relabel"
+
+- name: Run a command inside tempest guest image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a ~/tempest_image --run-command \"{{ test.images.command }}\""
+  failed_when: false
+  when: test.images.command is defined
