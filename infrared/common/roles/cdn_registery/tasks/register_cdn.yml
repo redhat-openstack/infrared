@@ -25,6 +25,7 @@
       package:
           name: /tmp/katello-ca-consumer-latest.noarch.rpm
           state: present
+      become: true
   when: cdn_creds.server_hostname is defined and _sat6_check['status'] == 200
 
 - name: register machines to CDN
@@ -51,3 +52,4 @@
       server_proxy_user: "{{ cdn_creds.server_proxy_user | default(omit) }}"
       state: "{{ cdn_creds.state | default(omit) }}"
       username: "{{ cdn_creds.username | default(omit) }}"
+  become: true
