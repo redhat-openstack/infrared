@@ -46,6 +46,30 @@
       "revId": "62961b9410bd498018abd7a2c29626526d78f386",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1833546d_029f5f85",
+        "filename": "plugins/tempest/tasks/run_suite.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2020-02-17T16:33:27Z",
+      "side": 1,
+      "message": "I\u0027m kind of split between two opinions here: \n\noption 1) the \u0027tempest\u0027 plugin should fail here... then collect logs ... which is ran in a \u0027catch\u0027 or \u0027finally\u0027 stage after this tempest plugin (it\u0027s independent from this tempest run) should collect the debug info you want... more so, progressing this play/tasks in situation when we can\u0027t fetch the junit is pointless anyways... you even better fail here (on line #201) actually (so use \u0027fail_on_missing: yes\u0027) and _not_ run the cleanup on line #214 so the collect logs has ability to catch more debug info (despite it\u0027s defaulting to \u0027no\u0027 we have to cover the situation when it\u0027s set to \u0027yes\u0027 as well)\n\noption 2) ignore this \u0027fetching subunit\u0027 errors and progress, but then we report the tempest plugin/play as \u0027successful\u0027 despite it _possibly_ run tempest testing but we don\u0027t have any proof it actually happen (note line #147) - I\u0027m not comfortable with reporting successful play run when we are not sure it\u0027s true",
+      "parentUuid": "12ae1224_b840f0c5",
+      "range": {
+        "startLine": 201,
+        "startChar": 12,
+        "endLine": 201,
+        "endChar": 31
+      },
+      "revId": "62961b9410bd498018abd7a2c29626526d78f386",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
