@@ -19,42 +19,26 @@
             msg: "instackenv file is missing"
         when: not instack_file_path.stat.exists
 
-      # replace with os_ modules once shade group will be available
-      - name: read all flavors
+      - name: Remove all existing flavors
         shell: |
             source ~/stackrc
-            openstack flavor list | awk  'FNR>3 {print $4}' | sed '/^\s*$/d'
-        register: existing_flavors
-        tags: skip_ansible_lint
+            flavor_list=$(openstack flavor list -f value -c Name | tr '\r\n' ' ')
+            if [[ "$flavor_list" != "" ]]; then
+              openstack flavor delete ${flavor_list}
+              exit 2
+            fi
+        args:
+          executable: /bin/bash
+        register: _remove_existing_flavors
+        changed_when: _remove_existing_flavors.rc == 2
+        failed_when: _remove_existing_flavors.rc not in [0, 2]
 
-      - name: remove all the flavors
-        shell: |
-            source ~/stackrc
-            openstack flavor delete {{ item }}
-        with_items: "{{ existing_flavors.stdout_lines }}"
-        ignore_errors: yes
-        tags: skip_ansible_lint
-        register: flavor_delete
-
-      - name: Workarond for BZ #1317312
-        shell: |
-            source ~/stackrc
-            nova flavor-delete {{ item[0] }}
-        tags: skip_ansible_lint
-        when: "'public endpoint for messaging service not found' in item[1].stderr "
-        with_together:
-            - "{{ existing_flavors.stdout_lines }}"
-            - "{{ flavor_delete.results }}"
-        ignore_errors: yes
-
-      - name: create the baremetal flavor for our machines
+      - name: Create the baremetal flavor for our machines
         shell: |
             source ~/stackrc
             openstack flavor create --id auto --ram 4096 --disk 8 --vcpus 1 baremetal
         tags: skip_ansible_lint
         register: bm_result
-        ignore_errors: yes
-        failed_when: "bm_result.rc != 0 and bm_result.stderr.find('Flavor with name baremetal already exists') != -1"
 
       - name: set resources properties for baremetal flavor(RHOS14+)
         shell: |
@@ -68,29 +52,26 @@
         tags: skip_ansible_lint
         when: install.version|default(undercloud_version)|openstack_release > 13
 
-
       # OSPd7 doesn't seem to have implicit profile matching and notifies to do this step manually
       # in prior of OC deployment. Otherwise errors and warnings are produced in process when
       # overcloud deployment starts.
-      - name: set additional properties
-        shell: |
-            source ~/stackrc
-            openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' --property "capabilities:profile"="baremetal" baremetal
+      - name: Apply special cases for OSP7
         when:
             - install.version|default(undercloud_version)|openstack_release == 7
             - "'hypervisor' not in groups"
             - "'bmc' not in groups"
-        tags: skip_ansible_lint
+        block:
+          - name: set additional properties
+            shell: |
+                source ~/stackrc
+                openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' --property "capabilities:profile"="baremetal" baremetal
+            tags: skip_ansible_lint
 
-      - name: Set baremetal capability for OSPd7 nodes as it must be done explicitely
-        shell: |
-            source ~/stackrc
-            for node in `ironic node-list | awk '{print $2}' | grep -v "\(ID\|^$\)"`; do ironic node-update $node add properties/capabilities=profile:baremetal,boot_option:local; done
-        tags: skip_ansible_lint
-        when:
-            - install.version|default(undercloud_version)|openstack_release == 7
-            - "'hypervisor' not in groups"
-            - "'bmc' not in groups"
+          - name: Set baremetal capability for OSPd7 nodes as it must be done explicitely
+            shell: |
+                source ~/stackrc
+                for node in `ironic node-list | awk '{print $2}' | grep -v "\(ID\|^$\)"`; do ironic node-update $node add properties/capabilities=profile:baremetal,boot_option:local; done
+            tags: skip_ansible_lint
 
       - name: read instackenv file
         command: cat "{{ instack_file }}"
@@ -100,19 +81,11 @@
             overcloud_facts: "{{ overcloud_hosts_facts.stdout | from_json }}"
 
       - block:
-            - name: check for original flavors
-              shell: >
-                  source ~/stackrc;
-                  openstack flavor list | awk '/{{ item.name.rstrip('1234567890-').split('-')[-1] }}/ {print $4}'
-              with_items: "{{ overcloud_facts.nodes | default([]) }}"
-              register: original_flavors
-
             # Remember, hostvars are special: https://github.com/ansible/ansible/issues/13838, https://github.com/ansible/ansible/issues/21084
             - name: create the flavors for our machines
               vars:
                   flv_min_disk_size: 6
                   flv_min_cpu: 1
-                  searched_string: "Flavor with name {{ item.name }} already exists"
               shell: >
                   source ~/stackrc;
                   openstack flavor create
@@ -122,7 +95,6 @@
                   --vcpus {{ [((hostvars[item.name] | default({})).vcpus | default(item.cpu) | int) - 1, flv_min_cpu] | max }}
                   {{ item.name.rstrip('1234567890-').split('-')[-1] }}
               register: flavor_result
-              failed_when: flavor_result.rc != 0 and flavor_result.stderr.find(searched_string) != -1
               with_items: "{{ overcloud_facts.nodes | default([]) }}"
 
             - name: get the node UUID
