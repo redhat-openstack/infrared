@@ -1,118 +1,118 @@
 ---
-- name: Installing Virtual BMC and its requirements
-  delegate_to: "{{ vbmc_inventory_host }}"
-  block:
-  - block:
-    - name: Install packages required for python-virtualbmc pip package
-      package:
-          name:
-            - gcc
-            - libvirt
-            - libvirt-devel
-            - "{{ (hostvars[vbmc_inventory_host].ansible_distribution_major_version|default('7') == '8') | ternary('platform-python-devel', 'python-devel') }}"
-            - "{{ (hostvars[vbmc_inventory_host].ansible_distribution_major_version|default('7') == '8') | ternary('python3-setuptools', 'python-setuptools') }}"
-            - ipmitool
-            - "{{ (hostvars[vbmc_inventory_host].ansible_distribution_major_version|default('7') == '8') | ternary('python3-libvirt', 'libvirt-python') }}"
-          state: latest
-          disable_gpg_check: yes
+- name: Install binary requirements
+  become: true
+  package:
+    name:
+      - gcc
+      - ipmitool
+      - libvirt
+      - libvirt-devel
+      - "{{ (ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int < 8) | ternary('libvirt-python', 'python3-libvirt') }}"
+      - "{{ (ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int < 8) | ternary('python-devel', 'python3-devel') }}"
+      - "{{ (ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int < 8) | ternary('python-virtualenv', 'python3-virtualenv') }}"
+    state: present
+    disable_gpg_check: yes
 
-    - name: install pip
-      easy_install:
-          name: pip
-      when: hostvars[vbmc_inventory_host].ansible_distribution_major_version|default('8') == '7'
-    become: yes
 
-  - name: gather info about PATH/env variables
-    setup:
+- name: Collect the version of virtualenv
+  shell: |
+    virtualenv --version 2>/dev/null || echo 'none'
+  args:
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+  register: _virtualenv_version
 
-  - name: "check if there's a virtualenv already installed (i.e.: a system-wide RPM package)"
-    command: virtualenv --version
-    changed_when: false
-    failed_when: false
-    register: virtualenv_installed_check
+- name: Fail when required virtualenv version is not present
+  fail:
+    msg: >-
+      The required virtualenv version is not present.
+      The minimum version of 1.10 is required, but
+      {{ _virtualenv_version.stdout }} is installed.
+  when:
+    - ((_virtualenv_version.stdout | trim) == 'none') or
+      ((_virtualenv_version.stdout | trim) is version('1.10', '<'))
 
-  - name: install virtualenv pip module
-    pip:
-        name: virtualenv
-        extra_args: "--user"
-    when: virtualenv_installed_check.rc != 0
+# We deliberately avoid downloading newer versions of pip,
+# setuptools and wheel when creating the virtualenv. By
+# doing this we avoid breaking every time one of them does
+# a new release.
+# We also ensure that there are no site packages, because
+# we do not need them.
+- name: Set extra virtualenv parameters
+  set_fact:
+    _venv_create_extra_options: >-
+      {{ ((_virtualenv_version.stdout | trim) is version('14.0.0', '<')) | ternary('--never-download', '--no-download') }}
+      {{ ((_virtualenv_version.stdout | trim) is version('1.7.0', '<')) | ternary('--no-site-packages', '') }}
 
-  - name: Install python-virtualbmc with pip
-    pip:
-        virtualenv: "{{ vbmc_virtualenv }}"
-        name: virtualbmc
-        version: "{{ vbmc_version }}"
-        virtualenv_site_packages: yes
-    environment:
-      PATH: "{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}"
-      # to find 'virtualenv' command if available in user's ~/.local/bin, otherwise will find a system-wide one
-
-  # When a virtualenv is setup, it does not copy the selinux labels.
-  # ref: https://github.com/pypa/virtualenv/issues/1334
-  - name: Set the correct label on the virtualenv to allow systemd to start the service
-    file:
-        path: "{{ vbmc_virtualenv }}/bin"
-        state: directory
-        setype: "bin_t"
-        recurse: yes
-
-  - block:
-      - name: adds VirtualBMC as systemd service
-        copy:
-          mode: 0664
-          dest: "/etc/systemd/system/virtualbmc.service"
-          content: |
-            [Unit]
-            Description=Virtual Baseboard Management Controller Emulation service
-            After=syslog.target network.target
-
-            [Service]
-            Type=simple
-            User={{ vbmc_user }}
-            ExecStart={{ vbmc_virtualenv }}/bin/python {{ vbmcd_bin }} --foreground
-            Restart=always
-            RestartSec=1
-
-            [Install]
-            WantedBy=multi-user.target
-
-      - name: Create VirtualBMC directories
-        file:
-          path: "{{ item }}"
-          state: directory
-          mode: 0640
-          owner: root
-          group: root
-        with_items:
-          - "/etc/virtualbmc"
-          - "/var/log/virtualbmc"
-
-      - name: Create VirtualBMC configuration file
-        copy:
-          mode: 0640
-          dest: "/etc/virtualbmc/virtualbmc.conf"
-          content: |
-            [default]
-            config_dir= {{ vbmc_config_dir }}
-            [log]
-            logfile=/var/log/virtualbmc/virtualbmc.log
-            debug=True
-            [ipmi]
-            session_timout=20
-
-      - name: reload systemd
-        systemd:
-            daemon_reload: yes
-
-      - name: restart virtualbmc
-        service:
-            name: virtualbmc
-            state: restarted
-    become: true
-
-  - name: Start the Virtual BMCs
-    become: true
-    systemd:
+- name: Install python-virtualbmc with pip
+  pip:
       name: virtualbmc
-      state: started
-      enabled: yes
+      version: "{{ vbmc_version }}"
+      virtualenv: "{{ vbmc_virtualenv }}"
+      virtualenv_command: "/usr/bin/virtualenv {{ _venv_create_extra_options }}"
+      virtualenv_site_packages: yes
+
+# When a virtualenv is setup, it does not copy the selinux labels.
+# ref: https://github.com/pypa/virtualenv/issues/1334
+- name: Set the correct label on the virtualenv to allow systemd to start the service
+  file:
+      path: "{{ vbmc_virtualenv }}/bin"
+      state: directory
+      setype: "bin_t"
+      recurse: yes
+  become: true
+
+- name: adds VirtualBMC as systemd service
+  copy:
+    mode: 0664
+    dest: "/etc/systemd/system/virtualbmc.service"
+    content: |
+      [Unit]
+      Description=Virtual Baseboard Management Controller Emulation service
+      After=syslog.target network.target
+
+      [Service]
+      Type=simple
+      User={{ vbmc_user }}
+      ExecStart={{ vbmc_virtualenv }}/bin/python {{ vbmcd_bin }} --foreground
+      Restart=always
+      RestartSec=1
+
+      [Install]
+      WantedBy=multi-user.target
+  become: true
+
+- name: Create VirtualBMC directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0640
+    owner: root
+    group: root
+  with_items:
+    - "/etc/virtualbmc"
+    - "/var/log/virtualbmc"
+  become: true
+
+- name: Create VirtualBMC configuration file
+  copy:
+    mode: 0640
+    dest: "/etc/virtualbmc/virtualbmc.conf"
+    content: |
+      [default]
+      config_dir= {{ vbmc_config_dir }}
+      [log]
+      logfile=/var/log/virtualbmc/virtualbmc.log
+      debug=True
+      [ipmi]
+      session_timout=20
+  become: true
+
+- name: Restart virtualbmc
+  service:
+    name: virtualbmc
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+  become: true
