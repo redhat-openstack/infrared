@@ -1,11 +1,16 @@
 ---
 - name: Provision OpenStack network resources
   hosts: localhost
+  connection: local
+  gather_facts: yes
   tasks:
       - name: get network dict
         include_vars: "{{ provision.topology.network }}"
 
       - block:
+          - debug:
+              var: ansible_python_interpreter
+
           - name: Create networks
             os_network:
                 cloud: "{{ provision.cloud | default(omit) }}"
