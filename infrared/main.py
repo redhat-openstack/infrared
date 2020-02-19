@@ -114,7 +114,7 @@ class WorkspaceManagerSpec(api.SpecObject):
         # import settings
         importer_parser = workspace_subparsers.add_parser(
             'import', help='Import deployment configs.')
-        importer_parser.add_argument("filename", help="Archive file name.")
+        importer_parser.add_argument("filename", help="Archive file name or URL.")
         importer_parser.add_argument(
             "-n", "--name", dest="workspacename",
             help="Workspace name to import with. "
