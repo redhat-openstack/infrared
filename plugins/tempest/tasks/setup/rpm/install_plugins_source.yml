@@ -1,42 +1,18 @@
-- name: Install git
-  become: yes
-  package:
-      name: "git"
-      state: present
-
-# not using easy_install due to problems similar to https://github.com/pypa/pip/issues/4596
-- name: Install pip using get-pip.py
-  shell: |
-      curl https://bootstrap.pypa.io/get-pip.py | {{ ansible_python_interpreter | default('python') }}
-  become: true
-  when: ansible_python_version is version('3', '<')
-
-- name: Install python3-pip
-  package:
-      name: python3-pip
-      state: present
-  become: true
-  when: ansible_python_version  is version('3', '>=')
-
-- name: Create plugins directory
-  file:
-      state: directory
-      path: "{{ plugins_dir }}"
-
+---
 - name: Set hostname url
   set_fact:
-      hostname_url: "{{ plugin_dict.value.repo | default('') | urlsplit('hostname') }}"
+      hostname_url: "{{ repo | default('') | urlsplit('hostname') }}"
 
 - name: Obtain a real URL behind a shortened URL
-  shell: curl -sLI {{ plugin_dict.value.repo }} --insecure | grep -i Location | awk '{print$2}' | head -1
+  shell: curl -sLI {{ repo }} --insecure | grep -i Location | awk '{print$2}' | head -1
   when: hostname_url == "url.corp.redhat.com"
   register: extracted_url
 
-- name: Clone tempest plugin
+- name: Clone "{{ repo | basename }}" tempest plugin
   environment:
       GIT_SSL_NO_VERIFY: 0
   git:
-      repo: "{{ extracted_url.skipped | default(False) | ternary(plugin_dict.value.repo, extracted_url.stdout) | default(plugin_dict.value.default) }}"
+      repo: "{{ extracted_url.skipped | default(False) | ternary(repo, extracted_url.stdout) | default(plugin_dict.value.default) }}"
       dest: "{{ plugins_dir }}/{{ plugin_dict.key }}"
       version: "{{ plugin_dict.value.version | default(omit) }}"
       accept_hostkey: true
@@ -65,6 +41,10 @@
           chdir: "~/{{ test.dir }}"
           requirements: "{{ plugins_reqs.stat.path }}"
       when: plugins_reqs.stat.exists
+
+- name: print dict
+  debug:
+    msg:  "{{ plugins_dir }}/{{ plugin_dict.key }}"
 
 - name: Install plugin packages to the user home directory
   pip:

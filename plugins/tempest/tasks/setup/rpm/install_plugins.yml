@@ -56,8 +56,8 @@
   with_dict: "{{ plugins | default({}) }}"
   when: item.value.package is defined
 
-- name: Install plugin from source "{{ test_suite }}" suite
-  include_tasks: install_plugins_source.yml
+- name: Loop over plugins
+  include_tasks: multiple_plugins.yml
   loop_control:
       loop_var: plugin_dict
   when: plugin_dict.value.package is not defined

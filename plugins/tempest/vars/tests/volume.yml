@@ -9,17 +9,26 @@ test_dict:
           - "^tempest.scenario.test_volume_.*"
           - "^cinder.tests.tempest.*"
           - "^cinder_tempest_plugin.*"
-    blacklist: []
+          - "^tempest_storage_plugin.*"
+    blacklist:
+          - "^tempest_storage_plugin.tests.scenario.test_swift"
+          - "^tempest_storage_plugin.tests.scenario.prepare_cloud"
+          - "^tempest_storage_plugin.tests.scenario.test_overcloud_nodes_power_actions"
+          - "^tempest_storage_plugin.tests.scenario.parallel_tests"
+          - "^tempest_storage_plugin.tests.scenario.test_share.*"
+          - "^tempest_storage_plugin.tests.scenario.test_docker_basic_actions.TestManilaBasicActions.*"
     plugins:
         cinder:
-            repo: "https://opendev.org/openstack/cinder-tempest-plugin"
-            package:
-                7: "python-tempest-lib"
-                8: "python-tempest-lib"
-                9: "python-cinder-tests"
-                10: "python-cinder-tests"
-                11: "python-cinder-tests"
-                12: "python-cinder-tests"
-                13: "python2-cinder-tests-tempest"
-                14: "python2-cinder-tests-tempest"
-                default: "python3-cinder-tests-tempest"
+            repo:
+                - "https://opendev.org/openstack/cinder-tempest-plugin":
+                      package:
+                          7: "python-tempest-lib"
+                          8: "python-tempest-lib"
+                          9: "python-cinder-tests"
+                          10: "python-cinder-tests"
+                          11: "python-cinder-tests"
+                          12: "python-cinder-tests"
+                          13: "python2-cinder-tests-tempest"
+                          14: "python2-cinder-tests-tempest"
+                          default: "python3-cinder-tests-tempest"
+                - "https://url.corp.redhat.com/downstream-storage-plugin"

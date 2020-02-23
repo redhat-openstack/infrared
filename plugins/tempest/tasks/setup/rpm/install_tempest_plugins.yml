@@ -1,0 +1,14 @@
+---
+- name: Install plugin packages for "{{ test_suite }}" suite
+  become: yes
+  package:
+      name: "{{ item.value.package[test.openstack.version |default(overcloud_version) | int]|default(item.value.package.default) }}"
+      state: present
+  with_dict: "{{ repo }}"
+  register: packages
+  ignore_errors: True
+  when: item.value.package is defined
+
+- name: Install plugin from source "{{ test_suite }}" suite
+  include_tasks: install_plugins_source.yml
+  when: packages.results is not defined
