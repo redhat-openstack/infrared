@@ -101,6 +101,12 @@
       regex: "{{ test_dict.test_regex }}"
   when: test_dict.test_regex is defined and test_dict.test_regex
 
+- name: Check resolv.conf
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-cat -a tempest_image /etc/resolv.conf"
+  failed_when: false
+
 - block:
       - name: Set python interpreter for tempest
         vars:

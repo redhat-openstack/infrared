@@ -37,3 +37,10 @@
   command: "virt-customize -a ~/tempest_image --run-command \"{{ test.images.command }}\""
   failed_when: false
   when: test.images.command is defined
+
+- name: Check resolv.conf
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-cat -a tempest_image /etc/resolv.conf"
+  failed_when: false
+  when: test.images.command is defined

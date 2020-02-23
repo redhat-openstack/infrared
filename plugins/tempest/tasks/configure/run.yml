@@ -121,6 +121,12 @@
       REQUESTS_CA_BUNDLE: '/etc/pki/tls/certs/ca-bundle.crt'
   register: config_result
 
+- name: Check resolv.conf
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-cat -a tempest_image /etc/resolv.conf"
+  failed_when: false
+
 - name: Save the current state for the later cleanup
   shell: >
       test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
