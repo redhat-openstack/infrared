@@ -23,52 +23,11 @@
       state: directory
       path: "{{ plugins_dir }}"
 
-- name: Set hostname url
-  set_fact:
-      hostname_url: "{{ plugin_dict.value.repo | default('') | urlsplit('hostname') }}"
+- set_fact:
+        repos: "{{ plugin_dict.value.repo is defined | ternary([plugin_dict.value.repo], plugin_dict.value.repos) }}"
 
-- name: Obtain a real URL behind a shortened URL
-  shell: curl -sLI {{ plugin_dict.value.repo }} --insecure | grep -i Location | awk '{print$2}' | head -1
-  when: hostname_url == "url.corp.redhat.com"
-  register: extracted_url
-
-- name: Clone tempest plugin
-  environment:
-      GIT_SSL_NO_VERIFY: 0
-  git:
-      repo: "{{ extracted_url.skipped | default(False) | ternary(plugin_dict.value.repo, extracted_url.stdout) | default(plugin_dict.value.default) }}"
-      dest: "{{ plugins_dir }}/{{ plugin_dict.key }}"
-      version: "{{ plugin_dict.value.version | default(omit) }}"
-      accept_hostkey: true
-  retries: 3
-  delay: 60
-
-- name: Install extra system requirements for tests
-  package:
-      name: "{{ plugin_dict.value.dependencies }}"
-      state: present
-  when: plugin_dict.value.dependencies is defined
-  become: yes
-
-- block:
-    # some repos have "test-requirements" files and some don't.
-    - name: Check if test-requirements exists
-      stat:
-          path: "{{ plugins_dir }}/{{ plugin_dict.key }}/test-requirements.txt"
-      register: plugins_reqs
-
-    - name: Get repo requirements
-      become: yes
-      environment:
-        PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
-      pip:
-          chdir: "~/{{ test.dir }}"
-          requirements: "{{ plugins_reqs.stat.path }}"
-      when: plugins_reqs.stat.exists
-
-- name: Install plugin packages to the user home directory
-  pip:
-      name: "{{ plugins_dir }}/{{ plugin_dict.key }}"
-      state: present
-      editable: true
-      extra_args: --user
+- name: Loop over tempest plugins
+  include_tasks: install_multiple_plugins.yml
+  with_items: "{{ repos }}"
+  loop_control:
+    loop_var: repo

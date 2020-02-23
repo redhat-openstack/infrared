@@ -9,10 +9,20 @@ test_dict:
           - "^tempest.scenario.test_volume_.*"
           - "^cinder.tests.tempest.*"
           - "^cinder_tempest_plugin.*"
-    blacklist: []
+          - "^tempest_storage_plugin"
+
+    blacklist:
+          - "^tempest_storage_plugin.tests.scenario.test_swift"
+          - "^tempest_storage_plugin.tests.scenario.prepare_cloud"
+          - "^tempest_storage_plugin.tests.scenario.test_overcloud_nodes_power_actions"
+          - "^tempest_storage_plugin.tests.scenario.parallel_tests"
+          - "^tempest_storage_plugin.tests.scenario.test_share.*"
+          - "^tempest_storage_plugin.tests.scenario.test_docker_basic_actions.TestManilaBasicActions.*"
     plugins:
         cinder:
-            repo: "https://opendev.org/openstack/cinder-tempest-plugin"
+            repo:
+               - "https://opendev.org/openstack/cinder-tempest-plugin"
+               - "https://url.corp.redhat.com/downstream-storage-plugin"
             package:
                 7: "python-tempest-lib"
                 8: "python-tempest-lib"
