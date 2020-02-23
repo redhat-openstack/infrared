@@ -64,6 +64,15 @@
             - upgrade
         import_tasks: tasks/prepare_uc_images.yml
         when: undercloud_version|openstack_release >= 13
+        
+      # If dnsmasq is running, it will cause openstack-ironic-inspector-dnsmasq
+      # to fail since it's using the same port as used by dnsmasq
+      - name: stop dnsmasq
+        become: true
+        service:
+            name: dnsmasq
+            state: stopped
+        when: undercloud_version|openstack_release == 13
 
       - name: "{{ operation_type }} to version {{ undercloud_upgrade_version }} build {{ install.build | default('latest') }}"
         include_tasks: "tasks/upgrade/upgrade.yml"
