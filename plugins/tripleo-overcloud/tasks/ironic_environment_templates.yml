@@ -3,7 +3,7 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: "--environment-file {{ install.heat.templates.basedir }}/environments/services-docker/ironic.yaml \\"
-      insertbefore: "^--log-file.*"
+      insertafter: '^\s*--templates.*'
   when:
   - install.version | default(undercloud_version) | openstack_release == 12
 
@@ -11,7 +11,7 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: "--environment-file {{ install.heat.templates.basedir }}/environments/services/ironic.yaml \\"
-      insertbefore: "^--log-file.*"
+      insertafter: '^\s*--templates.*'
   when:
   - install.version | default(undercloud_version) | openstack_release < 15
   - install.version | default(undercloud_version) | openstack_release != 12
@@ -20,7 +20,7 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: "--environment-file {{ install.heat.templates.basedir }}/environments/services/ironic-overcloud.yaml \\"
-      insertbefore: "^--log-file.*"
+      insertafter: '^\s*--templates.*'
   when:
   - install.version | default(undercloud_version) | openstack_release > 14
 
@@ -28,7 +28,7 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: "--environment-file {{ install.heat.templates.basedir }}/environments/services/ironic-inspector.yaml \\"
-      insertbefore: "^--log-file.*"
+      insertafter: '^\s*--templates.*'
   when:
   - install.ironic_inspector
   - install.version | default(undercloud_version) | openstack_release >= 14
