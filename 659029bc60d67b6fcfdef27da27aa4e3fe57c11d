@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43330138_71aecf0a",
+        "filename": "infrared/common/roles/shade/tasks/main.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1004057
+      },
+      "writtenOn": "2020-02-24T16:43:46Z",
+      "side": 1,
+      "message": "The name of this variable doesn\u0027t represent its purpose anymore...\nActually, I think the only reason we need it, is to check whether there is a use of python 3 or not...\n\nIf there is no later usage in this variable, I suggest to move it to next task and define it as a task var there\n\n- name: install virtualenv requirments for pip\n  become: yes\n  var:\n      is_py3: ansible_python_version is version(\u00273\u0027, \u0027\u003c\u0027) \n  package:\n      name:\n        - gcc\n        - \"{{ (install_pip_from_source) | ternary(\u0027python3-devel\u0027, \u0027python-devel\u0027) }}\"\n        - \"{{ (install_pip_from_source) | ternary(\u0027python3-setuptools\u0027, \u0027python-setuptools\u0027) }}\"\n        - libffi-devel\n      state: present",
+      "range": {
+        "startLine": 8,
+        "startChar": 4,
+        "endLine": 8,
+        "endChar": 27
+      },
+      "revId": "659029bc60d67b6fcfdef27da27aa4e3fe57c11d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
