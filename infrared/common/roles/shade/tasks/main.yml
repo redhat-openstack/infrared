@@ -37,15 +37,6 @@
   when: install_pip_from_source
   tags: install-pip
 
-
-#TODO(aopincar): Check if there is a reason not install pip from source only
-- name: install pip using easy_install
-  become: yes
-  easy_install:
-      name: pip
-  when: not install_pip_from_source
-  tags: install-pip
-
 - name: install virtualenv pip module
   environment:
      PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
