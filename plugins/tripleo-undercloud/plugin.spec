@@ -24,6 +24,7 @@ subparsers:
                           This will create an undercloud snapshot for use with the `--snapshot-restore` flag
                   dest-address:
                       type: Value
+                      default: "cougar11.scl.lab.tlv.redhat.com"
                       help: |
                           This will be the remote server where the UC backup image will be stored
                   dest-mirror-address:
