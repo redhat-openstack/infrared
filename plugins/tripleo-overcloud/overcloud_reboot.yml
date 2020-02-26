@@ -12,6 +12,59 @@
   roles:
       - version-discovery
 
+- name: Prepare and launch workload
+  hosts: undercloud
+  gather_facts: false
+  any_errors_fatal: true
+  serial: 1
+  vars_files:
+      - vars/overcloud/reboot/workload.yml
+  tasks:
+      - block:
+          - name: create cleanup workload script
+            template:
+              src: "{{ workload_cleanup_template }}"
+              dest: "{{ workload_cleanup_script }}"
+              mode: 0775
+          - name: create workload launch script
+            template:
+              src: "{{ workload_launch_template }}"
+              dest: "{{ workload_launch_script }}"
+              mode: 0775
+          - name: create workload start script
+            template:
+              src: "{{ workload_start_after_reboot_template }}"
+              dest: "{{ workload_start_after_reboot_script }}"
+              mode: 0775
+          - name: create connectivity check script
+            template:
+              src: "{{ connectivity_check_template }}"
+              dest: "{{ connectivity_check_script }}"
+              mode: 0775
+          - name: cleanup workload
+            shell: |
+              set -o pipefail
+              bash {{ workload_cleanup_script }} 2>&1 {{ timestamper_cmd }} > cleanup_workload_pre.log
+            args:
+              chdir: "{{ working_dir }}"
+            when: workload_cleanup
+          - name: launch workload
+            shell: |
+              set -o pipefail
+              bash {{ workload_launch_script }} 2>&1 {{ timestamper_cmd }} > workload_launch.log
+            args:
+              chdir: "{{ working_dir }}"
+          - name: check vm connectivity before reboot
+            shell: |
+              set -o pipefail
+              bash {{ connectivity_check_script }}
+            args:
+              chdir: "{{ working_dir }}"
+            when: connectivity_check
+
+        when: install.workload|default(False)
+
+
 - name: Overcloud Reboot
   hosts: overcloud_nodes:!unused
   gather_facts: false
@@ -167,8 +220,11 @@
             delay: 30
             sleep: 15
             timeout: 360
+        register: uc_reachable
         delegate_to: hypervisor
+        retries: 21
         when: "'hypervisor' in groups"
+        until: uc_reachable is succeeded
 
       - name: check node is ssh-able
         shell: id || echo "NOT_READY"
@@ -481,3 +537,35 @@
           - groups.compute|difference(groups.unused|default([]))|length > 1
           - install.postreboot_evacuate|default(False)
           - compute_instances.stdout | length > 0
+
+
+- name: VM recovery
+  hosts: undercloud
+  gather_facts: false
+  any_errors_fatal: true
+  serial: 1
+  vars_files:
+      - vars/overcloud/reboot/workload.yml
+  tasks:
+      - block:
+          - name: start VM instances after overcloud restart
+            shell: |
+              set -o pipefail
+              bash {{ workload_start_after_reboot_script }}
+            args:
+              chdir: "{{ working_dir }}"
+          - name: check vm connectivity after reboot
+            shell: |
+              set -o pipefail
+              bash {{ connectivity_check_script }}
+            args:
+              chdir: "{{ working_dir }}"
+            when: connectivity_check
+          - name: cleanup workload
+            shell: |
+              set -o pipefail
+              bash {{ workload_cleanup_script }} 2>&1 {{ timestamper_cmd }} > cleanup_workload_post.log
+            args:
+              chdir: "{{ working_dir }}"
+            when: workload_cleanup
+        when: install.workload|default(False)

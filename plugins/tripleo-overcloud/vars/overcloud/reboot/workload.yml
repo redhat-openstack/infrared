@@ -1,0 +1,37 @@
+---
+# defaults file for tripleo-overcloud
+# main vars:
+working_dir: "{{ (ansible_env|default({})).HOME|default('/home/stack') }}"
+
+
+# rc files:
+undercloud_rc: "{{ working_dir }}/stackrc"
+overcloud_rc: "{{ working_dir }}/{{ install.overcloud.stack }}rc"
+
+
+# launch workload before update/upgrade
+workload_cleanup: true
+external_network_name: "public"
+workload_image_url: "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+workload_memory: "512"
+workload_user: "cirros"
+workload_disk: 5
+workload_vcpu: 1
+workload_swap: 512
+
+# note that both UC upgrade and update use the same template
+workload_launch_template: workload_launch.sh.j2
+workload_launch_script: "{{ working_dir }}/workload_launch.sh"
+workload_cleanup_template: cleanup_workload.sh.j2
+workload_cleanup_script: "{{ working_dir }}/cleanup_workload.sh"
+workload_start_after_reboot_template: workload_start.sh.j2
+workload_start_after_reboot_script: workload_start.sh
+
+# connectivity check before and after reboot
+connectivity_check: true
+connectivity_check_template: "check_vm_connectivity.sh.j2"
+connectivity_check_script: "{{ working_dir }}/check_vm_connectivity.sh"
+
+# required for logstash indexing
+timestamper_cmd: >-
+    | awk '{ print strftime("%Y-%m-%d %H:%M:%S |"), $0; fflush(); }'
