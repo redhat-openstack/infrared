@@ -1,0 +1,64 @@
+#!/bin/bash
+
+OVERCLOUD_RC="{{ overcloud_rc }}"
+INSTANCE_USER="{{ workload_user }}"
+INTERNET_IP=8.8.8.8
+
+source ${OVERCLOUD_RC}
+
+INSTANCE_NETWORKS_LIST=$(openstack server list -f value -c Networks \
+| grep -v "^$" | cut -d "=" -f2)
+INSTANCE_FIP_LIST=$(echo "$INSTANCE_NETWORKS_LIST" \
+| cut -d "," -f2)
+INSTANCE_INT_IP_LIST=$(echo "$INSTANCE_NETWORKS_LIST" \
+| cut -d "," -f1)
+
+# SSH to VMs through their floating ip
+for INSTANCE_FIP in $INSTANCE_FIP_LIST; do
+    timeout_seconds=180
+    elapsed_seconds=0
+    while true; do
+        # assert instance is reachable via FIP
+        echo "[$(date)] Trying to ssh to ${INSTANCE_FIP}"
+        ssh -q -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            ${INSTANCE_USER}@${INSTANCE_FIP} "hostname"
+    
+        if [[ ${?} -eq 0 ]]; then
+            echo "Instance is reachable via ${INSTANCE_FIP}"
+            break
+        fi
+        sleep 3
+        elapsed_seconds=$(expr $elapsed_seconds + 3)
+        if [ $elapsed_seconds -ge $timeout_seconds ]; then
+            echo "FAILURE: Instance failed to boot."
+            exit 1
+        fi
+    done
+done
+
+# Ping from one VM to the other internal IP
+for INSTANCE_FIP in $INSTANCE_FIP_LIST; do
+    #ping any other VM instance FIP
+    for OTHER_INSTANCE_FIP in $INSTANCE_FIP_LIST; do
+        ssh -q -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            ${INSTANCE_USER}@${INSTANCE_FIP} \
+            "ping -c1 -W5 ${OTHER_INSTANCE_FIP}" \
+            || exit 1
+    done
+    #ping any other VM instance internal IP
+    for INSTANCE_INT_IP in $INSTANCE_INT_IP_LIST; do
+        ssh -q -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            ${INSTANCE_USER}@${INSTANCE_FIP} \
+            "ping -c1 -W5 ${INSTANCE_INT_IP}" \
+            || exit 1
+    done
+    #ping internet
+    ssh -q -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        ${INSTANCE_USER}@${INSTANCE_FIP} \
+        "ping -c1 -W5 ${INTERNET_IP}" \
+        || exit 1
+done
+
