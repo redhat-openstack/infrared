@@ -1,0 +1,149 @@
+#!/bin/bash
+#
+# Script that spawns an instance
+#
+
+SUFFIX=$(openssl rand -hex 5)
+SUFFIX2=$(openssl rand -hex 5)
+
+OVERCLOUD_RC='{{ overcloud_rc }}'
+IMAGE_URL='{{ workload_image_url }}'
+IMAGE_NAME="upgrade_workload_${SUFFIX}"
+IMAGE_FILE="$(mktemp -d )/upgrade_workload_image.qcow2"
+INSTANCE_NAME="instance_${SUFFIX}"
+INSTANCE_NAME2="instance_${SUFFIX2}"
+KEYPAIR_NAME="userkey_${SUFFIX}"
+FLAVOR_NAME="v1-1G-{{ workload_disk}}G-${SUFFIX}"
+SECGROUP_NAME="allow-icmp-ssh-${SUFFIX}"
+TENANT_NET_NAME="internal_net_${SUFFIX}"
+EXTERNAL_NET_NAME='{{ external_network_name }}'
+
+source ${OVERCLOUD_RC}
+
+## create image
+openstack image list | grep ${IMAGE_NAME}
+
+if [ $? -ne 0 ]; then
+    echo "Downloading image ${IMAGE_URL}"
+    curl --silent --retry 3 -L -4 -o ${IMAGE_FILE} ${IMAGE_URL}
+
+    if [ $? -ne 0 ]; then
+        echo "Failed to download ${IMAGE_URL}"
+        exit 1
+    fi
+
+    echo "Uploading ${IMAGE_NAME} to Glance"
+    openstack image create \
+        --file ${IMAGE_FILE} \
+        --disk-format qcow2 \
+        --container-format bare \
+        ${IMAGE_NAME}
+fi
+
+## create user key
+openstack keypair list | grep ${KEYPAIR_NAME}
+if [ $? -ne 0 ]; then
+    echo "Creating keypair ${KEYPAIR_NAME}"
+    openstack keypair create --public-key ~/.ssh/id_rsa.pub ${KEYPAIR_NAME}
+fi
+
+## create flavor
+openstack flavor list | grep ${FLAVOR_NAME}
+if [ $? -ne 0 ]; then
+    echo "Creating flavor ${FLAVOR_NAME}"
+    openstack flavor create --vcpus {{ workload_vcpu }} \
+        --ram {{ workload_memory }} \
+        --disk {{ workload_disk }} \
+        --swap {{ workload_swap }} \
+        $FLAVOR_NAME
+fi
+
+## create networking
+openstack network list | grep ${TENANT_NET_NAME}
+if [ $? -ne 0 ]; then
+    NAMESERVER=$(grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' /etc/resolv.conf  | head -1)
+    echo "Creating router ${TENANT_NET_NAME}_router"
+    openstack router create ${TENANT_NET_NAME}_router || exit 1
+
+    echo "Creating network ${TENANT_NET_NAME}"
+    openstack network create ${TENANT_NET_NAME} || exit 1
+
+    echo "Creating subnet ${TENANT_NET_NAME}_subnet"
+    openstack subnet create \
+        --subnet-range 192.168.0.0/24 \
+        --allocation-pool start=192.168.0.10,end=192.168.0.100 \
+        --gateway 192.168.0.254 \
+        --dns-nameserver ${NAMESERVER} \
+        --network ${TENANT_NET_NAME} \
+        ${TENANT_NET_NAME}_subnet || exit 1
+
+    echo "Add subnet ${TENANT_NET_NAME}_subnet to router ${TENANT_NET_NAME}_router"
+    openstack router add subnet  ${TENANT_NET_NAME}_router ${TENANT_NET_NAME}_subnet || exit 1
+
+    echo "Set external-gateway for ${TENANT_NET_NAME}_router"
+    openstack router set --external-gateway ${EXTERNAL_NET_NAME} ${TENANT_NET_NAME}_router || exit 1
+fi
+
+## create security group
+openstack security group list | grep ${SECGROUP_NAME}
+if [ $? -ne 0 ]; then
+    echo "Creating security group ${SECGROUP_NAME}"
+    openstack security group create ${SECGROUP_NAME} || exit 1
+
+    echo "Creating rules for ports 22,80,443 in security group ${SECGROUP_NAME}"
+    openstack security group rule create --proto icmp ${SECGROUP_NAME} || exit 1
+    openstack security group rule create --proto tcp --dst-port 22 ${SECGROUP_NAME} || exit 1
+    openstack security group rule create --proto tcp --dst-port 80 ${SECGROUP_NAME} || exit 1
+    openstack security group rule create --proto tcp --dst-port 443 ${SECGROUP_NAME} || exit 1
+fi
+
+## create instance
+TENANT_NET_ID=$( openstack network show -f json ${TENANT_NET_NAME} |  jq -r -c '.id' )
+
+for INSTANCE in ${INSTANCE_NAME} ${INSTANCE_NAME2}; do
+    echo "Creating overcloud instance ${INSTANCE}"
+    openstack server create  \
+        --image ${IMAGE_NAME} \
+        --flavor ${FLAVOR_NAME} \
+        --security-group ${SECGROUP_NAME} \
+        --key-name  ${KEYPAIR_NAME} \
+        --nic net-id=${TENANT_NET_ID} \
+        ${INSTANCE} || exit 1
+
+    timeout_seconds=120
+    elapsed_seconds=0
+    while true; do
+        INSTANCE_STATUS=$(openstack server show ${INSTANCE} -f json | jq -r '.status')
+        case "${INSTANCE_STATUS}" in
+            "ACTIVE")
+                echo "${INSTANCE} reached 'ACTIVE' status"
+                break
+                ;;
+            "ERROR")
+                echo "${INSTANCE} failed"
+                exit 1
+        esac
+        sleep 3
+        elapsed_seconds=$(expr $elapsed_seconds + 3)
+        if [ $elapsed_seconds -ge $timeout_seconds ]; then
+            echo "FAILURE: Instance failed to boot within ${elapsed_seconds} seconds"
+            openstack server show ${INSTANCE} -f json 2>&1
+            exit 1
+        fi
+    done
+
+    ## assign floating ip
+    INSTANCE_FIP=$(openstack floating ip create ${EXTERNAL_NET_NAME} -f json | jq -r -c '.floating_ip_address' )
+
+
+    echo "Assign FIP[${INSTANCE_FIP}] to server ${INSTANCE}"
+    openstack server add floating ip ${INSTANCE} ${INSTANCE_FIP} || exit 1
+
+    ### TO-DO after overcloud reboot, volumes status is set to error and VMs
+    ### cannot be started
+    ## create and attach a volume
+    #CINDER_VOL_ID=$(openstack volume create --size 1 vol_${INSTANCE} -f json | jq -r .id) || exit 1
+    #echo "Attach volume vol_${INSTANCE} to instance ${INSTANCE}"
+    #openstack server add volume ${INSTANCE} ${CINDER_VOL_ID} || exit 1
+done
+

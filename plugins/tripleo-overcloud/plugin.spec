@@ -807,6 +807,12 @@ subparsers:
                       help: |
                           Validate connectivity to floating IP doesn't get interrupted during update/upgrade.
                       default: False
+                  workload:
+                      type: Bool
+                      help: |
+                          Create workload (create some VMs) before reboot, start them after reboot and
+                          check connecticity between them.
+                      default: False
 
             - title: Ironic Configuration
               options:
