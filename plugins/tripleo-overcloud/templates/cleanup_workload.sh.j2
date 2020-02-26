@@ -1,0 +1,81 @@
+#!/bin/bash
+#
+
+OVERCLOUD_RC='{{ overcloud_rc }}'
+source ${OVERCLOUD_RC}
+
+echo -e "\nDeleting all VM instances"
+for vm in $(openstack server list --all -c ID -f value | grep -v "^$"); do
+    echo -e ".\c"; openstack server delete $vm
+done
+
+for router in $(openstack router list -c ID -f value | grep -v "^$"); do
+  echo "Removing all subnets from router (ID: $router)"
+  for subnet in $(openstack subnet list -c ID -f value | grep -v "^$"); do
+    echo -e ".\c"; openstack router remove subnet $router $subnet
+done;
+done
+
+echo -e "\nDeleting all floating ips"
+for fip in $(openstack floating ip list -c ID -f value | grep -v "^$"); do
+    echo -e ".\c"; openstack floating ip delete $fip
+done
+
+#for OSP 13 might need to use: neutron router-gateway-clear
+echo -e "\nUnsetting external gateway from all routers"
+for router in $(openstack router list -c ID -f value | grep -v "^$"); do
+    echo -e ".\c"; openstack router unset --external-gateway $router
+done
+
+echo -e "\nDeleting all trunks"
+for trunk in $(openstack network trunk list -c ID -f value | grep -v "^$"); do
+    echo -e ".\c"; openstack network trunk delete $trunk
+done
+
+echo -e "\nDeleting all ports"
+for port in $(openstack port list -c ID -f value | grep -v "^$"); do
+    echo -e ".\c"; openstack port delete $port
+done
+
+echo -e "\nDeleting all subnets"
+for subnet in $(openstack network list --internal -c Subnets -f value | tr -d "," | grep -v "^$"); do
+    echo -e ".\c"; openstack subnet delete $subnet
+done
+
+echo -e "\nDeleting all routers"
+for router in $(openstack router list -c ID -f value | grep -v "^$"); do
+    echo -e ".\c"; openstack router delete $router
+done
+
+echo -e "\nDeleting all internal networks"
+for network in $(openstack network list --internal -c ID -f value | grep -v "^$"); do
+    echo -e ".\c"; openstack network delete $network
+done
+
+echo -e "\nDeleting all VM images"
+for img in $(openstack image list -c ID -f value | grep -v "^$"); do
+    echo -e ".\c"; openstack image delete $img
+done
+
+echo -e "\nDeleting all VM flavors"
+for flavor in $(openstack flavor list -c ID -f value | grep -v "^$"); do
+    echo -e ".\c"; openstack flavor delete $flavor
+done
+
+echo -e "\nDeleting all security groups"
+for secgroup in $(openstack security group list -c ID -f value | grep -v "^$"); do
+    echo -e ".\c"; openstack security group delete $secgroup
+done
+
+echo -e "\nDeleting key pairs"
+for keypair in $(openstack keypair list -c Name -f value | grep -v "^$"); do
+    echo -e ".\c"; openstack keypair delete $keypair
+done
+
+echo -e "\nDeleting volumes"
+for volume in $(openstack volume list -c ID -f value | grep -v "^$"); do
+    echo -e ".\c"
+    openstack volume set --detached $volume
+    openstack volume delete $volume
+done
+
