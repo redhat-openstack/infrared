@@ -175,19 +175,22 @@
         ignore_errors: true
 
       - block:
-        - name: read value of 'docker_insecure_registries' from undercloud.conf
-          vars:
-            undercloud_conf_orig_file: "{{ inventory_dir }}/undercloud_before_adding_insecure_registries.conf"
-          set_fact:
-            docker_insecure_registries_orig: "{{ lookup('ini', 'docker_insecure_registries section=DEFAULT file={{ undercloud_conf_orig_file }}') }}"
+        - block:
+          - name: read value of 'docker_insecure_registries' from undercloud.conf
+            vars:
+              undercloud_conf_orig_file: "{{ inventory_dir }}/undercloud_before_adding_insecure_registries.conf"
+            set_fact:
+              docker_insecure_registries_orig: "{{ lookup('ini', 'docker_insecure_registries section=DEFAULT file={{ undercloud_conf_orig_file }}') }}"
 
-        - name: "append insecure registry: {{ registry_host }}"
-          set_fact:
-            docker_insecure_registries_with_overrides: "{{ docker_insecure_registries_with_overrides | default(docker_insecure_registries_orig.split(',')) + [item] }}"
-          with_items: "{{ registry_host }}"
+          - name: "append insecure registry: {{ registry_host }}"
+            set_fact:
+              docker_insecure_registries_with_overrides: "{{ docker_insecure_registries_with_overrides | default(docker_insecure_registries_orig.split(',')) + [item] }}"
+            with_items: "{{ registry_host }}"
 
-        - debug:
-            var: docker_insecure_registries_with_overrides
+          - debug:
+              var: docker_insecure_registries_with_overrides
+
+          when: ansible_distribution_major_version | int == 7
 
         - name: add insecure registries (including overrides) to undercloud.conf
           ini_file:
@@ -196,7 +199,7 @@
             backup: yes
             section: DEFAULT
             option: docker_insecure_registries
-            value: "{{ docker_insecure_registries_with_overrides | join(',') }}"
+            value: "{{ docker_insecure_registries_with_overrides | default(podman_insecure_registries_with_overrides) | join(',') }}"
         when: fetch_undercloud_conf is not failed
 
       tags: update-undercloud-conf
