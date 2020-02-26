@@ -221,7 +221,33 @@
       - install.network.ovn and not install.network.dvr
       - install.version|default(undercloud_version)|openstack_release == 12
 
-- name: Change network type in OVN ML2 environment file OSP
+- name: Set NeutronTypeDrivers to {{ install.network.backend }} in neutron-ovn-ha env file
+  become: yes
+  yedit:
+      src: "{{ install.heat.templates.basedir }}/environments/services/neutron-ovn-ha.yaml"
+      update: True
+      key: parameter_defaults
+      value:
+          NeutronTypeDrivers:
+              "{{ install.network.backend }},flat"
+  when:
+      - install.network.ovn and not install.network.dvr
+      - install.version|default(undercloud_version)|openstack_release >= 13
+
+- name: Set NeutronTypeDrivers to {{ install.network.backend }} in neutron-ovn-dvr-ha env file
+  become: yes
+  yedit:
+      src: "{{ install.heat.templates.basedir }}/environments/services/neutron-ovn-dvr-ha.yaml"
+      update: True
+      key: parameter_defaults
+      value:
+          NeutronTypeDrivers:
+              '{{ install.network.backend }},flat'
+  when:
+      - install.network.ovn and install.network.dvr
+      - install.version|default(undercloud_version)|openstack_release >= 13
+
+- name: Set NeutronNetworkType to {{ install.network.backend }} in neutron-ovn-ha env file
   become: yes
   yedit:
       src: "{{ install.heat.templates.basedir }}/environments/services/neutron-ovn-ha.yaml"
@@ -229,12 +255,12 @@
       key: parameter_defaults
       value:
           NeutronNetworkType:
-              '{{ install.network.backend }}'
+              "{{ install.network.backend }},flat"
   when:
       - install.network.ovn and not install.network.dvr
       - install.version|default(undercloud_version)|openstack_release >= 13
 
-- name: Change network type in OVN DVR environment file
+- name: Set NeutronNetworkType to {{ install.network.backend }} in neutron-ovn-dvr-ha env file
   become: yes
   yedit:
       src: "{{ install.heat.templates.basedir }}/environments/services/neutron-ovn-dvr-ha.yaml"
@@ -242,7 +268,7 @@
       key: parameter_defaults
       value:
           NeutronNetworkType:
-              '{{ install.network.backend }}'
+              '{{ install.network.backend }},flat'
   when:
       - install.network.ovn and install.network.dvr
       - install.version|default(undercloud_version)|openstack_release >= 13
