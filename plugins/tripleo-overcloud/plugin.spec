@@ -653,12 +653,14 @@ subparsers:
                           the is_hci flag is introduced into internal.yaml.
                       default: false
 
-                  ceph-rgw-swift-headers:
+                  ceph-rgw-swift-compatibility:
                       type: Bool
                       help: |
                           Rados Gateway does not respond with same headers as swift.
-                          Changing this to true will add a config flag that forces the responces to match swift's.
-                          This is useful when tempest object_storage tests fail due to the headers mismatch
+                          Rados Gateway doesn't enable versioning by default.
+                          Changing this to true will add a config flag that forces the responces to match swift's and
+                          enable versioning.
+                          This is useful when tempest object_storage tests fail due to differences with swift.
                       default: false
 
             - title: Composable roles
