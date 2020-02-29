@@ -37,3 +37,5 @@
   template:
       dest: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/ironic-custom.yaml"
       src: ironic-custom.yaml.j2
+  when:
+  - '"networking-ansible" not in install.overcloud.templates|join(" ")'
