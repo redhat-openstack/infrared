@@ -26,6 +26,16 @@
   become: true
   when: ansible_python_version  is version('3', '>=')
 
+# Make sure latest version of virtualenv is installed with pip.
+# Previous stages/roles (like shade) possibly installed python-virtualenv as a
+# system package and there is a need to reinstall the package with sudo to have
+# the virtualenv updated and available to all users.
+- name: Install latest virtualenv using pip
+  pip:
+    name: virtualenv
+    state: forcereinstall
+  become: true
+
 - name: Clone tempest
   git:
       repo: "{{ setup.repo.get(test.openstack.version|default(overcloud_version)|openstack_release, setup.repo.defaults).url }}"
