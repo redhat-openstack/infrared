@@ -51,4 +51,6 @@ parameter_defaults:
 {% if install.version|openstack_release > 14 %}
     NeutronMechanismDrivers: ovn,ansible
     NeutronTypeDrivers: local,geneve,vlan,flat
+{% else %}
+    NeutronTypeDrivers: local,vxlan,vlan,flat
 {% endif %}
