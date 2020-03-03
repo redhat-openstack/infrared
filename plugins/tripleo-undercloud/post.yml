@@ -29,8 +29,9 @@
           notify: restart ironic conductor service
           when: "install.version|openstack_release <= 13"
       when:
-        - "'vqfx-0' in hostvars"
+        - "'vqfx-0' in hostvars or 'veos-0' in hostvars"
         - "install.version is defined"
+
     - name: Set ctlplane nameservers on (OSP<11 and OSP13 only)
       shell: |
         source ~/stackrc
