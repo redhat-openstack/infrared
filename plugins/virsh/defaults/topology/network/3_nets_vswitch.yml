@@ -42,7 +42,7 @@ nodes:
             - network: "data"
             - network: "management"
             - network: "external"
-            - connect_to: "vqfx"
+            - connect_to: "{{ vswitch_type }}"
               network: baremetal
               bridged: yes
               model: e1000
@@ -52,7 +52,7 @@ nodes:
             network: management
     ironic:
         interfaces:
-            - connect_to: vqfx
+            - connect_to: "{{ vswitch_type }}"
               network: baremetal
               bridged: yes
               model: e1000
@@ -85,3 +85,10 @@ nodes:
               model: e1000
         external_network:
             network: management
+    veos:
+        interfaces:
+            # management network must be first
+            - network: management
+              model: e1000
+        external_network:
+          network: management
