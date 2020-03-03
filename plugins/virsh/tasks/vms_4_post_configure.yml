@@ -12,10 +12,10 @@
           NAME=eth3
           NM_CONTROLLED=no
           ONBOOT=no
-  when: "'vqfx-0' in hostvars"
+  when: topology_node.os.type in infrared_vswitch_types
 
-- name: "configure {{ topology_node.os.type }} switch"
-  include_tasks: "tasks/configure_{{ topology_node.os.type }}_switch.yml"
+- name: "setup ssh keys on {{ topology_node.os.type }} switch"
+  include_tasks: "tasks/vswitch_appliance_setup.yml"
   when: topology_node.os.type in infrared_vswitch_types
   with_items: "{{ topology_node.node_indexes }}"
   loop_control:
