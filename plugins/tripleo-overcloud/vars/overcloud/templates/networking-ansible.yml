@@ -5,12 +5,21 @@ tripleo_heat_templates:
 custom_templates:
   parameter_defaults:
     ML2HostConfigs:
+      {% if 'vqfx-0' in hostvars %}
       junos:
         ansible_host: "{{ hostvars['vqfx-0']['ansible_host'] }}"
         ansible_network_os: junos
         ansible_ssh_pass: Juniper
         ansible_user: root
         manage_vlans: False
+      {% endif %}
+      {% if 'veos-0' in hostvars %}
+      veos:
+        ansible_host: "{{ hostvars['veos-0']['ansible_host'] }}"
+        ansible_network_os: eos
+        ansible_ssh_pass: Arista
+        ansible_user: admin
+      {% endif %}
     IronicCleaningNetwork: 'baremetal'
     IronicProvisioningNetwork: 'baremetal'
     IronicRescuingNetwork: 'baremetal'
