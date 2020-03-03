@@ -453,9 +453,9 @@ subparsers:
                           Skip reading any private puddle files to auto-detect the containers parameters
                       default: False
 
-                  registry-tag:
+                  registry-tag-name:
                       type: Value
-                      help: The images tag
+                      help: The images tag name (for example, latest)
 
                   registry-tag-discover:
                       type: Bool

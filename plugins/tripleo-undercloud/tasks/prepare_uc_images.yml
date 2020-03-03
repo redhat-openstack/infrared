@@ -32,14 +32,14 @@
           container-image-prepare:
               namespace: "{{ registry_namespace|default('rhosp' + (target_install_version|openstack_release|string)) }}"
               prefix: "{{ install.registry.prefix|default('openstack-') }}"
-              tag: "{{ install.registry.tag.discover|ternary('AUTODETECT', install.registry.tag ) }}"
+              tag: "{{ install.registry.tag.discover|ternary('AUTODETECT', install.registry.tag.name ) }}"
   when: install.registry.skip.puddle
 
 - name: Fail non-osp deployment
   fail:
       msg: |
           For non-OSP deployment set --registry-skip-puddle=yes and provide
-          '-registy-namespace' '--registry-tag' options.
+          '-registy-namespace' '--registry-tag-name' options.
   when:
       - (target_install_version|openstack_distribution) != 'OSP'
       - container_env is not defined

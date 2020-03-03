@@ -125,9 +125,9 @@ subparsers:
                       type: Value
                       help: The images prefix
 
-                  registry-tag:
+                  registry-tag-name:
                       type: Value
-                      help: The images tag
+                      help: The images tag name (for example, latest)
                       required_when: "registry-skip-puddle == True"
 
                   registry-tag-label:
