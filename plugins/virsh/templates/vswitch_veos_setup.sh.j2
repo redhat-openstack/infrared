@@ -1,0 +1,177 @@
+#!/bin/bash
+set -x
+
+sshpubkey=$(<{{ switch_ssh_key }}.pub)
+
+
+# copy ssh key to the instance
+TERM=xterm expect -c "
+spawn bash -c \"ssh -o PubKeyAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no admin@{{ switch_ip }}\"
+expect {
+  timeout { exit 1 }
+  eof { exit 1 }
+  \"Password:\"
+}
+send \"Arista\r\"
+expect {
+  timeout { exit 1 }
+  \"localhost>\"
+}
+send \"enable\r\"
+expect {
+  timeout { exit 1 }
+  \"localhost#\"
+}
+send \"configure\r\"
+expect {
+  timeout { exit 1 }
+  \"localhost(config)#\"
+}
+send \"username admin sshkey $sshpubkey\r\"
+expect {
+  timeout { exit 1 }
+  \"localhost(config)#\"
+}
+send \"write memory\r\"
+expect {
+  timeout { exit 1 }
+  \"Copy completed successfully.\"
+}
+send \"exit\r\"
+"
+
+
+TERM=xterm expect -c"
+  set timeout 60
+  spawn ssh -i {{ switch_ssh_key }} admin@{{ switch_ip }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+  expect {
+    timeout { exit 1 }
+    \"localhost>\"
+  }
+  send \"enable\r\"
+  expect {
+    timeout { exit 1 }
+    \"localhost#\"
+  }
+  send \"configure\r\"
+  expect {
+    timeout { exit 1 }
+    \"localhost(config)#\"
+  }
+  send \"lldp run\r\"
+  expect {
+    timeout { exit 1 }
+    \"localhost(config)#\"
+  }
+  send \"vlan 1000\r\"
+  expect {
+    timeout { exit 1 }
+    \"localhost(config-vlan-1000)#\"
+  }
+  send \"name provisioning\r\"
+  expect {
+    timeout { exit 1 }
+    \"localhost(config-vlan-1000)#\"
+  }
+  send \"exit\r\"
+  expect {
+    timeout { exit 1 }
+    \"localhost(config)#\"
+  }
+  send \"vlan 50\r\"
+  expect {
+    timeout { exit 1 }
+    \"localhost(config-vlan-50)#\"
+  }
+  send \"name tenant\r\"
+  expect {
+    timeout { exit 1 }
+    \"localhost(config-vlan-50)#\"
+  }
+  send \"exit\r\"
+  expect {
+    timeout { exit 1 }
+    \"localhost(config)#\"
+  }
+  send \"vlan 1001-1010\r\"
+  expect {
+    timeout { exit 1 }
+    \"localhost(config-vlan-1001-1010)#\"
+  }
+  send \"name tempest\r\"
+  expect {
+    timeout { exit 1 }
+    \"localhost(config-vlan-1001-1010)#\"
+  }
+  send \"exit\r\"
+  expect {
+    timeout { exit 1 }
+    \"localhost(config)#\"
+  }
+  send \"interface ethernet {{ undercloud_switchport|int - 3 }}\r\"
+  expect {
+    timeout { exit 1 }
+    \"localhost(config-if-Et{{ undercloud_switchport|int - 3 }})#\"
+  }
+  send \"switchport access vlan 1001\r\"
+  expect {
+    timeout { exit 1 }
+    \"localhost(config-if-Et{{ undercloud_switchport|int - 3 }})#\"
+  }
+  send \"exit\r\"
+  expect {
+    timeout { exit 1 }
+    \"localhost(config)#\"
+  }
+  foreach x { {{ controller_switchports.split(' ') + compute_switchports.split(' ') }} } {
+      incr x -3
+      send \"interface ethernet $x\r\"
+      expect {
+        timeout { exit 1 }
+        \"localhost(config-if-Et$x)#\"
+      }
+      send \"switchport mode trunk\r\"
+      expect {
+        timeout { exit 1 }
+        \"localhost(config-if-Et$x)#\"
+      }
+      send \"switchport trunk native vlan 1\r\"
+      expect {
+        timeout { exit 1 }
+        \"localhost(config-if-Et$x)#\"
+      }
+      send \"switchport trunk allowed vlan 50,1000-1010\r\"
+      expect {
+        timeout { exit 1 }
+        \"localhost(config-if-Et$x)#\"
+      }
+      send \"exit\r\"
+      expect {
+        timeout { exit 1 }
+        \"localhost(config)#\"
+      }
+  }
+  foreach x { {{ ironic_switchports.split(' ') }} } {
+      incr x -3
+      send \"interface ethernet $x\r\"
+      expect {
+        timeout { exit 1 }
+        \"localhost(config-if-Et$x)#\"
+      }
+      send \"switchport access vlan 1\r\"
+      expect {
+        timeout { exit 1 }
+        \"localhost(config-if-Et$x)#\"
+      }
+      send \"exit\r\"
+      expect {
+        timeout { exit 1 }
+        \"localhost(config)#\"
+      }
+  }
+  send \"write memory\r\"
+  expect {
+    timeout { exit 1 }
+    \"Copy completed successfully.\"
+  }
+"
