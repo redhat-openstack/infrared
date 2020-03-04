@@ -37,10 +37,14 @@
         extra_args: "--user"
     when: virtualenv_installed_check.rc != 0
 
+  - name: Download upper constraints
+    command: curl -Lf -o "{{ vbmc_home }}/vbmc-upper-constraints.txt" https://releases.openstack.org/constraints/upper/master
+
   - name: Install python-virtualbmc with pip
     pip:
         virtualenv: "{{ vbmc_virtualenv }}"
         name: virtualbmc
+        extra_args: "-c {{ vbmc_home }}/vbmc-upper-constraints.txt"
         version: "{{ vbmc_version }}"
         virtualenv_site_packages: yes
     environment:
