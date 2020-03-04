@@ -60,6 +60,15 @@ class InfraredPluginManager(object):
         if not os.path.exists(self.plugins_dir):
             os.makedirs(self.plugins_dir)
 
+        # register plugins_dir path otherwise roles introduced by the plugins
+        # are not found during the plugin execution
+        conf_path = os.environ.get('ANSIBLE_ROLES_PATH', '')
+        if conf_path:
+            full_conf_path = ':'.join([self.plugins_dir, conf_path])
+        else:
+            full_conf_path = self.plugins_dir
+        os.environ['ANSIBLE_ROLES_PATH'] = full_conf_path
+
         self._config_file = os.path.abspath(os.path.expanduser(plugins_conf))
         self._install_plugins_required = install_plugins
         self._configure()
