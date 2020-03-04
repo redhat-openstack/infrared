@@ -37,10 +37,18 @@
         extra_args: "--user"
     when: virtualenv_installed_check.rc != 0
 
+    # The reason for this was RHOSINFRA-3080 (i.e. without upper constraint any
+    # vbmc dependency that breaks will affect us immediately, whereas with upper constraints
+    # we are somewhat shielded and there will be more upstream coverage before pulling in
+    # new deps)
+  - name: Download upper constraints
+    command: curl -Lf -o "{{ vbmc_home }}/vbmc-upper-constraints.txt" https://releases.openstack.org/constraints/upper/master
+
   - name: Install python-virtualbmc with pip
     pip:
         virtualenv: "{{ vbmc_virtualenv }}"
         name: virtualbmc
+        extra_args: "-c {{ vbmc_home }}/vbmc-upper-constraints.txt"
         version: "{{ vbmc_version }}"
         virtualenv_site_packages: yes
     environment:
