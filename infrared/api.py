@@ -2,6 +2,7 @@
 import abc
 import argparse
 import logging
+import os
 import yaml
 
 
@@ -143,12 +144,33 @@ class InfraredPluginsSpec(SpecObject):
         if control_args.get("dry-run"):
             return None
 
+        # register plugins_dir path otherwise roles introduced by the plugin
+        # are not found during the plugin execution
+        # save the current ANSIBLE_ROLES_PATH so that it can be restored later
+        ansible_roles_path = os.environ.get('ANSIBLE_ROLES_PATH', '')
+        if self.plugin.roles_path:
+            # check whether the path defined by user exists
+            role_path = os.path.join(self.plugin.path, self.plugin.roles_path)
+            if not os.path.exists(role_path):
+                LOG.warning("Plugin's config.role_path: %s, doesn't exist",
+                            role_path)
+            # roles path points to the dir which contains installed plugins
+            roles_path = os.path.join(role_path, '../')
+            if ansible_roles_path:
+                new_path = ':'.join([ansible_roles_path, roles_path])
+            else:
+                new_path = roles_path
+            os.environ['ANSIBLE_ROLES_PATH'] = new_path
+
         result = execute.ansible_playbook(
             inventory=active_workspace.inventory,
             playbook_path=self.plugin.playbook,
             verbose=control_args.get('verbose', None),
             extra_vars=vars_dict,
             ansible_args=control_args.get('ansible-args', None))
+
+        # restore original ANSIBLE_ROLES_PATH
+        os.environ['ANSIBLE_ROLES_PATH'] = ansible_roles_path
         return result
 
 

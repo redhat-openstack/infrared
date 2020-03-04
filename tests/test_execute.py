@@ -102,6 +102,50 @@ def test_execute_main(spec_fixture, workspace_manager_fixture,          # noqa
         "role_" + output_file)), "Plugin role not invoked"
 
 
+@pytest.mark.parametrize("input_value, input_roles", # noqa
+                         [("", ""), ("/path/to/role", "/path/to/role:")])
+def test_execute_main_role_path(spec_fixture, workspace_manager_fixture, # noqa
+                                test_workspace, input_value, input_roles):
+    """Verify execution runs the main.yml playbook when roles_path is set.
+
+    Workflow is the same as in the test_execute_main test, however, the plugin
+    used here has config.roles_path set.
+
+    Verifies that ANSIBLE_ROLES_PATH is set before plugin's main.yml execution
+    and it's restored to the original value after the plugin execution is over.
+    """
+    input_string = ['example']
+
+    # get the plugin with role_path defined
+    role_path_plugin = 'example/plugins/plugin_with_role_path/infrared/plugin'
+    plugin_dir = path.join(path.abspath(path.dirname(tests.__file__)),
+                           role_path_plugin)
+    test_plugin = plugins.InfraredPlugin(plugin_dir=plugin_dir)
+    from infrared.api import InfraredPluginsSpec
+    spec = InfraredPluginsSpec(test_plugin)
+
+    spec_manager = api.SpecManager()
+    spec_manager.register_spec(spec)
+
+    inventory_dir = test_workspace.path
+    output_file = "output.example"
+    environ['ANSIBLE_ROLES_PATH'] = input_value
+    assert not path.exists(path.join(inventory_dir, output_file))
+    assert not path.exists(path.join(inventory_dir, "role_" + output_file))
+
+    workspace_manager_fixture.activate(test_workspace.name)
+    return_value = spec_manager.run_specs(args=input_string)
+    out_file = open(path.join(inventory_dir, output_file), "r")
+
+    expected_resp = 'ANSIBLE_ROLES_PATH=' + input_roles
+    expected_resp += path.join(plugin_dir, test_plugin.roles_path + '../')
+
+    assert return_value == 0
+    assert environ.get('ANSIBLE_ROLES_PATH', '') == input_value
+    assert path.exists(path.join(inventory_dir, output_file))
+    assert out_file.read() == expected_resp
+
+
 def test_fake_inventory(spec_fixture, workspace_manager_fixture,          # noqa
                         test_workspace):
     """Verify "--inventory" updates workspace's inventory. """
