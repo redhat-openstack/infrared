@@ -9,6 +9,16 @@
   set_fact:
       node_groups: []
 
+- name: update nodes_groups from original groups with cell1 deployment
+  set_fact:
+      node_groups: "{{ ( baremetal_name in item.value and item.key not in ignored_groups ) | ternary(node_groups|default([]) + [item.key], node_groups|default([])) }}"
+  with_dict: "{{ groups }}"
+  vars:
+      ignored_groups: ['ungrouped', 'ovb', 'unused']
+  when:
+      - baremetal_name in groups.all
+      - '"cell1" in node_info.name'
+
 - name: update nodes_groups from original groups
   set_fact:
       node_groups: "{{ ( baremetal_name in item.value and item.key not in ignored_groups ) | ternary(node_groups|default([]) + [item.key], node_groups|default([])) }}"
@@ -17,6 +27,7 @@
       ignored_groups: ['ungrouped', 'ovb']
   when:
       - baremetal_name in groups.all
+      - '"cell1" not in node_info.name'
 
 - name: update nodes_groups with predefined ones
   set_fact:
