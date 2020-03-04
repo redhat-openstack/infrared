@@ -1,6 +1,7 @@
 config:
    plugin_type: provision
    entry_point: main.yml
+   # roles_path: ../  # Optional, contains relative path to a role
 subparsers:
     example:
         description: Example provisioner plugin
