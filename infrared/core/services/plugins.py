@@ -713,6 +713,16 @@ class InfraredPlugin(object):
             return self.config['plugin_type']
 
     @property
+    def roles_path(self):
+        try:
+            return self.config['config']['roles_path']
+        except KeyError:
+            try:
+                return self.config['roles_path']
+            except KeyError:
+                return ''
+
+    @property
     def description(self):
         try:
             return self.config['subparsers'][self.name]['description']
