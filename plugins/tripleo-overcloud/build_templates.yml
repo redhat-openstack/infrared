@@ -151,6 +151,14 @@
             - install.containers|default('')
             - install.version|default(undercloud_version)|openstack_release >= 12
 
+      - name: Trust to undercloud cert
+        include_tasks: tasks/trust_uc.yml
+        when:
+            - not install.overcloud.ssl
+            - overcloud_deploy_script|default('')
+            - install.version|default(undercloud_version)|openstack_release >= 12
+            - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
+
       - name: append extra templates provided by user
         include_tasks: tasks/environment_templates.yml
         with_items: "{{ install.overcloud.templates|default([]) }}"
