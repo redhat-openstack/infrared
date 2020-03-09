@@ -43,6 +43,8 @@ sleep 60
 # copy the infterface wait script into the appliance
 scp -i {{ switch_ssh_key  }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {{ temp_dir.path }}/vqfx_wait.sh root@{{ switch_ip }}:~/wait.sh
 
+undercloud_port=$(echo xe-0/0/$(($(virsh domiflist vqfx-0 | awk "/unde0vqfx0/{ print NR}") - 6)))
+
 # wait for interfaces to come up, then configure
 TERM=xterm expect -c"
   set timeout 300
@@ -80,6 +82,8 @@ TERM=xterm expect -c"
   send \"set interfaces xe-0/0/{{ oc_node_count | int - 2 + x }} unit 0 family ethernet-switching vlan members default\r\"
   expect \"root#\"
   {% endfor %}
+  send \"set interfaces $undercloud_port unit 0 family ethernet-switching vlan members 1001\r\"
+  expect \"root#\"
   send \"set protocols lldp interface all\r\"
   expect \"root#\"
   send \"commit\r\"
