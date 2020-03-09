@@ -43,6 +43,10 @@ sleep 60
 # copy the infterface wait script into the appliance
 scp -i {{ switch_ssh_key  }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {{ temp_dir.path }}/vqfx_wait.sh root@{{ switch_ip }}:~/wait.sh
 
+undercloud_port=$(echo xe-0/0/$(($(virsh domiflist vqfx-0 | awk "/unde0vqfx0/{ print NR}") - 6)))
+control_ports=$(for i in $(virsh domiflist vqfx-0 | grep cont | awk '{print $3}'); do echo "xe-0/0/$(($(virsh domiflist vqfx-0 | awk "/$i/{ print NR}") - 6))"; done)
+compute_ports=$(for i in $(virsh domiflist vqfx-0 | grep comp | awk '{print $3}'); do echo "xe-0/0/$(($(virsh domiflist vqfx-0 | awk "/$i/{ print NR}") - 6))"; done)
+
 # wait for interfaces to come up, then configure
 TERM=xterm expect -c"
   set timeout 300
@@ -54,32 +58,32 @@ TERM=xterm expect -c"
   expect \"root>\"
   send \"config\r\"
   expect \"root#\"
-  send \"set interfaces interface-range ctlcmp member-range xe-0/0/1 to xe-0/0/{{ oc_node_count | int - 2 }}\r\"
-  expect \"root#\"
-  send \"set interfaces interface-range ctlcmp unit 0 family ethernet-switching interface-mode trunk\r\"
-  expect \"root#\"
-  send \"set interfaces interface-range ctlcmp native-vlan-id 1\r\"
-  expect \"root#\"
   send \"set vlans provisioning vlan-id 1000\r\"
   expect \"root#\"
   send \"set vlans tenant vlan-id 50\r\"
   expect \"root#\"
   send \"set vlans tempest vlan-id-list 1001-1010\r\"
   expect \"root#\"
-  send \"set interfaces xe-0/0/0 unit 0 family ethernet-switching vlan members default\r\"
-  expect \"root#\"
-  send \"set interfaces interface-range ctlcmp unit 0 family ethernet-switching vlan members provisioning\r\"
-  expect \"root#\"
-  send \"set interfaces interface-range ctlcmp unit 0 family ethernet-switching vlan members default\r\"
-  expect \"root#\"
-  send \"set interfaces interface-range ctlcmp unit 0 family ethernet-switching vlan members tenant\r\"
-  expect \"root#\"
-  send \"set interfaces interface-range ctlcmp unit 0 family ethernet-switching vlan members tempest\r\"
-  expect \"root#\"
+  foreach x {$control_ports $compute_ports} {
+      send \"set interfaces \$x unit 0 family ethernet-switching interface-mode trunk\r\"
+      expect \"root#\"
+      send \"set interfaces \$x native-vlan-id 1\r\"
+      expect \"root#\"
+      send \"set interfaces \$x unit 0 family ethernet-switching vlan members provisioning\r\"
+      expect \"root#\"
+      send \"set interfaces \$x unit 0 family ethernet-switching vlan members default\r\"
+      expect \"root#\"
+      send \"set interfaces \$x unit 0 family ethernet-switching vlan members tenant\r\"
+      expect \"root#\"
+      send \"set interfaces \$x unit 0 family ethernet-switching vlan members tempest\r\"
+      expect \"root#\"
+  }
   {% for x in range(1, groups.ironic|default([])|length|int + 1) %}
   send \"set interfaces xe-0/0/{{ oc_node_count | int - 2 + x }} unit 0 family ethernet-switching vlan members default\r\"
   expect \"root#\"
   {% endfor %}
+  send \"set interfaces $undercloud_port unit 0 family ethernet-switching vlan members 1001\r\"
+  expect \"root#\"
   send \"set protocols lldp interface all\r\"
   expect \"root#\"
   send \"commit\r\"
