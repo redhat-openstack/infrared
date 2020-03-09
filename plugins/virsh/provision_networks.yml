@@ -19,6 +19,7 @@
           networks: "{{ networks|default({}) | combine(item.value, recursive=True) }}"
       when: item.key == 'networks'
       with_dict: "{{ override|default({}) }}"
+
     - name: Get uniq id for current deployment
       set_fact:
             prefix: "{{ ansible_local.run.keys()[0] }}"
@@ -36,6 +37,17 @@
       set_fact:
           networks: "{{ networks|combine({item.key: {'name': prefix|default('') + (prefix is defined|ternary('-','')) + item.value.name }}, recursive=True) }}"
       with_dict: "{{ networks }}"
+
+    - name: disable tempest interface to vswitch on undercloud
+      become: yes
+      copy:
+          dest: "/etc/sysconfig/network-scripts/ifcfg-eth3"
+          content: |
+              DEVICE=eth3
+              NAME=eth3
+              NM_CONTROLLED=no
+              ONBOOT=no
+      when: "'vqfx-0' in hostvars"
 
     - name: Check if interfaces have inet6 address family capabilities
       shell: "ip addr show | grep inet6"
