@@ -80,6 +80,8 @@ TERM=xterm expect -c"
   send \"set interfaces xe-0/0/{{ oc_node_count | int - 2 + x }} unit 0 family ethernet-switching vlan members default\r\"
   expect \"root#\"
   {% endfor %}
+  send \"set interfaces xe-0/0/{{ oc_node_count | int + 1 }} unit 0 family ethernet-switching vlan members 1001\r\"
+  expect \"root#\"
   send \"set protocols lldp interface all\r\"
   expect \"root#\"
   send \"commit\r\"
