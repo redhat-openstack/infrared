@@ -144,9 +144,11 @@
         set_fact:
           podman_insecure_registries_with_overrides: "{{ podman_insecure_registries_with_overrides | default(podman_insecure_registries_orig) + [item] }}"
         with_items: "{{ registry_host }}"
+        when: podman_insecure_registries_orig|default('')
 
       - debug:
           var: podman_insecure_registries_with_overrides
+        when: podman_insecure_registries_with_overrides is defined
 
       - name: add insecure registries (including overrides) to /etc/containers/registries.conf
         ini_file:
@@ -186,9 +188,11 @@
             set_fact:
               docker_insecure_registries_with_overrides: "{{ docker_insecure_registries_with_overrides | default(docker_insecure_registries_orig.split(',')) + [item] }}"
             with_items: "{{ registry_host }}"
+            when: docker_insecure_registries_orig|default('')
 
           - debug:
               var: docker_insecure_registries_with_overrides
+            when: docker_insecure_registries_with_overrides is defined
 
           when: ansible_distribution_major_version | int == 7
 
@@ -200,6 +204,7 @@
             section: DEFAULT
             option: docker_insecure_registries
             value: "{{ docker_insecure_registries_with_overrides | default(podman_insecure_registries_with_overrides) | join(',') }}"
+          when: docker_insecure_registries_with_overrides|default(false) or podman_insecure_registries_with_overrides|default(false)
         when: fetch_undercloud_conf is not failed
 
       tags: update-undercloud-conf
