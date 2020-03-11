@@ -18,7 +18,7 @@
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-customize -a {{ overcloud_image_file }} --run-command 'grubby --set-default /boot/vmlinuz*rt*' --selinux-relabel"
   when:
-    - overcloud_RealTime_kernel
+    - overcloud_RealTime_kernel | default(False)
 
 - name: Build kernel files regex pattern
   set_fact:
@@ -38,8 +38,8 @@
 
 - name: Find latest kernel files
   set_fact:
-    overcloud_vmlinuz: "{{ overcloud_kernel_files['files'] | selectattr('path', 'match', overcloud_vmlinuz) | list | sort(attribute='mtime') | last }}"
-    overcloud_initramfs: "{{ overcloud_kernel_files['files'] | selectattr('path', 'match', overcloud_initramfs) | list | sort(attribute='mtime') | last }}"
+    overcloud_vmlinuz: "{{ overcloud_kernel_files['files'] | selectattr('path', 'match', overcloud_vmlinuz | default('.*vmlinuz.*x86_64')) | list | sort(attribute='mtime') | last }}"
+    overcloud_initramfs: "{{ overcloud_kernel_files['files'] | selectattr('path', 'match', overcloud_initramfs | default('.*initramfs.*x86_64.img')) | list | sort(attribute='mtime') | last }}"
 
 - name: Replace kernel files
   copy:
