@@ -10,10 +10,11 @@ def _calc_version_from_release(release):
 def _discover_version(value):
     try:
         try:
-            return int(value), "OSP"
+            return format(float(value), '.1f'), "OSP"
+            # float(value), "OSP"
         except ValueError:
             # osp can in addition have also 15-trunk and such
-            return int(value.split('-trunk')[0]), "OSP"
+            return format(float(value.split('-trunk')[0]), '.1f'), "OSP"
     except ValueError:
         return _calc_version_from_release(value), "RDO"
 
