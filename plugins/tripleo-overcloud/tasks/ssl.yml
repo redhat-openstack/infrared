@@ -1,12 +1,30 @@
-- name: extract our external allocation pools start value
-  command: "cat {{ template_base }}/network/{{ network_environment_file }}"
-  register: network_env
-  when: "not 'bmc' in groups"
+- block:
+  - name: extract our external allocation pools start value
+    command: "cat {{ template_base }}/network/{{ network_environment_file }}"
+    register: network_env
 
-- name: get IP address of VIP
-  set_fact:
-      external_allocation_pool_start: "{{ (network_env.stdout | from_yaml).parameter_defaults.ExternalAllocationPools[0].start }}"
-  when: "not 'bmc' in groups"
+  - name: get IP address of VIP
+    set_fact:
+        external_allocation_pool_start: "{{ (network_env.stdout | from_yaml).parameter_defaults.ExternalAllocationPools[0].start }}"
+  when:
+    - "not 'bmc' in groups"
+    - not use_network_data|bool
+
+- block:
+  - name: read deployment network configuration from network_data
+    command: "cat {{ template_base }}/network/network_data.yaml"
+    register: network_template_out
+    changed_when: false
+
+  - name: get the IP address of VIP from network_data
+    vars:
+      network_template: "{{ network_template_out.stdout | from_yaml }}"
+      external_network: "{{ (network_template|selectattr('name_lower', 'equalto', 'external')|first) }}"
+    set_fact:
+      external_allocation_pool_start: "{{ (external_network.get('allocation_pools', {})|first).start | default((external_network.ipv6_allocation_pools|first).start) }}"
+  when:
+    - "not 'bmc' in groups"
+    - use_network_data|bool
 
 - name: Add overcloud public IP to ssl configuration
   become: yes
