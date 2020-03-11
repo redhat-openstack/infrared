@@ -16,19 +16,3 @@
 - import_playbook: shade.yml
   tags: shade
 
-- import_playbook: configure.yml
-  tags: configure
-
-- import_playbook: tls_everywhere.yml
-  tags: configure
-  when:
-      - install.tls.everywhere|default(False)
-      - install.version|openstack_release >= 12
-      - (install.version|openstack_distribution) == 'OSP'
-
-- import_playbook: deploy.yml
-  tags: deploy
-
-- import_playbook: splitstack.yml
-  when: install.splitstack|default(False)
-  tags: splitstack
