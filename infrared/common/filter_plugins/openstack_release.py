@@ -1,4 +1,5 @@
 """Jinja filters to streamline openstack versions for numbers and names"""
+import re
 
 
 def _calc_version_from_release(release):
@@ -13,7 +14,8 @@ def _discover_version(value):
             return int(value), "OSP"
         except ValueError:
             # osp can in addition have also 15-trunk and such
-            return int(value.split('-trunk')[0]), "OSP"
+            # 16.1 return only the major version
+            return int(re.search('[0-9]+', value).group()), "OSP"
     except ValueError:
         return _calc_version_from_release(value), "RDO"
 
