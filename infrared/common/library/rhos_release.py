@@ -163,7 +163,7 @@ def _parse_output(module, cmd, stdout):
 
     def released(line):
         pattern = re.compile(r'(?P<start># rhos-release )'
-                             r'(?P<release>\d+)(?P<trunk>(-trunk)?)\s*'
+                             r'(?P<release>\d+[\.\d+]*)(?P<trunk>(-trunk)?)\s*'
                              r'(?P<director>-director)?\s*'
                              r'(?P<poodle>-d)?\s*'
                              r'(-p (?P<version>\S*))?'
@@ -180,6 +180,9 @@ def _parse_output(module, cmd, stdout):
         )
 
     installed_releases = map(released, release_lines)
+
+    print("installed_releases: %s" % installed_releases)
+
     ret_dict = dict(
         repodir=repodir,
         files=list(filenames)
