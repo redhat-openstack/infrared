@@ -83,6 +83,13 @@
             mode: 0755
         when: local_src == "none"
 
+      - name: prepare custom heat environment files
+        import_tasks: tasks/prepare_heat_env_files.yaml
+        when:
+          - install.version|openstack_distribution == 'OSP'
+          - install.version|openstack_release >= 16
+          - install.get('config', {}).get('heat', {})
+
       - name: override values in undercloud conf
         include_tasks: tasks/inject_undercloud_conf.yml
         with_dict: "{{ conf.options|default({}) }}"

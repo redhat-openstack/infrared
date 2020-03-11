@@ -94,6 +94,37 @@ subparsers:
                           Forces additional Undercloud configuration (undercloud.conf) options.
                           Format: --config-options section.option=value1 --config-options section.option=value
 
+                  config-heat:
+                    type: NestedDict
+                    action: append
+                    help: |
+                      NOTE: This param was added into tripleo-undercloud plugin for OSP 16 and above. It was not tested
+                      with earlier OSP versions so it's not guaranteed to work with those.
+                      Inject additional Tripleo Heat Templates configuration options under "paramater_defaults"
+                      entry point.
+                      Example:
+                          --config-heat ExtraConfig.ironic::drivers::ipmi::command_retry_timeout=10
+                          --config-heat ExtraConfig.ironic::drivers::ipmi::min_command_interval=2
+                      should inject the following yaml to "undercloud install" command:
+
+                          ---
+                          parameter_defaults:
+                              ExtraConfig:
+                                  ironic::drivers::ipmi::command_retry_timeout: 10
+                                  ironic::drivers::ipmi::min_command_interval: 2
+
+                      It is also possible to have . (dot) included in key by escaping it.
+                      Example:
+                          --config-heat "ControllerExtraConfig.opendaylight::log_levels.org\.opendaylight\.netvirt\.elan=TRACE"
+
+                      should inject the following yaml to "undercloud install" command:
+
+                           ---
+                           parameter_defaults:
+                               ControllerExtraConfig:
+                                   opendaylight::log_levels:
+                                       org.opendaylight.netvirt.elan: TRACE
+
                   ssl:
                       type: Bool
                       help: |
@@ -211,6 +242,10 @@ subparsers:
                         - "15-trunk"
                         - "16"
                         - "16-trunk"
+                        - "16.0"
+                        - "16.0-trunk"
+                        - "16.1"
+                        - "16.1-trunk"
                         - kilo
                         - liberty
                         - mitaka

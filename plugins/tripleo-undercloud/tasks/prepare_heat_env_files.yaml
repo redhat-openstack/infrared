@@ -1,0 +1,24 @@
+- fail:
+    msg: "'config-heat' param was added into tripleo-undercloud plugin for OSP 16 and above. It was not tested with earlier OSP versions so it's not guaranteed to work with those."
+  when:
+    - install.get('config', {}).get('heat', {})
+    - install.version|openstack_release < 16
+
+- name: read config-heat parameter value
+  set_fact:
+    config_heat_parameter_defaults:
+      parameter_defaults: "{{ install.get('config', {}).get('heat', {}) }}"
+  when: install.get('config', {}).get('heat', {})
+
+- name: save the above value as 'parameter_defaults' in undercloud_config_heat.yaml file
+  copy:
+    dest: "{{ working_dir }}/undercloud_config_heat.yaml"
+    content: "{{ config_heat_parameter_defaults | to_nice_yaml }}"
+  when: config_heat_parameter_defaults is defined
+
+- name: add created YAML file to 'custom_env_files' param in undercloud conf
+  ini_file:
+    dest: ~/undercloud.conf
+    section: "DEFAULT"
+    option: "custom_env_files"
+    value: "{{ working_dir }}/undercloud_config_heat.yaml"
