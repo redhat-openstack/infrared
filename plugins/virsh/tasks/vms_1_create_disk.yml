@@ -54,6 +54,9 @@
             # virt-resize needs target file with expected size to already exists
             os_version=`virt-cat -a {{ base_image_path }}/{{ image_name }} /etc/os-release | awk '/^VERSION=/ {print $1}' | grep -oP '[0-9]+' | head -1`
             virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
+            # We need to regenerate a new machine-id due to DHCP IPv6 not working otherwise
+            virt-sysprep -a {{ disk_pool }}/{{ node_image }} \
+                --operations machine-id
             # inject DEFROUTE for IPv6 and IPv6 to file and set it on for external network only
             virt-customize -a {{ disk_pool }}/{{ node_image }} \
             {% for interface in topology_node.interfaces %}
