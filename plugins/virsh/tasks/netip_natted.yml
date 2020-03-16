@@ -66,11 +66,11 @@
   add_host:
       name: "{{ item.key }}"
       groups: "{{ item.value.groups | join(',') }}"
-      ansible_user: "root"
+      ansible_user: "{{ item.value.ansible_user | default('root') }}"
       ansible_host: "{{ item.value.ip | default('NA') }}"
       ansible_ssh_private_key_file: "{{ inventory_dir }}/id_rsa"
       # Set 'ansible_connection' explicitly here, because in vms_2_install.yaml it was initially set to 'local'.
-      ansible_connection: "ssh"
+      ansible_connection: "{{ item.value.ansible_connection | default('ssh') }}"
       ansible_python_interpreter: "{{ ( ( py_interpreter.results | selectattr('item.key', 'equalto', item.key) | first | default(None) )['stdout'] | default('') ) | trim | default(omit, true) }}"
       ansible_ssh_common_args: "
           -o BatchMode=yes
