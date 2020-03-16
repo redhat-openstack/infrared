@@ -110,7 +110,7 @@
                 name: "{{ item.name }}"
                 ansible_ssh_common_args: "-o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                                           -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
-                                          {{ ssh_user }}@{{ ssh_host }}\""
+                                          {{ hostvars[groups[item.name][0]].username | default(ssh_user) }}@{{ ssh_host }}\""
             when: "'hypervisor' not in groups"
 
             with_items: "{{ openstack_servers }}"
