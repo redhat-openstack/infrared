@@ -72,6 +72,21 @@ subparsers:
                         URL to location where auxiliary images are placed.
                       default: https://url.corp.redhat.com/rhos-qe-mirror-tlv
 
+                  image-ssh_user:
+                      type: Value
+                      default: root
+                      help: |
+                          Will be used as main ssh user for all ssh communtication.
+                          User will not be created. If user should be created use
+                          topology.username instead.
+
+                  image-ansible_connection:
+                      type: Value
+                      default: ssh
+                      help: |
+                          Will set the ansible connection for all ansible operations.
+
+
             - title: topology
               options:
                   prefix:
