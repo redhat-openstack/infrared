@@ -11,12 +11,21 @@
     with_items: "{{ topology_node.node_indexes }}"
     register: mac_list
 
-  - name: Set inventory netwrok info
+  - name: Set inventory network info
     vars:
         inv_clear_net: "{{ topology_node.provision_network if 'provision_network' in topology_node else topology_node.external_network.network }}"
         inv_net: "{{ prefix|default('') + (prefix is defined|ternary('-','')) + inv_clear_net }}"
+        ssh_user: "{{ topology_node.get('image', {}).ssh_user | default('root') }}"
+        ans_con: "{{ topology_node.get('image', {}).ansible_connection | default('ssh') }}"
     set_fact:
-        vm_inv_info: "{{ vm_inv_info | default({})|combine({ item.cmd.split()[2]: { 'mac': item.stdout, 'groups': topology_node.groups, 'net': inv_net, 'deploy_os': topology_node.deploy_os|default(True) }}) }}"
+        vm_inv_info: >
+                {{ vm_inv_info | default({})|combine({ item.cmd.split()[2]: {
+                        'mac': item.stdout,
+                        'groups': topology_node.groups,
+                        'net': inv_net,
+                        'deploy_os': topology_node.deploy_os|default(True),
+                        'ansible_user': ssh_user,
+                        'ansible_connection': ans_con }}) }}
     with_items: "{{ mac_list.results }}"
 
   when: "not topology_node.external_network.bridged|default(False)"
