@@ -2,6 +2,18 @@
 - set_fact:
     topology_node: "{{ node.value }}"
 
+- name: disable tempest interface to vswitch on undercloud
+  delegate_to: "{{ groups['undercloud']|first }}"
+  become: yes
+  copy:
+      dest: "/etc/sysconfig/network-scripts/ifcfg-eth3"
+      content: |
+          DEVICE=eth3
+          NAME=eth3
+          NM_CONTROLLED=no
+          ONBOOT=no
+  when: "'vqfx-0' in hostvars"
+
 - name: "configure {{ topology_node.os.type }} switch"
   include_tasks: "tasks/configure_{{ topology_node.os.type }}_switch.yml"
   when: topology_node.os.type in infrared_vswitch_types
