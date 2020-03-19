@@ -31,7 +31,7 @@
 
 - name: Set serial_files_dir fact
   set_fact:
-    serial_files_dir: /var/log/libvirt/qemu
+    serial_files_dir: /var/lib/libvirt/qemu/
 
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
 - name: create vm's
@@ -60,7 +60,7 @@
            {%- if interface.model is defined and interface.model %},model={{ interface.model }}{% endif %} \
           {% endfor -%}
           {% if provision.serial.files %}
-           --serial file,path="{{ serial_files_dir }}/{{ prefix|default('') }}{{ topology_node.name }}-{{ item }}-serial.log" \
+           --serial file,path="{{ serial_files_dir }}/{{ prefix|default('') }}{{ topology_node.name }}-{{ item }}.log" \
           {% endif %}
            --virt-type kvm \
            --cpu {{ topology_node.cpumodel|default('host-passthrough') }} \
