@@ -135,6 +135,71 @@
       loop_control:
         label: "{{ item.path | basename }}"
 
+    - name: Check if any of the VM's are using /var/lib/libvirt/qemu for console logs
+      shell: |-
+        if grep -q '/var/lib/libvirt/qemu//.*\.log' {{ provision.virsh.snapshot.path }}/*.xml; then
+          echo 'true'
+        else
+          echo 'false'
+        fi
+      register: _vm_using_var_lib
+      changed_when: false
+      args:
+        executable: /bin/bash
+
+    - name: Setup selinux policy for RHEL8 when the image set uses /var/lib/libvirt/qemu for console logs
+      when:
+        - "ansible_os_family == 'RedHat' and ansible_distribution_major_version is version('8', '>=')"
+        - "_vm_using_var_lib.stdout | bool"
+      become: yes
+      block:
+        - name: Install required packages
+          package:
+            name:
+              - policycoreutils
+              - policycoreutils-devel
+              - policycoreutils-python-utils
+            state: present
+
+        - name: Create local policy directory
+          file:
+            state: directory
+            dest: /etc/selinux/targeted/local
+            mode: 0755
+            owner: root
+            group: root
+
+        - name: Create local policy
+          copy:
+            content: |-
+              policy_module(var_lib_libvirt_qemu, 1.0)
+              require {
+                      type qemu_var_run_t;
+                      type virtlogd_t;
+                      class capability dac_override;
+                      class dir { add_name remove_name write };
+                      class file { append create getattr open unlink };
+              }
+              allow virtlogd_t qemu_var_run_t:dir { add_name remove_name write };
+              allow virtlogd_t qemu_var_run_t:file getattr;
+              allow virtlogd_t qemu_var_run_t:file { append create open unlink };
+              allow virtlogd_t self:capability dac_override;
+            dest: /etc/selinux/targeted/local/var_lib_libvirt_qemu.te
+
+        - name: Compile local policy
+          shell: |-
+            make -f /usr/share/selinux/devel/Makefile
+          args:
+            chdir: /etc/selinux/targeted/local
+            executable: /bin/bash
+
+        - name: Install and load local policy
+          shell: |-
+            semodule -i var_lib_libvirt_qemu.pp
+          args:
+            chdir: /etc/selinux/targeted/local
+            executable: /bin/bash
+
     - name: Start any VM's that were in a running state
       virt:
         name: "{{ item.name }}"
