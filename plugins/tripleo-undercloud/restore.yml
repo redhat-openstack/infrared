@@ -67,8 +67,23 @@
             name: libguestfs-tools
             state: present
 
+
+      - name: Get Appliance files to allow virt-customize on RHEL hypervisors
+        get_url:
+          dest: /opt/appliance.tar.xz
+          url: http://download.libguestfs.org/binaries/appliance/appliance-1.40.1.tar.xz
+        register: appliance_archive
+        
+      - name: Unpack Appliance files
+        when: appliance_archive is changed
+        unarchive:
+          src: /opt/appliance.tar.xz
+          dest: /opt/
+          remote_src: yes
+
       - name: resets undercloud image configurations
         environment:
+            LIBGUESTFS_PATH: /opt/appliance/
             LIBGUESTFS_BACKEND: direct
         command: >
             virt-sysprep -a {{ undercloud_disk_path }}
@@ -86,6 +101,9 @@
                --chmod 0700:/home/{{ undercloud_user }}/.ssh
                --run-command "chown {{ undercloud_user }}:{{ undercloud_user }} /home/{{ undercloud_user }}/.ssh/authorized_keys"
                --selinux-relabel
+        environment:
+            LIBGUESTFS_PATH: /opt/appliance/
+            LIBGUESTFS_BACKEND: direct
 
       - name: create Undercloud VM from snapshot
         command: >
