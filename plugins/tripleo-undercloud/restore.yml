@@ -69,13 +69,21 @@
 
       - name: resets undercloud image configurations
         environment:
+            LIBGUESTFS_PATH: /opt/appliance/
             LIBGUESTFS_BACKEND: direct
+            LIBGUESTFS_DEBUG: 1
+            LIBGUESTFS_TRACE: 1
         command: >
             virt-sysprep -a {{ undercloud_disk_path }}
                 --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net,ssh-hostkeys
       # Copy hypervisor's key into UC root and also for "undercloud_user" as we need this user since next hosts task update inventory
       # This is necesarry for muffin because we need to refresh the auhtortized_keys with new hypervisor's pubkey
       - name: inject our key into the undercloud image
+        environment:
+          LIBGUESTFS_PATH: /opt/appliance/
+          LIBGUESTFS_BACKEND: direct
+          LIBGUESTFS_DEBUG: 1
+          LIBGUESTFS_TRACE: 1
         command: >
             virt-customize -a {{ undercloud_disk_path }}
                --root-password password:redhat
@@ -85,26 +93,25 @@
                --upload /root/.ssh/id_rsa.pub:/home/{{ undercloud_user }}/.ssh/authorized_keys
                --chmod 0700:/home/{{ undercloud_user }}/.ssh
                --run-command "chown {{ undercloud_user }}:{{ undercloud_user }} /home/{{ undercloud_user }}/.ssh/authorized_keys"
-               --selinux-relabel
+
 
       - name: create Undercloud VM from snapshot
         command: >
-            virt-install --name {{ undercloud_node.name }}
-               --disk path={{ undercloud_disk_path }},device=disk,bus=virtio,format=qcow2,cache={{ undercloud_node.disks.disk1.cache }}
+            virt-install --name undercloud-0
+               --disk path={{ undercloud_disk_path }},device=disk,bus=virtio,format=qcow2
                --network network:data
                --network network:management
                --network network:external
                --virt-type kvm
                --cpu host-model
-               --ram {{ undercloud_node.memory }}
-               --vcpus {{ undercloud_node.cpu }}
-               --os-variant {{ undercloud_node.os.variant }}
+               --ram 16000
+               --vcpus 8
+               --os-variant rhel8.0
                --import
                --noautoconsole
                --autostart
                --vnc
                --rng /dev/urandom
-               --dry-run --print-xml
         register: virt_xml
 
       - name: define the undercloud VM
@@ -192,6 +199,8 @@
         delegate_to: "{{ groups.undercloud | first }}"
         become: true
         become_user: stack
+        vars:
+          ansible_python_interpreter: /usr/bin/python3
         shell: |
             source ~/stackrc
             openstack server list

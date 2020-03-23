@@ -11,10 +11,25 @@
             name: libguestfs-tools-c
             state: present
       - block:
+          - name: stop openstack services
+            delegate_to: "{{ groups.undercloud | first }}"
+            become: true
+            become_user: stack
+            vars:
+              ansible_python_interpreter: /usr/bin/python3
+            shell: |
+              sudo systemctl stop run-runc*
+              sudo systemctl stop tripleo*
+            ignore_errors: true
+
           - name: shutdown the undercloud VM
             virt:
                 name: "{{ undercloud }}"
-                state: destroyed
+                state: shutdown
+
+          - name: wait for the vm to gracefully shut down
+            pause:
+              minutes: 5
 
           - name: copy and shrink undercloud image
             command: "virt-sparsify --compress {{ install.disk.pool }}/{{ undercloud }}-disk1.qcow2 {{ undercloud_image_file }}"
