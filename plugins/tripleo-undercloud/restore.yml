@@ -67,6 +67,15 @@
             name: libguestfs-tools
             state: present
 
+      - name: Configure virt-sysprep to work with osp16 snapshot
+        command: "{{ item }}"
+        with_items:
+            - curl -O http://download.libguestfs.Rorg/binaries/appliance/appliance-1.40.1.tar.xz
+            - tar xvfJ appliance-1.40.1.tar.xz -C $HOME/
+            - export LIBGUESTFS_PATH=$HOME/appliance/
+            - export LIBGUESTFS_BACKEND=direct
+        when: "'osp-16' in {{ install.snapshot.image }}"
+
       - name: resets undercloud image configurations
         environment:
             LIBGUESTFS_BACKEND: direct
