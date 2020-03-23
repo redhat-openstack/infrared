@@ -55,8 +55,8 @@
 
       - name: download image
         get_url:
-            url: "{{ install.snapshot.image }}"
-            dest: "{{ undercloud_disk_path }}"
+            url: http://cougar11.scl.lab.tlv.redhat.com/osp-images/16/undercloud-0-snapshot-osp-16--puddle-undetermined-ssl.qcow2
+            dest: /home/qemu
             owner: qemu
             group: qemu
             force: yes
@@ -69,13 +69,21 @@
 
       - name: resets undercloud image configurations
         environment:
+            LIBGUESTFS_PATH: /opt/appliance/
             LIBGUESTFS_BACKEND: direct
+            LIBGUESTFS_DEBUG: 1
+            LIBGUESTFS_TRACE: 1
         command: >
             virt-sysprep -a {{ undercloud_disk_path }}
                 --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net,ssh-hostkeys
       # Copy hypervisor's key into UC root and also for "undercloud_user" as we need this user since next hosts task update inventory
       # This is necesarry for muffin because we need to refresh the auhtortized_keys with new hypervisor's pubkey
       - name: inject our key into the undercloud image
+        environment:
+          LIBGUESTFS_PATH: /opt/appliance/
+          LIBGUESTFS_BACKEND: direct
+          LIBGUESTFS_DEBUG: 1
+          LIBGUESTFS_TRACE: 1
         command: >
             virt-customize -a {{ undercloud_disk_path }}
                --root-password password:redhat
@@ -85,9 +93,14 @@
                --upload /root/.ssh/id_rsa.pub:/home/{{ undercloud_user }}/.ssh/authorized_keys
                --chmod 0700:/home/{{ undercloud_user }}/.ssh
                --run-command "chown {{ undercloud_user }}:{{ undercloud_user }} /home/{{ undercloud_user }}/.ssh/authorized_keys"
-               --selinux-relabel
+
 
       - name: create Undercloud VM from snapshot
+        environment:
+          LIBGUESTFS_PATH: /opt/appliance/
+          LIBGUESTFS_BACKEND: direct
+          LIBGUESTFS_DEBUG: 1
+          LIBGUESTFS_TRACE: 1
         command: >
             virt-install --name {{ undercloud_node.name }}
                --disk path={{ undercloud_disk_path }},device=disk,bus=virtio,format=qcow2,cache={{ undercloud_node.disks.disk1.cache }}
@@ -104,94 +117,37 @@
                --autostart
                --vnc
                --rng /dev/urandom
-               --dry-run --print-xml
         register: virt_xml
 
-      - name: define the undercloud VM
-        virt:
-            name: "{{ undercloud_node.name }}"
-            command: define
-            xml: "{{ virt_xml.stdout }}"
-
       - name: get correct MAC of external interface for undercloud (in case we have multiple dhcp leases in libvirt's db)
+        environment:
+          LIBGUESTFS_PATH: /opt/appliance/
+          LIBGUESTFS_BACKEND: direct
+          LIBGUESTFS_DEBUG: 1
+          LIBGUESTFS_TRACE: 1
         shell: |
             virsh dumpxml undercloud-0 | grep external -B 1 | grep mac | cut -d\' -f2
         register: mac_ext
 
-      - name: start the undercloud VM
-        virt:
-            name: "{{ undercloud_node.name }}"
-            state: running
-
       - name: wait for the undercloud IP to become available
+        environment:
+          LIBGUESTFS_PATH: /opt/appliance/
+          LIBGUESTFS_BACKEND: direct
+          LIBGUESTFS_DEBUG: 1
+          LIBGUESTFS_TRACE: 1
         shell: |
-            virsh net-dhcp-leases external | grep {{ mac_ext.stdout }} | awk '($4 == "ipv4") && ($6 =="{{ undercloud_node.name }}") {print $5}'
+            virsh net-dhcp-leases external | grep {{ mac_ext.stdout }} | awk '($4 == "ipv4") && ($6 =="{{ undercloud_node.name }}") {print $5}' | awk -F / '{print $1}'
         register: undercloud_ip
         until: undercloud_ip.stdout != ''
         retries: 15
         delay: 15
 
-      - name: waiting for the undercloud to be SSH available
-        wait_for:
-            port: 22
-            host: "{{ undercloud_ip.stdout | ipaddr('address') }}"
-            search_regex: OpenSSH
-            delay: 10
-            sleep: 3
-
-      - name: add undercloud to host list
-        add_host:
-            name: "{{ undercloud_node.name }}"
-            hostname: "undercloud-0"
-            node_label: "undercloud-0"
-            groups: "undercloud,tester,openstack_nodes"
-            ansible_user: "{{ undercloud_user }}"
-            ansible_ssh_private_key_file: "{{ hostvars[groups['overcloud_nodes'][0]].ansible_ssh_private_key_file }}"
-            ansible_host: "{{ undercloud_ip.stdout | ipaddr('address') }}"
-            ansible_ssh_common_args: "
-                -o BatchMode=yes \
-                -o ForwardAgent=yes \
-                -o ServerAliveInterval=30 \
-                -o ControlMaster=auto \
-                -o ControlPersist=30m \
-                -o StrictHostKeyChecking=no \
-                -o UserKnownHostsFile=/dev/null \
-                -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                -W %h:%p -i {{ ansible_ssh_private_key_file }} \
-                {{ ansible_user|default(ansible_ssh_user) }}@{{ ansible_host|default(ansible_ssh_host) }}\""
-        notify:
-            - update /etc/hosts with undercloud's details
-
-      - include_role:
-            name: inventory-update
-            apply:
-              delegate_to: localhost
-        vars:
-            inventory_file_name: 'hosts-installer'
-
-      # create stack user on hypervisor, because on clean machine we can have it missing
-      - block:
-          - name: create stack user on hypervisor
-            user:
-                name: "{{ install.user.name }}"
-                state: present
-                password: "{{ install.user.password | password_hash('sha512') }}"
-
-          - name: set permissions for the user to access the hypervisor
-            copy:
-                content: |
-                    [libvirt Management Access]
-                    Identity=unix-user:{{ install.user.name }}
-                    Action=org.libvirt.unix.manage
-                    ResultAny=yes
-                    ResultInactive=yes
-                    ResultActive=yes
-                dest: "/etc/polkit-1/localauthority/50-local.d/50-libvirt-user-{{ install.user.name }}.pkla"
-
       - name: test openstack environment
-        delegate_to: "{{ groups.undercloud | first }}"
+        delegate_to: "{{ undercloud_ip.stdout }}"
         become: true
         become_user: stack
+        vars:
+          ansible_python_interpreter: /usr/bin/python3
         shell: |
             source ~/stackrc
             openstack server list
