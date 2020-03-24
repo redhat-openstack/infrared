@@ -49,6 +49,7 @@ class SpecValidator(Validator):
         "properties": {
             "plugin_type": {"type": "string", "minLength": 1},
             "entry_point": {"type": "string", "minLength": 1},
+            "roles_path": {"type": "string", "minLength": 1},
         },
         "additionalProperties": False,
         "required": ["plugin_type"]
@@ -82,6 +83,7 @@ class SpecValidator(Validator):
         "properties": {
             "plugin_type": {"type": "string", "minLength": 1},
             "entry_point": {"type": "string", "minLength": 1},
+            "roles_path": {"type": "string", "minLength": 1},
             "description": {"type": "string", "minLength": 1},
             "subparsers": SUBPARSER_PART_SCHEMA
         },

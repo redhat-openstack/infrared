@@ -60,6 +60,26 @@ Config section:
     * Plugin type can be one of the following: ``provision``, ``install``, ``test``, ``other``.
     * Entry point is the main playbook for the plugin. by default this will refer to main.yml file
         but can be changed to ant other file.
+    * ``roles_path``:
+        This is optional and it might be used when the plugin refers to a role
+        which is introduced by that plugin. The ``roles_path`` then relatively
+        points (from plugin.spec location) to the role. Let's take a look at
+        the following example of an ansible role (can be as a standalone project)
+        which is also an infrared plugin
+        ::
+
+            my_role
+            ├── defaults
+            │   └── main.yml
+            ├── infrared_plugin
+            │   ├── main.yml                # Main playbook. All execution starts here
+            │   └── plugin.spec             # Plugin definition
+            ├── tasks                       # Tasks of the role
+            │   └── main.yml
+
+In the above example ``main.yml`` calls ``my_role``. In order to help infrared
+find the role, ``roles_path`` within config section needs to be set to ``../``
+to point to the ansible role called from ``infrared_plugin/main.yml``
 
 To access the options defined in the spec from your playbooks and roles use
 the plugin type with the option name.

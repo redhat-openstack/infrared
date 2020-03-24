@@ -1,0 +1,26 @@
+- name: Main Play
+  hosts: all
+  vars:
+      output_file: output.example
+  tasks:
+      - debug:
+            var: inventory_dir
+        tags: only_this
+
+      - name: Test output
+        vars:
+            output_file: output.example
+        file:
+            path: "{{ inventory_dir }}/{{ output_file }}"
+            state: touch
+
+      - name: Print env variables
+        shell: >
+            printenv | grep ANSIBLE_ROLES_PATH
+        register: out
+
+      - name: Save output to a file
+        copy:
+          content: "{{ out.stdout }}"
+          dest: "{{ inventory_dir }}/{{ output_file }}"
+
