@@ -43,6 +43,10 @@ subparsers:
                         - debug_failing
                         - debug_all
                       default: normal
+                  tester-node:
+                      type: Value
+                      help: The name of the node from where to run the tests
+                      default: 'undercloud'
                   debug-command:
                       type: Value
                       help: |
