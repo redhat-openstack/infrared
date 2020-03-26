@@ -16,6 +16,23 @@
           state: latest
           disable_gpg_check: yes
 
+    - name: Disable and remove the libvirt default network (BZ#1807092)
+      shell: |
+        RETURN_CODE=0
+        if virsh net-list --name | egrep -q "^default$"; then
+          virsh net-autostart default --disable
+          virsh net-destroy default
+          virsh undefine default
+          RETURN_CODE=2
+        fi
+        exit ${RETURN_CODE}
+      args:
+        executable: /bin/bash
+      register: _disable_libvirt_default_net
+      changed_when: _disable_libvirt_default_net.rc == 2
+      failed_when: _disable_libvirt_default_net.rc not in [0,2]
+      when: vbmc_inventory_host == 'undercloud-0'
+
     - name: install pip
       easy_install:
           name: pip
