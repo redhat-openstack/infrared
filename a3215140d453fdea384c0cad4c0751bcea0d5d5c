@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69d04480_87bfba4e",
+        "filename": "plugins/virsh/defaults/topology/network/8_nets_3_bridges_hybrid.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1008672
+      },
+      "writtenOn": "2020-03-26T07:53:41Z",
+      "side": 1,
+      "message": "Explanation to nfv qe guys,\n\nThe following network structure will be used:\n\ncontroller:\n  interfaces:\n    - network: \"br-ctlplane\" ----\u003e Provisioning\n      bridged: yes\n    - network: \"br-internal\" ----\u003e br-link0 (vxlan mgmt)\n      bridged: yes\n    - network: \"br-internal\" ----\u003e br-dpdk1 (same bridge will use nic5 on the compute)\n      bridged: yes\n    - network: \"br-internal\" ----\u003e br-dpdk2 (same bridge will use nic6 on the compute)\n      bridged: yes\n    - network: \"br-internal\" ----\u003e br-sriov1 (first sriov nic of the compute)\n      bridged: yes\n    - network: \"br-internal\" ----\u003e br-sriov2 (second sriov nic of the compute)\n      bridged: yes\n    - network: \"br-external\" ----\u003e br-access (External api and Floating ip allocation)\n      bridged: yes\n    - network: \"management\" -----\u003e Virsh internal network",
+      "revId": "a3215140d453fdea384c0cad4c0751bcea0d5d5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
