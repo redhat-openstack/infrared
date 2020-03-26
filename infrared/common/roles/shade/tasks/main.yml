@@ -80,10 +80,8 @@
   vars:
       venv_cmd: "{{ ansible_env.HOME }}/.local/bin/virtualenv"
   pip:
-      name:
-        - pytz==2016.4
-        - cmd2==0.8.6
-        - shade>=1.25
-      # TODO: unpin shade to avoid other conflicts
+      # On RHEL7 we need to pin to < 0.40.0 because that's when py2
+      # testing was removed.
+      name: "{{ (install_pip_from_source) | ternary('openstacksdk>=0.29.0', 'openstacksdk>=0.29.0,<0.40.0') }}"
       virtualenv: "{{ shade_path_venv }}"
       virtualenv_command: "{{ (is_venv.stdout | bool) | ternary(omit, venv_cmd) }}"
