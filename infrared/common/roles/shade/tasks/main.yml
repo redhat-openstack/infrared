@@ -5,19 +5,15 @@
   register: is_venv
 
 - set_fact:
-    install_pip_from_source: "{{ (false in src_conditions) | ternary(False, True) }}"
-  vars:
-    src_conditions:
-      - "{{ ansible_distribution in ['CentOS', 'RedHat'] }}"
-      - "{{ ansible_distribution_major_version | int >= 8 }}"
+    py3_environment: "{{ (ansible_distribution in ['CentOS', 'RedHat']) and (ansible_distribution_major_version | int >= 8) }}"
 
 - name: install virtualenv requirments for pip
   become: yes
   package:
       name:
         - gcc
-        - "{{ (install_pip_from_source) | ternary('python3-devel', 'python-devel') }}"
-        - "{{ (install_pip_from_source) | ternary('python3-setuptools', 'python-setuptools') }}"
+        - "{{ (py3_environment | bool) | ternary('python3-devel', 'python-devel') }}"
+        - "{{ (py3_environment | bool) | ternary('python3-setuptools', 'python-setuptools') }}"
         - libffi-devel
       state: present
 
@@ -34,7 +30,7 @@
     - name: Install pip using get-pip.py
       command: "{{ ansible_python_interpreter | default('python') }} {{ get_pip.dest }}"
       become: true
-  when: install_pip_from_source
+  when: py3_environment | bool
   tags: install-pip
 
 
@@ -43,7 +39,7 @@
   become: yes
   easy_install:
       name: pip
-  when: not install_pip_from_source
+  when: not py3_environment | bool
   tags: install-pip
 
 - name: install virtualenv pip module
@@ -82,6 +78,6 @@
   pip:
       # On RHEL7 we need to pin to < 0.40.0 because that's when py2
       # testing was removed.
-      name: "{{ (install_pip_from_source) | ternary('openstacksdk>=0.29.0', 'openstacksdk>=0.29.0,<0.40.0') }}"
+      name: "{{ (py3_environment | bool) | ternary('openstacksdk>=0.29.0', 'openstacksdk>=0.29.0,<0.40.0') }}"
       virtualenv: "{{ shade_path_venv }}"
       virtualenv_command: "{{ (is_venv.stdout | bool) | ternary(omit, venv_cmd) }}"
