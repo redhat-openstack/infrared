@@ -126,7 +126,7 @@
             {%-   set _ = package_list.append('python3-tripleoclient') %}
             {%- endif %}
             {%- if install.packages is defined %}
-            {%-   set _ = package_list.extend(install.packages.split()) %}
+            {%-   set _ = package_list.extend(install.packages.split() | reject('equalto', '')) %}
             {%- endif %}
             {%- if ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int < 8 %}
             {%-   set _ = package_list.append('deltarpm') %}
