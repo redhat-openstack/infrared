@@ -111,27 +111,46 @@
           dstat_output_dir: '/var/log/extra'
         tags: dstat
 
-      - name: install packages on Undercloud
-        package:
-          name: "{{ _package_list }}"
-          state: present
-        vars:
-          _package_list: >-
-            {%- set package_list = [] %}
-            {%- if install.version | openstack_release == 7 %}
-            {%-   set _ = package_list.append('python-rdomanager-oscplugin') %}
-            {%- elif install.version|openstack_release < 15 %}
-            {%-   set _ = package_list.append('python-tripleoclient') %}
-            {%- else %}
-            {%-   set _ = package_list.append('python3-tripleoclient') %}
-            {%- endif %}
-            {%- if install.packages is defined %}
-            {%-   set _ = package_list.extend(install.packages.split()) %}
-            {%- endif %}
-            {%- if ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int < 8 %}
-            {%-   set _ = package_list.append('deltarpm') %}
-            {%- endif %}
-            {{- package_list }}
+      - name: Install packages on Undercloud
+        block:
+          - name: Create the package list to install
+            set_fact:
+              _package_list: >-
+                {%- set package_list = [] %}
+                {%- if install.version | openstack_release == 7 %}
+                {%-   set _ = package_list.append('python-rdomanager-oscplugin') %}
+                {%- elif install.version|openstack_release < 15 %}
+                {%-   set _ = package_list.append('python-tripleoclient') %}
+                {%- else %}
+                {%-   set _ = package_list.append('python3-tripleoclient') %}
+                {%- endif %}
+                {%- if install.packages is defined %}
+                {%-   set _ = package_list.extend(install.packages.split()) %}
+                {%- endif %}
+                {%- if ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int < 8 %}
+                {%-   set _ = package_list.append('deltarpm') %}
+                {%- endif %}
+                {{- package_list }}
+
+          - name: Install the packages
+            package:
+              name: "{{ _package_list }}"
+              state: present
+            register: _install_packages
+        rescue:
+          - name: Output the failed task's register
+            debug:
+              msg: "{{ _install_packages }}"
+
+          - name: Fail with the inputs for debugging purposes
+            fail:
+              msg: |
+                _package_list: {{ _package_list }}
+                install.version: {{ install.version }}
+                openstack_release: {{ install.version | openstack_release }}
+                install.packages: {{ install.version | default('') }}
+                ansible_distribution: {{ ansible_distribution }}
+                ansible_distribution_major_version: {{ ansible_distribution_major_version }}
 
       - name: Update system and reboot
         include_tasks: tasks/update_and_reboot.yml
