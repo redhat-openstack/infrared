@@ -66,6 +66,12 @@
           requirements: "{{ plugins_reqs.stat.path }}"
       when: plugins_reqs.stat.exists
 
+- name: Make sure the latest version of setuptools is installed
+  pip:
+    name: setuptools
+    state: latest
+    extra_args: --user
+
 - name: Install plugin packages to the user home directory
   pip:
       name: "{{ plugins_dir }}/{{ plugin_dict.key }}"
