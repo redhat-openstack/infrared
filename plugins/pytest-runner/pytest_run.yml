@@ -44,7 +44,8 @@
           name: pytest
           state: present
           virtualenv: /tmp/pytest_venv
-
+        environment:
+          PATH: "/home/{{ ansible_user|default(ansible_ssh_user) }}/.local/bin:$PATH"
       - name: Install packages
         become: true
         package:
