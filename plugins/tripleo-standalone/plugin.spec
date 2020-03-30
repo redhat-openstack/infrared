@@ -53,9 +53,6 @@ subparsers:
                   build:
                       help: |
                           String represents a timestamp of the OSP puddle.
-                          Note: for versions 6 < OSPd < 10 to specify director
-                          version use '--director-build' flag.
-                          (for the given product core version).
                           Supports any rhos-release labels.
                           RDO supported labels: master-tripleo-ci
                           Examples: "passed_phase1", "2016-08-11.1", "Y1", "Z3", "GA"
