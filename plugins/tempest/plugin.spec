@@ -87,6 +87,8 @@ subparsers:
                            - "15-trunk"
                            - "16"
                            - "16-trunk"
+                           - "16.1"
+                           - "16.1-trunk"
                            - liberty
                            - kilo
                            - liberty
