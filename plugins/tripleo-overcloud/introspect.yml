@@ -171,12 +171,19 @@
       # seamlessly. This must be async task because we need to enforce explicit timeout
       # for this process, otherwise timeout is controlled by ironic and seriously long
       # (usually one must wait for 1 hour if any failure on any node occurs).
+      # Note(odyssey4me):
+      # Sometimes, on OSP10 in particular, introspection succeeds but there are some nodes
+      # which are left in a 'manageable' state instead of an 'available' state. For this
+      # case we manually force the state to 'manageable'.
 
       - name: start node introspection
         shell: |
             source ~/stackrc
-            {% if install.version|default(undercloud_version) |openstack_release < 13 %}
+            {% if install.version|default(undercloud_version) | openstack_release < 13 %}
             openstack baremetal introspection bulk start
+            for uuid in $(openstack baremetal node list --fields uuid provision_state -f value | awk '/manageable/ {print $1}'); do
+              ironic node-set-provision-state ${uuid} provide
+            done
             {% else %}
             openstack overcloud node introspect --provide --all-manageable
             {% endif %}
