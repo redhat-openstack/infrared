@@ -5,6 +5,13 @@
   # file may contain passwords. Don't print its content to console
   no_log: yes
 
+- name: Inform the operators if both rhsm_activation_key and rhsm_repos are given
+  debug:
+    msg: "username and activationkey are exclusive options when using Satellite"
+  when:
+    - cdn_creds.activationkey is defined
+    - cdn_creds.username is defined
+
 - name: Check if Satellite server
   uri:
     url: "https://{{ cdn_creds.server_hostname }}/katello/api/ping"
