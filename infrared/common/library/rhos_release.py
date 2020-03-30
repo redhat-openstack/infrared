@@ -261,7 +261,6 @@ def main():
             release=dict(),
             build_date=dict(),
             director=dict(type='bool', default=True),
-            director_build_date=dict(),
             pin_puddle=dict(default=True),
             enable_poodle_repos=dict(default=False),
             poodle_type=dict(choices=POODLE_TYPES.keys()),
