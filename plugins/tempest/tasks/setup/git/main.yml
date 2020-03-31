@@ -77,6 +77,14 @@
       version: "2.11.1"
       virtualenv: "{{ virtualenvs.tempest }}"
 
+# stestr > 2.6.0 no longer supports python 2.7
+- name: Install stestr==2.6.0 when python2.7 is used
+  pip:
+      name: "stestr"
+      version: "2.6.0"
+      virtualenv: "{{ virtualenvs.tempest }}"
+  when: test.openstack.version|default(overcloud_version)|openstack_release < 15
+
 # Make sure os-testr is installed for versions <13 since it was removed
 # from tempest requirements file on tempest master branch
 # and stestr was not required yet (only from tempest >=18)
