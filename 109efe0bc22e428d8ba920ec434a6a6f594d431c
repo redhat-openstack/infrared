@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae1b95a7_f4e7d08c",
+        "filename": "infrared/common/filter_plugins/openstack_release.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2020-03-31T13:13:00Z",
+      "side": 1,
+      "message": "since there may be comparisons like \u0027release \u003d\u003d \"13\"\u0027 or such, comparing it as string,\nmaybe more compatible way could be to:\n- return formatted without floating part if it\u0027s   \u0027int(value) \u003d\u003d float(value)\n- return formatted with floating part otherwise\n\n(otherwise you may need to go over all of the conditions and patch them (including likely outside of repo plugins))\n(maybe for explicit .0 comparison there could be some parameter for this filter to explicitly request float)\n\n\n- maybe attempt stripping -trunk first?",
+      "revId": "109efe0bc22e428d8ba920ec434a6a6f594d431c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
