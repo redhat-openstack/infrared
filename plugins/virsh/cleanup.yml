@@ -81,19 +81,20 @@
           action: "cleanup"
           prefix: "{{ provision.prefix|default('') }}"
 
-    - block:
-        - name: Get all deployments
-          set_fact:
-              deployments_info: "{{ deployments_info|default({})|combine({item.key : item.value}) }}"
-          when: prefix not in item.key
-          with_dict: "{{ ansible_local.deployment_info }}"
+    - name: Get info about previous deployment if any was done
+      set_fact:
+          deployments_info: "{{ deployments_info|default({})|combine({item.key : item.value}) }}"
+      when: prefix not in item.key
+      with_dict: "{{ ansible_local.deployment_info | default({}) }}"
 
-        - name: Create running deployment custom fact
-          template:
-              src: deployments.fact.j2
-              dest: "{{ custom_facts }}/deployment_info.fact"
-              mode: 0644
-      when: provision.prefix is defined
+    - name: (Re)Create running deployment custom fact
+      template:
+          src: deployments.fact.j2
+          dest: "{{ custom_facts }}/deployment_info.fact"
+          mode: 0644
+      when:
+          - provision.prefix is defined
+          - provision.cleanup is false
 
     - name: Make sure that we don't have deployment_info facts at all in case of full cleanup
       file:
@@ -117,7 +118,8 @@
         - name: Generating a list of VMs to omit based on prefix
           set_fact:
             vms_to_omit: "{{ vms_to_omit|default([])|union([item]) }}"
-          when: provision.prefix in item
+          when:
+              - provision.prefix in item
           with_items: "{{ groups['all'] }}"
 
         - debug:
@@ -129,4 +131,6 @@
           vars:
             inventory_file_name: 'hosts-virsh-cleanup-prefix'
             omit_hosts: "{{ vms_to_omit }}"
-      when: provision.prefix is defined
+      when: 
+          - provision.prefix is defined
+          - vms_to_omit is defined
