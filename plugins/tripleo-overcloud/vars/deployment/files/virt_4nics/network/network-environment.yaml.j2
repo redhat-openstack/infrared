@@ -45,7 +45,7 @@ parameter_defaults:
 {% else %}
     NeutronExternalNetworkBridge: ""
 {% endif %}
-{% if install.version|openstack_release > 14 and not install.network.dvr %}
+{% if install.version|openstack_release is version('14', '>') and not install.network.dvr %}
     NeutronBridgeMappings: ""
 {% else %}
     NeutronBridgeMappings: "datacentre:br-ex,tenant:br-tenant"

@@ -23,7 +23,7 @@
       value:
           NeutronTunnelTypes:
               "{{ (install.network.backend) | regex_replace('vlan', '') | regex_replace(',,', ',') | regex_replace(',$', '') | regex_replace('^,', '') }}"
-  when: install.version|default(undercloud_version)|openstack_release >= 8 or install.network.backend == 'gre'
+  when: install.version|default(undercloud_version)|openstack_release is version('8', '>=') or install.network.backend == 'gre'
 
 - name: Disable DVR
   yedit:
@@ -35,7 +35,7 @@
               "false"
   when:
       - not install.network.dvr
-      - install.version|default(undercloud_version) | openstack_release >= 15
+      - install.version|default(undercloud_version) |openstack_release is version('15', '>=')
 
 - name: Append the network isolation template line to the base overcloud deploy script
   lineinfile:
@@ -46,13 +46,13 @@
   import_tasks: control_node_placement/predictable_ips.yml
   when:
      - install.predictable.ips
-     - install.version|default(undercloud_version) | openstack_release >= 10
+     - install.version|default(undercloud_version) |openstack_release is version('10', '>=')
 
 - name: Custom network names
   import_tasks: network/custom_network_names.yml
   when:
      - install.get('custom_network_names',{})|default(False)
-     - install.version|default(undercloud_version) | openstack_release >= 14
+     - install.version|default(undercloud_version) |openstack_release is version('14', '>=')
 
 - name: Upload network file for custom network topology
   block:
@@ -74,7 +74,7 @@
           line: '-e {{ template_base }}/network/network_data.yaml \'
   when:
      - install.get('network', {}).get('data', {}).file is defined
-     - install.version|default(undercloud_version) | openstack_release >= 13
+     - install.version|default(undercloud_version) |openstack_release is version('13', '>=')
 
 - name: Upload roles data file to add custom roles to deployment
   block:
@@ -89,7 +89,7 @@
           line: '-r {{ template_base }}/roles/roles_data.yaml \'
   when:
      - install.get('custom', {}).get('data', {}).get('roles', {}).file is defined
-     - install.version|default(undercloud_version) | openstack_release >= 13
+     - install.version|default(undercloud_version) |openstack_release is version('13', '>=')
 
 - name: Append the network template line for splitstack to the base overcloud deploy script
   lineinfile:
@@ -103,7 +103,7 @@
       line: '-n {{ template_base }}/network/network_data{{ (install.network.protocol != "ipv4") | ternary("-v6","") }}.yaml \'
   when:
      - install.network.render.templates|default(False)
-     - install.version|default(undercloud_version) | openstack_release >= 13
+     - install.version|default(undercloud_version) |openstack_release is version('13', '>=')
 
 - name: Append the network environment template line to the base overcloud deploy script
   lineinfile:
@@ -122,11 +122,11 @@
       line: '-e {{ install.heat.templates.basedir }}/environments/services/neutron-bgpvpn-opendaylight.yaml \'
   when:
       - install.network.bgpvpn
-      - install.version|default(undercloud_version)|openstack_release > 12
+      - install.version|default(undercloud_version)|openstack_release is version('12', '>')
 
 - name: Inject dvr override template
   vars:
-      nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('', 'legacy') }}"
+      nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release is version('10', '>')) | ternary('', 'legacy') }}"
   template:
       src: dvr-override.yaml.j2
       dest: "{{ template_base }}/network/dvr-override.yaml"
@@ -139,7 +139,7 @@
       insertbefore: ".*network-environment.*"
   when:
       - install.network.ovs and not install.network.dvr
-      - install.version|default(undercloud_version)|openstack_release >= 15
+      - install.version|default(undercloud_version)|openstack_release is version('15', '>=')
 
 - name: Append neutron-ovs-dvr to overcloud deploy script
   lineinfile:
@@ -148,8 +148,8 @@
       insertbefore: ".*network-environment.*"
   when:
       - install.network.dvr
-      - (install.network.ovs and install.version|default(undercloud_version)|openstack_release >= 15) or
-        (not install.network.ovn and install.version|default(undercloud_version)|openstack_release < 15)
+      - (install.network.ovs and install.version|default(undercloud_version)|openstack_release is version('15', '>=')) or
+        (not install.network.ovn and install.version|default(undercloud_version)|openstack_release is version('15', '<'))
 
 - name: Append the l2gw template line to the base overcloud deploy script
   lineinfile:
@@ -180,7 +180,7 @@
       src: "files/network/neutron-lbaas.yml"
   when:
       - install.network.lbaas
-      - install.version|default(undercloud_version)|openstack_release >= 13
+      - install.version|default(undercloud_version)|openstack_release is version('13', '>=')
 
 - name: Append the LBaaS v2 template line to the base overcloud deploy script
   lineinfile:
@@ -188,7 +188,7 @@
       line: '-e {{ install.heat.templates.basedir }}/environments/services/neutron-lbaas.yaml \'
   when:
       - install.network.lbaas
-      - install.version|default(undercloud_version)|openstack_release >= 13
+      - install.version|default(undercloud_version)|openstack_release is version('13', '>=')
 
 - name: Append the network dvr overrides
   lineinfile:
@@ -224,7 +224,7 @@
               '{{ install.network.backend }}'
   when:
       - install.network.ovn and not install.network.dvr
-      - install.version|default(undercloud_version)|openstack_release == 12
+      - install.version|default(undercloud_version)|openstack_release is version('12', '==')
 
 - name: Change network type in OVN ML2 environment file OSP
   become: yes
@@ -237,7 +237,7 @@
               '{{ install.network.backend }}'
   when:
       - install.network.ovn and not install.network.dvr
-      - install.version|default(undercloud_version)|openstack_release >= 13
+      - install.version|default(undercloud_version)|openstack_release is version('13', '>=')
 
 - name: Change network type in OVN DVR environment file
   become: yes
@@ -250,7 +250,7 @@
               '{{ install.network.backend }}'
   when:
       - install.network.ovn and install.network.dvr
-      - install.version|default(undercloud_version)|openstack_release >= 13
+      - install.version|default(undercloud_version)|openstack_release is version('13', '>=')
 
 - block:
   - name: Remove OVNCMSOptions for controller nodes in non-DVR deployments
@@ -277,9 +277,9 @@
                 OVNCMSOptions: enable-chassis-as-gw
     when:
         - install.network.ovn and install.network.dvr
-        - install.version|default(undercloud_version) | openstack_release >= 15
+        - install.version|default(undercloud_version) |openstack_release is version('15', '>=')
         - "'networker' in install.role.files"
   become: yes
   when:
-      - install.version|default(undercloud_version)|openstack_release >= 13
+      - install.version|default(undercloud_version)|openstack_release is version('13', '>=')
       - install.get('role', {}).files is defined

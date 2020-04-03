@@ -5,7 +5,7 @@
       line: "--environment-file {{ install.heat.templates.basedir }}/environments/services-docker/ironic.yaml \\"
       insertafter: '^\s*--templates.*'
   when:
-  - install.version | default(undercloud_version) | openstack_release == 12
+  - install.version | default(undercloud_version) |openstack_release is version('12', '==')
 
 - name: include default ironic template in OSP14 and below
   lineinfile:
@@ -13,8 +13,8 @@
       line: "--environment-file {{ install.heat.templates.basedir }}/environments/services/ironic.yaml \\"
       insertafter: '^\s*--templates.*'
   when:
-  - install.version | default(undercloud_version) | openstack_release < 15
-  - install.version | default(undercloud_version) | openstack_release != 12
+  - install.version | default(undercloud_version) |openstack_release is version('15', '<')
+  - install.version | default(undercloud_version) |openstack_release is version('12', '!=')
 
 - name: include default ironic template in OSP15 and above
   lineinfile:
@@ -22,7 +22,7 @@
       line: "--environment-file {{ install.heat.templates.basedir }}/environments/services/ironic-overcloud.yaml \\"
       insertafter: '^\s*--templates.*'
   when:
-  - install.version | default(undercloud_version) | openstack_release > 14
+  - install.version | default(undercloud_version) |openstack_release is version('14', '>')
 
 - name: include default ironic-inspector template
   lineinfile:
@@ -31,7 +31,7 @@
       insertafter: '^\s*--templates.*'
   when:
   - install.ironic_inspector
-  - install.version | default(undercloud_version) | openstack_release >= 14
+  - install.version | default(undercloud_version) |openstack_release is version('14', '>=')
 
 - name: create custom ironic template file
   template:

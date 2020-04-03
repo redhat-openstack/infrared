@@ -11,7 +11,7 @@
       import_tasks: tasks/undercloud_reboot.yml
 
   when:
-    - undercloud_version|openstack_release == 10
+    - undercloud_version|openstack_release is version('10', '==')
     - ffwd_kernel_reboot|default(false)|bool
 
 - name: Update packages prior upgrade
@@ -19,7 +19,7 @@
   package:
       name: "*"
       state: latest
-  when: undercloud_version|openstack_release == 7
+  when: undercloud_version|openstack_release is version('7', '==')
 
 - name: restart RHOS-7 updated services
   become: true
@@ -31,7 +31,7 @@
       - "openstack-ironic-discoverd.service"
       - "openstack-heat-engine.service"
   when:
-      - undercloud_version|openstack_release == 7
+      - undercloud_version|openstack_release is version('7', '==')
       - install.get('update', {}).undercloud|default(False)
 
 - block:
@@ -54,9 +54,9 @@
             name: openvswitch
             state: stopped
         when:
-            - undercloud_version|openstack_release < 10
+            - undercloud_version|openstack_release is version('10', '<')
             - install.get('update', {}).undercloud|default(False)
-  when: undercloud_version|openstack_release > 7
+  when: undercloud_version|openstack_release is version('7', '>')
 
 - block:
       - name: Stop httpd
@@ -73,11 +73,11 @@
             - 'openstack-puppet-modules'
             - 'openstack-tripleo-common'
           state: latest
-  when: undercloud_version|openstack_release == 10
+  when: undercloud_version|openstack_release is version('10', '==')
 
 - name: Undercloud {{ operation_type }}
   shell: "openstack undercloud upgrade &> undercloud_{{ operation_type }}.log"
-  when: undercloud_version|openstack_release > 7 or (not install.get('update', {}).undercloud|default(False))
+  when: undercloud_version|openstack_release is version('7', '>') or (not install.get('update', {}).undercloud|default(False))
 
 - name: reboot undercloud
   import_tasks: tasks/undercloud_reboot.yml

@@ -146,5 +146,5 @@
 
       - name: install the oscplugin/tripleO client
         package:
-            name: "{{ (install.version|openstack_release == 7) | ternary('python-rdomanager-oscplugin', (install.version|openstack_release < 15) | ternary('python-tripleoclient', 'python3-tripleoclient')) }}"
+            name: "{{ (install.version|openstack_release is version('7', '==')) | ternary('python-rdomanager-oscplugin', (install.version|openstack_release is version('15', '<')) | ternary('python-tripleoclient', 'python3-tripleoclient')) }}"
             state: present

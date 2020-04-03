@@ -63,7 +63,7 @@ parameters:
   EC2MetadataIp: # Override this via parameter_defaults
     description: The IP address of the EC2 metadata server.
     type: string
-{% if install.version|openstack_release >= 15 %}
+{% if install.version|openstack_release is version('15', '>=') %}
   ControlPlaneStaticRoutes:
     default: []
     description: >
@@ -115,7 +115,7 @@ parameters:
       Management network.
     type: number
 {% endif %}
-{% if install.version|openstack_release >= 14 %}
+{% if install.version|openstack_release is version('14', '>=') %}
   StorageInterfaceRoutes:
     default: []
     description: >
@@ -179,7 +179,7 @@ resources:
                    $network_config:
                        network_config:
                         -
-{% if install.ironic and install.version|default(undercloud_version)|openstack_release > 14 %}
+{% if install.ironic and install.version|default(undercloud_version)|openstack_release is version('14', '>') %}
                           type: ovs_bridge
                           name: br-baremetal
                           members:

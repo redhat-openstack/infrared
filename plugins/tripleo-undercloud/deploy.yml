@@ -15,7 +15,7 @@
         become: true
         become_user: root
         when:
-          - install.version|openstack_release == 10
+          - install.version|openstack_release is version('10', '==')
           - install.build|default('') == 'ga'
         register: apply_workaround_bz1428608
 
@@ -28,7 +28,7 @@
         become_user: root
         when:
           - install.version|openstack_distribution == 'OSP'
-          - install.version|openstack_release <= 10
+          - install.version|openstack_release is version('10', '<=')
 
       - name: install the undercloud
         command: bash ~/undercloud_deploy.sh
@@ -69,7 +69,7 @@
         become_user: root
         when:
             - install.version|openstack_distribution == 'OSP'
-            - install.version|openstack_release == 10
+            - install.version|openstack_release is version('10', '==')
 
       # rhosp-release provides /etc/rhosp-release, which is used in upgrade for version discovery.
       - name: install rhosp-release
@@ -79,7 +79,7 @@
             name: rhosp-release
         when:
             - install.version|openstack_distribution == 'OSP'
-            - install.version|openstack_release >= 10
+            - install.version|openstack_release is version('10', '>=')
 
       - name: fetch the stackrc file
         tags:
@@ -106,4 +106,4 @@
           openstack --os-project-name service object store account set --property Temp-URL-Key=$(uuidgen | sha1sum | awk '{print $1}')
         when:
           - install.deploy_interface_default != 'iscsi'
-          - install.version|default(undercloud_version) | openstack_release >= 13
+          - install.version|default(undercloud_version) |openstack_release is version('13', '>=')

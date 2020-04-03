@@ -36,13 +36,13 @@ server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.i
 
 listen glance_api
   bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:9292
-{% if install.version|default(undercloud_version)|openstack_release < 11 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('11', '<') %}
   bind {{ loadbalancer.network.storage.vip | ipaddr('address') }}:9292
   {% for x in range(controllers_number|int) %}
 server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.storage.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:9292 check fall 5 inter 2000 rise 2
   {% endfor %}
 {% endif %}
-{% if install.version|default(undercloud_version)|openstack_release > 10 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('10', '>') %}
   bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:9292
   {% for x in range(controllers_number|int) %}
 server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:9292 check fall 5 inter 2000 rise 2
@@ -186,7 +186,7 @@ listen swift_proxy_server
 server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.storage.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8080 check fall 5 inter 2000 rise 2
   {% endfor %}
 
-{% if install.version|default(undercloud_version)|openstack_release > 8 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('8', '>') %}
 listen aodh
   bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8042 transparent
   bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8042 transparent
@@ -209,7 +209,7 @@ server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.i
   {% endfor %}
 {% endif %}
 
-{% if install.version|default(undercloud_version)|openstack_release > 10 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('10', '>') %}
 listen nova_placement
   bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8778 transparent
   bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8778 transparent
@@ -221,7 +221,7 @@ server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.i
   {% endfor %}
 {% endif %}
 
-{% if install.version|default(undercloud_version)|openstack_release > 11 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('11', '>') %}
 listen panko
   bind {{ loadbalancer.network.external.vip | ipaddr('address') }}:8977 transparent
   bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:8977 transparent

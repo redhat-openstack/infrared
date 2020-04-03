@@ -8,7 +8,7 @@
       roles_base: "/usr/share/openstack-tripleo-heat-templates/roles"
       ipv6_postfix: "{{  (install.network.protocol == 'ipv4') | ternary('', '-v6') }}"
       ipv6_postfix_underscore: "{{  (install.network.protocol == 'ipv4') | ternary('', '_v6') }}"
-      nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('', 'legacy') }}"
+      nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release is version('10', '>')) | ternary('', 'legacy') }}"
       flavor_name_mapping:
           Controller: Controller
           ObjectStorage: SwiftStorage
@@ -101,7 +101,7 @@
         when:
            - install.predictable
            - install.predictable.ips
-           - install.version|default(undercloud_version) | openstack_release >= 10
+           - install.version|default(undercloud_version) |openstack_release is version('10', '>=')
 
       - name: create the nodes file
         template:
@@ -130,7 +130,7 @@
         import_tasks: tasks/control_node_placement/specific_node_ids.yml
         when:
            - install.specific.node.ids
-           - install.version|default(undercloud_version) | openstack_release >= 10
+           - install.version|default(undercloud_version) |openstack_release is version('10', '>=')
         vars:
             role_file_path: "{{ template_base }}/roles/roles_data.yaml"
             generate_scheduler_hints: yes

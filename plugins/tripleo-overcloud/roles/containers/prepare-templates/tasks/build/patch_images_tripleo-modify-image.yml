@@ -60,7 +60,7 @@
 - name: Run images modification
   shell: |
       source /home/stack/stackrc
-      {% if install.version|default(undercloud_version)|openstack_release > 14 %}
+      {% if install.version|default(undercloud_version)|openstack_release is version('14', '>') %}
       sudo \
       {% endif %}
       openstack tripleo container image prepare \

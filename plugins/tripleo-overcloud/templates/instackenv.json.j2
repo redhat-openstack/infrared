@@ -1,5 +1,5 @@
 {
-  {% if install.version|default(undercloud_version) | openstack_release < 11  and not install.vbmc.force %}
+  {% if install.version|default(undercloud_version) |openstack_release is version('11', '<')  and not install.vbmc.force %}
   "ssh-user": "{{ ansible_user|default(ansible_ssh_user) }}",
   "ssh-key": "{{ undercloud_private_key }}",
   "power_manager": "nova.virt.baremetal.virtual_power_driver.VirtualPowerManager",
@@ -18,13 +18,13 @@
       "cpu": "{{ host_data.cpu }}",
       "memory": "{{ (host_data.memory_kibs|int / 1024)|round|int }}",
       "disk": "{{ (host_data.disk_bytes|int / 1073741824)|round|int }}",
-      {% if install.version|default(undercloud_version)|openstack_release < 11 %}
+      {% if install.version|default(undercloud_version)|openstack_release is version('11', '<') %}
         "disks": {{ host_data.disks }},
       {% endif %}
       "arch": "{{ host_data.arch }}",
-      {% if install.version|default(undercloud_version) | openstack_release >= 11  or install.vbmc.force %}
+      {% if install.version|default(undercloud_version) |openstack_release is version('11', '>=')  or install.vbmc.force %}
         "pm_addr": "{{ vbmc_management_address }}",
-        "pm_type": "{% if install.version|default(undercloud_version)|openstack_release >= 13 %}ipmi{% else %}pxe_ipmitool{% endif %}",
+        "pm_type": "{% if install.version|default(undercloud_version)|openstack_release is version('13', '>=') %}ipmi{% else %}pxe_ipmitool{% endif %}",
         "pm_user": "{{ install.vbmc.username }}",
         "pm_password": "{{ install.vbmc.password }}",
         "pm_port": "{{ vbmc_ports[host_data.name] }}"

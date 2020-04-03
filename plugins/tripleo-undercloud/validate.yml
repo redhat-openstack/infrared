@@ -24,7 +24,7 @@
             msg: "Image task 'rpm' is not supported for product version '{{ install.version }}'. Use another image task."
         when:
             - install.version|default('')
-            - install.version|openstack_release < 8
+            - install.version|openstack_release is version('8', '<')
             - install.images.task|default('')  == 'rpm'
 
       - name: validate director build
@@ -36,7 +36,7 @@
             - director_build is defined and director_build
             - not install.get('update', {}).undercloud|default(False)
             - install.version|default('')
-            - install.version|openstack_release > 9
+            - install.version|openstack_release is version('9', '>')
 
 - name: Validate Undercloud
   hosts: undercloud
@@ -53,5 +53,5 @@
         when:
             - install.version|default('')
             - install.version|openstack_distribution == 'OSP'
-            - install.version|openstack_release >= 13
+            - install.version|openstack_release is version('13', '>=')
             - ansible_distribution_version is version('7.5', '<')

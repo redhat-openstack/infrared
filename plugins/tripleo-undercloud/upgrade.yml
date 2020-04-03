@@ -51,19 +51,19 @@
             - upgrade
         package:
           name:
-            - "{{ (undercloud_upgrade_version|openstack_release < 15) | ternary('python-tripleoclient', 'python3-tripleoclient') }}"
+            - "{{ (undercloud_upgrade_version|openstack_release is version('15', '<')) | ternary('python-tripleoclient', 'python3-tripleoclient') }}"
             - "openstack-tripleo-common"
             - "openstack-tripleo-heat-templates"
             - "openstack-tripleo-validations"
           state: latest
-        when: undercloud_version|openstack_release >= 13
+        when: undercloud_version|openstack_release is version('13', '>=')
 
       - name: prepare undercloud containers
         tags:
             - undercloud_containers
             - upgrade
         import_tasks: tasks/prepare_uc_images.yml
-        when: undercloud_version|openstack_release >= 13
+        when: undercloud_version|openstack_release is version('13', '>=')
 
       - name: "{{ operation_type }} to version {{ undercloud_upgrade_version }} build {{ install.build | default('latest') }}"
         include_tasks: "tasks/upgrade/upgrade.yml"

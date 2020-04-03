@@ -20,7 +20,7 @@
   disable_constraints: True
 {% endif -%} {# end of install.splitstack #}
 {# OSP12 specific #}
-{% if install.version|default(undercloud_version)|openstack_release > 11 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('11', '>') %}
 {% if role.tags|default([])|length > 0 %}
   tags:
 {% for tag in role.tags %}

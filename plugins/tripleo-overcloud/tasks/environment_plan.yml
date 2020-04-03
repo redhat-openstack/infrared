@@ -1,7 +1,7 @@
 - name: check that openstack version is supproted
   fail:
       msg: Environment plan is supported by RHOSP version 12 and greater.
-  when: install.version|default(undercloud_version)|openstack_release < 12
+  when: install.version|default(undercloud_version)|openstack_release is version('12', '<')
 
 - name: download environment plan from url
   get_url:

@@ -12,7 +12,7 @@ openstack overcloud deploy \
 --stack {{ install.overcloud.stack }} \
 --libvirt-type {{ install.libvirt.type }} \
 --ntp-server {{ install.ntp.server }} \
-{% if install.version|default(undercloud_version)|openstack_release < 11 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('11', '<') %}
 --control-scale {{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or '1' }} \
 --control-flavor {{ ('controller' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('controller', 'baremetal') }} \
 --compute-scale {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or '1' }} \

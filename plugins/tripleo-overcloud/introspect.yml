@@ -21,7 +21,7 @@
   vars:
       undercloud_provision_cidr: "{{ ansible_br_ctlplane.ipv4.network }}/{{ ansible_br_ctlplane.ipv4.netmask }}"
       instack_input: "{{ (install.instackenv|default({})).file | default('') }}"
-      ironic_cli: "{{ (install.version|default(undercloud_version)|openstack_release < 14)|ternary('ironic node-show --fields uuid -- ','openstack baremetal node show --fields uuid -- ') }}"
+      ironic_cli: "{{ (install.version|default(undercloud_version)|openstack_release is version('14', '<'))|ternary('ironic node-show --fields uuid -- ','openstack baremetal node show --fields uuid -- ') }}"
   tasks:
       - block:
         - name: Get flavor list for UEFI updating
@@ -44,7 +44,7 @@
           with_items: "{{ flavor_list.stdout_lines }}"
         when:
             - install.boot.mode == 'uefi'
-            - install.version|default(undercloud_version) |openstack_release > 9
+            - install.version|default(undercloud_version) |openstack_release is version('9', '>')
         tags:
             - ironic
             - skip_ansible_lint
@@ -82,7 +82,7 @@
             set -eo pipefail
             source ~/stackrc
 
-            {% if install.version|default(undercloud_version) |openstack_release < 13 %}
+            {% if install.version|default(undercloud_version) |openstack_release is version('13', '<') %}
             openstack baremetal import --json {{ instack_file_path.stat.path }}
             openstack baremetal configure boot
             {% else %}
@@ -97,7 +97,7 @@
         shell: |
             source ~/stackrc
             NODE_UUID=$({{ ironic_cli }} {{ item.name | default(item) }} | awk '/uuid/ {print $4}' )
-            {% if install.version|default(undercloud_version) |openstack_release < 13 %}
+            {% if install.version|default(undercloud_version) |openstack_release is version('13', '<') %}
             ironic node-update ${NODE_UUID} add properties/root_device='{"size": {{ hostvars[item].disk  }} }'
             #TODO(skatlapa): Check if Ironic CLI BZ#1602066 affects baremetal update command
             {% else %}
@@ -115,7 +115,7 @@
                 - node: "ceph"
                   hint: "name"
                   hintvalue: "{{ ceph_default_disk_name }}"
-            ceph_defaults: "{{ ((install.version|default(undercloud_version)|openstack_release > 9) and
+            ceph_defaults: "{{ ((install.version|default(undercloud_version)|openstack_release is version('9', '>')) and
                                  'ceph' in groups and
                                  'hypervisor' in groups)|ternary(default_disk_override, []) }}"
         set_fact:
@@ -130,7 +130,7 @@
 
             {% for node in item.node.split(':') %}
                 if [[ "{{ node }}" =~ $REGEX ]]; then
-                {% if install.version|default(undercloud_version) |openstack_release > 9 %}
+                {% if install.version|default(undercloud_version) |openstack_release is version('9', '>') %}
                     openstack baremetal node set \
                       --property root_device='{"{{ item.hint }}":"{{ item.hintvalue }}"}' {{ node }}
                 {% else %}
@@ -138,7 +138,7 @@
                     xargs -I{} ironic node-update {} add properties/root_device='{"{{ item.hint }}":"{{ item.hintvalue }}"}'
                 {% endif %}
                 else
-                {% if install.version|default(undercloud_version) |openstack_release > 9 %}
+                {% if install.version|default(undercloud_version) |openstack_release is version('9', '>') %}
                     openstack baremetal node list|awk '/{{ node }}/ {print $2}'| \
                     xargs -I{} openstack baremetal node set {} --property root_device='{"{{ item.hint }}":"{{ item.hintvalue }}"}'
                 {% else %}
@@ -161,7 +161,7 @@
         with_items: "{{ groups['overcloud_nodes'] | default([]) }}"
         when:
             - install.image_direct_deploy != 'iscsi'
-            - install.version|default(undercloud_version) | openstack_release >= 13
+            - install.version|default(undercloud_version) |openstack_release is version('13', '>=')
 
       # Because introspection is faulty and tricky especially on baremetals
       # we need to check multiple times if any failure occured. Reasonable time
@@ -179,7 +179,7 @@
       - name: start node introspection
         shell: |
             source ~/stackrc
-            {% if install.version|default(undercloud_version) | openstack_release < 13 %}
+            {% if install.version|default(undercloud_version) |openstack_release is version('13', '<') %}
             openstack baremetal introspection bulk start
             for uuid in $(openstack baremetal node list --fields uuid provision_state -f value | awk '/manageable/ {print $1}'); do
               ironic node-set-provision-state ${uuid} provide
@@ -227,7 +227,7 @@
         with_dict: "{{ vbmc_ports }}"
         when:
             - install.vbmc.force
-            - install.version|default(undercloud_version) | openstack_release == 10
+            - install.version|default(undercloud_version) |openstack_release is version('10', '==')
             - vbmc_ports is defined
 
 #

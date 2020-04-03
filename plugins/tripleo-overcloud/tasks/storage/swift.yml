@@ -6,7 +6,7 @@
           line: '--swift-storage-scale {{ storage_nodes }} \'
       when:
           - "templates.storage_add_scale|default(True)"
-          - install.version|default(undercloud_version)|openstack_release < 11
+          - install.version|default(undercloud_version)|openstack_release is version('11', '<')
 
     - name: append the swift storage template line to the base overcloud deploy script
       lineinfile:
@@ -14,7 +14,7 @@
           line: '--swift-storage-flavor {{ ("swift" in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary("swift", "baremetal") }} \'
       when:
           - "templates.storage_add_scale|default(True)"
-          - install.version|default(undercloud_version)|openstack_release < 11
+          - install.version|default(undercloud_version)|openstack_release is version('11', '<')
 
   when:
       - not install.storage.external

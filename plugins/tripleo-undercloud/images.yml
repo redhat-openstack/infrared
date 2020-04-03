@@ -123,7 +123,7 @@
             - skip_ansible_lint
         register: oc_nodes_prev
         when:
-            - undercloud_version|openstack_release <= 10
+            - undercloud_version|openstack_release is version('10', '<=')
 
       - name: check for existing nodes ( OS >= 11 )
         shell: |
@@ -133,7 +133,7 @@
             - skip_ansible_lint
         register: oc_nodes
         when:
-            - undercloud_version|openstack_release >= 11
+            - undercloud_version|openstack_release is version('11', '>=')
 
       - name: configure nodes to use updated kernel and ramdisk ( OS <= 10 )
         shell: |
@@ -142,7 +142,7 @@
         tags:
             - skip_ansible_lint
         when:
-            - undercloud_version|openstack_release <= 10
+            - undercloud_version|openstack_release is version('10', '<=')
             - oc_nodes_prev.stdout|int > 4
 
       # https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/11/html/upgrading_red_hat_openstack_platform/chap-director-minor-update#sect-Updating_Overcloud_and_Introspection_Images
@@ -153,7 +153,7 @@
         tags:
             - skip_ansible_lint
         when:
-            - undercloud_version|openstack_release >= 11
+            - undercloud_version|openstack_release is version('11', '>=')
             - oc_nodes.stdout|from_json
 
       - name: remove downloaded images

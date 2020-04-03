@@ -48,7 +48,7 @@ parameter_defaults:
     NeutronBridgeMappings: "ctlplane:br-ctlplane,datacentre:br-ex,baremetal:br-baremetal"
     NeutronNetworkVLANRanges: "baremetal:1000:1010"
     NeutronFlatNetworks: ctlplane,datacentre,baremetal
-{% if install.version|openstack_release > 14 %}
+{% if install.version|openstack_release is version('14', '>') %}
     NeutronMechanismDrivers: ovn,ansible
     NeutronTypeDrivers: local,geneve,vlan,flat
 {% else %}

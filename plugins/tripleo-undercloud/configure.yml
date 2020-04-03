@@ -52,7 +52,7 @@
         import_tasks: tasks/prepare_uc_images.yml
         when:
             - install.version|openstack_distribution == 'OSP'
-            - install.version|openstack_release > 13
+            - install.version|openstack_release is version('13', '>')
 
       - name: template the undercloud.conf from local machine
         template:
@@ -91,7 +91,7 @@
 
       - name: enable undercloud-ssl
         include_tasks: tasks/ssl.yml
-        when: install.ssl or install.version|openstack_release > 13
+        when: install.ssl or install.version|openstack_release is version('13', '>')
         tags: ssl
 
       - name: create the base undercloud deploy script
@@ -118,14 +118,14 @@
               state: present
               line: "nova::network::neutron::dhcp_domain: {{ install.overcloud.domain }}"
             when:
-                - install.version|openstack_release < 12
+                - install.version|openstack_release is version('12', '<')
           - name: Ensure neutron has dns_domain set to cloud domain
             lineinfile:
               path: "{{ working_dir }}/hiera_override.yaml"
               state: present
               line: "neutron::dns_domain: {{ install.overcloud.domain }}"
             when:
-                - install.version|openstack_release < 12
+                - install.version|openstack_release is version('12', '<')
 
           - block:
               - name: get global mtu hieradata for neutron from local_mtu
@@ -141,7 +141,7 @@
                 when:
                     - local_mtu.stdout != ""
             when:
-                - install.version|openstack_release < 14
+                - install.version|openstack_release is version('14', '<')
 
           - name: set additional config via hieradata
             lineinfile:
@@ -159,7 +159,7 @@
                 option: hieradata_override
                 value: "{{ working_dir }}/hiera_override.yaml"
         when:
-            - install.version|openstack_release > 9
+            - install.version|openstack_release is version('9', '>')
 
       - block:
           - name: download workarounds file
@@ -194,7 +194,7 @@
                undercloud_custom_env_content: |
                    parameter_defaults:
                       IronicDefaultDeployInterface: direct
-                   {% if install.version|default(undercloud_version) | openstack_release > 14 and install.image.download.source == 'http' %}
+                   {% if install.version|default(undercloud_version) |openstack_release is version('14', '>') and install.image.download.source == 'http' %}
                       IronicImageDownloadSource: http
                    {% endif %}
 
@@ -211,4 +211,4 @@
                 value: "{{ working_dir }}/undercloud_custom_env.yaml"
         when:
           - install.deploy_interface_default == 'direct'
-          - install.version|default(undercloud_version) | openstack_release > 13
+          - install.version|default(undercloud_version) |openstack_release is version('13', '>')

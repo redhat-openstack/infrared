@@ -7,7 +7,7 @@
 - name: get node details
   shell: |
       source ~/stackrc
-      {% if install.version|default(undercloud_version) | openstack_release < 13 %}
+      {% if install.version|default(undercloud_version) |openstack_release is version('13', '<') %}
       ironic --json node-show {{ item }}
       {% else %}
       openstack baremetal node show -f json {{ item }}
@@ -20,7 +20,7 @@
 - name: update node capabilities with node name for scheduler hints
   shell: >
       source ~/stackrc;
-      {% if install.version|default(undercloud_version) | openstack_release < 13 %}
+      {% if install.version|default(undercloud_version) |openstack_release is version('13', '<') %}
       NODE_UUID=$(ironic node-list | grep -w {{ (item | from_json)['name'] }} | awk '{print $2}')
       ironic node-update ${NODE_UUID} replace
       properties/capabilities='node:{{ (item | from_json)['name'] }},{{ (item | from_json)['properties']['capabilities'] }}'

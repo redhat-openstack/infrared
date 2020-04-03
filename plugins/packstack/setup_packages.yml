@@ -21,8 +21,8 @@
             --enable {{ reponame }} >>/var/log/yum.log
         vars:
             version: "{{ install.version|openstack_release }}.0{{ ('-trunk' in install.version) | ternary('-trunk', '') }}"
-            reponame: "rhelosp-{{ version }}-devtools{{ (install.version|openstack_release < 15) | ternary('-puddle', '') }}"
-        when: "install.version|openstack_release >= 13"
+            reponame: "rhelosp-{{ version }}-devtools{{ (install.version|openstack_release is version('15', '<')) | ternary('-puddle', '') }}"
+        when: "install.version|openstack_release is version('13', '>=')"
 
       - name: Update all packages
         package:

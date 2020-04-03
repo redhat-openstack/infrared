@@ -10,7 +10,7 @@ nodes:
     properties:
       local_gb: "{{ (host_data.disk_bytes|int / 1073741824)|round|int }}"
       cpu_arch: "{{ host_data.arch }}"
-    driver: "{% if install.version|default(undercloud_version)|openstack_release >= 13 %}ipmi{% else %}pxe_ipmitool{% endif %}"
+    driver: "{% if install.version|default(undercloud_version)|openstack_release is version('13', '>=') %}ipmi{% else %}pxe_ipmitool{% endif %}"
     driver_info:
       ipmi_address: "{{ vbmc_management_address }}"
       ipmi_username: "{{ install.vbmc.username }}"

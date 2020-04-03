@@ -52,7 +52,7 @@
   with_items: "{{ test.tests }}"
   loop_control:
       loop_var: test_suite
-  when: test.openstack.version|default(overcloud_version)|openstack_release >= 7
+  when: test.openstack.version|default(overcloud_version)|openstack_release is version('7', '>=')
 
 - name: Install test dependency
   become: yes
@@ -63,4 +63,4 @@
 - name: Warning message
   debug:
       msg: WARNING! Plugins are not available for RHOS version < 7
-  when: test.openstack.version|default(overcloud_version)|openstack_release < 7
+  when: test.openstack.version|default(overcloud_version)|openstack_release is version('7', '<')

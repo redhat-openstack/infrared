@@ -43,7 +43,7 @@
         --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }} \
         {% endif %}
   when:
-      - install.version|default(undercloud_version)|openstack_release < 14
+      - install.version|default(undercloud_version)|openstack_release is version('14', '<')
   tags:
       - skip_ansible_lint
 
@@ -58,7 +58,7 @@
       line: '-e ~/containers-prepare-parameter.yaml \'
       insertbefore: "^--log-file.*"
   when:
-      - install.version|default(undercloud_version)|openstack_release >= 14
+      - install.version|default(undercloud_version)|openstack_release is version('14', '>=')
       - not install.ocupdate|default(false)
       - not install_container_images_packages is defined
       - not install_container_images_patch is defined

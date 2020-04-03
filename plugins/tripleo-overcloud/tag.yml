@@ -66,7 +66,7 @@
               --property resources:VCPU=0 \
               --property capabilities:boot_option=local
         tags: skip_ansible_lint
-        when: install.version|default(undercloud_version)|openstack_release > 13
+        when: install.version|default(undercloud_version)|openstack_release is version('13', '>')
 
 
       # OSPd7 doesn't seem to have implicit profile matching and notifies to do this step manually
@@ -77,7 +77,7 @@
             source ~/stackrc
             openstack flavor set --property 'cpu_arch'='x86_64' --property 'capabilities:boot_option'='local' --property "capabilities:profile"="baremetal" baremetal
         when:
-            - install.version|default(undercloud_version)|openstack_release == 7
+            - install.version|default(undercloud_version)|openstack_release is version('7', '==')
             - "'hypervisor' not in groups"
             - "'bmc' not in groups"
         tags: skip_ansible_lint
@@ -88,7 +88,7 @@
             for node in `ironic node-list | awk '{print $2}' | grep -v "\(ID\|^$\)"`; do ironic node-update $node add properties/capabilities=profile:baremetal,boot_option:local; done
         tags: skip_ansible_lint
         when:
-            - install.version|default(undercloud_version)|openstack_release == 7
+            - install.version|default(undercloud_version)|openstack_release is version('7', '==')
             - "'hypervisor' not in groups"
             - "'bmc' not in groups"
 
@@ -127,7 +127,7 @@
 
             - name: get the node UUID
               vars:
-                  ironic_cli: "{{ (install.version|default(undercloud_version)|openstack_release < 14)|ternary('ironic node-show --fields uuid -- ','openstack baremetal node show --fields uuid -- ') }}"
+                  ironic_cli: "{{ (install.version|default(undercloud_version)|openstack_release is version('14', '<'))|ternary('ironic node-show --fields uuid -- ','openstack baremetal node show --fields uuid -- ') }}"
               shell: |
                   source ~/stackrc
                   {{ ironic_cli }} {{ item.name | default(item) }} | awk '/uuid/ {print $4}'
@@ -159,7 +159,7 @@
         tags: skip_ansible_lint
         when:
             - "item[0].item.name is defined and item[1].cmd is defined and item[0].item.name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
-            - install.version|default(undercloud_version)|openstack_release < 14
+            - install.version|default(undercloud_version)|openstack_release is version('14', '<')
         with_together:
             - "{{ node_list.results }}"
             - "{{ tagged_flavors | default([]) }}"
@@ -172,7 +172,7 @@
         tags: skip_ansible_lint
         when:
             - "item[0].item.name is defined and item[1].cmd is defined and item[0].item.name.rstrip('1234567890-').split('-')[-1] in item[1].cmd"
-            - install.version|default(undercloud_version)|openstack_release >= 14
+            - install.version|default(undercloud_version)|openstack_release is version('14', '>=')
         with_together:
             - "{{ node_list.results }}"
             - "{{ tagged_flavors | default([]) }}"
@@ -241,4 +241,4 @@
         when:
             - check_nodename.rc == 0
             - install.resource.class.enabled
-            - install.version|default(undercloud_version)|openstack_release >= 12
+            - install.version|default(undercloud_version)|openstack_release is version('12', '>=')

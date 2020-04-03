@@ -92,7 +92,7 @@
 # NOTE(bandini): this is a bug in haproxy's default service file IMO
 # NOTE(aopincar): Not needed in OSP < 15 and prevents the HAProxy service from starting
 - name: Make sure haproxy starts after the network is really up
-  when: install.version|default(undercloud_version)|openstack_release >= 15
+  when: install.version|default(undercloud_version)|openstack_release is version('15', '>=')
   template:
       src: haproxy.service.j2
       dest: /etc/systemd/system/haproxy.service

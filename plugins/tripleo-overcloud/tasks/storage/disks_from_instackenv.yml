@@ -12,7 +12,7 @@
   # All hosts 'from instackenv.json' which name is in storage group (swift or ceph) of inventory
   with_items: "{{ instackenv_data.nodes }}"
   when:
-      - install.version|default(undercloud_version) |openstack_release < 11
+      - install.version|default(undercloud_version) |openstack_release is version('11', '<')
       - item["name"] in storage_group
 
   # NOTE requires all storage nodes to have same disks setting.

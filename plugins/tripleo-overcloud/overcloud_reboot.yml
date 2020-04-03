@@ -19,7 +19,7 @@
   serial: 1
   vars:
       ceph_client: "{{ groups['controller']|first }}"
-      container_runtime: "{{ (install.version | default(undercloud_version) | openstack_release > 14) | ternary('podman', 'docker') }}"
+      container_runtime: "{{ (install.version | default(undercloud_version) |openstack_release is version('14', '>')) | ternary('podman', 'docker') }}"
   tasks:
       - set_fact:
             overcloud_rc: "/home/stack/{{ install.overcloud.stack }}rc"

@@ -33,4 +33,4 @@
   with_items:
       - "collectd"
       - "sensu-client"
-      - "fluentd{{ (install.version | default(undercloud_version) | openstack_release >= 13) | ternary('', '-client') }}"
+      - "fluentd{{ (install.version | default(undercloud_version) |openstack_release is version('13', '>=')) | ternary('', '-client') }}"

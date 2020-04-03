@@ -1,4 +1,4 @@
-{% if install.version|default(undercloud_version)|openstack_release < 9 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('9', '<') %}
 parameters:
   ServiceNetMap:
     NeutronTenantNetwork: tenant
@@ -34,7 +34,7 @@ parameters:
 {% endif %}
 
 parameter_defaults:
-{% if install.version|default(undercloud_version)|openstack_release > 8 and install.version|default(undercloud_version)|openstack_release < 11 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('8', '>') and install.version|default(undercloud_version)|openstack_release is version('11', '<') %}
   ServiceNetMap:
     NeutronTenantNetwork: tenant
     CeilometerApiNetwork: internal_api
@@ -70,14 +70,14 @@ parameter_defaults:
     NovaColdMigrationNetwork: ctlplane
     NovaLibvirtNetwork: internal_api
 {% endif %}
-{% if install.version|default(undercloud_version)|openstack_release > 10 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('10', '>') %}
   ServiceNetMap:
     KeystoneAdminApiNetwork: internal_api # allows undercloud to config endpoints
 {% endif %}
-{% if install.version|default(undercloud_version)|openstack_release > 7 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('7', '>') %}
   RedisPassword: 'examplepassword'
 {% endif %}
-{% if install.version|default(undercloud_version)|openstack_release < 11 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('11', '<') %}
   ControlPlaneIP: {{ loadbalancer.network.plain.ip | ipaddr('address') }}
   ExternalNetworkVip: {{ loadbalancer.network.external.vip | ipaddr('address') }}
   InternalApiNetworkVip: {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}
@@ -86,7 +86,7 @@ parameter_defaults:
   ServiceVips:
     redis: {{ loadbalancer.network.redis.vip | ipaddr('address') }}
 {% endif %}
-{% if install.version|default(undercloud_version)|openstack_release > 10 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('10', '>') %}
   ControlFixedIPs: [{'ip_address':'{{ loadbalancer.network.plain.ip | ipaddr('address') }}'}]
   PublicVirtualFixedIPs: [{'ip_address':'{{ loadbalancer.network.external.vip | ipaddr('address') }}'}]
   InternalApiVirtualFixedIPs: [{'ip_address':'{{ loadbalancer.network.internal_api.vip | ipaddr('address') }}'}]

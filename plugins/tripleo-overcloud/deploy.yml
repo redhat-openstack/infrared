@@ -16,7 +16,7 @@
           find . -exec sed -e "s|docker/services|puppet/services|g" -i {} \;
         when:
           - not install.containers | bool
-          - install.version|default(undercloud_version)|openstack_release >= 12
+          - install.version|default(undercloud_version)|openstack_release is version('12', '>=')
         become: yes
 
 - import_playbook: build_templates.yml
@@ -31,7 +31,7 @@
       - freeipa
   when:
       - install.tls.everywhere|default(False)
-      - install.version|default(undercloud_version)|openstack_release >= 12
+      - install.version|default(undercloud_version)|openstack_release is version('12', '>=')
       - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
 - name: Run heat agent script in a background if splitstack deployment
@@ -68,7 +68,7 @@
             command: "systemctl restart openstack-nova-*"
             become: yes
         when:
-            - install.version|openstack_release < 10
+            - install.version|openstack_release is version('10', '<')
 
       - name: Execute the pre overcloud deploy action
         shell: |
@@ -91,7 +91,7 @@
                 - post_overcloud
         when:
             - install.tls.everywhere|default(False)
-            - install.version|default(undercloud_version)|openstack_release >= 12
+            - install.version|default(undercloud_version)|openstack_release is version('12', '>=')
             - overcloud_deploy.rc == 0
 
       - name: Print the last few lines of the output to spot failures
@@ -102,14 +102,14 @@
         shell: |
             source ~/stackrc
             openstack stack failures list {{ install.overcloud.stack }}
-        when: overcloud_deploy.rc != 0 and install.version|default(undercloud_version)|openstack_release >= 10
+        when: overcloud_deploy.rc != 0 and install.version|default(undercloud_version)|openstack_release is version('10', '>=')
         tags: skip_ansible_lint
 
       - name: Prepare stack failures long log
         shell: |
             source ~/stackrc
             openstack stack failures list {{ install.overcloud.stack }} --long > openstack_failures_long.log
-        when: overcloud_deploy.rc != 0 and install.version|default(undercloud_version)|openstack_release >= 10
+        when: overcloud_deploy.rc != 0 and install.version|default(undercloud_version)|openstack_release is version('10', '>=')
         tags: skip_ansible_lint
 
       - name: copy summary script
@@ -233,6 +233,6 @@
             tasks_from: iptables_overcloud.yml
         when:
             - "'hypervisor' in groups"
-            - install.version|default(undercloud_version) | openstack_release >= 11 or install.vbmc.force
+            - install.version|default(undercloud_version) |openstack_release is version('11', '>=') or install.vbmc.force
             - subnet is defined
             - subnet.cidr is defined

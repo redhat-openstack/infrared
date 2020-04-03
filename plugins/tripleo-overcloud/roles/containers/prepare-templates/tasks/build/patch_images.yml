@@ -44,7 +44,7 @@
           - python-neutron-lbaas-tests.noarch
           - python-neutronclient.noarch
           - python-networking-ovn.noarch
-  when: install.version|default(undercloud_version)|openstack_release == 12
+  when: install.version|default(undercloud_version)|openstack_release is version('12', '==')
 
 - set_fact:
       skip_container_images_patching: 'not_defined'
@@ -60,9 +60,9 @@
 - include_tasks: patch_images_do.yml
   when:
     - not skip_container_images_patching | bool
-    - install.version|default(undercloud_version)|openstack_release < 14
+    - install.version|default(undercloud_version)|openstack_release is version('14', '<')
 
 - include_tasks: patch_images_tripleo-modify-image.yml
   when:
     - not skip_container_images_patching | bool
-    - install.version|default(undercloud_version)|openstack_release > 13
+    - install.version|default(undercloud_version)|openstack_release is version('13', '>')

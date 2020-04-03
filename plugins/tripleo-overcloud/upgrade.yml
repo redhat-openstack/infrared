@@ -109,4 +109,4 @@
 
       - name: Overcloud Upgrade
         include_tasks: "tasks/upgrade/{{ undercloud_version }}/main.yml"
-        when: undercloud_version|openstack_release < 12
+        when: undercloud_version|openstack_release is version('12', '<')

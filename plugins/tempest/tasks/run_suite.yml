@@ -127,7 +127,7 @@
             chdir: "{{ test.dir }}"
         ignore_errors: true
         when:
-            - test.openstack.version|default(overcloud_version)|openstack_release >= 13
+            - test.openstack.version|default(overcloud_version)|openstack_release is version('13', '>=')
 
       - name: run tempest "{{ test_suite }}" suite with ostestr
         shell: >
@@ -148,7 +148,7 @@
             chdir: "{{ test.dir }}"
         ignore_errors: true
         when:
-            - test.openstack.version|default(overcloud_version)|openstack_release < 13
+            - test.openstack.version|default(overcloud_version)|openstack_release is version('13', '<')
 
       - name: generate results report in HTML format
         shell: |
@@ -216,5 +216,5 @@
         args:
             executable: /bin/bash
             chdir: "{{ test.dir }}"
-        when: test.cleanup and test.openstack.version|default(overcloud_version)|openstack_release > 7
+        when: test.cleanup and test.openstack.version|default(overcloud_version)|openstack_release is version('7', '>')
   when: test_dict.test_regex is defined or whitelistfile is defined or blacklistfile is defined

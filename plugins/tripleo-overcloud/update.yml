@@ -71,7 +71,7 @@
       template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
   roles:
       - role: containers/prepare-templates
-        when: undercloud_version|openstack_release > 11
+        when: undercloud_version|openstack_release is version('11', '>')
 
 - name: Overcloud Minor Update
   hosts: undercloud

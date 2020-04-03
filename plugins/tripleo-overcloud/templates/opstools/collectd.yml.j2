@@ -1,5 +1,5 @@
 parameter_defaults:
-{% if (install.version | default(undercloud_version) | openstack_release >= 13)  %}
+{% if (install.version | default(undercloud_version) |openstack_release is version('13', '>='))  %}
   CollectdGnocchiServer: {{ opstools_ip_addess }}
   CollectdGnocchiUser: admin
 {% else %}

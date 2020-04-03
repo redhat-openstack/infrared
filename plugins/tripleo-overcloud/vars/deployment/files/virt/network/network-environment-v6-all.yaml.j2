@@ -43,7 +43,7 @@ parameter_defaults:
 {% else %}
     ControlPlaneDefaultRoute: 192.168.24.1
 {% endif %}
-{% if install.version|default(undercloud_version) | openstack_release == 14 %}
+{% if install.version|default(undercloud_version) |openstack_release is version('14', '==') %}
     ControlPlaneSubnetCidr: "24"
 {% endif %}
 {% if install.network.dvr %}

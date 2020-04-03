@@ -239,7 +239,7 @@ Below is an example of the controller default role::
         host_name_format: 'controller-%index%'
 
         # condition can be used to include or disable services. For example:
-        #  - "{% if install.version |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
+        #  - "{% if install.version |openstack_release is version('11', '<') %}OS::TripleO::Services::VipHosts{% endif %}"
         services:
             - OS::TripleO::Services::CACerts
             - OS::TripleO::Services::CephClient
@@ -310,8 +310,8 @@ Below is an example of the controller default role::
             - OS::TripleO::Services::NovaIronic
             - OS::TripleO::Services::TripleoPackages
             - OS::TripleO::Services::TripleoFirewall
-            - "{% if install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::OpenDaylightApi{% endif %}"
-            - "{% if install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::OpenDaylightOvs{% endif %}"
+            - "{% if install.version|default(undercloud_version) |openstack_release is version('15', '<') %}OS::TripleO::Services::OpenDaylightApi{% endif %}"
+            - "{% if install.version|default(undercloud_version) |openstack_release is version('15', '<') %}OS::TripleO::Services::OpenDaylightOvs{% endif %}"
             - OS::TripleO::Services::SensuClient
             - OS::TripleO::Services::FluentdClient
             - OS::TripleO::Services::VipHosts

@@ -1,5 +1,5 @@
 parameter_defaults:
-{% if install.version|default(undercloud_version)|openstack_release > 13 and install.tls.everywhere|default(False) %}
+{% if install.version|default(undercloud_version)|openstack_release is version('13', '>') and install.tls.everywhere|default(False) %}
   ControllerExtraConfig:
      ironic::drivers::pxe::pxe_append_params: 'nofb nomodeset vga=normal ipa-insecure=1'
 {% endif %}
@@ -8,7 +8,7 @@ parameter_defaults:
   IronicCleaningNetwork: baremetal
   IronicCleaningDiskErase: metadata
   IronicIPXEEnabled: true
-{% if install.version|default(undercloud_version)|openstack_release < 14 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('14', '<') %}
   IronicEnabledDrivers:
       - pxe_ipmitool
       - fake
@@ -23,7 +23,7 @@ parameter_defaults:
   IronicEnabledPowerInterfaces: [ipmitool, fake]
   IronicEnabledRaidInterfaces: [no-raid, fake]
   IronicEnabledVendorInterfaces: [ipmitool, fake, no-vendor]
-{% if install.version|default(undercloud_version)|openstack_release > 14 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('14', '>') %}
   IronicEnabledInspectInterfaces: [no-inspect, inspector, fake]
 {% endif %}
 {% endif %}
@@ -34,7 +34,7 @@ parameter_defaults:
       - ComputeFilter
       - ComputeCapabilitiesFilter
       - ImagePropertiesFilter
-{% if install.version|default(undercloud_version)|openstack_release < 14 %}
+{% if install.version|default(undercloud_version)|openstack_release is version('14', '<') %}
       - RamFilter
       - DiskFilter
   ControllerExtraConfig:
@@ -48,6 +48,6 @@ parameter_defaults:
   IPAImageURLs: '["http://{{ ansible_br_ctlplane['ipv4']['address'] }}:8088/agent.kernel", "http://{{ ansible_br_ctlplane['ipv4']['address'] }}:8088/agent.ramdisk"]'
   IronicInspectorInterface: 'br-baremetal'
 {% endif %}
-{% if install.version|default(undercloud_version) | openstack_release > 14 and install.image.download.source == 'http' %}
+{% if install.version|default(undercloud_version) |openstack_release is version('14', '>') and install.image.download.source == 'http' %}
   IronicImageDownloadSource: http
 {% endif %}

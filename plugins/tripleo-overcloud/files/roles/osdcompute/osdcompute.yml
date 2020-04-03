@@ -18,53 +18,53 @@ osdcompute_role:
     host_name_format: 'osdcompute-%index%'
 
     options:
-        - "{% if install.version|default(undercloud_version)|openstack_release > 10 %}disable_upgrade_deployment: True{% endif %}"
+        - "{% if install.version|default(undercloud_version)|openstack_release is version('10', '>') %}disable_upgrade_deployment: True{% endif %}"
 
     services:
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Aide{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::AuditD{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('12', '>') %}OS::TripleO::Services::Aide{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('12', '>') %}OS::TripleO::Services::AuditD{% endif %}"
         - OS::TripleO::Services::CACerts
         - OS::TripleO::Services::CephClient
         - OS::TripleO::Services::CephExternal
         - OS::TripleO::Services::CephOSD
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Collectd{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('11', '>') %}OS::TripleO::Services::CertmongerUser{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('12', '>') %}OS::TripleO::Services::Collectd{% endif %}"
         - OS::TripleO::Services::ComputeCeilometerAgent
         - OS::TripleO::Services::ComputeNeutronCorePlugin
         - OS::TripleO::Services::ComputeNeutronL3Agent
         - OS::TripleO::Services::ComputeNeutronMetadataAgent
         - OS::TripleO::Services::ComputeNeutronOvsAgent
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Ipsec{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Iscsid{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('11', '>') %}OS::TripleO::Services::Docker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('16', '<') %}OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release is version('13', '<') %}Client{% endif %}{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('12', '>') %}OS::TripleO::Services::Ipsec{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('11', '>') %}OS::TripleO::Services::Iscsid{% endif %}"
         - OS::TripleO::Services::Kernel
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::LoginDefs{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::MySQLClient{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronLinuxbridgeAgent{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NeutronVppAgent{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release < 13 %}OS::TripleO::Services::NeutronSriovAgent{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('12', '>') %}OS::TripleO::Services::LoginDefs{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('10', '>') %}OS::TripleO::Services::MySQLClient{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('11', '>') %}OS::TripleO::Services::NeutronLinuxbridgeAgent{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('11', '>') %}OS::TripleO::Services::NeutronVppAgent{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('13', '<') %}OS::TripleO::Services::NeutronSriovAgent{% endif %}"
         - OS::TripleO::Services::NovaCompute
         - OS::TripleO::Services::NovaLibvirt
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::NovaMigrationTarget{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('11', '>') %}OS::TripleO::Services::NovaMigrationTarget{% endif %}"
         - OS::TripleO::Services::Ntp
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::OpenDaylightOvs{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNController{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::OVNMetadataAgent{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Rhsm{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release >= 16 %}OS::TripleO::Services::Rsyslog{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::RsyslogSidecar{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::SensuClient{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::SkydiveAgent{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('11', '>') %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('15', '<') %}OS::TripleO::Services::OpenDaylightOvs{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('12', '>') %}OS::TripleO::Services::OVNController{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('12', '>') %}OS::TripleO::Services::OVNMetadataAgent{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('12', '>') %}OS::TripleO::Services::Rhsm{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('16', '>=') %}OS::TripleO::Services::Rsyslog{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('12', '>') %}OS::TripleO::Services::RsyslogSidecar{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('11', '>') %}OS::TripleO::Services::Securetty{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('16', '<') %}OS::TripleO::Services::SensuClient{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('12', '>') %}OS::TripleO::Services::SkydiveAgent{% endif %}"
         - OS::TripleO::Services::Snmp
         - "{% if roles_sshd %}OS::TripleO::Services::Sshd{% endif %}"
         - OS::TripleO::Services::Timezone
         - OS::TripleO::Services::TripleoFirewall
         - OS::TripleO::Services::TripleoPackages
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Tuned{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Vpp{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Aide{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::AuditD{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('11', '>') %}OS::TripleO::Services::Tuned{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('11', '<') %}OS::TripleO::Services::VipHosts{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('11', '>') %}OS::TripleO::Services::Vpp{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('12', '>') %}OS::TripleO::Services::Aide{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release is version('12', '>') %}OS::TripleO::Services::AuditD{% endif %}"

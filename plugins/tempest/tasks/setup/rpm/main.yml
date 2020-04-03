@@ -67,7 +67,7 @@
 - name: Install junitxml and subunit-filters
   become: yes
   vars:
-      python_prefix: "{{ (test.openstack.version|default(overcloud_version)|openstack_release >= 15) | ternary('python3', 'python') }}"
+      python_prefix: "{{ (test.openstack.version|default(overcloud_version)|openstack_release is version('15', '>=')) | ternary('python3', 'python') }}"
   package:
       name:
           - "{{ python_prefix }}-junitxml"
@@ -84,9 +84,9 @@
   package:
       name: "{{ setup.dependencies[test.openstack.version|default(overcloud_version)|openstack_release|string]|default(setup.dependencies.defaults) }}"
       state: latest
-  when: test.openstack.version|default(overcloud_version)|openstack_release >= 7
+  when: test.openstack.version|default(overcloud_version)|openstack_release is version('7', '>=')
 
 - name: Warning message
   debug:
       msg: WARNING! Plugins are not available for RHOS version < 7
-  when: test.openstack.version|default(overcloud_version)|openstack_release < 7
+  when: test.openstack.version|default(overcloud_version)|openstack_release is version('7', '<')

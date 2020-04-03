@@ -13,7 +13,7 @@
       line: '-e {{ install.heat.templates.basedir }}/environments/neutron-ml2-ovn-ha.yaml \'
   when:
       - install.network.ovn and not install.network.dvr
-      - install.version|default(undercloud_version)|openstack_release == 12
+      - install.version|default(undercloud_version)|openstack_release is version('12', '==')
 
 - name: append the ovn HA OSP 13 template line to the base overcloud deploy script
   lineinfile:
@@ -21,7 +21,7 @@
       line: '-e {{ install.heat.templates.basedir }}/environments/services-docker/neutron-ovn-ha.yaml \'
   when:
       - install.network.ovn and not install.network.dvr
-      - install.version|default(undercloud_version)|openstack_release == 13
+      - install.version|default(undercloud_version)|openstack_release is version('13', '==')
 
 - name: append the ovn HA OSP > 13 template line to the base overcloud deploy script
   lineinfile:
@@ -29,7 +29,7 @@
       line: '-e {{ install.heat.templates.basedir }}/environments/services/neutron-ovn-ha.yaml \'
   when:
       - install.network.ovn and not install.network.dvr
-      - install.version|default(undercloud_version)|openstack_release > 13
+      - install.version|default(undercloud_version)|openstack_release is version('13', '>')
 
 - name: append the ovn DVR HA OSP > 12 template line to the base overcloud deploy script
   lineinfile:
@@ -37,7 +37,7 @@
       line: '-e {{ install.heat.templates.basedir }}/environments/services/neutron-ovn-dvr-ha.yaml \'
   when:
       - install.network.ovn and install.network.dvr
-      - install.version|default(undercloud_version)|openstack_release > 12
+      - install.version|default(undercloud_version)|openstack_release is version('12', '>')
 
 - name: append docker-images
   lineinfile:
@@ -45,7 +45,7 @@
       line: '-e /home/stack/composable_roles/docker-images.yaml  \'
   when:
       - install.storage.protocol.backend == "nfs-ganesha"
-      - install.version|default(undercloud_version)|openstack_release == 13
+      - install.version|default(undercloud_version)|openstack_release is version('13', '==')
 
 - name: append network_data_ganesha
   lineinfile:
@@ -53,4 +53,4 @@
       line: '-n /usr/share/openstack-tripleo-heat-templates/network_data_ganesha.yaml   \'
   when:
       - install.storage.protocol.backend == "nfs-ganesha"
-      - install.version|default(undercloud_version)|openstack_release > 12
+      - install.version|default(undercloud_version)|openstack_release is version('12', '>')

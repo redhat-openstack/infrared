@@ -83,7 +83,7 @@
       name: "stestr"
       version: "2.6.0"
       virtualenv: "{{ virtualenvs.tempest }}"
-  when: test.openstack.version|default(overcloud_version)|openstack_release < 15
+  when: test.openstack.version|default(overcloud_version)|openstack_release is version('15', '<')
 
 # Make sure os-testr is installed for versions <13 since it was removed
 # from tempest requirements file on tempest master branch
@@ -94,7 +94,7 @@
       virtualenv: "{{ virtualenvs.tempest }}"
       version: "{{ ir_default_pip_versions['os-testr'] | default(omit) }}"
       state: "{{ ir_default_pip_versions['os-testr'] is defined | ternary('present', 'latest') }}"
-  when: test.openstack.version|default(overcloud_version)|openstack_release < 13
+  when: test.openstack.version|default(overcloud_version)|openstack_release is version('13', '<')
 
 - name: Get repo requirements
   pip:
@@ -126,9 +126,9 @@
   with_items: "{{ test.tests }}"
   loop_control:
       loop_var: test_suite
-  when: test.openstack.version|default(overcloud_version)|openstack_release >= 7
+  when: test.openstack.version|default(overcloud_version)|openstack_release is version('7', '>=')
 
 - name: Warning message
   debug:
       msg: WARNING! Plugins are not available for RHOS version < 7
-  when: test.openstack.version|default(overcloud_version)|openstack_release < 7
+  when: test.openstack.version|default(overcloud_version)|openstack_release is version('7', '<')
