@@ -50,10 +50,18 @@
             ## Prepare disk image
 
             {% if disk_name == 'disk1' and topology_node.deploy_os|default(True) and topology_node.supports_libguestfs|default(True) -%}
+            # Find out the root partition of the image as it is not always necessarily /dev/sda1.
+            # We pick the first xfs disk for simplicity as it seems to cover for both old rhel7 and rhel8 images
+            # but also for late 8.2 images which have root in sda3. In case of errors we fallback to sda1
+            if ret=$(guestfish -a {{ base_image_path }}/{{ image_name }} --ro run : list-filesystems | grep "xfs" | cut -f1 -d:); then
+              partition="$ret"
+            else
+              partition="/dev/sda1"
+            fi
             # expand (copy-content) into new image in case of system disk
             # virt-resize needs target file with expected size to already exists
             os_version=`virt-cat -a {{ base_image_path }}/{{ image_name }} /etc/os-release | awk '/^VERSION=/ {print $1}' | grep -oP '[0-9]+' | head -1`
-            virt-resize --expand /dev/sda1 {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
+            virt-resize --expand "$partition" {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
             # We need to regenerate a new machine-id due to DHCP IPv6 not working otherwise
             virt-sysprep -a {{ disk_pool }}/{{ node_image }} \
                 --operations machine-id
