@@ -53,6 +53,15 @@
       dest: "{{ vbmc_home }}/vbmc-upper-constraints.txt"
       force: yes
 
+  # We are getting libvirt-python from the system packages
+  # so we do not want pip to try and compile it. To ensure
+  # that happens, we remove it from the constraints.
+  - name: Remove libvirt-python from constraints
+    lineinfile:
+      path: "{{ vbmc_home }}/vbmc-upper-constraints.txt"
+      state: absent
+      regexp: "^libvirt-python"
+
   # We deliberately avoid downloading newer versions of pip,
   # setuptools and wheel when creating the virtualenv. By
   # doing this we avoid breaking every time one of them does
