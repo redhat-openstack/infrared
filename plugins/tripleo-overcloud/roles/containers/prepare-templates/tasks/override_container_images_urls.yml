@@ -48,7 +48,7 @@
     install_container_images_output: >-
       { 'parameter_defaults': {
       {%- set insecure_registries = [] -%}
-      {%- for param_name,param_value in original_heat_docker_images.parameter_defaults.iteritems() -%}
+      {%- for param_name,param_value in original_heat_docker_images.parameter_defaults.items() | list -%}
         {%- set print_coma = 1 -%}
         {%- set image_name = '' -%}
         {%- if param_value is string -%}
@@ -79,7 +79,7 @@
   set_fact:
     install_container_images_output: >-
       {{ install_container_images_output | combine({ 'parameter_defaults':
-      {'DockerInsecureRegistryAddress': original_insecure_registry_adresses + install_container_images_registries.keys() }}, recursive=True) }}
+      {'DockerInsecureRegistryAddress': original_insecure_registry_adresses + install_container_images_registries.keys() | list }}, recursive=True) }}
 
 - name: print container images (including overrides)
   debug:
