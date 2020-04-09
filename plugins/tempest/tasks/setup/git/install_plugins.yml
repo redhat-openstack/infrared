@@ -43,7 +43,7 @@
     - name: Check if test-requirements exists
       stat:
           path: "{{ plugins_dir }}/{{ item }}/test-requirements.txt"
-      with_items: "{{ plugins.keys() }}"
+      with_items: "{{ plugins.keys() | list }}"
       register: plugins_reqs
 
     - name: Get repo requirements
@@ -59,4 +59,4 @@
       name: "{{ plugins_dir }}/{{ item }}"
       state: present
       editable: true
-  with_items: "{{ plugins.keys() }}"
+  with_items: "{{ plugins.keys() | list }}"
