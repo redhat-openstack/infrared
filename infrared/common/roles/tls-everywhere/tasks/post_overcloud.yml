@@ -3,8 +3,24 @@
   - name: Get overcloud entries
     shell: |
         source {{ freeipa_undercloud_rc }}
-        openstack stack output show overcloud HostsEntry -f value -c output_value
+        openstack stack output show overcloud HostsEntry -f json -c output_value
     register: overcloud_entries
+
+  - name: Set overcloud hosts json
+    set_fact:
+      overcloud_hosts_json: "{{ overcloud_entries.stdout|from_json }}"
+
+  # In https://review.opendev.org/#/c/715178/ HostsEntry became a list and not a long string
+  # with \n in it any longer
+  - name: Set overcloud hosts fact (OSP < 16 style when HostsEntry is a single string)
+    set_fact:
+      overcloud_hosts: "{{ overcloud_hosts_json.output_value }}"
+    when: overcloud_hosts_json.output_value is string
+
+  - name: Set overcloud hosts fact (OSP >= 16 style when HostsEntry is a list)
+    set_fact:
+      overcloud_hosts: "{{ overcloud_hosts_json.output_value|join('\n') }}"
+    when: overcloud_hosts_json.output_value is not string
 
   - name: Removing previous Overcloud Entries
     become: true
@@ -19,7 +35,7 @@
         path: /etc/hosts
         backup: yes
         marker: "### {mark} Overcloud Entries"
-        content: "{{ overcloud_entries.stdout }}"
+        content: "{{ overcloud_hosts }}"
 
   - name: Removing previous Overcloud Entries
     become: true
@@ -45,7 +61,7 @@
         line: "{{ item }}"
         insertafter: "### BEGIN Overcloud Entries"
         state: present
-    with_items: "{{ overcloud_entries.stdout_lines }}"
+    with_items: "{{ overcloud_hosts }}"
     delegate_to: "{{ freeipa_shade_node }}"
     when: "freeipa_overcloud_stack in item"
   delegate_to: "{{ freeipa_undercloud_node }}"
