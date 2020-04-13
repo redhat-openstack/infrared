@@ -23,7 +23,12 @@ controller_role:
         - StorageMgmt
         - Tenant
     host_name_format: 'controller-%index%'
-
+    {% if install.version|default(undercloud_version) |openstack_release is version('10', '<=') %}
+    uses_deprecated_params: True
+    deprecated_param_extraconfig: 'controllerExtraConfig'
+    deprecated_param_flavor: 'OvercloudControlFlavor'
+    deprecated_param_image: 'controllerImage'
+    {% endif %}
     services:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Aide{% endif %}"
         - OS::TripleO::Services::AodhApi
