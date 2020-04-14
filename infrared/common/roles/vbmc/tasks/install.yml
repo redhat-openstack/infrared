@@ -47,9 +47,12 @@
   # Note:
   # We use the 'train' constraints because it is the last
   # OpenStack release that tests both py2 and py3.
+  # We use 'master' on py3 (rhel >=8.2) becuse the older constrains does not have
+  # good enough pyghmi
+  # https://bugzilla.redhat.com/show_bug.cgi?id=1813889
   - name: Download the OpenStack upper-constraints file
     get_url:
-      url: "https://releases.openstack.org/constraints/upper/train"
+      url: "https://releases.openstack.org/constraints/upper/{{ (_is_py2_host | bool) | ternary('train', 'master'}}"
       dest: "{{ vbmc_home }}/vbmc-upper-constraints.txt"
       force: yes
 
