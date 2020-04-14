@@ -60,4 +60,55 @@
             undercloud_hostname = {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}
             undercloud_nameservers = {{ freeipa_node_ipaddress }}
             overcloud_domain_name = {{ freeipa_cloud_domain }}
+
+  - name: remove undercloud_service_certificate in undercloud.conf for ipa ca
+    ini_file:
+        path: ~/undercloud.conf
+        backup: yes
+        state: absent
+        section: "DEFAULT"
+        option: "undercloud_service_certificate"
+    when: freeipa_undercloud_ca|bool
+
+  - name: ipa ca in undercloud.conf
+    ini_file:
+        path: ~/undercloud.conf
+        backup: yes
+        section: "{{ item.section }}"
+        option: "{{ item.option }}"
+        value: "{{ item.value }}"
+    with_items:
+        - { section: "DEFAULT", option: "generate_service_certificate", value: "true" }
+        - { section: "DEFAULT", option: "certificate_generation_ca", value: "IPA" }
+        - { section: "DEFAULT", option: "undercloud_public_host", value: "{{ groups['undercloud'][0] }}-public.{{ freeipa_cloud_domain }}" }
+        - { section: "DEFAULT", option: "undercloud_admin_host", value: "{{ groups['undercloud'][0] }}-admin.{{ freeipa_cloud_domain }}" }
+        - { section: "DEFAULT", option: "service_principal", value: "host/{{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}@{{ freeipa_cloud_domain|upper }}" }
+    when: freeipa_undercloud_ca|bool
+
+  - name: Prepare novajoin to work
+    command: cat ~/hiera_override.yaml
+    register: hiera_override_orig
+
+  - name: add certificate_specs to hiera_override.yaml
+    template:
+      src: hiera_override.yaml.j2
+      dest: "{{ freeipa_templates_basedir }}/hiera_override.yaml"
   delegate_to: "{{ freeipa_undercloud_node }}"
+
+- block:
+    - name: Configure FreeIPA DNS for overcloud public_vip
+      become: yes
+      shell: |
+          echo {{ freeipa_admin_password }}|kinit admin
+          ipa host-del {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}
+          ipa dnsrecord-add {{ freeipa_cloud_domain }} {{ groups['undercloud'][0] }} --a-rec {{ freeipa_undercloud_ipaddress }}
+          ipa host-add {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}
+          ipa host-mod {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} --password '{{ novajoin.stdout }}'
+          ipa host-add-principal {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} host/{{ groups['undercloud'][0] }}-admin.{{ freeipa_cloud_domain }}@{{ freeipa_cloud_domain|upper }}
+          ipa host-add-principal {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} host/{{ groups['undercloud'][0] }}-public.{{ freeipa_cloud_domain }}@{{ freeipa_cloud_domain|upper }}
+          ipa service-add nova/{{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}@{{ freeipa_cloud_domain|upper }}
+          ipa role-add-member "Nova Host Manager" --services=nova/{{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}@{{ freeipa_cloud_domain|upper }}
+          ipa dnsrecord-add {{ freeipa_cloud_domain }} {{ groups['undercloud'][0] }}-public --a-rec 192.168.24.2
+          ipa dnsrecord-add {{ freeipa_cloud_domain }} {{ groups['undercloud'][0] }}-admin --a-rec 192.168.24.3
+      when: freeipa_undercloud_ca|bool
+  delegate_to: "{{ freeipa_node }}"
