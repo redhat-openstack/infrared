@@ -184,6 +184,12 @@ subparsers:
                           Specifies whether TLS Everywhere with FreeIPA should be implemented
                       default: no
 
+                  ipa-ca:
+                      type: Bool
+                      help: |
+                          This will use the freeipa CA as the undercloud CA. 'certificate_generation_ca = IPA'
+                      default: no
+
             - title: Setup Undercloud Packages
               options:
                   mirror:
