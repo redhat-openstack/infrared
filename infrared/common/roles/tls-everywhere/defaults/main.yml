@@ -27,6 +27,7 @@ freeipa_rhel8_dnf_modules:
 freeipa_undercloud_node: "{{ groups['undercloud'][0] }}"
 freeipa_undercloud_rc: "~/stackrc"
 freeipa_undercloud_ipaddress: "{{ (freeipa_network_protocol == 'ipv4') | ternary(hostvars[groups['undercloud'][0]].ansible_eth2.ipv4.address, hostvars[groups['undercloud'][0]].ansible_eth2.ipv6[0].address) }}"
+freeipa_undercloud_ca: "{{ ( True if (install.ipa|default({})).ca|default('') == 'true' else False ) }}"
 
 # Overcloud settings
 freeipa_overcloud_deploy_script: "~/overcloud_deploy.sh"

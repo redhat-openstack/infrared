@@ -1,0 +1,13 @@
+{{ hiera_override_orig.stdout }}
+tripleo::profile::base::haproxy::certificates_specs:
+  haproxy-external:
+     service_pem: /etc/pki/tls/private/overcloud_endpoint.pem
+     service_certificate: '/etc/pki/tls/certs/undercloud-front.crt'
+     service_key: '/etc/pki/tls/private/undercloud-front.key'
+     hostname: '{{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}'
+     postsave_cmd: '/usr/bin/certmonger-haproxy-refresh.sh reload external'
+     principal: host/{{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}@{{ freeipa_cloud_domain|upper }}
+     dnsnames:
+       - {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}
+       - {{ groups['undercloud'][0] }}-public.{{ freeipa_cloud_domain }}
+       - {{ groups['undercloud'][0] }}-admin.{{ freeipa_cloud_domain }}
