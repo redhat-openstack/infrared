@@ -200,6 +200,14 @@ subparsers:
                           Specifies whether TLS Everywhere with FreeIPA should be implemented
                       default: no
 
+                  ipa-ca:
+                      type: Bool
+                      help: |
+                          This will use the freeipa CA as the undercloud CA. 'certificate_generation_ca = IPA'
+                          If 'generate_service_certificate = true' is set 'certificate_generation_ca = LOCAL'
+                          is the default and certmonger will use a local openssl CA unless specified.
+                      default: no
+
             - title: Setup Undercloud Packages
               options:
                   mirror:
