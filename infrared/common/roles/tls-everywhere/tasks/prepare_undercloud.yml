@@ -28,7 +28,6 @@
     package:
       name:
         - 'patch'
-        - 'python3-nss'
         - 'python3-novajoin'
       state: present
     when:
@@ -60,4 +59,24 @@
             undercloud_hostname = {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}
             undercloud_nameservers = {{ freeipa_node_ipaddress }}
             overcloud_domain_name = {{ freeipa_cloud_domain }}
+
+  - name: remove undercloud_service_certificate in undercloud.conf for ipa ca
+    when: freeipa_undercloud_ca|bool true
+    lineinfile:
+        path: ~/undercloud.conf
+        backup: yes
+        state: absent
+        regexp: '^undercloud_service_certificate'
+ 
+  - name: ipa ca in undercloud.conf
+    when: freeipa_undercloud_ca|bool true
+    blockinfile:
+        path: ~/undercloud.conf
+        backup: yes
+        insertbefore: '^\[ctlplane-subnet\]'
+        marker: "# {mark} IPA CA SETTINGS -->"
+        content: |
+            generate_service_certificate = true
+            certificate_generation_ca = IPA
+   
   delegate_to: "{{ freeipa_undercloud_node }}"
