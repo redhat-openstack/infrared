@@ -21,6 +21,10 @@ parameters:
     default: ''
     description: IP address/subnet on the storage network
     type: string
+  StorageNFSIpSubnet:
+    default: ''
+    description: IP address/subnet on the storage network
+    type: string
   StorageMgmtIpSubnet:
     default: ''
     description: IP address/subnet on the storage mgmt network
@@ -41,9 +45,17 @@ parameters:
     default: 30
     description: Vlan ID for the storage network traffic.
     type: number
+  StorageMgmtNetworkVlanID:
+    default: 40
+    description: Vlan ID for the storage mgmt network traffic.
+    type: number
   TenantNetworkVlanID:
     default: 50
     description: Vlan ID for the tenant network traffic.
+    type: number
+  StorageNFSNetworkVlanID:
+    default: 70
+    description: Vlan ID for the storage network traffic.
     type: number
   ControlPlaneSubnetCidr: # Override this via parameter_defaults
     default: '24'
@@ -98,6 +110,12 @@ parameters:
       guaranteed to pass through the data path of the segments in the
       Tenant network.
     type: number
+  StorageNFSMtu:
+    default: 1500
+    description: The maximum transmission unit (MTU) size(in bytes) that is
+      guaranteed to pass through the data path of the segments in the
+      Storage NFS network.
+    type: number
   ExternalMtu:
     default: 1500
     description: The maximum transmission unit (MTU) size(in bytes) that is
@@ -124,6 +142,14 @@ parameters:
     default: []
     description: >
       Routes for the storage_mgmt network traffic.
+      JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
+      Unless the default is changed, the parameter is automatically resolved
+      from the subnet host_routes attribute.
+    type: json
+  StorageNFSInterfaceRoutes:
+    default: []
+    description: >
+      Routes for the storageNFS network traffic.
       JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
       Unless the default is changed, the parameter is automatically resolved
       from the subnet host_routes attribute.
@@ -166,6 +192,7 @@ resources:
   OsNetConfigImpl:
     type: OS::Heat::SoftwareConfig
     properties:
+
       group: script
       config:
           str_replace:
@@ -174,12 +201,13 @@ resources:
               params:
                    $network_config:
                        network_config:
+
                         -
                           type: interface
                           name: nic1
-                          use_dhcp: false
                           dns_servers:
                               get_param: DnsServers
+                          use_dhcp: false
                           addresses:
                             -
                               ip_netmask:
@@ -187,6 +215,7 @@ resources:
                                   - '/'
                                   - - get_param: ControlPlaneIp
                                     - get_param: ControlPlaneSubnetCidr
+
                           routes:
                             -
                               ip_netmask: 0.0.0.0/0
@@ -200,31 +229,51 @@ resources:
                               next_hop:
                                   get_param: EC2MetadataIp
                         -
-                          type: linux_bond
-                          name: bond_api
-                          bonding_options: "mode=active-backup"
+                          type: ovs_bridge
+                          name: br-isolated
                           use_dhcp: false
                           members:
                             -
                               type: interface
                               name: nic2
+                              # force the MAC address of the bridge to this interface
                               primary: true
-                        -
-                          type: vlan
-                          vlan_id:
-                              get_param: InternalApiNetworkVlanID
-                          device: bond_api
-                          addresses:
                             -
-                              ip_netmask:
-                                  get_param: InternalApiIpSubnet
-                        - type: vlan
-                          vlan_id:
-                              get_param: StorageNetworkVlanID
-                          device: bond_api
-                          addresses:
-                          - ip_netmask:
-                                get_param: StorageIpSubnet
+                              type: vlan
+                              vlan_id:
+                                  get_param: InternalApiNetworkVlanID
+                              addresses:
+                              -
+                                ip_netmask:
+                                    get_param: InternalApiIpSubnet
+                            -
+                              type: vlan
+                              vlan_id:
+                                  get_param: StorageNetworkVlanID
+                              addresses:
+                              -
+                                ip_netmask:
+                                    get_param: StorageIpSubnet
+
+{% if install.version|openstack_release >= 15 %}
+                        -
+                          type: ovs_bridge
+                          # This will default to br-ex, anything else requires specific
+                          # brige mapping entries for it to be used.
+                          name: bridge_name
+                          use_dhcp: false
+                          members:
+                            -
+                              type: interface
+                              name: nic3
+                              primary: true
+{% else %}
+                        -
+                          type: interface
+                          name: nic3
+                          defroute: false
+                          use_dhcp: false
+{% endif %}
                         -
                           type: ovs_bridge
                           name: br-baremetal
@@ -241,7 +290,6 @@ resources:
                               addresses:
                               - ip_netmask:
                                     get_param: TenantIpSubnet
-
 outputs:
   OS::stack_id:
     description: The OsNetConfigImpl resource.
