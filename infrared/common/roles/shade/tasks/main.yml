@@ -1,87 +1,88 @@
 ---
-- name: Check if running inside virtualenv
-  command: |
-      {{ ansible_python_interpreter | default('python') }} -c "import sys; print(True if hasattr(sys, 'real_prefix') else False)"
-  register: is_venv
-
-- set_fact:
-    install_pip_from_source: "{{ (false in src_conditions) | ternary(False, True) }}"
+- name: Install OpenStackSDK and its requirements
   vars:
-    src_conditions:
-      - "{{ ansible_distribution in ['CentOS', 'RedHat'] }}"
-      - "{{ ansible_distribution_major_version | int >= 8 }}"
+    _is_py2_host: "{{ ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int < 8 }}"
+  environment:
+    # To enable the use of a non-package and user-local virtualenv,
+    # we add a user-local bin path to PATH
+    PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
+  block:
+  - name: Gather facts
+    setup:
 
-- name: install virtualenv requirments for pip
-  become: yes
-  package:
+  - name: Install required packages
+    package:
       name:
         - gcc
-        - "{{ (install_pip_from_source) | ternary('python3-devel', 'python-devel') }}"
-        - "{{ (install_pip_from_source) | ternary('python3-setuptools', 'python-setuptools') }}"
-        - libffi-devel
+        - "{{ (_is_py2_host | bool) | ternary('python-devel', 'python3-devel') }}"
       state: present
+    become: true
+    register: _install_packages
+    until: _install_packages is success
+    retries: 5
+    delay: 10
 
-- block:
-    - name: Download get-pip.py
-      get_url:
-        url: "https://bootstrap.pypa.io/get-pip.py"
-        dest: "/tmp/get-pip.py"
-        mode: 0755
-        force: yes
-        validate_certs: no
-      register: get_pip
+  - name: Collect the path for virtualenv if it is installed
+    shell: |
+      which virtualenv 2>/dev/null || echo 'none'
+    args:
+      executable: /bin/bash
+    changed_when: false
+    register: _virtualenv_path
 
-    - name: Install pip using get-pip.py
-      command: "{{ ansible_python_interpreter | default('python') }} {{ get_pip.dest }}"
-      become: true
-  when: install_pip_from_source
-  tags: install-pip
+  - name: Install python-virtualenv on hosts < RHEL8
+    package:
+      name: python-virtualenv
+      state: present
+    become: true
+    register: _install_packages
+    until: _install_packages is success
+    retries: 5
+    delay: 10
+    when:
+      - _virtualenv_path.stdout | trim == 'none'
+      - _is_py2_host | bool
 
+  # We use the OpenStack upper-constraints file to help
+  # insulate us from problems with new releases of
+  # pypi-sourced dependencies when installing openstacksdk.
+  # Note:
+  # We use the 'train' constraints for RHEL < 8 because it
+  # is the last OpenStack release that tests both py2 and py3.
+  # For RHEL >= 8 we use the 'master' constraints.
+  - name: Download the OpenStack upper-constraints file
+    get_url:
+      url: "https://releases.openstack.org/constraints/upper/{{ (_is_py2_host | bool) | ternary('train', 'master') }}"
+      dest: "{{ shade_path_venv | regex_replace('(/)+$', '') }}-shade-upper-constraints.txt"
+      force: yes
+    register: _download_constraints
+    until: _download_constraints is success
+    retries: 5
+    delay: 10
 
-#TODO(aopincar): Check if there is a reason not install pip from source only
-- name: install pip using easy_install
-  become: yes
-  easy_install:
-      name: pip
-  when: not install_pip_from_source
-  tags: install-pip
-
-- name: install virtualenv pip module
-  environment:
-     PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
-  pip:
-      name: virtualenv
-      state: forcereinstall
-      extra_args: "{{ (is_venv.stdout | bool) | ternary(omit, '--user') }}"
-
-# required to avoid any conflicts in venv with
-# different packages versions (especially shade)
-- name: cleanup shade venv if present
-  become: yes
-  file:
-      state: absent
+  # If a venv exists, it may have an old version of setuptools
+  # or corrupt in some other way. To make sure that we always
+  # have a fresh start, we remove any existing virtualenv.
+  - name: Remove any existing vbmc virtualenv
+    file:
       path: "{{ shade_path_venv }}"
+      state: absent
 
-# installing setuptools and pip must happen before other packages and separated
-# do not use shimming for these two special packages
-- name: shade virtualenv core deps
-  vars:
-      venv_cmd: "{{ ansible_env.HOME }}/.local/bin/virtualenv"
-  pip:
-      name: "{{ item }}"
+  # We deliberately avoid downloading newer versions of pip,
+  # setuptools and wheel when creating the virtualenv. By
+  # doing this we avoid breaking every time one of them does
+  # a new release. For python3 this is the default behaviour
+  # when using 'python3 -m venv', but for the 'virtualenv'
+  # tool we need to pass it a CLI argument.
+  - name: Install openstacksdk with pip
+    vars:
+      virtualenv_path: "{{ (_virtualenv_path.stdout | trim == 'none') | ternary('/usr/bin/virtualenv', _virtualenv_path.stdout | trim) }}"
+    pip:
+      name: openstacksdk
+      extra_args: "--constraint {{ shade_path_venv | regex_replace('(/)+$', '') }}-shade-upper-constraints.txt"
       virtualenv: "{{ shade_path_venv }}"
-      virtualenv_command: "{{ (is_venv.stdout | bool) | ternary(omit, venv_cmd) }}"
-  with_items:
-    # workaround for https://github.com/pypa/setuptools/issues/1990
-    - "setuptools>39.0.0,<45.2.0"
-    - "pip>=10.0.1"
-
-- name: shade virtualenv deps
-  vars:
-      venv_cmd: "{{ ansible_env.HOME }}/.local/bin/virtualenv"
-  pip:
-      # On RHEL7 we need to pin to < 0.40.0 because that's when py2
-      # testing was removed.
-      name: "{{ (install_pip_from_source) | ternary('openstacksdk>=0.29.0', 'openstacksdk>=0.29.0,<0.40.0') }}"
-      virtualenv: "{{ shade_path_venv }}"
-      virtualenv_command: "{{ (is_venv.stdout | bool) | ternary(omit, venv_cmd) }}"
+      virtualenv_command: "{{ (_is_py2_host | bool) | ternary(virtualenv_path ~ ' --no-download', '/usr/bin/python3 -m venv') }}"
+    register: _install_from_pip
+    until: _install_from_pip is success
+    retries: 5
+    delay: 10
