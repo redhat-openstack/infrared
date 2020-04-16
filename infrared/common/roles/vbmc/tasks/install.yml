@@ -22,6 +22,10 @@
       state: present
       disable_gpg_check: yes
     become: true
+    register: _install_packages
+    until: _install_packages is success
+    retries: 5
+    delay: 10
 
   - name: Collect the path for virtualenv if it is installed
     shell: |
@@ -37,6 +41,10 @@
       state: present
       disable_gpg_check: yes
     become: true
+    register: _install_packages
+    until: _install_packages is success
+    retries: 5
+    delay: 10
     when:
       - _virtualenv_path.stdout | trim == 'none'
       - _is_py2_host | bool
@@ -55,6 +63,10 @@
       url: "https://releases.openstack.org/constraints/upper/{{ (_is_py2_host | bool) | ternary('train', 'master') }}"
       dest: "{{ vbmc_home }}/vbmc-upper-constraints.txt"
       force: yes
+    register: _download_constraints
+    until: _download_constraints is success
+    retries: 5
+    delay: 10
 
   # We are getting libvirt-python from the system packages
   # so we do not want pip to try and compile it. To ensure
@@ -82,6 +94,10 @@
       virtualenv_command: "{{ (_is_py2_host | bool) | ternary(virtualenv_path ~ ' --no-download', '/usr/bin/python3 -m venv') }}"
       # This is required to get access to the libvirt-python modules
       virtualenv_site_packages: yes
+    register: _install_from_pip
+    until: _install_from_pip is success
+    retries: 5
+    delay: 10
 
   # When a virtualenv is setup, it does not copy the selinux labels.
   # ref: https://github.com/pypa/virtualenv/issues/1334
