@@ -1,4 +1,15 @@
 ---
+
+- debug:
+    var: ansible_distribution_major_version
+
+- name: run 'setup' to gather facts (only if required)
+  setup:
+  when: ansible_distribution_major_version is not defined
+
+- debug:
+    var: ansible_distribution_major_version
+
 - name: Installing Virtual BMC and its requirements
   delegate_to: "{{ vbmc_inventory_host }}"
   vars:
@@ -8,6 +19,9 @@
     # we add a user-local bin path to PATH
     PATH: "{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}"
   block:
+  - debug:
+      var: _is_py2_host
+
   - name: Gather facts (needed for install and iptables tasks)
     setup:
 
