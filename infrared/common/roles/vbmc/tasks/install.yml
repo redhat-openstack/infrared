@@ -65,6 +65,14 @@
       state: absent
       regexp: "^libvirt-python"
 
+  # If a venv exists, it may have an old version of setuptools
+  # or corrupt in some other way. To make sure that we always
+  # have a fresh start, we remove any existing virtualenv.
+  - name: Remove any existing vbmc virtualenv
+    file:
+      path: "{{ vbmc_virtualenv }}"
+      state: absent
+
   # We deliberately avoid downloading newer versions of pip,
   # setuptools and wheel when creating the virtualenv. By
   # doing this we avoid breaking every time one of them does
