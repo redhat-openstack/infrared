@@ -252,7 +252,7 @@
 
 - name: Search for segfault in logs
   become: yes
-  shell: "! grep -v ansible-command /var/log/messages | grep segfault"
+  shell: "! grep -v ansible-command /var/log/messages | grep -E '(segfault|11/SEGV)'"
   register: result
   ignore_errors: yes
 
