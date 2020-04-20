@@ -35,9 +35,14 @@
   when:
       - baremetal_name not in groups.all
 
+
+
+- debug:
+    msg: name {{ node_info.name|lower }} groups {{ node_groups }} user {{ user }} ansible host {{ node_info.addresses.ctlplane[0].addr }} key {{ overcloud_pkey }}
 # todo(obaranov) Remove hosts from the 'unused' group
 # Currently ansible does not allow to remove existing host from a group
 - name: add hosts to host list
+  become: True
   add_host:
       name: "{{ node_info.name|lower }}"
       # only add groups for new nodes. don't touch existing nodes' groups
