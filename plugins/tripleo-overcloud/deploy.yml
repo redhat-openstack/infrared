@@ -46,6 +46,9 @@
       poll: 0
       when: install.splitstack|default(False)
 
+- name: Disable iscsid service on undercloud
+  import_playbook: stop_iscsi.yml
+
 - name: Deploy the Overcloud
   hosts: undercloud
   gather_facts: yes
