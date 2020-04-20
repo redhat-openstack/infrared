@@ -2,7 +2,13 @@
 - set_fact:
       cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"
 
+- set_fact:
+    ansible_python_interpreter: /usr/bin/python3
+  when:
+    - install.snapshot.restore|default('')
+    - install.version > 14
 - name: get cloud variables
+  
   shell: |
       for key in $( set | awk '{FS="="}  /^OS_/ {print $1}' ); do unset $key ; done
       source {{ auth_file_path }}
