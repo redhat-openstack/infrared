@@ -130,11 +130,19 @@
             wait
         tags: summary
 
+
 - name: Update inventory with overcloud details
   import_playbook: update_inventory.yml
   tags:
       - inventory_update
       - deploy
+
+- name: Reboot undercloud to refresh containers in OSP 15 and above
+  import_playbook: reboot_containerized.yml
+  when:
+    - install.snapshot.restore|default('')
+    - install.osp.version > 14
+
 
 - name: Verify overcloud deployment
   hosts: undercloud
