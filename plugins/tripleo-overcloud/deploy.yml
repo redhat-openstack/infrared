@@ -130,6 +130,12 @@
             wait
         tags: summary
 
+- name: Reboot undercloud to refresh containers in OSP 15 and above
+  import_playbook: "{{ undecloud_reboot | default('reboot_containerized.yml') }}"
+  when:
+    - install.snapshot.restore|default('')
+    - install.osp.version > 14
+
 - name: Update inventory with overcloud details
   import_playbook: update_inventory.yml
   tags:
