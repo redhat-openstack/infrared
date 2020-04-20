@@ -3,6 +3,11 @@
       cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"
 
 - name: get cloud variables
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  when:
+    - install.snapshot.restore|default('')
+    - install.osp.version > 14
   shell: |
       for key in $( set | awk '{FS="="}  /^OS_/ {print $1}' ); do unset $key ; done
       source {{ auth_file_path }}
