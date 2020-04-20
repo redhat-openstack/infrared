@@ -262,6 +262,14 @@ subparsers:
                           - kvm
                           - qemu
 
+                  restored:
+                      type: Value
+                      help: Wether undercloud was restored from snapshot
+                      default: False
+                      choices:
+                          - True
+                          - False
+
             - title: Overcloud Options
               options:
                   overcloud-predeploy-action:
