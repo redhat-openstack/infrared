@@ -1,0 +1,23 @@
+---
+
+- name: Reboot undercloud to refresh containers in OSP 15 and above
+  hosts: hypervisor
+  gather_facts: no
+  tasks:
+      - name: Shut down the undercloud vm gracefully
+        virt:
+            name: undercloud-0
+            state: shutdown
+
+      - name: Wait for the vm to gracefully shut down
+        pause:
+            minutes: 5
+
+      - name: Power on the undercloud vm
+        virt:
+            name: undercloud-0
+            state: running
+
+      - name: Wait for containers to start
+        pause:
+            minutes: 5

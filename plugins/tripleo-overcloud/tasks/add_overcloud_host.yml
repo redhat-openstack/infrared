@@ -35,9 +35,12 @@
   when:
       - baremetal_name not in groups.all
 
+
+
 # todo(obaranov) Remove hosts from the 'unused' group
 # Currently ansible does not allow to remove existing host from a group
 - name: add hosts to host list
+  become: True
   add_host:
       name: "{{ node_info.name|lower }}"
       # only add groups for new nodes. don't touch existing nodes' groups
