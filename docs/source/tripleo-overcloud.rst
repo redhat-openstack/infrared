@@ -172,6 +172,9 @@ Overcloud Options
     A path to a ``*.sh`` file containing ``openstack overcloud deploy`` command.
     This is for advance users.
 
+* ``--restored``: Boolean. Indicates wether overcloud is deployed on
+    Undercloud restored from snap shot. Default value: False
+
 * ``--heat-templates-basedir``: Allows to override the templates base dir
     to be used for deployment. Default value: "/usr/share/openstack-tripleo-heat-templates"
 
