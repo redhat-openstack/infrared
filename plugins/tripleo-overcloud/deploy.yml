@@ -46,6 +46,12 @@
       poll: 0
       when: install.splitstack|default(False)
 
+- name: Disable iscsi service and reboot undercloud when restored from snapshot
+  import_playbook: reboot_containerized.yml
+  when:
+    - install.version > 14
+    - install.restored == 'True'
+
 - name: Deploy the Overcloud
   hosts: undercloud
   gather_facts: yes
@@ -130,11 +136,14 @@
             wait
         tags: summary
 
+
 - name: Update inventory with overcloud details
   import_playbook: update_inventory.yml
   tags:
       - inventory_update
       - deploy
+
+
 
 - name: Verify overcloud deployment
   hosts: undercloud
