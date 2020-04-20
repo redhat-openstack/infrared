@@ -85,27 +85,53 @@
       path: "{{ vbmc_virtualenv }}"
       state: absent
 
-  # We deliberately avoid downloading newer versions of pip,
-  # setuptools and wheel when creating the virtualenv. By
-  # doing this we avoid breaking every time one of them does
-  # a new release. For python3 this is the default behaviour
-  # when using 'python3 -m venv', but for the 'virtualenv'
-  # tool we need to pass it a CLI argument.
-  - name: Install python-virtualbmc with pip
-    vars:
-      virtualenv_path: "{{ (_virtualenv_path.stdout | trim == 'none') | ternary('/usr/bin/virtualenv', _virtualenv_path.stdout | trim) }}"
-    pip:
-      name: virtualbmc
-      version: "{{ vbmc_version }}"
-      extra_args: "--constraint {{ vbmc_home }}/vbmc-upper-constraints.txt"
-      virtualenv: "{{ vbmc_virtualenv }}"
-      virtualenv_command: "{{ (_is_py2_host | bool) | ternary(virtualenv_path ~ ' --no-download', '/usr/bin/python3 -m venv') }}"
-      # This is required to get access to the libvirt-python modules
-      virtualenv_site_packages: yes
-    register: _install_from_pip
-    until: _install_from_pip is success
-    retries: 5
-    delay: 10
+  - name: Install virtualbmc
+    block: &install_tasks
+      # We deliberately avoid downloading newer versions of pip,
+      # setuptools and wheel when creating the virtualenv. By
+      # doing this we avoid breaking every time one of them does
+      # a new release. For python3 this is the default behaviour
+      # when using 'python3 -m venv', but for the 'virtualenv'
+      # tool we need to pass it a CLI argument.
+      - name: Install package from pypi
+        vars:
+          virtualenv_path: "{{ (_virtualenv_path.stdout | trim == 'none') | ternary('/usr/bin/virtualenv', _virtualenv_path.stdout | trim) }}"
+        pip:
+          name: virtualbmc
+          version: "{{ vbmc_version }}"
+          extra_args: "--constraint {{ vbmc_home }}/vbmc-upper-constraints.txt"
+          virtualenv: "{{ vbmc_virtualenv }}"
+          virtualenv_command: "{{ (_is_py2_host | bool) | ternary(virtualenv_path ~ ' --no-download', '/usr/bin/python3 -m venv') }}"
+          # This is required to get access to the libvirt-python modules
+          virtualenv_site_packages: yes
+        register: _install_from_pypi
+        until: _install_from_pypi is success
+        retries: 5
+        delay: 10
+    rescue:
+      - name: Uninstall python-virtualenv on hosts < RHEL8
+        package:
+          name: python-virtualenv
+          state: absent
+        become: true
+        register: _uninstall_packages
+        until: _uninstall_packages is success
+        when:
+          - _is_py2_host | bool
+
+      - name: Install python-virtualenv on hosts < RHEL8
+        package:
+          name: python-virtualenv
+          state: present
+          disable_gpg_check: yes
+        become: true
+        register: _install_packages
+        until: _install_packages is success
+        retries: 5
+        delay: 10
+        when:
+          - _is_py2_host | bool
+      <<: *install_tasks
 
   # When a virtualenv is setup, it does not copy the selinux labels.
   # ref: https://github.com/pypa/virtualenv/issues/1334
