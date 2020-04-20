@@ -46,6 +46,26 @@
       poll: 0
       when: install.splitstack|default(False)
 
+- name: iscsi fix for restored osp  15 and above
+  hosts: undercloud
+  become: true
+  tasks:
+    - name: stop and disable iscsi.socket
+      service:
+        name: iscsi.socket
+        state: stopped
+        enabled: no
+  when:
+    - install.version > 14
+    - install.restored == 'True'
+
+
+- name: Reboot undercloud to refresh containers in OSP 15 and above
+  import_playbook: reboot_containerized.yml
+  when:
+    - install.version > 14
+    - install.restored == 'True'
+
 - name: Deploy the Overcloud
   hosts: undercloud
   gather_facts: yes
@@ -130,11 +150,14 @@
             wait
         tags: summary
 
+
 - name: Update inventory with overcloud details
   import_playbook: update_inventory.yml
   tags:
       - inventory_update
       - deploy
+
+
 
 - name: Verify overcloud deployment
   hosts: undercloud
