@@ -2,6 +2,16 @@
 - set_fact:
       cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"
 
+- name: Detect python interpreter in Undercloud
+  command: 'which python'
+  register: py_interpreter
+
+- set_fact:
+    ansible_python_interpreter: "{{ (py_interpreter.stdout_lines | default('python')) | trim }}"
+  when:
+    - install.snapshot.restore|default('')
+    - install.version > 14
+
 - name: get cloud variables
   shell: |
       for key in $( set | awk '{FS="="}  /^OS_/ {print $1}' ); do unset $key ; done
