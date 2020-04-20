@@ -67,6 +67,7 @@ subparsers:
                           When used with `snapshot-restore`, it will use this file as the disk name for the domain
                       default: "undercloud-snapshot.qcow2"
 
+
             - title: Undercloud Configuration
               options:
                   config-file:

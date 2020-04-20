@@ -228,6 +228,7 @@ To use this feature, simply run::
 Or optionally, provide the file name of the image to restore from (defaults to "undercloud-snapshot.qcow2").
 .. note:: the filename refers to a path on the hypervisor.
 
+
 Undercloud Upgrade
 ---------------------
 Upgrade is discovering current Undercloud version and upgrade it to the next major one.
