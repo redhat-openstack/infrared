@@ -22,7 +22,8 @@
     retries: 5
     delay: 10
 
-  - name: Collect the path for virtualenv if it is installed
+  - &find_virtualenv
+    name: Collect the path for virtualenv if it is installed
     shell: |
       which virtualenv 2>/dev/null || echo 'none'
     args:
@@ -90,26 +91,38 @@
         retries: 5
         delay: 10
     rescue:
-      - name: Uninstall python-virtualenv on hosts < RHEL8
-        package:
-          name: python-virtualenv
-          state: absent
-        become: true
-        register: _uninstall_packages
-        until: _uninstall_packages is success
-        when:
-          - _is_py2_host | bool
-
-      - name: Install python-virtualenv on hosts < RHEL8
-        package:
-          name: python-virtualenv
-          state: present
-        become: true
-        register: _install_packages
-        until: _install_packages is success
+      # The host may have virtualenv installed in some other way
+      # and have the package install blocked in its yum config.
+      # To cater for this, we try to reinstall it in another way.
+      - name: Reinstall virtualenv on hosts < RHEL8
+        shell: |-
+          exit_code=0
+          if grep -qr "exclude.*python-virtualenv" /etc/yum*; then
+              if python -m pip --version &>/dev/null; then
+                  python -m pip uninstall -y virtualenv
+                  python -m pip install virtualenv --constraint {{ shade_path_venv | regex_replace('(/)+$', '') }}-shade-upper-constraints.txt
+                  exit_code=2
+              else
+                  echo "The package python-virtualenv is excluded from installs, but python has no pip module installed to install it from pypi."
+                  exit_code=1
+              fi
+          else
+              yum reinstall python-virtualenv
+              exit_code=2
+          fi
+          exit ${exit_code}
+        args:
+          executable: /bin/bash
+          warn: no
+        register: _fix_virtualenv
+        changed_when: _fix_virtualenv.rc == 2
+        failed_when: _fix_virtualenv.rc not in [0,2]
+        until: _fix_virtualenv is success
         retries: 5
         delay: 10
         when:
           - _is_py2_host | bool
+
+      - *find_virtualenv
 
       - *install_task
