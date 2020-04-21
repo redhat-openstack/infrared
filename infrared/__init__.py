@@ -208,6 +208,12 @@ PLUGINS_REGISTRY = {
         'desc': 'The tempest test runner',
         'type': 'test'
     },
+    'tobiko': {
+        'src': 'https://opendev.org/x/tobiko.git',
+        'src_path': 'infrared_plugin',
+        'desc': 'Deploy and run Tobiko test cases',
+        'type': 'test'
+    },
     'tripleo-inventory': {
         'src': 'https://github.com/rhos-infra/tripleo-inventory.git',
         'src_path': 'infrared_plugin',
