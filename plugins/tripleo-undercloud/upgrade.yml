@@ -29,7 +29,7 @@
   vars:
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
       operation_type: "{{ 'Update' if install.get('update', {}).undercloud|default(False) else 'Upgrade' }}"
-      undercloud_upgrade_version: "{{ undercloud_version|int + (1 if install.upgrade|default(False) else 0) }}"
+      undercloud_upgrade_version: "{{ undercloud_version|upgrade_release if install.upgrade|default(False) else undercloud_version }}"
   roles:
       - role: rhos-release
         release: "{{ undercloud_upgrade_version }}"
