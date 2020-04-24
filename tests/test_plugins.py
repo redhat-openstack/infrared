@@ -537,7 +537,8 @@ def test_add_plugin_from_git(plugin_manager_fixture, mocker):
     mock_os.chdir.assert_has_calls(mock_tempfile.mkdtemp.return_value)
     mock_git.clone_from.assert_called_with(
         url='https://sample_github.null/plugin_repo.git',
-        to_path=mock_os.path.join.return_value)
+        to_path=mock_os.path.join.return_value,
+        kill_after_timeout=300)
     mock_os.join.has_call(SAMPLE_PLUGINS_DIR, mock_os.listdir.return_value[0])
     mock_os.join.has_call(mock_tempfile.mkdtemp.return_value,
                           mock_os.listdir.return_value[0])
@@ -592,7 +593,8 @@ def test_add_plugin_from_git_dirname_from_spec(plugin_manager_fixture, mocker):
     mock_git.clone_from.assert_called_with(
         url='https://sample_github.null/plugin_repo.git',
         to_path=os.path.join(
-            mock_tempfile.mkdtemp.return_value, "plugin_repo"))
+            mock_tempfile.mkdtemp.return_value, "plugin_repo"),
+        kill_after_timeout=300)
 
     # check that it was copied with the plugin name and not repo name
     mock_shutil.copytree.assert_called_with(
