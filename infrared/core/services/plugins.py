@@ -5,6 +5,7 @@ import os
 import shutil
 import sys
 import tempfile
+import tenacity
 import time
 
 from collections import OrderedDict
@@ -267,6 +268,8 @@ class InfraredPluginManager(object):
             raise StopIteration
 
     @staticmethod
+    @tenacity.retry(reraise=True, wait=tenacity.wait_exponential(),
+                    stop=tenacity.stop_after_attempt(3))
     def _clone_git_plugin(git_url, rev=None):
         """Clone a plugin into a given destination directory
 
