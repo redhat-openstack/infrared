@@ -1,11 +1,11 @@
 ---
 - name: Validate network name is defined
   fail:
-      msg: "The 'bmc_ipmi_network_name' variable if not  defined "
+    msg: "The 'bmc_ipmi_network_name' variable if not  defined "
   when: "not bmc_ipmi_network_name or bmc_ipmi_network_name=='undefined'"
 
 - fail:
-      msg: "OVB not supported for non Red Hat operating systems"
+    msg: "OVB not supported for non Red Hat operating systems"
   when: ansible_os_family != "RedHat"
 
 - name: check for subscription
@@ -16,59 +16,71 @@
   when: not bmc_subscribtion == 'cdn'|default(False)
 
 - include_role:
-      name: cdn_registery
+    name: cdn_registery
   vars:
-      cdn_args_file: "{{ provision.bmc.cdn }}"
-      install_version: "{{ provision.bmc.version|default(bmc_rhos_release) }}"
+    cdn_args_file: "{{ provision.bmc.cdn }}"
+    install_version: "{{ provision.bmc.version|default(bmc_rhos_release) }}"
   when:
-      - "provision.bmc is defined"
-      - "provision.bmc.cdn is defined"
-      - "bmc_rhos_release|openstack_distribution == 'OSP'"
+    - provision.bmc is defined
+    - provision.bmc.cdn is defined
+    - bmc_subscribtion == 'cdn'
 
 - include_role:
-      name: rhos-release
+    name: rhos-release
   vars:
-      release: "{{ bmc_rhos_release }}"
-      build: "latest"
-      rr_buildmods: "pin"
-      mirror: "{{ bmc_repos | default(omit) }}"
+    release: "{{ bmc_rhel[ansible_distribution_major_version]['rhos_release'] }}"
+    build: "latest"
+    rr_buildmods: "pin"
+    rr_distro_version: "{{ bmc_rhel[ansible_distribution_major_version]['rr_distro_version']|default(omit) }}"
   when:
-      - "bmc_rhos_release|openstack_distribution == 'OSP'"
-      - not bmc_subscribtion == 'cdn'
-      - cdn_status.rc != 0
+    - bmc_subscribtion == 'rhos'
+    - cdn_status.rc != 0
 
 - include_role:
-      name: rdo-release
+    name: rdo-release
   vars:
-      release: "{{ bmc_rhos_release }}"
-      rr_buildmods: "{{ bmc_rr_buildmods }}"
-      build: "latest"
-  when: bmc_rhos_release|openstack_distribution == 'RDO'
+    release: "{{ bmc_rdo_release }}"
+    rr_buildmods: "{{ bmc_rr_buildmods }}"
+    build: "latest"
+  when:
+    - bmc_subscribtion == 'rdo'
 
 # Install the necessary packages to setup the bmc node
 - name: Install repos
   package:
-      name: "{{ bmc_repos }}"
-      state: present
+    name: "{{ bmc_repos }}"
+    state: present
 
-# This is a separate task due to the way Ansible handle RPMs installation.
-# Before able to install 'python-pip' the right repos from previous task, should be installed.
-- name: Install RPM packages
+- name: Install BMC RPM packages
   package:
-      name: "{{ bmc_rpms }}"
-      state: present
-      disable_gpg_check: yes
+    name: "{{ bmc_rpms }}"
+    state: present
+    disable_gpg_check: yes
 
-- name: Install pip packages
+- name: Install BMC pypi packages into virtualenv
   pip:
-      name: "{{ item }}"
-      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
-  with_items: "{{ bmc_pip }}"
+    name: "{{ item }}"
+    version: "{{ ir_default_pip_versions[item] | default(omit) }}"
+    virtualenv: "{{ bmc_ovb_venv }}"
+    virtualenv_command: /usr/bin/python3 -m venv
+  register: _install_from_pypi
+  until: _install_from_pypi is success
+  retries: 5
+  delay: 10
+  loop: "{{ bmc_pypi_pkgs }}"
 
-- name: Link pip installed openstackbmc to local bin
+- name: Get python3 venv lib path
   shell: |
-      ln -sf /usr/lib/python2.7/site-packages/openstack_virtual_baremetal/openstackbmc.py /usr/local/bin/openstackbmc && \
-      chmod +x /usr/local/bin/openstackbmc
+    ls -d {{ bmc_ovb_venv }}/lib64/python3*
+  register: _venv_py3_lib
+
+- name: Create openstackbmc wrapper
+  copy:
+    dest: /usr/local/bin/openstackbmc
+    mode: 0755
+    content: |
+      #!/bin/bash
+      {{ bmc_ovb_venv }}/bin/python3 {{ _venv_py3_lib.stdout }}/site-packages/openstack_virtual_baremetal/openstackbmc.py "$@"
 
 - name: Register internal subnet details
   os_subnets_facts:

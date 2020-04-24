@@ -1,18 +1,25 @@
 bmc_repos:
-    - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+  - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 bmc_rpms:
-    - python-pip
-    - python-crypto
-    - os-net-config
-    - python-novaclient
-    - python-neutronclient
-    - jq
-bmc_pip:
-    - openstack-virtual-baremetal
+  - gcc
+  - os-net-config
+  - python3
+bmc_ovb_venv: /var/tmp/ovb-venv
+bmc_pypi_pkgs:
+  - openstack-virtual-baremetal
+
+bmc_rhel:
+  '7':
+    rhos_release: 13
+    # need to force 7.8 to make python3 packages available
+    rr_distro_version: 7.8
+  '8':
+    rhos_release: 16
+    # rr_distro_version will be omitted, default will be used
+
 rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
-#Could be *rhos, rdo, cdn*
+#Could be 'rhos', 'cdn', 'rdo'.
 bmc_subscribtion: "rhos"
-bmc_rhos_release: 10
 bmc_rr_buildmods: "none"
 
 # helper varaibles to read from the provision settings
