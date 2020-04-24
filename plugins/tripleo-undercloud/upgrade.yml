@@ -29,7 +29,13 @@
   vars:
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
       operation_type: "{{ 'Update' if install.get('update', {}).undercloud|default(False) else 'Upgrade' }}"
-      undercloud_upgrade_version: "{{ undercloud_version|osp_upgrade_release if install.upgrade|default(False) else undercloud_version }}"
+      # NOTE(jfrancoa) The target release will be set by --version param, so we
+      # don't have to do strange calculations. If version is not passed (to
+      # avoid breakages from jobs which might miss this new approach) we
+      # fallback into the previous handling (uc_version+1 for upgrade,
+      # uc_version for update).
+      # TODO: Remove default fallback code once all jobs use --version.
+      undercloud_upgrade_version: "{{ install.version|default(install.upgrade|default(false) | ternary(undercloud_version|osp_upgrade_release, undercloud_version) ) }}"
   roles:
       - role: rhos-release
         release: "{{ undercloud_upgrade_version }}"

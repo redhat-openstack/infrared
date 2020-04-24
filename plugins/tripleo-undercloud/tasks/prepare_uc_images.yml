@@ -13,12 +13,6 @@
   vars:
       is_upgrade: "{{ install.upgrade|default(false) }}"
   set_fact:
-  # TODO(psedlak): replace '|int + 1' with special logic (helper/filter) which can do proper version increments (juno->kilo, 15-trunk->16-trunk etc)
-  #                - this code (as original version before it) is not allowing RDO + upgrade
-  #                  there is no conversion for 'version+1 => named rdo release', so if upgrade==yes then loosing the openstack_distribution information
-  #                - also, same issue will be when upgrade==yes with OSP15-trunk
-  #                  as 15-trunk needs to have that '-trunk' string part, so '|int + 1' will also strip this information
-  #                - likely solution is to add new |openstack_release_increment helper, where proper conversion can be handled (to after +1 convert back to name string)
       target_install_version: "{{ install.version | default( is_upgrade | ternary(undercloud_version|osp_upgrade_release, undercloud_version) ) }}"
 
 - name: set registry namespace if from user input
