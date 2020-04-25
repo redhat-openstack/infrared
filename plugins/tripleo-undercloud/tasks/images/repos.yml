@@ -21,6 +21,8 @@
   service:
       name: libvirtd
       state: restarted
+  when:
+    libguestfs_backend != 'direct'
 
 - name: Get custom repository file stat
   vars:
