@@ -15,13 +15,6 @@
       name: libguestfs-tools
       state: present
 
-# restart libvirt service to avoid possible hangs of virt-customize task.
-- name: restart libvirt service
-  become: yes
-  service:
-      name: libvirtd
-      state: restarted
-
 - name: Get custom repository file stat
   vars:
       repo_dir: /etc/yum.repos.d
