@@ -6,6 +6,10 @@
   set_fact:
       disk_pool: "{{ provision.disk.pool if (topology_node.disks.disk1.path == None) else topology_node.disks.disk1.path }}"
 
+- name: define disk pool name
+  set_fact:
+      pool_name: "{{ provision.pool.name }}"
+
 - block:
       #todo(yfried): move this to verification section (before execution)
       - name: verify swap is within disk1 size
@@ -28,6 +32,31 @@
           mode: 0755
           follow: yes
         when: disk_pool | default(False)
+
+
+      - name: Check volume pool
+        command: >
+          virsh pool-uuid "{{ pool_name }}"
+        register: pool_check
+        ignore_errors: true
+        changed_when: false
+
+      - name: create the volume pool xml file
+        template:
+          src: volume_pool.xml.j2
+          dest: "/tmp/volume_pool.xml"
+        when: pool_check is failed
+
+      - name: Define volume pool
+        command: "virsh pool-define /tmp/volume_pool.xml"
+        when: pool_check is failed
+
+      - name: Start volume pool
+        virt_pool:
+          command: start
+          state: active
+          autostart: "yes"
+          name: "{{ pool_name }}"
 
       # For disks usually it will be only 1 disk so the async will run on nodes rather than disks creation
       - name: create disk(s) from vm base image
