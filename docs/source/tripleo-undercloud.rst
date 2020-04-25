@@ -274,6 +274,8 @@ Below is an example of a workarounds file::
              patch: false
              basedir: ''
              id: ''
+             # patchlevel is optional and defaults to 1
+             patchlevel: 2
              command: 'touch /home/stack/pre_workaround_applied'
 
         post_undercloud_deploy_workarounds:
