@@ -66,6 +66,12 @@ subparsers:
                         A path to the image pool. Default is Storage Pool from libvirt
                       default: "/var/lib/libvirt/images"
 
+                  pool-name:
+                      type: Value
+                      help: |
+                        A name for the image pool. Default is 'images' as created by libvirt
+                      default: "images"
+
                   image-mirror-url:
                       type: Value
                       help: |
