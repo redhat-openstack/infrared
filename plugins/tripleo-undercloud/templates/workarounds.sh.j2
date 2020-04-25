@@ -7,6 +7,7 @@ set -euo pipefail
 function apply_patch {
     local patch_dir=$1
     local patch_id=$2
+    local patch_level=$3
 
     curl -4 https://review.opendev.org/changes/${patch_id}/revisions/current/patch?download | \
         base64 -d > /tmp/patch.txt
@@ -15,7 +16,7 @@ function apply_patch {
     then
         echo "Patch ${patch_id} already applied, skipping"
     else
-        sudo patch -Ns  -d ${patch_dir} -p1 < /tmp/patch.txt
+        sudo patch -Ns  -d ${patch_dir} -p${patch_level} < /tmp/patch.txt
     fi
 }
 
@@ -24,7 +25,12 @@ function apply_patch {
 {% for key, value in bugs.items() %}
 echo {{ key }}
 {% if value.patch %}
-apply_patch {{ value.basedir }} {{ value.id }}
+{% if 'patchlevel' in value and value.patchlevel is number %}
+{% set plevel = value.patchlevel %}
+{% else %}
+{% set plevel = 1 %}
+{% endif %}
+apply_patch {{ value.basedir }} {{ value.id }} {{ plevel }}
 {% else %}
 {{ value.command }}
 
@@ -37,7 +43,12 @@ apply_patch {{ value.basedir }} {{ value.id }}
 {% for key, value in bugs.items() %}
 echo {{ key }}
 {% if value.patch %}
-apply_patch {{ value.basedir }} {{ value.id }}
+{% if 'patchlevel' in value and value.patchlevel is number %}
+{% set plevel = value.patchlevel %}
+{% else %}
+{% set plevel = 1 %}
+{% endif %}
+apply_patch {{ value.basedir }} {{ value.id }} {{ plevel }}
 {% else %}
 {{ value.command }}
 
