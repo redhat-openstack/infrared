@@ -98,7 +98,7 @@
       # check pcs cluster status
       - name: check pacemaker cluster status
         become: true
-        shell: pcs status 2>&1 | grep 'cluster is not currently running on this node'
+        shell: pcs status 2>&1 | grep -E 'cluster is not currently running on this node|Unable to connect to localhost'
         register: pcs_active
         ignore_errors: true
 
