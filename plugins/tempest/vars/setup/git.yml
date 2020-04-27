@@ -29,7 +29,7 @@ setup:
         - libxslt-devel
         - mariadb-devel
         - openssl-devel
-        - "{{ (test.openstack.version | int > 14) | ternary('python3-setuptools', 'python-setuptools') }}"
+        - "{{ (test.openstack.version | float > 14.0) | ternary('python3-setuptools', 'python-setuptools') }}"
     pip_packages:
         - python-subunit
         - junitxml
