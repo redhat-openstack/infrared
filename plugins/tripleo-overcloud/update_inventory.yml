@@ -33,7 +33,7 @@
       - name: list ironic nodes
         shell: |
             source ~/stackrc
-            {% if (install.version | default(undercloud_version) | openstack_release) | int < 10 %}
+            {% if (install.version | default(undercloud_version) | openstack_release) | float < 10.0 %}
             ironic node-list | sed -e '/^+-/d' -e 's/^| /"/' -e 's/\s\+|$/"/' -e 's/\s\+|\s\+/","/g'
             {% else %}
             openstack baremetal node list -f csv

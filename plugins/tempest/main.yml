@@ -64,7 +64,7 @@
               src: /home/stack/.virtualenvs/.tempest/lib/python3.6/site-packages/subunit/36.patch
               dest: /home/stack/.virtualenvs/.tempest/lib/python3.6/site-packages/subunit/filters.py
         when:
-          - (test.openstack.version | int > 14)
+          - (test.openstack.version | float > 14.0)
           - test.setup == 'git'
 
       - name: Run tempest test suites
