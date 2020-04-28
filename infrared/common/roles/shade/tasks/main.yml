@@ -56,6 +56,7 @@
       url: "https://releases.openstack.org/constraints/upper/{{ (_is_py2_host | bool) | ternary('train', 'master') }}"
       dest: "{{ shade_path_venv | regex_replace('(/)+$', '') }}-shade-upper-constraints.txt"
       force: yes
+      mode: 0755
     register: _download_constraints
     until: _download_constraints is success
     retries: 5
