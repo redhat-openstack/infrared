@@ -37,6 +37,7 @@
   environment:
     PATH: "$PATH:/usr/local/bin:/bin"
   become: true
+  when: test.openstack.version|default(overcloud_version)|openstack_release > 14
 
 - name: Clone tempest
   git:
