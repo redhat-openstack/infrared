@@ -1,4 +1,14 @@
 ---
+#TODO: Remove workaround below when https://bugzilla.redhat.com/show_bug.cgi?id=1689875 is fixed
+#When a package update triggeres a delete of /usr/bin/python symlink, shade ansible module fails to find the interpreter
+- name: Update alternative for /usr/bin/python
+  become: yes
+  shell: |
+    [ -e /usr/bin/python3 ] ||  dnf install -y python36 || dnf install -y python37 || dnf install -y python || dnf install -u /usr/bin/python3
+    alternatives --set python /usr/bin/python3
+  ignore_errors: yes
+  when: ansible_distribution_major_version == '8'
+
 - name: update system packages
   package:
       state: latest
