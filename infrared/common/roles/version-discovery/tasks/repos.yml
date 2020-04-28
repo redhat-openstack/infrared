@@ -45,8 +45,8 @@
 
 
 - set_fact:
-      undercloud_version: "{{ version_regex|int or beta }}"
-      overcloud_version: "{{ version_regex|int or beta }}"
+      undercloud_version:"{{ version_regex or beta }}"
+      overcloud_version:"{{ version_regex or beta }}"
   vars:
       version_regex: "{{ installed_package_data.repo | regex_replace('^rhel-7-server-openstack-(beta|[.0-9]+)-rpms$', '\\1') }}"
       # TODO(yfried): change that when beta version changes
@@ -54,8 +54,8 @@
   when: version_regex|int or version_regex == 'beta'
 
 - set_fact:
-      undercloud_version: "{{ version_regex|int }}"
-      overcloud_version: "{{ version_regex|int }}"
+      undercloud_version: "{{ version_regex }}"
+      overcloud_version: "{{ version_regex }}"
   vars:
       version_regex: "{{ installed_package_data.repo | regex_replace('^rhelosp-([0-9]+\\.[0-9]+)(-director)?-(puddle|trunk|cdn)$', '\\1') }}"
   when:
@@ -64,8 +64,8 @@
 
 - name: Read version from the custom repos
   set_fact:
-      undercloud_version: "{{ version_regex|int }}"
-      overcloud_version: "{{ version_regex|int }}"
+      undercloud_version: "{{ version_regex }}"
+      overcloud_version: "{{ version_regex }}"
   vars:
       version_regex: "{{ installed_package_data.repo | regex_replace('^rhosp-([0-9]+)', '\\1') }}"
   when:
@@ -87,3 +87,13 @@
   when:
       - undercloud_version is not defined
       - rdotrunk_result.matched > 0
+
+- name: Set version back to integer for versions x.0 for backward compatibility
+  set_fact:
+    undercloud_version: "{{ version_value|int }}"
+    overcloud_version: "{{ version_value|int }}"
+  vars:
+      version_value: "{{ undercloud_version }}"
+  when:
+    - undercloud_version is defined
+    - undercloud_version.split('.')[1] == "0"
