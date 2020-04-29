@@ -14,8 +14,13 @@
       msg: "instackenv file is missing"
   when: not instack_file_path.stat.exists
 
+- name: Set fencing delay
+  set_fact:
+    fencing_delay_string: "--delay {{ install.overcloud.fencing_delay }}"
+  when: install.overcloud.fencing_delay|default(0)|int > 0
+
 - name: Generate fencing.yml
-  shell: "source ~/stackrc;openstack overcloud generate fencing --ipmi-lanplus --output ~/fencing.yaml {{ instack_file }}"
+  shell: "source ~/stackrc;openstack overcloud generate fencing {{ fencing_delay_string|default('') }} --ipmi-lanplus --output ~/fencing.yaml {{ instack_file }}"
 
 - name: append fencing yaml overcloud deploy script
   lineinfile:

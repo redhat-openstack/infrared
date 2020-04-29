@@ -294,6 +294,12 @@ subparsers:
                       help: Specifies whether fencing should be configured and enabled on the overcloud
                             (Supported from OSP13 and newer)
 
+                  overcloud-fencing_delay:
+                      type: Value
+                      default: 0
+                      help: Specifies the fencing delay that needs to be configured
+                            (Makes only sense when overcloud-fencing is true)
+
                   overcloud-script:
                       type: Value
                       help: |
