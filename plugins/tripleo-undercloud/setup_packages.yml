@@ -9,7 +9,7 @@
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
       undercloud_extra_repos: []
   tags: install
-  pre_tasks:
+  tasks:
       # FIXME(yfried): figure why this is required in gate only
       - name: gather undercloud facts since sometimes they are missing
         setup:
@@ -24,25 +24,28 @@
         register: cdn_status
         changed_when: false
         when: not install.cdn|default(False)
-  roles:
-      - role: cdn_registery
-        cdn_args_file: "{{ install.cdn|default('') }}"
-        install_version: "{{ install.version }}"
+
+      - include_role:
+            name: cdn_registery
+        vars:
+            cdn_args_file: "{{ install.cdn|default('') }}"
+            install_version: "{{ install.version }}"
         when:
             - "install.cdn|default(False) or cdn_status.rc == 0"
             - "install.version|openstack_distribution == 'OSP'"
-        become: yes
 
-      - role: rhos-release
-        release: "{{ install.version }}"
-        rr_buildmods: "{{ install.buildmods }}"
-        build: "{{ install.build | default(omit) }}"
-        director_build: "{{ install.get('director', {}).build|default(omit) }}"
-        mirror: "{{ install.mirror | default(omit) }}"
-        rr_distro_version: "{{ install.osrelease|default(omit) }}"
-        enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
-        without_ceph: "{{ not install.get('ceph', {}).repos|default(omit) }}"
-        skip_remove_repo: "{{ install.get('skip', {}).get('remove', {}).repo|default(omit) }}"
+      - include_role:
+            name: rhos-release
+        vars:
+            release: "{{ install.version }}"
+            rr_buildmods: "{{ install.buildmods }}"
+            build: "{{ install.build | default(omit) }}"
+            director_build: "{{ install.get('director', {}).build|default(omit) }}"
+            mirror: "{{ install.mirror | default(omit) }}"
+            rr_distro_version: "{{ install.osrelease|default(omit) }}"
+            enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
+            without_ceph: "{{ not install.get('ceph', {}).repos|default(omit) }}"
+            skip_remove_repo: "{{ install.get('skip', {}).get('remove', {}).repo|default(omit) }}"
         when:
             - "install.version|openstack_distribution == 'OSP'"
             - not install.cdn|default(False)
@@ -50,28 +53,31 @@
             - not skip_release
         tags: rhos-release
 
-      - role: rdo-release
-        release: "{{ install.version }}"
-        rr_buildmods: "{{ install.buildmods }}"
-        build: "{{ install.build | default(omit) }}"
-        mirror: "{{ install.mirror | default(omit) }}"
+      - include_role:
+            name: rdo-release
+        vars:
+            release: "{{ install.version }}"
+            rr_buildmods: "{{ install.buildmods }}"
+            build: "{{ install.build | default(omit) }}"
+            mirror: "{{ install.mirror | default(omit) }}"
         when:
             - install.version|openstack_distribution == 'RDO'
             - not skip_release
         tags: rhos-release
 
-      - role: from-source
-        release: "{{ install.version }}"
-        rr_buildmods: "{{ install.buildmods }}"
-        build: "{{ install.build | default(omit) }}"
-        mirror: "{{ install.mirror | default(omit) }}"
-        build_components: "{{ install.from.source }}"
+      - include_role:
+            name: from-source
+        vars:
+            release: "{{ install.version }}"
+            rr_buildmods: "{{ install.buildmods }}"
+            build: "{{ install.build | default(omit) }}"
+            mirror: "{{ install.mirror | default(omit) }}"
+            build_components: "{{ install.from.source }}"
         when:
             - install.get('from', {}).source is defined
             - not skip_release
         tags: git-release
 
-  tasks:
       - name: load custom repos configuration file
         include_vars: "{{ custom_repos.config|default('') }}"
         when: "custom_repos.config|default('')"
@@ -133,5 +139,23 @@
             {%- endif %}
             {{- package_list }}
 
-      - name: Update system and reboot
-        include_tasks: tasks/update_and_reboot.yml
+      - name: Update system packages
+        package:
+            state: latest
+            name: "*"
+        register: update
+
+      - name: Show the current ansible_python facts
+        debug:
+            var: ansible_python
+
+      - name: Re-gather facts
+        setup:
+
+      - name: Show the current ansible_python facts
+        debug:
+            var: ansible_python
+
+      - name: Reboot the undercloud
+        reboot:
+          reboot_timeout: 600
