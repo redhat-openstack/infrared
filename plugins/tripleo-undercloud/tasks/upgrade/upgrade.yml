@@ -7,9 +7,16 @@
           name: "kernel*"
           state: latest
 
+    # We check with systemctl if system has finished booting up
+    # but on RHEL7 we don't have --wait option so we check only
+    # for the state. We accept running or degraded as some
+    # services seem to flap after bootup but work fine. We give
+    # system 10 minutes to boot up.
     - name: reboot undercloud for FFWD
-      import_tasks: tasks/undercloud_reboot.yml
-
+      reboot:
+          reboot_timeout: 600
+          test_command: >-
+              systemctl is-system-running | grep -e running -e degraded
   when:
     - undercloud_version|openstack_release == 10
     - ffwd_kernel_reboot|default(false)|bool
@@ -79,6 +86,14 @@
   shell: "openstack undercloud upgrade &> undercloud_{{ operation_type }}.log"
   when: undercloud_version|openstack_release > 7 or (not install.get('update', {}).undercloud|default(False))
 
+# We check with systemctl if system has finished booting up
+# but on RHEL7 we don't have --wait option so we check only
+# for the state. We accept running or degraded as some
+# services seem to flap after bootup but work fine. We give
+# system 10 minutes to boot up.
 - name: reboot undercloud
-  import_tasks: tasks/undercloud_reboot.yml
+  reboot:
+      reboot_timeout: 600
+      test_command: >-
+          systemctl is-system-running | grep -e running -e degraded
   tags: undercloud_reboot
