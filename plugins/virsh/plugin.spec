@@ -38,8 +38,15 @@ subparsers:
                   host-mtu-size:
                       type: Value
                       help: |
-                          Setting the custom MTU size on the provided networks of the Hypervisor. If the custom size is not defined,
-                          the default MTU size of '1500' will be used.
+                          Setting the custom MTU size on the provided physical networks of the Hypervisor. If the custom size is not
+                          defined, the default MTU size of '1500' will be used.
+                      default: False
+                  host-network-mtu-size:
+                      type: Value
+                      help: |
+                          Setting the custom MTU size on the provided virtual networks of the Hypervisor. This setting applies
+                          custom MTU size on virtual network interfaces on the hypervisor and on network interfaces of virtual nodes.
+                          If the custom size is not defined, the default MTU size of '1500' will be used.
                       default: False
 
             - title: image
