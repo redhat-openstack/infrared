@@ -64,7 +64,7 @@
       network_template: "{{ network_template_out.stdout | from_yaml }}"
     set_fact:
       route_result:
-        stdout: "{{ (network_template|selectattr('name_lower', 'external')|first).ip_subnet }}"
+        stdout: "{{ (network_template|selectattr('name_lower','equalto','external')|first).ip_subnet }}"
   when: use_network_data|bool
 
 - name: add new static route for external network
