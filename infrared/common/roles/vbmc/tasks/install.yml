@@ -1,152 +1,36 @@
 ---
 - name: Installing Virtual BMC and its requirements
   delegate_to: "{{ vbmc_inventory_host }}"
-  vars:
-    _is_py2_host: "{{ ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int < 8 }}"
-  environment:
-    # To enable the use of a non-package and user-local virtualenv,
-    # we add a user-local bin path to PATH
-    PATH: "{{ vbmc_home }}/.local/bin:{{ ansible_env.PATH }}"
   block:
   - name: Gather facts (needed for install and iptables tasks)
     setup:
 
   - name: Install packages required for python-virtualbmc pip package
+    vars:
+      _is_py2_host: "{{ ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int < 8 }}"
     package:
       name:
-        - gcc
         - ipmitool
         - libvirt-devel
         - "{{ (_is_py2_host | bool) | ternary('libvirt-python', 'python3-libvirt') }}"
-        - "{{ (_is_py2_host | bool) | ternary('python-devel', 'python3-devel') }}"
       state: present
-      disable_gpg_check: yes
     become: true
     register: _install_packages
     until: _install_packages is success
     retries: 5
     delay: 10
 
-  - &find_virtualenv
-    name: Collect the path for virtualenv if it is installed
-    shell: |
-      which virtualenv 2>/dev/null || echo 'none'
-    args:
-      executable: /bin/bash
-    changed_when: false
-    register: _virtualenv_path
-
-  - name: Install python-virtualenv on hosts < RHEL8
-    package:
-      name: python-virtualenv
-      state: present
-      disable_gpg_check: yes
-    become: true
-    register: _install_packages
-    until: _install_packages is success
-    retries: 5
-    delay: 10
-    when:
-      - _virtualenv_path.stdout | trim == 'none'
-      - _is_py2_host | bool
-
-  # We use the OpenStack upper-constraints file to help
-  # insulate us from problems with new releases of
-  # pypi-sourced dependencies when installing virtualbmc.
-  # Note:
-  # We use the 'train' constraints because it is the last
-  # OpenStack release that tests both py2 and py3.
-  # We use 'master' on py3 (rhel >=8.2) becuse the older constrains does not have
-  # good enough pyghmi
-  # https://bugzilla.redhat.com/show_bug.cgi?id=1813889
-  - name: Download the OpenStack upper-constraints file
-    get_url:
-      url: "https://releases.openstack.org/constraints/upper/{{ (_is_py2_host | bool) | ternary('train', 'master') }}"
-      dest: "{{ vbmc_home }}/vbmc-upper-constraints.txt"
-      force: yes
-    register: _download_constraints
-    until: _download_constraints is success
-    retries: 5
-    delay: 10
-
-  # We are getting libvirt-python from the system packages
-  # so we do not want pip to try and compile it. To ensure
-  # that happens, we remove it from the constraints.
-  - name: Remove libvirt-python from constraints
-    lineinfile:
-      path: "{{ vbmc_home }}/vbmc-upper-constraints.txt"
-      state: absent
-      regexp: "^libvirt-python"
-
-  # If a venv exists, it may have an old version of setuptools
-  # or corrupt in some other way. To make sure that we always
-  # have a fresh start, we remove any existing virtualenv.
-  - name: Remove any existing vbmc virtualenv
-    file:
-      path: "{{ vbmc_virtualenv }}"
-      state: absent
-
-  - name: Install virtualbmc
-    block:
-      # We deliberately avoid downloading newer versions of pip,
-      # setuptools and wheel when creating the virtualenv. By
-      # doing this we avoid breaking every time one of them does
-      # a new release. For python3 this is the default behaviour
-      # when using 'python3 -m venv', but for the 'virtualenv'
-      # tool we need to pass it a CLI argument.
-      - &install_task
-        name: Install package from pypi
-        vars:
-          virtualenv_path: "{{ (_virtualenv_path.stdout | trim == 'none') | ternary('/usr/bin/virtualenv', _virtualenv_path.stdout | trim) }}"
-        pip:
-          name: virtualbmc
-          version: "{{ vbmc_version }}"
-          extra_args: "--constraint {{ vbmc_home }}/vbmc-upper-constraints.txt"
-          virtualenv: "{{ vbmc_virtualenv }}"
-          virtualenv_command: "{{ (_is_py2_host | bool) | ternary(virtualenv_path ~ ' --no-download', '/usr/bin/python3 -m venv') }}"
-          # This is required to get access to the libvirt-python modules
-          virtualenv_site_packages: yes
-        register: _install_from_pypi
-        until: _install_from_pypi is success
-        retries: 5
-        delay: 10
-    rescue:
-      # The host may have virtualenv installed in some other way
-      # and have the package install blocked in its yum config.
-      # To cater for this, we try to reinstall it in another way.
-      - name: Reinstall virtualenv on hosts < RHEL8
-        shell: |-
-          exit_code=0
-          if grep -qr "exclude.*python-virtualenv" /etc/yum*; then
-              if python -m pip --version &>/dev/null; then
-                  python -m pip uninstall -y virtualenv
-                  python -m pip install virtualenv --constraint {{ vbmc_home }}/vbmc-upper-constraints.txt
-                  exit_code=2
-              else
-                  echo "The package python-virtualenv is excluded from installs, but python has no pip module installed to install it from pypi."
-                  exit_code=1
-              fi
-          else
-              yum reinstall -y python-virtualenv
-              exit_code=2
-          fi
-          exit ${exit_code}
-        become: true
-        args:
-          executable: /bin/bash
-          warn: no
-        register: _fix_virtualenv
-        changed_when: _fix_virtualenv.rc == 2
-        failed_when: _fix_virtualenv.rc not in [0,2]
-        until: _fix_virtualenv is success
-        retries: 5
-        delay: 10
-        when:
-          - _is_py2_host | bool
-
-      - *find_virtualenv
-
-      - *install_task
+  - name: Prepare the virtualenv
+    include_role:
+      name: create_venv
+    vars:
+      venv_constraints_remove:
+        - "^libvirt-python.*$"
+      venv_destination_path: "{{ vbmc_virtualenv }}"
+      venv_pip_packages:
+        - virtualbmc
+      venv_rebuild: yes
+      venv_system_site_packages: yes
 
   # When a virtualenv is setup, it does not copy the selinux labels.
   # ref: https://github.com/pypa/virtualenv/issues/1334
