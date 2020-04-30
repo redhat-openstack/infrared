@@ -54,7 +54,11 @@ parameter_defaults:
     ControllerParameters:
       NeutronBridgeMappings: "datacentre:br-ex,tenant:br-isolated"
     ComputeParameters:
+{% if install.network.backend == 'vlan' %}
+      NeutronBridgeMappings: "tenant:br-isolated"
+{% else %}
       NeutronBridgeMappings: ""
+{% endif %}
 {% else %}
     NeutronBridgeMappings: "datacentre:br-ex,tenant:br-isolated"
 {% endif %}
