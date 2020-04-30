@@ -803,6 +803,12 @@ subparsers:
                       help: |
                           Let you the option to enable testing/pending repos with rhos-release. Multiple values have to be coma separated.
                           Examples: --enable-testing-repos rhel,extras,ceph or --enable-testing-repos all
+                  reboot-timeout:
+                      type: Value
+                      default: 600
+                      help: |
+                          The timeout for the undercloud host to come back from a reboot after package updates or
+                          an upgrade.
                   postreboot:
                       type: Bool
                       help: |
