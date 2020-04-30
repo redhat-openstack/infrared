@@ -117,65 +117,17 @@
             - pcs_active is failed
             - pcmk_remote is failed
 
+      # We check with systemctl if system has finished booting up
+      # but on RHEL7 we don't have --wait option so we check only
+      # for the state. We accept running or degraded as some
+      # services seem to flap after bootup but work fine. We give
+      # system 10 minutes to boot up.
       - name: reboot the node
         become: true
-        shell: "sleep 5 && shutdown -r now"
-        async: 1
-        poll: 0
-        ignore_errors: true
-
-      - name: wait for node to go down(hypervisor)
-        command: ping -c1 {{ ansible_host|default(ansible_ssh_host) }}
-        register: node_down
-        until: node_down.rc != 0
-        retries: 60
-        delay: 3
-        ignore_errors: true
-        delegate_to: hypervisor
-        when: "'hypervisor' in groups"
-
-      - name: wait for node to go down(undercloud)
-        become: no
-        command: ping -c1 {{ ansible_host|default(ansible_ssh_host) }}
-        register: node_down
-        until: node_down.rc != 0
-        retries: 100
-        delay: 3
-        ignore_errors: true
-        delegate_to: "{{ groups['undercloud']|first }}"
-        when: "'hypervisor' not in groups"
-
-      - name: waiting for the node to be available(undercloud)
-        become: no
-        wait_for:
-            port: 22
-            host: "{{ ansible_host }}"
-            search_regex: OpenSSH
-            timeout: 30
-        register: uc_reachable
-        delegate_to: "{{ groups['undercloud']|first }}"
-        when: "'hypervisor' not in groups"
-        retries: 21
-        until: uc_reachable is succeeded
-
-      - name: waiting for the node to be available(hypervisor)
-        become: no
-        wait_for:
-            host: "{{ ansible_host }}"
-            port: 22
-            search_regex: OpenSSH
-            delay: 30
-            sleep: 15
-            timeout: 360
-        delegate_to: hypervisor
-        when: "'hypervisor' in groups"
-
-      - name: check node is ssh-able
-        shell: id || echo "NOT_READY"
-        register: id_ssh
-        until: "'{{ ansible_user }}' in id_ssh.stdout"
-        retries: 20
-        delay: 15
+        reboot:
+            reboot_timeout: "{{ install.get('reboot', {}).get('timeout', 600) }}"
+            test_command: >-
+                systemctl is-system-running | grep -e running -e degraded
 
       - name: check pcmk_remote node is up
         become: true

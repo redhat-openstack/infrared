@@ -22,30 +22,15 @@
       register: loaded_ovs
   delegate_to: "{{ node_name }}"
 
-- block:
-    - name: Reboot {{ node_name }}
-      become: true
-      shell: "sleep 2; shutdown -r now"
-      async: 1
-      poll: 0
-      ignore_errors: true
-      delegate_to: "{{ node_name }}"
-
-    - name: Wait for {{ node_name }} to go down
-      command: "ping -c1 {{ hostvars[node_name].ansible_host|
-                            default(hostvars[node_name].ansible_ssh_host) }}"
-      ignore_errors: true
-      register: node_down
-      until: node_down.rc != 0
-      retries: 30
-      delay: 5
-
-    - name: waiting for the {{ node_name }} to be available
-      wait_for:
-          port: 22
-          host: "{{ hostvars[node_name].ansible_host|
-                    default(hostvars[node_name].ansible_ssh_host) }}"
-          search_regex: OpenSSH
-          delay: 10
-          sleep: 3
-  when: (installed_kernel.stdout != loaded_kernel.stdout) or (installed_ovs.stdout != loaded_ovs.stdout)
+  # We check with systemctl if system has finished booting up
+  # but on RHEL7 we don't have --wait option so we check only
+  # for the state. We accept running or degraded as some
+  # services seem to flap after bootup but work fine. We give
+  # system 10 minutes to boot up.
+  - name: Reboot the {{ node_name }}
+    become: true
+    reboot:
+      reboot_timeout: "{{ install.get('reboot', {}).get('timeout', 600) }}"
+      test_command: >-
+          systemctl is-system-running | grep -e running -e degraded
+    when: (installed_kernel.stdout != loaded_kernel.stdout) or (installed_ovs.stdout != loaded_ovs.stdout)
