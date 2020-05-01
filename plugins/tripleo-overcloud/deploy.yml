@@ -135,6 +135,22 @@
         register: pre_overcloud_install_action
         when: install.get('overcloud', {}).get('predeploy', {}).get('action', {})
 
+      - name: Apply workaround for bz1817014
+        block:
+        - name: Find docker-images.yaml
+          find:
+            paths: /home/stack
+            recurse: yes
+            patterns: 'docker-images.yaml'
+          register: find_result
+
+        - name: Add undercloud-0 to insecure registry address
+          replace:
+            path: "{{ item.path }}"
+            regexp: '(?i)DockerInsecureRegistryAddress:'
+            replace: "DockerInsecureRegistryAddress:\n  - undercloud-0.ctlplane.redhat.local:8787"
+          with_items: "{{ find_result.files }}"
+
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
