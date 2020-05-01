@@ -77,6 +77,12 @@
         ignore_errors: yes
         when: install.get('overcloud', {}).get('predeploy', {}).get('action', {})
 
+      - name: bz1817014 
+        lineinfile:
+            dest: "/home/stack/virt/docker-images.yaml"
+            line: '  - undercloud-0.ctlplane.redhat.local:8787'
+            insertafter: 'DockerInsecureRegistryAddress:'
+
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
