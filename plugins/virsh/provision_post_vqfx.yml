@@ -7,14 +7,6 @@
     ansible_network_os: junos
     ansible_command_timeout: 120
   tasks:
-      - name: disable system syslog console logging
-        junos_command:
-          commands:
-            - "configure"
-            - "deactivate system syslog user *"
-            - "commit"
-            - "exit"
-
       - name: setup vlans, lldp and undercloud switchport on vqfx
         junos_command:
           commands:
