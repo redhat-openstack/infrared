@@ -95,27 +95,37 @@
             - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph osd set noout"
             - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph osd set norebalance"
 
-      # check pcs cluster status
-      - name: check pacemaker cluster status
-        become: true
-        shell: pcs status 2>&1 | grep -E 'cluster is not currently running on this node|Unable to connect to localhost'
-        register: pcs_active
-        ignore_errors: true
-
-      - name: check this if this is pcmk-remote node
+      # Check the following conditions:
+      # A) pcmk_remote is succeeded will be true is this is a pcmk-remote node
+      # B) pcmk_core is succeeded will be true when we are pcmk core node
+      #    aka a pcmk node but not a remote
+      # C) both pcmk_remote and pcmk_core will be 'failed' if we are not part of
+      #    a pcmk cluster (networker node/ceph node)
+      # NB: we use crm_mon and not pcs status due to:
+      #     https://bugzilla.redhat.com/show_bug.cgi?id=1830552
+      - name: check if this is a pcmk-remote node
         become: true
         shell: |
-            pcs status 2>&1 | grep -w 'RemoteOnline:' | grep {{ inventory_hostname }}
+            crm_mon -1 2>&1 | grep -w 'RemoteOnline:' | grep -w {{ inventory_hostname }}
         register: pcmk_remote
         ignore_errors: true
-        when: pcs_active is failed
 
-      - name: stop pcs cluster
+      - name: check if this is a pacemaker core node
+        become: true
+        shell: crm_mon -1 &> /dev/null
+        register: pcmk_core
+        ignore_errors: true
+        failed_when: pcmk_remote is succeeded or pcmk_core is failed
+
+      - name: stop pcs cluster on core cluster nodes
         become: true
         command: "pcs cluster stop --request-timeout=300 {% if groups['controller']|length  < 3 %} --force {% endif %}"
-        when:
-            - pcs_active is failed
-            - pcmk_remote is failed
+        when: pcmk_core is succeeded
+
+      - name:  stop pcs cluster on remote cluster nodes
+        become: true
+        shell: "pcs cluster stop --request-timeout=300; systemctl stop pacemaker_remote"
+        when: pcmk_remote is succeeded
 
       - name: reboot the node
         become: true
@@ -173,31 +183,36 @@
       - name: check node is ssh-able
         shell: id || echo "NOT_READY"
         register: id_ssh
-        until: "'{{ ansible_user }}' in id_ssh.stdout"
+        until: "ansible_user in id_ssh.stdout"
         retries: 20
         delay: 15
 
       - name: check pcmk_remote node is up
         become: true
-        shell: pcs status | grep -w 'RemoteOnline:'
+        shell: crm_mon -1 2>&1 | grep -w 'RemoteOnline:'
         register: remote_online
-        until: "'{{ inventory_hostname }}' in remote_online.stdout"
+        until: "inventory_hostname in remote_online.stdout"
         retries: 6
         delay: 5
-        when:
-            - pcs_active is failed
-            - pcmk_remote is succeeded
+        when: pcmk_remote is succeeded
 
       - name: wait for pacemaker node to recover
         become: true
-        shell: pcs status | grep -w 'Online:'
+        shell: crm_mon -1 2>&1 | grep -w 'Online:'
         register: pcs_status
-        until: "'{{ inventory_hostname }}' in pcs_status.stdout"
+        until: "inventory_hostname in pcs_status.stdout"
         retries: 60
         delay: 5
-        when:
-            - pcs_active is failed
-            - pcmk_remote is failed
+        when: pcmk_core is succeeded
+
+      - name: wait for pacemaker remote node to recover
+        become: true
+        shell: crm_mon -1 2>&1 | grep -w 'RemoteOnline:'
+        register: pcs_status
+        until: "inventory_hostname in pcs_status.stdout"
+        retries: 60
+        delay: 5
+        when: pcmk_remote is succeeded
 
       - name: cleanup pacemaker resource
         shell: |
@@ -210,14 +225,13 @@
         when:
           - cleanup_services is defined
           - cleanup_services|default({})|length > 0
-          - pcs_active is failed
-          - pcmk_remote is failed
+          - pcmk_core is succeeded or pcmk_remote is succeeded
 
       # Todo(yprokule): enhance search patterns
       - name: check for any stopped pcs resources
         become: true
         shell: |
-            pcs status | grep {{ item }} || /bin/true
+            crm_mon -1 2>&1 | grep {{ item }} || /bin/true
         register: srv_status
         until: srv_status.stdout.find("{{ item }}") == -1
         ignore_errors: true
@@ -228,14 +242,13 @@
             - "Starting"
             - "Promoting"
         when:
-            - pcs_active is failed
-            - pcmk_remote is failed
-            - "'{{ install.deployment.files | basename }}' == 'virt'"
+            - pcmk_core is succeeded or pcmk_remote is succeeded
+            - "(install.deployment.files | basename) == 'virt'"
 
       - name: Report pacemaker status for stopped resources
         become: true
         register: fail_stop
-        command: pcs status
+        command: crm_mon -1 2>&1
         when:
             - srv_status is failed
 
@@ -250,7 +263,7 @@
       - name: Check for any unmanaged pcs resources
         become: true
         shell: |
-            pcs status | grep {{ item }} || /bin/true
+            crm_mon -1 2>&1 | grep {{ item }} || /bin/true
         register: srv_status
         until: srv_status.stdout.find("{{ item }}") == -1
         ignore_errors: true
@@ -258,14 +271,12 @@
         delay: 10
         with_items:
             - 'unmanaged'
-        when:
-            - pcs_active is failed
-            - pcmk_remote is failed
+        when: pcmk_core is succeeded or pcmk_remote is succeeded
 
       - name: Report pacemaker status for unmanaged resources
         become: true
         register: fail_unmanaged
-        command: pcs status
+        command: crm_mon -1 2>&1
         when:
             - srv_status is failed
 
