@@ -25,3 +25,8 @@ subparsers:
                           Comma separated list of test files locations in git repo. Example:
                           'tripleo/container_sanity.py', 'tripleo/container_sanity_v3.py'
                       default: 'tripleo/container_sanity.py'
+
+                  tester-node:
+                      type: Value
+                      help: The name of the node from where to run the tests
+                      default: 'undercloud-0'
