@@ -39,6 +39,10 @@ subparsers:
                           The set of tests to execute
                           __LISTYAMLS__
                       default: none.yml
+                  tester-node:
+                      type: Value
+                      help: The name of the node from where to run the tests
+                      default: 'undercloud-0'
                   image:
                       type: VarFile
                       help: |
