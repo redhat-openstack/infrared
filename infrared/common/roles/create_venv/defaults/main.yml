@@ -17,6 +17,10 @@ venv_distro_package_list:
   - gcc
   - "{{ (venv_python_version | int == 2) | ternary('python-devel', 'python3-devel') }}"
 
+# Ensure ownership of the venv_destination_path directory
+# matches that of the parent directory
+venv_owner_match_to_parent: no
+
 # The python packages to install into the venv
 venv_pip_packages: []
 
@@ -25,6 +29,17 @@ venv_python_version: "{{ (ansible_distribution in ['CentOS', 'RedHat'] and ansib
 
 # Recreate the venv
 venv_rebuild: no
+
+# Change the shebang for binaries in the venv so that they
+# refer to '#!/usr/bin/env python' rather than the full
+# path to the python binary in the venv. This is handy
+# for python2/virtualenv where the length of the shebang
+# line is limited to 128 characters.
+# refs:
+# - https://github.com/pypa/pip/issues/1773
+# - https://github.com/pypa/virtualenv/issues/596
+# - https://github.com/pypa/virtualenv/issues/1549
+venv_shebang_relocate: no
 
 # Add system-site-packages to the venv
 venv_system_site_packages: no

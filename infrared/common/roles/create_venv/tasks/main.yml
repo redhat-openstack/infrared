@@ -49,6 +49,7 @@
       file:
         path: "{{ venv_destination_path | dirname }}"
         state: directory
+      register: _venv_dest_parent_create
 
     - name: Create the virtualenv
       block:
@@ -66,6 +67,27 @@
             {{ venv_destination_path }}
           args:
             creates: "{{ venv_destination_path }}/bin/activate"
+
+        - &ensure_ownership
+          name: Ensure ownership of the venv_destination_path directory
+          file:
+            path: "{{ venv_destination_path }}"
+            state: directory
+            owner: "{{ _venv_dest_parent_create['owner'] }}"
+            group: "{{ _venv_dest_parent_create['group'] }}"
+            recurse: true
+          become: true
+          when:
+            - venv_owner_match_to_parent | bool
+
+        - &venv_shebang_relocate
+          name: Relocate the shebangs in the venv binaries
+          shell: >-
+            sed -i 's|^#!.*python$|#!/usr/bin/env python|' {{ venv_destination_path }}/bin/*
+          args:
+            executable: /bin/bash
+          when:
+            - venv_shebang_relocate | bool
 
         - &download_constraints
           name: Download the constraints file
@@ -99,6 +121,9 @@
           until: _install_venv_pip_packages is success
           retries: 5
           delay: 10
+
+        - *venv_shebang_relocate
+
       rescue:
         # The host may have virtualenv installed in some other way
         # and have the package install blocked in its yum config.
@@ -135,8 +160,14 @@
 
         - *create_virtualenv
 
+        - *ensure_ownership
+
+        - *venv_shebang_relocate
+
         - *download_constraints
 
         - *remove_constraints
 
         - *install_packages
+
+        - *venv_shebang_relocate
