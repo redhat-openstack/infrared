@@ -200,6 +200,12 @@ subparsers:
                           Specifies whether TLS Everywhere with FreeIPA should be implemented
                       default: no
 
+                  enable-novajoin:
+                      type: Bool
+                      help: |
+                          Specifies whether TLS Everywhere with FreeIPA will use novajoin on the undercloud
+                      default: yes
+
             - title: Setup Undercloud Packages
               options:
                   mirror:

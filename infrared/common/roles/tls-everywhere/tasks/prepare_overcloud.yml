@@ -26,5 +26,20 @@
         - "{{ freeipa_templates_basedir }}/cloud-names.yaml"
         - "{{ freeipa_templates_basedir }}/public_vip.yaml"
 
-  delegate_to: "{{ freeipa_undercloud_node }}"
+  - name: Get last row of overcloud deploy script
+    command: "tail -n 1 {{ freeipa_overcloud_deploy_script }}"
+    register: oc_deploy_script_last_line
 
+  - name: Append the TLS Everywhere ansible template line to the base overcloud deploy script
+    lineinfile:
+        dest: "{{ freeipa_overcloud_deploy_script }}"
+        line: "-e {{ freeipa_templates_basedir }}/ipaservices-baremetal-ansible.yaml \\"
+        insertbefore: "{{ oc_deploy_script_last_line.stdout }}"
+    when: not (freeipa_enable_novajoin|bool)
+
+  - name: Generate ipaservices-baremetal-ansible.yaml
+    template:
+        src: ipaservices-baremetal-ansible.yaml.j2
+        dest: "{{ freeipa_templates_basedir }}/ipaservices-baremetal-ansible.yaml"
+    when: not (freeipa_enable_novajoin|bool)
+  delegate_to: "{{ freeipa_undercloud_node }}"
