@@ -1,0 +1,8 @@
+resource_registry:
+  OS::TripleO::Services::IpaClient: {{ freeipa_heat_templates_basedir }}/deployment/ipa/ipaservices-baremetal-ansible.yaml
+
+parameter_defaults:
+  IdMServer: {{ freeipa_node }}.{{ freeipa_cloud_domain }}
+  IdMDomain: {{ freeipa_cloud_domain }}
+  DnsSearchDomains: ["{{ freeipa_cloud_domain }}"]
+  DnsServers: ["{{ freeipa_node_ipaddress }}"]
