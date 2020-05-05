@@ -412,6 +412,12 @@ subparsers:
                           Specifies whether TLS Everywhere with FreeIPA should be implemented
                       default: no
 
+                  enable-novajoin:
+                      type: Bool
+                      help: |
+                          Specifies whether TLS Everywhere with FreeIPA will use novajoin on the overcloud
+                      default: yes
+
                   ipa-forwarder:
                       type: Value
                       help: |

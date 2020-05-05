@@ -35,6 +35,7 @@ freeipa_source_dir: "{{ (install|default({})).get('deployment', {}).get('files',
 freeipa_templates_basedir: "{{ hostvars[groups['undercloud'][0]].ansible_user_dir }}/{{ freeipa_source_dir | basename }}"
 freeipa_heat_templates_basedir: "{{ (install|default({})).get('heat', {}).get('templates', {}).get('basedir', '/usr/share/openstack-tripleo-heat-templates') }}"
 freeipa_use_ceph: "{{ ( True if (install.storage|default({})).backend|default('') == 'ceph' else False ) }}"
+freeipa_enable_novajoin: "{{ ( True if (install.enable|default({})).novajoin|default('') == 'true' else False ) }}"
 freeipa_network_environment_file: "{{ freeipa_templates_basedir }}/network/network-environment.yaml"
 freeipa_network_environment_v6_file: "{{ freeipa_templates_basedir }}/network/network-environment-v6.yaml"
 freeipa_forwarder: "{{ (install|default({})).get('ipa', {}).get('forwarder', 'hypervisor') }}"
