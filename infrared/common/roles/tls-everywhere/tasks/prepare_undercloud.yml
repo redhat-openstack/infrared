@@ -18,22 +18,36 @@
 
   - name: Enable additional dnf module for RHEL8
     become: yes
-    command: dnf module enable pki-deps -y
+    command: dnf module enable idm:DL1 -y
     when:
         - ansible_distribution in ['CentOS', 'RedHat']
         - ansible_distribution_major_version == '8'
 
-  - name: Install RHEL8 packages
+  - name: Install RHEL8 packages for novajoin
     become: yes
     package:
       name:
         - 'patch'
-        - 'python3-nss'
         - 'python3-novajoin'
       state: present
     when:
         - ansible_distribution in ['CentOS', 'RedHat']
         - ansible_distribution_major_version == '8'
+        - freeipa_enable_novajoin|bool
+
+  - name: Install RHEL8 packages for non-novajoin
+    become: yes
+    package:
+      name:
+        - 'patch'
+        - 'python3-ipalib'
+        - 'python3-ipaclient'
+        - 'krb5-devel'
+      state: present
+    when:
+        - ansible_distribution in ['CentOS', 'RedHat']
+        - ansible_distribution_major_version == '8'
+        - not freeipa_enable_novajoin|bool
 
   - name: Prepare novajoin to work
     become: yes
@@ -47,28 +61,51 @@
         --hostname {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}
         --precreate
     register: novajoin
+    when: freeipa_enable_novajoin|bool
 
-  - name: Prepare undercloud.conf
-    lineinfile:
+  - name: Edit undercloud.conf for novajoin
+    ini_file:
         path: ~/undercloud.conf
         backup: yes
-        state: absent
-        regex: "{{ item }}"
-    loop:
-        - undercloud_hostname
-        - undercloud_nameservers
-        - overcloud_domain_name
+        section: "{{ item.section }}"
+        option: "{{ item.option }}"
+        value: "{{ item.value }}"
+    with_items:
+        - { section: "DEFAULT", option: "enable_novajoin", value: "True" }
+        - { section: "DEFAULT", option: "ipa_otp", value: "{{ novajoin.stdout }}" }
+        - { section: "DEFAULT", option: "undercloud_hostname", value: "{{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}" }
+        - { section: "DEFAULT", option: "undercloud_nameservers", value: "{{ freeipa_node_ipaddress }} " }
+        - { section: "DEFAULT", option: "overcloud_domain_name", value: "{{ freeipa_cloud_domain }}" }
+    when: freeipa_enable_novajoin|bool
 
-  - name: Edit undercloud.conf
-    blockinfile:
+  - name: run undercloud ipa installer
+    become: yes
+    become_user: stack
+    command: |
+        ansible-playbook \
+          --ssh-extra-args "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
+          /usr/share/ansible/tripleo-playbooks/undercloud-ipa-install.yaml
+    environment:
+        IPA_DOMAIN: "{{ freeipa_cloud_domain }}"
+        IPA_REALM: "{{ freeipa_cloud_domain|upper }}"
+        IPA_ADMIN_USER: admin
+        IPA_ADMIN_PASSWORD: "{{ freeipa_admin_password }}"
+        IPA_SERVER_HOSTNAME: "{{ freeipa_node }}.{{ freeipa_cloud_domain }}"
+        UNDERCLOUD_FQDN: "{{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}"
+        USER: stack
+        CLOUD_DOMAIN: "{{ freeipa_cloud_domain }}"
+    when: not freeipa_enable_novajoin|bool
+
+  - name: Edit undercloud.conf without novajoin
+    ini_file:
         path: ~/undercloud.conf
         backup: yes
-        insertbefore: '^\[ctlplane-subnet\]'
-        marker: "# {mark} TLS EVERYWHERE SETTINGS -->"
-        content: |
-            enable_novajoin = True
-            ipa_otp = {{ novajoin.stdout }}
-            undercloud_hostname = {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}
-            undercloud_nameservers = {{ freeipa_node_ipaddress }}
-            overcloud_domain_name = {{ freeipa_cloud_domain }}
+        section: "{{ item.section }}"
+        option: "{{ item.option }}"
+        value: "{{ item.value }}"
+    with_items:
+        - { section: "DEFAULT", option: "undercloud_hostname", value: "{{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }}" }
+        - { section: "DEFAULT", option: "undercloud_nameservers", value: "{{ freeipa_node_ipaddress }} " }
+        - { section: "DEFAULT", option: "overcloud_domain_name", value: "{{ freeipa_cloud_domain }}" }
+    when: not freeipa_enable_novajoin|bool
   delegate_to: "{{ freeipa_undercloud_node }}"
