@@ -49,6 +49,7 @@
       file:
         path: "{{ venv_destination_path | dirname }}"
         state: directory
+      register: _venv_dest_parent_create
 
     - name: Create the virtualenv
       block:
@@ -66,6 +67,16 @@
             {{ venv_destination_path }}
           args:
             creates: "{{ venv_destination_path }}/bin/activate"
+
+        - &ensure_ownership
+          name: Ensure the correct ownership of the venv_destination_path directory
+          file:
+            path: "{{ venv_destination_path }}"
+            state: directory
+            owner: "{{ _venv_dest_parent_create['owner'] }}"
+            group: "{{ _venv_dest_parent_create['group'] }}"
+            recurse: true
+          become: true
 
         - &download_constraints
           name: Download the constraints file
@@ -134,6 +145,8 @@
         - *find_virtualenv
 
         - *create_virtualenv
+
+        - *ensure_ownership
 
         - *download_constraints
 
