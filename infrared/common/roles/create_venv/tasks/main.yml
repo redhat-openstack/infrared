@@ -1,0 +1,142 @@
+- name: Prepare the virtualenv
+  environment:
+    # To enable the use of a non-package and user-local virtualenv,
+    # we add /usr/local/bin path to PATH
+    PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
+  block:
+    - name: Install required distro packages
+      package:
+        name: "{{ venv_distro_package_list }}"
+        state: present
+      become: true
+      when:
+        - venv_distro_package_list | length > 0
+      register: _install_distro_packages
+      until: _install_distro_packages is success
+      retries: 5
+      delay: 10
+
+    - name: Ensure a fresh venv_destination_path if venv_rebuild is enabled
+      file:
+        path: "{{ venv_destination_path }}"
+        state: absent
+      when:
+        - venv_rebuild | bool
+
+    - &find_virtualenv
+      name: Collect the path for virtualenv if it is installed
+      shell: |
+        which virtualenv 2>/dev/null || echo 'none'
+      args:
+        executable: /bin/bash
+      changed_when: false
+      register: _virtualenv_path
+
+    - name: Install python-virtualenv on hosts < RHEL8
+      package:
+        name: python-virtualenv
+        state: present
+      become: true
+      register: _install_packages
+      until: _install_packages is success
+      retries: 5
+      delay: 10
+      when:
+        - _virtualenv_path.stdout | trim == 'none'
+        - venv_python_version | int == 2
+
+    - name: Create the venv_destination_path parent directory
+      file:
+        path: "{{ venv_destination_path | dirname }}"
+        state: directory
+
+    - name: Create the virtualenv
+      block:
+        # We deliberately avoid downloading newer versions of pip,
+        # setuptools and wheel when creating the virtualenv. By
+        # doing this we avoid breaking every time one of them does
+        # a new release. For python3 this is the default behaviour
+        # when using 'python3 -m venv', but for the 'virtualenv'
+        # tool we need to pass it a CLI argument.
+        - &create_virtualenv
+          name: Create the virtualenv (if it does not exist)
+          command: >-
+            {{ (venv_python_version | int == 2) | ternary('virtualenv --no-download', 'python3 -m venv') }}
+            {{ (venv_system_site_packages | bool) | ternary('--system-site-packages', '') }}
+            {{ venv_destination_path }}
+          args:
+            creates: "{{ venv_destination_path }}/bin/activate"
+
+        - &download_constraints
+          name: Download the constraints file
+          get_url:
+            url: "{{ venv_constraints }}"
+            dest: "{{ venv_destination_path }}/constraints.txt"
+            force: yes
+          register: _download_constraints
+          until: _download_constraints is success
+          retries: 5
+          delay: 10
+          when:
+            - venv_constraints != ''
+
+        - &remove_constraints
+          name: Remove constraint items
+          lineinfile:
+            path: "{{ venv_destination_path }}/constraints.txt"
+            state: absent
+            regexp: "{{ item }}"
+          loop: "{{ venv_constraints_remove }}"
+
+        - &install_packages
+          name: Install python packages into the venv
+          pip:
+            name: "{{ venv_pip_packages }}"
+            state: present
+            virtualenv: "{{ venv_destination_path }}"
+            extra_args: "{{ (venv_constraints != '') | ternary('--constraint ' ~ venv_destination_path ~ '/constraints.txt', omit) }}"
+          register: _install_venv_pip_packages
+          until: _install_venv_pip_packages is success
+          retries: 5
+          delay: 10
+      rescue:
+        # The host may have virtualenv installed in some other way
+        # and have the package install blocked in its yum config.
+        # To cater for this, we try to reinstall it in another way.
+        - name: Reinstall virtualenv on hosts < RHEL8
+          shell: |-
+            exit_code=0
+            if python -m pip --version &>/dev/null; then
+                python -m pip uninstall -y virtualenv
+                python -m pip install virtualenv --constraints {{ venv_constraints }}
+                exit_code=2
+            elif grep -qr "exclude.*python-virtualenv" /etc/yum*; then
+                echo "The package python-virtualenv is excluded from installs, but python has no pip module installed to install it from pypi."
+                exit_code=1
+            else
+                yum reinstall -y python-virtualenv
+                exit_code=2
+            fi
+            exit ${exit_code}
+          become: true
+          args:
+            executable: /bin/bash
+            warn: no
+          register: _fix_virtualenv
+          changed_when: _fix_virtualenv.rc == 2
+          failed_when: _fix_virtualenv.rc not in [0,2]
+          until: _fix_virtualenv is success
+          retries: 5
+          delay: 10
+          when:
+            - venv_python_version | int == 2
+
+        - *find_virtualenv
+
+        - *create_virtualenv
+
+        - *download_constraints
+
+        - *remove_constraints
+
+        - *install_packages
