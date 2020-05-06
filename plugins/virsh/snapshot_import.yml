@@ -125,12 +125,32 @@
       vars:
         vm_provision_user: "{{ (item.item.path | basename is match('undercloud-.*')) | ternary('stack', 'heat-admin') }}"
 
+    - name: Import the VM configuration
+      copy:
+        src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
+        dest: "/etc/libvirt/qemu/"
+        checksum: "{{ item.checksum }}"
+        remote_src: yes
+      loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+
+    - name: Change machine type to work on the current hypervisor
+      xml:
+        path: "/etc/libvirt/qemu/{{ item.path | basename }}"
+        xpath: "/domain/os/type"
+        attribute: "machine"
+        value: "pc"
+      loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+
     # We use command here, because the virt module needs the raw XML
     # and a lookup will not work remotely. We could slurp all the files,
     # but that's a lot of work for very little gain.
-    - name: Import the VM configuration
+    - name: Define the VM's
       command: >-
-        virsh define {{ provision.virsh.snapshot.path }}/{{ item.path | basename }}
+        virsh define /etc/libvirt/qemu/{{ item.path | basename }}
       loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
       loop_control:
         label: "{{ item.path | basename }}"
