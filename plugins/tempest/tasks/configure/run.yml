@@ -23,14 +23,14 @@
 - name: Configure Whitebox db parameters
   block:
     - name: Get controller hostname
-      shell: source ~/stackrc && ansible-inventory -i /usr/bin/tripleo-ansible-inventory --list | jq '.Controller.hosts[]' | head -n 1 | tr -d '"'
+      shell: source ~/stackrc && ansible-inventory -i /usr/bin/tripleo-ansible-inventory --graph Controller | sed -ne 's/^[ \t|]\+--\([a-z0-9\-]\+\)$/\1/p' | head -n 1
       register: controller_host
     - name: Get internal IP
       shell: source ~/stackrc && ansible-inventory -i /usr/bin/tripleo-ansible-inventory --host={{ controller_host.stdout | trim }} | jq '.internal_api_ip' | tr -d '"'
       register: internal_ip
-    - name: Get management IP
-      shell: source ~/stackrc && ansible-inventory -i /usr/bin/tripleo-ansible-inventory --host={{ controller_host.stdout | trim }}| jq '.management_ip' | tr -d '"'
-      register: management_ip
+    - name: Get control plane IP
+      shell: source ~/stackrc && ansible-inventory -i /usr/bin/tripleo-ansible-inventory --host={{ controller_host.stdout | trim }}| jq '.ctlplane_ip' | tr -d '"'
+      register: host_ip
     - name: Get Nova password
       shell: |
         source ~/stackrc && openstack object save overcloud plan-environment.yaml
@@ -91,7 +91,7 @@
               {% endif %}
               {% if test.configure.whitebox.db %}
               whitebox-database.internal_ip {{ internal_ip.stdout }} \
-              whitebox-database.host {{ management_ip.stdout }} \
+              whitebox-database.host {{ host_ip.stdout }} \
               whitebox-database.password {{ nova_password.stdout }} \
               {% endif %}
               {# config options #}
