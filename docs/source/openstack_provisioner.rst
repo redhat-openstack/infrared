@@ -25,7 +25,7 @@ OpenStack Cloud Details
     ``clouds.yml`` is expected in either ``~/.config/openstack`` or ``/etc/openstack`` directories
     according to `documentation <http://docs.openstack.org/developer/os-client-config/#config-files>`_:
 
-        .. note:: You can also omit the cloud parameter, and `infrared` will sourced openstackrc file:
+        .. note:: You can also omit the cloud parameter, and `infrared` will sourced keystonerc file:
 
           .. code-block:: shell
 
