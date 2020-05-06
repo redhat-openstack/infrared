@@ -6,6 +6,14 @@
   loop_control:
     loop_var: num
 
+- name: set bridges to hub mode
+  command: "ip link set {{ item.network | format(num) if item.needs_formatting | default(False) else item.network }} type bridge ageing_time 0"
+  when:
+    - item.hub|default(False)
+  with_items: "{{ topology_node.node_indexes }}"
+  loop_control:
+    loop_var: num
+
 - name: bring bridges up
   command: "ip link set dev {{ item.network | format(num) if item.needs_formatting | default(False) else item.network }} up"
   with_items: "{{ topology_node.node_indexes }}"
