@@ -1,14 +1,17 @@
 - name: Set tester node
   hosts: localhost
   tasks:
-    - name: Add chosen node to tester group
-      add_host:
-          name: "{{ test.tester.node }}"
-          groups: "tester"
-    - include_role:
-          name: inventory-update
-      vars:
-          inventory_file_name: 'hosts-test'
+      - name: Add node to tester group
+        block:
+          - name: Add chosen node to tester group
+            add_host:
+                name: "{{ test.tester.node }}"
+                groups: "tester"
+          - include_role:
+                name: inventory-update
+            vars:
+                inventory_file_name: 'hosts-test'
+        when: "'tester' not in groups"
 
 - name: Discover OverCloud OpenStack version (if necessary)
   hosts: "{{ (test.openstack.version is not defined) | ternary(groups.controller[0], 'none') }}"
