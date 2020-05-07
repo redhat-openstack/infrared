@@ -65,7 +65,7 @@ parameter_defaults:
     CephAnsibleExtraConfig:
         is_hci: true
 {% endif %}{# End of is_hci block #}
-{% if install.ceph.rgw.swift.compatibility|default(false) and install.version|default(undercloud_version)|openstack_release >= 13 %}
+{% if install.ceph.rgw.swift.compatibility|default(false) and install.version|default(undercloud_version) >= 13 %}
 {# This block add a ceph.conf override (under [global]) to force rgw to return same headers as swift and enable versioning#}
     CephConfigOverrides:
         rgw_swift_enforce_content_length: true
