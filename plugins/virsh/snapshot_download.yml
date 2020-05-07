@@ -5,38 +5,15 @@
   any_errors_fatal: true
   tasks:
     - name: Ensure a usable swift client is available
-      block:
-        - &prepare_swift_venv
-          name: Prepare swiftclient venv
-          pip:
-            name:
-              - "python-keystoneclient"
-              - "python-swiftclient"
-            virtualenv: "{{ provision.virsh.snapshot.path | dirname }}/.swiftclient"
-            state: present
-      rescue:
-        # TODO(odyssey4me): virtualenv may be in a broken state
-        # ref: https://github.com/pypa/virtualenv/issues/1551
-        - name: Ensure that virtualenv is uninstalled
-          shell: |-
-            sudo python -m pip uninstall -y virtualenv
-          when: "ansible_python['version']['major'] is version('3', '<')"
-          args:
-            executable: /bin/bash
-
-        - name: Ensure that the virtualenv is reinstalled
-          shell: |-
-            if rpm -q python-virtualenv; then
-              sudo yum reinstall -y python-virtualenv
-            else
-              sudo python -m pip install virtualenv
-            fi
-          when: "ansible_python['version']['major'] is version('3', '<')"
-          args:
-            executable: /bin/bash
-            warn: no
-
-        - *prepare_swift_venv
+      include_role:
+        name: create_venv
+      vars:
+        venv_destination_path: "{{ provision.virsh.snapshot.path | dirname }}/.swiftclient"
+        venv_owner_match_to_parent: yes
+        venv_pip_packages:
+          - "python-keystoneclient"
+          - "python-swiftclient"
+        venv_shebang_relocate: yes
 
     - name: Make sure that the snapshot path exists
       file:
