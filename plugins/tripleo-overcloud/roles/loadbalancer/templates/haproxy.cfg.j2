@@ -168,6 +168,7 @@ listen redis
   bind {{ loadbalancer.network.redis.vip | ipaddr('address') }}:6379 transparent
   balance first
   option tcp-check
+  tcp-check connect port 6379
   tcp-check send AUTH\ examplepassword\r\n
   tcp-check send PING\r\n
   tcp-check expect string +PONG
