@@ -60,16 +60,6 @@
   register: servers_create
   with_sequence: "count={{ node.value }}"
 
-- name: Check instance creation status
-  async_status:
-    jid: "{{ async_result_item.ansible_job_id }}"
-  loop: "{{ servers_create.results }}"
-  loop_control:
-    loop_var: "async_result_item"
-  register: servers
-  until: servers.finished
-  retries: 300
-
 # need to write all servers to file at once
 - name: save servers for registration
   set_fact:
