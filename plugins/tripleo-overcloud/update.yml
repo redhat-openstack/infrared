@@ -1,16 +1,3 @@
-- name: Collecting Info
-  hosts: undercloud:overcloud_nodes:!unused
-  gather_facts: yes
-  any_errors_fatal: true
-  vars:
-      discovery_types:
-          - rhos_release_file
-          - nova
-  tags:
-      - update_collect_info
-  roles:
-      - version-discovery
-
 - name: Undercloud Validation
   hosts: undercloud
   gather_facts: yes
@@ -52,8 +39,8 @@
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
   roles:
       - role: rhos-release
-        release: "{{ (undercloud_version|int) }}"
         rr_buildmods: "{{ install.buildmods }}"
+        release: "{{ (hostvars[groups['undercloud']|first].undercloud_version) }}"
         director_build: "{{ install.get('director', {}).build|default(omit) }}"
         build: "{{ install.build|default('latest') }}"
         mirror: "{{ install.mirror | default(omit) }}"
@@ -71,7 +58,7 @@
       template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
   roles:
       - role: containers/prepare-templates
-        when: undercloud_version|openstack_release > 11
+        when: hostvars[groups['undercloud']|first].undercloud_version|openstack_release > 11
 
 - name: Overcloud Minor Update
   hosts: undercloud
@@ -89,7 +76,7 @@
   tasks:
       - name: update deployment plan in Mistral
         include_tasks: tasks/update/common/update_mistral_plan.yaml
-        when: undercloud_version|openstack_release in [10, 11]
+        when: hostvars[groups['undercloud']|first].undercloud_version|openstack_release in [10, 11]
 
       - name: Scan nodes ssh keys
         command: "ssh-keyscan -t rsa {{ hostvars[item].ansible_host|
