@@ -1,16 +1,3 @@
-- name: Collecting Info
-  hosts: undercloud:overcloud_nodes:!unused
-  gather_facts: yes
-  any_errors_fatal: true
-  vars:
-      discovery_types:
-          - rhos_release_file
-          - nova
-  tags:
-      - update_collect_info
-  roles:
-      - version-discovery
-
 - name: Undercloud Validation
   hosts: undercloud
   gather_facts: yes
@@ -52,8 +39,9 @@
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
   roles:
       - role: rhos-release
-        release: "{{ (undercloud_version|int) }}"
+        release: "{{ (undercloud_version) }}"
         rr_buildmods: "{{ install.buildmods }}"
+        release: "{{ (hostvars[groups['undercloud']|first].undercloud_version) }}"
         director_build: "{{ install.get('director', {}).build|default(omit) }}"
         build: "{{ install.build|default('latest') }}"
         mirror: "{{ install.mirror | default(omit) }}"
