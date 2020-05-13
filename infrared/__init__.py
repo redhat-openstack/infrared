@@ -17,6 +17,7 @@ def version_details():
         "ansible-{ansible_version}, " \
         "python-{python_version})".format(**locals())
 
+
 __all__ = (
     '__version__',   # string, standard across most modules
     'version_info',  # version tuple, same format as python sys.version_info

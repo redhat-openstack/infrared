@@ -503,6 +503,7 @@ class NestedDict(ComplexType, NestedBase):
     def resolve(self, value):
         return self._resolve(value)
 
+
 IniType = NestedDict
 
 

@@ -38,14 +38,14 @@ DOCUMENTATION = '''
       fail_on_change:
         name: JUnit fail on change
         default: False
-        description: Consider any tasks reporting "changed" as a 
+        description: Consider any tasks reporting "changed" as a
                      junit test failure
         env:
           - name: JUNIT_FAIL_ON_CHANGE
       fail_on_ignore:
         name: JUnit fail on ignore
         default: False
-        description: Consider failed tasks as a junit test failure even if 
+        description: Consider failed tasks as a junit test failure even if
                      ignore_on_error is set
         env:
           - name: JUNIT_FAIL_ON_IGNORE
