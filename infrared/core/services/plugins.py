@@ -610,7 +610,7 @@ class InfraredPluginManager(object):
                 # if path was not found locally attempt to download it
                 http = urllib3.PoolManager()
                 urllib_ret = http.request('GET', plugins_registry)
-                if urllib_ret.status is not 200:
+                if urllib_ret.status != 200:
                     # make sure we received OK status code from url
                     raise IRFailedToImportPlugins(
                         'Got unexpected returned code ({}) from registry '

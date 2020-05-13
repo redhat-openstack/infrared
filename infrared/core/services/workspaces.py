@@ -453,7 +453,7 @@ class WorkspaceManager(object):
             if not os.path.exists(workspace_src):
                 http = urllib3.PoolManager()
                 urllib_ret = http.request('GET', workspace_src)
-                if urllib_ret.status is not 200:
+                if urllib_ret.status != 200:
                     raise exceptions.IRFailedToImportWorkspace(
                         'Got unexpected returned code ({}) from workspace '
                         'URL ({})'.format(urllib_ret.status, workspace_src))

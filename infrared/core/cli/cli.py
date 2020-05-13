@@ -439,7 +439,7 @@ class KeyValueList(ComplexType):
             if match_str is not value:
                 continue
 
-            if style is 'old_style':
+            if style == 'old_style':
                 LOG.warning("This format of KeyValue value is deprecated, "
                             "Please enter values in the following "
                             "format: {}".format(self.new_format))
