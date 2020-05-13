@@ -1,7 +1,7 @@
 {% for host in groups['all'] if host not in (omit_groups_hosts|default([]) + omit_hosts) %}
 {% if hostvars[host].get('ansible_connection', '') == 'local' %}
 
-{{ host }} ansible_connection=local ansible_python_interpreter='{{ ansible_playbook_python }}'
+{{ host }} ansible_connection=local
 {%- else %}
 
 {{ host }} {% if hostvars[host]['original_name'] is defined %}original_name={{ hostvars[host]['original_name'] }}{% endif %} {% if 'ansible_host' in hostvars[host] %}ansible_host={{ hostvars[host]['ansible_host']|default(hostvars[host].ansible_ssh_host) }} {% endif %}ansible_connection={{ hostvars[host].get('ansible_connection', 'ssh') }} ansible_user={{ hostvars[host]['ansible_user']|default(hostvars[host].ansible_user) }}
