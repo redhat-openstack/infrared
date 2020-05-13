@@ -164,6 +164,18 @@ listen nova_osapi
 server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:8774 check fall 5 inter 2000 rise 2
   {% endfor %}
 
+listen ovn_dbs_north
+  bind {{ loadbalancer.network.ovndbs.vip | ipaddr('address') }}:6641
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:6641 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
+listen ovn_dbs_south
+  bind {{ loadbalancer.network.ovndbs.vip | ipaddr('address') }}:6642
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:6642 check fall 5 inter 2000 rise 2
+  {% endfor %}
+
 listen redis
   bind {{ loadbalancer.network.redis.vip | ipaddr('address') }}:6379 transparent
   balance first

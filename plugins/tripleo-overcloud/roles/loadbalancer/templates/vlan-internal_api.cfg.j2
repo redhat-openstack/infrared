@@ -3,9 +3,11 @@ BOOTPROTO=static
 ONBOOT=yes
 IP{{ (install.network.protocol != 'ipv4') | ternary('V6ADDR','ADDR1') }}={{ loadbalancer.network.internal_api.vip | ipaddr('address') }}
 IP{{ (install.network.protocol != 'ipv4') | ternary('V6ADDR_SECONDARIES','ADDR2') }}={{ loadbalancer.network.redis.vip | ipaddr('address') }}
+IP{{ (install.network.protocol != 'ipv4') | ternary('V6ADDR_SECONDARIES','ADDR3') }}={{ loadbalancer.network.ovndbs.vip | ipaddr('address') }}
 {% if install.network.protocol == 'ipv4' %}
 PREFIX1={{ loadbalancer.network.internal_api.vip | ipaddr('prefix') }}
 PREFIX2={{ loadbalancer.network.redis.vip | ipaddr('prefix') }}
+PREFIX3={{ loadbalancer.network.ovndbs.vip | ipaddr('prefix') }}
 {% endif %}
 {% if install.network.protocol != 'ipv4' %}
 IPV6PREFIX={{ loadbalancer.network.internal_api.vip | ipaddr('prefix') }}
