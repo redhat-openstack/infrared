@@ -74,7 +74,9 @@ class CliParser(object):
 
     @classmethod
     def parse_cli_input(cls, arg_parser, args=None):
-        """:param arg_parser: argparse object
+        """Parse CLI input.
+
+        :param arg_parser: argparse object
         :param args: replace sys.argv[1:]
         :return: dict. Parsed CLI input
         """
@@ -688,7 +690,9 @@ class ListFileType(VarFileType):
 
 
 class TopologyFileType(VarFileType):
-    """Looks for a topology file in following locations:
+    """Looks for a topology file.
+
+    Looks for a topology file in following locations:
         * relative path (./path)
         * abs path ($PWD/path)
         * <plugin_root>/vars

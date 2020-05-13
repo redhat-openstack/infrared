@@ -29,13 +29,15 @@ class CoreSettings(object):
                  plugins_conf_file=None,
                  install_plugin_at_start=True,
                  plugins_base_folder=None):
-        """:param workspaces_base_folder: folder where the
-        workspace will be stored
+        """Constructor.
+
+        :param workspaces_base_folder: folder where the
+               workspace will be stored
         :param plugins_conf_file: location of the plugins.ini file with the
-        list of all plugins and types.
+               list of all plugins and types.
         :param install_plugin_at_start: specifies whether all the plugins
-        should be installed on ir start. Skip installation may be required for
-        unit tests, for example.
+               should be installed on ir start. Skip installation may be
+               required for unit tests, for example.
         """
 
         self.infrared_home = os.path.abspath(os.environ.get(

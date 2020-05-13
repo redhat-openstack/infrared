@@ -546,7 +546,8 @@ class WorkspaceManager(object):
 
     def _get_inventory(self, workspace_name=None):
         """Returns Inventory object for the provided workspace.
-           Use active workspace as default
+
+           Uses active workspace as default.
 
            :param workspace_name: workspace name to list nodes from.
         """

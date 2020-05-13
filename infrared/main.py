@@ -9,9 +9,7 @@ import sys
 
 
 def inject_common_paths():
-    """Discover the path to the common/ directory provided
-       by infrared core.
-    """
+    """Discover the path to the common/ directory provided by infrared core."""
     def override_conf_path(common_path, envvar, specific_dir):
         conf_path = os.environ.get(envvar, '')
         additional_conf_path = os.path.join(common_path, specific_dir)

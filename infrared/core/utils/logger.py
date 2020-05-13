@@ -38,7 +38,9 @@ LOG.addHandler(sh)
 
 
 def ir_excepthook(exc_type, exc_value, exc_traceback):
-    """exception hook that sends IRException to log and other exceptions to
+    """Exception hook.
+
+    It sends IRException to log and other exceptions to
     stderr (default excepthook)
     """
 

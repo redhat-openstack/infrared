@@ -6,7 +6,9 @@ except ImportError:
 
 
 def csv_to_dict(string, delimiter=','):
-    r"""Creates a list of dicts from a string in the format:
+    r"""Creates a list of dicts from a string.
+
+    Creates a list of dicts from a string in the format:
                             [
         "a, b, c\n"\            {'a': '1', 'b': '2', 'c': '3'},
         "1, 2, 3\n"\  -->       {'a': '4', 'b': '5', 'c': '6'},

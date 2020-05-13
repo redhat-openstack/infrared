@@ -46,7 +46,9 @@ class SpecParser(object):
 
     def __init__(self, subparser, spec_dict, vars_dir, defaults_dir,
                  plugin_path):
-        """:param subparser: argparse.subparser to extend
+        """Constructor.
+
+        :param subparser: argparse.subparser to extend
         :param spec_dict: dict with CLI description
         :param vars_dir: Path to plugin's vars dir
         :param defaults_dir: Path to plugin's defaults dir

@@ -88,8 +88,7 @@ except ImportError:
 
 
 class CallbackModule(CallbackBase):
-    """
-    This callback writes playbook output to a JUnit formatted XML file.
+    """This callback writes playbook output to a JUnit formatted XML file.
 
     Tasks show up in the report as follows:
         'ok': pass
@@ -163,7 +162,7 @@ class CallbackModule(CallbackBase):
             os.mkdir(self._output_dir)
 
     def _start_task(self, task):
-        """ record the start of a task for one or more hosts """
+        """Record the start of a task for one or more hosts."""
 
         uuid = task._uuid
 
@@ -183,7 +182,7 @@ class CallbackModule(CallbackBase):
         self._task_data[uuid] = TaskData(uuid, name, path, play, action)
 
     def _finish_task(self, status, result):
-        """ record the results of a task for a single host """
+        """Record the results of a task for a single host."""
 
         task_uuid = result._task._uuid
 
@@ -212,7 +211,7 @@ class CallbackModule(CallbackBase):
         task_data.add_host(HostData(host_uuid, host_name, status, result))
 
     def _build_test_case(self, task_data, host_data):
-        """ build a TestCase from the given TaskData and HostData """
+        """Build a TestCase from the given TaskData and HostData."""
 
         name = '[%s] %s: %s' % (host_data.name, task_data.play, task_data.name)
         duration = host_data.finish - task_data.start
@@ -255,14 +254,19 @@ class CallbackModule(CallbackBase):
         return test_case
 
     def _cleanse_string(self, value):
-        """ convert surrogate escapes to the unicode replacement
-            character to avoid XML encoding errors """
+        """Cleanse string.
+
+        Convert surrogate escapes to the unicode replacement
+        character to avoid XML encoding errors.
+        """
         return to_text(to_bytes(value, errors='surrogateescape'),
                        errors='replace')
 
     def _generate_report(self):
-        """ generate a TestSuite report from the collected TaskData
-            and HostData """
+        """Generate a TestSuite report.
+
+        Generate a TestSuite report from the collected TaskData and HostData.
+        """
         test_cases = []
 
         for task_uuid, task_data in self._task_data.items():
@@ -323,9 +327,7 @@ class CallbackModule(CallbackBase):
 
 
 class TaskData:
-    """
-    Data about an individual task.
-    """
+    """Data about an individual task."""
 
     def __init__(self, uuid, name, path, play, action):
         self.uuid = uuid
@@ -351,9 +353,7 @@ class TaskData:
 
 
 class HostData:
-    """
-    Data about an individual host.
-    """
+    """Data about an individual host."""
 
     def __init__(self, uuid, name, status, result):
         self.uuid = uuid

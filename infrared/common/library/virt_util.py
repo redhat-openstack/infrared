@@ -187,7 +187,8 @@ class Util(object):
         return wrap
 
     def _validate_args(self, *args):
-        """Check if arguments, listed in 'args' are passed and have values
+        """Check if arguments, listed in 'args' are passed and have values.
+
            :return: dict {arg_name: arg_value}
         """
         absent = []
@@ -204,7 +205,8 @@ class Util(object):
         return result
 
     def __call__(self, module):
-        """Call module command with arguments
+        """Call module command with arguments.
+
            * From 'module' object determines command.
            * From COMMANDS dict get the function object and required arguments
              names
@@ -296,14 +298,16 @@ class Util(object):
     @command('static_dhcp4', domain={'type': 'str'},
              network={'type': 'str'})
     def static_dhcp_ip4(self, domain='', network=''):
-        """Set static dhcp address for domain in network
+        """Set static dhcp address for domain in network.
+
            * Get network dhcp; determine netmask and ip range (start, end)
            * Determine mac address of domain's interface, connected
              to network
            * Generate ip range list and exclude assignet addresses
            * Assign firsh available address to domain
+
            If address of network for domain is already assigned - return
-           this address
+           this address.
         """
         interfaces = self.get_dom_devices(domain=domain,
                                           device_class='interface')['devices']
@@ -401,11 +405,13 @@ class Util(object):
 
     @command('domains_and_networks', hosts={'type': 'list'})
     def get_domains_and_networks(self, hosts=''):
-        """Get domains and networks for cleanup
+        """Get domains and networks for cleanup.
+
            * Accepts list of inventory hosts (all)
            * Determine which of hosts are defined VMs
            * Determine networks list, this domains are connected
            * Get networks dhcp info: leases and static dhcp
+
            Return: list_vms: list of existing domains names
                    networks: {
                                  name: {

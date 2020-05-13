@@ -22,7 +22,9 @@ DEFAULT_ANSIBLE_SETTINGS = dict(
 class AnsibleConfigManager(object):
 
     def __init__(self, infrared_home):
-        """:param ansible_config: A path to the ansible config
+        """Constructor.
+
+        :param ansible_config: A path to the ansible config
         """
         self.ansible_config_path = self._get_ansible_conf_path(infrared_home)
         config_validator = AnsibleConfigValidator()
@@ -34,11 +36,13 @@ class AnsibleConfigManager(object):
 
     @staticmethod
     def _get_ansible_conf_path(infrared_home):
-        """Check for Ansible config in specific locations and return the first
-           located
+        """Get path to Ansible config.
+
+        Check for Ansible config in specific locations and return the first
+        located.
 
         :param infrared_home: infrared's home directory
-        :return:
+        :return: the first located Ansible config
         """
         locations_list = [
             os.path.join(os.getcwd(), 'ansible.cfg'),
@@ -75,8 +79,6 @@ class AnsibleConfigManager(object):
             config.write(fp)
 
     def inject_config(self):
-        """Export the environment variable for config path,
-        if variable doesn't exist.
-        """
+        """Set the environment variable for config path, if it is undefined."""
         if os.environ.get('ANSIBLE_CONFIG', '') == '':
             os.environ['ANSIBLE_CONFIG'] = self.ansible_config_path

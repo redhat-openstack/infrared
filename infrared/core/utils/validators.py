@@ -42,7 +42,9 @@ class Validator(object):
 
 
 class SpecValidator(Validator):
-    """Class for validating that a plugin spec (YAML) has all required fields
+    """Class for validating a plugin spec.
+
+    It checks that a plugin spec (YAML) has all required fields.
     """
     CONFIG_PART_SCHEMA = {
         "type": "object",
