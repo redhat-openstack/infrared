@@ -431,7 +431,7 @@ class SpecParser(object):
                         splited_args_list[idx] = str(splited_args_list[idx])
                         if (splited_args_list[idx] not in ['and', 'or'] and
                             not any(
-                            (c in '<>=') for c in splited_args_list[idx])):
+                                (c in '<>=') for c in splited_args_list[idx])):
                             splited_args_list[idx] = "'{0}'".format(
                                 yaml.safe_load(splited_args_list[idx]))
                     else:

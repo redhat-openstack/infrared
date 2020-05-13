@@ -284,7 +284,7 @@ class CallbackModule(CallbackBase):
         report = TestSuite.to_xml_string([test_suite])
 
         output_file = os.path.join(self._output_dir, '%s-%s.xml' % (
-        self._playbook_name, time.time()))
+            self._playbook_name, time.time()))
 
         with open(output_file, 'wb') as xml:
             xml.write(to_bytes(report, errors='surrogate_or_strict'))
@@ -348,10 +348,10 @@ class TaskData(object):
             if host.status == 'included':
                 # concatenate task include output from multiple items
                 host.result = '%s\n%s' % (
-                self.host_data[host.uuid].result, host.result)
+                    self.host_data[host.uuid].result, host.result)
             else:
                 raise Exception('%s: %s: %s: duplicate host callback: %s' % (
-                self.path, self.play, self.name, host.name))
+                    self.path, self.play, self.name, host.name))
 
         self.host_data[host.uuid] = host
 

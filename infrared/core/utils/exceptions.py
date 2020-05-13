@@ -48,8 +48,8 @@ class IRRequiredArgsMissingException(IRException):
 
         message = 'Required options are not set:'
         for cmd_name, args in missing_args.items():
-                message += ("\n * [{}]: {}".format(cmd_name, ", ".join(
-                    ["'" + arg + "'" for arg in args])))
+            message += ("\n * [{}]: {}".format(cmd_name, ", ".join(
+                ["'" + arg + "'" for arg in args])))
         super(IRRequiredArgsMissingException, self).__init__(message)
 
 
