@@ -3,7 +3,37 @@
 # GNU General Public License v3.0+
 # (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import os
+import re
+import time
+
+from ansible.module_utils._text import to_bytes
+from ansible.module_utils._text import to_text
+from ansible.plugins.callback import CallbackBase
+
+try:
+    from junit_xml import TestCase
+    from junit_xml import TestSuite
+
+    HAS_JUNIT_XML = True
+except ImportError:
+    HAS_JUNIT_XML = False
+
+try:
+    from collections import OrderedDict
+
+    HAS_ORDERED_DICT = True
+except ImportError:
+    try:
+        from ordereddict import OrderedDict
+
+        HAS_ORDERED_DICT = True
+    except ImportError:
+        HAS_ORDERED_DICT = False
 
 __metaclass__ = type
 
@@ -59,32 +89,6 @@ DOCUMENTATION = '''
       - whitelist in configuration
       - junit_xml (python lib)
 '''
-
-import os
-import time
-import re
-
-from ansible.module_utils._text import to_bytes, to_text
-from ansible.plugins.callback import CallbackBase
-
-try:
-    from junit_xml import TestSuite, TestCase
-
-    HAS_JUNIT_XML = True
-except ImportError:
-    HAS_JUNIT_XML = False
-
-try:
-    from collections import OrderedDict
-
-    HAS_ORDERED_DICT = True
-except ImportError:
-    try:
-        from ordereddict import OrderedDict
-
-        HAS_ORDERED_DICT = True
-    except ImportError:
-        HAS_ORDERED_DICT = False
 
 
 class CallbackModule(CallbackBase):
