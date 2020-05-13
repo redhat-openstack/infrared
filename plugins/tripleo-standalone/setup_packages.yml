@@ -114,6 +114,7 @@
       # services seem to flap after bootup but work fine. We give
       # system 10 minutes to boot up.
       - name: Reboot the undercloud
+        become: true
         reboot:
           reboot_timeout: "{{ install.get('reboot', {}).get('timeout', 600) }}"
           test_command: >-
