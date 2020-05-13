@@ -42,7 +42,6 @@ subparsers:
                   tester-node:
                       type: Value
                       help: The name of the node from where to run the tests
-                      default: 'undercloud-0'
                   image:
                       type: VarFile
                       help: |
