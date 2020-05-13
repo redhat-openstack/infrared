@@ -9,6 +9,7 @@ from __future__ import print_function
 
 import os
 import re
+from six import add_metaclass
 import time
 
 from ansible.module_utils._text import to_bytes
@@ -34,8 +35,6 @@ except ImportError:
         HAS_ORDERED_DICT = True
     except ImportError:
         HAS_ORDERED_DICT = False
-
-__metaclass__ = type
 
 DOCUMENTATION = '''
     callback: junit_report
@@ -330,7 +329,8 @@ class CallbackModule(CallbackBase):
         self._generate_report()
 
 
-class TaskData:
+@add_metaclass(type)
+class TaskData(object):
     """Data about an individual task."""
 
     def __init__(self, uuid, name, path, play, action):
@@ -356,7 +356,8 @@ class TaskData:
         self.host_data[host.uuid] = host
 
 
-class HostData:
+@add_metaclass(type)
+class HostData(object):
     """Data about an individual host."""
 
     def __init__(self, uuid, name, status, result):
