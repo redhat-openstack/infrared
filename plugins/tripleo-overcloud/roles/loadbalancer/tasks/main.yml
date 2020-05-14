@@ -108,17 +108,10 @@
       state: present
 
 - name: reboot the loadbalancer
-  command: "virsh reboot {{ inventory_hostname }}"
-  delegate_to: virthost
-  when: "'virthost' in groups"
-  become: no
-
-- name: reboot the loadbalancer
-  shell: "sleep 2 && shutdown -r now"
-  async: 1
-  poll: 0
-  ignore_errors: true
-  when: "'virthost' not in groups"
+  reboot:
+      reboot_timeout: "{{ install.get('reboot', {}).get('timeout', 600) }}"
+      test_command: >-
+          systemctl is-system-running | grep -e running -e degraded
 
 - name: Waiting for the loadbalancer to be available
   delegate_to: localhost
