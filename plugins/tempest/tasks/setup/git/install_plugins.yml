@@ -30,6 +30,15 @@
       version: "{{ item.value.version | default(omit) }}"
   with_dict: "{{ plugins }}"
 
+- name: Clone tempest plugins
+  environment:
+    GIT_SSL_NO_VERIFY: 0
+  git:
+      repo: "{{ item.value.repo }}"
+      dest: "/tmp/foo/{{ item.key }}"
+      version: "{{ item.value.version[test.openstack.version |default(overcloud_version)]|default(item.value.version.default|default(omit,True)) }}"
+  loop: "{{ plugins|dict2items }}"
+
 - name: Install extra system requirements for tests
   package:
     name: "{{ item.value.dependencies }}"
