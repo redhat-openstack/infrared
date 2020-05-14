@@ -32,11 +32,12 @@
   tasks:
       - include_role:
             name: version-discovery
+            apply:
+                delegate_to: "{{ groups.controller[0] }}"
         vars:
             discovery_types:
                 - rhos_release_file
                 - nova
-        delegate_to: "{{ groups.controller[0] }}"
 
       - debug:
             msg: "Overcloud's OpenStack version that has been auto discovered is {{ overcloud_version }}"
