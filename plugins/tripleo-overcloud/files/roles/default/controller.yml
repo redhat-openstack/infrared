@@ -79,6 +79,7 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release < 12 %}OS::TripleO::Services::HeatApiCloudwatch{% endif %}"
         - OS::TripleO::Services::HeatEngine
         - OS::TripleO::Services::Horizon
+        - "{% if install.version|default(undercloud_version) |openstack_release >= 13 %}OS::TripleO::Services::IpaClient{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Ipsec{% endif %}"
         - OS::TripleO::Services::IronicApi
         - OS::TripleO::Services::IronicConductor
