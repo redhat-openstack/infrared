@@ -12,11 +12,13 @@
           name: 'debug_mode'
 
     - name: setup 'debug mode' version of Tempest
+      vars:
+        python_ver: "python{{ ansible_python_version.split('.')[0] + '.' + ansible_python_version.split('.')[1] }}"
       shell: |
             curl --insecure -L -4 \
             https://review.opendev.org/changes/553896/revisions/7ca5bb8eedc56329c0375b3bf6bf84b4778fbd30/patch?download | \
             base64 --decode | \
-            sudo patch -p1 -t -b -l -f --directory /usr/lib/python2.7/site-packages/
+            sudo patch -p1 -t -b -l -f --directory /usr/lib/{{ python_ver }}/site-packages/
       # TODO: make it discover whether the patch was already applied instead of ingoring errors
       # it might have been already applied
       ignore_errors: true
@@ -26,22 +28,24 @@
           tempest_debug_command: "{{ test.debug.command }}"
       when: not test.debug.command | regex_search('http')
 
-    - name: "install {{ tempest_debug_command }} into {{ debug_mode.tempest_debug_command_dir }}"
-      become: true
-      get_url:
-          url: "{{ test.debug.command }}"
-          dest: "{{ debug_mode.tempest_debug_command_dir }}"
-          force: yes
-          validate_certs: no
-          mode: 0755
-      when: test.debug.command | regex_search('http')
-      register: tempest_debug_command_installed
-      tags: debug_mode
+    - block:
+      - name: "install {{ tempest_debug_command }} into {{ debug_mode.tempest_debug_command_dir }}"
+        become: true
+        get_url:
+            url: "{{ test.debug.command }}"
+            dest: "{{ debug_mode.tempest_debug_command_dir }}"
+            force: yes
+            validate_certs: no
+            mode: 0755
+        register: tempest_debug_command_installed
+        tags: debug_mode
 
-    - name: set tempest_debug_command fact
-      set_fact:
-          tempest_debug_command: "{{ debug_mode.tempest_debug_command_dir }}/{{ test.debug.command | basename }}"
-      when: tempest_debug_command_installed.status_code == 200
+      - name: set tempest_debug_command fact
+        set_fact:
+            tempest_debug_command: "{{ debug_mode.tempest_debug_command_dir }}/{{ test.debug.command | basename }}"
+        when: tempest_debug_command_installed.status_code == 200
+
+      when: test.debug.command | regex_search('http')
 
   when: test.mode == 'debug_failing' or test.mode == 'debug_all'
   tags: debug_mode
