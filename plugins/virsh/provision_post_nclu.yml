@@ -1,0 +1,39 @@
+---
+- name: configure nclu
+  hosts: nclu-0
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+    ansible_network_os: nclu
+  tasks:
+    - name: add switchports
+      nclu:
+        template: |
+            {% for iface in range(1,8) %}
+            add int swp{{iface}}
+            {% endfor %}
+        commit: true
+
+    - name: setup hostname, vlans and undercloud port on nclu
+      nclu:
+        commands:
+          - add hostname nclu-0
+          - add vlan 50
+          - add vlan 1000-1010
+          - add interface swp{{ hostvars['hypervisor']['undercloud_switchport']|int - 3 }} bridge access 1001
+        commit: true
+
+    - name: setup switchports for overcloud controller and compute nodes on nclu
+      nclu:
+        commands:
+          - add interface swp{{ item|int - 3 }} bridge trunk vlans 50,1000-1010
+          - add interface swp{{ item|int - 3 }} bridge pvid 1
+        commit: true
+      with_items: "{{ hostvars['hypervisor']['controller_switchports'].split(' ') + hostvars['hypervisor']['compute_switchports'].split(' ') }}"
+
+    - name: setup default vlan for overcloud ironic nodes
+      nclu:
+        commands:
+          - add interface swp{{ item|int - 3 }} bridge access 1
+        commit: true
+      with_items: "{{ hostvars['hypervisor']['ironic_switchports'].split(' ') }}"

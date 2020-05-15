@@ -1,0 +1,41 @@
+#!/bin/bash
+set -x
+
+# copy ssh key to the instance
+TERM=xterm expect -c "
+spawn bash -c \"ssh-copy-id -o PreferredAuthentications=password -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {{ switch_ssh_key }}.pub cumulus@{{ switch_ip }}\"
+expect {
+  timeout { exit 1 }
+  eof { exit 1 }
+  \"cumulus*password:\"
+}
+send \"CumulusLinux!\r\"
+expect {
+  timeout { exit 1 }
+  \"Number of key(s) added: 1\"
+}
+expect \"Number of key(s) added: 1\"
+"
+
+#TERM=xterm expect -c"
+#  set timeout 300
+#  spawn ssh -i {{ switch_ssh_key }} root@{{ switch_ip }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+#  expect \"root@:RE:0%\"
+#  send \"cli\r\"
+#  expect \"root>\"
+#  send \"config\r\"
+#  expect \"root#\"
+#  send \"deactivate system syslog user *\r\"
+#  expect \"root#\"
+#  send \"set interfaces em1 unit 0 family inet address 169.254.0.2/24\r\"
+#  expect \"root#\"
+#  send \"commit\r\"
+#  expect \"root#\"
+#  send \"exit\r\"
+#  expect \"root>\"
+#  send \"restart chassis-control\r\"
+#  expect \"root>\"
+#  send \"exit\r\"
+#  expect \"root@:RE:0%\"
+#  send \"exit\r\"
+#"
