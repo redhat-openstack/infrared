@@ -1,0 +1,16 @@
+---
+tripleo_heat_templates:
+    - "{{ install.heat.templates.basedir }}/environments/services/neutron-ml2-ansible.yaml"
+
+custom_templates:
+  parameter_defaults:
+    ML2HostConfigs:
+      cumulus:
+        ansible_host: "{{ hostvars['cumulus-0']['ansible_host'] }}"
+        ansible_network_os: cumulus
+        ansible_ssh_pass: CumulusLinux!
+        ansible_user: cumulus
+        manage_vlans: False
+    IronicCleaningNetwork: 'baremetal'
+    IronicProvisioningNetwork: 'baremetal'
+    IronicRescuingNetwork: 'baremetal'
