@@ -34,6 +34,7 @@ telemetry_role:
         - OS::TripleO::Services::GnocchiApi
         - OS::TripleO::Services::GnocchiMetricd
         - OS::TripleO::Services::GnocchiStatsd
+        - "{% if install.version|default(undercloud_version) |openstack_release >= 13 %}OS::TripleO::Services::IpaClient{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Ipsec{% endif %}"
         - OS::TripleO::Services::Kernel
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::LoginDefs{% endif %}"
