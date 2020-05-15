@@ -10,6 +10,21 @@
       vars:
           inventory_file_name: 'hosts-test'
 
+- name: Do version discovery
+  hosts: "{{ groups.controller[0] }}"
+  gather_facts: yes
+  any_errors_fatal: yes
+  tasks:
+      - include_role:
+            name: version-discovery
+        vars:
+            discovery_types:
+                - rhos_release_file
+                - nova
+      - debug:
+            msg: "Overcloud's OpenStack version that has been auto discovered is {{ overcloud_version }}"
+        when: overcloud_version is defined
+
 - name: Run rally tester
   hosts: tester
   gather_facts: yes
@@ -30,18 +45,6 @@
           python_ver: "{{ (overcloud_version|openstack_release >= 15) | ternary('python3', 'python') }}"
       rally: "{{ default_config | combine(config, recursive=True) }}"
   tasks:
-      - include_role:
-            name: version-discovery
-        vars:
-            discovery_types:
-                - rhos_release_file
-                - nova
-        delegate_to: "{{ groups.controller[0] }}"
-
-      - debug:
-            msg: "Overcloud's OpenStack version that has been auto discovered is {{ overcloud_version }}"
-        when: overcloud_version is defined
-
       - name: Prepare rally files
         include_tasks: tasks/pre/main.yml
         tags:
