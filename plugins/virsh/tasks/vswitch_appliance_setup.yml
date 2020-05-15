@@ -56,7 +56,7 @@
 # Get ports from the switch to pass into openstack
 
 - name: get undercloud ports on {{ topology_node.os.type }} from hypervisor
-  shell: echo $(virsh domiflist {{ topology_node.os.type }}-0 | awk "/unde0{{ topology_node.os.type }}0/{ print NR}")
+  shell: echo $(virsh domiflist {{ topology_node.os.type }}-0 | awk "/unde0{{ topology_node.os.type[:4] }}0/{ print NR}")
   register: undercloud_port
 
 - name: save undercloud switchport
