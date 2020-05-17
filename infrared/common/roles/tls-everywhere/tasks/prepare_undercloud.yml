@@ -48,6 +48,17 @@
         --precreate
     register: novajoin
 
+  - name: Prepare undercloud.conf
+    lineinfile:
+        path: ~/undercloud.conf
+        backup: yes
+        state: absent
+        regex: "{{ item }}"
+    loop:
+        - undercloud_hostname
+        - undercloud_nameservers
+        - overcloud_domain_name
+
   - name: Edit undercloud.conf
     blockinfile:
         path: ~/undercloud.conf
