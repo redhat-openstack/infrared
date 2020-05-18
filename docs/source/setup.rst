@@ -120,4 +120,4 @@ Alternatively, just source it to enable completion temporarily::
 When working in virtualenv, might be a good idea to add import of this script to the
 virtualenv activation one::
 
-  echo ". $(pwd)/etc/bash_completion/infrared" >> ${VIRTUAL_ENV}/bin/activate
+  echo ". $(pwd)/etc/bash_completion.d/infrared" >> ${VIRTUAL_ENV}/bin/activate
