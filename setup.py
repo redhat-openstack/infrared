@@ -1,22 +1,9 @@
-import setuptools
+import os
+import subprocess
+import sys
 import warnings
 
-
-def is_redhat():
-    try:
-        from platform import linux_distribution
-    except ImportError as ex:
-        # Since Python 3.8 linux_distribution has been removed
-        try:
-            import distro
-        except ImportError as ex:
-            warnings.warn(str(ex))
-            return False  # this is fine in most of the cases
-        else:
-            return 'rhel' in distro.like().split()
-    else:
-        return 'redhat' in linux_distribution(supported_dists='redhat',
-                                              full_distribution_name=False)
+import setuptools
 
 
 setuptools.setup(
@@ -24,6 +11,28 @@ setuptools.setup(
     pbr=True)
 
 
-if is_redhat():
+def has_selinux():
+    """Checks has system SE Linux bindings
+
+    Import SE Linux bindings from base executable before copying files to
+    ensure can actually use SE Linux
+    """
+
+    prefix = (getattr(sys, 'real_prefix', None) or
+              getattr(sys, 'base_prefix', None) or
+              sys.prefix)
+    command = 'python{major}.{minor}'.format(major=sys.version_info.major,
+                                             minor=sys.version_info.minor)
+    executable = os.path.join(prefix, 'bin', command)
+    try:
+        subprocess.check_call([executable, '-c', 'import selinux'],
+                              universal_newlines=True)
+    except subprocess.CalledProcessError as ex:
+        warnings.warn(str(ex))
+        return False
+    return True
+
+
+if has_selinux():
     from infrared.core.utils.selinux_fix import copy_system_selinux
     copy_system_selinux()
