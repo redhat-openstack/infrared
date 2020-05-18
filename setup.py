@@ -26,4 +26,9 @@ setuptools.setup(
 
 if is_redhat():
     from infrared.core.utils.selinux_fix import copy_system_selinux
-    copy_system_selinux()
+    try:
+        copy_system_selinux()
+    except ImportError as ex:
+        # On RHEL-7 SE Linux only works when using Python 2.7
+        # On RHEL-8 SE Linux only works when using Python 3.6
+        warnings.warn(str(ex))
