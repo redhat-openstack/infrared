@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "4887463c_c363dcf6",
+        "filename": "plugins/tripleo-overcloud/reboot_containerized.yml",
+        "patchSetId": 52
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2020-05-18T11:14:23Z",
+      "side": 1,
+      "message": "this is because of https://bugzilla.redhat.com/show_bug.cgi?id\u003d1764187 / https://bugzilla.redhat.com/show_bug.cgi?id\u003d1642582\n\nand as such has nothing to do with restoring the uc snapshot,\ninstead it is bcs IR uses libguestfs on UC to customize images and that leaves iscsid which then collides with the one in openstack container\n\nas such it\u0027s issue in IR customize-image code - as proven by existence of these bug reports, it then can happen to anyone after rebooting UC for whatever reason, and code here would not fix that, the one responsible for installing/using libguestfs tools can fix it howerer\n(like it should take care of this stop/disable iscsid \u0026\u0026 restart openstack-iscsid after customizing images ... or reversed before customization steps)",
+      "revId": "d776c77354b5faa8e62940b6c6e5df6b840b5c38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4ad66159_4ae8c692",
         "filename": "plugins/tripleo-undercloud/restore_containerized.yml",
         "patchSetId": 52
