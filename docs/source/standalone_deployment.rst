@@ -10,7 +10,7 @@ For the virtual deployment, the ``virsh`` infrared plugin can be used for that::
 
     infrared virsh --topology-nodes standalone:1 \
                    --topology-network 1_net \
-                   --host-address myvirthost.redhat.common
+                   --host-address myvirthost.redhat.common \
                    --host-key ~/.ssh/host-key.pem
 
 
