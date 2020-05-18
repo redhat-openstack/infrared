@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ad66159_4ae8c692",
+        "filename": "plugins/tripleo-undercloud/restore_containerized.yml",
+        "patchSetId": 52
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2020-05-18T11:01:33Z",
+      "side": 1,
+      "message": "i do not think it\u0027s good idea to make big copy of restore.yml just for containerized like this, most of content is same, seems \"just\" -8+22 lines in ~300 lines big file changed so not worth full copy, as also these changes are quite trivial:\n\n- environment: is changed in two places\n  (can be single dict vaiable? also since it\u0027s for libguestfs appliance and most about adding debug/trace - if we really want that always fully enabled, i would guess it can be used even for non-containerized too) \n- conditional selinux-relabel could be used (but hmm, we can really skip selinux relabeling? will it not break things on selinux and cause service/... failures?)\n- python interpreter hardcoded\n  if we need to hardcode here likely it will be problem later in code\n  we have multiple ways of detecting and setting the python interpreter in the actual inventory so that it works even later, if needed should be used after booting the image (similar to virsh provision, oc deploy etc) before doing other steps, and so that it stays recorded in inventory\n- hardcoded values for node name or hw specs - seems forgotted debug values? if it was user-tweakable likely it should stay that way\n- retries 50 (why do we need so many retries? shouldn\u0027t we first maybe wait for system to boot - e.g. ask systemctl or something if needed)",
+      "revId": "d776c77354b5faa8e62940b6c6e5df6b840b5c38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
