@@ -15,7 +15,10 @@ def _discover_version(value):
         except ValueError:
             # osp can in addition have also 15-trunk and such
             # 16.1 return only the major version
-            return int(re.search('[0-9]+', value).group()), "OSP"
+            match = re.search('[0-9]+', value)
+            if match:
+                return int(match.group()), "OSP"
+            raise
     except ValueError:
         return _calc_version_from_release(value), "RDO"
 
