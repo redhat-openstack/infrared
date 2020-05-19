@@ -119,6 +119,12 @@ subparsers:
                           The setup type for tests and for the tempestconf tool.
                           __LISTYAMLS__
                       default: rpm
+                  venv3:
+                    type: Bool
+                    default: False
+                    help: |
+                      Whether to create a venv using python3
+
                   deployer-input-file:
                       type: FileValue
                       help: |
