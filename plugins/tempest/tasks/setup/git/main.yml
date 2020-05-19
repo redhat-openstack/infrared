@@ -61,6 +61,16 @@
 
 - debug: "msg='Build mark: tempest={{ tempest_repo_version.stdout }}'"
 
+# force_py3venv should be passed to the plugin as an extra variable
+# The purpose is to create python3 virtual environment despite of the
+# virtualenv version the exists on the system
+- name: Install Python3
+  become: true
+  package:
+    name: python3
+    state: present
+  when: force_py3venv|default(False)
+
 - name: Create venv with pip, setuptools and pbr
   pip:
       virtualenv: "{{ virtualenvs.tempest }}"
@@ -71,6 +81,11 @@
       - pip
       - setuptools
       - pbr
+  when: not (force_py3venv|default(False))
+
+- name: Create venv with python3
+  command: "python3 -m venv {{ virtualenvs.tempest }}"
+  when: force_py3venv|default(False)
 
 - name: Quickly workaround recent requests bug in 2.12
   pip:
@@ -84,7 +99,9 @@
       name: "stestr"
       version: "2.6.0"
       virtualenv: "{{ virtualenvs.tempest }}"
-  when: test.openstack.version|default(overcloud_version)|openstack_release < 15
+  when:
+    - test.openstack.version|default(overcloud_version)|openstack_release < 15
+    - not (force_py3venv|default(False))
 
 # Make sure os-testr is installed for versions <13 since it was removed
 # from tempest requirements file on tempest master branch
