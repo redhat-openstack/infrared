@@ -1,0 +1,57 @@
+---
+- name: configure veos
+  hosts: veos-0
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+    ansible_network_os: eos
+  tasks:
+      - name: setup lldp, vlans and undercloud port on veos
+        eos_command:
+          commands:
+            - "enable"
+            - "config"
+            - "lldp run"
+            - "vlan 1000"
+            - "name provisioning"
+            - "exit"
+            - "vlan 50"
+            - "name tenant"
+            - "exit"
+            - "vlan 1000-1010"
+            - "name tempest"
+            - "exit"
+            - "interface ethernet {{ hostvars['hypervisor']['undercloud_switchport']|int - 3 }}"
+            - "switchport access vlan 1001"
+            - "exit"
+            - "write memory"
+            - "exit"
+        connection: network_cli
+
+      - name: setup switchports for overcloud controller and compute nodes on veos
+        eos_command:
+          commands:
+            - "enable"
+            - "config"
+            - "interface ethernet {{ item|int - 3 }}"
+            - "switchport mode trunk"
+            - "switchport trunk native vlan 1"
+            - "switchport trunk allowed vlan 50,1000-1010"
+            - "exit"
+            - "write memory"
+            - "exit"
+        with_items: "{{ hostvars['hypervisor']['controller_switchports'].split(' ') + hostvars['hypervisor']['compute_switchports'].split(' ') }}"
+        connection: network_cli
+
+      - name: setup default vlan for overcloud ironic nodes
+        eos_command:
+          commands:
+            - "enable"
+            - "config"
+            - "interface ethernet {{ item|int - 3 }}"
+            - "switchport access vlan 1"
+            - "exit"
+            - "write memory"
+            - "exit"
+        with_items: "{{ hostvars['hypervisor']['ironic_switchports'].split(' ') }}"
+        connection: network_cli

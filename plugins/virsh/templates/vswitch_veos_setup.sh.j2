@@ -1,0 +1,40 @@
+#!/bin/bash
+set -x
+
+sshpubkey=$(<{{ switch_ssh_key }}.pub)
+
+
+# copy ssh key to the instance
+TERM=xterm expect -c "
+spawn bash -c \"ssh -o PubKeyAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no admin@{{ switch_ip }}\"
+expect {
+  timeout { exit 1 }
+  eof { exit 1 }
+  \"Password:\"
+}
+send \"Arista\r\"
+expect {
+  timeout { exit 1 }
+  \"localhost>\"
+}
+send \"enable\r\"
+expect {
+  timeout { exit 1 }
+  \"localhost#\"
+}
+send \"configure\r\"
+expect {
+  timeout { exit 1 }
+  \"localhost(config)#\"
+}
+send \"username admin sshkey $sshpubkey\r\"
+expect {
+  timeout { exit 1 }
+  \"localhost(config)#\"
+}
+send \"write memory\r\"
+expect {
+  timeout { exit 1 }
+  \"Copy completed successfully.\"
+}
+"
