@@ -61,6 +61,13 @@
 
 - debug: "msg='Build mark: tempest={{ tempest_repo_version.stdout }}'"
 
+- name: Install Python3
+  become: true
+  package:
+    name: python3
+    state: present
+  when: venv3|default(False)
+
 - name: Create venv with pip, setuptools and pbr
   pip:
       virtualenv: "{{ virtualenvs.tempest }}"
@@ -71,6 +78,11 @@
       - pip
       - setuptools
       - pbr
+  when: not (venv3|default(False))
+
+- name: Create venv with python3
+  command: "python3 -m venv {{ virtualenvs.tempest }}"
+  when: venv3|default(False)
 
 - name: Quickly workaround recent requests bug in 2.12
   pip:
@@ -84,7 +96,9 @@
       name: "stestr"
       version: "2.6.0"
       virtualenv: "{{ virtualenvs.tempest }}"
-  when: test.openstack.version|default(overcloud_version)|openstack_release < 15
+  when:
+    - test.openstack.version|default(overcloud_version)|openstack_release < 15
+    - not (venv3|default(False))
 
 # Make sure os-testr is installed for versions <13 since it was removed
 # from tempest requirements file on tempest master branch
