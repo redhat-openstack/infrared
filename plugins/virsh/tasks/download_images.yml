@@ -1,6 +1,14 @@
 - set_fact:
     topology_node: "{{ node.value }}"
 
+- name: ensure directory for images exists
+  file:
+    path: "{{ base_image_path }}/"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
 - name: download base image for node
   vars:
       source: "{{ item.value.import_url|default('') or topology_node.import_url|default('') or url }}"
