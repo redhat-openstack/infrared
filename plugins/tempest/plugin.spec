@@ -119,6 +119,7 @@ subparsers:
                           The setup type for tests and for the tempestconf tool.
                           __LISTYAMLS__
                       default: rpm
+
                   deployer-input-file:
                       type: FileValue
                       help: |
