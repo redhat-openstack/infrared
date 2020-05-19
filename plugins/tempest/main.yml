@@ -79,6 +79,9 @@
           - (test.openstack.version | float > 14.0)
           - test.setup == 'git'
 
+      - pause:
+          minutes: 10
+
       - name: Run tempest test suites
         include_tasks: "tasks/run_suite.yml"
         with_items: "{{ test.tests }}"
