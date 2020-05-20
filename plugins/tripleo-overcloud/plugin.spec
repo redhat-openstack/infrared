@@ -305,8 +305,8 @@ subparsers:
                       type: ListOfVarFiles
                       help: |
                             Add extra environment template files to "overcloud deploy" command
-                            File (in YAML format) containing a list of paths to template files on the UnderCloud.
-                            NOTE: Omit this to not include any extra files, or use "none"
+                            The templates will be taken from the plugin templates directory or THT path
+                            which is based on heat-templates-basedir option.
                             __LISTYAMLS__
 
                   config-heat:
