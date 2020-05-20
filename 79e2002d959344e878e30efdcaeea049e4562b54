@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73a5c58b_d7ac6ae3",
+        "filename": "infrared/common/roles/tls-everywhere/tasks/prepare_undercloud.yml",
+        "patchSetId": 11
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1006298
+      },
+      "writtenOn": "2020-05-20T09:39:39Z",
+      "side": 1,
+      "message": "So my osp16 without novajoin is still running, but my osp13 with the default (i.e. using novajoin) is erroring out with:\nTASK [tls-everywhere : run undercloud ipa installer] ***************************\n^[[0;31mfatal: [undercloud-0 -\u003e 172.16.0.59]: FAILED! \u003d\u003e {\"changed\": true, \"cmd\": [\"ansible-playbook\", \"--ssh-extra-args\", \"-o StrictHostKeyChecking\u003dno -o UserKnownHostsFile\u003d/dev/null\", \"/usr/share/ansible/tripleo-playbooks/undercloud-ipa-install.yaml\"], \"delta\": \"0:00:00.280222\", \"end\": \"2020-05-20 04:58:45.813682\", \"msg\": \"non-zero return code\", \"rc\": 1, \"start\": \"2020-05-20 04:58:45.533460\", \"stderr\": \"ERROR! the playbook: /usr/share/ansible/tripleo-playbooks/undercloud-ipa-install.yaml could not be found\", \"stderr_lines\": [\"ERROR! the playbook: /usr/share/ansible/tripleo-playbooks/undercloud-ipa-install.yaml could not be found\"], \"stdout\": \"\", \"stdout_lines\": []}^[[0m\n\nI *think* the reason is that you want:\nwhen: not (freeipa_enable_novajoin|bool)",
+      "range": {
+        "startLine": 97,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 2
+      },
+      "revId": "79e2002d959344e878e30efdcaeea049e4562b54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
