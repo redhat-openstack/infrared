@@ -224,7 +224,7 @@
 - block:
   - name: Set NeutronTypeDrivers to {{ install.network.backend }} in neutron-ovn{{ net_dvr }}-ha env file
     yedit:
-      src: "{{ install.heat.templates.basedir }}/environments/services/neutron-ovn{{ net_dvr }}-ha.yaml"
+      src: "{{ install.heat.templates.basedir }}/environments/{{ services }}/neutron-ovn{{ net_dvr }}-ha.yaml"
       update: True
       key: parameter_defaults
       value:
@@ -234,7 +234,7 @@
 
   - name: Set NeutronNetworkType to {{ install.network.backend }} in neutron-ovn{{ net_dvr }}-ha env file
     yedit:
-      src: "{{ install.heat.templates.basedir }}/environments/services/neutron-ovn{{ net_dvr }}-ha.yaml"
+      src: "{{ install.heat.templates.basedir }}/environments/{{ services }}/neutron-ovn{{ net_dvr }}-ha.yaml"
       update: True
       key: parameter_defaults
       value:
@@ -242,6 +242,7 @@
           "{{ install.network.backend }},flat"
   vars:
     net_dvr: "{{ (install.network.dvr | bool) | ternary('-dvr', '') }}"
+    services: "{{ (install.version|openstack_release > 13) | ternary('services', 'services-docker') }}"
   become: yes
   when:
     - install.network.ovn
