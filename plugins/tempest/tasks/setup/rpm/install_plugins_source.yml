@@ -57,6 +57,16 @@
           path: "{{ plugins_dir }}/{{ plugin_dict.key }}/test-requirements.txt"
       register: plugins_reqs
 
+    - lineinfile:
+        path: /home/stack/plugins/whitebox_plugin/test-requirements.txt
+        line: setuptools>=17.1
+        insertbefore: BOF
+        state: present
+        owner: stack
+        group: stack
+        mode: '0664'
+      when: plugins_reqs.stat.exists
+
     - name: Get repo requirements
       become: yes
       environment:
