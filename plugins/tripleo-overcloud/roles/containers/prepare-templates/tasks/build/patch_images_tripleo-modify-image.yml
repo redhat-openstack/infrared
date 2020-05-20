@@ -38,15 +38,9 @@
   loop_control:
       loop_var: repo_config
 
-- name: make copy of containers-prepare-parameter.yaml
-  copy:
-      src: "{{ containers_home_dir }}/containers-prepare-parameter.yaml"
-      dest: "{{ containers_home_dir }}/containers-prepare-parameter-copy.yaml"
-      remote_src: yes
-
-- name: Configure containers-prepare-parameter-copy.yaml for image modification
+- name: Configure containers-prepare-parameter.yaml for image modification
   blockinfile:
-      path: "{{ containers_home_dir }}/containers-prepare-parameter-copy.yaml"
+      path: "{{ containers_home_dir }}/containers-prepare-parameter.yaml"
       block: |2
             push_destination: {{ docker_registry_undercloud }}
             modify_role: tripleo-modify-image
@@ -64,5 +58,5 @@
       sudo \
       {% endif %}
       openstack tripleo container image prepare \
-        -e {{ containers_home_dir }}/containers-prepare-parameter-copy.yaml \
+        -e {{ containers_home_dir }}/containers-prepare-parameter.yaml \
         --output-env-file {{ template_base }}/docker-images.yaml
