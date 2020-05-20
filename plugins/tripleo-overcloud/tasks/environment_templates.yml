@@ -18,16 +18,37 @@
       insertafter: '^\s*--templates.*'
   with_items: "{{ default_templates.results }}"
   when: item.matched > 0
+  register: include_templates_res
+
+# Only if previous task didn't find any templates
+- name: find the template(s) in THT dir
+  find:
+      path: "{{ install.heat.templates.basedir }}"
+      pattern: "{{ templates_list_file }}\\.(?:yaml|j2\\.yaml)$"
+      use_regex: yes
+  when: include_templates_res.skipped
+  register: uc_templates
+
+- name: include templates from THT dir
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '  --environment-file {{ item.item }} \'
+      insertafter: '^\s*--templates.*'
+  with_items: "{{ uc_templates.results | default([]) }}"
+  when: item.matched > 0
 
 - name: fail because file not found
   vars:
       missing_templates: "{{ default_templates.results|rejectattr('matched')|map(attribute='item')|list }}"
+      uc_missing_templates: "{{ uc_templates.results|rejectattr('matched')|map(attribute='item')|list }}"
   fail:
       msg:
           error: "Unable to locate templates from file '{{ templates_list_file }}'"
           source_file: "{{ templates_list_file }}"
           missing_templates: "{{ missing_templates }}"
-  when: missing_templates | default([])
+  when:
+    - missing_templates | default([])
+    - uc_missing_templates | default([])
 
 - name: create custom templates file
   copy:
