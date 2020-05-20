@@ -1,0 +1,111 @@
+- name: Get list of patched packages
+  any_errors_fatal: true
+  gather_facts: false
+  hosts: undercloud
+  vars:
+    patched_rpms_dir: "/patched_rpms/"
+  tasks:
+    - name: Check {{ patched_rpms_dir }} directory exists
+      stat:
+        path: "{{ patched_rpms_dir }}"
+      register: patched_rpms_dir_stat
+    - set_fact:
+        patched_rpms_dir_stat: "{{ patched_rpms_dir_stat.stat }}"
+
+    - when:
+        - patched_rpms_dir_stat.exists
+        - patched_rpms_dir_stat.isdir
+      block:
+        - name: Obtain the packages names from RPMs
+          command:
+            cmd: rpm --query --queryformat '%{NAME}\n' --package "{{ patched_rpms_dir }}/*.rpm"
+            warn: no
+          register: patched_packages_names
+        - set_fact:
+            patched_packages_names: "{{ patched_packages_names.stdout_lines | join(' ') }}"
+            # Example content in `patchet_packages_names`:
+            # openstack-neutron openstack-neutron-common openstack-neutron-linuxbridge
+
+        - name: Obtain the detailed packages list from RPMs
+          command:
+            cmd: rpm --query --package "{{ patched_rpms_dir }}/*.rpm"
+            warn: no
+          register: patched_packages_details
+        - set_fact:
+            patched_packages_details: "{{ patched_packages_details.stdout }}"
+            # Example content in `patched_packages_details`:
+            # openstack-neutron-15.0.3-0.20200418020111.476bb78.el8ost.noarch
+            # openstack-neutron-common-15.0.3-0.20200418020111.476bb78.el8ost.noarch
+            # openstack-neutron-linuxbridge-15.0.3-0.20200418020111.476bb78.el8ost.noarch
+
+
+- name: Verify patched packages in containers
+  any_errors_fatal: true
+  gather_facts: false
+  hosts: overcloud_nodes
+  vars:
+    container_runtime: "podman"
+    patched_packages_names: "{{ hostvars[ groups.undercloud | first ].patched_packages_names }}"
+    patched_packages_details: "{{ hostvars[ groups.undercloud | first ].patched_packages_details }}"
+    patched_rpms_dir_stat: "{{ hostvars[ groups.undercloud | first ].patched_rpms_dir_stat }}"
+  tasks:
+    - when:
+        - patched_rpms_dir_stat.exists
+        - patched_rpms_dir_stat.isdir
+        - patched_packages_names | length > 0
+      block:
+        - name: Discover the running containers
+          become: true
+          command: |
+            {{ container_runtime }} ps --filter 'status=running' \
+                                       --format {%raw%}"{{.ID}}"{%endraw%}
+          register: discovered_containers
+        - set_fact:
+            discovered_containers: "{{ discovered_containers.stdout_lines | join(' ') }}"
+            # Example content in `discovered_containers`:
+            # ca0b0159d505 965386b64cf3 a096ed3978c1 ba677b9e34f0
+
+        - name: Examine the running containers
+          become: true
+          shell: |
+            STATUS=0
+            for CONTAINER_ID in {{ discovered_containers }}; do
+                #
+                # The content of PACKAGES would be analogous
+                # to the `patched_packages_details` -- we query
+                # the container for the packages that have
+                # matching names from `patched_packages_names`,
+                # ignoring non-installed entries (`grep -v`)
+                # and non-zero exit from command (`true`).
+                #
+                PACKAGES=$( {{ container_runtime }} exec "${CONTAINER_ID}" \
+                                rpm --query {{ patched_packages_names }} 2>/dev/null \
+                                | grep -v 'is not installed' \
+                                || true )
+                if [ -n "${PACKAGES}" ]; then
+                    #
+                    # If there is anything on the right side of the diff,
+                    # it means that some of `patched_packages_names` were
+                    # not installed in the proper version in the container.
+                    #
+                    if ( diff <(echo "{{ patched_packages_details }}") <(echo "${PACKAGES}") \
+                              | grep '^>' >/dev/null 2>&1 ); then
+                        #
+                        # Print information useful for debugging
+                        # and set non-zero exit status (error).
+                        #
+                        # Note(sdatko): the {{ '' }} is a workaround
+                        #               for a missing newline character
+                        #               after the Jinja conditional.
+                        #
+                        echo -n 'Found not patched packages in container: '
+                        {{ container_runtime }} ps --filter "id=${CONTAINER_ID}" \
+                                                   --format {% raw %}"{{.ID}} {{.Names}}"{% endraw %}{{ '' }}
+                        diff <(echo "{{ patched_packages_details }}") <(echo "${PACKAGES}") | grep '^>'
+                        STATUS=1
+                    fi
+                fi
+            done
+            exit ${STATUS}
+          args:
+            executable: /bin/bash
