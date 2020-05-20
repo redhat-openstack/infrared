@@ -18,6 +18,8 @@
           compute_dvr: ComputeDVR
           aio: Standalone
           computehci: ComputeHCI
+          computehci_distributed: DistributedComputeHCI
+          computehci_distributed_scaleout: DistributedComputeHCIScaleOut
       tht_mapping:
           - regexp: ^(Controller).*
             net_config_file: "controller{{ ipv6_postfix }}.yaml"
@@ -46,6 +48,12 @@
           - regexp: ^(HciCephAll).*
             net_config_file: "osdcompute.yaml"
             node_name: hcicephall
+          - regexp: ^(DistributedComputeHCIScaleOut).*
+            net_config_file: "osdcompute.yaml"
+            node_name: computehci_distributed_scaleout
+          - regexp: ^(DistributedComputeHCI).*
+            net_config_file: "osdcompute.yaml"
+            node_name: computehci_distributed
           - regexp: ^(ComputeHCI).*
             net_config_file: "osdcompute.yaml"
             node_name: computehci
