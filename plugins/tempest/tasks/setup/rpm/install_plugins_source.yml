@@ -58,6 +58,18 @@
           path: "{{ plugins_dir }}/{{ plugin_dict.key }}/requirements.txt"
       register: plugins_reqs
 
+    - lineinfile:
+        path: /home/stack/plugins/whitebox_plugin/requirements.txt
+        line: "{{ item }}"
+        state: absent
+        owner: stack
+        group: stack
+        mode: '0664'
+      with_items:
+        - 'oslo.log'
+        - 'tempest'
+      when: plugins_reqs.stat.exists
+
     - name: Get repo requirements
       become: yes
       environment:
