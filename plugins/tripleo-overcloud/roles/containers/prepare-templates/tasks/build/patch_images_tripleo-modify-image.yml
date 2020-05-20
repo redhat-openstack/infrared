@@ -54,7 +54,8 @@
             modify_vars:
               tasks_from: yum_update.yml
               yum_repos_dir_path: /etc/yum.repos.d
-              update_repo: "{{ install.update_repo|default('patched-rpms') }}"
+              rpms_path: /patched_rpms
+              modify_dir_path: "{{ container_images_patch_dir }}"
             excludes: [ceph, node-exporter, prom, alertmanager, grafana]
 
 - name: Run images modification
