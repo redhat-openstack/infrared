@@ -191,21 +191,27 @@
         regexp: "{{ _manifest_content.hypervisor_fqdn | regex_escape() }}"
         replace: "{{ hostvars.hypervisor.ansible_fqdn }}"
 
-    # We do not have the imported workspace available while this play is running
-    # so we opt to interact with the machine via the guest agent instead. This
-    # effectively validates that the machine is up, the guest agent service is
-    # running and the network stack has started.
-    - name: Wait until all started VM guest agents are reachable
-      command: >-
-        virsh domifaddr --domain {{ item.name }} --source agent
+    - name: Wait until the VM has an address
+      shell: |-
+        virsh_addr_raw=$(virsh domifaddr --domain {{ item.name }} --source arp | awk '$1 !~ /^Name|^-|^$/ {print $4}')
+        echo ${virsh_addr_raw%/*}
+      args:
+        executable: /bin/bash
+      register: _wait_start
+      delay: 60
+      retries: 30
+      until:
+        - _wait_start.stdout is defined
+        - _wait_start.stdout != ''
       loop: "{{ _manifest_content.servers | selectattr('state', 'equalto', 'running') | list }}"
       loop_control:
         label: "{{ item.name }}"
-      register: _wait_start
-      delay: 30
-      retries: 20
-      until: _wait_start.rc == 0
 
-    - name: Wait 5 minutes to ensure all VM services have completed startup
-      pause:
-        minutes: 5
+    - name: Wait until the VM SSH service is up
+      wait_for:
+        port: 22
+        host: "{{ item.stdout_lines | first }}"
+        search_regex: OpenSSH
+      loop: "{{ _wait_start.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
