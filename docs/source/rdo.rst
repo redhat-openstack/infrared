@@ -100,6 +100,6 @@ Known issues
           --overcloud-templates disable-telemetry
 
       infrared cloud-config -vv \
-      -o cloud-config.yml \
-      --deployment-files virt \
-      --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input
+          -o cloud-config.yml \
+          --deployment-files virt \
+          --tasks create_external_network,forward_overcloud_dashboard,network_time,tempest_deployer_input
