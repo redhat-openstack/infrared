@@ -1,0 +1,73 @@
+---
+- name: Get list of patched packages
+  gather_facts: false
+  hosts: undercloud
+  tasks:
+    - name: Check /patched_rpms/ directory exists
+      stat:
+        path: /patched_rpms/
+      register: patched_rpms_dir
+
+    - when: patched_rpms_dir.stat.isdir is defined and patched_rpms_dir.stat.isdir
+      block:
+        - name: Obtain the packages names from RPMs
+          command:
+            cmd: rpm --query --queryformat '%{NAME}\n' --package /patched_rpms/*.rpm
+            warn: no
+          register: patched_packages
+        - set_fact:
+            patched_packages: "{{ patched_packages.stdout_lines|join(' ') }}"
+
+        - name: Obtain the packages details from RPMs
+          command:
+            cmd: rpm --query --package /patched_rpms/*.rpm
+            warn: no
+          register: patched_list
+        - set_fact:
+            patched_list: "{{ patched_list.stdout }}"
+
+
+- name: Verify patched packages in containers
+  gather_facts: false
+  hosts: overcloud_nodes
+  vars:
+    patched_rpms_dir: "{{ hostvars[groups.undercloud|first].patched_rpms_dir }}"
+    patched_packages: "{{ hostvars[groups.undercloud|first].patched_packages }}"
+    patched_list: "{{ hostvars[groups.undercloud|first].patched_list }}"
+  tasks:
+    - when:
+        - patched_rpms_dir.stat.isdir is defined and patched_rpms_dir.stat.isdir
+        - patched_packages|length > 0
+      block:
+        - name: Discover the running containers
+          become: True
+          command: |
+            podman ps --filter 'status=running' --format {%raw%}"{{.ID}}"{%endraw%}
+          register: containers
+        - set_fact:
+            containers: "{{ containers.stdout_lines|join(' ') }}"
+
+        - name: Examine the running containers
+          become: True
+          shell: |
+            status=0
+            for containerID in {{ containers }}; do
+                packages=$( podman exec "${containerID}" \
+                                rpm --query {{ patched_packages }} 2>/dev/null \
+                                | grep -v 'is not installed' \
+                                || true )
+                if [ -n "${packages}" ]; then
+                    if ( diff <(echo "{{ patched_list }}") <(echo "${packages}") \
+                              | grep '^>' >/dev/null 2>&1 ); then
+                        echo -n 'Found not patched packages in container: '
+                        podman ps --format {%raw%}"{{.ID}} {{.Names}}"{%endraw%} \
+                                  --filter "id=${containerID}"
+                        diff <(echo "{{ patched_list }}") <(echo "${packages}") | grep '^>'
+                        status=1
+                    fi
+                fi
+            done
+            exit ${status}
+          args:
+            executable: /bin/bash
+

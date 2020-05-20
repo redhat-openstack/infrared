@@ -19,6 +19,11 @@
       - not install.upgrade|default('')
       - not install.ocupdate|default(False)
 
+- name: Verify modified containers images are used
+  import_playbook: "{{ verify_containers | default('verify-containers.yml') }}"
+  when:
+      - install.version|default(undercloud_version)|openstack_release >= 15
+
 - name: Overcloud Upgrade
   import_playbook: "{{ overcloud_upgrade | default('upgrade.yml') }}"
   when:
