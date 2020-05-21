@@ -1,5 +1,9 @@
 ---
 - block:
+  - name: Include VIPs configuration vars
+    include_vars:
+      file: "vars/public-vips-{{ (freeipa_network_protocol == 'ipv4') | ternary('ipv4','ipv6') }}.yml"
+
   - name: Install deltarpm
     become: yes
     package:
@@ -104,15 +108,15 @@
     become: yes
     shell: |
         echo {{ freeipa_admin_password }}|kinit admin
-        ipa dnsrecord-add {{ freeipa_cloud_domain }} overcloud --a-rec 10.0.0.101
+        ipa dnsrecord-add {{ freeipa_cloud_domain }} overcloud {{ (tls_everywhere.network.public_vip|ipv6)|default(False)|ternary('--aaaa-rec','--a-rec') }} {{ tls_everywhere.network.public_vip }}
         ipa dnszone-add ctlplane.{{ freeipa_cloud_domain }}
-        ipa dnsrecord-add ctlplane.{{ freeipa_cloud_domain }} overcloud --a-rec 192.168.24.101
+        ipa dnsrecord-add ctlplane.{{ freeipa_cloud_domain }} overcloud {{ (tls_everywhere.network.control_vip|ipv6)|default(False)|ternary('--aaaa-rec','--a-rec') }} {{ tls_everywhere.network.control_vip }}
         ipa dnszone-add internalapi.{{ freeipa_cloud_domain }}
-        ipa dnsrecord-add internalapi.{{ freeipa_cloud_domain }} overcloud --a-rec 172.17.1.101
+        ipa dnsrecord-add internalapi.{{ freeipa_cloud_domain }} overcloud {{ (tls_everywhere.network.internalapi_vip|ipv6)|default(False)|ternary('--aaaa-rec','--a-rec') }} {{ tls_everywhere.network.internalapi_vip }}
         ipa dnszone-add storage.{{ freeipa_cloud_domain }}
-        ipa dnsrecord-add storage.{{ freeipa_cloud_domain }} overcloud --a-rec 172.17.3.101
+        ipa dnsrecord-add storage.{{ freeipa_cloud_domain }} overcloud {{ (tls_everywhere.network.storage_vip|ipv6)|default(False)|ternary('--aaaa-rec','--a-rec') }} {{ tls_everywhere.network.storage_vip }}
         ipa dnszone-add storagemgmt.{{ freeipa_cloud_domain }}
-        ipa dnsrecord-add storagemgmt.{{ freeipa_cloud_domain }} overcloud --a-rec 172.17.4.101
+        ipa dnsrecord-add storagemgmt.{{ freeipa_cloud_domain }} overcloud {{ (tls_everywhere.network.storagemgmt_vip|ipv6)|default(False)|ternary('--aaaa-rec','--a-rec') }} {{ tls_everywhere.network.storagemgmt_vip }}
     register: overcloud_dns_entries
 
   - name: Configure FreeIPA DNS Forwarder from hypervisor
