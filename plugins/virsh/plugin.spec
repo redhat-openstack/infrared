@@ -269,7 +269,8 @@ subparsers:
                   virsh-snapshot-container:
                       type: Value
                       help: |
-                          The container to be used for the snapshot upload/download process.
+                          The object storage container to be used for the snapshot upload/download
+                          process.
                       required_when: >-
                         virsh-snapshot-upload == yes or
                         virsh-snapshot-download == yes
@@ -293,5 +294,13 @@ subparsers:
                           For this to work the following environment variables must be set:
                           OS_CLOUD, OS_STORAGE_URL. The value for OS_CLOUD must correspond with
                           an entry in the OpenStack client clouds.yaml file.
+                      default: False
+                  virsh-snapshot-cleanup:
+                      type: Bool
+                      help: |
+                          This is a flag to specify that the snapshot process should always remove
+                          the path specified by ``--virsh-snapshot-path`` once it has completed
+                          using the data. This is useful in a Continuous Integration (CI) environment
+                          to ensure that the large amounts of data are not left behind on the host.
                       default: False
 

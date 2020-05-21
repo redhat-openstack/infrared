@@ -81,21 +81,55 @@
     - name: Read the exported manifest file
       slurp:
         path: "{{ provision.virsh.snapshot.path }}/manifest.json"
-      register: _manifest_file
+      register: _virsh_snapshot_manifest_file
 
     - name: Register manifest content as a fact
       set_fact:
-        _manifest_content: "{{ _manifest_file.content | b64decode | from_json }}"
+        _virsh_snapshot_manifest_content: "{{ _virsh_snapshot_manifest_file.content | b64decode | from_json }}"
 
-    - name: Import the disk images
-      copy:
-        src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
-        dest: "{{ _virt_pools.pools.images.path }}/"
-        checksum: "{{ item.checksum }}"
-        remote_src: yes
-      loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
-      loop_control:
-        label: "{{ item.path | basename }}"
+    - name: Import the downloaded content
+      block:
+        - name: Import the disk images
+          copy:
+            src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
+            dest: "{{ _virt_pools.pools.images.path }}/"
+            checksum: "{{ item.checksum }}"
+            remote_src: yes
+          loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
+          loop_control:
+            label: "{{ item.path | basename }}"
+
+        - name: Import the VM configuration
+          copy:
+            src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
+            dest: "/etc/libvirt/qemu/"
+            checksum: "{{ item.checksum }}"
+            remote_src: yes
+          loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
+          loop_control:
+            label: "{{ item.path | basename }}"
+
+        - name: Fetch the infrared workspace
+          fetch:
+            src: "{{ provision.virsh.snapshot.path }}/infrared-workspace.tgz"
+            dest: "{{ src_workspace }}/"
+            flat: yes
+
+        - name: Import the infrared workspace
+          shell: |-
+            IR_ACTIVE_WORKSPACE=$({{ ir_cmd }} workspace list --active)
+            IR_NEW_WORKSPACE="workspace_$(date +%Y-%m-%d_%H-%M-%S)"
+            {{ ir_cmd }} workspace import {{ src_workspace }}/infrared-workspace.tgz --name ${IR_NEW_WORKSPACE}
+          delegate_to: localhost
+          args:
+            executable: /bin/bash
+      always:
+        - name: Remove the snapshot path (CI environments)
+          file:
+            path: "{{ provision.virsh.snapshot.path }}"
+            state: absent
+          when:
+            - provision.virsh.snapshot.cleanup | bool
 
     - name: Inspect the disk1 images to identify whether an operating system is present
       command: >-
@@ -104,7 +138,7 @@
       register: _virt_inspector
       changed_when: false
       failed_when: false
-      loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*-disk1\\.qcow2$') | list }}"
+      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*-disk1\\.qcow2$') | list }}"
       loop_control:
         label: "{{ item.path | basename }}"
 
@@ -125,23 +159,13 @@
       vars:
         vm_provision_user: "{{ (item.item.path | basename is match('undercloud-.*')) | ternary('stack', 'heat-admin') }}"
 
-    - name: Import the VM configuration
-      copy:
-        src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
-        dest: "/etc/libvirt/qemu/"
-        checksum: "{{ item.checksum }}"
-        remote_src: yes
-      loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
-      loop_control:
-        label: "{{ item.path | basename }}"
-
     - name: Change machine type to work on the current hypervisor
       xml:
         path: "/etc/libvirt/qemu/{{ item.path | basename }}"
         xpath: "/domain/os/type"
         attribute: "machine"
         value: "pc"
-      loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
+      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
       loop_control:
         label: "{{ item.path | basename }}"
 
@@ -151,7 +175,7 @@
     - name: Define the VM's
       command: >-
         virsh define /etc/libvirt/qemu/{{ item.path | basename }}
-      loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
+      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
       loop_control:
         label: "{{ item.path | basename }}"
 
@@ -160,24 +184,9 @@
         name: "{{ item.name }}"
         command: start
         state: running
-      loop: "{{ _manifest_content.servers | selectattr('state', 'equalto', 'running') | list }}"
+      loop: "{{ _virsh_snapshot_manifest_content.servers | selectattr('state', 'equalto', 'running') | list }}"
       loop_control:
         label: "{{ item.name }}"
-
-    - name: Fetch the infrared workspace
-      fetch:
-        src: "{{ provision.virsh.snapshot.path }}/infrared-workspace.tgz"
-        dest: "{{ src_workspace }}/"
-        flat: yes
-
-    - name: Import the infrared workspace
-      shell: |-
-        IR_ACTIVE_WORKSPACE=$({{ ir_cmd }} workspace list --active)
-        IR_NEW_WORKSPACE="workspace_$(date +%Y-%m-%d_%H-%M-%S)"
-        {{ ir_cmd }} workspace import {{ src_workspace }}/infrared-workspace.tgz --name ${IR_NEW_WORKSPACE}
-      delegate_to: localhost
-      args:
-        executable: /bin/bash
 
     - name: Add the imported ssh key to the hypervisor
       authorized_key:
@@ -188,7 +197,7 @@
     - name: Adjust the imported workspace inventory for the new hypervisor
       replace:
         path: "{{ ir_home }}/.workspaces/active/hosts"
-        regexp: "{{ _manifest_content.hypervisor_fqdn | regex_escape() }}"
+        regexp: "{{ _virsh_snapshot_manifest_content.hypervisor_fqdn | regex_escape() }}"
         replace: "{{ hostvars.hypervisor.ansible_fqdn }}"
 
     - name: Wait until the VM has an address
@@ -203,7 +212,7 @@
       until:
         - _wait_start.stdout is defined
         - _wait_start.stdout != ''
-      loop: "{{ _manifest_content.servers | selectattr('state', 'equalto', 'running') | list }}"
+      loop: "{{ _virsh_snapshot_manifest_content.servers | selectattr('state', 'equalto', 'running') | list }}"
       loop_control:
         label: "{{ item.name }}"
 

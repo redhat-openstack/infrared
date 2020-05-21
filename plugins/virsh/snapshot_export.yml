@@ -57,67 +57,80 @@
         path: "{{ provision.virsh.snapshot.path }}"
         state: directory
 
-    - name: Export the infrared workspace
-      shell: |-
-        IR_CMD="{{ (lookup('env', 'VIRTUAL_ENV') != '') | ternary(lookup('env', 'VIRTUAL_ENV') ~ '/bin/infrared', 'infrared') }}"
-        ${IR_CMD} workspace export --copy-keys --filename {{ src_workspace }}/infrared-workspace
-      delegate_to: localhost
-      args:
-        executable: /bin/bash
+    - name: Export the image set, but cleanup if any failure is encountered
+      block:
+        - name: Export the infrared workspace
+          shell: |-
+            IR_CMD="{{ (lookup('env', 'VIRTUAL_ENV') != '') | ternary(lookup('env', 'VIRTUAL_ENV') ~ '/bin/infrared', 'infrared') }}"
+            ${IR_CMD} workspace export --copy-keys --filename {{ src_workspace }}/infrared-workspace
+          delegate_to: localhost
+          args:
+            executable: /bin/bash
 
-    - name: Copy the exported workspace to the target host's snapshot export path
-      copy:
-        src: "{{ src_workspace }}/infrared-workspace.tgz"
-        dest: "{{ provision.virsh.snapshot.path }}/"
+        - name: Copy the exported workspace to the target host's snapshot export path
+          copy:
+            src: "{{ src_workspace }}/infrared-workspace.tgz"
+            dest: "{{ provision.virsh.snapshot.path }}/"
 
-    - name: Sparsify and export disk images
-      shell: |
-        for vdisk in $(virsh domblklist {{ item }} | awk '/{{ item }}/ {print $2}'); do
-          virt-sparsify --compress ${vdisk} {{ provision.virsh.snapshot.path }}/${vdisk##*/}
-        done
-      args:
-        executable: /bin/bash
-      loop: "{{ _vm_list }}"
+        - name: Sparsify and export disk images
+          shell: |
+            for vdisk in $(virsh domblklist {{ item }} | awk '/{{ item }}/ {print $2}'); do
+              virt-sparsify --compress ${vdisk} {{ provision.virsh.snapshot.path }}/${vdisk##*/}
+            done
+          args:
+            executable: /bin/bash
+          loop: "{{ _vm_list }}"
 
-    - name: Save VM definitions
-      copy:
-        src: "/etc/libvirt/qemu/{{ item }}.xml"
-        dest: "{{ provision.virsh.snapshot.path }}/"
-        remote_src: yes
-      loop: "{{ _vm_list }}"
+        - name: Save VM definitions
+          copy:
+            src: "/etc/libvirt/qemu/{{ item }}.xml"
+            dest: "{{ provision.virsh.snapshot.path }}/"
+            remote_src: yes
+          loop: "{{ _vm_list }}"
 
-    - name: Find all the files for the manifest
-      find:
-        paths: "{{ provision.virsh.snapshot.path }}"
-        patterns:
-          - "*.qcow2"
-          - "*.xml"
-          - "*.tgz"
-        get_checksum: yes
-      register: _manifest_files
+        - name: Find all the files for the manifest
+          find:
+            paths: "{{ provision.virsh.snapshot.path }}"
+            patterns:
+              - "*.qcow2"
+              - "*.xml"
+              - "*.tgz"
+            get_checksum: yes
+          register: _virsh_snapshot_manifest_files
 
-    - name: Prepare the manifest file content
-      set_fact:
-        _manifest_content: >-
-          {
-            'virt_pool_path': '{{ _virt_pools.pools.images.path }}',
-            'snapshot_path': '{{ provision.virsh.snapshot.path }}',
-            'hypervisor_fqdn': '{{ ansible_fqdn }}',
-            'servers': [
-          {% for vm_state_result in _vm_stop.results %}
+        - name: Prepare the manifest file content
+          set_fact:
+            _virsh_snapshot_manifest_content: >-
               {
-                'name': '{{ vm_state_result.item }}',
-                'state': '{{ (vm_state_result is changed) | ternary("running", "shut off") }}'
-              },
-          {% endfor %}
-            ],
-            'files': {{ _manifest_files.files | json_query('[*].{path: path, checksum: checksum}') | sort(attribute='path') }}
-          }
+                'virt_pool_path': '{{ _virt_pools.pools.images.path }}',
+                'snapshot_path': '{{ provision.virsh.snapshot.path }}',
+                'hypervisor_fqdn': '{{ ansible_fqdn }}',
+                'servers': [
+              {% for vm_state_result in _vm_stop.results %}
+                  {
+                    'name': '{{ vm_state_result.item }}',
+                    'state': '{{ (vm_state_result is changed) | ternary("running", "shut off") }}'
+                  },
+              {% endfor %}
+                ],
+                'files': {{ _virsh_snapshot_manifest_files.files | json_query('[*].{path: path, checksum: checksum}') | sort(attribute='path') }}
+              }
 
-    - name: Write out the manifest file
-      copy:
-        content: "{{ _manifest_content | to_nice_json }}"
-        dest: "{{ provision.virsh.snapshot.path }}/manifest.json"
+        - name: Write out the manifest file
+          copy:
+            content: "{{ _virsh_snapshot_manifest_content | to_nice_json }}"
+            dest: "{{ provision.virsh.snapshot.path }}/manifest.json"
+      rescue:
+        - name: Remove the snapshot path (CI environments)
+          file:
+            path: "{{ provision.virsh.snapshot.path }}"
+            state: absent
+          when:
+            - provision.virsh.snapshot.cleanup | bool
+
+        - name: Fail after the cleanup
+          fail:
+            msg: "The image set export failed."
 
     - name: Restart any VM's that were running
       virt:
