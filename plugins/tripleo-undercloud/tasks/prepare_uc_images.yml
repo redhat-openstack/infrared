@@ -144,7 +144,7 @@
         set_fact:
           podman_insecure_registries_with_overrides: "{{ podman_insecure_registries_with_overrides | default(podman_insecure_registries_orig) + [item] }}"
         with_items: "{{ registry_host }}"
-        when: podman_insecure_registries_orig|default('')
+        #        when: podman_insecure_registries_orig|default('')
 
       - debug:
           var: podman_insecure_registries_with_overrides
