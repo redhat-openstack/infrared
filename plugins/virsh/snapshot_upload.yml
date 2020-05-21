@@ -30,21 +30,30 @@
       vars:
         ansible_python_interpreter: "{{ ansible_playbook_python }}"
 
-    # The ansible os_object module does not currently support threaded uploads
-    # (which make this much faster), nor does it support setting a segment
-    # size (for large files), so we use the swift client instead. We use
-    # a segment size of 1GB.
-    - name: Upload the snapshot path folder to object storage
-      shell: |
-        source .swiftclient/bin/activate
-        swift upload {{ provision.virsh.snapshot.container }} {{ provision.virsh.snapshot.path | basename }} --object-threads 100 --skip-identical --segment-size 1073741824
-      args:
-        executable: "/bin/bash"
-        chdir: "{{ provision.virsh.snapshot.path | dirname }}"
-      environment:
-        OS_AUTH_TOKEN: "{{ auth_token }}"
-        OS_STORAGE_URL: "{{ lookup('env', 'OS_STORAGE_URL') }}"
-      register: _upload_result
-      retries: 10
-      delay: 30
-      until: _upload_result is success
+    - name: Upload the image set and cleanup afterwards
+      block:
+        # The ansible os_object module does not currently support threaded uploads
+        # (which make this much faster), nor does it support setting a segment
+        # size (for large files), so we use the swift client instead. We use
+        # a segment size of 1GB.
+        - name: Upload the snapshot path folder to object storage
+          shell: |
+            source .swiftclient/bin/activate
+            swift upload {{ provision.virsh.snapshot.container }} {{ provision.virsh.snapshot.path | basename }} --object-threads 100 --skip-identical --segment-size 1073741824
+          args:
+            executable: "/bin/bash"
+            chdir: "{{ provision.virsh.snapshot.path | dirname }}"
+          environment:
+            OS_AUTH_TOKEN: "{{ auth_token }}"
+            OS_STORAGE_URL: "{{ lookup('env', 'OS_STORAGE_URL') }}"
+          register: _upload_result
+          retries: 10
+          delay: 30
+          until: _upload_result is success
+      always:
+        - name: Remove the snapshot path (CI environments)
+          file:
+            path: "{{ provision.virsh.snapshot.path }}"
+            state: absent
+          when:
+            - provision.virsh.snapshot.ci | bool

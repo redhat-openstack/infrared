@@ -87,15 +87,49 @@
       set_fact:
         _manifest_content: "{{ _manifest_file.content | b64decode | from_json }}"
 
-    - name: Import the disk images
-      copy:
-        src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
-        dest: "{{ _virt_pools.pools.images.path }}/"
-        checksum: "{{ item.checksum }}"
-        remote_src: yes
-      loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
-      loop_control:
-        label: "{{ item.path | basename }}"
+    - name: Import the downloaded content
+      block:
+        - name: Import the disk images
+          copy:
+            src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
+            dest: "{{ _virt_pools.pools.images.path }}/"
+            checksum: "{{ item.checksum }}"
+            remote_src: yes
+          loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
+          loop_control:
+            label: "{{ item.path | basename }}"
+
+        - name: Import the VM configuration
+          copy:
+            src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
+            dest: "/etc/libvirt/qemu/"
+            checksum: "{{ item.checksum }}"
+            remote_src: yes
+          loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
+          loop_control:
+            label: "{{ item.path | basename }}"
+
+        - name: Fetch the infrared workspace
+          fetch:
+            src: "{{ provision.virsh.snapshot.path }}/infrared-workspace.tgz"
+            dest: "{{ src_workspace }}/"
+            flat: yes
+
+        - name: Import the infrared workspace
+          shell: |-
+            IR_ACTIVE_WORKSPACE=$({{ ir_cmd }} workspace list --active)
+            IR_NEW_WORKSPACE="workspace_$(date +%Y-%m-%d_%H-%M-%S)"
+            {{ ir_cmd }} workspace import {{ src_workspace }}/infrared-workspace.tgz --name ${IR_NEW_WORKSPACE}
+          delegate_to: localhost
+          args:
+            executable: /bin/bash
+      always:
+        - name: Remove the snapshot path (CI environments)
+          file:
+            path: "{{ provision.virsh.snapshot.path }}"
+            state: absent
+          when:
+            - provision.virsh.snapshot.ci | bool
 
     - name: Inspect the disk1 images to identify whether an operating system is present
       command: >-
@@ -107,6 +141,8 @@
       loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*-disk1\\.qcow2$') | list }}"
       loop_control:
         label: "{{ item.path | basename }}"
+      # The output is very verbose, so we disable the logging of that output
+      no_log: yes
 
     - name: Inject the host ssh key into the VM disk image (if it has an operating system)
       command: >-
@@ -124,16 +160,6 @@
         label: "{{ item.item.path | basename }}"
       vars:
         vm_provision_user: "{{ (item.item.path | basename is match('undercloud-.*')) | ternary('stack', 'heat-admin') }}"
-
-    - name: Import the VM configuration
-      copy:
-        src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
-        dest: "/etc/libvirt/qemu/"
-        checksum: "{{ item.checksum }}"
-        remote_src: yes
-      loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
-      loop_control:
-        label: "{{ item.path | basename }}"
 
     - name: Change machine type to work on the current hypervisor
       xml:
@@ -163,21 +189,6 @@
       loop: "{{ _manifest_content.servers | selectattr('state', 'equalto', 'running') | list }}"
       loop_control:
         label: "{{ item.name }}"
-
-    - name: Fetch the infrared workspace
-      fetch:
-        src: "{{ provision.virsh.snapshot.path }}/infrared-workspace.tgz"
-        dest: "{{ src_workspace }}/"
-        flat: yes
-
-    - name: Import the infrared workspace
-      shell: |-
-        IR_ACTIVE_WORKSPACE=$({{ ir_cmd }} workspace list --active)
-        IR_NEW_WORKSPACE="workspace_$(date +%Y-%m-%d_%H-%M-%S)"
-        {{ ir_cmd }} workspace import {{ src_workspace }}/infrared-workspace.tgz --name ${IR_NEW_WORKSPACE}
-      delegate_to: localhost
-      args:
-        executable: /bin/bash
 
     - name: Add the imported ssh key to the hypervisor
       authorized_key:
