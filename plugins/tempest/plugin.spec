@@ -45,7 +45,9 @@ subparsers:
                       default: normal
                   tester-node:
                       type: Value
-                      help: The name of the node from where to run the tests
+                      help: |
+                        The name of the node from where to run the tests.
+                        NOTE: this param is ignored if --openstack-installer is 'packstack'.
                       default: 'undercloud-0'
                   debug-command:
                       type: Value

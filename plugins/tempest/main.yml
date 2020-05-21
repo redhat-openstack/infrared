@@ -1,14 +1,17 @@
 - name: Set tester node
   hosts: localhost
   tasks:
-    - name: Add chosen node to tester group
-      add_host:
-          name: "{{ test.tester.node }}"
-          groups: "tester"
-    - include_role:
-          name: inventory-update
-      vars:
-          inventory_file_name: 'hosts-test'
+    - block:
+      - name: Add chosen node to tester group
+        add_host:
+            name: "{{ test.tester.node }}"
+            groups: "tester"
+      - include_role:
+            name: inventory-update
+        vars:
+            inventory_file_name: 'hosts-test'
+      # openstack infrared plugin should add the all-in-one VM to 'tester' Ansible group already
+      when: test.openstack.installer != 'packstack'
 
 - name: Discover OverCloud OpenStack version (if necessary)
   hosts: "{{ (test.openstack.version is not defined) | ternary(groups.controller[0], 'none') }}"
