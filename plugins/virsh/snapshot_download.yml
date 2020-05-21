@@ -23,9 +23,9 @@
     - name: Authenticate to the cloud to get a token
       os_auth:
         cloud: "{{ lookup('env', 'OS_CLOUD') }}"
-      register: _auth
+      register: _virsh_snapshot_auth
       until:
-        - _auth is success
+        - _virsh_snapshot_auth is success
         - auth_token is defined
         - auth_token is not none
         - auth_token | trim != ''
@@ -35,19 +35,32 @@
       vars:
         ansible_python_interpreter: "{{ ansible_playbook_python }}"
 
-    # The ansible os_object module does not currently support
-    # threaded downloads, so we use the swift client instead.
-    - name: Download the container contents to the snapshot path folder
-      shell: |
-        source .swiftclient/bin/activate
-        swift download {{ provision.virsh.snapshot.container }} --prefix {{ provision.virsh.snapshot.path | basename }} --object-threads 100 --skip-identical
-      args:
-        executable: "/bin/bash"
-        chdir: "{{ provision.virsh.snapshot.path | dirname }}"
-      environment:
-        OS_AUTH_TOKEN: "{{ auth_token }}"
-        OS_STORAGE_URL: "{{ lookup('env', 'OS_STORAGE_URL') }}"
-      register: _download_result
-      retries: 10
-      delay: 30
-      until: _download_result is success
+    - name: Download the image set, but clean up if there is a failure
+      block:
+        # The ansible os_object module does not currently support
+        # threaded downloads, so we use the swift client instead.
+        - name: Download the container contents to the snapshot path folder
+          shell: |
+            source .swiftclient/bin/activate
+            swift download {{ provision.virsh.snapshot.container }} --prefix {{ provision.virsh.snapshot.path | basename }} --object-threads 100 --skip-identical
+          args:
+            executable: "/bin/bash"
+            chdir: "{{ provision.virsh.snapshot.path | dirname }}"
+          environment:
+            OS_AUTH_TOKEN: "{{ auth_token }}"
+            OS_STORAGE_URL: "{{ lookup('env', 'OS_STORAGE_URL') }}"
+          register: _virsh_snapshot_download_result
+          retries: 10
+          delay: 30
+          until: _virsh_snapshot_download_result is success
+      rescue:
+        - name: Clean up the snapshot path
+          file:
+            path: "{{ provision.virsh.snapshot.path }}"
+            state: absent
+          when:
+            - provision.virsh.snapshot.cleanup | bool
+
+        - name: Fail after the cleanup
+          fail:
+            msg: "The image set download failed."
