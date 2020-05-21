@@ -269,7 +269,8 @@ subparsers:
                   virsh-snapshot-container:
                       type: Value
                       help: |
-                          The container to be used for the snapshot upload/download process.
+                          The object storage container to be used for the snapshot upload/download
+                          process.
                       required_when: >-
                         virsh-snapshot-upload == yes or
                         virsh-snapshot-download == yes
@@ -293,5 +294,14 @@ subparsers:
                           For this to work the following environment variables must be set:
                           OS_CLOUD, OS_STORAGE_URL. The value for OS_CLOUD must correspond with
                           an entry in the OpenStack client clouds.yaml file.
+                      default: False
+                  virsh-snapshot-ci:
+                      type: Bool
+                      help: |
+                          This is a flag to specify that the snapshot process is being used in a
+                          Continuous Integration (CI) environment. By enabling this, the snapshot
+                          export, upload, download and import processes will assume that it should
+                          use as little disk space as possible on the target host and if it is
+                          re-run on the same host it will have to re-download the image set.
                       default: False
 
