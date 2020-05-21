@@ -87,13 +87,6 @@ subparsers:
                           - uefi
                       default: bios
 
-                  config-options:
-                      type: IniType
-                      action: append
-                      help: |
-                          Forces additional Undercloud configuration (undercloud.conf) options.
-                          Format: --config-options section.option=value1 --config-options section.option=value
-
                   ssl:
                       type: Bool
                       help: |
