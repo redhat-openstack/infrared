@@ -87,7 +87,25 @@
       set_fact:
         _manifest_content: "{{ _manifest_file.content | b64decode | from_json }}"
 
-    - name: Import the disk images
+    - name: Move the disk images into the image pool (CI environments)
+      shell: |-
+        exit_code=0
+        if [[ -e {{ provision.virsh.snapshot.path }}/{{ item.path | basename }} ]]; then
+          mv {{ provision.virsh.snapshot.path }}/{{ item.path | basename }} {{ _virt_pools.pools.images.path }}/
+          exit_code=2
+        fi
+      register: _move_images
+      failed_when: _move_images.rc not in [0,2]
+      changed_when: _move_images.rc == 2
+      args:
+        executable: /bin/bash
+      loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+      when:
+        - provision.virsh.snapshot.ci | bool
+
+    - name: Copy the disk images into the image pool (non-CI environments)
       copy:
         src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
         dest: "{{ _virt_pools.pools.images.path }}/"
@@ -96,6 +114,8 @@
       loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
       loop_control:
         label: "{{ item.path | basename }}"
+      when:
+        - not (provision.virsh.snapshot.ci | bool)
 
     - name: Inspect the disk1 images to identify whether an operating system is present
       command: >-
@@ -107,6 +127,8 @@
       loop: "{{ _manifest_content.files | selectattr('path', 'match', '.*-disk1\\.qcow2$') | list }}"
       loop_control:
         label: "{{ item.path | basename }}"
+      # The output is very verbose, so we disable the logging of that output
+      no_log: yes
 
     - name: Inject the host ssh key into the VM disk image (if it has an operating system)
       command: >-
