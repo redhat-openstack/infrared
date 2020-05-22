@@ -141,6 +141,8 @@
       loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*-disk1\\.qcow2$') | list }}"
       loop_control:
         label: "{{ item.path | basename }}"
+      # The output is very verbose, so we disable the logging of that output
+      no_log: yes
 
     - name: Inject the host ssh key into the VM disk image (if it has an operating system)
       command: >-
