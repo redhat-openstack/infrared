@@ -19,6 +19,9 @@
   register: nics
   changed_when: false
 
+- set_fact:
+    image_to_use: "{{ (topology_node.image|default({})).name | default(provision.image) }}"
+
 - name: Create instances
   vars:
       resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
@@ -28,7 +31,7 @@
       auto_ip: "{{ topology_node.auto_ip | default(auto_ip) }}"
       config_drive: "{{ topology_node.config_drive | default(config_drive) }}"
       flavor: "{{ topology_node.flavor | default(flavor_id) }}"
-      image: "{{ (topology_node.image|default({})).name | default(provision.image) }}"
+      image: "{{ image_to_use }}"
       name: "{{ prefix }}{{ topology_node.name }}-{{ item|int - 1 }}"
       nics: "{{ nics.results | map(attribute='stdout') | join(',') }}"
       key_name: "{{ provision.key.name if provision.key.name else (prefix + provision.key.file | basename) }}"
@@ -63,6 +66,22 @@
       server: "{{ prefix }}*"
   register: servers
 
+- debug:
+    var: servers
+
+- name: Get details of guest image that was used for servers
+  os_image_facts:
+    cloud: "{{ provision.cloud | default(omit) }}"
+    image: "{{ image_to_use }}"
+  register: image_to_use_details
+
+- debug:
+    var: image_to_use_details
+
+- debug:
+    msg: "{{ image_to_use_details.ansible_facts.openstack_image }}"
+
+# need to write all servers to file at once
 - name: save servers for registration
   set_fact:
       server_list: "{{ server_list|default([]) + (servers.ansible_facts.openstack_servers) }}"
