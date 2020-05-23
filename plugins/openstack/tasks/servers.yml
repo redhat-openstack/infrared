@@ -20,8 +20,6 @@
   changed_when: false
 
 - name: Create instances
-  async: "{{ provision.os.server.timeout | int + 10 }}"
-  poll: 0
   vars:
       resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
       secgroups: "{% if provision.anti.spoofing | bool %}{{ topology_node.security_groups }}{% endif %}"
@@ -57,23 +55,17 @@
         #!/bin/bash
         for i in $(ip l | awk '$2 ~ /eth[1-9]/ {gsub(":", ""); print $2}'); do ip l set down dev $i; done
         {% endraw %}
-  register: servers_create
   with_sequence: "count={{ node.value }}"
 
-- name: Check instance creation status
-  async_status:
-    jid: "{{ async_result_item.ansible_job_id }}"
-  loop: "{{ servers_create.results }}"
-  loop_control:
-    loop_var: "async_result_item"
+- name: Register servers
+  os_server_facts:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      server: "{{ prefix }}*"
   register: servers
-  until: servers.finished
-  retries: 300
 
-# need to write all servers to file at once
 - name: save servers for registration
   set_fact:
-      server_list: "{{ server_list|default([]) + (servers.results | map(attribute='server') | list) }}"
+      server_list: "{{ server_list|default([]) + (servers.ansible_facts.openstack_servers) }}"
 
 - block:
       - name: Create volumes
@@ -149,7 +141,7 @@
   register: floating_ips
   retries: 3
   until: floating_ips is successful
-  with_items: "{{ servers.results | map(attribute='server') | list }}"
+  with_items: "{{ server_list }}"
 
 - name: Get flavor facts
   os_flavor_facts:
@@ -179,6 +171,8 @@
   register: py_interpreter
   with_items: "{{ floating_ips.results }}"
   when: "'ovb' not in topology_node.groups"
+  retries: 30
+  until: py_interpreter is successful
 
 - name: Add created servers to inventory
   vars:
