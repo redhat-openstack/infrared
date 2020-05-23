@@ -53,6 +53,10 @@
           containers_images_env_template_dest_file: "{{ inventory_dir }}/{{ cont_img_yml }}"
 
     - name: get puddle url from the repos
+      # TODO(nathancurry): This task does not work for OSP 16.0, because target_install_version = 16.0, but
+      #                    the repo filename is `rhos-release-16.repo`. Not sure whether should be fixed here
+      #                    or elsewhere. Not clear on how OSP 16.0 > 16.1 versioning is going to work going
+      #                    forward. Workaround for now is to manually edit repod_file variable below.
       vars:
           repod_file: "/etc/yum.repos.d/rhos-release-{{ target_install_version }}.repo"
       shell: |
