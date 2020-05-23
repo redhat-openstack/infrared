@@ -20,8 +20,6 @@
   changed_when: false
 
 - name: Create instances
-  async: "{{ provision.os.server.timeout | int + 10 }}"
-  poll: 0
   vars:
       resources: "{{ lookup('file', inventory_dir + '/resources.yml') | from_yaml }}"
       secgroups: "{% if provision.anti.spoofing | bool %}{{ topology_node.security_groups }}{% endif %}"
@@ -57,23 +55,17 @@
         #!/bin/bash
         for i in $(ip l | awk '$2 ~ /eth[1-9]/ {gsub(":", ""); print $2}'); do ip l set down dev $i; done
         {% endraw %}
-  register: servers_create
   with_sequence: "count={{ node.value }}"
 
-- name: Check instance creation status
-  async_status:
-    jid: "{{ async_result_item.ansible_job_id }}"
-  loop: "{{ servers_create.results }}"
-  loop_control:
-    loop_var: "async_result_item"
+- name: Register servers
+  os_server_facts:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      server: "{{ prefix }}*"
   register: servers
-  until: servers.finished
-  retries: 300
 
-# need to write all servers to file at once
 - name: save servers for registration
   set_fact:
-      server_list: "{{ server_list|default([]) + (servers.results | map(attribute='server') | list) }}"
+      server_list: "{{ server_list|default([]) + (servers.ansible_facts.openstack_servers) }}"
 
 - block:
       - name: Create volumes
@@ -149,7 +141,7 @@
   register: floating_ips
   retries: 3
   until: floating_ips is successful
-  with_items: "{{ servers.results | map(attribute='server') | list }}"
+  with_items: "{{ server_list }}"
 
 - name: Get flavor facts
   os_flavor_facts:
@@ -169,17 +161,6 @@
   with_items: "{{ floating_ips.results }}"
   when: "'ovb' not in topology_node.groups"
 
-- name: Detect the python interpreter
-  vars:
-      sshopts: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes"
-  shell: |
-      ssh {{ sshopts }} -i {{ provision.key.file }} \
-      {{ topology_node.get('image', {}).ssh_user | default(provision.username) }}@{{ item.floating_ip.floating_ip_address }} \
-      'command -v python python3 /usr/libexec/platform-python|head -n1'
-  register: py_interpreter
-  with_items: "{{ floating_ips.results }}"
-  when: "'ovb' not in topology_node.groups"
-
 - name: Add created servers to inventory
   vars:
       instance_flavor: "{{ openstack_flavors | first }}"
@@ -189,9 +170,8 @@
       ansible_host: "{{ item.floating_ip.floating_ip_address }}"
       groups: "{{ topology_node.groups | join(',') }}"
       ansible_ssh_private_key_file: "{{ provision.key.file | expanduser }}"
-      ansible_python_interpreter: "{{ ( ( py_interpreter.results | selectattr('item.item.name', 'equalto', item.item.name) | first | default(None) )['stdout'] | default('') ) | trim | default(omit, true) }}"
+      ansible_python_interpreter: "{{ ('8.' in provision.image) | ternary('/usr/libexec/platform-python', '/usr/bin/python') }}"
       ansible_user: "{{ topology_node.get('image', {}).ssh_user | default(provision.username) }}"
-#      eth1_interface_ip: "{{ item.item.addresses[data_network.name][0].addr }}"
       ram: "{{ instance_flavor.ram }}"
       disk: "{{ instance_flavor.disk }}"
       vcpus: "{{ instance_flavor.vcpus }}"
