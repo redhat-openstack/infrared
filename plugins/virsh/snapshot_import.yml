@@ -202,16 +202,17 @@
 
     - name: Wait until the VM has an address
       shell: |-
-        virsh_addr_raw=$(virsh domifaddr --domain {{ item.name }} --source arp | awk '$1 !~ /^Name|^-|^$/ {print $4}')
-        echo ${virsh_addr_raw%/*}
+        virsh domifaddr --domain {{ item.name }} --source agent --interface eth0 | awk '$1 !~ /^Name|^-|^$/ && !/N\/A/ {print $4}' 2>/dev/null
+        virsh domifaddr --domain {{ item.name }} --source arp | awk '$1 !~ /^Name|^-|^$/ {print $4}'
       args:
         executable: /bin/bash
       register: _wait_start
       delay: 60
       retries: 30
       until:
-        - _wait_start.stdout is defined
-        - _wait_start.stdout != ''
+        - _wait_start.stdout_lines is defined
+        - _wait_start.stdout_lines | ipv4('address')
+        - (_wait_start.stdout_lines | ipv4('address') | list) | length > 0
       loop: "{{ _virsh_snapshot_manifest_content.servers | selectattr('state', 'equalto', 'running') | list }}"
       loop_control:
         label: "{{ item.name }}"
@@ -219,7 +220,7 @@
     - name: Wait until the VM SSH service is up
       wait_for:
         port: 22
-        host: "{{ item.stdout_lines | first }}"
+        host: "{{ item.stdout_lines | ipv4('address') | first }}"
         search_regex: OpenSSH
       loop: "{{ _wait_start.results }}"
       loop_control:
