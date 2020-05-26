@@ -68,13 +68,14 @@
   loop_control:
       loop_var: test_suite
 
-- name: Install junitxml and subunit-filters
+- name: Install requirements
   become: yes
   vars:
       python_prefix: "{{ (test.openstack.version|default(overcloud_version)|openstack_release >= 15) | ternary('python3', 'python') }}"
   package:
       name:
           - "{{ python_prefix }}-junitxml"
+          - "{{ python_prefix }}-os-testr"
           - "subunit-filters"
       state: present
 
