@@ -95,7 +95,6 @@
       virtualenv: "{{ virtualenvs.tempest }}"
       version: "{{ ir_default_pip_versions['os-testr'] | default(omit) }}"
       state: "{{ ir_default_pip_versions['os-testr'] is defined | ternary('present', 'latest') }}"
-  when: test.openstack.version|default(overcloud_version)|openstack_release < 13
 
 - name: Get repo requirements
   pip:
