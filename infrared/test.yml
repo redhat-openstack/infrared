@@ -1,0 +1,78 @@
+ir_default_pip_versions:
+  Tempest: 19.0.0
+  cryptography: 2.6.1
+  junitxml: '0.7'
+  kubernetes: 8.0.1
+  nose: 1.3.7
+  openstacksdk: 0.25.0
+  os-testr: 1.0.0
+  oslo:
+    i18n: 3.23.1
+    utils: 3.40.3
+  pbr: 5.1.3
+  pip: 19.0.3
+  prettytable: 0.7.2
+  pyghmi: 1.2.16
+  pytest: 4.3.0
+  python-subunit: 1.3.0
+  rally-openstack: 1.3.0
+  requests: 2.21.0
+  setuptools: 40.8.0
+  six: 1.12.0
+  unittest2: 1.1.0
+test:
+  cleanup: false
+  collect:
+    ansible:
+      facts: false
+  config:
+    options:
+      auth:
+        tempest_roles: swiftoperator,creator
+      compute-feature-enabled:
+        attach_encrypted_volume: 'true'
+        live_migration: 'true'
+      data-processing-feature-enabled:
+        plugins: cdh,ambari,mapr
+      service_available:
+        barbican: 'true'
+      share:
+        backend_names: cephfs
+        capability_storage_protocol: NFS
+        default_share_type_name: default
+        enable_ip_rules_for_protocols: nfs
+        enable_protocols: nfs
+        multitenancy_enabled: 'False'
+        run_manage_unmanage_tests: 'False'
+        run_share_group_tests: 'False'
+        run_snapshot_tests: 'False'
+        storage_network: StorageNFS
+      validation:
+        run_validation: 'true'
+      volume-feature-enabled:
+        extend_attached_volume: 'true'
+  configure:
+    whitebox:
+      db: false
+      plugin: false
+  debug:
+    command: sosreport --batch --build --tmp-dir /var/log/extra --log-size=1 -p openstack
+  dir: tempest-dir
+  legacy:
+    config: false
+  list: false
+  mode: normal
+  openstack:
+    installer: tripleo
+    version: '13'
+  regexlist:
+    file: /home/rhos-ci/jenkins/workspace/DFG-all-unified-13_director-rhel-virthost-3cont_2comp_3ceph-ipv4-vxlan-ceph-nfs-ganesha-default/unified/bw-regexps
+  results:
+    formats: junitxml,html
+  revision: HEAD
+  setup: git
+  tempest:
+    config: true
+  tests:
+  - /Users/lkuchlan/.infrared/plugins/tempest/vars/tests/manila_scenario.yml
+  threads: 8
