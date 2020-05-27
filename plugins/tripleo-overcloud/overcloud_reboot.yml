@@ -71,29 +71,45 @@
           ceph_client: "{{ groups['monitors']|first }}"
         when: "'monitors' in groups"
 
+      # Temporarily disable ceph rebalance on OSP >= 14
+      - block:
+          - name: Check If ceph mon is located at ceph node
+            become: true
+            shell: "{{ container_runtime }} ps | grep ceph-mon"
+            register: ceph_mon
+            ignore_errors: true
+
+          - name: temporarily disable ceph rebalance
+            become: true
+            command: "{{ item }}"
+            when: ceph_mon is succeeded
+            with_items:
+                - "{{ container_runtime }} exec ceph-mon-{{ inventory_hostname }} ceph osd set noout"
+                - "{{ container_runtime }} exec ceph-mon-{{ inventory_hostname }} ceph osd set norebalance"
+
+          - name: temporarily disable ceph rebalance
+            become: true
+            command: "{{ item }}"
+            when: ceph_mon is failed
+            delegate_to: "{{ ceph_client }}"
+            with_items:
+                - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph osd set noout"
+                - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph osd set norebalance"
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int >= 14
+
       # Temporarily disable ceph rebalance on OSP < 14
       - name: temporarily disable ceph rebalance
         become: true
         command: "{{ item }}"
         when:
-          - "'ceph' in group_names"
           - overcloud_version|int < 14
+          - "'ceph' in group_names"
         delegate_to: "{{ ceph_client }}"
         with_items:
             - 'ceph osd set noout'
             - 'ceph osd set norebalance'
-
-      # Temporarily disable ceph rebalance on OSP >= 14
-      - name: temporarily disable ceph rebalance
-        become: true
-        command: "{{ item }}"
-        when:
-          - "'ceph' in group_names"
-          - overcloud_version|int >= 14
-        delegate_to: "{{ ceph_client }}"
-        with_items:
-            - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph osd set noout"
-            - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph osd set norebalance"
 
       # Check the following conditions:
       # A) pcmk_remote is succeeded will be true is this is a pcmk-remote node
