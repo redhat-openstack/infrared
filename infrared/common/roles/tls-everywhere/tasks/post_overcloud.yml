@@ -3,7 +3,7 @@
   - name: Get overcloud entries
     shell: |
         source {{ freeipa_undercloud_rc }}
-        openstack stack output show overcloud HostsEntry -f json -c output_value
+        openstack stack output show {{ freeipa_overcloud_stack }} HostsEntry -f json -c output_value
     register: overcloud_entries
 
   - name: Set overcloud hosts json
