@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55bd7690_698f371e",
+        "filename": "infrared/common/roles/tls-everywhere/tasks/prepare_freeipa.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2020-05-28T14:11:59Z",
+      "side": 1,
+      "message": "I understand ipv6 support is planned and not there yet, not sure whether this is right approach when mixing with tlsE feature though, considering:\n\nWe have this option in IR:\nNetwork Configuration:\n  --network-protocol NETWORK-PROTOCOL\n                        The overcloud network backend.\n                        Default value: \u0027ipv4\u0027.\n                        Allowed values: [\u0027ipv4\u0027, \u0027ipv6\u0027, \u0027ipv6-all\u0027].\n\nwhich can be passed to: https://github.com/redhat-openstack/infrared/blob/master/infrared/common/roles/tls-everywhere/defaults/main.yml#L4\n\nthat can lead into choosing file public-vips-ipv6.yml that doesn\u0027t exist at this point, possibly failing user with ipv6 deployment after tlsE is being enabled.\n\nI\u0027d be more comfortable to do not fail this way on smth not implemented yet, or if it is really needed then with explanatory \"Not implemented\" message.",
+      "revId": "059eac05f773c71cc66debd5800de8862af45fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "17668a11_1393c42c",
+        "filename": "infrared/common/roles/tls-everywhere/tasks/prepare_overcloud.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2020-05-28T14:11:59Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "059eac05f773c71cc66debd5800de8862af45fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
