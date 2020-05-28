@@ -18,34 +18,14 @@
           - ansible_distribution in ['CentOS', 'RedHat']
           - ansible_distribution_version|int >= 8
 
-      - name: install python-pip
-        shell: |
-          curl https://bootstrap.pypa.io/get-pip.py | python
-        when: ansible_python_version is version('3', '<')
-        become: true
+      - name: Install pytest into a venv
+        include_role:
+          name:
+        vars:
+          venv_destination_path: "/tmp/pytest_venv"
+          venv_pip_packages:
+            - pytest
 
-      - name: install python3-pip
-        package:
-          name: python3-pip
-          state: present
-        when: ansible_python_version  is version('3', '>=')
-        become: true
-
-      - name: install python virtualenv
-        pip:
-          name: virtualenv
-          state: present
-          extra_args: --user
-        become: true
-        become_user: '{{ ansible_user }}'
-
-      - name: install pytest via pip
-        pip:
-          name: pytest
-          state: present
-          virtualenv: /tmp/pytest_venv
-        environment:
-          PATH: "/home/{{ ansible_user|default(ansible_ssh_user) }}/.local/bin:$PATH"
       - name: Install packages
         become: true
         package:
