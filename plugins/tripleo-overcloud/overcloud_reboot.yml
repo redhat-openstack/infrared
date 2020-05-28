@@ -71,6 +71,21 @@
           ceph_client: "{{ groups['monitors']|first }}"
         when: "'monitors' in groups"
 
+      - block:
+          - name: Check If ceph mon is located at ceph node
+            become: true
+            shell: "{{ container_runtime }} ps | grep ceph-mon"
+            register: ceph_mon
+            ignore_errors: true
+
+          - name: Set ceph client to be local ceph node If ceph-mon present
+            set_fact:
+              ceph_client: "{{ inventory_hostname }}"
+            when: ceph_mon is succeeded
+        when:
+            - overcloud_version|int >= 14
+            - "'ceph' in group_names"
+
       # Temporarily disable ceph rebalance on OSP < 14
       - name: temporarily disable ceph rebalance
         become: true
