@@ -2,11 +2,6 @@
 - include_tasks: validate_overcloud.yml
 
 - block:
-  - name: Assign dns as freeipa node to ctrlplane-subnet
-    shell: |
-        source {{ freeipa_undercloud_rc }}
-        openstack subnet set ctlplane-subnet --no-dns-nameservers --dns-nameserver {{ freeipa_node_ipv4_address }}
-
   - name: Read deployment network configuration
     command: "cat {{ freeipa_network_environment_file }}"
     register: network_template_out
@@ -14,6 +9,11 @@
   - name: Load deployment network configuration as YAML
     set_fact:
         network_template: "{{ network_template_out.stdout | from_yaml }}"
+
+  - name: Assign dns as freeipa node to ctrlplane-subnet
+    shell: |
+        source {{ freeipa_undercloud_rc }}
+        openstack subnet set {{ network_template.parameter_defaults.ControlPlaneSubnet | default('ctlplane-subnet') }} --no-dns-nameservers --dns-nameserver {{ freeipa_node_ipv4_address }}
 
   - name: Assign dns as freeipa node to network-environment
     lineinfile:
