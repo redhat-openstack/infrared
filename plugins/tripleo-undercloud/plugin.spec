@@ -175,7 +175,7 @@ subparsers:
 
                   reboot-timeout:
                       type: Value
-                      default: 600
+                      default: 1200
                       help: |
                           The timeout for the undercloud host to come back from a reboot after package updates or
                           an upgrade.
