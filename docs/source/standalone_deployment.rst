@@ -16,4 +16,4 @@ For the virtual deployment, the ``virsh`` infrared plugin can be used for that::
 
 After that start standalone deployment::
 
-    ir tripleo-standalone --version 14
+    infrared tripleo-standalone --version 15
