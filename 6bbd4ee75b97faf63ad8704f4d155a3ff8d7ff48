@@ -46,6 +46,30 @@
       "revId": "6bbd4ee75b97faf63ad8704f4d155a3ff8d7ff48",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2810b58_ec929389",
+        "filename": "requirements.txt",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1016895
+      },
+      "writtenOn": "2020-05-29T10:15:21Z",
+      "side": 1,
+      "message": "Alright, I guess the commit message and the explanations done previously - along with the slew of previously done tests over the course of months are not enough to give credibility here, so I\u0027ll try and do it more explicitly in a comment.\n\nSince https://github.com/ansible/ansible/commit/afdbb0d9d5bebb91f632f0d4a1364de5393ba17a the CLI arguments are global. If we don\u0027t reset them whenever IR begins a playbook, then it uses the previous CLI arguments. This results in some very weird and wonderful errors which will not be immediately obvious in testing.\n\nThe change in https://review.gerrithub.io/c/redhat-openstack/infrared/+/484891/16/infrared/core/execute.py ensures that the arguments are reset every time we execute a playbook to ensure that we are passing the right CLI arguments.\n\nIf you know of a better way of achieving the same goal - great. The fact is that we\u0027re using internal Ansible interfaces here, which we shouldn\u0027t be doing. As registered in RHOSINFRA-3057 we should move towards using ansible-runner instead to provide a standard and supported interface for running ansible playbooks.",
+      "parentUuid": "dd5707d9_ac7fb51b",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 40
+      },
+      "revId": "6bbd4ee75b97faf63ad8704f4d155a3ff8d7ff48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
