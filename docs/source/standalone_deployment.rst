@@ -10,10 +10,12 @@ For the virtual deployment, the ``virsh`` infrared plugin can be used for that::
 
     infrared virsh --topology-nodes standalone:1 \
                    --topology-network 1_net \
+                   --image-url <rhel8.qcow> \
                    --host-address myvirthost.redhat.common
                    --host-key ~/.ssh/host-key.pem
 
+Note you should insert the correct URL to a RHEL8 image above.
 
 After that start standalone deployment::
 
-    ir tripleo-standalone --version 14
+    infrared tripleo-standalone --version 15
