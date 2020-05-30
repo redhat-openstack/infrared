@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7391d1ef_9aa193cd",
+        "filename": "infrared/common/roles/tls-everywhere/tasks/prepare_freeipa.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1006298
+      },
+      "writtenOn": "2020-05-30T16:21:17Z",
+      "side": 1,
+      "message": "Thanks for the feedback Filip, much appreciated.\n\nSo in this case I don\u0027t think this is a big issue and the reason is that today TLS-E and IPv6 not only does not work at *all* but it fails in even more mysterious and odd ways if you try it (there are currently a number of issues in infrared, initscripts, os-net-config and even ovn-dbs)\nActually with this change you\u0027ll get the error of public-vips-ipv6.yaml missing instead of your overcloud randomly timing out, either failing to resolve dns (freeipa listens on external by default and ipv4 tls-e only works because the undercloud is default gw and NATs), or failing to get an ipv6 (https://bugzilla.redhat.com/show_bug.cgi?id\u003d1809601 and https://bugzilla.redhat.com/show_bug.cgi?id\u003d1838239) or failing to create a network on neutron (due to missing ovn fix http://file.rdu.redhat.com/~mbaldess/ovn-ipv6/0001-WIP-Make-the-notify-calls-work-with-IPv6.patch). So I think this should be better than the current status quo?",
+      "parentUuid": "55bd7690_698f371e",
+      "revId": "059eac05f773c71cc66debd5800de8862af45fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "17668a11_1393c42c",
         "filename": "infrared/common/roles/tls-everywhere/tasks/prepare_overcloud.yml",
         "patchSetId": 3
