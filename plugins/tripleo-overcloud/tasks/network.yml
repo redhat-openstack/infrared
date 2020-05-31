@@ -106,7 +106,9 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-n {{ template_base }}/network/network_data.yaml \'
-  when: use_network_data|bool
+  when:
+    - use_network_data|bool
+    - install.storage.protocol.backend != "nfs-ganesha"
 
 - name: Append the network environment template line to the base overcloud deploy script
   lineinfile:
