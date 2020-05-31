@@ -59,7 +59,7 @@
       templates:
           generate_host_name_template: yes
           storage_add_scale: yes
-      use_network_data: "{{ install.network.render.templates|default(False) or ( install.network.protocol == 'ipv6' and install.version|default(undercloud_version) | openstack_release >= 13 ) }}"
+      use_network_data: "{{ install.network.render.templates|default(False) or ( install.storage.protocol.backend != 'nfs-ganesha' and install.network.protocol == 'ipv6' and install.version|default(undercloud_version) | openstack_release >= 13 ) }}"
   import_playbook: "{{ overcloud_deploy | default('deploy.yml') }}"
   when:
       - install.deploy|default('')
