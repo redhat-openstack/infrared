@@ -10,12 +10,11 @@
     # We check with systemctl if system has finished booting up
     # but on RHEL7 we don't have --wait option so we check only
     # for the state. We accept running or degraded as some
-    # services seem to flap after bootup but work fine. We give
-    # system 20 minutes to boot up.
+    # services seem to flap after bootup but work fine.
     - name: reboot undercloud for FFWD
       become: true
       reboot:
-          reboot_timeout: "{{ install.get('reboot', {}).get('timeout', 1200) }}"
+          reboot_timeout: "{{ install.reboot.timeout }}"
           test_command: >-
               systemctl is-system-running | grep -e running -e degraded
   when:
@@ -90,12 +89,11 @@
 # We check with systemctl if system has finished booting up
 # but on RHEL7 we don't have --wait option so we check only
 # for the state. We accept running or degraded as some
-# services seem to flap after bootup but work fine. We give
-# system 20 minutes to boot up.
+# services seem to flap after bootup but work fine.
 - name: reboot undercloud
   become: true
   reboot:
-      reboot_timeout: "{{ install.get('reboot', {}).get('timeout', 1200) }}"
+      reboot_timeout: "{{ install.reboot.timeout }}"
       test_command: >-
           systemctl is-system-running | grep -e running -e degraded
   tags: undercloud_reboot
