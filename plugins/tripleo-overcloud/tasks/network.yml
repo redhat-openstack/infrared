@@ -283,8 +283,10 @@
       - install.get('role', {}).files is defined
 
 - name: Add bridge mappings for compute nodes in non-DVR OVN VLAN deployments
+  vars:
+    services: "{{ (install.version|openstack_release > 13) | ternary('services', 'services-docker') }}"
   become: yes
   command: |
-      sed -i "s/\(NeutronBridgeMappings: \)''/\1'tenant:br-isolated'/" "{{ install.heat.templates.basedir }}/environments/services/neutron-ovn-ha.yaml"
+      sed -i "s/\(NeutronBridgeMappings: \)''/\1'tenant:br-isolated'/" "{{ install.heat.templates.basedir }}/environments/{{ services }}/neutron-ovn-ha.yaml"
   when:
       - install.network.ovn and not install.network.dvr and install.network.backend == 'vlan'
