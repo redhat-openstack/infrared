@@ -21,13 +21,13 @@ fi
 
 # patch yum.repos
 
-sed -i "s/download.*\.lab.*\.redhat\.com/${mirror}/" *.repo
-sed -i "s/download\(-node.*\)\?\.eng.*\.redhat\.com/${mirror}/" *.repo
-sed -i "s/download\.devel\.redhat\.com/${mirror}/" *.repo
-sed -i "s/rhos-release.*\.redhat\.com/${mirror}\/rhos-release/" *.repo
-sed -r -i "s/ayanami.*\.redhat.com/${mirror}\/ayanami/" *.repo
-sed -i "s/pulp.*\.redhat\.com/${mirror}\/pulp/" *.repo
-sed -i "s|cdn\.stage\.redhat\.com|${mirror}/cdn-stage|" *.repo
+sed -i "s|https\?://download.*\.lab.*\.redhat\.com|http://${mirror}|" *.repo
+sed -i "s|https\?://download\(-node.*\)\?\.eng.*\.redhat\.com|http://${mirror}|" *.repo
+sed -i "s|https\?://download\.devel\.redhat\.com|http://${mirror}|" *.repo
+sed -i "s|https\?://rhos-release.*\.redhat\.com|http://${mirror}/rhos-release|" *.repo
+sed -i "s|https\?://ayanami.*\.redhat.com|http://${mirror}/ayanami|" *.repo
+sed -i "s|https\?://pulp.*\.redhat\.com|http://${mirror}/pulp|" *.repo
+sed -i "s|https\?://cdn\.stage\.redhat\.com|http://${mirror}/cdn-stage|" *.repo
 sed -i "s|https\?://copr-be\.cloud\.fedoraproject\.org|http://${mirror}/copr-be|" *.repo
 
 # patch hosts to enforce communication only with mirror
