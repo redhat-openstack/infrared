@@ -4,7 +4,8 @@
   when: install.version|default(undercloud_version) | openstack_release < 13
 
 - set_fact:
-      isolation_file: "network-isolation{{ (install.network.protocol == 'ipv6-all') | ternary('-v6-all','') }}.yaml"
+      isolation_file: "network-isolation{{ (install.network.protocol == 'ipv6' and install.storage.protocol.backend == 'nfs-ganesha') | ternary('-v6','') }}{{ (install.network.protocol == 'ipv6-all') | ternary('-v6-all','') }}.yaml"
+
   when: install.version|default(undercloud_version) | openstack_release >= 13
 
 # Starting from OSP11, the overcloud deploy deprecated the neutron flags
@@ -106,9 +107,7 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-n {{ template_base }}/network/network_data.yaml \'
-  when:
-    - use_network_data|bool
-    - install.storage.protocol.backend != "nfs-ganesha"
+  when: use_network_data|bool
 
 - name: Append the network environment template line to the base overcloud deploy script
   lineinfile:
