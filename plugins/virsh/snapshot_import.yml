@@ -225,3 +225,16 @@
       loop: "{{ _wait_start.results }}"
       loop_control:
         label: "{{ item.item.name }}"
+
+    - name: Wait until the boot has completed
+      shell: |
+        set -o pipefail
+        ssh root@{{ item.stdout_lines | ipv4('address') | first }} is-system-running | grep -e running -e degraded
+      args:
+        executable: /bin/bash
+      register: _wait_start
+      delay: 60
+      retries: 30
+      loop: "{{ _wait_start.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
