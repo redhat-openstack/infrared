@@ -8,6 +8,7 @@
     src_workspace: "{{ lookup('env', 'WORKSPACE') | default('/tmp', true) }}"
     ir_cmd: "{{ (lookup('env', 'VIRTUAL_ENV') != '') | ternary(lookup('env', 'VIRTUAL_ENV') ~ '/bin/infrared', 'infrared') }}"
     ir_home: "{{ lookup('env', 'IR_HOME') | default(lookup('env', 'HOME') ~ '/.infrared', true) }}"
+    inventory_cmd: "{{ (lookup('env', 'VIRTUAL_ENV') != '') | ternary(lookup('env', 'VIRTUAL_ENV') ~ '/bin/ansible-inventory', 'ansible-inventory') }}"
   tasks:
     - name: Install required packages
       package:
@@ -200,28 +201,32 @@
         regexp: "{{ _virsh_snapshot_manifest_content.hypervisor_fqdn | regex_escape() }}"
         replace: "{{ hostvars.hypervisor.ansible_fqdn }}"
 
-    - name: Wait until the VM has an address
-      shell: |-
-        virsh domifaddr --domain {{ item.name }} --source agent --interface eth0 | awk '$1 !~ /^Name|^-|^$/ && !/N\/A/ {print $4}' 2>/dev/null
-        virsh domifaddr --domain {{ item.name }} --source arp | awk '$1 !~ /^Name|^-|^$/ {print $4}'
+    - name: Read the new inventory
+      shell: >-
+        {{ inventory_cmd }} -i {{ ir_home }}/.workspaces/active/hosts --list
+      register: _new_ir_inventory
+      delegate_to: localhost
       args:
         executable: /bin/bash
-      register: _wait_start
+      environment:
+        ANSIBLE_VERBOSITY: 0
+
+    - name: Wait until the boot has completed
+      shell: >-
+        set -o pipefail;
+        ssh
+        -o StrictHostKeyChecking=no
+        -o UserKnownHostsFile=/dev/null
+        {{ _inventory[item]['ansible_user']}}@{{ _inventory[item]['ansible_host'] }}
+        'systemctl is-system-running'
+        | grep -e running -e degraded
+      args:
+        executable: /bin/bash
+      register: _wait_boot_complete
       delay: 60
       retries: 30
       until:
-        - _wait_start.stdout_lines is defined
-        - _wait_start.stdout_lines | ipv4('address')
-        - (_wait_start.stdout_lines | ipv4('address') | list) | length > 0
-      loop: "{{ _virsh_snapshot_manifest_content.servers | selectattr('state', 'equalto', 'running') | list }}"
-      loop_control:
-        label: "{{ item.name }}"
-
-    - name: Wait until the VM SSH service is up
-      wait_for:
-        port: 22
-        host: "{{ item.stdout_lines | ipv4('address') | first }}"
-        search_regex: OpenSSH
-      loop: "{{ _wait_start.results }}"
-      loop_control:
-        label: "{{ item.item.name }}"
+        - _wait_boot_complete.rc == 0
+      loop: "{{ _virsh_snapshot_manifest_content.servers | selectattr('state', 'equalto', 'running') | list | sort }}"
+      vars:
+        _inventory: "{{ (_new_ir_inventory.stdout | from_json)['_meta']['hostvars'] }}"
