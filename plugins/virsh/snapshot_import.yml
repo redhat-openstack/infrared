@@ -206,13 +206,13 @@
         virsh domifaddr --domain {{ item.name }} --source arp | awk '$1 !~ /^Name|^-|^$/ {print $4}'
       args:
         executable: /bin/bash
-      register: _wait_start
+      register: _wait_for_address
       delay: 60
       retries: 30
       until:
-        - _wait_start.stdout_lines is defined
-        - _wait_start.stdout_lines | ipv4('address')
-        - (_wait_start.stdout_lines | ipv4('address') | list) | length > 0
+        - _wait_for_address.stdout_lines is defined
+        - _wait_for_address.stdout_lines | ipv4('address')
+        - (_wait_for_address.stdout_lines | ipv4('address') | list) | length > 0
       loop: "{{ _virsh_snapshot_manifest_content.servers | selectattr('state', 'equalto', 'running') | list }}"
       loop_control:
         label: "{{ item.name }}"
@@ -222,6 +222,25 @@
         port: 22
         host: "{{ item.stdout_lines | ipv4('address') | first }}"
         search_regex: OpenSSH
-      loop: "{{ _wait_start.results }}"
+      loop: "{{ _wait_for_address.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+
+    - name: Wait until the boot has completed
+      shell: >-
+        set -o pipefail;
+        ssh
+        -o StrictHostKeyChecking=no
+        -o UserKnownHostsFile=/dev/null
+        root@{{ item.stdout_lines | ipv4('address') | first }} is-system-running
+        | grep -e running -e degraded
+      args:
+        executable: /bin/bash
+      register: _wait_boot_complete
+      delay: 60
+      retries: 30
+      until:
+        - _wait_boot_complete.rc == 0
+      loop: "{{ _wait_for_address.results }}"
       loop_control:
         label: "{{ item.item.name }}"
