@@ -33,6 +33,20 @@
             name: openstack-packstack
             state: present
 
+      # Disable EC2 facts https://bugzilla.redhat.com/show_bug.cgi?id=1842520
+      - name: Create facter config directory
+        file:
+            state: directory
+            path: /etc/puppetlabs/facter
+
+      - name: Create facter config file
+        copy:
+            dest: /etc/puppetlabs/facter/facter.conf
+            content: |
+              facts : {
+                blocklist: [ "EC2" ],
+              }
+
       - name: Generate answer file
         command: "packstack --gen-answer-file={{ answers_file }}"
 
