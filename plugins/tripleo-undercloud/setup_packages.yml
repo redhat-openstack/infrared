@@ -34,6 +34,13 @@
             - "install.cdn|default(False) or cdn_status.rc == 0"
             - "install.version|openstack_distribution == 'OSP'"
 
+      - name: pin rhel version
+        command: subscription-manager release --set=8.1
+        when:
+            - "install.cdn|default(False) or cdn_status.rc == 0"
+            - "install.version|openstack_distribution == 'OSP'"
+            - "install.version|openstack_release == 16"
+
       - include_role:
             name: rhos-release
         vars:
