@@ -60,3 +60,8 @@
       state: "{{ cdn_creds.state | default(omit) }}"
       username: "{{ cdn_creds.username | default(omit) }}"
   become: true
+
+- name: pin the rhel release if release is provided
+  command: subscription-manager release --set={{ cdn_creds.release|string }}
+  become: true
+  when: cdn_creds.release is defined
