@@ -134,6 +134,7 @@
     - name: Inspect the disk1 images to identify whether an operating system is present
       command: >-
         virt-inspector
+        --no-applications
         --add {{ _virt_pools.pools.images.path }}/{{ item.path | basename }}
       register: _virt_inspector
       changed_when: false
