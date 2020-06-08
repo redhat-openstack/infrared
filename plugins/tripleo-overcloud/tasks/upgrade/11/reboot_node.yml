@@ -30,7 +30,7 @@
 - name: Reboot {{ node_name }}
   become: true
   reboot:
-    reboot_timeout: "{{ install.get('reboot', {}).get('timeout', 600) }}"
+    reboot_timeout: "{{ install.reboot.timeout }}"
     test_command: >-
         systemctl is-system-running | grep -e running -e degraded
   when: (installed_kernel.stdout != loaded_kernel.stdout) or (installed_ovs.stdout != loaded_ovs.stdout)
