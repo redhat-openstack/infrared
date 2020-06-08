@@ -1,5 +1,9 @@
 ---
 - block:
+  - name: Include VIPs configuration vars
+    include_vars:
+      file: "vars/public-vips-{{ (freeipa_network_protocol == 'ipv4') | ternary('ipv4','ipv6') }}.yml"
+
   - name: Generate cloud-names.yml
     template:
         src: cloud-names.yaml.j2
