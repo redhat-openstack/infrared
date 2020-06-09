@@ -54,6 +54,7 @@
           --chmod 0700:/root/.ssh \
           --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys \
           --delete /etc/dhcp/dhclient.conf \
+          --uninstall ovirt-guest-agent-common \
           --selinux-relabel
   with_items: "{{ download_image_result.results }}"
   when:
