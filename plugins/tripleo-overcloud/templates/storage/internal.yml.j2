@@ -1,5 +1,5 @@
 parameter_defaults:
-{% if install.version|default(undercloud_version)|openstack_release == 15%}
+{% if install.version|default(undercloud_version)|int == 15%}
     EnableRhcs4Beta: true
 {% endif %}
     CephAnsiblePlaybookVerbosity: 3
@@ -14,7 +14,7 @@ parameter_defaults:
 {% if 0 < ( (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 ) < 3  %}
     CephPoolDefaultSize: {{ (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 }}
 {% endif %}
-{% if install.containers|default(false) and install.version|default(undercloud_version)|openstack_release > 11 %}
+{% if install.containers|default(false) and install.version|default(undercloud_version)|int > 11 %}
 {# containers uses ceph-ansible #}
     CephPoolDefaultPgNum: 32
     CephAnsibleDisksConfig:
@@ -24,7 +24,7 @@ parameter_defaults:
         osd_scenario: lvm
         osd_objectstore: bluestore
 {% else %}
-{% if install.version|default(undercloud_version)|openstack_release >= 13%}
+{% if install.version|default(undercloud_version)|int >= 13%}
 {% if install.ceph.osd.type|default('bluestore') == 'bluestore' %}
 {% for disk in storage_node_disks[1:] %}
             - '/dev/{{ disk }}'
@@ -60,12 +60,12 @@ parameter_defaults:
 {% endif %}{# end of install.splitstack #}
 
         journal_size: 512
-{% if install.ceph.hci.memreserve|default(false) and install.version|default(undercloud_version) >= 13 %}
+{% if install.ceph.hci.memreserve|default(false) and install.version|default(undercloud_version)|int >= 13 %}
 {# This block, for openstack>=13 defines the memory reservation feature introduced in ceph 3.2 #}
     CephAnsibleExtraConfig:
         is_hci: true
 {% endif %}{# End of is_hci block #}
-{% if install.ceph.rgw.swift.compatibility|default(false) and install.version|default(undercloud_version)|openstack_release >= 13 %}
+{% if install.ceph.rgw.swift.compatibility|default(false) and install.version|default(undercloud_version)|int >= 13 %}
 {# This block add a ceph.conf override (under [global]) to force rgw to return same headers as swift and enable versioning#}
     CephConfigOverrides:
         rgw_swift_enforce_content_length: true
