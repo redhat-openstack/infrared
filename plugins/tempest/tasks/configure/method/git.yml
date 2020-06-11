@@ -6,7 +6,10 @@
       repo: "{{ tempest_conf.repo }}"
       version: "{{ tempest_conf.revision | default(omit) }}"
       dest: "{{ tempest_conf.dir }}"
+  retries: 3
+  delay: 5
   register: tempest_conf_repo
+  until: tempest_conf_repo is succeeded
   when: test.python_tempest_conf_dir is not defined
 
 - name: Fetch tempest_conf from change
