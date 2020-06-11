@@ -6,8 +6,15 @@
       repo: "{{ tempest_conf.repo }}"
       version: "{{ tempest_conf.revision | default(omit) }}"
       dest: "{{ tempest_conf.dir }}"
+  reries: 3
+  delay: 5
   register: tempest_conf_repo
+  until: tempest_conf_repo.failed is false
   when: test.python_tempest_conf_dir is not defined
+
+- fail:
+    msg: "Unable to clone {{ tempest_conf.repo }}"
+  when: tempest_conf_repo.failed is true
 
 - name: Fetch tempest_conf from change
   synchronize:
