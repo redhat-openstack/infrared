@@ -12,7 +12,7 @@ function apply_patch {
     curl -L -4 https://review.opendev.org/changes/${patch_id}/revisions/current/patch?download | \
         base64 -d > /tmp/patch.txt
 
-    if sudo patch --dry-run --reverse --force -d ${patch_dir} -p1 < /tmp/patch.txt >/dev/null 2>&1
+    if sudo patch --dry-run --reverse --force -d ${patch_dir} -p${patch_level} < /tmp/patch.txt >/dev/null 2>&1
     then
         echo "Patch ${patch_id} already applied, skipping"
     else
