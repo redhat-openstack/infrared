@@ -217,7 +217,7 @@
       key: parameter_defaults
       value:
           NeutronNetworkType:
-              '{{ install.network.backend }}'
+              '{{ install.network.backend }},vlan'
   when:
       - install.network.ovn and not install.network.dvr
       - install.version|default(undercloud_version)|openstack_release == 12
@@ -230,7 +230,7 @@
       key: parameter_defaults
       value:
         NeutronTypeDrivers:
-          "{{ install.network.backend }},flat"
+          "{{ install.network.backend }},vlan,flat"
 
 
   - name: Set NeutronNetworkType to {{ install.network.backend }} in neutron-ovn{{ net_dvr }}-ha env file
