@@ -1,0 +1,17 @@
+#!/bin/bash
+
+echo "Retrieving logs via heat-admin"
+source ~/stackrc
+mkdir {{ dest_dir }} 
+cd {{ dest_dir }}
+SERVERS=`openstack server list -f json`
+SERVERNAMES=`echo $SERVERS | jq -r .[].Name`
+LIST_LN=`echo $SERVERNAMES | wc -w`
+i=0
+while [ $i -lt $LIST_LN ]; do
+       IP=`echo $SERVERS | jq -r .[$i].Networks | awk -F'=' '{print $2}'`
+       SERVERNAME=`echo $SERVERS | jq -r .[$i].Name`
+       ssh heat-admin@$IP bash < log-generate.sh
+       scp heat-admin@$IP:~/tmp/$SERVERNAME.tar {{ dest_dir }}/
+       let i=i+1
+done

@@ -12,6 +12,7 @@
         #^ unbuffer for not-wrapping yum list output
       state: present
   ignore_errors: true
+  register: command_result
 
 - name: collect list of installed rpms
   shell: rpm -qa > /var/log/rpm.list
@@ -307,5 +308,16 @@
   ignore_errors: true
   with_items: "{{ other.archive.custom.split(',') }}"
   tags: collect_custom
+
+- name: Check for unreachable nodes
+  hosts: all
+  ignore_unreachable: false
+  tasks:
+  block:
+  - name: Check for unreachable hosts
+    ping:
+  rescue:
+  - import_tasks: tasks/collect_logs_via_undercloud.yml
+    when: inventory_hostname in groups['undercloud']
 
 - import_tasks: tasks/compress_fetch_cleanup.yml
