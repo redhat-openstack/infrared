@@ -1,0 +1,197 @@
+sudo -i
+yum install -y gzip lsof pciutils psmisc tar expect
+echo "collect list of installed rpms"
+rpm -qa > /var/log/rpm.list
+echo "collect list of running kernel modules"
+lsmod > /var/log/module_list
+echo "prepare directory with extra logs"
+mkdir /var/log/extra
+echo "list pkg+repo"
+unbuffer yum -C list installed > /var/log/extra/packages || yum -C list installed > /var/log/extra/packages
+echo "collect status of all systemd units"
+systemctl --all > /var/log/extra/service 2>&1
+echo: "collect logs from all failed systemd services" 
+systemctl -t service --failed --no-legend | awk '{print $1}' | xargs -r -n1 journalctl -u > /var/log/extra/service-failed 2>&1
+echo "collect network status info"
+(ip a; ip r; iptables-save;iptables -nL) &> /var/log/extra/network;
+(for NS in $(ip netns list); do
+    echo "==== $NS ====";
+    ip netns exec $NS ip a;
+    ip netns exec $NS ip r;
+    ip netns exec $NS ip iptables-save;
+    PIDS="$(ip netns pids $NS)";
+    [[ ! -z "$PIDS" ]] && ps --no-headers -f --pids "$PIDS";
+    echo "";
+    done) &> /var/log/extra/network-netns
+(for NB in $(ovs-vsctl show | grep Bridge |awk '{print $2}'); do
+    echo "==== Bridge name - $NB ====";
+    ovs-ofctl show $NB
+    ovs-ofctl dump-flows $NB
+    echo "";
+    done;ovsdb-client dump) &> /var/log/extra/ovs
+(function sbctl() {
+    SBDB=$(sudo ovs-vsctl get open . external_ids:ovn-remote | sed -e 's/\"//g');
+    timeout -k 10 5 sudo podman exec ovn_controller ovn-sbctl --db=$SBDB $1
+}
+function nbctl() {
+    NBDB=$(sudo ovs-vsctl get open . external_ids:ovn-remote | sed -e 's/\"//g' | sed -e 's/6642/6641/g');
+    timeout -k 10 5 sudo podman exec ovn_controller ovn-nbctl --db=$NBDB $1
+}
+echo "Output of ovn-sbctl show";
+sbctl show;
+echo ""
+echo "Output of ovn-nbctl show";
+nbctl show;
+echo ""
+echo "Output of ovn-sbctl lflow-list";
+sbctl lflow-list) &> /var/log/extra/ovn
+
+lsof -P &> /var/log/extra/lsof
+pstree -p &> /var/log/extra/pstree
+top -b -n 1 &> /var/log/extra/top
+dmesg &> /var/log/extra/dmesg
+sysctl -a &> /var/log/extra/sysctl
+netstat -lnp &> /var/log/extra/netstat
+lsmod &> /var/log/extra/lsmod
+lspci &> /var/log/extra/lspci
+pip list &> /var/log/extra/pip
+(set -x; blkid; lsblk; df -T; df -i) &> /var/log/extra/disk
+(set -x; sestatus -v; sestatus -b) &> /var/log/extra/selinux
+if [[ -f "/etc/ceph/ceph.client.admin.keyring" || -f "/etc/ceph/ceph.keyring" || -f "/etc/ceph/keyring" || -f "/etc/ceph/keyring.bin" ]]; then
+    ceph status &>/var/log/extra/ceph
+fi
+
+cont_cmd=""
+
+if command -v docker && systemctl is-active docker; then
+    cont_cmd="docker"
+fi
+if command -v podman && podman ps &> /dev/null; then
+    cont_cmd="podman"
+fi
+
+if [[ -n "$cont_cmd" ]]; then
+    CEPH_CONTAINERS_IDS=$($cont_cmd ps -f name=ceph-mon- -q)
+    for CID in $CEPH_CONTAINERS_IDS; do
+        echo -e "\n===========================\n --- $CID\n" >> /var/log/extra/ceph
+        $cont_cmd exec $CID ceph status &>>/var/log/extra/ceph
+    done
+fi
+
+(vgs; pvs; lvs) &> /var/log/extra/lvm
+
+cat /proc/cpuinfo &> /var/log/extra/cpuinfo
+
+echo "Collect docker info and logs"
+cont_cmd=""
+if command -v docker && systemctl is-active docker; then
+    cont_cmd="docker"
+fi
+if command -v podman && podman ps &> /dev/null; then
+    cont_cmd="podman"
+fi
+
+if [[ -n "$cont_cmd" ]]; then
+    BASE_CONT_EXTRA=/var/log/extra/containers;
+    mkdir -p "$BASE_CONT_EXTRA";
+    All_FILE="$BASE_CONT_EXTRA/containers_allinfo.log";
+    $cont_cmd ps --all --size &> "$All_FILE";
+    $cont_cmd images --all &>> "$All_FILE";
+    $cont_cmd volume ls &>> "$All_FILE";
+    $cont_cmd stats --all --no-stream &>> "$All_FILE";
+    $cont_cmd info &>> "$All_FILE";
+    for cont in $($cont_cmd ps -a | awk {'print $NF'} | grep -v NAMES); do
+        INFO_DIR="$BASE_CONT_EXTRA/containers/${cont}";
+        mkdir -p "$INFO_DIR";
+        INFO_FILE="$INFO_DIR/container_info.log";
+        if [[ "$cont_cmd" == "docker" ]]; then
+            echo "+ $cont_cmd top $cont auxw" > "$INFO_FILE";
+            $cont_cmd top "$cont" auxw &>> "$INFO_FILE";
+        else
+            echo "+ $cont_cmd top $cont user pid ppid pcpu vsz tty state time etime args" &>> "$INFO_FILE";
+            $cont_cmd top "$cont" user pid ppid pcpu vsz tty state time etime args &>> "$INFO_FILE";
+        fi
+        echo "+ $cont_cmd exec --user root $cont top -bwn1" >> "$INFO_FILE";
+        $cont_cmd exec --user root "$cont" top -bwn1 &>> "$INFO_FILE";
+        echo "+ $cont_cmd inspect $cont" >> "$INFO_FILE";
+        $cont_cmd inspect "$cont" &>> "$INFO_FILE";
+        $cont_cmd logs "$cont" &> "$INFO_DIR/stdout.log";
+        echo "+ $cont_cmd exec -it --user root $cont /usr/bin/rpm -qa" >> "$INFO_FILE";
+        $cont_cmd exec -it --user root ${cont} /usr/bin/rpm -qa &>> "$INFO_FILE";
+        if [[ "$cont_cmd" == "docker" ]]; then
+            $cont_cmd cp "$cont:/var/lib/kolla/config_files/config.json" "$INFO_DIR/config.json";
+        else
+            mnt=$($cont_cmd mount "$cont");
+            cp "$mnt:/var/lib/kolla/config_files/config.json" "$INFO_DIR/config.json";
+            $cont_cmd umount $cont;
+        fi
+    done;
+fi
+
+{# echo "clockdiff to each peer"
+  shell: |
+      time_log=/var/log/extra/clockdiff
+      echo -n "date:" >"$time_log"
+      date &>>"$time_log"
+      {% for host in groups['all'] %}
+         # something that applies to all app servers.
+      {% if 'ansible_default_ipv4' in hostvars[host] %}
+      echo -n {{ host }} [{{ hostvars[host]['ansible_default_ipv4']['address'] }}] ": " &>>"$time_log"
+      clockdiff {{ hostvars[host]['ansible_default_ipv4']['address'] }} &>>"$time_log"
+      {% endif %}
+      {% endfor %} #}
+
+echo "pcs status/config"
+pcs_log=/var/log/extra/pcslog
+echo "+ pcs status" &>"$pcs_log"
+pcs status &>>"$pcs_log"
+echo "+ pcs config" &>>"$pcs_log"
+pcs config &>>"$pcs_log"
+
+virt-host-validate &> /var/log/extra/virt-host-validate
+
+echo "generate human-readable SAR logs"
+  [[ -f /usr/lib64/sa/sa2 ]] && /usr/lib64/sa/sa2 -A
+
+echo "Create directory for mysql db dumps"
+mkdir /var/log/extra/mysqldump
+
+echo "stop dstat service if present"
+sudo sysemctl stop dstat
+
+echo "backup the mysql databases"
+echo show databases\\;| mysql | awk 'BEGIN {a=0}; { if (a>0) print $1; a=a+1}' | while read a; do echo Dump $a..; mysqldump --lock-all-tables \"$a\" | xz >\"/var/log/extra/mysqldump/$a.sql.xz\"; done
+
+echo "Search for AVC denied"
+sudo ! (grep -i denied /var/log/audit/* | sed -r 's/audit\\(.*\\): avc/audit(...): avc/; s/(pid|ino)=[0-9]+ /\\1=... /g'|sort -u)
+
+echo "Search for segfault in logs"
+sudo ! grep -v ansible-command /var/log/messages | grep segfault
+
+echo "Search for OOM issues in logs"
+sudo ! grep -v ansible-command /var/log/messages | grep oom-killer
+
+echo "collect logs"
+mkdir -p /tmp/$HOSTNAME;
+      find /var/log/rpm.list /var/log/extra {{ archives_list|join(' ') }} \
+      -maxdepth {{ other.max.depth | default(4) }} -type f -size -1024M \
+      -not -path '/var/log/journal/*' \
+      -not -path '*/\.*' \
+      -not -path '*/etc/pki/*' \
+      -not -path '*/etc/selinux/targeted/*' \
+      -not -path '/root/*.tar*' \
+      -not -path '/root/*.qcow*' \
+      -not -path '/root/*.initrd*' \
+      -not -path '/root/*.vmlinuz*' \
+      -not -path '*/udev/hwdb.bin' \
+      -exec cp -rL --parents {} /tmp/$HOSTNAME \;
+      find /tmp/$HOSTNAME -type d -print0 | xargs -0 chmod 755;
+      find /tmp/$HOSTNAME -type f -print0 | xargs -0 chmod 644;
+
+cd /tmp/$HOSTNAME
+echo "remove broken links"
+for i in `find . -xtype l`; do ls -la $i >> BROKEN_LINKS.txt; rm -rf $i; done
+
+echo "compress logs in tar ball"
+cd /tmp
+tar cf{{ other.gzip|ternary ('z', '') }} $HOSTNAME.tar{{ other.gzip|ternary ('.gz', '') }} $HOSTNAME

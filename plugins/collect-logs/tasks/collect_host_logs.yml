@@ -12,6 +12,12 @@
         #^ unbuffer for not-wrapping yum list output
       state: present
   ignore_errors: true
+  register: command_result
+
+- name: Set unreachable hosts flag when "unreachable" in command result
+  set_fact: 
+      unreachable_hosts: true
+  when: "UNREACHABLE" in command_result.stdout
 
 - name: collect list of installed rpms
   shell: rpm -qa > /var/log/rpm.list

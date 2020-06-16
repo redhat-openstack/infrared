@@ -1,0 +1,17 @@
+- name: Generate script for undercloud
+  template:
+    src: "templates/collect-logs-via-undercloud.sh.j2"
+    dest: "~/collect-logs-via-undercloud.sh"
+    mode: 0744
+    owner: stack
+    group: stack
+  delegate_to: undercloud
+  become_user: stack
+  become: yes
+
+- name: execute shell script on undercloud
+  script:
+    cmd: ~/collect-logs-via-undercloud.sh
+  delegate_to: undercloud
+  become_user: stack
+  become: yes
