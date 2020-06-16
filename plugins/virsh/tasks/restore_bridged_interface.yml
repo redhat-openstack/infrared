@@ -22,6 +22,9 @@
       name: "/etc/sysconfig/network-scripts/ifcfg-{{ bridge_name }}"
       state: absent
 
+- name: delete the bridge and attached interface
+  command: "ip link delete {{ bridge_name }}"
+
 - name: restart network
   become: yes
   service:
