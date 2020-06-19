@@ -581,7 +581,7 @@ subparsers:
                         the storage-external is yes/true, but it can be extended in the future.
                         Default behavior depends on the OpenStack version.
                   storage-backend:
-                      type: Value
+                      type: ListValue
                       choices:
                           - ceph
                           - swift
