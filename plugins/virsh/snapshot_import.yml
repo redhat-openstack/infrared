@@ -201,6 +201,7 @@
         path: "{{ ir_home }}/.workspaces/active/hosts"
         regexp: "{{ _virsh_snapshot_manifest_content.hypervisor_fqdn | regex_escape() }}"
         replace: "{{ hostvars.hypervisor.ansible_fqdn }}"
+      delegate_to: localhost
 
     - name: Read the new inventory
       shell: >-
