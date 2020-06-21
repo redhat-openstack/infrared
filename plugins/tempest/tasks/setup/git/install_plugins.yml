@@ -39,10 +39,10 @@
   become: yes
 
 - block:
-  # some repos have "test-requirements" files and some don't.
-    - name: Check if test-requirements exists
+  # some repos have "requirements" files and some don't.
+    - name: Check if requirements exists
       stat:
-          path: "{{ plugins_dir }}/{{ item }}/test-requirements.txt"
+          path: "{{ plugins_dir }}/{{ item }}/requirements.txt"
       with_items: "{{ plugins.keys() | list }}"
       register: plugins_reqs
 
