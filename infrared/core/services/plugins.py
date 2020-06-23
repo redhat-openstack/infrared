@@ -10,7 +10,6 @@ import time
 
 from collections import OrderedDict
 from six.moves import configparser
-from six.moves import getcwd
 
 
 from pip._internal.main import main as pip_main
@@ -283,12 +282,11 @@ class InfraredPluginManager(object):
         plugin_git_name = os.path.split(git_url)[-1].split('.')[0]
 
         tmpdir = tempfile.mkdtemp(prefix="ir-")
-        cwd = getcwd()
-        os.chdir(tmpdir)
+        plugin_tmp_source = os.path.join(tmpdir, plugin_git_name)
         try:
             repo = git.Repo.clone_from(
                 url=git_url,
-                to_path=os.path.join(tmpdir, plugin_git_name),
+                to_path=plugin_tmp_source,
                 kill_after_timeout=300)
             if rev is not None:
                 repo.git.checkout(rev)
@@ -297,8 +295,6 @@ class InfraredPluginManager(object):
             raise IRFailedToAddPlugin(
                 "Cloning git repo {} is failed: {}".format(git_url, e))
 
-        plugin_tmp_source = os.path.join(tmpdir, plugin_git_name)
-        os.chdir(cwd)
         return plugin_tmp_source
 
     @staticmethod
