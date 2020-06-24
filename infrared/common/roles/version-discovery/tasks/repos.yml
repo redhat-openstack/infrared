@@ -57,7 +57,7 @@
       undercloud_version: "{{ version_regex }}"
       overcloud_version: "{{ version_regex }}"
   vars:
-      version_regex: "{{ installed_package_data.repo | regex_replace('^rhelosp-([0-9]+\\.[0-9]+)(-director)?-(puddle|trunk|cdn)$', '\\1') }}"
+      version_regex: "{{ installed_package_data.repo | regex_replace('^rhelosp-([0-9]+\\.[0-9]+)(-director)?(-puddle|-trunk|-cdn)?$', '\\1') }}"
   when:
       - undercloud_version is not defined
       - version_regex|int > 0
