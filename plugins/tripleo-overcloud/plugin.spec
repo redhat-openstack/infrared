@@ -219,7 +219,7 @@ subparsers:
                       help: The amount of compute nodes to deploy
 
                   storage-nodes:
-                      type: Value
+                      type: int
                       help: |
                             The amount of storage nodes to deploy. If --storage-backend is set, this
                             value will default to '1', otherwise no storage nodes will be used.
