@@ -114,6 +114,7 @@
           name: Install python packages into the venv
           pip:
             name: "{{ venv_pip_packages }}"
+            requirements: "{{ venv_pip_requirements | default(omit) }}"
             state: present
             virtualenv: "{{ venv_destination_path }}"
             extra_args: "{{ (venv_constraints != '') | ternary('--constraint ' ~ venv_destination_path ~ '/constraints.txt', omit) }}"
