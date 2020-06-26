@@ -104,10 +104,9 @@
           - custom_repos_files is defined
           - install['upload']['extra']['repos']
 
-      - name: Downloading extra repositories
-        get_url:
-            url: "{{ item }}"
-            dest: /etc/yum.repos.d/
+      - name: Add extra repositories
+        become: yes
+        command: "yum config-manager --add-repo {{ item }}"
         with_items: "{{ custom_repos.urls|default([]) }}"
 
       - name: Setup and start dstat
