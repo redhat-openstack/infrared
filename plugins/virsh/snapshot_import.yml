@@ -238,7 +238,7 @@
         executable: /bin/bash
       register: _wait_boot_complete
       delay: 60
-      retries: 30
+      retries: 60
       until:
         - _wait_boot_complete.rc == 0
       loop: "{{ _virsh_snapshot_manifest_content.servers | selectattr('state', 'equalto', 'running') | list | sort(attribute='name') }}"
