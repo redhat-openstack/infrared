@@ -90,7 +90,7 @@
 
     - name: Import the downloaded content
       block:
-        - name: Import the disk images
+        - name: Copy the disk images (if cleanup is not enabled)
           copy:
             src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
             dest: "{{ _virt_pools.pools.images.path }}/"
@@ -99,6 +99,20 @@
           loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
           loop_control:
             label: "{{ item.path | basename }}"
+          when:
+            - not provision.virsh.snapshot.cleanup | bool
+
+        - name: Move the disk images (if cleanup is enabled)
+          shell: |-
+            SRC_FILE="{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
+            if [[ -e ${SRC_FILE} ]]; then
+              mv ${SRC_FILE} {{ _virt_pools.pools.images.path }}/
+            fi
+          loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
+          loop_control:
+            label: "{{ item.path | basename }}"
+          when:
+            - provision.virsh.snapshot.cleanup | bool
 
         - name: Import the VM configuration
           copy:
@@ -131,35 +145,6 @@
             state: absent
           when:
             - provision.virsh.snapshot.cleanup | bool
-
-    - name: Inspect the disk1 images to identify whether an operating system is present
-      command: >-
-        virt-inspector
-        --no-applications
-        --add {{ _virt_pools.pools.images.path }}/{{ item.path | basename }}
-      register: _virt_inspector
-      changed_when: false
-      failed_when: false
-      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*-disk1\\.qcow2$') | list }}"
-      loop_control:
-        label: "{{ item.path | basename }}"
-
-    - name: Inject the host ssh key into the VM disk image (if it has an operating system)
-      command: >-
-        virt-customize
-        --add {{ _virt_pools.pools.images.path }}/{{ item.item.path | basename }}
-        --root-password password:redhat
-        --mkdir /root/.ssh
-        --chmod 0700:/root/.ssh
-        --ssh-inject root:file:/root/.ssh/id_rsa.pub
-        --chmod 0700:/home/{{ vm_provision_user }}/.ssh
-        --ssh-inject {{ vm_provision_user }}:file:/root/.ssh/id_rsa.pub
-      when: item.stdout != "<?xml version=\"1.0\"?>\n<operatingsystems/>"
-      loop: "{{ _virt_inspector.results }}"
-      loop_control:
-        label: "{{ item.item.path | basename }}"
-      vars:
-        vm_provision_user: "{{ (item.item.path | basename is match('undercloud-.*')) | ternary('stack', 'heat-admin') }}"
 
     - name: Change machine type to work on the current hypervisor
       xml:
@@ -229,13 +214,14 @@
     - name: Wait until the boot has completed
       shell: >-
         ssh
-        -o StrictHostKeyChecking=no
-        -o UserKnownHostsFile=/dev/null
-        {{ _inventory[item.name]['ansible_user']}}@{{ _inventory[item.name]['ansible_host'] }}
+        {{ _inventory[item.name]['ansible_ssh_common_args'] }}
+        -i {{ _inventory[item.name]['ansible_ssh_private_key_file'] }}
+        {{ _inventory[item.name]['ansible_user'] }}@{{ _inventory[item.name]['ansible_host'] }}
         'systemctl is-system-running'
         | grep -e running -e degraded
       args:
         executable: /bin/bash
+      delegate_to: localhost
       register: _wait_boot_complete
       delay: 60
       retries: 30
