@@ -75,6 +75,19 @@
             dest: '{{ template_base }}/network/network_data.yaml'
         when: use_network_data|bool
 
+      # TODO(wznoinsk): add bz
+      - name: "Create a custom environment file - ceph beta override for osp15 - we keep using ceph beta for osp15, bz#"
+        copy:
+          dest: "{{ template_base }}/ceph_osp15_overrides.yaml"
+          content: |
+            parameter_defaults:
+              EnableRhcs4Beta: true
+              CephPoolDefaultSize: 1
+              CephPoolDefaultPgNum: 3
+        when:
+          - install.version|default(undercloud_version)|openstack_release == 15
+          - install.storage.backend == 'ceph'
+
       - name: inject debug.yaml so it will be auto discovered with user templates
         template:
             src: templates/debug.yaml.j2
