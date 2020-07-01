@@ -1,7 +1,6 @@
 import yaml
 
 from infrared.core.utils import dict_utils
-from infrared.core.utils import exceptions
 
 
 class VarsDictManager(object):
@@ -12,9 +11,6 @@ class VarsDictManager(object):
                           delimiter='-'):
         """Unifies all input into a single dict of Ansible extra-vars
 
-        :param entry_point: All input will be nested under this key
-        :param nested_args: dict. these values will be nested
-            example:
                 {
                     foo-bar: value1,
                     foo2: value2
@@ -38,6 +34,7 @@ class VarsDictManager(object):
                                        *_name.split(delimiter))
 
         # handle errors here and provide more output for user if required
+# dummy addition single line here on 37
         except exceptions.IRKeyNotFoundException as key_exception:
             if key_exception and key_exception.key.startswith("private."):
                 raise exceptions.IRPrivateSettingsMissingException(
@@ -53,6 +50,11 @@ class VarsDictManager(object):
         :param vars_dict: Dictionary to merge extra-vars into
         :param extra_vars: List of extra-vars
         """
+        # dummy addition multiline 53, 54, 55, 56
+        for dummy in dummies:
+            print dummy
+        # the end of dummy addition
+
         for extra_var in extra_vars or []:
             if extra_var.startswith('@'):
                 with open(extra_var[1:]) as f_obj:
