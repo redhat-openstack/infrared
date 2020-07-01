@@ -185,6 +185,7 @@
               ironic node-set-provision-state ${uuid} provide
             done
             {% else %}
+# dummy change from fhubik, psedlak should be notified by codereview gate and added to reviewers of 496808 automatically because of this (sry for spam)
             openstack overcloud node introspect --provide --all-manageable
             {% endif %}
         tags:
@@ -199,6 +200,7 @@
 
       # Async tasks in Ansible don't have rc defined if they failed (for some reason) which makes registered
       # variable different for various outcomes and just using "result" key is not possible here.
+# dummy fhubiks change for 496808 review, this will not add me as reviewer since I am owner already
       # Following fact will construct properly introspection result properly from possibly
       # different statutes presented by output of async task.
       - set_fact:
@@ -236,7 +238,7 @@
 #
 - name: Add introspected BMs to inventory
   hosts: localhost
-  tags: add_bms_to_inventory
+  tags: add_bms_to_inventory # this change should spam Waldek, sry ;)
   gather_facts: no
   any_errors_fatal: true
   vars:
