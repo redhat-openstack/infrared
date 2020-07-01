@@ -12,8 +12,6 @@ class VarsDictManager(object):
                           delimiter='-'):
         """Unifies all input into a single dict of Ansible extra-vars
 
-        :param entry_point: All input will be nested under this key
-        :param nested_args: dict. these values will be nested
             example:
                 {
                     foo-bar: value1,
@@ -38,6 +36,7 @@ class VarsDictManager(object):
                                        *_name.split(delimiter))
 
         # handle errors here and provide more output for user if required
+# dummy addition
         except exceptions.IRKeyNotFoundException as key_exception:
             if key_exception and key_exception.key.startswith("private."):
                 raise exceptions.IRPrivateSettingsMissingException(
