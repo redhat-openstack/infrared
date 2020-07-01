@@ -15,10 +15,9 @@
 
 - name: Overcloud install
   import_playbook: "{{ overcloud_install | default('install.yml') }}"
-  when:
-      - not install.upgrade|default('')
+  when: # this change affects Yurii, who is not in OpenStack anymore
       - not install.ocupdate|default(False)
-
+# This will be ignored, since oleksii is not in RH anymore
 - name: Verify modified containers images are used
   import_playbook: "{{ verify_containers | default('verify-containers.yml') }}"
   when:
