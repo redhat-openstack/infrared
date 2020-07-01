@@ -128,6 +128,7 @@ def ansible_playbook(ir_workspace, ir_plugin, playbook_path, verbose=None,
 
      :param ir_workspace: An Infrared Workspace object represents the active
      workspace
+This change will notify Ariel
      :param ir_plugin: An InfraredPlugin object of the current plugin
      :param playbook_path: the playbook to invoke
      :param verbose: Ansible verbosity level
