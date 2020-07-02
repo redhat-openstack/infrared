@@ -296,6 +296,13 @@
   ignore_errors: true
   tags: collect_logs
 
+- name: Collect based on filters
+  shell: |
+     find /var/log \
+     -exec grep -l -E ({{ filters|join('|') }}) {} \; >> /tmp/filtered_logs
+  ignore_errors: true
+  when: other.filters is defined 
+
 - import_tasks: tasks/collect_hypervisor_logs.yml
 
 - name: collect custom directories
