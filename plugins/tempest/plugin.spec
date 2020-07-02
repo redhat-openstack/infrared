@@ -72,7 +72,15 @@ subparsers:
                         The plugin flag can also specify the version/branch to clone.
                         In order to specify version the repo_url should be separated by comma:
                             --plugin=repo_url,version
+                        Optionally, a refspec can be provided, separated by comma too.
+                        If version is set to a SHA-1 not reachable from any branch or tag,
+                        refspec option may be necessary to specify the ref containing the SHA-1.
+                            --plugin=repo_url,version,refspec
                         More than one --plugin option can be provided.
+                        Examples:
+                            --plugin 'https://code.engineering.redhat.com/gerrit/rhos-qe-tests/tempest_neutron_plugin'
+                            --plugin 'https://code.engineering.redhat.com/gerrit/rhos-qe-tests/tempest_neutron_plugin,ca48194'
+                            --plugin 'https://code.engineering.redhat.com/gerrit/rhos-qe-tests/tempest_neutron_plugin,FETCH_HEAD,refs/changes/20/200820/12'
                   openstack-version:
                        type: Value
                        help: |
