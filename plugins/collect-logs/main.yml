@@ -6,7 +6,7 @@
   tags: collect_hypervisor_logs
   any_errors_fatal: false  # as we are happy to collect whatever we can
   vars:
-    - dest_dir: "{{ (other.dest|default({})).dir|default('') | absolute_path }}"
+    dest_dir: "{{ (other.dest|default({})).dir|default('') | absolute_path }}"
   vars_files:
     - vars/default_archives_list.yml
   tasks:
@@ -24,15 +24,23 @@
 
 - name: Gather Logs
   hosts: "{{ other.hosts }}"
-  gather_facts: yes
+  gather_facts: no
   become: yes
   any_errors_fatal: false  # as we are happy to collect whatever we can
   ignore_unreachable: true
   vars:
-      - dest_dir: "{{ (other.dest|default({})).dir|default('') | absolute_path }}"
+    dest_dir: "{{ (other.dest|default({})).dir|default('') | absolute_path }}"
+    ansible_python_interpreter: "{{ py_interpreter.stdout_lines | first | trim }}"
   vars_files:
       - vars/default_archives_list.yml
   tasks:
+    - name: Detect python interpreter
+      raw: 'command -v python3 python2 /usr/libexec/platform-python'
+      register: py_interpreter
+
+    - name: Gather facts
+      setup:
+
     # this one is required to avoid 3 or 4 return codes
     # when some of hosts are unreachable
     - include_role:
