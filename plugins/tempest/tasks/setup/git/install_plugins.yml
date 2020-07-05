@@ -54,9 +54,6 @@
       with_items: "{{ plugins_reqs.results|selectattr('stat.exists')|map(attribute='stat.path')|list }}"
 
 - name: Install plugin packages
-  pip:
-      virtualenv: "{{ virtualenvs.tempest }}"
-      name: "{{ plugins_dir }}/{{ item }}"
-      state: present
-      editable: true
+  shell:
+    "source /home/stack/.virtualenvs/.tempest/bin/activate && cd {{ plugins_dir }}/{{ item }} && pip install -e ."
   with_items: "{{ plugins.keys() | list }}"
