@@ -108,7 +108,8 @@
         become: yes
         shell: |
           yum-config-manager --add-repo {{ item }}
-          yum-config-manager --save --setopt=*{{ item | urlsplit('netloc') }}*.gpgcheck=0
+          sed -i /gpgcheck/d /etc/yum.repos.d/{{ item | urlsplit('netloc') }}*
+          sed -i -e '$agpgcheck=0' /etc/yum.repos.d/{{ item | urlsplit('netloc') }}*
         with_items: "{{ custom_repos.urls|default([]) }}"
 
       - name: Setup and start dstat
