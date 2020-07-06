@@ -226,7 +226,7 @@
       loop_control:
         label: "{{ item.name }}"
 
-    - name: Add the imported ssh key to the hypervisor
+    - name: Add the imported ssh key to the remote hypervisor
       authorized_key:
         user: root
         state: present
@@ -249,22 +249,50 @@
       environment:
         ANSIBLE_VERBOSITY: 0
 
-    - name: Wait until the boot has completed
-      shell: >-
-        ssh
-        {{ _inventory[item.name]['ansible_ssh_common_args'] }}
-        -i {{ _inventory[item.name]['ansible_ssh_private_key_file'] }}
-        {{ _inventory[item.name]['ansible_user'] }}@{{ _inventory[item.name]['ansible_host'] }}
-        'systemctl is-system-running'
-        | grep -e running -e degraded
-      args:
-        executable: /bin/bash
-      delegate_to: localhost
-      register: _wait_boot_complete
-      delay: 60
-      retries: 30
-      until:
-        - _wait_boot_complete.rc == 0
-      loop: "{{ _virsh_snapshot_manifest_content.servers | selectattr('state', 'equalto', 'running') | list | sort(attribute='name') }}"
+    - name: Wait until boot completes then finalise access
       vars:
         _inventory: "{{ (_new_ir_inventory.stdout | from_json)['_meta']['hostvars'] }}"
+        _running_servers: "{{ _virsh_snapshot_manifest_content.servers | selectattr('state', 'equalto', 'running') | list | sort(attribute='name') }}"
+      block:
+        - name: Wait until the boot has completed
+          shell: >-
+            ssh
+            {{ _inventory[item.name]['ansible_ssh_common_args'] }}
+            -i {{ _inventory[item.name]['ansible_ssh_private_key_file'] }}
+            {{ _inventory[item.name]['ansible_user'] }}@{{ _inventory[item.name]['ansible_host'] }}
+            'systemctl is-system-running'
+            | grep -e running -e degraded
+          args:
+            executable: /bin/bash
+          delegate_to: localhost
+          register: _wait_boot_complete
+          delay: 60
+          retries: 30
+          until:
+            - _wait_boot_complete.rc == 0
+          loop: "{{ _running_servers }}"
+
+        - name: Update /etc/hosts with VM's details
+          lineinfile:
+            dest: /etc/hosts
+            line: "{{ _inventory[item.name]['ansible_host'] }}    {{ item.name }}.redhat.local {{ item.name }}"
+            regexp: ".*{{ item.name }}$"
+            state: present
+          loop: "{{ _running_servers }}"
+
+        - name: Fetch the remote hypervisor's public ssh key
+          fetch:
+            src: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_rsa.pub"
+            dest: "{{ src_workspace }}/"
+
+        - name: Copy the remote hypervisor's public ssh key into the VM authorized_keys
+          shell: >-
+            ssh-copy-id
+            -i "{{ src_workspace }}/{{ inventory_hostname }}/{{ ansible_user }}/.ssh/id_rsa.pub"
+            -o "IdentityFile {{ _inventory[item.name]['ansible_ssh_private_key_file'] }}"
+            {{ _inventory[item.name]['ansible_ssh_common_args'] }}
+            {{ _inventory[item.name]['ansible_user'] }}@{{ _inventory[item.name]['ansible_host'] }}
+          args:
+            executable: /bin/bash
+          delegate_to: localhost
+          loop: "{{ _running_servers }}"
