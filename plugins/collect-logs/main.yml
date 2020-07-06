@@ -30,7 +30,7 @@
   ignore_unreachable: true
   vars:
     dest_dir: "{{ (other.dest|default({})).dir|default('') | absolute_path }}"
-    ansible_python_interpreter: "{{ py_interpreter.stdout_lines | first | trim }}"
+    ansible_python_interpreter: "{{ py_interpreter.get('stdout_lines', ['/usr/libexec/platform-python']) | first | trim }}"
   vars_files:
       - vars/default_archives_list.yml
   tasks:
