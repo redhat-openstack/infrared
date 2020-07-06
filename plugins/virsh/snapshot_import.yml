@@ -249,6 +249,16 @@
       environment:
         ANSIBLE_VERBOSITY: 0
 
+    - name: Update /etc/hosts with VM's details
+      lineinfile:
+        dest: /etc/hosts
+        line: "{{ _inventory[item.name]['ansible_host'] }}    {{ item.name }}.redhat.local {{ item.name }}"
+        regexp: ".*{{ item.name }}$"
+        state: present
+      loop: "{{ _virsh_snapshot_manifest_content.servers | selectattr('state', 'equalto', 'running') | list | sort(attribute='name') }}"
+      vars:
+        _inventory: "{{ (_new_ir_inventory.stdout | from_json)['_meta']['hostvars'] }}"
+
     - name: Wait until the boot has completed
       shell: >-
         ssh
