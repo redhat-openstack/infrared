@@ -21,6 +21,14 @@
     url: "{{ item }}"
     dest: "{{ images_update_dir }}/extra_repos"
   with_items: "{{ install.container.extra.repos }}"
+  when: ( item|splitext)[-1] == ".repo"
+
+# In case the extra repo is not a .repo file, we copy the .repo
+# file from /etc/yum.repod.d
+- name: Copy extra repositories
+  shell: "cp /etc/yum.repos.d/{{ item | urlsplit('netloc') }}* {{ images_update_dir }}/extra_repos/"
+  with_items: "{{ install.container.extra.repos }}"
+  when: ( item|splitext)[-1] != ".repo"
 
 - name: Set container logs dir fact
   set_fact:
