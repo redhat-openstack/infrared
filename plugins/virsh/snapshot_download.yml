@@ -42,7 +42,12 @@
         - name: Download the container contents to the snapshot path folder
           shell: |
             source .swiftclient/bin/activate
-            swift download {{ provision.virsh.snapshot.container }} --prefix {{ provision.virsh.snapshot.path | basename }} --object-threads 100 --skip-identical
+            if [[ $(swift list  {{ provision.virsh.snapshot.container }} --prefix {{ provision.virsh.snapshot.path | basename }} | wc -l) -eq 0 ]]; then
+              echo "There are no files available for an image set named: {{ provision.virsh.snapshot.path | basename }}"
+              exit 1
+            else
+              swift download {{ provision.virsh.snapshot.container }} --prefix {{ provision.virsh.snapshot.path | basename }} --object-threads 100 --skip-identical
+            fi
           args:
             executable: "/bin/bash"
             chdir: "{{ provision.virsh.snapshot.path | dirname }}"
