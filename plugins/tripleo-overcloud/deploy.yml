@@ -124,7 +124,6 @@
 
       - name: Prepare Execute the deployment summary script
         become: yes
-        # TODO(yfried): use "file" module intead mkdir
         shell: |
             mkdir -p /var/log/extra/
             source ~{{ ansible_user|default(ansible_ssh_user) }}/stackrc
@@ -132,6 +131,12 @@
             ~{{ ansible_user|default(ansible_ssh_user) }}/deploy_info.sh 2>&1 &
             wait
         tags: summary
+
+      - name: Execute the post overcloud deploy action
+        shell: |
+          {{ install.overcloud.postdeploy.action }} &> post_overcloud_install_action.log
+        ignore_errors: yes
+        when: install.get('overcloud', {}).get('postdeploy', {}).get('action', {})
 
 - name: Update inventory with overcloud details
   import_playbook: update_inventory.yml
