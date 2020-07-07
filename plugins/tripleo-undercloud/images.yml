@@ -86,11 +86,20 @@
             url: "{{ item }}"
             dest: "{{ tmp_oc_repos_dir }}"
         with_items: "{{ install.get('repos', {}).urls|default([]) }}"
+        when: (item|splitext)[-1] == ".repo"        
         register: extra_repos_get_url
         until: extra_repos_get_url is not failed or extra_repos_get_url.status_code | quote not in retry_http_codes
         retries: 2
         delay: 10
         tags: extra-repos
+
+      - name: Copy previously enabled custom repos
+        become: yes
+        shell: |
+          cp /etc/yum.repos.d/{{ item | urlsplit('netloc') }}* {{ tmp_oc_repos_dir }}
+        register: extra_repos_get_url
+        when: (item|splitext)[-1] != ".repo"
+        with_items: "{{ install.get('repos', {}).urls|default([]) }}"
 
       - include_tasks: "tasks/images/{{ install.images.task }}.yml"
 
