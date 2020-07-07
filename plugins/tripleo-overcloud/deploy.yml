@@ -77,7 +77,6 @@
         shell: |
           {{ install.overcloud.predeploy.action }} &> pre_overcloud_install_action.log
         register: pre_overcloud_install_action
-        ignore_errors: yes
         when: install.get('overcloud', {}).get('predeploy', {}).get('action', {})
 
       - name: Execute the overcloud deploy script
@@ -124,7 +123,6 @@
 
       - name: Prepare Execute the deployment summary script
         become: yes
-        # TODO(yfried): use "file" module intead mkdir
         shell: |
             mkdir -p /var/log/extra/
             source ~{{ ansible_user|default(ansible_ssh_user) }}/stackrc
@@ -132,6 +130,11 @@
             ~{{ ansible_user|default(ansible_ssh_user) }}/deploy_info.sh 2>&1 &
             wait
         tags: summary
+
+      - name: Execute the post overcloud deploy action
+        shell: |
+          {{ install.overcloud.postdeploy.action }} &> post_overcloud_install_action.log
+        when: install.get('overcloud', {}).get('postdeploy', {}).get('action', {})
 
 - name: Update inventory with overcloud details
   import_playbook: update_inventory.yml
