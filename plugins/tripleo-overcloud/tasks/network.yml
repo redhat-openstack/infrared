@@ -157,16 +157,16 @@
   become: yes
   replace:
       path: "{{ install.heat.templates.basedir }}/environments/neutron-l2gw.yaml"
-      regexp: '../puppet/services/neutron-l2gw-agent.yaml'
-      replace: 'OS::Heat::None'
+      regexp: '(OS::TripleO::Services::NeutronL2gwAgent:)[^\n]+$'
+      replace: '\1 OS::Heat::None'
   when: install.network.l2gw
 
 - name: Configure several service plugins
   become: yes
   replace:
       path: "{{ install.heat.templates.basedir }}/environments/neutron-l2gw.yaml"
-      regexp: '\"networking_l2gw.services.l2gateway.plugin.L2GatewayPlugin\"'
-      replace: 'router,qos,trunk,networking_l2gw.services.l2gateway.plugin.L2GatewayPlugin'
+      regexp: '(NeutronServicePlugins:)[^\n]+$'
+      replace: '\1 "router,qos,trunk,l2gw"'
   when: install.network.l2gw
 
 - name: Create neutron-lbaas environment file
