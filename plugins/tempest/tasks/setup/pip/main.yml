@@ -13,15 +13,31 @@
       name: "{{ setup.packages }}"
       state: present
 
-- name: Create the venv and install tempest
-  import_role:
-    name: create_venv
-  vars:
-    venv_constraints_remove:
-      - "^tempest===.*$"
-    venv_destination_path: "{{ virtualenvs.tempest }}"
-    venv_pip_packages: "{{ setup.pip_packages }}"
-    venv_python_version: "{{ (force_py3venv | bool OR (ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int > 7)) | ternary(3, 2) }}"
+- name: Create venv with pip, setuptools and pbr
+  pip:
+      virtualenv: "{{ virtualenvs.tempest }}"
+      virtualenv_site_packages: yes
+      name: "{{ item }}"
+      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
+      state: "{{ ir_default_pip_versions[item] is defined | ternary('present', 'latest') }}"
+  with_items:
+      - pip
+      - setuptools
+      - pbr
+
+- name: Quickly workaround recent requests bug in 2.12
+  pip:
+      name: "requests"
+      version: "2.11.1"
+      virtualenv: "{{ virtualenvs.tempest }}"
+
+- name: Install tempest from pip
+  pip:
+      virtualenv: "{{ virtualenvs.tempest }}"
+      name: "Tempest"
+      version: "{{ ir_default_pip_versions['Tempest'] | default(omit) }}"
+      state: "{{ ir_default_pip_versions['Tempest'] is defined | ternary('present', 'latest') }}"
+  register: tempest_pip
 
 - name: Print pip tempest version
   shell: |
