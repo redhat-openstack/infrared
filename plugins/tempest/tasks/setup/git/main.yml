@@ -13,6 +13,32 @@
       name: "{{ setup.packages }}"
       state: present
 
+- name: Install pip using get-pip.py
+  shell: |
+      curl https://bootstrap.pypa.io/get-pip.py | {{ ansible_python_interpreter | default('python') }}
+  become: true
+  when: ansible_python_version is version('3', '<')
+
+- name: Install python3-pip
+  package:
+      name: python3-pip
+      state: present
+  become: true
+  when: ansible_python_version  is version('3', '>=')
+
+# Make sure latest version of virtualenv is installed with pip.
+# Previous stages/roles (like shade) possibly installed python-virtualenv as a
+# system package and there is a need to reinstall the package with sudo to have
+# the virtualenv updated and available to all users.
+- name: Install latest virtualenv using pip
+  pip:
+    name: virtualenv
+    state: forcereinstall
+  environment:
+    PATH: "$PATH:/usr/local/bin:/bin"
+  become: true
+  when: test.openstack.version|default(overcloud_version)|openstack_release > 14
+
 - name: Clone tempest
   git:
       repo: "{{ setup.repo.get(test.openstack.version|default(overcloud_version)|openstack_release, setup.repo.defaults).url }}"
@@ -35,19 +61,81 @@
 
 - debug: "msg='Build mark: tempest={{ tempest_repo_version.stdout }}'"
 
-- name: Create the venv and install tempest
-  import_role:
-    name: create_venv
-  vars:
-    venv_constraints_remove:
-      - "^tempest===.*$"
-    venv_destination_path: "{{ virtualenvs.tempest }}"
-    # Make sure os-testr is installed for versions <13 since it was removed
-    # from tempest requirements file on tempest master branch
-    # and stestr was not required yet (only from tempest >=18)
-    venv_pip_packages: "{{ setup.pip_packages + [ (test.openstack.version|default(overcloud_version)|openstack_release < 13) | ternary('os-testr', ''), '~/{{ setup.clone_dir }}' ] }}"
-    venv_pip_requirements: "~/{{ setup.clone_dir }}/requirements.txt"
-    venv_python_version: "{{ (force_py3venv | bool OR (ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int > 7)) | ternary(3, 2) }}"
+# force_py3venv should be passed to the plugin as an extra variable
+# The purpose is to enforce the usaage of python3 virtual environment
+- name: Install Python3
+  become: true
+  package:
+    name: python3
+    state: present
+  when: force_py3venv|default(False)
+
+- name: Create venv with pip, setuptools and pbr
+  pip:
+      virtualenv: "{{ virtualenvs.tempest }}"
+      name: "{{ item }}"
+      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
+      state: "{{ ir_default_pip_versions[item] is defined | ternary('present', 'latest') }}"
+  with_items:
+      - pip
+      - setuptools
+      - pbr
+  when: not (force_py3venv|default(False))
+
+- name: Create venv with python3
+  command: "python3 -m venv {{ virtualenvs.tempest }}"
+  when: force_py3venv|default(False)
+
+- name: Quickly workaround recent requests bug in 2.12
+  pip:
+      name: "requests"
+      version: "2.11.1"
+      virtualenv: "{{ virtualenvs.tempest }}"
+
+# stestr > 2.6.0 no longer supports python 2.7
+- name: Install stestr==2.6.0 when python2.7 is used
+  pip:
+      name: "stestr"
+      version: "2.6.0"
+      virtualenv: "{{ virtualenvs.tempest }}"
+  when:
+    - test.openstack.version|default(overcloud_version)|openstack_release < 15
+    - not (force_py3venv|default(False))
+
+# Make sure os-testr is installed for versions <13 since it was removed
+# from tempest requirements file on tempest master branch
+# and stestr was not required yet (only from tempest >=18)
+- name: Install os-testr
+  pip:
+      name: "os-testr"
+      virtualenv: "{{ virtualenvs.tempest }}"
+      version: "{{ ir_default_pip_versions['os-testr'] | default(omit) }}"
+      state: "{{ ir_default_pip_versions['os-testr'] is defined | ternary('present', 'latest') }}"
+  when: test.openstack.version|default(overcloud_version)|openstack_release < 13
+
+- name: Get repo requirements
+  pip:
+      virtualenv: "{{ virtualenvs.tempest }}"
+      chdir: "~/{{ setup.clone_dir }}"
+      requirements: "{{ item }}"
+  with_items:
+      - requirements.txt
+
+- name: Install extra requirements
+  pip:
+      chdir: "~/{{ setup.clone_dir }}"
+      virtualenv: "{{ virtualenvs.tempest }}"
+      name: "{{ item }}"
+      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
+      state: present
+  with_items: "{{ setup.pip_packages }}"
+
+- name: Install Tempest package
+  pip:
+      chdir: "~/{{ setup.clone_dir }}"
+      virtualenv: "{{ virtualenvs.tempest }}"
+      name: "."
+      editable: true
 
 - name: Install test plugins
   include_tasks: install_plugins.yml
