@@ -114,7 +114,6 @@
           name: Install python packages into the venv
           pip:
             name: "{{ venv_pip_packages }}"
-            requirements: "{{ venv_pip_requirements | default(omit) }}"
             state: present
             virtualenv: "{{ venv_destination_path }}"
             extra_args: "{{ (venv_constraints != '') | ternary('--constraint ' ~ venv_destination_path ~ '/constraints.txt', omit) }}"
@@ -122,6 +121,20 @@
           until: _install_venv_pip_packages is success
           retries: 5
           delay: 10
+
+        - &install_packages_from_requirements
+          name: Install python packages from requirements into the venv
+          pip:
+            requirements: "{{ venv_pip_requirements }}"
+            state: present
+            virtualenv: "{{ venv_destination_path }}"
+            extra_args: "{{ (venv_constraints != '') | ternary('--constraint ' ~ venv_destination_path ~ '/constraints.txt', omit) }}"
+          register: _install_venv_requirements_packages
+          until: _install_venv_requirements_packages is success
+          retries: 5
+          delay: 10
+          when:
+            - venv_pip_requirements != ''
 
         - *venv_shebang_relocate
 
@@ -170,5 +183,7 @@
         - *remove_constraints
 
         - *install_packages
+
+        - *install_packages_from_requirements
 
         - *venv_shebang_relocate
