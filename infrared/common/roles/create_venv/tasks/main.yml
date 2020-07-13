@@ -112,8 +112,10 @@
 
         - &install_packages
           name: Install python packages into the venv
+          vars:
+            _venv_pip_packages: "{{ venv_pip_packages | reject('equalto', '') | list }}"
           pip:
-            name: "{{ venv_pip_packages }}"
+            name: "{{ _venv_pip_packages }}"
             state: present
             virtualenv: "{{ venv_destination_path }}"
             extra_args: "{{ (venv_constraints != '') | ternary('--constraint ' ~ venv_destination_path ~ '/constraints.txt', omit) }}"
@@ -121,6 +123,8 @@
           until: _install_venv_pip_packages is success
           retries: 5
           delay: 10
+          when:
+            - _venv_pip_packages != []
 
         - &install_packages_from_requirements
           name: Install python packages from requirements into the venv
