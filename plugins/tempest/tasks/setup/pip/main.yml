@@ -13,6 +13,15 @@
       name: "{{ setup.packages }}"
       state: present
 
+# force_py3venv should be passed to the plugin as an extra variable
+# The purpose is to enforce the usaage of python3 virtual environment
+- name: Install Python3
+  become: true
+  package:
+    name: python3
+    state: present
+  when: force_py3venv | default(False)
+
 - name: Create the venv and install tempest
   import_role:
     name: create_venv
