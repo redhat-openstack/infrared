@@ -21,7 +21,7 @@
       - "^tempest===.*$"
     venv_destination_path: "{{ virtualenvs.tempest }}"
     venv_pip_packages: "{{ setup.pip_packages }}"
-    venv_python_version: "{{ (force_py3venv | bool OR (ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int > 7)) | ternary(3, 2) }}"
+    venv_python_version: "{{ (force_py3venv | bool or (ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int > 7)) | ternary(3, 2) }}"
 
 - name: Print pip tempest version
   shell: |
