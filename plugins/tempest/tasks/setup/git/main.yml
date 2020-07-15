@@ -47,7 +47,7 @@
     # and stestr was not required yet (only from tempest >=18)
     venv_pip_packages: "{{ setup.pip_packages + [ (test.openstack.version|default(overcloud_version)|openstack_release < 13) | ternary('os-testr', ''), '~/' ~ setup.clone_dir ] }}"
     venv_pip_requirements: "~/{{ setup.clone_dir }}/requirements.txt"
-    venv_python_version: "{{ (force_py3venv | bool or (ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int > 7)) | ternary(3, 2) }}"
+    venv_python_version: "{{ (force_py3venv | default(False)) | bool or (ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int > 7)) | ternary(3, 2) }}"
     venv_rebuild: true
 
 - name: Install test plugins
