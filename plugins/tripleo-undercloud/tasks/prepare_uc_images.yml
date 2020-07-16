@@ -79,22 +79,24 @@
           file: "{{ containers_images_env_template_dest_file }}"
           name: container_env
 
-  when: not install.registry.skip.puddle
+  when: not install.registry.skip.puddle and install.cdn is undefined
 
-- name: determine final container registry host
-  vars:
-      user_mirror: "{{ install.get('registry').mirror|default('') }}"
-  set_fact:
-      registry_host: "{{ user_mirror | ternary(user_mirror, (container_env['container-image-prepare']['namespace'].split('/')[0] | container_mirror(install.mirror|default(''))) ) }}"
+- block:
+  - name: determine final container registry host
+    vars:
+        user_mirror: "{{ install.get('registry').mirror|default('') }}"
+    set_fact:
+        registry_host: "{{ user_mirror | ternary(user_mirror, (container_env['container-image-prepare']['namespace'].split('/')[0] | container_mirror(install.mirror|default(''))) ) }}"
 
-- name: determine final container registry namespace and prefix
-  vars:
-      user_prefix: "{{ install.get('registry', {}).prefix | default('') }}"
-  set_fact:
-      registry_namespace: "{{ registry_host }}/{{ registry_namespace | ternary(registry_namespace, container_env['container-image-prepare']['namespace'].split('/')[1] ) }}"
-      registry_prefix: "{{ user_prefix | ternary ( user_prefix, container_env['container-image-prepare']['prefix'] ) }}"
-      # list of insecure registries is needed later in undercloud.conf.j2 template
-      insecure_registry_hosts: "['{{ registry_host }}']"
+  - name: determine final container registry namespace and prefix
+    vars:
+        user_prefix: "{{ install.get('registry', {}).prefix | default('') }}"
+    set_fact:
+        registry_namespace: "{{ registry_host }}/{{ registry_namespace | ternary(registry_namespace, container_env['container-image-prepare']['namespace'].split('/')[1] ) }}"
+        registry_prefix: "{{ user_prefix | ternary ( user_prefix, container_env['container-image-prepare']['prefix'] ) }}"
+        # list of insecure registries is needed later in undercloud.conf.j2 template
+        insecure_registry_hosts: "['{{ registry_host }}']"
+  when: install.cdn is undefined
 
 # This is needed also for rdo deploympent.
 - name: generate container images environment file
@@ -105,6 +107,13 @@
       {% if not install.registry.undercloud.skip %}
       --local-push-destination
       {% endif %}
+
+- name: add credentials to container images environment file
+  blockinfile:
+    dest: "{{ working_dir }}/containers-prepare-parameter.yaml"
+    insertafter: EOF
+    block: "  ContainerImageRegistryCredentials:\n    registry.redhat.io:\n      {{ cdn_creds.registry_username }}: {{ cdn_creds.registry_password }}"
+  when: install.cdn is defined
 
 - block:
     # 'undercloud update' is running 'container image prepare' but is not using 'heat' templates which normally
@@ -339,4 +348,4 @@
                 insecure_registry_hosts: "{{ insecure_registry_hosts }} + ['{{ registry }}']"
 
   when:
-      - (target_install_version|openstack_distribution) == 'OSP'
+      - (target_install_version|openstack_distribution) == 'OSP' and install.cdn is undefined
