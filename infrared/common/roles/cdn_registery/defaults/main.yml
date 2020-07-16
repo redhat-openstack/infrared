@@ -8,31 +8,51 @@ subscriptions:
         - rhel-8-for-x86_64-appstream-rpms
         - rhel-8-for-x86_64-highavailability-rpms
         - fast-datapath-for-rhel-8-x86_64-rpms
-    15:
+    ceph_4:
+        - rhceph-4-mon-for-rhel-8-x86_64-rpms
+        - rhceph-4-osd-for-rhel-8-x86_64-rpms
+        - rhceph-4-tools-for-rhel-8-x86_64-rpms
+    16.1:
+        - openstack-16.1-for-rhel-8-x86_64-rpms
+        - ansible-2.9-for-rhel-8-x86_64-rpms
+        - advanced-virt-for-rhel-8-x86_64-rpms
+    16.0:
+        - openstack-16-for-rhel-8-x86_64-rpms
+        - ansible-2.8-for-rhel-8-x86_64-rpms
+        - openstack-16-devtools-for-rhel-8-x86_64-rpms
+    15.0:
         - openstack-15-for-rhel-8-x86_64-rpms
         - ansible-2.8-for-rhel-8-x86_64-rpms
-    14:
+    14.0:
         - rhel-ha-for-rhel-7-server-rpms
         - rhel-7-server-openstack-14-rpms
-    13:
+    13.0:
         - rhel-ha-for-rhel-7-server-rpms
         - rhel-7-server-openstack-13-rpms
-    12:
+    12.0:
         - rhel-ha-for-rhel-7-server-rpms
         - rhel-7-server-openstack-12-rpms
-    11:
+    11.0:
         - rhel-ha-for-rhel-7-server-rpms
         - rhel-7-server-openstack-11-rpms
-    10:
+    10.0:
         - rhel-ha-for-rhel-7-server-rpms
         - rhel-7-server-openstack-10-rpms
-    9:
+    9.0:
         - rhel-7-server-openstack-9-rpms
         - rhel-7-server-openstack-9-director-rpms
-    8:
+    8.0:
         - rhel-7-server-openstack-8-rpms
         - rhel-7-server-openstack-8-director-rpms
-    7:
+    7.0:
         - rhel-7-server-openstack-7.0-rpms
         - rhel-7-server-openstack-7.0-director-rpms
 cdn_skip_openstack_repos: "{{ skip_release|default(false) }}"
+dnf_modules:
+    16.1:
+        disabled:
+          - container-tools
+          - virt
+        enabled:
+          - container-tools:2.0
+          - virt:8.2
