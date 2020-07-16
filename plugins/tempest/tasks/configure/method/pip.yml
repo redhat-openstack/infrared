@@ -10,7 +10,7 @@
 
 - name: Create tempest conf venv with pip, setuptools and pbr
   pip:
-      virtualenv: "{{ virtualenvs.tempest_conf }}"
+      virtualenv: "{{ virtualenvs.tempest }}"
       name: "{{ item }}"
       version: "{{ ir_default_pip_versions[item] | default(omit) }}"
       state: "{{ ir_default_pip_versions[item] is defined | ternary('present', 'latest') }}"
@@ -22,12 +22,12 @@
 - name: Install tempest_conf
   pip:
       name: "."
-      virtualenv: "{{ virtualenvs.tempest_conf }}"
+      virtualenv: "{{ virtualenvs.tempest }}"
       chdir: "{{ tempest_conf.dir }}"
 
 - name: Init tempest
   shell: |
-      source {{ virtualenvs.tempest_conf }}/bin/activate
+      source {{ virtualenvs.tempest }}/bin/activate
       tempest init ~/"{{ test.dir }}"
   args:
       creates: "~/{{ test.dir }}/etc"
