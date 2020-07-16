@@ -51,6 +51,12 @@
       when: install.satellite.clean.nodes | default(false)
   when: cdn_creds.server_hostname is defined and _sat6_check['status'] == 200
 
+- name: Check RedHat account status
+  command: subscription-manager status
+  become: true
+  register: cdn_account_status
+  ignore_errors: true
+
 - name: register machines to CDN
   redhat_subscription:
       activationkey: "{{ cdn_creds.activationkey | default(omit) }}"
@@ -76,3 +82,4 @@
       state: "{{ cdn_creds.state | default(omit) }}"
       username: "{{ cdn_creds.username | default(omit) }}"
   become: true
+  when: cdn_account_status.rc != 0

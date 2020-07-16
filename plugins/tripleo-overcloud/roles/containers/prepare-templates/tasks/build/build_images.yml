@@ -1,156 +1,191 @@
 ---
 # versions and registry addresses is job metadata we want to collect in json file
 # when 'collect-ansible-facts' role is called hence using set_facts instead of vars
-- name: set required facts for "container image prepare"
-  set_fact:
-      container_image:
-          openstack_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
-          basereg_relative: "{{ install.get('registry', {}).namespace|default(False)|ternary(install.get('registry', {}).namespace, ''.join(container_env['container-image-prepare']['namespace'].split('/')[1:])) }}"
-          cephreg_relative: "{{''.join(container_env['container-image-prepare']['ceph-namespace'].split('/')[1:]) }}"
-          mirror_reg: "{{ install.get('registry', {}).mirror|default('') }}"
-  tags: container-images-packages
-
-- name: set required facts for "container image prepare" - part two
-  set_fact:
-      container_image_external:
-          reg_namespace: "{{ container_image['mirror_reg'] | ternary(container_image['mirror_reg'] + '/' + container_image['basereg_relative'], container_env['container-image-prepare']['namespace']) }}"
-          ceph_namespace: "{{ container_image['mirror_reg'] | ternary(container_image['mirror_reg'] + '/' + container_image['cephreg_relative'], container_env['container-image-prepare']['ceph-namespace']) }}"
-  tags: container-images-packages
-
 - block:
-    - name: "Create {{ containers_images_template_dest_file }} to upload to local registry - *overcloud* container image prepare"
-      command: >
-        openstack overcloud container image prepare \
-            --namespace {{ container_image_external['reg_namespace'].rstrip('/') }} \
-            --tag {{ container_env['container-image-prepare']['tag'] }} \
-            {% if container_env['container-image-prepare']['prefix'] != '' %}
-            --prefix {{ container_env['container-image-prepare']['prefix'] }} \
-            {% endif %}
-            {% if container_env['container-image-prepare']['ceph-namespace'] != '' %}
-            --set ceph_namespace={{ container_env['container-image-prepare']['ceph-namespace'] }} \
-            {% endif %}
-            {% if container_env['container-image-prepare']['ceph-image'] != '' %}
-            --set ceph_image={{ container_env['container-image-prepare']['ceph-image'] }} \
-            {% endif %}
-            {% if container_env['container-image-prepare']['ceph-tag'] != '' %}
-            --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }} \
-            {% endif %}
-            --output-images-file {{ containers_images_template_dest_file }} \
-            {{ environment_yamls | default('') }} {{ roles_yamls | default('') }}
-
-    - name: get docker registry name
+    - name: set required facts for "container image prepare"
       set_fact:
-          docker_insecure_registry: "{{ container_image_external['reg_namespace'].split('/')[0] }}"
+          container_image:
+              openstack_version: "{{ install.version|default(undercloud_version)|openstack_release }}"
+              basereg_relative: "{{ install.get('registry', {}).namespace|default(False)|ternary(install.get('registry', {}).namespace, ''.join(container_env['container-image-prepare']['namespace'].split('/')[1:])) }}"
+              cephreg_relative: "{{''.join(container_env['container-image-prepare']['ceph-namespace'].split('/')[1:]) }}"
+              mirror_reg: "{{ install.get('registry', {}).mirror|default('') }}"
       tags: container-images-packages
 
-    - name: set insecure ceph registry
+    - name: set required facts for "container image prepare" - part two
       set_fact:
-          docker_insecure_ceph_registry: "{{ container_env['container-image-prepare']['ceph-namespace'].split('/')[0] }}"
+          container_image_external:
+              reg_namespace: "{{ container_image['mirror_reg'] | ternary(container_image['mirror_reg'] + '/' + container_image['basereg_relative'], container_env['container-image-prepare']['namespace']) }}"
+              ceph_namespace: "{{ container_image['mirror_reg'] | ternary(container_image['mirror_reg'] + '/' + container_image['cephreg_relative'], container_env['container-image-prepare']['ceph-namespace']) }}"
+      tags: container-images-packages
+
+    - block:
+        - name: "Create {{ containers_images_template_dest_file }} to upload to local registry - *overcloud* container image prepare"
+          command: >
+            openstack overcloud container image prepare \
+                --namespace {{ container_image_external['reg_namespace'].rstrip('/') }} \
+                --tag {{ container_env['container-image-prepare']['tag'] }} \
+                {% if container_env['container-image-prepare']['prefix'] != '' %}
+                --prefix {{ container_env['container-image-prepare']['prefix'] }} \
+                {% endif %}
+                {% if container_env['container-image-prepare']['ceph-namespace'] != '' %}
+                --set ceph_namespace={{ container_env['container-image-prepare']['ceph-namespace'] }} \
+                {% endif %}
+                {% if container_env['container-image-prepare']['ceph-image'] != '' %}
+                --set ceph_image={{ container_env['container-image-prepare']['ceph-image'] }} \
+                {% endif %}
+                {% if container_env['container-image-prepare']['ceph-tag'] != '' %}
+                --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }} \
+                {% endif %}
+                --output-images-file {{ containers_images_template_dest_file }} \
+                {{ environment_yamls | default('') }} {{ roles_yamls | default('') }}
+
+        - name: get docker registry name
+          set_fact:
+              docker_insecure_registry: "{{ container_image_external['reg_namespace'].split('/')[0] }}"
+          tags: container-images-packages
+
+        - name: set insecure ceph registry
+          set_fact:
+              docker_insecure_ceph_registry: "{{ container_env['container-image-prepare']['ceph-namespace'].split('/')[0] }}"
+          when:
+              - container_env['container-image-prepare']['ceph-namespace'] != ''
+
+        - name: replace IP with hostname in /etc/sysconfig/docker
+          replace:
+              dest: /etc/sysconfig/docker
+              regexp: '^(INSECURE_REGISTRY=.--insecure-registry)'
+              replace: '\1 {{ docker_insecure_registry }} --insecure-registry'
+              backup: no
+          become: true
+
+        - name: add insecure ceph registry to /etc/sysconfig/docker
+          replace:
+              dest: /etc/sysconfig/docker
+              regexp: '^(INSECURE_REGISTRY=.--insecure-registry)'
+              replace: '\1 {{ docker_insecure_ceph_registry }} --insecure-registry'
+              backup: no
+          become: true
+          when:
+              - docker_insecure_ceph_registry is defined
+
+        - name: restart docker service
+          service:
+              name: docker
+              state: restarted
+          become: true
+
+        - name: Check if docker is running
+          command: systemctl status docker
+          ignore_errors: yes
+          changed_when: false
+          register: service_docker_status
+
+        - name: Report status of docker
+          fail:
+              msg: |
+                 Service docker is not running.
+                 Output of `systemctl status docker`:
+                 {{ service_docker_status.stdout }}
+                 {{ service_docker_status.stderr }}
+          when: service_docker_status is failed
+
+        - name: openstack overcloud container image upload
+          shell: |
+              source /home/stack/stackrc
+              openstack overcloud container image upload --verbose --config-file {{ containers_images_template_dest_file }}
+          when: not install.registry.undercloud.skip
+          tags:
+              - skip_ansible_lint
+              - container_image_upload
       when:
-          - container_env['container-image-prepare']['ceph-namespace'] != ''
+          - install.version|default(undercloud_version)|openstack_release < 14
 
-    - name: replace IP with hostname in /etc/sysconfig/docker
-      replace:
-          dest: /etc/sysconfig/docker
-          regexp: '^(INSECURE_REGISTRY=.--insecure-registry)'
-          replace: '\1 {{ docker_insecure_registry }} --insecure-registry'
-          backup: no
-      become: true
+    - name: Get patched_rpms and from_source file stat
+      vars:
+          repo_dir: /etc/yum.repos.d
+      stat:
+          path: "{{ repo_dir }}/{{ item }}"
+      register: patched_rpms
+      with_items:
+          - patched_rpms.repo
+          - from_source.repo
+      tags: container-images-packages
 
-    - name: add insecure ceph registry to /etc/sysconfig/docker
-      replace:
-          dest: /etc/sysconfig/docker
-          regexp: '^(INSECURE_REGISTRY=.--insecure-registry)'
-          replace: '\1 {{ docker_insecure_ceph_registry }} --insecure-registry'
-          backup: no
-      become: true
-      when:
-          - docker_insecure_ceph_registry is defined
-
-    - name: restart docker service
-      service:
-          name: docker
-          state: restarted
-      become: true
-
-    - name: Check if docker is running
-      command: systemctl status docker
-      ignore_errors: yes
-      changed_when: false
-      register: service_docker_status
-
-    - name: Report status of docker
-      fail:
-          msg: |
-             Service docker is not running.
-             Output of `systemctl status docker`:
-             {{ service_docker_status.stdout }}
-             {{ service_docker_status.stderr }}
-      when: service_docker_status is failed
-
-    - name: openstack overcloud container image upload
+    ## Workaround BZ#1627946
+    - name:  Run *tripleo* container image prepare (OSP >= 14)
       shell: |
-          source /home/stack/stackrc
-          openstack overcloud container image upload --verbose --config-file {{ containers_images_template_dest_file }}
-      when: not install.registry.undercloud.skip
+          {% if install.version|default(undercloud_version)|openstack_release > 14 %}
+          sudo \
+          {% endif %}
+          openstack tripleo container image prepare \
+            -e ~/containers-prepare-parameter.yaml \
+            {{ environment_yamls | default('') }} {{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
+            --output-env-file {{ template_base }}/docker-images.yaml
+      when: install.version|default(undercloud_version)|openstack_release >= 14 and
+            ( install.network.ovn|default(False) or
+              install.ocupdate|default(False) or
+              install_container_images_packages is defined or
+              install_container_extra_repos is defined or
+              install_container_images_urls is defined or
+              install_container_images_patch is defined or patched_rpms.results | selectattr('stat.exists', 'equalto', True) | list | length > 0
+            )
       tags:
           - skip_ansible_lint
-          - container_image_upload
+          - container-image-prepare
+
+    - name: install packages in container images
+      include_tasks: container_images_packages.yml
+      when: install_container_images_packages is defined
+      tags: container-images-packages
+
+    - name: patch images
+      import_tasks: patch_images.yml
+      when: install_container_images_patch is defined or patched_rpms.results | selectattr('stat.exists', 'equalto', True) | list | length > 0
+      tags: container-images-packages
+
+    - name: Update containers images when OSP <= 14
+      import_tasks: update_images.yml
+      when:
+        - install_container_extra_repos is defined
+        - install.version|default(undercloud_version)|openstack_release <= 14
+      tags: container-extra-repos
+
+    - name: Update containers images when OSP >= 15
+      include_tasks: patch_images_tripleo-modify-image.yml
+      when:
+        - install.version|default(undercloud_version)|openstack_release >= 15
+        - install_container_extra_repos is defined
+
   when:
-      - install.version|default(undercloud_version)|openstack_release < 14
+    - not install.overcloud.templates | select('search', 'rhsm|overloud_cdn') | list | length >0
+    - install.cdn is not defined or (cdn_status is defined and cdn_status.rc != 0)
 
-- name: Get patched_rpms and from_source file stat
-  vars:
-      repo_dir: /etc/yum.repos.d
-  stat:
-      path: "{{ repo_dir }}/{{ item }}"
-  register: patched_rpms
-  with_items:
-      - patched_rpms.repo
-      - from_source.repo
-  tags: container-images-packages
+- block:
+    - name: fetch cdn creds from file
+      include_vars:
+          file: "{{ install.cdn|default('') }}"
+          name: cdn_creds
+      # file may contain passwords. Don't print its content to console
+      no_log: yes
 
-## Workaround BZ#1627946
-- name:  Run *tripleo* container image prepare (OSP >= 14)
-  shell: |
-      {% if install.version|default(undercloud_version)|openstack_release > 14 %}
-      sudo \
-      {% endif %}
-      openstack tripleo container image prepare \
-        -e ~/containers-prepare-parameter.yaml \
-        {{ environment_yamls | default('') }} {{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
-        --output-env-file {{ template_base }}/docker-images.yaml
-  when: install.version|default(undercloud_version)|openstack_release >= 14 and
-        ( install.network.ovn|default(False) or
-          install.ocupdate|default(False) or
-          install_container_images_packages is defined or
-          install_container_extra_repos is defined or
-          install_container_images_urls is defined or
-          install_container_images_patch is defined or patched_rpms.results | selectattr('stat.exists', 'equalto', True) | list | length > 0
-        )
-  tags:
-      - skip_ansible_lint
-      - container-image-prepare
+    - name: Run tripleo container prepare default (CDN) < 14
+      command: openstack overcloud container image prepare --output-env-file containers-prepare-parameter.yaml
+      when:
+        - install.version|default(undercloud_version)|openstack_release < 14
 
-- name: install packages in container images
-  include_tasks: container_images_packages.yml
-  when: install_container_images_packages is defined
-  tags: container-images-packages
+    - name: Run tripleo container prepare default (CDN) > 13
+      shell: |
+        {% if install.version|default(undercloud_version)|openstack_release > 14 %}
+        sudo \
+        {% endif %}
+        openstack tripleo container image prepare default --local-push-destination --output-env-file containers-prepare-parameter.yaml
+      when:
+        - install.version|default(undercloud_version)|openstack_release >= 14
 
-- name: patch images
-  import_tasks: patch_images.yml
-  when: install_container_images_patch is defined or patched_rpms.results | selectattr('stat.exists', 'equalto', True) | list | length > 0
-  tags: container-images-packages
+    - name: add credentials to container images environment file
+      blockinfile:
+        dest: "containers-prepare-parameter.yaml"
+        insertafter: EOF
+        block: "  ContainerImageRegistryCredentials:\n    registry.redhat.io:\n      {{ cdn_creds.registry_username }}: {{ cdn_creds.registry_password }}"
 
-- name: Update containers images when OSP <= 14
-  import_tasks: update_images.yml
-  when:
-    - install_container_extra_repos is defined
-    - install.version|default(undercloud_version)|openstack_release <= 14
-  tags: container-extra-repos
-
-- name: Update containers images when OSP >= 15
-  include_tasks: patch_images_tripleo-modify-image.yml
-  when:
-    - install.version|default(undercloud_version)|openstack_release >= 15
-    - install_container_extra_repos is defined
+  when: install.cdn is defined
