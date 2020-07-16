@@ -100,6 +100,13 @@ subparsers:
 
                       ansible_variable: 'install_container_images_urls'
 
+                  cdn:
+                      type: FileValue
+                      help: |
+                          YAML file
+                          Register the undercloud with a Red Hat Subscription Management platform.
+                          see documentation for more details
+
                   registry-mirror:
                       type: Value
                       help: | 
