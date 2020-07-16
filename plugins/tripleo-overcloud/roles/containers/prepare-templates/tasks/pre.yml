@@ -65,6 +65,9 @@
       - container_env is not defined
 
 - block:
+    - debug:
+          var: install
+          
     - name: get puddle url from the repos
       vars:
           repod_file: "/etc/yum.repos.d/rhos-release-{{ undercloud_version|default(install.version) }}.repo"
@@ -134,7 +137,7 @@
                   ceph-image: "{{ install.get('registry', {}).get('ceph', {}).image | default(container_env['container-image-prepare']['ceph-image'] | default('')) }}"
                   ceph-tag: "{{ install.get('registry', {}).get('ceph', {}).tag | default(container_env['container-image-prepare']['ceph-tag'] | default('')) }}"
 
-  when: not install.registry.skip.puddle
+  when: not install.registry.skip.puddle and install.cdn is undefined
 
 - name: set os_version fact
   set_fact:
