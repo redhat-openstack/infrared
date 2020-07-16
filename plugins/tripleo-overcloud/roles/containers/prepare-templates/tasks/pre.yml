@@ -134,7 +134,7 @@
                   ceph-image: "{{ install.get('registry', {}).get('ceph', {}).image | default(container_env['container-image-prepare']['ceph-image'] | default('')) }}"
                   ceph-tag: "{{ install.get('registry', {}).get('ceph', {}).tag | default(container_env['container-image-prepare']['ceph-tag'] | default('')) }}"
 
-  when: not install.registry.skip.puddle
+  when: not install.registry.skip.puddle and not ( install.overcloud.templates is search('overcloud_cdn.yml') or install.overcloud.templates is search('rhsm.yml') )
 
 - name: set os_version fact
   set_fact:
