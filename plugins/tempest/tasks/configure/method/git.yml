@@ -26,7 +26,7 @@
   import_role:
     name: create_venv
   vars:
-    venv_destination_path: "{{ virtualenvs.tempest_conf }}"
+    venv_destination_path: "{{ virtualenvs.tempest }}"
     venv_pip_packages:
       - pip
       - setuptools
@@ -38,7 +38,7 @@
 - name: Install tempest_conf
   pip:
       name: "."
-      virtualenv: "{{ virtualenvs.tempest_conf }}"
+      virtualenv: "{{ virtualenvs.tempest }}"
       chdir: "{{ tempest_conf.dir }}"
 
 - name: Init tempest

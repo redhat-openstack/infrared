@@ -11,12 +11,18 @@
 
 - block:
     - name: import prepare_uc_images builtin
-      import_tasks: tasks/prepare_uc_images_builtin.yml
+      import_tasks: prepare_uc_images_builtin.yml
       when:
           - custom_script_url == ''
+
     - name:
-      import_tasks: tasks/prepare_uc_images_external.yml
+      import_tasks: prepare_uc_images_external.yml
       when:
           - custom_script_url != ''
   vars:
     - custom_script_url: "{{ install.get('registry', {}).get('custom', {}).get('script', {}).get('url', {})|default('') }}"
+  when: install.cdn is undefined
+
+- name: Import prepare_uc_images for CDN
+  import_tasks: prepare_uc_images_cdn.yml
+  when: install.cdn is defined

@@ -170,6 +170,15 @@
         include_tasks: tasks/storage/nova-nfs.yml
         when: install.nova.nfs.backend|default(False)
 
+      - include_role:
+            name: cdn_registery
+        vars:
+            cdn_args_file: "{{ install.cdn|default('') }}"
+            install_version: "{{ install.version }}"
+        when:
+          - "(install.cdn|default(False) or (cdn_status is defined and cdn_status.rc == 0)) or (install.overcloud.templates | select('search', 'rhsm|overloud_cdn') | list | length >0)"
+          - "install.version|openstack_distribution == 'OSP'"
+
       - import_role:
             name: containers/prepare-templates
         tags:

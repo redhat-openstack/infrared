@@ -57,11 +57,13 @@ overcloud_domain_name={{ install.overcloud.domain }}
 {% if install.version|default(undercloud_version)|openstack_distribution == 'OSP' %}
 container_images_file={{ working_dir }}/containers-prepare-parameter.yaml
 {% endif %}
+{% if install.cdn is not defined %}
 {% if install.version|openstack_release < 15 %}
 docker_insecure_registries={{ insecure_registry_hosts|unique|join(',') }}
 {% else %}
 container_insecure_registries={{ insecure_registry_hosts|unique|join(',') }}
 {% endif %}
+{% endif %}{# endif install.cdn is undefined #}
 {% endif %}{# endIf release > 13 #}
 
 [ctlplane-subnet]

@@ -4,6 +4,15 @@
       name: "openstack-tempest"
       state: present
   register: tempest_rpm
+  when: test.rpm.package is undefined or test.rpm.package|length == 0
+
+- name: Install tempest from URL
+  become: yes
+  yum:
+    name: "{{ test.rpm.package }}"
+    state: present
+  register: tempest_rpm
+  when: test.rpm.package is defined and test.rpm.package|length >0
 
 - block:
     - name: load 'debug mode' facts from file
