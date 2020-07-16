@@ -1,3 +1,11 @@
+- name: check for subscription
+  become: yes
+  command: "subscription-manager identity"
+  ignore_errors: yes
+  register: cdn_status
+  failed_when: cdn_status.rc != 0
+  changed_when: false
+
 - name: Enable rhos unittest repository in order to install mariadb-devel
   vars:
     os_version: "{{ test.openstack.version|default(overcloud_version)|float }}"
@@ -6,6 +14,7 @@
       yum-config-manager \
           --setopt 'rhelosp-{{ os_version }}-unittest.includepkgs=mariadb-devel' \
           --enable rhelosp-{{ os_version }}-unittest >/var/log/yum.log
+  when: cdn_status.rc != 0
 
 - name: Install devel packages for package build dependencies
   become: yes
