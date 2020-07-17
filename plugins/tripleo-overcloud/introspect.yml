@@ -63,6 +63,20 @@
         register: instack_file_path
         tags: ironic
 
+      - name: Try get instackenv from the workspace if other methods did not succeded yet
+        copy:
+            src: "{{ inventory_dir }}/instackenv.json"
+            dest: "~/instackenv.json"
+        when: not instack_file_path.stat.exists
+        tags: ironic
+
+      - name: register path from stat for instackenv.json
+        stat:
+            path: "~/instackenv.json"
+        when: not instack_file_path.stat.exists
+        register: instack_file_path
+        tags: ironic
+
       - name: fail if instackenv file is missing
         fail:
             msg: instackenv file is missing
