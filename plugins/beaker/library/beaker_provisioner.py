@@ -19,7 +19,7 @@
 
 import json
 import time
-from urlparse import urljoin
+from six.moves.urllib.parse import urljoin
 from xml.dom import minidom
 
 import requests
@@ -386,7 +386,7 @@ class BeakerMachine(object):
         import re
         import ssl
         import tempfile
-        import xmlrpclib
+        import six.moves.xmlrpc_client as xmlrpclib
 
         try:
             ssl_context = ssl.create_default_context(cafile=self.ca_cert)
