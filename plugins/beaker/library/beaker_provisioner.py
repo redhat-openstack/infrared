@@ -19,7 +19,7 @@
 
 import json
 import time
-from urlparse import urljoin
+from  six.moves.urllib.parse import urljoin
 from xml.dom import minidom
 
 import requests
@@ -172,7 +172,7 @@ class BeakerMachine(object):
         params = dict(tg_format='atom', list_tgp_limit=limit)
 
         cnt = 0
-        for f_name, f_val in filters.items():
+        for f_name, f_val in list(filters.items()):
             params['systemsearch-{0}.table'.format(cnt)] = f_name
             params['systemsearch-{0}.operation'.format(cnt)] = 'is'
             params['systemsearch-{0}.value'.format(cnt)] = f_val
@@ -386,7 +386,7 @@ class BeakerMachine(object):
         import re
         import ssl
         import tempfile
-        import xmlrpclib
+        import six.moves.xmlrpc_client as xmlrpclib
 
         try:
             ssl_context = ssl.create_default_context(cafile=self.ca_cert)
