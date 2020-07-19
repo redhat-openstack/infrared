@@ -287,5 +287,4 @@
   become: yes
   command: |
       sed -i "s/\(NeutronBridgeMappings: \)''/\1'tenant:br-isolated'/" "{{ install.heat.templates.basedir }}/environments/{{ services }}/neutron-ovn-ha.yaml"
-  when:
-      - install.network.ovn and not install.network.dvr and install.network.backend == 'vlan'
+  when: install.network.ovn and not install.network.dvr and install.network.backend is match('.*vlan.*')
