@@ -1,8 +1,8 @@
 ---
-- name: collect /var/log/sfiles, ssh configs etc.
+- name: collect /var/lib/libvirt/qemu/*.log, ssh configs etc.
   shell: |
       mkdir -p /tmp/{{ inventory_hostname }};
-      find /var/log/sfiles /etc/ssh/ \
+      find /var/lib/libvirt/qemu/*.log /etc/ssh/ \
       -maxdepth {{ other.max.depth | default(4) }} -type f -size -1024M \
       -exec cp -rL --parents {} /tmp/{{ inventory_hostname }} \;
       journalctl -x > /tmp/{{ inventory_hostname }}/journal.log;
