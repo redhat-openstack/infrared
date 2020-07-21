@@ -46,12 +46,15 @@
           - python-networking-ovn.noarch
   when: install.version|default(undercloud_version)|openstack_release == 12
 
-- set_fact:
-      skip_container_images_patching: 'not_defined'
+- name: set fact - not_containerized_rpms for OSP13
+  set_fact:
+      not_containerized_rpms:
+          - python2-neutron-tests-tempest.noarch
+  when: install.version|default(undercloud_version)|openstack_release == 13
 
 - name: if 'patched-rpms' yum repo contains _only_ 'not_containerized_rpms' then skip container images patching
   set_fact:
-      skip_container_images_patching: "{%- if item not in not_containerized_rpms or not skip_container_images_patching | bool -%} False {%- else -%} True {%- endif -%}"
+      skip_container_images_patching: "{%- if item not in not_containerized_rpms -%} False {%- else -%} True {%- endif -%}"
   with_items: "{{ patched_rpms_packages_shell.stdout_lines }}"
 
 - debug:
