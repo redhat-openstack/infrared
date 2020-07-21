@@ -11,7 +11,8 @@
 
 - name: set image patching fact(s)
   set_fact:
-      not_containerized_rpms: []
+      not_containerized_rpms:
+          - python2-neutron-tests-tempest.noarch
 
 - name: set fact - not_containerized_rpms for OSP12
   set_fact:
@@ -47,7 +48,7 @@
   when: install.version|default(undercloud_version)|openstack_release == 12
 
 - set_fact:
-      skip_container_images_patching: 'not_defined'
+      skip_container_images_patching: true
 
 - name: if 'patched-rpms' yum repo contains _only_ 'not_containerized_rpms' then skip container images patching
   set_fact:
