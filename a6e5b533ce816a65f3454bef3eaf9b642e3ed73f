@@ -22,6 +22,30 @@
       "revId": "a6e5b533ce816a65f3454bef3eaf9b642e3ed73f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "596b0e13_edb2fb3c",
+        "filename": "plugins/tripleo-overcloud/roles/containers/prepare-templates/tasks/build/patch_images.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1017622
+      },
+      "writtenOn": "2020-07-22T13:45:46Z",
+      "side": 1,
+      "message": "Yeah, I know, but look at the loop in the next task. If I am not wrong, it has never worked correctly because (skip_container_images_patching | bool) was false during the first iteration.\nWhen that value is initialized to false, that loop makes no sense:  skip_container_images_patching will always end up being false.\nIt only makes sense it skip_container_images_patching is initialized to true.\n\nDoes this make sense to you?",
+      "parentUuid": "777c59a8_e982531d",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 42
+      },
+      "revId": "a6e5b533ce816a65f3454bef3eaf9b642e3ed73f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
