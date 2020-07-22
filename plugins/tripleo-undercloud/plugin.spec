@@ -149,6 +149,12 @@ subparsers:
                           parameter "CloudDomain" must be set to a matching value.
                       default: 'redhat.local'
 
+                  freeipa-domain:
+                      type: Value
+                      help: |
+                          Set the FreeIPA domain parameter.
+                      default: 'redhat.local'
+
                   deploy_interface_default:
                       type: Value
                       default: iscsi
@@ -199,6 +205,12 @@ subparsers:
                       help: |
                           Specifies whether TLS Everywhere with FreeIPA should be implemented
                       default: no
+
+                  enable-novajoin:
+                      type: Bool
+                      help: |
+                          Specifies whether TLS Everywhere with FreeIPA will use novajoin on the undercloud
+                      default: yes
 
             - title: Setup Undercloud Packages
               options:

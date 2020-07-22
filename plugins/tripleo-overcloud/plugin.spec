@@ -410,11 +410,29 @@ subparsers:
                           for overcloud_domain_name that was configured in undercloud.conf if set.
                       default: 'redhat.local'
 
+                  freeipa-domain:
+                      type: Value
+                      help: |
+                          Set the FreeIPA domain parameter.
+                      default: 'redhat.local'
+
                   tls-everywhere:
                       type: Bool
                       help: |
                           Specifies whether TLS Everywhere with FreeIPA should be implemented
                       default: no
+
+                  enable-novajoin:
+                      type: Bool
+                      help: |
+                          Specifies whether TLS Everywhere with FreeIPA will use novajoin on the overcloud
+                      default: yes
+
+                  ipa-issue-public-certs:
+                      type: Bool
+                      help: |
+                          Specifies whether certs on the public endpoints will be issued by FreeIPA
+                      default: yes
 
                   ipa-forwarder:
                       type: Value
