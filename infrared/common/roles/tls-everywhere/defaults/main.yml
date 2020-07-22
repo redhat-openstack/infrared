@@ -41,7 +41,7 @@ freeipa_overcloud_install_packages: "{{ ( False if (install.enable|default({})).
 freeipa_network_environment_file: "{{ freeipa_templates_basedir }}/network/network-environment.yaml"
 freeipa_network_environment_v6_file: "{{ freeipa_templates_basedir }}/network/network-environment-v6.yaml"
 freeipa_forwarder: "{{ (install|default({})).get('ipa', {}).get('forwarder', 'hypervisor') }}"
-freeipa_issue_public_endpoint_certs: "{{ ( True if (install.ipa|default({})).issue|default('').public|default('').certs|default('') == 'true' else False ) }}"
+freeipa_issue_public_endpoint_certs: "{{ ( True if (install|default({}).get('ipa',{}).get('issue', {}).get('public', {}).get('certs', '') == 'true' else False ) }}"
 
 # Shade settings
 freeipa_shade_node: "{{ groups.shade | first }}"
