@@ -16,6 +16,24 @@
       "revId": "62cd657c56e46a188e908ddba290350fe9188be4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09dc7df0_7449e03e",
+        "filename": "plugins/tripleo-overcloud/roles/containers/prepare-templates/tasks/build/patch_images.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1017622
+      },
+      "writtenOn": "2020-07-22T10:02:04Z",
+      "side": 1,
+      "message": "This is not failing for osp\u003e13 (I mean, without my patch). See this: https://rhos-qe-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/DFG-all-unified-16_director-rhel-virthost-3cont_2comp-ipv4-vxlan-lvm-default/182/artifact/.sh/ir-tripleo-overcloud-install.log\nSaying that, not sure if the original code is right, despite not failing. It does not fail with osp\u003e13 because patch_images_tripleo-modify-image.yml is imported instead of patch_images_do.yml (see the end of this yml file)\nI think patch_images_tripleo-modify-image.yml works because it uses openstack tripleo container image prepare command and does not matter whether any container is really updated or not, while patch_images_do.yml fails when no containers have to be updated because it uses docker commands.\n\n\nIn any case, in order to not affect osp\u003e13 by this patch, maybe it should only set not_containerized_rpms to the new value when osp\u003c14.\n\nThe patch just worked here: https://rhos-qe-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/DFG-all-unified-13_director-rhel-virthost-3cont_2comp-ipv4-vxlan-lvm-default/423/\nBut I am going to modify it. It will only apply when osp\u003c14",
+      "parentUuid": "dc4cd165_fe4dd14a",
+      "revId": "62cd657c56e46a188e908ddba290350fe9188be4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
