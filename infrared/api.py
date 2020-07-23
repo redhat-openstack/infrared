@@ -163,7 +163,8 @@ class InfraredPluginsSpec(SpecObject):
             os.environ['ANSIBLE_ROLES_PATH'] = new_path
 
         result = execute.ansible_playbook(
-            inventory=active_workspace.inventory,
+            ir_workspace=active_workspace,
+            ir_plugin=self.plugin,
             playbook_path=self.plugin.playbook,
             verbose=control_args.get('verbose', None),
             extra_vars=vars_dict,
