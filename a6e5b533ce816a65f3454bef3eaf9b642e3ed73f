@@ -70,6 +70,30 @@
       "revId": "a6e5b533ce816a65f3454bef3eaf9b642e3ed73f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4721cdc7_7f50558d",
+        "filename": "plugins/tripleo-overcloud/roles/containers/prepare-templates/tasks/build/patch_images.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1017622
+      },
+      "writtenOn": "2020-07-23T06:35:00Z",
+      "side": 1,
+      "message": "you cannot use item to initialize skip_container_images_patching before the loop because item values are assigned during the loop.\n\nRegarding your side note, the loop is a complicated method to do something like this:\nskip_container_images_patching \u003d all(item in not_containerized_rpms for item in patched_rpms_packages_shell.stdout_lines)\n\nThe intention of the loop is that once skip_container_images_patching is false, it will never be true again. It makes sense (once an rpm is containerized, container patching should not be skipped). But it\u0027ll only work if skip_container_images_patching is initialized to true.",
+      "parentUuid": "2870bb1c_e1170f8a",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 42
+      },
+      "revId": "a6e5b533ce816a65f3454bef3eaf9b642e3ed73f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
