@@ -5,13 +5,42 @@
 
 - name: wait for VMs IPs
   shell: |
-      virsh net-dhcp-leases {{ item.value.net }} | awk '($4 == "ipv4")  && ($3 == "{{ item.value.mac }}") {print $5}'
+      virsh net-dhcp-leases {{ item.value.net }} | awk '($4 == "ipv44")  && ($3 == "{{ item.value.mac }}") {print $5}'
   when: item.value.deploy_os
   register: ip_list
   until: "ip_list.stdout != ''"
-  retries: 40
+  retries: 4
   delay: 5
   with_dict: "{{ vm_inv_info }}"
+  failed_when: false
+  tags: skip_ansible_lint
+
+- debug:
+    var: ip_list
+
+- name: stop/start the virsh network we couldn't get IPs for
+  register: stop_start_virsh_network
+  shell: |
+    echo "Build mark: VIRSH NETWORK RESTARTED"
+    virsh net-destroy {{ item.value.net }}
+    virsh net-start {{ item.value.net }}
+  when:
+    - item.value.deploy_os
+    - ip_list.results | selectattr('item.key', 'equalto', item.key) | selectattr('failed', 'equalto', 'true')
+  with_dict: "{{ vm_inv_info }}"
+
+- name: wait for VMs IPs - 2nd try
+  shell: |
+    virsh net-dhcp-leases {{ item.value.net }} | awk '($4 == "ipv44")  && ($3 == "{{ item.value.mac }}") {print $5}'
+  when:
+    - item.value.deploy_os
+    - stop_start_virsh_network is defined
+  register: ip_list
+  until: "ip_list.stdout != ''"
+  retries: 20
+  delay: 5
+  with_dict: "{{ vm_inv_info }}"
+  failed_when: false
   tags: skip_ansible_lint
 
 - name: construct dict with node name as key and with ip as value
