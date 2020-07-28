@@ -108,7 +108,30 @@
       - item.0.bridge|default('') not in ignore_virsh_nets
   ignore_errors: yes
 
-- name: remove the networks we created
+- name: gather information about network interfaces that exist on this system
+  shell: ip --json link
+  register: network_interfaces_json
+
+- name: remove the network interfaces linked to networks we created
+  vars:
+    ifname: |-
+      {%- for interface in network_interfaces_json.stdout | from_json -%}
+      {%- if 'link' in interface -%}
+      {%- if interface.link == item.key -%}
+      {{ interface.ifname }}
+      {%- endif -%}
+      {%- endif -%}
+      {%- endfor -%}
+  shell: |
+    ip l del {{ ifname }}
+    rm -f /etc/sysconfig/network-scripts/ifcfg-{{ ifname }}
+  become: true
+  with_dict: "{{ vm_nets.networks }}"
+  when:
+    - item.key not in ignore_virsh_nets
+    - ifname != ""
+
+- name: remove the virsh networks we created
   tags: networks
   virt_net:
       name: "{{ item.key }}"
