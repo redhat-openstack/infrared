@@ -12,7 +12,47 @@
   retries: 40
   delay: 5
   with_dict: "{{ vm_inv_info }}"
-  tags: skip_ansible_lint
+  ignore_errors: true
+  tags:
+    - skip_ansible_lint
+    - bz1840307
+
+- debug:
+    var: ip_list
+  tags: bz1840307
+
+#- name: stop/start the virsh network we couldn't get IPs for
+#  register: stop_start_virsh_network
+#  shell: |
+#    echo "Build mark: VIRSH NETWORK RESTARTED"
+#    virsh net-destroy {{ item.value.net }}
+#    virsh net-start {{ item.value.net }}
+
+# workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1840307 (bz1840307, bz#1840307)
+# it may not be required on RHEL8.3+
+- name: restart libvirt if we couldn't get IPs for VMs
+  service:
+    name: libvirtd
+    state: restarted
+  when: ip_list is failed
+  tags: bz1840307
+#    - ip_list.results | selectattr('item.key', 'equalto', item.key) | selectattr('failed', 'equalto', 'true')
+#  with_dict: "{{ vm_inv_info }}"
+
+- name: wait for VMs IPs - 2nd try
+  shell: |
+    virsh net-dhcp-leases {{ item.value.net }} | awk '($4 == "ipv4")  && ($3 == "{{ item.value.mac }}") {print $5}'
+  when:
+    - item.value.deploy_os
+    - stop_start_virsh_network is defined
+  register: ip_list
+  until: "ip_list.stdout != ''"
+  retries: 40
+  delay: 5
+  with_dict: "{{ vm_inv_info }}"
+  tags:
+    - skip_ansible_lint
+    - bz1840307
 
 - name: construct dict with node name as key and with ip as value
   set_fact:

@@ -45,7 +45,9 @@
          (not provision.virsh.snapshot.export | bool) and
          (not provision.virsh.snapshot.import | bool) and
          (provision.topology.nodes is defined) }}
-  tags: vms
+  tags:
+    - vms
+    - bz1840307
 
 - name: Create a sudoer user for non root SSH login
   import_playbook: "{{ provision_user | default('provision_user.yml') }}"
