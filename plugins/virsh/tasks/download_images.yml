@@ -28,7 +28,9 @@
   retries: 5
   delay: 5
   with_dict: "{{ topology_node.disks }}"
-  when: topology_node.disks|count > 0
+  when:
+    - topology_node.disks|count > 0
+    - topology_node.deploy_os | default(true) | bool
 
 - name: result of download base image for node
   debug:
@@ -57,4 +59,6 @@
           --selinux-relabel
   with_items: "{{ download_image_result.results }}"
   when:
-    - topology_node.supports_libguestfs|default(true)
+    - topology_node.supports_libguestfs | default(true)
+    - topology_node.deploy_os | default(true) | bool
+
