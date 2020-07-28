@@ -108,13 +108,38 @@
       - item.0.bridge|default('') not in ignore_virsh_nets
   ignore_errors: yes
 
-- name: remove the networks we created
+- name: remove the virsh networks we created
   tags: networks
   virt_net:
       name: "{{ item.key }}"
       state: absent
   with_dict: "{{ vm_nets.networks }}"
   when: item.key not in ignore_virsh_nets
+
+- name: gather information about network interfaces that exist on this system
+  shell: ip --json link
+  register: network_interfaces_json
+  tags: skip_ansible_lint
+
+- name: remove any left-over interfaces linked/related to networks we created
+  vars:
+    ifname_rm_command: |-
+      {%- for interface in network_interfaces_json.stdout | from_json -%}
+      {%- if 'link' in interface -%}
+      {%- if interface.link == item.key -%}
+      ip l del {{ interface.ifname }}; rm -f /etc/sysconfig/network-scripts/ifcfg-{{ interface.ifname }};
+      {%- endif -%}
+      {%- elif interface.ifname == item.key or interface.ifname == item.key + "-nic" -%}
+      ip l del {{ interface.ifname }}; rm -f /etc/sysconfig/network-scripts/ifcfg-{{ interface.ifname }};
+      {%- endif -%}
+      {%- endfor -%}
+  shell: "{{ ifname_rm_command }}"
+  become: true
+  with_dict: "{{ vm_nets.networks }}"
+  when:
+    - item.key not in ignore_virsh_nets
+    - ifname_rm_command != ""
+  tags: skip_ansible_lint
 
 - name: restore bridge
   tags: networks
