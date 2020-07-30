@@ -1,5 +1,9 @@
 resource_registry:
+{% if install.version|openstack_release >= 16 %}
   OS::TripleO::Services::IpaClient: {{ freeipa_heat_templates_basedir }}/deployment/ipa/ipaservices-baremetal-ansible.yaml
+{% else %}
+  OS::TripleO::Services::IpaClient: {{ freeipa_heat_templates_basedir }}/extraconfig/services/ipaclient.yaml
+{% endif %}
 
 parameter_defaults:
   IdMServer: {{ freeipa_node }}.{{ freeipa_domain }}
