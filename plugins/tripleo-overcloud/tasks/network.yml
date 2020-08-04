@@ -172,8 +172,10 @@
 - name: Create neutron-lbaas environment file
   become: yes
   copy:
-      dest: "{{ install.heat.templates.basedir }}/environments/services/neutron-lbaas.yaml"
+      dest: "{{ install.heat.templates.basedir }}/environments/{{ services }}/neutron-lbaas.yaml"
       src: "files/network/neutron-lbaas.yml"
+  vars:
+    services: "{{ (install.version|openstack_release > 13) | ternary('services', 'services-docker') }}"
   when:
       - install.network.lbaas
       - install.version|default(undercloud_version)|openstack_release >= 13
@@ -181,7 +183,9 @@
 - name: Append the LBaaS v2 template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e {{ install.heat.templates.basedir }}/environments/services/neutron-lbaas.yaml \'
+      line: '-e {{ install.heat.templates.basedir }}/environments/{{ services }}/neutron-lbaas.yaml \'
+  vars:
+    services: "{{ (install.version|openstack_release > 13) | ternary('services', 'services-docker') }}"
   when:
       - install.network.lbaas
       - install.version|default(undercloud_version)|openstack_release >= 13
@@ -252,14 +256,14 @@
 - block:
   - name: Remove OVNCMSOptions for controller nodes in non-DVR deployments
     command: |
-        sed -i '/ControllerParameters/,+1 d' {{ install.heat.templates.basedir }}/environments/services/neutron-ovn-ha.yaml
+        sed -i '/ControllerParameters/,+1 d' {{ install.heat.templates.basedir }}/environments/{{ services }}/neutron-ovn-ha.yaml
     when:
         - install.network.ovn and not install.network.dvr
         - "'networker' in install.role.files"
 
   - name: Remove OVNCMSOptions for controller nodes in DVR deployments
     command: |
-        sed -i '/ControllerParameters/,+1 d' {{ install.heat.templates.basedir }}/environments/services/neutron-ovn-dvr-ha.yaml
+        sed -i '/ControllerParameters/,+1 d' {{ install.heat.templates.basedir }}/environments/{{ services }}/neutron-ovn-dvr-ha.yaml
     when:
         - install.network.ovn and install.network.dvr
         - "'networker' in install.role.files"
@@ -280,6 +284,8 @@
   when:
       - install.version|default(undercloud_version)|openstack_release >= 13
       - install.get('role', {}).files is defined
+  vars:
+    services: "{{ (install.version|openstack_release > 13) | ternary('services', 'services-docker') }}"
 
 - name: Add bridge mappings for compute nodes in non-DVR OVN VLAN deployments
   vars:

@@ -34,7 +34,9 @@
 - name: append the ovn DVR HA OSP > 12 template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e {{ install.heat.templates.basedir }}/environments/services/neutron-ovn-dvr-ha.yaml \'
+      line: '-e {{ install.heat.templates.basedir }}/environments/{{ services }}/neutron-ovn-dvr-ha.yaml \'
+  vars:
+    services: "{{ (install.version|openstack_release > 13) | ternary('services', 'services-docker') }}"
   when:
       - install.network.ovn and install.network.dvr
       - install.version|default(undercloud_version)|openstack_release > 12
