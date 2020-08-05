@@ -104,6 +104,17 @@
         regexp: '^ca.crl.MasterCRL.publishOnStart=(.*)$'
         line: 'ca.crl.MasterCRL.publishOnStart=true'
 
+  - name: Add ACL to allow hosts access to DNS
+    become: yes
+    shell:
+      cmd: |
+        cat << EOF | ldapmodify -x -D "cn=Directory Manager" -w {{ freeipa_directory_manager_password }}
+        dn: cn=dns,dc={{ freeipa_domain.split(".")[0] }},dc={{ freeipa_domain.split(".")[1] }}
+        changetype: modify
+        add: aci
+        aci: (targetattr = "aaaarecord || arecord || cnamerecord || idnsname || objectclass || ptrrecord")(targetfilter = "(&(objectclass=idnsrecord)(|(aaaarecord=*)(arecord=*)(cnamerecord=*)(ptrrecord=*)(idnsZoneActive=TRUE)))")(version 3.0; acl "Allow hosts to read DNS A/AAA/CNAME/PTR records"; allow (read,search,compare) userdn = "ldap:///fqdn=*,cn=computers,cn=accounts,dc={{ freeipa_domain.split('.')[0] }},dc={{ freeipa_domain.split('.')[1] }}";)
+        EOF
+
   - name: Add DNS zone when needed
     become: yes
     shell: |
