@@ -12,6 +12,31 @@
   retries: 40
   delay: 5
   with_dict: "{{ vm_inv_info }}"
+  ignore_errors: true
+  tags: skip_ansible_lint
+
+# workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1840307 (bz1840307, bz#1840307)
+# it may not be required on RHEL8.3+
+- name: restart the VM that failed to get/show its IP
+  vars:
+    vm_ip_list: "{{ ip_list.results | selectattr('item.key', 'equalto', item.key) | list | first }}"
+  register: vm_restarted
+  shell: virsh reboot {{ item.key }}
+  when: vm_ip_list.failed | default(false) | bool
+  with_dict: "{{ vm_inv_info }}"
+  tags: skip_ansible_lint
+
+- name: wait for VMs IPs - 2nd try
+  shell: |
+    virsh net-dhcp-leases {{ item.value.net }} | awk '($4 == "ipv4")  && ($3 == "{{ item.value.mac }}") {print $5}'
+  when:
+    - item.value.deploy_os
+    - vm_restarted is defined
+  register: ip_list
+  until: "ip_list.stdout != ''"
+  retries: 40
+  delay: 5
+  with_dict: "{{ vm_inv_info }}"
   tags: skip_ansible_lint
 
 - name: construct dict with node name as key and with ip as value
