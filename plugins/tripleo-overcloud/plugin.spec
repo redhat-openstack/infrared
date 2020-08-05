@@ -617,6 +617,12 @@ subparsers:
                         The 'lvm' value will be used when storage nodes were not found.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
 
+                  ceph-cluster-name:
+                      type: Value
+                      default: ceph
+                      help: |
+                        The variable used to change the ceph cluster name, this feature is supported from RHOSP 15. Default value is 'ceph'.
+
                   glance-backend:
                       type: Value
                       choices:
