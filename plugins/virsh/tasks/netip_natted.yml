@@ -3,16 +3,26 @@
 - name: get networks dict
   include_vars: "{{ provision.topology.network }}"
 
+# Wait for IP, if it takes >1 minute there is good likelyhood we hit bug below
 - name: wait for VMs IPs
   shell: |
       virsh net-dhcp-leases {{ item.value.net }} | awk '($4 == "ipv4")  && ($3 == "{{ item.value.mac }}") {print $5}'
   when: item.value.deploy_os
   register: ip_list
   until: "ip_list.stdout != ''"
-  retries: 40
-  delay: 5
+  retries: 20
+  delay: 3
   with_dict: "{{ vm_inv_info }}"
+  ignore_errors: true
   tags: skip_ansible_lint
+
+# Workaround libvirt bug (details in included playbook)
+# Based on https://projects.engineering.redhat.com/browse/RHOSINFRA-3266
+# we need to do at least 3 attempts. Lets make them fairly short (30s), it usually takes ~5 seconds
+# to obtain lease for single UC vm from dnsmasq/libvirt.
+- name: Restart VM and get IP again in recursive loop
+  include_tasks: tasks/libvirt_workaround.yml
+  when: ip_list.failed | default(false) | bool
 
 - name: construct dict with node name as key and with ip as value
   set_fact:
