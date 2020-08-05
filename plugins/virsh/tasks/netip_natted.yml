@@ -4,6 +4,7 @@
   include_vars: "{{ provision.topology.network }}"
 
 # Wait for IP, if it takes >1 minute there is good likelyhood we hit bug below
+# Decrease the unnecesarry long delay by 50-75% - IP is usually assigned not in more what 3 seconds anyway
 - name: wait for VMs IPs
   shell: |
       virsh net-dhcp-leases {{ item.value.net }} | awk '($4 == "ipv4")  && ($3 == "{{ item.value.mac }}") {print $5}'
