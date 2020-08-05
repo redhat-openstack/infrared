@@ -3,14 +3,15 @@
 - name: get networks dict
   include_vars: "{{ provision.topology.network }}"
 
+# Decrease the unnecesarry long delay by 50-75% - IP is usually assigned not in more what 3 seconds anyway
 - name: wait for VMs IPs
   shell: |
       virsh net-dhcp-leases {{ item.value.net }} | awk '($4 == "ipv4")  && ($3 == "{{ item.value.mac }}") {print $5}'
   when: item.value.deploy_os
   register: ip_list
   until: "ip_list.stdout != ''"
-  retries: 40
-  delay: 5
+  retries: 20
+  delay: 3
   with_dict: "{{ vm_inv_info }}"
   tags: skip_ansible_lint
 

@@ -42,7 +42,9 @@
       loop_control:
           loop_var: node
       when: node.value.node_indexes|length > 0
-      tags: images
+      tags: 
+          - images
+          - notrun
 
     - name: prepare bridge interfaces in the topology
       set_fact:
@@ -65,7 +67,7 @@
           retries: 300
           with_items: "{{ async_disks }}"
           when: async_disks is defined
-      tags: disks
+      tags: disks,notrun
 
     # Build VMs
     - block:
@@ -84,7 +86,12 @@
           retries: 300
           with_items: "{{ async_install }}"
           when: async_install is defined
-      tags: install
+      tags: install,notrun
+
+    - name: Start all VMs again so they can fetch new IPs
+      shell: |
+          for i in `virsh list --all | awk '{print $2}' | grep -v "\(Name\|^$\)"`; do virsh start $i ; done
+      tags: vms_test
 
     # Fetch IP addresses
     - block:
@@ -114,3 +121,4 @@
       loop_control:
           loop_var: node
       when: node.value.node_indexes|length > 0
+      tags: post_vms,notrun
