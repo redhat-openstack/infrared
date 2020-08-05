@@ -1,0 +1,43 @@
+# workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1840307 (bz1840307, bz#1840307)
+# it may not be required on RHEL8.3+
+# Used recursive solution from https://github.com/ansible/ansible/issues/46203
+# since Ansible doesn not support repeating of block with conditionals.
+- name: Group of tasks that are tightly coupled
+  block:
+  - name: Increment the retry count
+    set_fact:
+      retry_count: "{{ 0 if retry_count is undefined else retry_count | int + 1 }}"
+
+  - name: restart the VM that failed to get/show its IP
+    vars:
+      vm_ip_list: "{{ ip_list.results | selectattr('item.key', 'equalto', item.key) | list | first }}"
+    register: vm_restarted
+    shell: virsh reboot {{ item.key }}
+    when: vm_ip_list.failed | default(false) | bool
+    with_dict: "{{ vm_inv_info }}"
+    tags: skip_ansible_lint
+
+  - name: wait for VMs IPs - yet another try
+    shell: |
+      virsh net-dhcp-leases {{ item.value.net }} | awk '($4 == "ipv4")  && ($3 == "{{ item.value.mac }}") {print $5}'
+    when:
+      - item.value.deploy_os
+      - vm_restarted is defined
+    register: ip_list
+    until: "ip_list.stdout != ''"
+    retries: 20
+    delay: 3
+    with_dict: "{{ vm_inv_info }}"
+    tags: skip_ansible_lint
+
+  rescue:
+    - fail:
+        msg: Maximum retries of grouped tasks reached
+      when: retry_count | int == 3
+
+    - debug:
+        msg: "Task Group failed, let's give it another shot"
+
+    - include_tasks: tasks/libvirt_workaround.yml
+
+
