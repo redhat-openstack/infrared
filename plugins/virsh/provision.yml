@@ -26,6 +26,18 @@
          (not provision.virsh.snapshot.export | bool) }}
   tags: hypervisor
 
+- name: Flakehunt preparation
+  hosts: hypervisor
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+    - name: Shutdown VMs and remove mgmt network
+      shell: |
+          for i in `virsh list --all | awk '{print $2}' | grep -v "\(Name\|^$\)"`; do virsh destroy $i ; done
+          virsh net-destroy management || true
+          virsh net-undefine management || true
+      tags: vms_test
+
 - name: Create Networks
   import_playbook: "{{ provision_networks | default('provision_networks.yml') }}"
   vars:
@@ -80,7 +92,7 @@
   hosts: "{{ (_main_run_condition | bool) | ternary('localhost', 'none') }}"
   gather_facts: no
   any_errors_fatal: true
-  tags: always
+  tags: inventory
   tasks:
     - include_role:
         name: inventory-update
