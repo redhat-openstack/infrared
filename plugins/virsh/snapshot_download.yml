@@ -20,6 +20,10 @@
         path: "{{ provision.virsh.snapshot.path }}"
         state: directory
 
+    - name: Show which cloud is being connected to
+      debug:
+        msg: "OS_CLOUD: {{ lookup('env', 'OS_CLOUD') }}"
+
     - name: Authenticate to the cloud to get a token
       os_auth:
         cloud: "{{ lookup('env', 'OS_CLOUD') }}"
