@@ -1,4 +1,10 @@
 ---
+- name: Check if this node is an ipa client
+  stat:
+    path: /etc/ipa/default.conf
+  register: ipa_default_conf_stat
+  delegate_to: "{{ freeipa_node }}"
+
 - block:
   - name: Include VIPs configuration vars
     include_vars:
@@ -193,4 +199,5 @@
         line: "{{ freeipa_undercloud_ipaddress }} {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} {{ groups['undercloud'][0] }}"
         state: present
   delegate_to: "{{ freeipa_node }}"
+  when: not ipa_default_conf_stat.stat.exists
 
