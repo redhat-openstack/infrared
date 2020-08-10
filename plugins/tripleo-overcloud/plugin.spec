@@ -102,8 +102,7 @@ subparsers:
 
                   registry-mirror:
                       type: Value
-                      help: The alternative docker registry to use for deployment.
-                      required_when: "registry-skip-puddle == True"
+                      help: The alternative docker registry to use for deployment. DEPRECATED.
 
                   registry-undercloud-skip:
                       type: Bool
@@ -127,8 +126,7 @@ subparsers:
 
                   registry-tag:
                       type: Value
-                      help: The images tag
-                      required_when: "registry-skip-puddle == True"
+                      help: The images tag.
 
                   registry-tag-label:
                       type: Value

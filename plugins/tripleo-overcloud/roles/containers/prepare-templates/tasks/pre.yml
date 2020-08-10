@@ -49,20 +49,11 @@
           container-image-prepare:
               namespace: "{{ install.get('registry', {}).namespace|default('') }}"
               prefix: "{{ install.registry.prefix|default('') }}"
-              tag: "{{ install.registry.tag }}"
+              tag: "{{ install.registry.tag|default(omit) }}"
               ceph-namespace: "{{ install.get('registry', {}).get('ceph', {}).namespace|default('') }}"
               ceph-image: "{{ install.get('registry', {}).get('ceph', {}).image|default('') }}"
               ceph-tag: "{{ install.get('registry', {}).get('ceph', {}).tag|default('') }}"
   when: install.registry.skip.puddle
-
-- name: Fail non-osp deployment
-  fail:
-      msg: |
-          For non-OSP deployment set --registry-skip-puddle=yes and provide
-          '-registy-namespace' '--registry-tag' options.
-  when:
-      - (install.version|default(undercloud_version)|openstack_distribution) != 'OSP'
-      - container_env is not defined
 
 - block:
     - name: get puddle url from the repos
