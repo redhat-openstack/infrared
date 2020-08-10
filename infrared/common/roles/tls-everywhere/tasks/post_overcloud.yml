@@ -28,6 +28,7 @@
         path: /etc/hosts
         marker: "### {mark} Overcloud Entries"
         state: absent
+    when: "install.version|openstack_release < 16"
 
   - name: Update /etc/hosts with Overcloud Entries
     become: true
@@ -36,6 +37,7 @@
         backup: yes
         marker: "### {mark} Overcloud Entries"
         content: "{{ overcloud_hosts }}"
+    when: "install.version|openstack_release < 16"
 
   - name: Removing previous Overcloud Entries
     become: true
