@@ -102,8 +102,9 @@ subparsers:
 
                   registry-mirror:
                       type: Value
-                      help: The alternative docker registry to use for deployment.
-                      required_when: "registry-skip-puddle == True"
+                      help: | 
+                          The alternative docker registry to use for deployment. DEPRECATED.
+                          New version of osp handles the registry mirror only at the undercloud step.
 
                   registry-undercloud-skip:
                       type: Bool
@@ -127,8 +128,7 @@ subparsers:
 
                   registry-tag:
                       type: Value
-                      help: The images tag
-                      required_when: "registry-skip-puddle == True"
+                      help: The images tag.
 
                   registry-tag-label:
                       type: Value
