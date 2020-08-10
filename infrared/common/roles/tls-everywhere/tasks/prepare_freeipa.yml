@@ -1,4 +1,11 @@
 ---
+- name: Check if this node is an ipa client
+  become: yes
+  stat:
+    path:  /etc/ipa_server_setup_done
+  register: ipa_server_setup_done_stat
+  delegate_to: "{{ freeipa_node }}"
+
 - block:
   - name: Include VIPs configuration vars
     include_vars:
@@ -192,5 +199,13 @@
         dest: "/etc/hosts"
         line: "{{ freeipa_undercloud_ipaddress }} {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} {{ groups['undercloud'][0] }}"
         state: present
+
+  - name: create success file
+    become: yes
+    copy:
+      content: ""
+      path: /etc/ipa_server_setup_done
+
   delegate_to: "{{ freeipa_node }}"
+  when: not ipa_server_setup_done_stat.stat.exists
 
