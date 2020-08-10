@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da6c203b_c67d6910",
+        "filename": "plugins/virsh/tasks/libvirt_workaround.yml",
+        "patchSetId": 20
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1016895
+      },
+      "writtenOn": "2020-08-10T10:13:26Z",
+      "side": 1,
+      "message": "Perhaps use multiple ways to get the IP? For example:\n\n  virsh domifaddr --domain \u003cdomain\u003e --source agent --interface \u003cinterface\u003e\n  virsh domifaddr --domain \u003cdomain\u003e --source arp",
+      "revId": "81669c4ddbcc8856228aa92d3912d8a9d7aa41c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a5c1ccb_128858e4",
+        "filename": "plugins/virsh/tasks/netip_natted.yml",
+        "patchSetId": 20
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1016895
+      },
+      "writtenOn": "2020-08-10T10:13:26Z",
+      "side": 1,
+      "message": "Rather than use ignore_errors, why not use block/rescue?\n\nEven better, why not just remove this task and use the included workaround instead to reduce the duplication of code?",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 21
+      },
+      "revId": "81669c4ddbcc8856228aa92d3912d8a9d7aa41c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
