@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "525ffff0_d1fce5d0",
+        "filename": "plugins/virsh/tasks/libvirt_workaround.yml",
+        "patchSetId": 20
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2020-08-10T14:14:35Z",
+      "side": 1,
+      "message": "Perhaps yes as another option or as Pavel mentioned to get it directly from dnsmasq.\n\nThe aim here was to do quickest workaround with minimum impact on existing code not delaying provisioning stage too much, hoping for the libvirt fix will be backported asap.\n\nWe\u0027ll recheck these options if current workaround won\u0027t be enough.",
+      "parentUuid": "da6c203b_c67d6910",
+      "revId": "81669c4ddbcc8856228aa92d3912d8a9d7aa41c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4a5c1ccb_128858e4",
         "filename": "plugins/virsh/tasks/netip_natted.yml",
         "patchSetId": 20
@@ -30,6 +48,30 @@
       "writtenOn": "2020-08-10T10:13:26Z",
       "side": 1,
       "message": "Rather than use ignore_errors, why not use block/rescue?\n\nEven better, why not just remove this task and use the included workaround instead to reduce the duplication of code?",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 21
+      },
+      "revId": "81669c4ddbcc8856228aa92d3912d8a9d7aa41c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "31e29351_4c6f241b",
+        "filename": "plugins/virsh/tasks/netip_natted.yml",
+        "patchSetId": 20
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2020-08-10T14:14:35Z",
+      "side": 1,
+      "message": "Not sure what would be the advantage, moreover I tend to choose the block/rescue solution when there are more than 1 tasks in play.\n\nOn the second point, imho this is more explicit in terms of readability and giving people clear msg how the flow went in console log - jobs on rhel7 will skip the workaround tasks/playbook since they shouldn\u0027t hit it, for anyone using \"problematic distro\" the flow will be clearly different, making sure the console shows the workaround playbook was included during prov. stage so they will be aware of possible impact (prolonged stage duration). It should be also easier to revert these changes to orig state once we do not need it anymore.",
+      "parentUuid": "4a5c1ccb_128858e4",
       "range": {
         "startLine": 16,
         "startChar": 0,
