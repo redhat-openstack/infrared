@@ -72,10 +72,9 @@ subparsers:
                   config-file:
                       type: FileValue
                       help: |
-                          Path to a custom undercloud.conf file to use for deployment.
-                          If not set, it will look under `templates` path for a file named `undercloud.conf`.
-                          If no `undercloud.conf` file found, it will use default `/usr/share/instack-undercloud/undercloud.conf.sample`
-                          that is provided by the installation.
+                          Path to a custom undercloud.conf (jinja template) file to use for deployment.
+                          If value set to `none` it will use the `/usr/share/instack-undercloud/undercloud.conf.sample`
+                          from the undercloud node.
 
                   boot-mode:
                       type: Value
