@@ -244,6 +244,8 @@ subparsers:
                         - "16.0-trunk"
                         - "16.1"
                         - "16.1-trunk"
+                        - "16.2"
+                        - "16.2-trunk"
                         - kilo
                         - liberty
                         - mitaka
