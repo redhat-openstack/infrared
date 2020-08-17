@@ -116,6 +116,16 @@ subparsers:
                           specifies whether the rhos/rdo-release tools should
                           be used to install tripleo packages. This flag also disables installation of the extra cdn
                           repositories.
+                  custom-sources-script-url:
+                      help: |
+                          Script which is downloaded and executed at repo and registry setup time,
+                          IR provides context for the scripts via environment variables.
+                          Implies repos-skip-release , the script can call foo-release if wishes
+                          In case of a remote url you can pass get parameters.
+                      default: ""
+                  custom-sources-script-args:
+                      help: |
+                           Extra arguments for the custom-sources script.
                   skip-remove-repo:
                       type: Value
                       action: append

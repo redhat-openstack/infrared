@@ -5,7 +5,9 @@
   become: yes
   vars:
       custom_repos: "{{ install.repos|default({}) }}"
-      skip_release: "{{ install.get('repos', {}).get('skip', {}).release|default('') }}"
+      custom_script_url: "{{ install.get('custom', {}).get('sources', {}).get('script', {}).get('url', {})|default('') }}"
+      custom_script_args: "{{ install.get('custom', {}).get('sources', {}).get('script', {}).get('args', {})|default('') }}"
+      skip_release: "{{ custom_script_url != '' or install.get('repos', {}).get('skip', {}).release|default('') }}"
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
   tags: install
   pre_tasks:
@@ -56,6 +58,16 @@
         when:
             - install.version|openstack_distribution == 'RDO'
             - not skip_release
+        tags: rhos-release
+
+      - role: from-script
+        script_url: "{{ custom_script_url }}"
+        script_args: "{{ custom_script_args }}"
+        release: "{{ install.version }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        context: "standalone"
+        when:
+            - "{{ custom_script_url != '' }}"
         tags: rhos-release
 
       - role: from-source
