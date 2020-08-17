@@ -2,6 +2,10 @@
 - name: Update Undercloud in the inventory
   import_playbook: "{{ update_inventory | default('update_inventory.yml') }}"
 
+- name: Install ca crt
+  import_playbook: "{{ install_ca_crt | default('install_ca_crt.yml') }}"
+  when: install.version|default('')
+
 - name: Perform validations
   import_playbook: "{{ validate_undercloud | default('validate.yml') }}"
   when: install.validate|default('')
