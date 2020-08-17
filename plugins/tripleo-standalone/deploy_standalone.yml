@@ -39,7 +39,7 @@
 
       - name: store ip for template
         shell: |
-            /sbin/ifconfig {{ install.local.interface }} |grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*'
+            /usr/sbin/ip addr show {{ install.local.interface }} | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*'
         register: deploy_ip
         become: yes
 
