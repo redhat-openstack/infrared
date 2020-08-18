@@ -24,13 +24,13 @@
   import_playbook: "{{ install_restore | default('restore.yml') }}"
   when:
     - install.snapshot.restore|default('')
-    - install.version|int < 15
+    - install.version|round < 15
 
 - name: Restore an undercloud from image (using undercloud snapshot) osp 15 and above
   import_playbook: "{{ install_restore | default('restore_containerized.yml') }}"
   when:
     - install.snapshot.restore|default('')
-    - install.version|int > 14
+    - install.version|round > 14
 
 - name: Undercloud Upgrade
   import_playbook: "{{ upgrade_undercloud | default('upgrade.yml') }}"
