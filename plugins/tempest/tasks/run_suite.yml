@@ -106,7 +106,7 @@
         vars:
           test_openstack_version: "{{ test.openstack.version | default(overcloud_version) | openstack_release }}"
         set_fact:
-          python_interpreter: "{{ (test_openstack_version | float > 14.0) | ternary('python3', 'python') }}"
+          python_interpreter: "{{ (test_openstack_version | float >= 13.0) | ternary('python3', 'python') }}"
 
       - name: run tempest "{{ test_suite }}" suite with tempest run
         shell: >
