@@ -44,6 +44,7 @@
           openssl req -new -x509
           -days 365
           -key {{ ssl.privkey }}
+          {% if ansible_distribution_major_version | int >= 8 %} -addext 'subjectAltName = IP:{{ public_vip }}' {% endif %}
           -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ public_vip }}'
           -out {{ ssl.cacert }}"
   # Ansible had trouble templating the above command straight to the shell module hence the var
