@@ -1,6 +1,6 @@
 parameter_defaults:
   CertmongerCA: local
-  CloudName: {{ deploy_ip.stdout }}
+  CloudName: {{ deploy_ip }}
   CloudDomain: localdomain
   ContainerImagePrepare:
   - set:
@@ -21,7 +21,7 @@ parameter_defaults:
   # needed for vip & pacemaker
   KernelIpNonLocalBind: 1
   DockerInsecureRegistryAddress:
-  - {{ deploy_ip.stdout }}:8787
+  - {{ deploy_ip }}:8787
   - docker-registry.engineering.redhat.com
   NeutronPublicInterface: {{ install.local.interface }}
   # re-use ctlplane bridge for public net

@@ -16,6 +16,26 @@ subparsers:
                       type: Value
                       help: The data network interface name
                       default: eth0
+                  deployment-script:
+                      type: Value
+                      help: |
+                            The absolute path to a custom standalone deployment script.
+                            If not set, it will deploy using the standard standalone script.
+                  deploy-ip:
+                      type: Value
+                      help: |
+                            The ip to use when deploying standalone openstack. If not set,
+                            the ip configured to local-interface will be used.
+                  deployment-files:
+                      type: VarDir
+                      help: |
+                          The absolute path to the folder containing the templates of the standalone deployment.
+                          If not set it will generate a deployment based on standard parameters.
+                  user-name:
+                      type: Value
+                      help: The installation user name. Will be generated if missing
+                      default: stack
+
             - title: Setup Packages
               options:
                   mirror:
@@ -42,6 +62,10 @@ subparsers:
                         - "14"
                         - "15"
                         - "15-trunk"
+                        - "16"
+                        - "16.1"
+                        - "16.2"
+                        - "17"
                         - kilo
                         - liberty
                         - mitaka
