@@ -3,9 +3,9 @@
   hosts: standalone
   gather_facts: yes
   vars:
-      home_dir: /home/cloud-user
+      home_dir: "/home/{{ install.user.name }}"
       gateway: 10.0.0.1
-      deployment_user: cloud-user
+      deployment_user: "{{ install.user.name }}"
       netmask: 24
       containers_images_env_template_download_basename: "overcloud_container_image_prepare.yaml"
       containers_images_env_template_dest_file: "{{ inventory_dir }}/overcloud_container_image_prepare.yaml"
@@ -35,13 +35,22 @@
                 file: "{{ containers_images_env_template_dest_file }}"
                 name: container_env
 
-          - debug: var=container_env
+      - name: set ip if provided by cli
+        set_fact:
+            deploy_ip: "{{ install.deploy.ip }}"
+        when: install.get('deploy', {}).get('ip', {})
 
-      - name: store ip for template
-        shell: |
-            /sbin/ifconfig {{ install.local.interface }} |grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*'
-        register: deploy_ip
-        become: yes
+      - name: register IP from local-interaface
+        block:
+          - name: get ip from local interface for template
+            shell: |
+                /sbin/ifconfig {{ install.local.interface }} | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*'
+            register: deploy_ip_shell
+            become: yes
+
+          - set_fact:
+              deploy_ip={{deploy_ip_shell.stdout}}
+        when: not install.get('deploy', {}).get('ip', {})
 
       - name: set hostname
         shell: |
@@ -49,21 +58,56 @@
             sudo hostnamectl set-hostname --transient {{ install.stackname }}-0.localdomain
         become: yes
 
-      - name: Generate standalone_parameters.yaml file
-        vars:
+      - name: set standalone deployment template file
+        set_fact:
+            standalone_deployment_template: "{{ install.get('deployment', {}).get('script', undefined) | default('standalone_deploy.sh.j2') }}"
+
+      - debug: msg="{{ standalone_deployment_template }}"
+
+      - name: set container env variables
+        set_fact:
             dns_server: "10.10.160.1"
             containers_name_prefix: "{{ container_env['container-image-prepare'].prefix }}"
             containers_name_suffix: "{{ container_env['container-image-prepare'].name_suffix|default('') }}"
             containers_namespace: "{{ container_env['container-image-prepare'].namespace }}"
             containers_tag: "{{ container_env['container-image-prepare'].tag }}"
+
+      - name: Copy custom deployment files
+        vars:
+            source_dir: "{{ install.deployment.files }}"
+            template_base: "{{ ansible_user_dir }}/{{ source_dir | basename }}"
+        block:
+        - name: Create template base folder
+          file:
+              path: '{{ template_base }}'
+              state: directory
+              mode: u=rwX,g=rX,o=rX
+
+        - name: Ensure deployment folder nested structure exists
+          file:
+              path: '{{ template_base }}/{{ item.path }}'
+              state: directory
+          with_filetree: '{{ source_dir }}'
+          when: item.state == 'directory'
+
+        - name: Copy deployment folder
+          template:
+              src: '{{ item.src }}'
+              dest: '{{ template_base }}/{{ item.path | regex_replace("\.j2$", "") }}'
+          with_filetree: '{{ source_dir }}'
+          when: item.state == 'file'
+        when: install.get('deployment', {}).get('files', {})
+
+      - name: Generate standalone_parameters.yaml file
         template:
             src: standalone_parameters.yaml.j2
-            dest: /home/cloud-user/standalone_parameters.yaml
+            dest: "{{home_dir}}/standalone_parameters.yaml"
             owner: "{{ deployment_user }}"
+        when: not install.get('deployment', {}).get('files', {})
 
       - name: Generate standalone_deployment.sh file
         template:
-            src: standalone_deploy.sh.j2
+            src: "{{ standalone_deployment_template }}"
             dest: "{{ home_dir }}/standalone_deploy.sh"
             owner: "{{ deployment_user }}"
             mode: "0755"
