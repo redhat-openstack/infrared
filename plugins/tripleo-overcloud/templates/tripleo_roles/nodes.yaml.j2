@@ -14,13 +14,13 @@
 {%- endmacro %}
 
 {%- macro tht_net_config(role_name) -%}
-{%- for tht_map in tht_mapping if role_name|match(tht_map.regexp) -%}
+{%- for tht_map in tht_mapping if role_name is match(tht_map.regexp) -%}
 OS::TripleO::{{ tht_map.role_name|default(role_name) }}::Net::SoftwareConfig: {{ template_base }}/network/nic-configs/{{ nics_subfolder }}/{{ tht_map.net_config_file }}
 {%- endfor -%}
 {%- endmacro -%}
 
 {%- macro tht_node_name(role_name) -%}
-{%- for tht_map in tht_mapping if role_name|match(tht_map.regexp) -%}
+{%- for tht_map in tht_mapping if role_name is match(tht_map.regexp) -%}
 {{ tht_map.node_name }}
 {%- endfor -%}
 {%- endmacro -%}
