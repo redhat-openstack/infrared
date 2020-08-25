@@ -19,6 +19,7 @@
           networks: "{{ networks|default({}) | combine(item.value, recursive=True) }}"
       when: item.key == 'networks'
       with_dict: "{{ override|default({}) }}"
+
     - name: Get uniq id for current deployment
       set_fact:
             prefix: "{{ ansible_local.run.keys() | first }}"
