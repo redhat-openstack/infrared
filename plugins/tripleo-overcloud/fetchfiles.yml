@@ -18,7 +18,7 @@
         until: fetchfiles_undercloud_result.msg.find("Request failed") == -1
         retries: 5
         delay: 5
-        become: true
+        become: "{{ (item.split(',') | length) > 2 | ternary(false,true) }}"
         with_items: "{{ install.get('fetchfiles', {}).get('undercloud', {}) }}"
 
       - block:
