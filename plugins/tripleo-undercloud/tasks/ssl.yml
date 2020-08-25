@@ -15,12 +15,13 @@
 # RHOS 14 has the new version of undercloud.conf file
 # 'undercloud_public_vip' has been replaced by 'undercloud_public_host'
 # Check both values for all versions
+# trim off /xx notation from IPV6 CIDR entries
 - name: grab undercloud_public_vip from undercloud.conf
-  command: 'awk -F= "/^undercloud_public_vip\s*=\s*/ {print $2}" ~/undercloud.conf'
+  command: 'awk -F= "/^undercloud_public_vip\s*=\s*/ {print $2| \"cut -d / -f1\" }" ~/undercloud.conf'
   register: awk_undercloud_public_vip
 
 - name: grab undercloud_public_host from undercloud.conf
-  command: 'awk -F= "/^undercloud_public_host\s*=\s*/ {print $2}" ~/undercloud.conf'
+  command: 'awk -F= "/^undercloud_public_host\s*=\s*/ {print $2| \"cut -d / -f1\" }" ~/undercloud.conf'
   register: awk_undercloud_public_host
 
 - name: create cert directory
