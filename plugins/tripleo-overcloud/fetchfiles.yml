@@ -21,6 +21,21 @@
         become: true
         with_items: "{{ install.get('fetchfiles', {}).get('undercloud', {}) }}"
 
+      - name: Change Undercloud fetch files ownership
+        vars:
+            _file: "{{ item.split(',')[1] }}"
+            _owner: "{{ item.split(',')[2].split(':')[0] }}"
+            _group: "{{ item.split(',')[2].split(':')[1] }}"
+        file:
+            path: "{{ _file }}"
+            owner: "{{ _owner }}"
+            group: "{{ _group }}"
+        register: fetchfiles_undercloud_result
+        become: true
+        when: item.split(',') | length > 2
+        with_items: "{{ install.get('fetchfiles', {}).get('undercloud', {}) }}"
+
+
       - block:
           - name: wipe out /tmp/fetchfiles_overcloud/ directory
             file:
