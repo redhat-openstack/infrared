@@ -382,13 +382,16 @@ subparsers:
                       type: Value
                       action: append
                       help: |
-                          Pairs of 'URL,destfile'. File from 'URL' will be downloaded as 'destfile' (overwrite existing file) on Undercloud.
+                          List of two/three elements 'URL,destfile[,user:group]'. File from 'URL' will be downloaded as 'destfile' (overwrite existing file) on Undercloud.
                           'destfile' is an absolute path on Undercloud ending _with_ file name (because sometimes it's required to change file name).
+                          Optionally, a third element 'user:group' can be specified; if this element is present, the 'destfile' can be saved as a non root user; its format <user>:<group> separated by ':' needs to be fulfilled.
                           NOTE: this option is _not_ recommended for production jobs or environments. If files of an official product are fetched/overwritten,
                           it's advised to mark jobs using this method as 'experimental' and remove using this fetchfiles as soon as required files are in official release.
                           Example (in case one wants to use files from https://review.openstack.org/#/c/585015/2):
                               --fetchfiles-undercloud https://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/environments/network-isolation-v6.j2.yaml?h=refs/changes/15/585015/2,/usr/share/openstack-tripleo-heat-templates/environments/network-isolation-v6.j2.yaml
                               --fetchfiles-undercloud https://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/puppet/services/opendaylight-api.yaml?h=refs/changes/15/585015/2,/usr/share/openstack-tripleo-heat-templates/puppet/services/opendaylight-api.yaml
+                          Example including third element 'user:group':
+                              --fetchfiles-undercloud https://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/puppet/services/opendaylight-api.yaml?h=refs/changes/15/585015/2,/home/stack/opendaylight-api.yaml,stack:stack
 
                   heat-templates-basedir:
                       type: Value
