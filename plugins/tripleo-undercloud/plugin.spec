@@ -185,6 +185,12 @@ subparsers:
                           The timeout for the undercloud host to come back from a reboot after package updates or
                           an upgrade.
 
+                  prefer-ipv4-over-ipv6:
+                      type: Bool
+                      default: yes
+                      help: |
+                          Prefer IPv4 over IPv6. This flag helps to avoid long delays when there are issues with IPv6 connectivity.
+
             - title: Splitstack deployment
               options:
                   splitstack:

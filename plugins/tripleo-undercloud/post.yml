@@ -43,6 +43,15 @@
         - "undercloud_nameservers is defined"
         - "install.version|default(undercloud_version) | openstack_release == 13 or
           install.version|default(undercloud_version) | openstack_release < 11"
+
+    - name: Make sure that ipv4 has higher priority than ipv6
+      lineinfile:
+        path: /etc/gai.conf
+        create: yes
+        state: present
+        line: 'precedence ::ffff:0:0/96  100'
+      when: install.prefer.ipv4.over.ipv6
+
   handlers:
     - name: restart ironic conductor container
       command: podman restart ironic_conductor
