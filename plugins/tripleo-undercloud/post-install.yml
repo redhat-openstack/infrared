@@ -4,6 +4,15 @@
           Please, change default stack user password.
           Don't use the simple password for production deployment
   tasks:
+      - name: Make sure that DNS over ipv4 has higher priority
+        become: yes
+        lineinfile:
+          path: /etc/gai.conf
+          create: yes
+          state: present
+          line: 'precedence ::ffff:0:0/96  100'
+        when: install.dns.over.ipv4
+
       - name: Notification to change stack's password
         set_stats:
           data:
