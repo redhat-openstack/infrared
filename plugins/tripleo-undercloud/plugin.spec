@@ -185,6 +185,12 @@ subparsers:
                           The timeout for the undercloud host to come back from a reboot after package updates or
                           an upgrade.
 
+                  dns-over-ipv4:
+                      type: Bool
+                      default: yes
+                      help: |
+                          Prefer DNS resolving over IPv4 over IPv6.
+
             - title: Splitstack deployment
               options:
                   splitstack:
