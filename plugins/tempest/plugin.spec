@@ -196,6 +196,10 @@ subparsers:
                           be ammended to the tempest whitelist file (in addition to the tests that were contained
                           therein). For more details on how black/white list operate refer to:
                           http://stestr.readthedocs.io/en/latest/MANUAL.html#test-selection
+                  component_threads:
+                      type: NestedDict
+                      help: Used to set the number of threads for suite test
+                            Format: --component_threads manila_scenario=1,cinder=4
                   revision:
                       type: Value
                       help: The setup (git) revision if applicable
