@@ -187,3 +187,29 @@ When UEFI is in use, libvirt will require additional setup on the host, for IPv6
 
         modprobe nf_nat_ipv6
 
+Ansible output manipulations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Infrared allows to manipulate the output that comes from Ansible execution.
+All manipulations are set through the environment variables listed below:
+
+Hide Ansible's STDOUT & STDERR
+------------------------------
+The ``IR_ANSIBLE_NO_STDOUT`` & ``IR_ANSIBLE_NO_STDERR`` control whether the output from STDOUT & STDERR will be displayed or not.
+
+  .. note::  These have no effect on log files explaind
+
+Log Ansible's output to files
+-----------------------------
+| Regardless the output that will or will not be printed to the stdout, Infrared gives users the option log Ansible output to files.
+| Two options are available and can be set together or separately:
+| ``IR_ANSIBLE_LOG_OUTPUT``: Indicates a creation of a log file containing the exact output as comes from Ansible.
+| ``IR_ANSIBLE_LOG_OUTPUT_NO_ANSI``: Same as the above, but without any ANSI characters.
+| The log files will be stored inside a directory called 'ansible_outputs' in the active workspace directory. The name of the files will have the following conventions: ``ir_<hr_timestamp>_<plugin_name>.log`` & ``ir_<hr_timestamp>_<plugin_name>_no_ansi.log``
+
+  .. note:: All the manipulations mentioned above has no effect on Infrared output that doesn't come from Ansible.
+
+  .. note:: | Infrared uses the ``distutils.util.strtobool`` to covert string representations of truth to true (1) or false (0).
+            | Accepted values:
+            | True values are y, yes, t, true, on and 1; False values are n, no, f, false, off and 0.
+            | A ``ValueError`` exception will be raised in case a different value is provided.
