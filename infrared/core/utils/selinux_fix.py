@@ -33,6 +33,7 @@ def setup_logging(script_name=None, level=None):
 def ensure_system_selinux():
     try:
         import selinux  # noqa
+
     except ImportError:
         if has_system_selinux():
             LOG.debug("Make System SE Linux available from '%s'",
@@ -57,6 +58,9 @@ def copy_system_selinux(force=True):
                                      "installed")
         from distutils import sysconfig
 
+        import inspect
+        import pydoc
+
         if hasattr(sys, 'real_prefix'):
             fallback_prefix = sys.real_prefix
         elif hasattr(sys, 'base_prefix'):
@@ -68,10 +72,16 @@ def copy_system_selinux(force=True):
 
         # check for venv
         VENV_SITE = sysconfig.get_python_lib()
-        SELINUX_PATH = os.path.join(
-            sysconfig.get_python_lib(plat_specific=True,
-                                     prefix=fallback_prefix),
-            "selinux")
+        PYTHON_LIB_PATH1 = sysconfig.get_python_lib(plat_specific=True,
+                                     prefix=fallback_prefix)
+        SELINUX_PATH1 = os.path.join(PYTHON_LIB_PATH1,
+                                     "selinux")
+
+        PYTHON_LIB_PATH2 = os.path.join(os.path.dirname(inspect.getfile(pydoc)),
+                                                        "site-packages")
+        SELINUX_PATH2 = os.path.join(PYTHON_LIB_PATH2,
+                                     "selinux")
+
         dest = os.path.join(VENV_SITE, "selinux")
         if force:
             shutil.rmtree(dest, ignore_errors=True)
@@ -81,24 +91,34 @@ def copy_system_selinux(force=True):
 
         # filter precompiled files including subdirs
         files = []
-        for path, _, fnames in os.walk(SELINUX_PATH):
+        LOG.debug("SELINUX_PATH1: %s" % SELINUX_PATH1)
+        LOG.debug("SELINUX_PATH2: %s" % SELINUX_PATH2)
+
+        for path, _, fnames in (*os.walk(SELINUX_PATH1), *os.walk(SELINUX_PATH2)):
             for name in fnames:
                 if not os.path.splitext(name)[1] in (".pyc", ".pyo"):
                     files.append(os.path.join(path, name))
 
+        LOG.debug("files: %s" % files)
+
         # add extra file for (libselinux-python-2.5-9.fc24.x86_64)
         # for python3 we can have extra lines after _selinux names.
         # so need to use glob expression
-        root_dest = sysconfig.get_python_lib(
-            plat_specific=True, prefix=fallback_prefix)
-        _selinux_files = glob.glob(os.path.join(root_dest, "_selinux*.so"))
+        _selinux_files1 = glob.glob(os.path.join(PYTHON_LIB_PATH1, "_selinux*.so"))
+        _selinux_files2 = glob.glob(os.path.join(PYTHON_LIB_PATH2, "_selinux*.so"))
 
-        os.makedirs(dest)
+        if files:
+            os.makedirs(dest)
+
         for f in files:
             LOG.debug("copy file '%s' to '%s'", f, dest)
             shutil.copy(f, dest)
 
-        for _selinux_file in _selinux_files:
+        LOG.debug("_selinux_files1: %s" % _selinux_files1)
+        LOG.debug("_selinux_files2: %s" % _selinux_files2)
+
+        for _selinux_file in (*_selinux_files1, *_selinux_files2):
+            LOG.debug("_selinux_file: %s" % _selinux_file)
             if os.path.exists(_selinux_file):
                 LOG.debug("copy file '%s' to '%s'", _selinux_file,
                           os.path.dirname(dest))
