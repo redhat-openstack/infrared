@@ -33,6 +33,7 @@ def setup_logging(script_name=None, level=None):
 def ensure_system_selinux():
     try:
         import selinux  # noqa
+
     except ImportError:
         if has_system_selinux():
             LOG.debug("Make System SE Linux available from '%s'",
@@ -57,6 +58,9 @@ def copy_system_selinux(force=True):
                                      "installed")
         from distutils import sysconfig
 
+        import inspect
+        import pydoc
+
         if hasattr(sys, 'real_prefix'):
             fallback_prefix = sys.real_prefix
         elif hasattr(sys, 'base_prefix'):
@@ -72,6 +76,11 @@ def copy_system_selinux(force=True):
             sysconfig.get_python_lib(plat_specific=True,
                                      prefix=fallback_prefix),
             "selinux")
+
+        SELINUX_PATH2 = os.path.join(
+            os.path.dirname(inspect.getfile(pydoc)),
+            "site-packages/selinux")
+
         dest = os.path.join(VENV_SITE, "selinux")
         if force:
             shutil.rmtree(dest, ignore_errors=True)
@@ -81,10 +90,15 @@ def copy_system_selinux(force=True):
 
         # filter precompiled files including subdirs
         files = []
-        for path, _, fnames in os.walk(SELINUX_PATH):
+        LOG.debug("SELINUX_PATH: %s" % SELINUX_PATH)
+        LOG.debug("SELINUX_PATH2: %s" % SELINUX_PATH2)
+
+        for path, _, fnames in (*os.walk(SELINUX_PATH), *os.walk(SELINUX_PATH2)):
             for name in fnames:
                 if not os.path.splitext(name)[1] in (".pyc", ".pyo"):
                     files.append(os.path.join(path, name))
+
+        LOG.debug("files: %s" % files)
 
         # add extra file for (libselinux-python-2.5-9.fc24.x86_64)
         # for python3 we can have extra lines after _selinux names.
@@ -93,7 +107,9 @@ def copy_system_selinux(force=True):
             plat_specific=True, prefix=fallback_prefix)
         _selinux_files = glob.glob(os.path.join(root_dest, "_selinux*.so"))
 
-        os.makedirs(dest)
+        if files:
+            os.makedirs(dest)
+
         for f in files:
             LOG.debug("copy file '%s' to '%s'", f, dest)
             shutil.copy(f, dest)
