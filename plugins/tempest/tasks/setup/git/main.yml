@@ -35,6 +35,15 @@
 
 - debug: "msg='Build mark: tempest={{ tempest_repo_version.stdout }}'"
 
+- name: Set venv_distro_package_list for OSP13 and forced Python3 venv
+  set_fact:
+    venv_distro_package_list:
+      - gcc
+      - python3
+  when:
+    - test.openstack.version|default(overcloud_version)|openstack_release == 13
+    - venv_python_version | int == 3
+
 - name: Create the venv and install tempest
   import_role:
     name: create_venv
@@ -45,7 +54,7 @@
     # Make sure os-testr is installed for versions <13 since it was removed
     # from tempest requirements file on tempest master branch
     # and stestr was not required yet (only from tempest >=18)
-    venv_pip_packages: "{{ setup.pip_packages + [ (test.openstack.version|default(overcloud_version)|openstack_release < 13) | ternary('os-testr', ''), '~/' ~ setup.clone_dir ] }}"
+    venv_pip_packages: "{{ setup.pip_packages + [ (test.openstack.version|default(overcloud_version)|openstack_release < 13) | ternary('os-testr', ''), '~/' ~ setup.clone_dir ] | select | list }}"
     venv_pip_requirements: "~/{{ setup.clone_dir }}/requirements.txt"
     venv_python_version: "{{ ((force_py3venv | default(False)) | bool or (ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int > 7)) | ternary(3, 2) }}"
     venv_rebuild: true
