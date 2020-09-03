@@ -102,12 +102,6 @@
   when: test_dict.test_regex is defined and test_dict.test_regex
 
 - block:
-      - name: Set python interpreter for tempest
-        vars:
-          test_openstack_version: "{{ test.openstack.version | default(overcloud_version) | openstack_release }}"
-        set_fact:
-          python_interpreter: "{{ (test_openstack_version | float > 14.0) | ternary('python3', 'python') }}"
-
       - name: run tempest "{{ test_suite }}" suite with tempest run
         shell: >
             test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
@@ -120,7 +114,6 @@
             {{ (test.list) | ternary ('--list','') }}
             > {{ test_output_filename }}.subunit;
         environment:
-            PYTHON: "{{ python_interpreter | default(python_interpreter) or 'python' }}"
             PYTHONHASHSEED: 0
         args:
             executable: /bin/bash
@@ -141,7 +134,6 @@
             {{ (test.list) | ternary ('--list','') }}
             > {{ test_output_filename }}.subunit;
         environment:
-            PYTHON: "{{ python_interpreter | default(python_interpreter) or 'python' }}"
             PYTHONHASHSEED: 0
         args:
             executable: /bin/bash
