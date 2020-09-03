@@ -4,6 +4,7 @@
   package:
       name: "{{ install.images.url is defined | ternary(install.images.get('url', '').split(','), ['rhosp-director-images']) }}"
       state: latest
+      disable_gpg_check: true
   register: yum_install
   until: "yum_install is not failed or not yum_install.msg | regex_search('Operation too slow')"
   retries: 2

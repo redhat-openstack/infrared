@@ -13,10 +13,6 @@
       undercloud_user: "{{ install.user.name | default('stack') }}"
       # todo(yfried): add external refs so users can override these values and customize the Undercloud
   tasks:
-      - name: Detect python interpreter path in Hypervisor
-        command: 'which python3'
-        register: py_interpreter
-
       - name: check and create directory
         file:
             path: "{{ install.disk.pool }}"
@@ -194,8 +190,6 @@
         delegate_to: "{{ groups.undercloud | first }}"
         become: true
         become_user: stack
-        vars:
-          ansible_python_interpreter: "{{ (py_interpreter.stdout_lines[0] | default('python')) | trim }}"
         shell: |
             source ~/stackrc
             openstack server list
@@ -213,23 +207,6 @@
                    {{ groups['undercloud'][0] }}.redhat.local \
                    {{ groups['undercloud'][0] }}"
             state: present
-
-- name: Detect python interpreter in Undercloud
-  hosts: undercloud
-  vars:
-    ansible_python_interpreter: "/usr/bin/python3"
-  gather_facts: no
-  become: true
-  any_errors_fatal: false
-  ignore_errors: true
-  tasks:
-      - stat:
-            path: /usr/bin/python
-        register: path
-
-      - name: Set Python interpreter
-        command: 'ln -s /usr/bin/python3 /usr//bin/python'
-        when: path.stat.islnk is not defined
 
 # workaround for selinux errors while introspection from qs image
 - name: fix selinux configurations
