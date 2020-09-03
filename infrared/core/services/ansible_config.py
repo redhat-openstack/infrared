@@ -10,11 +10,12 @@ LOG = logger.LOG
 DEFAULT_ANSIBLE_SETTINGS = dict(
     defaults=OrderedDict([
         ('host_key_checking', 'False'),
-        ('forks', 500),
+        ('forks', 400),
         ('timeout', 30),
         ('pipelining', 'True'),
         ('force_color', 1),
         ('show_custom_stats', 'True'),
+        ('ssh_common_args', '-o ControlMaster=auto -o ControlPersist=60s -o ServerAliveInterval=5 -o ServerAliveCountMax=5'),
     ]),
 )
 
