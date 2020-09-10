@@ -43,6 +43,18 @@
       - not install.network.dvr
       - install.version|default(undercloud_version) | openstack_release >= 15
 
+- name: Disable DVR for OVN even when OSP<15
+  yedit:
+      src: "{{ template_base }}/network/{{ network_environment_file }}"
+      update: True
+      key: parameter_defaults
+      value:
+          NeutronEnableDVR:
+              "false"
+  when:
+      - not install.network.dvr
+      - install.network.ovn
+
 - name: Append the network isolation template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
