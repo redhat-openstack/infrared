@@ -161,7 +161,7 @@
       # This issue causes an exception when that playbook is included with the false condition
       - name: power off overcloud nodes
         vars:
-            vm_nodes: "{{ oc_nodes + oc_ironic | difference(bm_nodes_names) }}"
+            vm_nodes: "{{ oc_nodes | difference(bm_nodes_names) }}"
         virt:
             name: "{{ item }}"
             state: destroyed
