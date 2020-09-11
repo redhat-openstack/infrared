@@ -87,7 +87,7 @@
             vms_hypervisor: "{{ vms_hypervisor|default({})|combine({item[0]: item[1]}) }}"
         when: "(hostvars[item[0]].ansible_ssh_common_args is defined) and (hostvars[item[1]].ansible_host in hostvars[item[0]].ansible_ssh_common_args)"
         with_nested:
-            - "{{ oc_nodes | difference(bm_nodes_names) }}"
+            - "{{ oc_nodes + oc_ironic | difference(bm_nodes_names) }}"
             - "{{ hypervisor_group }}"
 
       - name: get information about vm's from hypervisor
@@ -126,7 +126,7 @@
       - name: get information about oc_ironic vm's from hypervisor
         vars:
             vm_nodes: "{{ oc_ironic | difference(bm_nodes_names) }}"
-        delegate_to: hypervisor
+        delegate_to: "{{ vms_hypervisor[item] }}"
         shell: |
             NODE_XML=`virsh dumpxml {{ item }}`
             disks_list=$(virsh domblklist {{ item }}  | \
