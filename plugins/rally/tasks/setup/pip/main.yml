@@ -20,6 +20,17 @@
       virtualenv: "{{ rally.path }}"
   with_items: "{{ setup.pip_packages }}"
 
+- debug:
+      var: setup.pip_packages_python2
+- name: Install required pip packages for python2
+  pip:
+      name: "{{ item.package }}"
+      version: "{{ item.version | default(omit) }}"
+      state: "{{ item.version is defined | ternary('present', 'latest') }}"
+      virtualenv: "{{ rally.path }}"
+  with_items: "{{ setup.pip_packages_python2 }}"
+  when: ansible_python.version.major < 3
+
 - name: Install rally-openstack and related packages
   pip:
       name: "{{ item }}"
