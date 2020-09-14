@@ -112,7 +112,8 @@ SHARED_GROUPS = [
                            r'junitxml=0.7,'
                            r'unittest2=1.1.0,'
                            r'nose=1.3.7,'
-                           r'Tempest=19.0.0'
+                           r'Tempest=19.0.0,'
+                           r'pyrsistent=0.16.1'
             }
         },
     },

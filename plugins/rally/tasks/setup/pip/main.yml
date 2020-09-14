@@ -1,36 +1,45 @@
 # pip10=crashes while importing requests
 
-- name: Install pip using get-pip.py
-  shell: |
-      curl https://bootstrap.pypa.io/get-pip.py | "{{ rally.python_ver }}"
-  become: true
-  when: setup.pip_packages is defined
+#- name: Install pip using get-pip.py
+#  shell: |
+#      curl https://bootstrap.pypa.io/get-pip.py | "{{ rally.python_ver }}"
+#  become: true
+#  when: setup.pip_packages is defined
+#
+#- name: Install devel packages for package build dependencies
+#  become: yes
+#  package:
+#      name: "{{ setup.packages }}"
+#      state: present
 
-- name: Install devel packages for package build dependencies
-  become: yes
-  package:
-      name: "{{ setup.packages }}"
-      state: present
+- name: Create list of required pip packages with versions
+  vars:
+    version: "{{ ir_default_pip_versions[item] | default('') }}"
+  set_fact:
+    pip_packages_and_versions: "{{ pip_packages_and_versions | default([]) | union([item + (version == '') | ternary ('', '==' + version)]) }}"
+  with_items: "{{ setup.pip_packages }}"
 
 - name: Install required pip packages
   pip:
-      name: "{{ item }}"
-      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
-      state: "{{ ir_default_pip_versions[item] is defined | ternary('present', 'latest') }}"
+      name: "{{ pip_packages_and_versions }}"
       virtualenv: "{{ rally.path }}"
-  with_items: "{{ setup.pip_packages }}"
 
-- name: Install rally-openstack and related packages
-  pip:
-      name: "{{ item }}"
-      version: "{{ ir_default_pip_versions[item] | default(omit) }}"
-      state: "{{ ir_default_pip_versions[item] is defined | ternary('present', 'latest') }}"
-      virtualenv: "{{ rally.path }}"
+- name: Create list of rally-openstack and related packages with versions
+  vars:
+  vars:
+    version: "{{ ir_default_pip_versions[item] | default('') }}"
+  set_fact:
+    pip_packages_and_versions2: "{{ pip_packages_and_versions2 | default([]) | union([item + (version == '') | ternary ('', '==' + version)]) }}"
   with_items:
       - prettytable
       - cryptography
       - rally-openstack
       - openstacksdk
+
+- name: Install rally-openstack and related packages
+  pip:
+      name: "{{ pip_packages_and_versions2 }}"
+      virtualenv: "{{ rally.path }}"
 
 - name: Clone Rally-Plugins git repo
   git:
