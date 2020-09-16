@@ -134,6 +134,18 @@
       with_items:
           - {src: "~/.ssh/id_rsa", dest: "{{ inventory_dir }}/id_rsa"}
           - {src: "~/.ssh/id_rsa.pub", dest: "{{ inventory_dir }}/id_rsa.pub"}
+      when: groups.hypervisor|count == 1
+
+    - name: copy server private key from hypervisor for SSH proxy
+      fetch:
+          src: "{{ item.src }}"
+          dest: "{{ item.dest }}"
+          flat: yes
+          validate_checksum: no
+      with_items:
+          - {src: "~/.ssh/id_rsa", dest: "{{ inventory_dir }}/id_rsa"}
+          - {src: "~/.ssh/id_rsa.pub", dest: "{{ inventory_dir }}/id_rsa.pub"}
+      when: groups.hypervisor|count > 1
 
     - name: update file permissions
       file:
