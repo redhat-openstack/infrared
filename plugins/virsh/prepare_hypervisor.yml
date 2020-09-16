@@ -127,10 +127,13 @@
       when: not result.stat.exists | bool
 
     - name: copy server private key from hypervisor for SSH proxy
+      vars:
+          validate_checksum:  "{{ (groups.hypervisor|count == 1) | ternary('yes', 'no') }}"
       fetch:
           src: "{{ item.src }}"
           dest: "{{ item.dest }}"
           flat: yes
+          validate_checksum: "{{ validate_checksum }}"
       with_items:
           - {src: "~/.ssh/id_rsa", dest: "{{ inventory_dir }}/id_rsa"}
           - {src: "~/.ssh/id_rsa.pub", dest: "{{ inventory_dir }}/id_rsa.pub"}
