@@ -12,9 +12,12 @@ DEFAULT_ANSIBLE_SETTINGS = dict(
         ('host_key_checking', 'False'),
         ('forks', 500),
         ('timeout', 30),
-        ('pipelining', 'True'),
         ('force_color', 1),
         ('show_custom_stats', 'True'),
+    ]),
+    ssh_connection=OrderedDict([
+        ('pipelining', 'True'),
+        ('retries', 2),
     ]),
 )
 
