@@ -129,7 +129,11 @@
       executable: /bin/bash
       chdir: "{{ test.dir }}"
   when: test.openstack.version|default(overcloud_version)|openstack_release > 7 or test.setup != 'rpm'
-
+  register: tempest_cleanup_cmd_out
+  failed_when: >
+    ( tempest_cleanup_cmd_out.rc != 0 ) and
+    ( "The resource could not be found." not in tempest_cleanup_cmd_out.stderr ) and
+    ( test.openstack.version|default(overcloud_version)|openstack_release > 13 )
 
 - name: Print configuration cmd
   debug:
