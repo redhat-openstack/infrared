@@ -224,6 +224,11 @@ subparsers:
                       help: |
                           Use tempest cleanup to clean the leftover from the tests (usually when tests fail)
                       default: no
+                  skip-init-saved-state:
+                      type: Bool
+                      help: |
+                          Skip tempest init-saved-stage call for cleanup of leftover from the tests.
+                      default: no
                   python_tempest_conf_dir:
                       type: Value
                       help: |
