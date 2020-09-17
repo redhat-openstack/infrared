@@ -128,7 +128,7 @@
   args:
       executable: /bin/bash
       chdir: "{{ test.dir }}"
-  when: test.openstack.version|default(overcloud_version)|openstack_release > 7 or test.setup != 'rpm'
+  when: test.openstack.version|default(overcloud_version)|openstack_release > 7 or test.setup != 'rpm' or test.skip.init.saved.state|bool == true
 
 
 - name: Print configuration cmd
