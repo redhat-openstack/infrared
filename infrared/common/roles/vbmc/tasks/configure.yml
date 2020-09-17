@@ -40,15 +40,7 @@
 
   - name: Set management bmc address
     set_fact:
-        vbmc_management_address: "{{ ansible_default_ipv4.address }}"
-    when: vbmc_host == 'undercloud'
-
-  # If the undercloud is a baremetal and user chooses hypervisor for vbmc_host, then
-  # need to use hypervisor's ansible ipv4 address as undercloud can't reach hypervisor management address.
-  - name: Set management bmc address
-    set_fact:
-        vbmc_management_address: "{{ ('undercloud_hypervisors' in groups) | ternary(hostvars[vbmc_hypervisor][management_net].ipv4.address, hostvars[vbmc_hypervisor]['ansible_default_ipv4']['address']) }}"
-    when: vbmc_host == 'hypervisor'
+        vbmc_management_address: "{{ (vbmc_host == 'hypervisor')|ternary(hostvars[vbmc_hypervisor][management_net].ipv4.address, ansible_default_ipv4.address) }}"
 
   - name: Set external network name
     set_fact:
