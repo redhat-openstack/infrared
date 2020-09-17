@@ -9,7 +9,7 @@
           protocol: "udp"
           destination_port: "{{ item.value }}"
       with_dict: "{{ vbmc_ports }}"
-      delegate_to: "{{ vbmc_hypervisor }}"
+      delegate_to: hypervisor
 
     - name: Ease iptables rules on vbmc host
       iptables:
@@ -47,20 +47,6 @@
           destination_port: "{{ item.value }}"
       loop: "{{ vbmc_ports|dict2items }}"
 
-    - name: allow access to port vbmc ports from hypervisor default network
-      vars:
-          default_net: "{{ hostvars[groups.hypervisor|first]['ansible_default_ipv4'] }}"
-      iptables:
-          action: insert
-          comment: "Infrared: vbmc ports"
-          table: filter
-          chain: INPUT
-          jump: ACCEPT
-          protocol: "udp"
-          source: "{{ default_net['network'] }}/{{ default_net['netmask'] }}"
-          destination_port: "{{ item.value }}"
-      loop: "{{ vbmc_ports|dict2items }}"
-
     - name: allow access to port vbmc ports from hypervisor
       iptables:
           action: insert
@@ -84,7 +70,7 @@
               source: "{{ vbmc_external_net_address }}"
               destination_port: "{{ item.value }}"
           loop: "{{ vbmc_ports|dict2items }}"
-      when: hostvars[vbmc_hypervisor][ansible_external_name] is defined
+      when: hostvars['hypervisor'][ansible_external_name] is defined
 
   when: vbmc_host == 'hypervisor'
   become: True

@@ -6,7 +6,7 @@
           - name: set undercloud_hypervisors
             set_fact:
                 undercloud_hypervisors: "{{ undercloud_hypervisors|default([]) + [item[1]] }}"
-            when: ('ansible_ssh_common_args' in hostvars[item[0]]) and (hostvars[item[1]].ansible_host in hostvars[item[0]].ansible_ssh_common_args)
+            when: hostvars[item[1]].ansible_host in hostvars[item[0]].ansible_ssh_common_args
             with_nested:
                 - "{{ groups.undercloud }}"
                 - "{{ groups.hypervisor }}"

@@ -56,7 +56,6 @@
             label: "{{ node_info.name }}"
             loop_var: node_info
         vars:
-            hypervisor_group: "{{ groups.get('hypervisor', ['hypervisor']) }}"
             baremetal_name: >-
               {{ (ironic_node_list.stdout|default('') | from_csv | selectattr('UUID', 'equalto', node_info['hypervisor_hostname']) | list)[0]['Name'] }}
 
@@ -117,20 +116,23 @@
             with_items: "{{ openstack_servers }}"
 
       - name: Enable SSH forwarding using hypervisor node for hybrid OC nodes
+        vars:
+            ssh_user: "{{ hostvars['hypervisor'].ansible_user|
+                          default(hostvars['hypervisor'].ansible_ssh_user) }}"
+            ssh_host: "{{ hostvars['hypervisor'].ansible_host|
+                          default(hostvars['hypervisor'].ansible_ssh_host) }}"
         add_host:
-            name: "{{ item[0].name }}"
+            name: "{{ item.name }}"
             ansible_ssh_common_args: " -o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no \
                                        -o BatchMode=yes \
                                        -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                                        -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
-                                          {{ hostvars[item[1]].ansible_user|default(hostvars[item[1]].ansible_ssh_user) }}@{{ hostvars[item[1]].ansible_host| default(hostvars[item[1]].ansible_ssh_host) }}\""
+                                          {{ ssh_user }}@{{ ssh_host }}\""
         when:
           - "'hypervisor' in groups"
           - install.hybrid|default(false)
-          - "(hostvars[item[0].name].ansible_ssh_common_args is defined) and (hostvars[item[1]].ansible_host in hostvars[item[0].name].ansible_ssh_common_args)"
-        with_nested:
-            - "{{ openstack_servers }}"
-            - "{{ groups.get('hypervisor', ['hypervisor']) }}"
+
+        with_items: "{{ openstack_servers }}"
 
 - name: Update the inventory file
   hosts: localhost
