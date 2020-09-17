@@ -14,6 +14,7 @@
       set_fact:
         ansible_local: "{{ ansible_local | combine({'run': ansible_local.deployment_info}) }}"
       when:
+        - provision.prefix is defined
         - provision.topology.extend
         - ansible_local.run is not defined
 
