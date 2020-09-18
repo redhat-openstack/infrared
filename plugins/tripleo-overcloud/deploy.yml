@@ -223,6 +223,20 @@
       set_fact:
         oc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
 
+- name: Drop the caches from Operating System's RAM on compute nodes
+  hosts: compute
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+    - name: get free mem before dropping caches
+      shell: free -m
+
+    - name: drop caches from operating system RAM
+      shell: sysctl -w vm.drop_caches=1
+
+    - name: get free mem after dropping caches
+      shell: free -m
+
 - name: Allow vbmc ports for all the overcloud nodes
   hosts: localhost
   gather_facts: no
