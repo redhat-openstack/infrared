@@ -1,24 +1,42 @@
 ---
-- name: install dstat packages
-  package:
-      name:
-        - dstat
-        - pcp-system-tools
+- block:
+  - setup:
+
+  - name: install rhos-release and required yum repos
+    vars:
+      rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+      release: "{{ (hostvars[groups['undercloud']|first].undercloud_version) }}"
+      build: "{{ install.build|default('latest') }}"
+    include_role:
+      name: rhos-release
+    when: ansible_distribution_major_version is version(8, '>=')
+
+  - name: install dstat package
+    package:
+      name: "dstat"
       state: present
+    when: ansible_distribution_major_version is version(8, '<')
 
-- name: deploy dstat.service
-  template:
-      src: dstat.service.j2
-      dest: /etc/systemd/system/dstat.service
-  register: dstat_service_file
+  - name: install pcp-system-tools package
+    package:
+        name: pcp-system-tools
+        state: present
 
-- name: reload systemd to pickup dstat.service
-  systemd:
-    daemon-reload: yes
-  when: dstat_service_file is changed
+  - name: deploy dstat.service
+    template:
+        src: dstat.service.j2
+        dest: /etc/systemd/system/dstat.service
+    register: dstat_service_file
 
-- name: ensure dstat.service is up
-  service:
-    name: dstat
-    enabled: true
-    state: restarted
+  - name: reload systemd to pickup dstat.service
+    systemd:
+      daemon-reload: yes
+    when: dstat_service_file is changed
+
+  - name: ensure dstat.service is up
+    service:
+      name: dstat
+      enabled: true
+      state: restarted
+
+  become: true
