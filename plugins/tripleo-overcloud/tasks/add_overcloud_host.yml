@@ -46,6 +46,9 @@
       ansible_ssh_pass: ""
       ansible_host: "{{ node_info.addresses.ctlplane[0].addr }}"
       ansible_ssh_private_key_file: "{{ overcloud_pkey }}"
+      # baremetal nodes may not yet have node_info.addresses.ctlplane
+  when:
+      - baremetal_name not in groups.all
 
 - name: add original name
   add_host:
