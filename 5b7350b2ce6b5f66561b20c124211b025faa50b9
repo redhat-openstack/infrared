@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "898fac52_496678ff",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1007615
+      },
+      "writtenOn": "2020-09-21T10:46:12Z",
+      "side": 1,
+      "message": "I think you can\"t avoid overlap by simply by changing the allocation pool in this file because currently it  is used both by overcloud_deploy, which sets up storage_nfs_subnet in the undercloud (that network is defined in the undercloud as it deploys the overcloud and allocations are made for interfaces on the Controllers and the NFS service VIP) and post-deployment via the cloud-config plugin when it sets up the overcloud Neutron StorageNFS provider network (which is used for VMs).\n\nTo fix, this file should define a range that is a proper part of the CIDR and the cloud-config code should set up a range that does not overlap with the range here, a range that is a different proper part of the same CIDR.",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 11
+      },
+      "revId": "5b7350b2ce6b5f66561b20c124211b025faa50b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1843f8c3_e5869563",
+        "filename": "plugins/tripleo-overcloud/vars/deployment/files/composable_roles/network/network-environment-v6.yaml.j2",
+        "patchSetId": 3
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1007615
+      },
+      "writtenOn": "2020-09-21T10:46:12Z",
+      "side": 1,
+      "message": "This isn\"t part of the fd00:fd00:fd00:7000::/64 CIDR.",
+      "range": {
+        "startLine": 6,
+        "startChar": 31,
+        "endLine": 6,
+        "endChar": 119
+      },
+      "revId": "5b7350b2ce6b5f66561b20c124211b025faa50b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
