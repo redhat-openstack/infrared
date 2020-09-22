@@ -1,0 +1,61 @@
+# no mode option :(
+- name: download the script when it looks like a fetch url
+  get_url:
+      url: "{{ script_url }}"
+      dest: "{{ custom_sources_script_location }}"
+  become: true
+  retries: 3
+  delay: 3
+  when:
+      - script_url|regex_search('^https?://.*')
+
+- name: copy script from host
+  copy:
+      src: "{{ script_url }}"
+      dest: "{{ custom_sources_script_location }}"
+      mode: "0755"
+  when:
+      - not script_url|regex_search('^https:?//.*')
+
+# TODO: consider caching the script in the workspace and
+# using the script module
+- name: execute the custome script
+  shell: |
+          chmod 755 {{ custom_sources_script_location }}
+          {{ custom_sources_script_location }} {{ script_args }} 2>&1 | tee -a "{{ custom_sources_script_output_log }}"
+  environment:
+          REPO_OS_BUILD_CONTEXT: "{{ context|default('undercloud') }}"
+          REPO_OS_VERSION: "{{ release|default(omit) }}"
+          REPO_BUILD_SITE: "{{ mirror|default(omit) }}"
+          IR_CALL_ENV: "{{ ir_cfg_env|default(install)|to_nice_json }}"
+  args:
+      warn: no
+  tags: skip_ansible_lint
+
+- name: looking for repo base Id marker
+  become: true
+  become_user: root
+  shell: |
+      cat /etc/repo_baseid
+  register: repo_baseid
+  ignore_errors: yes
+  tags: skip_ansible_lint
+
+- name: looking for repo extra Id marker
+  become: true
+  become_user: root
+  shell: |
+      cat /etc/repo_extraid
+  register: repo_extraid
+  ignore_errors: yes
+  tags: skip_ansible_lint
+
+- debug:
+      msg: "Build mark: repo_baseid={{ repo_baseid.stdout }}"
+  when:
+      - repo_baseid.rc == 0
+
+- debug:
+      msg: "Build mark: repo_extraid={{ repo_extraid.stdout }}"
+  when:
+      - repo_extraid.rc == 0

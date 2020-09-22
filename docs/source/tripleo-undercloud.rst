@@ -60,6 +60,20 @@ Setup an Undercloud
          - This feature is supported by OSP 13 or RDO queens versions.
          - This feature is expiremental and should be used only for development.
 
+* ``--custom-sources-script-url`` setup custom repos (package sources) by a custom user provided script.
+    This way allows to not have any internal infrastructure related logic included,
+    and at the same able provides the flexibility to mix released and not released content as you wish. ::
+
+        infrared tripleo-undercloud --version 17 \
+        --custom-sources-script-url http://mysuperscriptstope.example.org/script_generator?foobar=32 \
+        --custom-sources-script-args '--delorian_id 42' \
+
+    Infrared  also provides environment variables to the custom script about the execution context,
+    for example 'REPO_OS_VERSION' holds the version which was passed to the install script.
+
+    .. note::
+         - This feature is expiremental therefore the behavior may change
+
 .. _module documentation: http://docs.ansible.com/ansible/redhat_subscription_module.html
 
 .. note:: | In case of **virsh** deployment **ipxe-roms-qemu** will be installed on hypervisor node.
