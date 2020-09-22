@@ -490,6 +490,11 @@ subparsers:
                       default: no
                       help: Activate Neutron DVR extension on the overcloud.
 
+                  network-force-compute-dvr:
+                      type: Bool
+                      default: no
+                      help: On non-DVR setup use compute node with access to the external network.
+
                   network-override-dvr-nic:
                       type: FileValue
                       help: |
