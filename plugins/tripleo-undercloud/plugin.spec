@@ -199,6 +199,11 @@ subparsers:
                           Specifies the DNS forwarder of BIND on the IPA server
                       default: 'hypervisor'
 
+                  freeipa-undercloud-interface:
+                      type: Value
+                      help: |
+                          Undercloud external network interface
+
                   tls-everywhere:
                       type: Bool
                       help: |
