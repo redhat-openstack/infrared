@@ -8,6 +8,11 @@ Clone `infrared` 2.0 from GitHub::
 
     git clone https://github.com/redhat-openstack/infrared.git
 
+Enable project-specific pre-push hook, used to share knowledge on review process::
+
+    ln -s ../../.githooks/pre-push .git/hooks/pre-push
+
+
 Make sure that all `prerequisites <setup.html#Prerequisites>`_ are installed.
 Setup virtualenv and `install <setup.html#Installation>`_ from source using pip::
 
