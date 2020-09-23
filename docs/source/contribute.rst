@@ -13,18 +13,57 @@ To initialize the directory of ``infrared`` execute ``git review -s``.
 Every patch needs to have *Change-Id* in commit message
 (``git review -s`` installs post-commit hook to automatically add one).
 
-For some more info about git review usage, read `GerritHub Intro`_ and `OpenStack Infra Manual`_.
+For some more info about git review usage, read `GerritHub Intro`_, `OpenDev`_
+and `OpenStack Infra Manual`_. Also, it is expected to be familiar with `best practices`_
+and useful presentations (`p1`_ , `p2`_) on the topic of reviewing before contributing
+to this project, since the review itself is important part of development cycle
+and code ownership.
 
 .. _`review.gerrithub.io`: https://review.gerrithub.io/#/q/project:redhat-openstack/infrared
 .. _`GerritHub Intro`: https://review.gerrithub.io/Documentation/intro-quick.html#_the_life_and_times_of_a_change
+.. _`OpenDev`: https://review.opendev.org/Documentation/intro-quick.html
 .. _`OpenStack Infra Manual`: http://docs.openstack.org/infra/manual/developers.html
+.. _`best practices`: https://medium.com/palantir/code-review-best-practices-19e02780015f
+.. _`p1`: https://blog.simplypatrick.com/html/gerrit-best-practices.html
+.. _`p2`: http://wincent.github.io/gerrit-best-practices-tech-talk/assets/fallback/index.html
+
+Review process specifics
+------------------------
+As mentioned, gerrit workflow is used. Before changes are commited,
+they must go through CI-tied review process. Note since InfraRed is targeted
+as plugin-based automation framework, simplyfing usability and cooperation
+of varuous Ansible playbooks in order to deploy OpenStack, and it is developed
+as free-to-contribute open source project, there are specifics to the review
+process that grew organically in time.
+
+Most important are:
+    - contributors follow git/gerrit best practices
+    - contributors respect gate votes
+    - features (automation) are not owned by InfraRed team, they are owned
+    by stakeholders who build their features/automation using InfraRed framework
+    - only InfraRed core and structure is maintained by the team
+    - contributors improve their chances to merge with proof the validity
+    of the change, ideally automation log or CI job
+    - no clear ownership of playbooks inside plugins, ownership is derived
+    by last git commit history record per specific line
+    - no assigned reviewers, no periodic reviewing, a contibutor is responsible
+    to gather enough traction and attention to merge his change on his own,
+    communicating the change with core members and/or collagues first
+    - contributors participate on maintenance, communication on issues,
+    removal of dead code, documentation of their features, also watch changes
+    related to their code
+    - contributors add reviewers based on the code they propose to change
+    according to git history or their familiarity with others working on
+    similar parts of the code
+    - contributors are aware that their code flow might not be gated
+    and therefore broken any time, also their change might be reverted
+    instantly if it breaks major downstream CI workflows (phase1/2)
 
 Non Red Hatters
 ---------------
 Non-RedHat Employees should file pull requests to the `InfraRed project`_ on GitHub.
 
 .. _`InfraRed project`: https://github.com/redhat-openstack/infrared
-
 
 Release Notes
 -------------
