@@ -105,8 +105,13 @@ Answers File:
 
 Common Options:
     * ``--dry-run``: Don't execute Ansible playbook. Only write generated vars dict to stdout
-    * ``--output``: Redirect generated vars dict from stdout to an explicit file (YAML format).
     * ``--extra-vars``: Inject custom input into the `vars dict <plugins.html#Complex option types>`_
+    * ``--output``: Redirect generated vars dict from stdout to an explicit file (YAML format).
+
+    .. note:: Please notice that InfraRed can dump the vars dict into a JSON file by setting the
+        'IR_GEN_VARS_JSON' environment variable to one of the YAML boolean values which are equivalent to 'True'.
+        The JSON file will be stored inside a directory named 'ansible_vars' under the active workspace directory
+        and the name of the file will be in the following format: 'ir_<timestamp>_<plugin_name>.json'
 
 Inventory:
     Load a new inventory to active `workspace <workspace.html>`_. The file is copied to
