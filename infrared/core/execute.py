@@ -1,6 +1,7 @@
 from datetime import datetime
 from distutils.util import strtobool
 import errno
+import json
 import os
 import re
 import sys
@@ -204,14 +205,30 @@ def _run_playbook(cli_args, vars_dict, ir_workspace, ir_plugin):
 
             ansible_outputs_dir = \
                 os.path.join(ir_workspace.path, 'ansible_outputs')
-            timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S.%f")
-            filename_template = "ir_{timestamp}_{plugin_name}{postfix}.log"
+            ansible_vars_dir = \
+                os.path.join(ir_workspace.path, 'ansible_vars')
 
-            try:
-                os.makedirs(ansible_outputs_dir)
-            except OSError as e:
-                if e.errno != errno.EEXIST:
-                    raise
+            timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S.%f")
+            filename_template = \
+                "ir_{timestamp}_{plugin_name}{postfix}.{file_ext}"
+
+            for _dir in (ansible_outputs_dir, ansible_vars_dir):
+                try:
+                    os.makedirs(_dir)
+                except OSError as e:
+                    if e.errno != errno.EEXIST:
+                        raise
+
+            if bool(strtobool(os.environ.get('IR_GEN_VARS_JSON', 'no'))):
+                filename = filename_template.format(
+                    timestamp=timestamp,
+                    plugin_name=ir_plugin.name,
+                    postfix='',
+                    file_ext='json'
+                )
+                vars_file = os.path.join(ansible_vars_dir, filename)
+                with open(vars_file, 'w') as fp:
+                    json.dump(vars_dict, fp, indent=4, sort_keys=True)
 
             with IRSTDFDManager(stdout=stdout, stderr=stderr) as fd_manager:
 
@@ -220,7 +237,8 @@ def _run_playbook(cli_args, vars_dict, ir_workspace, ir_plugin):
                     filename = filename_template.format(
                         timestamp=timestamp,
                         plugin_name=ir_plugin.name,
-                        postfix=''
+                        postfix='',
+                        file_ext='log'
                     )
                     log_file = os.path.join(ansible_outputs_dir, filename)
                     fd_manager.add(open(log_file, 'w'))
@@ -230,7 +248,8 @@ def _run_playbook(cli_args, vars_dict, ir_workspace, ir_plugin):
                     filename = filename_template.format(
                         timestamp=timestamp,
                         plugin_name=ir_plugin.name,
-                        postfix='_no_ansi'
+                        postfix='_no_ansi',
+                        file_ext='log'
                     )
                     log_file = os.path.join(ansible_outputs_dir, filename)
                     fd_manager.add(NoAnsiFile(open(log_file, 'w')))
