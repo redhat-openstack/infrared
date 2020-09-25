@@ -103,7 +103,7 @@
 
 - name: Add number of threads for test suite
   set_fact:
-     comp_threads: "{{ test.component_threads[test_suite] | default('False') }}"
+     comp_threads: "{{ test.component_threads[test_suite] | default(False) }}"
   when: test.component_threads is defined
 
 - block:
@@ -119,7 +119,7 @@
             tempest run --subunit --regex '{{ regex | default('') }}'
             {{ whitelistfile }}
             {{ blacklistfile }}
-            {{ ('--concurrency ' + comp_threads|default('False')|ternary(comp_threads,test_dict.threads)|default(test.threads)|string ) }}
+            {{ ('--concurrency ' + comp_threads|default(False)|ternary(comp_threads,test_dict.threads)|default(test.threads)|string ) }}
             {{ ('--black-regex ' + test.blackre|string|quote )
             if test.blackre|default('') else '' }}
             {{ (test.list) | ternary ('--list','') }}
@@ -140,7 +140,7 @@
             ostestr -s --no-pretty --regex '{{ regex | default('') }}'
             {{ whitelistfile }}
             {{ blacklistfile }}
-            {{ ('--concurrency ' + comp_threads|default('False')|ternary(comp_threads,test_dict.threads)|default(test.threads)|string ) }}
+            {{ ('--concurrency ' + comp_threads|default(False)|ternary(comp_threads,test_dict.threads)|default(test.threads)|string ) }}
             {{ ('--black-regex ' + test.blackre|string|quote )
             if test.blackre|default('') else '' }}
             {{ (test.list) | ternary ('--list','') }}
