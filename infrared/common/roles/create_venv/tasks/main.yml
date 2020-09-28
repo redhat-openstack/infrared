@@ -59,10 +59,22 @@
         # a new release. For python3 this is the default behaviour
         # when using 'python3 -m venv', but for the 'virtualenv'
         # tool we need to pass it a CLI argument.
+        # For RHEL7.4 and below wee allow the pip/setuptools update
+        # to happen so that we have a version of pip that is capable
+        # of using constraints.
         - &create_virtualenv
           name: Create the virtualenv (if it does not exist)
           command: >-
-            {{ (venv_python_version | int == 2) | ternary('virtualenv --no-download', 'python3 -m venv') }}
+            {% if venv_python_version | int == 2 %}
+            {%   if ansible_facts['ansible_distribution'] == 'Red Hat Enterprise Linux' && ansible_facts['ansible_distribution_version'] is version('7.4', '<=') %}
+            {%     _cmd = 'virtualenv' %}
+            {%   else %}
+            {%     _cmd = 'virtualenv --no-download' %}
+            {%   endif %}
+            {% else %}
+            {%   _cmd = 'python3 -m venv' %}
+            {% endif %}
+            {{ _cmd }}
             {{ (venv_system_site_packages | bool) | ternary('--system-site-packages', '') }}
             {{ venv_destination_path }}
           args:
