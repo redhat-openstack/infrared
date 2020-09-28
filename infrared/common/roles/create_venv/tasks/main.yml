@@ -26,11 +26,11 @@
     - &find_virtualenv
       name: Collect the path for virtualenv if it is installed
       shell: |
-        which virtualenv 2>/dev/null || echo 'none'
+        virtualenv --version 2>&1 || echo 'none'
       args:
         executable: /bin/bash
       changed_when: false
-      register: _virtualenv_path
+      register: _virtualenv_version
 
     - name: Install python-virtualenv on hosts < RHEL8
       package:
@@ -42,7 +42,7 @@
       retries: 5
       delay: 10
       when:
-        - _virtualenv_path.stdout | trim == 'none'
+        - _virtualenv_version.stdout | trim == 'none'
         - venv_python_version | int == 2
 
     - name: Create the venv_destination_path parent directory
@@ -62,11 +62,17 @@
         - &create_virtualenv
           name: Create the virtualenv (if it does not exist)
           command: >-
-            {{ (venv_python_version | int == 2) | ternary('virtualenv --no-download', 'python3 -m venv') }}
+            {{ (venv_python_version | int == 2) | ternary('virtualenv ' ~ _virtualenv_options, 'python3 -m venv') }}
             {{ (venv_system_site_packages | bool) | ternary('--system-site-packages', '') }}
             {{ venv_destination_path }}
           args:
             creates: "{{ venv_destination_path }}/bin/activate"
+          # _virtualenv_version may take two forms:
+          # (stdout) '15.1.0'
+          # (stderr) 'virtualenv 20.0.1 from /usr/local/lib/python2.7/dist-packages/virtualenv/__init__.pyc'
+          vars:
+            _virtualenv_version_number: "{{ (_virtualenv_version.stdout.split(' ') | length == 1) | ternary(_virtualenv_version.stdout, _virtualenv_version.stdout.split(' ')[1]) }}"
+            _virtualenv_options: "{{ (_virtualenv_version_number is version_compare('14.0.0', '<')) | ternary('--never-download', '--no-download') }}"
 
         - &ensure_ownership
           name: Ensure ownership of the venv_destination_path directory
