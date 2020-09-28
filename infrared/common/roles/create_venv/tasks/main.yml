@@ -62,7 +62,7 @@
         - &create_virtualenv
           name: Create the virtualenv (if it does not exist)
           command: >-
-            {{ (venv_python_version | int == 2) | ternary('virtualenv --no-download', 'python3 -m venv') }}
+            {{ (venv_python_version | int == 2) | ternary('virtualenv --never-download', 'python3 -m venv') }}
             {{ (venv_system_site_packages | bool) | ternary('--system-site-packages', '') }}
             {{ venv_destination_path }}
           args:
@@ -88,6 +88,18 @@
             executable: /bin/bash
           when:
             - venv_shebang_relocate | bool
+
+        - &venv_upgrade_pip
+          name: Upgrade pip/setuptools/wheel in very old environments
+          shell: >-
+            source bin/activate
+            pip install --upgrade 'pip<20'
+          args:
+            executable: /bin/bash
+            chdir: "{{ venv_destination_path }}"
+          when:
+            - ansible_facts['distribution'] == 'RedHat'
+            - ansible_facts['distribution_version'] is version('7.4', '<=')
 
         - &download_constraints
           name: Download the constraints file
@@ -181,6 +193,8 @@
         - *ensure_ownership
 
         - *venv_shebang_relocate
+
+        - *venv_upgrade_pip
 
         - *download_constraints
 
