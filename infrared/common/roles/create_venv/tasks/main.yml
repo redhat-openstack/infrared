@@ -62,7 +62,7 @@
         - &create_virtualenv
           name: Create the virtualenv (if it does not exist)
           command: >-
-            {{ (venv_python_version | int == 2) | ternary('virtualenv --no-download', 'python3 -m venv') }}
+            {{ (venv_python_version | int == 2) | ternary('virtualenv --never-download', 'python3 -m venv') }}
             {{ (venv_system_site_packages | bool) | ternary('--system-site-packages', '') }}
             {{ venv_destination_path }}
           args:
