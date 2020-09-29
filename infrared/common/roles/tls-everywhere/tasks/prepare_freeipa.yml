@@ -136,6 +136,7 @@
         ipa dnszone-add storagemgmt.{{ freeipa_cloud_domain }}
         ipa dnsrecord-add storagemgmt.{{ freeipa_cloud_domain }} overcloud {{ (tls_everywhere.network.storagemgmt_vip|ipv6)|default(False)|ternary('--aaaa-rec','--a-rec') }} {{ tls_everywhere.network.storagemgmt_vip }}
     register: overcloud_dns_entries
+    when: not (freeipa_enable_novajoin|bool)
 
   - name: Configure FreeIPA DNS Forwarder from hypervisor
     become: yes
