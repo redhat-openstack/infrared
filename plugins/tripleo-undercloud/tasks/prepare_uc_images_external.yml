@@ -1,0 +1,53 @@
+---
+- block:
+    - name: download the script when it looks like a fetch url
+      get_url:
+          url: "{{ script_url }}"
+          dest: "{{ script_target }}"
+      become: true
+      retries: 3
+      delay: 3
+      when:
+          - script_url|regex_search('^https?://.*')
+    - name: copy script from host
+      copy:
+          src: "{{ script_url }}"
+          dest: "{{ script_target }}"
+          mode: "0755"
+      when:
+          - not script_url|regex_search('^https?:/.*')
+    - name: execute the custom registry script
+      become: true
+      become_user: root
+      shell: |
+              chmod 755 {{ script_target }}
+              {{ script_target }} {{ script_args }} 2>&1 | tee -a "{{ script_log_target }}"
+      environment:
+              IR_CALL_ENV: "{{ conf|to_nice_json }}"
+      args:
+          warn: no
+      tags: skip_ansible_lint
+
+    - name: fetch registries fact
+      become: true
+      become_user: root
+      shell: |
+          cat {{ working_dir }}/ir_registry_facts.json
+      register: registry_facts
+      tags: skip_ansible_lint
+
+    - debug:
+         msg: "registry script facts '''{{ registry_facts.stdout }}'''"
+
+      # insecure_registry_hosts is the expected one
+      # insecure_registry_hosts is an array of strings
+      # with_dict looks required
+    - name: Set registry facts from the script
+      set_fact: {"{{ item.key }}":"{{ item.value }}"}
+      with_dict: "{{ registry_facts.stdout|from_json }}"
+  vars:
+      - conf: "{{ install|default({}) }}"
+      - script_target: '{{ working_dir }}/custom_registry_script'
+      - script_log_target: '/var/log/custom_registry_script.log'
+      - script_url: "{{ install.get('registry', {}).get('custom', {}).get('script', {}).get('url', {})|default('') }}"
+      - script_args: "{{ install.get('registry', {}).get('custom', {}).get('script', {}).get('args', {})|default('') }}"

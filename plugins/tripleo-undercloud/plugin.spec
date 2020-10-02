@@ -540,3 +540,13 @@ subparsers:
                   registry-ceph-password:
                       type: Value
                       help: A password/token string to authenticate with a ceph registry
+
+                  registry-custom-script-url:
+                      type: Value
+                      help: Use the custom script to configure registries and container sources
+                      default: ''
+
+                  registry-custom-script-args:
+                      type: Value
+                      help: Arguments passed to the registry-custom-script.
+                      default: ''
