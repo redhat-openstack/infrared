@@ -183,6 +183,12 @@ def _run_playbook(cli_args, vars_dict, ir_workspace, ir_plugin):
     #                 '__main__'. Otherwise ansible gets unpatched '__main__'
     #                 and creates new 'display' object with default (0)
     #                 verbosity.
+    # NOTE(afazekas): GlobalCLIArgs gets value only once per invocation, but
+    # since it has singleton decorator, so it would remember to old arguments in different tests
+    # removing the singleton decorator
+    from ansible.utils import context_objects
+    context_objects.GlobalCLIArgs = context_objects.CLIArgs
+
     from ansible.cli.playbook import PlaybookCLI
     from ansible.errors import AnsibleOptionsError
     from ansible.errors import AnsibleParserError
