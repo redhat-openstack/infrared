@@ -67,6 +67,7 @@
         when:
             - install.images.packages|default('') or install.images['update'] or install.images.remove|default('')
             - install.version|default(undercloud_version)|openstack_distribution == 'OSP'
+            - not install.registry.skip.puddle
         tags: rhos-release
 
       - name: prepare RDO repos for the images
@@ -79,8 +80,15 @@
         when:
             - install.images.packages|default('') or install.images['update'] or install.images.remove|default('')
             - undercloud_version|default(undercloud_version)|openstack_distribution == 'RDO'
+            - not install.registry.skip.puddle
         tags: rhos-release
+
   tasks:
+      - name: prepare undercloud repos for image update
+        shell: |
+          cp -a /etc/yum.repos.d/* {{ tmp_oc_repos_dir }}
+        when:
+            - install.registry.skip.puddle
       - name: Downloading extra YUM/DNF repositories
         get_url:
             url: "{{ item }}"
