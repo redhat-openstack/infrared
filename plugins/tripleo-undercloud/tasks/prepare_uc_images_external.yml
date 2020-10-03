@@ -42,9 +42,11 @@
       # insecure_registry_hosts is the expected one
       # insecure_registry_hosts is an array of strings
       # with_dict looks required
+      # ignore_errors: until we drop py27 and old ansible support
     - name: Set registry facts from the script
       set_fact: {"{{ item.key }}":"{{ item.value }}"}
       with_dict: "{{ registry_facts.stdout|from_json }}"
+      ignore_errors: "{{ ansible_distribution_version | version('>=', '2.9') | ternary(false, true) }}"
   vars:
       - conf: "{{ install|default({}) }}"
       - script_target: '{{ working_dir }}/custom_registry_script'
