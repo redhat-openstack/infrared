@@ -10,24 +10,13 @@
       (install.network.protocol == 'ipv4') | ternary('ipv4','ipv6') }}.yml"
   pre_tasks:
       - include_vars: "{{ external_lb_network_template_file }}"
-
-      - name: Get the rhos-release RPM
-        get_url:
-            url: "{{ rhos_release_rpm }}"
-            dest: "/tmp/rhos-release-latest.rpm"
-            force: yes
-            validate_certs: no
-        register: get_rhos_release_get_url
-        until: get_rhos_release_get_url is not failed or get_rhos_release_get_url.status_code | quote not in retry_http_codes
-        retries: 2
-        delay: 10
-
-      - name: Install the rhos-release RPM
-        package:
-            name: /tmp/rhos-release-latest.rpm
-            state: present
-
-      - name: Run rhos release
-        command: rhos-release "{{ install.version|default(undercloud_version)  }}"
   roles:
-      - role: loadbalancer
+    - name: Set up loadbalancer's rhos-release
+      role: rhos-release
+      release: "{{ install.version|default(undercloud_version) }}"
+      rr_buildmods: "{{ install.buildmods }}"
+      build: "{{ install.build | default(omit) }}"
+      director_build: "{{ install.get('director', {}).build|default(omit) }}"
+      mirror: "{{ install.mirror | default(omit) }}"
+    - name: Configure the loadbalancer
+      role: loadbalancer
