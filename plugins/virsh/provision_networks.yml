@@ -72,7 +72,8 @@
               hostvars[inventory_hostname]['ansible_' + item.nic]|default('')) }}"
       with_items:
           "{{ networks.values() | selectattr('forward', 'defined') | selectattr('forward', 'equalto', 'bridge') | list }}"
-      when: "networks is defined"
+      when: networks is defined and ansible_distribution_major_version | int == 7
+
 
     - name: check for existing networks
       virt_net:
