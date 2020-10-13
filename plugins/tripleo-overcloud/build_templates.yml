@@ -100,8 +100,11 @@
           content: |
             parameter_defaults:
                NtpPool: {{ install.ntp.pool }}
+               #NOTE(gfidente): We want MinPoll/MaxPoll set for 13 jobs
+               MinPoll: 4
+               MaxPoll: 5
         when:
-            - install.version|default(undercloud_version)|openstack_release >= 15
+            - install.version|default(undercloud_version)|openstack_release >= 13
             - install.get('ntp', {}).pool is defined
             - install.ntp.pool
 
