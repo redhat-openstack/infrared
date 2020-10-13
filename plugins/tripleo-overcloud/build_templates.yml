@@ -100,6 +100,11 @@
           content: |
             parameter_defaults:
                NtpPool: {{ install.ntp.pool }}
+               #NOTE(gfidente): OSP13 uses NtpServer, OSP16 supports both NtpPool and NtpServer
+               #setting both to same value should make this always work
+               NtpServer: {{ install.ntp.pool }}
+               MinPoll: 4
+               MaxPoll: 5
         when:
             - install.version|default(undercloud_version)|openstack_release >= 15
             - install.get('ntp', {}).pool is defined
