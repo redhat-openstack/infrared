@@ -11,6 +11,7 @@
 {% set _dummy = ns.role_hosts.update({ ns.role_hosts_key: ns.role_hosts[ns.role_hosts_key]|default('') ~ hostvars[host_name]['ansible_eth0']['ipv4']['address'] ~ ' ' }) %}
 {% endfor %}
 export OVERCLOUD_HOSTS="{{ ns.oc_nodes }}"
+export OVERCLOUD_PLAN="{{ install.overcloud.stack }}"
 export OVERCLOUD_ROLES="{{ ns.saved_roles }}"
 export STACK_NAME="{{ install.overcloud.stack }}"
 {% for key,value in ns.role_hosts.items()|sort %}
