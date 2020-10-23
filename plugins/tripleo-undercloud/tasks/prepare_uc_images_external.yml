@@ -46,7 +46,7 @@
     - name: Set registry facts from the script
       set_fact: {"{{ item.key }}":"{{ item.value }}"}
       with_dict: "{{ registry_facts.stdout|from_json }}"
-      ignore_errors: "{{ ansible_distribution_version | version('>=', '2.9') | ternary(false, true) }}"
+      ignore_errors: "{{ ansible_distribution_version is version('>=', '2.9') | ternary(false, true) }}"
   vars:
       - conf: "{{ install|default({}) }}"
       - script_target: '{{ working_dir }}/custom_registry_script'
