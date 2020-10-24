@@ -120,6 +120,14 @@
       - item.key not in ignore_virsh_nets
       - item.value.forward_mode|default('') == 'bridge'
 
+- name: Cleanup nmcli openvswitch resources
+  tags: networks
+  shell: |
+    for con_uuid in $(nmcli connection | grep IR_OVS | awk '{ print $2 }');
+    do
+      nmcli connection delete $con_uuid;
+    done
+
 - name: Cleanup /var/lib/libvirt/qemu/*.log
   become: true
   shell: rm -rf /var/lib/libvirt/qemu/*.log
