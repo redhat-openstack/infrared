@@ -2,6 +2,15 @@
   shell: "brctl show {{ bridge_name }} | awk '/{{ bridge_name }}/ {print $4}'"
   register: nic_name
 
+- name: Stat backup bridge config
+  become: yes
+  vars:
+    # keep vars consistent with creation playbook
+    nic:
+      interface: "{{ nic_name.stdout | trim }}"
+  stat:
+    path: "/etc/sysconfig/network-scripts/ir_bkp_ifcfg-{{ nic.interface }}"
+  register: ir_bkp_ifcfg_file
 
 - name: restore interface network configuration
   become: yes
@@ -16,17 +25,36 @@
       remote_src: yes
 #      backup: yes
       force: yes
+  when: ir_bkp_ifcfg_file.stat.exists
+
+- name: Stat bridge interface configuration
+  become: yes
+  stat:
+    path: "/etc/sysconfig/network-scripts/ifcfg-{{ bridge_name }}"
+  register: bridge_name_file
 
 - name: delete bridge interface configuration
   file:
       name: "/etc/sysconfig/network-scripts/ifcfg-{{ bridge_name }}"
       state: absent
+  when: bridge_name_file.stat.exists
+
+- name: Bridge exists
+  command: ip link show {{ bridge_name }}
+  register: ip_link_show_result
+  ignore_errors: true
 
 - name: delete the bridge and attached interface
-  command: "ip link delete {{ bridge_name }}"
+  command: ip link delete {{ bridge_name }}
+  when: ip_link_show_result.rc == '0'
+
+- name: collect facts about system services
+  service_facts:
+  register: services_state
 
 - name: restart network
   become: yes
   service:
       name: network
       state: restarted
+  when: services_state.ansible_facts.services['network.service'] is defined

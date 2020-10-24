@@ -71,7 +71,15 @@
           nic_data: "{{ (item.nic == '') | ternary(hostvars[inventory_hostname]['ansible_' + ansible_default_ipv4.interface],
               hostvars[inventory_hostname]['ansible_' + item.nic]|default('')) }}"
       with_items:
-          "{{ networks.values() | selectattr('forward', 'defined') | selectattr('forward', 'equalto', 'bridge') | list }}"
+          "{{ networks.values() | selectattr('forward', 'defined') | selectattr('forward', 'equalto', 'bridge') | rejectattr('virtualport_type', 'defined') | list }}"
+      when: "networks is defined"
+
+    - name: create openvswitch bridged networks
+      include_tasks: tasks/openvswitch_network.yaml
+      vars:
+        network: "{{ item }}"
+        portgroups: "{{ item.portgroups|default([]) }}"
+      loop: "{{ networks.values() | selectattr('virtualport_type', 'defined') | selectattr('virtualport_type', 'equalto', 'openvswitch') | list }}"
       when: "networks is defined"
 
     - name: check for existing networks

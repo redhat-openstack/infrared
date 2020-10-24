@@ -1,0 +1,60 @@
+# NOTE: Use the name of the portgroup instead of the network name if
+#       provisioning over a network with multiple portgroups.
+#       For example: -e provision_virsh_network_name=ctlplane1
+---
+networks:
+    net1:
+      external_connectivity: no
+      name: data
+      forward: bridge
+      virtualport_type: openvswitch
+      ipv6_address: 2001:DB80:1::f:ff/64 # A foo address so NetworkManager keep iface up ...
+      portgroups:
+        - name: ctlplane1
+          default: true
+          vlan_id: 5
+          # ipv4_address: 192.168.24.254
+          ipv6_address: 2620:dead:beef:5::f:ff/64
+        - name: trunk
+          default: false
+          trunk: true
+          vlans:
+            - id: 100 # External
+              ipv4_address: 10.0.0.1/24
+              ipv6_address: 2620:52:0:13b8::fe/64
+            - id: 10 # InternalApi
+            - id: 20 # Storage
+            - id: 30 # StorageMgmt
+            - id: 40 # Tenant
+            - id: 50 # Management
+    net2:
+      external_connectivity: yes
+      name: management
+      ip_address: "172.16.{{ net }}.1"
+      netmask: "255.255.255.0"
+      forward: nat
+      dhcp:
+        range:
+          start: "172.16.{{ net }}.2"
+          end: "172.16.{{ net }}.100"
+        subnet_cidr: "172.16.{{ net }}.0/24"
+        subnet_gateway: "172.16.{{ net }}.1"
+      floating_ip:
+        start: "172.16.{{ net }}.101"
+        end: "172.16.{{ net }}.150"
+
+nodes:
+  default:
+    interfaces:
+      - network: data
+        portgroup: ctlplane1
+      - network: data
+        portgroup: trunk
+    provision_network: data
+  undercloud:
+    interfaces:
+      - network: data
+        portgroup: ctlplane1
+      - network: management
+    external_network:
+      network: management
