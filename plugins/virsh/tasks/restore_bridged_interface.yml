@@ -17,16 +17,34 @@
     - 'bridge_name | replace("-", "_") in ansible_facts'
     - '"interfaces" in ansible_facts[bridge_name | replace("-", "_")]'
 
+- name: Stat bridge interface configuration
+  become: yes
+  stat:
+    path: "/etc/sysconfig/network-scripts/ifcfg-{{ bridge_name }}"
+  register: bridge_name_file
+
 - name: delete bridge interface configuration
   file:
       name: "/etc/sysconfig/network-scripts/ifcfg-{{ bridge_name }}"
       state: absent
+  when: bridge_name_file.stat.exists
+
+- name: Bridge exists
+  command: ip link show {{ bridge_name }}
+  register: ip_link_show_result
+  ignore_errors: true
 
 - name: delete the bridge and attached interface
-  command: "ip link delete {{ bridge_name }}"
+  command: ip link delete {{ bridge_name }}
+  when: ip_link_show_result.rc == '0'
+
+- name: collect facts about system services
+  service_facts:
+  register: services_state
 
 - name: restart network
   become: yes
   service:
       name: NetworkManager
       state: restarted
+  when: services_state.ansible_facts.services['network.service'] is defined
