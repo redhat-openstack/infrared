@@ -7,6 +7,23 @@
     {% if provision.host.network.mtu.size %}
         <mtu size="{{ provision.host.network.mtu.size }}"/>
     {% endif %}
+    {% if item.value.virtualport_type is defined %}
+        <virtualport type="{{item.value.virtualport_type}}"/>
+    {% endif %}
+    {% for portgroup in item.value.portgroups|default([]) %}
+        <portgroup name="{{ portgroup.name }}" {% if portgroup.default|bool %}default="yes"{% endif %}>
+          <vlan trunk="{% if portgroup.trunk|default(false)|bool %}yes{% else %}no{% endif %}">
+          {% if portgroup.vlans is defined %}
+          {% for vlan in portgroup.vlans|default([]) %}
+            <tag id="{{ vlan.id }}"/>
+          {% endfor %}
+          {% endif %}
+          {% if portgroup.vlan_id is defined %}
+            <tag id="{{ portgroup.vlan_id }}"/>
+          {% endif %}
+          </vlan>
+        </portgroup>
+    {% endfor %}
     {% if item.value.forward|default('') != 'bridge' %}
     {% if item.value.ip_address is defined %}
   <ip address="{{ item.value.ip_address }}" netmask="{{ item.value.netmask }}">
