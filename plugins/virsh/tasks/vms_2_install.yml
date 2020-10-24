@@ -57,7 +57,8 @@
           {% for interface in topology_node.interfaces %}
            --network {{ 'bridge' if (interface.bridged|default(False)) else 'network' }}:{{ prefix|default('') }}{{ (prefix is defined|ternary('-','')) }}
            {%- if interface.needs_formatting | default(False) %}{{ interface.network | format(item) }}{% else %}{{ interface.network }}{% endif %}
-           {%- if interface.model is defined and interface.model %},model={{ interface.model }}{% endif %} \
+           {%- if interface.model is defined and interface.model %},model={{ interface.model }}{% endif %}
+           {%- if interface.portgroup is defined %},portgroup={{ interface.portgroup }}{% endif %} \
           {% endfor -%}
           {% if provision.serial.files %}
            --serial file,path="{{ serial_files_dir }}/{{ prefix|default('') }}{{ topology_node.name }}-{{ item }}.log" \
