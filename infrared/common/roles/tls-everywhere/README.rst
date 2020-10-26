@@ -74,6 +74,8 @@ Role variables:
 
 ``freeipa_undercloud_rc`` - stackrc location, default: '~/stackrc'
 
+``freeipa_undercloud_interface`` - Undercloud external network interface
+
 ``freeipa_undercloud_ipaddress`` - Undercloud ip address. It depends of the network protocol
 
 ``freeipa_overcloud_deploy_script`` - Overcloud deploy script location, default: ~/overcloud_deploy.sh
