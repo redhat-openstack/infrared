@@ -14,7 +14,11 @@
 {% set host_data = host_string|from_yaml %}
     {
       "name": "{{ host_data.name }}",
+      {% if install.instackenv|default({}) and install.instackenv.useports|default(False) %}
+      "ports": [{"address": "{{ host_data.mac }}", "local_link_connection": {"switch_id": "52:54:00:00:00:00", "port_id": "{{ loop.index }}"}}],
+      {% else %}
       "mac": ["{{ host_data.mac }}"],
+      {% endif %}
       "cpu": "{{ host_data.cpu }}",
       "memory": "{{ (host_data.memory_kibs|int / 1024)|round|int }}",
       "disk": "{{ (host_data.disk_bytes|int / 1073741824)|round|int }}",
