@@ -111,6 +111,30 @@
         register: nodes_info
         tags:
             - skip_ansible_lint
+        when: osp_version|int < 16
+
+      - name: get information about vm's from hypervisor
+        vars:
+            vm_nodes: "{{ oc_nodes | difference(bm_nodes_names) }}"
+        delegate_to: "{{ vms_hypervisor[item] }}"
+        shell: |
+            NODE_XML=`virsh dumpxml {{ item }}`
+            disks_list=$(virsh domblklist {{ item }}  | \
+                awk '{ if(NR>2 && $0 !~ /^ *$/) { d = d "," "\"" $1 "\"" } } END { print "[" gensub("^,","",1,d) "]" }')
+            echo "{
+                'name': '{{ item }}',
+                'arch': '`echo "$NODE_XML" | grep arch | cut -d\' -f2`',
+                'memory_kibs': '`echo "$NODE_XML" | grep currentMemory | cut -d\< -f2 | cut -d\> -f2`',
+                'ports': [{'address': '`for network_name in ctlplane1; do echo "$NODE_XML" | grep \'$network_name\' -B 1 | grep mac | cut -d\' -f2; done|grep -v ^$`', 'local_link_connection': {"network_type": "unmanaged"}}]',
+                'cpu': '`echo "$NODE_XML" | grep vcpu | cut -d\< -f2 | cut -d\> -f2`',
+                'disk_bytes': '`virsh domblkinfo {{ item }} vda | grep -e Capacity | cut -d\: -f2 | xargs`',
+                'disks': '${disks_list}',
+            }"
+        with_items: "{{ vm_nodes|sort }}"
+        register: nodes_info
+        tags:
+            - skip_ansible_lint
+        when: osp_version|int >= 16
 
       - name: prepare instackenv.json file
         vars:
