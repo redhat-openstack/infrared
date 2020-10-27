@@ -212,6 +212,13 @@ subparsers:
                       type: Value
                       help: The path to the instackenv.json configuration file used for introspection.
 
+                  instackenv-useports:
+                      type: Bool
+                      default: no
+                      help: |
+                          Use "ports" definition instead of "mac" in instackenv.json file.
+                          This option is available since Rocky (also see RHBZ#1909010).
+
                   controller-nodes:
                       type: Value
                       help: The amount of controller nodes to deploy

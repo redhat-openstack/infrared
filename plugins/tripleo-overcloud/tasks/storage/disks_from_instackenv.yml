@@ -25,7 +25,11 @@
       for UUID in $(openstack baremetal node list -f value -c UUID);
       do
           # For every UUID get introspection data and search for mac address, defined in 'instackenv.json'
+          {% if storage_node.mac is defined %}
           MATCH=$(openstack baremetal introspection data save ${UUID} | jq ''|grep "{{ storage_node.mac[0] }}" | wc -l)
+          {% else %}
+          MATCH=$(openstack baremetal introspection data save ${UUID} | jq ''|grep "{{ storage_node.ports[0]['address'] }}" | wc -l)
+          {% endif %}
           # If mac address if found
           if [ ${MATCH} != 0 ];
           then
