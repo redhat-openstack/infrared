@@ -115,6 +115,16 @@
         regexp: '^ca.crl.MasterCRL.publishOnStart=(.*)$'
         line: 'ca.crl.MasterCRL.publishOnStart=true'
 
+  - name: Does the DNS ACL exist
+    become: yes
+    shell: >-
+      ldapsearch -LLL -x -D "cn=Directory Manager" -w {{ freeipa_directory_manager_password }} -s base
+      -b cn=dns,dc={{ freeipa_domain.split(".")[0] }},dc={{ freeipa_domain.split(".")[1] }}
+      aci='*Allow hosts to read DNS A/AAA/CNAME/PTR records*' numSubordinates |
+      sed -n 's/^[ \t]*numSubordinates:[ \t]*\(.*\)/\1/p'
+    register: dns_aci_count
+    ignore_errors: true
+
   - name: Add ACL to allow hosts access to DNS
     become: yes
     shell:
@@ -125,6 +135,7 @@
         add: aci
         aci: (targetattr = "aaaarecord || arecord || cnamerecord || idnsname || objectclass || ptrrecord")(targetfilter = "(&(objectclass=idnsrecord)(|(aaaarecord=*)(arecord=*)(cnamerecord=*)(ptrrecord=*)(idnsZoneActive=TRUE)))")(version 3.0; acl "Allow hosts to read DNS A/AAA/CNAME/PTR records"; allow (read,search,compare) userdn = "ldap:///fqdn=*,cn=computers,cn=accounts,dc={{ freeipa_domain.split('.')[0] }},dc={{ freeipa_domain.split('.')[1] }}";)
         EOF
+    when: dns_aci_count.stdout|default(0)|int == 0
 
   - name: Add DNS zone when needed
     become: yes
