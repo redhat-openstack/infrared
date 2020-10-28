@@ -58,9 +58,9 @@
   - name: Workaround for newer JDK breaking FreeIPA
     become: yes
     shell: |
-      dnf install -y java-1.8.0-openjdk java-1.8.0-openjdk-headless
+      yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-headless
       if rpm -q --queryformat '%{version}' java-1.8.0-openjdk |grep "1.8.0.272"; then
-        dnf downgrade -y java-1.8.0-openjdk java-1.8.0-openjdk-headless
+        yum downgrade -y java-1.8.0-openjdk java-1.8.0-openjdk-headless
       fi
 
   - name: Install Red Hat CA
