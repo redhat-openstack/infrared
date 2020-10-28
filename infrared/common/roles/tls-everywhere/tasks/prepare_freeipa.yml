@@ -52,6 +52,16 @@
         - ansible_distribution in ['CentOS', 'RedHat']
         - ansible_distribution_major_version == '8'
 
+  # This can be removed once rhbz#1892216 is fixed and released
+  # We need to install openjdk beforehand (as it is installed by the freeipa)
+  # script and then downgrade it in case the version is the known broken one
+  - name: Workaround for newer JDK breaking FreeIPA
+    shell: |
+      dnf install -y java-1.8.0-openjdk java-1.8.0-openjdk-headless
+      if rpm -q --queryformat '%{version}' java-1.8.0-openjdk |grep "1.8.0.272"; then
+        dnf downgrade -y java-1.8.0-openjdk java-1.8.0-openjdk-headless
+      fi
+
   - name: Install Red Hat CA
     become: yes
     shell: |
