@@ -34,6 +34,22 @@
           state: present
           disable_gpg_check: true
       become: true
+    
+    - name: remove hosts from Satellite server
+      uri:
+          url: "https://{{ cdn_creds.server_hostname }}/api/v2/hosts/{{ item }}.{{ install.overcloud.domain }}"
+          user: "{{ cdn_creds.username | default(omit)}}"
+          password: "{{ cdn_creds.password | default(omit)}}"
+          method: DELETE
+          force_basic_auth: yes
+          return_content: yes
+          validate_certs: false
+          status_code: [200,201,202]
+          body_format: json
+      with_items: "{{ groups.all | difference(['localhost']) | difference(['hypervisor']) | difference(('hypervisor' in groups) | ternary(groups.hypervisor, [])) }}"
+      ignore_errors: yes
+      when: "{{ install.satellite.clean.nodes }}"
+
   when: cdn_creds.server_hostname is defined and _sat6_check['status'] == 200
 
 - name: register machines to CDN

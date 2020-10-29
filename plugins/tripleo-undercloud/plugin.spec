@@ -353,6 +353,11 @@ subparsers:
                           YAML file
                           Register the undercloud with a Red Hat Subscription Management platform.
                           see documentation for more details
+                  satellite-clean-nodes:
+                      type: Bool
+                      default: False
+                      help: |
+                          Unregister undercloud and overcloud nodes from satellite server
                   repos-config:
                       type: VarFile
                       help: |
