@@ -82,6 +82,19 @@
             set_fact:
               ceph_client: "{{ inventory_hostname }}"
             when: ceph_mon.rc == 0
+
+          # Check if Ceph cluster name is used
+          - name: Get a name of Ceph cluster
+            become: true
+            shell: "ps -p $(pidof ceph-mon) -o args --no-headers | grep -o 'cluster.*' | cut -d' ' -f2"
+            register: ceph_cluster_name
+            delegate_to: "{{ ceph_client }}"
+
+          - name: Set path to ceph configuration
+            set_fact:
+              ceph_conf_option: "-c /etc/ceph/{{ ceph_cluster_name.stdout }}.conf"
+            when:
+                - ceph_cluster_name.stdout | length > 0
         when:
             - overcloud_version|int >= 14
             - "'ceph' in group_names"
@@ -107,8 +120,8 @@
           - overcloud_version|int >= 14
         delegate_to: "{{ ceph_client }}"
         with_items:
-            - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph osd set noout"
-            - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph osd set norebalance"
+            - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option|default(None) }} osd set noout"
+            - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option|default(None) }} osd set norebalance"
 
       # Check the following conditions:
       # A) pcmk_remote is succeeded will be true is this is a pcmk-remote node
@@ -264,8 +277,8 @@
           - overcloud_version|int >= 14
         delegate_to: "{{ ceph_client }}"
         with_items:
-            - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph osd unset noout"
-            - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph osd unset norebalance"
+            - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option|default(None) }} osd unset noout"
+            - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option|default(None) }} osd unset norebalance"
 
       - name: wait for OSDs to come back on OSP < 14
         become: true
@@ -281,7 +294,7 @@
 
       - name: wait for OSDs to come back on OSP >= 14
         become: true
-        command: "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph pg stat"
+        command: "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option|default(None) }} pg stat"
         register: active_osd
         until: active_osd.stdout.find("active+clean") > -1
         retries: 24
@@ -304,7 +317,7 @@
       - name: check clock_skew on ceph cluster on OSP >= 14
         become: true
         shell: |
-            {{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph status | grep 'Monitor clock skew detected' || echo 'ALL_GOOD'
+            {{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option|default(None) }} status | grep 'Monitor clock skew detected' || echo 'ALL_GOOD'
         register: clock_skew
         when:
           - "'ceph' in group_names"
@@ -327,7 +340,7 @@
 
       - name: check ceph cluster status on OSP >= 14
         become: true
-        command: "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph status"
+        command: "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option|default(None) }} status"
         register: ceph_health
         until: ceph_health.stdout.find("HEALTH_OK") > -1
         retries: 30
@@ -354,7 +367,7 @@
 
       - name: check ceph cluster status with clock skew on OSP >=14
         become: true
-        command: "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph status"
+        command: "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option|default(None) }} status"
         register: ceph_health
         until: ceph_health.stdout.find("HEALTH_WARN") > -1 or ceph_health.stdout.find("HEALTH_OK") > -1
         retries: 30
