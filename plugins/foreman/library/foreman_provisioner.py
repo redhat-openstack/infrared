@@ -96,6 +96,10 @@ options:
      description:
          - The ID of Medium to set
      required: false
+   ptable_id:
+     description:
+         - The ID of the partition table to set
+     required: false
    ping_deadline:
      description:
          - Timeout in seconds for 'ping' command (works with 'wait_for_host')
@@ -221,7 +225,9 @@ class ForemanManager(object):
             self.url, self.resource['update']['url'].format(id=host_id))
         response = self.session.put(request_url,
                                     data=update_info, verify=False)
-        return response.json()
+        response_json = response.json()
+        response_json.update({"status_code": response.status_code,"response_text":response.text})
+        return response_json
 
     def set_build_on_host(self, host_id, flag):
         """
@@ -234,7 +240,7 @@ class ForemanManager(object):
         if self.get_host(host_id).get('build') != flag:
             raise Exception("Failed setting build on host {0}".format(host_id))
 
-    def set_host_os(self, host_id, os_id, medium_id):
+    def set_host_os(self, host_id, os_id, medium_id,ptable_id):
         """Sets host's operating system
 
         :param host_id: Host's FQDN/ID
@@ -247,12 +253,20 @@ class ForemanManager(object):
             os_data['operatingsystem_id'] = os_id
         if medium_id:
             os_data['medium_id'] = medium_id
+        if ptable_id:
+            os_data['ptable_id'] = ptable_id
 
         # Nothing to update
         if not os_data:
             return
 
         res_body = self.update_host(host_id, json.dumps({'host': os_data}))
+
+        # Handle non 200 esponses
+        if res_body.get('status_code') != 200:
+            raise Exception(
+                "Failed to set host parameters, api returned an error: {}".format(res_body.get('response_message')))
+
 
         # Validates change
         if os_id and (res_body.get('operatingsystem_id') != eval(os_id)):
@@ -263,6 +277,10 @@ class ForemanManager(object):
             raise Exception(
                 "Failed to set 'medium_id' - Expected '{}' but got '{}'."
                 "".format(eval(medium_id), res_body.get('medium_id')))
+        if ptable_id and (res_body.get('ptable_id') != eval(ptable_id)):
+            raise Exception(
+                "Failed to set 'ptable_id' - Expected '{}' but got '{}'."
+                "".format(eval(ptable_id), res_body.get('ptable_id')))
 
     def bmc(self, host_id, command):
         """
@@ -314,7 +332,7 @@ class ForemanManager(object):
 
     def provision(self, host_id, mgmt_strategy, mgmt_action, ipmi_address,
                   ipmi_username, ipmi_password, operatingsystem_id, medium_id,
-                  ping_deadline, wait_for_host=10):
+                  ptable_id, ping_deadline, wait_for_host=10):
         """
         This method rebuilds a machine, doing so by running get_host and bmc.
         :param host_id: the name or ID of the host we wish to rebuild
@@ -331,6 +349,7 @@ class ForemanManager(object):
         :param medium_id: Medium ID
         :param ping_deadline: Timeout in seconds for 'ping' command
         (works with 'wait_for_host')
+        :param ptable_id: Partition table ID
         :raises: KeyError if BMC hasn't been found on the given host
                  Exception in case of machine could not be reached after
                  rebuild
@@ -338,7 +357,7 @@ class ForemanManager(object):
         wait_for_host = int(wait_for_host)
 
         building_host = self.get_host(host_id)
-        self.set_host_os(host_id, operatingsystem_id, medium_id)
+        self.set_host_os(host_id, operatingsystem_id, medium_id, ptable_id)
         self.set_build_on_host(host_id, True)
         if mgmt_strategy == 'foreman':
             if self._validate_bmc(host_id):
@@ -388,7 +407,8 @@ def main():
             ipmi_username=dict(default='ADMIN'),
             ipmi_password=dict(default='ADMIN'),
             operatingsystem_id=dict(default=None),
-            medium_id=dict(default=None)))
+            medium_id=dict(default=None),
+            ptable_id=dict(default=None)))
 
     foreman_client = ForemanManager(url=module.params['auth_url'],
                                     username=module.params['username'],
@@ -406,6 +426,7 @@ def main():
                                      module.params['ipmi_password'],
                                      module.params['operatingsystem_id'],
                                      module.params['medium_id'],
+                                     module.params['ptable_id'],
                                      module.params['ping_deadline'],
                                      module.params['wait_for_host'])
 
