@@ -70,6 +70,9 @@ subparsers:
                   medium-id:
                       type: Value
                       help: "Medium ID to set"
+                  ptable-id:
+                      type: Value
+                      help: "Partition table ID to set (optional)"
                   ping-deadline:
                       type: Value
                       help: "Deadline in seconds for 'ping' command (If 'wait' isn't 0/False)"
