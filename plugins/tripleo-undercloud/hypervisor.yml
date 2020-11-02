@@ -17,7 +17,7 @@
             dest: /etc/hosts
             line: "{{ hostvars[item].ansible_host|
                       default(hostvars[item].ansible_ssh_host) }}    \
-                   {{ item }}.redhat.local {{ item }}"
+                   {{ item }}.{{ install.overcloud.domain }} {{ item }}"
             regexp: ".*{{ item }}$"
             state: present
         when: '"ansible_ssh_host" in hostvars[item] or "ansible_host" in hostvars[item]'
