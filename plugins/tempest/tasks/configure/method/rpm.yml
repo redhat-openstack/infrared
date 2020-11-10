@@ -31,6 +31,17 @@
       creates: "~/{{ test.dir }}/etc"
   when: configure_tempest_dir.rc != 0
 
+- name: Copy custom .stestr files from the given location
+  copy:
+    src: "{{ test.custom-stestr-dir }}"
+    dest: "{{ test.dir }}/.stestr"
+    remote_src: true
+    force: true
+  ignore_errors: true
+  when:
+    - configure_tempest_dir.rc != 0
+    - test.custom-stestr-dir is defined
+
 - name: Check if we have tempestconf tool installed
   stat:
       path: /usr/bin/discover-tempest-config
