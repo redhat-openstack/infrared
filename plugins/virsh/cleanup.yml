@@ -58,7 +58,7 @@
           for i in $(pgrep dhcrelay); do kill -9 ${i}; done
       failed_when: False
 
-- name: Remove vbmc package and nodes
+- name: Remove nodes
   hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
   gather_facts: yes
   any_errors_fatal: true
@@ -73,13 +73,6 @@
             - 'hypervisor.yml'
           paths:
             - 'vars'
-
-    - name: include vbmc's cleanup task
-      include_role:
-          name: vbmc
-      vars:
-          action: "cleanup"
-          prefix: "{{ provision.prefix|default('') }}"
 
     - block:
         - name: Get all deployments
