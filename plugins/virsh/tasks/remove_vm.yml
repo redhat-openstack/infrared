@@ -1,11 +1,20 @@
 ---
-- name: destroy undefined vms
+- name: get the list of snapshots on VM
+  command: "virsh snapshot-list --domain {{ vm_name }} --name --external"
+  register: vm_snapshots
+
+- name: delete external snapshots storage
+  shell: rm -f $(virsh snapshot-dumpxml {{ vm_name }} {{item}} |  xmllint --xpath '/domainsnapshot/disks/disk/source/@file' - | sed -n 's/[^\"]*\"\([^\"]*\)\"[^\"]*/\1\n/gp')
+  with_items: "{{ vm_snapshots.stdout_lines }}"
+  when: vm_snapshots.stdout != ""
+
+- name: destroy undefined vms with all remaining storage and metadata
   virt:
       name: "{{ vm_name }}"
       state: destroyed
 
 - name: undefine relevant VMs
-  command: "virsh undefine --nvram {{ vm_name }}"
+  command: "virsh undefine --nvram --remove-all-storage --delete-storage-volume-snapshots --snapshots-metadata --checkpoints-metadata {{ vm_name }}"
 
 - name: Clean /etc/hosts file
   become: yes
