@@ -21,14 +21,10 @@ def test_list_yamls_in_help_screen(plugin_manager_fixture):  # noqa
     """
 
     topology_help = """  --topology TOPOLOGY   help of topology option
-                        Available values: {}""".format(
-        list(set(['undercloud', 'compute']))
-    )
+                        Available values: ['compute', 'undercloud']"""
     topology_network_help = """  --topology-networks TOPOLOGY-NETWORKS
                         help of topology-networks option
-                        Available values: {}""".format(
-        list(set(['3_nics', '2_nics', '1_nics']))
-    )
+                        Available values: ['1_nics', '2_nics', '3_nics']"""
 
     plugin_manager = plugin_manager_fixture()
     plugin_dir = os.path.join(SAMPLE_PLUGINS_DIR,

@@ -241,7 +241,7 @@ class CliParser(object):
             # convert set back to list
             opt_kwargs['help'] = opt_kwargs['help'].replace(
                 YAMLS_PLACEHODER, "Available values: {}".
-                format(list(yaml_set)))
+                format(sorted(list(yaml_set))))
 
         # update help
         option_data['help'] = opt_kwargs.get('help', '')
