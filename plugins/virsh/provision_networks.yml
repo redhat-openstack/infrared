@@ -98,3 +98,9 @@
           name: "{{ item.value.name }}"
           state: active
       with_dict: "{{ networks }}"
+
+    - name: enable multicast querier on external virtual network
+      shell: |
+          file=/sys/devices/virtual/net/external/bridge/multicast_querier
+          [ -f $file ] && echo '1' > $file
+      when: provision.host.network.multicast.querier
