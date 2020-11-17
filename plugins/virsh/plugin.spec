@@ -48,6 +48,11 @@ subparsers:
                           custom MTU size on virtual network interfaces on the hypervisor and on network interfaces of virtual nodes.
                           If the custom size is not defined, the default MTU size of '1500' will be used.
                       default: False
+                  host-network-multicast-querier:
+                      type: Bool
+                      help: |
+                          Use this option in order to enable multicast querier on the external virtual network
+                      default: False
 
             - title: image
               options:
