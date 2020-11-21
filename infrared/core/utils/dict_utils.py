@@ -86,4 +86,8 @@ def dict_merge(first, second,
                 # replace first value with the value from second
                 conflict_resolver(first, second, key)
         else:
-            first[key] = second[key]
+            try:
+                first[key] = second[key]
+            except TypeError as e:
+                LOG.error("dict_merge(%s, %s) failed on: %s" % (first, second, key))
+                raise e
