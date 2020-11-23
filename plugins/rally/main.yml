@@ -27,10 +27,9 @@
               plugins:
                   dir: "{{ ansible_user_dir }}/.rally/plugins"
                   revision: HEAD
-          python_ver: "python{{ ansible_python.version.major }}"
+          python_ver: "python3"
       rally: "{{ default_config | combine(config, recursive=True) }}"
   tasks:
-
       - name: Prepare rally files
         include_tasks: tasks/pre/main.yml
         tags:
