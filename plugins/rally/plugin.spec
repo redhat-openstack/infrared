@@ -56,3 +56,9 @@ subparsers:
                       type: Value
                       help: The task file to use
                       default: rally-jobs/mytest.json
+                  delete-existing-venv:
+                      type: Bool
+                      help: |
+                          Delete existing Rally virtual environment
+                          (Shouldn't be used if Rally is installed from 'RPM')
+                      default: True

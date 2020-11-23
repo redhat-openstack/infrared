@@ -1,4 +1,35 @@
 ---
+- name: Make sure Python3 in installed
+  block:
+    - name: Check if Python3 is installed
+      shell: "which python3"
+      ignore_errors: true
+      register: which_py3
+
+    - name: Install Python3 if missing
+      become: yes
+      package:
+        name: python3
+        state: present
+      when: which_py3.rc == 1
+
+- name: Create a Python3 virtualenv
+  when: test.setup != 'rpm'
+  block:
+    - name: Delete previous Rally virtualenv
+      when: test.delete.existing.venv
+      file:
+        path: rally.path
+        state: absent
+
+    - name: Create a Python3 virtualenv ('rally') using the venv module
+      shell: python3 -m venv rally --without-pip
+
+    - name: Install pip in the newly created virtualenv
+      shell: |
+        source rally/bin/activate
+        curl https://bootstrap.pypa.io/get-pip.py | python
+
 - name: Download cirros image
   get_url:
       url: " {{ guest_image.url }}"
