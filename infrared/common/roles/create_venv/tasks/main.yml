@@ -83,7 +83,8 @@
         - &venv_shebang_relocate
           name: Relocate the shebangs in the venv binaries
           shell: >-
-            sed -i 's|^#!.*python$|#!/usr/bin/env python|' {{ venv_destination_path }}/bin/*
+            find {{ venv_destination_path }}/bin -type f -maxdepth 1
+            -exec sed -i 's|^#!.*python$|#!/usr/bin/env python|' {} \;
           args:
             executable: /bin/bash
           when:
