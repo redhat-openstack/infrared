@@ -38,6 +38,15 @@ def spec_fixture():
     yield spec
 
 
+# The 'filterwarnings' decoration below ignores warnings on 'invalid escape
+# sequence' coming from PrettyTable module in Python 3.
+# The 'PrettyTable' package is required by some other packages (like:
+# 'python-novaclient', 'python-cinderclient' & 'cliff') in version < 0.8
+@pytest.mark.filterwarnings(
+    "ignore:invalid escape sequence:DeprecationWarning:.*prettytable.*:74",
+    "ignore:invalid escape sequence:DeprecationWarning:.*prettytable.*:800",
+    "ignore:invalid escape sequence:DeprecationWarning:.*prettytable.*:801",
+    "ignore:invalid escape sequence:DeprecationWarning:.*prettytable.*:802")
 def test_execute_no_workspace(spec_fixture, workspace_manager_fixture):   # noqa
     """Verify new workspace was been created when there are no workspaces. """
 
