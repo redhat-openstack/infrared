@@ -1,5 +1,5 @@
 - name: get bridge NIC
-  shell: "brctl show {{ bridge_name }} | awk '/{{ bridge_name }}/ {print $4}'"
+  shell: "bridge link | awk '/master {{ bridge_name }}/ {print $2}' | tr -d ':'"
   register: nic_name
 
 
