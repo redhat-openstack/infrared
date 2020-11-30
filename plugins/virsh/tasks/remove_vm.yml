@@ -17,7 +17,7 @@
   when: vm_snapshots.stdout != ""
 
 - name: undefine relevant VMs
-  command: "virsh undefine --nvram --remove-all-storage --delete-storage-volume-snapshots --snapshots-metadata --checkpoints-metadata {{ vm_name }}"
+  command: "virsh undefine --nvram --remove-all-storage --snapshots-metadata --checkpoints-metadata {{ vm_name }}"
 
 - name: Clean /etc/hosts file
   become: yes
