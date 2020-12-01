@@ -14,7 +14,7 @@ Want to take it for a spin? check out our docs at the bottom under the `Official
 How to contribute?
 ------------------
 
-To contribute please follow: http://infrared.readthedocs.io/en/latest/contribute.html
+To contribute please follow the following: http://infrared.readthedocs.io/en/latest/contribute.html
 
 Official Documentation
 ----------------------
