@@ -1,10 +1,15 @@
 - name: Undercloud Upgrade Validation
   hosts: undercloud
-  gather_facts: yes
+  gather_facts: no
   any_errors_fatal: true
   tags:
       - upgrade
       - upgrade_repos
+  pre_tasks:
+      - name: Clear gathered facts to avoid using deployment values
+        meta: clear_facts
+      - name: Force facts refresh.
+        setup:
   tasks:
       - name: get undercloud version
         tags: undercloud_version_discovery
