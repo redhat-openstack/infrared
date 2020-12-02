@@ -7,6 +7,8 @@ from infrared.core.utils.validators import AnsibleConfigValidator
 
 LOG = logger.LOG
 
+INFRARED_COMMON_PATH = os.path.realpath(__file__ + '/../../../common')
+
 DEFAULT_ANSIBLE_SETTINGS = dict(
     defaults=OrderedDict([
         ('host_key_checking', 'False'),
@@ -14,6 +16,10 @@ DEFAULT_ANSIBLE_SETTINGS = dict(
         ('timeout', 30),
         ('force_color', 1),
         ('show_custom_stats', 'True'),
+        ('callback_plugins', INFRARED_COMMON_PATH + '/callback_plugins'),
+        ('filter_plugins', INFRARED_COMMON_PATH + '/filter_plugins'),
+        ('library', INFRARED_COMMON_PATH + '/modules'),
+        ('roles', INFRARED_COMMON_PATH + '/roles'),
     ]),
     ssh_connection=OrderedDict([
         ('pipelining', 'True'),
