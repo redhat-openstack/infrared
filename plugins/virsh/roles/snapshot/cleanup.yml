@@ -1,0 +1,7 @@
+---
+- name: Clean up the snapshot path
+  file:
+    path: "{{ provision.virsh.snapshot.path }}"
+    state: absent
+  when:
+    - provision.virsh.snapshot.cleanup | bool

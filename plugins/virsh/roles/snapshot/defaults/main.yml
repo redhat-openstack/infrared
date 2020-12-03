@@ -1,0 +1,8 @@
+---
+snapshot_object_storage_client_bin: "{{ (provision.virsh.snapshot.container is match('s3://.*')) | ternary('aws', 'swift') }}"
+snapshot_object_storage_client_packages:
+  aws:
+    - "awscli"
+  swift:
+    - "python-keystoneclient"
+    - "python-swiftclient"
