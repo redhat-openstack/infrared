@@ -1,0 +1,60 @@
+---
+- import_tasks: download_prepare.yml
+
+- name: Download the image set, but clean up if there is a failure
+  block:
+    # The ansible os_object module does not currently support
+    # threaded downloads, so we use the swift client instead.
+    - name: Download the container contents to the snapshot path folder (swift)
+      shell: |
+        source .{{ _object_storage_client_bin }}clientvenv/bin/activate
+        if [[ $(swift list {{ provision.virsh.snapshot.container }} --prefix {{ provision.virsh.snapshot.path | basename }} | wc -l) -eq 0 ]]; then
+          echo "There are no files available for an image set named: {{ provision.virsh.snapshot.path | basename }}"
+          exit 1
+        else
+          swift download {{ provision.virsh.snapshot.container }} --prefix {{ provision.virsh.snapshot.path | basename }} --object-threads 100 --skip-identical
+        fi
+      args:
+        executable: "/bin/bash"
+        chdir: "{{ provision.virsh.snapshot.path | dirname }}"
+      environment:
+        OS_AUTH_TOKEN: "{{ auth_token }}"
+        OS_STORAGE_URL: "{{ lookup('env', 'OS_STORAGE_URL') }}"
+      register: _virsh_snapshot_download_swift_result
+      retries: 10
+      delay: 30
+      until: _virsh_snapshot_download_swift_result is success
+      when: _object_storage_client_bin == "swift"
+
+    # The ansible s3_sync module does not currently support the s3_url parameter
+    # which would allow it to work with Ceph RGW.
+    # The ansible aws_s3 module supports the s3_url, but requires the upload of
+    # each object to be done in a loop which is highly inefficient.
+    # We use the 'aws s3 sync' option due to it being able to work on the whole
+    # folder at once with a high level of efficiency.
+    - name: Download the container contents to the snapshot path folder (aws)
+      vars:
+        _cli_aws_endpoint_url: "{{ (lookup('env', 'AWS_ENDPOINT_URL') != '') | ternary('--endpoint-url ' ~ lookup('env', 'AWS_ENDPOINT_URL'), '') }}"
+      shell: >-
+        source .{{ _object_storage_client_bin }}clientvenv/bin/activate;
+        aws {{ _cli_aws_endpoint_url }}
+        s3 sync --no-progress --delete
+        {{ provision.virsh.snapshot.container }}/{{ provision.virsh.snapshot.path | basename }}
+        {{ provision.virsh.snapshot.path | basename }}/
+      args:
+        executable: "/bin/bash"
+        chdir: "{{ provision.virsh.snapshot.path | dirname }}"
+      environment:
+        AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
+        AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+      register: _virsh_snapshot_download_aws_result
+      retries: 10
+      delay: 30
+      until: _virsh_snapshot_download_aws_result is success
+      when: _object_storage_client_bin == "aws"
+  rescue:
+    - import_tasks: cleanup.yml
+
+    - name: Fail after the cleanup
+      fail:
+        msg: "The image set download failed."
