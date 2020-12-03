@@ -1,0 +1,50 @@
+---
+- name: Check that the required environment variables are set (swift)
+  fail:
+    msg: >-
+      The environment variables OS_CLOUD and OS_STORAGE_URL must be set
+      on the Ansible controller.
+  when:
+    - snapshot_object_storage_client_bin == "swift"
+    - lookup('env', 'OS_CLOUD') == ""
+    - lookup('env', 'OS_STORAGE_URL') == ""
+
+- name: Check that the required environment variables are set (aws)
+  fail:
+    msg: >-
+      The environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+      must be set on the Ansible controller.
+  when:
+    - snapshot_object_storage_client_bin == "aws"
+    - lookup('env', 'AWS_ACCESS_KEY_ID') == ""
+    - lookup('env', 'AWS_SECRET_ACCESS_KEY') == ""
+
+- name: Ensure a usable object storage client is available
+  include_role:
+    name: create_venv
+  vars:
+    venv_destination_path: "{{ provision.virsh.snapshot.path | dirname }}/.{{ snapshot_object_storage_client_bin }}clientvenv"
+    venv_owner_match_to_parent: yes
+    venv_pip_packages: "{{ snapshot_object_storage_client_packages[snapshot_object_storage_client_bin] }}"
+    venv_shebang_relocate: yes
+
+- name: Make sure that the snapshot path exists
+  file:
+    path: "{{ provision.virsh.snapshot.path }}"
+    state: directory
+
+- name: Authenticate to the OpenStack cloud to get a token
+  os_auth:
+    cloud: "{{ lookup('env', 'OS_CLOUD') }}"
+  register: _virsh_snapshot_auth
+  until:
+    - _virsh_snapshot_auth is success
+    - auth_token is defined
+    - auth_token is not none
+    - auth_token | trim != ''
+  retries: 10
+  delay: 30
+  delegate_to: localhost
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+  when: snapshot_object_storage_client_bin == "swift"
