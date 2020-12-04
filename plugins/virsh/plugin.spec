@@ -281,8 +281,10 @@ subparsers:
                   virsh-snapshot-container:
                       type: Value
                       help: |
-                          The object storage container to be used for the snapshot upload/download
-                          process.
+                          The object storage container/bucket to be used for the snapshot upload/download
+                          process. If the container prefix is ``s3://`` then the AWS CLI will be used for
+                          upload/download actions, otherwise the OpenStack Swift CLI will be used
+                          instead.
                       required_when: >-
                         virsh-snapshot-upload == yes or
                         virsh-snapshot-download == yes
@@ -291,10 +293,12 @@ subparsers:
                       help: |
                           This will upload the image set found in the path specified by
                           ``--virsh-snapshot-path`` to the object storage container specified by
-                          ``--virsh-snapshot-container`` via the OpenStack swift client. For this
-                          to work the following environment variables must be set: OS_CLOUD,
-                          OS_STORAGE_URL. The value for OS_CLOUD must correspond with an entry in
-                          the OpenStack client clouds.yaml file.
+                          ``--virsh-snapshot-container``. For this to work with the OpenStack Swift CLI,
+                          the environment variables OS_CLOUD and OS_STORAGE_URL must be set and the value
+                          for OS_CLOUD must correspond with an entry in the OpenStack client clouds.yaml file.
+                          For this to work with the AWS CLI, the environment variables AWS_ACCESS_KEY_ID and
+                          AWS_SECRET_ACCESS_KEY must be set, with AWS_ENDPOINT_URL optionally set if a S3
+                          compatible service is being used.
                       default: False
                   virsh-snapshot-download:
                       type: Bool
@@ -303,9 +307,11 @@ subparsers:
                           storage using the container specified by ``--virsh-snapshot-container``
                           and the basename derived from ``--virsh-snapshot-path``. The folder
                           will be downloaded to the parent directory of ``--virsh-snapshot-path``.
-                          For this to work the following environment variables must be set:
-                          OS_CLOUD, OS_STORAGE_URL. The value for OS_CLOUD must correspond with
-                          an entry in the OpenStack client clouds.yaml file.
+                          For this to work with the OpenStack Swift CLI, the environment variables OS_CLOUD
+                          and OS_STORAGE_URL must be set and the value for OS_CLOUD must correspond with an
+                          entry in the OpenStack client clouds.yaml file. For this to work with the AWS CLI,
+                          the environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be set,
+                          with AWS_ENDPOINT_URL optionally set if a S3 compatible service is being used.
                       default: False
                   virsh-snapshot-cleanup:
                       type: Bool
