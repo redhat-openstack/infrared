@@ -32,6 +32,7 @@
         source {{ overcloud_rc }}
         openstack compute service set {{ hostvars[inventory_hostname]['ansible_fqdn'] }} nova-compute --disable
       delegate_to: "{{ groups['undercloud']|first }}"
+      ignore_errors: true
       when: "'enabled' in nova_compute_service_staus.stdout"
 
     - name: Get the 'nova-compute' service status after disabled it
@@ -497,6 +498,7 @@
         source {{ overcloud_rc }}
         openstack compute service set {{ hostvars[inventory_hostname]['ansible_fqdn'] }} nova-compute --enable
       delegate_to: "{{ groups['undercloud']|first }}"
+      ignore_errors: true
 
     - name: Get the 'nova-compute' service status after enabled it
       shell: |
