@@ -425,6 +425,9 @@ def main():
 
     status_changed = False
 
+    # Strip off quotation marks from 'host_id'
+    module.params['host_id'] = module.params['host_id'].strip("'").strip('"')
+
     if module.boolean(module.params['rebuild']):
         try:
             foreman_client.provision(module.params['host_id'],
