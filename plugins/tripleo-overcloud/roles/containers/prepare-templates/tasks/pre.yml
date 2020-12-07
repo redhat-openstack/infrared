@@ -134,9 +134,15 @@
       - container-images-packages
       - container-images-patch
 
+- name: Dump variable list
+  debug:
+    var: ansible_facts
+  ignore_errors: true
+
 - name: set docker_registry_undercloud facts
   set_fact:
-      docker_registry_undercloud: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
+#      docker_registry_undercloud: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
+      docker_registry_undercloud: "2620:dead:beef:5::1:3:8787"
       docker_registry_undercloud_namespace: "{{ install.get('registry', {}).namespace|default('rhosp' + os_version) }}"
   tags:
       - container-images-packages
