@@ -104,6 +104,9 @@
         delay: 5
         become: true
         become_user: root
+
+      - set_fact:
+            rhos_release_version: "{{ command_result.releases.core.release }}"
   rescue:
       - name: run rhos-release without retries
         rhos_release:
@@ -124,6 +127,15 @@
             msg:
                 error: "rhos-release failed unexpectedly"
                 rhos_release_output: "{{ command_result }}"
+
+  # A workaround for an issue described in https://projects.engineering.redhat.com/browse/RHOSINFRA-3802
+- name: Enable rhelosp-devtools for OSP16
+  command: 'dnf config-manager --set-enabled rhelosp-{{ rhos_release_version|float }}-devtools'
+  args:
+    warn: false
+  become: true
+  become_user: root
+  when: rhos_release_version == "16" or rhos_release_version == "15"
 
 - block:
     - name: parse specific number of director puddle used from rhos-release output
