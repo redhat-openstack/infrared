@@ -173,7 +173,7 @@
 
       - name: check if this is a pacemaker core node
         become: true
-        shell: crm_mon -1 &> /dev/null
+        shell: crm_mon -1
         register: pcmk_core
         ignore_errors: true
         failed_when: pcmk_remote is succeeded or pcmk_core is failed
