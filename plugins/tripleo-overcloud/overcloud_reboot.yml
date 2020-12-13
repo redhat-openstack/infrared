@@ -127,7 +127,7 @@
           - name: Set path to ceph configuration
             set_fact:
               ceph_conf_option: >-
-                  (ceph_cluster_name.stdout | length > 0) | ternary('-c /etc/ceph/' ~ ceph_cluster_name.stdout ~ '.conf', '')
+                  {{ (ceph_cluster_name.stdout | length > 0) | ternary('-c /etc/ceph/' ~ ceph_cluster_name.stdout ~ '.conf', '') }}
         when:
             - overcloud_version|int >= 14
             - "'ceph' in group_names"
