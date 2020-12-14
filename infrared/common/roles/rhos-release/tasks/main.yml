@@ -64,9 +64,9 @@
       validate_certs: no
   when: 'not rr_skip_install_if_present or "rhos-release not_installed" in rr_pre_installed.stdout'
   register: download_result
-  until: '"Request failed" not in download_result.msg'
+  until: download_result is success
   retries: 5
-  delay: 5
+  delay: 10
 
 - name: install the rhos-release RPM
   package:
