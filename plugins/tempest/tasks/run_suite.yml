@@ -1,6 +1,7 @@
 - name: set facts for test suite
   set_fact:
       test_suite: "{{ test_suite_file | basename | splitext | first }}"
+      test_suite_prefix: '{{ test.test.suite.prefix }}'
 
 - name: initialize max_seq_number to 0
   set_fact:
@@ -175,14 +176,14 @@
             results_formats.junitxml is defined
 
       - name: inject the test suite name to the XML name atribute
-        command: "sed '/^<testsuite/s/name=\"\"/name=\"{{ test_suite }}\"/' -i {{ test_output_filename }}.xml"
+        command: "sed '/^<testsuite/s/name=\"\"/name=\"{{ test_suite_prefix }}{{ test_suite }}\"/' -i {{ test_output_filename }}.xml"
         args:
             chdir: "{{ test.dir }}"
         when:
             results_formats.junitxml is defined
 
       - name: add the test suite name in the HTML report title
-        command: "sed 's#<title>\\(.*Test Report\\)</title>#<title>\\1 - {{ test_suite }}</title>#' \
+        command: "sed 's#<title>\\(.*Test Report\\)</title>#<title>\\1 - {{ test_suite_prefix }}{{ test_suite }}</title>#' \
                   -i {{ test_output_filename }}.html"
         args:
             chdir: "{{ test.dir }}"
