@@ -125,6 +125,15 @@
                 error: "rhos-release failed unexpectedly"
                 rhos_release_output: "{{ command_result }}"
 
+  # A workaround for an issue described in https://projects.engineering.redhat.com/browse/RHOSINFRA-3802
+- name: Enable rhelosp-devtools for OSP15
+  command: 'dnf config-manager --set-enabled rhelosp-15.0-devtools'
+  args:
+    warn: false
+  become: true
+  become_user: root
+  when: release == "15"
+
 - block:
     - name: parse specific number of director puddle used from rhos-release output
       set_fact:
