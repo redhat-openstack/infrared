@@ -55,12 +55,14 @@
   # This can be removed once rhbz#1892216 is fixed and released
   # We need to install openjdk beforehand (as it is installed by the freeipa)
   # script and then downgrade it in case the version is the known broken one
+  # The 1.8.0.275.b01 version of JDK is still broken. We need to downgrade 
+  # to proper version.
   - name: Workaround for newer JDK breaking FreeIPA
     become: yes
     shell: |
       yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-headless
-      if rpm -q --queryformat '%{version}' java-1.8.0-openjdk |grep "1.8.0.272"; then
-        yum downgrade -y java-1.8.0-openjdk java-1.8.0-openjdk-headless
+      if rpm -q --queryformat '%{version}' java-1.8.0-openjdk |grep "1.8.0.27"; then
+              yum downgrade -y java-1.8.0-openjdk-devel-1:1.8.0.265.b01-0.el8_2.x86_64
       fi
 
   - name: Install Red Hat CA
