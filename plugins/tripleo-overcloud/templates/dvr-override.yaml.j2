@@ -1,9 +1,14 @@
 resource_registry:
+{% if install.role is defined and install.role.files is defined and install.role.files is search("ComputeHCI") %}
+{%   set _compute_role = "ComputeHCI" %}
+{% else %}
+{%   set _compute_role = "Compute" %}
+{% endif %}
 {% if install.version|default(undercloud_version)|openstack_release <= 11 %}
     OS::TripleO::Compute::Net::SoftwareConfig: {{ template_base }}/network/{% if install.role is defined and install.role.files == 'networker' %}nic-configs{% else %}three-nics-vlans{% endif %}/{{ nics_subfolder }}/controller.yaml
 {% else %}
-    OS::TripleO::Compute::Net::SoftwareConfig: {{ template_base }}/network/{{ nics_subfolder }}/compute-dvr.yaml
+    OS::TripleO::{{ _compute_role }}::Net::SoftwareConfig: {{ template_base }}/network/{{ nics_subfolder }}/compute-dvr.yaml
 {% endif %}
 {% if install.version|default(undercloud_version)|openstack_release <= 14 %}
-    OS::TripleO::Compute::Ports::ExternalPort: {{ install.heat.templates.basedir }}/network/ports/external.yaml
+    OS::TripleO::{{ _compute_role }}::Ports::ExternalPort: {{ install.heat.templates.basedir }}/network/ports/external.yaml
 {% endif %}
