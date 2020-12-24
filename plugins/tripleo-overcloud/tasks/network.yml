@@ -8,6 +8,17 @@
 
   when: install.version|default(undercloud_version) | openstack_release >= 13
 
+- name: Append port forwarding
+  yedit:
+      src: "{{ template_base }}/network/{{ network_environment_file }}"
+      update: True
+      key: parameter_defaults
+      value:
+          NeutronServicePlugins: router,qos,segments,trunk,port_forwarding
+          ExtraConfig:
+              neutron::agents::l3::extensions: fip_qos,port_forwarding
+  when: install.version|default(undercloud_version) | openstack_release >= 16.2
+
 # Starting from OSP11, the overcloud deploy deprecated the neutron flags
 # and because they should be used even in older releases, there is no reason
 # to not do so.
