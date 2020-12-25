@@ -36,6 +36,12 @@
       dest: /etc/sysconfig/network-scripts/ifcfg-{{ loadbalancer.network.oc_interface }}
   when: loadbalancer.network.plain is defined
 
+- name: create IPV4 interface for external network
+  template:
+      src: external.cfg.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-{{ loadbalancer.network.ex_interface }}
+  when: loadbalancer.network.external is defined and install.network.protocol == 'ipv4'
+
 - name: create IPV4 VLAN interface for external network as alias
   template:
       src: vlan-external.cfg.j2
