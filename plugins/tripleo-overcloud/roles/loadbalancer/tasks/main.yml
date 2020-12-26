@@ -1,4 +1,10 @@
 ---
+- name: Make sure firewalld is stopped or connections to the the LB will be rejected
+  service:
+    name: firewalld
+    state: stopped
+    enabled: False
+
 - name: Set haproxy_connect_any flag on and keep it persistent across reboots
   seboolean:
     name: haproxy_connect_any
