@@ -16,6 +16,23 @@
       "message": "Please improve the commit message:\n- separate subject line end explanation/reason paragraph\n- if it does solve RHOSINFRA-3800 mention it there (but see below)\n\n\n while this makes image downloading also skipped for nodes with no-os-deployed or not-supporting-libguestfs ...\n\ni believe there may be other issue RHOSINFRA-3800 which does not really gets addressed (not completely), although i may have misread the code here in quick reading:\n- for regular nodes which support os/...\n- if they have more disks (imagine ceph node)\n- those will enter into this block anyway\n- and then they will loop the get_url (with_dict: disks) too, even if they need only first disk to be based on downloaded image \n\nfor that i believe it could be better to check per-disk and download only for those disks which need it, for those which are ok with empty image such should be created instead\nso \u0027when:\u0027 for get_url should consider also specific disk info not just general topology disks count\n\n(or better could be to \u0027if there are any empty disks wanted\u0027 do \u0027init empty image once, then copy it to all requested empty disks names)",
       "revId": "4c7a9226e0f4986c410b2e4630519e37d47faeb0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "49256750_a91e3a17",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2021-01-04T13:50:38Z",
+      "side": 1,
+      "message": "Adding Dan and Jakub since this will affect how their usage behaves.\n\nFrom what i found in git-log, they are users/authors of the supports_libguestfs flag (veos, vqfx).\n\nCurrent patchset 1 of this change, will make their image NOT DOWNLOADED too (in addition of not virt-customizing/sysprepping it).\nAnd I\u0027m not 100% sure if that is ok or not for their usage (it\u0027s quite substantial change of \"ir virsh\" behavior in regards to non-os/non-libguestfs nodes).\n",
+      "revId": "4c7a9226e0f4986c410b2e4630519e37d47faeb0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
