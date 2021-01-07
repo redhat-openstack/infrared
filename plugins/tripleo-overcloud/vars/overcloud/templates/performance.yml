@@ -39,3 +39,10 @@ custom_templates:
                 - 'client 200s'
                 - 'server 200s'
                 - 'check 15s'
+        NetworkerExtraConfig:
+            # Due to neutron not using heartbeat in rpc messages we
+            # end up hitting issues when Metworker node agents start before
+            # the controllers. This causes them to get stuck for 10min while
+            # waiting for the timeout before retrying. This results with
+            # failures of workload tests post deployment.
+            neutron::rpc_response_timeout: '150'
