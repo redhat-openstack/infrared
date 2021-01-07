@@ -9,53 +9,53 @@
     group: root
     mode: 0755
 
-- name: download base image for node
-  vars:
-      source: "{{ item.value.import_url|default('') or topology_node.import_url|default('') or url }}"
-  get_url:
-      # Use default url if unless disk has a different source
-      url: "{{ source }}"
-      # use original basename explicitly, otherwise, "force" doesn't work
-      dest: "{{ base_image_path }}/{{ source | basename }}{% if topology_node.supports_libguestfs|default(true) %}.original{% endif %}"
-      # Download new images only.
-      force: "{{ item.value.force_image_download|default(false)|bool or provision.force.image.download }}"
-      validate_certs: "{{ url.startswith('https://url.corp.redhat.com/') | ternary(false, omit) }}"
-      owner: qemu
-      group: qemu
-      timeout: 30
-  register: download_image_result
-  until: download_image_result.msg.find("Request failed") == -1
-  retries: 5
-  delay: 5
-  with_dict: "{{ topology_node.disks }}"
-  when: topology_node.disks|count > 0
+- block:
+  - name: download base image for node
+    vars:
+        source: "{{ item.value.import_url|default('') or topology_node.import_url|default('') or url }}"
+    get_url:
+        # Use default url if unless disk has a different source
+        url: "{{ source }}"
+        # use original basename explicitly, otherwise, "force" doesn't work
+        dest: "{{ base_image_path }}/{{ source | basename }}{% if topology_node.supports_libguestfs|default(true) %}.original{% endif %}"
+        # Download new images only.
+        force: "{{ item.value.force_image_download|default(false)|bool or provision.force.image.download }}"
+        validate_certs: "{{ url.startswith('https://url.corp.redhat.com/') | ternary(false, omit) }}"
+        owner: qemu
+        group: qemu
+        timeout: 30
+    register: download_image_result
+    until: download_image_result.msg.find("Request failed") == -1
+    retries: 5
+    delay: 5
+    with_dict: "{{ topology_node.disks }}"
+    when: topology_node.disks|count > 0
 
-- name: result of download base image for node
-  debug:
-    var: download_image_result
+  - name: result of download base image for node
+    debug:
+      var: download_image_result
 
-- name: adjust base image for this run
-  shell: |
-      set -ex
-      export LIBGUESTFS_PATH=/opt/appliance
-      export LIBGUESTFS_BACKEND=direct
-      PREP_IMG_FILE={{ item.dest }}
-      PREP_IMG_FILE=${PREP_IMG_FILE%.original}
-      cp {{ item.dest }} ${PREP_IMG_FILE}
-      virt-sysprep -a ${PREP_IMG_FILE} \
-          --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
-      virt-customize -a ${PREP_IMG_FILE} \
-      {% if not item.item.value.image_url|default('') %}
-          --run-command 'yum remove -y cloud-init*' \
-      {% endif %}
-          --root-password password:redhat \
-          --run-command 'echo "UseDNS no" >> /etc/ssh/sshd_config' \
-          --mkdir /root/.ssh \
-          --chmod 0700:/root/.ssh \
-          --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys \
-          --delete /etc/dhcp/dhclient.conf \
-          --selinux-relabel
-  with_items: "{{ download_image_result.results }}"
-  when:
-    - topology_node.supports_libguestfs | default(true)
-    - topology_node.deploy_os | default(true) | bool
+  - name: adjust base image for this run
+    shell: |
+        set -ex
+        export LIBGUESTFS_PATH=/opt/appliance
+        export LIBGUESTFS_BACKEND=direct
+        PREP_IMG_FILE={{ item.dest }}
+        PREP_IMG_FILE=${PREP_IMG_FILE%.original}
+        cp {{ item.dest }} ${PREP_IMG_FILE}
+        virt-sysprep -a ${PREP_IMG_FILE} \
+            --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
+        virt-customize -a ${PREP_IMG_FILE} \
+        {% if not item.item.value.image_url|default('') %}
+            --run-command 'yum remove -y cloud-init*' \
+        {% endif %}
+            --root-password password:redhat \
+            --run-command 'echo "UseDNS no" >> /etc/ssh/sshd_config' \
+            --mkdir /root/.ssh \
+            --chmod 0700:/root/.ssh \
+            --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys \
+            --delete /etc/dhcp/dhclient.conf \
+            --selinux-relabel
+    with_items: "{{ download_image_result.results }}"
+    when: topology_node.supports_libguestfs | default(true)
+  when: topology_node.deploy_os | default(true) | bool
