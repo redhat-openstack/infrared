@@ -20,6 +20,10 @@
       content: |
           ACTION=="add", SUBSYSTEM=="module", KERNEL=="bridge", RUN+="/sbin/sysctl -p /etc/sysctl.d/bridge.conf"
 
+- name: install bridge utils
+  package:
+      name: bridge-utils
+
 - name: backup interface network configuration
   become: yes
   copy:
@@ -28,72 +32,61 @@
       remote_src: yes
       force: no
 
+# todo(yfried): replace with nmcli module once this works
+- name: interface network configuration
+  become: yes
+  copy:
+      force: yes
+#      backup: yes
+      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ nic_data.device }}"
+      content: |
+          DEVICE={{ nic_data.device }}
+          NAME={{ nic_data.device }}
+          HWADDR={{ nic_data.macaddress }}
+          BRIDGE={{ nic_settings.name }}
+          # Change to 'no' to disable NetworkManager for this interface.
+          NM_CONTROLLED=no
+          ONBOOT=yes
+          TYPE=Ethernet
+
 - name: Setting the MTU size of {{ provision.host.mtu.size }}
-  nmcli:
-    conn_name: "{{ nic_data['device'] }}"
-    mtu: "{{ provision['host']['mtu']['size'] }}"
-    type: ethernet
-    state: present
-  when: provision['host']['mtu']['size'] | default('False')
+  become: yes
+  lineinfile:
+      path: "/etc/sysconfig/network-scripts/ifcfg-{{ nic_data.device }}"
+      state: present
+      insertafter: EOF
+      line: "MTU={{ provision.host.mtu.size }}"
+  when: provision.host.mtu.size|default('False')
 
-- name: Reset the ip_addr variable
-  set_fact:
-    ip_addr: ''
+- name: bridge network configuration
+  become: yes
+  copy:
+      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ nic_settings.name }}"
+      content: |
+          DEVICE={{ nic_settings.name }}
+          NAME={{ nic_settings.name }}
+          TYPE=Bridge
 
-- name: Calculate network cidr
-  set_fact:
-    ip_cidr: "{{ (nic_settings['ip_address'] + '/' + nic_settings['netmask']) | ipaddr('prefix') }}"
-  when:
-    - nic_settings['ip_address'] is defined
-    - nic_settings['netmask'] is defined
+          BOOTPROTO={{ nic_settings.bootproto|default('none') }}
+          {% if nic_settings.ip_address|default(false) %}
+          IPADDR={{ nic_settings.ip_address }}
+          {% endif %}
+          {% if nic_settings.netmask|default(false) %}
+          NETMASK={{ nic_settings.netmask }}
+          {% endif %}
+          NM_CONTROLLED=no
+          ONBOOT=yes
+          # If you want to turn on Spanning Tree Protocol, ask your hosting
+          # provider first as it may conflict with their network.
+          STP=off
+          # If STP is off, set to 0. If STP is on, set to 2 (or greater).
+          DELAY=0
 
-- name: Set ip address for the bridge
-  set_fact:
-    ip_addr: "{{ nic_settings['ip_address'] }}/{{ ip_cidr }}"
-  when:
-    - nic_settings['ip_address'] is defined
-    - ip_cidr is defined
-
-- name: Create Bridge Interface {{ nic_settings['name'] }}
-  nmcli:
-    conn_name: "{{ nic_settings['name'] }}"
-    state: present
-    type: bridge
-    ip4: "{{ ip_addr | default(omit) }}"
-    autoconnect: True
-    stp: "{{ nic_settings['stp'] | default(False) }}"
-
-- name: Disable DEFROUTE For Bridge Network
-  command: "nmcli connection mod {{ nic_settings['name'] }} ipv4.never-default yes"
-
-# This is a workaround since the are no parameters exposed in nmcli module
-- name: Disble DHCP Failures In Bridge Interface Without IPv4 settings
-  block:
-    # nmcli doesn't allow to set interface with bootproto none
-    - name: Set BOOTPROTO to 'none' For Bridge {{ nic_settings['name'] }}
-      lineinfile:
-        path: "/etc/sysconfig/network-scripts/ifcfg-{{ nic_settings['name'] }}"
-        regexp: '^BOOTPROTO=.*'
-        line: 'BOOTPROTO=none'
-
-    # Network<Manager doesn't allow to disable DHCP, and will cause interface to go down if
-    # it will fail to retrieve an IP address, set DHCP timeout to infinite
-    - name: Set DHCP Timeout To Infinite For Bridge {{ nic_settings['name'] }}
-      command: "nmcli connection modify {{ nic_settings['name'] }} ipv4.dhcp-timeout infinity"
-
-    - name: Restart Network Interface {{ nic_settings['name'] }}
-      shell: "nmcli connection down {{ nic_settings['name'] }};nmcli connection up {{ nic_settings['name'] }}"
-  when: '"ip_address" not in nic_settings'
-
-- name: Attach interface {{ nic_data['device'] }} to bridge {{ nic_settings['name'] }}
-  nmcli:
-     conn_name: "{{ nic_data.device }}"
-     master: "{{ nic_settings.name }}"
-     state: present
-     type: bridge-slave
-     hairpin: False
-
-# Need to ensure interface is up before restarting
 - name: restart interface
   become: yes
-  shell: "nmcli connection up {{ nic_data.device }} && nmcli connection reload && nmcli connection down {{ nic_data.device }} && nmcli connection up {{ nic_data.device }}"
+  shell: >
+      ifdown {{ nic_settings.name }} && ifdown {{ nic_data.device }} && ifup {{ nic_settings.name }} && ifup {{ nic_data.device }} {%
+      if nic_settings.renew is defined and nic_settings.renew|bool
+      %}&& dhclient -r {{ nic_settings.name }} && dhclient {{ nic_settings.name }}{% endif %}
+# TODO(yfried): why doesn't this work?
+#  shell: "nmcli connection reload && nmcli connection down {{ nic_data.device }} && nmcli connection up {{ nic_data.device }}"

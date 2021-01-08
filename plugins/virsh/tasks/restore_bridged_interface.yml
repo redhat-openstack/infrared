@@ -1,21 +1,21 @@
-# Network must likely changed since initial gather_facts
-- name: Gather Updated Network Facts
-  setup:
-    gather_subset: network
+- name: get bridge NIC
+  shell: "brctl show {{ bridge_name }} | awk '/{{ bridge_name }}/ {print $4}'"
+  register: nic_name
+
 
 - name: restore interface network configuration
   become: yes
+  vars:
+      # keep vars consistent with creation playbook
+      nic:
+          interface: "{{ nic_name.stdout | trim }}"
   copy:
-      src: "/etc/sysconfig/network-scripts/ir_bkp_ifcfg-{{ interface }}"
-      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ interface }}"
+#      src: "/etc/sysconfig/network-scripts/ir_bkp_ifcfg-{{ nic.interface }}"
+      src: "/etc/sysconfig/network-scripts/ir_bkp_ifcfg-{{ nic.interface }}"
+      dest: "/etc/sysconfig/network-scripts/ifcfg-{{ nic.interface }}"
       remote_src: yes
+#      backup: yes
       force: yes
-  loop: "{{ ansible_facts[bridge_name | replace('-', '_')]['interfaces'] }}"
-  loop_control:
-    loop_var: interface
-  when:
-    - 'bridge_name | replace("-", "_") in ansible_facts'
-    - '"interfaces" in ansible_facts[bridge_name | replace("-", "_")]'
 
 - name: delete bridge interface configuration
   file:
@@ -28,5 +28,5 @@
 - name: restart network
   become: yes
   service:
-      name: NetworkManager
+      name: network
       state: restarted
