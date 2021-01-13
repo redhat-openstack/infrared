@@ -268,9 +268,18 @@ class PluginManagerSpec(api.SpecObject):
                                 " sourced plugins. Ignored for"
                                 "'plugin add all' command.")
 
-        add_parser.add_argument("--src-path", help="Relative path within the "
-                                                   "repository where infrared "
-                                                   "plugin can be found.")
+        add_parser.add_argument("--src-path",
+                                help="Relative path within the repository "
+                                     "where infrared plugin can be found.\n"
+                                     "(Required with --link-roles")
+
+        add_parser.add_argument("--link-roles", action='store_true',
+                                help="Auto creates symbolic 'roles' directory "
+                                     "in the path provided with '--src-path' "
+                                     "which points to the 'roles' directory "
+                                     "inside the project's root dir if exists,"
+                                     " otherwise to the project's root dir "
+                                     "itself.")
 
         add_parser.add_argument("--skip-roles", action='store_true',
                                 help="Skip the from file roles installation. "
@@ -358,7 +367,8 @@ class PluginManagerSpec(api.SpecObject):
                     self.plugin_manager.add_plugin(
                         _plugin, rev=pargs.revision,
                         plugin_src_path=pargs.src_path,
-                        skip_roles=pargs.skip_roles)
+                        skip_roles=pargs.skip_roles,
+                        link_roles=pargs.link_roles)
         elif subcommand == 'remove':
             if 'all' in pargs.name:
                 self.plugin_manager.remove_all()

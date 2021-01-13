@@ -9,6 +9,7 @@ import tenacity
 import time
 
 from collections import OrderedDict
+from distutils.util import strtobool
 from six.moves import configparser
 
 
@@ -416,7 +417,7 @@ class InfraredPluginManager(object):
                 pip_main(['install', '-r', reqs_file])
 
     def add_plugin(self, plugin_source, rev=None, plugins_registry=None,
-                   plugin_src_path=None, skip_roles=False):
+                   plugin_src_path=None, skip_roles=False, link_roles=False):
         """Adds (install) a plugin
 
         :param plugin_source: Plugin source.
@@ -429,6 +430,9 @@ class InfraredPluginManager(object):
         :param plugin_src_path: relative path to the plugin location inside the
                source
         :param skip_roles: Skip the from file roles installation
+        :param link_roles: Auto create symlink from {plugin_src_path}/roles to
+               the 'roles' directory inside the plugin root dir or to the
+               plugin root dir itself
         """
         plugins_registry = plugins_registry or PLUGINS_REGISTRY
         plugin_data = {}
@@ -439,6 +443,9 @@ class InfraredPluginManager(object):
 
         if plugin_src_path is None:
             plugin_src_path = plugin_data.get('src_path', '')
+
+        _link_roles = link_roles or bool(strtobool(
+            plugin_data.get('link_roles', 'false')))
 
         # Local dir plugin
         if os.path.exists(plugin_source):
@@ -480,6 +487,33 @@ class InfraredPluginManager(object):
 
         if rm_source:
             shutil.rmtree(plugin_source)
+
+        if _link_roles:
+            if not plugin_src_path:
+                raise IRFailedToAddPlugin(
+                    "'--src-path' is required with '--link-roles'")
+
+            roles_dir = os.path.join(dest, plugin_src_path, 'roles')
+            if os.path.exists(roles_dir):
+                raise IRFailedToAddPlugin(
+                    "Can't create a symbolic link to a 'roles' directory in "
+                    "'{roles_dir}', because one is already exists".format(
+                        roles_dir=roles_dir
+                    ))
+
+            src_dir = dest
+            if os.path.exists(dest + '/roles'):
+                if not os.path.isdir(dest + '/roles'):
+                    raise IRFailedToAddPlugin(
+                        "The plugin directory ('{dest}') contains"
+                        "a 'roles' file that can't be sym-linked".format(
+                            dest=dest
+                        ))
+                src_dir += '/roles'
+
+            os.mkdir(roles_dir)
+            dest_dir = roles_dir + '/' + dest.split('/')[-1]
+            os.symlink(src_dir, dest_dir)
 
         self.config.set(plugin_type, plugin.name,
                         os.path.join(dest, plugin_src_path))

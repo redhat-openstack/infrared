@@ -455,21 +455,23 @@ The registry file is following the YAML format.
 Each section of the registry file contains an object which specifies the plugin to be installed:
 
 * ``src``: The path to the plugin. It can be either local path or git url
-* ``src_path``: (optional) Relative path within the repository where infrared plugin can be found.
-* ``rev``: (optional) If the plugin source is git, this allows to specify the revision to pull.
 * ``desc``: The plugin description.
 * ``type``: Plugin type can be one of the following: ``provision``, ``install``, ``test``, ``other``.
+* ``rev``: (optional) If the plugin source is git, this allows to specify the revision to pull.
+* ``src_path``: (optional, required with 'link_roles') Relative path within the repository where infrared plugin can be found.
+* ``link_roles``: (optional, requires 'src_path') Creates a symbolic link inside a (newly created) role directory in 'src_path', that points to the 'roles' directory inside the plugin root directory if exists, otherwise, to the root plugin directory. The input is a string represents a boolean value.
 
 Example of a registry file::
 
     ---
 
     plugin_name:
-        src: path/to/plugin/directory
-        rev: some_revision_hash
-        src_path: /path/to/plugin/in/repo
-        desc: Some plugin description
-        type: provision/test/install/other
+        src: 'path/to/plugin/directory'
+        desc: 'Some plugin description'
+        type: 'provision/test/install/other'
+        rev: 'some_revision_hash'
+        src_path: '/path/to/plugin/in/repo'
+        link_roles: 'true'
 
 How to create a new plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
