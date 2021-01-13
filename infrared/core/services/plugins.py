@@ -9,6 +9,7 @@ import tenacity
 import time
 
 from collections import OrderedDict
+from distutils.util import strtobool
 from six.moves import configparser
 
 
@@ -480,6 +481,32 @@ class InfraredPluginManager(object):
 
         if rm_source:
             shutil.rmtree(plugin_source)
+
+        # Create a symbolic link from 'src-path' to a role dir in
+        # plugin_src_path dir
+        if plugin_src_path and \
+                bool(strtobool(plugin_data.get('link_roles', 'false'))):
+            roles_dir = os.path.join(dest, plugin_src_path, 'roles')
+            if os.path.exists(roles_dir):
+                raise IRFailedToAddPlugin(
+                    "Can't create a symbolic link to a 'roles' directory in "
+                    "'{roles_dir}', because one is already exists".format(
+                        roles_dir=roles_dir
+                    ))
+
+            src_dir = dest
+            if os.path.exists(dest + '/roles'):
+                if not os.path.isdir(dest + '/roles'):
+                    raise IRFailedToAddPlugin(
+                        "The plugin directory ('{dest}') contains"
+                        "a 'roles' file that can't be sym-linked".format(
+                            dest=dest
+                        ))
+                src_dir += '/roles'
+
+            os.mkdir(roles_dir)
+            dest_dir = roles_dir + '/' + dest.split('/')[-1]
+            os.symlink(src_dir, dest_dir)
 
         self.config.set(plugin_type, plugin.name,
                         os.path.join(dest, plugin_src_path))
