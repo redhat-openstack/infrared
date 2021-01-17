@@ -197,12 +197,30 @@ def _run_playbook(cli_args, vars_dict, ir_workspace, ir_plugin):
     from ansible.cli.playbook import PlaybookCLI
     from ansible.errors import AnsibleOptionsError
     from ansible.errors import AnsibleParserError
+
     with tempfile.NamedTemporaryFile(
             mode='w+', prefix="ir-settings-", delete=True) as tmp:
         tmp.write(yaml.safe_dump(vars_dict, default_flow_style=False))
         # make sure created file is readable.
         tmp.flush()
         cli_args.extend(['--extra-vars', "@" + tmp.name])
+
+        if not bool(strtobool(os.environ.get('IR_NO_EXTRAS', 'no'))):
+            ir_extras = {
+                'infrared': {
+                    'python': {
+                        'executable': sys.executable,
+                        'version': {
+                            'full': sys.version.split()[0],
+                            'major': sys.version_info.major,
+                            'minor': sys.version_info.minor,
+                            'micro': sys.version_info.micro,
+                        }
+                    }
+                }
+            }
+            cli_args.extend(['--extra-vars', str(ir_extras)])
+
         cli = PlaybookCLI(cli_args)
         LOG.debug('Starting ansible cli with args: {}'.format(cli_args[1:]))
         try:

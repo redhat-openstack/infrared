@@ -213,3 +213,10 @@ Log Ansible's output to files
             | Accepted values:
             | True values are y, yes, t, true, on and 1; False values are n, no, f, false, off and 0.
             | A ``ValueError`` exception will be raised in case a different value is provided.
+
+InfraRed extra vars
+^^^^^^^^^^^^^^^^^^^
+
+| By default, InfraRed adds some useful data about itself as an extra-vars to Ansible.
+| Currently, the data contains details about the InfraRed Python interpreter (path & version) and it can be accessed directly from within Ansible Playbook (ex. infrared.python.executable).
+| The ``IR_NO_EXTRAS`` environment variable can be set to 'true' if one doesn't want to include that data.
