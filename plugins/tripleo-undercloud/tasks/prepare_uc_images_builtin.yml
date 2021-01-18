@@ -33,7 +33,9 @@
               namespace: "{{ registry_namespace|default('rhosp' + (target_install_version|openstack_release|string)) }}"
               prefix: "{{ install.registry.prefix|default('openstack-') }}"
               tag: "{{ install.registry.tag|default('AUTODETECT') }}"
-  when: install.registry.skip.puddle
+  when:
+    - install.registry.skip.puddle
+    - not install.upgrade|default('')
 
 - name: Fail non-osp deployment
   fail:
