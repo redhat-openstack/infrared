@@ -30,11 +30,7 @@ while [ $# -gt 0 ]; do
 done
 
 echo "Server info"
-{% if (install.version|default(undercloud_version)|openstack_release) >= 9 %}
 openstack server list -f value -c ID | xargs -n 1 openstack server show
-{% else %}
-openstack server list |  awk 'BEGIN {a=0}; /\|/{ if (a>2) print $2} {a=a+1}' | xargs -n 1 openstack server show
-{% endif %}
 
 {% if (install.version|default(undercloud_version)|openstack_release) >= 11 %}
 echo "BM node info"
@@ -43,7 +39,6 @@ openstack baremetal node list -f value -c UUID | xargs -r -n 1 openstack baremet
 {% endif %}
 
 echo "Deployments"
-{% if (install.version|default(undercloud_version)|openstack_release) >= 9 %}
 openstack software deployment list --long
 DEPLOYMENTS=`openstack software deployment list -f value -c id -c config_id -c status --quote none`
 
@@ -57,27 +52,12 @@ while read deployment config status; do
 	echo openstack software config show "$config"
 	openstack software config show "$config"
 done < <(echo "$DEPLOYMENTS")
-{% else %}
-DEPLOYMENTS=`heat resource-list --n 5 overcloud | grep -wE "OS::Heat::SoftwareDeployment|OS::Heat::StructuredDeployment"`
-echo "$DEPLOYMENTS"
 
-for deployment in `echo "$DEPLOYMENTS" | grep -v 'COMPLETE' | awk '{print $4}'`; do
-	echo heat deployment-output-show "$deployment" --all
-	heat deployment-output-show "$deployment" --all
-	echo heat deployment-show "$deployment"
-	heat deployment-show "$deployment"
-	echo heat config-show
-	heat config-show `heat deployment-show "$deployment" | jq '.config_id' | tr -d '"'`
-done
-{% endif %}
-
-{% if (install.version|default(undercloud_version)|openstack_release) >= 10 %}
 echo "WorkFlow/Actions"
 echo openstack action execution list
 openstack action execution list
 echo openstack workflow execution list
 openstack workflow execution list
 #TODO: detailed info about the failed actions (output)
-{% endif %}
 
 echo FIN

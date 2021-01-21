@@ -1,40 +1,5 @@
-{% if install.version|default(undercloud_version)|openstack_release < 9 %}
-parameters:
-  ServiceNetMap:
-    NeutronTenantNetwork: tenant
-    CeilometerApiNetwork: internal_api
-    MongoDbNetwork: internal_api
-    CinderApiNetwork: internal_api
-    CinderIscsiNetwork: storage
-    GlanceApiNetwork: storage
-    GlanceRegistryNetwork: internal_api
-    KeystoneAdminApiNetwork: internal_api
-    KeystonePublicApiNetwork: internal_api
-    NeutronApiNetwork: internal_api
-    HeatApiNetwork: internal_api
-    NovaApiNetwork: internal_api
-    NovaMetadataNetwork: internal_api
-    NovaVncProxyNetwork: internal_api
-    SwiftMgmtNetwork: storage_mgmt
-    SwiftProxyNetwork: storage
-    HorizonNetwork: internal_api
-    MemcachedNetwork: internal_api
-    RabbitMqNetwork: internal_api
-    RedisNetwork: internal_api
-    MysqlNetwork: internal_api
-    CephClusterNetwork: storage_mgmt
-    CephPublicNetwork: storage
-    ControllerHostnameResolveNetwork: internal_api
-    ComputeHostnameResolveNetwork: internal_api
-    BlockStorageHostnameResolveNetwork: internal_api
-    ObjectStorageHostnameResolveNetwork: internal_api
-    CephStorageHostnameResolveNetwork: storage
-    NovaColdMigrationNetwork: ctlplane
-    NovaLibvirtNetwork: internal_api
-{% endif %}
-
 parameter_defaults:
-{% if install.version|default(undercloud_version)|openstack_release > 8 and install.version|default(undercloud_version)|openstack_release < 11 %}
+{% if install.version|default(undercloud_version)|openstack_release == 10 %}
   ServiceNetMap:
     NeutronTenantNetwork: tenant
     CeilometerApiNetwork: internal_api
@@ -74,10 +39,8 @@ parameter_defaults:
   ServiceNetMap:
     KeystoneAdminApiNetwork: internal_api # allows undercloud to config endpoints
 {% endif %}
-{% if install.version|default(undercloud_version)|openstack_release > 7 %}
   RedisPassword: 'examplepassword'
-{% endif %}
-{% if install.version|default(undercloud_version)|openstack_release < 11 %}
+{% if install.version|default(undercloud_version)|openstack_release == 10 %}
   ControlPlaneIP: {{ loadbalancer.network.plain.ip | ipaddr('address') }}
   ExternalNetworkVip: {{ loadbalancer.network.external.vip | ipaddr('address') }}
   InternalApiNetworkVip: {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}

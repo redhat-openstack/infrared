@@ -60,7 +60,6 @@
       openstack stack failures list {{ install.overcloud.stack }}
   when:
       - overcloud_upgrade_step.rc != 0 or upgrade_err_msg.rc == 0
-      - undercloud_version|openstack_release > 9
 
 - fail:
       msg: "Overcloud upgrade {{ ugstage.step }} step failed... :("

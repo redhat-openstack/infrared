@@ -44,7 +44,6 @@
           with_items: "{{ flavor_list.stdout_lines }}"
         when:
             - install.boot.mode == 'uefi'
-            - install.version|default(undercloud_version) |openstack_release > 9
         tags:
             - ironic
             - skip_ansible_lint
@@ -129,9 +128,7 @@
                 - node: "ceph"
                   hint: "name"
                   hintvalue: "{{ ceph_default_disk_name }}"
-            ceph_defaults: "{{ ((install.version|default(undercloud_version)|openstack_release > 9) and
-                                 'ceph' in groups and
-                                 'hypervisor' in groups)|ternary(default_disk_override, []) }}"
+            ceph_defaults: "{{ ( 'ceph' in groups and 'hypervisor' in groups)|ternary(default_disk_override, []) }}"
         set_fact:
             root_disk: "{{ ceph_defaults|union(install.get('root',{}).get('disk',{}).get('override', [])) }}"
 
@@ -144,21 +141,11 @@
 
             {% for node in item.node.split(':') %}
                 if [[ "{{ node }}" =~ $REGEX ]]; then
-                {% if install.version|default(undercloud_version) |openstack_release > 9 %}
                     openstack baremetal node set \
                       --property root_device='{"{{ item.hint }}":"{{ item.hintvalue }}"}' {{ node }}
-                {% else %}
-                    ironic node-list|awk '/{{ node }}/ {print $2}'| \
-                    xargs -I{} ironic node-update {} add properties/root_device='{"{{ item.hint }}":"{{ item.hintvalue }}"}'
-                {% endif %}
                 else
-                {% if install.version|default(undercloud_version) |openstack_release > 9 %}
                     openstack baremetal node list|awk '/{{ node }}/ {print $2}'| \
                     xargs -I{} openstack baremetal node set {} --property root_device='{"{{ item.hint }}":"{{ item.hintvalue }}"}'
-                {% else %}
-                    ironic node-list|awk '/{{ node }}/ {print $2}'| \
-                    xargs -I{} ironic node-update {} add properties/root_device='{"{{ item.hint }}":"{{ item.hintvalue }}"}'
-                {% endif %}
                 fi
             {% endfor %}
         tags:

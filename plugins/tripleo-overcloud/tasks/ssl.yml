@@ -194,13 +194,11 @@
   template:
       src: ssl/public_vip.yaml.j2
       dest: "{{ template_base }}/public_vip.yaml"
-  when: install.version|default(undercloud_version)|openstack_release > 9
 
 - name: append the invocation line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ template_base }}/public_vip.yaml \'
-  when: install.version|default(undercloud_version)|openstack_release > 9
 
 - name: Generate cloud-names.yml
   template:
@@ -213,7 +211,6 @@
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ template_base }}/cloud-names.yaml \'
   when:
-      - install.version|default(undercloud_version)|openstack_release > 9
       - install.overcloud.use.dns.names
 
 - name: append the invocation line to the base overcloud deploy script
@@ -222,4 +219,3 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/{{ sub_dir }}{{ tls_template_name }} \'
-  when: install.version|default(undercloud_version)|openstack_release > 9

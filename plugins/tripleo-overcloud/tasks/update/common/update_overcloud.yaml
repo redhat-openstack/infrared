@@ -1,17 +1,10 @@
 ---
-- name: create update script {{ overcloud_update_script }} OS 10+
+- name: create update script {{ overcloud_update_script }}
   copy:
     dest: "{{ overcloud_update_script }}"
     mode: 0755
     content: |
         yes ""| tail -n +1 | openstack overcloud update stack -i {{ install.overcloud.stack }}
-  when:
-    - undercloud_version|openstack_release > 9
-
-- name: create update script {{ overcloud_update_script }} OS < 10
-  include_tasks: create_update_script.yaml
-  when:
-    - undercloud_version|openstack_release < 10
 
 - block:
     - debug: msg="Starting floating IP dataplane ping check during minor update"
@@ -33,7 +26,6 @@
     openstack stack failures list --long {{ install.overcloud.stack }}
   when:
     - overcloud_update.rc != 0
-    - undercloud_version|openstack_release > 9
 
 - name: failed to update overcloud
   fail:

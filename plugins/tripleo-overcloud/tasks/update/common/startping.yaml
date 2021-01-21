@@ -1,12 +1,8 @@
 ---
 - name: register first floating ip address
-  vars:
-    fip_query_new: openstack floating ip list -f json | jq -r -c '.[] | select(.Port) | .["Floating IP Address"]'
-    fip_query_old: neutron floatingip-list -f json | jq -r -c '.[]|select(.port_id)|.floating_ip_address'
-    fip_query: "{{ (undercloud_version|openstack_release > 9 )|ternary(fip_query_new, fip_query_old) }}"
   shell: |
     source {{ overcloudrc_file }}
-    {{ fip_query }} | head -1
+    openstack floating ip list -f json | jq -r -c '.[] | select(.Port) | .["Floating IP Address"]' | head -1
   register: floatip
 
 - name: register timestamp
