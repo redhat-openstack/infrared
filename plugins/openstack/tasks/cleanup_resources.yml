@@ -15,6 +15,20 @@
   delay: 3
   until: keypairs_cleanup is success
 
+- name: Remove floating IPs
+  os_floating_ip:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      server: "{{ item.id }}"
+      state: absent
+      # always wait for floating ip
+      wait: yes
+      timeout: "{{ provision.os.server.timeout | int }}"
+  register: floating_ips_removal
+  retries: 3
+  until: floating_ips_removal is successful
+  with_items: "{{ servers|default([]) }}"
+  ignore_errors: yes
+
 - name: Cleanup servers
   async: "{{ provision.os.server.timeout | int + 10 }}"
   poll: 0
