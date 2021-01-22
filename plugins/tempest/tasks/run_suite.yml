@@ -2,28 +2,35 @@
   set_fact:
       test_suite: "{{ test_suite_file | basename | splitext | first }}"
       test_suite_prefix: '{{ test.test.suite.prefix }}'
-
-- name: initialize max_seq_number to 0
-  set_fact:
-      max_seq_number: 0
-
-# Find the test_output_file.N.xml with maximal N (if exists)
-- name: find max file seq
-  vars:
-      file_name: "{{ item | basename | splitext | first }}"
-      seq_number: "{{ file_name | regex_replace('^(?P<basename>.+)\\.(?P<seq_num>\\d+)$', '\\g<seq_num>') }}"
-  set_fact:
-      max_seq_number: "{{ [seq_number|int, max_seq_number|int] | max }}"
-      test_output_filename: "tempest-results-{{ test_suite }}.{{ max_seq_number | int + 1 }}"
-  with_fileglob:
-      - "{{ inventory_dir }}/tempest_results/tempest-results-{{ test_suite }}.*.subunit"
-
-- name: set facts
-  set_fact:
-      test_output_filename: "tempest-results-{{ test_suite }}.{{ max_seq_number | int + 1 }}"
       blacklistfile: ''
       whitelistfile: ''
       regex: ''
+
+- block:
+    - name: initialize max_seq_number to 0
+      set_fact:
+          max_seq_number: 0
+
+    # Find the test_output_file.N.xml with maximal N (if exists)
+    - name: find max file seq
+      vars:
+          file_name: "{{ item | basename | splitext | first }}"
+          seq_number: "{{ file_name | regex_replace('^(?P<basename>.+)\\.(?P<seq_num>\\d+)$', '\\g<seq_num>') }}"
+      set_fact:
+          max_seq_number: "{{ [seq_number|int, max_seq_number|int] | max }}"
+          test_output_filename: "tempest-results-{{ test_suite }}.{{ max_seq_number | int + 1 }}"
+      with_fileglob:
+          - "{{ inventory_dir }}/tempest_results/tempest-results-{{ test_suite }}.*.subunit"
+
+    - name: set the output file suffix to the highest number + 1
+      set_fact:
+          test_output_filename: "tempest-results-{{ test_suite }}.{{ max_seq_number | int + 1 }}"
+  when: test.test.step.id is not defined
+
+- name: set the output file suffix to the requested step ID
+  set_fact:
+      test_output_filename: "tempest-results-{{ test_suite }}.{{ test.test.step.id }}"
+  when: test.test.step.id is defined
 
 - name: Include test suite vars
   include_vars: "{{ test_suite_file }}"
