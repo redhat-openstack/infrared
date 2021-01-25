@@ -19,6 +19,17 @@
           - name: copy and shrink undercloud image
             command: "virt-sparsify --compress {{ install.disk.pool }}/{{ undercloud }}-disk1.qcow2 {{ undercloud_image_file }}"
 
+          - name: Use md5 to calculate checksum
+            ansible.builtin.stat:
+                path: "{{ undercloud_image_file }}"
+                checksum_algorithm: md5
+                get_checksum: yes
+            register: local_md5sum
+
+          - name: print uc image md5
+            debug:
+                msg: "{{ local_md5sum.stat.checksum }}"
+
           - name: copy our auth key to the virthost
             copy:
                 src: "{{ install.dest.key  | expanduser | realpath }}"
@@ -30,8 +41,32 @@
             shell: |
                 scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
                 ~/backup_server_auth_key {{ undercloud_image_file }} {{ install.dest.user }}@{{ install.dest.address }}:{{ install.dest.path }}/{{ undercloud_image_file }}
-            when: install.dest|default({})
+            when:
+                - install.dest.address|default({})
+                - install.dest.path|default({})
             tags: skip_ansible_lint
+
+          - name: get md5sum from the remote
+            shell: |
+                ssh -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.address }} \
+                md5sum {{ install.dest.path }}{{ undercloud_image_file }} | awk '{print $1}'
+            when:
+                - install.dest.address|default({})
+                - install.dest.path|default({})
+            tags: skip_ansible_lint
+            register: remote_md5sum
+
+          - name: print remote uc image md5
+            debug:
+                msg: "The md5 checksum is {{ remote_md5sum.stdout }}"
+            when:
+                - install.dest.address|default({})
+                - install.dest.path|default({})
+
+          - name: "Fail when md5sum are not equal with the remote"
+            fail:
+                msg: "Something went wrong, the copy is not the same as the original"
+            when: local_md5sum.stat.checksum == remote_md5sum.stdout
 
           - name: copy the image to mirror server
             shell: |
@@ -39,9 +74,32 @@
                 scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
                 ~/backup_server_auth_key {{ undercloud_image_file }} {{ install.dest.user }}@{{ install.dest.mirror.address }}:{{ install.dest.mirror.path }}/{{ undercloud_image_file }}
                 date
-            when: install.dest.mirror|default({})
+            when:
+                - install.dest.mirror.address|default({})
+                - install.dest.mirror.path|default({})
             tags: skip_ansible_lint
 
+          - name: get md5sum from the mirror
+            shell: |
+                ssh -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.mirror.address }} \
+                md5sum {{ install.dest.mirror.path }}{{ undercloud_image_file }} | awk '{print $1}'
+            when:
+                - install.dest.mirror.address|default({})
+                - install.dest.mirror.path|default({})
+            tags: skip_ansible_lint
+            register: mirror_md5sum
+
+          - name: print mirror md5sum
+            debug:
+                msg: "The md5 checksum is {{ mirror_md5sum.stdout }}"
+            when:
+                - install.dest.mirror.address|default({})
+                - install.dest.mirror.path|default({})
+
+          - name: "Fail when md5sum are not equal with the mirror"
+            fail:
+                msg: "Something went wrong, the copy is not the same as the original"
+            when: local_md5sum.stat.checksum == mirror_md5sum.stdout
         always:
           - name: cleanup the undercloud image file
             file:
@@ -53,9 +111,9 @@
             shell: |
                 ssh -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.address }} rm -f {{ install.dest.path }}/{{ undercloud_image_file }}
             when:
-                - local_hash is defined
-                - remote_hash is defined
-                - local_hash.stdout != remote_hash.stdout
+                - local_md5sum is defined
+                - remote_md5sum is defined
+                - local_md5sum.stat.checksum != remote_md5sum.stdout || local_md5sum.stat.checksum != mirror_md5sum.stdout
             tags: skip_ansible_lint
 
           - name: Power on the undercloud VM
