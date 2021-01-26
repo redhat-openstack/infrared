@@ -240,6 +240,11 @@ subparsers:
                       type: Value
                       help: Prefix for test suite name to be specified in junitxml report file.
                       default: ''
+                  test-step-id:
+                      type: Value
+                      help: |
+                          Step identifier to be appended to each output file.
+                          If not specified, an auto-incremental number is used starting from 1.
                   list:
                       type: Bool
                       help: List all the tests which will be run.
