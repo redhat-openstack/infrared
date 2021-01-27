@@ -39,10 +39,12 @@ parameter_defaults:
     EC2MetadataIp: 192.168.24.1
 {% if install.splitstack|default(False) %}
     ControlPlaneDefaultRoute: {{ ansible_host|default(ansible_ssh_host) }}
-{% else %}
+{% elif install.version|openstack_release < 16 %}
     ControlPlaneDefaultRoute: 192.168.24.1
 {% endif %}
+{% if install.version|openstack_release < 16 %}
     ControlPlaneSubnetCidr: "24"
+{% endif %}
     NeutronExternalNetworkBridge: ""
     NeutronBridgeMappings: "datacentre:br-ex,tenant:br-tenant"
     NeutronNetworkVLANRanges: "tenant:1000:2000"

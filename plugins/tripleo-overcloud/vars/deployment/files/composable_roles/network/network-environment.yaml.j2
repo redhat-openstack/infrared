@@ -21,11 +21,15 @@ parameter_defaults:
 {% if install.splitstack|default(False) %}
     ControlPlaneDefaultRoute: {{ ansible_host|default(ansible_ssh_host) }}
     EC2MetadataIp: {{ ansible_host|default(ansible_ssh_host) }}
-{% else %}
+{% elif install.version|openstack_release < 16 %}
     ControlPlaneDefaultRoute: 192.168.24.1
     EC2MetadataIp: 192.168.24.1
+{% else %}
+    EC2MetadataIp: 192.168.24.1
 {% endif %}
+{% if install.version|openstack_release < 16 %}
     ControlPlaneSubnetCidr: "24"
+{% endif %}
 {% if not (install.ntp.pool|default(False) and install.version|openstack_release >= 15) %}
     NtpServer: ["clock1.rdu2.redhat.com"]
 {% endif %}

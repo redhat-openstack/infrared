@@ -43,7 +43,7 @@ parameter_defaults:
     EC2MetadataIp: 192.168.24.1
 {% if install.splitstack|default(False) %}
     ControlPlaneDefaultRoute: {{ ansible_host|default(ansible_ssh_host) }}
-{% else %}
+{% elif install.version|openstack_release < 16 %}
     ControlPlaneDefaultRoute: 192.168.24.1
 {% endif %}
 {% if not (install.ntp.pool|default(False) and install.version|openstack_release >= 15)  %}
