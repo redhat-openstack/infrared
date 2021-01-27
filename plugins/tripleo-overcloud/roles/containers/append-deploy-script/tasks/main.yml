@@ -39,6 +39,14 @@
       - install.network.ovn and install.network.dvr
       - install.version|default(undercloud_version)|openstack_release > 12
 
+- name: append host config and reboot
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ install.heat.templates.basedir }}/environments/host-config-and-reboot.yaml \'
+  when:
+      - install.overcloud.host.config.and.reboot
+      - install.version|default(undercloud_version)|openstack_release > 12 and install.version|default(undercloud_version)|openstack_release is version('16.1', '<')
+
 - name: append docker-images
   lineinfile:
       dest: "~/overcloud_deploy.sh"
