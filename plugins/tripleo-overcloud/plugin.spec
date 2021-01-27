@@ -102,7 +102,7 @@ subparsers:
 
                   registry-mirror:
                       type: Value
-                      help: | 
+                      help: |
                           The alternative docker registry to use for deployment. DEPRECATED.
                           New version of osp handles the registry mirror only at the undercloud step.
 
@@ -294,7 +294,12 @@ subparsers:
                       default: no
                       help: Specifies whether to use DNS names in the subject DN for the public certs
 
-                  overcloud-fencing:
+                 overcloud-host-config-and-reboot:
+                      type: Bool
+                      default: no
+                      help: Specifies if compute parameters require host conifg and reboot to take effect
+
+                 overcloud-fencing:
                       type: Bool
                       default: no
                       help: Specifies whether fencing should be configured and enabled on the overcloud
