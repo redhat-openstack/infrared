@@ -252,7 +252,7 @@ resources:
                               -
                                 ip_netmask:
                                     get_param: TenantIpSubnet
-{% if install.network.dvr|bool %}
+{% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
                         -
                           type: ovs_bridge
                           # This will default to br-ex, anything else requires specific
