@@ -994,6 +994,13 @@ subparsers:
                       choices:
                           - swift
                           - http
+                  remove-br-baremetal:
+                      type: Bool
+                      help: |
+                          When set to true, ironic will not use the br-baremetal network for introspection but only
+                          br-ex. This is useful in environments with less than 3 nics (where vlans are used for 
+                          network separation).
+                      default: False
 
             - title: ansible facts
               options:
