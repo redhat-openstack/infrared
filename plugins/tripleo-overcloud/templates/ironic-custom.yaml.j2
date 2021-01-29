@@ -3,8 +3,15 @@ parameter_defaults:
   ControllerExtraConfig:
      ironic::drivers::pxe::pxe_append_params: 'nofb nomodeset vga=normal ipa-insecure=1'
 {% endif %}
+{% if install.remove.br.baremetal|default(False) %}
+  NeutronBridgeMappings: datacentre:br-ex
+  NeutronFlatNetworks: datacentre
+  IronicInspectorInterface: 'br-ex'
+{% else %}
   NeutronBridgeMappings: datacentre:br-ex,baremetal:br-baremetal
   NeutronFlatNetworks: datacentre,baremetal
+  IronicInspectorInterface: 'br-baremetal'
+{% endif %}
   IronicCleaningNetwork: baremetal
   IronicCleaningDiskErase: metadata
   IronicIPXEEnabled: true
@@ -46,7 +53,6 @@ parameter_defaults:
 {% if install.version|default(undercloud_version)|openstack_release and install.ironic_inspector %}
   IronicInspectorIpRange: '{{ ansible_br_ctlplane.ipv4.network.split('.')[0:3] | join('.') }}.210,{{ ansible_br_ctlplane.ipv4.network.split('.')[0:3] | join('.') }}.240'
   IPAImageURLs: '["http://{{ ansible_br_ctlplane['ipv4']['address'] }}:8088/agent.kernel", "http://{{ ansible_br_ctlplane['ipv4']['address'] }}:8088/agent.ramdisk"]'
-  IronicInspectorInterface: 'br-baremetal'
 {% endif %}
 {% if install.version|default(undercloud_version) | openstack_release > 14 and install.image.download.source == 'http' %}
   IronicImageDownloadSource: http
