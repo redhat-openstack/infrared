@@ -252,25 +252,10 @@ resources:
                               -
                                 ip_netmask:
                                     get_param: TenantIpSubnet
-{% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
-                        -
-                          type: ovs_bridge
-                          # This will default to br-ex, anything else requires specific
-                          # brige mapping entries for it to be used.
-                          name: bridge_name
-                          use_dhcp: false
-                          members:
-                            -
-                              type: interface
-                              name: nic3
-                              # force the MAC address of the bridge to this interface
-                              primary: true
-{% else %}
                         -
                           type: interface
                           name: nic3
                           use_dhcp: false
-{% endif %}
 
 outputs:
   OS::stack_id:
