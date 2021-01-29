@@ -994,6 +994,12 @@ subparsers:
                       choices:
                           - swift
                           - http
+                  remove-br-baremetal:
+                      type: Bool
+                      help: |
+                          This options allows to remove br-baremetal for introspection and use either br-ex
+                          instead, useful when we have less than three nics in the environment.
+                      default: False
 
             - title: ansible facts
               options:
