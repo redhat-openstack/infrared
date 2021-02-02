@@ -1,0 +1,16 @@
+---
+tripleo_heat_templates:
+    - "{{ install.heat.templates.basedir }}/environments/services/neutron-ml2-ansible.yaml"
+
+custom_templates:
+  parameter_defaults:
+    ML2HostConfigs:
+      openvswitch:
+        ansible_host: "{{ hostvars['ovsvswitch-0']['ansible_host'] }}"
+        ansible_network_os: openvswitch
+        ansible_ssh_pass: InsecurePassword
+        ansible_user: root
+        manage_vlans: False
+    IronicCleaningNetwork: 'baremetal'
+    IronicProvisioningNetwork: 'baremetal'
+    IronicRescuingNetwork: 'baremetal'
