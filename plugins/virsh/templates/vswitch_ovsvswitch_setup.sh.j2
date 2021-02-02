@@ -1,0 +1,5 @@
+#!/bin/bash
+set -x
+
+# Set a password that networking-ansible can use to do switch configuration on the ovsvswitch node
+ssh -i {{ switch_ssh_key }} root@{{ switch_ip }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "echo 'InsecurePassword' | passwd root --stdin"

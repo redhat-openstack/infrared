@@ -1,7 +1,4 @@
 ---
-- set_fact:
-    topology_node: "{{ node.value }}"
-
 - name: disable tempest interface to vswitch on undercloud
   delegate_to: "{{ groups['undercloud']|first }}"
   become: yes
@@ -12,11 +9,11 @@
           NAME=eth3
           NM_CONTROLLED=no
           ONBOOT=no
-  when: topology_node.os.type in infrared_vswitch_types
+  when: vswitch_type in infrared_vswitch_types
 
-- name: "setup ssh keys on {{ topology_node.os.type }} switch"
+- name: "setup ssh keys on {{ vswitch_type }} switch"
   include_tasks: "tasks/vswitch_appliance_setup.yml"
-  when: topology_node.os.type in infrared_vswitch_types
+  when: vswitch_type in infrared_vswitch_types
   with_items: "{{ topology_node.node_indexes }}"
   loop_control:
     loop_var: num
