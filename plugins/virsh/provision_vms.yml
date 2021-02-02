@@ -9,6 +9,7 @@
       infrared_vswitch_types:
         - vqfx
         - veos
+        - ovsvswitch
   tasks:
     - name: Expand ansible local facts (needed for topology extend)
       set_fact:
@@ -23,9 +24,13 @@
         prefix: "{{ provision.prefix }}"
       when: provision.prefix is defined
 
+    - name: set vswitch type default
+      set_fact:
+        vswitch_type: 'None'
+
     - name: set vswitch type
       set_fact:
-          vswitch_type: "{{ switch_type }}"
+        vswitch_type: "{{ switch_type }}"
       with_list: "{{ infrared_vswitch_types }}"
       loop_control:
           loop_var: switch_type
