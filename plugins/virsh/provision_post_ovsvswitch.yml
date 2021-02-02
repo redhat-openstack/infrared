@@ -1,0 +1,79 @@
+---
+- name: configure ovs vswitch node
+  hosts: ovsvswitch-0
+  any_errors_fatal: true
+  gather_facts: yes
+  tasks:
+    # Set a password that networking-ansible can use to do switch configuration on the ovsvswitch node
+    - name: set root password
+      user:
+        name: "root"
+        update_password: always
+        password: "$6$vg/TEVCJamwUJ3zj$Nr8V6mJE7E96bBTe9v8ZZ1aLnzlBTegc53dnPs0zYWPzUmDlpVgpgnU4YXlxD7y.ygEV2f7u5BXuHGEXdXp5T."
+
+    - name: rhos-release
+      yum:
+        name: http://download.eng.bos.redhat.com/rcm-guest/puddles/OpenStack/rhos-release/rhos-release-latest.noarch.rpm
+        disable_gpg_check: yes
+
+    - name: base os repo install
+      copy:
+        remote_src: yes
+        src: "/var/lib/rhos-release/repos/rhos-release-rhel-{{ ansible_distribution_version }}.repo"
+        dest: "/etc/yum.repos.d/rhos-release-rhel-{{ ansible_distribution_version }}.repo"
+          #src: "/var/lib/rhos-release/repos/rhos-release-rhel-8.3.repo"
+          #dest: "/etc/yum.repos.d/rhos-release-rhel-8.3.repo"
+
+    - name: osp repo install
+      copy:
+        remote_src: yes
+        src: /var/lib/rhos-release/repos/rhos-release-16.2.repo
+        dest: /etc/yum.repos.d/rhos-release-16.2.repo
+
+    - name: install openvswitch
+      package:
+        name: openvswitch
+        state: present
+
+    - name: enable and start openvswitch
+      ansible.builtin.systemd:
+        name: openvswitch
+        state: started
+        enabled: yes
+
+    - name: create ovs vswitch bridge
+      openvswitch_bridge:
+        bridge: ovsvswitch
+        state: present
+
+#### VLANS ###
+## 50 Tenant (openstack assigned)
+## 1000 Provisioning
+## 1001-1010 Tempest allocated
+#
+    - name: create undercloud port on ovs vswitch
+      openvswitch_port:
+        bridge: ovsvswitch
+        port: "eth{{ item|int - 3 }}"
+        set: "port eth{{ item|int - 3 }} trunks=1001"
+      with_items: "{{ hostvars['hypervisor']['undercloud_switchport'] }}"
+
+    - name: create controller and compute ports on ovs vswitch
+      openvswitch_port:
+        bridge: ovsvswitch
+        port: "eth{{ item|int - 3 }}"
+        set: "port eth{{ item|int -3 }} trunks=50,1000-1010"
+      with_items: "{{ hostvars['hypervisor']['controller_switchports'].split(' ') + hostvars['hypervisor']['compute_switchports'].split(' ') }}"
+
+    - name: create ironic node ports on ovs vswitch
+      openvswitch_port:
+        bridge: ovsvswitch
+        port: "eth{{ item|int - 3 }}"
+      with_items: "{{ hostvars['hypervisor']['ironic_switchports'].split(' ') }}"
+
+    - name: enable lldp on ironic interfaces
+      openvswitch_port:
+        bridge: ovsvswitch
+        port: "eth{{ item|int -3 }}"
+        set: "interface eth{{ item|int - 3 }} lldp:enable=true"
+      with_items: "{{ hostvars['hypervisor']['ironic_switchports'].split(' ') }}"

@@ -1,12 +1,12 @@
 ---
-- name: create a temporary directory for {{ topology_node.os.type }} configuration scripts
+- name: create a temporary directory for {{ vswitch_type }} configuration scripts
   tempfile:
     state: directory
   register: temp_dir
 
 - name: get host name
   set_fact:
-    host_name: "{{ topology_node.name }}-{{ num }}"
+    host_name: "{{ vswitch_type }}-{{ num }}"
 
 - name: set SSH key path
   set_fact:
@@ -29,14 +29,14 @@
       dest: "{{ switch_ssh_key }}.pub"
       mode: "0644"
 
-- name: copy {{ topology_node.os.type }} SSH key install script to the temp directory
+- name: copy {{ vswitch_type }} SSH key install script to the temp directory
   template:
-    src: "vswitch_{{ topology_node.os.type }}_setup.sh.j2"
-    dest: "{{ temp_dir.path }}/vswitch_{{ topology_node.os.type }}_setup.sh"
+    src: "vswitch_{{ vswitch_type }}_setup.sh.j2"
+    dest: "{{ temp_dir.path }}/vswitch_{{ vswitch_type }}_setup.sh"
     mode: 0755
 
-- name: install SSH keys on {{ topology_node.os.type }} switch
-  command: "{{ temp_dir.path }}/vswitch_{{ topology_node.os.type }}_setup.sh"
+- name: install SSH keys on {{ vswitch_type }} switch
+  command: "{{ temp_dir.path }}/vswitch_{{ vswitch_type }}_setup.sh"
 
 # Specific wait for vqfx
 - name: wait for xe interfaces to show up on vqfx
@@ -51,36 +51,36 @@
         endif
         sleep 10
       end"
-  when: topology_node.os.type == 'vqfx'
+  when: vswitch_type == 'vqfx'
 
 # Get ports from the switch to pass into openstack
 
-- name: get undercloud ports on {{ topology_node.os.type }} from hypervisor
-  shell: echo $(virsh domiflist {{ topology_node.os.type }}-0 | awk "/unde0{{ topology_node.os.type }}0/{ print NR}")
+- name: get undercloud ports on {{ vswitch_type }} from hypervisor
+  shell: echo $(virsh domiflist {{ vswitch_type }}-0 | awk "/unde0/{ print NR}")
   register: undercloud_port
 
 - name: save undercloud switchport
   set_fact:
     undercloud_switchport: "{{ undercloud_port.stdout }}"
 
-- name: get controller ports on {{ topology_node.os.type }} from hypervisor
-  shell: echo $(for i in $(virsh domiflist {{ topology_node.os.type }}-0 | grep cont | awk '{print $3}'); do echo "$(virsh domiflist {{ topology_node.os.type }}-0 | awk "/$i/{ print NR}")"; done)
+- name: get controller ports on {{ vswitch_type }} from hypervisor
+  shell: echo $(for i in $(virsh domiflist {{ vswitch_type }}-0 | grep cont | awk '{print $3}'); do echo "$(virsh domiflist {{ vswitch_type }}-0 | awk "/$i/{ print NR}")"; done)
   register: controller_ports
 
 - name: save controller switchports
   set_fact:
     controller_switchports: "{{ controller_ports.stdout }}"
 
-- name: get compute ports on {{ topology_node.os.type }} from hypervisor
-  shell: echo $(for i in $(virsh domiflist {{ topology_node.os.type }}-0 | grep comp | awk '{print $3}'); do echo "$(virsh domiflist {{ topology_node.os.type }}-0 | awk "/$i/{ print NR}")"; done)
+- name: get compute ports on {{ vswitch_type }} from hypervisor
+  shell: echo $(for i in $(virsh domiflist {{ vswitch_type }}-0 | grep comp | awk '{print $3}'); do echo "$(virsh domiflist {{ vswitch_type }}-0 | awk "/$i/{ print NR}")"; done)
   register: compute_ports
 
 - name: save compute switchports
   set_fact:
     compute_switchports: "{{ compute_ports.stdout }}"
 
-- name: get ironic ports on {{ topology_node.os.type }} from hypervisor
-  shell: echo $(for i in $(virsh domiflist {{ topology_node.os.type }}-0 | grep iron | awk '{print $3}'); do echo "$(virsh domiflist {{ topology_node.os.type }}-0 | awk "/$i/{ print NR}")"; done)
+- name: get ironic ports on {{ vswitch_type }} from hypervisor
+  shell: echo $(for i in $(virsh domiflist {{ vswitch_type }}-0 | grep iron | awk '{print $3}'); do echo "$(virsh domiflist {{ vswitch_type }}-0 | awk "/$i/{ print NR}")"; done)
   register: ironic_ports
 
 - name: save ironic switchports
