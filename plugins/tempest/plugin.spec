@@ -204,6 +204,10 @@ subparsers:
                   revision:
                       type: Value
                       help: The setup (git) revision if applicable
+                  gerrit_review:
+                      type: Value
+                      help: |
+                          Cherry-pick the given change from Gerrit
                   threads:
                       type: Value
                       help: The number of concurrent threads to run tests
