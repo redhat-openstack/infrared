@@ -276,6 +276,17 @@
               replace: "\\1tag: {{ container_env['container-image-prepare']['tag'] }}"
       when: not install.registry.skip.puddle
 
+    - name: set insecure registry in containers-prepare-parameter file
+      lineinfile:
+          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+          insertafter: "parameter_defaults:"
+          line: |2
+              DockerInsecureRegistryAddress:
+            {% for line in install.registry.insecure.containers.parameter.split(",") %}
+                - {{ line | trim }}
+            {% endfor %}
+      when: install.registry.insecure.containers.parameter is defined
+
     - block:
         - name: set satellite namespace
           replace:

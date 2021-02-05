@@ -17,8 +17,19 @@
           8:
               - "ironic-python-agent.tar"
               - "overcloud-full.tar"
+          ppc64le:
+              - "ironic-python-agent-latest-{{ undercloud_version }}-x86_64.tar"
+              - "overcloud-full-latest-{{ undercloud_version }}-x86_64.tar"
+              - "overcloud-full-latest-{{ undercloud_version }}-ppc64le.tar"
+              - "ironic-python-agent-latest-{{ undercloud_version }}-ppc64le.tar"
+          s390x:
+              - "ironic-python-agent-latest-{{ undercloud_version }}-x86_64.tar"
+              - "overcloud-full-latest-{{ undercloud_version }}-x86_64.tar"
+              - "overcloud-full-latest-{{ undercloud_version }}-s390x.tar"
+              - "ironic-python-agent-latest-{{ undercloud_version }}-s390x.tar"
           # Any higher version defaults to 8
-      tar_images: "{{ install.images.files | default(tar_files[undercloud_version|openstack_release]) | default(tar_files[8]) }}"
+      tar_images: "{{ install.images.files | default(install.download.ppc64le.images | ternary(tar_files.ppc64le, tar_files[undercloud_version|openstack_release])) | default(tar_files[8]) }}"
+      multiarch_images: "{{ install.download.ppc64le.images == true | ternary(true, false) }}"
       tmp_oc_repos_dir: /tmp/oc_repos/yum.repos.d
       overcloud_image_file: overcloud-full.qcow2
       amphora_image_file: "/usr/share/openstack-octavia-amphora-images/octavia-amphora.qcow2"
@@ -130,6 +141,21 @@
             source ~/stackrc
             openstack overcloud image upload --update-existing
         tags: skip_ansible_lint
+        when: not multiarch_images
+
+      - name: Upload ppc64le images to glance
+        shell: |
+            set -exuo pipefail
+            source ~/stackrc
+            openstack overcloud image upload --image-path ~{{ install.user.name }}/images/ppc64le --architecture ppc64le --whole-disk --http-boot /var/lib/ironic/tftpboot/ppc64le
+        when: multiarch_images
+
+      - name: Upload x86_64 images to glance
+        shell: |
+            set -exuo pipefail
+            source ~/stackrc
+            openstack overcloud image upload --image-path ~{{ install.user.name }}/images/x86_64 --http-boot /var/lib/ironic/tftpboot/
+        when: multiarch_images
 
       - name: check for existing nodes ( OS <= 10 )
         shell: |
@@ -181,3 +207,10 @@
           - "{{ (image_files|default({})).get('results',{}) }}"
           - "files"
         when: image_files is defined and install.images.cleanup
+
+
+      - name: remove downloaded images directory for multiarch deployments
+        file:
+            path: "~{{ install.user.name }}/images"
+            state: absent
+        when: install.images.cleanup and multiarch_images
