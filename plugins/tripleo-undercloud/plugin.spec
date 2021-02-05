@@ -471,6 +471,12 @@ subparsers:
                           Updating default overcloud kernel with kernel files retrieved from customized overcloud image
                       default: no
 
+                  download-ppc64le-images:
+                      type: Bool
+                      help: |
+                          Enables download of ppc64le cloud images and their upload into glance for multiarch deployments
+                      default: false
+
             - title: Undercloud Upgrade
               options:
                   upgrade:
