@@ -471,6 +471,12 @@ subparsers:
                           Updating default overcloud kernel with kernel files retrieved from customized overcloud image
                       default: no
 
+                  download-ppc64le-images:
+                      type: Bool
+                      help: |
+                          Enables download of ppc64le cloud images and their upload into glance for multiarch deployments
+                      default: false
+
             - title: Undercloud Upgrade
               options:
                   upgrade:
@@ -561,3 +567,10 @@ subparsers:
                       type: Value
                       help: Arguments passed to the registry-custom-script.
                       default: ''
+
+                  registry-insecure-containers-parameter:
+                      type: Value
+                      help: |
+                          Designate an insecure registry using the DockerInsecureRegistryAddress flag
+                          inside the containers-prepare-parameter file
+
