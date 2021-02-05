@@ -470,6 +470,11 @@ subparsers:
                       help: |
                           Updating default overcloud kernel with kernel files retrieved from customized overcloud image
                       default: no
+                  download-ppc64le-images:
+                      type: Bool
+                      help: |
+                        Enabling this option downloads the rhosp-director-images-all package which includes the ppc64le overcloud images
+                      default: no
 
             - title: Undercloud Upgrade
               options:

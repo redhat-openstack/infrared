@@ -2,14 +2,14 @@
 - name: install the RPM with the pre-built overcloud images
   become: yes
   package:
-      name: "{{ install.images.url is defined | ternary(install.images.get('url', '').split(','), ['rhosp-director-images']) }}"
+      name: "{{ install.images.url is defined | ternary(install.images.get('url', '').split(','), install.download.ppc64le.images | ternary (['rhosp-director-images-all'],  ['rhosp-director-images'])) }}"
       state: latest
   register: yum_install
   until: "yum_install is not failed or not yum_install.msg | regex_search('Operation too slow')"
   retries: 2
   # on a regular day this package install takes 120-150sec
   # here we want to allow for mirror/proxy cache to have enough time to download it from main download server before we'll retry
-  delay: 150
+  delay: "{{ install.download.ppc64le.images | ternary(300, 150) }}"
 
 # todo(yfried): investigate gtar error "Warning: Cannot stat: No such file or directory")'
 - name: untar the images
