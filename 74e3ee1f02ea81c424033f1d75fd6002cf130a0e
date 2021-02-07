@@ -16,6 +16,92 @@
       "message": "Hi All,\nIn this patch we are adding support for multiarch deployments.\nInitial steps include downloading the correct cloud images, next we need to make sure they are uploaded correctly to glance and that introspection is done correctly.\nWhile this is a work in progress, you feedback is appreciated.\n\nThanks!",
       "revId": "74e3ee1f02ea81c424033f1d75fd6002cf130a0e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9988954b_a18d97c3",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016438
+      },
+      "writtenOn": "2021-02-07T16:33:27Z",
+      "side": 1,
+      "message": "Hey,\n\nJust putting my 2 cents (or 0.0657842 agorot).\nI think that this patch could be extended to be more generic in regards to cpu architecture, which will could be extended in the future.\n",
+      "revId": "74e3ee1f02ea81c424033f1d75fd6002cf130a0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6f5202e0_d54ac0b0",
+        "filename": "plugins/tripleo-undercloud/images.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1016438
+      },
+      "writtenOn": "2021-02-07T16:33:27Z",
+      "side": 1,
+      "message": "Don\u0027t have an  \u003e OSP16 deployment currently, but in my opinion this can be streamlined.\nIn a 16.1 deployment, the are symlinks of overcloud images fetched via RPM as following:\n- overcloud-full-latest-\u003cUNDERCLOUD_VERISON\u003e-\u003cCPU_ARCH\u003e.tar\n\nWhich means that we could make those variables easier, similar to line 23:\novercloud-full-latest-{{ undercloud_version }}-{{ deployment_cpu_arch }}.tar\ndeployment_cpu_arch - will be a var parsed by infrared.",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 191
+      },
+      "revId": "74e3ee1f02ea81c424033f1d75fd6002cf130a0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "852c08c3_41558bd7",
+        "filename": "plugins/tripleo-undercloud/plugin.spec",
+        "patchSetId": 1
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1016438
+      },
+      "writtenOn": "2021-02-07T16:33:27Z",
+      "side": 1,
+      "message": "I think it is worth to consider having a flag that indicates which CPU arch instead of creating a specific logic for ppc64le.\nThe default could be x86 but it could be extended to ppc64le and other architectures (s390x).",
+      "range": {
+        "startLine": 473,
+        "startChar": 18,
+        "endLine": 473,
+        "endChar": 41
+      },
+      "revId": "74e3ee1f02ea81c424033f1d75fd6002cf130a0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e2d36d05_183fb380",
+        "filename": "plugins/tripleo-undercloud/tasks/images/rpm.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1016438
+      },
+      "writtenOn": "2021-02-07T16:33:27Z",
+      "side": 1,
+      "message": "The package string will be constructed based on CPU arch:\nrhosp-director-images-{{ deployment_cpu_arch }}.noarch",
+      "range": {
+        "startLine": 5,
+        "startChar": 2,
+        "endLine": 5,
+        "endChar": 204
+      },
+      "revId": "74e3ee1f02ea81c424033f1d75fd6002cf130a0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
