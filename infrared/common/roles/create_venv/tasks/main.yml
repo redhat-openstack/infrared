@@ -91,16 +91,15 @@
             - venv_shebang_relocate | bool
 
         - &venv_upgrade_pip
-          name: Upgrade pip/setuptools/wheel in very old environments
+          name: Upgrade pip if it is old
           shell: |
             source bin/activate
-            pip install --upgrade 'pip<20'
+            if [ "$(pip --version | cut -d' ' -f2 | cut -d'.' -f1)" -lt "19" ]; then
+              pip install --upgrade 'pip<20'
+            fi
           args:
             executable: /bin/bash
             chdir: "{{ venv_destination_path }}"
-          when:
-            - ansible_facts['distribution'] == 'RedHat'
-            - ansible_facts['distribution_version'] is version('7.4', '<=')
 
         - &download_constraints
           name: Download the constraints file
