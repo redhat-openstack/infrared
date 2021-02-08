@@ -98,9 +98,6 @@
           args:
             executable: /bin/bash
             chdir: "{{ venv_destination_path }}"
-          when:
-            - ansible_facts['distribution'] == 'RedHat'
-            - ansible_facts['distribution_version'] is version('7.4', '<=')
 
         - &download_constraints
           name: Download the constraints file
