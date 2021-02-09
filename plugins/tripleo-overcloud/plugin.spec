@@ -264,6 +264,11 @@ subparsers:
                           - kvm
                           - qemu
 
+                  ppc64le-nodes:
+                      type: Bool
+                      help: Specifies if ppc64le nodes are being utilized in this overcloud deployment
+                      default: false
+
             - title: Overcloud Options
               options:
                   overcloud-predeploy-action:
