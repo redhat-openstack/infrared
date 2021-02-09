@@ -275,6 +275,10 @@ subparsers:
                           Configures following fields in [whitebox-database] section in tempest.conf:
                           internal_ip (Controller), host (Controller), password (NovaPassword) useful for connections to Nova database
                       default: no
+                  rpm-package:
+                      type: Value
+                      help: A URL of tempest RPM package to be installed from external source.
+                      default: ''
             - title: ansible facts
               options:
                   collect-ansible-facts:

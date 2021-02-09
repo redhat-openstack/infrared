@@ -16,11 +16,25 @@
 
     - name: register to openstack repos
       vars:
-          repo_list: "{{ (subscriptions.common_8 if (install_version|openstack_release) >= 15 else subscriptions.common_7) + (subscriptions[install_version|openstack_release] if not cdn_skip_openstack_repos | default(false) else []) }}"
+          repo_version: "{{ (install_version if install_version is defined else openstack_release)|string }}"
+          repo_list: "{{ (subscriptions.common_8 if (repo_version|int) >= 15 else subscriptions.common_7) + (subscriptions[(repo_version|float)] if not cdn_skip_openstack_repos | default(false) else []) + (subscriptions.ceph_4 if install.storage is defined and install.storage.backend is defined and install.storage.backend == 'ceph' else []) }}"
           modified_list: "{{ repo_list | map('regex_replace', '^(.*)$', '--enable=\\1') | join(' ') }}"
       command: "subscription-manager repos {{ modified_list }}"
       become: true
-  # running also if subscriptions are defined to avoid job breakages.
+      # running also if subscriptions are defined to avoid job breakages.
+
+    - name: Set correct modules for OSP > 16
+      become: true
+      vars:
+        repo_version: "{{ (install_version if install_version is defined else openstack_release)|string }}"
+        module_list: "{{ dnf_modules[(repo_version|float)] }}"
+        modules_list_disabled: "{{ module_list.disabled | join(' ') }}"
+        modules_list_enabled: "{{ module_list.enabled | join(' ') }}"
+      block:
+      - command: 'dnf module disable {{ modules_list_disabled }} -y'
+      - command: 'dnf module enable {{ modules_list_enabled }} -y'
+      when: (install_version if install_version is defined else openstack_release)|float > 16
+
   when: (cdn_args_file != '' and cdn_creds.activationkey is undefined) or (subscriptions is defined and subscriptions|length > 0 )
 
 - name: refresh yum cache
