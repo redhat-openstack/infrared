@@ -117,6 +117,7 @@
                   source ~/stackrc;
                   openstack flavor create
                   --id auto
+                  --property cpu_arch="{{ item.arch| default('x86_64') }}"
                   --ram {{ (hostvars[item.name] | default({})).ram | default(item.memory) }}
                   --disk {{ [((hostvars[item.name] | default({})).disk | default(item.disk) | int) - 3, flv_min_disk_size] | max }}
                   --vcpus {{ [((hostvars[item.name] | default({})).vcpus | default(item.cpu) | int) - 1, flv_min_cpu] | max }}
@@ -143,7 +144,6 @@
         shell: |
             source ~/stackrc
             openstack flavor set \
-                  --property 'cpu_arch'='x86_64' \
                   --property 'capabilities:boot_option'='local' \
                   --property 'capabilities:profile'='{{ item.cmd.split() | last }}' {{ item.cmd.split() | last }} \
                   {% if install.boot.mode == 'uefi'  %}--property capabilities:boot_mode=uefi{% endif %}
