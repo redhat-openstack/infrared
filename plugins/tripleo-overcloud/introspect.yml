@@ -99,6 +99,8 @@
             {% if install.version|default(undercloud_version) |openstack_release < 13 %}
             openstack baremetal import --json {{ instack_file_path.stat.path }}
             openstack baremetal configure boot
+            {% elif install.ppc64le.nodes %}
+            openstack overcloud node import --instance-boot-option=local --http-boot /var/lib/ironic/tftpboot {{ instack_file_path.stat.path }}
             {% else %}
             openstack overcloud node import --instance-boot-option=local {{ instack_file_path.stat.path }}
             {% endif %}
@@ -199,6 +201,9 @@
               ironic node-set-provision-state ${uuid} provide
             done
             {% else %}
+            {% if install.ppc64le.nodes %}
+            for node in $( openstack baremetal node list -f value -c Name ) ; do openstack baremetal node set --boot-interface pxe $node ;done
+            {% endif %}
             openstack overcloud node introspect --provide --all-manageable
             {% endif %}
         tags:
