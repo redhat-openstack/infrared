@@ -1,9 +1,16 @@
 ---
+- name: Is firewalld enabled
+  command: systemctl cat firewalld
+  register: firewalld_exists
+  changed_when: false
+  failed_when: firewalld_exists.rc not in [0, 1]
+
 - name: Make sure firewalld is stopped or connections to the the LB will be rejected
   service:
     name: firewalld
     state: stopped
     enabled: False
+  when: firewalld_exists.rc == 0
 
 - name: Set haproxy_connect_any flag on and keep it persistent across reboots
   seboolean:
