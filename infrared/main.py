@@ -25,6 +25,7 @@ def inject_common_paths():
                                         'common')
     override_conf_path(common_path, 'ANSIBLE_ROLES_PATH', 'roles')
     override_conf_path(common_path, 'ANSIBLE_FILTER_PLUGINS', 'filter_plugins')
+    override_conf_path(common_path, 'ANSIBLE_MODULE_UTILS', 'module_utils')
     override_conf_path(common_path, 'ANSIBLE_CALLBACK_PLUGINS',
                        'callback_plugins')
     override_conf_path(common_path, 'ANSIBLE_LIBRARY', 'library')
