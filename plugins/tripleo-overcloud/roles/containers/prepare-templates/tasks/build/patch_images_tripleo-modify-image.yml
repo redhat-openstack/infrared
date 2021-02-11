@@ -44,6 +44,14 @@
       dest: "{{ containers_home_dir }}/containers-prepare-parameter-copy.yaml"
       remote_src: yes
 
+- name: Configure openvswitch as neutron driver
+  when: install.network.ovs
+  replace:
+      path: "{{ containers_home_dir }}/containers-prepare-parameter-copy.yaml"
+      regexp: '^(\s*neutron_driver\s*:)(.*)'
+      replace: '\1 openvswitch'
+
+
 - name: Configure containers-prepare-parameter-copy.yaml for image modification
   blockinfile:
       path: "{{ containers_home_dir }}/containers-prepare-parameter-copy.yaml"
