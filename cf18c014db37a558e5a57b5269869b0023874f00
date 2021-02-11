@@ -189,6 +189,23 @@
       "parentUuid": "0f2c36e5_fcd6c637",
       "revId": "cf18c014db37a558e5a57b5269869b0023874f00",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "86a56605_b5382c16",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2021-02-11T14:48:48Z",
+      "side": 1,
+      "message": "I was not aware of the amount of support exceptions - I counted 4 up to 2022 (https://source.redhat.com/groups/public/sbr-cloud-prods-envs/emerging_technology_group_wiki/red_hat_openstack_platform_lifecycle_extensions_beyond_original_eol_date , thx Luigi for sharing this link), changing my vote to \"neutral\" then.\n\nFrom my pov, though I have been always fan of per-OSPxy-IR branching that is strongly maitained e.g. on weeks basis, this efforts were demandning for people-force in the past, and there is no dedicated for these in rhosinfra, likely not changing anytime soon - so not happening afaik.\n\nIn general, if support exception for old releases occurs, also assuming it will be time-demanding, currently we just have to go thru single step (with single IR branch-master), and that would be:\n1) resurrect the OSP flow withing current master (against the legacy rhel), which already includes all related changes to underlying infra (since of course when we do not have any CI jobs on that release, there is basically certainty it is \"broken\", but still up to date with underlying [infra] changes)\n\nWith OSP\u003c10 \"dead and unmaintained\" branch (there is noone to maintain it), we would have to go thru steps:\n1) Find backport/cherrypick/merge relevant changes to underlying infra from (months/years of developing) master branch (because everything always changes even if it shouldn\u0027t - repo locations, hardcoded links, rhel versions, package names, service hostings...) - huge amount of work, we already tried this before with double amount of people in the team with \"stable\" branch, it failed badly...\n2) do step 1 from previous one\n\nMy 2 cents tl;dr: In current state of the team/project, if there are these chances for time-critical support exceptions for these old deployments, though it would give us \"cleaner\" code, I tend to go more between 0 to -1 side... Unless we mote to fully maintained IR-OSPxy-branch mode of course...",
+      "revId": "cf18c014db37a558e5a57b5269869b0023874f00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
