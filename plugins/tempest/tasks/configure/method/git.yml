@@ -33,7 +33,7 @@
       - pbr
     venv_python_version: "{{ ((force_py3venv | default(False)) | bool or (ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_major_version | int > 7)) | ternary(3, 2) }}"
     venv_pip_requirements: "{{ tempest_conf.dir }}/requirements.txt"
-    venv_rebuild: true
+    venv_rebuild: false
 
 - name: Install tempest_conf
   pip:
