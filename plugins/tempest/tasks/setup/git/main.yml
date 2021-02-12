@@ -30,6 +30,19 @@
   register: tempest_repo
   when: setup.local_dir is not defined
 
+- name: Install gerrit review package
+  become: yes
+  pip:
+    name: "{{ setup.git_review_package }}"
+  when: test.gerrit_review is defined
+
+- name: Apply the patch from Gerrit
+  shell: |
+      cd {{ setup.clone_dir }}
+      git remote add gerrit {{ setup.review_url }}
+      git review -d {{ test.gerrit_review }}
+  when: test.gerrit_review is defined
+
 - name: Fetch tempest from change
   synchronize: dest={{ setup.clone_dir }} src={{ test.local_dir }}/
                  archive=no recursive=yes perms=yes links=yes
