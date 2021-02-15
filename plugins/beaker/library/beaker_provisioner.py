@@ -385,38 +385,43 @@ class BeakerMachine(object):
         # TODO: This method should be replaced with SafeCookieTransfer class!!!
         import re
         import ssl
-        import tempfile
         import six.moves.xmlrpc_client as xmlrpclib
+
+        # This method is supposed to return the beaker_auth_token, but
+        # that is not easily obtainable from the library as atribute or by
+        # a method. We need to obtain it (steal it) from the parse_response()
+        # method inside Transport object, otherwise it has to be hacked
+        # very dirty by stealing sys.stdout and parsing it (as it was done
+        # in prev implementation). This approach is slightly cleaner.
+        # To do it, VerboseSafeTransport is used instead of SafeTransport.
+        class VerboseSafeTransport(xmlrpclib.SafeTransport):
+
+            def parse_response(self, response):
+                self.response = response
+                return super().parse_response(response)
 
         try:
             ssl_context = ssl.create_default_context(cafile=self.ca_cert)
-            transport = xmlrpclib.SafeTransport(context=ssl_context)
+            transport = VerboseSafeTransport(context=ssl_context)
         except TypeError:
             # py < 2.7.9
-            transport = xmlrpclib.SafeTransport()
-
+            transport = VerboseSafeTransport()
 
         hub = xmlrpclib.ServerProxy(
             urljoin(self.base_url, 'client'),
             allow_none=True,
             transport=transport,
-            verbose=True)
+            verbose=False)
 
-        stdout = sys.stdout
-        tmp_file = tempfile.TemporaryFile()
         try:
-            sys.stdout = tmp_file
             hub.auth.login_password(self.auth.username, self.auth.password)
-            tmp_file.seek(0)
-            stdout_content = tmp_file.read()
         except xmlrpclib.Fault:
             raise RuntimeError('Failed to authenticate with the server')
-        finally:
-            sys.stdout = stdout
-            tmp_file.close()
 
+        # Finally get the cookie that contains "beaker_auth_token" here
+        cookie = transport.response.headers.get_all("Set-Cookie")
         pattern = re.compile('beaker_auth_token=[\w.-]*')
-        results = pattern.findall(stdout_content)
+        results = pattern.findall(str(cookie))
         if not results:
             raise RuntimeError("Cookie not found")
 
