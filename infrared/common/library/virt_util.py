@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 from collections import defaultdict
-import ipaddr
+import ipaddress
 from xml.etree import cElementTree as ET
 
 from ansible.module_utils.basic import AnsibleModule
@@ -333,9 +333,9 @@ class Util(object):
             net_addr = net['network']['ip'].get('address')
             netmask = net['network']['ip'].get('netmask')
 
-            network_addresses = [i for i in ipaddr.IPv4Network('{}/{}'.format(
+            network_addresses = [i for i in ipaddress.IPv4Network('{}/{}'.format(
                 net_addr, netmask)).iterhosts()]
-            network_addresses.remove(ipaddr.IPAddress(net_addr))
+            network_addresses.remove(ipaddress.IPAddress(net_addr))
 
             dhcp = item.get('dhcp')
             if dhcp is not None:
@@ -343,8 +343,8 @@ class Util(object):
 
                 if dhcp_range:
                     start_ind = network_addresses.index(
-                        ipaddr.IPAddress(dhcp_range['start']))
-                    stop_ind = network_addresses.index(ipaddr.IPAddress(
+                        ipaddress.IPAddress(dhcp_range['start']))
+                    stop_ind = network_addresses.index(ipaddress.IPAddress(
                         dhcp_range['end']))
                     network_addresses = network_addresses[
                         start_ind:stop_ind + 1]
@@ -354,7 +354,7 @@ class Util(object):
                 assigned = [assigned]
 
             for record in assigned:
-                network_addresses.remove(ipaddr.IPAddress(record['ip']))
+                network_addresses.remove(ipaddress.IPAddress(record['ip']))
                 if record['mac'] == mac:
                     return {'ipaddr': record['ip']}
 
