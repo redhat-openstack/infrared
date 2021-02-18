@@ -90,6 +90,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "82cdb13e_aaeb42f6",
+        "filename": "plugins/tripleo-overcloud/introspect.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1006569
+      },
+      "writtenOn": "2021-02-18T00:03:04Z",
+      "side": 1,
+      "message": "This is needed because of the way puppet-ironic works and the fact the ppc64le needs PXE vs iPXE.  You are correct that it needs to be better documented and we\u0027re working with the docs team to resolve that aspect.  and there probably should be open bugs (upstream and downstream).\n\nIt might be worth collapsing the elif structure into a ternary?\n\n  openstack overcloud node import --instance-boot-option\u003dlocal {{ install.ppc64le.nodes|ternary(\u0027--http-boot /var/lib/ironic/tftpboot \u0027, \u0027\u0027) }} {{ instack_file_path.stat.path }}\n\nas I guess that makes it slightly more \"clear\" that when ppc64le nodes are involved the \"normal\" flow is to be used but path just needs to be slightly different.",
+      "parentUuid": "78003486_b755cf4b",
+      "revId": "c468a3be462b696cc750b884f03c31e2384a5c87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "4dac490d_25fd38a6",
         "filename": "plugins/tripleo-overcloud/introspect.yml",
         "patchSetId": 4
@@ -101,6 +119,30 @@
       "writtenOn": "2021-02-12T09:51:24Z",
       "side": 1,
       "message": "I understant this is workaround of some sort, isn\u0027t Ironic doing this automatically, architecture regardless? Why is this step needed?\n\nE.g. {# see #rhbz or jira #}",
+      "range": {
+        "startLine": 205,
+        "startChar": 127,
+        "endLine": 205,
+        "endChar": 130
+      },
+      "revId": "c468a3be462b696cc750b884f03c31e2384a5c87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0456c3bb_dcfbb03e",
+        "filename": "plugins/tripleo-overcloud/introspect.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1006569
+      },
+      "writtenOn": "2021-02-18T00:03:04Z",
+      "side": 1,
+      "message": "Currently there isn\u0027t an open bug or issue.  There probably should be.  It mistakenly got placed behind some long running community work to make the reproduction possible upstream.\n\nIronic defaults it iPXE it it\u0027s available and it\u0027s always available.  It\u0027s just that when you installed the undercloud with `ipxe_enabled\u003dfalse` puppet-ironic skips steps so then an iPXE enabled machine doesn\u0027t boot.",
+      "parentUuid": "4dac490d_25fd38a6",
       "range": {
         "startLine": 205,
         "startChar": 127,
