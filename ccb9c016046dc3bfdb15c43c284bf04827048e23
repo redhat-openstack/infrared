@@ -33,6 +33,108 @@
       "message": "recheck openstack",
       "revId": "ccb9c016046dc3bfdb15c43c284bf04827048e23",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "aec8e30b_e18963c9",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 38
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-02-21T11:32:31Z",
+      "side": 1,
+      "message": "Belated -1.\n\nThis change contains a lot of big and smaller changes whose:\n- should be refactored to be more maintaible\n- should have been splitted in their own changes\n- their need is unclear, because there is NO COMMIT message. No, a single line is not a commit message.\nPlease go through:\nhttps://chris.beams.io/posts/git-commit/\n\nI\u0027d recommend a revert of this change, in order to be properly redone.",
+      "revId": "ccb9c016046dc3bfdb15c43c284bf04827048e23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6ead3f53_bab59af8",
+        "filename": "plugins/tempest/tasks/configure/method/pip.yml",
+        "patchSetId": 38
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-02-21T11:32:31Z",
+      "side": 1,
+      "message": "are those changes really needed?",
+      "revId": "ccb9c016046dc3bfdb15c43c284bf04827048e23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "54c5f3b2_4ecbdce8",
+        "filename": "plugins/tempest/tasks/configure/run.yml",
+        "patchSetId": 38
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-02-21T11:32:31Z",
+      "side": 1,
+      "message": "debug statement, they shouldn\u0027t be in the final code",
+      "revId": "ccb9c016046dc3bfdb15c43c284bf04827048e23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "516aab57_5bf08d03",
+        "filename": "plugins/tempest/tasks/setup/pip/main.yml",
+        "patchSetId": 38
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-02-21T11:32:31Z",
+      "side": 1,
+      "message": "Instead of repeating this code over and over, you should move it to a task/role which saves a fact, and calls that just once at the beginning of the tempest infrared plugin",
+      "revId": "ccb9c016046dc3bfdb15c43c284bf04827048e23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "256170da_117ca791",
+        "filename": "plugins/tempest/tasks/setup/pip/main.yml",
+        "patchSetId": 38
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-02-21T11:32:31Z",
+      "side": 1,
+      "message": "This means the unittest repository won\u0027t be installed, but something may break without it. This shouldn\u0027t work like this.",
+      "revId": "ccb9c016046dc3bfdb15c43c284bf04827048e23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f3903339_562c83b1",
+        "filename": "plugins/tempest/tasks/setup/rpm/main.yml",
+        "patchSetId": 38
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-02-21T11:32:31Z",
+      "side": 1,
+      "message": "instead of duplicating the same task code, just set a fact with the name of the tempest package.\n\nset fact tempest_package_name to openstack-tempest\nif test.rpm.package is defined and not empty, set tempest_package_name to test.rpm.package\n\nand use tempest_package_name in the task. Definitely better than cloning the same code.\n\n(not sure why it needs to be different, as regardless of the origin, CDN or not, it is always openstack-tempest, but anyway)",
+      "revId": "ccb9c016046dc3bfdb15c43c284bf04827048e23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
