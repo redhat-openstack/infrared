@@ -126,7 +126,7 @@
                   ceph-tag: "{{ install.get('registry', {}).get('ceph', {}).tag | default(container_env['container-image-prepare']['ceph-tag'] | default('')) }}"
 
   when:
-    - not install.overcloud.templates | select('search', 'rhsm|overloud_cdn') | list | length >0
+    - not install.overcloud.templates|default(False) | select('search', 'rhsm|overloud_cdn') | list | length >0
     - not install.cdn|default(False) or cdn_status is defined and cdn_status.rc != 0
     - not install.registry.skip.puddle
 
