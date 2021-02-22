@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "29f41350_b9477d85",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 31
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-02-22T10:29:57Z",
+      "side": 1,
+      "message": "A bit more comments on how this should be done:",
+      "revId": "e12ee86de47e7e7140c266dd137aa611ce8a203b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "78cc4211_4b6b00a4",
+        "filename": "plugins/tripleo-overcloud/deploy.yml",
+        "patchSetId": 31
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-02-22T10:29:57Z",
+      "side": 1,
+      "message": "Instead of messing up with the docker-images.yaml, I think we should look at the code of this same tripleo-overcloud infrared plugin which populates DockerInsecureRegistryAddress\n(see plugins/tripleo-overcloud/roles/containers/prepare-templates/tasks/override_container_images_urls.yml)\n\nIt already goes through the list of registries defined for the images, so the questions are:\n- why doesn\u0027t it add this specific registry to the list when needed\n- if it turns out the logic is correct, then a new parameter may be added to this plugin to set additional insecure registries, and its value appended to the other values using that same code\n- and make sure anyway the change is only applied when needed (not by default, hence the need for an argument)\n\nbut regardless of which of the ways above is implemented, directly changing docker-images.yml is going to break.",
+      "revId": "e12ee86de47e7e7140c266dd137aa611ce8a203b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
