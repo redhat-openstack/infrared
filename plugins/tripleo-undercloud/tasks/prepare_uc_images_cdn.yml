@@ -113,7 +113,7 @@
     dest: "{{ working_dir }}/containers-prepare-parameter.yaml"
     insertafter: EOF
     block: "  ContainerImageRegistryCredentials:\n    registry.redhat.io:\n      {{ cdn_creds.registry_username }}: {{ cdn_creds.registry_password }}"
-  when: install.cdn is defined
+  when: install.cdn is defined and _sat6_check['status'] != 200
 
 - block:
     - name: import prepare_uc_images builtin
