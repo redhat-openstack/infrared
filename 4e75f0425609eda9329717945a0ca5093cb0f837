@@ -104,6 +104,24 @@
       "parentUuid": "b2694ac4_6c722e03",
       "revId": "4e75f0425609eda9329717945a0ca5093cb0f837",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f18c7f0a_6a2400a0",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016744
+      },
+      "writtenOn": "2021-02-23T16:17:09Z",
+      "side": 1,
+      "message": "yes, it is used in:\n\n[ccamposr@localhost infrared]$ grep -r \"image prepare default\" | grep -v log\nplugins/tripleo-undercloud/tasks/prepare_uc_images_builtin.yml:      openstack tripleo container image prepare default \\\nplugins/tripleo-undercloud/tasks/prepare_uc_images_cdn.yml:      openstack tripleo container image prepare default \\\nplugins/tripleo-overcloud/roles/containers/prepare-templates/tasks/build/build_images.yml:        openstack tripleo container image prepare default --local-push-destination --output-env-file containers-prepare-parameter.yaml\n\nAnd in general no problems, becasue after we generate the container config list using all the extra templates, but in build images no:\n\nplugins/tripleo-overcloud/roles/containers/prepare-templates/tasks/build/patch_images_tripleo-modify-image.yml\n\nbut i am seeing that the fix isn\u0027t working properly :(.",
+      "parentUuid": "ab41fce3_7960d752",
+      "revId": "4e75f0425609eda9329717945a0ca5093cb0f837",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
