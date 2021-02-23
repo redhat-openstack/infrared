@@ -18,6 +18,12 @@
   become: true
   when: ansible_python_version  is version('3', '>=')
 
+- name: Upgrade pip if it is old
+  pip:
+      name: pip<20
+      extra_args: --upgrade
+  become: true
+
 - name: Create plugins directory
   file:
       state: directory
