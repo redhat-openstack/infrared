@@ -18,6 +18,15 @@
   become: true
   when: ansible_python_version  is version('3', '>=')
 
+- name: Upgrade pip if it is old
+  shell: |
+    if [ "$(pip --version | cut -d' ' -f2 | cut -d'.' -f1)" -lt "19" ]; then
+      pip install --upgrade 'pip<20'
+    fi
+  become: true
+  args:
+    executable: /bin/bash
+
 - name: Create plugins directory
   file:
       state: directory
