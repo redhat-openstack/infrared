@@ -222,7 +222,8 @@ Once an undercloud VM is up and ready, run the following::
 
     ir tripleo-undercloud --snapshot-backup yes
 
-Or optionally, provide the file name of the image to create (defaults to "undercloud-snapshot.qcow2").
+Or optionally, provide the filename of the image to create (defaults to "undercloud-snapshot.qcow2").
+
 .. note:: the filename refers to a path on the hypervisor.
 
     ir tripleo-undercloud --snapshot-backup yes --snapshot-filename custom-name.qcow2
