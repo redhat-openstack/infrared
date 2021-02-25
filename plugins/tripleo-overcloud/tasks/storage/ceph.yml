@@ -87,4 +87,6 @@
             dest: "~/overcloud_deploy.sh"
             line: '-e {{ template_base }}/{{ install.storage.config }}.yaml \'
 
-  when: install.storage.config != 'internal'
+  when:
+    - install.storage.config != 'internal'
+    - install.storage.backend != 'cephfs-nfs-netapp'
