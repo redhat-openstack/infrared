@@ -629,6 +629,7 @@ subparsers:
                           - swift
                           - netapp-iscsi
                           - netapp-nfs
+                          - cephfs-nfs-netapp
                           - lvm
                           - nfs
                       help: |
