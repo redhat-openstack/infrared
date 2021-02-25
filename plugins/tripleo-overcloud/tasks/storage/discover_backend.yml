@@ -11,7 +11,16 @@
 - name: set default storage backend
   set_fact:
       storage_backend: "{{ (install.storage|default({})).backend | default('lvm') }}"
-  when: storage_backend is not defined
+  when:
+      - storage_backend is not defined
+      - ((install.storage|default({})).multi|default({})).backends is not defined
+
+- name: set default multi storage backends
+  set_fact:
+      storage_multi_backends: "{{ ((install.storage|default({})).multi|default({})).backends | default({}) }}"
+  when:
+      - storage_multi_backends is not defined
+      - (install.storage|default({})).backend is not defined
 
 - name: print storage backend
   debug:
