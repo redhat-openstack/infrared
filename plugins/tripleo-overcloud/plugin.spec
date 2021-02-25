@@ -629,6 +629,7 @@ subparsers:
                           - swift
                           - netapp-iscsi
                           - netapp-nfs
+                          - cephfs-nfs-netapp
                           - lvm
                           - nfs
                       help: |
@@ -636,6 +637,8 @@ subparsers:
                         If not supplied, Infrared will try to discover storage nodes and select appropriate backed.
                         The 'lvm' value will be used when storage nodes were not found.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
+                  storage-multi-backends:
+                      type: KeyValueList
 
                   ceph-cluster-name:
                       type: Value
