@@ -3,6 +3,7 @@
       storage_backend: "{{ item }}"
   when:
       - not (install.storage|default({})).backend | default(False)
+      - not ((install.storage|default({})).multi|default({})).backend | default(False)
       - item in groups
   with_items:
       - ceph
@@ -11,7 +12,24 @@
 - name: set default storage backend
   set_fact:
       storage_backend: "{{ (install.storage|default({})).backend | default('lvm') }}"
-  when: storage_backend is not defined
+  when:
+      - storage_backend is not defined
+      - ((install.storage|default({})).multi|default({})).backends is not defined
+
+- name: set default multi storage backends
+  set_fact:
+      storage_multi_backends: "{{ ((install.storage|default({})).multi|default({})).backends | default({}) }}"
+  when:
+      - storage_multi_backends is not defined
+      - storage_backend is not defined
+
+- name: check if one of the storage backends is ceph internal
+  set_fact:
+      storage_backend: "{{ (item.key == 'ceph' and item.value == 'internal') | ternary('ceph', '' )}}"
+  with_dict: "{{ storage_multi_backends | default({}) }}"
+  when:
+      - storage_multi_backends|default('')
+      - storage_backend is not defined
 
 - name: print storage backend
   debug:

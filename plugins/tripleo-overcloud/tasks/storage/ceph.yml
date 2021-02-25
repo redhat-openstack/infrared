@@ -17,8 +17,8 @@
             - install.version|default(undercloud_version)|openstack_release < 11
 
   when:
-    - "not install.storage.external"
-    - "not install.splitstack"
+      - not install.storage.external or (backend|default({})).value|default('') == 'external'
+      - "not install.splitstack"
   vars:
       storage_nodes: "{{ (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 }}"
 
@@ -34,7 +34,7 @@
       line: '-e  /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible-external.yaml \'
   when:
       - (install.version|default(undercloud_version)|openstack_release >= 12)
-      - install.storage.external
+      - install.storage.external or (backend|default({})).value|default('') == 'external'
       - ((install.storage.method is not defined and (install.version|default(undercloud_version)|openstack_release > 12)) or (install.storage.method is defined and install.storage.method == 'ansible'))
 
 
@@ -44,7 +44,7 @@
       line: '-e  /usr/share/openstack-tripleo-heat-templates/environments/puppet-ceph-external.yaml \'
   when:
       - (install.version|default(undercloud_version)|openstack_release >= 12)
-      - install.storage.external
+      - install.storage.external or (backend|default({})).value|default('') == 'external'
       - ((install.storage.method is not defined and (install.version|default(undercloud_version)|openstack_release == 12)) or (install.storage.method is defined and install.storage.method == 'puppet'))
 
 - block:
@@ -56,17 +56,16 @@
                 {%- elif install.version|default(undercloud_version)|openstack_release >= 10 -%}10
                 {%- else -%}{{ install.version|default(undercloud_version)|openstack_release }}{%- endif -%}"
         template:
-            src: "storage/{{ install.storage.config }}.yml.j2"
-            dest: "{{ template_base }}/{{ install.storage.config }}.yaml"
+            src: "storage/internal.yml.j2"
+            dest: "{{ template_base }}/internal.yaml"
             mode: 0755
 
       - name: append the storage ceph custom template line to the base overcloud deploy script
         lineinfile:
             dest: "~/overcloud_deploy.sh"
-            line: '-e {{ template_base }}/{{ install.storage.config }}.yaml \'
-
+            line: '-e {{ template_base }}/internal.yaml \'
   when:
-    - install.storage.config == 'internal'
+    - install.storage.config == 'internal' or (backend|default({})).value|default('') == 'internal'
 
 - name: append the storage ceph template in splitstack deployment
   lineinfile:
@@ -79,12 +78,12 @@
 - block:
       - name: Copy storage configuration file to the remote
         copy:
-            src: "vars/storage/config/{{ install.storage.config }}.yml"
-            dest: "{{ template_base }}/{{ install.storage.config }}.yaml"
+            src: "{{ hostvars['localhost']['install_storage_config_file'] }}"
+            dest: "{{ template_base }}/storage-config.yaml"
 
       - name: Append the storage configuration line to the base overcloud deploy script
         lineinfile:
             dest: "~/overcloud_deploy.sh"
-            line: '-e {{ template_base }}/{{ install.storage.config }}.yaml \'
+            line: '-e {{ template_base }}/storage-config.yaml \'
 
   when: install.storage.config != 'internal'
