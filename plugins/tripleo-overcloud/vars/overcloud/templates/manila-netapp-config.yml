@@ -1,3 +1,14 @@
 ---
 tripleo_heat_templates:
     - "{{ install.heat.templates.basedir }}/environments/manila-netapp-config.yaml"
+
+custom_templates:
+    parameter_defaults:
+        ManilaEnabledShareProtocols:
+            - NFS
+        ManilaNetappDriverHandlesShareServers: 'false'
+        ManilaNetappLogin: admin
+        ManilaNetappPassword: netapp123
+        ManilaNetappServerHostname: 10.9.76.133
+        ManilaNetappTraceFlags: api
+        ManilaNetappVserver: tbarron_0
