@@ -55,7 +55,7 @@
   # This can be removed once rhbz#1892216 is fixed and released
   # We need to install openjdk beforehand (as it is installed by the freeipa)
   # script and then downgrade it in case the version is the known broken one
-  # The 1.8.0.275.b01 version of JDK is still broken. We need to downgrade 
+  # The 1.8.0.275.b01 version of JDK is still broken. We need to downgrade
   # to proper version.
   - name: Workaround for broken versions of openjdk
     become: yes
@@ -235,5 +235,5 @@
         dest: "/etc/hosts"
         line: "{{ freeipa_undercloud_ipaddress }} {{ groups['undercloud'][0] }}.{{ freeipa_cloud_domain }} {{ groups['undercloud'][0] }}"
         state: present
-  delegate_to: "{{ freeipa_node }}"
+  delegate_to: "{{ freeipa_undercloud_node }}"
 
