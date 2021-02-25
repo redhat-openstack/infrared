@@ -15,3 +15,11 @@
 - include_tasks: "{{ storage_backend }}.yml"
   when:
     - storage_backend|default('')
+    - manila_backends is not defined
+
+- include_tasks: "{{ manila_backend.key }}.yml"
+  loop_control:
+     loop_var: manila_backend
+  with_dict: "{{ manila_backends | default({}) }}"
+  when:
+      - manila_backends|default('')

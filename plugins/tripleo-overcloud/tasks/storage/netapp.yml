@@ -9,7 +9,9 @@
         lineinfile:
             dest: "~/overcloud_deploy.sh"
             line: '-e {{ template_base }}/storage-config.yaml \'
-        when: install.storage.backend != 'netapp-nfs'
+        when:
+            - (install.storage|default({})).backend | default('') != 'netapp-nfs'
+            - (manila_backend|default({})).key|default('') != 'netapp-nfs'
 
       # storage-config.yaml is an env file for external storage backend and is shell be placed
       # after the default env files specified by deploy-script to override default values
@@ -23,6 +25,6 @@
             - absent
             - present
         when:
-            - storage_backend == 'netapp-nfs'
+            - storage_backend == 'netapp-nfs' or (manila_backend|default({})).key|default('')
 
-  when: install.storage.external
+  when: install.storage.external or (manila_backend|default({})).value|default('') == 'external'
