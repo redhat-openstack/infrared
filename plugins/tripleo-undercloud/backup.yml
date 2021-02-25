@@ -46,7 +46,7 @@
                 - install.dest.path|default({})
             tags: skip_ansible_lint
 
-          - name: get sha256sum from the remote
+          - name: get and check sha256sum from the remote
             shell: >
                 ssh -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.address }} "
                 cd {{ install.dest.path }} &&
@@ -57,18 +57,7 @@
                 - install.dest.path|default({})
             tags: skip_ansible_lint
             register: remote_sha256sum
-
-          - name: print remote uc image sha256
-            debug:
-                msg: "The sha256 checksum is {{ remote_sha256sum.stdout }}"
-            when:
-                - install.dest.address|default({})
-                - install.dest.path|default({})
-
-          - name: "Fail when sha256sum are not equal with the remote"
-            fail:
-                msg: "Something went wrong, the copy is not the same as the original"
-            when: local_sha256sum.stat.checksum == remote_sha256sum.stdout
+            failed_when: local_sha256sum.stat.checksum != remote_sha256sum.stdout
 
           - name: copy the image to mirror server
             shell: |
@@ -81,7 +70,7 @@
                 - install.dest.mirror.path|default({})
             tags: skip_ansible_lint
 
-          - name: get sha256sum from the mirror
+          - name: get and check sha256sum from the mirror
             shell: >
                 ssh -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.mirror.address }} "
                 cd {{ install.dest.mirror.path }} &&
@@ -92,18 +81,7 @@
                 - install.dest.mirror.path|default({})
             tags: skip_ansible_lint
             register: mirror_sha256sum
-
-          - name: print mirror sha256sum
-            debug:
-                msg: "The sha256sum checksum is {{ mirror_sha256sum.stdout }}"
-            when:
-                - install.dest.mirror.address|default({})
-                - install.dest.mirror.path|default({})
-
-          - name: "Fail when sha256sum are not equal with the mirror"
-            fail:
-                msg: "Something went wrong, the copy is not the same as the original"
-            when: local_sha256sum.stat.checksum == mirror_sha256sum.stdout
+            failed_when: local_sha256sum.stat.checksum == mirror_sha256sum.stdout
         always:
           - name: cleanup the undercloud image file
             file:
@@ -116,7 +94,7 @@
                 ssh -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.address }} rm -f {{ install.dest.path }}/{{ undercloud_image_file }}
             when:
                 - local_sha256sum is defined
-                - remote_sha256sum is defined
+                - install.dest|default({}) 
                 - local_sha256sum.stat.checksum != remote_sha256sum.stdout or local_sha256sum.stat.checksum != mirror_sha256sum.stdout
             tags: skip_ansible_lint
 
