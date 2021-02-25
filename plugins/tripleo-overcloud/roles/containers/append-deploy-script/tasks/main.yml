@@ -4,7 +4,7 @@
       line: '-e {{ install.heat.templates.basedir }}/environments/ceph-ansible/ceph-ansible.yaml \'
   when:
       - not install.storage.external
-      - storage_backend|default('') == 'ceph'
+      - storage_backend|default('')|regex_search('ceph')
 
 # OVN environment file should be appended AFTER docker-ha.yaml
 - name: append the ovn HA OSP 12 template line to the base overcloud deploy script

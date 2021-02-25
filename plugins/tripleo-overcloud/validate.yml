@@ -18,6 +18,7 @@
         when:
             - install.deploy|default('')
             - not (install.storage|default({})).backend|default(False)
+            - not (install.storage|default({})).multi.backends|default(False)
             - "'swift' in groups"
             - "'ceph' in groups"
 
@@ -27,7 +28,7 @@
 
       - when:
           - install.deploy|default('')
-          - install.storage.external
+          - ((install.storage|default({})).multi|default({})).backends | default(False) | ternary(install.storage.config != 'internal', install.storage.external)
         block:
           - name: validate storage-config option is provided
             fail:
