@@ -636,6 +636,16 @@ subparsers:
                         If not supplied, Infrared will try to discover storage nodes and select appropriate backed.
                         The 'lvm' value will be used when storage nodes were not found.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
+                  storage-multi-backends:
+                      type: KeyValueList
+                      help: |
+                        The multiple storage backends that we would like to use.
+                        This parameter is of KeyValueList type, when the key specifies
+                        the name/type of the storage backend and the value specifies
+                        whether the storage is external or internal
+                        NOTE: when using this parameter do not you "storage-backend" and "storage-external" parameters
+                        Value example:
+                        --storage-multi-backends netapp:external,ceph:internal
 
                   ceph-cluster-name:
                       type: Value

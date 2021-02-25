@@ -15,3 +15,10 @@
 - include_tasks: "{{ storage_backend }}.yml"
   when:
     - storage_backend|default('')
+
+- include_tasks: "{{ backend.key }}.yml"
+  loop_control:
+     loop_var: backend
+  with_dict: "{{ storage_multi_backends | default({}) }}"
+  when:
+      - storage_multi_backends|default('')
