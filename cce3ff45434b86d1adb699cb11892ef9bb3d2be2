@@ -50,6 +50,24 @@
       "message": "imo this will be always empty dict because there is no test_regex variable but test_dict.test_regex.\nI am not sure why loop is needed regardless.",
       "revId": "cce3ff45434b86d1adb699cb11892ef9bb3d2be2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "eab4daf0_ed9de42b",
+        "filename": "plugins/tempest/tasks/run_suite.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-03-01T09:08:38Z",
+      "side": 1,
+      "message": "I suspect because the code was taken from here:\nhttps://github.com/redhat-openstack/infrared/blob/5028a80d34d3f99ba91e63660c5698bc65abcdec/plugins/tempest/tasks/setup/rpm/install_plugins.yml#L52\n\n- name: Install plugin packages for \"{{ test_suite }}\" suite\n  become: yes\n  package:\n      name: \"{{ item.value.package[test.openstack.version |default(overcloud_version) | int]|default(item.value.package.default) }}\"\n      state: present\n  with_dict: \"{{ plugins | default({}) }}\"\n  when: item.value.package is defined\n\n\nThere, \u0027package\u0027 can have multiple items under it, while here \u0027test_regex\u0027 contains just one dictionary.\n\nThat said, the code both there and here also shouldn\u0027t cast the openstack version to int (it breaks with 16/16.1/16.2), but that hasn\u0027t been a problem for plugin packages (mostly the same in all 16.x) but it may be a problem with regex which may change. But let\u0027s discuss it in https://review.gerrithub.io/c/redhat-openstack/infrared/+/511482",
+      "parentUuid": "f6662b8d_f9a4e4f1",
+      "revId": "cce3ff45434b86d1adb699cb11892ef9bb3d2be2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
