@@ -106,9 +106,8 @@
 
 - name: Add regex invoke for "{{ test_suite }}"
   set_fact:
-      regex: "{{ item.value.test_regex[test.openstack.version |default(overcloud_version) | int]|default(item.value.default) }}"
-  when: item.value is defined
-  with_dict: "{{ test_regex | default({}) }}"
+      regex: "{{ test_dict.test_regex[test.openstack.version |default(overcloud_version) | int]|default(test_dict.test_regex.default) }}"
+  when: test_dict.test_regex is defined and test_dict.test_regex
 
 - name: Add number of threads for test suite
   set_fact:
