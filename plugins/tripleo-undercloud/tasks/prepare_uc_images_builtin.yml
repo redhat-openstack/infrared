@@ -72,6 +72,10 @@
           url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_env_template_download_basename }}"
           dest: "{{ containers_images_env_template_dest_file }}"
           force: true
+      register: get_url_result
+      until: get_url_result is success
+      retries: 16
+      delay: 8
       delegate_to: localhost
 
     - name: Load variables from container environment file
