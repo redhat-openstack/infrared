@@ -100,7 +100,7 @@
             openstack baremetal import --json {{ instack_file_path.stat.path }}
             openstack baremetal configure boot
             {% else %}
-            openstack overcloud node import --instance-boot-option=local {{ instack_file_path.stat.path }}
+            openstack overcloud node import --instance-boot-option=local {{ install.ppc64le.nodes|ternary('--http-boot /var/lib/ironic/tftpboot ', '') }} {{ instack_file_path.stat.path }}
             {% endif %}
         tags:
             - ironic
@@ -199,6 +199,9 @@
               ironic node-set-provision-state ${uuid} provide
             done
             {% else %}
+            {% if install.ppc64le.nodes %}
+            for node in $( openstack baremetal node list -f value -c Name ) ; do openstack baremetal node set --boot-interface pxe $node ;done
+            {% endif %}
             openstack overcloud node introspect --provide --all-manageable
             {% endif %}
         tags:
@@ -210,6 +213,7 @@
         retries: 20
         delay: 90
         ignore_errors: yes
+
 
       # Async tasks in Ansible don't have rc defined if they failed (for some reason) which makes registered
       # variable different for various outcomes and just using "result" key is not possible here.
