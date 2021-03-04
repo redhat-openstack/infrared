@@ -104,6 +104,34 @@
           when:
             - venv_shebang_relocate | bool
 
+        - &check_pip_installed
+          name: Check if pip in available in the virtualenv
+          shell: |
+            source {{ venv_destination_path }}/bin/activate
+            python -m pip --version
+          ignore_errors: true
+          register: check_pip
+
+        - name: Install pip if it's missing
+          when: check_pip.rc != 0
+          block:
+
+            - name: Install pip using the 'get-pip.py' script
+              shell: |
+                source {{ venv_destination_path }}/bin/activate
+                curl https://bootstrap.pypa.io/get-pip.py | python
+
+            - *check_pip_installed
+
+        - name: Fail the execution if pip ins't available
+          fail:
+            msg: "{{ check_pip }}"
+          when: check_pip.rc != 0
+
+        - name: Print the pip version
+          debug:
+            msg: "{{ check_pip.stdout }}"
+
         - &venv_upgrade_pip
           name: Upgrade pip if it is old
           shell: |
