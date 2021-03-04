@@ -59,12 +59,12 @@
       register: plugins_reqs
 
     - name: Get repo requirements
-      become: yes
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
       pip:
           chdir: "~/{{ test.dir }}"
           requirements: "{{ plugins_reqs.stat.path }}"
+          extra_args: --user
       when: plugins_reqs.stat.exists
 
 - name: Install plugin packages to the user home directory
