@@ -109,75 +109,77 @@
         when: (item|splitext)[-1] != ".repo"
         with_items: "{{ install.get('repos', {}).urls|default([]) }}"
 
-      - include_tasks: "tasks/images/{{ install.images.task }}.yml"
+      block:
+      when: install.images.task != 'none'
+        - include_tasks: "tasks/images/{{ install.images.task }}.yml"
 
-      - name: modify images - update to core build and install packages
-        include_tasks: tasks/images/repos.yml
-        # update is a func name (dict.update) so it must be used as str explicitly
-        when: install.images.packages|default('') or install.images['update'] or install.images.remove|default('')
+        - name: modify images - update to core build and install packages
+          include_tasks: tasks/images/repos.yml
+          # update is a func name (dict.update) so it must be used as str explicitly
+          when: install.images.packages|default('') or install.images['update'] or install.images.remove|default('')
 
-      # Trigger only when update kernel flag is specified and new packages installed inside overcloud image
-      - name: update default overcloud kernel from modified overcloud image
-        include_tasks: tasks/images/update-kernel.yml
-        when:
-          - install['overcloud']['update']['kernel']
-          - install.images.packages
+        # Trigger only when update kernel flag is specified and new packages installed inside overcloud image
+        - name: update default overcloud kernel from modified overcloud image
+          include_tasks: tasks/images/update-kernel.yml
+          when:
+            - install['overcloud']['update']['kernel']
+            - install.images.packages
 
-       #Need to fix  BZ1462703 to apply --os-cloud
-      - name: upload the overcloud images to glance
-        shell: |
-            set -exuo pipefail
-            source ~/stackrc
-            openstack overcloud image upload --update-existing
-        tags: skip_ansible_lint
+         #Need to fix  BZ1462703 to apply --os-cloud
+        - name: upload the overcloud images to glance
+          shell: |
+              set -exuo pipefail
+              source ~/stackrc
+              openstack overcloud image upload --update-existing
+          tags: skip_ansible_lint
 
-      - name: check for existing nodes ( OS <= 10 )
-        shell: |
-            set -exuo pipefail
-            source ~/stackrc
-            ironic node-list 2>/dev/null | wc -l
-        tags:
-            - skip_ansible_lint
-        register: oc_nodes_prev
-        when:
-            - undercloud_version|openstack_release <= 10
+        - name: check for existing nodes ( OS <= 10 )
+          shell: |
+              set -exuo pipefail
+              source ~/stackrc
+              ironic node-list 2>/dev/null | wc -l
+          tags:
+              - skip_ansible_lint
+          register: oc_nodes_prev
+          when:
+              - undercloud_version|openstack_release <= 10
 
-      - name: check for existing nodes ( OS >= 11 )
-        shell: |
-            source ~/stackrc
-            openstack baremetal node list -c UUID -f json
-        tags:
-            - skip_ansible_lint
-        register: oc_nodes
-        when:
-            - undercloud_version|openstack_release >= 11
+        - name: check for existing nodes ( OS >= 11 )
+          shell: |
+              source ~/stackrc
+              openstack baremetal node list -c UUID -f json
+          tags:
+              - skip_ansible_lint
+          register: oc_nodes
+          when:
+              - undercloud_version|openstack_release >= 11
 
-      - name: configure nodes to use updated kernel and ramdisk ( OS <= 10 )
-        shell: |
-            source ~/stackrc
-            openstack baremetal configure boot
-        tags:
-            - skip_ansible_lint
-        when:
-            - undercloud_version|openstack_release <= 10
-            - oc_nodes_prev.stdout|int > 4
+        - name: configure nodes to use updated kernel and ramdisk ( OS <= 10 )
+          shell: |
+              source ~/stackrc
+              openstack baremetal configure boot
+          tags:
+              - skip_ansible_lint
+          when:
+              - undercloud_version|openstack_release <= 10
+              - oc_nodes_prev.stdout|int > 4
 
-      # https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/11/html/upgrading_red_hat_openstack_platform/chap-director-minor-update#sect-Updating_Overcloud_and_Introspection_Images
-      - name: configure nodes to use updated kernel and ramdisk ( OS >= 11 )
-        shell: |
-            source ~/stackrc
-            openstack overcloud node configure {{ ' '.join(oc_nodes.stdout|from_json|map(attribute='UUID')) }}
-        tags:
-            - skip_ansible_lint
-        when:
-            - undercloud_version|openstack_release >= 11
-            - oc_nodes.stdout|from_json
+        # https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/11/html/upgrading_red_hat_openstack_platform/chap-director-minor-update#sect-Updating_Overcloud_and_Introspection_Images
+        - name: configure nodes to use updated kernel and ramdisk ( OS >= 11 )
+          shell: |
+              source ~/stackrc
+              openstack overcloud node configure {{ ' '.join(oc_nodes.stdout|from_json|map(attribute='UUID')) }}
+          tags:
+              - skip_ansible_lint
+          when:
+              - undercloud_version|openstack_release >= 11
+              - oc_nodes.stdout|from_json
 
-      - name: remove downloaded images
-        file:
-            path: "/home/{{ install.user.name }}/{{ item[1] }}"
-            state: absent
-        with_subelements:
-          - "{{ (image_files|default({})).get('results',{}) }}"
-          - "files"
-        when: image_files is defined and install.images.cleanup
+        - name: remove downloaded images
+          file:
+              path: "/home/{{ install.user.name }}/{{ item[1] }}"
+              state: absent
+          with_subelements:
+            - "{{ (image_files|default({})).get('results',{}) }}"
+            - "files"
+          when: image_files is defined and install.images.cleanup

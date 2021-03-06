@@ -414,10 +414,12 @@ subparsers:
                           * rpm - packaged with product (versions 8 and above)
                           * import - Download pre-built images from a given source (versions 7 and 8). Requires '--images-url'.
                           * build - build images locally (takes longer) on top of regular cloud guest image. CentOS/RHEL will be used for RDO/OSP.
+                          * none - do not upload any Overcloud images (useful for pre-provisioned nodes)
                       choices:
                           - rpm
                           - import
                           - build
+                          - none
 
                   images-url:
                       type: Value
