@@ -1,0 +1,117 @@
+resource_registry:
+    OS::TripleO::Services::CeilometerAgentCentral: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-central-container-puppet.yaml
+    OS::TripleO::Services::CeilometerAgentIpmi: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-ipmi-container-puppet.yaml
+    OS::TripleO::Services::CeilometerAgentNotification: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-notification-container-puppet.yaml
+    OS::TripleO::Services::Collectd: /usr/share/openstack-tripleo-heat-templates/deployment/metrics/collectd-container-puppet.yaml
+    OS::TripleO::Services::ComputeCeilometerAgent: /usr/share/openstack-tripleo-heat-templates/deployment/ceilometer/ceilometer-agent-compute-container-puppet.yaml
+    OS::TripleO::Services::MetricsQdr: /usr/share/openstack-tripleo-heat-templates/deployment/metrics/qdr-container-puppet.yaml
+    OS::TripleO::Services::Redis: /usr/share/openstack-tripleo-heat-templates/deployment/database/redis-pacemaker-puppet.yaml
+    OS::TripleO::Services::GnocchiApi: /usr/share/openstack-tripleo-heat-templates/deployment/gnocchi/gnocchi-api-container-puppet.yaml
+    OS::TripleO::Services::GnocchiMetricd: /usr/share/openstack-tripleo-heat-templates/deployment/gnocchi/gnocchi-metricd-container-puppet.yaml
+    OS::TripleO::Services::GnocchiStatsd: /usr/share/openstack-tripleo-heat-templates/deployment/gnocchi/gnocchi-statsd-container-puppet.yaml
+    OS::TripleO::Services::AodhApi: /usr/share/openstack-tripleo-heat-templates/deployment/aodh/aodh-api-container-puppet.yaml
+    OS::TripleO::Services::AodhEvaluator: /usr/share/openstack-tripleo-heat-templates/deployment/aodh/aodh-evaluator-container-puppet.yaml
+    OS::TripleO::Services::AodhNotifier: /usr/share/openstack-tripleo-heat-templates/deployment/aodh/aodh-notifier-container-puppet.yaml
+    OS::TripleO::Services::AodhListener: /usr/share/openstack-tripleo-heat-templates/deployment/aodh/aodh-listener-container-puppet.yaml
+    OS::TripleO::Services::PankoApi: /usr/share/openstack-tripleo-heat-templates/deployment/deprecated/panko/panko-api-container-puppet.yaml
+
+custom_templates:   
+    parameter_defaults:
+        CeilometerEnableGnocchi: true
+        GnocchiArchivePolicy: 'high'
+        GnocchiRbdPoolName: 'metrics'
+        GnocchiBackend: 'rbd'
+
+        EventPipelinePublishers: ['gnocchi://?filter_project=service&archive_policy=high']
+        PipelinePublishers: ['gnocchi://?filter_project=service&archive_policy=high']
+        CeilometerQdrPublishEvents: true
+        CeilometerQdrEventsConfig:
+            driver: amqp
+            topic: cloud1-event
+        CeilometerQdrMetricsConfig:
+            driver: amqp
+            topic: cloud1-metering
+
+        CeilometerQdrPublishMetrics: true
+        CeilometerEnablePanko: false
+        ManagePolling: true
+        ManagePipeline: true
+        NotificationDriver: 'messagingv2'
+        CollectdEnableLibpodstats: true
+        CollectdEnableSensubility: true
+        CollectdSensubilityConnection: sealusa37.mobius.lab.eng.rdu2.redhat.com
+        CollectdSensubilityTransport: amqp1
+        CollectdSensubilityLogLevel: DEBUG
+        CollectdAmqpInstances:
+            cloud1-notify:
+                format: JSON
+                notify: true
+                presettle: false
+            cloud1-telemetry:
+                format: JSON
+                presettle: false
+        CollectdAmqpInterval: 5
+        CollectdConnectionType: amqp1
+        CollectdDefaultPollingInterval: 5
+
+        EnableSTF: true
+
+        MetricsQdrAddresses:
+        -   distribution: multicast
+            prefix: collectd
+        -   distribution: multicast
+            prefix: anycast/ceilometer
+
+        MetricsQdrSSLProfiles:
+        -   name: sslProfile
+
+        CephStorageExtraConfig:
+            tripleo::profile::base::metrics::collectd::amqp_host: "%{hiera('storage')}"
+            tripleo::profile::base::metrics::qdr::listener_addr: "%{hiera('storage')}"
+
+        
+	CollectdExtraPlugins:
+            - vmem
+            - write_http
+        ExtraConfig:
+            ceilometer::agent::polling::polling_interval: 5
+            collectd::plugin::cpu::reportbycpu: true
+            collectd::plugin::vmem::verbose: true
+            collectd::plugin::amqp1::send_queue_limit: 50
+            collectd::plugin::virt::hostname_format: name metadata uuid
+            collectd::plugin::virt::plugin_instance_format: name
+            collectd::plugin::virt::extra_stats: "cpu_util disk vcpu"
+            collectd::plugin::write_http::nodes:
+                collectd:
+                    url: "{{ write_http_server }}"
+                    metrics: true
+                    header: foo
+            collectd::plugin::ceph::daemons:
+               - ceph-osd.0
+               - ceph-osd.1
+               - ceph-osd.2
+               - ceph-osd.3
+               - ceph-osd.4
+               - ceph-osd.5
+               - ceph-osd.6
+               - ceph-osd.7
+               - ceph-osd.8
+               - ceph-osd.9
+               - ceph-osd.10
+               - ceph-osd.11
+               - ceph-osd.12
+               - ceph-osd.13
+               - ceph-osd.14
+               - ceph-osd.15
+
+
+        CollectdExtraPlugins:
+        - vmem
+        - write_http
+
+        MetricsQdrConnectors:
+            - host: "{{ stf_server_name }}"
+              port: 443
+              role: edge
+              verifyHostname: false
+              sslProfile: sslProfile
