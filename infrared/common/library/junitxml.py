@@ -247,6 +247,29 @@ class JUnintXML:
     def dst_file(self, dst_file):
         self.__dst_file = dst_file
 
+    def limit_testcase_name_len(self, max_len, postfix=''):
+        """Truncates the testcase name if longer than the given maximum length
+
+        :param max_len: The maximum length of the testcase name attribute
+        (including the prefix if given)
+        :param postfix: A postfix to add to the testcase name in case it longer
+        than the given maximum length
+        """
+        def _cut_testcase_name_len(elem, _max_len, _postfix):
+            name = elem.get('name')
+            if len(name) <= _max_len:
+                return False
+
+            new_name = name[:_max_len - len(_postfix)] + _postfix
+            elem.set('name', new_name)
+
+            return True
+
+        self.__process(
+            action_func=_cut_testcase_name_len,
+            _max_len=max_len,
+            _postfix=postfix)
+
     def prepend_classname_to_name(self):
         """Prepends the classname to the name attribute for each testcase"""
         def _prepend_classname_to_name(elem):
@@ -427,6 +450,8 @@ def main():
             prepend_classname=dict(default=False, type='bool', required=False),
             remove_testcase_id=dict(
                 default=False, type='bool', required=False),
+            testcase_name_max_len=dict(default=0, required=False, type='int'),
+            testcase_name_max_len_postfix=dict(default='...', required=False),
             testcase_prefix=dict(required=False),
             testcase_prefix_sep=dict(default='-', required=False),
             testcase_prefix_no_dots=dict(
@@ -462,6 +487,12 @@ def main():
             juxml.add_testsuite_prefixes(
                 prefixes=module.params['testsuite_prefixes'],
                 prefixes_sep=module.params['testsuite_prefixes_sep'])
+
+        if module.params['testcase_name_max_len']:
+            juxml.limit_testcase_name_len(
+                max_len=module.params['testcase_name_max_len'],
+                postfix=module.params['testcase_name_max_len_postfix']
+            )
 
         if module.params['indent'] is not None:
             juxml.indent = module.params['indent']
