@@ -5,6 +5,7 @@
   vars:
       undercloud: "{{ hostvars[(groups.undercloud|first)].inventory_hostname }}"
       undercloud_image_file: "{{ install.snapshot.filename.rstrip('.qcow2') }}.qcow2"
+      ssh_opts: " -o PreferredAuthentications=publickey -c aes128-ctr -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectionAttempts=32 "
   tasks:
       - name: install package with virt-sparsify
         package:
@@ -48,10 +49,10 @@
 
           - name: get sha256sum from the remote
             shell: >
-                ssh -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.address }} "
+                ssh {{ ssh_opts }} -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.address }} "
                 cd {{ install.dest.path }} &&
                  sha256sum {{ undercloud_image_file }} > {{ undercloud_image_file }}.sha256 ;
-                cat {{ install.dest.path }}{{ undercloud_image_file }}.sha256" | awk '{print $1}'
+                cat {{ install.dest.path }}/{{ undercloud_image_file }}.sha256" | awk '{print $1}'
             when:
                 - install.dest.address|default({})
                 - install.dest.path|default({})
@@ -83,10 +84,10 @@
 
           - name: get sha256sum from the mirror
             shell: >
-                ssh -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.mirror.address }} "
+                ssh {{ ssh_opts }} -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.mirror.address }} "
                 cd {{ install.dest.mirror.path }} &&
                  sha256sum {{ undercloud_image_file }} > {{ undercloud_image_file }}.sha256 ;
-                cat {{ install.dest.mirror.path }}{{ undercloud_image_file }}.sha256" | awk '{print $1}'
+                cat {{ install.dest.mirror.path }}/{{ undercloud_image_file }}.sha256" | awk '{print $1}'
             when:
                 - install.dest.mirror.address|default({})
                 - install.dest.mirror.path|default({})
@@ -113,11 +114,20 @@
 
           - name: cleanup in case of failure
             shell: |
-                ssh -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.address }} rm -f {{ install.dest.path }}/{{ undercloud_image_file }}
+                ssh {{ ssh_opts }}  -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.address }} rm -f {{ install.dest.path }}/{{ undercloud_image_file }} {{ install.dest.path }}/{{ undercloud_image_file }}.sha256
             when:
                 - local_sha256sum is defined
                 - remote_sha256sum is defined
-                - local_sha256sum.stat.checksum != remote_sha256sum.stdout or local_sha256sum.stat.checksum != mirror_sha256sum.stdout
+                - local_sha256sum.stat.checksum != remote_sha256sum.stdout
+            tags: skip_ansible_lint
+
+          - name: cleanup in case of failure on mirror
+            shell: |
+                ssh {{ ssh_opts }} -i ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.mirror.address }} rm -f {{ install.dest.mirror.path }}/{{ undercloud_image_file }} {{ install.dest.mirror.path }}/{{ undercloud_image_file }}.sha256
+            when:
+                - local_sha256sum is defined
+                - mirror_sha256sum is defined
+                - local_sha256sum.stat.checksum != mirror_sha256sum.stdout
             tags: skip_ansible_lint
 
           - name: Power on the undercloud VM
