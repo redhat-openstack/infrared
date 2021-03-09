@@ -16,6 +16,24 @@
       "message": "This doesn\u0027t end up working. The network name in the way you\u0027re replacing used to grep a substring from the interface name so we pass vqfx to search for a bridge named iron0vqfx0.\nHere\u0027s an example of an interface\u0027s xml:\n\n    \u003cinterface type\u003d\u0027bridge\u0027\u003e\n      \u003cmac address\u003d\u002752:54:00:64:f1:a7\u0027/\u003e\n      \u003csource bridge\u003d\u0027iron0vqfx0\u0027/\u003e\n      \u003cmodel type\u003d\u0027virtio\u0027/\u003e\n      \u003caddress type\u003d\u0027pci\u0027 domain\u003d\u00270x0000\u0027 bus\u003d\u00270x00\u0027 slot\u003d\u00270x03\u0027 function\u003d\u00270x0\u0027/\u003e\n    \u003c/interface\u003e\n\nI\u0027ll play with the xpath lookup and see if I can figure out how to get the mac extracted properly.",
       "revId": "a8f76278b8f3e748555452d4180460870580126c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e5c02836_d13193b4",
+        "filename": "plugins/tripleo-overcloud/hypervisor.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1003936
+      },
+      "writtenOn": "2021-03-09T23:32:03Z",
+      "side": 1,
+      "message": "\u0027mac\u0027: \u0027`for network_name in {{ oc_ironic_network_name | default(provison_virsh_network_name) }}; do echo \"$NODE_XML\" | xmllint --xpath \"string(/domain/devices/interface[contains(source/@*, \u0027$network_name\u0027)]/mac/@address)\" -; done|grep -v ^$`\u0027,\n\nthis works works for the net-ansible use cases.",
+      "parentUuid": "f2fd1940_1758d0b9",
+      "revId": "a8f76278b8f3e748555452d4180460870580126c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
