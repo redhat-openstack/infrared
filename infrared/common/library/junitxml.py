@@ -20,6 +20,8 @@ import os
 import re
 
 from lxml import etree
+from lxml.etree import XMLParser
+from lxml.etree import set_default_parser
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -157,6 +159,13 @@ options:
         description:
             - Indicates whether or not to remove skipped testcases from the
             result file.
+        type: bool
+        default: false
+    lxml_huge_tree:
+        description:
+            - When 'True', sets the default lxml XMLPrser with huge_tree=True.
+            That disable security restrictions and support very deep trees and
+            very long text content (only affects libxml2 2.7+)
         type: bool
         default: false
 
@@ -481,10 +490,14 @@ def main():
             testsuite_prefixes=dict(required=False),
             testsuite_prefixes_sep=dict(default='-', required=False),
             remove_skipped=dict(default=False, required=False, type='bool'),
+            lxml_huge_tree=dict(default=False, type='bool', required=False),
         )
     )
 
     try:
+
+        if module.params['lxml_huge_tree']:
+            set_default_parser(XMLParser(huge_tree=True))
 
         juxml = JUnintXML(src_file=module.params['src'])
 
