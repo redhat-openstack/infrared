@@ -11,14 +11,17 @@ import os
 import re
 from six import add_metaclass
 import time
+import xml.etree.ElementTree as ET
 
 from ansible.module_utils._text import to_bytes
 from ansible.module_utils._text import to_text
 from ansible.plugins.callback import CallbackBase
+from junit_xml import decode
 
 try:
     from junit_xml import TestCase
     from junit_xml import TestSuite
+    from junit_xml import to_xml_report_string
 
     HAS_JUNIT_XML = True
 except ImportError:
@@ -88,6 +91,34 @@ DOCUMENTATION = '''
       - whitelist in configuration
       - junit_xml (python lib)
 '''
+
+
+class RPTestCase(TestCase):
+
+    def __init__(self, *args, **kwargs):
+        super(self.__class__, self).__init__(*args, **kwargs)
+        self.multiple_stdout = []
+
+    def add_stdout_element(self, elem_info):
+        self.multiple_stdout.append(elem_info)
+
+
+class RPTestSuite(TestSuite):
+
+    def __init__(self, *args, **kwargs):
+        self.multiple_stdout = []
+        super(self.__class__, self).__init__(*args, **kwargs)
+
+    def build_xml_doc(self, encoding=None):
+        xml_element = \
+            super(self.__class__, self).build_xml_doc(encoding=encoding)
+
+        for idx, case in enumerate(xml_element):
+            for stdout in self.test_cases[idx].multiple_stdout:
+                stdout_element = ET.SubElement(case, "system-out")
+                stdout_element.text = decode(stdout, encoding)
+
+        return xml_element
 
 
 class CallbackModule(CallbackBase):
@@ -172,17 +203,7 @@ class CallbackModule(CallbackBase):
         if uuid in self._task_data:
             return
 
-        play = self._play_name
-        name = task.get_name().strip()
-        path = task.get_path()
-        action = task.action
-
-        if not task.no_log:
-            args = ', '.join(('%s=%s' % a for a in task.args.items()))
-            if args:
-                name += ' ' + args
-
-        self._task_data[uuid] = TaskData(uuid, name, path, play, action)
+        self._task_data[uuid] = TaskData(task, self._play_name)
 
     def _finish_task(self, status, result):
         """Record the results of a task for a single host."""
@@ -213,10 +234,50 @@ class CallbackModule(CallbackBase):
 
         task_data.add_host(HostData(host_uuid, host_name, status, result))
 
+    @staticmethod
+    def get_task_details(task, host):
+
+        if task.task.no_log:
+            args = "'no_log' is true, output is hidden"
+        else:
+            args = ','.join(
+                ('\n\t%s = %s' % arg for arg in task.task.args.items()))
+
+        details = \
+            """Ansible Task Details:
+---------------------
+    Name: {task_name}
+    Original Name: {org_name}
+    UUID: {task_uuid}
+    Action: {action}
+    File: {task_file}
+    Play: {task_play}
+    Line: {task_line}
+    Role: {role}
+    Host: {host_name}
+    Status: {host_status}
+
+    {args}
+        """.format(
+                task_name=task.name,
+                org_name=task.task.get_name().strip(),
+                task_uuid=task.uuid,
+                action=task.action,
+                task_file=task.file[0],
+                task_play=task.play,
+                task_line=task.line[0],
+                role=task.role,
+                host_name=host.name,
+                host_status=host.status,
+                args='Task Args:  ' + args,
+            )
+
+        return details
+
     def _build_test_case(self, task_data, host_data):
         """Build a TestCase from the given TaskData and HostData."""
 
-        name = '[%s] %s: %s' % (host_data.name, task_data.play, task_data.name)
+        name = task_data.name
         duration = host_data.finish - task_data.start
 
         if self._task_class == 'true':
@@ -224,18 +285,29 @@ class CallbackModule(CallbackBase):
         else:
             junit_classname = task_data.path
 
+        test_case = RPTestCase(
+            name=name,
+            classname=junit_classname,
+            elapsed_sec=duration,
+            allow_multiple_subelements=True
+        )
+
+        test_case.add_stdout_element(
+            self.__class__.get_task_details(task=task_data, host=host_data))
+
         if host_data.status == 'included':
-            return TestCase(name, junit_classname, duration, host_data.result)
+            test_case.add_stdout_element(host_data.result)
+            return test_case
 
         res = host_data.result._result
         rc = res.get('rc', 0)
         dump = self._dump_results(res, indent=0)
         dump = self._cleanse_string(dump)
 
-        if host_data.status == 'ok':
-            return TestCase(name, junit_classname, duration, dump)
+        test_case.add_stdout_element(dump)
 
-        test_case = TestCase(name, junit_classname, duration)
+        if host_data.status == 'ok':
+            return test_case
 
         if host_data.status == 'failed':
             if 'exception' in res:
@@ -280,8 +352,8 @@ class CallbackModule(CallbackBase):
             for host_uuid, host_data in task_data.host_data.items():
                 test_cases.append(self._build_test_case(task_data, host_data))
 
-        test_suite = TestSuite(self._playbook_name, test_cases)
-        report = TestSuite.to_xml_string([test_suite])
+        test_suite = RPTestSuite(self._playbook_name, test_cases)
+        report = to_xml_report_string([test_suite])
 
         output_file = os.path.join(self._output_dir, '%s-%s.xml' % (
             self._playbook_name, time.time()))
@@ -333,15 +405,32 @@ class CallbackModule(CallbackBase):
 class TaskData(object):
     """Data about an individual task."""
 
-    def __init__(self, uuid, name, path, play, action):
-        self.uuid = uuid
-        self.name = name
-        self.path = path
-        self.play = play
-        self.start = None
-        self.host_data = OrderedDict()
+    executed_tasks = {}
+
+    def __init__(self, task, play_name):
+        self.task = task
+
+        # Adding counter to the task name in case it (or other task with the
+        # same name) was already called so ReportPortal will be able to show
+        # the history of the task (test) as expected
+        name = task.get_name().strip()
+        if name not in self.__class__.executed_tasks:
+            self.__class__.executed_tasks[name] = 1
+            self.name = name
+        else:
+            self.__class__.executed_tasks[name] += 1
+            self.name = name + '  -  #{exec_cnt}'.format(
+                exec_cnt=self.__class__.executed_tasks[name])
+
+        self.uuid = task._uuid
+        self.path = task.get_path()
+        self.file = task.get_path().split(':')[0],
+        self.line = int(task.get_path().split(':')[-1]),
+        self.play = play_name
         self.start = time.time()
-        self.action = action
+        self.action = task.action
+        self.role = str(task._role)
+        self.host_data = OrderedDict()
 
     def add_host(self, host):
         if host.uuid in self.host_data:
@@ -354,6 +443,62 @@ class TaskData(object):
                     self.path, self.play, self.name, host.name))
 
         self.host_data[host.uuid] = host
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    @property
+    def uuid(self):
+        return self._uuid
+
+    @uuid.setter
+    def uuid(self, uuid):
+        self._uuid = uuid
+
+    @property
+    def path(self):
+        return self._path
+
+    @path.setter
+    def path(self, path):
+        self._path = path
+
+    @property
+    def play(self):
+        return self._play
+
+    @play.setter
+    def play(self, play):
+        self._play = play
+
+    @property
+    def start(self):
+        return self._start
+
+    @start.setter
+    def start(self, start):
+        self._start = start
+
+    @property
+    def action(self):
+        return self._action
+
+    @action.setter
+    def action(self, action):
+        self._action = action
+
+    @property
+    def role(self):
+        return self._role
+
+    @role.setter
+    def role(self, role):
+        self._role = role
 
 
 @add_metaclass(type)
