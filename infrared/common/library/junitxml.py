@@ -70,10 +70,32 @@ options:
                 Out: <testcase ... name="testname"><testcase>
         default: false
         type: bool
+    testcase_name_max_len:
+        description:
+            - The maximum length of the testcase name attribute.
+            (Value should be an integer greater than zero)
+            If the --testcase_name_max_len_postfix is given, it will be
+            included in the maximum length
+
+            Example:
+              testcase_name_max_len = 6
+              testcase_name_max_len_postfix = '...'
+
+              In:  <testcase ... name="123456789"><testcase>
+              Out: <testcase ... name="123..."><testcase>
+        default: 0
+        type: int
+    testcase_name_max_len_postfix:
+        description:
+            - A postfix to add to the testcase name in case it's longer it's
+            longer the 'testcase_name_max_len'
+        default:'...'
+        type: str
     testcase_prefix:
         description:
             - A prefix to add to the name attribute of each testcase element.
             (Uses the 'testcase-prefix-sep' value as a separator)
+
             Example:
                 In:  <testcase ... name="testname"><testcase>
                 Out: <testcase ... name="myprefix-testname"><testcase>
@@ -246,6 +268,29 @@ class JUnintXML:
     @dst_file.setter
     def dst_file(self, dst_file):
         self.__dst_file = dst_file
+
+    def limit_testcase_name_len(self, max_len, postfix=''):
+        """Truncates the testcase name if longer than the given maximum length
+
+        :param max_len: The maximum length of the testcase name attribute
+        (including the prefix if given)
+        :param postfix: A postfix to add to the testcase name in case it longer
+        than the given maximum length
+        """
+        def _cut_testcase_name_len(elem, _max_len, _postfix):
+            name = elem.get('name')
+            if len(name) <= _max_len:
+                return False
+
+            new_name = name[:_max_len - len(_postfix)] + _postfix
+            elem.set('name', new_name)
+
+            return True
+
+        self.__process(
+            action_func=_cut_testcase_name_len,
+            _max_len=max_len,
+            _postfix=postfix)
 
     def prepend_classname_to_name(self):
         """Prepends the classname to the name attribute for each testcase"""
@@ -427,6 +472,8 @@ def main():
             prepend_classname=dict(default=False, type='bool', required=False),
             remove_testcase_id=dict(
                 default=False, type='bool', required=False),
+            testcase_name_max_len=dict(default=0, required=False, type='int'),
+            testcase_name_max_len_postfix=dict(default='...', required=False),
             testcase_prefix=dict(required=False),
             testcase_prefix_sep=dict(default='-', required=False),
             testcase_prefix_no_dots=dict(
@@ -462,6 +509,12 @@ def main():
             juxml.add_testsuite_prefixes(
                 prefixes=module.params['testsuite_prefixes'],
                 prefixes_sep=module.params['testsuite_prefixes_sep'])
+
+        if module.params['testcase_name_max_len']:
+            juxml.limit_testcase_name_len(
+                max_len=module.params['testcase_name_max_len'],
+                postfix=module.params['testcase_name_max_len_postfix']
+            )
 
         if module.params['indent'] is not None:
             juxml.indent = module.params['indent']
