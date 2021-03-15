@@ -29,10 +29,10 @@
           missing_templates: "{{ missing_templates }}"
   when: missing_templates | default([])
 
-- name: create custom templates file
+- name: create deployment template file
   copy:
       dest: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/{{ raw_name }}.yaml"
-      content: "{{ current_file.custom_templates|to_nice_yaml }}"
-  when: current_file.custom_templates is defined
+      content: "{{ current_file|to_nice_yaml }}"
+  when: current_file is defined
   vars:
       raw_name: "{{ templates_list_file | basename | splitext | first }}"
