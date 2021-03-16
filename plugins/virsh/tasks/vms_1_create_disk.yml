@@ -101,8 +101,7 @@
                     --run-command 'grep ^DEFROUTE {{ net_scripts }}/ifcfg-eth{{ loop.index0 }} || echo "DEFROUTE=yes" >> {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' \
                     --run-command 'grep ^IPV6_DEFROUTE {{ net_scripts }}/ifcfg-eth{{ loop.index0 }} || echo "IPV6_DEFROUTE=yes" >> {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' \
                     {% if provision.host.network.mtu.size %} --run-command 'echo MTU={{ provision.host.network.mtu.size }} >> {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}'{% endif %}
-                {%- else -%}--run-command 'cp {{ net_scripts }}/ifcfg-eth{0,{{ loop.index0 }}} && sed -i s/DEVICE=.*/DEVICE=eth{{ loop.index0 }}/g {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' {% endif %} \
-                --run-command 'sed -i s/DEFROUTE=.*/DEFROUTE={{ 'yes' if (topology_node.external_network.network == interface.network) else 'no' }}/g {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' \
+                    --run-command 'sed -i s/DEFROUTE=.*/DEFROUTE={{ 'yes' if (topology_node.external_network.network == interface.network) else 'no' }}/g {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}'
             {% endfor %}
             {%- if topology_node.swap|default('0')|int > 0 -%}
                 --run-command 'dd if=/dev/zero of=/swapfile bs=1M count={{ topology_node.swap }}' \
