@@ -126,6 +126,79 @@
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ template_base }}/network/{{ network_environment_file }} \'
 
+- name: Inject nodes_software_config.yaml
+  vars:
+      template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
+      roles_base: "/usr/share/openstack-tripleo-heat-templates/roles"
+      ipv6_postfix: "{{  (install.network.protocol == 'ipv4') | ternary('', '-v6') }}"
+      ipv6_postfix_underscore: "{{  (install.network.protocol == 'ipv4') | ternary('', '_v6') }}"
+      nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('', 'legacy') }}"
+      flavor_name_mapping:
+          Controller: Controller
+          ObjectStorage: SwiftStorage
+      role_names_mapping:
+          ceph: CephStorage
+          swift: ObjectStorage
+          compute_dvr: ComputeDVR
+          aio: Standalone
+          computehci: ComputeHCI
+      tht_mapping:
+          - regexp: ^(Controller).*
+            net_config_file: "controller{{ ipv6_postfix }}.yaml"
+            node_name: controller
+          - regexp: ^(Novacontrol).*
+            net_config_file: "novacontrol.yaml"
+            node_name: novacontrol
+          - regexp: ^(Compute)(?!HCI).*$
+            net_config_file: "compute.yaml"
+            node_name: compute
+          - regexp: ^(Ceph).*
+            net_config_file: "ceph-storage.yaml"
+            node_name: ceph
+          - regexp: ^(ObjectStorage).*
+            net_config_file: "swift-storage.yaml"
+            node_name: swift
+          - regexp: ^(Database).*
+            net_config_file: "database_internal.yaml"
+            node_name: database
+          - regexp: ^(Messaging).*
+            net_config_file: "messaging_internal.yaml"
+            node_name: messaging
+          - regexp: ^(Networker).*
+            net_config_file: "networker.yaml"
+            node_name: networker
+          - regexp: ^(HciCephAll).*
+            net_config_file: "osdcompute.yaml"
+            node_name: hcicephall
+          - regexp: ^(ComputeHCI).*
+            net_config_file: "osdcompute.yaml"
+            node_name: computehci
+  tags:
+      - deploy_preparation
+      - tht_roles
+  when:
+      - install.deploy|default('')
+      - install.role is defined and install.role.files != 'default'
+      - (install.version|default(undercloud_version) | openstack_release > 12) or install.tht.roles | bool
+      - not install.splitstack
+  template:
+      src: templates/nodes_software_config.yaml.j2
+      dest: "{{ template_base }}/nodes_software_config.yaml"
+
+- name: Append nodes_software_config.yaml to overcloud deploy script
+  tags:
+      - deploy_preparation
+      - tht_roles
+  when:
+      - install.deploy|default('')
+      - install.role is defined and install.role.files != 'default'
+      - (install.version|default(undercloud_version) | openstack_release > 12) or install.tht.roles | bool
+      - not install.splitstack
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e {{ template_base }}/nodes_software_config.yaml \'
+      insertafter: ".*network-environment.*"
+
 - name: Append the bgpvpn template line to the base overcloud deploy script
   lineinfile:
       dest: "~/overcloud_deploy.sh"
