@@ -96,12 +96,14 @@
         - name: Download the container contents to the snapshot path folder (aws)
           vars:
             _cli_aws_endpoint_url: "{{ (lookup('env', 'AWS_ENDPOINT_URL') != '') | ternary('--endpoint-url ' ~ lookup('env', 'AWS_ENDPOINT_URL'), '') }}"
-          shell: >-
-            source .{{ _object_storage_client_bin }}clientvenv/bin/activate;
-            aws {{ _cli_aws_endpoint_url }}
-            s3 sync --no-progress --delete
-            {{ provision.virsh.snapshot.container }}/{{ provision.virsh.snapshot.path | basename }}
-            {{ provision.virsh.snapshot.path | basename }}/
+          shell: |
+            source .{{ _object_storage_client_bin }}clientvenv/bin/activate
+            if ! aws {{ _cli_aws_endpoint_url }} s3 ls {{ provision.virsh.snapshot.container }}/{{ provision.virsh.snapshot.path | basename }}; then
+              echo "There are no files available for an image set named: {{ provision.virsh.snapshot.path | basename }}"
+              exit 1
+            else
+              aws {{ _cli_aws_endpoint_url }} s3 sync --no-progress --delete {{ provision.virsh.snapshot.container }}/{{ provision.virsh.snapshot.path | basename }} {{ provision.virsh.snapshot.path | basename }}/
+            fi
           args:
             executable: "/bin/bash"
             chdir: "{{ provision.virsh.snapshot.path | dirname }}"
