@@ -16,6 +16,23 @@
       "message": "I\u0027d prefer to do it the \u0027http_retry_codes\u0027 way like https://github.com/redhat-openstack/infrared/blob/aa10309b94de66de7349c42f6047a965ba4310ac/plugins/tripleo-undercloud/tasks/images/build.yml#L15 ...\nI know the enviroment file is not big but retrying 16 times by 8 seconds on a HTTP 404 error is rather wasting the time",
       "revId": "7a50fdb1246b145608dbd72be9a598679b49444d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ba58de3b_f8462868",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2021-03-18T13:46:02Z",
+      "side": 1,
+      "message": "I agree with Waldek here, it\u0027s better to be clear about why and when to retry - to be explicit about cases of known problems.\nAnd fail on unknown yet issues:\n- not to slow down time to failure [like 4h to fail in tripleo in past]\n- neither mask issues which should be fixed otherwise, by retrying until succeeding (some infra misconfig, or as late example of service decommissioning being advertised via http 410 gone random injection)\n\nAs per other discussion on irc, i\u0027m ok with extending the known failure codes slightly with other known expected-to-be-retried-per-definition codes too.",
+      "revId": "7a50fdb1246b145608dbd72be9a598679b49444d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
