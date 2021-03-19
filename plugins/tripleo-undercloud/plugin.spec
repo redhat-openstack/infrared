@@ -385,6 +385,7 @@ subparsers:
                           specifies whether the rhos/rdo-release tools should
                           be used to install tripleo packages. This flag also disables installation of the extra cdn
                           repositories.
+
                   custom-sources-script-url:
                       help: |
                           Script which is downloaded and executed at repo and registry setup time,
@@ -557,6 +558,11 @@ subparsers:
                   registry-ceph-password:
                       type: Value
                       help: A password/token string to authenticate with a ceph registry
+
+                  registry-update-containers:
+                      type: Bool
+                      help: Ask tripleo to update to containers besed on the undercloud repositories
+                      default: false
 
                   registry-custom-script-url:
                       type: Value
