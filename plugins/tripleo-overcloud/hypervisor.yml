@@ -93,17 +93,18 @@
       - name: get information about vm's from hypervisor
         vars:
             vm_nodes: "{{ oc_nodes | difference(bm_nodes_names) }}"
+            vm_network: "{{ provison_virsh_network_name }}"
         delegate_to: "{{ vms_hypervisor[item] }}"
-        shell: |
+        shell: &get_vm_info |
             NODE_XML=`virsh dumpxml {{ item }}`
             disks_list=$(virsh domblklist {{ item }}  | \
                 awk '{ if(NR>2 && $0 !~ /^ *$/) { d = d "," "\"" $1 "\"" } } END { print "[" gensub("^,","",1,d) "]" }')
             echo "{
                 'name': '{{ item }}',
-                'arch': '`echo "$NODE_XML" | grep arch | cut -d\' -f2`',
-                'memory_kibs': '`echo "$NODE_XML" | grep currentMemory | cut -d\< -f2 | cut -d\> -f2`',
-                'mac': '`for network_name in {{ provison_virsh_network_name }}; do echo "$NODE_XML" | grep \'$network_name\' -B 1 | grep mac | cut -d\' -f2; done|grep -v ^$`',
-                'cpu': '`echo "$NODE_XML" | grep vcpu | cut -d\< -f2 | cut -d\> -f2`',
+                'arch': '`echo "$NODE_XML" | xmllint --xpath "string(/domain/os/type/@arch)" -`',
+                'memory_kibs': '`echo "$NODE_XML" | xmllint --xpath "string(/domain/currentMemory)" -`',
+                'mac': '`for network_name in {{ vm_network }}; do echo "$NODE_XML" | xmllint --xpath "string(/domain/devices/interface[contains(source/@*, '$network_name')]/mac/@address)" -; done|grep -v ^$`',
+                'cpu': '`echo "$NODE_XML" | xmllint --xpath "string(/domain/vcpu)" -`',
                 'disk_bytes': '`virsh domblkinfo {{ item }} vda | grep -e Capacity | cut -d\: -f2 | xargs`',
                 'disks': '${disks_list}',
             }"
@@ -126,20 +127,9 @@
       - name: get information about oc_ironic vm's from hypervisor
         vars:
             vm_nodes: "{{ oc_ironic | difference(bm_nodes_names) }}"
+            vm_network: "{{ oc_ironic_network_name }}"
         delegate_to: "{{ vms_hypervisor[item] }}"
-        shell: |
-            NODE_XML=`virsh dumpxml {{ item }}`
-            disks_list=$(virsh domblklist {{ item }}  | \
-                awk '{ if(NR>2 && $0 !~ /^ *$/) { d = d "," "\"" $1 "\"" } } END { print "[" gensub("^,","",1,d) "]" }')
-            echo "{
-                'name': '{{ item }}',
-                'arch': '`echo "$NODE_XML" | grep arch | cut -d\' -f2`',
-                'memory_kibs': '`echo "$NODE_XML" | grep currentMemory | cut -d\< -f2 | cut -d\> -f2`',
-                'mac': '`for network_name in {{ oc_ironic_network_name | default(provison_virsh_network_name) }}; do echo "$NODE_XML" | grep $network_name -B 1 | grep mac | cut -d\' -f2; done|grep -v ^$`',
-                'cpu': '`echo "$NODE_XML" | grep vcpu | cut -d\< -f2 | cut -d\> -f2`',
-                'disk_bytes': '`virsh domblkinfo {{ item }} vda | grep -e Capacity | cut -d\: -f2 | xargs`',
-                'disks': '${disks_list}',
-            }"
+        shell: *get_vm_info
         with_items: "{{ vm_nodes|sort }}"
         register: nodes_info
         tags:
