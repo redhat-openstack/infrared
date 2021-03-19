@@ -351,3 +351,16 @@
 
   when:
       - (target_install_version|openstack_distribution) == 'OSP'
+
+- name: set insecure registry in containers-prepare-parameter file
+  blockinfile:
+     path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+     block: |2
+         push_destination: {{ docker_registry_undercloud }}
+         modify_role: tripleo-modify-image
+         modify_append_tag: '-updated'
+         modify_vars:
+           tasks_from: yum_update.yml
+           yum_repos_dir_path: /etc/yum.repos.d
+  when:
+    - install.get('registry', {}).get('update', {}).get('containers', false)
