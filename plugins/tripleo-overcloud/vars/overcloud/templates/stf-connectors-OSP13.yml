@@ -1,0 +1,72 @@
+tripleo_heat_templates:
+    - "{{ install.heat.templates.basedir }}/environments/metrics/ceilometer-write-qdr.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/metrics/collectd-write-qdr.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/metrics/qdr-edge-only.yaml"
+parameter_defaults:
+  EventPipelinePublishers: []
+  PipelinePublishers: []
+  ManagePipeline: true
+  ManagePolling: true
+  CeilometerEnablePanko: false
+  CeilometerQdrPublishEvents: true
+  CeilometerQdrPublishMetrics: true
+  CollectdAmqpInstances:
+    cloud2-notify:
+      format: JSON
+      notify: true
+      presettle: false
+    cloud2-telemetry:
+      format: JSON
+      presettle: false
+  CeilometerQdrEventsConfig:
+    driver: amqp
+    topic: cloud2-event
+  CeilometerQdrMetricsConfig:
+    driver: amqp
+    topic: cloud2-metering
+  CollectdAmqpInterval: 5
+  CollectdConnectionType: amqp1
+  CollectdDefaultPlugins:
+    - cpu
+    - df
+    - disk
+    - hugepages
+    - interface
+    - load
+    - memory
+    - processes
+    - unixsock
+    - uptime
+    - connectivity
+    - intel_rdt
+    - ipmi
+    - procevent
+  CollectdDefaultPollingInterval: 5
+  MetricsQdrAddresses:
+    - distribution: multicast
+      prefix: collectd
+    - distribution: multicast
+      prefix: anycast/ceilometer
+  MetricsQdrConnectors:
+    - host: '{{ stf_server_name }}' 
+      port: 443
+      role: edge
+      sslProfile: sslProfile
+      verifyHostname: false
+  MetricsQdrSSLProfiles:
+    - name: sslProfile
+  ExtraConfig:
+    'collectd::plugin::cpu::reportbycpu': true
+    'collectd::plugin::cpu::reportbystate': true
+    'collectd::plugin::cpu::reportnumcpu': false
+    'collectd::plugin::cpu::valuespercentage': true
+    'collectd::plugin::df::ignoreselected': true
+    'collectd::plugin::df::reportbydevice': true
+    'collectd::plugin::df::fstypes':
+      - xfs
+    'collectd::plugin::load::reportrelative': true
+    'collectd::plugin::virt::connection': 'qemu:///system'
+    'collectd::plugin::virt::extra_stats': cpu_util disk disk_err pcpu job_stats_background perf vcpupin
+    'collectd::plugin::virt::hostname_format': hostname
+    'ceilometer::agent::polling::polling_interval': 5
+    'ceilometer::agent::polling::polling_meters': '*'
