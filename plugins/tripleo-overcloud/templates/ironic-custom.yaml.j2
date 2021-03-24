@@ -41,9 +41,8 @@ parameter_defaults:
       - ComputeFilter
       - ComputeCapabilitiesFilter
       - ImagePropertiesFilter
-{% if install.version|default(undercloud_version)|openstack_release < 14 %}
-      - RamFilter
-      - DiskFilter
+      - ServerGroupAffinityFilter
+      - ServerGroupAntiAffinityFilter
   ControllerExtraConfig:
       ironic::drivers::ssh::libvirt_uri: 'qemu:///system'
 {% if install.tls.everywhere|default(False) %}
