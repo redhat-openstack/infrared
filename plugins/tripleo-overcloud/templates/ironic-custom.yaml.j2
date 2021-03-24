@@ -41,14 +41,12 @@ parameter_defaults:
       - ComputeFilter
       - ComputeCapabilitiesFilter
       - ImagePropertiesFilter
-{% if install.version|default(undercloud_version)|openstack_release < 14 %}
-      - RamFilter
-      - DiskFilter
+      - ServerGroupAffinityFilter
+      - ServerGroupAntiAffinityFilter
   ControllerExtraConfig:
       ironic::drivers::ssh::libvirt_uri: 'qemu:///system'
 {% if install.tls.everywhere|default(False) %}
       ironic::drivers::pxe::pxe_append_params: 'nofb nomodeset vga=normal ipa-insecure=1'
-{% endif %}
 {% endif %}
 {% if install.version|default(undercloud_version)|openstack_release and install.ironic_inspector %}
   IronicInspectorIpRange: '{{ ansible_br_ctlplane.ipv4.network.split('.')[0:3] | join('.') }}.210,{{ ansible_br_ctlplane.ipv4.network.split('.')[0:3] | join('.') }}.240'
