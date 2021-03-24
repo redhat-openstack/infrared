@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e5e622c7_b60e78b6",
+        "filename": "plugins/tempest/vars/tests/downstream_network_plugin.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1017622
+      },
+      "writtenOn": "2021-03-24T16:50:34Z",
+      "side": 1,
+      "message": "this is also part of [1], but I think it doesn\u0027t exist. At least, we don\u0027t run these tests.\n@Eran, @Roman, am I missing something?\n\n[1] https://github.com/redhat-openstack/infrared/blob/master/plugins/tempest/vars/tests/neutron.yml",
+      "revId": "a59527150593d81eb7a14b6151039d855b9510de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "fedc1a7e_7837fd8d",
+        "filename": "plugins/tempest/vars/tests/downstream_network_plugin.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1017622
+      },
+      "writtenOn": "2021-03-24T16:50:34Z",
+      "side": 1,
+      "message": "I would add this to the blacklist:\n\n        - \"^neutron_plugin.tests.scenario.test_qos.QosTestSriov.*\"\n\nPlease remove this (*):\ntest_port_security_macspoofing_port -\u003e it\u0027s an upstream test blacklisted in ovn jobs because it\u0027s not supported\nDHCPAgentSchedulers-\u003e it\u0027s an upstream test blacklisted in ovn jobs because it\u0027s not supported\ntest_router_interface_status -\u003e it\u0027s an upstream test blacklisted in ovn jobs because it\u0027s not supported\ntest_qos -\u003e it\u0027s already supported by OVN in OSP16.1, we just removed it from OVN OSP16.1 jobs blacklists\ntest_connectivity_min_max_mtu -\u003e it\u0027s an upstream test blacklisted in ovn jobs because it\u0027s not supported\ntest_trunk_vm_migration -\u003e it\u0027s an upstream test blacklisted in ovn jobs because it\u0027s not supported\nextra_dhcp_opts -\u003e it\u0027s an upstream test blacklisted in ovn jobs because it\u0027s not supported\n\n \n\n(*) summarizing, please leave only this:\n\n  blacklist:\n        - \"^neutron_plugin.tests.scenario.test_qos.QosTestSriov.*\"\n        - \"OvnDvr\"\n        - \"multicast\"",
+      "revId": "a59527150593d81eb7a14b6151039d855b9510de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
