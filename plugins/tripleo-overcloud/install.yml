@@ -4,9 +4,12 @@
   tags:
       - delete
 
-- name: Perform pre install tasks
+- name: Perform pre install tasks - packages installation
   import_playbook: "{{ overcloud_pre | default('pre.yml') }}"
-  when: install.pre|default('')
+  when:
+      - install.undercloud is defined
+      - install.undercloud.packages
+      - install.version|default(undercloud_version)|openstack_release >= 12
   tags:
       - pre
 

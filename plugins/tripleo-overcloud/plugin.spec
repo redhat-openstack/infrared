@@ -33,11 +33,6 @@ subparsers:
                       help: Specifies whether to deploy the overcloud
                       default: False
 
-                  pre:
-                      type: Bool
-                      help: Specifies whether we should run pre install tasks
-                      default: False
-
                   delete:
                       type: Bool
                       help: Deletes existing Overcloud
