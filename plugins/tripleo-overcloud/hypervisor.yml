@@ -127,7 +127,7 @@
       - name: get information about oc_ironic vm's from hypervisor
         vars:
             vm_nodes: "{{ oc_ironic | difference(bm_nodes_names) }}"
-            vm_network: "{{ oc_ironic_network_name }}"
+            vm_network: "{{ oc_ironic_network_name | default(provison_virsh_network_name) }}"
         delegate_to: "{{ vms_hypervisor[item] }}"
         shell: *get_vm_info
         with_items: "{{ vm_nodes|sort }}"
