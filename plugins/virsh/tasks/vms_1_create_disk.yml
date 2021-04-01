@@ -98,6 +98,7 @@
             virt-customize -a {{ disk_pool }}/{{ node_image }} \
             {% for interface in topology_node.interfaces %}
                 {% if loop.index0 == 0 %}
+                    --run-command 'echo -e "DEVICE=\"eth0\"\nBOOTPROTO=\"dhcp\"\nBOOTPROTOv6=\"dhcp\"\nONBOOT=\"yes\"\nTYPE=\"Ethernet\"\nUSERCTL=\"yes\"\nPEERDNS=\"yes\"\nIPV6INIT=\"yes\"\nPERSISTENT_DHCLIENT=\"1\"\n" > {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' \
                     --run-command 'grep ^DEFROUTE {{ net_scripts }}/ifcfg-eth{{ loop.index0 }} || echo "DEFROUTE=yes" >> {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' \
                     --run-command 'grep ^IPV6_DEFROUTE {{ net_scripts }}/ifcfg-eth{{ loop.index0 }} || echo "IPV6_DEFROUTE=yes" >> {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}' \
                     {% if provision.host.network.mtu.size %} --run-command 'echo MTU={{ provision.host.network.mtu.size }} >> {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}'{% endif %}
