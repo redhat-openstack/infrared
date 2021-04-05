@@ -107,6 +107,11 @@
             user: "{{ install.user.name }}"
             key: "{{ uc_publickey }}"
 
+      - name: Ensure system is current
+        package:
+          name: '*'
+          ensure: latest
+
       - name: Install heat-agent package
         package:
             name: 'python-heat-agent'
