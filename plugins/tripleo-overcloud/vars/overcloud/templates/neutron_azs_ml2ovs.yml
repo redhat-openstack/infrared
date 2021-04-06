@@ -1,0 +1,20 @@
+---
+tripleo_heat_templates:
+    []
+
+custom_templates:
+    parameter_defaults:
+        ControllerExtraConfig:
+            neutron::server::network_scheduler_driver: neutron.scheduler.dhcp_agent_scheduler.AZAwareWeightScheduler
+            neutron::server::router_scheduler_driver: neutron.scheduler.l3_agent_scheduler.AZLeastRoutersScheduler
+            neutron::server::dhcp_load_type: networks
+            neutron::server::default_availability_zones: zone1,zone2
+            neutron::agents::dhcp::availability_zone: zone1
+            neutron::agents::l3::availability_zone: zone1
+        NetworkerExtraConfig:
+            neutron::server::network_scheduler_driver: neutron.scheduler.dhcp_agent_scheduler.AZAwareWeightScheduler
+            neutron::server::router_scheduler_driver: neutron.scheduler.l3_agent_scheduler.AZLeastRoutersScheduler
+            neutron::server::dhcp_load_type: networks
+            neutron::server::default_availability_zones: zone1,zone2
+            neutron::agents::dhcp::availability_zone: zone2
+            neutron::agents::l3::availability_zone: zone2
