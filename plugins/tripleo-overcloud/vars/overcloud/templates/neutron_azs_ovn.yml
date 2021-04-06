@@ -1,0 +1,18 @@
+---
+tripleo_heat_templates:
+    []
+
+custom_templates:
+    parameter_defaults:
+        ControllerExtraConfig:
+            OVNCMSOptions: "enable-chassis-as-gw,availability-zones=zone1"
+            neutron::server::network_scheduler_driver: neutron.scheduler.dhcp_agent_scheduler.AZAwareWeightScheduler
+            neutron::server::dhcp_load_type: networks
+            neutron::server::default_availability_zones: ['zone1', 'zone2']
+            neutron::agents::dhcp::availability_zone: zone1
+        NetworkerExtraConfig:
+            OVNCMSOptions: "enable-chassis-as-gw,availability-zones=zone2"
+            neutron::server::network_scheduler_driver: neutron.scheduler.dhcp_agent_scheduler.AZAwareWeightScheduler
+            neutron::server::dhcp_load_type: networks
+            neutron::server::default_availability_zones: ['zone1', 'zone2']
+            neutron::agents::dhcp::availability_zone: zone2
