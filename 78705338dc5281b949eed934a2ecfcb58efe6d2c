@@ -16,6 +16,29 @@
       "message": "I am using smth similar to work around issues in newer RHEL8.4 images (https://review.gerrithub.io/c/redhat-openstack/infrared/+/512954/8/plugins/virsh/tasks/vms_1_create_disk.yml) still relying on eth0 though.\n\nOld and recommended 338 version (https://mailman-int.corp.redhat.com/archives/rhos-qe-dept/2021-March/msg02985.html) of r-g-i should not suffer from this though, I have no clue why this happens only in few isolated jobs and not whole CI, where we reverted to 338 to bypass all issues caused by https://projects.engineering.redhat.com/browse/RHOSINFRA-3942 sources.\n\nAnyway, imho I vote to stick with 338 with proper IR patch/workaround which works for everyone, until RelDel rebase on top newer images.",
       "revId": "78705338dc5281b949eed934a2ecfcb58efe6d2c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "66fb3fa0_93c92550",
+        "filename": "plugins/virsh/tasks/vms_1_create_disk.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1009116
+      },
+      "writtenOn": "2021-04-07T19:35:51Z",
+      "side": 1,
+      "message": "This comment is breaking things.\nThe jinja parser puts \"\\n\" after the comment which basically breaks the command into 2\n\n+ virt-customize -a /var/lib/libvirt/images/undercloud-0-disk1.qcow2\n+ --run-command \u0027echo -e \"DEVICE\u003d\\\"eth0\\\"\\nBOOTPROTO\u003d\\\"dhcp\\\"\\nBOOTPROTOv6\u003d\\\"dhcp\\\"\\nONBOOT\u003d\\\"yes\\\"\\nTYPE\u003d\\\"Ethernet\\\"\\nUSERCTL\u003d\\\"yes\\\"\\nPEERDNS\u003d\\\"yes\\\"\\nIPV6INIT\u003d\\\"yes\\\"\\nPERSISTENT_DHCLIENT\u003d\\\"1\\\"\\n\" \u003e /etc/sysconfig/network-scripts/ifcfg-eth0\u0027 --run-command \u0027grep ^DEFROUTE /etc/sysconfig/network-scripts/ifcfg-eth0 || echo \"DEFROUTE\u003dyes\" \u003e\u003e /etc/sysconfig/network-scripts/ifcfg-eth0\u0027 --run-command \u0027grep ^IPV6_DEFROUTE /etc/sysconfig/network-scripts/ifcfg-eth0 || echo \"IPV6_DEFROUTE\u003dyes\" \u003e\u003e /etc/sysconfig/network-scripts/ifcfg-eth0\u0027 --run-command \u0027sed -i s/DEFROUTE\u003d.*/DEFROUTE\u003dno/g /etc/sysconfig/network-scripts/ifcfg-eth0\u0027 --run-command \u0027cp /etc/sysconfig/network-scripts/ifcfg-eth{0,1} \u0026\u0026 sed -i s/DEVICE\u003d.*/DEVICE\u003deth1/g /etc/sysconfig/network-scripts/ifcfg-eth1\u0027 --run-command \u0027sed -i s/DEFROUTE\u003d.*/DEFROUTE\u003dyes/g /etc/sysconfig/network-scripts/ifcfg-eth1\u0027 --run-command \u0027cp /etc/sysconfig/network-scripts/ifcfg-eth{0,2} \u0026\u0026 sed -i s/DEVICE\u003d.*/DEVICE\u003deth2/g /etc/sysconfig/network-scripts/ifcfg-eth2\u0027 --run-command \u0027sed -i s/DEFROUTE\u003d.*/DEFROUTE\u003dno/g /etc/sysconfig/network-scripts/ifcfg-eth2\u0027 --selinux-relabel\n/bin/sh: line 21: --run-command: command not found\n\nFull log: \nhttps://rhos-ci-staging-jenkins.lab.eng.tlv2.redhat.com/job/DFG-security-python-novajoin-16.2_director-rhel-virthost-3cont_2comp_1ipa-ipv4-geneve-ovb-greenfield/14/console",
+      "range": {
+        "startLine": 101,
+        "startChar": 20,
+        "endLine": 101,
+        "endChar": 60
+      },
+      "revId": "78705338dc5281b949eed934a2ecfcb58efe6d2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
