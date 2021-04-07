@@ -12,6 +12,10 @@ subscriptions:
         - rhceph-4-mon-for-rhel-8-x86_64-rpms
         - rhceph-4-osd-for-rhel-8-x86_64-rpms
         - rhceph-4-tools-for-rhel-8-x86_64-rpms
+    16.2:
+        - openstack-16.2-for-rhel-8-x86_64-rpms
+        - ansible-2.9-for-rhel-8-x86_64-rpms
+        - advanced-virt-for-rhel-8-x86_64-rpms
     16.1:
         - openstack-16.1-for-rhel-8-x86_64-rpms
         - ansible-2.9-for-rhel-8-x86_64-rpms
@@ -50,6 +54,13 @@ subscriptions:
 cdn_skip_openstack_repos: "{{ skip_release|default(false) }}"
 dnf_modules:
     16.1:
+        disabled:
+          - container-tools
+          - virt
+        enabled:
+          - container-tools:2.0
+          - virt:8.2
+    16.2:
         disabled:
           - container-tools
           - virt
