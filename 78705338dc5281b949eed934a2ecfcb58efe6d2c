@@ -18,6 +18,24 @@
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "2d9de842_d1efe87e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1006298
+      },
+      "writtenOn": "2021-04-08T09:48:57Z",
+      "side": 1,
+      "message": "\u003e I am using smth similar to work around issues in newer RHEL8.4 images (https://review.gerrithub.io/c/redhat-openstack/infrared/+/512954/8/plugins/virsh/tasks/vms_1_create_disk.yml) still relying on eth0 though.\n\nYeah so ifcfg-eth0 is fully gone from the images. I guess either we lobby for it to be back or we just stop relying on it.\n\n\u003e Old and recommended 338 version (https://mailman-int.corp.redhat.com/archives/rhos-qe-dept/2021-March/msg02985.html) of r-g-i should not suffer from this though, I have no clue why this happens only in few isolated jobs and not whole CI, where we reverted to 338 to bypass all issues caused by https://projects.engineering.redhat.com/browse/RHOSINFRA-3942 sources.\n\u003e \n\u003e Anyway, imho I vote to stick with 338 with proper IR patch/workaround which works for everyone, until RelDel rebase on top newer images.\n\nThe problem with -338 is that it breaks reboots as the network.service does not come up.",
+      "parentUuid": "16efc03f_c197b8d3",
+      "revId": "78705338dc5281b949eed934a2ecfcb58efe6d2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "66fb3fa0_93c92550",
