@@ -52,6 +52,12 @@
             state: directory
             mode: u=rwX,g=rX,o=rX
 
+      - name: Create a stable symlink to the template base folder
+        file:
+            src: '{{ template_base }}'
+            dest: '__oc_templates_folder'
+            state: link
+
       - name: Ensure deployment folder nested structure exists
         file:
             path: '{{ template_base }}/{{ item.path }}'
