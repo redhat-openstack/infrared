@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6036279c_0cdbe3fb",
+        "filename": "plugins/foreman/library/foreman_provisioner.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1011165
+      },
+      "writtenOn": "2021-04-09T14:53:24Z",
+      "side": 1,
+      "message": "I would remove sleep from the method to keep it clean. I would put sleep after line 415 or would remove it as foreman_status is supposed to get the status from foreman.",
+      "revId": "f52e3e61111c54b36677773dd9866ec22128895b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7f0eb5ea_3869acd7",
+        "filename": "plugins/foreman/library/foreman_provisioner.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1011165
+      },
+      "writtenOn": "2021-04-09T14:53:24Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "f52e3e61111c54b36677773dd9866ec22128895b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "87ef024b_9dd1e587",
+        "filename": "plugins/foreman/library/foreman_provisioner.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1011165
+      },
+      "writtenOn": "2021-04-09T14:53:24Z",
+      "side": 1,
+      "message": "Float operations are costy. Can we change to int?\nAlso we can calculate end_time once before cycle and don\u0027t calculate it every cycle.\n\nend_time \u003d int(time.time()) + wait_for_host\n\nwhile start_time \u003c end_time:\n   ...\nelse:\n   raise Exception(\"wait time exceeded; node status: \" +str(state))",
+      "revId": "f52e3e61111c54b36677773dd9866ec22128895b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
