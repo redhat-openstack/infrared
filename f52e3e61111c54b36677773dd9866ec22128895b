@@ -1,6 +1,23 @@
 {
   "comments": [
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "0afead80_3b9714c1",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1017703
+      },
+      "writtenOn": "2021-04-09T15:21:14Z",
+      "side": 1,
+      "message": "A few comments but the direction is good IMO\n(As this is still WIP)",
+      "revId": "f52e3e61111c54b36677773dd9866ec22128895b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "6036279c_0cdbe3fb",
@@ -14,6 +31,29 @@
       "writtenOn": "2021-04-09T14:53:24Z",
       "side": 1,
       "message": "I would remove sleep from the method to keep it clean. I would put sleep after line 415 or would remove it as foreman_status is supposed to get the status from foreman.",
+      "revId": "f52e3e61111c54b36677773dd9866ec22128895b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "bf068cf8_4a4e1e03",
+        "filename": "plugins/foreman/library/foreman_provisioner.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1017703
+      },
+      "writtenOn": "2021-04-09T15:21:14Z",
+      "side": 1,
+      "message": "I was very curious about your choice here so I went to do some reading. Thank you for putting this in this form!\nhttps://stackoverflow.com/questions/3815359/while-1-vs-whiletrue-why-is-there-a-difference-in-python-2-bytecode\n\nI think this will use python 3 to execute btw",
+      "range": {
+        "startLine": 313,
+        "startChar": 8,
+        "endLine": 313,
+        "endChar": 15
+      },
       "revId": "f52e3e61111c54b36677773dd9866ec22128895b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     },
@@ -37,6 +77,29 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "f80b97d7_8626ab74",
+        "filename": "plugins/foreman/library/foreman_provisioner.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1017703
+      },
+      "writtenOn": "2021-04-09T15:21:14Z",
+      "side": 1,
+      "message": "nit: space at end of line\n\nAlso - the functionality here is already available in the `ipmi` function.\nEven though that doesn\u0027t return the command stdout (can be changed)\n\nI think it is better to modify the ipmi function and here to check the output only. And name it \"ipmi_verify_on\"\nBut when will we encounter a scenario where the node it powered off after provisioning?",
+      "range": {
+        "startLine": 348,
+        "startChar": 30,
+        "endLine": 348,
+        "endChar": 31
+      },
+      "revId": "f52e3e61111c54b36677773dd9866ec22128895b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "87ef024b_9dd1e587",
         "filename": "plugins/foreman/library/foreman_provisioner.py",
         "patchSetId": 1
@@ -48,6 +111,29 @@
       "writtenOn": "2021-04-09T14:53:24Z",
       "side": 1,
       "message": "Float operations are costy. Can we change to int?\nAlso we can calculate end_time once before cycle and don\u0027t calculate it every cycle.\n\nend_time \u003d int(time.time()) + wait_for_host\n\nwhile start_time \u003c end_time:\n   ...\nelse:\n   raise Exception(\"wait time exceeded; node status: \" +str(state))",
+      "revId": "f52e3e61111c54b36677773dd9866ec22128895b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3ebf0d6f_307e71eb",
+        "filename": "plugins/foreman/library/foreman_provisioner.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1017703
+      },
+      "writtenOn": "2021-04-09T15:21:14Z",
+      "side": 1,
+      "message": "nit \ncount \u003d 0",
+      "range": {
+        "startLine": 434,
+        "startChar": 8,
+        "endLine": 434,
+        "endChar": 15
+      },
       "revId": "f52e3e61111c54b36677773dd9866ec22128895b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
