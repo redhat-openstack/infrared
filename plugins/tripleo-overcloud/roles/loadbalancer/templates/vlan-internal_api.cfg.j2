@@ -1,16 +1,18 @@
 DEVICE={{ loadbalancer.network.provision_interface }}.{{ loadbalancer.network.internal_api.vlanid }}
 BOOTPROTO=static
 ONBOOT=yes
-IP{{ (install.network.protocol != 'ipv4') | ternary('V6ADDR','ADDR1') }}={{ loadbalancer.network.internal_api.vip | ipaddr('address') }}
-IP{{ (install.network.protocol != 'ipv4') | ternary('V6ADDR_SECONDARIES','ADDR2') }}={{ loadbalancer.network.redis.vip | ipaddr('address') }}
-IP{{ (install.network.protocol != 'ipv4') | ternary('V6ADDR_SECONDARIES','ADDR3') }}={{ loadbalancer.network.ovndbs.vip | ipaddr('address') }}
 {% if install.network.protocol == 'ipv4' %}
+IPADDR1={{ loadbalancer.network.internal_api.vip | ipaddr('address') }}
+IPADDR2={{ loadbalancer.network.redis.vip | ipaddr('address') }}
+IPADDR3={{ loadbalancer.network.ovndbs.vip | ipaddr('address') }}
 PREFIX1={{ loadbalancer.network.internal_api.vip | ipaddr('prefix') }}
 PREFIX2={{ loadbalancer.network.redis.vip | ipaddr('prefix') }}
 PREFIX3={{ loadbalancer.network.ovndbs.vip | ipaddr('prefix') }}
 {% endif %}
 {% if install.network.protocol != 'ipv4' %}
+IPV6ADDR={{ loadbalancer.network.internal_api.vip | ipaddr('address') }}
 IPV6PREFIX={{ loadbalancer.network.internal_api.vip | ipaddr('prefix') }}
+IPV6ADDR_SECONDARIES="{{ loadbalancer.network.redis.vip | ipaddr('address') }} {{ loadbalancer.network.ovndbs.vip | ipaddr('address') }}"
 IPV6INIT=yes
 IPV6_AUTOCONF=no
 {% endif %}
