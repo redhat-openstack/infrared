@@ -53,6 +53,24 @@
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "d8b41a58_bcd9add2",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 17
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-04-14T09:19:03Z",
+      "side": 1,
+      "message": "So, the problem that the entire code which deals with \"storage\" assumes there is a \"STORAGE\" entity which doesn\u0027t exist. At the beginning it was probably meant to be \"block storage\", but then it quickly leaked into other services.\nThe long term solution is to make sure each service really use its own parameter. It will be a long and painful process. A change like https://review.gerrithub.io/c/rhos-infra/cloud-config/+/509927 belongs to the same process.\nOf course each service may still rely on those common \"storage\" parameters during the transitional period.\n\nIn this case, I\u0027d say: please create a separate parameter for manila backend which can handle single, multiple, whetever types of backend and make sure manila uses that one.",
+      "parentUuid": "1f9f6d8d_58cf5b91",
+      "revId": "4909422a5a0917d9ad6cf077f14c675b68f05cad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "608c6e21_6dc7e2c9",
