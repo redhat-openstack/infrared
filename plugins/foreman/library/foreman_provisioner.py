@@ -87,7 +87,7 @@ options:
      description:
          - Number of seconds we should wait for the host given the 'rebuild'
          state was set.
-     default: 10
+     default: 2400
      required: false
    operatingsystem_id:
      description:
@@ -130,6 +130,9 @@ RESOURCES = {
         },
         'interfaces': {
             'url': '/api/v2/hosts/{id}/interfaces',
+        },
+        'build': {
+            'url': '/api/v2/hosts/{id}/status/build',
         }
     }
 }
@@ -301,7 +304,7 @@ class ForemanManager(object):
         response = self.session.put(request_url, data=command, verify=False)
         # TODO(tkammer): add verification that the BMC command was issued
 
-    def ipmi(self, host_id, command, username, password):
+    def ipmi(self, host_id, username, password, action):
         """
         execute a command through the ipmitool
         :param host_id: the ipmi id of the host
@@ -310,15 +313,44 @@ class ForemanManager(object):
         :param password: host IPMI password
         commands: 'status', 'on', 'off', 'cycle', 'reset', 'soft' # TBD
         """
-        command = "ipmitool -I lanplus -H {host_id} -U {username} -P " \
+        ipmi_op = "ipmitool -I lanplus -H {host_id} -U {username} -P " \
                   "{password} chassis power {cmd}".format(
                       host_id=host_id, username=username, password=password,
-                      cmd=command)
-        return_code = subprocess.call(command, shell=True)
-
+                      cmd=action)
+        output = subprocess.run(ipmi_op, shell=True, capture_output=True)
+        state = output.stdout.decode("utf-8")
+        return_code = output.returncode
         if return_code:
-            raise Exception("Call to {0}, returned with {1}".format(command,
+            raise Exception("Call to {0}, returned with {1}".format(ipmi_op,
                             return_code))
+        return state
+
+    def ipmi_status(self, host_ipmi, ipmi_username, ipmi_password):
+        """
+        Get status of the node
+        """
+        ipmi_state = self.ipmi(host_ipmi, ipmi_username, ipmi_password, "status")
+        if "Chassis Power is on" in str(ipmi_state):
+            return
+        else:
+            self.ipmi(host_ipmi, ipmi_username, ipmi_password, "on")
+
+    def build_status(self, host_id, wait_for_host):
+        """
+        Get status of the node
+        """
+        request_url = self.compile_url(
+            self.url, self.resource['build']['url'].format(id=host_id))
+        timeout = int(time.time()) + wait_for_host
+        while int(time.time()) < timeout:
+            status = self.session.get(request_url, verify=False)
+            state = status.json().get('status_label')
+            print(str(state))
+            if state == "Installed":
+                break
+            time.sleep(60)
+        else:
+            raise Exception("wait time exceeded; node status: " +str(state))
 
     def _validate_bmc(self, host_id):
         """
@@ -361,7 +393,6 @@ class ForemanManager(object):
                  rebuild
         """
         wait_for_host = int(wait_for_host)
-
         building_host = self.get_host(host_id)
         self.set_host_os(host_id, operatingsystem_id, medium_id, ptable_id)
         self.set_build_on_host(host_id, True)
@@ -380,23 +411,26 @@ class ForemanManager(object):
                 # Host isn't specified nor found in foreman
                 raise Exception("Unknown IPMI address for foreman host: {0}. "
                                 "".format(host_id))
-            self.ipmi(host_ipmi, mgmt_action, ipmi_username, ipmi_password)
+            self.ipmi(host_ipmi, ipmi_username, ipmi_password, mgmt_action)
+            self.ipmi_status(host_ipmi, ipmi_username, ipmi_password)
         else:
             raise Exception("{0} is not a supported "
                             "management strategy".format(mgmt_strategy))
-        if wait_for_host:
-            while self.get_host(host_id).get('build'):
-                time.sleep(wait_for_host)
 
-            command = "ping -q -c 30 -w {0} {1}".format(
+        self.build_status(host_id, wait_for_host)
+        ping_cmd = "ping -q -c 30 -w {0} {1}".format(
                 ping_deadline, building_host.get('name'))
-            return_code = subprocess.call(command, shell=True)
-
-            if return_code:
-                raise Exception(
-                    "Could not reach {0}, rc={1}, "
-                    "cmd={2}".format(host_id, return_code, command))
-
+        count = 0
+        while count < 10:
+            return_code = subprocess.call(ping_cmd, shell=True)
+            if not return_code:
+                break
+            time.sleep(60)
+            count += 1
+        else:
+            raise Exception(
+                "Could not reach {0}, rc={1}, "
+                "cmd={2}".format(host_id, return_code, ping_cmd))
 
 def main():
     module = AnsibleModule(
@@ -410,7 +444,7 @@ def main():
                                choices=MGMT_SUPPORTED_STRATEGIES),
             mgmt_action=dict(default='cycle', choices=['on', 'off', 'cycle',
                                                        'reset', 'soft']),
-            wait_for_host=dict(default=10),
+            wait_for_host=dict(default=2400),
             ping_deadline=dict(default=600),
             ipmi_address=dict(default=None),
             ipmi_username=dict(default='ADMIN'),
@@ -458,3 +492,4 @@ def main():
 
 
 main()
+
