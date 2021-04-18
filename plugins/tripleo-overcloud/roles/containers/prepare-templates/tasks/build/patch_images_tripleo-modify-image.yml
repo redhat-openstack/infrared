@@ -65,4 +65,7 @@
       {% endif %}
       openstack tripleo container image prepare \
         -e {{ containers_home_dir }}/containers-prepare-parameter-copy.yaml \
+        {% if install.get('custom', {}).get('data', {}).get('roles', {}).file is defined | default('false') %}
+        -r {{ install.custom.data.roles.file }} \
+        {% endif %}
         --output-env-file {{ template_base }}/docker-images.yaml
