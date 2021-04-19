@@ -103,6 +103,16 @@
             - ansible_facts['distribution'] == 'RedHat'
             - ansible_facts['distribution_version'] != '8.1'
 
+        - name: Import the nvram images
+          copy:
+            src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
+            dest: "{{ _virt_pools.pools.images.path }}/../qemu/nvram/"
+            checksum: "{{ item.checksum }}"
+            remote_src: yes
+          loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*fd$') | list }}"
+          loop_control:
+            label: "{{ item.path | basename }}"
+
         # On RHEL 8.1 a bug in qemu-img means we need to convert to raw
         # ref: https://bugs.launchpad.net/tripleo/+bug/1885637
         - name: Convert the disk images to raw format

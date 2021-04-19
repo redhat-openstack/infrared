@@ -81,6 +81,16 @@
             executable: /bin/bash
           loop: "{{ _vm_list }}"
 
+        - name: Save nvram image
+          shell: |
+            nvram_image=$(xmllint --xpath 'string(/domain/os/nvram)' /etc/libvirt/qemu/{{ item }}.xml)
+            if [[ "${nvram_image}" != "" ]]; then
+              rsync ${nvram_image} {{ provision.virsh.snapshot.path }}/
+            fi
+          args:
+            executable: /bin/bash
+          loop: "{{ _vm_list }}"
+
         - name: Save VM definitions
           copy:
             src: "/etc/libvirt/qemu/{{ item }}.xml"
@@ -95,6 +105,7 @@
               - "*.qcow2"
               - "*.xml"
               - "*.tgz"
+              - "*.fd"
             get_checksum: yes
           register: _virsh_snapshot_manifest_files
 
