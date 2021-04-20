@@ -10,6 +10,11 @@
     ir_home: "{{ lookup('env', 'IR_HOME') | default(lookup('env', 'HOME') ~ '/.infrared', true) }}"
     inventory_cmd: "{{ (lookup('env', 'VIRTUAL_ENV') != '') | ternary(lookup('env', 'VIRTUAL_ENV') ~ '/bin/ansible-inventory', 'ansible-inventory') }}"
   tasks:
+    - name: Assert that we are using a compatible hypervisor
+      that:
+        - ansible_facts['distribution'] == 'RedHat'
+        - ansible_facts['distribution_version'] is version('8.2', '>=')
+
     - name: Install required packages
       package:
         name: libguestfs-tools-c
@@ -99,9 +104,6 @@
           loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
           loop_control:
             label: "{{ item.path | basename }}"
-          when:
-            - ansible_facts['distribution'] == 'RedHat'
-            - ansible_facts['distribution_version'] != '8.1'
 
         - name: Import the nvram images
           copy:
@@ -112,21 +114,6 @@
           loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*fd$') | list }}"
           loop_control:
             label: "{{ item.path | basename }}"
-
-        # On RHEL 8.1 a bug in qemu-img means we need to convert to raw
-        # ref: https://bugs.launchpad.net/tripleo/+bug/1885637
-        - name: Convert the disk images to raw format
-          shell: >-
-            qemu-img
-            convert
-            {{ provision.virsh.snapshot.path }}/{{ item.path | basename }}
-            {{ _virt_pools.pools.images.path }}/{{ (item.path | basename) | regex_replace('qcow2$', 'raw') }}
-          loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
-          loop_control:
-            label: "{{ item.path | basename }}"
-          when:
-            - ansible_facts['distribution'] == 'RedHat'
-            - ansible_facts['distribution_version'] == '8.1'
 
         - name: Import the VM configuration
           copy:
@@ -159,63 +146,6 @@
             state: absent
           when:
             - provision.virsh.snapshot.cleanup | bool
-
-    - name: Change machine type to work on the current hypervisor
-      xml:
-        path: "/etc/libvirt/qemu/{{ item.path | basename }}"
-        xpath: "/domain/os/type"
-        attribute: "machine"
-        value: "pc"
-      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
-      loop_control:
-        label: "{{ item.path | basename }}"
-
-    - name: Change USB model to work on older hypervisors
-      xml:
-        path: "/etc/libvirt/qemu/{{ item.path | basename }}"
-        xpath: "/domain/devices/controller[@type='usb']"
-        attribute: "model"
-        value: "nec-xhci"
-      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
-      loop_control:
-        label: "{{ item.path | basename }}"
-      when:
-        - ansible_facts['distribution'] == 'RedHat'
-        - ansible_facts['distribution_major_version'] == '7'
-
-    # On RHEL 8.1 a bug in qemu-img means we need to convert to raw
-    # ref: https://bugs.launchpad.net/tripleo/+bug/1885637
-    - name: Modify the domain xml files for RHEL 8.1 bug in qemu-img
-      when:
-        - ansible_facts['distribution'] == 'RedHat'
-        - ansible_facts['distribution_version'] == '8.1'
-      block:
-        - name: Change disk file driver type to raw
-          xml:
-            path: "/etc/libvirt/qemu/{{ item.path | basename }}"
-            xpath: "/domain/devices/disk[@type='file']/driver[@type='qcow2']"
-            attribute: "type"
-            value: "raw"
-          loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
-          loop_control:
-            label: "{{ item.path | basename }}"
-
-        - name: Change disk file name to raw extension
-          xml:
-            path: "/etc/libvirt/qemu/{{ item.server }}.xml"
-            xpath: "/domain/devices/disk[@type='file']/source[@file='{{ _virt_pools.pools.images.path }}/{{ item.image }}']"
-            attribute: "file"
-            value: "{{ _virt_pools.pools.images.path }}/{{ item.image | regex_replace('qcow2$', 'raw') }}"
-          loop: "{{ server_image_map }}"
-          vars:
-            server_image_map: >-
-              {%- set _server_image_map = [] %}
-              {%- for server in _virsh_snapshot_manifest_content.servers | map(attribute='name') | list %}
-              {%-   for image in _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*' ~ server ~ '.*qcow2$') | map(attribute='path') | map('basename') | list %}
-              {%-     set _ = _server_image_map.append({'server': server, 'image': image}) %}
-              {%-   endfor %}
-              {%- endfor %}
-              {{- _server_image_map }}
 
     # We use command here, because the virt module needs the raw XML
     # and a lookup will not work remotely. We could slurp all the files,
