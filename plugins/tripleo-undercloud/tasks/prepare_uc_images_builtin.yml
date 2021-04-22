@@ -282,10 +282,10 @@
           insertafter: "parameter_defaults:"
           line: |2
               DockerInsecureRegistryAddress:
-            {% for line in install.registry.insecure.containers.parameter.split(",") %}
+            {% for line in install.registry-insecure-containers-parameter.split(",") %}
                 - {{ line | trim }}
             {% endfor %}
-      when: install.registry.insecure.containers.parameter is defined
+      when: install.registry-insecure-containers-parameter is defined
 
     - block:
         - name: set satellite namespace
