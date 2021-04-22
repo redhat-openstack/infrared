@@ -125,6 +125,92 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "d0a75279_91681609",
+        "filename": "plugins/tripleo-overcloud/tasks/storage/ceph.yml",
+        "patchSetId": 18
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-04-22T09:18:20Z",
+      "side": 1,
+      "message": "The logic is wrong even now:\n- it assumes you have just one backend;\n- it ties that backend to the installation of (for example) ceph\n\nFor example, the condition that drivers whether this file should be executed or not shouldn\u0027t be storage.method or storage.backend or storage.external. In fact storage.external in fact has two different meanings, it depends on the value of the protocol... But you can have several storage systems around, some of them internal, other external.\nSo this file should be executed if someone requested a ceph configuration, external or internal. Then some services may make use of it, but the *deployment* of ceph itself  shouldn\u0027t be tied to storage.backend or manila.backend.",
+      "parentUuid": "23801096_554f3869",
+      "revId": "e1a70c20942a6b6573c169f32ccb82602b041528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "db963376_89d64df1",
+        "filename": "plugins/tripleo-overcloud/tasks/storage/ceph.yml",
+        "patchSetId": 18
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-04-22T09:18:20Z",
+      "side": 1,
+      "message": "I\u0027m not sure why this change with the fixed name. This is a separate change anyway.",
+      "revId": "e1a70c20942a6b6573c169f32ccb82602b041528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "36a96914_856e048d",
+        "filename": "plugins/tripleo-overcloud/tasks/storage/ceph.yml",
+        "patchSetId": 18
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-04-22T09:18:20Z",
+      "side": 1,
+      "message": "See above",
+      "revId": "e1a70c20942a6b6573c169f32ccb82602b041528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "69b30811_d2e50983",
+        "filename": "plugins/tripleo-overcloud/tasks/storage/discover_backend.yml",
+        "patchSetId": 18
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-04-22T09:18:20Z",
+      "side": 1,
+      "message": "This is an example of incorrect logic: it means lvm can\u0027t be configured if manila is set. But this affects also cinder.",
+      "revId": "e1a70c20942a6b6573c169f32ccb82602b041528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "53d25479_ef869395",
+        "filename": "plugins/tripleo-overcloud/tasks/storage/discover_backend.yml",
+        "patchSetId": 18
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-04-22T09:18:20Z",
+      "side": 1,
+      "message": "You don\u0027t need to have it here, just create a separate file for this code. You just need to decide whether you want to fix the logic of the installation of ceph and netapp-nfs before or after this change.",
+      "revId": "e1a70c20942a6b6573c169f32ccb82602b041528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "37b86e55_901e15a4",
         "filename": "plugins/tripleo-overcloud/tasks/storage/netapp.yml",
         "patchSetId": 18
@@ -190,6 +276,41 @@
       "side": 1,
       "message": "Right, but if you remember, I tested your patch(If20dea79e12137224e256780f529c94d5b834a50)\non OSP13 and this syntax was not supported, it was ansible 2.7.",
       "parentUuid": "632368ba_ecd354c3",
+      "revId": "e1a70c20942a6b6573c169f32ccb82602b041528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "19ac0bc1_7f15d036",
+        "filename": "plugins/tripleo-overcloud/tasks/storage/netapp.yml",
+        "patchSetId": 18
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-04-22T09:18:20Z",
+      "side": 1,
+      "message": "how and where did you run infrared from?",
+      "parentUuid": "73871eff_bc38cbac",
+      "revId": "e1a70c20942a6b6573c169f32ccb82602b041528",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3f40fb94_137c2a47",
+        "filename": "plugins/tripleo-overcloud/tasks/storage/netapp.yml",
+        "patchSetId": 18
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-04-22T09:18:20Z",
+      "side": 1,
+      "message": "that\u0027s the point: storage_backend shouldn\u0027t affect the installation of manila.\n\nThis condition shouldn\u0027t use storage-backend, and in fact this entire file is just about deploying an external configuration file, it has nothing to do with netapp.",
       "revId": "e1a70c20942a6b6573c169f32ccb82602b041528",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
