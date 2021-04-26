@@ -266,11 +266,12 @@ class ForemanManager(object):
 
         res_body = self.update_host(host_id, json.dumps({'host': os_data}))
 
-        # Handle non 200 esponses
+        # Handle non-200 responses
         if res_body.get('status_code') != 200:
             raise Exception(
-                "Failed to set host parameters, api returned an error: "
+                "Failed to set parameters for host_id {}, Foreman API returned an error: "
                 "'{}'\nWith response code: {}".format(
+                    host_id,
                     res_body.get('response_text'),
                     res_body.get('status_code')))
 
