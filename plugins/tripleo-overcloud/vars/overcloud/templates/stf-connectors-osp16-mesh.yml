@@ -1,7 +1,8 @@
 tripleo_heat_templates:
-    - "{{ install.heat.templates.basedir }}/environments/enable-stf.yaml"
     - "{{ install.heat.templates.basedir }}/environments/metrics/ceilometer-write-qdr.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/metrics/collectd-write-qdr.yaml"
     - "{{ install.heat.templates.basedir }}/environments/enable-legacy-telemetry.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/metrics/qdr-form-controller-mesh.yaml"
 custom_templates:
   parameter_defaults:
     CeilometerEnableGnocchi: true
@@ -40,7 +41,6 @@ custom_templates:
     CollectdAmqpInterval: 5
     CollectdConnectionType: amqp1
     CollectdDefaultPollingInterval: 5
-    EnableSTF: true
     MetricsQdrAddresses:
       - distribution: multicast
         prefix: collectd
@@ -65,8 +65,15 @@ custom_templates:
         - ceph-osd.2
         - ceph-osd.3
         - ceph-osd.4
+        - ceph-osd.5
+      'collectd::plugin::write_http::nodes':
+           collectd:
+               url: '{{ write_http_server }}'
+               metrics: true
+               header: foo
     CollectdExtraPlugins:
       - vmem
+      - write_http
     MetricsQdrConnectors:
       - host: '{{ stf_server_name }}'
         port: 443
