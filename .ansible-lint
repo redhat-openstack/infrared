@@ -1,11 +1,19 @@
 parseable: true
 skip_list:
-  - '204'
-  - '301'
-  - '302'
-  - '303'
-  - '306'
-  - '403'
-  - '502'
-  - '602'
-  - '701'
+  - '204'  # Lines should be no longer than 160 chars
+warn_list:  # or 'skip_list' to silence them completely
+  - '106'  # Role name {} does not match ``^[a-z][a-z0-9_]+$`` patter
+  - '206'  # Variables should have spaces before and after: {{ var_name }}
+  - '207'  # Nested jinja pattern
+  - '208'  # File permissions not mentioned
+  - '301'  # Commands should not change things if nothing needs doing
+  - '302'  # rm used in place of argument state=absent to file module
+  - '303'  # sed used in place of template, replace or lineinfile module
+  - '305'  # Use shell only when shell functionality is required
+  - '306'  # Shells that use pipes should set the pipefail option
+  - '403'  # Package installs should not use latest
+  - '502'  # All tasks should be named
+  - '601'  # Don't compare to literal True/False
+  - '602'  # Don't compare to empty string
+  - '701'  # meta/main.yml should contain relevant info
+  - experimental  # all rules tagged as experimental
