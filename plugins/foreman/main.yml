@@ -3,12 +3,30 @@
   hosts: localhost
   gather_facts: no
   tasks:
+    - name: Get the host ID from Foreman
+      uri:
+        url: "{{ provision.url }}/api/v2/hosts/{{ provision.host.address }}"
+        url_username: "{{ provision.user }}"
+        url_password: "{{ provision.password }}"
+        force_basic_auth: yes
+        headers:
+          Content-Type: "application/json"
+      register: host_facts
+
+    - name: Set a variable (host_id) with the host ID
+      set_fact:
+        host_id: "{{ host_facts | json_query('json.id') }}"
+
+    - name: Print the host ID
+      debug:
+        msg: "The host ID of '{{ provision.host.address }}' is '{{ host_id }}'"
+
     - name: Rebuild nodes
       foreman_provisioner:
            auth_url: "{{ provision.url }}"
            username: "{{ provision.user }}"
            password: "{{ provision.password }}"
-           host_id: "{{ provision.host.address }}"
+           host_id: "{{ host_id }}"
            ping_deadline: "{{ (provision.ping | default({})).deadline | default(omit) }}"
            wait_for_host: "{{ provision.wait | int }}"
            mgmt_strategy: "{{ provision.strategy }}"
