@@ -31,6 +31,10 @@
   become: true
   become_user: root
 
+- name: temporararily set rhos-release url to one without md5 digest
+  set_fact:
+      rhos_release_rpm: "http://download-node-02.eng.bos.redhat.com/rcm-guest/puddles/OpenStack/rhos-release/rhos-release-latest.noarch.rpm"
+
 - name: gather repo file names to remove
   find:
       path: "{{ rr_target_directory }}"
