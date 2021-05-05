@@ -30,6 +30,25 @@
           - install.version|openstack_distribution == 'OSP'
           - install.version|openstack_release <= 10
 
+      - name: make sure certmonger works under fips
+        become: true
+        become_user: root
+        block:
+          - name: replace certmonger for fips until this build is available
+            yum:
+              name: http://download.eng.bos.redhat.com/brewroot/vol/rhel-8/packages/certmonger/0.79.13/3.el8/x86_64/certmonger-0.79.13-3.el8.x86_64.rpm
+              state: present
+              disable_gpg_check: yes
+          - name: remove the old certmonger creds file
+            file:
+              path: /var/lib/certmonger/local/creds
+              state: absent
+          - name: restart certmonger
+            systemd:
+              name: certmonger
+              state: restarted
+        when: install.enable.fips | default(False)
+
       - name: install the undercloud
         command: bash ~/undercloud_deploy.sh
         register: undercloud_deployment
