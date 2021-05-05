@@ -117,8 +117,9 @@ will be later created.
 
   .. note:: This task executes `rpm -e --nodeps` command which will cause RPM DB to be out of sync
 
-* ``--images-cleanup`` tells `infrared` do remove the images files original after they are uploaded
+* ``--images-cleanup`` tells `infrared` to remove the original images files after they are uploaded
   to the undercloud's Glance service.
+* ``--images-enable-fips`` tells `infrared` to enable FIPS in the overcloud image.  This defaults to False.
 
 To configure overcloud images::
 
