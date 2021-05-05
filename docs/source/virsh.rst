@@ -182,3 +182,4 @@ Advanced Settings
 -----------------
 
 * ``--serial-files``: When true, redirect the serial output to files that can be found under '/var/log/sfiles' on the Hypervisor.
+* ``--enable-fips`` tells `infrared` to enable FIPS on the kernel command line.  This defaults to False.
