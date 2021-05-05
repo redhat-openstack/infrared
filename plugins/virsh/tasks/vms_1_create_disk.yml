@@ -96,6 +96,7 @@
                 --operations machine-id
             # inject DEFROUTE for IPv6 and IPv6 to file and set it on for external network only
             NIC_DEFAULT="DEVICE=\"eth0\"\nBOOTPROTO=\"dhcp\"\nBOOTPROTOv6=\"dhcp\"\nONBOOT=\"yes\"\nTYPE=\"Ethernet\"\nUSERCTL=\"yes\"\nPEERDNS=\"yes\"\nIPV6INIT=\"yes\"\nPERSISTENT_DHCLIENT=\"1\"\n"
+
             virt-customize -a {{ disk_pool }}/{{ node_image }} \
             {% for interface in topology_node.interfaces %}
                 {% if loop.index0 == 0 %}
@@ -112,6 +113,12 @@
                 --run-command 'mkswap /swapfile' \
                 --run-command 'echo /swapfile none swap defaults 0 0 >> /etc/fstab' \
             {% endif -%}{# endif swap #}
+            {% if provision.enable.fips %}
+                --copy-in '/var/lib/rhos-release/repos/rhos-release-rhel-8.4.repo:/etc/yum.repos.d' \
+                --install grub2-tools \
+                --run-command 'echo GRUB_CMDLINE_LINUX="fips=1" >> /etc/default/grub' \ 
+                --run-command 'grub2-mkconfig -o /boot/grub2/grub.cfg' \
+            {% endif %} {# endif fips #}
                 --selinux-relabel
             {% endif %}{# endif disk1 #}
 
