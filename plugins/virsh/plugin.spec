@@ -235,6 +235,13 @@ subparsers:
                       Password to protect VNC console
                     required_when: >-
                       vnc-external == yes
+            - title: Enable FIPS
+              options:
+                  enable-fips:
+                    type: Bool
+                    help: |
+                      Enable fips on the overcloud images
+                    default: false
             - title: ansible facts
               options:
                   collect-ansible-facts:
