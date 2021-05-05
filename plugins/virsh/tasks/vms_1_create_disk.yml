@@ -96,6 +96,11 @@
                 --operations machine-id
             # inject DEFROUTE for IPv6 and IPv6 to file and set it on for external network only
             NIC_DEFAULT="DEVICE=\"eth0\"\nBOOTPROTO=\"dhcp\"\nBOOTPROTOv6=\"dhcp\"\nONBOOT=\"yes\"\nTYPE=\"Ethernet\"\nUSERCTL=\"yes\"\nPEERDNS=\"yes\"\nIPV6INIT=\"yes\"\nPERSISTENT_DHCLIENT=\"1\"\n"
+            {% if provision.enable.fips %}
+                wget http://download-node-02.eng.bos.redhat.com/rcm-guest/puddles/OpenStack/rhos-release/rhos-release-latest.noarch.rpm -O /tmp/rhos-release-latest.noarch.rpm
+                rpm -ivh /tmp/rhos-release-latest.noarch.rpm
+            {% endif %} {# endif fips #}
+
             virt-customize -a {{ disk_pool }}/{{ node_image }} \
             {% for interface in topology_node.interfaces %}
                 {% if loop.index0 == 0 %}
@@ -112,6 +117,12 @@
                 --run-command 'mkswap /swapfile' \
                 --run-command 'echo /swapfile none swap defaults 0 0 >> /etc/fstab' \
             {% endif -%}{# endif swap #}
+            {% if provision.enable.fips %}
+                --copy-in /var/lib/rhos-release/repos/rhos-release-rhel-8.4.repo:/etc/yum.repos.d
+                --install grub2-tools
+                --edit '/etc/default/grub: s/^GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="fips=1 /'
+                --run-command 'grub2-mkconfig -o /boot/grub2/grub.cfg'
+            {% endif %} {# endif fips #}
                 --selinux-relabel
             {% endif %}{# endif disk1 #}
 
