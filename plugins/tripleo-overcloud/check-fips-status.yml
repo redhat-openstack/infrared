@@ -1,0 +1,14 @@
+- name: Verify if fips is enabled
+  gather_facts: true
+  any_errors_fatal: false
+  hosts: overcloud_nodes
+  become: true
+  tasks:
+    - name: check fips mode
+      command: fips-mode-setup --check
+      register: fips_check
+
+    - debug: var=fips_check
+
+    - name: check if ansible says fips is enabled
+      debug: var=ansible_fips
