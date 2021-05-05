@@ -221,6 +221,14 @@ subparsers:
                       options used for spawning vms (memballoon, rng and such).
                     default: ''
 
+            - title: Enable FIPS
+              options:
+                  enable-fips:
+                    type: Bool
+                    help: |
+                      Enable fips on the overcloud images
+                    default: false
+
             - title: ansible facts
               options:
                   collect-ansible-facts:
