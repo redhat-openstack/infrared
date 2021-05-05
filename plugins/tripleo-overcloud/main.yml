@@ -19,6 +19,12 @@
       - not install.upgrade|default('')
       - not install.ocupdate|default(False)
 
+- name: Check fips status
+  import_playbook: "{{ check_fips_status | default('check-fips-status.yml') }}"
+  when:
+      - install.deploy|default('')
+      - install.version|default(undercloud_version)|openstack_release >= 16
+
 - name: Verify modified containers images are used
   import_playbook: "{{ verify_containers | default('verify-containers.yml') }}"
   when:
