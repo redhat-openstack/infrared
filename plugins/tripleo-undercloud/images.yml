@@ -134,6 +134,16 @@
           - install['overcloud']['update']['kernel']
           - install.images.packages
 
+      - name: Enable FIPS in overcloud images
+        environment:
+          LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+        command: >
+          virt-customize -a {{ overcloud_image_file }}
+          --edit '/etc/default/grub: s/^GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="fips=1 /'
+          --run-command 'grub2-mkconfig -o /boot/grub2/grub.cfg'
+        when:
+        - install.images.enable.fips | default(False)
+
        #Need to fix  BZ1462703 to apply --os-cloud
       - name: upload the overcloud images to glance
         shell: |

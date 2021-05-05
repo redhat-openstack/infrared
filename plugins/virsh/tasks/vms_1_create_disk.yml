@@ -112,6 +112,10 @@
                 --run-command 'mkswap /swapfile' \
                 --run-command 'echo /swapfile none swap defaults 0 0 >> /etc/fstab' \
             {% endif -%}{# endif swap #}
+            {% if provision.enable.fips %}
+                --edit '/etc/default/grub: s/^GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="fips=1 /'
+                --run-command 'grub2-mkconfig -o /boot/grub2/grub.cfg'
+            {% endif %} {# endif fips #}
                 --selinux-relabel
             {% endif %}{# endif disk1 #}
 
