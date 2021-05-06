@@ -472,6 +472,12 @@ subparsers:
                               --fetchfiles-overcloud https://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/environments/network-isolation-v6.j2.yaml?h=refs/changes/15/585015/2,/usr/share/openstack-tripleo-heat-templates/environments/network-isolation-v6.j2.yaml
                               --fetchfiles-overcloud https://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/puppet/services/opendaylight-api.yaml?h=refs/changes/15/585015/2,/usr/share/openstack-tripleo-heat-templates/puppet/services/opendaylight-api.yaml
 
+                  overcloud-post_boot_actions:
+                      type: Bool
+                      help: |
+                          Trigger the actions required after a full environment reboot.
+                      default: no
+
             - title: Network Configuration
               options:
                   network-backend:
