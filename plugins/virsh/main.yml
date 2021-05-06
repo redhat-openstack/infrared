@@ -52,3 +52,10 @@
   import_playbook: snapshot_restore.yml
   vars:
     _run_condition: "{{ provision.virsh.snapshot.restore | bool }}"
+
+- name: Quiesce the virtual machines
+  import_playbook: snapshot_quiesce.yml
+  tags:
+    - quiesce
+  when:
+    - provision.virsh.snapshot.quiesce | bool
