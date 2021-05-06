@@ -40,6 +40,13 @@
   when:
       - install.postreboot|default(False)
 
+- name: Overcloud Post-boot Actions
+  import_playbook: "{{ overcloud_post_boot_actions | default('post_boot_actions.yml') }}"
+  when:
+      - install.overcloud.post_boot_actions|default(False)
+  tags:
+      - healthcheck
+
 - name: Collect Ansible facts
   import_playbook: 'collect-ansible-facts.yml'
   when:
