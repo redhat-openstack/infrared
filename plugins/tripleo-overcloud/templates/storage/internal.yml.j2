@@ -19,7 +19,7 @@ parameter_defaults:
 {% endif %}
 {% if install.containers|default(false) and install.version|default(undercloud_version)|openstack_release > 11 %}
 {# containers uses ceph-ansible #}
-    CephPoolDefaultPgNum: 32
+    CephPoolDefaultPgNum: {{ install.ceph.pgnum }}
     CephAnsibleDisksConfig:
         devices:
 {% if install.splitstack|default(False) %}
