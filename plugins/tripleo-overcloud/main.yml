@@ -40,6 +40,13 @@
   when:
       - install.postreboot|default(False)
 
+- name: Overcloud Health Check
+  import_playbook: "{{ overcloud_healthcheck | default('healthcheck.yml') }}"
+  when:
+      - install.overcloud.healthcheck|default(False)
+  tags:
+      - healthcheck
+
 - name: Collect Ansible facts
   import_playbook: 'collect-ansible-facts.yml'
   when:
