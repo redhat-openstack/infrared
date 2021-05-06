@@ -19,7 +19,7 @@ parameter_defaults:
 {% endif %}
 {% if install.containers|default(false) and install.version|default(undercloud_version)|openstack_release > 11 %}
 {# containers uses ceph-ansible #}
-    CephPoolDefaultPgNum: 32
+    CephPoolDefaultPgNum: {{ install.ceph.pgnum }}
     CephAnsibleDisksConfig:
         devices:
 {% if install.splitstack|default(False) %}
@@ -76,8 +76,8 @@ parameter_defaults:
 {% endif %}{# End of rgw_swift_enforce_content_length block #}
 {% else %}
     ExtraConfig:
-      ceph::profile::params::osd_pool_default_pg_num: 32
-      ceph::profile::params::osd_pool_default_pgp_num: 32
+      ceph::profile::params::osd_pool_default_pg_num: {{ install.ceph.pgnum }}
+      ceph::profile::params::osd_pool_default_pgp_num: {{ install.ceph.pgnum }}
       ceph::profile::params::osds:
 {% for disk in storage_node_disks[1:] %}
        '/dev/{{ disk }}': {}
