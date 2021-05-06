@@ -648,6 +648,11 @@ subparsers:
                       help: |
                         The variable used to change the ceph cluster name, this feature is supported from RHOSP 15. Default value is 'ceph'.
 
+                  ceph-pgnum:
+                      type: Value
+                      default: 32
+                      help: set the default amount of placement groups for the pools in the internal Ceph cluster
+
                   glance-backend:
                       type: Value
                       choices:
