@@ -321,4 +321,11 @@ subparsers:
                           using the data. This is useful in a Continuous Integration (CI) environment
                           to ensure that the large amounts of data are not left behind on the host.
                       default: False
-
+                  virsh-snapshot-quiesce:
+                      type: Bool
+                      help: |
+                          This is a flag to enable a quiesce process after a snapshot restore or import.
+                          This is useful to ensure that time is synchronised and services are all in the
+                          correct state. This action must be done independently of the import process
+                          because infrared will need to use the newly imported inventory.
+                      default: False
