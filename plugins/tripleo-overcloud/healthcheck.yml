@@ -1,0 +1,107 @@
+- name: Ceph checks
+  hosts: "{{ ('monitors' in groups) | ternary((groups['monitors'] | default([])) | first, groups['controller'] | first) }}"
+  gather_facts: false
+  any_errors_fatal: true
+  tasks:
+    - name: Get a name of Ceph cluster
+      become: true
+      shell: >-
+        ps -p $(pidof ceph-mon) -o args --no-headers | grep -o 'cluster.*' | cut -d' ' -f2
+      changed_when: false
+      register: ceph_cluster_name
+
+    - name: Identify the container runtime
+      shell: >-
+        basename $(command -v podman || command -v docker)
+      register: _container_runtime
+      changed_when: false
+
+    - name: Set the ceph command prefix
+      set_fact:
+        _ceph_cmd_prefix: >-
+          {{ _container_runtime.stdout }}
+          exec
+          ceph-mon-{{ inventory_hostname }}
+          ceph
+          -c
+          /etc/ceph/{{ ceph_cluster_name.stdout }}.conf
+
+    - name: Wait for OSDs to come back
+      become: true
+      command: >-
+        {{ _ceph_cmd_prefix }} pg stat
+      changed_when: false
+      register: active_osd
+      until: active_osd.stdout.find("active+clean") > -1
+      retries: 5
+      delay: 60
+
+    - name: Wait for cluster health to be OK
+      become: true
+      command: >-
+        {{ _ceph_cmd_prefix }} status
+      changed_when: false
+      register: _ceph_health
+      until: _ceph_health.stdout.find("HEALTH_OK") > -1
+      retries: 5
+      delay: 60
+
+- name: Pacemaker checks
+  hosts: controller
+  gather_facts: false
+  any_errors_fatal: true
+  tasks:
+    - name: Wait for pacemaker cluster to recover
+      become: yes
+      shell: |
+        set -o pipefail
+        crm_mon -1 2>&1 | grep -w 'Online:' | grep {{ inventory_hostname }}
+      register: _pcs_status
+      retries: 5
+      delay: 60
+
+- name: OpenStack checks
+  hosts: undercloud
+  gather_facts: false
+  any_errors_fatal: true
+  vars:
+    overcloud_rc: "/home/stack/{{ install.overcloud.stack }}rc"
+  tasks:
+    - name: Wait until all network agents are up
+      shell: |
+        source {{ overcloud_rc }}
+        openstack network agent list -f json | jq '.[] | select(.State==true and .Alive==false)'
+      register: _network_agents_state
+      retries: 5
+      delay: 60
+      until: _network_agents_state.stdout == ''
+
+    - name: Wait until all compute services are up
+      shell: |
+        source {{ overcloud_rc }}
+        openstack compute service list -f json | jq '.[] | select(.Status=="enabled" and .State=="down")'
+      register: _compute_service_state
+      retries: 5
+      delay: 60
+      until: _compute_service_state.stdout == ''
+
+    - name: Wait until all volume services are up
+      shell: |
+        source {{ overcloud_rc }}
+        openstack volume service list -f json | jq '.[] | select(.Status=="enabled" and .State=="down" and .Binary!="cinder-backup")'
+      register: _volume_service_state
+      retries: 5
+      delay: 60
+      until: _volume_service_state.stdout == ''
+
+    # ref:
+    #   https://bugzilla.redhat.com/show_bug.cgi?id=1665191
+    #   https://bugzilla.redhat.com/show_bug.cgi?id=1666804
+    - name: Verify that at least one cinder-backup service is active
+      shell: |
+        source {{ overcloud_rc }}
+        openstack volume service list -f json | jq '.[] | select(.Binary=="cinder-backup" and .Status=="enabled" and .State=="up").Host' | wc -l
+      register: _volume_backup_state
+      retries: 5
+      delay: 60
+      until: _volume_backup_state.stdout == '1'
