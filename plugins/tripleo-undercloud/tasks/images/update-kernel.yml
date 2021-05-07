@@ -29,6 +29,11 @@
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-copy-out -a {{ overcloud_image_file }} /boot /tmp/"
 
+- name: Remove machine-id from overcloud image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-sysprep --operation machine-id -a {{ overcloud_image_file }}"
+
 - name: Find kernel files
   find:
     paths: /tmp/boot
