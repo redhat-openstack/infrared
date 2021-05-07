@@ -68,9 +68,9 @@
            --vcpus {{ topology_node.cpu }} \
            --os-variant {{ topology_node.os.variant }} \
            --import \
+           --graphics vnc,listen={{ provision.vnc | ternary('0.0.0.0','127.0.0.1') }},password={{ provision.vncpassword }} \
            --noautoconsole \
            --autostart \
-           --graphics vnc \
            --rng /dev/urandom {{ provision.get('virtopts', '') }}
   with_items: "{{ topology_node.node_indexes }}"
   register: vm_install

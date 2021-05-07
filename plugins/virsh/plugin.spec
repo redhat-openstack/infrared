@@ -220,7 +220,20 @@ subparsers:
                       Usefull for special cases when one may want to override specific
                       options used for spawning vms (memballoon, rng and such).
                     default: ''
-
+            - title: External VNC Mode
+              options:
+                  vnc:
+                    type: Bool
+                    help: |
+                      Enable VNC console on all interfaces (0.0.0.0). Port will
+                      be auto-allocated 5900,5901,...
+                      Useful for debugging cases
+                    default: False
+                  vncpassword:
+                    type: Value
+                    help: |
+                      Password to protect VNC console
+                    default: ''
             - title: ansible facts
               options:
                   collect-ansible-facts:
