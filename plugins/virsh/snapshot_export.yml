@@ -75,7 +75,8 @@
         - name: Sparsify and export disk images
           shell: |
             for vdisk in $(virsh domblklist {{ item }} | awk '/{{ item }}/ {print $2}'); do
-              virt-sparsify --check-tmpdir fail --compress ${vdisk} {{ provision.virsh.snapshot.path }}/${vdisk##*/}
+              virt-sparsify --in-place ${vdisk}
+              qemu-img convert -O qcow2 -c ${vdisk} {{ provision.virsh.snapshot.path }}/${vdisk##*/}
             done
           args:
             executable: /bin/bash
