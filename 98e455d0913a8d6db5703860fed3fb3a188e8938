@@ -1,6 +1,23 @@
 {
   "comments": [
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "038b3aa7_cc7bdf39",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-05-14T12:06:53Z",
+      "side": 1,
+      "message": "As far as I can see it looks fine and it doesn\u0027t break the default workflow.\n\n",
+      "revId": "98e455d0913a8d6db5703860fed3fb3a188e8938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "c19228a2_561943f8",
@@ -14,6 +31,24 @@
       "writtenOn": "2021-05-14T12:01:29Z",
       "side": 1,
       "message": "when password is set to \u0027\u0027 it means no password. Tested by\n\nssh -L 5900:127.0.0.1:5900 HOST\nand then\nvnc to localhost:5900\n\nPassword was not required.",
+      "revId": "98e455d0913a8d6db5703860fed3fb3a188e8938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "addf8179_a14925ed",
+        "filename": "plugins/virsh/tasks/vms_2_install.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-05-14T12:06:53Z",
+      "side": 1,
+      "message": "Oh, ok.\n\nRegarding the condition, maybe the \"and provision.vnc.password | length \u003e 0\" is not needed (it can\u0027t be \u003c0, and if it\u0027s \u003d\u003d 0 it\u0027s the same as \u0027\u0027, so it should be enough to just check if it\u0027s defined.",
+      "parentUuid": "c19228a2_561943f8",
       "revId": "98e455d0913a8d6db5703860fed3fb3a188e8938",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
