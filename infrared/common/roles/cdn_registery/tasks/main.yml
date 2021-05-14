@@ -14,13 +14,25 @@
       register: unregister_repos
       become: true
 
-    - name: register to openstack repos
+    - name: register to openstack repos for OSP >= 15
       vars:
           repo_version: "{{ (install_version if install_version is defined else openstack_release)|string }}"
-          repo_list: "{{ (subscriptions.common_8 if (repo_version|int) >= 15 else subscriptions.common_7) + (subscriptions[(repo_version|float)] if not cdn_skip_openstack_repos | default(false) else []) + (subscriptions.ceph_4 if install.storage is defined and install.storage.backend is defined and install.storage.backend == 'ceph' else []) }}"
+          repo_list: "{{ (subscriptions.common_8) + (subscriptions[(repo_version|float)] if not cdn_skip_openstack_repos | default(false) else []) + (subscriptions.ceph_4 if install.storage is defined and install.storage.backend is defined and install.storage.backend == 'ceph' else []) }}"
           modified_list: "{{ repo_list | map('regex_replace', '^(.*)$', '--enable=\\1') | join(' ') }}"
       command: "subscription-manager repos {{ modified_list }}"
       become: true
+      when: (install_version if install_version is defined else openstack_release)|float >= 15
+
+    - name: register to openstack repos for OSP < 15
+      vars:
+          repo_version: "{{ (install_version if install_version is defined else openstack_release)|string }}"
+          repo_list: "{{ (subscriptions.common_7) + (subscriptions[(repo_version|float)] if not cdn_skip_openstack_repos | default(false) else []) + (subscriptions.ceph_3 if install.storage is defined and install.storage.backend is defined and install.storage.backend == 'ceph' else []) }}"
+          modified_list: "{{ repo_list | map('regex_replace', '^(.*)$', '--enable=\\1') | join(' ') }}"
+      command: "subscription-manager repos {{ modified_list }}"
+      become: true
+      when: (install_version if install_version is defined else openstack_release)|float < 15
+
+
       # running also if subscriptions are defined to avoid job breakages.
 
     - name: Set correct modules for OSP > 16
