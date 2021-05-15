@@ -18,6 +18,14 @@
               ceph_namespace: "{{ container_image['mirror_reg'] | ternary(container_image['mirror_reg'] + '/' + container_image['cephreg_relative'], container_env['container-image-prepare']['ceph-namespace']) }}"
       tags: container-images-packages
 
+    - name: set neutron_driver in containers-prepare-parameter.yaml
+      replace:
+          path: "containers-prepare-parameter.yaml"
+          regexp: '^(\s*neutron_driver:).*'
+          replace: "\\1 ovs"
+      when:
+          - install.network.ovs
+
     - block:
         - name: "Create {{ containers_images_template_dest_file }} to upload to local registry - *overcloud* container image prepare"
           command: >
@@ -188,5 +196,13 @@
         insertafter: EOF
         block: "  ContainerImageRegistryCredentials:\n    registry.redhat.io:\n      {{ cdn_creds.registry_username }}: {{ cdn_creds.registry_password }}"
       when: _sat6_check['status'] != 200
+
+    - name: set neutron_driver in containers-prepare-parameter.yaml
+      replace:
+          path: "containers-prepare-parameter.yaml"
+          regexp: '^(\s*neutron_driver:).*'
+          replace: "\\1 ovs"
+      when:
+          - install.network.ovs
 
   when: install.cdn is defined
