@@ -3,13 +3,16 @@
 - name: get networks dict
   include_vars: "{{ provision.topology.network }}"
 
+- set_fact:
+    topology_node: "{{ node.value }}"
+
 - name: wait for VMs IPs
   shell: |
       virsh net-dhcp-leases {{ item.value.net }} | awk '($4 == "ipv4")  && ($3 == "{{ item.value.mac }}") {print $5}'
   when: item.value.deploy_os
   register: ip_list
   until: "ip_list.stdout != ''"
-  retries: 40
+  retries: 60
   delay: 5
   with_dict: "{{ vm_inv_info }}"
   tags: skip_ansible_lint
