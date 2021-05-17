@@ -4,12 +4,14 @@
   include_vars: "{{ provision.topology.network }}"
 
 - name: wait for VMs IPs
+  vars:
+      vm_wait_retry_counts: 50
   shell: |
       virsh net-dhcp-leases {{ item.value.net }} | awk '($4 == "ipv4")  && ($3 == "{{ item.value.mac }}") {print $5}'
   when: item.value.deploy_os
   register: ip_list
   until: "ip_list.stdout != ''"
-  retries: 40
+  retries: "{{ vm_wait_retry_counts }}"
   delay: 5
   with_dict: "{{ vm_inv_info }}"
   tags: skip_ansible_lint
