@@ -9,7 +9,7 @@
   when: item.value.deploy_os
   register: ip_list
   until: "ip_list.stdout != ''"
-  retries: 40
+  retries: "{{ topology_node.ip_retry_counts | default(60) }}"
   delay: 5
   with_dict: "{{ vm_inv_info }}"
   tags: skip_ansible_lint
