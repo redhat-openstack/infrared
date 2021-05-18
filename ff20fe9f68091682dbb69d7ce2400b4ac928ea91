@@ -16,6 +16,52 @@
       "message": "So is the scope just the virsh infrared plugin? \n\nSorry if I\u0027m picky about this, but it may speed up the reviews if it\u0027s marked in the commit message",
       "revId": "ff20fe9f68091682dbb69d7ce2400b4ac928ea91",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "113721d2_978c629e",
+        "filename": "plugins/virsh/tasks/netip_natted.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1016895
+      },
+      "writtenOn": "2021-05-18T10:48:00Z",
+      "side": 1,
+      "message": "This could be done like: \"{{ vm_wait_retry_counts | default(50) }}\"\n\nThat way there\u0027s no need to hunt for there the variable is set. It also means that the variable can be set in the inventory or group_vars, rather than forcing the use of extra-vars.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 39
+      },
+      "revId": "ff20fe9f68091682dbb69d7ce2400b4ac928ea91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "10fdbbe3_472bfd22",
+        "filename": "plugins/virsh/tasks/netip_natted.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1016895
+      },
+      "writtenOn": "2021-05-18T10:48:00Z",
+      "side": 1,
+      "message": "Would it perhaps make better sense to increase the delay? I\u0027m not sure what would cause a VM to take more than 3.5 mins to start and get an IP address... but perhaps increasing the delay would extend the timeout and achieve the same result without the extra log output caused by the retries.",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 10
+      },
+      "revId": "ff20fe9f68091682dbb69d7ce2400b4ac928ea91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
