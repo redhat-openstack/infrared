@@ -4,7 +4,7 @@
   gather_facts: yes
   any_errors_fatal: true
   vars:
-      user: heat-admin
+      user: "{{ install.overcloud.ssh.user if install.overcloud.ssh.user != '' else 'heat-admin' }}"
       # The var "private_key" is used outside this scope and cannot be overridden
       overcloud_pkey: "{{ inventory_dir }}/id_rsa_overcloud"
   tasks:
