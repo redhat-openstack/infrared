@@ -27,6 +27,11 @@
                 get_checksum: yes
             register: local_sha256sum
 
+          - name: Create trace file for undercloud image
+            copy:
+              dest: "{{ undercloud_image_file }}.trace.txt"
+              content: "{{ lookup('env', 'BUILD_URL') }}"
+
           - name: print uc image sha256
             debug:
                 msg: "{{ local_sha256sum.stat.checksum }}"
@@ -46,6 +51,16 @@
                 - install.dest.address|default({})
                 - install.dest.path|default({})
             tags: skip_ansible_lint
+
+          - name: copy the trace to remote server
+              shell: |
+                scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
+                ~/backup_server_auth_key {{ undercloud_image_file }}.trace.txt \
+                {{ install.dest.user }}@{{ install.dest.address }}:{{ install.dest.path }}/{{ undercloud_image_file }}.trace.txt
+              when:
+                - install.dest.address|default({})
+                - install.dest.path|default({})
+              tags: skip_ansible_lint
 
           - name: get sha256sum from the remote
             shell: >
