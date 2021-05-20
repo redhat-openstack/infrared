@@ -39,6 +39,11 @@
                 get_checksum: yes
             register: local_sha256sum
 
+          - name: Create a build URL file to track undercloud image source
+            copy:
+              dest: "{{ undercloud_image_file }}.buildurl"
+              content: "{{ lookup('env', 'BUILD_URL') | default('BUILD_URL was not set') }}"
+
           - name: print uc image sha256
             debug:
                 msg: "{{ local_sha256sum.stat.checksum }}"
@@ -54,6 +59,16 @@
             shell: |
                 scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
                 ~/backup_server_auth_key {{ undercloud_image_file }} {{ install.dest.user }}@{{ install.dest.address }}:{{ install.dest.path }}/{{ undercloud_image_file }}
+            when:
+                - install.dest.address|default({})
+                - install.dest.path|default({})
+            tags: skip_ansible_lint
+
+          - name: copy the build URL file to remote server
+            shell: |
+                scp -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
+                ~/backup_server_auth_key {{ undercloud_image_file }}.buildurl \
+                {{ install.dest.user }}@{{ install.dest.address }}:{{ install.dest.path }}/{{ undercloud_image_file }}.buildurl
             when:
                 - install.dest.address|default({})
                 - install.dest.path|default({})
