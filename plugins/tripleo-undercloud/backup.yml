@@ -12,10 +12,22 @@
             name: libguestfs-tools-c
             state: present
       - block:
+          # Initiate the non-blocking graceful shutdown
           - name: shutdown the undercloud VM
             virt:
                 name: "{{ undercloud }}"
-                state: destroyed
+                state: shutdown
+
+          # As there is a delay between gr. shutdown initiation and it being
+          # properly finished, we need to wait for it in order to prevent
+          # disk image corruptions, especially when using "cache=unsafe"
+          - name: Wait for the UC VM being properly shut down
+            command: |
+                virsh domstate "{{ undercloud }}"
+            register: uc_shutdown
+            until: uc_shutdown.stdout.find('shut off') != -1
+            retries: 10
+            delay: 10
 
           - name: copy and shrink undercloud image
             command: "virt-sparsify --compress {{ install.disk.pool }}/{{ undercloud }}-disk1.qcow2 {{ undercloud_image_file }}"
