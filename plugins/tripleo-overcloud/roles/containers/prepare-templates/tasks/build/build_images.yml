@@ -18,14 +18,6 @@
               ceph_namespace: "{{ container_image['mirror_reg'] | ternary(container_image['mirror_reg'] + '/' + container_image['cephreg_relative'], container_env['container-image-prepare']['ceph-namespace']) }}"
       tags: container-images-packages
 
-    - name: set neutron_driver in containers-prepare-parameter.yaml
-      replace:
-          path: "containers-prepare-parameter.yaml"
-          regexp: '^(\s*neutron_driver:).*'
-          replace: "\\1 ovs"
-      when:
-          - install.network.ovs
-
     - block:
         - name: "Create {{ containers_images_template_dest_file }} to upload to local registry - *overcloud* container image prepare"
           command: >
@@ -164,6 +156,15 @@
         - install.version|default(undercloud_version)|openstack_release >= 15
         - install_container_extra_repos is defined
 
+    - name: set neutron_driver in containers-prepare-parameter.yaml
+      replace:
+          path: "containers-prepare-parameter.yaml"
+          regexp: '^(\s*neutron_driver:).*'
+          replace: "\\1 ovs"
+      when:
+          - install.network.ovs
+          - install.version|default(undercloud_version)|openstack_release >= 14
+
   when:
     - not install.overcloud.templates| default(False) | select('search', 'rhsm|overloud_cdn') | list | length > 0
     - install.cdn is not defined or (cdn_status is defined and cdn_status.rc != 0)
@@ -204,5 +205,6 @@
           replace: "\\1 ovs"
       when:
           - install.network.ovs
+          - install.version|default(undercloud_version)|openstack_release >= 14
 
   when: install.cdn is defined
