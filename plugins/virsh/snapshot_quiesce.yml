@@ -90,25 +90,38 @@
   gather_facts: false
   any_errors_fatal: true
   tasks:
-    - name: Wait for core cluster hosts to come online
-      become: yes
-      shell: |
-        set -o pipefail
-        crm_mon -1 2>&1 | grep -w 'Online:' | grep {{ inventory_hostname }}
-      changed_when: false
-      register: _pcs_status
-      retries: 5
-      delay: 60
+    - block:
+        - name: Wait for core cluster hosts to come online
+          shell: |
+            set -o pipefail
+            crm_mon -1 | grep -w 'Online:' | grep {{ inventory_hostname }}
+          changed_when: false
+          register: _pcs_status
+          retries: 5
+          delay: 60
+          until: _pcs_status is not failed
 
-    - name: Wait for cluster to be OK
-      become: yes
-      shell: >-
-        crm_mon -s1 | grep "CLUSTER OK"
-      changed_when: false
-      register: _pcs_health
-      retries: 5
-      delay: 60
-      run_once: true
+        - name: Wait for the resources to come online
+          shell: |
+            set -o pipefail
+            crm_mon -1 | grep "\(Stopped\|Starting\).*{{ inventory_hostname }}" && exit 1
+          changed_when: false
+          register: _bundle_status
+          retries: 5
+          delay: 60
+          until: _bundle_status is not failed
+
+        - name: Wait for cluster to be OK
+          shell: |
+            set -o pipefail
+            crm_mon -s
+          changed_when: false
+          register: _pcs_health
+          retries: 5
+          delay: 60
+          until: _pcs_health.stdout.find("CLUSTER OK") > -1
+          run_once: true
+      become: true
 
 - name: Ensure that all the core OpenStack services/agents are up
   hosts: undercloud
