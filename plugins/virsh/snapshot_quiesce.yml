@@ -41,10 +41,12 @@
   tasks:
     - name: Only run this on one of the hosts
       run_once: true
+      when: "'ceph' in groups"
       block:
       - name: Get a name of Ceph cluster
         become: true
-        shell: >-
+        shell: |
+          set -o pipefail
           ps -p $(pidof ceph-mon) -o args --no-headers | grep -o 'cluster.*' | cut -d' ' -f2
         changed_when: false
         register: ceph_cluster_name
