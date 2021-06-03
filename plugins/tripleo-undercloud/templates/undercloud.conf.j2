@@ -76,8 +76,11 @@ inspection_iprange = 192.168.24.100,192.168.24.120
 masquerade = true
 #TODO(skatlapa): add param to override masq
 {% endif %}{# endIf release >= 13 #}
-
 {% if install.boot.mode == 'uefi' %}
-ipxe_enabled = True
+{% if install.version|default(undercloud_version)|openstack_release < 16 %}
+  ipxe_enabled = True
+{% else %}
+  ipxe_enabled = False
+{% endif %}
 inspection_enable_uefi = True
 {% endif %}
