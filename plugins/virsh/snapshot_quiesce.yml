@@ -20,6 +20,10 @@
         shell: >-
           ntpd -q -g -x
         changed_when: false
+        register: _reset_time
+        until: _reset_time.rc == 0
+        retries: 5
+        delay: 60
       - name: Start the time service
         service:
           name: ntpd
@@ -33,6 +37,10 @@
         shell: >-
           chronyc makestep
         changed_when: false
+        register: _reset_time
+        until: _reset_time.rc == 0
+        retries: 5
+        delay: 60
 
 - name: Ensure that the Ceph cluster is up and healthy
   hosts: "{{ ('monitors' in groups) | ternary('monitors', 'controller') }}"
