@@ -18,6 +18,7 @@
   when:
       - not install.upgrade|default('')
       - not install.ocupdate|default(False)
+      - not install.postreboot|default(False)
 
 - name: Verify modified containers images are used
   import_playbook: "{{ verify_containers | default('verify-containers.yml') }}"
