@@ -7,10 +7,29 @@
         line: "{{ freeipa_node_ipaddress }} {{ freeipa_node }}.{{ freeipa_domain }} {{ freeipa_node }}"
         state: present
 
+  - name: Set 'dns=none' in /etc/NetworkManager/NetworkManager.conf
+    become: true
+    ini_file:
+        path: /etc/NetworkManager/NetworkManager.conf
+        state: present
+        no_extra_spaces: true
+        section: main
+        option: dns
+        value: none
+        backup: true
+    register: nm_conf_dns_output
+
+  - name: Reload NetworkManager
+    become: true
+    service:
+        name: NetworkManager
+        state: reloaded
+    when: nm_conf_dns_output is changed
+
   - name: set IdM server to be the nameserver if multiple domains
     become: yes
     copy:
-        dest: "/usr/lib/systemd/resolv.conf"
+        dest: "/etc/resolv.conf"
         content: |
             search {{ freeipa_cloud_domain }} {{ freeipa_domain }}
             nameserver {{ freeipa_node_ipaddress }}
@@ -19,29 +38,10 @@
   - name: set IdM server to be the nameserver if single domain
     become: yes
     copy:
-        dest: "/usr/lib/systemd/resolv.conf"
+        dest: "/etc/resolv.conf"
         content: |
             search {{ freeipa_cloud_domain }}
             nameserver {{ freeipa_node_ipaddress }}
     when: freeipa_cloud_domain == freeipa_domain
-
-  - name: Make systemd resolv.conf immutable
-    become: yes
-    file:
-      path: /usr/lib/systemd/resolv.conf
-      owner: root
-      group: root
-      mode: '0644'
-      attributes: +i
-
-  - name: Create a symbolic link of systemd resolv.conf
-    become: yes
-    file:
-        src: "/usr/lib/systemd/resolv.conf"
-        dest: "/etc/resolv.conf"
-        owner: root
-        group: root
-        state: link
-        force: yes
 
   delegate_to: "{{ freeipa_undercloud_node }}"

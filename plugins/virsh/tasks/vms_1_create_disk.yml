@@ -95,7 +95,7 @@
             virt-sysprep -a {{ disk_pool }}/{{ node_image }} \
                 --operations machine-id
             # inject DEFROUTE for IPv6 and IPv6 to file and set it on for external network only
-            NIC_DEFAULT="DEVICE=\"eth0\"\nBOOTPROTO=\"dhcp\"\nBOOTPROTOv6=\"dhcp\"\nONBOOT=\"yes\"\nTYPE=\"Ethernet\"\nUSERCTL=\"yes\"\nPEERDNS=\"yes\"\nIPV6INIT=\"yes\"\nPERSISTENT_DHCLIENT=\"1\"\n"
+            NIC_DEFAULT="DEVICE=\"eth0\"\nBOOTPROTO=\"dhcp\"\nBOOTPROTOv6=\"dhcp\"\nONBOOT=\"yes\"\nTYPE=\"Ethernet\"\nUSERCTL=\"yes\"\nPEERDNS=\"no\"\nIPV6INIT=\"yes\"\nPERSISTENT_DHCLIENT=\"1\"\n"
             virt-customize -a {{ disk_pool }}/{{ node_image }} \
             {% for interface in topology_node.interfaces %}
                 {% if loop.index0 == 0 %}
