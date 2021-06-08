@@ -3,14 +3,12 @@
   gather_facts: false
   any_errors_fatal: true
   tasks:
-    - name: Gather facts
-      setup:
-        gather_subset:
-          - min
+    - name: Populate service facts
+      service_facts:
 
-    - name: Reset the time for RHEL7
+    - name: Reset the time if ntpd service
       become: true
-      when: ansible_facts['distribution_major_version'] is version('7', '==')
+      when: "'ntpd.service' in ansible_facts.services"
       block:
       - name: Stop the time service
         service:
@@ -25,9 +23,9 @@
           name: ntpd
           state: started
 
-    - name: Reset the time for RHEL8+
+    - name: Reset the time if chronyd
       become: true
-      when: ansible_facts['distribution_major_version'] is version('8', '>=')
+      when: "'chronyd.service' in ansible_facts.services"
       block:
       - name: Reset the time
         shell: >-
