@@ -21,19 +21,6 @@
         name: libguestfs-tools-c
         state: present
 
-    - name: Get info about existing virt storage pools
-      virt_pool:
-        command: info
-      register: _virt_pools
-
-    - name: Set default image pool path
-      set_fact:
-        _virt_pools:
-          pools:
-            images:
-              path: "/var/lib/libvirt/images"
-      when: _virt_pools.pools.images is not defined
-
     - name: Get info about existing VM's
       virt:
         command: list_vms
@@ -99,7 +86,7 @@
         - name: Import the disk images
           copy:
             src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
-            dest: "{{ _virt_pools.pools.images.path }}/"
+            dest: "{{ provision.disk.pool }}/"
             checksum: "{{ item.checksum }}"
             remote_src: yes
           loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
@@ -109,7 +96,7 @@
         - name: Import the nvram images
           copy:
             src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
-            dest: "{{ _virt_pools.pools.images.path }}/../qemu/nvram/"
+            dest: "{{ provision.disk.pool }}/../qemu/nvram/"
             checksum: "{{ item.checksum }}"
             remote_src: yes
           loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*fd$') | list }}"
@@ -147,6 +134,23 @@
             state: absent
           when:
             - provision.virsh.snapshot.cleanup | bool
+
+    - name: Change VM configuration to use correct pool path
+      xml:
+        path: "/etc/libvirt/qemu/{{ item.server }}.xml"
+        xpath: "/domain/devices/disk[@type='file']/source[@file='{{ _virsh_snapshot_manifest_content.virt_pool_path }}/{{ item.image }}']"
+        attribute: "file"
+        value: "{{ provision.disk.pool }}/{{ item.image }}"
+      loop: "{{ server_image_map }}"
+      vars:
+        server_image_map: >-
+          {%- set _server_image_map = [] %}
+          {%- for server in _virsh_snapshot_manifest_content.servers | map(attribute='name') | list %}
+          {%-   for image in _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*' ~ server ~ '.*qcow2$') | map(attribute='path') | map('basename') | list %}
+          {%-     set _ = _server_image_map.append({'server': server, 'image': image}) %}
+          {%-   endfor %}
+          {%- endfor %}
+          {{- _server_image_map }}
 
     # We use command here, because the virt module needs the raw XML
     # and a lookup will not work remotely. We could slurp all the files,
