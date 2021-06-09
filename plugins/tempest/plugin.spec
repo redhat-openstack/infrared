@@ -173,6 +173,10 @@ subparsers:
                        help: |
                            Remove additional Tempest configuration (tempest.conf) options.
                            Format: --remove-options section.option:value1 --remove-options section.option:value
+                  whitere:
+                      type: Value
+                      help: |
+                          Adds an option to override regex that comes from the test_dict passed to the ostestr/tempest invocation.
                   blackre:
                       type: Value
                       help: |
