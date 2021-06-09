@@ -51,18 +51,25 @@
         changed_when: false
         register: ceph_cluster_name
 
-      - name: Identify the container runtime
-        shell: >-
-          basename $(command -v podman || command -v docker)
+      - name: Identify the container runtime (if any)
+        shell: |-
+          runtime=$(command -v podman || command -v docker)
+          if [[ $runtime != '' ]]; then
+            basename $runtime
+          else
+            echo none
+          fi
         register: _container_runtime
         changed_when: false
 
       - name: Set the ceph command prefix
         set_fact:
           _ceph_cmd_prefix: >-
+            {% if _container_runtime.stdout != "none" %}
             {{ _container_runtime.stdout }}
             exec
             ceph-mon-{{ inventory_hostname }}
+            {% endif %}
             ceph
             -c
             /etc/ceph/{{ ceph_cluster_name.stdout }}.conf
