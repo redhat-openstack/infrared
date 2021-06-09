@@ -124,7 +124,7 @@
       - name: run tempest "{{ test_suite }}" suite with tempest run
         shell: >
             test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
-            tempest run --subunit --regex '{{ regex | default('') }}'
+            tempest run --subunit --regex {{ test.whitere|default(False)|ternary(test.whitere, regex|default('')) }}
             {{ whitelistfile }}
             {{ blacklistfile }}
             {{ ('--concurrency ' + comp_threads|default(False)|ternary(comp_threads,test_dict.threads)|default(test.threads)|string ) }}
@@ -145,7 +145,7 @@
       - name: run tempest "{{ test_suite }}" suite with ostestr
         shell: >
             test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
-            ostestr -s --no-pretty --regex '{{ regex | default('') }}'
+            ostestr -s --no-pretty --regex {{ test.whitere|default(False)|ternary(test.whitere, regex|default('')) }}
             {{ whitelistfile }}
             {{ blacklistfile }}
             {{ ('--concurrency ' + comp_threads|default(False)|ternary(comp_threads,test_dict.threads)|default(test.threads)|string ) }}
