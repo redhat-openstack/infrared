@@ -83,11 +83,17 @@ options:
          - Host IPMI password
      default: 'ADMIN'
      required: false
+   poll_interval:
+     description:
+         - The time in seconds between calls to check that the server's status
+         changed from 'Build'
+     default: 10
+     required: false
    wait_for_host:
      description:
          - Number of seconds we should wait for the host given the 'rebuild'
          state was set.
-     default: 10
+     default: 120
      required: false
    operatingsystem_id:
      description:
@@ -339,7 +345,8 @@ class ForemanManager(object):
 
     def provision(self, host_id, mgmt_strategy, mgmt_action, ipmi_address,
                   ipmi_username, ipmi_password, operatingsystem_id, medium_id,
-                  ptable_id, ping_deadline, wait_for_host=10):
+                  ptable_id, ping_deadline, poll_interval=10,
+                  wait_for_host=120):
         """
         This method rebuilds a machine, doing so by running get_host and bmc.
         :param host_id: the name or ID of the host we wish to rebuild
@@ -357,11 +364,14 @@ class ForemanManager(object):
         :param ping_deadline: Timeout in seconds for 'ping' command
         (works with 'wait_for_host')
         :param ptable_id: Partition table ID
+        :param poll_interval: The time between calls to check that the server's
+                 status changed from 'Build'
         :raises: KeyError if BMC hasn't been found on the given host
                  Exception in case of machine could not be reached after
                  rebuild
         """
         wait_for_host = int(wait_for_host)
+        poll_interval = int(poll_interval)
 
         building_host = self.get_host(host_id)
         self.set_host_os(host_id, operatingsystem_id, medium_id, ptable_id)
@@ -385,11 +395,17 @@ class ForemanManager(object):
         else:
             raise Exception("{0} is not a supported "
                             "management strategy".format(mgmt_strategy))
-        if wait_for_host:
-            while self.get_host(host_id).get('build'):
-                time.sleep(wait_for_host)
 
-            command = "ping -q -c 30 -w {0} {1}".format(
+        # Poll foreman until host transitions off of build status
+        if poll_interval:
+            while self.get_host(host_id).get('build'):
+                time.sleep(poll_interval)
+
+        # Allow for host to boot
+        if wait_for_host:
+            time.sleep(wait_for_host)
+
+            command = "ping -q -c 15 -w {0} {1}".format(
                 ping_deadline, building_host.get('name'))
             return_code = subprocess.call(command, shell=True)
 
@@ -418,7 +434,8 @@ def main():
             ipmi_password=dict(default='ADMIN'),
             operatingsystem_id=dict(default=None),
             medium_id=dict(default=None),
-            ptable_id=dict(default=None)))
+            ptable_id=dict(default=None),
+            poll_interval=dict(default=None)))
 
     foreman_client = ForemanManager(url=module.params['auth_url'],
                                     username=module.params['username'],
@@ -441,6 +458,7 @@ def main():
                                      module.params['medium_id'],
                                      module.params['ptable_id'],
                                      module.params['ping_deadline'],
+                                     module.params['poll_interval'],
                                      module.params['wait_for_host'])
 
         except KeyError as e:
