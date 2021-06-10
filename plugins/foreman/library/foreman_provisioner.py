@@ -339,7 +339,7 @@ class ForemanManager(object):
 
     def provision(self, host_id, mgmt_strategy, mgmt_action, ipmi_address,
                   ipmi_username, ipmi_password, operatingsystem_id, medium_id,
-                  ptable_id, ping_deadline, wait_for_host=10):
+                  ptable_id, ping_deadline, poll_time, wait_for_host=10):
         """
         This method rebuilds a machine, doing so by running get_host and bmc.
         :param host_id: the name or ID of the host we wish to rebuild
@@ -357,6 +357,7 @@ class ForemanManager(object):
         :param ping_deadline: Timeout in seconds for 'ping' command
         (works with 'wait_for_host')
         :param ptable_id: Partition table ID
+        :param poll_time: The time between calls to check that the server satus changed from 'Build'
         :raises: KeyError if BMC hasn't been found on the given host
                  Exception in case of machine could not be reached after
                  rebuild
@@ -387,7 +388,12 @@ class ForemanManager(object):
                             "management strategy".format(mgmt_strategy))
         if wait_for_host:
             while self.get_host(host_id).get('build'):
-                time.sleep(wait_for_host)
+                time.sleep(int(poll_time) if poll_time else wait_for_host)
+                print("Polling")
+
+            # Allow for host to boot
+            print("Sleeping until boot")
+            time.sleep(wait_for_host)
 
             command = "ping -q -c 30 -w {0} {1}".format(
                 ping_deadline, building_host.get('name'))
@@ -418,7 +424,8 @@ def main():
             ipmi_password=dict(default='ADMIN'),
             operatingsystem_id=dict(default=None),
             medium_id=dict(default=None),
-            ptable_id=dict(default=None)))
+            ptable_id=dict(default=None),
+            poll_time=dict(default=None)))
 
     foreman_client = ForemanManager(url=module.params['auth_url'],
                                     username=module.params['username'],
@@ -441,6 +448,7 @@ def main():
                                      module.params['medium_id'],
                                      module.params['ptable_id'],
                                      module.params['ping_deadline'],
+                                     module.params['poll_time'],
                                      module.params['wait_for_host'])
 
         except KeyError as e:
