@@ -31,8 +31,12 @@ subparsers:
                       default: cycle
                   wait:
                       type: Value
-                      default: 10
+                      default: 120
                       help: 'Number of seconds to wait before checking connectivity to the host after rebuild'
+                  poll-time:
+                      type: Value
+                      default: 10
+                      help: "The time in seconds between API calls to check on the build status"
 
 
             - title: Host details
@@ -75,7 +79,7 @@ subparsers:
                       help: "Partition table ID to set (optional)"
                   ping-deadline:
                       type: Value
-                      help: "Deadline in seconds for 'ping' command (If 'wait' isn't 0/False)"
+                      help: "Deadline in seconds for 'ping' command (If 'poll-time' isn't 0/False)"
 
             - title: Host roles
               options:
