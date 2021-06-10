@@ -76,6 +76,9 @@ subparsers:
                   ping-deadline:
                       type: Value
                       help: "Deadline in seconds for 'ping' command (If 'wait' isn't 0/False)"
+                  poll-time:
+                      type: Value
+                      help: "The time in seconds between API calls to check on the build status"                
 
             - title: Host roles
               options:
