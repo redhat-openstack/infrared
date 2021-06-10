@@ -389,6 +389,7 @@ class ForemanManager(object):
             while self.get_host(host_id).get('build'):
                 time.sleep(wait_for_host)
 
+            time.sleep(wait_for_host)
             command = "ping -q -c 30 -w {0} {1}".format(
                 ping_deadline, building_host.get('name'))
             return_code = subprocess.call(command, shell=True)
