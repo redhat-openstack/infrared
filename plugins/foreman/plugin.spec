@@ -31,8 +31,12 @@ subparsers:
                       default: cycle
                   wait:
                       type: Value
-                      default: 10
+                      default: 120
                       help: 'Number of seconds to wait before checking connectivity to the host after rebuild'
+                  poll-interval:
+                      type: Value
+                      default: 10
+                      help: "The time in seconds between API calls to check on the build status"
 
 
             - title: Host details
