@@ -135,6 +135,24 @@
       "message": "This parameter really only needs to be applied to Compute/ComputeHCI roles, surely? The purpose of it is to facilitate live migration between RHEL7.x/RHEL8.2 and RHEL8.4 nodes due to the changes in defaults implements in RHEL8.3+.\n\nI would suggest, also, that a comment is added here with the bug ref to provide context in the future when no-one remembers why this setting is here.",
       "revId": "e2a174c9a7612c65760364a91ea7e066319d51ec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "fa8c668f_4fb1dbb5",
+        "filename": "plugins/tripleo-overcloud/templates/nodes_data.yaml.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1012331
+      },
+      "writtenOn": "2021-06-11T12:53:39Z",
+      "side": 1,
+      "message": "Ideally, we\u0027d add it only to the individual compute roles but I\u0027m no IR expert and I\u0027m not sure how to loop exhaustively all the compute roles. We could add it to Compute, ComputeHCI only, but that would miss other possible compute roles.\n\nThere\u0027s not much downside in adding this to all the roles also, so this was the simplest solution imho. If you have a better idea on how to loop through all roles, please be my guest. If you think we should just add this to Compute and ComputeHCI, I\u0027m fine with this too, just let me know where to pass these parameters so we don\u0027t override other parameters.",
+      "parentUuid": "9e409669_aa451b6a",
+      "revId": "e2a174c9a7612c65760364a91ea7e066319d51ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
