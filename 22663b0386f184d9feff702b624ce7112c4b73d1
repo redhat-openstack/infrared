@@ -50,6 +50,23 @@
       "message": "@Sorin ... Pavel mentioned something about multithreded execution of these tox environments and possibility that some threads may start to cleanup things whic are still being used by other threads... while such bash\u0027y cleanup should account for that for sure as well... I\u0027m more referring to your proposal about pre_test hook, probably worth considering multithreaded execution (especially temp/random workspaces etc.)...\n\nre using your hook proposal here in this tox-pycache ... sure why not... just need to have it in the python3-tox rpm first ;-)",
       "revId": "22663b0386f184d9feff702b624ce7112c4b73d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ae8a88a5_ebefcc76",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1008329
+      },
+      "writtenOn": "2021-06-14T08:23:52Z",
+      "side": 1,
+      "message": "You do NOT need to have the tox plugin packaged as rpm, mentioning it inside requires is enough. Tox knows to install and use plugins on demand, in fact it even knows to upgrade itself inside an intermediary virtualenv when you require a version of tox newer than the system one. From this point of view is really smart.\n\nAround the multithreaded execution, that it can become more problematic: is about running tox environments in parallel or something else?\n\nIn fact the funny bit is that if you run them in parallel any amount of cleanup would not be sufficient as files could be created after you did the cleanup, fixing nothing.\n\nI think it would be better to avoid parallel execution or correctly configure python to not create cache files.",
+      "revId": "22663b0386f184d9feff702b624ce7112c4b73d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
