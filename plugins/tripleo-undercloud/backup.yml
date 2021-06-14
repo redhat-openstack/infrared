@@ -110,7 +110,7 @@
                 scp -o Compression=yes -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
                 ~/backup_server_auth_key {{ undercloud_image_file }} {{ install.dest.user }}@{{ install.dest.mirror.address }}:{{ install.dest.mirror.path }}/{{ undercloud_image_file }}.scp_tmp
                 ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
-                ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.address }} "mv {{ install.dest.mirror.path }}/{{ undercloud_image_file }}.scp_tmp {{ install.dest.mirror.path }}/{{ undercloud_image_file }}"
+                ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.mirror.address }} "mv {{ install.dest.mirror.path }}/{{ undercloud_image_file }}.scp_tmp {{ install.dest.mirror.path }}/{{ undercloud_image_file }}"
                 date
             when:
                 - install.dest.mirror.address|default({})
