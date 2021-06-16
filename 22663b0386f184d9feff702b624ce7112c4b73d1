@@ -67,6 +67,23 @@
       "message": "You do NOT need to have the tox plugin packaged as rpm, mentioning it inside requires is enough. Tox knows to install and use plugins on demand, in fact it even knows to upgrade itself inside an intermediary virtualenv when you require a version of tox newer than the system one. From this point of view is really smart.\n\nAround the multithreaded execution, that it can become more problematic: is about running tox environments in parallel or something else?\n\nIn fact the funny bit is that if you run them in parallel any amount of cleanup would not be sufficient as files could be created after you did the cleanup, fixing nothing.\n\nI think it would be better to avoid parallel execution or correctly configure python to not create cache files.",
       "revId": "22663b0386f184d9feff702b624ce7112c4b73d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "fa54c106_11d10f51",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2021-06-16T07:56:32Z",
+      "side": 1,
+      "message": "@Sorin: tox-extra is interesting, did not knew about it, thanks, though likely i will not now or soon be looking into that (this is quite low priority fix anyway)\n\nAs mentioned it is related to parallel execution of tox test envs, and as You suggested it\u0027s trying to minimize the writing of such cache files by all/each of the envs to minimize collision surface (by expanding use of DONTWRITEBYTECODE, but with varying versions of python around, currently none being 3.8+ yet where i checked, we cannot utilize PYTHONPYCACHEPREFIX to properly isolate the caches so need solution working without that) ...\n... that together with more targeted cleanup behaviour -  to even further minimize now already small possible collision area.",
+      "revId": "22663b0386f184d9feff702b624ce7112c4b73d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
