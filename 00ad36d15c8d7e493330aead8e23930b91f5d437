@@ -22,6 +22,30 @@
       },
       "revId": "00ad36d15c8d7e493330aead8e23930b91f5d437",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f8bd0600_74c10073",
+        "filename": "plugins/foreman/library/foreman_provisioner.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2021-06-18T12:47:03Z",
+      "side": 1,
+      "message": "I am not sure I get it either, so far I understand it this way:\n\nFrom         :param wait_for_host: number of seconds the function waits after host\n        finished rebuilding before checking connectivity\nI believe the \"wait_for_host\" is by default set to 10 seconds not minutes, which should cover baremetal boot time +- once its built, but it is also used for polling the hosts state.\n\nNow with this fix, we have API status polling as the loop with poll_time and then the wait for host boot itself as \"wait_for_host\" parameter (which I think was its initial design, just only not finished, so it was 1 param used for 2 things improperly)...\n\nIn that case right, this change makes sense as its improvement and add clarity, though if we want to switch to this more logical implementation, I don\u0027t see any reason for keeping\n\ntime.sleep(int(poll_time) if poll_time else wait_for_host)\n\ninstead of\n\ntime.sleep(int(poll_time))\n\n\u003d\u003d Lets make poll_time mandatory then?",
+      "parentUuid": "4e23e683_f7c5265e",
+      "range": {
+        "startLine": 392,
+        "startChar": 12,
+        "endLine": 392,
+        "endChar": 37
+      },
+      "revId": "00ad36d15c8d7e493330aead8e23930b91f5d437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
