@@ -37,7 +37,7 @@
         changed_when: false
 
 - name: Ensure that the Ceph cluster is up and healthy
-  hosts: "{{ ('monitors' in groups) | ternary('monitors', 'controller') }}"
+  hosts: "{{ ('monitors' in groups) | ternary('monitors', ('serviceapi' in groups) | ternary('serviceapi', 'controller')) }}"
   gather_facts: false
   any_errors_fatal: true
   tasks:
@@ -97,7 +97,7 @@
         delay: 60
 
 - name: Ensure that the Pacemaker cluster and all its resources are up
-  hosts: controller
+  hosts: "{{ groups['controller'] | difference(groups['serviceapi']) }}"
   gather_facts: false
   any_errors_fatal: true
   tasks:
