@@ -38,13 +38,8 @@
   command: ip link delete {{ bridge_name }}
   when: ip_link_show_result.rc == 0
 
-- name: collect facts about system services
-  service_facts:
-  register: services_state
-
 - name: restart network
   become: yes
   service:
       name: NetworkManager
       state: restarted
-  when: services_state.ansible_facts.services['NetworkManager.service'] is defined
