@@ -707,6 +707,12 @@ subparsers:
                           __LISTYAMLS__
                       default: internal
 
+                  storage-config-file:
+                      type: Value
+                      help: |
+                          Unlike storage-config, this option allow to pass storage configuration
+                          file (YAML file) regardless of the storage backend tasks.
+
                   ceph-osd-type:
                       type: Value
                       help: |
