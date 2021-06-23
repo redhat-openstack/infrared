@@ -16,6 +16,24 @@
       "message": "I\u0027m not totally sure why this is needed - we already pass configuration files which sets the full storage configuration.",
       "revId": "e0ac27ccab2c7d5e5c4c3015f7b56c16a048456b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6e3320e5_2f1d1534",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1014216
+      },
+      "writtenOn": "2021-06-23T06:44:50Z",
+      "side": 1,
+      "message": "The storage-config file is added to overcloud_deploy.sh script in the backend tasks (ceph.yml, swift.yml, netapp.yml). In case we need two backends ceph internal and netapp external, two files are required internal.yaml and another configuration file for netapp.\nThe existing code does not allow this.\nI suggested this change because I didn\u0027t want to change the existing code to avoid problems.\n\nThere is another option that I think is preferable.\nWe can separate the storage-config task and move it under storage/main.yml.\nThere will be one condition for running the task only that the file is provided.\n\nWhat do you think ?",
+      "parentUuid": "5c9eecc3_c1832722",
+      "revId": "e0ac27ccab2c7d5e5c4c3015f7b56c16a048456b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
