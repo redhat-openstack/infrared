@@ -181,12 +181,18 @@
     # ref:
     #   https://bugzilla.redhat.com/show_bug.cgi?id=1665191
     #   https://bugzilla.redhat.com/show_bug.cgi?id=1666804
-    - name: Verify that at least one cinder-backup service is active
+    - name: Verify that at least one cinder-backup service is active (if it was deployed)
       shell: |
         source {{ overcloud_rc }}
-        openstack volume service list -f json | jq '.[] | select(.Binary=="cinder-backup" and .Status=="enabled" and .State=="up").Host' | wc -l
+        RETURN_CODE=0
+        if [[ $(openstack volume service list -f json | jq '.[] | select(.Binary=="cinder-backup" and .Status=="enabled")') != '' ]]; then
+          if [[ $(openstack volume service list -f json | jq '.[] | select(.Binary=="cinder-backup" and .Status=="enabled" and .State=="up").Host' | wc -l) != "1" ]]; then
+            RETURN_CODE=1
+          fi
+        fi
+        exit ${RETURN_CODE}
       changed_when: false
       register: _volume_backup_state
       retries: 5
       delay: 60
-      until: _volume_backup_state.stdout == '1'
+      until: _volume_backup_state.rc == '0'
