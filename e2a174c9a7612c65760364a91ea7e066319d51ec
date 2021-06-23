@@ -188,6 +188,24 @@
       "parentUuid": "fa8c668f_4fb1dbb5",
       "revId": "e2a174c9a7612c65760364a91ea7e066319d51ec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "48b8396c_9906d252",
+        "filename": "plugins/tripleo-overcloud/templates/nodes_data.yaml.j2",
+        "patchSetId": 2
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1012331
+      },
+      "writtenOn": "2021-06-23T14:37:18Z",
+      "side": 1,
+      "message": "@sathlan is right, this won\u0027t work because KernelArgs is sourced only as a role parameter and not a global parameter.\n\nThis should be defined under all roles with a nova_libvirt service in them.\n\nAlso, if we want to hardcode ComputeParameters and ComputeHCIParameters and ComputeWhateverParameters here, this is going to break or instances of the *Parameters defined anywhere else in the templates like here [1] for example, or anything user-defined.\n\nWe need some kind of harmonization of the those role parameters.\n\n\n[1] https://github.com/redhat-openstack/infrared/blob/master/plugins/tripleo-overcloud/vars/deployment/files/virt/network/network-environment.yaml.j2#L60",
+      "parentUuid": "08230b4c_02a40ea9",
+      "revId": "e2a174c9a7612c65760364a91ea7e066319d51ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
