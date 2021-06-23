@@ -154,7 +154,7 @@
         openstack network agent list -f json | jq '.[] | select(.State==true and .Alive==false)'
       changed_when: false
       register: _network_agents_state
-      retries: 5
+      retries: 15
       delay: 60
       until: _network_agents_state.stdout == ''
 
@@ -164,7 +164,7 @@
         openstack compute service list -f json | jq '.[] | select(.Status=="enabled" and .State=="down")'
       changed_when: false
       register: _compute_service_state
-      retries: 5
+      retries: 15
       delay: 60
       until: _compute_service_state.stdout == ''
 
@@ -174,7 +174,7 @@
         openstack volume service list -f json | jq '.[] | select(.Status=="enabled" and .State=="down" and .Binary!="cinder-backup")'
       changed_when: false
       register: _volume_service_state
-      retries: 5
+      retries: 15
       delay: 60
       until: _volume_service_state.stdout == ''
 
@@ -187,6 +187,6 @@
         openstack volume service list -f json | jq '.[] | select(.Binary=="cinder-backup" and .Status=="enabled" and .State=="up").Host' | wc -l
       changed_when: false
       register: _volume_backup_state
-      retries: 5
+      retries: 15
       delay: 60
       until: _volume_backup_state.stdout == '1'
