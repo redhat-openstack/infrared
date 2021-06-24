@@ -12,11 +12,6 @@
         name: libguestfs-tools-c
         state: present
 
-    - name: Get info about existing virt storage pools
-      virt_pool:
-        command: info
-      register: _virt_pools
-
     - name: Get info about existing VM's
       virt:
         command: list_vms
@@ -114,7 +109,7 @@
           set_fact:
             _virsh_snapshot_manifest_content: >-
               {
-                'virt_pool_path': '{{ _virt_pools.pools.images.path }}',
+                'virt_pool_path': '{{ provision.disk.pool }}',
                 'snapshot_path': '{{ provision.virsh.snapshot.path }}',
                 'hypervisor_fqdn': '{{ ansible_fqdn }}',
                 'servers': [
