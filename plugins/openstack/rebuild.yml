@@ -1,0 +1,7 @@
+- name: Pre run configuration
+  import_playbook: "{{ provision_pre | default('pre.yml') }}"
+  tags: pre_rebuild
+
+- name: Rebuild instances
+  import_playbook: "{{ rebuild_instances | default('rebuild_instances.yml') }}"
+  tags: rebuild
