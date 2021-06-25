@@ -1,0 +1,12 @@
+- name: Locking OpenStack instances
+  hosts: localhost
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+  tasks:
+      - name: Unlock instance
+        os_server_action:
+          cloud: "{{ provision.cloud | default(omit) }}"
+          action: unlock
+          server: "{{ item }}"
+        loop: "{{ provision.instances }}"
