@@ -1,0 +1,13 @@
+- name: Rebuild OpenStack instances
+  hosts: localhost
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+  tasks:
+      - name: Rebuild instances
+        os_server_action:
+          cloud: "{{ provision.cloud | default(omit) }}"
+          image: "{{ provision.image | default(omit) }}"
+          action: rebuild
+          server: "{{ item }}"
+        loop: "{{ provision.instances }}"
