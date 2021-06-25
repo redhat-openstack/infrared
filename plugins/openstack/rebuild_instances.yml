@@ -1,0 +1,33 @@
+- name: Rebuild OpenStack instances
+  hosts: localhost
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+  tasks:
+      - name: Rebuild instances
+        os_server_action:
+          cloud: "{{ provision.cloud | default(omit) }}"
+          image: "{{ provision.image | default(omit) }}"
+          action: rebuild
+          server: "{{ item }}"
+        register: stam
+        loop: "{{ provision.instances }}"
+
+      - name: Retrieve instance data
+        os_server_info:
+          cloud: "{{ provision.cloud | default(omit) }}"
+          server: "{{ item }}"
+        register: rebuilt_instances
+        loop: "{{ provision.instances }}"
+
+      - name: Add created servers to inventory
+        vars:
+            instance_flavor: "{{ openstack_flavors | first }}"
+        add_host:
+            # item.item is the server object
+            name: "{{ item.item }}"
+            ansible_host: "{{ item.openstack_servers[0].accessIPv4 }}"
+            groups: "{{ provision.groups }}"
+            ansible_ssh_private_key_file: "{{ provision.key.file | expanduser }}"
+            ansible_user: "{{ provision.username }}"
+        with_items: "{{ rebuilt_instances.results }}"

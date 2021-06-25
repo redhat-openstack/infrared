@@ -87,6 +87,22 @@ subparsers:
                       silent:
                           - image
 
+            - title: rebuild
+              options:
+                  rebuild:
+                      type: Bool
+                      help: Rebuild an existing instance
+                  instances:
+                      type: ListValue
+                      help: |
+                          OpenStack instances to rebuild.
+                          comma separated list.
+                  groups:
+                      type: Value
+                      help: |
+                          Group name(s) to which rebuilt instances will be added
+                      default: 'openstack_nodes'
+
             - title: Setup BMC node repositories
               options:
                   bmc-cdn:
