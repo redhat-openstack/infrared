@@ -106,6 +106,8 @@ subparsers:
                            - "16.2"
                            - "16.2-trunk"
                            - "17"
+                           - "17.0"
+                           - "17.1"
                            - "17-trunk"
                            - liberty
                            - kilo
