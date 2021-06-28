@@ -10,9 +10,10 @@
           server: "{{ item }}"
         register: rebuilt_instances
         loop: "{{ provision.instances }}"
-        until: "not {{ rebuilt_instances.openstack_servers[0].locked }}"
-        retries: 30
-        delay: 600
+
+      - name: debug
+        debug:
+          msg: "{{ rebuilt_instances }}"
 
       - name: Lock instance
         os_server_action:
