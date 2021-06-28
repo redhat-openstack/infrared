@@ -87,6 +87,38 @@ subparsers:
                       silent:
                           - image
 
+            - title: Provision
+              options:
+                  provision:
+                      type: Bool
+                      help: Provision OpenStack instance(s)
+                      default: true
+
+            - title: Lock
+              options:
+                  lock:
+                      type: Bool
+                      help: Lock an OpenStack instance
+                  unlock:
+                      type: Bool
+                      help: Unlock an OpenStack instance
+
+            - title: Rebuild
+              options:
+                  rebuild:
+                      type: Bool
+                      help: Rebuild an existing instance
+                  instances:
+                      type: ListValue
+                      help: |
+                          OpenStack instances to rebuild.
+                          comma separated list.
+                  groups:
+                      type: Value
+                      help: |
+                          Group name(s) to which rebuilt instances will be added
+                      default: 'openstack_nodes'
+
             - title: Setup BMC node repositories
               options:
                   bmc-cdn:
