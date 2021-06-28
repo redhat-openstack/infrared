@@ -9,7 +9,9 @@
     - not provision.rebuild|default(False)
 
 - import_playbook: lock.yml
-  when: provision.lock|default(False)
+  when:
+    - provision.lock|default(False)
+    - not provision.rebuild|default(False)
 
 - import_playbook: rebuild.yml
   when: provision.rebuild|default(False)

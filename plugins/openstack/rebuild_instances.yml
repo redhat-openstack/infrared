@@ -10,7 +10,7 @@
           server: "{{ item }}"
         register: rebuilt_instances
         loop: "{{ provision.instances }}"
-        until: "not {{ rebuilt_instances.openstack_servers[0].locked }}"
+        until: not rebuilt_instances.openstack_servers[0].locked|default(False)
         retries: 30
         delay: 600
 
