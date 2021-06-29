@@ -12,6 +12,10 @@
   set_fact:
       topology_node: "{{ node_dict|default({}) | combine((override|default({})).get(node.key|basename|splitext|first, {}), recursive=True) }}"
 
+- name: Print
+  debug:
+      msg: "Topology node is: {{topology_node}}"
+
 - name: Replace node names with deployment id
   set_fact:
       topology_node: "{{ topology_node|combine({'name': prefix|default('')+ (prefix is defined|ternary('-','')) + topology_node.name}, recursive=True) }}"
