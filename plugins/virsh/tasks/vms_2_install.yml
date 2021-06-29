@@ -33,6 +33,13 @@
   set_fact:
     serial_files_dir: /var/lib/libvirt/qemu/
 
+# First, refresh the RBD remote storage pool as it doesn't detect newly
+# created images in prev. playbook (vms_1_create_disk.yml)
+- name: Refresh volume pool
+  virt_pool:
+    command: refresh
+    name: "{{ pool_name }}"
+
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
 - name: create vm's
   shell: |
@@ -43,7 +50,7 @@
            --disk path={{ base_image_path }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=
            {%- if topology_node.disks.disk1.bus is defined %}{{ topology_node.disks.disk1.bus }}{% else %}{{ provision.disk.bus }}{% endif %},format=qcow2,cache={{ disk_values.cache }} \
           {% else %}
-           --disk path={{ disk_pool }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus={{ provision.disk.bus }},format=qcow2,cache={{ disk_values.cache }} \
+           --disk vol=default/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus={{ provision.disk.bus }},format=qcow2,cache={{ disk_values.cache }} \
           {% endif -%}
           {% endfor %}
           {% else %}

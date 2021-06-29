@@ -41,6 +41,10 @@
         ignore_errors: true
         changed_when: false
 
+      - name: Print
+        debug:
+            msg: "pool check is: {{pool_check}}"
+
       - name: create the volume pool xml file
         template:
           src: volume_pool.xml.j2
@@ -79,7 +83,7 @@
             {% if not disk_values.import_url %}
 
             # create empty disk
-            qemu-img create -f qcow2 -o preallocation={{ disk_values.preallocation }} {{ disk_pool  }}/{{ node_image }} {{ disk_values.size }}
+            qemu-img create -f qcow2 -o preallocation={{ disk_values.preallocation }} {{ base_image_path  }}/{{ node_image }} {{ disk_values.size }}
 
             ## Prepare disk image
 
@@ -90,13 +94,13 @@
             # Try to find the "root" partition or an xfs partition. Defaults to /dev/sda1 else.
             root_part=`virt-filesystems --csv --long --no-title -a {{ base_image_path }}/{{ image_name }} | awk -F "," '{ if ($4 == "root") {print $1; exit;} else if ($3 == "xfs") {print $1; exit;} }'`
             root_part=${root_part:-/dev/sda1}
-            virt-resize --expand $root_part {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
+            virt-resize --expand $root_part {{ base_image_path }}/{{ image_name }} {{ base_image_path }}/{{ node_image }}
             # We need to regenerate a new machine-id due to DHCP IPv6 not working otherwise
-            virt-sysprep -a {{ disk_pool }}/{{ node_image }} \
+            virt-sysprep -a {{ base_image_path }}/{{ node_image }} \
                 --operations machine-id
             # inject DEFROUTE for IPv6 and IPv6 to file and set it on for external network only
             NIC_DEFAULT="DEVICE=\"eth0\"\nBOOTPROTO=\"dhcp\"\nBOOTPROTOv6=\"dhcp\"\nONBOOT=\"yes\"\nTYPE=\"Ethernet\"\nUSERCTL=\"yes\"\nPEERDNS=\"yes\"\nIPV6INIT=\"yes\"\nPERSISTENT_DHCLIENT=\"1\"\n"
-            virt-customize -a {{ disk_pool }}/{{ node_image }} \
+            virt-customize -a {{ base_image_path }}/{{ node_image }} \
             {% for interface in topology_node.interfaces %}
                 {% if loop.index0 == 0 %}
                     --run-command "echo -e \"$NIC_DEFAULT\" > {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}" \
@@ -120,7 +124,13 @@
             # in case of import simply copy that image to use as a disk
             cp -rf {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
             {% endif %}{# endif not import_url #}
-            chown qemu:qemu {{ disk_pool }}/{{ node_image }}
+            chown qemu:qemu {{ base_image_path }}/{{ node_image }}
+            # TODO fhubik - this is for devel, remove once debug finished
+            set +e
+            rbd info --pool rbdbench2 {{ node_image }} &>/dev/null
+            IMG_EXISTS=$?
+            set -e
+            if [ $IMG_EXISTS -ne 0 ]; then qemu-img convert -f qcow2 -O raw {{ base_image_path }}/{{ node_image }} {{ disk_pool }}/{{ node_image }}; fi
             {% endfor %}{# endfor vm disks #}
             {% endfor %}{# endfor vm-type(controller etc) #}
       #  todo(yfried) needs a "creates"
