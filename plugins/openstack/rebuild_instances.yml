@@ -12,7 +12,21 @@
         loop: "{{ provision.instances }}"
         until: not rebuilt_instances.openstack_servers[0].locked|default(False)
         retries: 30
-        delay: 600
+        delay: "{{ 600|random(start=500) }}"
+
+      - name: Pause
+        pause:
+          minutes: "{{ 3|random(start=1) }}"
+
+      - name: Verify instance is unlocked (again)
+        os_server_info:
+          cloud: "{{ provision.cloud | default(omit) }}"
+          server: "{{ item }}"
+        register: rebuilt_instances
+        loop: "{{ provision.instances }}"
+        until: not rebuilt_instances.openstack_servers[0].locked|default(False)
+        retries: 30
+        delay: "{{ 600|random(start=500) }}"
 
       - name: Lock instance
         os_server_action:
