@@ -43,7 +43,7 @@
            --disk path={{ base_image_path }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=
            {%- if topology_node.disks.disk1.bus is defined %}{{ topology_node.disks.disk1.bus }}{% else %}{{ provision.disk.bus }}{% endif %},format=qcow2,cache={{ disk_values.cache }} \
           {% else %}
-           --disk path={{ disk_pool }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus={{ provision.disk.bus }},format=qcow2,cache={{ disk_values.cache }} \
+           --disk vol=default/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus={{ provision.disk.bus }},format=qcow2,cache={{ disk_values.cache }} \
           {% endif -%}
           {% endfor %}
           {% else %}
