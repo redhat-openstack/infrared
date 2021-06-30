@@ -91,7 +91,7 @@
 
 - name: Add blacklist invocation
   set_fact:
-      blacklistfile: "--blacklist_file black_list_{{ test_suite }}"
+      blacklistfile: "--exclude_list black_list_{{ test_suite }}"
   when: black_list_file.stat.exists
 
 - name: Check for the existance of white_list_file
@@ -101,7 +101,7 @@
 
 - name: Add whitelist invocation
   set_fact:
-      whitelistfile: "--whitelist_file white_list_{{ test_suite }}"
+      whitelistfile: "--include_list white_list_{{ test_suite }}"
   when: white_list_file.stat.exists
 
 - name: Add regex invoke for "{{ test_suite }}"
@@ -128,7 +128,7 @@
             {{ whitelistfile }}
             {{ blacklistfile }}
             {{ ('--concurrency ' + comp_threads|default(False)|ternary(comp_threads,test_dict.threads)|default(test.threads)|string ) }}
-            {{ ('--black-regex ' + test.blackre|string|quote )
+            {{ ('--exclude-regex ' + test.blackre|string|quote )
             if test.blackre|default('') else '' }}
             {{ (test.list) | ternary ('--list','') }}
             > {{ test_output_filename }}.subunit;
@@ -149,7 +149,7 @@
             {{ whitelistfile }}
             {{ blacklistfile }}
             {{ ('--concurrency ' + comp_threads|default(False)|ternary(comp_threads,test_dict.threads)|default(test.threads)|string ) }}
-            {{ ('--black-regex ' + test.blackre|string|quote )
+            {{ ('--exclude-regex ' + test.blackre|string|quote )
             if test.blackre|default('') else '' }}
             {{ (test.list) | ternary ('--list','') }}
             > {{ test_output_filename }}.subunit;
