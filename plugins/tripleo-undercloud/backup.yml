@@ -33,7 +33,7 @@
             command: "virt-sparsify --compress {{ install.disk.pool }}/{{ undercloud }}-disk1.qcow2 {{ undercloud_image_file }}"
 
           - name: Use sha256 to calculate checksum
-            ansible.builtin.stat:
+            stat:
                 path: "{{ undercloud_image_file }}"
                 checksum_algorithm: sha256
                 get_checksum: yes
