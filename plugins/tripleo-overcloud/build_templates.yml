@@ -52,11 +52,15 @@
             state: directory
             mode: u=rwX,g=rX,o=rX
 
+      - name: Delete the symlink to exclude the failure when reapplying the symlink to another dir
+        file:
+          path: '__oc_templates_folder'
+          state: absent
+
       - name: Create a stable symlink to the template base folder
         file:
             src: '{{ template_base }}'
             dest: '__oc_templates_folder'
-            force: yes
             state: link
 
       - name: Ensure deployment folder nested structure exists
