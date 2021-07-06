@@ -66,7 +66,9 @@
             name: vbmc
         vars:
             vbmc_nodes: "{{ oc_nodes + oc_ironic | difference(bm_nodes_names) }}"
-        when: install.version|default(undercloud_version) | openstack_release >= 11 or install.vbmc.force
+        when:
+            - install.version|default(undercloud_version) | openstack_release >= 11 or install.vbmc.force
+            - oc_nodes or oc_ironic
 
       - name: grab undercloud private key
         command: "cat ~/.ssh/id_rsa"
