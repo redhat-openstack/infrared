@@ -157,7 +157,12 @@
       search_regex: OpenSSH
       delay: 10
       sleep: 3
-      timeout: 500
+      timeout: 60
+  register: wait_for_hosts_reachable
+  retries: 5
+  delay: 1
+  until: wait_for_hosts_reachable.rc == 0
+
   with_items: "{{ floating_ips.results }}"
   when: "'ovb' not in topology_node.groups"
 
