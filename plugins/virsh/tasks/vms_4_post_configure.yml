@@ -12,7 +12,7 @@
   when: vswitch_type in infrared_vswitch_types
 
 - name: "setup ssh keys on {{ vswitch_type }} switch"
-  include_tasks: "tasks/vswitch_appliance_setup.yml"
+  include_tasks: "vswitch_appliance_setup.yml"
   when: vswitch_type in infrared_vswitch_types
   with_items: "{{ topology_node.node_indexes }}"
   loop_control:
