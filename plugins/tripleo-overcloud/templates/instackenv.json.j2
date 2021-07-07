@@ -8,7 +8,7 @@
   {% endif %}
   "nodes": [
 {% for bm_host in (bm_nodes|default({}))['nodes']|default([]) %}
-    {{ bm_host | to_nice_json }},
+    {{ bm_host | to_nice_json }}{% if not loop.last %},{% endif %}
 {% endfor %}
 {% for host_string in nodes_info.results|map(attribute='stdout')|list %}
 {% set host_data = host_string|from_yaml %}
