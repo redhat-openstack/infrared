@@ -27,6 +27,17 @@
         tags:
             - always
 
+- name: Install Crudini on the overcloud nodes
+  hosts: "{{ groups.overcloud_nodes|default([]) }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+      - include_tasks: tasks/install-crudini.yml
+        tags:
+            - always
+        when:
+            - test.install.crudini is defined and test.install.crudini
+
 - name: Test openstack with tempest
   hosts: tester
   gather_facts: yes
