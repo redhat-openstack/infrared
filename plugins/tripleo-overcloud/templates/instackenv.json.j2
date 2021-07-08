@@ -11,6 +11,7 @@
     {{ bm_host | to_nice_json }}{% if not loop.last %},{% endif %}
 {% endfor %}
 {% for host_string in nodes_info.results|map(attribute='stdout')|list %}
+    {% if (bm_nodes|default({}))['nodes']|default([]) %},{% endif %}
 {% set host_data = host_string|from_yaml %}
     {
       "name": "{{ host_data.name }}",
