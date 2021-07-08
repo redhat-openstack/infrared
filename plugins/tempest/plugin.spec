@@ -285,6 +285,10 @@ subparsers:
                       type: Value
                       help: A URL of tempest RPM package to be installed from external source.
                       default: ''
+                  install-crudini:
+                      type: Bool
+                      help: Install crudini on all controller nodes (required by some tests).
+                      default: no
             - title: ansible facts
               options:
                   collect-ansible-facts:
