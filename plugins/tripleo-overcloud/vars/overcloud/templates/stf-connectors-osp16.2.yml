@@ -2,22 +2,23 @@ tripleo_heat_templates:
     - "{{ install.heat.templates.basedir }}/environments/metrics/collectd-write-qdr.yaml"
     - "{{ install.heat.templates.basedir }}/environments/metrics/ceilometer-write-qdr.yaml"
     - "{{ install.heat.templates.basedir }}/environments/metrics/qdr-edge-only.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/enable-legacy-telemetry.yaml"
     - "{{ install.heat.templates.basedir }}/deployment/database/redis-pacemaker-puppet.yaml"
 custom_templates:
   parameter_defaults:
     CeilometerQdrEventsConfig:
       driver: amqp
-      topic: osp13-event
+      topic: osp162-event
     CeilometerQdrMetricsConfig:
       driver: amqp
-      topic: osp13-metering
+      topic: osp162-metering
     CeilometerQdrPublishMetrics: true
     CollectdAmqpInstances:
-      osp13-notify:
+      osp162-notify:
         format: JSON
         notify: true
         presettle: false
-      osp13-telemetry:
+      osp162-telemetry:
         format: JSON
         presettle: false
     MetricsQdrAddresses:
