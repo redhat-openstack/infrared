@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a6352ef7_57de1471",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1019299
+      },
+      "writtenOn": "2021-07-08T16:58:24Z",
+      "side": 1,
+      "message": "I diff\u0027d the stf-connectors files against each other and found that they are basically identical except for the cloud/topic names. After talking to Leonid, the intention is to run multiple OSP instances based on these files all pointed at the same STF in order to do multi-cloud testing. This seems like a sane justification for all that duplication, but I\u0027m open to suggestions on if there is yet another layer of templating or variable injection available to make that even smoother.\n\nIn any case, this LGTM",
+      "revId": "2f3735f3b29380719448bd04012cfa672161ee9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "716781ca_c2159470",
+        "filename": "plugins/tripleo-overcloud/vars/overcloud/templates/enable-stf-ceph.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1019299
+      },
+      "writtenOn": "2021-07-08T16:58:24Z",
+      "side": 1,
+      "message": "According to our docs/intended process, this ceph config should end up in an stf-connectors file, not the base template, but since there are several stf-connectors files (for multicloud/multiversion testing against a single STF), it would cause even more duplication and maintenance. It saves on work to put it here even if it\u0027s somewhat impure vs. the real world.",
+      "revId": "2f3735f3b29380719448bd04012cfa672161ee9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
