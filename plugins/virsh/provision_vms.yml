@@ -4,7 +4,8 @@
   gather_facts: yes
   any_errors_fatal: true
   vars:
-      base_image_path: /var/lib/libvirt/images
+      # In case its not RBD deployment, use "/var/lib/libvirt/images" default
+      base_image_path: "{{ 'rbd:///rbd/' if provision.rbd.on else provision.disk.pool }}"
       url: "{{ provision.image.url }}"
       infrared_vswitch_types:
         - vqfx
@@ -18,6 +19,12 @@
         - provision.prefix is defined
         - provision.topology.extend
         - ansible_local.run is not defined
+
+    - name: Construct reference to new rbd clone (TODO check which unused)
+      set_fact:
+          rbd_clone_url: "{{ 'rbd/' + provision.rbd.namespace + '/' + provision.rbd.clonename }}"
+          rbd_namespace_url: "{{ 'rbd/' + provision.rbd.namespace }}"
+          rbd_namespace_url_libguestfs: "{{ 'rbd:///rbd/' + provision.rbd.namespace }}"
 
     - name: Get uniq id for current deployment
       set_fact:
@@ -47,7 +54,12 @@
       with_dict: "{{ topology_nodes }}"
       loop_control:
           loop_var: node
-      when: node.value.node_indexes|length > 0
+      when: node.value.node_indexes|length > 0 and not provision.rbd.on
+      tags: images
+
+    - name: prepare customized clone of golden rbd image
+      include_tasks: tasks/prepare_golden_image_clone.yml
+      when: provision.rbd.on
       tags: images
 
     - name: prepare bridge interfaces in the topology
@@ -69,6 +81,7 @@
           register: disk_tasks
           until: disk_tasks.finished
           retries: 300
+          delay: 3
           with_items: "{{ async_disks }}"
           when: async_disks is defined
       tags: disks

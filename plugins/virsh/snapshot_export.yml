@@ -23,6 +23,12 @@
       set_fact:
         _vm_list: "{{ _virt_list.list_vms | select('match', vm_prefix ~ provision.virsh.snapshot.servers) | list }}"
 
+# TODO: detect cephfs, override path if detected? Maybe no, maybe use param rather?
+
+#    - name: If RBD is used, overwrite snapshot destination
+#      set_fact:
+#        provision.virsh.snapshot.path: "/mnt/mycephfs"
+
     - name: Shut down any running VM's
       shell: |
         set -eo pipefail
@@ -81,6 +87,20 @@
             parallel --will-cite --use-cores-instead-of-threads --jobs 50% 'virt-sparsify --in-place {}; qemu-img convert -O qcow2 -c {} {{ provision.virsh.snapshot.path }}/$(basename {})' ::: $DISK_LIST
           args:
             executable: /bin/bash
+          loop: "{{ _vm_list }}"
+          when: not provision.rbd
+
+        - name: Snapshot the states of all RBD images in image repository
+          shell: |
+            for vdisk in $(virsh domblklist {{ item }} | awk '/{{ item }}/ {print $2}'); do
+
+              virt-sparsify --in-place ${vdisk}
+              qemu-img convert -O qcow2 -c ${vdisk} {{ provision.virsh.snapshot.path }}/${vdisk##*/}
+            done
+          args:
+            executable: /bin/bash
+          loop: "{{ _vm_list }}"
+          when: provision.rbd
 
         - name: Save nvram image
           shell: |
@@ -91,6 +111,8 @@
           args:
             executable: /bin/bash
           loop: "{{ _vm_list }}"
+          when: not provision.rbd
+
 
         - name: Save VM definitions
           copy:
