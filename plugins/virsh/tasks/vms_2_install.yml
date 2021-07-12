@@ -2,10 +2,6 @@
 - set_fact:
     topology_node: "{{ node.value }}"
 
-- name: define disk pool path
-  set_fact:
-      disk_pool: "{{ provision.disk.pool if (topology_node.disks.disk1.path == None) else topology_node.disks.disk1.path }}"
-
   # This is an early inventory host registration.
   # It has 'local' connection type because has no configured network yet.
   # This is needed for cases when provisioning failed before we generated inventory file. In this cases we have orphan resources (vms and networks).
@@ -33,17 +29,27 @@
   set_fact:
     serial_files_dir: /var/lib/libvirt/qemu/
 
+# First, refresh the RBD remote storage pool as it doesn't detect newly
+# created images in prev. playbook (vms_1_create_disk.yml)
+- name: Refresh volume pool
+  virt_pool:
+    command: refresh
+    name: "{{ pool_name }}"
+
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
 - name: create vm's
+  vars:
+      base_image_path: "{{ rbd_namespace_url_libguestfs if provision.rbd.on }}"
+      img_format: "{{ 'rbd' if provision.rbd.on else 'qcow2' }}"
   shell: |
       virt-install --name {{ topology_node.name }}-{{ item }} \
           {% if topology_node.disks|count > 0 %}
           {% for disk_name, disk_values in topology_node.disks.items() %}
           {% if disk_values.import_url is defined and disk_values.import_url %}
-           --disk path={{ base_image_path }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=
-           {%- if topology_node.disks.disk1.bus is defined %}{{ topology_node.disks.disk1.bus }}{% else %}{{ provision.disk.bus }}{% endif %},format=qcow2,cache={{ disk_values.cache }} \
+           --disk path={{ base_image_path }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.{{ img_format }},device=disk,bus=
+           {%- if topology_node.disks.disk1.bus is defined %}{{ topology_node.disks.disk1.bus }}{% else %}{{ provision.disk.bus }}{% endif %},format={{ img_format }},cache={{ disk_values.cache }} \
           {% else %}
-           --disk path={{ disk_pool }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus={{ provision.disk.bus }},format=qcow2,cache={{ disk_values.cache }} \
+           --disk path={{ disk_pool }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.{{ img_format }},device=disk,bus={{ provision.disk.bus }},format={{ img_format }},cache={{ disk_values.cache }} \
           {% endif -%}
           {% endfor %}
           {% else %}
