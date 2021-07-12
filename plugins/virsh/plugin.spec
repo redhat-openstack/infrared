@@ -165,7 +165,23 @@ subparsers:
                           Redirect the VMs serial output to files.
                           Files can be found under /var/lib/libvirt/qemu/{prefix-node_name-node_number}-serial.log
                           For example: /var/lib/libvirt/qemu/XYZ-undercloud-0-serial.log
-
+                  rbd-on:
+                      type: Bool
+                      default: False
+                      help: |
+                          Enables experimental RBD snapshot support.
+                  rbd-source:
+                      type: Value
+                      help: |
+                         Source golden image to clone from (in RBD URL format: pool/namespace/image).
+                  rbd-namespace:
+                      type: Value
+                      help: |
+                         Unique RBD namespace for this deployment.
+                  rbd-clonename:
+                      type: Value
+                      help: |
+                         How to name the "golden image" clone which will be cloned to current namespace and images will be derived from.
             - title: cleanup
               options:
                   cleanup:
