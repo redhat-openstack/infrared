@@ -2,9 +2,6 @@ custom_templates:
   parameter_defaults:
       CeilometerQdrPublishEvents: true
       CeilometerQdrPublishMetrics: true
-      CephStorageExtraConfig:
-          tripleo::profile::base::metrics::collectd::amqp_host: '%{hiera(''storage'')}'
-          tripleo::profile::base::metrics::qdr::listener_addr: '%{hiera(''storage'')}'
       CollectdAmqpInterval: 5
       CollectdConnectionType: amqp1
       CollectdDefaultPollingInterval: 5
@@ -33,9 +30,9 @@ custom_templates:
           - volume.*
           collectd::plugin::amqp1::send_queue_limit: 50
           collectd::plugin::cpu::reportbycpu: true
-          collectd::plugin::virt::extra_stats: cpu_util disk vcpu
-          collectd::plugin::virt::hostname_format: "name uuid hostname"
-          collectd::plugin::virt::plugin_instance_format: name
+          collectd::plugin::virt::extra_stats: "pcpu cpu_util vcpupin vcpu memory disk disk_err disk_allocation disk_capacity disk_physical domain_state job_stats_background perf"
+          collectd::plugin::virt::hostname_format: "uuid metadata hostname"
+          collectd::plugin::virt::plugin_instance_format: metadata
           collectd::plugin::vmem::verbose: true
           collectd::plugin::memcached::instances:
             local:
