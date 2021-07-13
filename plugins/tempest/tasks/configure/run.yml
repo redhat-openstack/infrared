@@ -38,6 +38,22 @@
       register: nova_password
   when: test.configure.whitebox.db
 
+- name: Configure custom image and flavor ids
+  block:
+    - name: Get customized image id
+      shell: source ~/keystonerc && openstack image show customized_image -f value -c id
+      register: image_id
+    - name: Get customized alt image id
+      shell: source ~/keystonerc && openstack image show customized_image_alt -f value -c id
+      register: image_alt_id
+    - name: Get customized flavor id
+      shell: source ~/keystonerc && openstack flavor show customized_flavor -f value -c id
+      register: flavor_id
+    - name: Get customized alt flavor id
+      shell: source ~/keystonerc && openstack flavor show customized_flavor_alt -f value -c id
+      register: flavor_alt_id
+  when: test.customized.image.flavor
+
 - debug:
     var: test
 
@@ -99,6 +115,12 @@
               whitebox-database.internal_ip {{ internal_ip.stdout }} \
               whitebox-database.host {{ host_ip.stdout }} \
               whitebox-database.password {{ nova_password.stdout }} \
+              {% endif %}
+              {% if test.customized.image.flavor %}
+              compute.flavor_ref {{ flavor_id.stdout }} \
+              compute.flavor_ref_alt {{ flavor_alt_id.stdout }} \
+              compute.image_ref {{ image_id.stdout }} \
+              compute.image_ref_alt {{ image_alt_id.stdout }} \
               {% endif %}
               {# config options #}
               {% for section_name,options in config_options.items() %}

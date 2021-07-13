@@ -281,6 +281,14 @@ subparsers:
                           Configures following fields in [whitebox-database] section in tempest.conf:
                           internal_ip (Controller), host (Controller), password (NovaPassword) useful for connections to Nova database
                       default: no
+                  customized-image-flavor:
+                      type: Bool
+                      help: |
+                          Configures ids of customized images and flavors created in cloud-config 'create_flavors_image' task
+                          Plugin url: https://github.com/rhos-infra/cloud-config
+                          NOTE: 'customized_flavor', 'customized_flavor_alt', 'customized_image', 'customized_image_alt' should
+                          be pre-created, preferably by the 'create_flavors_image' task before using this option
+                      default: no
                   rpm-package:
                       type: Value
                       help: A URL of tempest RPM package to be installed from external source.
