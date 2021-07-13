@@ -2,12 +2,6 @@
 {% if install.version|openstack_release < 15 and install.get('bip', {}).get('address', {}) %}
 docker_bip = '--bip={{ install.bip.address }}'
 {% endif %}
-# Explicitly enable nova as nova is disabled by default,
-# until the jobs are migrated to use baremetal provisioning
-# https://review.opendev.org/#/c/749679/
-{% if install.version|openstack_release >= 17 %}
-enable_nova = true
-{% endif %}
 # Network interface on the Undercloud that will be handling the PXE
 # boots and DHCP for Overcloud instances. (string value)
 {% if 'bmc' in groups %}
