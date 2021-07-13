@@ -8,6 +8,7 @@ custom_templates:
       CollectdAmqpInterval: 5
       CollectdConnectionType: amqp1
       CollectdDefaultPollingInterval: 5
+      EnableSTF: true
       CollectdEnableLibpodstats: true
       CollectdEnableSensubility: true
       CollectdExtraPlugins:
@@ -39,9 +40,9 @@ custom_templates:
           - ceph-osd.3
           - ceph-osd.4
           collectd::plugin::cpu::reportbycpu: true
-          collectd::plugin::virt::extra_stats: cpu_util disk vcpu
-          collectd::plugin::virt::hostname_format: "name uuid hostname"
-          collectd::plugin::virt::plugin_instance_format: name
+          collectd::plugin::virt::extra_stats: "cpu_util vcpu disk"
+          collectd::plugin::virt::hostname_format: "uuid metadata hostname"
+          collectd::plugin::virt::plugin_instance_format: metadata
           collectd::plugin::vmem::verbose: true
           collectd::plugin::memcached::instances:
             local:
