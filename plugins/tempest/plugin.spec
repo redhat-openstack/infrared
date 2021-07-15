@@ -286,8 +286,11 @@ subparsers:
                       help: |
                           Configures ids of customized images and flavors created in cloud-config 'create_flavors_image' task
                           Plugin url: https://github.com/rhos-infra/cloud-config
-                          NOTE: 'customized_flavor', 'customized_flavor_alt', 'customized_image', 'customized_image_alt' should
-                          be pre-created, preferably by the 'create_flavors_image' task before using this option
+                          NOTE: 'customized_flavor', 'customized_flavor_alt', <hostname-url>, <hostname-url>_alt should
+                          be pre-created, preferably by the 'create_flavors_image' task before using this option 
+                          NOTE: <hostname-url> is the basename of the image used. Both tempest image and cloud-config image specs should
+                          be defined the same. Example- 'cirros-0.5.2-x86_64-disk.img' would be the name of the image when the following
+                          image spec is passed:  https://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
                       default: no
                   rpm-package:
                       type: Value
