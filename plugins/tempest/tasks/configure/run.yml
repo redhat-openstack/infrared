@@ -40,11 +40,14 @@
 
 - name: Configure custom image and flavor ids
   block:
-    - name: Get customized image id
-      shell: source ~/keystonerc && openstack image show customized_image -f value -c id
+    - name: Set hostname url
+      set_fact:
+        hostname_url: "{{ test.image | basename }}"
+    - name: Get {{ hostname_url }} image id
+      shell: source ~/keystonerc && openstack image show {{ hostname_url }} -f value -c id
       register: image_id
-    - name: Get customized alt image id
-      shell: source ~/keystonerc && openstack image show customized_image_alt -f value -c id
+    - name: Get {{ hostname_url }} alt image id
+      shell: source ~/keystonerc && openstack image show {{ hostname_url }}_alt -f value -c id
       register: image_alt_id
     - name: Get customized flavor id
       shell: source ~/keystonerc && openstack flavor show customized_flavor -f value -c id
@@ -52,7 +55,9 @@
     - name: Get customized alt flavor id
       shell: source ~/keystonerc && openstack flavor show customized_flavor_alt -f value -c id
       register: flavor_alt_id
-  when: test.customized.image.flavor
+  when:
+    - test.customized.image.flavor
+    - test.image is defined and test.image
 
 - debug:
     var: test
