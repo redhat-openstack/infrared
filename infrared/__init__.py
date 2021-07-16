@@ -201,7 +201,8 @@ PLUGINS_REGISTRY = {
         'src': 'https://github.com/rhos-infra/reportportal.git',
         'src_path': 'infrared_plugin',
         'desc': 'Ansible role for sending XUnit test results to ReportPortal',
-        'type': 'other'
+        'type': 'other',
+        'link_roles': 'true'
     },
     'tempest': {
         'src': 'plugins/tempest',
