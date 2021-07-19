@@ -38,3 +38,9 @@
   shell: |
           rbd snap create {{ rbd_clone_url }}@virsh || true
           rbd snap protect {{ rbd_clone_url }}@virsh || true
+
+- name: Record the name of the parent snapshot as fact
+  set_fact:
+    golden_snapshot: "{{ rbd_clone_url }}@virsh"
+    golden_snapshot_url: "'rbd:///'{{ rbd_clone_url }}@virsh"
+

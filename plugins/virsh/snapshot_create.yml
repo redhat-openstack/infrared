@@ -29,3 +29,17 @@
       changed_when: _virt_snapshot_create.rc == 2
       failed_when: _virt_snapshot_create.rc not in [0,2]
       loop: "{{ _virt_list.list_vms | select('match', vm_prefix ~ provision.virsh.snapshot.servers) | list }}"
+      when: not provision.rbd.on
+
+    - name: Create RBD snapshots of each disk of each VM
+      shell: |
+        set -e
+        RETURN_CODE=0
+        exit ${RETURN_CODE}
+      args:
+        executable: /bin/bash
+      register: _virt_snapshot_create
+      changed_when: _virt_snapshot_create.rc == 2
+      failed_when: _virt_snapshot_create.rc not in [0,2]
+      loop: "{{ _virt_list.list_vms | select('match', vm_prefix ~ provision.virsh.snapshot.servers) | list }}"
+      when: provision.rbd.on
