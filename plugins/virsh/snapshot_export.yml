@@ -35,6 +35,8 @@
         RETURN_CODE=0
         if ! virsh domstate {{ item }} | grep -qw 'shut off'; then
           virsh shutdown {{ item }}
+          sleep 30
+          virsh destroy {{ item }}
           RETURN_CODE=2
         fi
         exit ${RETURN_CODE}
@@ -88,19 +90,20 @@
           args:
             executable: /bin/bash
           loop: "{{ _vm_list }}"
-          when: not provision.rbd
+          when: not provision.rbd.on
 
         - name: Snapshot the states of all RBD images in image repository
+          ignore_errors: yes
           shell: |
+            echo "{{ provision.rbd.namespace }} > {{ provision.virsh.snapshot.path }}/namespace-info.txt"
             for vdisk in $(virsh domblklist {{ item }} | awk '/{{ item }}/ {print $2}'); do
-
-              virt-sparsify --in-place ${vdisk}
-              qemu-img convert -O qcow2 -c ${vdisk} {{ provision.virsh.snapshot.path }}/${vdisk##*/}
+              rbd snap create ${vdisk}@{{ provision.rbd.snapname }}
+              rbd snap protect ${vdisk}@{{ provision.rbd.snapname }}
             done
           args:
             executable: /bin/bash
           loop: "{{ _vm_list }}"
-          when: provision.rbd
+          when: provision.rbd.on
 
         - name: Save nvram image
           shell: |
@@ -111,8 +114,7 @@
           args:
             executable: /bin/bash
           loop: "{{ _vm_list }}"
-          when: not provision.rbd
-
+          when: not provision.rbd.on
 
         - name: Save VM definitions
           copy:
