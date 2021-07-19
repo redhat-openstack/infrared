@@ -15,6 +15,7 @@ custom_templates:
       - vmem
       CollectdSensubilityLogLevel: DEBUG
       CollectdSensubilityTransport: amqp1
+      CollectdSensubilityResultChannel: sensubility/telemetry
       ExtraConfig:
           ceilometer::agent::polling::polling_interval: 30
           ceilometer::agent::polling::polling_meters:
@@ -46,5 +47,5 @@ custom_templates:
           collectd::plugin::vmem::verbose: true
           collectd::plugin::memcached::instances:
             local:
-              host: "%{hiera(fqdn_canonical)}"
+              host: "%{hiera('fqdn_canonical')}"
               port: 11211
