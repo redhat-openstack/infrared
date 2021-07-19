@@ -182,6 +182,10 @@ subparsers:
                       type: Value
                       help: |
                          How to name the "golden image" clone which will be cloned to current namespace and images will be derived from.
+                  rbd-snapname:
+                      type: Value
+                      help: |
+                         Name of global snapshot which will record state of the whole namespace when "export" is run
             - title: cleanup
               options:
                   cleanup:
