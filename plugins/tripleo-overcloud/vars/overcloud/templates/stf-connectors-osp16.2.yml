@@ -5,6 +5,9 @@ tripleo_heat_templates:
     - "{{ install.heat.templates.basedir }}/environments/enable-legacy-telemetry.yaml"
 custom_templates:
   parameter_defaults:
+    CollectdSensubilityLogLevel: DEBUG
+    CollectdSensubilityTransport: amqp1
+    CollectdSensubilityResultsChannel: sensubility/osp162-telemetry
     CeilometerQdrEventsConfig:
       driver: amqp
       topic: osp162-event
