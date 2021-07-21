@@ -5,6 +5,9 @@ tripleo_heat_templates:
     - "{{ install.heat.templates.basedir }}/environments/enable-legacy-telemetry.yaml"
 custom_templates:
   parameter_defaults:
+    CollectdSensubilityLogLevel: DEBUG
+    CollectdSensubilityTransport: amqp1
+    CollectdSensubilityResultsChannel: sensubility/dcn-telemetry
     CeilometerQdrEventsConfig:
       driver: amqp
       topic: dcn-event
