@@ -37,7 +37,8 @@
       source_dir: "{{ install.deployment.files }}"
       # FIXME(yfried): use '~/' once https://github.com/ansible/ansible/issues/19869 is resolved
       template_base: "{{ ansible_user_dir }}/{{ source_dir | basename }}"
-      network_environment_file: "network-environment{{ (install.network.protocol == 'ipv6') | ternary('-v6','') }}{{ (install.network.protocol == 'ipv6-all') | ternary('-v6-all','') }}.yaml"
+      network_environment_file: "network-environment{{ ((install.version|default(undercloud_version)|openstack_release >= 17)) | ternary('_v2','') }}\
+          -{{ (install.network.protocol == 'ipv6') | ternary('-v6','') }}{{ (install.network.protocol == 'ipv6-all') | ternary('-v6-all','') }}.yaml"
   tasks:
       - name: read all flavors
         shell: |
