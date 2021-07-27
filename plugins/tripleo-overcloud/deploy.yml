@@ -49,6 +49,34 @@
 - name: Disable iscsid service on undercloud
   import_playbook: stop_iscsi.yml
 
+#TODO: merge this block to a single command
+- name: metalsmith net register and deploy
+  vars:
+      - template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
+  hosts: undercloud
+  any_errors_fatal: true
+  tasks:
+     - block:
+         - name: Output directory for generated environments
+           ansible.builtin.file:
+              state: directory
+              path: /home/stack/templates
+              mode: '0755'
+         - name: Create nets
+           shell: |
+               source ~/stackrc
+               openstack overcloud network provision {{ template_base }}/network/network_data.yaml -o /home/stack/templates/network_environment.yaml 2>&1 | tee -a /home/stack/overcloud_provision_net.log
+         - name: reserve VIPs
+           shell: |
+               source ~/stackrc
+               openstack overcloud network vip provision --stack {{ install.overcloud.stack }} {{ template_base }}/network/vip_data.yaml -o /home/stack/templates/vips-environment.yaml 2>&1 | tee -a /home/stack/overcloud_provision_vip.log
+         - name: Images/Deploy/provision nodes
+           shell: |
+               source ~/stackrc
+               openstack overcloud node provision  -o /home/stack/templates/baremetal_environment.yaml  {{ template_base }}/network/baremetal_deployment.yaml
+       when:
+           - (install.version|default(undercloud_version) | openstack_release >= 17)
+
 - name: Deploy the Overcloud
   hosts: undercloud
   gather_facts: yes
