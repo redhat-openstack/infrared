@@ -59,6 +59,7 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/{{ isolation_file }} \'
+  when: install.version|default(undercloud_version) | openstack_release < 17
 
 - name: Predictable IPs resource_registry
   import_tasks: control_node_placement/predictable_ips.yml
