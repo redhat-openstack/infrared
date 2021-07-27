@@ -18,3 +18,6 @@ openstack overcloud deploy \
 --compute-scale {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or '1' }} \
 --compute-flavor {{ ('compute' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('compute', 'baremetal') }} \
 {% endif %}
+{% if install.version|default(undercloud_version)|openstack_release >= 17 %}
+-e /home/stack/templates/vips-environment.yaml -e /home/stack/templates/network_environment.yaml -e /home/stack/templates/baremetal_environment.yaml
+{% endif %}

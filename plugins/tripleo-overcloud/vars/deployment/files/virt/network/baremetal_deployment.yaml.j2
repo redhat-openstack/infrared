@@ -1,0 +1,67 @@
+- name: Controller
+  count: {{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or '1' }}
+  hostname_format: controller-%index%
+  defaults:
+    network_config:
+      default_route_network:
+      - External
+      network_deployment_actions:
+      - CREATE
+      physical_bridge_name: br-ex
+      public_interface_name: nic1
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: storage
+    - network: storage_mgmt
+    - network: internal_api
+    - network: tenant
+    - network: external
+- name: Compute
+  count: {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or (install.hybrid is defined)| ternary('1','0') }}
+  hostname_format: compute-%index%
+  defaults:
+    network_config:
+      network_deployment_actions:
+      - CREATE
+      physical_bridge_name: br-ex
+      public_interface_name: nic1
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: storage
+    - network: internal_api
+    - network: tenant
+{% if not install.storage.external %}
+{%- if storage_backend == 'ceph' %}
+- name: CephStorage
+  count: {{ (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 }}
+  hostname_format: ceph-%index%
+  defaults:
+    network_config:
+      network_deployment_actions:
+      - CREATE
+      physical_bridge_name: br-ex
+      public_interface_name: nic1
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: storage
+    - network: storage_mgmt
+{% endif -%}
+{%- if storage_backend == 'swift' %}
+- name: SwiftStorage
+  count: {{ (install.storage.nodes|default(0)) or (groups['swift']|default([])|length) or 1 }}
+  hostname_format: swift-%index%
+  defaults:
+    network_config:
+      network_deployment_actions:
+      - CREATE
+      physical_bridge_name: br-ex
+      public_interface_name: nic1
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: storage
+    - network: storage_mgmt
+{% endif %}
