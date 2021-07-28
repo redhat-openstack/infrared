@@ -2,6 +2,7 @@
   count: {{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or '1' }}
   hostname_format: controller-%index%
   defaults:
+    profile: control
     network_config:
       default_route_network:
       - External
@@ -20,6 +21,7 @@
   count: {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or (install.hybrid is defined)| ternary('1','0') }}
   hostname_format: compute-%index%
   defaults:
+    profile: compute
     network_config:
       physical_bridge_name: br-ex
       public_interface_name: nic1
@@ -36,6 +38,7 @@
   count: {{ (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 }}
   hostname_format: ceph-%index%
   defaults:
+    profile: ceph-storage
     network_config:
       physical_bridge_name: br-ex
       public_interface_name: nic1
@@ -51,6 +54,7 @@
   count: {{ (install.storage.nodes|default(0)) or (groups['swift']|default([])|length) or 1 }}
   hostname_format: swift-%index%
   defaults:
+    profile: swift-storage
     network_config:
       physical_bridge_name: br-ex
       public_interface_name: nic1
