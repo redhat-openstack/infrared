@@ -53,9 +53,11 @@
 
 - name: Tag our machines with proper flavors
   import_playbook: "{{ overcloud_flavors | default('tag.yml') }}"
-  when: install.tagging|default('')
+  when:
+     - install.tagging|default('')
+     - (install.version|default(undercloud_version) | openstack_release < 17)
   tags:
-      - tag
+     - tag
 
 - name: Deploy the Overcloud
   vars:
