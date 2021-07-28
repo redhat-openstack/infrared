@@ -48,6 +48,11 @@
           "profile":"{{ uefi[host_data.name.split('-')[0]] }}",
           "boot_option":"local"
         }
+      {% elif install.version|default(undercloud_version)|openstack_release >= 17 %}
+       , "capabilities":
+        {
+          "profile":"{{ uefi[host_data.name.split('-')[0]] }}"
+        }
       {% endif %}
     }{% if not loop.last %},{% endif %}
 {% endfor %}
