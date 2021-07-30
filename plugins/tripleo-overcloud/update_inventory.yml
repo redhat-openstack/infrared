@@ -29,6 +29,21 @@
             # Required for SSL
             validate_certs: no
         delegate_to: "{{ groups.shade | first }}"
+        when: install.version|default(undercloud_version) | openstack_release < 17
+
+      - name: node name ip address facts
+        shell: |
+            source ~/stackrc ; openstack port list --network=ctlplane | awk 'BEGIN { first="true"; print "[" }\
+            /-ctlplane/ { if (first!="true") print ","; cmd="openstack port show " $2 " -c binding_host_id -f value"; cmd | getline result; close(cmd); \
+            print "{\"name\": \"" gensub("(.*)-ctlplane","\\1","g", $4) "\", \"addresses\": {\"ctlplane\":[{\"addr\":\"" \
+            gensub("ip_address=\x27(.*)\x27.*", "\\1", "g", $8)  "\"}]}, \"status\" : \"OKOK\", \"hypervisor_hostname\": \"" result "\"}" ; first="false"}\
+            END { print "]" }'
+        when: install.version|default(undercloud_version) | openstack_release >= 17
+        register: ctlplane_ports
+
+      - set_fact:
+             openstack_servers: "{{ ctlplane_ports.stdout | from_json }}"
+        when: install.version|default(undercloud_version) | openstack_release >=17
 
       - name: list ironic nodes
         shell: |
