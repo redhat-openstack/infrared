@@ -29,6 +29,21 @@
             # Required for SSL
             validate_certs: no
         delegate_to: "{{ groups.shade | first }}"
+        when: install.version|default(undercloud_version) | openstack_release < 17
+
+      - name: node name ip address facts
+        shell: |
+            source ~/stackrc ; metalsmith list | awk 'BEGIN { first="true"; print "[" }\
+            /ctlplane=/ { if (first!="true") print ",";  \
+            print "{\"name\": \"" $4 "\", \"addresses\": {\"ctlplane\":[{\"addr\":\"" \
+            gensub("ctlplane=([^ ]*)", "\\1", "g", $12)  "\"}]}, \"status\" : \"OKOK\", \"hypervisor_hostname\": \"" $2 "\"}" ; first="false"}\
+            END { print "]" }'
+        when: install.version|default(undercloud_version) | openstack_release >= 17
+        register: ctlplane_ports
+
+      - set_fact:
+             openstack_servers: "{{ ctlplane_ports.stdout | from_json }}"
+        when: install.version|default(undercloud_version) | openstack_release >=17
 
       - name: list ironic nodes
         shell: |
