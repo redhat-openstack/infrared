@@ -58,9 +58,13 @@
 
 - name: Get roles data file if exists
   shell: |
-      roles_file=$(grep '\-r\ ' /home/stack/overcloud_deploy.sh | sed 's/.*-r\ \(.*\)\ .*/\1/')
-      [ "$roles_file" == "" ] && roles_file=$(grep '\-\-roles\-file\ ' /home/stack/overcloud_deploy.sh | sed 's/.*--roles-file\ \(.*\)\ .*/\1/')
-      echo -n $roles_file
+      if [ -f "{{ template_base }}/roles_data.yaml" ];then
+         echo -n "{{ template_base }}/roles/roles_data.yaml"
+      else
+         roles_file=$(grep '\-r\ ' /home/stack/overcloud_deploy.sh | sed 's/.*-r\ \(.*\)\ .*/\1/')
+         [ "$roles_file" == "" ] && roles_file=$(grep '\-\-roles\-file\ ' /home/stack/overcloud_deploy.sh | sed 's/.*--roles-file\ \(.*\)\ .*/\1/')
+         echo -n $roles_file
+      fi
   register: found_roles_data
 
 - name: Set roles data parameter
