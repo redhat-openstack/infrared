@@ -16,6 +16,24 @@
       "message": "Confirmed on a POC job, cheery picking this change resulted in the expected:\n[stack@undercloud-0 ~]$ cat overcloud_deploy.sh \n#!/bin/bash\n\nopenstack overcloud deploy \\\n--timeout 100 \\\n--templates /usr/share/openstack-tripleo-heat-templates \\                                                                                                                                                                                    \n  --environment-file /usr/share/openstack-tripleo-heat-templates/environments/multipathd.yaml \u003c-added\n\nHowever to complete the multipath config on the overcloud, \nwe still need the newer storage config yaml, which amends missing multipath bits[0] to the original storage config yaml.\n\n[0]\n    NovaLibvirtVolumeUseMultipath: true\n    ExtraConfig:\n      cinder::config::cinder_config:\n        tripleo_netapp/use_multipath_for_image_xfer:\n           value: true",
       "revId": "81783acc5124a0350b2f27725f72160678ff64f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a29c2824_dc32835d",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-08-02T08:14:28Z",
+      "side": 1,
+      "message": "If those parameters are always needed to set up multipath, maybe shouldn\u0027t they be set here, in this file, instead of an additional configuration file which should be restricted to internal parameters?",
+      "parentUuid": "bbfb09d3_a7e8b881",
+      "revId": "81783acc5124a0350b2f27725f72160678ff64f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
