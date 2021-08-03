@@ -3,7 +3,7 @@
   fail:
       msg: "InfraRed supports updates for OpenStack version > 6"
   when:
-      - undercloud_version|openstack_release < 7
+      - install.version|default(undercloud_version) |openstack_release < 7
 
 - name: Checking overcloud_deploy_file
   stat:
