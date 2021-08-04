@@ -34,7 +34,8 @@
         if ! virsh domstate {{ item }} | grep -qw 'shut off'; then
           virsh shutdown {{ item }}
           sleep 30
-          virsh destroy {{ item }}
+          virsh destroy {{ item }} || true
+          sleep 10
           RETURN_CODE=2
         fi
         exit ${RETURN_CODE}
@@ -52,7 +53,7 @@
       register: _vm_shutdown
       until: _vm_shutdown.stdout.find('shut off') != -1
       retries: "{{ vm_shutdown_timeout | default(30) }}"
-      delay: 60
+      delay: 10
       loop: "{{ _vm_list }}"
 
     - name: Make sure that the snapshot path exists
