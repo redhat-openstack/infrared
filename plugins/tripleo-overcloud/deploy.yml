@@ -19,20 +19,20 @@
           - install.version|default(undercloud_version)|openstack_release >= 12
         become: yes
 
-- import_playbook: build_templates.yml
-  tags:
-      - deploy_preparation
-      - templates
+#- import_playbook: build_templates.yml
+#  tags:
+#      - deploy_preparation
+#      - templates
 
-- import_playbook: tls_everywhere.yml
-  tags:
-      - deploy_preparation
-      - templates
-      - freeipa
-  when:
-      - install.tls.everywhere|default(False)
-      - install.version|default(undercloud_version)|openstack_release >= 12
-      - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
+#- import_playbook: tls_everywhere.yml
+#  tags:
+#      - deploy_preparation
+#      - templates
+#      - freeipa
+#  when:
+#      - install.tls.everywhere|default(False)
+#      - install.version|default(undercloud_version)|openstack_release >= 12
+#      - (install.version|default(undercloud_version)|openstack_distribution) == 'OSP'
 
 - name: Run heat agent script in a background if splitstack deployment
   hosts: undercloud
@@ -99,6 +99,7 @@
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
+            exit 1
             bash {{ overcloud_deploy_script }} &> overcloud_install.log
         register: overcloud_deploy
         ignore_errors: yes
@@ -125,6 +126,7 @@
             - overcloud_deploy.rc != 0
             - install.version|default(undercloud_version)|openstack_release >= 10
             - install.version|default(undercloud_version)|openstack_release < 17
+        ignore_errors: yes
         tags: skip_ansible_lint
 
       - name: Prepare stack failures long log
@@ -135,6 +137,7 @@
             - overcloud_deploy.rc != 0
             - install.version|default(undercloud_version)|openstack_release >= 10
             - install.version|default(undercloud_version)|openstack_release < 17
+        ignore_errors: yes
         tags: skip_ansible_lint
 
       - name: copy summary script
@@ -174,9 +177,9 @@
   tags:
       - deploy
   tasks:
-    - fail:
-          msg: "Overcloud deployment failed... :("
-      when: overcloud_deploy is defined and overcloud_deploy.rc != 0
+    #- fail:
+    #      msg: "Overcloud deployment failed... :("
+    #  when: overcloud_deploy is defined and overcloud_deploy.rc != 0
 
     - name: verify overcloudrc was created
       wait_for:
