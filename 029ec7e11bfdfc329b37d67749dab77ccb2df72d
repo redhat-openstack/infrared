@@ -16,6 +16,23 @@
       "message": "Tested to solve the issue on the same env this Bz has been reported on,\n\nThis patch fixes the following : \n\n\n(overcloud) [stack@undercloud-0 ~]$ ansible-playbook  ./ansible_test.yaml \n[WARNING]: Found both group and host with same name: undercloud\n\nPLAY [localhost] *************************************************************************************************************************************************************\n\nTASK [debug] *****************************************************************************************************************************************************************\nok: [localhost] \u003d\u003e {}\n\nMSG:\n\nmessage\n\nTASK [shell] *****************************************************************************************************************************************************************\nchanged: [localhost]\n\nTASK [Waiting for ovn-controller agent on compute node to come up] ***********************************************************************************************************\nchanged: [localhost]\n\nTASK [Waiting for networking-ovn-metadata-agent agent on compute node to come up] ********************************************************************************************\nFAILED - RETRYING: Waiting for networking-ovn-metadata-agent agent on compute node to come up (60 retries left).\nFAILED - RETRYING: Waiting for networking-ovn-metadata-agent agent on compute node to come up (59 retries left).\n^C [ERROR]: User interrupted execution\n(overcloud) [stack@undercloud-0 ~]$ openstack network agent list\n+--------------------------------------+----------------------+---------------------------+-------------------+-------+-------+----------------+\n| ID                                   | Agent Type           | Host                      | Availability Zone | Alive | State | Binary         |\n+--------------------------------------+----------------------+---------------------------+-------------------+-------+-------+----------------+\n| cdf182aa-41c0-4b93-993d-b4e2b20eac3d | OVN Controller agent | compute-0.redhat.local    |                   | :-)   | UP    | ovn-controller |\n| 3a8d4e6d-291f-47a7-97b6-79145d59f53f | OVN Controller agent | compute-1.redhat.local    |                   | :-)   | UP    | ovn-controller |\n| dd3a12dd-3410-4ff1-8a19-2721ca807b34 | OVN Controller agent | controller-1.redhat.local |                   | :-)   | UP    | ovn-controller |\n| c7f59bf7-af68-4889-9d36-fa0489464b20 | OVN Controller agent | controller-0.redhat.local |                   | :-)   | UP    | ovn-controller |\n| 514aba22-52da-449c-9226-9ac0fe173202 | OVN Controller agent | controller-2.redhat.local |                   | :-)   | UP    | ovn-controller |\n+--------------------------------------+----------------------+---------------------------+-------------------+-------+-------+----------------+\n",
       "revId": "029ec7e11bfdfc329b37d67749dab77ccb2df72d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2b2c786f_6495e711",
+        "filename": "plugins/tripleo-overcloud/overcloud_reboot.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1004057
+      },
+      "writtenOn": "2021-08-04T11:46:34Z",
+      "side": 1,
+      "message": "I really think this condition becomes too long.\nWhy not using the search_regex filter instead? or maybe some other creative solution?",
+      "revId": "029ec7e11bfdfc329b37d67749dab77ccb2df72d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
