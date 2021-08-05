@@ -294,19 +294,6 @@
       - install.network.dvr or install.network.force.compute.dvr
       - install.get('network', {}).get('override', {}).get('dvr', {}).get('nic', {})
 
-- name: Change network type in OVN ML2 environment file OSP 12
-  become: yes
-  yedit:
-      src: "{{ install.heat.templates.basedir }}/environments/services/neutron-ml2-ovn-ha.yaml"
-      update: True
-      key: parameter_defaults
-      value:
-          NeutronNetworkType:
-              '{{ install.network.backend }}'
-  when:
-      - install.network.ovn and not install.network.dvr
-      - install.version|default(undercloud_version)|openstack_release == 12
-
 - block:
   - name: Set NeutronTypeDrivers to {{ install.network.backend }} in neutron-ovn{{ net_dvr }}-ha env file
     yedit:
