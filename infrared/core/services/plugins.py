@@ -523,6 +523,8 @@ class InfraredPluginManager(object):
 
         self._install_requirements(dest)
         if not skip_roles:
+            # roles are skipped only in infrared's internal tests
+            # param for this is not exposed in cli/spec files
             self._install_roles_from_file(dest)
         self._load_plugins()
 
@@ -588,16 +590,27 @@ class InfraredPluginManager(object):
             LOG.debug("Installing Galaxy "
                       "requirements... ({})".format(galaxy_reqs_file))
             from ansible.cli.galaxy import GalaxyCLI
-            from ansible.errors import AnsibleError
-            glxy_cli = GalaxyCLI(['install'])
+
+            glxy_cli_params = ['ansible-galaxy',
+                               'role',
+                               'install',
+                               '-r',
+                               galaxy_reqs_file]
+            if InfraredPluginManager._is_collection_requirements(galaxy_reqs_file):
+                glxy_cli_params[1] = 'collection'
+            LOG.debug("Galaxy command: {}".format(glxy_cli_params))
+            glxy_cli = GalaxyCLI(glxy_cli_params)
             glxy_cli.parse()
-            glxy_cli.options.role_file = galaxy_reqs_file
-            try:
-                glxy_cli.execute_install()
-            except AnsibleError as e:
-                raise IRFailedToAddPlugin(e.message)
+            glxy_cli.run()
         else:
             LOG.debug("Galaxy requirements files weren't found.")
+
+    @staticmethod
+    def _is_collection_requirements(requirements_path):
+        reqs_yaml = {}
+        with open(requirements_path) as content:
+            reqs_yaml = yaml.load(content, Loader=yaml.FullLoader)
+        return ('collections' in reqs_yaml)
 
     def freeze(self):
         registry = {}
