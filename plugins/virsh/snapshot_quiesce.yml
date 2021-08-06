@@ -148,10 +148,21 @@
       register: _overcloud_stack_name
       changed_when: false
 
+    - name: Restart all neutron agents to reinitiate RabbitMQ connectivity
+      become: true
+      shell: |-
+        {%- raw -%}
+        for c in $(docker ps --format "{{.Names}}" | grep "neutron_.*" | grep -v ".*_api"); do
+          docker restart ${c}
+        done
+        {%- endraw %}
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['overcloud_nodes'] }}"
+
     - name: Wait until all network agents are up
       shell: |
         source {{ overcloud_rc }}
-        openstack network agent list -f json | jq '.[] | select(.State==true and .Alive==false)'
+        openstack network agent list -f json | jq '.[] | select(.State!="UP" or .Alive!=":-)")'
       changed_when: false
       register: _network_agents_state
       retries: 15
