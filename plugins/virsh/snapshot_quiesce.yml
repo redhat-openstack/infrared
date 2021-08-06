@@ -5,6 +5,7 @@
   tasks:
     - name: Populate service facts
       service_facts:
+      no_log: true
 
     - name: Reset the time if ntpd service
       become: true
@@ -148,10 +149,35 @@
       register: _overcloud_stack_name
       changed_when: false
 
+    - name: Force some services to reinitiate RabbitMQ connectivity
+      become: true
+      shell: |-
+        {%- raw -%}
+        return_code=0
+        if command -v docker; then
+          for cnt in $(docker ps --format "{{.Names}}" | grep -E "neutron_.*|nova_metadata" | grep -v ".*_api"); do
+            docker restart ${cnt}
+            return_code=2
+          done
+        else
+          for svc in $(systemctl --no-legend list-units neutron\*agent.service | awk '{print $1}'); do
+            systemctl restart ${svc}
+          done
+        fi
+        exit ${return_code}
+        {%- endraw %}
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['overcloud_nodes'] }}"
+      register: _restart_services
+      changed_when: _restart_services.rc == 2
+      failed_when: _restart_services.rc not in [0,2]
+
+    # OSP10 returns: { "State": "UP", "Alive": false }
+    # OSP13 returns: { "State": "UP", "Alive": "XXX" }
     - name: Wait until all network agents are up
       shell: |
         source {{ overcloud_rc }}
-        openstack network agent list -f json | jq '.[] | select(.State==true and .Alive==false)'
+        openstack network agent list -f json | jq '.[] | select(.State=="UP" and (.Alive==false or .Alive=="XXX"))'
       changed_when: false
       register: _network_agents_state
       retries: 15
