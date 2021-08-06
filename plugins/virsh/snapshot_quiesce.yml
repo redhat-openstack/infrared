@@ -148,7 +148,8 @@
       register: _overcloud_stack_name
       changed_when: false
 
-    - name: Wait until all network agents are up
+    - &network_agents_wait
+      name: Wait until all network agents are up
       shell: |
         source {{ overcloud_rc }}
         openstack network agent list -f json | jq '.[] | select(.State==true and .Alive==false)'
@@ -157,6 +158,19 @@
       retries: 15
       delay: 60
       until: _network_agents_state.stdout == ''
+
+    - name: Restart the compute network agents to reinitiate RabbitMQ connectivity
+      shell: |-
+        {%- raw %}
+        for c in $(docker ps --format "{{.Names}}" | grep "neutron_.*_agent"); do
+          docker restart ${c}
+        done
+        {%- endraw %}
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['overcloud_nodes'] }}"
+
+    - <<: *network_agents_wait
+      name: Wait until all network agents are up (again)
 
     - name: Wait until all compute services are up
       shell: |
@@ -196,3 +210,7 @@
       retries: 15
       delay: 60
       until: _volume_backup_state.rc == 0
+
+    - name: Add a little extra waiting time
+      shell: >-
+        sleep 600
