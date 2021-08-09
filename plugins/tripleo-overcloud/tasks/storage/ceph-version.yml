@@ -1,0 +1,40 @@
+  - name: get Ceph podman container image version 
+    block:
+    - name: get ceph image name
+      shell: "podman search  undercloud-0.ctlplane.redhat.local:8787/ceph | grep -v dashboard | grep ceph"
+      register: ceph_image_name
+
+    - name: download Ceph container image to undercloud
+      shell: "podman pull {{ ceph_image_name.stdout.split()[1] }}"
+
+    - name: get ceph tags version
+      shell: "podman search --format json --list-tags {{ ceph_image_name.stdout.split()[1] }}"
+      register: ceph_image_tags
+
+    - name: get ceph version
+      shell: "podman image inspect {{ ceph_image_name.stdout.split()[1] }}:{{( ceph_image_tags.stdout | from_json)[0].Tags[0] }}"
+      register: ceph_image_inspect
+
+    - name: print ceph hash
+      debug:
+        msg: "Build mark: ceph_version={{ (ceph_image_inspect.stdout | from_json)[0].Labels.release | replace('scratch-','') }}"
+    become: true
+    run_once: true
+    when: install.version|default(undercloud_version)|openstack_release > 14
+
+  - name: get Ceph Docker container image version
+    block:
+      - name: get ceph image name
+        shell: "docker images  | grep -v dashboard | grep ceph"
+        register: ceph_image_name
+
+      - name: get ceph version
+        shell: "docker image inspect {{ ceph_image_name.stdout.split()[0] }}:{{  ceph_image_name.stdout.split()[1]}}"
+        register: ceph_image_inspect
+
+      - name: print ceph hash
+        debug:
+          msg: "Build mark: ceph_version=3-{{ (ceph_image_inspect.stdout | from_json)[0].Config.Labels.release }}"
+    become: true
+    run_once: true
+    when: install.version|default(undercloud_version)|openstack_release <= 14
