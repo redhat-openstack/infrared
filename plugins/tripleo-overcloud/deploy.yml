@@ -86,6 +86,11 @@
         register: overcloud_deploy
         ignore_errors: yes
 
+      - include_tasks: ceph-version.yml
+        when:
+            - storage_backend|default('') == 'ceph'
+            - install.storage.config == 'internal'
+
       - include_role:
             name: tls-everywhere
         vars:
