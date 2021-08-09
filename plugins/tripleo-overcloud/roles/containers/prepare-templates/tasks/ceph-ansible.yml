@@ -3,3 +3,11 @@
       name: ceph-ansible
       state: present
   become: true
+
+- name: Gather the package facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: print Ceph Ansbile version
+  ansible.builtin.debug:
+    msg: "Build mark: ceph_ansible_version={{ ansible_facts.packages['ceph-ansible'][0].version }} "
