@@ -1,0 +1,26 @@
+  - name: get ceph image name
+    shell: "podman images  | grep -v dashboard | grep ceph"
+    delegate_to: ceph
+    register: ceph_image_name
+    become: true
+    run_once: true
+
+  - name: get ceph tags version
+    shell: "podman search --format json --list-tags {{ ceph_image_name.stdout.split()[0] }}"
+    register: ceph_image_tags
+    delegate_to: ceph
+    become: true
+    run_once: true
+
+  - name: get ceph version
+    shell: "podman image inspect {{ ceph_image_name.stdout.split()[0] }}:{{( ceph_image_tags.stdout | from_json)[0].Tags[-1] }}"
+    become: true
+    run_once: true
+    delegate_to: ceph
+    register: ceph_image_inspect
+
+  - name: print ceph hash
+    debug:
+      msg: "Build mark: ceph_version={{ (ceph_image_inspect.stdout | from_json)[0].Labels.release | replace('scratch-','') }}"
+    run_once: true
+    delegate_to: ceph
