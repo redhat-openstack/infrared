@@ -138,7 +138,7 @@
         vars:
           podman_registries_orig_file: "{{ inventory_dir }}/podman_registries.conf"
         set_fact:
-          podman_insecure_registries_orig: "{{ lookup('ini', 'registries section=registries.insecure file={{ podman_registries_orig_file }}') }}"
+          podman_insecure_registries_orig: "{{ lookup('ini', 'registries section=registries.insecure file={{ podman_registries_orig_file }}', errors='warn') | default('') }}"
 
       - name: append insecure registries
         set_fact:
@@ -222,19 +222,41 @@
           regexp: '(^\ +)name_prefix.*'
           replace: "\\1name_prefix: {{ registry_prefix }}"
 
+    # Complex processing of container_image_prepare.yaml folows as the format
+    # of the file slightly changed for OSP17, see RHOSINFRA-4180 for details
     - set_fact:
+        ceph_namespace_fromfile: "{% if (target_install_version|openstack_release) < 17 %}\
+            {{container_env['container-image-prepare']['ceph-namespace']}}\
+            {% else %}\
+            {{container_env['container-image-prepare']['ceph_namespace']}}\
+            {% endif %}"
+
         ceph_namespace: "{{ install.registry.get('ceph', {}).namespace is defined |
         ternary(
             install.registry.get('ceph', {}).get('namespace', ''),
-            container_env['container-image-prepare']['ceph-namespace'] | default('registry.access.redhat.com/rhceph')) }}"
-        ceph_image: "{{ install.registry.get('ceph', {}).image is defined |
+            ceph_namespace_fromfile | default('registry.access.redhat.com/rhceph')) }}"
+
+        ceph_image_fromfile: "{% if (target_install_version|openstack_release) < 17 %}\
+            {{container_env['container-image-prepare']['ceph-image']}}\
+            {% else %}\
+            {{container_env['container-image-prepare']['ceph_image']}}\
+            {% endif %}"
+
+        ceph_image: "{{ install.registry.get('ceph', {}).namespace is defined |
         ternary(
-            install.registry.get('ceph', {}).get('image', ''),
-            container_env['container-image-prepare']['ceph-image'] | default('rhceph-3-rhel7')) }}"
+            install.registry.get('ceph', {}).get('namespace', ''),
+            ceph_image_fromfile | default('registry.access.redhat.com/rhceph')) }}"
+
+        ceph_tag_fromfile: "{% if (target_install_version|openstack_release) < 17 %}\
+            {{container_env['container-image-prepare']['ceph-tag']}}\
+            {% else %}\
+            {{container_env['container-image-prepare']['ceph_tag']}}\
+            {% endif %}"
+
         ceph_tag: "{{ install.registry.get('ceph', {}).tag is defined |
         ternary(
             install.registry.get('ceph', {}).get('tag', ''),
-            container_env['container-image-prepare']['ceph-tag'] | default('latest')) }}"
+            ceph_tag_fromfile | default('latest')) }}"
 
     - name: append ceph to list of insecure registries
       when: ceph_registry_host|default(False)
