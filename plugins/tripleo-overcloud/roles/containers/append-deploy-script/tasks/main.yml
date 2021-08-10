@@ -5,6 +5,16 @@
   when:
       - not install.storage.external
       - storage_backend|default('') == 'ceph'
+      - install.version|default(undercloud_version) | openstack_release < 17
+
+- name: append cephadm TripleO template
+  lineinfile:
+      dest: "{{ containers_ir_deploy_script }}"
+      line: '-e {{ install.heat.templates.basedir }}/environments/cephadm/cephadm.yaml \'
+  when:
+      - not install.storage.external
+      - storage_backend|default('') == 'ceph'
+      - install.version|default(undercloud_version) | openstack_release >= 17
 
 # OVN environment file should be appended AFTER docker-ha.yaml
 - name: append the ovn HA OSP 12 template line to the base overcloud deploy script
