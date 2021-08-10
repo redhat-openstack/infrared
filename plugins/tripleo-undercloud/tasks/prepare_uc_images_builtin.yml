@@ -138,7 +138,7 @@
         vars:
           podman_registries_orig_file: "{{ inventory_dir }}/podman_registries.conf"
         set_fact:
-          podman_insecure_registries_orig: "{{ lookup('ini', 'registries section=registries.insecure file={{ podman_registries_orig_file }}') }}"
+          podman_insecure_registries_orig: "{{ lookup('ini', 'registries section=registries.insecure file={{ podman_registries_orig_file }}', errors='warn') | default('') }}"
 
       - name: append insecure registries
         set_fact:
