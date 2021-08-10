@@ -4,7 +4,7 @@
   any_errors_fatal: true
   vars:
       undercloud: "{{ hostvars[(groups.undercloud|first)].inventory_hostname }}"
-      undercloud_image_file: "{{ install.snapshot.filename.rstrip('.qcow2') }}.qcow2"
+      undercloud_image_file: '{{ (".qcow2" == install.snapshot.filename[-6:]) | ternary(install.snapshot.filename, install.snapshot.filename + ".qcow2") }}'
       ssh_opts: " -o PreferredAuthentications=publickey -c aes128-ctr -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectionAttempts=32 "
   tasks:
       - name: install package with virt-sparsify
