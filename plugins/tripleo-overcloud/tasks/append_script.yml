@@ -14,11 +14,6 @@
   tags: network
   when: network.stat.exists
 
-- name: Setup the overcloud ssl
-  include_tasks: ssl.yml
-  tags: overcloud_ssl
-  when: install.overcloud.ssl
-
 - name: Configure undercloud and overcloud to use IPA for DNS
   block:
     - name: Set up undercloud to use freeipa as a DNS server
@@ -117,4 +112,4 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       regexp: "^--log-file .*"
-      line: "--log-file overcloud_deployment_{{ 100 | random }}.log"
+      line: "--log-file overcloud_deployment_{{ 100 | random }}.log \\"
