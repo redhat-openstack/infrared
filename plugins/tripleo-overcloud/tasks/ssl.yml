@@ -9,6 +9,19 @@
   when:
     - "not 'bmc' in groups"
     - not use_network_data|bool
+    - install.version|default(undercloud_version)| openstack_release < 17
+
+- block:
+  - name: extract our external allocation pools start value
+    command: "cat {{ /home/stack/templates/overcloud-vip-deployed.yaml }}"
+    register: network_env
+
+  - name: get IP address of VIP
+    set_fact:
+        external_allocation_pool_start: "{{ (network_env.stdout | from_yaml).parameter_defaults.ControlPlaneVipData.external.ip_address_uri }}"
+  when:
+    - "not 'bmc' in groups"
+    - install.version|default(undercloud_version)| openstack_release >= 17
 
 - block:
   - name: read deployment network configuration from network_data
@@ -34,6 +47,7 @@
   when:
     - "not 'bmc' in groups"
     - use_network_data|bool
+    - install.version|default(undercloud_version)| openstack_release < 17
 
 - name: Add overcloud public IP to ssl configuration
   become: yes
