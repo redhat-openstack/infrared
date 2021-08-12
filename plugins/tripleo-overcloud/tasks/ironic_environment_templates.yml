@@ -1,12 +1,4 @@
 # include environment template files from undercloud in overcloud_deploy script
-- name: include default ironic template in OSP12
-  lineinfile:
-      dest: "~/overcloud_deploy.sh"
-      line: "--environment-file {{ install.heat.templates.basedir }}/environments/services-docker/ironic.yaml \\"
-      insertafter: '^\s*--templates.*'
-  when:
-  - install.version | default(undercloud_version) | openstack_release == 12
-
 - name: include default ironic template in OSP14 and below
   lineinfile:
       dest: "~/overcloud_deploy.sh"
