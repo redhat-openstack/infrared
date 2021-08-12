@@ -14,6 +14,26 @@
   tags: network
   when: network.stat.exists
 
+- block:
+    - name: Output directory for generated environments
+      ansible.builtin.file:
+         state: directory
+         path: /home/stack/templates
+         mode: '0755'
+    - name: Create nets
+      shell: |
+          source ~/stackrc
+          set -o pipefail
+          openstack overcloud network provision {{ template_base }}/network/network_data_v2.yaml -o /home/stack/templates/overcloud-networks-deployed.yaml 2>&1 | tee -a /home/stack/overcloud_provision_01_net.log
+    - name: reserve VIPs
+      shell: |
+          source ~/stackrc
+          set -o pipefail
+          openstack overcloud network vip provision --stack {{ install.overcloud.stack }} {{ template_base }}/network/vip_data.yaml -o /home/stack/templates/overcloud-vip-deployed.yaml 2>&1 | \
+          tee -a /home/stack/overcloud_provision_02_vip.log
+  when:
+      - (install.version|default(undercloud_version) | openstack_release >= 17)
+
 - name: Setup the overcloud ssl
   include_tasks: ssl.yml
   tags: overcloud_ssl
