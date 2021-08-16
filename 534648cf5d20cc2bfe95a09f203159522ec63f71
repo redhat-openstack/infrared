@@ -16,6 +16,23 @@
       "message": "fixed the smiley direction :)",
       "revId": "534648cf5d20cc2bfe95a09f203159522ec63f71",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "289f2cc9_ada876fa",
+        "filename": "plugins/tripleo-overcloud/overcloud_reboot.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1004057
+      },
+      "writtenOn": "2021-08-16T21:22:07Z",
+      "side": 1,
+      "message": "Hi Pini,\n\nThe logic looks fine, but two minor comment that won\u0027t prevent me from merging this change.\n1. Please notice that you changed the use of \u0027find\u0027 which should return the index of the sub-string with \u0027match\u0027 that succeeds if it finds the pattern at the beginning of the string (first test)\n2. You can make a use of the \u0027block folded style indicator\u0027 to split the tests into separate lines and make it a bit more easy to read:\nuntil: \u003e\n    ovn_meta_up.stdout is match(\u0027true\u0027) or \n    ovn_controller_up.stdout is regex(\u0027:-\\)|true\u0027)",
+      "revId": "534648cf5d20cc2bfe95a09f203159522ec63f71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
