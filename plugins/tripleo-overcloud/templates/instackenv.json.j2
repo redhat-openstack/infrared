@@ -54,6 +54,12 @@
           "profile":"{{ uefi[host_data.name.split('-')[0]] }}"
         }
       {% endif %}
+      {%if install.version|default(undercloud_version)|openstack_release >= 17 %}
+      , "root_device":
+         {
+           "name":"/dev/vda"
+         }
+      {% endif %}
     }{% if not loop.last %},{% endif %}
 {% endfor %}
     ]
