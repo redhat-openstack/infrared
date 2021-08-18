@@ -202,6 +202,10 @@
             {% if install.ppc64le.nodes %}
             for node in $( openstack baremetal node list -f value -c Name ) ; do openstack baremetal node set --boot-interface pxe $node ;done
             {% endif %}
+            # ensure leving the verifying state, expected next state is all 'manageable'
+            while openstack baremetal node list --fields provision_state | grep verifying; do
+               sleep 0.5;
+            done
             openstack overcloud node introspect --provide --all-manageable
             {% endif %}
         tags:
