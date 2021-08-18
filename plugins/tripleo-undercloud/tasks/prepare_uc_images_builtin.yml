@@ -224,24 +224,25 @@
 
     # Complex processing of container_image_prepare.yaml folows as the format
     # of the file slightly changed for OSP17, see RHOSINFRA-4180 for details
-    - set_fact:
-        ceph_namespace_fromfile: "{% if (target_install_version|openstack_release) < 17 %}\
-            {{ container_env['container-image-prepare']['ceph-namespace'] }}\
-            {% else %}\
+    - name:  process compose control file
+      vars:
+        ceph_namespace_fromfile: "{% if 'ceph_namespace' in container_env['container-image-prepare'] %}\
             {{ container_env['container-image-prepare']['ceph_namespace'] }}\
-            {% endif %}"
-        ceph_image_fromfile: "{% if (target_install_version|openstack_release) < 17 %}\
-            {{ container_env['container-image-prepare']['ceph-image'] }}\
             {% else %}\
+            {{ container_env['container-image-prepare']['ceph-namespace'] }}\
+            {% endif %}"
+        ceph_image_fromfile: "{% if 'ceph_image' in container_env['container-image-prepare'] %}\
             {{ container_env['container-image-prepare']['ceph_image'] }}\
-            {% endif %}"
-        ceph_tag_fromfile: "{% if (target_install_version|openstack_release) < 17 %}\
-            {{ container_env['container-image-prepare']['ceph-tag'] }}\
             {% else %}\
+            {{ container_env['container-image-prepare']['ceph-image'] }}\
+            {% endif %}"
+        ceph_tag_fromfile: "{% 'ceph_tag' in container_env['container-image-prepare']  %}\
             {{ container_env['container-image-prepare']['ceph_tag'] }}\
+            {% else %}\
+            {{ container_env['container-image-prepare']['ceph-tag'] }}\
             {% endif %}"
 
-    - set_fact:
+      set_fact:
         ceph_namespace: "{{ install.registry.get('ceph', {}).namespace is defined |
         ternary(
             install.registry.get('ceph', {}).get('namespace', ''),
