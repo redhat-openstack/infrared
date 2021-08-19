@@ -1,0 +1,15 @@
+{% for interface in l3appliance_config.interfaces %}
+{% if interface.ipv6_prefix is defined %}
+interface eth{{loop.index -1}} {
+  AdvSendAdvert on;
+  AdvManagedFlag {% if l3appliance_config.radvd_config.AdvManagedFlag %}on{% else %}off{% endif %};
+  AdvOtherConfigFlag on;
+  AdvRASolicitedUnicast on;
+  AdvLinkMTU {{ l3appliance_config.radvd_config.mtu }};
+  prefix {{ interface.ipv6_prefix }} {
+    AdvAutonomous {% if l3appliance_config.radvd_config.AdvAutonomous %}on{% else %}off{% endif %};
+    AdvOnLink on;
+  };
+};
+{% endif %}
+{% endfor %}

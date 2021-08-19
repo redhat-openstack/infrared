@@ -1,0 +1,101 @@
+- name: configure L3 appliance node
+  hosts: l3appliance-0
+  any_errors_fatal: true
+  gather_facts: yes
+  tasks:
+    - name: L3 Appliance - install rhos-release package
+      become: true
+      # TODO: Switch to use ansible dnf module
+      yum:
+        name: http://download.eng.bos.redhat.com/rcm-guest/puddles/OpenStack/rhos-release/rhos-release-latest.noarch.rpm
+        disable_gpg_check: yes
+
+    - name: L3 Appliance - Use rhos-release latest-released
+      become: true
+      command:
+        cmd: "rhos-release latest-released"
+
+    - name: L3 Appliance - Install packages
+      become: true
+      yum:
+        name:
+          - dnsmasq
+          - radvd
+        state: present
+
+    - name: L3 Appliance - Enable IPv6 routing
+      become: true
+      sysctl:
+        name: net.ipv6.conf.all.forwarding
+        value: 1
+        sysctl_set: yes
+        state: present
+        reload: yes
+
+    - name: L3 Appliance - Enable IPv4 routing
+      become: true
+      sysctl:
+        name: net.ipv4.conf.all.forwarding
+        value: 1
+        sysctl_set: yes
+        state: present
+        reload: yes
+
+    - name: L3 Appliance - Load network topology
+      include_vars: "{{ provision.topology.network }}"
+
+    - name: L3 Appliance - Configure network interfaces
+      become: true
+      shell: |
+        {% for interface in l3appliance_config.interfaces %}
+          {% if interface.ipv4_address is defined %}
+            nmcli device modify {{ interface.name }} \
+              ipv4.method manual ipv4.addr {{ interface.ipv4_address }}
+          {% endif %}
+          {% if interface.ipv6_address is defined %}
+            nmcli device modify {{ interface.name }} \
+              ipv6.method static ipv6.address {{ interface.ipv6_address }}
+          {% endif %}
+        {% endfor %}
+
+    - name: L3 Appliance - Write Router Advertisement Deamon config
+      become: true
+      template:
+        src: radvd.conf.j2
+        dest: /etc/radvd.conf
+        mode: '0644'
+        owner: root
+        group: root
+      when:
+        - l3appliance_config.enable_radvd|default(false)
+
+    - name: L3 Appliance - Enable and start Router Advertisement Deamon
+      become: true
+      systemd:
+        name: radvd
+        state: restarted
+        enabled: true
+      when:
+        - l3appliance_config.enable_radvd|default(false)
+
+    - name: L3 Appliance - Create systemd unit file for dnsmask DHCP relay
+      become: true
+      template:
+        src: dnsmasq_dhcrelay.service.j2
+        dest: /etc/systemd/system/dnsmasq_dhcrelay.service
+        mode: '0644'
+        owner: root
+        group: root
+      when:
+        - l3appliance_config.enable_dhcp_relay|default(false) or
+          l3appliance_config.enable_dhcpv6_relay|default(false)
+
+    - name: L3 Appliance - Enable and DHCP relay service
+      become: true
+      systemd:
+        name: dnsmasq_dhcrelay
+        state: restarted
+        enabled: true
+      when:
+        - l3appliance_config.enable_dhcp_relay|default(false) or
+          l3appliance_config.enable_dhcpv6_relay|default(false)

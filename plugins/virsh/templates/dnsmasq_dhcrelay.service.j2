@@ -1,0 +1,27 @@
+[Unit]
+Description=DHCP dnsmasq Relay Agent Daemon
+Documentation=man:dnsmasq(8)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/dnsmasq \
+    --keep-in-foreground \
+{% if l3appliance_config.enable_dhcpv6_relay|default(false) %}
+{% for downstream_iface_ip in l3appliance_config.dhcpv6_relay_config.downstream_iface_ips %}
+    --dhcp-relay={{ downstream_iface_ip }},ff05::1:3,{{ l3appliance_config.dhcpv6_relay_config.upstream_iface }} \
+{% endfor %}
+{% endif %}
+{% if l3appliance_config.enable_dhcp_relay|default(false) %}
+{% for downstream_iface_ip in l3appliance_config.dhcp_relay_config.downstream_iface_ips %}
+{% for upsream_server_ip in l3appliance_config.dhcp_relay_config.upstream_server_ips %}
+    --dhcp-relay={{ downstream_iface_ip }},{{ upsream_server_ip }} \
+{% endfor %}
+{% endfor %}
+{% endif %}
+    --port 0
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target
