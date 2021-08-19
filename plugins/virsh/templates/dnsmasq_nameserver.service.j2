@@ -1,0 +1,18 @@
+[Unit]
+Description=DNS dnsmasq caching nameserver
+Documentation=man:dnsmasq(8)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/dnsmasq \
+    --conf-file=/dev/null \
+    --keep-in-foreground \
+    --no-hosts \
+    --bind-interfaces \
+    --log-queries
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target
