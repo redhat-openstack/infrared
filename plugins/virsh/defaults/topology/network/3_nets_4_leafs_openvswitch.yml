@@ -1,0 +1,308 @@
+# NOTE: Use the name of the portgroup instead of the network name if
+#       provisioning over a network with multiple portgroups.
+#       For example: -e provision_virsh_network_name=ctlplane1
+---
+networks:
+    net1:
+      external_connectivity: no
+      name: data
+      forward: bridge
+      virtualport_type: openvswitch
+      ipv6_address: 2001:DB80:1::f:ff/64 # A foo address so NetworkManager keep iface up ...
+      portgroups:
+        - name: ctlplane0
+          default: true
+          vlan_id: 4
+        - name: ctlplane1
+          default: false
+          vlan_id: 5
+        - name: ctlplane2
+          default: false
+          vlan_id: 6
+        - name: ctlplane3
+          default: false
+          vlan_id: 7
+        - name: external
+          default: false
+          vlan_id: 10
+          ipv4_address: 10.0.0.254/24
+          ipv6_address: 2620:52:0:13b8::fd/64
+        - name: trunk
+          default: false
+          trunk: true
+          vlans:
+            - id: 23 # InternalApi - leaf 0
+            - id: 20 # InternalApi - leaf 1
+            - id: 21 # InternalApi - leaf 2
+            - id: 22 # InternalApi - leaf 3
+            - id: 33 # Storage - leaf 0
+            - id: 30 # Storage - leaf 1
+            - id: 31 # Storage - leaf 2
+            - id: 32 # Storage - leaf 3
+            - id: 43 # StorageMgmt - leaf 0
+            - id: 40 # StorageMgmt - leaf 1
+            - id: 41 # StorageMgmt - leaf 2
+            - id: 42 # StorageMgmt - leaf 3
+            - id: 53 # Tenant - leaf 0
+            - id: 50 # Tenant - leaf 1
+            - id: 51 # Tenant - leaf 2
+            - id: 52 # Tenant - leaf 3
+            - id: 60 # Management - leaf 0
+            - id: 61 # Management - leaf 1
+            - id: 62 # Management - leaf 2
+            - id: 63 # Management - leaf 3
+    net2:
+      external_connectivity: yes
+      name: management
+      ip_address: "172.16.{{ net }}.1"
+      netmask: "255.255.255.0"
+      forward: nat
+      dhcp:
+        range:
+          start: "172.16.{{ net }}.2"
+          end: "172.16.{{ net }}.100"
+        subnet_cidr: "172.16.{{ net }}.0/24"
+        subnet_gateway: "172.16.{{ net }}.1"
+      floating_ip:
+        start: "172.16.{{ net }}.101"
+        end: "172.16.{{ net }}.150"
+
+l3appliance_config:
+  interfaces:
+    - name: eth0
+      mtu: 1500
+      ipv4_address: 192.168.24.254/24
+      ipv6_address: 2620:dead:beef:4::f:ff/64
+      ipv6_prefix: 2620:dead:beef:4::/64
+    - name: eth1
+      mtu: 1500
+      ipv4_address: 192.168.25.254/24
+      ipv6_address: 2620:dead:beef:5::f:ff/64
+      ipv6_prefix: 2620:dead:beef:5::/64
+    - name: eth2
+      mtu: 1500
+      ipv4_address: 192.168.26.254/24
+      ipv6_address: 2620:dead:beef:6::f:ff/64
+      ipv6_prefix: 2620:dead:beef:6::/64
+    - name: eth3
+      mtu: 1500
+      ipv4_address: 192.168.27.254/24
+      ipv6_address: 2620:dead:beef:7::f:ff/64
+      ipv6_prefix: 2620:dead:beef:7::/64
+
+  vlan_interfaces:
+    # Internal API - VLANs 10, 11 and 12
+    - name: internalapi0
+      vlan_id: 23
+      dev: eth4
+      ipv4_address: 172.120.1.1/24
+      ipv6_address: fd00:fd00:fd00:1000::1/64
+      ipv6_prefix: fd00:fd00:fd00:1000::/64
+    - name: internalapi1
+      vlan_id: 20
+      dev: eth4
+      ipv4_address: 172.117.1.1/24
+      ipv6_address: fd00:fd00:fd00:1001::1/64
+      ipv6_prefix: fd00:fd00:fd00:1001::/64
+    - name: internalapi2
+      vlan_id: 21
+      dev: eth4
+      ipv4_address: 172.118.1.1/24
+      ipv6_address: fd00:fd00:fd00:1002::1/64
+      ipv6_prefix: fd00:fd00:fd00:1002::/64
+    - name: internalapi3
+      vlan_id: 22
+      dev: eth4
+      ipv4_address: 172.119.1.1/24
+      ipv6_address: fd00:fd00:fd00:1003::1/64
+      ipv6_prefix: fd00:fd00:fd00:1003::/64
+    # Storage - VLANs 20, 21 and 22
+    - name: storage0
+      vlan_id: 33
+      dev: eth4
+      ipv4_address: 172.120.3.1/24
+      ipv6_address: fd00:fd00:fd00:2000::1/64
+      ipv6_prefix: fd00:fd00:fd00:2000::/64
+    - name: storage1
+      vlan_id: 30
+      dev: eth4
+      ipv4_address: 172.117.3.1/24
+      ipv6_address: fd00:fd00:fd00:2001::1/64
+      ipv6_prefix: fd00:fd00:fd00:2001::/64
+    - name: storage2
+      vlan_id: 31
+      dev: eth4
+      ipv4_address: 172.118.3.1/24
+      ipv6_address: fd00:fd00:fd00:2002::1/64
+      ipv6_prefix: fd00:fd00:fd00:2002::/64
+    - name: storage3
+      vlan_id: 31
+      dev: eth4
+      ipv4_address: 172.119.3.1/24
+      ipv6_address: fd00:fd00:fd00:2003::1/64
+      ipv6_prefix: fd00:fd00:fd00:2003::/64
+    # StorageMgmt - VLANs 30, 31 and 32
+    - name: storagemgmt0
+      vlan_id: 43
+      dev: eth4
+      ipv4_address: 172.120.4.1/24
+      ipv6_address: fd00:fd00:fd00:3000::1/64
+      ipv6_prefix: fd00:fd00:fd00:3000::/64
+    - name: storagemgmt1
+      vlan_id: 40
+      dev: eth4
+      ipv4_address: 172.117.4.1/24
+      ipv6_address: fd00:fd00:fd00:3001::1/64
+      ipv6_prefix: fd00:fd00:fd00:3001::/64
+    - name: storagemgmt2
+      vlan_id: 41
+      dev: eth4
+      ipv4_address: 172.118.4.1/24
+      ipv6_address: fd00:fd00:fd00:3002::1/64
+      ipv6_prefix: fd00:fd00:fd00:3002::/64
+    - name: storagemgmt3
+      vlan_id: 42
+      dev: eth4
+      ipv4_address: 172.119.4.1/24
+      ipv6_address: fd00:fd00:fd00:3003::1/64
+      ipv6_prefix: fd00:fd00:fd00:3003::/64
+    # Tenant - VLANs 40, 41 and 42
+    - name: tenant0
+      vlan_id: 53
+      dev: eth4
+      ipv4_address: 172.120.2.1/24
+      ipv6_address: fd00:fd00:fd00:4000::1/64
+      ipv6_prefix: fd00:fd00:fd00:4000::/64
+    - name: tenant1
+      vlan_id: 50
+      dev: eth4
+      ipv4_address: 172.117.2.1/24
+      ipv6_address: fd00:fd00:fd00:4001::1
+      ipv6_prefix: fd00:fd00:fd00:4001::/64
+    - name: tenant2
+      vlan_id: 51
+      dev: eth4
+      ipv4_address: 172.118.2.1/24
+      ipv6_address: fd00:fd00:fd00:4002::1/64
+      ipv6_prefix: fd00:fd00:fd00:4002::/64
+    - name: tenant3
+      vlan_id: 52
+      dev: eth4
+      ipv4_address: 172.119.2.1/24
+      ipv6_address: fd00:fd00:fd00:4003::1/64
+      ipv6_prefix: fd00:fd00:fd00:4003::/64
+    # Management - VLANs 50, 51 and 52
+    - name: mgmt0
+      vlan_id: 60
+      dev: eth4
+      ipv4_address: 172.20.0.254/24
+      ipv6_address: fd00:fd00:fd00:5000::1/64
+      ipv6_prefix: fd00:fd00:fd00:5000::/64
+    - name: mgmt1
+      vlan_id: 61
+      dev: eth4
+      ipv4_address: 172.20.1.254/24
+      ipv6_address: fd00:fd00:fd00:5001::1/64
+      ipv6_prefix: fd00:fd00:fd00:5001::/64
+    - name: mgmt2
+      vlan_id: 62
+      dev: eth4
+      ipv4_address: 172.20.2.254/24
+      ipv6_address: fd00:fd00:fd00:5002::1/64
+      ipv6_prefix: fd00:fd00:fd00:5002::/64
+    - name: mgmt3
+      vlan_id: 63
+      dev: eth4
+      ipv4_address: 172.20.3.254/24
+      ipv6_address: fd00:fd00:fd00:5003::1/64
+      ipv6_prefix: fd00:fd00:fd00:5003::/64
+    # External
+    - name: external0
+      vlan_id: 10
+      dev: eth4
+      ipv4_address: 10.0.0.1/24
+      ipv6_address: 2620:52:0:13b8::fe/64
+      ipv6_prefix: 2620:52:0:13b8::/64
+
+  enable_radvd: true
+  radvd_config:
+    AdvManagedFlag: on # "on" == stateful, "off" = stateless
+    mtu: 1500
+    AdvAutonomous: off # "off" == stateful, "on" = stateless
+
+  enable_dhcp_relay: true
+  dhcp_relay_config:
+    upstream_server_ips:
+      - 192.168.24.1
+      - 192.168.24.10
+    downstream_iface_ips:
+      - 192.168.25.254
+      - 192.168.26.254
+
+  enable_dhcpv6_relay: true
+  dhcpv6_relay_config:
+    upstream_iface: eth0
+    downstream_iface_ips:
+      - 2620:dead:beef:5::f:ff
+      - 2620:dead:beef:6::f:ff
+      - 2620:dead:beef:7::f:ff
+
+nodes:
+  default:
+    interfaces:
+      - network: data
+        portgroup: ctlplane0
+      - network: data
+        portgroup: trunk
+      - network: data
+        portgroup: external
+    provision_network: data
+  controller:
+    interfaces:
+      - network: data
+        portgroup: ctlplane1
+      - network: data
+        portgroup: trunk
+      - network: data
+        portgroup: external
+    provision_network: data
+  compute:
+    interfaces:
+      - network: data
+        portgroup: ctlplane2
+      - network: data
+        portgroup: trunk
+      - network: data
+        portgroup: external
+    provision_network: data
+  ceph:
+    interfaces:
+      - network: data
+        portgroup: ctlplane2
+      - network: data
+        portgroup: trunk
+      - network: data
+        portgroup: external
+    provision_network: data
+  undercloud:
+    interfaces:
+      - network: data
+        portgroup: ctlplane0
+      - network: management
+    external_network:
+      network: management
+  l3appliance:
+    interfaces:
+      - network: data
+        portgroup: ctlplane0
+      - network: data
+        portgroup: ctlplane1
+      - network: data
+        portgroup: ctlplane2
+      - network: data
+        portgroup: ctlplane3
+      - network: data
+        portgroup: trunk
+      - network: management
+    external_network:
+      network: management
