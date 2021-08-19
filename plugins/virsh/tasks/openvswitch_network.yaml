@@ -38,13 +38,13 @@
     nmcli connection add type ovs-interface slave-type ovs-port \
        conn.interface {{ network.name }} \
        master IR_OVS_ovs-port-{{ network.name }} \
-       con-name IR_OVS_ovs-if-{{ network.name }} \
     {% if network.ipv4_address is defined %}
        ipv4.method static ipv4.address {{ network.ipv4_address }} \
     {% endif %}
     {% if network.ipv6_address is defined %}
        ipv6.method static ipv6.address {{ network.ipv6_address }} \
     {% endif %}
+       con-name IR_OVS_ovs-if-{{ network.name }}
 
     {% for portgroup in portgroups if not portgroup.trunk|default(false) %}
       {% if portgroup.ipv4_address is defined or portgroup.ipv6_address is defined %}
@@ -52,19 +52,19 @@
        conn.interface {{ portgroup.name }} \
        master IR_OVS_{{ network.name }} \
        ovs-port.tag {{ portgroup.vlan_id }} \
-       con-name IR_OVS_ovs-port-{{ portgroup.name }} \
+       con-name IR_OVS_ovs-port-{{ portgroup.name }}
 
     nmcli connection add type ovs-interface \
        slave-type ovs-port \
        conn.interface {{ portgroup.name }} \
        master IR_OVS_ovs-port-{{ portgroup.name }} \
-       con-name IR_OVS_ovs-if-{{ portgroup.name }} \
       {% if portgroup.ipv4_address is defined %}
        ipv4.method static ipv4.address {{ portgroup.ipv4_address }} \
       {% endif %}
       {% if portgroup.ipv6_address is defined %}
        ipv6.method static ipv6.address {{ portgroup.ipv6_address }} \
       {% endif %}
+       con-name IR_OVS_ovs-if-{{ portgroup.name }}
       {% endif %}
     {% endfor %}
 
@@ -74,18 +74,18 @@
        conn.interface {{ portgroup.name }}{{ vlan.id }} \
        master {{ network.name }} \
        ovs-port.tag {{ vlan.id }} \
-       con-name IR_OVS_ovs-port-{{ portgroup.name }}{{ vlan.id }} \
+       con-name IR_OVS_ovs-port-{{ portgroup.name }}{{ vlan.id }}
 
     nmcli connection add type ovs-interface \
        slave-type ovs-port \
        conn.interface {{ portgroup.name }}{{ vlan.id }} \
        master IR_OVS_ovs-port-{{ portgroup.name }}{{ vlan.id }} \
-       con-name IR_OVS_ovs-if-{{ portgroup.name }}{{ vlan.id }} \
         {% if vlan.ipv4_address is defined %}
        ipv4.method static ipv4.address {{ vlan.ipv4_address }} \
         {% endif %}
         {% if vlan.ipv6_address is defined %}
        ipv6.method static ipv6.address {{ vlan.ipv6_address }} \
         {% endif %}
+       con-name IR_OVS_ovs-if-{{ portgroup.name }}{{ vlan.id }}
       {% endfor %}
     {% endfor %}
