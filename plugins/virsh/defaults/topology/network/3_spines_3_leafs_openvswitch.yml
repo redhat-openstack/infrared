@@ -1,0 +1,145 @@
+# NOTE: Use the name of the portgroup instead of the network name if
+#       provisioning over a network with multiple portgroups.
+#       For example: -e provision_virsh_network_name=ctlplane1
+---
+networks:
+    net1:
+      external_connectivity: no
+      name: data
+      forward: bridge
+      virtualport_type: openvswitch
+      ipv6_address: 2001:DB80:1::f:ff/64 # A foo address so NetworkManager keep iface up ...
+      portgroups:
+        - name: ctlplane1
+          default: true
+          vlan_id: 4
+        - name: ctlplane2
+          default: false
+          vlan_id: 5
+        - name: ctlplane3
+          default: false
+          vlan_id: 6
+        - name: trunk
+          default: false
+          trunk: true
+          vlans:
+            - id: 100 # External
+              ipv4_address: 10.0.0.1/24
+              ipv6_address: 2620:52:0:13b8::fe/64
+            - id: 10 # InternalApi - leaf 0
+            - id: 11 # InternalApi - leaf 1
+            - id: 12 # InternalApi - leaf 2
+            - id: 20 # Storage - leaf 0
+            - id: 21 # Storage - leaf 1
+            - id: 22 # Storage - leaf 2
+            - id: 30 # StorageMgmt - leaf 0
+            - id: 31 # StorageMgmt - leaf 1
+            - id: 32 # StorageMgmt - leaf 2
+            - id: 40 # Tenant - leaf 0
+            - id: 41 # Tenant - leaf 1
+            - id: 42 # Tenant - leaf 2
+            - id: 50 # Management - leaf 0
+            - id: 51 # Management - leaf 1
+            - id: 52 # Management - leaf 2
+    net2:
+      external_connectivity: yes
+      name: management
+      ip_address: "172.16.{{ net }}.1"
+      netmask: "255.255.255.0"
+      forward: nat
+      dhcp:
+        range:
+          start: "172.16.{{ net }}.2"
+          end: "172.16.{{ net }}.100"
+        subnet_cidr: "172.16.{{ net }}.0/24"
+        subnet_gateway: "172.16.{{ net }}.1"
+      floating_ip:
+        start: "172.16.{{ net }}.101"
+        end: "172.16.{{ net }}.150"
+
+l3appliance_config:
+  interfaces:
+    - name: eth0
+      mtu: 1500
+      ipv4_address: 192.168.24.254/24
+      ipv6_address: 2620:dead:beef:4::f:ff/64
+      ipv6_prefix: 2620:dead:beef:4::/64
+    - name: eth1
+      mtu: 1500
+      ipv4_address: 192.168.25.254/24
+      ipv6_address: 2620:dead:beef:5::f:ff/64
+      ipv6_prefix: 2620:dead:beef:5::/64
+    - name: eth2
+      mtu: 1500
+      ipv4_address: 192.168.26.254/24
+      ipv6_address: 2620:dead:beef:6::f:ff/64
+      ipv6_prefix: 2620:dead:beef:6::/64
+
+  enable_radvd: true
+  radvd_config:
+    AdvManagedFlag: on # "on" == stateful, "off" = stateless
+    mtu: 1500
+    AdvAutonomous: off # "off" == stateful, "on" = stateless
+
+  enable_dhcp_relay: true
+  dhcp_relay_config:
+    upstream_server_ips:
+      - 192.168.24.1
+      - 192.168.24.10
+    downstream_iface_ips:
+      - 192.168.25.254
+      - 192.168.26.254
+
+  enable_dhcpv6_relay: true
+  dhcpv6_relay_config:
+    upstream_iface: eth0
+    downstream_iface_ips:
+      - 2620:dead:beef:5::f:ff
+      - 2620:dead:beef:6::f:ff
+
+nodes:
+  default:
+    interfaces:
+      - network: data
+        portgroup: ctlplane1
+      - network: data
+        portgroup: trunk
+    provision_network: data
+  controller:
+    interfaces:
+      - network: data
+        portgroup: ctlplane2
+      - network: data
+        portgroup: trunk
+    provision_network: data
+  compute:
+    interfaces:
+      - network: data
+        portgroup: ctlplane3
+      - network: data
+        portgroup: trunk
+    provision_network: data
+  ceph:
+    interfaces:
+      - network: data
+        portgroup: ctlplane3
+      - network: data
+        portgroup: trunk
+  undercloud:
+    interfaces:
+      - network: data
+        portgroup: ctlplane1
+      - network: management
+    external_network:
+      network: management
+  l3appliance:
+    interfaces:
+      - network: data
+        portgroup: ctlplane1
+      - network: data
+        portgroup: ctlplane2
+      - network: data
+        portgroup: ctlplane3
+      - network: management
+    external_network:
+      network: management
