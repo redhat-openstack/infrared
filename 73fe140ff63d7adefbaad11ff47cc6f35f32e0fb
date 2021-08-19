@@ -120,6 +120,24 @@
       "message": "Does it really needs to be fact step , cannot they be variables on the \"single\" fact step ?",
       "revId": "73fe140ff63d7adefbaad11ff47cc6f35f32e0fb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "63c55fc1_3a46542d",
+        "filename": "plugins/tripleo-undercloud/tasks/prepare_uc_images_builtin.yml",
+        "patchSetId": 8
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2021-08-19T09:09:50Z",
+      "side": 1,
+      "message": "It exactly can not be done as single \"set_fact\" step, as I tried that before - I realized these facts update facts DB in single per-task-bulk. Therefore when ceph_namespace_fromfile was used, it was empty, if not done in 2 separate tasks (first will set the preliminary facts, second uses them).\n\nFound that \"bug\" before already, this ensures it won\u0027t happen.",
+      "parentUuid": "2387ec4c_b7e33640",
+      "revId": "73fe140ff63d7adefbaad11ff47cc6f35f32e0fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
