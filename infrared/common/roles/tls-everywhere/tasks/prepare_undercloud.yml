@@ -18,7 +18,9 @@
 
   - name: Enable additional dnf module for RHEL8
     become: yes
-    command: dnf module enable idm:DL1 -y
+    shell: |
+        dnf module reset idm -y
+        dnf module enable idm:DL1 -y
     when:
         - ansible_distribution in ['CentOS', 'RedHat']
         - ansible_distribution_major_version == '8'
