@@ -1,0 +1,34 @@
+tripleo_heat_templates:
+    - "{{ install.heat.templates.basedir }}/environments/metrics/collectd-write-qdr.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/metrics/ceilometer-write-qdr.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/metrics/qdr-edge-only.yaml"
+custom_templates:
+  parameter_defaults:
+    CeilometerQdrEventsConfig:
+      driver: amqp
+      topic: osp13-event
+    CeilometerQdrMetricsConfig:
+      driver: amqp
+      topic: osp13-metering
+    CeilometerQdrPublishMetrics: true
+    CollectdAmqpInstances:
+      osp13-notify:
+        format: JSON
+        notify: true
+        presettle: false
+      osp13-telemetry:
+        format: JSON
+        presettle: false
+    MetricsQdrAddresses:
+      - distribution: multicast
+        prefix: collectd
+      - distribution: multicast
+        prefix: anycast/ceilometer
+    MetricsQdrConnectors:
+      - host: '{{ stf_server_name }}'
+        port: 443
+        role: edge
+        verifyHostname: false
+        sslProfile: sslProfile
+    MetricsQdrSSLProfiles:
+      - name: sslProfile
