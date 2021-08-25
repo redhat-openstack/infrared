@@ -65,11 +65,11 @@
 
     - block:
         - name: check for OVMF package
-          action: "{{ ansible_pkg_mgr }} list=OVMF enablerepo='*'"
+          action: "{{ ansible_pkg_mgr }} list=OVMF"
           register: ovmf_status
 
         - name: install OVMF package
-          action: "{{ ansible_pkg_mgr }} name=OVMF state=present enablerepo='*' "
+          action: "{{ ansible_pkg_mgr }} name=OVMF state=present"
           when: ovmf_status.results|list|length > 0
 
         - name: check if UEFI binaries are installed from OVMF
