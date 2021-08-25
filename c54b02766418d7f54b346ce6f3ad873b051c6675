@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ed22d346_4735da4e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1015563
+      },
+      "writtenOn": "2021-08-25T21:11:45Z",
+      "side": 1,
+      "message": "I think this is a good idea.\nAlso see comment about the order of logic in the entire block, I think it is flawed. But it should be changed separately so that either the enablerepo part or the logic change can be reverted independently.",
+      "revId": "c54b02766418d7f54b346ce6f3ad873b051c6675",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d4563923_c6ee0113",
+        "filename": "plugins/virsh/prepare_hypervisor.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1015563
+      },
+      "writtenOn": "2021-08-25T21:11:45Z",
+      "side": 1,
+      "message": "The logic in this block is flawed\nIt does:\n  a) Check repos for available package, if TRUE - Install package.\n  b) Check for already installed package.\n\nIt should do b) first, then a) and fail only if the package is not installed/cannot be installed.\n\nFixing the logic should be a follow up patch.",
+      "range": {
+        "startLine": 66,
+        "startChar": 6,
+        "endLine": 66,
+        "endChar": 11
+      },
+      "revId": "c54b02766418d7f54b346ce6f3ad873b051c6675",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
