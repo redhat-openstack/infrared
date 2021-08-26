@@ -147,6 +147,7 @@
         shell: |
             set -exuo pipefail
             source ~/stackrc
+            mkdir -p /var/lib/ironic/tftpboot/ppc64le/
             openstack overcloud image upload --image-path ~{{ install.user.name }}/images/ppc64le --architecture ppc64le --whole-disk --http-boot /var/lib/ironic/tftpboot/ppc64le
         when: multiarch_images
 
