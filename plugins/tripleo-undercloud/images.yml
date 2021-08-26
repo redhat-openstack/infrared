@@ -143,10 +143,12 @@
         tags: skip_ansible_lint
         when: not multiarch_images
 
+      # creating /var/lib/ironic/tftpboot/ppc64le/ dir as a workaround for 16.2 until BZ#1984448 is fixed
       - name: Upload ppc64le images to glance
         shell: |
             set -exuo pipefail
             source ~/stackrc
+            mkdir -p /var/lib/ironic/tftpboot/ppc64le/
             openstack overcloud image upload --image-path ~{{ install.user.name }}/images/ppc64le --architecture ppc64le --whole-disk --http-boot /var/lib/ironic/tftpboot/ppc64le
         when: multiarch_images
 
