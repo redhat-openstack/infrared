@@ -139,7 +139,7 @@
 
 - name: set docker_registry_undercloud facts
   set_fact:
-      docker_registry_undercloud: "{{ ansible_br_ctlplane['ipv4']['address'] }}:8787"
+      docker_registry_undercloud: "{% if os_version|float < 16 %}{{ ansible_br_ctlplane['ipv4']['address'] }}{% else %}{{ ansible_fqdn }}{% endif %}:8787"
       docker_registry_undercloud_namespace: "{{ install.get('registry', {}).namespace|default('rhosp' + os_version) }}"
   tags:
       - container-images-packages
