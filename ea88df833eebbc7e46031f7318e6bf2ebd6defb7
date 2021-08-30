@@ -16,6 +16,23 @@
       "message": "LGTM, let\u0027s wait on some additional reviews. I\u0027m also adding rhos-infra",
       "revId": "ea88df833eebbc7e46031f7318e6bf2ebd6defb7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "5b7a2553_f3b88cfd",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1017703
+      },
+      "writtenOn": "2021-08-30T12:04:00Z",
+      "side": 1,
+      "message": "I went and looked up the workaround proposed, looks like there\u0027s one more thing to do prior to uploading the image:\nWorkaround (if any): Create /var/lib/ironic/tftpboot/ppc64le and set its permissions correctly\nIf not using root, we can prepend sudo\n\n1. As *root*, create the directory:\n   # mkdir /var/lib/tftpboot/ppc64le\n\n2. As root, change the ownership to the appropriate UID/GID:\n   # chown 42422.42422 /var/lib/tftpboot/ppc64le\n\n3. As root, ensure the SELinux label is correctly set:\n   # chcon system_u:object_r:container_file_t:s0 /var/lib/tftpboot/ppc64le\n\nResult: Step 4 (openstack overcloud image upload...) may now be executed.\n",
+      "revId": "ea88df833eebbc7e46031f7318e6bf2ebd6defb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
