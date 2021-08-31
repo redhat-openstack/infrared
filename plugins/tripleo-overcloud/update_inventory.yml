@@ -8,6 +8,14 @@
       # The var "private_key" is used outside this scope and cannot be overridden
       overcloud_pkey: "{{ inventory_dir }}/id_rsa_overcloud"
   tasks:
+      - name: Update ssh config if a custom user specified
+        replace:
+             path: "~/.ssh/config"
+             regexp: 'heat-admin'
+             replace: "{{ install.overcloud.ssh.user }}"
+             mode: 0600
+         when: install.overcloud.ssh.user | length > 0
+
       - name: fetch the private key file from the undercloud
         fetch:
             src: "~/.ssh/id_rsa"
