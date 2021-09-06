@@ -121,14 +121,20 @@
         shell: |
             source ~/stackrc
             openstack stack failures list {{ install.overcloud.stack }}
-        when: overcloud_deploy.rc != 0 and install.version|default(undercloud_version)|openstack_release >= 10
+        when:
+            - overcloud_deploy.rc != 0
+            - install.version|default(undercloud_version)|openstack_release >= 10
+            - install.version|default(undercloud_version)|openstack_release < 17
         tags: skip_ansible_lint
 
       - name: Prepare stack failures long log
         shell: |
             source ~/stackrc
             openstack stack failures list {{ install.overcloud.stack }} --long > openstack_failures_long.log
-        when: overcloud_deploy.rc != 0 and install.version|default(undercloud_version)|openstack_release >= 10
+        when:
+            - overcloud_deploy.rc != 0
+            - install.version|default(undercloud_version)|openstack_release >= 10
+            - install.version|default(undercloud_version)|openstack_release < 17
         tags: skip_ansible_lint
 
       - name: copy summary script
