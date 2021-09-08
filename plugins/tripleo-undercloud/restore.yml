@@ -27,6 +27,13 @@
             path: "{{ install.snapshot.image }}"
         register: image_file
 
+      - name: Updatime mtime of existing snapshot image we are about to use
+        file:
+            path: "{{ install.snapshot.image }}"
+            state: touch
+        when:
+            - image_file.stat.exists
+
       - name: Fail when snapshot image doesn't exist
         fail:
             msg: "Provided snapshot image is not found, path - {{ install.snapshot.image }}"
