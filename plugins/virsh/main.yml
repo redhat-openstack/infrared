@@ -7,10 +7,16 @@
   vars:
     _run_condition: "{{ provision.get('remove', {}).nodes | default(False) }}"
 
+- name: Run remove RBD namespace playbook
+  import_playbook: rbd_remove_namespace.yml
+  vars:
+    _run_condition: "{{ provision.rbd.cleanup.namespace | bool }}"
+
 - import_playbook: "{{ provision_playbook | default('provision.yml') }}"
   vars:
     _main_run_condition: >-
       {{ (not provision.cleanup | default(False)) and
+         (not provision.rbd.cleanup.namespace | default(False)) and
          (not provision.kill | default(False)) and
          (not provision.get('remove', {}).nodes | default(False)) }}
 
