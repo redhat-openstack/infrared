@@ -170,6 +170,11 @@ subparsers:
                       default: False
                       help: |
                           Enables experimental RBD snapshot support.
+                  rbd-pool:
+                      type: Value
+                      default: rbd
+                      help: |
+                         Main RBD pool name
                   rbd-source:
                       type: Value
                       help: |
@@ -186,6 +191,11 @@ subparsers:
                       type: Value
                       help: |
                          Name of global snapshot which will record state of the whole namespace when "export" is run
+                  rbd-cleanup-namespace:
+                      type: Bool
+                      default: False
+                      help: |
+                         This option will remove all images, snapshots and clones from requested namespace
             - title: cleanup
               options:
                   cleanup:

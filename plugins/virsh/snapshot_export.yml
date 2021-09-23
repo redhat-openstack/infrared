@@ -35,8 +35,6 @@
         RETURN_CODE=0
         if ! virsh domstate {{ item }} | grep -qw 'shut off'; then
           virsh shutdown {{ item }}
-          sleep 30
-          virsh destroy {{ item }}
           RETURN_CODE=2
         fi
         exit ${RETURN_CODE}
@@ -47,6 +45,8 @@
       changed_when: _vm_stop.rc == 2
       failed_when: _vm_stop.rc not in [0, 2]
 
+# TODO ADD ACPI checks for VMs that do not have OS yet...
+
     - name: Wait for all VM's to be shut down
       command: |
         virsh domstate {{ item }}
@@ -56,6 +56,9 @@
       retries: "{{ vm_shutdown_timeout | default(30) }}"
       delay: 60
       loop: "{{ _vm_list }}"
+
+#    - name: Fail
+#      fail: msg="Reached stop"
 
     - name: Make sure that the snapshot path exists
       file:
