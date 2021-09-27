@@ -4,7 +4,7 @@
   when: install.version|default(undercloud_version) | openstack_release < 13
 
 - set_fact:
-      isolation_file: "network-isolation{{ (install.network.protocol == 'ipv6' and install.storage.protocol.backend == 'nfs-ganesha') | ternary('-v6','') }}{{ (install.network.protocol == 'ipv6-all') | ternary('-v6-all','') }}.yaml"
+      isolation_file: "network-isolation{{ (install.network.protocol == 'ipv6' and install.manila.storage.protocol == 'nfs-ganesha') | ternary('-v6','') }}{{ (install.network.protocol == 'ipv6-all') | ternary('-v6-all','') }}.yaml"
 
   when: install.version|default(undercloud_version) | openstack_release >= 13
 
