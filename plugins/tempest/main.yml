@@ -39,6 +39,19 @@
         when:
             - test.install.crudini|bool
 
+- name: Start netstat logging before tempest run
+  hosts: "{{ groups.overcloud_nodes|default([]) }}"
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: start netstat in the backgrounbd
+        shell: >
+           set -e
+           /usr/bin/netstat -lnp -c 60 &> /var/log/netstat_audit.log
+           echo $! >/tmp/netstat.pid
+        async: 0
+        poll: 0
+
 - name: Test openstack with tempest
   hosts: tester
   gather_facts: yes
@@ -91,3 +104,13 @@
         when: test.collect.ansible.facts|default(False)
         tags: collect-ansible-facts
         ignore_errors: True
+
+- name: Stop netstat logging at tempest run
+  hosts: "{{ groups.overcloud_nodes|default([]) }}"
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: Kill netstat by pid
+        shell: >
+           kill -9 $(cat /tmp/netstat.pid)
+        ignore_errors: true
