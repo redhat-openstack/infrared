@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9497e9fd_c10559a6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-10-07T22:50:41Z",
+      "side": 1,
+      "message": "Apparently this broke non-freeipa jobs. I\u0027m going to propose a revert at least to allow people to test this.\n\n2021-10-07 23:40:43.784 | \n2021-10-07 23:40:43.786 | TASK [sign request with undercloud CA] *****************************************\n2021-10-07 23:40:43.788 | task path: /home/rhos-ci/jenkins/workspace/DFG-all-unified-ffu-upgrade-13-16.2_director-rhel-virthost-3cont_2comp_3ceph-ipv4-vxlan-ceph-nfs-ganesha-default/infrared/plugins/tripleo-overcloud/tasks/ssl.yml:139\n2021-10-07 23:40:43.790 | Thursday 07 October 2021  23:40:43 +0300 (0:00:00.217)       0:03:02.076 ****** \n2021-10-07 23:40:43.967 | fatal: [undercloud-0]: FAILED! \u003d\u003e {\n2021-10-07 23:40:43.969 |     \"changed\": true,\n2021-10-07 23:40:43.971 |     \"cmd\": [\n2021-10-07 23:40:43.973 |         \"openssl\",\n2021-10-07 23:40:43.975 |         \"x509\",\n2021-10-07 23:40:43.977 |         \"-req\",\n2021-10-07 23:40:43.979 |         \"-in\",\n2021-10-07 23:40:43.981 |         \"/home/stack/composable_roles/overcloud-cacert.pem\",\n2021-10-07 23:40:43.983 |         \"-days\",\n2021-10-07 23:40:43.985 |         \"365\",\n2021-10-07 23:40:43.987 |         \"-CA\",\n2021-10-07 23:40:43.989 |         \"-CAkey\",\n2021-10-07 23:40:43.991 |         \"~/undercloud-privkey.pem\",\n2021-10-07 23:40:43.993 |         \"-set_serial\",\n2021-10-07 23:40:43.995 |         \"01\",\n2021-10-07 23:40:43.997 |         \"-extfile\",\n2021-10-07 23:40:43.999 |         \"/etc/pki/tls/openssl.cnf\",\n2021-10-07 23:40:44.000 |         \"-extensions\",\n2021-10-07 23:40:44.002 |         \"v3_req\",\n2021-10-07 23:40:44.004 |         \"-out\",\n2021-10-07 23:40:44.006 |         \"/home/stack/composable_roles/overcloud-cacert.pem\"\n2021-10-07 23:40:44.008 |     ],\n2021-10-07 23:40:44.010 |     \"delta\": \"0:00:00.007344\",\n2021-10-07 23:40:44.012 |     \"end\": \"2021-10-07 16:40:43.953401\",\n2021-10-07 23:40:44.014 |     \"rc\": 1,\n2021-10-07 23:40:44.016 |     \"start\": \"2021-10-07 16:40:43.946057\"\n2021-10-07 23:40:44.018 | }\n2021-10-07 23:40:44.020 | \n2021-10-07 23:40:44.022 | STDERR:\n2021-10-07 23:40:44.024 | \n2021-10-07 23:40:44.027 | unknown option /home/stack/undercloud-privkey.pem",
+      "revId": "5343c7610da355dafe17704a3f0ec4a5d30c1a45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
