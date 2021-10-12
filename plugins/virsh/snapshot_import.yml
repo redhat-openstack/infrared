@@ -172,6 +172,16 @@
           {%- endfor %}
           {{- _server_image_map }}
 
+    - name: Change nvram path to the correct location
+      lineinfile:
+        path: "/etc/libvirt/qemu/{{ item.path | basename }}"
+        regexp: "(.*)/var/lib/libvirt/qemu/nvram(.*)"
+        line: "\\1{{ provision.disk.pool }}/../qemu/nvram/\\2"
+        backrefs: true
+      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+
     # We use command here, because the virt module needs the raw XML
     # and a lookup will not work remotely. We could slurp all the files,
     # but that's a lot of work for very little gain.
