@@ -121,6 +121,7 @@
             url: "{{ venv_constraints }}"
             dest: "{{ venv_destination_path }}/constraints.txt"
             force: yes
+            validate_certs: "{{ ansible_facts['distribution_version'] is version('7.9', '>=') }}"
           register: _download_constraints
           until: _download_constraints is success
           retries: 5
