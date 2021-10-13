@@ -51,20 +51,60 @@
 
 # net/vip provisioning stpes moved to earlier stages in order to use VIP and other address
 # in template generations, for example for IP based SSL certifactes
-- name: metalsmith net register and deploy
+- name: Deploy the nodes
   vars:
       - template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
   hosts: undercloud
   any_errors_fatal: true
   tasks:
-      - name: Images/Deploy/provision nodes
+      - name: Provision the ("baremetal") nodes
         shell: |
             source ~/stackrc
             set -o pipefail
             openstack overcloud node provision --network-config --stack {{ install.overcloud.stack }} -o /home/stack/templates/overcloud-baremetal-deployed.yaml  {{ template_base }}/network/baremetal_deployment.yaml | \
-            tee -a /home/stack/overcloud_provision_03_node.log
+            tee -a /home/stack/overcloud_provision_nodes.log
         when:
             - (install.version|default(undercloud_version) | openstack_release >= 17)
+
+- name: Update inventory with details about node provisioning
+  import_playbook: update_inventory.yml
+
+- name: Copy registries.conf overrides from UC to controller and ceph nodes
+  hosts: controller, ceph
+  any_errors_fatal: true
+  gather_facts: no
+  tasks:
+      - name: Insecure UC registry needs to be trusted on these nodes
+        ini_file:
+          path: /etc/containers/registries.conf
+          create: no
+          backup: yes
+          section: registries.insecure
+          option: registries
+          value: "['192.168.24.1:8787']"
+        become: true
+        when:
+            - (install.version|default(undercloud_version) | openstack_release >= 17)
+
+- name: Deploy Deployed Ceph using cephadm and local UC registry
+  hosts: undercloud
+  vars:
+      - containers_home_dir: "/home/stack"
+  any_errors_fatal: true
+  tasks:
+      - name: Deploy Ceph separately from OC(Deployed Ceph topology)
+        shell: |
+            source ~/stackrc
+            set -o pipefail
+            openstack overcloud ceph deploy -o /home/stack/templates/overcloud-ceph-deployed.yaml \
+            --container-image-prepare "{{ containers_home_dir }}/containers-prepare-parameter.yaml" \
+            --container-namespace 192.168.24.1:8787/rh-osbs \
+            /home/stack/templates/overcloud-baremetal-deployed.yaml \
+            | tee -a /home/stack/overcloud_ceph_deployment.log
+        when:
+            - (install.version|default(undercloud_version) | openstack_release >= 17.0)
+            - install.storage.backend|default('') == 'ceph'
+            - not install.storage.external
 
 - name: Deploy the Overcloud
   hosts: undercloud
