@@ -20,8 +20,11 @@ openstack overcloud deploy \
 {% endif %}
 {% if install.version|default(undercloud_version)|openstack_release >= 17 %}
 --deployed-server -e /home/stack/templates/overcloud-vip-deployed.yaml -e /home/stack/templates/overcloud-networks-deployed.yaml -e /home/stack/templates/overcloud-baremetal-deployed.yaml \
-{# rhbz#2020590 - network_data_v2.yaml has to be part of both, the "network provision" step also the OC deployment from now on  #}
---networks-file /home/stack/virt/network/network_data_v2.yaml \
+{% if install.storage.backend|default('') == 'ceph' and not install.storage.external %}
+-e /home/stack/templates/overcloud-ceph-deployed.yaml \
+{% endif %}
 {# rhbz#2013352 #}
 --disable-protected-resource-types \
+{# rhbz#2020590 - network_data_v2.yaml has to be part of both, the "network provision" step also the OC deployment from now on  #}
+--networks-file /home/stack/virt/network/network_data_v2.yaml \
 {% endif %}
