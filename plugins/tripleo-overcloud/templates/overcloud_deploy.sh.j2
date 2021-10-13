@@ -20,4 +20,7 @@ openstack overcloud deploy \
 {% endif %}
 {% if install.version|default(undercloud_version)|openstack_release >= 17 %}
 --deployed-server -e /home/stack/templates/overcloud-vip-deployed.yaml -e /home/stack/templates/overcloud-networks-deployed.yaml -e /home/stack/templates/overcloud-baremetal-deployed.yaml \
+{% if storage_backend|default('') == 'ceph' and not install.storage.external %}
+-e /home/stack/templates/overcloud-ceph-deployed.yaml \
+{% endif %}
 {% endif %}
