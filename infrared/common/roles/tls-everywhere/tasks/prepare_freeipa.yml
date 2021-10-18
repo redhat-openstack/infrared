@@ -55,7 +55,7 @@
   # This can be removed once rhbz#1892216 is fixed and released
   # We need to install openjdk beforehand (as it is installed by the freeipa)
   # script and then downgrade it in case the version is the known broken one
-  # The 1.8.0.275.b01 version of JDK is still broken. We need to downgrade 
+  # The 1.8.0.275.b01 version of JDK is still broken. We need to downgrade
   # to proper version.
   - name: Workaround for broken versions of openjdk
     become: yes
@@ -99,6 +99,7 @@
        url: "{{ freeipa_setup_script }}"
        dest: "{{ freeipa_working_dir }}/freeipa_setup.sh"
        mode: 775
+       validate_certs: "{{ ansible_facts['distribution_version'] is version('7.9', '>=') }}"
 
   - name: Generate inventory file
     template:
