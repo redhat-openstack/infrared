@@ -73,6 +73,11 @@
       - java-1.8.0-openjdk-headless-1:1.8.0.282.b08-1.el8_2
       allow_downgrade: yes
 
+  - name: Update ca-certificate
+    yum:
+      name: ca-certificates
+      state: latest
+
   - name: Install Red Hat CA
     become: yes
     shell: |
@@ -82,7 +87,7 @@
 
   - name: Update repos
     become: yes
-    command: yum clean all
+    command: yum update all
 
   - name: Enable iptables service for RHEL8
     become: yes
