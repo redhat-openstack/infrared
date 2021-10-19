@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "50d2020b_36e7de82",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2021-10-19T15:57:52Z",
+      "side": 1,
+      "message": "I suspect this is going to break again the case when you have undercloud SSL but no freeipa.\n\n- name: sign request with undercloud CA\n  vars:\n      undercloud_pkey: ~/undercloud-privkey.pem\n  command: \u003e\n      openssl x509 -req\n      -in {{ template_base }}/overcloud-cacert.pem -days 365\n      -CA {{ undercloud_cacert }}\n      -CAkey {{ undercloud_pkey }}\n      -set_serial 01\n      -extfile /etc/pki/tls/openssl.cnf\n      -extensions v3_req\n      -out {{ template_base }}/overcloud-cacert.pem\n  when: undercloud_ssl.rc \u003d\u003d 0\n\n",
+      "revId": "49e7e797ca32c3ba925c5f1d133484f03c2f514b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
