@@ -60,7 +60,7 @@
 
 - name: Set undercloud/overcloud certificate path fact
   set_fact:
-      undercloud_cacert: '/etc/pki/ca-trust/source/anchors/undercloud-cacert.pem'
+      undercloud_cacert: "{{ '' if tls_everywhere else '/etc/pki/ca-trust/source/anchors/undercloud-cacert.pem' }}"
       overcloud_cacert: '/etc/pki/ca-trust/source/anchors/overcloud-cacert.pem'
 
 - name: copy the enable-tls.yaml file locally
