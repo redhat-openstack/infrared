@@ -18,7 +18,7 @@
 
   - name: get IP address of VIP
     set_fact:
-        external_allocation_pool_start: "{{ (network_env.stdout | from_yaml).parameter_defaults.VipPortMap.external.ip_address_uri }}"
+        external_allocation_pool_start: "{{ (network_env.stdout | from_yaml).parameter_defaults.VipPortMap.external.ip_address }}"
   when:
     - "not 'bmc' in groups"
     - install.version|default(undercloud_version)| openstack_release >= 17
