@@ -114,7 +114,7 @@
 
 - name: set subject CN and template file when not using dns names
   set_fact:
-      subj_name: "{{ external_allocation_pool_start }}"
+      subj_name: "{{ external_allocation_pool_start | ipwrap }}"
       tls_template_name: 'tls-endpoints-public-ip.yaml'
   when: not install.overcloud.use.dns.names
 
