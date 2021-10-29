@@ -142,7 +142,7 @@
   command: >
       openssl x509 -req
       -in {{ template_base }}/overcloud-cacert.pem -days 365
-      -CA {{ undercloud_cacert }}
+      {{ undercloud_cacert | ternary('-CA' + undercloud_cacert, '') }}
       -CAkey {{ undercloud_pkey }}
       -set_serial 01
       -extfile /etc/pki/tls/openssl.cnf
