@@ -21,7 +21,9 @@
 - name: Add cacert to clouds_yaml fact
   set_fact:
       clouds_yaml: "{{ clouds_yaml | combine({cloudname: {'cacert': undercloud_cacert }}, recursive=True) }}"
-  when: undercloud_cacert is defined
+  when:
+      - undercloud_cacert is defined
+      - not install.tls.everywhere
 
 - name: create clouds.yaml if doesn't exist
   blockinfile:
