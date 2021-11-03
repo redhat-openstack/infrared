@@ -118,3 +118,12 @@
       dest: "~/overcloud_deploy.sh"
       regexp: "^--log-file .*"
       line: "--log-file overcloud_deployment_{{ 100 | random }}.log"
+
+- name: Append ansible backup lines at the bottom of the deploy command
+  blockinfile:
+      path: "~/overcloud_deploy.sh"
+      block: |
+        EXIT_CODE=$?
+        cp -p ${HOME}/ansible.log{,.$(date +%H%M%S) || true
+        exit $EXIT_CODE
+      marker: "# {mark} Ansible log backup"
