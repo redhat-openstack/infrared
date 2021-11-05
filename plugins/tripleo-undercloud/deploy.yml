@@ -95,6 +95,8 @@
         vars:
             auth_file_path: "/home/stack/stackrc"
             cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"
+        when:
+          - install.version|default(undercloud_version) | openstack_release < 17
 
       - name: gathering new facts about the undercloud
         setup:
