@@ -65,11 +65,11 @@
 
     - block:
         - name: check for OVMF package
-          action: "{{ ansible_pkg_mgr }} list=OVMF"
+          action: "{{ ansible_pkg_mgr }} list=OVMF enablerepo='rhel-7-server-rpms'"
           register: ovmf_status
 
         - name: install OVMF package
-          action: "{{ ansible_pkg_mgr }} name=OVMF state=present"
+          action: "{{ ansible_pkg_mgr }} name=OVMF state=present enablerepo='rhel-7-server-rpms' "
           when: ovmf_status.results|list|length > 0
 
         - name: check if UEFI binaries are installed from OVMF
