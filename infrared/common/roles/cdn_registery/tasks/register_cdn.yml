@@ -82,4 +82,4 @@
       state: "{{ cdn_creds.state | default(omit) }}"
       username: "{{ cdn_creds.username | default(omit) }}"
   become: true
-  when: cdn_account_status.rc != 0
+  when: cdn_account_status.rc != 0 or (cdn_creds.force_register | default(false))
