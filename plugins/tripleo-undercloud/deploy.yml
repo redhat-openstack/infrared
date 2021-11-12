@@ -90,6 +90,15 @@
             flat: yes
             fail_on_missing: yes
 
+      - name: create shell environment configuration for ephemeral Heat
+        template:
+          src: heatrc.j2
+          dest: ~/heatrc
+          force: true
+          mode: 0600
+        when:
+          - install.version|default(undercloud_version) | openstack_release >= 17
+
       - name: update clouds.yaml file
         include_tasks: clouds.yml
         vars:
