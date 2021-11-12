@@ -1,0 +1,6 @@
+unset OS_PROJECT_NAME
+unset OS_PROJECT_DOMAIN_NAME
+unset OS_USER_DOMAIN_NAME
+export OS_AUTH_TYPE=none
+IP=`cat /etc/hosts | grep "{{ inventory_hostname }}.{{ install.overcloud.domain }} {{ inventory_hostname }}$" -m 1| awk '{print $1}'`
+export OS_ENDPOINT=http://$IP:8006/v1/admin
