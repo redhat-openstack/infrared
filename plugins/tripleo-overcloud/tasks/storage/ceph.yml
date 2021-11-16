@@ -34,6 +34,7 @@
       line: '-e  /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible-external.yaml \'
   when:
       - (install.version|default(undercloud_version)|openstack_release >= 12)
+      - (install.version|default(undercloud_version)|openstack_release < 17)
       - install.storage.external
       - ((install.storage.method is not defined and (install.version|default(undercloud_version)|openstack_release > 12)) or (install.storage.method is defined and install.storage.method == 'ansible'))
 

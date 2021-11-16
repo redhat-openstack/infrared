@@ -12,7 +12,6 @@
       dest: "{{ containers_ir_deploy_script }}"
       line: '-e {{ install.heat.templates.basedir }}/environments/cephadm/cephadm.yaml \'
   when:
-      - not install.storage.external
       - storage_backend|default('') == 'ceph'
       - install.version|default(undercloud_version) | openstack_release >= 17
 
