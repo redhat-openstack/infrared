@@ -52,7 +52,7 @@
           {% if provision.bootmode == 'uefi' %}
           --boot {{ 'hd' if topology_node.deploy_os|default(True) else 'uefi' }} \
           {% else %}
-          --boot {{ provision.bootmode }} \
+          --boot {{ 'hd' if provision.bootmode == 'bios' else provision.bootmode }} \
           {% endif %}
           {% for interface in topology_node.interfaces %}
            --network {{ 'bridge' if (interface.bridged|default(False)) else 'network' }}:{{ prefix|default('') }}{{ (prefix is defined|ternary('-','')) }}
