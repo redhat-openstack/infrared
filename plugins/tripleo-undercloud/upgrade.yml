@@ -25,7 +25,9 @@
   hosts: undercloud
   gather_facts: yes
   any_errors_fatal: true
-  tags: upgrade
+  tags:
+    - upgrade
+    - upgrade_repos
   vars:
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
       operation_type: "{{ 'Update' if install.get('update', {}).undercloud|default(False) else 'Upgrade' }}"
@@ -35,20 +37,39 @@
       # fallback into the previous handling (uc_version+1 for upgrade,
       # uc_version for update).
       undercloud_upgrade_version: "{{ install.version|default(install.upgrade|default(false) | ternary(undercloud_version|int +1, undercloud_version) ) }}"
-  roles:
-      - role: rhos-release
-        release: "{{ undercloud_upgrade_version }}"
-        director_build: "{{ install.get('director', {}).build|default(omit) }}"
-        build: "{{ install.build | default(omit) }}"
-        mirror: "{{ install.mirror | default(omit) }}"
-        rr_distro_version: "{{ install.osrelease|default(omit) }}"
-        rr_buildmods: "{{ install.buildmods }}"
-        enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
-        without_ceph: "{{ not install.get('ceph', {}).repos|default(omit) }}"
+  tasks:
+      - include_role:
+            name: rhos-release
+        vars:
+            release: "{{ undercloud_upgrade_version }}"
+            director_build: "{{ install.get('director', {}).build|default(omit) }}"
+            build: "{{ install.build | default(omit) }}"
+            mirror: "{{ install.mirror | default(omit) }}"
+            rr_distro_version: "{{ install.osrelease|default(omit) }}"
+            rr_buildmods: "{{ install.buildmods }}"
+            enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
+            without_ceph: "{{ not install.get('ceph', {}).repos|default(omit) }}"
+        when:
+            - "install.version|openstack_distribution == 'OSP'"
+            - not install.cdn|default(False)
+            - not skip_release
         tags:
             - upgrade
             - upgrade_repos
-  tasks:
+
+      - include_role:
+            name: cdn_registery
+        vars:
+            ansible_become: true
+            cdn_args_file: "{{ install.cdn|default('') }}"
+            install_version: "{{ install.version }}"
+        when:
+            - install.cdn|default(False)
+            - "install.version|openstack_distribution == 'OSP'"
+        tags:
+            - upgrade
+            - upgrade_repos
+
       - name: update packages for the upgrade
         become: true
         tags:
@@ -71,5 +92,3 @@
         import_tasks: tasks/prepare_uc_images.yml
         when: undercloud_version|openstack_release >= 13
 
-      - name: "{{ operation_type }} to version {{ undercloud_upgrade_version }} build {{ install.build | default('latest') }}"
-        include_tasks: "tasks/upgrade/upgrade.yml"
