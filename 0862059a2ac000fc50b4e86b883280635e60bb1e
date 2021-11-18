@@ -33,6 +33,24 @@
       "message": "I am ok with the change, we might have to add this extra flag in our job definition but still trying to understand, what is the use case for not having ironic-custom.yaml as this file was being used to provide ironic services in overcloud? ",
       "revId": "0862059a2ac000fc50b4e86b883280635e60bb1e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c5559d30_d493c9ec",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1012090
+      },
+      "writtenOn": "2021-11-18T07:05:43Z",
+      "side": 1,
+      "message": "Hi Paras, the default value of this parameter is yes so you won\u0027t need to change anything in your jobs. We will also submit a patch to rhos-qe-jenkis overcloud deploy stage that will add the parameter and value to the infrared deploy command.\n\nAs for the use case, the file is providing custom values per setup, e.g. flat vs vlan based deployment. In our setup, we are using a custom network on a vlan base.\nIn addition, we are using actual BM nodes and not VMs.\nIf you compare the two config files there is a major difference + parameters that are not needed at all.\n\nWhat enables the ironic services on the overcloud is this file:\n/usr/share/openstack-tripleo-heat-templates/environments/services/ironic-overcloud.yaml\n\nJust to confirm that this is not affecting you, pls let me know if you can run some of your jobs with this patch.\n\nThanks,\nUdi",
+      "parentUuid": "65c0f967_7ed66dfa",
+      "revId": "0862059a2ac000fc50b4e86b883280635e60bb1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
