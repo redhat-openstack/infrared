@@ -1,0 +1,13 @@
+table ip nat {
+        chain prerouting {
+                type nat hook prerouting priority dstnat
+                policy accept
+        }
+        chain postrouting {
+                type nat hook postrouting priority srcnat
+                policy accept
+{% for interface in l3appliance_config.masquerade_interfaces|default([]) %}
+                oifname "{{ interface }}" masquerade
+{% endfor %}
+        }
+}
