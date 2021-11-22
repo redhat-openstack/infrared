@@ -119,7 +119,7 @@
           {% endif %}
           openstack tripleo container image prepare \
             -e ~/containers-prepare-parameter.yaml \
-            {{ environment_yamls | default('') }} {{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
+            {{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
             --output-env-file {{ template_base }}/docker-images.yaml
       when: install.version|default(undercloud_version)|openstack_release >= 14 and
             ( install.network.ovn|default(False) or
