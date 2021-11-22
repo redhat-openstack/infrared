@@ -34,9 +34,17 @@
       line: '-e  /usr/share/openstack-tripleo-heat-templates/environments/ceph-ansible/ceph-ansible-external.yaml \'
   when:
       - (install.version|default(undercloud_version)|openstack_release >= 12)
+      - (install.version|default(undercloud_version)|openstack_release < 17)
       - install.storage.external
       - ((install.storage.method is not defined and (install.version|default(undercloud_version)|openstack_release > 12)) or (install.storage.method is defined and install.storage.method == 'ansible'))
 
+- name: append the storage template line to apply the external-ceph deploy script for >= OSP17
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e  /usr/share/openstack-tripleo-heat-templates/environments/external-ceph.yaml \'
+  when:
+      - (install.version|default(undercloud_version)|openstack_release >= 17)
+      - install.storage.external
 
 - name: append the storage template line to the base overcloud external puppet ceph deploy script
   lineinfile:
