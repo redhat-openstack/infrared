@@ -22,6 +22,7 @@
           - dnsmasq
           - radvd
           - chrony
+          - nftables
         state: present
 
     - name: L3 Appliance - Enable IPv6 routing
@@ -168,3 +169,25 @@
         enabled: true
       when:
         - l3appliance_config.enable_timeserver|default(false)
+
+    - name: L3 Appliance - nftables NAT Masquerade
+      become: true
+      block:
+        - name: L3 Appliance - Write nftables NAT Masquerade config
+          template:
+            src: nftables_masquerade.nft.j2
+            dest: "/etc/nftables/nftables_masquerade.nft"
+            mode: '0644'
+            owner: root
+            group: root
+        - name: L3 Appliance - Include nftables_masquerade.nft in nftables config
+          lineinfile:
+            path: /etc/sysconfig/nftables.conf
+            line: "include \"/etc/nftables/nftables_masquerade.nft\""
+        - name: L3 Appliance - Enable nftables service
+          systemd:
+            name: nftables
+            state: restarted
+            enabled: true
+      when:
+        - l3appliance_config.masquerade_interfaces is defined
