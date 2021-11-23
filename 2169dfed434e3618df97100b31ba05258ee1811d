@@ -56,6 +56,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "451db401_70e9835b",
+        "filename": "plugins/virsh/snapshot_quiesce.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011165
+      },
+      "writtenOn": "2021-11-23T14:25:27Z",
+      "side": 1,
+      "message": "no need to wait active+clean step. The rebalance may take some time even if OSDs are empty.",
+      "parentUuid": "e5307b2a_5f947f9e",
+      "revId": "2169dfed434e3618df97100b31ba05258ee1811d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "6c1bcf28_90a8c042",
         "filename": "plugins/virsh/snapshot_quiesce.yml",
         "patchSetId": 2
@@ -114,6 +132,30 @@
       "writtenOn": "2021-11-23T14:20:52Z",
       "side": 1,
       "message": "Ah yeah, it retries until HEALTH_OK - but if the max number of retries is hit and it is still HEALTH_WARN then it does not fail the task.\n\nOK, you\u0027re right - leave as-is here.",
+      "parentUuid": "77f82878_59c73e36",
+      "range": {
+        "startLine": 101,
+        "startChar": 21,
+        "endLine": 101,
+        "endChar": 79
+      },
+      "revId": "2169dfed434e3618df97100b31ba05258ee1811d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e06b0396_0fc582f9",
+        "filename": "plugins/virsh/snapshot_quiesce.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011165
+      },
+      "writtenOn": "2021-11-23T14:25:27Z",
+      "side": 1,
+      "message": "HEALTH_WARN is a legit health condition. It means that some rebalancing are going on. We should never consider it as a failure, so  (_ceph_health.stdout| from_json)[\"status\"] \u003d\u003d \"HEALTH_ERR\" is the best option from all options we have.",
       "parentUuid": "77f82878_59c73e36",
       "range": {
         "startLine": 101,
