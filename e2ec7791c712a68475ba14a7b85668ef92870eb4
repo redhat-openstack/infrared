@@ -72,6 +72,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "91ee23cb_c6e2d58c",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2021-11-23T11:13:13Z",
+      "side": 1,
+      "message": "Yes, we and IR had it wrong. For a long time. Might this be a quick fix without any behaviou change? It might.\n\nBut in principle that doesn\u0027t justify API change inclusion after GA for automation/CI of multiple OSPs (even if these are \"just\" env templates). The product API was used and that was allowed usage by product, which did not break deployments for the whole existence of CI results. This leads me to believe this was allowed product API call for the whole time being, up until now, where it broke deployment for OSP17. Its not responsibility of QE to handle all possible product API calls, its product responsibility to fail on unallowed usage - which did not happen. For that its worth, these params might be sent into /dev/null by TripleO.\n\nRather than putting all existing quality results in question by hiding this now this way, I say lets own the mistake. Lets create BZ against 16.1/16.2 and see the reasoning there. Possible outcome would be addition to documentation, note for customer, etc... then and only then adjusting InfraRed maybe.\n\nAnother point of view is from customer and his updates: If he deployed GA builds with our QE guarantees we presented at that time, now he gets updates tested on deployments where basically deployment API changed? What value have these QE guarantees then? Also we have no idea, how for example update workflows will be impacted overall.\n\nTo be absolutely sure this doesn\u0027t change any previously gathered results: testing all jobs on all possible builds back into history to make sure the behaviour is the same is basically impossible.",
+      "parentUuid": "df26e7dd_a4396260",
+      "revId": "e2ec7791c712a68475ba14a7b85668ef92870eb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "98d306fe_f34dc549",
         "filename": "plugins/tripleo-overcloud/roles/containers/prepare-templates/tasks/build/build_images.yml",
         "patchSetId": 2
