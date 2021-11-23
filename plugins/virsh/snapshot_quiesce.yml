@@ -77,27 +77,28 @@
             -c
             /etc/ceph/{{ ceph_cluster_name.stdout }}.conf
 
-      - name: Wait for OSDs to come back
+      - name: Wait for all OSDs to be up
         become: true
         command: >-
-          {{ _ceph_cmd_prefix }} pg stat
-        changed_when: false
-        register: active_osd
-        until: active_osd.stdout.find("active+clean") > -1
+          {{ _ceph_cmd_prefix }} osd stat -f json
+        register: _wait_for_all_osds_up
         retries: 5
         delay: 60
+        changed_when: false
+        until:
+          - (_wait_for_all_osds_up.stdout | from_json)["osdmap"]["num_osds"] | int > 0
+          - (_wait_for_all_osds_up.stdout | from_json)["osdmap"]["num_osds"] == (_wait_for_all_osds_up.stdout | from_json)["osdmap"]["num_up_osds"]
 
       - name: Wait for cluster health to be OK
         become: true
         command: >-
-          {{ _ceph_cmd_prefix }} status
+          {{ _ceph_cmd_prefix }} health -f json
         changed_when: false
         register: _ceph_health
-        until: _ceph_health.stdout.find("HEALTH_OK") > -1
+        until: (_ceph_health.stdout| from_json)["status"] == "HEALTH_OK"
         retries: 10
         delay: 60
-        failed_when: (_ceph_health.stdout.find("HEALTH_OK") == -1) and
-                     (_ceph_health.stdout.find("HEALTH_WARN") == -1)
+        failed_when: (_ceph_health.stdout| from_json)["status"] == "HEALTH_ERR"
 
 - name: Ensure that the Pacemaker cluster and all its resources are up
   hosts: controller:!serviceapi
