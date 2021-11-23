@@ -77,15 +77,32 @@
             -c
             /etc/ceph/{{ ceph_cluster_name.stdout }}.conf
 
-      - name: Wait for OSDs to come back
+      # Json format for osd stat is inconsistent across ceph versions
+      # Because of it we need to create separate osd stat command in advance
+      - name: Set the ceph osd command
+        set_fact:
+          _ceph_osd_cmd_prefix: >-
+            {{ _ceph_cmd_prefix }}
+            osd
+            stat
+            --format
+            json
+            {% if _container_runtime.stdout == "podman" %}
+            | jq ".[]"
+            {% endif %}
+
+      - name: Wait for all OSDs to be up
         become: true
-        command: >-
-          {{ _ceph_cmd_prefix }} pg stat
-        changed_when: false
-        register: active_osd
-        until: active_osd.stdout.find("active+clean") > -1
+        shell: |
+          set -o pipefail
+          {{ _ceph_osd_cmd_prefix }}
+        register: _wait_for_all_osds_up
         retries: 5
         delay: 60
+        changed_when: false
+        until:
+          - (_wait_for_all_osds_up.stdout | from_json)["num_osds"] | int > 0
+          - (_wait_for_all_osds_up.stdout | from_json)["num_osds"] == (_wait_for_all_osds_up.stdout | from_json)["num_up_osds"]
 
       - name: Wait for cluster health to be OK
         become: true
@@ -94,7 +111,7 @@
         changed_when: false
         register: _ceph_health
         until: _ceph_health.stdout.find("HEALTH_OK") > -1
-        retries: 10
+        retries: 15
         delay: 60
         failed_when: (_ceph_health.stdout.find("HEALTH_OK") == -1) and
                      (_ceph_health.stdout.find("HEALTH_WARN") == -1)
