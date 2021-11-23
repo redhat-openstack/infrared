@@ -16,6 +16,29 @@
       "message": "Filip thanks for pointing this out.\nYes we need to be careful around changes like this,\nthough my main concern with changing existing/old things comes with changing the tests (\u003d the validation criteria) as main issue (adding tests year later is questionable, unless they are for freshly discovered bug to prevent regression but adding suddenly new constrains as that can then spin up wide chain of testing/fixups/backports loop - when it was not originally considered as needed and as such should be aimed at next incoming version if possible - backporting is costly).\n\nDropping workaround like this, correcting the ci code, while it might have similar impact,\nis always reasonable - there is no point in running/testing the things in wrong way, it\u0027s in the end wasted time with disqualifiable results (issues uncovered with this execution might be rightfully disregarded).\n\nSo I\u0027m definitely for getting the code to do the right thing.\nThat said - it may warrant notification for consumers (mailing list etc) to let then know it may cause failures - esp those expected to be affected (original commit/BZ mentions ODL/OVN/...).\n\nAs also I wonder if just this revert does it right, if there is not something else, some specific files to be passed instead. I admin I\u0027m currently bit confused by the bug comments and related commits which were correcting this (adding the when conditions) from the time of this reverted one commit.",
       "revId": "0dd097502235868a372864145df45acababc24cc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d3691c27_15560e7f",
+        "filename": "plugins/tripleo-overcloud/roles/containers/prepare-templates/tasks/build/build_images.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2021-11-23T23:15:57Z",
+      "side": 1,
+      "message": "So does this cover it?\n\n  should be fixed by passing the \"custom roles + role counts\"\n\nOr another patch expected - and if so why not to do as one fix, as if this is only part then it will cause failures right?",
+      "range": {
+        "startLine": 122,
+        "startChar": 15,
+        "endLine": 122,
+        "endChar": 26
+      },
+      "revId": "0dd097502235868a372864145df45acababc24cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
