@@ -96,6 +96,13 @@
         register: pre_overcloud_install_action
         when: install.get('overcloud', {}).get('predeploy', {}).get('action', {})
 
+      - name: apply workaround for lp1951949
+        shell: |
+          yum -y install patch unzip
+          curl -o /tmp/foo.zip https://review.opendev.org/changes/openstack%2Ftripleo-ansible~818910/revisions/2/patch?zip
+          unzip /tmp/foo.zip -d /tmp
+          sudo patch --dry-run -p3 -d/usr/share/ansible/tripleo-playbooks/ </tmp/646893e.diff
+
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
