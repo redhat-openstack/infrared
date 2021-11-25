@@ -3,6 +3,19 @@
     http://docs.openstack.org/developer/tripleo-docs/advanced_deployment/node_placement.html
 #}
 
+{#
+# TODO: This is workaround for downstream osp17 job, TripleO now defaults to
+# libvirt's "modular daemons" but this required libvirt > 7.4, this is a
+# temporary workaround to move back to monolithic modular libvirt daemon till
+# we move RHOSP17 to RHEL9 which will provide  libvirt > 7.4.
+# Details in https://bugzilla.redhat.com/show_bug.cgi?id=2021536
+#}
+{% if install.version|default(undercloud_version) | openstack_release == 17 and ansible_distribution_version is version('8.5', '<') %}
+resource_registry:
+  OS::TripleO::Services::NovaLibvirt: /usr/share/openstack-tripleo-heat-templates/deployment/deprecated/nova/nova-libvirt-container-puppet.yaml
+{% endif %}
+
+
 parameter_defaults:
 {% if install.overcloud.domain != '' %}
     CloudDomain: {{  install.overcloud.domain }}
