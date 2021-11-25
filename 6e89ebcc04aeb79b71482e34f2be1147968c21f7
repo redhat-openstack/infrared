@@ -105,6 +105,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "7e8c5669_2e9c6a52",
+        "filename": "plugins/tripleo-overcloud/deploy.yml",
+        "patchSetId": 6
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2021-11-25T10:35:08Z",
+      "side": 1,
+      "message": "Is it really necesarry for the OSP deployment? From https://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/deployed_ceph.html they do not include \"stack\" variable in docs, also by default it seems to be set to\n\n  --stack STACK         Name or ID of heat stack (default\u003dEnv:\n                        OVERCLOUD_STACK_NAME)",
+      "parentUuid": "14b0cf6e_743402b0",
+      "revId": "6e89ebcc04aeb79b71482e34f2be1147968c21f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "6c33dad1_f6adf2b5",
         "filename": "plugins/tripleo-overcloud/templates/overcloud_deploy.sh.j2",
         "patchSetId": 6
@@ -140,6 +158,30 @@
       "side": 1,
       "message": "The actual baremetal deployment would have been done with metalsmith and the above files would be the output of running metalsmith. Please read this which explains in more detail:\n\nhttps://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/features/deployed_ceph.html#deployed-ceph-workflow\n\nIn the case of IR, it is running metalsmith, i.e. it is running the commands that produce these files:\n\nhttps://review.gerrithub.io/c/redhat-openstack/infrared/+/525551/6/plugins/tripleo-overcloud/deploy.yml#64\n\nAre you asking that IR take these files as parameters?",
       "parentUuid": "6c33dad1_f6adf2b5",
+      "range": {
+        "startLine": 22,
+        "startChar": 18,
+        "endLine": 22,
+        "endChar": 187
+      },
+      "revId": "6e89ebcc04aeb79b71482e34f2be1147968c21f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6aceb70c_2f07d069",
+        "filename": "plugins/tripleo-overcloud/templates/overcloud_deploy.sh.j2",
+        "patchSetId": 6
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2021-11-25T10:35:08Z",
+      "side": 1,
+      "message": "I suggest to take this step by step. Baremetal deployment though important is not in the scope here, first we have to make sure virthost-based p1/p2 automation and CI delivers results, then we can get into p3 scenarios which might need much more flexibility and related changes.",
+      "parentUuid": "0fd91757_a2f23dc7",
       "range": {
         "startLine": 22,
         "startChar": 18,
