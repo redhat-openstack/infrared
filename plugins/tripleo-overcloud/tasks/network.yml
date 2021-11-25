@@ -120,7 +120,9 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-n {{ template_base }}/network/network_data.yaml \'
-  when: use_network_data|bool
+  when:
+     - use_network_data|bool
+     - install.version|default(undercloud_version)| openstack_release < 17
 
 - name: Append the network environment template line to the base overcloud deploy script
   lineinfile:
