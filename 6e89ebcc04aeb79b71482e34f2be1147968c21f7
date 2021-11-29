@@ -123,6 +123,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "1f58a432_0443e204",
+        "filename": "plugins/tripleo-overcloud/deploy.yml",
+        "patchSetId": 6
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2021-11-29T12:31:30Z",
+      "side": 1,
+      "message": "If you don\u0027t use \"--stack\", then the default name for the stack is overcloud. You don\u0027t have to use it but it is used internally by the deployment tool",
+      "parentUuid": "7e8c5669_2e9c6a52",
+      "revId": "6e89ebcc04aeb79b71482e34f2be1147968c21f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "6c33dad1_f6adf2b5",
         "filename": "plugins/tripleo-overcloud/templates/overcloud_deploy.sh.j2",
         "patchSetId": 6
@@ -182,6 +200,30 @@
       "side": 1,
       "message": "I suggest to take this step by step. Baremetal deployment though important is not in the scope here, first we have to make sure virthost-based p1/p2 automation and CI delivers results, then we can get into p3 scenarios which might need much more flexibility and related changes.",
       "parentUuid": "0fd91757_a2f23dc7",
+      "range": {
+        "startLine": 22,
+        "startChar": 18,
+        "endLine": 22,
+        "endChar": 187
+      },
+      "revId": "6e89ebcc04aeb79b71482e34f2be1147968c21f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a39c98d6_4ed697c0",
+        "filename": "plugins/tripleo-overcloud/templates/overcloud_deploy.sh.j2",
+        "patchSetId": 6
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2021-11-29T12:31:30Z",
+      "side": 1,
+      "message": "\u003e Baremetal deployment though important is not in the scope here, \n\nIn the following command, overcloud-baremetal-deployed.yaml is a mandatory argument:\n\n  openstack overcloud ceph deploy overcloud-baremetal-deployed.yaml\n\nThus, the output of metal smith is necessarily in scope. However, it can be virtual bare metal.\n\nIt looks to me like the file is produced in IR:\n\n /home/stack/templates/overcloud-baremetal-deployed.yaml\n\nSo please pass it or the command won\u0027t be tested which is the goal of this patch.\n\n\u003e first we have to make sure virthost-based p1/p2 automation and CI delivers results, \n\u003e then we can get into p3 scenarios which might need much more flexibility and related changes.\n\nIt\u0027s fine to use \"virtual baremetal\" here so virthost-based p1/p2 automation should be fine.",
+      "parentUuid": "6aceb70c_2f07d069",
       "range": {
         "startLine": 22,
         "startChar": 18,
