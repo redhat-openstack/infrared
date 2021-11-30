@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "63a1a0f6_13c6f47c",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 9
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2021-11-30T14:23:24Z",
+      "side": 1,
+      "message": "Looking good Filip! Two comments below.",
+      "revId": "0549035ea5bf62b1b76b0d64abaf07d4df64c6f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "33c9389e_fff265ac",
+        "filename": "plugins/tripleo-overcloud/deploy.yml",
+        "patchSetId": 9
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2021-11-30T14:23:24Z",
+      "side": 1,
+      "message": "Rather than make a copy of this file and edit it, you should be able to use the --container-namespace option as below so that the CLI tool does the replacement for you. \n\n  --container-namespace 192.168.24.1:8787\n  --container-image-prepare \"{{ containers_home_dir }}/containers-prepare-parameter.yaml\"\n\nFeel free to try this option if it\u0027s easier for you (less tasks, less changes). It also tests that aspect of the tool. Thanks.",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 42
+      },
+      "revId": "0549035ea5bf62b1b76b0d64abaf07d4df64c6f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8734774a_d51173a5",
+        "filename": "plugins/tripleo-overcloud/deploy.yml",
+        "patchSetId": 9
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2021-11-30T14:23:24Z",
+      "side": 1,
+      "message": "Please consider adding the following here:\n\n  --network-data /home/stack/virt/network/network_data_v2.yaml\n\nThe following has merged in Wallaby and should soon be in the compose so that you can use the above option (which will become a required argument). Thanks.\n\nhttps://review.opendev.org/q/topic:%22bug%252F1950178-stable%252Fwallaby%22+(status:open%20OR%20status:merged)",
+      "revId": "0549035ea5bf62b1b76b0d64abaf07d4df64c6f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
