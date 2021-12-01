@@ -21,7 +21,7 @@ custom_templates:
     NeutronBridgeMappings: datacentre:br-ex,baremetal:br-baremetal
     NeutronFlatNetworks: datacentre,baremetal
     NovaSchedulerDefaultFilters:
-        - RetryFilter
+        "- {% if (install.version | default(undercloud_version) | openstack_release < 13) %}RetryFilter{% endif %}"
         - AggregateInstanceExtraSpecsFilter
         - AvailabilityZoneFilter
         - ComputeFilter
