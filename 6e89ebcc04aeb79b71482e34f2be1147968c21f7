@@ -86,6 +86,24 @@
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "a802ee2a_b0b5f004",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2021-12-01T09:58:41Z",
+      "side": 1,
+      "message": "Surely it might be needed in the future, lets defer this for now, as target here is the \"MVP\" (release early, release often ;)) for this feature, extensions later.",
+      "parentUuid": "66079ff1_37924f93",
+      "revId": "6e89ebcc04aeb79b71482e34f2be1147968c21f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "14b0cf6e_743402b0",
@@ -158,6 +176,48 @@
         "endLine": 73,
         "endChar": 44
       },
+      "revId": "6e89ebcc04aeb79b71482e34f2be1147968c21f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1359a643_42ddaa7e",
+        "filename": "plugins/tripleo-overcloud/deploy.yml",
+        "patchSetId": 6
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2021-12-01T09:58:41Z",
+      "side": 1,
+      "message": "Done, n2 passed since #9.",
+      "parentUuid": "a40dbc93_e467806c",
+      "range": {
+        "startLine": 73,
+        "startChar": 12,
+        "endLine": 73,
+        "endChar": 44
+      },
+      "revId": "6e89ebcc04aeb79b71482e34f2be1147968c21f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "887293a9_a31a0da8",
+        "filename": "plugins/tripleo-overcloud/deploy.yml",
+        "patchSetId": 6
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2021-12-01T09:58:41Z",
+      "side": 1,
+      "message": "If there is no forseeable case for working with custom overcloud\u0027s name, I guess we can omit it for now as this is MVP?",
+      "parentUuid": "1f58a432_0443e204",
       "revId": "6e89ebcc04aeb79b71482e34f2be1147968c21f7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     },
@@ -247,6 +307,30 @@
       "side": 1,
       "message": "\u003e Baremetal deployment though important is not in the scope here, \n\nIn the following command, overcloud-baremetal-deployed.yaml is a mandatory argument:\n\n  openstack overcloud ceph deploy overcloud-baremetal-deployed.yaml\n\nThus, the output of metal smith is necessarily in scope. However, it can be virtual bare metal.\n\nIt looks to me like the file is produced in IR:\n\n /home/stack/templates/overcloud-baremetal-deployed.yaml\n\nSo please pass it or the command won\u0027t be tested which is the goal of this patch.\n\n\u003e first we have to make sure virthost-based p1/p2 automation and CI delivers results, \n\u003e then we can get into p3 scenarios which might need much more flexibility and related changes.\n\nIt\u0027s fine to use \"virtual baremetal\" here so virthost-based p1/p2 automation should be fine.",
       "parentUuid": "6aceb70c_2f07d069",
+      "range": {
+        "startLine": 22,
+        "startChar": 18,
+        "endLine": 22,
+        "endChar": 187
+      },
+      "revId": "6e89ebcc04aeb79b71482e34f2be1147968c21f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4b6eb372_30759f72",
+        "filename": "plugins/tripleo-overcloud/templates/overcloud_deploy.sh.j2",
+        "patchSetId": 6
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2021-12-01T09:58:41Z",
+      "side": 1,
+      "message": "Sure, I did not mean \"overcloud-baremetal-deployed.yaml\" file per se, but baremetal topology in general and its enablement in CI and IR (which is according to my info very far from being established currently, and likely will be for a month or so) - so any BM topology adjustmens are out of scope of this MVP.\n\nThe *deployed.yaml files are fixed in the OSP17 flow currently, makes sense that we need to always include them wherever they are required.",
+      "parentUuid": "a39c98d6_4ed697c0",
       "range": {
         "startLine": 22,
         "startChar": 18,
