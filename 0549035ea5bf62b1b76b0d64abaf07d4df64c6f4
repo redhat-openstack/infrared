@@ -67,6 +67,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "86f63859_173700dc",
+        "filename": "plugins/tripleo-overcloud/deploy.yml",
+        "patchSetId": 9
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2021-12-01T11:12:23Z",
+      "side": 1,
+      "message": "This actually doesn\u0027t work, when I use the file it does, but using\n\nopenstack overcloud ceph deploy -o /home/stack/templates/overcloud-ceph-deployed.yaml /home/stack/templates/overcloud-baremetal-deployed.yaml  --container-namespace 192.168.24.1:8787 --container-image-p\nrepare /home/stack/containers-prepare-parameter.yaml --container-image rhceph --container-tag 5-12\n\nfails with:\nusr/sbin/cephadm\\\", line 3333, in _pull_image\", \"    raise RuntimeError(\u0027Failed command: %s\u0027 % cmd_str)\", \"RuntimeError: Failed co\nmmand: /bin/podman pull 192.168.24.1:8787/rhceph:5-12\"], \"stdout\": \"\", \"stdout_lines\": []\n\nnot sure why, do you wanna me create a BZ for it? Maybe there is an issue in the replacement handling in cephadm or I am doing smth wrong?",
+      "parentUuid": "65d6704c_bfba4f0a",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 42
+      },
+      "revId": "0549035ea5bf62b1b76b0d64abaf07d4df64c6f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "8734774a_d51173a5",
         "filename": "plugins/tripleo-overcloud/deploy.yml",
         "patchSetId": 9
@@ -96,6 +120,24 @@
       "side": 1,
       "message": "Done since #9.",
       "parentUuid": "8734774a_d51173a5",
+      "revId": "0549035ea5bf62b1b76b0d64abaf07d4df64c6f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ff1fba69_cb49384b",
+        "filename": "plugins/tripleo-overcloud/deploy.yml",
+        "patchSetId": 9
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2021-12-01T11:12:23Z",
+      "side": 1,
+      "message": "I just tested on RHOS-17.0-RHEL-8-20211105.n.0 and there is no \"--network-data\" yes, so we might need to postpone this until it hits downstream (maybe already did in newer builds, dunno).",
+      "parentUuid": "3b3f3f6d_eff17c5a",
       "revId": "0549035ea5bf62b1b76b0d64abaf07d4df64c6f4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
