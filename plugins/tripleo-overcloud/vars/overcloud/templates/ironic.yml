@@ -11,7 +11,7 @@ custom_templates:
         - pxe_ipmitool
         - fake
     NovaSchedulerDefaultFilters:
-        - RetryFilter
+        - "{% if (install.version | default(undercloud_version) | openstack_release < 13) %}RetryFilter{% endif %}"
         - AggregateInstanceExtraSpecsFilter
         - AvailabilityZoneFilter
         - RamFilter
