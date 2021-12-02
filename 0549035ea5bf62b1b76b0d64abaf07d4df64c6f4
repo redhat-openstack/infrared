@@ -139,6 +139,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "63760ff0_0955fa00",
+        "filename": "plugins/tripleo-overcloud/deploy.yml",
+        "patchSetId": 9
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2021-12-02T11:58:45Z",
+      "side": 1,
+      "message": "You know I thought about this much more and I think I will revert into my previous implementation in next patchset, as the final one, for several reasons (though also I have the \"--parameter way\" confirmed working):\n\n0) containers-prepare-parameter.yaml is single source of \"truth\" about container metadata, which is downloaded then post-processed using IR. In this stage, right before OC deployment itself, the file contains also all the tweaks (e.g. mirrors, string replacements [3,4]) and changes related to specific automation - which are very likely related to also deployed ceph workflow already (as it was part of OC deployment before, these were being applied anyway). RelDel is provider of the containers and metadata, which is only being mirrored as it goes thru CI pipeline down - we should stick to use this file first, use --parameter based modifications only if needed by specific workflows second.\n\n1) containers-prepare-parameter.yaml contents might change in time (any of it, it already had happened in the past), hardcoding any parameter like \"--container-namespace\" here at IR layer might break. Lets keep these parameter overrides on following patches focusing on phase3 usages...\n\n2) supported by same workflow also used for container patching plugins/tripleo-overcloud/roles/containers/prepare-templates/tasks/build/patch_images_tripleo-modify-image.yml\n\n[3] plugins/tripleo-undercloud/tasks/prepare_uc_images_builtin.yml\n[4] ./plugins/tripleo-overcloud/roles/containers/prepare-templates/tasks/build/build_images.yml",
+      "parentUuid": "b6ecbc2a_f145af50",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 42
+      },
+      "revId": "0549035ea5bf62b1b76b0d64abaf07d4df64c6f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "8734774a_d51173a5",
         "filename": "plugins/tripleo-overcloud/deploy.yml",
         "patchSetId": 9
