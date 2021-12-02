@@ -20,10 +20,10 @@ parameter_defaults:
 {% endif %}
 {% if install.version|openstack_release > 14 and not install.network.dvr and not install.network.ovs %}
     ControllerParameters:
-      NeutronBridgeMappings: "datacentre:br-ex,tenant:br-isolated"
+      NeutronBridgeMappings: "datacentre:br-ex,tenant:br-tenant"
     ComputeParameters:
       NeutronBridgeMappings: ""
 {% else %}
-    NeutronBridgeMappings: "datacentre:br-ex,tenant:br-isolated"
+    NeutronBridgeMappings: "datacentre:br-ex,tenant:br-tenant"
 {% endif %}
     NeutronNetworkVLANRanges: "tenant:1000:2000"
