@@ -219,47 +219,42 @@ resources:
                               default: true
                               next_hop:
                                   get_param: ControlPlaneDefaultRoute
-                        -
-                          type: ovs_bridge
-                          name: br-isolated
+                        - type: interface
+                          name: nic2
                           use_dhcp: false
-                          members:
-                            -
-                              type: interface
-                              name: nic2
-                              primary: true
-                            -
-                              type: vlan
-                              vlan_id:
-                                  get_param: InternalApiNetworkVlanID
-                              addresses:
-                              -
-                                ip_netmask:
-                                    get_param: InternalApiIpSubnet
-                            -
-                              type: vlan
-                              vlan_id:
-                                  get_param: StorageNetworkVlanID
-                              addresses:
-                              -
-                                ip_netmask:
-                                    get_param: StorageIpSubnet
-                            -
-                              type: vlan
-                              vlan_id:
-                                  get_param: StorageMgmtNetworkVlanID
-                              addresses:
-                              -
-                                ip_netmask:
-                                    get_param: StorageMgmtIpSubnet
-                            -
-                              type: vlan
-                              vlan_id:
-                                  get_param: TenantNetworkVlanID
-                              addresses:
-                              -
-                                ip_netmask:
-                                    get_param: TenantIpSubnet
+                          primary: true
+                        - type: vlan
+                          vlan_id:
+                              get_param: InternalApiNetworkVlanID
+                          device: nic2
+                          addresses:
+                          -
+                            ip_netmask:
+                                get_param: InternalApiIpSubnet
+                        - type: vlan
+                          vlan_id:
+                              get_param: StorageNetworkVlanID
+                          device: nic2
+                          addresses:
+                          -
+                            ip_netmask:
+                                get_param: StorageIpSubnet
+                        - type: vlan
+                          vlan_id:
+                              get_param: StorageMgmtNetworkVlanID
+                          device: nic2
+                          addresses:
+                          -
+                            ip_netmask:
+                                get_param: StorageMgmtIpSubnet
+                        - type: vlan
+                          vlan_id:
+                              get_param: TenantNetworkVlanID
+                          device: nic2
+                          addresses:
+                          -
+                            ip_netmask:
+                                get_param: TenantIpSubnet
                         -
                           type: ovs_bridge
                           # This will default to br-ex, anything else requires specific
