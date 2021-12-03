@@ -6,6 +6,9 @@ ir-provisioner -d virsh -v \
   --image-url=www.images.com/rhel-7.qcow2 \
   --cleanup
 
+this review is used to reset IR to bypass d13a66a from 2 Nov
+donotmerge
+
 ## PROVISION ##
 ir-provisioner -d virsh -v \
   --topology-nodes=undercloud:1,controller:1,compute:1 \
