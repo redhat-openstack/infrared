@@ -34,7 +34,11 @@ parameter_defaults:
   IronicEnabledInspectInterfaces: [no-inspect, inspector, fake]
 {% endif %}
 {% endif %}
+{% if (install.version|default(undercloud_version)|openstack_release < 17) %}
   NovaSchedulerDefaultFilters:
+{% else %}
+  NovaSchedulerEnabledFilters:
+{% endif %}
       - AggregateInstanceExtraSpecsFilter
       - AvailabilityZoneFilter
       - ComputeFilter
@@ -43,6 +47,7 @@ parameter_defaults:
 {% if install.version|default(undercloud_version)|openstack_release < 14 %}
       - RamFilter
       - DiskFilter
+      - "{% if (install.version | default(undercloud_version) | openstack_release < 13) %}RetryFilter{% endif %}"
   ControllerExtraConfig:
       ironic::drivers::ssh::libvirt_uri: 'qemu:///system'
 {% if install.tls.everywhere|default(False) %}
