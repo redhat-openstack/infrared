@@ -3,40 +3,12 @@
       path: "{{ deployer_input }}"
   register: deployer_input_stat
 
-- name: Run Whitebox plugin configuration commands
-  block:
-    - name: Get Compute node IP inventory
-      shell: "source ~/stackrc && openstack server list -f value -c Name -c Networks | grep -i compute | sort -h"
-      register: ip_inventory
-    - name: Get hypervisor inventory
-      shell: "source ~/keystonerc && openstack hypervisor list -f value -c \"Hypervisor Hostname\" | sort -h"
-      register: hostname_inventory
-    - name: Map host with corresponding IP
-      vars:
-        final_compute: ''
-      set_fact:
-        final_compute: "{{ item.0.split() | first }}:{{ item.1.split('ctlplane=')[1] }},{{ final_compute | default('') }}"
-      loop: "{{ hostname_inventory.stdout_lines | zip(ip_inventory.stdout_lines) | list }}"
-      when: 'item.1.split() | first in item.0.split() | first'
-  when: test.configure.whitebox.plugin
-
-- name: Configure Whitebox db parameters
-  block:
-    - name: Get controller hostname
-      shell: source ~/stackrc && ansible-inventory -i /usr/bin/tripleo-ansible-inventory --graph Controller | sed -ne 's/^[ \t|]\+--\([a-z0-9\-]\+\)$/\1/p' | head -n 1
-      register: controller_host
-    - name: Get internal IP
-      shell: source ~/stackrc && ansible-inventory -i /usr/bin/tripleo-ansible-inventory --host={{ controller_host.stdout | trim }} | jq '.internal_api_ip' | tr -d '"'
-      register: internal_ip
-    - name: Get control plane IP
-      shell: source ~/stackrc && ansible-inventory -i /usr/bin/tripleo-ansible-inventory --host={{ controller_host.stdout | trim }}| jq '.ctlplane_ip' | tr -d '"'
-      register: host_ip
-    - name: Get Nova password
-      shell: |
-        source ~/stackrc && openstack object save overcloud plan-environment.yaml
-        cat plan-environment.yaml | awk '/NovaPassword/ {print $2}'
-      register: nova_password
-  when: test.configure.whitebox.db
+- name: Run Whitebox plugin configuration command
+  vars:
+      white_command_version: "{{ 'latest'  if test.openstack.version|default(overcloud_version)|openstack_release >= 17 \
+                                  else 'legacy'}}"
+  include_tasks: "whitebox_config_{{ white_command_version }}_commands.yml"
+  when: test.configure.whitebox.plugin or test.configure.whitebox.db
 
 - name: Configure custom image and flavor ids
   block:
