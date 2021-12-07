@@ -12,6 +12,8 @@
       pattern: "{{ item|basename|splitext|first }}\\.(?:yaml|j2\\.yaml)$"
       use_regex: yes
   with_items: "{{ current_file.tripleo_heat_templates | default([]) }}"
+  when:
+    - not item is regex("^removed.*")
   register: default_templates
 
 - name: remove deprecated RetryFilter from OSP 16 onwards
@@ -34,11 +36,13 @@
       line: '  --environment-file {{ item.item }} \'
       insertafter: '^\s*--templates.*'
   with_items: "{{ default_templates.results }}"
-  when: item.matched > 0
+  when:
+    - item.matched is defined
+    - item.matched > 0
 
 - name: fail because file not found
   vars:
-      missing_templates: "{{ default_templates.results|rejectattr('matched')|map(attribute='item')|list }}"
+      missing_templates: "{{ default_templates.results|selectattr('matched','defined')|rejectattr('matched')|map(attribute='item')|list }}"
   fail:
       msg:
           error: "Unable to locate templates from file '{{ templates_list_file }}'"
