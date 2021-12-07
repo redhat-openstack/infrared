@@ -1,4 +1,6 @@
 ---
 tripleo_heat_templates:
     - "{{ install.heat.templates.basedir }}/environments/enable-designate.yaml"
+    {%- if (install.version | default(undercloud_version) | openstack_release < 17) %}
     - "{{ install.heat.templates.basedir }}/environments/designate-config-ha.yaml"
+    {%- endif %}
