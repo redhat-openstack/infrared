@@ -5,11 +5,18 @@
 
 - name: Run Whitebox plugin configuration commands
   block:
+    - set_fact:
+        uc_server_list_cmd: "{{ 'metalsmith -c Hostname -f value -c \"IP Addresses\" -f value list' \
+                                if test.openstack.version|default(overcloud_version)|openstack_release >= 17 \
+                                else 'openstack server list -f value -c Name -c Networks' }}"
+        uc_hypervisor_list_cmd: "{{ 'source ~/keystonerc && nova service-list | cut -d\"|\" -f4 | grep compute' \
+                                    if test.openstack.version|default(overcloud_version)|openstack_release >= 17 \
+                                    else 'source ~/keystonerc && openstack hypervisor list -f value -c \"Hypervisor Hostname\"' }}"
     - name: Get Compute node IP inventory
-      shell: "source ~/stackrc && openstack server list -f value -c Name -c Networks | grep -i compute | sort -h"
+      shell: "source ~/stackrc && {{ uc_server_list_cmd }} | grep -i compute | sort -h"
       register: ip_inventory
     - name: Get hypervisor inventory
-      shell: "source ~/keystonerc && openstack hypervisor list -f value -c \"Hypervisor Hostname\" | sort -h"
+      shell: "{{ uc_hypervisor_list_cmd }} | sort -h"
       register: hostname_inventory
     - name: Map host with corresponding IP
       vars:
@@ -20,7 +27,7 @@
       when: 'item.1.split() | first in item.0.split() | first'
   when: test.configure.whitebox.plugin
 
-- name: Configure Whitebox db parameters
+- name: Configure Whitebox db parameters for RHOS 13 to 16
   block:
     - name: Get controller hostname
       shell: source ~/stackrc && ansible-inventory -i /usr/bin/tripleo-ansible-inventory --graph Controller | sed -ne 's/^[ \t|]\+--\([a-z0-9\-]\+\)$/\1/p' | head -n 1
@@ -36,7 +43,23 @@
         source ~/stackrc && openstack object save overcloud plan-environment.yaml
         cat plan-environment.yaml | awk '/NovaPassword/ {print $2}'
       register: nova_password
-  when: test.configure.whitebox.db
+  when: test.configure.whitebox.db and test.openstack.version|default(overcloud_version)|openstack_release < 17
+
+- name: Configure Whitebox db parameters for RHOS 17+
+  block:
+    - name: Get controller hostname
+      shell: grep -E '\s+controller_node_names' ~/overcloud-deploy/overcloud/overcloud-export.yaml | cut -d ':' -f 2 | cut -d "," -f 1 | xargs
+      register: controller_host
+    - name: Get internal IP
+      shell: grep -E {{ controller_host.stdout }}.*internalapi /etc/hosts | cut -d " " -f 1
+      register: internal_ip
+    - name: Get control plane IP
+      shell: grep -E {{ controller_host.stdout }}.*ctlplane /etc/hosts | cut -d " " -f 1
+      register: host_ip
+    - name: Get Nova password
+      shell: grep NovaPassword ~/overcloud-deploy/overcloud/overcloud-export.yaml | awk '/NovaPassword/ {print $2}'
+      register: nova_password
+  when: test.configure.whitebox.db and test.openstack.version|default(overcloud_version)|openstack_release >= 17
 
 - name: Configure custom image and flavor ids
   block:
