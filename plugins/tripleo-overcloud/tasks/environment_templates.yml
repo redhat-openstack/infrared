@@ -12,6 +12,8 @@
       pattern: "{{ item|basename|splitext|first }}\\.(?:yaml|j2\\.yaml)$"
       use_regex: yes
   with_items: "{{ current_file.tripleo_heat_templates | default([]) }}"
+  when:
+    - not item is regex("^removed.*")
   register: default_templates
 
 - name: remove deprecated RetryFilter from OSP 16 onwards
