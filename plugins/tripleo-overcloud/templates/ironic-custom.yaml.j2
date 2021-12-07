@@ -34,7 +34,11 @@ parameter_defaults:
   IronicEnabledInspectInterfaces: [no-inspect, inspector, fake]
 {% endif %}
 {% endif %}
+{% if (install.version|default(undercloud_version)|openstack_release < 17) %}
   NovaSchedulerDefaultFilters:
+{% else %}
+  NovaSchedulerEnabledFilters:
+{% endif %}
       - AggregateInstanceExtraSpecsFilter
       - AvailabilityZoneFilter
       - ComputeFilter
