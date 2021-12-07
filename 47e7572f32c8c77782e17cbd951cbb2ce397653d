@@ -224,6 +224,30 @@
       },
       "revId": "47e7572f32c8c77782e17cbd951cbb2ce397653d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "bf8e08e0_9e515676",
+        "filename": "plugins/tripleo-overcloud/templates/hostnames.yml.j2",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2021-12-07T14:31:41Z",
+      "side": 1,
+      "message": "\u003eWithout condition we might switch to the old way also on rhel 9, what is not intended.\n\nNope, I assumed this workaround will be removed the moment RHEL9 content hits, forcing everyone from CI to switch to RHEL9 too in one bulk. But it seems to me like you wanna to take different direction - with that conditional included, where it becomes permanent workaround in IR for the whole life of OSP17.\n\nNot sure which way is better, I prefer hard flip to minimize amount of workarounds in the code (lets not repeat the situation where we forgot these in code for multiple OSPs, considering we have close to no tool to monitor status of workarounds), but likely both approaches are usable. Note I don\u0027t want to keep workarounds in the code longer than they need to be there...\n\nI also wonder whether there is a point in RHEL9 CI lifecycle where this whole workaround can be removed anyway, even in this form...",
+      "parentUuid": "e109c549_5ee95aa9",
+      "range": {
+        "startLine": 13,
+        "startChar": 80,
+        "endLine": 13,
+        "endChar": 108
+      },
+      "revId": "47e7572f32c8c77782e17cbd951cbb2ce397653d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
