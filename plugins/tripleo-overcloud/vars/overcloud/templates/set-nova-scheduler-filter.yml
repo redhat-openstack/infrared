@@ -4,8 +4,12 @@ tripleo_heat_templates:
 
 custom_templates:
   parameter_defaults:
+{% if (install.version|default(undercloud_version)|openstack_release >= 17) %}
+    NovaSchedulerEnabledFilters:
+{% else %}
     NovaSchedulerDefaultFilters:
         - RetryFilter
+{% endif %}
         - AggregateInstanceExtraSpecsFilter
         - AvailabilityZoneFilter
         - ComputeFilter
