@@ -5,6 +5,8 @@
         source {{ freeipa_undercloud_rc }}
         openstack stack output show {{ freeipa_overcloud_stack }} HostsEntry -f json -c output_value
     register: overcloud_entries
+    when:
+      - install.version|default(undercloud_version) | openstack_release < 17
 
   - name: Set overcloud hosts json
     set_fact:
