@@ -1,0 +1,150 @@
+- name: Storage
+  name_lower: storage
+  subnets:
+    storage_subnet:
+{% if 'ipv6' not in install.network.protocol %}
+      allocation_pools:
+      - end: 172.17.3.149
+        start: 172.17.3.10
+      ip_subnet: 172.17.3.0/24
+{% else %}
+      enable_dhcp: true
+      ipv6_address_mode: dhcpv6-stateful
+      ipv6_allocation_pools:
+      - end: fd00:fd00:fd00:3000:aaaa:aaaa:ffff:fffe
+        start: fd00:fd00:fd00:3000::10
+      ipv6_ra_mode: dhcpv6-stateful
+      ipv6_subnet: fd00:fd00:fd00:3000::/64
+{% endif %}
+      physical_network: storage
+      vlan: 30
+  vip: true
+{% if 'ipv6' in install.network.protocol %}
+  ipv6: true
+{% endif %}
+- name: StorageMgmt
+  name_lower: storage_mgmt
+  subnets:
+    storage_mgmt_subnet:
+{% if 'ipv6' not in install.network.protocol %}
+      allocation_pools:
+      - end: 172.17.4.149
+        start: 172.17.4.10
+      ip_subnet: 172.17.4.0/24
+{% else %}
+      enable_dhcp: true
+      ipv6_address_mode: dhcpv6-stateful
+      ipv6_allocation_pools:
+      - end: fd00:fd00:fd00:4000:aaaa:aaaa:ffff:fffe
+        start: fd00:fd00:fd00:4000::10
+      ipv6_ra_mode: dhcpv6-stateful
+      ipv6_subnet: fd00:fd00:fd00:4000::/64
+{% endif %}
+      physical_network: storage_mgmt
+      vlan: 40
+  vip: true
+{% if 'ipv6' in install.network.protocol %}
+  ipv6: true
+{% endif %}
+
+- name: InternalApi
+  name_lower: internal_api
+  subnets:
+    internal_api_subnet:
+{% if 'ipv6' not in install.network.protocol %}
+      allocation_pools:
+      - end: 172.17.1.149
+        start: 172.17.1.10
+      ip_subnet: 172.17.1.0/24
+{% else %}
+      enable_dhcp: true
+      ipv6_address_mode: dhcpv6-stateful
+      ipv6_allocation_pools:
+      - end: fd00:fd00:fd00:2000:aaaa:aaaa:ffff:fffe
+        start: fd00:fd00:fd00:2000::10
+      ipv6_ra_mode: dhcpv6-stateful
+      ipv6_subnet: fd00:fd00:fd00:2000::/64
+{% endif %}
+      physical_network: internal_api
+      vlan: 20
+  vip: true
+{% if 'ipv6' in install.network.protocol %}
+  ipv6: true
+{% endif %}
+
+- name: Tenant
+  name_lower: tenant
+  subnets:
+    tenant_subnet:
+{% if 'ipv6-all' not in install.network.protocol %}
+      allocation_pools:
+      - end: 172.17.2.149
+        start: 172.17.2.10
+      ip_subnet: 172.17.2.0/24
+{% else %}
+      enable_dhcp: true
+      ipv6_address_mode: dhcpv6-stateful
+      ipv6_allocation_pools:
+      - end: fd00:fd00:fd00:5000:aaaa:aaaa:ffff:fffe
+        start: fd00:fd00:fd00:5000::10
+      ipv6_ra_mode: dhcpv6-stateful
+      ipv6_subnet: fd00:fd00:fd00:5000::/64
+{% endif %}
+      physical_network: tenant
+      vlan: 50
+{% if 'ipv6-all' in install.network.protocol %}
+  ipv6: true
+{% endif %}
+
+- name: External
+  name_lower: external
+  vip: true
+  subnets:
+    external_subnet:
+{% if 'ipv6' not in install.network.protocol %}
+      allocation_pools:
+      - end: 10.0.0.149
+        start: 10.0.0.101
+      gateway_ip: 10.0.0.1
+      ip_subnet: 10.0.0.0/24
+{% else %}
+      enable_dhcp: true
+      gateway_ipv6: 2620:52:0:13b8::fe
+      ipv6_address_mode: dhcpv6-stateful
+      ipv6_allocation_pools:
+      - end: 2620:52:0:13b8:5054:ff:fe3e:aa
+        start: 2620:52:0:13b8:5054:ff:fe3e:1
+      ipv6_ra_mode: dhcpv6-stateful
+      ipv6_subnet: 2620:52:0:13b8::/64
+{% endif %}
+      physical_network: external
+      vlan: 10
+{% if 'ipv6' in install.network.protocol %}
+  ipv6: true
+{% endif %}
+
+- name: Management
+  name_lower: management
+  subnets:
+    management_subnet:
+{% if 'ipv6' not in install.network.protocol %}
+      allocation_pools:
+      - end: 10.0.1.250
+        start: 10.0.1.4
+      gateway_ip: 10.0.1.1
+      ip_subnet: 10.0.1.0/24
+{% else %}
+      enable_dhcp: true
+      gateway_ipv6: fd00:fd00:fd00:6000::1
+      ipv6_address_mode: dhcpv6-stateful
+      ipv6_allocation_pools:
+      - end: fd00:fd00:fd00:6000:ffff:ffff:ffff:fffe
+        start: fd00:fd00:fd00:6000::10
+      ipv6_ra_mode: dhcpv6-stateful
+      ipv6_subnet: fd00:fd00:fd00:6000::/64
+{% endif %}
+      physical_network: management
+      vlan: 60
+{% if 'ipv6' in install.network.protocol %}
+  ipv6: true
+{% endif %}
