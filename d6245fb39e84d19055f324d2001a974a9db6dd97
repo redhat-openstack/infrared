@@ -85,6 +85,23 @@
       "message": "Damn, there are +100 failures compared to latest run: https://rhos-ci-jenkins.lab.eng.tlv2.redhat.com/view/QE/view/OSP17.0/job/phase2-17.0_compact-director-rhel-8.4-virthost-1cont_1comp_1ceph-ipv4-geneve-ceph-ssl/62/ - I wonder whether it might be related to the split, so we should reevaluate, or we can take on it later as these might be product issues.",
       "revId": "d6245fb39e84d19055f324d2001a974a9db6dd97",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "09a096ed_4aad0ee8",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 21
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2021-12-09T14:59:11Z",
+      "side": 1,
+      "message": "Yeah, smth\u0027s really wrong with the OC on such setup after all, unfortunately:\n\novercloudrc $ openstack server list --all\n\nFailed to contact the endpoint at https://10.0.0.128:13292 for discovery. Fallback to using that endpoint as the base url.\n\nlikely around glance endpoint?\n\n| f941afa0ae20437ba55bc826da24e6f9 | regionOne | glance       | image          | True    | public    | https://10.0.0.128:13292\n\nI will recheck the OC deployment params for I am missing smth yet again...",
+      "revId": "d6245fb39e84d19055f324d2001a974a9db6dd97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
