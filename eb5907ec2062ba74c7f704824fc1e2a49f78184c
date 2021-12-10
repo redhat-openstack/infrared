@@ -50,6 +50,24 @@
       "message": "Code is failing when custom name of heat stack(overcloud name) is used with following message:\nInventory file not found in working directory: /home/stack/overcloud-deploy/overcloud/tripleo-ansible-inventory.yaml. It should have been created by \u0027openstack overcloud node provision\u0027\n\nI set stack name to qe-Cloud-0 and files were generated in different location.\n[stack@undercloud-0 ~]$ ls overcloud-deploy/qe-Cloud-0/\ninventory-network-config.yaml   tripleo-qe-Cloud-0-baremetal-deployment.yaml\ntripleo-ansible-inventory.yaml  tripleo-qe-Cloud-0-virtual-ips.yaml\n",
       "revId": "eb5907ec2062ba74c7f704824fc1e2a49f78184c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a6293700_48c5d353",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 22
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2021-12-10T15:26:01Z",
+      "side": 1,
+      "message": "Mikolaj, If \"--stack $STACK_NAME\" is passed to \"openstack overcloud ceph deploy\" then it will find the expected files in the correct location. I suggested a way to avoid this exact problem in this review earlier.\n\nhttps://review.gerrithub.io/c/redhat-openstack/infrared/+/525551/6..22/plugins/tripleo-overcloud/deploy.yml#b73\n\nFilip, would you please consider the above? Thanks.",
+      "parentUuid": "5af1b40f_a4f331b0",
+      "revId": "eb5907ec2062ba74c7f704824fc1e2a49f78184c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
