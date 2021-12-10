@@ -16,6 +16,23 @@
       "message": "Thanks, this is useful - but I don\u0027t know if we would need to add vlan to NeutronNetworkType in order to use it, which is the goal here.\n\nI guess there was a time when vlan was not part of the default, which led to https://review.gerrithub.io/c/redhat-openstack/infrared/+/485851\n\n\nI agree we shouldn\u0027t change those files too much, but then wouldn\u0027t it make sense to read the value of the two parameters and only change it if \"flat\" is not in the list? I know you explicitly excluded that route but I\u0027d play safe, even if the code is going to be complicated.\n\nBut this really requires input from network people.",
       "revId": "ec2ca3ca87ffd1326d25d0446aae2868d107f854",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8828d744_aacab34c",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016950
+      },
+      "writtenOn": "2021-12-10T21:05:27Z",
+      "side": 1,
+      "message": "I agree with Luigi that probably would be better to read the existing values and append/reorder them putting the requested network backend first. We need this in order to force tempest to choose this network type by default for tenant networks.\n\nI would suggest something like this in order to achieve this (perhaps it\u0027s possible to do it nicer):\n- name: Set NeutronNetworkType to {{ install.network.backend }} in neutron-ovn{{ net_dvr }}-ha env file\n  shell: |\n      template\u003d\"{{ install.heat.templates.basedir }}/environments/{{ services }}/neutron-ovn{{ net_dvr }}-ha.yaml\"\n      neutron_drivers\u003d$(grep NeutronTypeDrivers $template | sed \u0027s/NeutronTypeDrivers//\u0027 | tr -d \" :\u0027\" | tr \",\" \" \")\n      network_types\u003d\"{{ install.network.backend }}\"\n      for driver in $neutron_drivers; do\n        [ \"$driver\" !\u003d \"{{ install.network.backend }}\" ] \u0026\u0026 network_types\u003d\"$network_types,$driver\"\n      done\n      sed -i \"/NeutronNetworkType/s/\\(.*:\\ \\).*/\\1\u0027$network_types\u0027/\" $template\n  vars:\n      net_dvr: \"{{ (install.network.dvr | bool) | ternary(\u0027-dvr\u0027, \u0027\u0027) }}\"\n      services: \"{{ (install.version|openstack_release \u003e 13) | ternary(\u0027services\u0027, \u0027services-docker\u0027) }}\"\n  become: yes\n  when:\n      - install.network.ovn\n      - install.version|default(undercloud_version)|openstack_release \u003e\u003d 13\n\nOther notes:\nI agree that we should avoid modifying the default template files, it would be nicer to add all overrides in some other template file that is imported later than the default one.\n\nIIUC, the purpose of https://review.gerrithub.io/c/redhat-openstack/infrared/+/485851 was to set \u0027vlan\u0027 first to force tempest use it for tenant network by default and probably also workaround the issue of osp13  services-docker/neutron-ovn-dvr-ha.yaml where \u0027flat\u0027 is not listed in NeutronNetworkType. I would consider this as a product bug but since we don\u0027t expect new releases of OSP13 we can\u0027t do anything with this.\n\nFYI, although it\u0027s not related, just because it is mentioned in the commit mesage, OVN in OSP16.2 is already supporting \u0027vxlan\u0027 tunnels, still not official but nevertheless we have a ci job that is deploying and testing it. It is considered as a possible future option for customers that going to perform ovs2ovn migration in order to avoid vxlan-\u003egeneve mtu issues.\n",
+      "revId": "ec2ca3ca87ffd1326d25d0446aae2868d107f854",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
