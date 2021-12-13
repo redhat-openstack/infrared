@@ -86,6 +86,24 @@
       "parentUuid": "8828d744_aacab34c",
       "revId": "ec2ca3ca87ffd1326d25d0446aae2868d107f854",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1c65ed1a_c8ce8201",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016950
+      },
+      "writtenOn": "2021-12-13T09:17:18Z",
+      "side": 1,
+      "message": "This patch seems pretty safe to me (at least for ovn). If it helps to override some deployment problem for other DFG I am giving my +1 on it. \n\nI think the original patch was not the best way to set preferred type first by removing other valid network types.\n\nI would prefer if we will be able to have NeutronTypeDrivers set as follows (for ovn):\non 13-16.1 \n- user specified \u0027geneve\u0027: \u0027geneve,vlan,flat\u0027\n- user specified \u0027vlan\u0027: \u0027vlan,geneve,flat\u0027\non 16.2+\n- user specified \u0027geneve\u0027:  \u0027geneve,vxlan,vlan,flat\u0027\n- user specifed \u0027vlan\u0027: \u0027vlan,geneve,vxlan,flat\u0027\n- user specified \u0027vxlan\u0027: \u0027vxlan,geneve,vlan,flat\u0027\n\nThe snippet I\u0027ve sent is doing exactly this, it does not change NeutronTypeDrivers,it just reads values from there (since it\u0027s contain all available types) and reorders according to the preferred value and puts reordered list into NeutronNetworkType.",
+      "parentUuid": "50dfc2fa_d84704df",
+      "revId": "ec2ca3ca87ffd1326d25d0446aae2868d107f854",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
