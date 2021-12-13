@@ -11,6 +11,20 @@
   with_items: "{{ current_file.tripleo_heat_templates | default([]) }}"
   register: default_templates
 
+- name: remove deprecated RetryFilter from OSP 16 onwards
+  block:
+  - set_fact:
+      filters_without_retry:
+          custom_templates:
+              parameter_defaults:
+                  NovaSchedulerDefaultFilters: "{{ current_file.custom_templates.parameter_defaults.NovaSchedulerDefaultFilters | reject('match', 'RetryFilter') | list }}"
+  - set_fact:
+      current_file: "{{ current_file | combine(filters_without_retry, recursive=True) }}"
+  when:
+    - install.version|default(undercloud_version) | openstack_release >= 16
+    - current_file.custom_templates is defined
+    - ('RetryFilter' in (current_file.custom_templates.parameter_defaults.NovaSchedulerDefaultFilters | default([])))
+
 - name: include templates from default location
   lineinfile:
       dest: "~/overcloud_deploy.sh"
