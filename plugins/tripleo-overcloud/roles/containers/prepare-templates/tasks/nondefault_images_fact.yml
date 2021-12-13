@@ -1,3 +1,12 @@
+- name: Remove deprecated filters OSP 16 onwards
+  lineinfile:
+      path: "{{ templates_list_file }}"
+      regexp: "{{ item }}"
+      state: absent
+  with_items:
+    - RetryFilter
+  when: install.version|default(undercloud_version) | openstack_release >= 16
+
 - include_vars:
       file: "{{ templates_list_file }}"
       name: current_file
