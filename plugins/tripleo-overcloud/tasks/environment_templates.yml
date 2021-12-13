@@ -36,3 +36,16 @@
   when: current_file.custom_templates is defined
   vars:
       raw_name: "{{ templates_list_file | basename | splitext | first }}"
+
+- name: Remove deprecated filters OSP 16 onwards
+  lineinfile:
+      path: "{ ansible_user_dir }}/{{ install.deployment.files | basename }}/{{ raw_name }}.yaml"
+      regexp: "{{ item }}"
+      state: absent
+  vars:
+      raw_name: "{{ templates_list_file | basename | splitext | first }}"
+  with_items:
+    - RetryFilter
+  when:
+    - install.version|default(undercloud_version) | openstack_release >= 16
+    - current_file.custom_templates is defined
