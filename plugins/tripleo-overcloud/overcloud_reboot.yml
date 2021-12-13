@@ -117,10 +117,27 @@
         when:
           - "'ceph' in group_names"
           - overcloud_version|int >= 14
+          - overcloud_version|int < 17
         delegate_to: "{{ ceph_client }}"
         with_items:
             - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option }} osd set noout"
             - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option }} osd set norebalance"
+
+      # Temporarily disable ceph rebalance on OSP >= 17
+      - name: temporarily disable ceph rebalance
+        become: true
+        command: "{{ item }}"
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int >= 17
+        delegate_to: "{{ ceph_client }}"
+        with_items:
+            - "cephadm shell -- ceph pg stat"
+            - "cephadm shell -- ceph -s"
+            - "cephadm shell -- ceph config dump"
+            - "cephadm shell -- ceph df"
+            - "cephadm shell -- ceph osd set noout"
+            - "cephadm shell -- ceph osd set norebalance"
 
       # Check the following conditions:
       # A) pcmk_remote is succeeded will be true is this is a pcmk-remote node
@@ -274,10 +291,24 @@
         when:
           - "'ceph' in group_names"
           - overcloud_version|int >= 14
+          - overcloud_version|int < 17
         delegate_to: "{{ ceph_client }}"
         with_items:
             - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option }} osd unset noout"
             - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option }} osd unset norebalance"
+
+
+      # Re-enable ceph rebalance on OSP >= 17
+      - name: reenable ceph rebalance
+        become: true
+        command: "{{ item }}"
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int >= 17
+        delegate_to: "{{ ceph_client }}"
+        with_items:
+            - "cephadm shell -- ceph osd unset noout"
+            - "cephadm shell -- ceph osd unset norebalance"
 
       - name: wait for OSDs to come back on OSP < 14
         become: true
@@ -301,6 +332,19 @@
         when:
           - "'ceph' in group_names"
           - overcloud_version|int >= 14
+          - overcloud_version|int < 17
+        delegate_to: "{{ ceph_client }}"
+
+      - name: wait for OSDs to come back on OSP >= 17
+        become: true
+        command: "cephadm shell -- ceph pg stat"
+        register: active_osd
+        until: active_osd.stdout.find("active+clean") > -1
+        retries: 24
+        delay: 15
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int >= 17
         delegate_to: "{{ ceph_client }}"
 
       - name: check clock_skew on ceph cluster on OSP < 14
@@ -321,6 +365,17 @@
         when:
           - "'ceph' in group_names"
           - overcloud_version|int >= 14
+          - overcloud_version|int < 17
+        delegate_to: "{{ ceph_client }}"
+
+      - name: check clock_skew on ceph cluster on OSP >= 17
+        become: true
+        shell: |
+            cephadm shell -- ceph status | grep 'Monitor clock skew detected' || echo 'ALL_GOOD'
+        register: clock_skew
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int >= 17
         delegate_to: "{{ ceph_client }}"
 
       - name: check ceph cluster status on OSP < 14
@@ -350,6 +405,21 @@
             - "groups['ceph']|difference(groups['unused']|default([]))|length >= 3"
             - "'ALL_GOOD' in clock_skew"
             - overcloud_version|int >= 14
+            - overcloud_version|int < 17
+
+      - name: check ceph cluster status on OSP >= 17
+        become: true
+        command: "cephadm shell -- ceph status"
+        register: ceph_health
+        until: ceph_health.stdout.find("HEALTH_OK") > -1
+        retries: 30
+        delay: 5
+        delegate_to: "{{ ceph_client }}"
+        when:
+            - "'ceph' in group_names"
+            - "groups['ceph']|difference(groups['unused']|default([]))|length >= 3"
+            - "'ALL_GOOD' in clock_skew"
+            - overcloud_version|int >= 17
 
       - name: check ceph cluster status with clock skew on OSP < 14
         become: true
@@ -376,6 +446,20 @@
             - "'ceph' in group_names"
             - "groups['ceph']|difference(groups['unused']|default([]))|length >= 3"
             - overcloud_version|int >= 14
+            - overcloud_version|int < 17
+
+      - name: check ceph cluster status with clock skew on OSP >=17
+        become: true
+        command: "cephadm shell -- ceph status"
+        register: ceph_health
+        until: ceph_health.stdout.find("HEALTH_WARN") > -1 or ceph_health.stdout.find("HEALTH_OK") > -1
+        retries: 30
+        delay: 5
+        delegate_to: "{{ ceph_client }}"
+        when:
+            - "'ceph' in group_names"
+            - "groups['ceph']|difference(groups['unused']|default([]))|length >= 3"
+            - overcloud_version|int >= 17
 
       - name: Assert nova-compute and Open vSwitch agent are up after reboot
         block:
