@@ -122,6 +122,18 @@
             - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option }} osd set noout"
             - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option }} osd set norebalance"
 
+       # Temporarily disable ceph rebalance on OSP >= 17
+      - name: temporarily disable ceph rebalance
+        become: true
+        command: "{{ item }}"
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int >= 17
+        delegate_to: "{{ ceph_client }}"
+        with_items:
+            - "cephadm shell -- ceph osd set noout"
+            - "cephadm shell -- ceph osd set norebalance"
+
       # Check the following conditions:
       # A) pcmk_remote is succeeded will be true is this is a pcmk-remote node
       # B) pcmk_core is succeeded will be true when we are pcmk core node
@@ -279,6 +291,19 @@
             - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option }} osd unset noout"
             - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option }} osd unset norebalance"
 
+
+      # Re-enable ceph rebalance on OSP >= 17
+      - name: reenable ceph rebalance
+        become: true
+        command: "{{ item }}"
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int >= 17
+        delegate_to: "{{ ceph_client }}"
+        with_items:
+            - "cephadm shell -- ceph osd unset noout"
+            - "cephadm shell -- ceph osd unset norebalance"
+
       - name: wait for OSDs to come back on OSP < 14
         become: true
         command: ceph pg stat
@@ -301,6 +326,18 @@
         when:
           - "'ceph' in group_names"
           - overcloud_version|int >= 14
+        delegate_to: "{{ ceph_client }}"
+
+      - name: wait for OSDs to come back on OSP >= 17
+        become: true
+        command: "cephadm shell -- ceph pg stat"
+        register: active_osd
+        until: active_osd.stdout.find("active+clean") > -1
+        retries: 24
+        delay: 15
+        when:
+          - "'ceph' in group_names"
+          - overcloud_version|int >= 17
         delegate_to: "{{ ceph_client }}"
 
       - name: check clock_skew on ceph cluster on OSP < 14
