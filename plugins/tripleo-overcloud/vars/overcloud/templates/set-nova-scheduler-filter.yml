@@ -15,4 +15,4 @@ custom_templates:
         - AllHostsFilter
         - ServerGroupAffinityFilter
         - ServerGroupAntiAffinityFilter
-        - "{% if (install.version | default(undercloud_version) | openstack_release < 13) %}RetryFilter{% endif %}"
+        {% if (install.version | default(undercloud_version) | openstack_release < 13) %}- RetryFilter{% endif %}
