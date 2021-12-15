@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "024e92c0_2d4885a9",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2021-12-15T13:45:27Z",
+      "side": 1,
+      "message": "lgtm\n\nalthough personally i would prefer more specific approach of modifying the list (by appending ideally) before generating the file",
+      "revId": "307ecfe3f1783503a5fe815bb70b007ec26ffe09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "73c7edb0_b348df30",
+        "filename": "plugins/tripleo-overcloud/tasks/environment_templates.yml",
+        "patchSetId": 6
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2021-12-15T13:45:27Z",
+      "side": 1,
+      "message": "I would recommend to instead of post-modifying the file, to exclude the value from the list before generating the file (faster and better targeted at specific key/value).\n\ne.g. something like following seems can do the trick (or could be modified to appending retryfilter for \u003c13 if not present):\n\n      - name: remove deprecated RetryFilter\n        when:\n          - install.version|default(undercloud_version) | openstack_release \u003e\u003d 13\n          - current_file.custom_templates is defined\n          - (\u0027RetryFilter\u0027 in (current_file.custom_templates.parameter_defaults.NovaSchedulerDefaultFilters | default([])))\n        block:\n        - set_fact:\n            filters_without_retry:\n                custom_templates:\n                    parameter_defaults:\n                        NovaSchedulerDefaultFilters: \"{{ current_file.custom_templates.parameter_defaults.NovaSchedulerDefaultFilters | reject(\u0027match\u0027, \u0027RetryFilter\u0027) | list }}\"\n        - set_fact:\n            current_file: \"{{ current_file | combine(filters_without_retry, recursive\u003dTrue) }}\"",
+      "revId": "307ecfe3f1783503a5fe815bb70b007ec26ffe09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
