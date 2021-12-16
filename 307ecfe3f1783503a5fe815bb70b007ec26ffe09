@@ -33,6 +33,24 @@
       "message": "I would recommend to instead of post-modifying the file, to exclude the value from the list before generating the file (faster and better targeted at specific key/value).\n\ne.g. something like following seems can do the trick (or could be modified to appending retryfilter for \u003c13 if not present):\n\n      - name: remove deprecated RetryFilter\n        when:\n          - install.version|default(undercloud_version) | openstack_release \u003e\u003d 13\n          - current_file.custom_templates is defined\n          - (\u0027RetryFilter\u0027 in (current_file.custom_templates.parameter_defaults.NovaSchedulerDefaultFilters | default([])))\n        block:\n        - set_fact:\n            filters_without_retry:\n                custom_templates:\n                    parameter_defaults:\n                        NovaSchedulerDefaultFilters: \"{{ current_file.custom_templates.parameter_defaults.NovaSchedulerDefaultFilters | reject(\u0027match\u0027, \u0027RetryFilter\u0027) | list }}\"\n        - set_fact:\n            current_file: \"{{ current_file | combine(filters_without_retry, recursive\u003dTrue) }}\"",
       "revId": "307ecfe3f1783503a5fe815bb70b007ec26ffe09",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b8080e10_4f8f59cd",
+        "filename": "plugins/tripleo-overcloud/tasks/environment_templates.yml",
+        "patchSetId": 6
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1017127
+      },
+      "writtenOn": "2021-12-16T15:29:13Z",
+      "side": 1,
+      "message": "Yes I like this approach, will update the patch with this strategy and remove WIP when tested downstream.",
+      "parentUuid": "73c7edb0_b348df30",
+      "revId": "307ecfe3f1783503a5fe815bb70b007ec26ffe09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
