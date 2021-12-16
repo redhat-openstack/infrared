@@ -19,7 +19,10 @@ openstack overcloud deploy \
 --compute-flavor {{ ('compute' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('compute', 'baremetal') }} \
 {% endif %}
 {% if install.version|default(undercloud_version)|openstack_release >= 17 %}
---deployed-server -e /home/stack/templates/overcloud-vip-deployed.yaml -e /home/stack/templates/overcloud-networks-deployed.yaml -e /home/stack/templates/overcloud-baremetal-deployed.yaml \
+--deployed-server \
+-e /home/stack/templates/overcloud-vip-deployed.yaml \
+-e /home/stack/templates/overcloud-networks-deployed.yaml \
+-e /home/stack/templates/overcloud-baremetal-deployed.yaml \
 {# rhbz#2020590 - network_data_v2.yaml has to be part of both, the "network provision" step also the OC deployment from now on  #}
 --networks-file /home/stack/virt/network/network_data_v2.yaml \
 {# rhbz#2013352 #}
