@@ -108,4 +108,4 @@
           openstack --os-project-name service object store account set --property Temp-URL-Key=$(uuidgen | sha1sum | awk '{print $1}')
         when:
           - install.deploy_interface_default != 'iscsi'
-          - install.version|default(undercloud_version) | openstack_release >= 13
+          - install.version|default(undercloud_version) | openstack_release == 13
