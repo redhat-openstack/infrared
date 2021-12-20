@@ -1,26 +1,50 @@
 ---
 - block:
-  - name: Get overcloud entries
-    shell: |
+  - name: read overcloud entries from undercloud /etc/hosts
+    when: "install.version|openstack_release >= 17"
+    block:
+    - set_fact:
+        begin_mark: '# START_HOST_ENTRIES_FOR_STACK: overcloud'
+        end_mark: '# END_HOST_ENTRIES_FOR_STACK: overcloud'
+
+    - name: read /etc/hosts on undercloud
+      slurp:
+        src: /etc/hosts
+      register: undercloud_etc_hosts
+
+    - set_fact:
+        content: "{{ undercloud_etc_hosts['content'] | b64decode }}"
+
+    - debug:
+        var: content.splitlines()
+
+    - set_fact:
+        overcloud_hosts: "{{ content | regex_search('^[\\S\\s]*' + begin_mark + '([\\S\\s]*)' + end_mark + '[\\S\\s]*$', '\\1') }}"
+
+  - name: get overcloud entries when osp < 17
+    when: "install.version|openstack_release < 17"
+    block:
+    - name: Get overcloud entries
+      shell: |
         source {{ freeipa_undercloud_rc }}
         openstack stack output show {{ freeipa_overcloud_stack }} HostsEntry -f json -c output_value
-    register: overcloud_entries
+      register: overcloud_entries
 
-  - name: Set overcloud hosts json
-    set_fact:
-      overcloud_hosts_json: "{{ overcloud_entries.stdout|from_json }}"
+    - name: Set overcloud hosts json
+      set_fact:
+        overcloud_hosts_json: "{{ overcloud_entries.stdout|from_json }}"
 
-  # In https://review.opendev.org/#/c/715178/ HostsEntry became a list and not a long string
-  # with \n in it any longer
-  - name: Set overcloud hosts fact (OSP < 16 style when HostsEntry is a single string)
-    set_fact:
-      overcloud_hosts: "{{ overcloud_hosts_json.output_value }}"
-    when: overcloud_hosts_json.output_value is string
+    # In https://review.opendev.org/#/c/715178/ HostsEntry became a list and not a long string
+    # with \n in it any longer
+    - name: Set overcloud hosts fact (OSP < 16 style when HostsEntry is a single string)
+      set_fact:
+        overcloud_hosts: "{{ overcloud_hosts_json.output_value }}"
+      when: overcloud_hosts_json.output_value is string
 
-  - name: Set overcloud hosts fact (OSP >= 16 style when HostsEntry is a list)
-    set_fact:
-      overcloud_hosts: "{{ overcloud_hosts_json.output_value|join('\n') }}"
-    when: overcloud_hosts_json.output_value is not string
+    - name: Set overcloud hosts fact (OSP >= 16 style when HostsEntry is a list)
+      set_fact:
+        overcloud_hosts: "{{ overcloud_hosts_json.output_value|join('\n') }}"
+      when: overcloud_hosts_json.output_value is not string
 
   - name: Removing previous Overcloud Entries
     become: true
