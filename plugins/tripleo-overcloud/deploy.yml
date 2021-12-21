@@ -66,8 +66,12 @@
         when:
             - (install.version|default(undercloud_version) | openstack_release >= 17)
 
+# For <17, the inventory can't be updated at this point because the nodes
+# don't exist here yet and they would end up in the "unused" group.
 - name: Update inventory with details about node provisioning
   import_playbook: update_inventory.yml
+  when:
+      - (install.version|default(undercloud_version) | openstack_release >= 17)
 
 - name: Copy registries.conf overrides from UC to controller and ceph nodes
   hosts: controller, ceph
