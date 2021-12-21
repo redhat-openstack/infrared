@@ -66,8 +66,14 @@
         when:
             - (install.version|default(undercloud_version) | openstack_release >= 17)
 
+# FIXME: this inventory update is likely to cause problems with full images
+# snapshotting/restoring on >=17 too, because the nodes are in power off
+# state at the time when this is called and they end up in the unused group,
+# thus breaking the minor update procedure.
 - name: Update inventory with details about node provisioning
   import_playbook: update_inventory.yml
+  when:
+      - (install.version|default(undercloud_version) | openstack_release >= 17)
 
 - name: Copy registries.conf overrides from UC to controller and ceph nodes
   hosts: controller, ceph
