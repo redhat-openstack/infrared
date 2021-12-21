@@ -21,13 +21,20 @@
   defaults:
     profile: compute
     network_config:
+{% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
+      template: /home/stack/virt/network/three-nics-vlans/compute-dvr.j2
+{% else %}
       template: /home/stack/virt/network/three-nics-vlans/compute.j2
+{% endif %}
     networks:
     - network: ctlplane
       vif: true
     - network: storage
     - network: internal_api
     - network: tenant
+{% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
+    - network: external
+{% endif %}
 {% if not install.storage.external %}
 {%- if install.storage.backend == 'ceph' %}
 - name: CephStorage
