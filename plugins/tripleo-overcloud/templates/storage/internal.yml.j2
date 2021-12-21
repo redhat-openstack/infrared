@@ -14,10 +14,6 @@ parameter_defaults:
     CinderRbdPoolName: "volumes"
     NovaRbdPoolName: "vms"
     GlanceRbdPoolName: "images"
-{# RHOSINFRA-4230 - hostnames misaligned during cephadm run  #}
-{% if install.version|default(undercloud_version)|openstack_release == 17 and install.tls.everywhere|default(False) %}
-    CephSpecFqdn: True
-{% endif %}
 {% if 0 < ( (install.storage.nodes|default(0)|int) or (groups['ceph']|default([])|length) or 1 ) < 3  %}
     CephPoolDefaultSize: {{ (install.storage.nodes|default(0)|int) or (groups['ceph']|default([])|length) or 1 }}
 {% endif %}
