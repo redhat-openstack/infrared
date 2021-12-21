@@ -31,7 +31,11 @@ network_config:
     vlan_id: {{ tenant_vlan_id }}
     addresses:
     - ip_netmask: {{ tenant_ip }}/{{ tenant_cidr }}
-- type: interface
-  name: nic3
+- type: ovs_bridge
+  name: br-ex
   use_dhcp: false
+  members:
+  - type: interface
+    name: nic3
+    primary: true
 {% endraw %}
