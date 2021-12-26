@@ -213,8 +213,35 @@ resources:
                               next_hop:
                                   get_param: EC2MetadataIp
                         -
+                          type: vlan
+                          vlan_id:
+                              get_param: InternalApiNetworkVlanID
+                          device: nic1
+                          addresses:
+                          -
+                            ip_netmask:
+                                get_param: InternalApiIpSubnet
+                        -
+                          type: vlan
+                          vlan_id:
+                              get_param: StorageNetworkVlanID
+                          device: nic1
+                          addresses:
+                          -
+                            ip_netmask:
+                                get_param: StorageIpSubnet
+                        -
+                          type: vlan
+                          vlan_id:
+                              get_param: StorageMgmtNetworkVlanID
+                          device: nic1
+                          addresses:
+                          -
+                            ip_netmask:
+                                get_param: StorageMgmtIpSubnet
+                        -
                           type: ovs_bridge
-                          name: br-isolated
+                          name: br-tenant
                           use_dhcp: false
                           members:
                             -
@@ -222,30 +249,6 @@ resources:
                               name: nic2
                               # force the MAC address of the bridge to this interface
                               primary: true
-                            -
-                              type: vlan
-                              vlan_id:
-                                  get_param: InternalApiNetworkVlanID
-                              addresses:
-                              -
-                                ip_netmask:
-                                    get_param: InternalApiIpSubnet
-                            -
-                              type: vlan
-                              vlan_id:
-                                  get_param: StorageNetworkVlanID
-                              addresses:
-                              -
-                                ip_netmask:
-                                    get_param: StorageIpSubnet
-                            -
-                              type: vlan
-                              vlan_id:
-                                  get_param: StorageMgmtNetworkVlanID
-                              addresses:
-                              -
-                                ip_netmask:
-                                    get_param: StorageMgmtIpSubnet
                             -
                               type: vlan
                               vlan_id:
