@@ -214,19 +214,11 @@ resources:
                               ip_netmask: 169.254.169.254/32
                               next_hop:
                                   get_param: EC2MetadataIp
-                        -
-                          type: ovs_bridge
-                          name: br-isolated
-                          use_dhcp: false
-                          members:
-                            -
-                              type: interface
-                              name: nic2
-                              primary: true
                             -
                               type: vlan
                               vlan_id:
                                   get_param: InternalApiNetworkVlanID
+                              device: nic1
                               addresses:
                               -
                                 ip_netmask:
@@ -235,6 +227,7 @@ resources:
                               type: vlan
                               vlan_id:
                                   get_param: StorageNetworkVlanID
+                              device: nic1
                               addresses:
                               -
                                 ip_netmask:
@@ -243,10 +236,20 @@ resources:
                               type: vlan
                               vlan_id:
                                   get_param: StorageMgmtNetworkVlanID
+                              device: nic1
                               addresses:
                               -
                                 ip_netmask:
                                     get_param: StorageMgmtIpSubnet
+                        -
+                          type: ovs_bridge
+                          name: br-tenant
+                          use_dhcp: false
+                          members:
+                            -
+                              type: interface
+                              name: nic2
+                              primary: true
                             -
                               type: vlan
                               vlan_id:
