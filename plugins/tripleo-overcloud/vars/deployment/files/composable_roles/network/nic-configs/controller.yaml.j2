@@ -237,8 +237,46 @@ resources:
                               next_hop:
                                   get_param: EC2MetadataIp
                         -
+                          type: vlan
+                          vlan_id:
+                              get_param: InternalApiNetworkVlanID
+                          device: nic1
+                          addresses:
+                          -
+                            ip_netmask:
+                                get_param: InternalApiIpSubnet
+                        -
+                          type: vlan
+                          vlan_id:
+                              get_param: StorageNetworkVlanID
+                          device: nic1
+                          addresses:
+                          -
+                            ip_netmask:
+                                get_param: StorageIpSubnet
+                        -
+                          type: vlan
+                          vlan_id:
+                              get_param: StorageMgmtNetworkVlanID
+                          device: nic1
+                          addresses:
+                          -
+                            ip_netmask:
+                                get_param: StorageMgmtIpSubnet
+{% if install.storage.protocol.backend == 'nfs-ganesha' %}
+                        -
+                          type: vlan
+                          vlan_id:
+                              get_param: StorageNFSNetworkVlanID
+                          device: nic1
+                          addresses:
+                          -
+                            ip_netmask:
+                                get_param: StorageNFSIpSubnet
+{% endif %}
+                        -
                           type: ovs_bridge
-                          name: br-isolated
+                          name: br-tenant
                           use_dhcp: false
                           members:
                             -
@@ -248,45 +286,11 @@ resources:
                             -
                               type: vlan
                               vlan_id:
-                                  get_param: InternalApiNetworkVlanID
-                              addresses:
-                              -
-                                ip_netmask:
-                                    get_param: InternalApiIpSubnet
-                            -
-                              type: vlan
-                              vlan_id:
-                                  get_param: StorageNetworkVlanID
-                              addresses:
-                              -
-                                ip_netmask:
-                                    get_param: StorageIpSubnet
-                            -
-                              type: vlan
-                              vlan_id:
-                                  get_param: StorageMgmtNetworkVlanID
-                              addresses:
-                              -
-                                ip_netmask:
-                                    get_param: StorageMgmtIpSubnet
-                            -
-                              type: vlan
-                              vlan_id:
                                   get_param: TenantNetworkVlanID
                               addresses:
                               -
                                 ip_netmask:
                                     get_param: TenantIpSubnet
-{% if install.storage.protocol.backend == 'nfs-ganesha' %}
-                            -
-                              type: vlan
-                              vlan_id:
-                                  get_param: StorageNFSNetworkVlanID
-                              addresses:
-                              -
-                                ip_netmask:
-                                    get_param: StorageNFSIpSubnet
-{% endif %}
                         -
                           type: ovs_bridge
                           # This will default to br-ex, anything else requires specific

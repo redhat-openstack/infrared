@@ -223,27 +223,28 @@ resources:
                                   get_param: ControlPlaneDefaultRoute
 
                               default: true
-                            -
-                              ip_netmask: 169.254.169.254/32
-                              next_hop:
-                                  get_param: EC2MetadataIp
+                        -
+                          ip_netmask: 169.254.169.254/32
+                          next_hop:
+                              get_param: EC2MetadataIp
+                        -
+                          type: vlan
+                          vlan_id:
+                              get_param: InternalApiNetworkVlanID
+                          device: nic1
+                          addresses:
+                          -
+                            ip_netmask:
+                                get_param: InternalApiIpSubnet
                         -
                           type: ovs_bridge
-                          name: br-isolated
+                          name: br-tenant
                           use_dhcp: false
                           members:
                             -
                               type: interface
                               name: nic2
                               primary: true
-                            -
-                              type: vlan
-                              vlan_id:
-                                  get_param: InternalApiNetworkVlanID
-                              addresses:
-                              -
-                                ip_netmask:
-                                    get_param: InternalApiIpSubnet
                             -
                               type: vlan
                               vlan_id:

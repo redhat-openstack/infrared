@@ -201,22 +201,14 @@ resources:
                               next_hop:
                                   get_param: EC2MetadataIp
                         -
-                          type: ovs_bridge
-                          name: br-isolated
-                          use_dhcp: false
-                          members:
-                            -
-                              type: interface
-                              name: nic2
-                              primary: true
-                            -
-                              type: vlan
-                              vlan_id:
-                                  get_param: InternalApiNetworkVlanID
-                              addresses:
-                              -
-                                ip_netmask:
-                                    get_param: InternalApiIpSubnet
+                          type: vlan
+                          vlan_id:
+                              get_param: InternalApiNetworkVlanID
+                          device: nic1
+                          addresses:
+                          -
+                            ip_netmask:
+                                get_param: InternalApiIpSubnet
 
 outputs:
   OS::stack_id:
