@@ -16,6 +16,23 @@
       "message": "It looks like it worked.\n\nFrom [0], the controller node configuration having nic1 with all the control plane VLANs in the kernel; nic2 with br-tenant and VLAN50 for Geneve; and nic3 dedicated for external traffic.\n\n{\"network_config\": [{\"addresses\": [{\"ip_netmask\": \"192.168.24.50/24\"}], \"dns_servers\": [\"10.0.0.1\"], \"domain\": [], \"name\": \"nic1\", \"routes\": [{\"default\": true, \"ip_netmask\": \"0.0.0.0/0\", \"next_hop\": \"192.168.24.1\"}, {\"ip_netmask\": \"169.254.169.254/32\", \"next_hop\": \"192.168.24.1\"}], \"type\": \"interface\", \"use_dhcp\": false}, {\"addresses\": [{\"ip_netmask\": \"172.17.1.48/24\"}], \"device\": \"nic1\", \"type\": \"vlan\", \"vlan_id\": 20}, {\"addresses\": [{\"ip_netmask\": \"172.17.3.119/24\"}], \"device\": \"nic1\", \"type\": \"vlan\", \"vlan_id\": 30}, {\"addresses\": [{\"ip_netmask\": \"172.17.4.60/24\"}], \"device\": \"nic1\", \"type\": \"vlan\", \"vlan_id\": 40}, {\"members\": [{\"name\": \"nic2\", \"primary\": true, \"type\": \"interface\"}, {\"addresses\": [{\"ip_netmask\": \"172.17.2.41/24\"}], \"type\": \"vlan\", \"vlan_id\": 50}], \"name\": \"br-tenant\", \"type\": \"ovs_bridge\", \"use_dhcp\": false}, {\"addresses\": [{\"ip_netmask\": \"10.0.0.112/24\"}], \"members\": [{\"name\": \"nic3\", \"primary\": true, \"type\": \"interface\"}], \"name\": \"br-ex\", \"routes\": [{\"ip_netmask\": \"0.0.0.0/0\", \"next_hop\": \"10.0.0.1\"}], \"type\": \"ovs_bridge\", \"use_dhcp\": false}]}\n\n\nAlso, the compute node seems fine [1]:\n\n{\"network_config\": [{\"addresses\": [{\"ip_netmask\": \"192.168.24.52/24\"}], \"dns_servers\": [\"10.0.0.1\"], \"domain\": [], \"name\": \"nic1\", \"routes\": [{\"default\": true, \"ip_netmask\": \"0.0.0.0/0\", \"next_hop\": \"192.168.24.1\"}, {\"ip_netmask\": \"169.254.169.254/32\", \"next_hop\": \"192.168.24.1\"}], \"type\": \"interface\", \"use_dhcp\": false}, {\"addresses\": [{\"ip_netmask\": \"172.17.1.121/24\"}], \"device\": \"nic1\", \"type\": \"vlan\", \"vlan_id\": 20}, {\"addresses\": [{\"ip_netmask\": \"172.17.3.97/24\"}], \"device\": \"nic1\", \"type\": \"vlan\", \"vlan_id\": 30}, {\"members\": [{\"name\": \"nic2\", \"primary\": true, \"type\": \"interface\"}, {\"addresses\": [{\"ip_netmask\": \"172.17.2.31/24\"}], \"type\": \"vlan\", \"vlan_id\": 50}], \"name\": \"br-tenant\", \"type\": \"ovs_bridge\", \"use_dhcp\": false}, {\"name\": \"nic3\", \"type\": \"interface\", \"use_dhcp\": false}]}\n\nAlso the bridge mappings seem correct:\n\n\n2021-12-23 16:34:45.076 |             \"ControllerParameters\": {\n2021-12-23 16:34:45.078 |                 \"NeutronBridgeMappings\": \"datacentre:br-ex,tenant:br-tenant\"\n\n\n[0] http://rhos-ci-logs.lab.eng.tlv2.redhat.com/logs/rcj/gate-infrared-tripleo-overcloud-osp16.1-ipv4/1599/controller-0/etc/os-net-config/config.json.gz\n[1] http://rhos-ci-logs.lab.eng.tlv2.redhat.com/logs/rcj/gate-infrared-tripleo-overcloud-osp16.1-ipv4/1599/compute-0/etc/os-net-config/config.json.gz",
       "revId": "7e398b663f08ca3902de84b85c49a147999af565",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "92a8b719_1379a69e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 7
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1004788
+      },
+      "writtenOn": "2022-01-02T20:05:48Z",
+      "side": 1,
+      "message": "test risk",
+      "revId": "7e398b663f08ca3902de84b85c49a147999af565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
