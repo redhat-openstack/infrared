@@ -301,32 +301,21 @@
       - install.network.dvr or install.network.force.compute.dvr
       - install.get('network', {}).get('override', {}).get('dvr', {}).get('nic', {})
 
-- block:
-  - name: Set NeutronTypeDrivers to {{ install.network.backend }} in neutron-ovn{{ net_dvr }}-ha env file
-    yedit:
-      src: "{{ install.heat.templates.basedir }}/environments/{{ services }}/neutron-ovn{{ net_dvr }}-ha.yaml"
-      update: True
-      key: parameter_defaults
-      value:
-        NeutronTypeDrivers:
-          "{{ install.network.backend }},flat"
-
-
-  - name: Set NeutronNetworkType to {{ install.network.backend }} in neutron-ovn{{ net_dvr }}-ha env file
-    yedit:
-      src: "{{ install.heat.templates.basedir }}/environments/{{ services }}/neutron-ovn{{ net_dvr }}-ha.yaml"
-      update: True
-      key: parameter_defaults
-      value:
-        NeutronNetworkType:
-          "{{ install.network.backend }},flat"
+- name: Set NeutronNetworkType to {{ install.network.backend }} in neutron-ovn{{ net_dvr }}-ha env file
+  yedit:
+    src: "{{ install.heat.templates.basedir }}/environments/{{ services }}/neutron-ovn{{ net_dvr }}-ha.yaml"
+    update: True
+    key: parameter_defaults
+    value:
+      NeutronNetworkType:
+        "{{ install.network.backend }},flat"
   vars:
-    net_dvr: "{{ (install.network.dvr | bool) | ternary('-dvr', '') }}"
-    services: "{{ (install.version|openstack_release > 13) | ternary('services', 'services-docker') }}"
+      net_dvr: "{{ (install.network.dvr | bool) | ternary('-dvr', '') }}"
+      services: "{{ (install.version|openstack_release > 13) | ternary('services', 'services-docker') }}"
   become: yes
   when:
-    - install.network.ovn
-    - install.version|default(undercloud_version)|openstack_release >= 13
+      - install.network.ovn
+      - install.version|default(undercloud_version)|openstack_release >= 13
 
 - block:
   - name: Remove OVNCMSOptions for controller nodes in non-DVR deployments
