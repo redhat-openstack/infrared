@@ -27,18 +27,18 @@ Highlights
       * `TripleO Undercloud <tripleo-undercloud.html>`_:
         Install undercloud up-to and including overcloud image creation
       * `TripleO Overcloud <tripleo-overcloud.html>`_:
-        Install overcloud using an exsiting undercloud.
+        Install overcloud using an existing undercloud.
 #. Answers file:
     The switch ``--generate-conf-file`` is renamed ``--generate-answers-file`` to avoid confusion
     with configuration files.
-#. Topoloy:
+#. Topology:
     The topology input type has been deprecated. Use `KeyValueList` to define node types and amounts, and ``include_vars``
     to add relevant files to playbooks, see `Topology`_ description for more information
 #. Cleanup:
-    the ``--cleanup`` options now accepts boolean values. Any YAML boolean is accpeted
+    the ``--cleanup`` options now accepts boolean values. Any YAML boolean is accepted
     ("yes/no", "true/false", "on/off")
 #. Bootstrap:
-    On virtual environmants, `tripleo-undercloud <tripleo-undercloud.html>`_ can create a snapshot
+    On virtual environments, `tripleo-undercloud <tripleo-undercloud.html>`_ can create a snapshot
     out of the undercloud VM that can later be used to bypass the installation process.
 
 .. _Plugin structure: plugins.html

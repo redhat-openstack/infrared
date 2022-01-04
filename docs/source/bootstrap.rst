@@ -51,7 +51,7 @@ For basic execution, the user should only provide data for the mandatory paramet
 CLI
 ^^^
 
-Notice the only three mandatory paramters in `virsh` provisioner are:
+Notice the only three mandatory parameters in `virsh` provisioner are:
 
   * ``--host-address`` - the host IP or FQDN to ssh to
   * ``--host-key`` - the private key file used to authenticate to your ``host-address`` server

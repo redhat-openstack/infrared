@@ -91,7 +91,7 @@ OSP12 Deployment
 
 The Infrared provides there options to deploy openstack with composable roles in OSP12+.
 
-**1) Automatically discover roles from the inventory.** In that case Inrared tries to determine what roles should be used basing
+**1) Automatically discover roles from the inventory.** In that case InfraRed tries to determine what roles should be used basing
 on the list of the ``overcloud_nodes`` from the inventory file. To enable automatic roles discover the ``--role-files``
 option should be set to ``auto`` or any other non-list value (not separated with ','). For example::
 
@@ -112,7 +112,7 @@ option should be set to ``auto`` or any other non-list value (not separated with
         [...]
 
 
-**2) Manually specify roles to use.** In that case user can specify the list roles to use by setting the ``--role-files`` otion
+**2) Manually specify roles to use.** In that case user can specify the list roles to use by setting the ``--role-files`` option
 to the list of roles from the `THT roles`_::
 
     # provision
@@ -132,7 +132,7 @@ to the list of roles from the `THT roles`_::
         [...]
 
 
-**3) User legacy OSP11 approach to generate roles templates.** See detailed desciption below.
+**3) User legacy OSP11 approach to generate roles templates.** See detailed description below.
 To enable that approach the ``--tht-roles`` flag should be set to `no` and the ``--role-files`` should point
 to the IR folder with the roles. For example::
 
