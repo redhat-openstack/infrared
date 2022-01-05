@@ -61,7 +61,10 @@
         shell: |
             source ~/stackrc
             set -o pipefail
-            openstack overcloud node provision --network-config --stack {{ install.overcloud.stack }} -o /home/stack/templates/overcloud-baremetal-deployed.yaml  {{ template_base }}/network/baremetal_deployment.yaml | \
+            openstack overcloud node provision {% if install.provision.network %}--network-config{% endif %} \
+              --stack {{ install.overcloud.stack }} \
+              -o /home/stack/templates/overcloud-baremetal-deployed.yaml \
+              {{ template_base }}/network/baremetal_deployment.yaml | \
             tee -a /home/stack/overcloud_provision_nodes.log
         when:
             - (install.version|default(undercloud_version) | openstack_release >= 17)

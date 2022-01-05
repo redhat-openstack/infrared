@@ -582,6 +582,11 @@ subparsers:
                       default: no
                       help: Adds a network for cleaning in OC. Asssumes Ironic in OC was enabled.
 
+                  provision-network:
+                      type: Bool
+                      help: Pre-provision network configuration.
+                      default: True
+
             - title: Overcloud Public Network
               options:
                   public-network:
