@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "07e9df52_08536cc6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1006886
+      },
+      "writtenOn": "2022-01-06T15:37:01Z",
+      "side": 1,
+      "message": "Added a possible fix for both list notations.",
+      "revId": "5bda2d7ae5756a4635781467f07d7b0e62af608c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "fb57fe32_2aa16ab4",
+        "filename": "infrared/common/roles/tls-everywhere/tasks/set_overcloud_dns.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1006886
+      },
+      "writtenOn": "2022-01-06T15:37:01Z",
+      "side": 1,
+      "message": "I think this may work if we change the regexp to something like:\n\nregexp: \"(DnsServers:[^#].*){{ network_template.parameter_defaults.DnsServers|first }}(.*$)\"\nreplace: \"\\1{{ freeipa_node_ipaddress }}\\2\"\n\nBased on my testing this will match only the DNS servers entries and not the other IP addresses in the network_parameters.yaml file.  This captures the formatting of the DnsServers line as capture groups 1 and 2 (for the end delimiters in the bracketed list notation).",
+      "revId": "5bda2d7ae5756a4635781467f07d7b0e62af608c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
