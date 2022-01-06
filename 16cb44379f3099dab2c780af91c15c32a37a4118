@@ -16,6 +16,24 @@
       "message": "Doesn\u0027t this additional step already happen in some other cases? Couldn\u0027t the condition there be extended? I mean, if the problem is install.network.ovn|default(False), can\u0027t that be simply removed, or changed a bit so that it\u0027s considered only for \u003c 17?",
       "revId": "16cb44379f3099dab2c780af91c15c32a37a4118",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e43faab7_a1c71225",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1006223
+      },
+      "writtenOn": "2022-01-06T17:36:35Z",
+      "side": 1,
+      "message": "You only need to run openstack tripleo container image prepare prior to deploy in the case where you are running ceph deploy before overcloud install. By default the overcloud deploy process will run this at deployment time so this the condition is that this needs to be run before ceph deployment.  I\u0027m uncertain why the ovn conditional was ever used for this. It might have been to ensure they get the correct containers into the docker-images.yaml which shouldn\u0027t have been used since the `openstack tripleo container image prepare` went live in OSP14 (I think it was 14).",
+      "parentUuid": "befda957_c8c14b4c",
+      "revId": "16cb44379f3099dab2c780af91c15c32a37a4118",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
