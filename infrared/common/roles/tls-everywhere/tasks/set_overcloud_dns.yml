@@ -15,11 +15,19 @@
         source {{ freeipa_undercloud_rc }}
         openstack subnet set {{ network_template.parameter_defaults.ControlPlaneSubnet | default('ctlplane-subnet') }} --no-dns-nameservers --dns-nameserver {{ freeipa_node_ipv4_address }}
 
-  - name: Assign dns as freeipa node to network-environment
+  - name: Assign dns as freeipa node to network-environment on OSP<17
     lineinfile:
         dest: "{{ freeipa_network_environment_file }}"
         regexp: "- {{ network_template.parameter_defaults.DnsServers|first }}"
         line: "    - {{ freeipa_node_ipaddress }}"
+    when: "install.version|openstack_release < 17"
+
+  - name: Assign dns as freeipa node to network-environment on OSP>16
+    replace:
+        path: "{{ freeipa_network_environment_file }}"
+        regexp: "(DnsServers:[^#].*){{ network_template.parameter_defaults.DnsServers|first }}(.*$)"
+        replace: "\1{{ freeipa_node_ipaddress }}\2"
+    when: "install.version|openstack_release > 16"
 
   - name: Assign dns search domains when domains do not match
     lineinfile:
