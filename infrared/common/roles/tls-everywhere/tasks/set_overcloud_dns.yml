@@ -16,10 +16,10 @@
         openstack subnet set {{ network_template.parameter_defaults.ControlPlaneSubnet | default('ctlplane-subnet') }} --no-dns-nameservers --dns-nameserver {{ freeipa_node_ipv4_address }}
 
   - name: Assign dns as freeipa node to network-environment
-    lineinfile:
-        dest: "{{ freeipa_network_environment_file }}"
-        regexp: "- {{ network_template.parameter_defaults.DnsServers|first }}"
-        line: "    - {{ freeipa_node_ipaddress }}"
+    replace:
+        path: "{{ freeipa_network_environment_file }}"
+        regexp: "(DnsServers:[^#].*){{ network_template.parameter_defaults.DnsServers|first }}(.*$)"
+        replace: "\1{{ freeipa_node_ipaddress }}\2"
 
   - name: Assign dns search domains when domains do not match
     lineinfile:
