@@ -69,6 +69,24 @@
       "message": "If release \u003e\u003d 14 it is also 17 for this condition ... I don\u0027t understand the condition for only ceph, if it was not appeared on the previous when condition for \"install.storage.backend... is ceph, meaning the previous when should also answer this condition?  \n\nAnyway if the condition is just for 17, so please put it at the beginning of the when block.",
       "revId": "16cb44379f3099dab2c780af91c15c32a37a4118",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "17e09664_42a35415",
+        "filename": "plugins/tripleo-overcloud/roles/containers/prepare-templates/tasks/build/build_images.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1017127
+      },
+      "writtenOn": "2022-01-10T15:54:33Z",
+      "side": 1,
+      "message": "Yes correct if its RHOS 17 it already meets the 14 \u003e\u003d condition, but since the ceph deployment changes started with 17 this command is only required if the deployment is using ceph and its 17 or greater, when using ceph this task is not required for RHOS Versions between 14 and 16.x.\n\nI don\u0027t follow what needs to be changed here.  Do you want #L125 to change to \u003e\u003d 17 or do you want #L132 - #L136 moved to the top of the conditionals?  If it\u0027s the former the task conditional needs to remain 14 \u003e\u003d since there are other pre 17 jobs dependent on executing this task for other reasons outside of deploying ceph.",
+      "parentUuid": "4fe9cf31_7937ec28",
+      "revId": "16cb44379f3099dab2c780af91c15c32a37a4118",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
