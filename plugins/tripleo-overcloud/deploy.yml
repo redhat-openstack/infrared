@@ -104,6 +104,7 @@
             openstack overcloud ceph deploy -o /home/stack/templates/overcloud-ceph-deployed.yaml \
             --container-image-prepare "{{ containers_home_dir }}/containers-prepare-parameter.yaml" \
             --container-namespace 192.168.24.1:8787/rh-osbs \
+            --stack "{{ install.overcloud.stack }}" \
             --network-data "{{ template_base }}/network/network_data_v2.yaml" \
             /home/stack/templates/overcloud-baremetal-deployed.yaml \
             | tee -a /home/stack/overcloud_ceph_deployment.log
