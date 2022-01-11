@@ -55,7 +55,7 @@
   import_playbook: "{{ overcloud_flavors | default('tag.yml') }}"
   when:
      - install.tagging|default('')
-     - (install.version|default(undercloud_version) | openstack_release < 17)
+     - (install.version|default(undercloud_version) | openstack_release <= 17)
   tags:
      - tag
 
