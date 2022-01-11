@@ -109,6 +109,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "1e31e32a_cfe7aa3d",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1006223
+      },
+      "writtenOn": "2022-01-11T14:22:59Z",
+      "side": 1,
+      "message": "You are arguing something outside of the scope of this patch. Honestly I don\u0027t know why there was this ovn condition in the first place as it *shouldn\u0027t* be this way.  This was likely done to address something and wasn\u0027t a correct fix.  From a deployment standpoint in 17 the execution of container image prepare is required if seting up ceph prior to the deployment of the overcloud *and* using push_destination: true.  This is a new workflow required for OSP17 and should be conditionalized separately from the other thing.\n\nThe --output-env-file {{ template_base }}/docker-images.yaml is likely the cause of having to run it with ovn because the defaults if run w/o anything used to generate you an ovs specific container set.  There\u0027s a problem here with the logic but that should be addressed outside the scope of this patch.  Who ever -2\u0027d this please lift that so that we can unblock CI and there should be a ticket/bz/whatever to address the other part of this condition.",
+      "parentUuid": "98a97d87_9676eeec",
+      "revId": "16cb44379f3099dab2c780af91c15c32a37a4118",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "4fe9cf31_7937ec28",
         "filename": "plugins/tripleo-overcloud/roles/containers/prepare-templates/tasks/build/build_images.yml",
         "patchSetId": 1
