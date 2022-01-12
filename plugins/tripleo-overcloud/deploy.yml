@@ -94,12 +94,13 @@
   hosts: undercloud
   vars:
       - containers_home_dir: "/home/stack"
-      - template_base: "/home/stack/virt"
+      - template_base: "/home/stack/{{ install.deployment.files }}"
   any_errors_fatal: true
   tasks:
-      - name: Deploy Ceph separately from OC(Deployed Ceph topology)
+      - name: Deploy Ceph separately from overcloud with overcloud ceph deploy script
         shell: |
             source ~/stackrc
+<<<<<<< HEAD
             set -o pipefail
             openstack overcloud ceph deploy -o /home/stack/templates/overcloud-ceph-deployed.yaml \
             --container-image-prepare "{{ containers_home_dir }}/containers-prepare-parameter.yaml" \
@@ -108,6 +109,10 @@
             --network-data "{{ template_base }}/network/network_data_v2.yaml" \
             /home/stack/templates/overcloud-baremetal-deployed.yaml \
             | tee -a /home/stack/overcloud_ceph_deployment.log
+=======
+            bash {{ ceph_deploy_script }} &> ceph_install.log
+        register: ceph_deploy
+>>>>>>> Convert overcloud ceph deploy to bash script
         when:
             - (install.version|default(undercloud_version) | openstack_release >= 17.0)
             - install.storage.backend|default('') == 'ceph'
