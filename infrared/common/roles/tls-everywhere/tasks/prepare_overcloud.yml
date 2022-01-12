@@ -1,5 +1,11 @@
 ---
 - block:
+  - name: disable novajoin for OSP17 and greater
+    when: "install.version|openstack_release >= 17"
+    block:
+    - set_fact:
+        freeipa_enable_novajoin: false
+
   - name: Include VIPs configuration vars
     include_vars:
       file: "vars/public-vips-{{ (freeipa_network_protocol == 'ipv4') | ternary('ipv4','ipv6') }}.yml"
