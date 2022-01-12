@@ -1,5 +1,11 @@
 ---
 - block:
+  - name: disable novajoin for OSP17 and greater
+    when: "install.version|openstack_release >= 17"
+    block:
+    - set_fact:
+        freeipa_enable_novajoin: false
+
   - name: Update /etc/hosts with freeipa's details
     become: yes
     lineinfile:
