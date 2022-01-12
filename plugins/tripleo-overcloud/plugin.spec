@@ -651,6 +651,14 @@ subparsers:
                         The 'lvm' value will be used when storage nodes were not found.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
 
+                  ceph-script:
+                      type: Value
+                      help: |
+                            The absolute path to a custom ceph deployment script.
+                            If not set, it will auto generate a deployment according to the
+                            provided templates / options.
+                            Note: This should be used for OSP 17 and above
+
                   ceph-cluster-name:
                       type: Value
                       default: ceph

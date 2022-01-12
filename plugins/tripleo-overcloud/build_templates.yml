@@ -131,6 +131,28 @@
             path: "{{ template_base }}/overcloud_deploy.sh"
         register: deploy_script
 
+      - name: copy ceph deployment script if provided by the user at the command line
+        copy:
+            src: "{{ install.ceph.script }}"
+            dest: "~/{{ install.ceph.script | basename }}"
+            mode: 0755
+            force: yes
+        when:
+          - install.ceph.script|default('')
+          - install.version|default(undercloud_version) | openstack_release >= 17
+
+      - set_fact:
+            ceph_deploy_script: "{{ install.ceph.script|default('') or deploy_script.stat.path|default('') | basename }}"
+
+      - name: create the bash ceph deploy script
+        template:
+            src: "{{ deploy_script_template | default('templates/overcloud_ceph_deploy.sh.j2') }}"
+            dest: "~/overcloud_ceph_deploy.sh"
+            mode: 0755
+        when:
+          - not ceph_deploy_script|default('')
+          - install.version|default(undercloud_version) | openstack_release >= 17
+
       - name: copy overcloud deployment script if provided by the user at the command line
         copy:
             src: "{{ install.overcloud.script }}"
