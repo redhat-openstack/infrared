@@ -35,7 +35,7 @@ def print_help():
         * if value of that element['hosts'] is not 'localhost'
           (only known safe for sure)
         * it will be asserted that it has 'any_errors_fatal' key
-          (whatever the value, just required it's explicitely specified)
+          (whatever the value, just required it's explicitly specified)
 
         Any failing element will be printed to stdout as:
           FAIL: file_path # element[name] # element[hosts]
@@ -47,7 +47,7 @@ def print_explanation():
     print(yellow(textwrap.dedent(
         """
         To pass this test, ALL ansible PLAYS in this repo need to have
-        any_errors_fatal explicitely defined.
+        any_errors_fatal explicitly defined.
 
         And in most cases in infrared set to true, e.g.:
 
