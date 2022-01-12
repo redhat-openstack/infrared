@@ -1,0 +1,15 @@
+#!/bin/bash
+
+openstack overcloud ceph deploy -o /home/stack/templates/overcloud-ceph-deployed.yaml \
+--container-image-prepare "{{ containers_home_dir }}/containers-prepare-parameter.yaml" \
+{% if install.registry.ceph.namespace|length %}
+--container-namespace 192.168.24.1:8787/rh-osbs \
+{% endif %}
+{% if install.registry.ceph.image|length %}
+--container-image "{{ install.registry.ceph.image }}" \
+{% endif %}
+{% if install.registry.ceph.tag|length %}
+--container-tag "{{ install.registry.ceph.tag }}" \
+{% endif %}
+--network-data "{{ template_base }}/network/network_data_v2.yaml" \
+/home/stack/templates/overcloud-baremetal-deployed.yaml
