@@ -196,16 +196,19 @@
       failed_when: _restart_services.rc not in [0,2]
 
     # OSP10 returns: { "State": "UP", "Alive": false }
-    # OSP13+ returns: { "State": "UP", "Alive": "XXX" }
+    # OSP13 returns: { "State": "UP", "Alive": "XXX" }
+    # OSP16+ returns: { "State": true, "Alive": false }
     - name: Wait until all network agents are up
       shell: |
         source {{ overcloud_rc }}
-        openstack network agent list -f json | jq '.[] | select(.State=="UP" and (.Alive==false or .Alive=="XXX"))'
+        openstack network agent list -f json | jq '.[] | select((.State=="UP" or .State==true) and (.Alive==false or .Alive=="XXX"))'
       changed_when: false
       register: _network_agents_state
       retries: 15
       delay: 60
-      until: _network_agents_state.stdout == ''
+      until:
+        - _network_agents_state.rc == 0
+        - _network_agents_state.stdout == ''
 
     - name: Wait until all compute services are up
       shell: |
